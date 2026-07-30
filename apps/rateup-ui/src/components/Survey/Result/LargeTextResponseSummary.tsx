@@ -78,7 +78,7 @@ const LargeTextResponseSummary = ({
 
   const LargeTextTeamwiseSummary = () => {
     if (!selectedQuestion) setSummaryTab(ResponseSummaryType.Team);
-    const questionSummary = currentSummary.find((q) => q.questionId === selectedQuestion.id);
+    const questionSummary = currentSummary.find((q) => q.questionId === selectedQuestion?.id);
     const teamWiseSummary = questionSummary?.team;
 
     return (
@@ -120,7 +120,7 @@ const LargeTextResponseSummary = ({
                         render={
                           <Button
                             size="sm"
-                            onClick={() => getResponseSummary(selectedQuestion.id, team.value)}
+                            onClick={() => getResponseSummary(selectedQuestion?.id, team.value)}
                           >
                             <Sparkles
                               className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}

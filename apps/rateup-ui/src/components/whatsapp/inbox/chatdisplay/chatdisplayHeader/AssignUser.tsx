@@ -191,17 +191,17 @@ const AssignUser = ({
             assignedUsers: [],
             assignStatus: assignStatus,
             triggeredByUser: {
-              id: user.userId,
-              name: user.userName,
+              id: user?.userId,
+              name: user?.userName,
             },
           },
           exchangeProcess: "internal",
         },
         sourcePlatform: "INTERNAL",
         sourceIdentifier: null,
-        sendBy: user.userId,
+        sendBy: user?.userId,
         sender: {
-          name: user.userName,
+          name: user?.userName,
           profilePhoto: user?.profilePhoto,
         },
         stats: {
@@ -447,7 +447,7 @@ const AssignUser = ({
                             <div>
                               <div className="text-sm">
                                 {staff.name}
-                                {staff.id === user.userId && (
+                                {staff.id === user?.userId && (
                                   <span className="ml-1">( {translations("You")} )</span>
                                 )}
                               </div>

@@ -310,7 +310,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     const handleUpdateRule = async () => {
       if (!validateRuleForm()) return;
       const fieldKey = ruleValues!.fieldKey!;
-      const newRules = multiInputRules?.[fieldKey]!;
+      const newRules = multiInputRules?.[fieldKey] ?? [];
       const rule = newRules.find((r) => r.ruleType == ruleValues!.ruleType)!;
       if (rule.ruleType == "length") {
         rule.min = ruleValues!.min;

@@ -28,7 +28,7 @@ const TestimonialEdit = ({
   setSelectedTestimonialIds,
   setFilters,
 }: {
-  currentStyle: TestimonialStyleType;
+  currentStyle: TestimonialStyleType | undefined;
   testimonials: CollectionTestimonial[];
   filters: filterType;
   isDelete?: boolean;

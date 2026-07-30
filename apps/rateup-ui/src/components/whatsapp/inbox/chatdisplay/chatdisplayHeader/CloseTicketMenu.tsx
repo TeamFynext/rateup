@@ -122,17 +122,17 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           assignedUsers: [],
           assignStatus,
           triggeredByUser: {
-            id: user.userId,
-            name: user.userName,
+            id: user?.userId,
+            name: user?.userName,
           },
         },
         exchangeProcess: "internal",
       },
       sourcePlatform: "INTERNAL",
       sourceIdentifier: null,
-      sendBy: user.userId,
+      sendBy: user?.userId,
       sender: {
-        name: user.userName,
+        name: user?.userName,
         profilePhoto: user?.profilePhoto,
       },
       stats: { read: "", sent: "", failed: "", delivered: "" },
@@ -223,7 +223,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             conversationStatus: status,
             resolutionResult,
             closedAt: closed ? null : new Date().toISOString(),
-            closedUser: closed ? null : { name: user?.userName, id: user.userId },
+            closedUser: closed ? null : { name: user?.userName, id: user?.userId },
             assignedUsers: [],
           }));
         },
@@ -341,7 +341,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           <DropdownMenuGroup>
             {CLOSE_STATUSES.map(({ status, label, tooltip }) => {
               const closedStatusIcon = getContactClosedIcon(status);
-              const Icon = closedStatusIcon.icon;
+              const Icon = closedStatusIcon?.icon;
               return (
                 <DropdownMenuItem
                   key={status}
@@ -350,7 +350,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
                   }
                   onClick={() => applyStatus(status, null)}
                 >
-                  <Icon className={closedStatusIcon.color} />
+                  <Icon className={closedStatusIcon?.color} />
                   {tooltip ? (
                     <CustomTooltip trigger={<p>{label}</p>} content={<p>{tooltip}</p>} />
                   ) : (

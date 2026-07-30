@@ -172,7 +172,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const handleSave = () => {
     const updatedLogicJumps = {
       ...((Object.fromEntries(
-        Object.entries(dbFlow.logicJumps).filter(([k, _v]) => {
+        Object.entries(dbFlow?.logicJumps).filter(([k, _v]) => {
           return k !== selectedScreenId;
         }),
       ) || {}) as any),
@@ -193,7 +193,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2">
         <h3 className="text-lg font-semibold">{translations("Logic Jumps for Screen:")}</h3>
-        <h3 className="text-lg font-medium text-(--whatsapp-green)">{screen.title}</h3>
+        <h3 className="text-lg font-medium text-(--whatsapp-green)">{screen?.title}</h3>
       </div>
       <ScrollArea className="grow">
         <div className="my-2 flex flex-1 flex-col gap-2 rounded-xl py-2">
@@ -269,12 +269,12 @@ function AtomicConditionBlock({
   const [selectedCondition, setSelectedCondition] = useState(condition.condition);
   const selectedScreen = getScreenObjById(flowJson.screens, selectedScreenId);
   const questionsInScreen = getQuestionsFromScreen(selectedScreen, survey, map);
-  const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
+  const logicSupportedQuestionsInScreen = questionsInScreen?.filter((q) =>
     logicSupportedTypes.includes(q.type as QuestionType),
   );
   const { t: translations } = useTranslation();
   const [selectedQId, setSelectedQId] = useState(condition?.questionId || editingQuestion?.id);
-  const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
+  const selectedQ = questionsInScreen?.find((q) => q.id === selectedQId);
   if (!selectedQ) return;
 
   const [matchData, setMatchData] = useState(condition.response);

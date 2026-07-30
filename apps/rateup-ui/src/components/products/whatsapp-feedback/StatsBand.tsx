@@ -30,7 +30,7 @@ function StatItem({
         function tick(now: number) {
           const p = Math.min(1, (now - start) / dur);
           const eased = 1 - Math.pow(1 - p, 3);
-          el.textContent = Math.round(count * eased) + suffix;
+          el!.textContent = Math.round(count * eased) + suffix;
           if (p < 1) requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);

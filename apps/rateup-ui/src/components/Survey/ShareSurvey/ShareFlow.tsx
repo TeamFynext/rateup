@@ -91,7 +91,7 @@ export const ShareFlow = ({
     label: team?.code,
   }));
 
-  const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
+  const isPublished = dbFlow?.status === WaFlowStatus.PUBLISHED;
   const disableShare = !(isPublished || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
@@ -121,7 +121,7 @@ export const ShareFlow = ({
             <Tooltip>
               <TooltipTrigger render={<span className="inline-block" />}>
                 <Button
-                  disabled={!dbFlow.pendingSave || pushToWaMutation.isPending}
+                  disabled={!dbFlow?.pendingSave || pushToWaMutation.isPending}
                   onClick={handleSaveToWa}
                 >
                   {pushToWaMutation.isPending && <Spinner data-icon="inline-start" />}
@@ -129,7 +129,7 @@ export const ShareFlow = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {dbFlow.pendingSave
+                {dbFlow?.pendingSave
                   ? translations("Save your flow to WhatsApp")
                   : translations("No changes to save")}
               </TooltipContent>

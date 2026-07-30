@@ -72,7 +72,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             <Badge variant="destructive">{translations("Error")}</Badge>
           </div>
         )}
-        {data && acceptedFlows.length > 0 ? (
+        {data && acceptedFlows?.length > 0 ? (
           <>
             <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto p-1">
               <TeamSelector

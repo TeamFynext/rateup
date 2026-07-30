@@ -16,7 +16,7 @@ const TestimonialShare = ({
   currentStyle,
 }: {
   selectedTestimonials: CollectionTestimonial[];
-  currentStyle: TestimonialStyleType;
+  currentStyle: TestimonialStyleType | undefined;
 }) => {
   const filteredTestimonials = selectedTestimonials;
   const { t: translations } = useTranslation();

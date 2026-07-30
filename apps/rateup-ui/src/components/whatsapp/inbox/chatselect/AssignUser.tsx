@@ -94,8 +94,8 @@ const BulkAssignUser = ({
       {
         contactIds,
         assignee: {
-          userId: user.userId,
-          teamId: user.teams?.[0],
+          userId: user?.userId,
+          teamId: user?.teams?.[0],
         },
       },
       {
@@ -108,7 +108,7 @@ const BulkAssignUser = ({
                 {
                   id: user?.userId,
                   name: user?.userName,
-                  teamId: user.teams?.[0],
+                  teamId: user?.teams?.[0],
                 },
               ],
             }));

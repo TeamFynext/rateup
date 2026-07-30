@@ -73,7 +73,7 @@ const CreateTicketModal = ({
   // Keep first column selected if none is selected
   useEffect(() => {
     setFormData((prev) => {
-      const newColId = (board?.ticketColumns?.length ?? 0) > 0 ? board.ticketColumns[0].id : "";
+      const newColId = (board?.ticketColumns?.length ?? 0) > 0 ? board?.ticketColumns[0].id : "";
       if (prev.ticketColumnId !== newColId && newColId) {
         return { ...prev, ticketColumnId: newColId };
       }

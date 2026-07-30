@@ -48,7 +48,7 @@ export function CountRestrictionCards({
   );
   return (
     <>
-      {(Object.keys(feature.count) as Array<"max" | "min">).map((property) => (
+      {(Object.keys(feature?.count) as Array<"max" | "min">).map((property) => (
         <CountField
           key={property}
           control={control}

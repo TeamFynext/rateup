@@ -166,7 +166,7 @@ function QuestionReviewPageEditor({
   }, [reviewPagePlatformDDState]);
 
   const handleSave = async () => {
-    if (teamsToDisplay.some((team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState])) {
+    if (teamsToDisplay?.some((team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState])) {
       toast.error("Please enter review page link for all teams.");
       return;
     }

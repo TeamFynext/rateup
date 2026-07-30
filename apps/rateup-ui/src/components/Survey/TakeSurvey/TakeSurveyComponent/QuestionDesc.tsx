@@ -19,7 +19,7 @@ function QuestionDesc({
       className={cn("mt-2.5 leading-[1.2]", largeScreen ? "text-[15px]" : "text-base")}
       style={themeStyles}
     >
-      {selectedQ.description[selectedLanguage]}
+      {selectedQ?.description[selectedLanguage]}
     </p>
   );
 }

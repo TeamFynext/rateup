@@ -85,13 +85,13 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
 
     if (!shouldDisconnect) return;
 
-    const settings = waSettings.find((s) =>
+    const settings = waSettings?.find((s) =>
       s.wabaId === wabaId && s.type === WaConfigType.Automated
         ? s.assets.includes(MetaLoginAssets.CATALOGS)
         : true,
     );
     disconnect.mutate(
-      { catalogId: catalogData?.catalogId, whatsappSettingsId: settings.id },
+      { catalogId: catalogData?.catalogId, whatsappSettingsId: settings?.id },
       {
         onSuccess: () => {
           setWabaId("");

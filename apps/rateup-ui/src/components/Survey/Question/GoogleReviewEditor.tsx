@@ -127,7 +127,7 @@ const GoogleReviewEditor = ({
   const teamsToDisplay = teamsRes?.data?.filter((t) => survey?.teams.some((st) => st.id === t.id));
 
   const handleSave = async () => {
-    if (teamsToDisplay.some((team) => !team.googleLink)) {
+    if (teamsToDisplay?.some((team) => !team.googleLink)) {
       toast.error(translations("Please enter Google Review links for all teams"));
       return;
     }

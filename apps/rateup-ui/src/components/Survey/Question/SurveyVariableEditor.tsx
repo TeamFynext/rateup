@@ -153,7 +153,7 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
   const isPending = isEdit ? variableUpdation.isPending : variableCreation.isPending;
 
   const onCreate = async (values: VariableFormValues) => {
-    if (variables.find((v) => v?.name == values.name)) {
+    if (variables?.find((v) => v?.name == values.name)) {
       setError("name", { message: translations("Variable already exist") });
       return;
     }
@@ -173,12 +173,12 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
   };
 
   const onUpdate = async (values: VariableFormValues) => {
-    if (variables.find((v) => v?.name == values.name) && variable?.name !== values.name) {
+    if (variables?.find((v) => v?.name == values.name) && variable?.name !== values.name) {
       setError("name", { message: translations("Variable already exist") });
       return;
     }
     variableUpdation.mutate(
-      { variableId: variable.id, data: values },
+      { variableId: variable?.id, data: values },
       {
         onSuccess: () => {
           reset();

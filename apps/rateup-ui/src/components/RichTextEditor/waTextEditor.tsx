@@ -264,7 +264,7 @@ function WaTextEditor({
       platform === MessagePlatform.INSTAGRAM &&
       whatsappSettingsPhoneId !== selectedContact?.lastMessage?.sourceIdentifier
     ) {
-      updatePhoneId(selectedContact.lastMessage.sourceIdentifier);
+      updatePhoneId(selectedContact?.lastMessage.sourceIdentifier);
     }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
 

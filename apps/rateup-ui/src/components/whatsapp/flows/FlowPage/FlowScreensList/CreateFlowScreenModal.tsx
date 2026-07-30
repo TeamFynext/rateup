@@ -98,11 +98,11 @@ function CreateFlowScreenModal({
   useEffect(() => {
     if (screenId) {
       const screenToBeEdited = getScreenObjById(flowJson.screens, screenId);
-      const layoutChildren = screenToBeEdited.layout["children"][0]["children"];
+      const layoutChildren = screenToBeEdited?.layout["children"][0]["children"];
       const footerObj = layoutChildren[layoutChildren.length - 1];
       form.reset({
-        screenId: screenToBeEdited.id,
-        screenTitle: screenToBeEdited.title,
+        screenId: screenToBeEdited?.id,
+        screenTitle: screenToBeEdited?.title,
         footerBtnLabel: footerObj.label,
       });
     }

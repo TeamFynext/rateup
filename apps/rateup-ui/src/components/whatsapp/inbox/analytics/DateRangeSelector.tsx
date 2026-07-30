@@ -89,7 +89,9 @@ const DateRangeSelector = ({
                 from: value.range[0],
                 to: value.range[1],
               }}
-              onSelect={(range) => onChange({ key: "custom-range", range: [range.from, range.to] })}
+              onSelect={(range) =>
+                onChange({ key: "custom-range", range: [range?.from, range?.to] })
+              }
               numberOfMonths={2}
               className="rounded-lg border shadow-sm"
             />

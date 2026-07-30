@@ -234,7 +234,7 @@ export function getQuestionForm(type: QuestionType | PageType, selectedQ: Questi
     case Q.EmailOtp:
       return <EmailOTPForm key={selectedQ?.id} />;
     case Q.WOP:
-      return <WOPForm wop={selectedQ?.wop!} isPreview={false} />;
+      return <WOPForm wop={selectedQ?.wop} isPreview={false} />;
     default:
       return <div>not implemented</div>;
   }

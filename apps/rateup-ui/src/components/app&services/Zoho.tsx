@@ -247,7 +247,7 @@ const ZohoTriggerList = ({
   const { user } = useUser();
   const { t } = useTranslation();
   const { data: zohoUsersResponse, isLoading: zohoUsersLoading } = useZohoUsers(
-    user.orgId,
+    user?.orgId,
     "bigin",
   );
 
@@ -869,7 +869,7 @@ function ZohoContactsTable({ integration }: { integration: any }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user.orgId, "crm"],
+        queryKey: ["zoho-contacts", user?.orgId, "crm"],
       });
 
       toast.success(t("Zoho contacts synced successfully"), {
@@ -922,7 +922,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
   const { data: lifecycles } = useLifecyclesWithContactCount();
   const syncMutation = useSyncZohoLeadsMutation();
   const updateIntegrationMutation = useUpdateIntegrationMutation(IntegratedApps.zoho);
-  const { data } = useZohoLeads(user.orgId);
+  const { data } = useZohoLeads(user?.orgId);
   const leads = data?.leads?.leads || [];
   const queryClient = useQueryClient();
   const [openMappingModal, setOpenMappingModal] = useState(false);
@@ -960,7 +960,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-leads", user.orgId],
+        queryKey: ["zoho-leads", user?.orgId],
       });
 
       toast.success(t("Zoho leads synced successfully"), {
@@ -1142,7 +1142,7 @@ function BiginContactsTable({ integration }: { integration: any }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user.orgId, "bigin"],
+        queryKey: ["zoho-contacts", user?.orgId, "bigin"],
       });
       toast.success(t("Bigin contacts synced successfully"), {
         id: toastId,

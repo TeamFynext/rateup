@@ -35,18 +35,18 @@ export function FlowTextDetailedView() {
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
   const [nonInputTextType, setNonInputTextType] = useState(
-    selectedFormElement.type === WaFlowFormElementType.nonInputText
+    selectedFormElement?.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
-      : selectedFormElement.type,
+      : selectedFormElement?.type,
   );
   const { t: translations } = useTranslation();
 
   const form = useForm<any>({
     defaultValues: {
-      text: selectedFormElement.text || "",
+      text: selectedFormElement?.text || "",
       type: nonInputTextType,
       fontWeight: selectedFormElement["font-weight"] || "normal",
-      strikethrough: selectedFormElement.strikethrough || false,
+      strikethrough: selectedFormElement?.strikethrough || false,
     },
   });
 
@@ -76,18 +76,18 @@ export function FlowTextDetailedView() {
     }
     form.clearErrors("text");
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
+    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement);
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl.children[index].text = values.text;
+      formEl!.children[index].text = values.text;
       if (textDecoration) {
-        formEl.children[index]["font-weight"] = values.fontWeight;
-        formEl.children[index].strikethrough = values.strikethrough;
+        formEl!.children[index]["font-weight"] = values.fontWeight;
+        formEl!.children[index].strikethrough = values.strikethrough;
       } else {
-        delete formEl.children[index]["font-weight"];
-        delete formEl.children[index].strikethrough;
+        delete formEl?.children[index]["font-weight"];
+        delete formEl?.children[index].strikethrough;
       }
-      formEl.children[index].type = nonInputTextType;
+      formEl!.children[index].type = nonInputTextType;
     });
   }
 

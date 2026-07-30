@@ -92,7 +92,7 @@ function NextPrev({
       selectedQ?.type === Q.Phone ||
       selectedQ?.type === Q.EmailPhone ||
       selectedQ?.type === Q.Testimonial ||
-      selectedQ.type === Q.Contact
+      selectedQ?.type === Q.Contact
     ) {
       if (!errorMsg) {
         next();

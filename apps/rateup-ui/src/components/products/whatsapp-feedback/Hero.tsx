@@ -40,11 +40,11 @@ export default function Hero() {
         : "";
 
       d.innerHTML = html + timeHtml;
-      waBody.appendChild(d);
+      waBody?.appendChild(d);
       requestAnimationFrame(() => {
         d.classList.remove("opacity-0", "translate-y-2", "scale-[0.97]");
       });
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody!.scrollTop = waBody?.scrollHeight;
       return d;
     }
 
@@ -57,8 +57,8 @@ export default function Hero() {
         <span class="w-1.5 h-1.5 rounded-full bg-[#9aa6ad] animate-blink [animation-delay:0.2s]"></span>
         <span class="w-1.5 h-1.5 rounded-full bg-[#9aa6ad] animate-blink [animation-delay:0.4s]"></span>
       `;
-      waBody.appendChild(d);
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody?.appendChild(d);
+      waBody!.scrollTop = waBody?.scrollHeight;
       return d;
     }
 
@@ -79,8 +79,8 @@ export default function Hero() {
           100 * (i + 1),
         );
       });
-      waBody.appendChild(wrap);
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody?.appendChild(wrap);
+      waBody!.scrollTop = waBody?.scrollHeight;
       return wrap;
     }
 
@@ -114,11 +114,11 @@ export default function Hero() {
           <span>📈 Response Rate</span>
           <span class="font-extrabold text-[13px] text-[#2a6254]">35%</span>
         </div>`;
-      waBody.appendChild(d);
+      waBody?.appendChild(d);
       requestAnimationFrame(() => {
         d.classList.remove("opacity-0", "translate-y-2", "scale-[0.97]");
       });
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody!.scrollTop = waBody?.scrollHeight;
       countUp(document.getElementById(respId), 580, 662, 1400);
       return d;
     }
@@ -185,7 +185,7 @@ export default function Hero() {
         mkFbCard();
         await sleep(4000);
 
-        waBody.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n: HTMLElement) => {
+        waBody?.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n: HTMLElement) => {
           n.style.transition = "opacity .5s ease";
           n.style.opacity = "0";
         });

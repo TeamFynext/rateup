@@ -392,10 +392,10 @@ export const UserSelector = (props: UserSelectorProps) => {
     name: u.name,
     status: u.status,
   }));
-  if (allowAll) userData.unshift({ id: "all", name: "All Staff", status: "online" });
+  if (allowAll) userData?.unshift({ id: "all", name: "All Staff", status: "online" });
   const { value, onChange } = props as Extract<UserSelectorProps, { allowMultiSelect?: false }>;
   function onValueChange(value: string) {
-    onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
+    onChange(value === "all" ? users?.data.map((u) => u.id) : value, value === "all");
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (

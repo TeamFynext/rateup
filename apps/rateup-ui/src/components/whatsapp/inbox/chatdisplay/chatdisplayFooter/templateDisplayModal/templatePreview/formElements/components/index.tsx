@@ -448,7 +448,8 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
   const isLeadAutomation = automatedReply && automatedReply?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&
-    (waSettings.find((w) => w.phoneId === automatedReply.whatsappSettingsPhoneId) ?? waSettings[0]);
+    (waSettings.find((w) => w.phoneId === automatedReply?.whatsappSettingsPhoneId) ??
+      waSettings[0]);
   const waSettingsId = automatedReply && isLeadAutomation && waSetting ? waSetting.id : null;
   const syncformQuestionsMut = useSyncLeadgenFormQuestions(
     props.leadgenData.data.leadgenFormId,

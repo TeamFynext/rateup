@@ -355,7 +355,7 @@ function getLabelsforConfirmModal(
       };
     case "ShopifyWebhookTopic":
       return {
-        headerTitle: `Disable ${data.event} event`,
+        headerTitle: `Disable ${data?.event} event`,
         headerLabel: "Are you sure to disable this webhook?",
         confirmFunction: confirmFunc,
         confirmFuncArgs,

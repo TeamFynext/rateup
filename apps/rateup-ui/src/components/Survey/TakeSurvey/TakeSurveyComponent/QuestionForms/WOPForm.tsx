@@ -6,7 +6,7 @@ import type { Wop } from "@/types/global";
 import { DEFAULT_WOP } from "../util.tsx";
 import WheelComponent from "../WheelComponent.tsx";
 
-const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop: Wop }) => {
+const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop?: Wop }) => {
   const [price, setPrice] = useState("");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 

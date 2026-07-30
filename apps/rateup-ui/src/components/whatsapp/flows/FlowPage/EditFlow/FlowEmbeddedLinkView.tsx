@@ -37,12 +37,12 @@ export function FlowEmbeddedLinkDetailedView() {
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
   const [nonInputTextType] = useState(
-    selectedFormElement.type === WaFlowFormElementType.nonInputText
+    selectedFormElement?.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
-      : selectedFormElement.type,
+      : selectedFormElement?.type,
   );
   const { t: translations } = useTranslation();
-  const limit = getFlowTextLimit(selectedFormElement.type);
+  const limit = getFlowTextLimit(selectedFormElement?.type);
 
   const schema = z.object({
     text: z
@@ -57,7 +57,7 @@ export function FlowEmbeddedLinkDetailedView() {
   const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
-      text: selectedFormElement.text || "",
+      text: selectedFormElement?.text || "",
       type: nonInputTextType,
       embeddedLinkScreenId: "",
     },
@@ -66,13 +66,13 @@ export function FlowEmbeddedLinkDetailedView() {
   const onSave = form.handleSubmit(
     (values) => {
       const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-      const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
+      const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement);
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-        const footer = formEl.children?.find((data) => data.type === WaFlowFormElementType.footer);
+        const footer = formEl?.children?.find((data) => data.type === WaFlowFormElementType.footer);
 
-        formEl.children[index].text = values.text;
-        formEl.children[index]["on-click-action"] = {
+        formEl!.children[index].text = values.text;
+        formEl!.children[index]["on-click-action"] = {
           name: "navigate",
           next: {
             type: "screen",
@@ -97,7 +97,7 @@ export function FlowEmbeddedLinkDetailedView() {
       <ScrollArea className="h-4/5">
         <div className="flex justify-between">
           <Badge variant="outline" className="text-muted-foreground">
-            {getWaFlowFormElementTypeLabel(selectedFormElement.type)}
+            {getWaFlowFormElementTypeLabel(selectedFormElement?.type)}
           </Badge>
         </div>
         <div className="flex gap-0.5 p-0.5 pr-10">

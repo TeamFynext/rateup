@@ -170,7 +170,7 @@ const RateupPlanModal = ({
   const handleSubmit = (values: z.infer<typeof schema>) => {
     const payload = { ...values, currency: values.currency || undefined };
     if (isEdit) {
-      rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan.id });
+      rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan?.id });
       toast.loading(translations("Hold.. your data is getting updated..."), {
         id: "load-data",
       });

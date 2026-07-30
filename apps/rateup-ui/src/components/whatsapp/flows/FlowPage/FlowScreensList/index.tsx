@@ -81,11 +81,11 @@ function FlowScreensList({
       const newOrder = reorder(elements, source.index, destination.index);
 
       const form = getFormObjFromScreenId(flowJson.screens, destination.droppableId);
-      const footer = form.children.find((child) => child.type === WaFlowFormElementType.footer);
+      const footer = form?.children.find((child) => child.type === WaFlowFormElementType.footer);
 
       updateFlowJson((draft) => {
         const form = getFormObjFromScreenId(draft.screens, destination.droppableId);
-        form.children = [...newOrder, footer];
+        form!.children = [...newOrder, footer];
       });
     } else {
       console.error("Inter-screen dragging Not implemented");

@@ -526,7 +526,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
             <Button
               variant="destructive"
               onClick={() => {
-                removeTeam(memberToDelete.id);
+                removeTeam(memberToDelete?.id);
                 setMemberToDelete(null);
               }}
             >

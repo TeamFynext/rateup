@@ -191,16 +191,16 @@ const ContactDetailedView = ({
                       const group = contactGroup.contactGroup;
 
                       return (
-                        <Card key={group.id} className="p-2">
+                        <Card key={group?.id} className="p-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <Folder className="w-4 h-4 text-indigo-600" />
-                              <span className="text-sm">{group.name}</span>
+                              <span className="text-sm">{group?.name}</span>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              aria-label={`Remove from ${group.name}`}
+                              aria-label={`Remove from ${group?.name}`}
                               onClick={() => {
                                 setSelectedGroup(group);
                                 handleRemoveContactFromGroup(group, [selectedContact.id]);

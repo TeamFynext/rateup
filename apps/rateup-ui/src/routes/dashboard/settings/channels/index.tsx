@@ -56,7 +56,7 @@ function ChannelsPage() {
             waConnected ? (
               <div className="flex items-center justify-between">
                 <span>Accounts</span>
-                <span className="text-foreground">{waSettings.length} connected</span>
+                <span className="text-foreground">{waSettings?.length} connected</span>
               </div>
             ) : null
           }

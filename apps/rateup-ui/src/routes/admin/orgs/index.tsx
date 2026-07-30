@@ -245,7 +245,7 @@ function OrgDisplay() {
 
   if (isLoading) return <RateupLoader className="h-dvh" />;
 
-  const tableData: OrgTableData[] = orgs.map((org) => ({
+  const tableData: OrgTableData[] = orgs?.map((org) => ({
     id: org.id,
     name: org.name,
     createdAt: formatIsoDateStringWithTime(org.createdAt),

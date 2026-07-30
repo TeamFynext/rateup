@@ -142,7 +142,7 @@ function CollectionById() {
 
           <TabsContent value={TestimonialTabs.Edit} className="flex-1">
             <TestimonialEdit
-              currentStyle={collection?.theme!}
+              currentStyle={collection?.theme}
               testimonials={collection?.testimonials ?? []}
               filters={filters}
               isDelete={isDelete}
@@ -156,7 +156,7 @@ function CollectionById() {
           <TabsContent value={TestimonialTabs.Share} className="flex-1">
             <TestimonialShare
               selectedTestimonials={collection?.testimonials ?? []}
-              currentStyle={collection?.theme!}
+              currentStyle={collection?.theme}
             />
           </TabsContent>
         </div>
@@ -261,7 +261,7 @@ function UtilityComponent({
                 checked={isAllSelectedForDelete}
                 disabled={!savedTestimonialIds?.length}
                 onCheckedChange={(checked) => {
-                  if (checked) setSelectedTestimonialIds(savedTestimonialIds);
+                  if (checked) setSelectedTestimonialIds(savedTestimonialIds ?? []);
                   else setSelectedTestimonialIds([]);
                 }}
               />

@@ -137,7 +137,7 @@ export default function WaInboxChatDisplayFooter({
   const platform = getContactPlatform(contact);
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
-    currentUser.teamId,
+    currentUser?.teamId,
     whatsappSettingsPhoneId,
     platform,
   );
@@ -339,17 +339,17 @@ export default function WaInboxChatDisplayFooter({
           },
           mentionedUser,
           triggeredByUser: {
-            id: user.userId,
-            name: user.userName,
+            id: user?.userId,
+            name: user?.userName,
           },
         },
         exchangeProcess: "privateNote",
       },
       sourcePlatform: "INTERNAL",
       sourceIdentifier: null,
-      sendBy: user.userId,
+      sendBy: user?.userId,
       sender: {
-        name: user.userName,
+        name: user?.userName,
         profilePhoto: user?.profilePhoto,
       },
       stats: {

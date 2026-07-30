@@ -101,7 +101,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
   const contacts = data?.users;
   const isSelectedAll = useMemo(() => {
     if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
-      return (contacts?.length ?? 0) > 0 && selectedContacts.length === contacts.length;
+      return (contacts?.length ?? 0) > 0 && selectedContacts.length === contacts?.length;
     }
 
     if (selectedTab === CampaignParticipantSource.GROUP) {
@@ -345,7 +345,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                         {selectedTab === CampaignParticipantSource.INDIVIDUAL && (
                           <>
                             {(filteredContacts?.length ?? 0) > 0 ? (
-                              filteredContacts.map((contact) => {
+                              filteredContacts?.map((contact) => {
                                 const isAlreadySelected = contact?.campaignParticipants?.some(
                                   (c: { campaignId?: string }) => c?.campaignId === campaign?.id,
                                 );
@@ -370,7 +370,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                         {selectedTab === CampaignParticipantSource.GROUP && (
                           <>
                             {(filteredGroups?.length ?? 0) > 0 ? (
-                              filteredGroups.map((group) => (
+                              filteredGroups?.map((group) => (
                                 <CustomerGroup
                                   key={group.id}
                                   group={group}

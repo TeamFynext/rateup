@@ -96,7 +96,7 @@ const ConditionValueInput = ({
       <Select
         onValueChange={valueField.onChange}
         value={valueField.value}
-        items={lifecycles.map((l: GetLabelsRes) => ({
+        items={lifecycles?.map((l: GetLabelsRes) => ({
           value: l?.id,
           label: `${l?.emoji ?? ""} ${l?.name ?? ""}`,
         }))}
@@ -105,7 +105,7 @@ const ConditionValueInput = ({
           <SelectValue placeholder="Select lifecycle" />
         </SelectTrigger>
         <SelectContent>
-          {lifecycles.map((l: GetLabelsRes) => (
+          {lifecycles?.map((l: GetLabelsRes) => (
             <SelectItem key={l?.id} value={l?.id}>
               {l?.emoji} {l?.name}
             </SelectItem>

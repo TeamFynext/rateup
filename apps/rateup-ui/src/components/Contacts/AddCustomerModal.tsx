@@ -208,7 +208,7 @@ const AddCustomerModal = ({
                   onCheckedChange={(checked) => {
                     setCustomerList(checked ? remainingContactIds : []);
                   }}
-                  disabled={contactGroupData.every((customer) =>
+                  disabled={contactGroupData?.every((customer) =>
                     existingContactIds.includes(customer?.id),
                   )}
                 />

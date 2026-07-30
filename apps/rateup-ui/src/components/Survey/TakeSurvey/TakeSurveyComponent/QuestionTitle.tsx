@@ -50,7 +50,7 @@ function QuestionTitle({
       className={classes.questionTitle}
       style={{ fontSize: largeScreen ? "30px" : "20px", ...themeStyles }}
     >
-      {selectedQ.title[selectedLanguage]}
+      {selectedQ?.title[selectedLanguage]}
     </p>
   );
 }

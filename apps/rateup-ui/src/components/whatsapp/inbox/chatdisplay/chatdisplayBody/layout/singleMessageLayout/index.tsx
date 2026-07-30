@@ -148,7 +148,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
   const { user } = useUser();
   const { selectedContact } = useContactsStore();
-  const currentUser = selectedContact.assignedUsers?.find((c) => c.id === user?.userId);
+  const currentUser = selectedContact?.assignedUsers?.find((c) => c.id === user?.userId);
 
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef<HTMLDivElement | null>(null);

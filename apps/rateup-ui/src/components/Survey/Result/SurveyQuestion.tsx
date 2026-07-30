@@ -63,7 +63,7 @@ const SurveyQuestion = ({
     const question =
       version === 1
         ? questions?.find((question) => question?.id === questionId)
-        : flowQuestions.find((q) => q.id === questionId);
+        : flowQuestions?.find((q) => q.id === questionId);
     return {
       type: version === 1 ? question.type : question.metaType,
       questionTitle:

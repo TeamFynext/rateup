@@ -43,7 +43,7 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/e
         surveyThemeData: survey?.webSurveyTheme?.theme,
         pagesThemeData: survey?.webSurveyPagesTheme,
         titleText:
-          thankyouPageTypeObj.titleText ||
+          thankyouPageTypeObj?.titleText ||
           `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
         subtitleText: thankyouPageTypeObj?.subtitleText ?? null,
       };
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/e
         surveyThemeData: survey?.webSurveyTheme?.theme,
         pagesThemeData: survey?.webSurveyPagesTheme,
         titleText:
-          thankyouPageTypeObj.titleText ||
+          thankyouPageTypeObj?.titleText ||
           `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
         subtitleText: thankyouPageTypeObj?.subtitleText ?? null,
       };
