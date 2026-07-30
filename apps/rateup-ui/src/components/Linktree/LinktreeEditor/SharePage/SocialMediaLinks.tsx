@@ -34,7 +34,10 @@ function SocialMediaLinks({
                   id === "iframe" ? (
                     <Button variant="ghost" size="icon-lg" onClick={openIframeModal} />
                   ) : (
-                    <a href={getLink(id, link, linktreeName, linktreeShareUrl)} target="_blank" />
+                    <a
+                      href={getLink(id, link ?? "", linktreeName, linktreeShareUrl)}
+                      target="_blank"
+                    />
                   )
                 }
               >

@@ -73,8 +73,8 @@ function AddLinkModal({
   // SurveyTypeDropdowns states
   const [selectedLinkType, setSelectedLinkType] = useState("web-survey");
   const [surveyTitleAutoCompleteSearch, setSurveyTitleAutoCompleteSearch] = useState("");
-  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState(null);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState("");
   // Web Survey or Whatsapp Survey Link Display name.
   const [wsOrWasLinkDisplayName, setWsOrWasLinkDisplayName] = useState("");
   const [dropdownErrors, setDropdownErrors] = useState({
@@ -180,13 +180,13 @@ function AddLinkModal({
   }, [selectedLinkType, selectedSurveyTitle, selectedTeam, customLinksInputsForm]);
 
   useEffect(() => {
-    setSelectedSurveyTitle(null);
+    setSelectedSurveyTitle("");
     setSurveyTitleAutoCompleteSearch("");
     setWsOrWasLinkDisplayName("");
   }, [selectedLinkType]);
 
   useEffect(() => {
-    setSelectedTeam(null);
+    setSelectedTeam("");
   }, [selectedSurveyTitle]);
 
   useEffect(() => {

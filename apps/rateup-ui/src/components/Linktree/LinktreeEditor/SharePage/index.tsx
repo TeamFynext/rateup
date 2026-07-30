@@ -58,7 +58,7 @@ function SharePage() {
           <SocialMediaLinks
             linktreeName={name}
             linktreeShareUrl={shareUrl}
-            isPublished={isPublished}
+            isPublished={!!isPublished}
           />
         </div>
       </div>
@@ -66,7 +66,7 @@ function SharePage() {
         className={`w-full overflow-auto rounded-lg bg-card p-4 shadow-md ${styles["share-qr-card"]}`}
       >
         <h2>{translations("Share QR Code")}</h2>
-        <ShareLinktree url={shareUrl} isPublished={isPublished} title={name} />
+        <ShareLinktree url={shareUrl} isPublished={!!isPublished} title={name} />
       </div>
       <NoLinksFoundModal opened={isNoLinksFoundModalOpen} onClose={closeNoLinksFoundModal} />
     </div>

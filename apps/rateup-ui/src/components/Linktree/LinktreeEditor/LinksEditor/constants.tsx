@@ -32,8 +32,7 @@ interface LinktreeSurvey {
 }
 
 const getLinkTypeLabel = (value: string) => {
-  const { label } = linkTypeOptions.find((obj) => obj.value === value);
-  return label;
+  return linkTypeOptions.find((obj) => obj.value === value)?.label;
 };
 
 const getSelectedSurveyTitleOptions = (
