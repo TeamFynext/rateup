@@ -278,14 +278,16 @@ const RazorpayPlans = () => {
         ?.map((plan: RazorpayPlan) => ({
           id: plan.planId,
           name: plan.name,
-          createdAt: dayjs.unix(plan.createdAt).format("DD/MM/YYYY HH:mm:ss"),
+          createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
           amount: plan.amount,
           currency: plan.currency,
           period: plan.period,
           interval: plan.interval,
           status: plan.status,
           description: plan.description,
-          canDelete: ![PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status),
+          canDelete: !(
+            plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
+          ),
         }))
     : [];
 

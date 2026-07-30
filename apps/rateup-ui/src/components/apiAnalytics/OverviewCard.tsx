@@ -20,7 +20,7 @@ function OverviewCard({
   trendLogoRequired?: boolean;
   trendValue?: number;
 }) {
-  const isNegative = trendValue < 0;
+  const isNegative = (trendValue ?? 0) < 0;
   return (
     <Card>
       <CardContent>

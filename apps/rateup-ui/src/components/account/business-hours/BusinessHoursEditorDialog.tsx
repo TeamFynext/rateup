@@ -76,7 +76,7 @@ function TimeSlotRow({
       <div className="flex items-center gap-3">
         <Select
           value={slot.openTime}
-          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "openTime", val)}
+          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "openTime", val ?? "")}
           items={timeOptions.map((time) => ({ value: time, label: time }))}
         >
           <SelectTrigger className="w-24">
@@ -95,7 +95,7 @@ function TimeSlotRow({
 
         <Select
           value={slot.closeTime}
-          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "closeTime", val)}
+          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "closeTime", val ?? "")}
           items={timeOptions.map((time) => ({ value: time, label: time }))}
         >
           <SelectTrigger className="w-24">

@@ -499,7 +499,7 @@ export function Column({
             </FieldTitle>
             <Select
               value={newCard.columnId}
-              onValueChange={(val) => setNewCard((prev) => ({ ...prev, columnId: val }))}
+              onValueChange={(val) => setNewCard((prev) => ({ ...prev, columnId: val ?? "" }))}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t("Select a column")}>

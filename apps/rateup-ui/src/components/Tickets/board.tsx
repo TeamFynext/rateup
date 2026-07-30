@@ -322,7 +322,7 @@ export function Board({
                   if (searchQuery) {
                     const query = searchQuery.toLowerCase();
                     if (
-                      !card.title.toLowerCase().includes(query) &&
+                      !card.title?.toLowerCase().includes(query) &&
                       !card.description?.toLowerCase().includes(query)
                     ) {
                       matches = false;
