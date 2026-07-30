@@ -40,7 +40,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
     logo: { logo: logoUrl, styles: logoStyles },
   } = surveyTheme;
 
-  const isOrgLogoPresent = logoUrl?.length > 0;
+  const isOrgLogoPresent = (logoUrl?.length ?? 0) > 0;
   const isMobile = selectedPreview === "mobile";
 
   const shouldUseSurveyTheme = webSurveyPagesTheme["languageTheme"]?.useSurveyTheme;
@@ -74,14 +74,14 @@ function LanguagePage({ survey }: { survey: Survey }) {
 
   useEffect(() => {
     if (startBtnInputRef.current) {
-      startBtnInputRef.current.setAttribute("size", startBtnLabel?.length - 1);
+      startBtnInputRef.current.setAttribute("size", String((startBtnLabel?.length ?? 0) - 1));
     }
   }, [startBtnLabel]);
 
   const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value: string, name: string) => {
+    async (value: string, name?: string) => {
       const data: {
         titleText?: string;
         subtitleText?: string | null;
@@ -90,7 +90,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
+          if (editSurveySelectedQuestion?.["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -120,7 +120,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
     : title;
 
   return (
-    <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
+    <CreditsCard enableCredits={!!isUnsplashImage} url={backgroundImageSrc}>
       <div
         className={cn(
           "flex h-full flex-col gap-4 bg-no-repeat bg-center bg-cover",
@@ -164,7 +164,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
               <AutosaveInput
                 className={startBtnWrapperStyles["start-btn-input-div"]}
                 name="startBtn"
-                value={startBtnLabel}
+                value={startBtnLabel ?? ""}
                 onSave={handleSaveTitleSubtitleStartTextSave}
                 style={{
                   color: "inherit",

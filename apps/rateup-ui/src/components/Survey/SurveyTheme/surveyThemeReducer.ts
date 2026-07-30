@@ -23,6 +23,8 @@ export interface SurveyThemePage {
   input: { primaryColor?: string };
   logo: { styles: CSSProperties; logo?: string | null; logoFile?: File | null };
   confettiEnabled?: boolean;
+  /** Page themes only: mirror the survey theme instead of their own styles. */
+  useSurveyTheme?: boolean;
 }
 
 /** The reducer's working state: the theme document plus editor UI state. */
