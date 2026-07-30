@@ -9,6 +9,7 @@ import ResultComparison from "@/components/Survey/Result/ResultComparison.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow.tsx";
 import { FlowScreenSheet } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
+import type { IEditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import FlowPageHeader, {
   FlowTabEnum,
@@ -34,8 +35,8 @@ function Flow() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-  const [teamOptions, setTeamOptions] = useState([]);
-  const [filterTeams, setFilterTeams] = useState([]);
+  const [teamOptions, setTeamOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [filterTeams, setFilterTeams] = useState<string[]>([]);
 
   const params = useParams({
     strict: false,
@@ -45,7 +46,7 @@ function Flow() {
   const tabView = searchParams.tab as string;
 
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
-  const { data: survey, isPending: isSurveyPending } = useSurvey(flow?.surveyId);
+  const { data: survey, isPending: isSurveyPending } = useSurvey(flow?.surveyId ?? "");
 
   const flowQuestions = useMemo(() => {
     if (!flow?.json?.screens) return [];
@@ -72,13 +73,13 @@ function Flow() {
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
-      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId ?? "");
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name ?? "");
     }
   }, [selectedTeamId]);
 
   useEffect(() => {
-    if (teamOptions) setSelectedTeamId(teamOptions?.[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions?.[0]?.value ?? "");
   }, [teamOptions]);
 
   useEffect(() => {
@@ -97,27 +98,15 @@ function Flow() {
     }
   }, [tabView]);
 
-  if (isPending || isSurveyPending) return <RateupLoader />;
+  if (isPending || isSurveyPending || !flow || !survey) return <RateupLoader />;
 
   return (
     <div className={styles["flow-page-container"]}>
       <div className={styles["flow-page-content"]}>
         <EditFlowContext.Provider
-          value={{
-            flowJson: null,
-            updateFlowJson: null,
-            map: null,
-            updateMap: null,
-            survey,
-            updateSurvey: null,
-            selectedLang: null,
-            selectedScreenId: null,
-            setSelectedScreenId: null,
-            setSelectedFormElementId: null,
-            selectedFormElementId: null,
-            screenNumber: null,
-            setScreenNumber: null,
-          }}
+          // Only the Result and Share tabs render below, so the flow-editor
+          // fields of the context are deliberately left unset.
+          value={{ survey } as IEditFlowContext}
         >
           <SurveyContext.Provider
             value={{
@@ -127,7 +116,7 @@ function Flow() {
               selectedTeamName,
               filterTeams,
               setFilterTeams,
-              filterTags: null,
+              filterTags: [],
               surveyId: survey?.id,
               teams: teamOptions,
             }}
