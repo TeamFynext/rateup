@@ -100,12 +100,14 @@ export function ChoicesCreator({
       .min(1)
       .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
-        const isDuplicate = choices.some((c) => {
+        const isDuplicate = choices.some((c: Choice) => {
+          // Picture choices nest the text under `value.value`, WhatsApp choices
+          // under `value.title`, and web choices store a plain string.
           const choiceValue = image
-            ? c?.value?.value.replace(/\s+/g, "")
+            ? (c?.value as { value?: string })?.value?.replace(/\s+/g, "")
             : surveyType !== SurveyType.Web
-              ? c?.value?.title?.replace(/\s+/g, "")
-              : c?.value?.replace(/\s+/g, "");
+              ? (c?.value as { title?: string })?.title?.replace(/\s+/g, "")
+              : (c?.value as string)?.replace(/\s+/g, "");
           return choiceValue === title.replace(/\s+/g, "");
         });
         return !isDuplicate;
@@ -195,10 +197,13 @@ export function ChoicesCreator({
   };
 
   const handleRemoveChoice = (choice: Choice) => {
-    if (image) updateImageArray({ Key: choice?.value?.image });
+    if (image)
+      updateImageArray({
+        Key: typeof choice?.value === "object" ? choice.value.image : undefined,
+      });
     form.setFieldValue("choices", {
       ...form.values.choices,
-      [selectedLanguage]: choices.filter((c) => c !== choice),
+      [selectedLanguage]: choices.filter((c: Choice) => c !== choice),
     });
   };
 
@@ -213,8 +218,10 @@ export function ChoicesCreator({
     if (imagePickerRef.current) imagePickerRef.current.value = "";
   };
 
-  const handleCropImageSave = (cropedImage: File) => {
-    setSelectedImageFile(cropedImage);
+  const handleCropImageSave = (cropedImage: File | string) => {
+    // Choice images are always cropped from a local blob, so the modal hands
+    // back a File here; it only returns a string for Unsplash-sourced images.
+    setSelectedImageFile(cropedImage as File);
     setFileError("");
   };
 
@@ -257,7 +264,7 @@ export function ChoicesCreator({
           form.values.type === QuestionType.CustomNPS ? "gap-4" : "gap-2",
         )}
       >
-        {choices.map((choice, i) => (
+        {choices.map((choice: Choice, i: number) => (
           <Choice
             key={i}
             choice={image ? choice?.value : choice}
@@ -584,12 +591,14 @@ function Choice({
       .min(1)
       .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
-        const isDuplicate = choices?.some((c, i) => {
+        const isDuplicate = choices?.some((c: Choice, i: number) => {
+          // Picture choices nest the text under `value.value`, WhatsApp choices
+          // under `value.title`, and web choices store a plain string.
           const choiceValue = image
-            ? c?.value?.value.replace(/\s+/g, "")
+            ? (c?.value as { value?: string })?.value?.replace(/\s+/g, "")
             : surveyType !== SurveyType.Web
-              ? c?.value?.title?.replace(/\s+/g, "")
-              : c?.value?.replace(/\s+/g, "");
+              ? (c?.value as { title?: string })?.title?.replace(/\s+/g, "")
+              : (c?.value as string)?.replace(/\s+/g, "");
           return i !== index && choiceValue === title.replace(/\s+/g, "");
         });
         return !isDuplicate;
@@ -657,14 +666,16 @@ function Choice({
     if (imagePickerRef.current) imagePickerRef.current.value = "";
   };
 
-  const handleCropImageSave = (cropedImage: File) => {
-    setSelectedImageFile(cropedImage);
+  const handleCropImageSave = (cropedImage: File | string) => {
+    // Choice images are always cropped from a local blob, so the modal hands
+    // back a File here; it only returns a string for Unsplash-sourced images.
+    setSelectedImageFile(cropedImage as File);
     setFileError("");
     setOpenedEditModal(true);
   };
 
   const handleChangeWeightage = (value: string) => {
-    const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c) => {
+    const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c: Choice) => {
       if (c.value === choice?.value) return { ...c, weightage: value };
       return c;
     });
@@ -694,11 +705,14 @@ function Choice({
         fileKey = await uploadFile(selectedImageFile);
         setFileUploadLoading(false);
       }
-      const updatedChoices = choices?.map((c, i) => {
+      const updatedChoices = choices?.map((c: Choice, i: number) => {
         if (i === index)
           return {
             ...c,
-            value: { value: values.title, image: fileKey ? fileKey : c?.value?.image },
+            value: {
+              value: values.title,
+              image: fileKey ? fileKey : (c?.value as { image?: string })?.image,
+            },
           };
         return c;
       });
@@ -716,10 +730,12 @@ function Choice({
               )
             : values.title,
       };
-      const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c, i) => {
-        if (i === index) return { ...c, ...choiceObj };
-        return c;
-      });
+      const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
+        (c: Choice, i: number) => {
+          if (i === index) return { ...c, ...choiceObj };
+          return c;
+        },
+      );
       form.setFieldValue("choices", {
         ...form.values.choices,
         [selectedLanguage]: updatedChoices,
