@@ -73,7 +73,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const [rawColumnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const columnFilters = useDebounce(rawColumnFilters, 200);
   const navigate = useNavigate();
-  const [campaignIds, setSelectedCampaignIds] = useState([]);
+  const [campaignIds, setSelectedCampaignIds] = useState<string[]>([]);
 
   const { serverFilters, setServerFilters } = useResponseFilterStore();
 

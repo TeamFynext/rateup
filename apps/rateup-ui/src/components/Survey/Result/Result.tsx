@@ -68,7 +68,7 @@ const Result = ({
           }: WaFlowFormElement & { metaType?: WaFlowQuestion["metaType"] }) => ({
             id,
             label,
-            metaType: (type || metaType) as WaFlowQuestion["metaType"],
+            metaType: (type || metaType) as unknown as WaFlowQuestion["metaType"],
             dataSource: dataSource as WaFlowQuestion["dataSource"],
             name,
             header,
@@ -86,7 +86,11 @@ const Result = ({
       {version === 1 ? (
         <Responses survey={survey} defaultLanguage={defaultLanguage} questions={questions} />
       ) : (
-        <WaResponses survey={survey} defaultLanguage={defaultLanguage} questions={flowQuestions} />
+        <WaResponses
+          survey={survey}
+          defaultLanguage={defaultLanguage}
+          questions={flowQuestions ?? []}
+        />
       )}
       <EncryptionPasswordModal
         passwordModalOpened={passwordModalOpened}

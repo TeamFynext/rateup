@@ -48,7 +48,7 @@ const LargeTextResponseSummary = ({
   const [selectedQuestion, setSelectedQuestion] = useState<Question | FormElement | null>(null);
   const { teams } = useContext(SurveyContext);
   const ref = useRef<HTMLDivElement | null>(null);
-  const [height, setHeight] = useState(null);
+  const [height, setHeight] = useState<number | null>(null);
   const { t: translations } = useTranslation();
 
   const getResponseSummary = (questionId: string, teamId?: string) => {
@@ -196,7 +196,10 @@ const LargeTextResponseSummary = ({
                         <Tooltip>
                           <TooltipTrigger
                             render={
-                              <Button size="sm" onClick={() => getResponseSummary(question.id)}>
+                              <Button
+                                size="sm"
+                                onClick={() => getResponseSummary(question.id ?? "")}
+                              >
                                 <Sparkles
                                   className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
                                 />

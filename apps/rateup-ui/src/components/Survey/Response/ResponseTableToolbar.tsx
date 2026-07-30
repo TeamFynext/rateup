@@ -229,7 +229,9 @@ export function ResponseTableToolbar<TData>({
       return (
         <Select
           value={searchTerm || "__none__"}
-          onValueChange={(value) => form.setValue("searchTerm", value === "__none__" ? "" : value)}
+          onValueChange={(value) =>
+            form.setValue("searchTerm", value === "__none__" ? "" : (value ?? ""))
+          }
           items={[
             { value: "__none__", label: translations("Select value") },
             ...numericOptions.map((option) => ({ value: option, label: option })),
@@ -320,7 +322,7 @@ export function ResponseTableToolbar<TData>({
             <Select
               value={searchBy}
               onValueChange={(value) => {
-                form.setValue("searchBy", value);
+                form.setValue("searchBy", value ?? "");
                 form.setValue("searchTerm", "");
               }}
               items={filterableColumns.map((column) => ({ value: column.id, label: column.label }))}
