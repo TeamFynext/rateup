@@ -421,7 +421,15 @@ export const ContainedTextField = React.forwardRef<
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
     className?: string;
-  } & Record<string, any>
+    error?: React.ReactNode;
+    /** Layout escape hatches carried over from the Mantine-era API. */
+    flex?: React.CSSProperties["flex"];
+    mt?: boolean | number | string;
+    style?: React.CSSProperties;
+  } & Omit<
+    React.ComponentPropsWithoutRef<"input">,
+    "onChange" | "onKeyDown" | "value" | "type" | "style" | "className"
+  >
 >(function ContainedTextField(
   { label, description, required, error, rightSection, className, flex, mt, style, ...inputProps },
   ref,

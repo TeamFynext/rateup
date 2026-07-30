@@ -21,6 +21,37 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm as useRHForm, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+
+/** A WhatsApp template row, as the templates endpoint returns it. */
+interface WaTemplateRow {
+  id: string;
+  data?: {
+    name?: string;
+    components?: Array<{
+      type?: string;
+      buttons?: Array<Record<string, unknown>>;
+    }>;
+  };
+}
+
+/** A row inside a list-message section. */
+interface ListRow {
+  title?: string;
+  description?: string;
+}
+
+/** A catalog product row, as the catalog-products endpoint returns it. */
+interface CatalogProduct {
+  retailer_id: string;
+  productProps?: { title?: string };
+}
+
+/** A team member, as the automation assign-node options endpoint returns it. */
+interface AutomationUser {
+  id: string;
+  name: string;
+  teams: Array<{ team_id?: string; team_name?: string }>;
+}
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
@@ -49,6 +80,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
 import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
 import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import type { Board, Column } from "@/components/Tickets/types.ts";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
 import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
 import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
@@ -172,7 +204,9 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node.id]);
 
-  const handleInputChange = <T extends NodeType>(key: keyof NodeTypeMap[T], value: any) => {
+  // Writes any field of the node currently being edited. The child editors
+  // declare their own node's `keyof`, which is assignable to `string` here.
+  const handleInputChange = (key: string, value: unknown) => {
     form.setValue(key as any, value, {
       shouldDirty: true,
     });
@@ -1550,7 +1584,12 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         variant="outline"
         disabled={typedData.sections?.length >= 10}
         onClick={() => {
-          const newSections = [...(typedData.sections || []), { title: "", rows: [] }];
+          const newSections = [
+            ...(typedData.sections || []),
+            // NOTE: seeds `rows`, while the catalog section shape and the editor
+            // above both use `productItems` — see the migration notes.
+            { title: "", rows: [] as string[] },
+          ];
           handleInputChange("sections", newSections);
         }}
         className="mt-2"
@@ -1781,12 +1820,12 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
   const typedData = nodeData;
   const [parameterData, setParameterData] = useImmer<any>(typedData?.parameters || []);
   const templateData =
-    templates?.map((t) => ({
+    templates?.map((t: WaTemplateRow) => ({
       label: t.data?.name,
       value: t.id,
       flowId: t.data?.components?.find((c) => c.type === "BUTTONS")?.buttons?.[0]?.["flow_id"],
     })) || [];
-  const selectedTemplate = templates?.find((t) => t.id === typedData?.template?.id);
+  const selectedTemplate = templates?.find((t: { id: string }) => t.id === typedData?.template?.id);
   const params = useParams({
     strict: false,
   });
@@ -1801,7 +1840,9 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const leadgenData = useMemo(() => {
     if (waSettingsId && metaAssets) {
-      const leadgenNode = data?.matchData?.json?.nodes.find((node) => node.type === "leadgenNode");
+      const leadgenNode = data?.matchData?.json?.nodes.find(
+        (node: { type?: string }) => node.type === "leadgenNode",
+      );
       if (leadgenNode?.data?.leadgenFormId?.length) {
         const leadgenForm = metaAssets?.leadgenForms.find(
           (form) => form.id === leadgenNode?.data?.leadgenFormId,
@@ -1840,7 +1881,8 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
         flex={1}
         error={templateError}
       />
-      {templateData?.find((t) => t.value === typedData?.template?.id)?.flowId && (
+      {templateData?.find((t: { value: string }) => t.value === typedData?.template?.id)
+        ?.flowId && (
         <TeamSelector
           value={typedData.teamId}
           onChange={(id) => {
@@ -1955,14 +1997,15 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
       newContacts[index] = {};
     }
 
-    // Navigate to the nested property and update it
-    let current = newContacts[index];
+    // Navigate to the nested property and update it. The path is dynamic, so
+    // the walk goes through an open view of the contact object.
+    let current = newContacts[index] as Record<string, unknown>;
     for (let i = 0; i < path.length - 1; i++) {
       if (!current[path[i]]) {
         // Initialize as object or array based on next path segment
         current[path[i]] = isNaN(Number(path[i + 1])) ? {} : [];
       }
-      current = current[path[i]];
+      current = current[path[i]] as Record<string, unknown>;
     }
     current[path[path.length - 1]] = value;
 
@@ -2148,9 +2191,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 { value: "MAIN", label: "Main" },
               ]}
               value={phone.type || "CELL"}
-              onChange={(value: "HOME" | "WORK" | "CELL" | "MAIN") => {
+              onChange={(value) => {
+                const typedValue = value as "HOME" | "WORK" | "CELL" | "MAIN";
                 const phones = [...(activeContact?.phones || [])];
-                phones[index] = { ...phones[index], type: value };
+                phones[index] = { ...phones[index], type: typedValue };
                 updateContactField(activeContactIndex, ["phones"], phones);
               }}
               style={{ flex: 1 }}
@@ -2226,9 +2270,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 { value: "OTHER", label: "Other" },
               ]}
               value={email.type || "WORK"}
-              onChange={(value: "WORK" | "HOME" | "OTHER") => {
+              onChange={(value) => {
+                const typedValue = value as "WORK" | "HOME" | "OTHER";
                 const emails = [...(activeContact?.emails || [])];
-                emails[index] = { ...emails[index], type: value };
+                emails[index] = { ...emails[index], type: typedValue };
                 updateContactField(activeContactIndex, ["emails"], emails);
               }}
               style={{ flex: 1 }}
@@ -2391,9 +2436,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 { value: "OTHER", label: "Other" },
               ]}
               value={address.type || "HOME"}
-              onChange={(value: "WORK" | "HOME" | "OTHER") => {
+              onChange={(value) => {
+                const typedValue = value as "WORK" | "HOME" | "OTHER";
                 const addresses = [...(activeContact?.addresses || [])];
-                addresses[index] = { ...addresses[index], type: value };
+                addresses[index] = { ...addresses[index], type: typedValue };
                 updateContactField(activeContactIndex, ["addresses"], addresses);
               }}
               style={{ maxWidth: 200 }}
@@ -2440,9 +2486,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 { value: "OTHER", label: "Other" },
               ]}
               value={url.type || "WORK"}
-              onChange={(value: "WORK" | "HOME" | "OTHER" | "PROFILE") => {
+              onChange={(value) => {
+                const typedValue = value as "WORK" | "HOME" | "OTHER" | "PROFILE";
                 const urls = [...(activeContact?.urls || [])];
-                urls[index] = { ...urls[index], type: value };
+                urls[index] = { ...urls[index], type: typedValue };
                 updateContactField(activeContactIndex, ["urls"], urls);
               }}
               style={{ flex: 1 }}
@@ -2482,15 +2529,15 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
 
   // Transform boards for Select component
   const boards = useMemo(
-    () => options?.map((board) => ({ value: board.id, label: board.title })),
+    () => options?.map((board: Board) => ({ value: board.id, label: board.title })),
     [],
   );
 
   // Get columns for selected board
   const columns = useMemo(() => {
-    const board = options?.find((board) => board.id === selectedBoard?.selectedBoardId);
+    const board = options?.find((board: Board) => board.id === selectedBoard?.selectedBoardId);
     return board
-      ? board.ticketColumns.map((col) => ({
+      ? board.ticketColumns.map((col: Column) => ({
           value: col.id,
           label: col.title,
         }))
@@ -2558,8 +2605,9 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
       const validationRes = await form.validate();
       if (validationRes.hasErrors) return;
       const teamName =
-        options?.data?.flatMap((user) => user.teams)?.find((team) => team.team_id === values.teamId)
-          ?.team_name ?? "";
+        options?.data
+          ?.flatMap((user: AutomationUser) => user.teams)
+          ?.find((team: { team_id?: string }) => team.team_id === values.teamId)?.team_name ?? "";
       handleInputChange("assign", {
         ...typedData?.assign,
         teamId: values.teamId,
@@ -2575,8 +2623,10 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
   const members = useMemo(
     () =>
       options?.data
-        ?.filter((user) => user.teams.some((t) => t.team_id === form.values.teamId))
-        .map((user) => ({ value: user.id, label: user.name })),
+        ?.filter((user: AutomationUser) =>
+          user.teams.some((t: { team_id?: string }) => t.team_id === form.values.teamId),
+        )
+        .map((user: AutomationUser) => ({ value: user.id, label: user.name })),
     [options, form.values.teamId],
   );
 
@@ -2665,7 +2715,7 @@ const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> 
     <div className="flex flex-col gap-4">
       <ContainedSelection
         data={
-          flows?.map((t) => ({
+          flows?.map((t: { dbFlowId?: string; id?: string; name?: string }) => ({
             label: t.name,
             value: t.dbFlowId,
           })) ?? []
@@ -2725,11 +2775,12 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   const syncLeadgenFormsMut = useSyncMetaLeadgenForms(waSettingsId);
 
   const { pages, adAccounts, leadgenForms, ads, formQuestions } = useMemo(() => {
-    let pages = [],
-      adAccounts = [],
-      leadgenForms = [],
-      ads = [],
-      formQuestions = [];
+    type Option = { label: string; value: string };
+    let pages: Option[] = [],
+      adAccounts: Option[] = [],
+      leadgenForms: Option[] = [],
+      ads: Option[] = [],
+      formQuestions: Option[] = [];
     if (metaAssets) {
       pages = metaAssets.pages.map((page) => ({
         label: page.name,
@@ -3077,7 +3128,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
   const products = useMemo(
     () =>
       data
-        ? data.products.map((p) => ({
+        ? data.products.map((p: CatalogProduct) => ({
             value: p.retailer_id,
             label: p?.productProps?.title,
           }))
@@ -3099,7 +3150,9 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
     }
 
     // Filter products to only show those in the selected product set
-    return products.filter((p) => selectedProductSet.productIds.includes(p.value));
+    return products.filter((p: { value: string }) =>
+      selectedProductSet.productIds.includes(p.value),
+    );
   }, [products, typedData.useProductSet, typedData.productSetId, productSets]);
 
   if (isLoading || isPending || isLoadingProductSets) return <RateupLoader />;
@@ -3401,7 +3454,10 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
           variant="outline"
           disabled={typedData.sections?.length >= 10}
           onClick={() => {
-            const newSections = [...(typedData.sections || []), { title: "", rows: [] }];
+            const newSections = [
+              ...(typedData.sections || []),
+              { title: "", rows: [] as ListRow[] },
+            ];
             handleInputChange("sections", newSections);
           }}
           className="mt-2"
@@ -3715,7 +3771,7 @@ const InstagramProductTemplateNodeEditor: React.FC<
   const products = useMemo(
     () =>
       catalogData
-        ? catalogData.products.map((p) => ({
+        ? catalogData.products.map((p: CatalogProduct) => ({
             value: p.retailer_id,
             label: p?.productProps?.title || p.retailer_id,
           }))
