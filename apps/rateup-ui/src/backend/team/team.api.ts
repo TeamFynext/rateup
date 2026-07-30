@@ -9,10 +9,12 @@ export interface ICreateTeam {
 
 export interface IInviteMember {
   name: string;
-  orgId: string;
+  orgId: string | undefined;
   invitedBy: string;
-  teamId: string;
+  /** Null invites the member to the organisation without a team. */
+  teamId: string | null;
   email: string;
+  type?: string;
 }
 
 export interface IEditTeam {

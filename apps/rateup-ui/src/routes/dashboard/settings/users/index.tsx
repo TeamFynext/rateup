@@ -477,7 +477,7 @@ function UsersPage() {
                         ) : (
                           <Select
                             value={userForm.watch("team")}
-                            onValueChange={(value) => userForm.setValue("team", value)}
+                            onValueChange={(value) => userForm.setValue("team", value ?? "")}
                             items={[
                               { value: "none", label: translations("No Team") },
                               ...(teamsDataUser?.data?.map((team: TeamOption) => ({
@@ -758,7 +758,7 @@ function EditMember({
 }: {
   isEditUserDialogOpen: boolean;
   setIsEditUserDialogOpen: (open: boolean) => void;
-  selectedUser: SelectedUser;
+  selectedUser: SelectedUser | null;
   setSelectedUser: (user: SelectedUser | null) => void;
   teams: Array<{ id: string; name: string }>;
   currentUserRole: string;
@@ -787,7 +787,7 @@ function EditMember({
 
     setRole(selectedUser.role || UserRole.MEMBER);
     setProfileImage(
-      selectedUser.profilePhoto ? getFileUrlFromKey(selectedUser.profilePhoto) : null,
+      selectedUser.profilePhoto ? (getFileUrlFromKey(selectedUser.profilePhoto) ?? null) : null,
     );
     setEditableName(selectedUser.name || "");
     setEditablePhone(selectedUser.phone || "");
@@ -923,7 +923,7 @@ function EditMember({
       updateProfile.mutate(profileData, { onSuccess, onError });
     } else {
       updateMemberProfile.mutate(
-        { userId: selectedUser.id, data: profileData },
+        { userId: selectedUser?.id ?? "", data: profileData },
         {
           onSuccess,
           onError: (error: any) => {
@@ -958,9 +958,9 @@ function EditMember({
         new Promise((resolve, reject) => {
           addUserToTeams.mutate(
             {
-              userId: selectedUser.id,
+              userId: selectedUser?.id ?? "",
               teamIds: teamIdsToAdd,
-              userEmail: selectedUser.email,
+              userEmail: selectedUser?.email ?? "",
             },
             {
               onSuccess: resolve,
@@ -975,7 +975,7 @@ function EditMember({
       tasks.push(
         new Promise((resolve, reject) => {
           removeUserFromTeam.mutate(
-            { teamId, userId: selectedUser.id },
+            { teamId, userId: selectedUser?.id ?? "" },
             {
               onSuccess: resolve,
               onError: reject,
@@ -1096,7 +1096,7 @@ function EditMember({
                     </FieldLabel>
                     <Select
                       value={editableGender}
-                      onValueChange={setEditableGender}
+                      onValueChange={(value) => setEditableGender(value ?? "")}
                       disabled={!canEditNameAndPhone}
                       items={[
                         { value: "MALE", label: "Mr" },
@@ -1217,9 +1217,9 @@ function EditMember({
                     ]}
                     onValueChange={(nextRole) => {
                       if (!canEditAll) return;
-                      if (!selectedUser.id) return;
-                      setRole(nextRole);
-                      onChangeRole(selectedUser.id, nextRole);
+                      if (!selectedUser?.id) return;
+                      setRole(nextRole ?? "");
+                      onChangeRole(selectedUser.id, nextRole ?? "");
                     }}
                   >
                     <SelectTrigger id="edit-role" className="h-9">
