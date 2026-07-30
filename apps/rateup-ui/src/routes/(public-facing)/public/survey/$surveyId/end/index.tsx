@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 
 import { getPublicSurvey, getPublicSurveyGoogleLink } from "@/backend/surveys/survey.api";
@@ -72,7 +72,7 @@ function End() {
   const propsToPass = Route.useLoaderData();
   return (
     <ThankYou
-      redirect={redirect}
+      redirect={propsToPass?.redirect}
       kioskMode={propsToPass?.kioskMode ? "y" : "n"}
       surveyIdValue={propsToPass?.surveyId}
       fromShortUrl={false}

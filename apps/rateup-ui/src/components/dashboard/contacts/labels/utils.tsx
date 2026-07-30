@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit2, MoreHorizontal, Trash2 } from "lucide-react";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -11,17 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 
-export interface ContactLabel {
-  id: string;
-  name: string;
-  color: string;
-  description: string | null;
-  createdAt: string;
-  orgId: string;
-  _count: {
-    contactLabels: number;
-  };
-}
+/** Alias for the labels endpoint's row shape, kept for readability here. */
+export type ContactLabel = ContactLabelOption;
 
 interface ColumnsProps {
   onEdit: (label: ContactLabel) => void;

@@ -205,18 +205,20 @@ function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe:
       <p>{label}</p>
       <Carousel className="w-full">
         <CarouselContent>
-          {fe.images?.map((img: { src?: string; [key: string]: unknown }, idx: number) => (
-            <CarouselItem key={idx}>
-              <img
-                src={`data:image/png;base64,${img.src}`}
-                alt={img["alt-text"]}
-                className="max-h-50"
-                style={{
-                  aspectRatio: fe?.["aspect-ratio"] || "4/3",
-                }}
-              />
-            </CarouselItem>
-          ))}
+          {fe.images?.map(
+            (img: { src?: string; "alt-text"?: string; [key: string]: unknown }, idx: number) => (
+              <CarouselItem key={idx}>
+                <img
+                  src={`data:image/png;base64,${img.src}`}
+                  alt={img["alt-text"]}
+                  className="max-h-50"
+                  style={{
+                    aspectRatio: fe?.["aspect-ratio"] || "4/3",
+                  }}
+                />
+              </CarouselItem>
+            ),
+          )}
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />

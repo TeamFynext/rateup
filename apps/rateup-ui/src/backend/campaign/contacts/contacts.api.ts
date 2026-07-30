@@ -109,6 +109,10 @@ export interface ContactLabelOption {
   id: string;
   name: string;
   color?: string;
+  description?: string | null;
+  createdAt?: string;
+  orgId?: string;
+  _count?: { contactLabels: number };
 }
 
 export const getContactLabels = async () => {
