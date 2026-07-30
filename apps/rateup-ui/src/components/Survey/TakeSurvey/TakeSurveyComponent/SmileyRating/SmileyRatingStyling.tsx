@@ -59,6 +59,13 @@ function lighten(color: string, alpha: number): string {
 }
 
 /** How a smiley set is rendered: filled/outline variant, palette, and emoji set. */
+/** Per-smiley colour overrides written by the theme editor. */
+export interface SmileyGradientStyle {
+  color?: Record<number, string>;
+  gradientStartColor?: string;
+  gradientEndColor?: string;
+}
+
 export interface SmileyIconStyle {
   variant: SmileyVariantStyle;
   colorType: SmileyColorType;

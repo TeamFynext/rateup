@@ -17,7 +17,13 @@ function ImageCropModal({
 }: {
   context: { closeModal: (id: string) => void };
   id: string;
-  innerProps: Record<string, unknown>;
+  innerProps: {
+    imageUrl: string;
+    imageName: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string }) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  };
 }) {
   const uid = useId();
   const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } = innerProps;

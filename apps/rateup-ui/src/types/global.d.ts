@@ -191,6 +191,8 @@ declare global {
     uiTextTranslations?: Record<string, Record<string, string>>;
     /** Cached AI summaries of the survey's long-text answers. */
     aiResponseSummary?: ResponseSummary[];
+    /** Advance to the next question automatically once an answer is picked. */
+    webSurveyAutoTransitionToNextQues?: boolean;
     ticketColumnId?: string;
     ticketBoardId?: string;
   }

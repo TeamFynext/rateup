@@ -23,6 +23,7 @@ import {
   getIconStyle,
   getSmileyEmojies,
 } from "./SmileyRatingStyling.tsx";
+import type { SmileyGradientStyle, SmileyIconStyle } from "./SmileyRatingStyling.tsx";
 
 const SMILEY_COUNT = 5;
 
@@ -33,18 +34,19 @@ const SmileyRating = ({
 }: {
   updateResponse: (value: unknown) => void;
   response?: unknown;
-  features?: Record<string, unknown>;
+  features?: { iconStyle?: SmileyIconStyle & SmileyGradientStyle; [key: string]: unknown };
 }) => {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
-  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
+  // The survey context is null on the standalone preview.
+  const { webSurveyAutoTransitionToNextQues } = (useSurveyContext() ?? {}) as Partial<Survey>;
 
   const [iconColor, setIconColor] = useState(null);
   const [customColor, setIsCustomColor] = useState(false);
   const [hoveredValue, setHoveredValue] = useState(-1);
 
-  const updateStringResponse = (value: string) => {
+  const updateStringResponse = (value: number) => {
     let stringValue;
     switch (value) {
       case 1:
@@ -69,7 +71,7 @@ const SmileyRating = ({
 
   const primaryColor = "dark";
 
-  const iconStyle = features?.iconStyle || {
+  const iconStyle: SmileyIconStyle & SmileyGradientStyle = features?.iconStyle || {
     variant: SmileyVariantStyle.Default,
     colorType: SmileyColorType.Default,
   };
@@ -89,7 +91,7 @@ const SmileyRating = ({
       if (!variant) return;
       if (![SmileyVariantStyle.Custom].includes(variant) && colorType !== SmileyColorType.Default) {
         setIsCustomColor(true);
-        const newColor = {};
+        const newColor: Record<number, string> = {};
         const colorArray = generateGradient(gradientStartColor, gradientEndColor, 5, primaryColor);
         Object.values(SmileyResponse)
           .reverse()
@@ -105,7 +107,7 @@ const SmileyRating = ({
     }
   }, [features]);
 
-  const currentValue = getNumericValue(response);
+  const currentValue = getNumericValue(response as string);
 
   const handleSelect = async (value: number) => {
     updateStringResponse(value);
