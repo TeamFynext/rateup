@@ -40,7 +40,7 @@ export interface QuestionFormFeatures {
 export interface QuestionFormValues {
   features?: Record<string, QuestionFormFeatures>;
   choices?: Record<string, Choice[]>;
-  tnc?: TNC;
+  tnc?: Record<string, TNC>;
   wop?: Wop;
   [key: string]: unknown;
 }

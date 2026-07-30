@@ -13,7 +13,7 @@ import { luminance } from "./isLightColor.ts";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
-export function TermsNConditionsForm({ tncData }: { tncData?: TNC }) {
+export function TermsNConditionsForm({ tncData }: { tncData?: Record<string, TNC> }) {
   const [opened, setOpened] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);

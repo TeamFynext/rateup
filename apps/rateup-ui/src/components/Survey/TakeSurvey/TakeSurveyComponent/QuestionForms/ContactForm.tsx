@@ -1,4 +1,5 @@
 import { IconMail } from "@tabler/icons-react";
+import type { CountryCode } from "libphonenumber-js";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -51,7 +52,7 @@ const ContactForm = ({
         <div className="flex flex-col gap-2.5">
           <span style={{ color: themePrimaryColor }}>{selectedFeature.phone.headText}</span>
           <PhoneInput
-            defaultCountry={selectedFeature?.phone?.defaultCountryCode || "IN"}
+            defaultCountry={(selectedFeature?.phone?.defaultCountryCode as CountryCode) || "IN"}
             international
             countryCallingCodeEditable={false}
             placeholder={translations("Enter phone number")}

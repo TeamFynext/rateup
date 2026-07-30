@@ -102,7 +102,7 @@ declare global {
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules | any;
-    tnc?: TNC;
+    tnc?: Record<string, TNC>;
     enableNpsAnalytics?: boolean;
     optinScreenId?: string;
     wop?: Wop;
@@ -199,6 +199,8 @@ declare global {
     responseWebhookEndpoint?: string;
     ticketColumnId?: string;
     ticketBoardId?: string;
+    /** Owning organisation's name, included by the public survey endpoint. */
+    orgName?: string;
   }
 
   interface STeam {
