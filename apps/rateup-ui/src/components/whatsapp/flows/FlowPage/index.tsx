@@ -32,6 +32,7 @@ import SurveySettings from "../../../Survey/Settings/index.tsx";
 import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow.tsx";
 import { FlowPreviewPhoneContent } from "../Preview/PreviewPanel.tsx";
 import EditFlow from "./EditFlow/EditFlow.tsx";
+import type { IEditFlowContext } from "./EditFlow/EditFlowContext.ts";
 import { EditFlowContext } from "./EditFlow/EditFlowContext.ts";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader/index.tsx";
 
@@ -44,16 +45,16 @@ function FlowPage() {
   const dbFlowId = params.dbFlowId as string;
 
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
-  const { data: surveyData } = useSurvey(flow?.surveyId);
+  const { data: surveyData } = useSurvey(flow?.surveyId ?? "");
   const flowEditable = flow?.status === WaFlowStatus.DRAFT;
 
-  const [flowJson, updateFlowJson] = useImmer<WaFlowJson>(undefined);
-  const [survey, updateSurvey] = useImmer<Survey>(undefined); // survey created from flowJson which we will be using to parse responses of the flow
-  const { data: questions } = useQuestions(survey?.id);
-  const [map, updateMap] = useImmer<WaFlowMap>(undefined); // map of flowElementName to questionType & also responseId to corresponding response type or value
+  const [flowJson, updateFlowJson] = useImmer<WaFlowJson | undefined>(undefined);
+  const [survey, updateSurvey] = useImmer<Survey | undefined>(undefined); // survey created from flowJson which we will be using to parse responses of the flow
+  const { data: questions } = useQuestions(survey?.id ?? "");
+  const [map, updateMap] = useImmer<WaFlowMap | undefined>(undefined); // map of flowElementName to questionType & also responseId to corresponding response type or value
 
-  const [selectedFormElementId, setSelectedFormElementId] = useState<string>(undefined); // if no question is selected, then show question types list in the right side
-  const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
+  const [selectedFormElementId, setSelectedFormElementId] = useState<string | undefined>(undefined); // if no question is selected, then show question types list in the right side
+  const [selectedScreenId, setSelectedScreenId] = useState<string | undefined>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
   const { update } = useRouteParams();
@@ -96,10 +97,12 @@ function FlowPage() {
     if (!flowEditable) return;
     if (questions && flowJson) {
       updateSurvey((draft) => {
-        draft.questions = questions;
+        draft!.questions = questions;
       });
       updateFlowJson((draft) => {
-        if (!flowJson.screens && questions?.length > 2) {
+        // The guard above proves both the draft and the questions are loaded.
+        if (!draft) return;
+        if (!flowJson.screens && (questions?.length ?? 0) > 2) {
           {
             const id = getUniqueRandomAlphaId(6, []);
             draft.screens = [
@@ -109,7 +112,7 @@ function FlowPage() {
                 footerBtnLabel: "Next",
               }),
             ];
-            updateFlowJsonNavigationAndDataPassing(draft, flow);
+            updateFlowJsonNavigationAndDataPassing(draft, flow!);
             questions
               ?.filter((data) => Object.values(QuestionType).includes(data.type as QuestionType))
               .forEach((newQ) => {
@@ -119,26 +122,26 @@ function FlowPage() {
                   id: newQ.id,
                   label: newQ.label,
                 };
-                const screenToBeEdited = getScreenObjById(draft.screens, id);
+                const screenToBeEdited = getScreenObjById(draft.screens, id)!;
                 screenToBeEdited.layout.children
-                  .find((se) => se.type === "Form")
+                  .find((se) => se.type === "Form")!
                   .children.push(newElement as any);
-                updateFlowJsonNavigationAndDataPassing(draft, flow);
+                updateFlowJsonNavigationAndDataPassing(draft, flow!);
               });
           }
         }
         if (!draft.screens) draft.screens = [];
         for (const screen of draft.screens) {
           const form = screen.layout.children.find((se) => se.type === "Form");
-          for (let i = 0; i < form?.children?.length; i++) {
-            const fe = form.children[i];
-            const question = getQuestionFromFlowFormElementName(fe.name, questions, map);
+          for (let i = 0; i < (form?.children?.length ?? 0); i++) {
+            const fe = form!.children[i]!;
+            const question = getQuestionFromFlowFormElementName(fe.name ?? "", questions!, map!);
             if (question) {
               const {
                 formElements: { questionElement },
               } = getFlowElementJsonFromQuestion(question);
               questionElement.name = fe.name;
-              form.children[i] = questionElement;
+              form!.children[i] = questionElement;
             }
           }
         }
@@ -150,14 +153,14 @@ function FlowPage() {
   // Things common to [surveyId].tsx
   const { user } = useUser();
 
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
-  const [, setdefaultLanguage] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [, setdefaultLanguage] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-  const [teamOptions, setTeamOptions] = useState([]);
-  const [filterTeams, setFilterTeams] = useState([]);
-  const [filterTags] = useState([]);
+  const [teamOptions, setTeamOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [filterTeams, setFilterTeams] = useState<string[]>([]);
+  const [filterTags] = useState<string[]>([]);
   const [screenNumber, setScreenNumber] = useState(0);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
@@ -172,16 +175,16 @@ function FlowPage() {
   }, [tabView]);
 
   useEffect(() => {
-    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value ?? "");
   }, [teamOptions]);
   useEffect(() => {
     if (survey) {
       if (tab !== FlowTabEnum.Responses) {
-        setSelectedLanguage(selectedLanguage ? selectedLanguage : survey?.languages?.[0]);
+        setSelectedLanguage(selectedLanguage ? selectedLanguage : (survey?.languages?.[0] ?? null));
       } else {
         setSelectedLanguage("");
       }
-      setdefaultLanguage(survey?.languages?.[0]);
+      setdefaultLanguage(survey?.languages?.[0] ?? null);
       const options = survey?.teams?.map((team) => ({
         value: team?.id,
         label: team?.name,
@@ -192,14 +195,14 @@ function FlowPage() {
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
-      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId ?? "");
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name ?? "");
     }
   }, [selectedTeamId]);
 
   // surveyId end
 
-  if (isPending || !flow || !flowJson || !survey) return <RateupLoader />;
+  if (isPending || !flow || !flowJson || !survey || !map) return <RateupLoader />;
 
   let currentPreviewScreen: WaFlowScreen | undefined;
   if (flowJson.screens?.length) {
@@ -209,21 +212,25 @@ function FlowPage() {
 
   return (
     <EditFlowContext.Provider
-      value={{
-        flowJson,
-        updateFlowJson,
-        map,
-        updateMap,
-        survey,
-        updateSurvey,
-        selectedLang,
-        selectedScreenId,
-        setSelectedScreenId,
-        setSelectedFormElementId,
-        selectedFormElementId,
-        screenNumber,
-        setScreenNumber,
-      }}
+      // The guard above proves every field below is loaded; the immer updaters
+      // still carry the `| undefined` of their seed state.
+      value={
+        {
+          flowJson,
+          updateFlowJson,
+          map,
+          updateMap,
+          survey,
+          updateSurvey,
+          selectedLang,
+          selectedScreenId,
+          setSelectedScreenId,
+          setSelectedFormElementId,
+          selectedFormElementId,
+          screenNumber,
+          setScreenNumber,
+        } as IEditFlowContext
+      }
     >
       <SelectedLanguageContext.Provider value={{ selectedLanguage: "en", defaultLanguage: "en" }}>
         <div className="relative h-full">
