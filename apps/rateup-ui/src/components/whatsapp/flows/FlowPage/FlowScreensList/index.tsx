@@ -42,7 +42,7 @@ function FlowScreensList({
 
   const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-  const firstRender = useRef<HTMLElement | null>(null);
+  const firstRender = useRef<string | null>(null);
   const [pageNo, handlers] = useCounter(0, {
     min: 0,
     max: flowJson?.screens?.length ?? 0,
@@ -76,7 +76,7 @@ function FlowScreensList({
       return;
     if (destination.droppableId === source.droppableId) {
       const screen = getScreenObjById(flowJson.screens, destination.droppableId);
-      const elements = getFlowFormElementsFromScreen(screen) as WaFlowFormElement[];
+      const elements = getFlowFormElementsFromScreen(screen!) as WaFlowFormElement[];
 
       const newOrder = reorder(elements, source.index, destination.index);
 
@@ -85,7 +85,7 @@ function FlowScreensList({
 
       updateFlowJson((draft) => {
         const form = getFormObjFromScreenId(draft.screens, destination.droppableId);
-        form!.children = [...newOrder, footer];
+        form!.children = [...newOrder, footer!];
       });
     } else {
       console.error("Inter-screen dragging Not implemented");
