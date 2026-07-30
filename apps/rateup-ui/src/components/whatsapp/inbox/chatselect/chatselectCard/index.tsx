@@ -126,7 +126,7 @@ export default function WaInboxChatSelectCard({
   const primaryAssignee = contact?.assignedUsers?.[0];
 
   const { mutate: toggleFavorite } = useToggleFavorite();
-  const assignMut = useAssignInboxToUer(contact?.id, filterData);
+  const assignMut = useAssignInboxToUer(contact?.id, filterData ?? "");
 
   function handleToggleFavorite(e: React.MouseEvent) {
     e.stopPropagation();
@@ -146,8 +146,8 @@ export default function WaInboxChatSelectCard({
       contactId,
       waCreatedAt: new Date().toISOString(),
       messageBody: {
-        send: null as WaInboxMessage["send"],
-        receive: null as WaInboxMessage["receive"],
+        send: undefined as WaInboxMessage["send"],
+        receive: undefined as WaInboxMessage["receive"],
         internal: {
           text: { body: `Chat assigned to ${user.userName}` },
           assignedUsers: [] as WaInternalMessageBody["assignedUsers"],
@@ -358,11 +358,11 @@ export default function WaInboxChatSelectCard({
             </span>
           )}
 
-          {contact?.mentionCount > 0 && (
+          {(contact?.mentionCount ?? 0) > 0 && (
             <span className="inline-flex items-center gap-0.75 text-[10px] font-extrabold text-primary">
               <AtSign className="size-2.75" />
               {translations("Mention")}
-              {contact.mentionCount > 1 ? ` ${contact.mentionCount}` : ""}
+              {(contact.mentionCount ?? 0) > 1 ? ` ${contact.mentionCount}` : ""}
             </span>
           )}
 

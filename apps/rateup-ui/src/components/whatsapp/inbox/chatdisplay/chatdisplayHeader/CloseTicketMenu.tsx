@@ -68,7 +68,7 @@ interface CloseTicketMenuProps {
  * a ticket that no tab but Spam can show would be a dead end.
  */
 export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuProps>) {
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -76,7 +76,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const blockmut = useBlockWhatsAppUser();
   const spamMutation = useSetContactSpam();
   const { filterData } = useContactStore();
-  const reopenMutation = useReopenConversation(filterData);
+  const reopenMutation = useReopenConversation(filterData ?? undefined);
 
   const closed = isTicketClosed(contact);
   const isSpam = !!contact?.isSpam;
@@ -223,7 +223,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             conversationStatus: status,
             resolutionResult,
             closedAt: closed ? null : new Date().toISOString(),
-            closedUser: closed ? null : { name: user?.userName, id: user?.userId },
+            closedUser: closed ? null : { name: user?.userName ?? "", id: user?.userId ?? "" },
             assignedUsers: [],
           }));
         },
@@ -350,7 +350,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
                   }
                   onClick={() => applyStatus(status, null)}
                 >
-                  <Icon className={closedStatusIcon?.color} />
+                  {Icon && <Icon className={closedStatusIcon?.color} />}
                   {tooltip ? (
                     <CustomTooltip trigger={<p>{label}</p>} content={<p>{tooltip}</p>} />
                   ) : (

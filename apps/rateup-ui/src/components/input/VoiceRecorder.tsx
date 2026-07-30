@@ -20,7 +20,7 @@ interface VoiceRecordState {
   audioContext: AudioContext | null;
   source: MediaStreamAudioSourceNode | null;
   chunks: Blob[];
-  fileKey: string;
+  fileKey: string | null;
   setFileKey: (value: string | null) => void;
   setIsRecording: (value: boolean) => void;
   setAudioUrl: (value: string | null) => void;
@@ -71,7 +71,7 @@ const VoiceRecorder = () => {
 
     if (!mimeType) {
       alert("None of the required audio formats are supported by this browser.");
-      return null;
+      return;
     }
 
     const newStream = await navigator.mediaDevices.getUserMedia({
@@ -118,7 +118,7 @@ const VoiceRecorder = () => {
       try {
         const key = await uploadFile(file);
         setFileKey(key);
-        setAudioUrl(getFileUrlFromKey(key));
+        setAudioUrl(getFileUrlFromKey(key) ?? null);
       } catch (error) {
         console.error(error);
       }

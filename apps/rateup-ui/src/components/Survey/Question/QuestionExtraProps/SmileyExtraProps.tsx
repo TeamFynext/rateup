@@ -74,8 +74,8 @@ const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
   // This editor works on the question's feature bag directly (smiley styling is
   // not per-language), unlike the language-keyed editors.
-  const features: QuestionFormFeatures = form.values.features
-    ? ({ ...form.values.features } as QuestionFormFeatures)
+  const features: QuestionFormFeatures = form.values?.features
+    ? ({ ...form.values?.features } as QuestionFormFeatures)
     : {};
   const [opened, setOpened] = useState(true);
 
@@ -105,7 +105,7 @@ const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
     if (field !== "variant" && !features?.iconStyle?.variant) {
       updateData["variant"] = SmileyVariantStyle.Default;
     }
-    form.setFieldValue("features", {
+    form.setFieldValue?.("features", {
       ...features,
       iconStyle: { ...features?.iconStyle, ...updateData },
     });
@@ -114,7 +114,7 @@ const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   };
 
   const updateSmileyColor = (smiley: number, value: string) => {
-    form.setFieldValue("features", {
+    form.setFieldValue?.("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
@@ -124,7 +124,7 @@ const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   };
 
   const updateSmileyEmoji = (smiley: number, value: string) => {
-    form.setFieldValue("features", {
+    form.setFieldValue?.("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
