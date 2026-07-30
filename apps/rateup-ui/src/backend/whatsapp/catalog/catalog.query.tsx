@@ -108,9 +108,9 @@ export const useAllWaCatalogs = () => {
     queryKey: ["allWaCatalog"],
   });
 };
-export const useConnectedWaCatalog = (whatsappSettingsPhoneId: string) => {
+export const useConnectedWaCatalog = (whatsappSettingsPhoneId: string | undefined) => {
   return useQuery({
-    queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId),
+    queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId ?? ""),
     queryKey: ["connected_catalog", whatsappSettingsPhoneId],
     enabled: !!whatsappSettingsPhoneId,
   });

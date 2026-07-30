@@ -106,8 +106,8 @@ export function Shopify() {
         <ShopifySchedules
           shopifyProducts={shopifyProducts}
           shopifyInfo={shopifyInfo}
-          waTemplates={templates}
-          teams={teams?.data}
+          waTemplates={templates ?? []}
+          teams={teams?.data ?? []}
         />
       </TabsContent>
       <TabsContent value="settings">

@@ -157,8 +157,8 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
               value={wabaId}
               items={wabaIds.map((id) => ({ value: id, label: id }))}
               onValueChange={(value) => {
-                setWabaId(value);
-                handleConnect(value);
+                setWabaId(value ?? "");
+                handleConnect(value ?? "");
               }}
             >
               <SelectTrigger id="waba-id">

@@ -86,7 +86,12 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
         ...ruleData,
         whatsappSettingsPhoneIds: ruleData.whatsappSettingsPhoneIds || [],
         groups: ruleData.groups || [],
-        actions: ruleData.actions || [],
+        // The API models "no value" as `null`; the form schema (and `reset`'s
+        // deep-partial shape) models it as an absent value.
+        actions: (ruleData.actions || []).map((action) => ({
+          ...action,
+          value: action.value ?? undefined,
+        })),
         options: ruleData.options || defaultValues.options,
       });
     }

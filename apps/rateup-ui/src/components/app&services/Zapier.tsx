@@ -107,9 +107,9 @@ function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
         <Field>
           <FieldLabel htmlFor="zapier-org-id">Organization ID</FieldLabel>
           <InputGroup>
-            <InputGroupInput id="zapier-org-id" value={user.user.orgId} readOnly />
+            <InputGroupInput id="zapier-org-id" value={user.user?.orgId ?? ""} readOnly />
             <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={user.user.orgId} />
+              <ApiCopyButton value={user.user?.orgId ?? ""} />
             </InputGroupAddon>
           </InputGroup>
         </Field>

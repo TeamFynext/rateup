@@ -52,7 +52,7 @@ function OverviewCard({
                 <TrendingUp className="w-3 h-3" />
               )}
               <span>
-                {trendValue > 0 ? "+" : ""}
+                {(trendValue ?? 0) > 0 ? "+" : ""}
                 {trendValue ?? 0}
               </span>
             </div>

@@ -104,7 +104,7 @@ export function MetaAgentPage() {
           <Select
             value={activeSettingsId}
             onValueChange={(value) => {
-              setSelectedId(value);
+              setSelectedId(value ?? undefined);
               setSection(null);
             }}
             items={waSettings.map((s) => ({ value: s.id, label: s.phoneDisplayName || s.phone }))}
