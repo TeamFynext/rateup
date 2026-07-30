@@ -93,7 +93,7 @@ export default function WaInboxContactDetails({
   isOpen,
   setIsOpen,
 }: Readonly<WaInboxContactDetailsProps>) {
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const { customFields } = useCustomFieldsContext();
   const { updateContactById, setSelectedContact } = useContactsStore();
   const deleteContactMutation = useContactDeleteMutation(groupId);
@@ -540,7 +540,7 @@ export default function WaInboxContactDetails({
                       control={control}
                       render={({ field }) => (
                         <LifecycleSelector
-                          value={field.value}
+                          value={field.value ?? ""}
                           onChange={field.onChange}
                           className="w-full"
                           placeholder={t("Enter lifecycle")}
@@ -951,7 +951,7 @@ export default function WaInboxContactDetails({
                         whileHover={{ scale: 1.02, x: 2 }}
                       >
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-                          {user.name.charAt(0).toUpperCase()}
+                          {user.name?.charAt(0).toUpperCase()}
                         </div>
                         <p className="text-xs font-light text-foreground">{user.name}</p>
                       </motion.div>
@@ -1047,7 +1047,10 @@ function DeleteContactButton({
   handleToggle,
 }: {
   contact: { id: string; name?: string };
-  deleteContactMutation: { mutate: (id: string, options?: unknown) => void; isPending?: boolean };
+  deleteContactMutation: {
+    mutate: (id: string, options?: { onSuccess?: () => void }) => void;
+    isPending?: boolean;
+  };
   handleToggle: () => void;
 }) {
   const { t } = useTranslation();
