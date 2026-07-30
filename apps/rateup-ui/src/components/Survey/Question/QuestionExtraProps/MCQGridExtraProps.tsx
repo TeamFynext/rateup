@@ -31,7 +31,7 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
   const [updateQuestion, setUpdateQuestion] = useState<{
     question: string;
     index: number;
-  }>(null);
+  } | null>(null);
   const [opened, setOpened] = useState(false);
   const open = () => setOpened(true);
   const close = () => setOpened(false);
@@ -44,8 +44,8 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
       setError(translations("Question already present"));
       return;
     }
-    form.setFieldValue("features", {
-      ...form.values.features,
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: {
         ...features,
         questions: [...questions, newQuestion],
@@ -57,8 +57,8 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
 
   const handleDragEnd = ({ source, destination }: DropResult) => {
     const reorderedQuestions = reorder(questions, source.index, destination?.index || 0);
-    form.setFieldValue("features", {
-      ...form.values.features,
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: {
         ...features,
         questions: reorderedQuestions,
@@ -66,17 +66,17 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
     });
   };
   const handleUpdateQuestion = () => {
-    if (questions[updateQuestion.index] == updateQuestion.question) return;
-    if (questions.includes(updateQuestion.question)) {
+    if (questions[updateQuestion?.index ?? -1] == updateQuestion?.question) return;
+    if (questions.includes(updateQuestion?.question ?? "")) {
       setUpdateError(translations("Question already present"));
       return;
     }
-    form.setFieldValue("features", {
-      ...form.values.features,
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: {
         ...features,
         questions: questions.map((q: string, index: number) =>
-          index == updateQuestion.index ? updateQuestion.question : q,
+          index == updateQuestion?.index ? updateQuestion?.question : q,
         ),
       },
     });
@@ -85,8 +85,8 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
   };
 
   const handleDeleteQuestion = (question: string) => {
-    form.setFieldValue("features", {
-      ...form.values.features,
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: {
         ...features,
         questions: questions.filter((q: string) => q !== question),
@@ -188,7 +188,7 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
                 onChange={(event) => {
                   setUpdateError("");
                   setUpdateQuestion({
-                    ...updateQuestion,
+                    index: updateQuestion?.index ?? 0,
                     question: event.target.value,
                   });
                 }}

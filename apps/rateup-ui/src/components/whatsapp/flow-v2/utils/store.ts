@@ -124,14 +124,14 @@ const useFlowStoreV3 = create<StoreState>()(
                   : child.type;
 
               const isNonInteractive =
-                NO_NAME_TYPES.has(mappedType) || NO_NAME_TYPES.has(child.type);
+                NO_NAME_TYPES.has(mappedType ?? "") || NO_NAME_TYPES.has(child.type ?? "");
 
               const isNoVisible =
-                NO_VISIBLE_TYPES.has(mappedType) || NO_VISIBLE_TYPES.has(child.type);
+                NO_VISIBLE_TYPES.has(mappedType ?? "") || NO_VISIBLE_TYPES.has(child.type ?? "");
 
               // Auto-generate name if required and missing
               const name =
-                REQUIRES_NAME_TYPES.includes(mappedType) && !child.name
+                REQUIRES_NAME_TYPES.includes(mappedType ?? "") && !child.name
                   ? `field_${Math.random().toString(36).substring(2, 10)}`
                   : child.name;
 
@@ -206,8 +206,8 @@ const useFlowStoreV3 = create<StoreState>()(
         }),
       setCurrentElement: (elementId, type) =>
         set((state) => {
-          state.currentElementId = elementId;
-          state.currentElementType = type;
+          state.currentElementId = elementId ?? null;
+          state.currentElementType = type ?? null;
           state.detailActiveEditor = EditorType.ElementEditor;
         }),
       setExpandedElementId: (elementId) =>
@@ -335,8 +335,8 @@ const useFlowStoreV3 = create<StoreState>()(
             } else {
               screen.layout.children.push(component);
             }
-            state.currentElementId = component.id;
-            state.expandedElementId = component.id; // Auto-expand new element
+            state.currentElementId = component.id ?? null;
+            state.expandedElementId = component.id ?? null; // Auto-expand new element
           }
         }),
 
