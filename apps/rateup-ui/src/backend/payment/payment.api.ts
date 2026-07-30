@@ -59,8 +59,10 @@ export interface ICreateCheckoutType {
   planId: string;
   planName: string;
   period: string;
-  orgId: string;
+  orgId: string | undefined;
   isAnnualMessageLimit: boolean;
+  rateupPlanId?: string;
+  trialDays?: number;
 }
 
 export async function createCheckoutSession(data: ICreateCheckoutType) {

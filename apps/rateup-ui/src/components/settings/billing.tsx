@@ -46,8 +46,11 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 /** A payment order row, as the orders endpoint returns it. */
-interface PaymentOrder {
+export interface PaymentOrder {
   id: string;
+  subscriptionId?: string;
+  hasTrial?: boolean;
+  subExpiry?: string;
   amount?: number;
   currency?: string;
   createdAt?: string;
@@ -58,7 +61,7 @@ interface PaymentOrder {
   subscriptionEndedAt?: string;
 }
 
-export function UsageCard({ subscription }: { subscription: Subscription }) {
+export function UsageCard({ subscription }: { subscription?: Subscription }) {
   const { t: translations } = useTranslation();
   const { data: stats, refetch, isFetching } = useUsageStats();
 
@@ -129,7 +132,10 @@ export function OrderHistory({
         ) : (
           <div className="space-y-3">
             {orders
-              ?.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              ?.sort(
+                (a, b) =>
+                  new Date(b.createdAt ?? "").getTime() - new Date(a.createdAt ?? "").getTime(),
+              )
               .map((item, index) => (
                 <div
                   key={index}
@@ -205,7 +211,7 @@ export const Billing = ({
   refreshOrders,
   isRefetching,
 }: {
-  subscription: Subscription;
+  subscription?: Subscription;
   activeOrderData: PaymentOrder | null;
   latestOrderData: PaymentOrder | null;
   processingPayment: boolean;
@@ -256,14 +262,14 @@ export const Billing = ({
     });
 
     if (subscription?.basePlan?.stripeProduct) {
-      CancelStripeSubscription.mutate(null, {
+      CancelStripeSubscription.mutate(undefined, {
         onSuccess: (_r) => {
           setCancelResult(true);
           setCancelDialogOpened(false);
         },
       });
     } else {
-      CancelRazorpaySubscription.mutate(null, {
+      CancelRazorpaySubscription.mutate(undefined, {
         onSuccess: (_r) => {
           setCancelResult(true);
           setCancelDialogOpened(false);
@@ -520,7 +526,7 @@ export const Billing = ({
                       {translations("Nil")}
                     </p>
                   </div>
-                  {!["FREE PLAN", "RATEUP TRIAL"].includes(subscription?.basePlan?.name) &&
+                  {!["FREE PLAN", "RATEUP TRIAL"].includes(subscription?.basePlan?.name ?? "") &&
                     activeOrderData?.subscriptionStatus === "cancelled" && (
                       <Button
                         onClick={() => setOpenedUpgradeModal(true)}
@@ -671,7 +677,7 @@ const TeamStats = ({
   subscription,
 }: {
   stats: UsageStats | undefined;
-  subscription: Subscription;
+  subscription?: Subscription;
 }) => {
   const { t: translations } = useTranslation();
   const statsArray = [
@@ -731,7 +737,7 @@ const SurveyStats = ({
   subscription,
 }: {
   stats: UsageStats | undefined;
-  subscription: Subscription;
+  subscription?: Subscription;
 }) => {
   const { t: translations } = useTranslation();
   const isActive = subscription?.features?.webSurvey?.active;
@@ -806,7 +812,7 @@ const WhatsappStats = ({
   subscription,
 }: {
   stats: UsageStats | undefined;
-  subscription: Subscription;
+  subscription?: Subscription;
 }) => {
   const { t: translations } = useTranslation();
   const isActive = subscription?.features?.whatsapp?.active;
@@ -880,7 +886,7 @@ const AIStats = ({
   subscription,
 }: {
   stats: UsageStats | undefined;
-  subscription: Subscription;
+  subscription?: Subscription;
 }) => {
   const { t: translations } = useTranslation();
   const aiFeature = subscription?.features?.ai;
@@ -951,7 +957,7 @@ const LoyaltyStats = ({
   subscription,
 }: {
   stats: UsageStats | undefined;
-  subscription: Subscription;
+  subscription?: Subscription;
 }) => {
   const { t: translations } = useTranslation();
   const loyalty = subscription?.features?.loyalty;
