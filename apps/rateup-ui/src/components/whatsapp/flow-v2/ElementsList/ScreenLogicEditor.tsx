@@ -59,8 +59,8 @@ export const ScreenLogicEditor = () => {
       const existingJumps = getLogicJumps(currentScreenId);
 
       if (existingJumps && existingJumps.length > 0) {
-        const stringActions = [];
-        const objectActions = [];
+        const stringActions: FlowLogicJump[] = [];
+        const objectActions: FlowLogicJumpComponentLevel[] = [];
 
         // Split the data based on action type
         existingJumps.forEach((item: any) => {

@@ -30,7 +30,7 @@ function useElementSize<T extends HTMLElement>() {
   return { ref, ...size };
 }
 
-export default function ThankyouPageThemeView({ survey }) {
+export default function ThankyouPageThemeView({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
 
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
@@ -70,8 +70,12 @@ export default function ThankyouPageThemeView({ survey }) {
   );
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value, name) => {
-      const data = {};
+    async (value: string, name: string) => {
+      const data: {
+        titleText?: string;
+        subtitleText?: string | null;
+        startButtonText?: string;
+      } = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;
@@ -116,7 +120,7 @@ export default function ThankyouPageThemeView({ survey }) {
           <div className="flex h-full w-full flex-col items-center justify-center">
             <ThemeTitle
               value={newTitle}
-              onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+              onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
           </div>

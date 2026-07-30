@@ -149,8 +149,8 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (dbFlow && logicJumps.length === 0 && componentLeventLogicJumps.length === 0) {
-      const stringActions = [];
-      const objectActions = [];
+      const stringActions: FlowLogicJump[] = [];
+      const objectActions: FlowLogicJumpComponentLevel[] = [];
 
       // Split the data based on action type
       (dbFlow?.logicJumps?.[selectedScreenId] || []).forEach((item) => {

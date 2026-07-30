@@ -38,13 +38,13 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   const otherInputRef = useRef<HTMLInputElement>(null);
   const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] = useState(false);
 
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const { control, watch, setValue } = useForm<MSQFormValues>({
     defaultValues: {
       selectedOptions: [],
-      otherText: response?.find((r) => r?.other)?.other || "",
+      otherText: response?.find((r: { other?: string }) => r?.other)?.other || "",
     },
   });
   const selectedOp = watch("selectedOptions");
@@ -54,14 +54,16 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
     if (response) {
       setValue(
         "selectedOptions",
-        response?.map((r) => (r?.other ? selectedFeature?.other.title : r?.value)),
+        response?.map((r: { other?: string; value?: string }) =>
+          r?.other ? selectedFeature?.other.title : r?.value,
+        ),
       );
     }
   }, [response]);
 
   const handleSelectedOp = (values: string[]) => {
     setValue("selectedOptions", values);
-    const res = values?.map((val) => options?.find((op) => op?.value === val));
+    const res = values?.map((val: string) => options?.find((op: Choice) => op?.value === val));
     if (values.includes(selectedFeature?.other?.title)) {
       if (otherInput?.length) updateResponse([...res, { other: otherInput }]);
       else updateResponse(null);
@@ -88,7 +90,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   if (selectedFeature?.other?.isEnabled) {
     data.push(selectedFeature?.other?.title);
   } else {
-    data.filter((op) => op !== selectedFeature?.other?.title);
+    data.filter((op: unknown) => op !== selectedFeature?.other?.title);
   }
 
   return (
@@ -132,7 +134,9 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
                         className="border-none bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
                         onChange={(e) => {
                           field.onChange(e);
-                          const res = options?.filter((op) => selectedOp?.includes(op?.value));
+                          const res = options?.filter((op: Choice) =>
+                            selectedOp?.includes(op?.value),
+                          );
                           updateResponse([...res, { other: e.target.value }]);
                         }}
                       />

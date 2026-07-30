@@ -11,7 +11,21 @@ import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
-const ContactForm = ({ features }: { features?: Record<string, unknown> }) => {
+/** Per-field configuration of a Contact question. */
+interface ContactFieldConfig {
+  isEnabled?: boolean;
+  headText?: string;
+  defaultCountryCode?: string;
+}
+
+const ContactForm = ({
+  features,
+}: {
+  features?: Record<
+    string,
+    { name?: ContactFieldConfig; phone?: ContactFieldConfig; email?: ContactFieldConfig }
+  >;
+}) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];

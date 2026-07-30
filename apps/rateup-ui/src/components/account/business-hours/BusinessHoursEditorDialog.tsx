@@ -35,6 +35,9 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 import type { BusinessHoursFormValues, DayKey } from "./schema.ts";
+
+/** One open/close window within a day's schedule. */
+type TimeSlot = BusinessHoursFormValues["schedule"][DayKey]["timeSlots"][number];
 import { businessHoursFormSchema, days, timeOptions } from "./schema.ts";
 
 interface Props {
@@ -54,13 +57,18 @@ function TimeSlotRow({
   handleTimeSlotChange,
   removeTimeSlot,
 }: {
-  slot: { start?: string; end?: string };
+  slot: TimeSlot;
   slotIndex: number;
-  day: string;
-  daySchedule: { slots?: Array<{ start?: string; end?: string }> };
-  slotError?: string;
-  handleTimeSlotChange: (day: string, slotIndex: number, field: string, value: string) => void;
-  removeTimeSlot: (day: string, slotIndex: number) => void;
+  day: DayKey;
+  daySchedule: { isOpen: boolean; timeSlots: TimeSlot[] };
+  slotError?: Partial<Record<"openTime" | "closeTime", { message?: string }>>;
+  handleTimeSlotChange: (
+    day: DayKey,
+    slotIndex: number,
+    field: "openTime" | "closeTime",
+    value: string,
+  ) => void;
+  removeTimeSlot: (day: DayKey, slotIndex: number) => void;
 }) {
   const { t } = useTranslation();
   return (

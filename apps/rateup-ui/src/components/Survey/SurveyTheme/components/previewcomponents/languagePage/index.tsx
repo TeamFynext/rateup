@@ -82,7 +82,11 @@ function LanguagePage({ survey }: { survey: Survey }) {
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
     async (value: string, name: string) => {
-      const data = {};
+      const data: {
+        titleText?: string;
+        subtitleText?: string | null;
+        startButtonText?: string;
+      } = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;
