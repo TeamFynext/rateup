@@ -25,7 +25,7 @@ function QuestionForm() {
   );
 }
 
-function getFormAlignment(alignment) {
+function getFormAlignment(alignment: string) {
   if (!alignment) return "flex-start";
   switch (alignment) {
     case "left":

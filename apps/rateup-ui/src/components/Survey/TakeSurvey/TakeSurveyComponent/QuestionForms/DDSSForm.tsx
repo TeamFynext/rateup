@@ -40,8 +40,8 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
 
-  const data = options?.map((op) => op?.value);
-  const items = data?.map((op) => ({ value: op, label: op }));
+  const data = options?.map((op: Choice) => op?.value);
+  const items = data?.map((op: string) => ({ value: op, label: op }));
   useEffect(() => {
     if (response) {
       setSelectedOp(response.value);
@@ -53,8 +53,8 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
   }, []);
 
-  const handleSelectedOp = (value) => {
-    const res = options?.find((op) => op?.value === value);
+  const handleSelectedOp = (value: string) => {
+    const res = options?.find((op: Choice) => op?.value === value);
     updateResponse(res);
   };
 

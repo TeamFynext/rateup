@@ -1,6 +1,6 @@
 import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
 
-function surveyThemeReducer(state, action) {
+function surveyThemeReducer(state: SurveyThemeState, action: SurveyThemeAction) {
   const { payload } = action;
   const { selectedPageTab, surveyTheme, selectedPreview } = state;
   const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab);

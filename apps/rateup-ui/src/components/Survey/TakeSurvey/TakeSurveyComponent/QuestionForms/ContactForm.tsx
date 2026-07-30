@@ -11,7 +11,7 @@ import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
-const ContactForm = ({ features }) => {
+const ContactForm = ({ features }: { features?: Record<string, unknown> }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];

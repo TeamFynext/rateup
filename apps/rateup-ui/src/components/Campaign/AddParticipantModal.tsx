@@ -43,6 +43,7 @@ import {
   CampaignParticipantSource,
   ContactGroupType,
 } from "@/types/enums.ts";
+import type { Campaign } from "@/types/global";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 import StatePagination from "./CampaignContactPagination.tsx";
@@ -111,7 +112,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
     if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
       const selectableCampaigns =
-        campaignData?.data?.filter((c) => c?.campaignParticipantsCount) || [];
+        campaignData?.data?.filter((c: Campaign) => c?.campaignParticipantsCount) || [];
 
       return (
         selectableCampaigns.length > 0 && selectedCampaigns.length === selectableCampaigns.length
@@ -187,7 +188,8 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
       case CampaignParticipantSource.CAMPAIGN: {
         const selectableCampaigns =
-          campaignData?.data?.filter((c) => (c?.campaignParticipantsCount ?? 0) > 0) ?? [];
+          campaignData?.data?.filter((c: Campaign) => (c?.campaignParticipantsCount ?? 0) > 0) ??
+          [];
 
         setSelectedCampaigns(checked ? selectableCampaigns : []);
         break;
@@ -203,7 +205,9 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
     ? contactGroup?.data.filter((g) => g.name.toLowerCase().includes(searchText.toLowerCase()))
     : contactGroup?.data;
   const filteredCampaigns = searchText
-    ? campaignData?.data.filter((g) => g.name.toLowerCase().includes(searchText.toLowerCase()))
+    ? campaignData?.data.filter((g: Campaign) =>
+        g.name.toLowerCase().includes(searchText.toLowerCase()),
+      )
     : campaignData?.data;
 
   const getSelectedCount = () => {
@@ -343,7 +347,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                             {filteredContacts?.length > 0 ? (
                               filteredContacts.map((contact) => {
                                 const isAlreadySelected = contact?.campaignParticipants?.some(
-                                  (c) => c?.campaignId === campaign?.id,
+                                  (c: { campaignId?: string }) => c?.campaignId === campaign?.id,
                                 );
                                 return (
                                   <Individual
@@ -385,7 +389,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                         {selectedTab === CampaignParticipantSource.CAMPAIGN && (
                           <>
                             {filteredCampaigns?.length > 0 ? (
-                              filteredCampaigns.map((campaign) => (
+                              filteredCampaigns.map((campaign: Campaign) => (
                                 <CustomerCampaign
                                   key={campaign.id}
                                   campaign={campaign}

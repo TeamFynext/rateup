@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import type { ChangeEvent } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 
@@ -13,7 +14,7 @@ export function TextAreaForm() {
 
   const [inputValue, setInputValue] = useState(response || "");
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.currentTarget.value;
 
     const updatedResponse = newValue?.replace(/\n+/g, ", ");

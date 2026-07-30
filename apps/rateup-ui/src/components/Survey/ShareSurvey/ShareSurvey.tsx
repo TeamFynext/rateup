@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { updateSurvey } from "@/backend/surveys/survey.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -160,7 +161,7 @@ const ShareSurvey = ({
     },
   });
 
-  function shareButtonAction(btn) {
+  function shareButtonAction(btn: { id: string; [key: string]: unknown }) {
     switch (btn) {
       case "fb":
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
@@ -407,7 +408,7 @@ const ShareSurvey = ({
                           }
                         </h4>
                         <ul className="list-disc space-y-1 pl-4 text-sm text-red-500">
-                          {item?.errors?.map((error, index) => (
+                          {item?.errors?.map((error: string, index: number) => (
                             <li key={index}>{error}</li>
                           ))}
                         </ul>
@@ -641,7 +642,19 @@ export const CopyLinkComponent = ({
   );
 };
 
-const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation, survey }) => {
+const PubliShSettingsModal = ({
+  opened,
+  close,
+  editPublish,
+  surveyUpdateMutation,
+  survey,
+}: {
+  opened: boolean;
+  close: () => void;
+  editPublish: boolean;
+  surveyUpdateMutation: SurveyUpdateMutation;
+  survey: Survey;
+}) => {
   const uid = useId();
   const { t: translations } = useTranslation();
   const [publishChoice, setPublishChoice] = useState<PublishEnum>(PublishEnum.NOW);

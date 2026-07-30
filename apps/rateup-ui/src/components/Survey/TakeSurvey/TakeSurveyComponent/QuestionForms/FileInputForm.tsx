@@ -59,7 +59,7 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
     handleUploadedFiles();
   }, [file]);
 
-  const handleRemoveFile = async (filekey) => {
+  const handleRemoveFile = async (filekey: string) => {
     setIsRemoving(true);
     await deleteUploadedFiles({
       fileKeyArray: [{ Key: filekey }],

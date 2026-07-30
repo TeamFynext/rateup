@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-const TncExtraProps = ({ form }) => {
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
+
+const TncExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const { t: translations } = useTranslation();

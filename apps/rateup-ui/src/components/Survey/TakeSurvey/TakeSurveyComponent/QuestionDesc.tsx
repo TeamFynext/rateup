@@ -1,10 +1,17 @@
 import { useContext } from "react";
+import type { CSSProperties } from "react";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { cn } from "@/lib/utils";
 
-function QuestionDesc({ largeScreen, themeStyles }) {
+function QuestionDesc({
+  largeScreen,
+  themeStyles,
+}: {
+  largeScreen: boolean;
+  themeStyles?: CSSProperties;
+}) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (

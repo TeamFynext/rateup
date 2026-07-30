@@ -14,6 +14,7 @@ import { SurveyType } from "@/types/enums.ts";
 import { reorder } from "@/utils/questions.ts";
 
 import { ChoicesCreator } from "./ChoicesCreator.tsx";
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
 
 /**
  * NOTE: this component reads `form.values` and calls `form.setFieldValue` —
@@ -29,7 +30,7 @@ interface MCQGridForm {
   setFieldValue?: (path: string, value: unknown) => void;
 }
 
-const MCQGridExtraProps = ({ form, qId }: { form: MCQGridForm; qId: string }) => {
+const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: string }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {};
   const questions = form.values?.features?.[selectedLanguage]?.questions || [];

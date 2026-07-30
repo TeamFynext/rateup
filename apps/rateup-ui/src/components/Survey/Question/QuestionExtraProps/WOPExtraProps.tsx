@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 
 import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
 
 // ── ColorInput ────────────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ type WopValues = {
   segColors: string[];
 };
 
-const WOPExtraProps = ({ form }) => {
+const WOPExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
   const { t: translations } = useTranslation();
 

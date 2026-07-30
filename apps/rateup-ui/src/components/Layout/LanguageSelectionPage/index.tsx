@@ -41,7 +41,7 @@ function LanguageSelectionPage({
   };
 
   const languageTypeQuestionObj =
-    questionsArr?.find((question) => question.type === PageType.Language) ||
+    questionsArr?.find((question: Question) => question.type === PageType.Language) ||
     defaultTitleSubtitleStartButtonTexts;
   const { titleText, subtitleText, startButtonText } = languageTypeQuestionObj;
 

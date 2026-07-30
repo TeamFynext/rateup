@@ -7,12 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import type { TNC } from "@/types/global";
 
 import { luminance } from "./isLightColor.ts";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
-export function TermsNConditionsForm({ tncData }) {
+export function TermsNConditionsForm({ tncData }: { tncData?: TNC }) {
   const [opened, setOpened] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);

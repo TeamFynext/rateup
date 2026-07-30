@@ -14,6 +14,7 @@ import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/Text
 import { SmileyResponse } from "@/types/enums.ts";
 
 import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
 
 export enum SmileyVariantStyle {
   Default = "Default",
@@ -69,7 +70,7 @@ function ColorInput({
   );
 }
 
-const SmileyExtraProps = ({ form }) => {
+const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
   const features = form.values.features ? { ...form.values.features } : {};
   const [opened, setOpened] = useState(true);

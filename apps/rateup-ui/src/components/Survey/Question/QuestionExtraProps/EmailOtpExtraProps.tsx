@@ -1,6 +1,5 @@
 import { IconInfoCircle, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useId, useContext, useRef, useState } from "react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -31,6 +30,8 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { emailPattern } from "@/utils/constants.ts";
 
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
+
 enum AllowEmailForOTP {
   allEmail = "All Emails",
   emailFromList = "Emails from list",
@@ -46,7 +47,7 @@ const EmailOtpExtraProps = ({
   qId,
   surveyLanguages,
 }: {
-  form: UseFormReturn<FieldValues>;
+  form: QuestionExtraPropsForm;
   qId: string;
   surveyLanguages: string[];
 }) => {
