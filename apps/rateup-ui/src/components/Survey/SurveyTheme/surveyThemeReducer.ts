@@ -16,6 +16,8 @@ export interface SurveyThemePage {
     mobileBg: SurveyThemeBgLayer;
     desktopBgImgFile?: File | null;
     mobileBgImgFile?: File | null;
+    /** Page themes only: reuse the survey theme's background. */
+    useSurveyBackground?: boolean;
   };
   title: { styles: CSSProperties };
   subtitle: { styles: CSSProperties };

@@ -25,7 +25,7 @@ function ButtonStyles() {
   const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { button } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { button } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
@@ -64,7 +64,7 @@ function ButtonStyles() {
       <div className={"custom-color-picker-and-heading-container"}>
         <h2>Background Color</h2>
         <CustomColorPicker
-          value={button?.styles?.backgroundColor}
+          value={String(button?.styles?.backgroundColor ?? "")}
           onChange={handleBackgroundColorChange}
           withoutEyedropper
         />
@@ -73,7 +73,7 @@ function ButtonStyles() {
       <div className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
-          value={button?.styles?.color}
+          value={String(button?.styles?.color ?? "")}
           onChange={handleTextColorChange}
           withoutEyedropper
         />

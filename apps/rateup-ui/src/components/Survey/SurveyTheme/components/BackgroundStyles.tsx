@@ -23,7 +23,7 @@ function BackgroundStyles() {
   const selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
   const surveyTheme = useSurveyThemeContextValue();
-  const { bg, confettiEnabled } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { bg, confettiEnabled } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
@@ -82,7 +82,8 @@ function BackgroundStyles() {
     [selectedPreview],
   );
 
-  const { bgColor, chooseBgRadioInputValue, imageUrl } = bg[selectedPreview + "Bg"];
+  const { bgColor, chooseBgRadioInputValue, imageUrl } =
+    bg[(selectedPreview + "Bg") as "desktopBg" | "mobileBg"];
 
   const isSurveyPageTab = selectedPageTab === ThemeTabEnum.SURVEY;
   const useSurveyBackground = !isSurveyPageTab && bg.useSurveyBackground;
@@ -98,7 +99,7 @@ function BackgroundStyles() {
       {selectedPageTab === ThemeTabEnum.THANKYOU && (
         <CustomSwitch
           className={styles["confetti-switch"]}
-          checked={confettiEnabled}
+          checked={!!confettiEnabled}
           onChange={handleConfettiChange}
           label={!confettiEnabled ? "Enable Confetti" : "Disable Confetti"}
         />
@@ -131,7 +132,7 @@ function BackgroundStyles() {
           <div className="custom-color-picker-and-heading-container">
             <CustomColorPicker
               id={`${uid}-image`}
-              value={bgColor}
+              value={bgColor ?? ""}
               onChange={handleBgColorPickerChange}
               withoutEyedropper
             />
@@ -142,7 +143,7 @@ function BackgroundStyles() {
           <div className="flex flex-col">
             {selectedPreview === "desktop" && (
               <LocalOrUnsplashImagePicker
-                value={imageUrl}
+                value={imageUrl ?? ""}
                 label={"Desktop"}
                 forDevice={"desktop"}
                 onImageSelected={handleDesktopBgImagePickerChange}
@@ -151,7 +152,7 @@ function BackgroundStyles() {
 
             {selectedPreview === "mobile" && (
               <LocalOrUnsplashImagePicker
-                value={imageUrl}
+                value={imageUrl ?? ""}
                 label={"Mobile"}
                 forDevice={"mobile"}
                 onImageSelected={handleMobileBgImagePickerChange}

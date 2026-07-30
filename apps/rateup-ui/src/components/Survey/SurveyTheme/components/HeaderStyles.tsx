@@ -24,7 +24,7 @@ function HeaderStyles() {
   const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { title } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { title } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 

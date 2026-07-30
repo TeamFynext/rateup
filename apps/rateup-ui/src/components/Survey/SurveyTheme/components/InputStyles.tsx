@@ -11,7 +11,7 @@ import {
 function InputStyles() {
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { input } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { input } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 

@@ -20,7 +20,7 @@ function LogoStyles() {
   const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { logo } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { logo } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
