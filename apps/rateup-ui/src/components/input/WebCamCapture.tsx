@@ -13,8 +13,8 @@ const videoConstraints = {
 interface WebcamProps {
   height?: string | number;
   width?: string | number;
-  setCapturedImg: any;
-  close;
+  setCapturedImg: (dataUrl: string) => void;
+  close: () => void;
 }
 
 const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: WebcamProps) => {

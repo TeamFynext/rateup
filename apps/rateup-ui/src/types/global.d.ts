@@ -225,6 +225,8 @@ declare global {
     ticketBoardId?: string;
     /** Owning organisation's name, included by the public survey endpoint. */
     orgName?: string;
+    /** Welcome page theme, included by the survey templates endpoint. */
+    WelcomeTheme?: { bgType?: string; bgStyles?: React.CSSProperties };
   }
 
   interface STeam {

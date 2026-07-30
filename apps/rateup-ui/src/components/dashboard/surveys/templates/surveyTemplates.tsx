@@ -10,7 +10,7 @@ const SurveyTemplates = ({
 }: {
   survey: Survey;
   setSelectedTemplate: (survey: Survey) => void;
-  bgTemp?: string;
+  bgTemp?: React.CSSProperties;
   open: () => void;
 }) => {
   return (
@@ -21,7 +21,9 @@ const SurveyTemplates = ({
         open();
       }}
       style={{
-        ...(survey?.WelcomeTheme?.bgType === "bgcolor" ? survey?.WelcomeTheme?.bgStyles : bgTemp),
+        ...(survey?.WelcomeTheme?.bgType === "bgcolor"
+          ? (survey?.WelcomeTheme?.bgStyles ?? {})
+          : bgTemp),
         width: "300px",
         minHeight: "150px",
         cursor: "pointer",
