@@ -217,7 +217,25 @@ export const useChatSocket = () => {
   }, [browserId, queryClient, messageStore]);
 };
 
-const handleNotificationWithSound = ({ message, navigate }) => {
+/** The inbox-notification slice of the socket payload this handler reads. */
+interface ChatSocketMessage {
+  type?: string;
+  inbox?: {
+    contact?: { id?: string; name?: string };
+    message?: {
+      messageId?: string;
+      messageBody?: { exchangeProcess?: string };
+    };
+  };
+}
+
+const handleNotificationWithSound = ({
+  message,
+  navigate,
+}: {
+  message: ChatSocketMessage | null | undefined;
+  navigate: ReturnType<typeof useNavigate>;
+}) => {
   const pathnamesMap = {
     inbox: "/dashboard/inbox",
   };

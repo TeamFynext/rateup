@@ -12,7 +12,56 @@ export function parseStringWithVariables(string: string): string[] {
   return dynamicVariables;
 }
 
-export function parseTemplate(template) {
+/**
+ * The raw Meta template payload as stored on a template row. It is only ever
+ * read structurally here, so these describe the fields this parser touches
+ * rather than the full WhatsApp schema.
+ */
+interface RawTemplateButton {
+  type?: string;
+  text?: string;
+  flow_id?: string | number;
+  example?: string | string[];
+  [key: string]: unknown;
+}
+
+interface RawTemplateComponent {
+  type: string;
+  format?: string;
+  text?: string;
+  code_expiration_minutes?: number;
+  example?: { header_handle?: string[]; body_text?: string[][] };
+  buttons?: RawTemplateButton[];
+  cards?: { components?: RawTemplateComponent[] }[];
+}
+
+interface RawTemplate {
+  templateType?: string;
+  whatsappSettingsPhoneId?: string;
+  defaultValues?: {
+    whatsappSettingsPhoneId?: string;
+    productCarousel?: { cardIndex: number; product_retailer_id?: string }[];
+    [key: string]: unknown;
+  };
+  data?: {
+    name?: string;
+    category?: WaTemplateCategory;
+    status?: string;
+    language?: string;
+    components?: RawTemplateComponent[];
+  };
+}
+
+/** A single card of a media (non-product) carousel, as the UI consumes it. */
+interface MediaCarouselCard {
+  format: string;
+  body: string;
+  buttons: RawTemplateButton[];
+  header: string | null;
+  example: string[];
+}
+
+export function parseTemplate(template: RawTemplate) {
   const parsedTemplate: any = {};
   parsedTemplate.name = template?.data?.name;
   parsedTemplate.category = template?.data?.category;
@@ -52,13 +101,13 @@ export function parseTemplate(template) {
       parsedTemplate.code_expiration_minutes = component?.code_expiration_minutes;
     } else if (component.type.toLowerCase() === "buttons") {
       if (template?.data?.category !== WaTemplateCategory.AUTHENTICATION) {
-        component.buttons.map((data) => {
+        component.buttons?.map((data: RawTemplateButton) => {
           if (data?.example && Array.isArray(data.example)) {
             data.example = data.example?.[0];
           }
         });
       }
-      const parsedButtons = component.buttons.map((button) => {
+      const parsedButtons = component.buttons?.map((button: RawTemplateButton) => {
         if (template?.data?.category === WaTemplateCategory.AUTHENTICATION) {
           return {
             type: WHATSAPP_BUTTON_TYPE.OTP,
@@ -75,15 +124,18 @@ export function parseTemplate(template) {
       });
       parsedTemplate["buttons"] = parsedButtons;
     } else if (component.type.toLowerCase() === "carousel") {
-      const headerComp = component.cards[0].components.find(
-        (c) => c.type.toLowerCase() === "header",
+      const headerComp = component.cards?.[0]?.components?.find(
+        (c: RawTemplateComponent) => c.type.toLowerCase() === "header",
       );
       if (headerComp?.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT) {
-        const cards = component.cards.map((card, index) => {
+        const cards = component.cards?.map((card, index: number) => {
           const cardDefaultValue = template?.defaultValues?.productCarousel?.find(
             (p) => p.cardIndex === index,
           );
-          const cardCarousel = {
+          const cardCarousel: {
+            button: RawTemplateButton;
+            product_retailer_id?: string;
+          } = {
             button: {
               type: "",
               text: "",
@@ -93,20 +145,20 @@ export function parseTemplate(template) {
           };
           for (const cardComponent of card?.components ?? []) {
             if (cardComponent.type.toLowerCase() === "buttons") {
-              cardComponent.buttons.map((data) => {
+              cardComponent.buttons?.map((data: RawTemplateButton) => {
                 if (data?.example && Array.isArray(data.example)) {
                   data.example = data.example?.[0];
                 }
               });
-              cardCarousel["button"] = cardComponent.buttons[0];
+              cardCarousel["button"] = cardComponent.buttons?.[0];
             }
           }
           return cardCarousel;
         });
         parsedTemplate["productCarousel"] = cards;
       } else {
-        const cards = component.cards.map((card) => {
-          const cardCarousel = {
+        const cards = component.cards?.map((card) => {
+          const cardCarousel: MediaCarouselCard = {
             format: "IMAGE",
             body: "",
             buttons: [],
@@ -116,13 +168,12 @@ export function parseTemplate(template) {
           for (const cardComponent of card?.components ?? []) {
             if (cardComponent.type.toLowerCase() === "header") {
               cardCarousel.format = cardComponent?.format ?? "IMAGE";
-              cardCarousel[cardComponent.type.toLowerCase()] =
-                cardComponent?.example?.header_handle?.[0];
+              cardCarousel.header = cardComponent?.example?.header_handle?.[0];
             } else if ("body" === cardComponent.type.toLowerCase()) {
-              cardCarousel[cardComponent.type.toLowerCase()] = cardComponent.text;
+              cardCarousel.body = cardComponent.text;
               cardCarousel["example"] = cardComponent.example?.body_text?.[0] ?? [];
             } else if (cardComponent.type.toLowerCase() === "buttons") {
-              cardComponent.buttons.map((data) => {
+              cardComponent.buttons?.map((data: RawTemplateButton) => {
                 if (data?.example && Array.isArray(data.example)) {
                   data.example = data.example?.[0];
                 }

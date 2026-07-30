@@ -31,7 +31,7 @@ export const setGAConsent = (consent: "granted" | "denied") => {
 };
 
 // For button click event
-export const gAnalyticsAndFbEvent = (gAcategory, fbEventName, label) => {
+export const gAnalyticsAndFbEvent = (gAcategory: string, fbEventName: string, label: string) => {
   if (isProduction) {
     analyseEvent({
       action: "button_click",

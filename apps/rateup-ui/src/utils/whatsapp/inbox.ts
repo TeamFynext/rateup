@@ -310,16 +310,16 @@ export function validateInboxTemplateSending(
         switch (componentC.format) {
           case "IMAGE":
             const hasDefaultImage = !!defaultValues?.image?.link;
-            const hasSelectedImage =
-              !!sendHeaderComponent?.parameters[0]?.[componentC?.format.toLowerCase()]?.link;
+            const hasSelectedImage = !!sendHeaderComponent?.parameters[0]?.image?.link;
             return hasDefaultImage || hasSelectedImage;
           case "VIDEO":
           case "DOCUMENT":
             const hasDefaultFile = !!createTemplateComponents.find(
               (data) => data.type === WaTemplateComponentTypeUpperCase.HEADER,
             )?.example?.header_handle?.[0];
-            const hasSelectedFile =
-              !!sendHeaderComponent?.parameters[0]?.[componentC?.format.toLowerCase()]?.link;
+            // "VIDEO" | "DOCUMENT" lowercased — the media key on the parameter.
+            const mediaKey = componentC.format.toLowerCase() as "video" | "document";
+            const hasSelectedFile = !!sendHeaderComponent?.parameters[0]?.[mediaKey]?.link;
             return hasDefaultFile || hasSelectedFile;
           case "LOCATION":
             if (!sendHeaderComponent) return false;

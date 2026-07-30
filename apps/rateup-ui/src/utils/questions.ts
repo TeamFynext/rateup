@@ -51,13 +51,18 @@ export function createPage(
   surveyType = SurveyType.Web,
 ): Question {
   const isWaFlow = surveyType === SurveyType.WaFlow;
-  const title = {};
-  const description = {};
-  const label = isWaFlow ? {} : undefined;
+  const title: Record<string, string> = {};
+  const description: Record<string, string> = {};
+  const label: Record<string, string> | undefined = isWaFlow ? {} : undefined;
+
+  // PageTitle/PageDescription only cover a subset of PageType (GoogleReview has
+  // no entry), so the lookup is partial — as it already was at runtime.
+  const pageTitles: Partial<Record<PageType, string>> = PageTitle;
+  const pageDescriptions: Partial<Record<PageType, string>> = PageDescription;
 
   for (const language of languages) {
-    title[language] = PageTitle[type];
-    description[language] = PageDescription[type];
+    title[language] = pageTitles[type];
+    description[language] = pageDescriptions[type];
     if (label) {
       label[language] = "";
     }
@@ -98,9 +103,9 @@ export function createBlankQuestion(
   surveyType = SurveyType.Web,
 ): Question {
   const isWaFlow = surveyType === SurveyType.WaFlow;
-  const title = {};
-  const description = {};
-  const label = isWaFlow ? {} : undefined;
+  const title: Record<string, string> = {};
+  const description: Record<string, string> = {};
+  const label: Record<string, string> | undefined = isWaFlow ? {} : undefined;
 
   for (const language of languages) {
     title[language] = "";
@@ -127,7 +132,7 @@ export function validateAllLanguagesArePopulated(
   languages: Array<string>,
   keyToValidate: Array<"title" | "description" | "choices">,
 ) {
-  const missingLangs = [];
+  const missingLangs: string[] = [];
 
   keyToValidate.forEach((key) => {
     if (key === "choices") {
@@ -181,7 +186,7 @@ export function validateContactFeaturesPopulated(
 
   const defaultEnabled = getDefaultContactFeatureEnabled(question.type as QuestionType);
 
-  const missingLangs = [];
+  const missingLangs: string[] = [];
   languages.forEach((language) => {
     const featureSet = question?.features?.[language];
     const hasAnyEnabled = CONTACT_FEATURE_KEYS.some((key) =>
@@ -197,7 +202,7 @@ export const getInitialQuestionValues = (
   languages: Array<string>,
   type = SurveyType.Web,
 ): Question & { enableNpsAnalytics?: boolean; extraConfig: any } => {
-  const emptyText = {};
+  const emptyText: Record<string, string> = {};
   languages?.forEach((lang) => {
     emptyText[lang] = "";
   });

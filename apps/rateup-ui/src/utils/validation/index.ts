@@ -1,13 +1,13 @@
 import { QuestionType } from "@/types/enums.ts";
 
-function validateLength(input, min, max) {
+function validateLength(input: string | number, min: number, max: number) {
   if (input.toString().length < min || input.toString().length > max) {
     return false;
   }
   return true;
 }
 
-function validateWordCount(input, min, max) {
+function validateWordCount(input: string, min: number, max: number) {
   const words = input.split(" ");
   if (words.length < min || words.length > max) {
     return false;
@@ -15,7 +15,7 @@ function validateWordCount(input, min, max) {
   return true;
 }
 
-function validateTextType(input, type) {
+function validateTextType(input: string, type: string) {
   if (type === "Letters") {
     const regex = /^[a-zA-Z\s]+$/;
     return regex.test(input);
@@ -29,9 +29,20 @@ function validateTextType(input, type) {
   return true;
 }
 
-export function validateQuestion(question, input, selectedLanguage) {
+/**
+ * A submitted answer: MultiTextInput questions post a record keyed by field,
+ * every other question posts the answer text on its own.
+ */
+type QuestionInput = string | Record<string, string>;
+
+export function validateQuestion(
+  question: Question,
+  input: QuestionInput,
+  selectedLanguage: string,
+) {
   if (question?.validationRules) {
-    if ([QuestionType.MultiTextInput].includes(question?.type)) {
+    if (question?.type === QuestionType.MultiTextInput) {
+      const fieldInput = typeof input === "object" ? input : undefined;
       const fields = question?.features?.[selectedLanguage]?.fields;
       for (const field of fields) {
         if (question?.validationRules?.[field?.fieldKey]) {
@@ -39,20 +50,20 @@ export function validateQuestion(question, input, selectedLanguage) {
           for (const rule of validationRules) {
             if (rule?.ruleType === "length") {
               if (
-                !input?.[field?.fieldKey] ||
-                !validateLength(input?.[field?.fieldKey], rule?.min, rule?.max)
+                !fieldInput?.[field?.fieldKey] ||
+                !validateLength(fieldInput?.[field?.fieldKey], rule?.min, rule?.max)
               ) {
                 return rule?.errorMessage;
               }
             } else if (rule?.ruleType === "textType") {
               if (
-                !input?.[field?.fieldKey] ||
-                !validateTextType(input?.[field?.fieldKey], rule?.type)
+                !fieldInput?.[field?.fieldKey] ||
+                !validateTextType(fieldInput?.[field?.fieldKey], rule?.type)
               ) {
                 return rule?.errorMessage;
               }
             } else if (rule?.ruleType === "required") {
-              if (!input?.[field?.fieldKey] || !input?.[field?.fieldKey]?.trim().length) {
+              if (!fieldInput?.[field?.fieldKey] || !fieldInput?.[field?.fieldKey]?.trim().length) {
                 return rule?.errorMessage;
               }
             }
@@ -60,10 +71,13 @@ export function validateQuestion(question, input, selectedLanguage) {
         }
       }
     } else {
+      // Only the branch above produces the field-keyed record form, so the
+      // answer here is the plain text the question posted.
+      const textInput = input as string;
       if (question?.validationRules?.length) {
         if (
           !validateLength(
-            input,
+            textInput,
             question?.validationRules?.length?.min,
             question?.validationRules?.length?.max,
           )
@@ -74,7 +88,7 @@ export function validateQuestion(question, input, selectedLanguage) {
       if (question.validationRules.wordCount) {
         if (
           !validateWordCount(
-            input,
+            textInput,
             question?.validationRules?.wordCount?.min,
             question?.validationRules?.wordCount?.max,
           )
@@ -83,7 +97,7 @@ export function validateQuestion(question, input, selectedLanguage) {
         }
       }
       if (question.validationRules.textType) {
-        if (!validateTextType(input, question?.validationRules?.textType?.type)) {
+        if (!validateTextType(textInput, question?.validationRules?.textType?.type)) {
           return question?.validationRules?.textType?.errorMessage;
         }
       }

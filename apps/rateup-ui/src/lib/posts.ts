@@ -104,7 +104,7 @@ export async function getPosts(filter?: { tag?: string; author?: string }) {
       include: "tags,authors",
       filter: filterStr,
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error(err);
     })) as Array<Post>;
 }
@@ -141,7 +141,7 @@ export async function getAuthors() {
     .browse({
       limit: 15,
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error(err);
     })) as Array<Author>;
 }
@@ -172,7 +172,7 @@ export async function getTags() {
     .browse({
       limit: 15,
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error(err);
     })) as Array<Tag>;
 }

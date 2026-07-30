@@ -33,7 +33,7 @@ export function parseLogicAction(
 
     let flag = false;
     for (const logic of logicJumps) {
-      let iterator: "map" | "some" | "every";
+      let iterator: "some" | "every";
       let comparator: (value: string) => boolean;
 
       if (ChoiceTypeQuestions.includes(type as QuestionType)) {
@@ -79,9 +79,10 @@ export function parseLogicAction(
           case LogicCondition.NotEquals:
           case LogicCondition.Equals:
             if (type === Q.MSQ || type === Q.DDMS) {
-              flag = logic.response[iterator as string](comparator);
+              // Multi-select logic always stores its response as a list of indices.
+              flag = (logic.response as string[])[iterator](comparator);
             } else {
-              flag = [logic.response][iterator as string](comparator);
+              flag = [logic.response as string][iterator](comparator);
             }
             break;
 
@@ -89,7 +90,7 @@ export function parseLogicAction(
           case LogicCondition.IncludesAnyOf:
           case LogicCondition.IncludesNoneOf:
             if (Array.isArray(logic.response)) {
-              flag = logic.response[iterator as string](comparator);
+              flag = logic.response[iterator](comparator);
             } else {
               throw new Error("Logic response should be an array");
             }
@@ -147,7 +148,7 @@ export function getResponses(
       case Q.DDMS:
       case Q.CustomNPS:
         return (
-          question.choices[selectedLanguage].map((choice, index) => ({
+          question.choices[selectedLanguage].map((choice: Choice, index: number) => ({
             label: typeof choice.value === "object" ? choice.value?.title : choice.value,
             value: index.toString(),
           })) || []
@@ -169,7 +170,14 @@ export function getResponses(
     return [];
   }
 }
-export function getResponses2(question): Array<string | { label: string; value: string }> {
+export function getResponses2(
+  question: Question & {
+    metaType?: WaQuestions;
+    /** WhatsApp flow questions carry choices under either spelling. */
+    "data-source"?: { title: string }[];
+    dataSource?: { title: string }[];
+  },
+): Array<string | { label: string; value: string }> {
   try {
     switch (question.metaType) {
       case WaQuestions.LD:
@@ -183,11 +191,11 @@ export function getResponses2(question): Array<string | { label: string; value: 
       case WaQuestions.Smiley:
       case WaQuestions.ChipsSelector:
         return (
-          question?.["data-source"]?.map((source, index) => ({
+          question?.["data-source"]?.map((source: { title: string }, index: number) => ({
             label: source.title,
             value: (index + 1)?.toString(),
           })) ||
-          question?.dataSource?.map((source, index) => ({
+          question?.dataSource?.map((source: { title: string }, index: number) => ({
             label: source.title,
             value: (index + 1)?.toString(),
           }))

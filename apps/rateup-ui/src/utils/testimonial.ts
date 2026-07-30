@@ -41,17 +41,17 @@ function filterByLength(testimonials: Array<Testimonial>, length: string) {
     : testimonials;
 }
 
-function filterByTeams(testimonials: Array<Testimonial>, teams) {
+function filterByTeams(testimonials: Array<Testimonial>, teams: string[]) {
   return testimonials?.filter((t) => (teams.length ? teams.includes(t.teamId) : true));
 }
 
-function filterBySurveys(testimonials: Array<Testimonial>, surveys, teams) {
+function filterBySurveys(testimonials: Array<Testimonial>, surveys: string[], teams: string[]) {
   return testimonials?.filter((t) =>
     teams?.length ? teams?.includes(t.teamId) : surveys?.length ? surveys.includes(t.survey.id) : t,
   );
 }
 
-function filterByRating(testimonials: Array<Testimonial>, rating) {
+function filterByRating(testimonials: Array<Testimonial>, rating: number) {
   return testimonials?.filter((t) => (rating ? t?.testimonial?.rating === rating : t));
 }
 

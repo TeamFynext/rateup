@@ -79,9 +79,14 @@ export interface Wop {
 
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
-    fbq: (...args: any[]) => void;
+    gtag: (...args: unknown[]) => void;
+    fbq: (...args: unknown[]) => void;
   }
+  // The analytics snippets are read off `globalThis`, which only picks up
+  // global `var` declarations — an `interface Window` member is not enough.
+  // Optional because both tags are absent until their script loads (and on SSR).
+  var gtag: ((...args: unknown[]) => void) | undefined;
+  var fbq: ((...args: unknown[]) => void) | undefined;
   interface Question {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
@@ -907,7 +912,9 @@ export interface WaFlowScreen {
   title: string;
   layout: WaFlowLayout;
   data?: any; // add types
-  terminal: boolean;
+  terminal?: boolean;
+  /** Set on the terminal screen of a completed flow; stripped when rebuilding. */
+  success?: boolean;
 }
 export interface WaFlowWa {
   // wa flow type from whatsapp
@@ -945,6 +952,11 @@ export interface WaFlowFormElement {
   "font-weight"?: string;
   strikethrough?: boolean;
   header?: string;
+  // DatePicker bounds and its dynamic-data hook, set by
+  // `updateFlowJsonNavigationAndDataPassing`.
+  "min-date"?: string;
+  "max-date"?: string;
+  "on-select-action"?: WaFlowOnClickAction;
 }
 
 export interface WaFlowMap {
@@ -1569,6 +1581,7 @@ interface WaTemplateParameter {
   payload?: string;
   location?: Location;
   image?: Image;
+  video?: Video;
   document?: Document;
 }
 
@@ -1593,6 +1606,10 @@ interface Image {
 }
 
 interface Document {
+  link: string;
+}
+
+interface Video {
   link: string;
 }
 

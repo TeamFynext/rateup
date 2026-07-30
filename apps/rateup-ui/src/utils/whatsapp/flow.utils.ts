@@ -295,10 +295,10 @@ export const getNewScreenObj = ({
 // We need to pass the draft of immer(used useImmer as state in EditFlow).
 
 export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow: DbFlow) => {
-  let screenData = null;
-  let previousPayloadData = null;
+  let screenData: Record<string, unknown> | null = null;
+  let previousPayloadData: Record<string, unknown> | null = null;
 
-  const routing_model = {};
+  const routing_model: Record<string, string[]> = {};
   let datePickerDynamicFlag = false;
 
   const screens = draft.screens;
@@ -554,8 +554,11 @@ export function getFlowElementJsonFromQuestion(question: Question) {
     )
       ? question.required
       : undefined;
+    // extraConfig carries arbitrary, question-type-specific flow-JSON keys, so
+    // it is written through an open view rather than the narrow element type.
+    const extraConfigTarget = questionElement as unknown as Record<string, unknown>;
     Object.entries(question?.extraConfig ?? {}).forEach(([key, value]) => {
-      questionElement[key] = value;
+      extraConfigTarget[key] = value;
     });
   }
   mapData.type = question.type;
@@ -646,7 +649,7 @@ function generateDataSourceFromQuestion(q: Question) {
       case qt.MSQ:
       case qt.DDMS:
       case qt.DDSS:
-        choices = q.choices?.[lang] ? q.choices[lang].map((c) => c.value) : [];
+        choices = q.choices?.[lang] ? q.choices[lang].map((c: Choice) => c.value) : [];
         break;
     }
 

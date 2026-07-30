@@ -37,7 +37,7 @@ export function getTimeSince(date: string) {
   return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? "" : "s"} ago`;
 }
 
-export function shuffleArray(array) {
+export function shuffleArray<T>(array: T[]) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
@@ -96,7 +96,7 @@ export const getContent = (title: string) => {
   else return title;
 };
 
-export function getUserRoleColor(role) {
+export function getUserRoleColor(role: string) {
   switch (role) {
     case UserRole.SUPADM:
       return "#B22222";
@@ -132,8 +132,10 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
 export const safeStrOrNull = (str: string): string | null =>
   !str || !str.trim().length ? null : str;
 
-export function hasRealContent(obj) {
-  return obj?.content?.some((block) => block.content && block.content.length > 0);
+export function hasRealContent(obj: { content?: { content?: unknown[] }[] } | null | undefined) {
+  return obj?.content?.some(
+    (block: { content?: unknown[] }) => block.content && block.content.length > 0,
+  );
 }
 
 export function randomHexColor(): string {

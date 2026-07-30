@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 
 import {
@@ -7,14 +8,31 @@ import {
 
 import { SelectedQContext } from "./SelectedQ.ts";
 
-const NextPrevFuncsAndLastQuestionContext = createContext({
+type NavFn = (() => void) | null;
+
+const NextPrevFuncsAndLastQuestionContext = createContext<{
+  nextFn: NavFn;
+  prevFn: NavFn;
+  isLastQuestion: boolean;
+  isFirstQuestion: boolean;
+}>({
   nextFn: null,
   prevFn: null,
   isLastQuestion: false,
   isFirstQuestion: false,
 });
 
-function NextPrevFuncsAndLastQuestionContextProvider({ nextFn, prevFn, survey, children }) {
+function NextPrevFuncsAndLastQuestionContextProvider({
+  nextFn,
+  prevFn,
+  survey,
+  children,
+}: {
+  nextFn: NavFn;
+  prevFn: NavFn;
+  survey: Survey;
+  children: ReactNode;
+}) {
   const { selectedQ } = useContext(SelectedQContext);
 
   const firstQuestion = getFirstQuestion(survey);

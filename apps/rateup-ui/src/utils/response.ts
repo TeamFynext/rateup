@@ -23,6 +23,15 @@ import {
 import SelectedLanguageContext from "../context/SelectedLanguage.ts";
 import { decryptPrivateKey, decryptResponse } from "./encryption/index.ts";
 
+/** A single choice a respondent picked, or typed into the "other" field. */
+interface ChoiceResponse {
+  value?: string;
+  other?: string;
+}
+
+/** An answer as stored on a response record: text, or a keyed bag of values. */
+type ResponseRecord = Record<string, unknown>;
+
 export function getResponse(q: any, response: any) {
   if (!response && response !== 0) return "";
 
@@ -56,12 +65,12 @@ export function getResponse(q: any, response: any) {
   }
 }
 
-function formatDateTime(response) {
+function formatDateTime(response: string | number | Date) {
   const date = dayjs(response);
   return date.format("DD, MMM YYYY");
 }
 
-function formatContactInfo(response) {
+function formatContactInfo(response: string | ResponseRecord) {
   if (typeof response === "string") return response;
   return Object.entries(response)
     .filter(Boolean)
@@ -69,31 +78,34 @@ function formatContactInfo(response) {
     .join(", ");
 }
 
-function formatEmailOtpResponse(response) {
+function formatEmailOtpResponse(response: { email?: string }) {
   return `Verified Email Id: ${response?.email}`;
 }
-function formatMultiTextInput(q, response) {
+function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
   if (typeof response === "string") return response;
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
   if (fields) {
-    return fields?.map((f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`);
+    return fields?.map(
+      (f: { fieldKey: string }) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
+    );
   }
 }
 
-function formatMCQGridResponse(question, response) {
+function formatMCQGridResponse(question: Question, response: Record<string, { value?: unknown }>) {
   if (!response) return;
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
-  return gridQuestions?.map((q) => `${q}: ${response?.[q]?.value ?? "NA"}`);
+  return gridQuestions?.map((q: string) => `${q}: ${response?.[q]?.value ?? "NA"}`);
 }
 
-function formatChoiceTypeQuestions(q, response) {
+function formatChoiceTypeQuestions(q: Question, response: ChoiceResponse | ChoiceResponse[]) {
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   let formattedValue = "";
   if (response) {
-    if ([QuestionType.DDMS, QuestionType.MSQ].includes(q?.type)) {
-      formattedValue = response
+    if (q?.type === QuestionType.DDMS || q?.type === QuestionType.MSQ) {
+      // These two question types always store their answer as a list of choices.
+      formattedValue = (response as ChoiceResponse[])
         .map(
           (item) =>
             item?.value?.trim() ||
@@ -101,29 +113,28 @@ function formatChoiceTypeQuestions(q, response) {
         )
         .join(", ");
     } else if (
-      [
-        QuestionType.DDSS,
-        QuestionType.MCQ,
-        QuestionType.CustomNPS,
-        QuestionType.WaButtons,
-      ].includes(q?.type)
+      q?.type === QuestionType.DDSS ||
+      q?.type === QuestionType.MCQ ||
+      q?.type === QuestionType.CustomNPS ||
+      q?.type === QuestionType.WaButtons
     ) {
+      const single = response as ChoiceResponse;
       formattedValue =
-        response.value ||
-        `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${response?.other}`;
+        single.value ||
+        `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${single?.other}`;
     }
   }
   return formattedValue;
 }
 
-function formatWaList(response) {
+function formatWaList(response: Record<string, { title?: string; description?: string }>) {
   const { title, description } = response[QuestionType.WaList];
   return description ? `${title}: ${description}` : title;
 }
 
-function formatTestimonialResponse(response) {
+function formatTestimonialResponse(response: string | ResponseRecord) {
   if (typeof response === "string") return response;
-  const contentArray = [];
+  const contentArray: string[] = [];
   Object.entries(response).map(([key, value]) => {
     if (key === "photo") return;
     contentArray.push(`${key}:  ${value ? String(value) : "NA"}`);
@@ -134,7 +145,7 @@ function formatTestimonialResponse(response) {
   };
 }
 
-function formatDefaultResponse(_q, response) {
+function formatDefaultResponse(_q: Question, response: unknown) {
   // Handle other types or default case
   return response;
 }

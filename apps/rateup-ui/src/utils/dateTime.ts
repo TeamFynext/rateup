@@ -9,7 +9,17 @@ dayjs.extend(advancedFormat);
 dayjs.extend(isBetween);
 dayjs.extend(relativeTime);
 
-export const formatedTime = (category) => {
+/** Anything dayjs()/new Date() accepts as an input. */
+type DateInput = string | number | Date | dayjs.Dayjs | null | undefined;
+
+/** A menu category / item carrying an optional daily availability window. */
+type ScheduledCategory = {
+  startTime?: DateInput;
+  endTime?: DateInput;
+  scheduleEnabled?: boolean;
+};
+
+export const formatedTime = (category: ScheduledCategory) => {
   const currentTime = dayjs().format("HH:mm");
   const formattedStartTime = dayjs(category?.startTime).format("HH:mm");
   const formattedStartTimeWithAmPm = dayjs(category?.startTime).format("hh:mm A");
@@ -29,32 +39,32 @@ export const formatedTime = (category) => {
   };
 };
 
-export const formatToCustomTime = (timestamp) => {
+export const formatToCustomTime = (timestamp: DateInput) => {
   if (!timestamp) return "-- : --";
   return dayjs(timestamp).format("hh:mm a");
 };
 
-export const createCustomTimestamp = (customTime) => {
+export const createCustomTimestamp = (customTime: string) => {
   const [hours, minutes] = customTime.split(":").map(Number);
   return dayjs().set("hour", hours).set("minute", minutes).toDate();
 };
 
 // Like... Output: '14th Feb, 2024'
-export function formatIsoDateString(isoDateString) {
+export function formatIsoDateString(isoDateString: DateInput) {
   return dayjs(isoDateString).format("Do MMM, YYYY");
 }
 
 // Like... Output: '13th Mar, 2024, 12:00 AM'
-export function formatIsoDateStringWithTime(isoDateString) {
+export function formatIsoDateStringWithTime(isoDateString: DateInput) {
   if (!isoDateString) return null;
   return dayjs(isoDateString).format("Do MMM, YYYY, h:mm A");
 }
-export function formatToRelativeTime(date, isUtc = false) {
+export function formatToRelativeTime(date: DateInput, isUtc = false) {
   if (isUtc) return dayjs.utc(date).fromNow();
   return dayjs(date).fromNow();
 }
 const currentTime = dayjs().format("HH:mm");
-export const isCategoryActive = (item) => {
+export const isCategoryActive = (item: ScheduledCategory) => {
   if (!item.startTime || !item.endTime || !item.scheduleEnabled) {
     return true;
   }
@@ -64,13 +74,13 @@ export const isCategoryActive = (item) => {
   else return startTime <= currentTime && endTime >= currentTime;
 };
 
-export const formatDate = (date) => dayjs(date).format("DD/MM/YYYY");
+export const formatDate = (date: DateInput) => dayjs(date).format("DD/MM/YYYY");
 
-export function isToday(isoDateString) {
+export function isToday(isoDateString: DateInput) {
   return dayjs(isoDateString).isAfter(dayjs().startOf("day"));
 }
 
-export function isYesterday(isoDateString) {
+export function isYesterday(isoDateString: DateInput) {
   return dayjs(isoDateString).isBetween(
     dayjs().subtract(1, "day").startOf("day"),
     dayjs().subtract(1, "day").endOf("day"),
@@ -79,17 +89,17 @@ export function isYesterday(isoDateString) {
   );
 }
 
-export function isThisMonth(isoDateString) {
+export function isThisMonth(isoDateString: DateInput) {
   return dayjs(isoDateString).isAfter(dayjs().startOf("month"));
 }
 
-export function isInLastSevenDays(isoDateString) {
+export function isInLastSevenDays(isoDateString: DateInput) {
   return dayjs().diff(dayjs(isoDateString), "week") == 0;
 }
 
-export function roundOffMinutesAndSeconds(dateString) {
+export function roundOffMinutesAndSeconds(dateString: string | number | Date) {
   const date = new Date(dateString);
-  const roundOffTime = (time) => Math.floor(time / 60) * 60;
+  const roundOffTime = (time: number) => Math.floor(time / 60) * 60;
 
   const roundedMinutes = roundOffTime(date.getMinutes() + 30);
   const roundedSeconds = roundOffTime(date.getSeconds() + 30);
@@ -100,7 +110,7 @@ export function roundOffMinutesAndSeconds(dateString) {
   return date;
 }
 
-export function formatDateWithRelativeTime(date) {
+export function formatDateWithRelativeTime(date: DateInput) {
   const d = dayjs(date);
   if (isToday(date)) {
     return `Today ${d.format("hh:mm A")}`;
@@ -111,7 +121,7 @@ export function formatDateWithRelativeTime(date) {
   }
 }
 
-export function formatTimeToNearestUnitFromSeconds(seconds) {
+export function formatTimeToNearestUnitFromSeconds(seconds: number) {
   if (seconds === 0) return { value: 0, suffix: "minute" };
   if (!seconds) return;
   let value = seconds;

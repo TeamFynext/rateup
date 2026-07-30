@@ -1,9 +1,16 @@
 import axios from "axios";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
+import { getApiErrorData, getApiErrorMessage } from "../apiError.ts";
 import { fallbackImage } from "../constants.ts";
 
-export const uploadFile = async (file, withThumbnails = false, data = { allowAll: false }) => {
+export const uploadFile = async (
+  file: File,
+  withThumbnails = false,
+  data = { allowAll: false },
+) => {
   const formData = new FormData();
   formData.append("metadata", JSON.stringify(data));
   formData.append("size", file?.size?.toString());
@@ -27,11 +34,11 @@ export const uploadFile = async (file, withThumbnails = false, data = { allowAll
     return response?.data?.data?.key as string;
   } catch (error) {
     toast.dismiss("upload-file");
-    throw error?.message;
+    throw getApiErrorMessage(error);
   }
 };
 
-export const deleteUploadedFiles = async (data) => {
+export const deleteUploadedFiles = async (data: RequestPayload) => {
   try {
     toast.loading("Deleting file...", {
       id: "delete-file",
@@ -50,10 +57,10 @@ export const deleteUploadedFiles = async (data) => {
     });
     return response?.data;
   } catch (error) {
-    toast.error(error?.message || "Error deleting file", {
+    toast.error(getApiErrorMessage(error, "Error deleting file"), {
       id: "delete-file",
     });
-    return error?.data;
+    return getApiErrorData(error);
   }
 };
 export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
@@ -89,7 +96,7 @@ export const getFileNameFromKey = (key: string) => {
   return key.split("-")[key.split("-").length - 1];
 };
 
-export const dataURItoBlob = (dataURI) => {
+export const dataURItoBlob = (dataURI: string) => {
   const byteString = atob(dataURI.split(",")[1]);
   const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
   const ab = new ArrayBuffer(byteString.length);
@@ -100,7 +107,11 @@ export const dataURItoBlob = (dataURI) => {
   return new Blob([ab], { type: mimeString });
 };
 
-export const getImageValue = (image, fallback = false, unsplashImage = false) => {
+export const getImageValue = (
+  image: File | string | null | undefined,
+  fallback = false,
+  unsplashImage = false,
+) => {
   if (typeof image === "object") {
     return URL.createObjectURL(image);
   } else if (unsplashImage) {

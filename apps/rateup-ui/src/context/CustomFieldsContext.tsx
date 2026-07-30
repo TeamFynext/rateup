@@ -12,13 +12,19 @@ interface CustomField {
   visibility: boolean;
   listValues?: string[];
   values: string;
+  /**
+   * Written by `updateCustomField`/`resetCustomFields`; the readers go through
+   * `values`. Declared so the update paths type-check against what they
+   * actually store.
+   */
+  value?: unknown;
 }
 
 interface CustomFieldsContextType {
   customFields: CustomField[];
   setCustomFields: (fields: CustomField[]) => void;
-  updateCustomField: (id: string, value: any) => void;
-  getCustomFieldValue: (id: string) => any;
+  updateCustomField: (id: string, value: unknown) => void;
+  getCustomFieldValue: (id: string) => string | undefined;
   resetCustomFields: () => void;
 }
 
@@ -32,7 +38,7 @@ interface CustomFieldsProviderProps {
 export function CustomFieldsProvider({ children, initialFields = [] }: CustomFieldsProviderProps) {
   const [customFields, setCustomFields] = useState<CustomField[]>(initialFields);
 
-  const updateCustomField = (id: string, value: any) => {
+  const updateCustomField = (id: string, value: unknown) => {
     setCustomFields((prev) => prev.map((field) => (field.id === id ? { ...field, value } : field)));
   };
 
@@ -42,7 +48,7 @@ export function CustomFieldsProvider({ children, initialFields = [] }: CustomFie
   };
 
   const resetCustomFields = () => {
-    setCustomFields((prev) => prev.map((field) => ({ ...field, value: undefined })));
+    setCustomFields((prev) => prev.map((field): CustomField => ({ ...field, value: undefined })));
   };
 
   useEffect(() => {

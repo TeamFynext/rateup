@@ -51,7 +51,7 @@ export function useSendResetEmail() {
   };
 }
 
-export function useSetNewPassword(open) {
+export function useSetNewPassword(open: () => void) {
   const navigate = useNavigate();
   return async function (newPassword: string) {
     try {

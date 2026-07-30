@@ -13,13 +13,13 @@ export function getQuestionLabel(question: Question, selectedLanguage?: string) 
   );
 }
 
-export const getFormattedTitleFromVariable = (title, variables) => {
+export const getFormattedTitleFromVariable = (title: string, variables: SurveyVariable[]) => {
   const variablesInQuestion = getPropValueFromQuestionCustomComponent(title);
   if (!variablesInQuestion) return null;
   const parser = new DOMParser();
   const doc = parser.parseFromString(title, "text/html");
   variablesInQuestion.forEach((value) => {
-    if (variables.map((variable) => variable.name).includes(value)) return;
+    if (variables.map((variable: SurveyVariable) => variable.name).includes(value)) return;
     const component = Array.from(doc.querySelectorAll("variable-component")).find(
       (el) => el.getAttribute("label") === value,
     );
