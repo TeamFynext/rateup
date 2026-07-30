@@ -176,7 +176,7 @@ export const ShareFlow = ({
                       disabled={disableShare || tagSelectData.length === 0}
                       value={tag}
                       onValueChange={(value) => setTag(value)}
-                      items={tagSelectData}
+                      items={tagSelectData?.map((tagItem) => ({ value: tagItem, label: tagItem }))}
                     >
                       <SelectTrigger id={`${uid}-field-2`} className="w-full min-w-[150px]">
                         <SelectValue placeholder={translations("select a single Tag")} />
@@ -195,7 +195,7 @@ export const ShareFlow = ({
                     selectTeamDropdownValue={selectTeamDropdownState}
                     teamSelectData={teamSelectData}
                     onSelectTeamDropdownChange={handleContainedSelectionChange}
-                    nothingFound={NothingFound}
+                    nothingFound={<NothingFound text={translations("No tags found")} />}
                     tagsToMap={survey.teams[Number(selectTeamDropdownState)].tags}
                     surveyTitle={survey?.title}
                     surveyId={surveyId}

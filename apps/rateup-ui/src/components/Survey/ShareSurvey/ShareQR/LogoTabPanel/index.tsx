@@ -15,7 +15,7 @@ export interface QrLogoPanelState {
   logoSize: number;
   logoFillType: CSSProperties["objectFit"];
   logoBorderRadius: number;
-  logoFile: string | null;
+  logoFile: string | File | null;
   isLogoEnabled?: boolean;
 }
 

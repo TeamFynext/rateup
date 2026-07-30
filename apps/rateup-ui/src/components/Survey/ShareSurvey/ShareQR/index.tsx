@@ -51,15 +51,15 @@ const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQ
   const handleSaveOfSurveyShareSettings = useCallback(async () => {
     if (shareSettingsMutation) {
       const formData = new FormData();
-      for (const property in logoTabPanelState) {
-        let value = logoTabPanelState[property];
+      for (const [property, rawValue] of Object.entries(logoTabPanelState)) {
+        let value: string | File = rawValue as string | File;
 
-        if (typeof value === "number") {
-          value = value.toString();
+        if (typeof rawValue === "number") {
+          value = rawValue.toString();
         }
 
-        if (typeof value === "boolean") {
-          value = value ? "true" : "false";
+        if (typeof rawValue === "boolean") {
+          value = rawValue ? "true" : "false";
         }
 
         formData.append(property, value);

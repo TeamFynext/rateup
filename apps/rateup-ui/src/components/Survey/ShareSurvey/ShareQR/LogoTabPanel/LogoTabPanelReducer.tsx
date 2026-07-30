@@ -14,7 +14,7 @@ const initialLogoTabPanelState: QrLogoPanelState = {
 const logoTabPanelReducer = (
   state: QrLogoPanelState,
   action: { type: string; payload?: unknown },
-): void => {
+): QrLogoPanelState | void => {
   // Each action carries the scalar for the field it names; the action type is a
   // bare string, so the payload cannot be discriminated on it.
   const value = action.payload as string & number & boolean & CSSProperties["objectFit"];
@@ -55,7 +55,7 @@ const logoTabPanelReducer = (
       break;
     }
     case "update-state-from-api": {
-      return payload;
+      return payload as QrLogoPanelState;
     }
   }
 };
