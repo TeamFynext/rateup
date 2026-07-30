@@ -29,7 +29,7 @@ export const LifecycleSelector = ({
   value: string;
   onChange: (
     value: string,
-    lifecycleObj: { id: string; name: string; emoji: string; category: string },
+    lifecycleObj?: { id: string; name: string; emoji: string; category: string },
   ) => void;
   placeholder?: string;
   className?: string;
@@ -79,7 +79,7 @@ export const LifecycleSelector = ({
   const visibleGroups = groups.filter((group) => group.items.length > 0);
 
   return (
-    <Select value={value || null} onValueChange={handleChange} items={items}>
+    <Select value={value || null} onValueChange={(next) => handleChange(next ?? "")} items={items}>
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder ?? "Select a lifecycle stage"} />
       </SelectTrigger>

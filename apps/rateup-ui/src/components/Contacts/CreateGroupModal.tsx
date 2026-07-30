@@ -216,7 +216,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                   id="file-upload"
                   type="file"
                   className="hidden"
-                  onChange={(e) => setFile(e.target.files?.[0])}
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                 />
 
                 <Label htmlFor="file-upload" className={buttonVariants()}>

@@ -54,7 +54,7 @@ const CreateContactModal = ({
   const [csvFileError, setCsvFileError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
 
   const { t: translations } = useTranslation();
   const { customFields } = useCustomFieldsContext();
@@ -395,7 +395,7 @@ export const UserSelector = (props: UserSelectorProps) => {
   if (allowAll) userData?.unshift({ id: "all", name: "All Staff", status: "online" });
   const { value, onChange } = props as Extract<UserSelectorProps, { allowMultiSelect?: false }>;
   function onValueChange(value: string) {
-    onChange(value === "all" ? users?.data.map((u) => u.id) : value, value === "all");
+    onChange(value === "all" ? (users?.data.map((u) => u.id) ?? []) : value, value === "all");
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (

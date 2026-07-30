@@ -177,7 +177,7 @@ export const contactColumn = (
           ) || [];
         return labels.length > 0 ? (
           <div className="flex flex-wrap gap-1">
-            {labels.map((label: string, index: number) => (
+            {labels.map((label: string | undefined, index: number) => (
               <Badge key={index} variant="secondary" color="blue">
                 {label}
               </Badge>

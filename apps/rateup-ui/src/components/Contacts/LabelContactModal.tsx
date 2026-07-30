@@ -30,7 +30,7 @@ const LabelContactModal = ({
   onSuccess?: (() => void) | null;
 }) => {
   const { t } = useTranslation();
-  const [labelIds, setLabelIds] = useState([]);
+  const [labelIds, setLabelIds] = useState<string[]>([]);
   const assign = useAssignContactLabelsToMultipleContacts();
   function handleApplyLabels() {
     assign.mutate(
