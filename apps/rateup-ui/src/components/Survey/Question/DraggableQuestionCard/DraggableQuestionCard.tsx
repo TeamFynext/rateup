@@ -110,11 +110,16 @@ export function DraggableQuestionCard({
                 className="flex size-9 shrink-0 items-center justify-center rounded-[10px] text-white"
                 style={{ backgroundColor: questionTypeColors[question.type] ?? "var(--primary)" }}
               >
-                {(pageIcons[question.type] || questionIcons[question.type]) &&
-                  React.createElement(pageIcons[question.type] ?? questionIcons[question.type], {
-                    size: 18,
-                    strokeWidth: 2,
-                  })}
+                {(pageIcons[question.type as keyof typeof pageIcons] ||
+                  questionIcons[question.type as keyof typeof questionIcons]) &&
+                  React.createElement(
+                    pageIcons[question.type as keyof typeof pageIcons] ??
+                      questionIcons[question.type as keyof typeof questionIcons],
+                    {
+                      size: 18,
+                      strokeWidth: 2,
+                    },
+                  )}
               </div>
               <span className="flex-1 truncate px-2 text-[13px] text-foreground">
                 {extractText(questionTitle)}

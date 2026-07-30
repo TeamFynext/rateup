@@ -31,8 +31,8 @@ function UnsplashImageSelectorModal({
   context: { closeModal: (id: string) => void };
   id: string;
   innerProps: {
-    handleUnsplashImageSave: (url: string, name: string) => void;
-    onImageSelected?: (url: string, name: string) => void;
+    handleUnsplashImageSave?: (url: string, name: string) => void;
+    onImageSelected?: (url: string | null, name?: string) => void;
     aspectRatio?: number;
   };
 }) {

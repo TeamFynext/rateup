@@ -19,8 +19,10 @@ function ImageSourceSelectorModal({
   context: { closeModal: (id: string) => void };
   id: string;
   innerProps: {
-    onImageSelected: (url: string, name?: string) => void;
+    onImageSelected: (url: string | null, name?: string) => void;
+    handleUnsplashImageSave?: (url: string, name: string) => void;
     aspectRatio?: number;
+    forDevice?: string;
   };
 }) {
   const { onImageSelected, forDevice } = innerProps;

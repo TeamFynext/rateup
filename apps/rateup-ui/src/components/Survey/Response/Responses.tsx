@@ -16,6 +16,7 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -260,7 +261,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const responseCount = responseData?.totalCount;
 
   const Toolbar = useCallback(
-    (props: Record<string, unknown>) => (
+    (props: DataTableToolbarProps<any, unknown>) => (
       <ResponseTableToolbar
         {...props}
         CFData={CFData}
@@ -336,7 +337,7 @@ const DeleteModal = ({
   opened,
   close,
 }: {
-  confirmDelete: () => void;
+  confirmDelete: (verifyEmail: string) => void;
   opened: boolean;
   close: () => void;
 }) => {
