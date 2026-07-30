@@ -70,8 +70,11 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
   useEffect(() => {
     if (opened && !initializedRef.current) {
       const logicJumps = getLogicJumps(currentScreen?.id || "");
-      const elementLogicJumps = (logicJumps || []).filter((jump: any) =>
-        jump.conditions?.some((cond: any) => cond.questionId === elementId),
+      // This modal edits screen-level jumps only; component-level entries are
+      // filtered out by the condition shape they carry.
+      const elementLogicJumps = (logicJumps || []).filter(
+        (jump): jump is FlowLogicJump =>
+          jump.conditions?.some((cond) => cond.questionId === elementId) ?? false,
       );
       setLocalJumps(elementLogicJumps.length > 0 ? [...elementLogicJumps] : []);
       initializedRef.current = true;

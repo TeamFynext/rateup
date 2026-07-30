@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { WaFlowFormElement } from "@/types/global";
 
 import { FlowMaxScreens } from "../../whatsappConfig.tsx";
 import useFlowStoreV3 from "../utils/store.ts";

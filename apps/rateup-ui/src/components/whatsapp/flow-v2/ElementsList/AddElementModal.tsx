@@ -264,7 +264,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
                 <h5 className="text-sm font-medium text-muted-foreground mb-3">{group.title}</h5>
                 <div className="grid grid-cols-3 gap-3">
                   {group.questionTypes.map((type) => {
-                    const Icon = questionIcons[type];
+                    const Icon = questionIcons[type as keyof typeof questionIcons];
                     return (
                       <Button
                         key={type}

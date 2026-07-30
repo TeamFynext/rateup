@@ -208,7 +208,9 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                   );
                 },
                 metaType: elementType,
-                maxChoice: getChoiceCount(QuestionType2?.[allValues.metaType as string])?.max ?? 20,
+                maxChoice:
+                  getChoiceCount(QuestionType2?.[allValues.metaType as keyof typeof QuestionType2])
+                    ?.max ?? 20,
               })}
               {...(field === "init-value" && {
                 dataSource: allValues?.["data-source"],

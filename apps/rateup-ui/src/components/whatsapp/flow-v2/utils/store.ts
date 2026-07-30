@@ -89,8 +89,11 @@ interface StoreState {
   googleReview?: GoogleReview;
   ticketIssued: any[];
   setTicketIssued: (ticketIssued: any[]) => void;
-  getLogicJumps: (screenId: string) => FlowLogicJump[];
-  updateLogicJumps: (screenId: string, jumps: FlowLogicJump[]) => void;
+  getLogicJumps: (screenId: string) => Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
+  updateLogicJumps: (
+    screenId: string,
+    jumps: Array<FlowLogicJump | FlowLogicJumpComponentLevel>,
+  ) => void;
   setAllLogicJumps: (jumps: {
     [screenId: string]: Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
   }) => void;
