@@ -85,7 +85,7 @@ export default function Page({
       ) : (
         <TakeSurveyLayoutWeb survey={survey}>
           <TakeSurvey
-            survey={survey}
+            survey={survey!}
             setIsReviewPage={setIsReviewPage}
             fromShortUrl={fromShortUrl}
           />

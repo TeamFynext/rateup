@@ -25,7 +25,7 @@ const CommonError = ({
   }, [error]);
 
   const handleRetry = () => {
-    reset();
+    reset?.();
   };
 
   return (

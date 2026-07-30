@@ -320,7 +320,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
                         <Select
                           value={selectedStatus[0] || ""}
-                          onValueChange={(value) => setSelectedStatus([value])}
+                          onValueChange={(value) => setSelectedStatus([value ?? ""])}
                           items={Object.values(CampaignParticipantAddStatus).map((status) => ({
                             value: status,
                             label: status,

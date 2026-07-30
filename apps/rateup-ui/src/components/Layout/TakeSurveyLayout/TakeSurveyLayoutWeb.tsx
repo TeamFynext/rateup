@@ -39,7 +39,7 @@ export const TakeSurveyLayoutWeb = ({
   survey,
   children,
 }: {
-  survey: Survey;
+  survey: Survey | null;
   children: ReactNode;
 }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
@@ -69,8 +69,8 @@ export const TakeSurveyLayoutWeb = ({
 
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
-  const updateVisited = useUpdateVisitedMutation(survey?.id);
-  const updateStarted = useUpdateStartedMutation(survey?.id);
+  const updateVisited = useUpdateVisitedMutation(survey?.id ?? "");
+  const updateStarted = useUpdateStartedMutation(survey?.id ?? "");
 
   const [opened, setOpened] = useState(false);
   const open = () => setOpened(true);
@@ -112,7 +112,7 @@ export const TakeSurveyLayoutWeb = ({
   }, [isWelcomePageEnabled]);
 
   useEffect(() => {
-    setIsWelcomePageEnabled(survey?.questions?.some((q) => q.type === PageType.Welcome));
+    setIsWelcomePageEnabled(!!survey?.questions?.some((q) => q.type === PageType.Welcome));
   }, [survey?.questions]);
 
   const handleStartClick = () => {
@@ -121,7 +121,7 @@ export const TakeSurveyLayoutWeb = ({
   };
 
   const verifySurveyPassword = useVerifySurveyPwdMutation(
-    survey?.id,
+    survey?.id ?? "",
     passwordInput,
     close,
     setIsPasswordVerified,
@@ -141,8 +141,8 @@ export const TakeSurveyLayoutWeb = ({
     verifySurveyPassword.mutate();
   };
 
-  if (!selectedLanguage && survey?.languages?.length <= 1) {
-    setSelectedLanguage(survey?.languages[0]);
+  if (!selectedLanguage && (survey?.languages?.length ?? 0) <= 1) {
+    setSelectedLanguage(survey?.languages[0] ?? "");
   }
 
   if (!selectedLanguage && isSurveyThemeEditView) {
@@ -235,7 +235,7 @@ export const TakeSurveyLayoutWeb = ({
         style={{ position: "relative", backgroundColor }}
       >
         <CreditsCard
-          enableCredits={isUnsplashImage && !isLanguagePageActive}
+          enableCredits={!!isUnsplashImage && !isLanguagePageActive}
           url={backgroundImageSrc}
         >
           <div

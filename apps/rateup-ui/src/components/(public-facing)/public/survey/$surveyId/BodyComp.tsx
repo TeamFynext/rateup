@@ -31,7 +31,7 @@ function BodyComp({
           reviewSuggestions={reviews}
           orgLogoUrl={orgLogoSrc}
           surveyTeamMapId={surveyId}
-          survey={undefined}
+          survey={null}
           reviewPageLinks={reviewPageLinks}
         />
       )}

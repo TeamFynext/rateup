@@ -106,7 +106,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   const surveyDeleteMutation = useMutation({
     mutationFn: ({ id, teamId }: { id: string; teamId?: string }) =>
       selectedTeamId && selectedTeamId !== "all"
-        ? deleteSurveyForOneTeam(id, teamId)
+        ? deleteSurveyForOneTeam(id, teamId ?? "")
         : deleteSurvey(id),
     onSuccess: () => {
       toast.success(translations("Deleted Survey Successfully!"), {
