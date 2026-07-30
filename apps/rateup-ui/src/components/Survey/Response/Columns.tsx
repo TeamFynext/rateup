@@ -25,6 +25,12 @@ import { HoverCardComponent } from "../HoverCard/HoverCard.tsx";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { fuzzyFilter } from "./Filter.ts";
 
+/** The cell context these response column definitions read. */
+interface ResponseCellInfo {
+  getValue: () => unknown;
+  row: { original: { Ticket?: Array<{ id: string }>; [key: string]: unknown } };
+}
+
 export const useSurveyResponseColumns = ({
   questions = [],
   defaultLanguage,
@@ -45,7 +51,8 @@ export const useSurveyResponseColumns = ({
         header: translations("Created At"),
         filterFn: fuzzyFilter,
         accessorKey: "createdAt",
-        cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        cell: (info: ResponseCellInfo) =>
+          dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...(questions?.length > 0
         ? questions.map((q: any) => {
@@ -104,7 +111,7 @@ export const useSurveyResponseColumns = ({
                 QuestionType.DocumentPicker,
                 QuestionType.PhotoPicker,
               ].includes(q.type),
-              cell: (info) => {
+              cell: (info: ResponseCellInfo) => {
                 return (
                   <BadgeorTextorPreview
                     questionType={q?.type}
@@ -118,7 +125,7 @@ export const useSurveyResponseColumns = ({
       {
         header: translations("Tags"),
         accessorKey: "tag",
-        cell: (info) => info.getValue(),
+        cell: (info: ResponseCellInfo) => info.getValue(),
       },
       ...(typeWa
         ? [
@@ -127,7 +134,7 @@ export const useSurveyResponseColumns = ({
               filterFn: fuzzyFilter,
               accessorFn: (row: any) => row?.phone,
               id: "respondentsMobileNumber",
-              cell: (info) => info.getValue(),
+              cell: (info: ResponseCellInfo) => info.getValue(),
             },
           ]
         : []),
@@ -138,7 +145,7 @@ export const useSurveyResponseColumns = ({
               enableColumnFilter: false,
               enableSorting: false,
               accessorKey: "ticket",
-              cell: (info) => {
+              cell: (info: ResponseCellInfo) => {
                 const ticketData = info.row.original.Ticket;
                 const ticket = ticketData?.[0];
 
@@ -179,7 +186,7 @@ export const useSurveyResponseColumns = ({
         header: translations("Action"),
         enableColumnFilter: false,
         enableSorting: false,
-        cell: (info) => {
+        cell: (info: ResponseCellInfo) => {
           return (
             <ActionMenu
               open={open}

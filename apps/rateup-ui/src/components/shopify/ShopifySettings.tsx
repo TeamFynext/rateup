@@ -95,9 +95,9 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
 
   async function confirmAndRun(
     deletionCase: string,
-    confirmFunc: (args?: unknown) => void,
-    confirmFuncArgs?: unknown,
-    data?: unknown,
+    confirmFunc: (...args: never[]) => void,
+    confirmFuncArgs?: unknown[],
+    data?: { event?: string; [key: string]: unknown },
   ) {
     const deleteCase = getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs, data);
     const shouldProceed = await confirm({
@@ -110,7 +110,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
 
     if (!shouldProceed) return;
 
-    if (confirmFuncArgs) confirmFunc(...confirmFuncArgs);
+    if (confirmFuncArgs) confirmFunc(...(confirmFuncArgs as never[]));
     else confirmFunc();
   }
 
@@ -125,7 +125,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
   const handleDeleteAllShopifySurveys = () => {
     const updateData = {
       ...shopifyInfo.credential,
-      shopifySurveys: [],
+      shopifySurveys: [] as unknown[],
     };
     toast.loading(translations("hold on..deleting surveys delivery settings"), {
       id: "integration-update",
@@ -148,7 +148,10 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     updateIntegration.mutate({ credential: updateData });
   };
 
-  const handleChangeWebhookByTopic = (event: { topic: ShopifyEvents }, isEnabled: boolean) => {
+  const handleChangeWebhookByTopic = (
+    event: { label: string; value: ShopifyEvents },
+    isEnabled: boolean,
+  ) => {
     if (isEnabled) {
       toast.loading(translations("Hold On..Registering webhooks"), {
         id: "webhooks",
@@ -309,9 +312,9 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
 
 function getLabelsforConfirmModal(
   deletionCase: string,
-  confirmFunc: (args?: unknown) => void,
-  confirmFuncArgs?: unknown,
-  data?: unknown,
+  confirmFunc: (...args: never[]) => void,
+  confirmFuncArgs?: unknown[],
+  data?: { event?: string; [key: string]: unknown },
 ) {
   switch (deletionCase) {
     case "webhooks":
