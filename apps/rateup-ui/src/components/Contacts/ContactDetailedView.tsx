@@ -34,12 +34,7 @@ const ContactDetailedView = ({
 }: {
   opened: boolean;
   setOpened: (open: boolean) => void;
-  selectedContact: ContactsData & {
-    notes?: string;
-    location?: string;
-    contactLabelMap?: Array<{ label?: { id?: string; name?: string; color?: string } }>;
-    contactGroups?: Array<{ contactGroup?: ContactGroup }>;
-  };
+  selectedContact: ContactsData;
   setIsSendMessageOpen: (open: boolean) => void;
   setIsAddToGroupOpen: (open: boolean) => void;
 }) => {

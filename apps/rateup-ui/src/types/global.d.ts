@@ -580,6 +580,22 @@ declare global {
     Lifecycle?: {
       name?: string;
     };
+    /** Free-text notes shown on the contact detail panel. */
+    notes?: string;
+    location?: string;
+    /**
+     * The label relation as the detail endpoints spell it (the list endpoint
+     * returns the same data under `ContactLabelMap`).
+     */
+    contactLabelMap?: Array<{
+      label?: {
+        id?: string;
+        name?: string;
+        color?: string;
+      };
+    }>;
+    /** Groups the contact belongs to, when the row is joined with them. */
+    contactGroups?: Array<{ contactGroup?: ContactGroup }>;
     customFields?: Array<{
       id: string;
       contactId: string;

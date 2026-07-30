@@ -3,6 +3,7 @@ import { Activity, useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -44,7 +45,9 @@ function WhatsAppInbox() {
           setSelectedContact(contactFromStore);
           consumed = true;
         } else if (fetchedContact) {
-          setSelectedContact(fetchedContact);
+          // A contact fetched by id carries no list-side `updatedAt`; the store
+          // registers it as a synthesized row, which is what this path wants.
+          setSelectedContact(fetchedContact as ContactWithUpdatedAt);
           consumed = true;
         }
         if (consumed) {

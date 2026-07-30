@@ -18,18 +18,7 @@ import ContactDetailedView from "./ContactDetailedView.tsx";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import SendMessageModal from "./SendMessageModal.tsx";
 
-const ContactMenu = ({
-  contact,
-  groupId,
-}: {
-  contact: ContactsData & {
-    notes?: string;
-    location?: string;
-    contactLabelMap?: Array<{ label?: { id?: string; name?: string; color?: string } }>;
-    contactGroups?: Array<{ contactGroup?: ContactGroup }>;
-  };
-  groupId: string;
-}) => {
+const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: string }) => {
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
   const [openedEditModal, setOpenedEditModal] = useState(false);

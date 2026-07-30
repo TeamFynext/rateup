@@ -169,7 +169,7 @@ export function useSignUp() {
         .find((row) => row.startsWith("referral_code="));
       const referralCode = existingCookie?.split("=")[1];
 
-      const optionalFormFields = [
+      const optionalFormFields: Array<{ id: string; value: string | string[] | null }> = [
         {
           id: "phoneNumber",
           value: phoneNumber || null,
@@ -227,7 +227,9 @@ export function useSignUp() {
             value: orgName,
           },
           ...optionalFormFields,
-        ],
+          // `goals` and `integrationsSelected` are sent as the arrays the signup
+          // wizard collects, which SuperTokens' formFields type does not model.
+        ] as Array<{ id: string; value: string }>,
       });
 
       if (response?.status === "FIELD_ERROR") {
