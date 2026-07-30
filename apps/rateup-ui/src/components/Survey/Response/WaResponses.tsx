@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -50,7 +52,46 @@ import { useResponseFilterStore } from "./store.ts";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const WaResponses = ({ survey, defaultLanguage, questions }) => {
+/** A flow question, as the responses table needs it for column building. */
+interface WaFlowQuestion {
+  id: string;
+  label?: string;
+  header?: string;
+  /** Flow questions reuse the survey question-type values for shared kinds. */
+  metaType?: WaQuestions & QuestionType;
+  dataSource?: Array<{ id: string; title?: string }>;
+}
+
+/** One response row returned by the flow-responses endpoint. */
+interface WaResponseRow {
+  id: string;
+  createdAt: string;
+  contactId?: string;
+  teamId?: string;
+  surveyTeamMap?: { teamId?: string };
+  language?: string;
+  phone?: string;
+  tag?: string;
+  Ticket?: Array<{ id: string }>;
+  responses: Array<{ questionId?: string; response?: unknown }>;
+  [key: string]: unknown;
+}
+
+/** The cell context these column definitions read. */
+interface CellInfo {
+  getValue: () => unknown;
+  row: { original: WaResponseRow };
+}
+
+const WaResponses = ({
+  survey,
+  defaultLanguage,
+  questions,
+}: {
+  survey: Survey;
+  defaultLanguage: string;
+  questions: WaFlowQuestion[];
+}) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -96,7 +137,7 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
   const [campaignIds, setSelectedCampaignIds] = useState([]);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
   useEffect(() => {
-    setServerFilters({});
+    setServerFilters([]);
   }, [survey]);
   const {
     data: responseData,
@@ -137,7 +178,7 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
   const downloadExcelResponse = useDownloadExcelResponse();
 
   const handleExcelDownload = useCallback(
-    (columns, format: "xlsx" | "ods" = "xlsx") => {
+    (columns: string[], format: "xlsx" | "ods" = "xlsx") => {
       downloadExcelResponse.mutate({
         defaultLanguage,
         surveyId,
@@ -185,12 +226,12 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
       {
         accessorKey: "createdAt",
         header: "Created At",
-        cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        cell: (info: CellInfo) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
-      ...(questions?.map((question) => ({
+      ...(questions?.map((question: WaFlowQuestion) => ({
         id: question.label + "_,_" + QuestionType2[question.metaType] + "_,_" + question.id,
         accessorKey: question.id,
-        accessorFn: (row) => {
+        accessorFn: (row: Record<string, unknown>) => {
           const response = row?.[question.id];
           if ([QuestionType.Rating, QuestionType.Opinion].includes(question.metaType)) {
             return Number(response);
@@ -204,7 +245,7 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
         enableSorting: ![WaQuestions.DocumentPicker, WaQuestions.PhotoPicker].includes(
           question.metaType,
         ),
-        cell: (info) => getCellData(info?.getValue(), question),
+        cell: (info: CellInfo) => getCellData(info?.getValue(), question),
       })) ?? []),
       {
         accessorKey: "mobile",
@@ -226,7 +267,7 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
               enableColumnFilter: false,
               enableSorting: false,
               accessorKey: "ticket",
-              cell: (info) => {
+              cell: (info: CellInfo) => {
                 const ticketData = info.row.original.Ticket;
                 const ticketExist = ticketData?.length > 0;
                 return (
@@ -259,7 +300,7 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
         id: "Action",
         enableColumnFilter: false,
         enableSorting: false,
-        cell: (info) => (
+        cell: (info: CellInfo) => (
           <ActionMenu
             open={open}
             resId={info.row.original.id}
@@ -328,11 +369,11 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
 
   const disableTags = useRef(false);
   const data = useMemo(() => {
-    return responseData?.responses?.map((item) => {
+    return responseData?.responses?.map((item: WaResponseRow) => {
       if (!item.tag) {
         disableTags.current = true;
       }
-      const row = {
+      const row: Record<string, unknown> = {
         id: item.id,
         contactId: item.contactId,
         teamId: item.teamId || item.surveyTeamMap?.teamId,
@@ -343,8 +384,10 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
         tag: item.tag,
       };
 
-      questions.forEach((question) => {
-        const response = item.responses.find((res) => res.questionId === question.id);
+      questions.forEach((question: WaFlowQuestion) => {
+        const response = item.responses.find(
+          (res: { questionId?: string; response?: unknown }) => res.questionId === question.id,
+        );
         row[question.id] = response ? response.response : "";
       });
 
@@ -357,7 +400,7 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
   const responseCount = responseData?.totalCount;
 
   const Toolbar = useCallback(
-    (props) => (
+    (props: DataTableToolbarProps<WaResponseRow, unknown>) => (
       <ResponseTableToolbar
         {...props}
         CFData={CFData}
@@ -420,7 +463,15 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
 
 export default React.memo(WaResponses);
 
-const DeleteModal = ({ confirmDelete, opened, close }) => {
+const DeleteModal = ({
+  confirmDelete,
+  opened,
+  close,
+}: {
+  confirmDelete: () => void;
+  opened: boolean;
+  close: () => void;
+}) => {
   const { t: translations } = useTranslation();
   return (
     <Dialog
@@ -453,16 +504,18 @@ const DeleteModal = ({ confirmDelete, opened, close }) => {
     </Dialog>
   );
 };
-export const getCellData = (info, question) => {
+export const getCellData = (info: unknown, question: WaFlowQuestion) => {
+  // The scale maps are keyed by the numeric answer value.
+  const scaleKey = info as keyof typeof LDResponseMap;
   switch (question.metaType) {
     case WaQuestions.LD:
-      return LDResponseMap[info] || "";
+      return LDResponseMap[scaleKey] || "";
     case WaQuestions.YN:
-      return YNResponseMap[info] || "";
+      return YNResponseMap[scaleKey] || "";
     case WaQuestions.Smiley:
-      return SmileyResponseMap[info] || "";
+      return SmileyResponseMap[scaleKey] || "";
     case WaQuestions.Rating:
-      return RatingScaleMap[info] || "";
+      return RatingScaleMap[scaleKey] || "";
     case WaQuestions.Opinion:
       return info || "";
     case WaQuestions.RadioButtonsGroup:
@@ -488,10 +541,10 @@ export const getCellData = (info, question) => {
         )
       );
     case WaQuestions.DatePicker:
-      return info ? dayjs(info).format("DD-MM-YYYY") : "";
+      return info ? dayjs(info as string | number | Date).format("DD-MM-YYYY") : "";
     case WaQuestions.TextArea:
     case WaQuestions.PhotoPicker:
-      return <WaHoverCardComponent content={info} type={question.metaType} />;
+      return <WaHoverCardComponent content={info as ReactNode} type={question.metaType} />;
     default:
       return info.toString() || "";
   }

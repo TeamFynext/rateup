@@ -40,7 +40,7 @@ export interface DataTableProps<TData, TValue> {
   defaultColumnVisibility?: VisibilityState;
 }
 
-interface DataTableToolbarProps<TData, _TValue> {
+export interface DataTableToolbarProps<TData, _TValue> {
   table: ReturnType<typeof useReactTable<TData>>;
 }
 
