@@ -23,7 +23,13 @@ import {
 
 const NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_\s]{0,}$/;
 
-function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
+function CreateNewThemeModal({
+  setThemeSelectorState,
+  surveyThemeDispatch,
+}: {
+  setThemeSelectorState: (id: string) => void;
+  surveyThemeDispatch: (action: { type: string; payload?: unknown }) => void;
+}) {
   const params = useParams({ strict: false });
   const surveyId = params.surveyId as string;
   const { t: translations } = useTranslation();

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useGetWebhookClientSecret } from "@/backend/org/org.query";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
+import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
@@ -19,7 +20,15 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { isValidUrl } from "@/utils/index.ts";
 
-const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }) => {
+const WebhookSettings = ({
+  responseWebhookEndpoint,
+  editSurvey,
+  enabledModules,
+}: {
+  responseWebhookEndpoint: string;
+  editSurvey: SurveyUpdateMutation;
+  enabledModules: string[];
+}) => {
   const uid = useId();
   const [endpointUrl, setEndpointUrl] = useState("");
   const [error, setError] = useState("");

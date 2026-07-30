@@ -28,7 +28,7 @@ import { SurveyVariableType } from "@/types/enums.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
-const SurveyVariableEditor = ({ setActiveTab }) => {
+const SurveyVariableEditor = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
   const { variables, surveyId } = useContext(SurveyContext);
   const [openedCreateVariable, setOpenedCreateVariable] = useState(false);
   const [openedEditVariable, setOpenedEditVariable] = useState(false);

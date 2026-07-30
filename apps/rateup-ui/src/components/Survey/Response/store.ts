@@ -1,10 +1,12 @@
 import { create } from "zustand";
 
+import type { ColumnFilterState } from "@/types/api.ts";
+
 interface ResponseFilter {
   enableServerFilter: boolean;
-  setServerFilters: (value) => void;
+  setServerFilters: (value: ColumnFilterState[]) => void;
   serverFilters: object;
-  setEnableServerFilter: (value) => void;
+  setEnableServerFilter: (value: boolean) => void;
 }
 export const useResponseFilterStore = create<ResponseFilter>((set) => ({
   enableServerFilter: true,

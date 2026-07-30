@@ -14,7 +14,17 @@ import { Input } from "@/components/ui/input.tsx";
 
 const NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/;
 
-function RenameThemeModal({ opened, onClose, themeId, oldName }) {
+function RenameThemeModal({
+  opened,
+  onClose,
+  themeId,
+  oldName,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  themeId: string;
+  oldName: string;
+}) {
   const [name, setName] = useState(oldName);
   const [error, setError] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);

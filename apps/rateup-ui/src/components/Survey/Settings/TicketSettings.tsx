@@ -25,7 +25,15 @@ import {
 
 import NotificationEmailSettings from "./NotificationEmailSettings.tsx";
 
-const TicketSettings = ({ survey, surveyId, enabledModules }) => {
+const TicketSettings = ({
+  survey,
+  surveyId,
+  enabledModules,
+}: {
+  survey: Survey;
+  surveyId: string;
+  enabledModules: string[];
+}) => {
   const uid = useId();
   const [enableTickets, setEnableTickets] = useState(survey?.enableTickets);
   const [ticketBoardId, setTicketBoardId] = useState(survey?.ticketBoardId);

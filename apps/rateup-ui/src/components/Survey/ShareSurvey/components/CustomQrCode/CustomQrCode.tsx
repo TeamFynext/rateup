@@ -35,7 +35,7 @@ function CustomQRCode({
     const width = 10;
     const height = 10;
 
-    const checkIsFindingPatternModule = (i) => {
+    const checkIsFindingPatternModule = (i: number) => {
       if (
         (rows.length >= 0 &&
           rows.length < 7 &&

@@ -12,7 +12,7 @@ import {
 interface ChartDatum {
   choice: string | number;
   count: number;
-  percentage?: number;
+  percentage?: string | number;
   [key: string]: unknown;
 }
 

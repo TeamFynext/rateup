@@ -42,7 +42,15 @@ type FormValues = {
   sendWeeklyReport: boolean;
 };
 
-const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
+const GeneralSettings = ({
+  survey,
+  enabledModules,
+  setSelectedLanguage,
+}: {
+  survey: Survey;
+  enabledModules: string[];
+  setSelectedLanguage: (language: string) => void;
+}) => {
   const uid = useId();
   const { t: translations } = useTranslation();
   const { data: teamRes } = useTeamsByUser();

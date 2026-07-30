@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button.tsx";
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
 import { useSurveyThemeContextValue } from "../../SurveyThemeContext.tsx";
 
-function PageThemeSaveBtn({ className = "", disabled = false, survey }) {
+function PageThemeSaveBtn({
+  className = "",
+  disabled = false,
+  survey,
+}: {
+  className?: string;
+  disabled?: boolean;
+  survey: Survey;
+}) {
   const [isSaving, setIsSaving] = useState(false);
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
 

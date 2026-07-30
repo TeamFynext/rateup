@@ -1,5 +1,6 @@
 import { Shuffle, X } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge.tsx";
@@ -13,7 +14,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 
-const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
+const GenerateTags = ({
+  tagSelectData,
+  setTagSelectData,
+  disabled,
+}: {
+  tagSelectData: string[];
+  setTagSelectData: Dispatch<SetStateAction<string[]>>;
+  disabled?: boolean;
+}) => {
   const [inputValue, setInputValue] = useState("");
   const { t: translations } = useTranslation();
 

@@ -7,7 +7,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import SliderCompatible from "@/components/ui/sliderCompatible.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
-function LogoTabpanel({ state, dispatch }) {
+function LogoTabpanel({
+  state,
+  dispatch,
+}: {
+  state: Record<string, unknown>;
+  dispatch: (action: { type: string; payload?: unknown }) => void;
+}) {
   const uid = useId();
   const { qrBgColor, qrColor, logoSize, logoBorderRadius, isLogoEnabled } = state;
 

@@ -37,7 +37,29 @@ const SurveyQuestion = ({
 }: SurveyQuestionProps) => {
   if (choiceWise.length === 0) return null;
 
-  function getQuestion(questionId) {
+  /** One aggregated choice bucket for a question. */
+  interface ChoiceWiseDatum {
+    choice: string | number;
+    count: number;
+  }
+
+  /** Aggregated answers for a single question. */
+  interface ChoiceWiseEntry {
+    responseCount?: number;
+    data: ChoiceWiseDatum[];
+  }
+
+  /** NPS breakdown for a single question. */
+  interface NpsEntry {
+    npsData?: {
+      npsScore?: number;
+      promoters?: number;
+      passives?: number;
+      detractors?: number;
+    };
+  }
+
+  function getQuestion(questionId: string) {
     const question =
       version === 1
         ? questions?.find((question) => question?.id === questionId)
@@ -67,9 +89,9 @@ const SurveyQuestion = ({
     <div className="space-y-8 border border-[#E2E5ED] rounded-md shadow-sm bg-white">
       <h2 className="font-bold text-md px-6 pt-6">Survey Question Breakdown</h2>
       <div className="py-8 px-4 md:px-14 flex flex-col gap-16">
-        {choiceWise?.map(([questionId, questionData], index) => {
+        {choiceWise?.map(([questionId, questionData]: [string, ChoiceWiseEntry], index: number) => {
           const questionDetails = getQuestion(questionId);
-          const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
+          const npsEntry = NPS.find(([id]: [string, NpsEntry]) => id === questionId)?.[1];
           const responseCount = questionData?.responseCount || 0;
           const npsscore = npsEntry?.npsData?.npsScore ?? 0;
           const npsScore = Math.round(npsscore);
@@ -79,7 +101,7 @@ const SurveyQuestion = ({
           const total = promoters + passives + detractors;
           const happinessIndex = total > 0 ? ((promoters / total) * 10).toFixed(1) : 0;
 
-          const chartData = questionData?.data.map((item) => {
+          const chartData = questionData?.data.map((item: ChoiceWiseDatum) => {
             const color =
               getResponseArrayByQuestionType(questionDetails?.type)?.find(
                 (ch) => ch.value.toString() === item.choice.toString(),

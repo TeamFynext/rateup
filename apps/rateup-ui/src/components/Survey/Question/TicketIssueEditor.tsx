@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q, QuestionType, SmileyResponse } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
@@ -151,7 +152,7 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
     }
   };
 
-  const updateSmileyResponse = (value) => {
+  const updateSmileyResponse = (value: string) => {
     setSelectedOptions((prevSmileys) => {
       return prevSmileys.includes(value)
         ? prevSmileys.filter((smiley) => smiley !== value)
@@ -171,11 +172,14 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
     }
   };
 
-  const handleError = (error) => {
+  const handleError = (error: unknown) => {
     console.error("Failed to update", error);
-    toast.error(` ${translations("Failed to update.. try again. Error:")} ${error.message}`, {
-      id: "load-data",
-    });
+    toast.error(
+      ` ${translations("Failed to update.. try again. Error:")} ${getApiErrorMessage(error)}`,
+      {
+        id: "load-data",
+      },
+    );
   };
 
   const finishQuestionOptionsUpdate = () => {
@@ -402,10 +406,12 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
                             :
                           </span>
                           <MultiSelect
-                            options={selectedQ.choices?.[selectedLanguage].map((c, index) => ({
-                              value: index.toString(),
-                              label: c.value as string,
-                            }))}
+                            options={selectedQ.choices?.[selectedLanguage].map(
+                              (c: Choice, index: number) => ({
+                                value: index.toString(),
+                                label: c.value as string,
+                              }),
+                            )}
                             value={selectedOptions}
                             onValueChange={setSelectedOptions}
                             placeholder="select"

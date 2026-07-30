@@ -15,7 +15,7 @@ import {
 
 import { updateEmailSurvey } from "./updateSettings.ts";
 
-const NotificationEmailSettings = ({ survey, surveyId }) => {
+const NotificationEmailSettings = ({ survey, surveyId }: { survey: Survey; surveyId: string }) => {
   const uid = useId();
   const [enableNotificationEmail, setEnabledNotificationEmail] = useState(
     survey?.enableNotificationEmail,

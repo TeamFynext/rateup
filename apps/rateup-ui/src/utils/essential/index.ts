@@ -1,7 +1,13 @@
-export const stringToColour = function (str: string) {
+/**
+ * Chart series get their colour from the choice label. Numeric choices are
+ * accepted and, as before, hash to the same constant colour — the loop simply
+ * never runs for them.
+ */
+export const stringToColour = function (str: string | number) {
   let hash = 0;
-  for (let i = 0; i < str?.length; i++) {
-    hash = str.codePointAt(i) || 0 + ((hash << 5) - hash);
+  const text = typeof str === "string" ? str : undefined;
+  for (let i = 0; i < (text?.length ?? 0); i++) {
+    hash = text.codePointAt(i) || 0 + ((hash << 5) - hash);
   }
   let colour = "#";
   for (let i = 0; i < 3; i++) {

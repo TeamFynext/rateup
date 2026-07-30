@@ -1,8 +1,20 @@
+import type { ReactNode } from "react";
+
 import { FieldTitle } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 
-function CustomSwitch({ className = "", checked, onChange, label }) {
+function CustomSwitch({
+  className = "",
+  checked,
+  onChange,
+  label,
+}: {
+  className?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: ReactNode;
+}) {
   return (
     <FieldTitle className={cn("flex w-fit cursor-pointer items-center gap-2.5", className)}>
       <span>{label}</span>

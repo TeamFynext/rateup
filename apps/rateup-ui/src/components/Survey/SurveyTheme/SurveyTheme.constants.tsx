@@ -135,7 +135,7 @@ export const supportedPageEditors = {
   languagePage: languagePageEditors,
 };
 
-export const getSurveyThemeKeyOf = (selectedPageTab) => {
+export const getSurveyThemeKeyOf = (selectedPageTab: string) => {
   switch (selectedPageTab) {
     case "surveyPage":
       return "surveyTheme";
@@ -148,7 +148,7 @@ export const getSurveyThemeKeyOf = (selectedPageTab) => {
   }
 };
 
-export const getSurveyThemeTabValueFromPageType = (pageType) => {
+export const getSurveyThemeTabValueFromPageType = (pageType: PageType) => {
   switch (pageType) {
     case PageType.Welcome: {
       return ThemeTabEnum.WELCOME;
@@ -162,7 +162,7 @@ export const getSurveyThemeTabValueFromPageType = (pageType) => {
   }
 };
 
-export const getSurveyThemeKeyFromPageType = (pageType) => {
+export const getSurveyThemeKeyFromPageType = (pageType: PageType) => {
   switch (pageType) {
     case PageType.Welcome: {
       return "welcomeTheme";

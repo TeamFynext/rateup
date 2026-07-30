@@ -1,4 +1,5 @@
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { IconPlus, IconStack2 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -85,11 +86,11 @@ export function QuestionsSideBar({
     if (addQnTrigger > 0) handleAddQn();
   }, [addQnTrigger]);
 
-  const openQuestion = (question) => {
+  const openQuestion = (question: Question) => {
     setSelectedQ(question);
     if (uniquePages.includes(question.type as PageType)) {
       const webSurveyPagesThemeCopy = cloneDeep(survey?.webSurveyPagesTheme);
-      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type);
+      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type as PageType);
       setSelectedSurveyThemeTab(surveyThemeTabValue);
       setSurveyThemeContextValue(webSurveyPagesThemeCopy);
     }
@@ -161,7 +162,7 @@ export function QuestionsSideBar({
     />
   ));
 
-  const handleDragEnd = ({ destination, source }) => {
+  const handleDragEnd = ({ destination, source }: DropResult) => {
     const reorderedQuestions = reorder(questionsState, source.index, destination?.index || 0);
     setQuestionsState(reorderedQuestions);
     questionsReorderMutation.mutate(reorderedQuestions);

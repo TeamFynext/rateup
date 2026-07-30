@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.t
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 
-const GoogleSheetSettings = ({ spreadSheetId }) => {
+const GoogleSheetSettings = ({ spreadSheetId }: { spreadSheetId: string }) => {
   const uid = useId();
   const { t: translations } = useTranslation();
   const url = spreadSheetId ? `https://docs.google.com/spreadsheets/d/${spreadSheetId}` : null;
