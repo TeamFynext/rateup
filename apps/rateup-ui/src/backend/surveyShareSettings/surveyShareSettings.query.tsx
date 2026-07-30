@@ -5,7 +5,7 @@ import { getShareSettings, upadateShareSettings } from "./surveyShareSettings.ap
 
 const useGetShareSettings = (queryKey?: string, resourceName?: string, id?: string) => {
   return useQuery({
-    queryKey: [queryKey, { resourceName, id }],
+    queryKey: [queryKey ?? "", { resourceName, id }],
     queryFn: getShareSettings,
   });
 };

@@ -66,7 +66,6 @@ export function DataTable<TData, TValue>({
     columns,
     state: {
       columnVisibility,
-      sorting,
       rowSelection,
       globalFilter,
       ...(serverSide?.pagination ? { pagination: serverSide.pagination } : {}),
