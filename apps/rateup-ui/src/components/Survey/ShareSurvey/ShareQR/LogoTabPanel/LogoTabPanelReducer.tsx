@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { QrLogoPanelState } from "./index.tsx";
-const initialLogoTabPanelState = {
+const initialLogoTabPanelState: QrLogoPanelState = {
   qrBgColor: "#FFFFFF",
   qrColor: "#000000",
   logoSize: 75,
@@ -14,7 +14,7 @@ const initialLogoTabPanelState = {
 const logoTabPanelReducer = (
   state: QrLogoPanelState,
   action: { type: string; payload?: unknown },
-) => {
+): void => {
   // Each action carries the scalar for the field it names; the action type is a
   // bare string, so the payload cannot be discriminated on it.
   const value = action.payload as string & number & boolean & CSSProperties["objectFit"];

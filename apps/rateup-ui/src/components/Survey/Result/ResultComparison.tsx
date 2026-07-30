@@ -57,10 +57,12 @@ export default function ResultComparison({
   const data = useMemo(
     () =>
       responseCountData
-        ? responseCountData?.teamWiseCount?.map((t: { mapId: string; count: number }) => ({
-            teamCode: t.teamCode,
-            count: t.count,
-          }))
+        ? responseCountData?.teamWiseCount?.map(
+            (t: { mapId: string; count: number; teamCode?: string }) => ({
+              teamCode: t.teamCode,
+              count: t.count,
+            }),
+          )
         : [],
     [responseCountData],
   );
@@ -91,7 +93,9 @@ export default function ResultComparison({
                 })
               : questionTitle;
           const graphData = filterTeams.length
-            ? (q.data ?? []).filter((d: { mapId: string }) => filterTeams.includes(d.mapId))
+            ? ((q.data ?? []) as Array<{ mapId: string }>).filter((d) =>
+                filterTeams.includes(d.mapId),
+              )
             : (q.data ?? []);
           return (
             <Card key={q.questionId} className="min-h-[500px]">
@@ -99,7 +103,9 @@ export default function ResultComparison({
                 <div className="flex items-start justify-between gap-4">
                   <p className="w-[85%] font-black text-muted-foreground">{localizedTitle}</p>
                   <Badge variant="secondary">
-                    {version === 1 ? question.type : QuestionType2[question.metaType]}
+                    {version === 1
+                      ? question.type
+                      : QuestionType2[question.metaType as keyof typeof QuestionType2]}
                   </Badge>
                 </div>
                 <ResponsiveContainer height={400}>

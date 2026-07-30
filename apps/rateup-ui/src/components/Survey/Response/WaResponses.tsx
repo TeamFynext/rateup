@@ -53,7 +53,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 /** A flow question, as the responses table needs it for column building. */
-interface WaFlowQuestion {
+export interface WaFlowQuestion {
   id: string;
   label?: string;
   header?: string;

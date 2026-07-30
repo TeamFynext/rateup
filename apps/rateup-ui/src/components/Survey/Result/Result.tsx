@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
+import type { WaFlowFormElement } from "@/types/global";
 import { decryptPrivateKey } from "@/utils/encryption/index.ts";
 import { pushToSessionStorage } from "@/utils/essential/index.ts";
 
 import Responses from "../Response/Responses.tsx";
 import WaResponses from "../Response/WaResponses.tsx";
+import type { WaFlowQuestion } from "../Response/WaResponses.tsx";
 
 const Result = ({
   survey,
@@ -26,6 +28,16 @@ const Result = ({
   setEncryptionPassword,
   flow = null,
   version = 1,
+}: {
+  survey: Survey;
+  encryptionpassword?: string;
+  setEncryptionPassword: (password: string) => void;
+  flow?: {
+    json?: {
+      screens?: Array<{ layout: { children: WaFlowFormElement[] } }>;
+    };
+  } | null;
+  version?: number;
 }) => {
   const { defaultLanguage } = useContext(SelectedLanguageContext);
   // end to end encryption logic for result page begins here
@@ -44,9 +56,9 @@ const Result = ({
   // .
   // .
   const flowQuestions = useMemo(() => {
-    return flow?.json?.screens?.flatMap((screen: WaFlowScreen) =>
+    return flow?.json?.screens?.flatMap((screen) =>
       screen.layout.children
-        .filter((child: WaFlowFormElement) => child.type !== QuestionType2.Footer)
+        .filter((child) => String(child.type) !== String(QuestionType2.Footer))
         .map(
           ({
             id,
@@ -56,11 +68,11 @@ const Result = ({
             name,
             "data-source": dataSource,
             header,
-          }: WaFlowFormElement & { metaType?: string }) => ({
+          }: WaFlowFormElement & { metaType?: WaFlowQuestion["metaType"] }) => ({
             id,
             label,
-            metaType: type || metaType,
-            dataSource,
+            metaType: (type || metaType) as WaFlowQuestion["metaType"],
+            dataSource: dataSource as WaFlowQuestion["dataSource"],
             name,
             header,
           }),
