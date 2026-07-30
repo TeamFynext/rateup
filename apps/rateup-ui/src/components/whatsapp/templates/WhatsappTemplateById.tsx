@@ -99,8 +99,9 @@ export function WhatsappTemplateById({
   templateId = templateId === "create" ? "" : templateId;
   const { data: editingItem, isPending } = useWaTemplateById(templateId);
   const [selectedText, setSelectedText] = useState("");
-  const contentHistory = useRef([]); // Ref to store content history
-  const inputRef = useRef(null);
+  /** Undo stack for the body text. */
+  const contentHistory = useRef<string[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
   const form = useForm<TemplateFormValues>({
@@ -312,7 +313,7 @@ export function WhatsappTemplateById({
     },
   );
 
-  const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId);
+  const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId ?? "");
   const productRetailerIds = useMemo(
     () => (catalog ? catalog.products?.map((p: { retailer_id: string }) => p.retailer_id) : []),
     [catalog],
@@ -399,7 +400,7 @@ export function WhatsappTemplateById({
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         toast.error("Dynamic variables name should is sequential numeric order");
         return;
-      } else if (values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
+      } else if (values.example!.length !== dynamicVariableArray.length || hasEmptyExamples) {
         toast.error("Please provide example values for all dynamic variables");
         return;
       }
@@ -439,7 +440,7 @@ export function WhatsappTemplateById({
       }
     }
     if (values.templateType === TemplateType.CAROUSEL) {
-      for (const card of values.mediaCarousel) {
+      for (const card of values.mediaCarousel!) {
         const dynamicVariableArr = parseStringWithVariables(card.body);
         if (dynamicVariableArr.length > 0) {
           if (!isArrayInCorrectOrder(dynamicVariableArr)) {
@@ -451,11 +452,11 @@ export function WhatsappTemplateById({
           }
         }
       }
-      const defaultValueCards = values.defaultValues.productCarousel ?? [];
-      values.productCarousel.map((card, index) => {
+      const defaultValueCards = values.defaultValues!.productCarousel ?? [];
+      values.productCarousel!.map((card, index) => {
         const cardIndex = defaultValueCards.findIndex((c) => c.cardIndex === index);
         if (cardIndex !== -1) {
-          defaultValueCards[cardIndex].product_retailer_id = card.product_retailer_id;
+          defaultValueCards[cardIndex]!.product_retailer_id = card.product_retailer_id;
         } else {
           defaultValueCards.push({
             cardIndex: index,
@@ -497,12 +498,12 @@ export function WhatsappTemplateById({
       }
       if (values.templateType === TemplateType.CAROUSEL) {
         await Promise.all(
-          values.mediaCarousel.map(async (card, index) => {
+          values.mediaCarousel!.map(async (card, index) => {
             if (card.header instanceof File) {
               const file = await uploadTemplateMedia(card.header);
               const publicImageLink = await uploadFile(card.header);
-              values.mediaCarousel[index].header = file?.id ?? "";
-              const defValues = values.defaultValues.mediaCarousel ?? [];
+              values.mediaCarousel![index]!.header = file?.id ?? "";
+              const defValues = values.defaultValues!.mediaCarousel ?? [];
               const defCardIndex = defValues.findIndex((v) => v.cardIndex === index);
               const obj = {
                 cardIndex: index,
@@ -558,8 +559,8 @@ export function WhatsappTemplateById({
   }
   const handleSelect = () => {
     const selection = window.getSelection();
-    const selectedText = selection.toString();
-    setSelectedText(selectedText?.trim());
+    const selectedText = selection?.toString();
+    setSelectedText(selectedText?.trim() ?? "");
   };
   const getNextVariable = () => {
     const variables = parseStringWithVariables(values.body);
@@ -583,7 +584,7 @@ export function WhatsappTemplateById({
 
   const undo = () => {
     if (contentHistory.current.length > 0) {
-      const previousContent = contentHistory.current.pop();
+      const previousContent = contentHistory.current.pop()!;
       setTemplateValue("body", previousContent);
     }
   };
@@ -734,7 +735,7 @@ export function WhatsappTemplateById({
             <p className="text-xs">${"{{}}"}</p>
           </div>
         </div>
-        {HeaderWithFormatting(values?.header, values?.format)}
+        {HeaderWithFormatting(values?.header ?? "", values?.format ?? "")}
         <p
           style={{
             wordBreak: "break-all",
@@ -759,7 +760,7 @@ export function WhatsappTemplateById({
       </ResponseMessageContainer>
       {values?.buttons?.slice(0, 2).map((data) => (
         <QuickReplyButton
-          text={data?.text}
+          text={data?.text ?? ""}
           key={data?.text}
           type={data.type}
           style={{ backgroundColor: bubbleBg }}
@@ -787,7 +788,7 @@ export function WhatsappTemplateById({
               key={index}
               style={{ borderRadius: "10px", background: bubbleBg }}
             >
-              {HeaderWithFormatting(card?.header, card?.format)}
+              {HeaderWithFormatting(card?.header ?? "", card?.format ?? "")}
               <p
                 className="p-2.5"
                 style={{
@@ -1076,7 +1077,9 @@ export function WhatsappTemplateById({
                     />
                     <div className="relative">
                       <Textarea
-                        ref={inputRef}
+                        // NOTE: the `registerField` spread below also sets `ref`,
+                        // so `inputRef` stays null and `insertValue` no-ops.
+                        // Left as-is; see the migration notes.
                         className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
                         placeholder={translations("Enter the text")}
                         rows={3}
@@ -1085,7 +1088,7 @@ export function WhatsappTemplateById({
                         {...registerField("body")}
                       />
                       <div className="pointer-events-none absolute right-2 bottom-2">
-                        <LengthTracker length={values?.body?.length} maxValue={1024} atStart />
+                        <LengthTracker length={values?.body?.length ?? 0} maxValue={1024} atStart />
                       </div>
                     </div>
                     {formErrors.body && <FieldError>{formErrors.body.message}</FieldError>}
