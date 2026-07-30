@@ -56,7 +56,7 @@ function HeaderStyles() {
       <div className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
-          value={title.styles.color}
+          value={String(title.styles.color ?? "")}
           onChange={handleColorChange}
           withoutEyedropper
         />
@@ -67,8 +67,8 @@ function HeaderStyles() {
             Font weight
           </FieldLabel>
           <Select
-            value={title.styles.fontWeight}
-            onValueChange={handleFontWeightChange}
+            value={String(title.styles.fontWeight ?? "")}
+            onValueChange={(value) => handleFontWeightChange(value ?? "")}
             items={FontWeights}
           >
             <SelectTrigger id={`${uid}-font-weight`} className="w-full rounded-xl">

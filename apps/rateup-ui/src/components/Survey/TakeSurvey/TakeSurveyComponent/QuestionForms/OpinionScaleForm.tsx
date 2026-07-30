@@ -21,7 +21,7 @@ interface iProps {
 }
 export function OpinionScaleForm({ initValue }: iProps) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [isHovered, setIsHovered] = useState(null);
+  const [isHovered, setIsHovered] = useState<number | null>(null);
 
   const themePrimaryColor = useThemePrimaryColor();
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
@@ -42,7 +42,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
   const handleBtnClick = async (e: MouseEvent<HTMLElement>) => {
     // The click lands on the button element itself; `target` is typed only as EventTarget.
     const clickedBtn = e.target as HTMLElement;
-    const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
+    const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue ?? "");
     if (clickedBtnValue) {
       if (!initValue) updateResponse(clickedBtnValue);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {

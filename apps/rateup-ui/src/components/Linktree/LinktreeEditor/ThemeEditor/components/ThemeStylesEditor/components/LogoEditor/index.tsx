@@ -48,13 +48,16 @@ function LogoEditor() {
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((url: { file?: File; url: string; source?: string }) => {
-    themeDispatch({
-      type: "logo-file-change",
-      payload: url,
-    });
-    resetFileInput();
-  }, []);
+  const onCroppedImgSave = useCallback(
+    (url: { file?: File; url: string; source?: string } | null) => {
+      themeDispatch({
+        type: "logo-file-change",
+        payload: url,
+      });
+      resetFileInput();
+    },
+    [],
+  );
 
   const onCroppedImgCancel = useCallback(() => {
     resetFileInput();

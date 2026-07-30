@@ -32,7 +32,13 @@ function LogoStyles() {
   const [cropModalOpened, setCropModalOpened] = useState(false);
   const closeCropModal = () => setCropModalOpened(false);
   const openCropModal = () => setCropModalOpened(true);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
   const handleHeightInputChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
@@ -48,8 +54,8 @@ function LogoStyles() {
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((obj: { file: File; url: string }) => {
-    const { file, url } = obj;
+  const onCroppedImgSave = useCallback((obj: { file?: File; url: string } | null) => {
+    const { file, url } = obj ?? {};
     surveyThemeDispatch({
       type: "logo-file-change",
       payload: {
