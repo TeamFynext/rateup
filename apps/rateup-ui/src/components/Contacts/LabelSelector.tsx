@@ -1,3 +1,4 @@
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 
 import { Card } from "../ui/card.tsx";
@@ -6,11 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Skeleton } from "../ui/skeleton.tsx";
 
 /** A contact label as the label picker renders it. */
-interface ContactLabelOption {
-  id: string;
-  name: string;
-  color?: string;
-}
 
 /**
  * `allowMultiSelect` decides whether this renders a `MultiSelect` or a `Select`,

@@ -69,8 +69,8 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { useContactTableStore } from "../store/contact-table-store.ts";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps {
+  table: Table<ContactsData>;
 }
 
 const SourceSelector = ({
@@ -172,7 +172,7 @@ const LabelSelector = ({
   );
 };
 
-export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   const isFiltered = table.getState().columnFilters.length > 0;
   const { filter, setFilter } = useContactTableStore();
   const { t } = useTranslation();

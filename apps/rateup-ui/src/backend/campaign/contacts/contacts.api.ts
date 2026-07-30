@@ -104,8 +104,15 @@ export const editContactLabels = async ({
   return res;
 };
 
+/** A contact label as the labels endpoint returns it. */
+export interface ContactLabelOption {
+  id: string;
+  name: string;
+  color?: string;
+}
+
 export const getContactLabels = async () => {
-  const res = await axiosClient.get(`${CONTACT_BASE_URL}/labels`);
+  const res = await axiosClient.get<ContactLabelOption[]>(`${CONTACT_BASE_URL}/labels`);
   return res.data;
 };
 
