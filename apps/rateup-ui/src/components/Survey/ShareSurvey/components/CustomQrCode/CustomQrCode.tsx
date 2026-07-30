@@ -17,8 +17,8 @@ function CustomQRCode({
   className,
   qrColor,
 }: CustomQRCodeProps) {
-  const [rows, setRows] = useState([]);
-  const [qrcodeObj, setQrCodeObj] = useState(null);
+  const [rows, setRows] = useState<React.JSX.Element[]>([]);
+  const [qrcodeObj, setQrCodeObj] = useState<ReturnType<typeof QRCode.create> | null>(null);
 
   const drawQRModules = useCallback(() => {
     const qrCodeObj = QRCode.create(textToBeEmbedded, {
@@ -89,7 +89,7 @@ function CustomQRCode({
       <svg
         xmlns="http://www.w3.org/2000/svg"
         version="1.1"
-        viewBox={`0 0 ${qrSize * 10} ${qrSize * 10}`}
+        viewBox={`0 0 ${(qrSize ?? 0) * 10} ${(qrSize ?? 0) * 10}`}
         className={className}
         width={qrSize ? qrSize : 300}
         height={qrSize ? qrSize : 300}

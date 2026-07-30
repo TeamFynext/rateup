@@ -55,13 +55,15 @@ function StylesComponent({
   const openEditors = useOpenEditors();
   const setOpenEditors = useSetOpenEditors();
 
-  const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab);
+  // The tab is always one of the four the helper maps.
+  const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab)!;
   const isSurveyPageTab = selectedPageTab === "surveyPage";
   const selectedPageUseSurveyThemeValue =
     survey?.webSurveyPagesTheme?.[surveyThemeKey]?.["useSurveyTheme"];
   const shouldUseSurveyTheme = selectedPageUseSurveyThemeValue && !isSurveyPageTab;
 
-  const editorComponents = supportedPageEditors[selectedPageTab];
+  const editorComponents =
+    supportedPageEditors[selectedPageTab as keyof typeof supportedPageEditors];
   const shouldDisplayThemeSelector = selectedPageTab === ThemeTabEnum.SURVEY;
 
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
@@ -72,7 +74,7 @@ function StylesComponent({
       const newWebSurveyPagesTheme = produce(
         webSurveyPagesTheme,
         (draft: typeof webSurveyPagesTheme) => {
-          draft[surveyThemeKey]["useSurveyTheme"] = checked;
+          draft[surveyThemeKey]!["useSurveyTheme"] = checked;
         },
       );
 

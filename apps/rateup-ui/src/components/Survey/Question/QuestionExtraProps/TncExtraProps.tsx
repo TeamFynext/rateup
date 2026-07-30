@@ -13,7 +13,7 @@ const TncExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const { t: translations } = useTranslation();
 
-  const tnc = form.values.tnc?.[selectedLanguage] || {
+  const tnc = form.values?.tnc?.[selectedLanguage] || {
     title: translations("I agree to"),
     urlTitle: translations("terms and conditions"),
     content: translations(
@@ -26,8 +26,8 @@ const TncExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const [content, setContent] = useState(tnc?.content);
 
   useEffect(() => {
-    form.setFieldValue("tnc", {
-      ...form.values.tnc,
+    form.setFieldValue?.("tnc", {
+      ...form.values?.tnc,
       [selectedLanguage]: { title, urlTitle, content },
     });
   }, [title, urlTitle, content]);

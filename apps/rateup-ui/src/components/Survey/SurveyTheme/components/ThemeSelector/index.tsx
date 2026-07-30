@@ -15,7 +15,7 @@ function ThemeSelector({
   isAllThemesFetchPending,
   survey,
 }: {
-  themeSelectorState: string;
+  themeSelectorState: string | undefined;
   setThemeSelectorState: (id: string) => void;
   allThemesArr?: Array<{ id: string; name: string; theme?: Record<string, SurveyThemePage> }>;
   isAllThemesFetchPending?: boolean;
@@ -25,7 +25,7 @@ function ThemeSelector({
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
   const [isRenameThemeModalOpened, setIsRenameThemeModalOpened] = useState(false);
-  const [selectedThemeIdToBeRenamed, setSelectedThemeIdToBeRename] = useState(null);
+  const [selectedThemeIdToBeRenamed, setSelectedThemeIdToBeRename] = useState<string | null>(null);
   const [selectedThemesThemeName, setSelectedThemesThemeName] = useState("");
 
   const handleChange = useCallback(
@@ -69,7 +69,7 @@ function ThemeSelector({
           option:
             "w-full [&>div]:w-full hover:bg-gray-50 data-[combobox-active=true]:bg-primary data-[combobox-active=true]:text-white data-[combobox-active=true]:hover:bg-primary",
         }}
-        value={themeSelectorState}
+        value={themeSelectorState ?? ""}
         data={getOptions(allThemesArr)}
         onChange={handleChange}
         renderOptionProps={{
@@ -88,7 +88,7 @@ function ThemeSelector({
         <RenameThemeModal
           opened={isRenameThemeModalOpened}
           onClose={handleCloseRenameThemeModal}
-          themeId={selectedThemeIdToBeRenamed}
+          themeId={selectedThemeIdToBeRenamed ?? ""}
           oldName={selectedThemesThemeName}
         />
       )}

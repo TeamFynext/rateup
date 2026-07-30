@@ -32,12 +32,12 @@ function RenderOption({
     setIsDeletingTheme(true);
     await deleteThemeMutation.mutateAsync(option.value);
     setIsDeletingTheme(false);
-    comboboxHandleChange(surveyActiveThemeId);
+    comboboxHandleChange?.(surveyActiveThemeId ?? "");
   };
 
   const handleEditBtnClick = async (e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
-    handleOpenRenameThemeModal(option.value);
+    handleOpenRenameThemeModal?.(option.value);
   };
 
   return (
