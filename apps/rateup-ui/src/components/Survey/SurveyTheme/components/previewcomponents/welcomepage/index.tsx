@@ -1,5 +1,6 @@
 import { isNumber } from "@tiptap/react";
 import { useCallback } from "react";
+import type { CSSProperties } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
@@ -16,7 +17,7 @@ import ThemeTitle from "../../ThemeTitle.tsx";
 
 import classes from "../../../SurveyTheme.module.css";
 
-export default function WelcomePageThemeView({ survey }) {
+export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
 
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
@@ -63,7 +64,7 @@ export default function WelcomePageThemeView({ survey }) {
   const orgLogoStyles = logoStyles;
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value, name) => {
+    async (value: string, name: string) => {
       const data = {};
       switch (name) {
         case "title": {
@@ -130,7 +131,7 @@ export default function WelcomePageThemeView({ survey }) {
 
             <ThemeTitle
               value={newTitle}
-              onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+              onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
             <div
@@ -165,7 +166,7 @@ export default function WelcomePageThemeView({ survey }) {
   );
 }
 
-export function getInlineStyleFromStyleObj(styles) {
+export function getInlineStyleFromStyleObj(styles: CSSProperties | undefined) {
   if (!styles) return "text-align:center";
   const newStyles = [];
   for (const key in styles) {

@@ -12,7 +12,8 @@ export const HoverCardComponent = ({
   content,
   questionType = null,
 }: {
-  content: ReactNode;
+  /** Either a rendered node, a list of answers, or a single choice object. */
+  content: ReactNode | string[] | { value?: { image?: string; value?: string } };
   questionType?: QuestionType | null;
 }) => {
   const { t: translations } = useTranslation();
@@ -23,20 +24,27 @@ export const HoverCardComponent = ({
   const isMultiType = [QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType);
   const isObjectContent = typeof content === "object";
 
+  // The three render branches below are selected by question type and runtime
+  // shape, which TypeScript cannot follow through those flags; these are the
+  // corresponding views of `content`.
+  const listContent = content as string[];
+  const choiceContent = content as { value?: { image?: string; value?: string } };
+  const textContent = content as string;
+
   return (
     <HoverCard>
       <HoverCardTrigger className="cursor-default">
-        {isMultiType && content?.length > 0 ? (
-          <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">{content[0]}</p>
+        {isMultiType && listContent?.length > 0 ? (
+          <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">{listContent[0]}</p>
         ) : isObjectContent ? (
           <img
-            src={getFileUrlFromKey(content?.value?.image)}
+            src={getFileUrlFromKey(choiceContent?.value?.image)}
             className="w-[30px]"
             alt={translations("answer image of question")}
           />
         ) : (
           <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">
-            {getContent(content)}
+            {getContent(textContent)}
           </p>
         )}
       </HoverCardTrigger>
@@ -45,8 +53,8 @@ export const HoverCardComponent = ({
         <ScrollArea className="max-h-[250px]">
           <div className="break-words font-light">
             {isMultiType ? (
-              content?.length > 0 &&
-              content?.map((item: string) => (
+              listContent?.length > 0 &&
+              listContent?.map((item: string) => (
                 <p key={item} className="min-w-[200px] max-w-[200px]">
                   {item}
                 </p>
@@ -54,14 +62,14 @@ export const HoverCardComponent = ({
             ) : isObjectContent ? (
               <>
                 <img
-                  src={getFileUrlFromKey(content?.value?.image)}
+                  src={getFileUrlFromKey(choiceContent?.value?.image)}
                   className="w-[200px]"
                   alt={translations("answer image of question")}
                 />
-                <p className="max-w-[200px] truncate">{content?.value?.value}</p>
+                <p className="max-w-[200px] truncate">{choiceContent?.value?.value}</p>
               </>
             ) : (
-              <p className="min-w-[200px]">{getContent(content)}</p>
+              <p className="min-w-[200px]">{getContent(textContent)}</p>
             )}
           </div>
         </ScrollArea>

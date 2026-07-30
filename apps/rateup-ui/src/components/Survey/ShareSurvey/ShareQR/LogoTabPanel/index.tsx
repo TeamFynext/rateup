@@ -1,4 +1,5 @@
 import { useId, useRef } from "react";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Field, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field.tsx";
@@ -7,11 +8,22 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import SliderCompatible from "@/components/ui/sliderCompatible.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
+/** The QR customisation panel's state. */
+export interface QrLogoPanelState {
+  qrBgColor: string;
+  qrColor: string;
+  logoSize: number;
+  logoFillType: CSSProperties["objectFit"];
+  logoBorderRadius: number;
+  logoFile: string | null;
+  isLogoEnabled?: boolean;
+}
+
 function LogoTabpanel({
   state,
   dispatch,
 }: {
-  state: Record<string, unknown>;
+  state: QrLogoPanelState;
   dispatch: (action: { type: string; payload?: unknown }) => void;
 }) {
   const uid = useId();

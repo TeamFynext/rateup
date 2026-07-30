@@ -19,7 +19,7 @@ import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
 
 import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
-function LanguagePage({ survey }) {
+function LanguagePage({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
 
@@ -81,7 +81,7 @@ function LanguagePage({ survey }) {
   const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value, name) => {
+    async (value: string, name: string) => {
       const data = {};
       switch (name) {
         case "title": {
@@ -143,7 +143,7 @@ function LanguagePage({ survey }) {
             <div className={startBtnWrapperStyles["titleBox"]}>
               <ThemeTitle
                 value={newTitle}
-                onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+                onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
             </div>

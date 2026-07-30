@@ -48,6 +48,7 @@ import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-r
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
@@ -166,15 +167,17 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 phone: "",
                               }),
-                            items: channels.map((channel) => ({
-                              title: channel.label,
-                              url: "#",
-                              icon: CHANNEL_PLATFORM_ICON[channel.platform] ?? IconMessage,
-                              handleClick: () => {
-                                handleFilter("channel", channel.value);
-                              },
-                              isActive: chatFilterStore.filter.phone === channel.value,
-                            })),
+                            items: channels.map(
+                              (channel: { platform?: string; [key: string]: unknown }) => ({
+                                title: channel.label,
+                                url: "#",
+                                icon: CHANNEL_PLATFORM_ICON[channel.platform] ?? IconMessage,
+                                handleClick: () => {
+                                  handleFilter("channel", channel.value);
+                                },
+                                isActive: chatFilterStore.filter.phone === channel.value,
+                              }),
+                            ),
                           },
                         ]
                       : []),
@@ -190,8 +193,10 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 lifecycle: "",
                               }),
-                            items: lifecycles.map((lbl) => ({
-                              icon: (props) => <div {...props}>{lbl.emoji}</div>,
+                            items: lifecycles.map((lbl: GetLabelsRes) => ({
+                              icon: (props: Record<string, unknown>) => (
+                                <div {...props}>{lbl.emoji}</div>
+                              ),
                               title: lbl.name,
                               url: "#",
                               handleClick: () => {
@@ -214,23 +219,25 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 labels: [],
                               }),
-                            items: contactLabels.map((lbl) => ({
-                              title: lbl.name,
-                              url: "#",
-                              icon: (props) => (
-                                <div
-                                  {...props}
-                                  className={`rounded-full ${props?.className ?? ""} w-3 h-3`}
-                                  style={{
-                                    background: lbl?.color,
-                                  }}
-                                />
-                              ),
-                              handleClick: () => {
-                                handleFilter("label", lbl.id);
-                              },
-                              isActive: chatFilterStore.filter.labels?.includes(lbl.id),
-                            })),
+                            items: contactLabels.map(
+                              (lbl: { id: string; name: string; color?: string }) => ({
+                                title: lbl.name,
+                                url: "#",
+                                icon: (props: Record<string, unknown>) => (
+                                  <div
+                                    {...props}
+                                    className={`rounded-full ${props?.className ?? ""} w-3 h-3`}
+                                    style={{
+                                      background: lbl?.color,
+                                    }}
+                                  />
+                                ),
+                                handleClick: () => {
+                                  handleFilter("label", lbl.id);
+                                },
+                                isActive: chatFilterStore.filter.labels?.includes(lbl.id),
+                              }),
+                            ),
                           },
                         ]
                       : []),
@@ -246,7 +253,7 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 assignedUserIds: [],
                               }),
-                            items: staff.map((member) => ({
+                            items: staff.map((member: { id: string; name?: string }) => ({
                               title: member.name,
                               url: "#",
                               handleClick: () => handleFilter("assignedStaff", member.id),
@@ -267,7 +274,7 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 assignedTeams: [],
                               }),
-                            items: teams.map((team) => ({
+                            items: teams.map((team: { id: string; name?: string }) => ({
                               title: team.name,
                               url: "#",
                               handleClick: () => handleFilter("assignedTeams", team.id),

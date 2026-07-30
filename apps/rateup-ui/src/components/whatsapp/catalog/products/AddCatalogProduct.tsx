@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useCreateBatchCatalogProducts,
   useCreateShopifyProduct,
@@ -165,7 +166,15 @@ function TagController({
   );
 }
 
-const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
+const AddCatalogProduct = ({
+  catalogData,
+  onCancel,
+  productData = null,
+}: {
+  catalogData: WaCatalog;
+  onCancel: () => void;
+  productData?: Record<string, unknown> | null;
+}) => {
   const uid = useId();
   const form = useForm<any>({
     resolver: zodResolver(catalogProductSchema),
@@ -732,7 +741,17 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   );
 };
 
-export const AddCatalogProductModal = ({ catalogData, opened, close, productData = null }) => {
+export const AddCatalogProductModal = ({
+  catalogData,
+  opened,
+  close,
+  productData = null,
+}: {
+  catalogData: WaCatalog;
+  opened: boolean;
+  close: () => void;
+  productData?: Record<string, unknown> | null;
+}) => {
   return (
     <Dialog open={opened} onOpenChange={(val) => !val && close()}>
       <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-2xl">

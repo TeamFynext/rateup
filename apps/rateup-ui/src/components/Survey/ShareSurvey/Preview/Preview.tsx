@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button.tsx";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
+import type { QrLogoPanelState } from "../ShareQR/LogoTabPanel/index.tsx";
 
 import styles from "./Preview.module.css";
 
@@ -20,7 +21,9 @@ function Preview({
 }: {
   url: string;
   surveyTitle: string;
-  logoTabPanelState: Record<string, unknown>;
+  logoTabPanelState: QrLogoPanelState;
+  isSurveyPublished?: boolean;
+  customAttrForDownloadedQrFileName?: string;
 }) {
   const {
     qrBgColor,

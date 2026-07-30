@@ -9,6 +9,18 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
+/** One row of the team performance table. */
+interface TeamPerformanceRow {
+  teamId: string;
+  teamName: string;
+  teamColor?: string;
+  teamMembers?: number;
+  teamMembersOnline?: number;
+  messagesSent?: number;
+  assignedConversations?: number;
+  averageResponseTime?: number;
+}
+
 function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -73,7 +85,7 @@ function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
                       </td>
                     </tr>
                   ))
-                : teamsData?.map((team: { id: string; name: string }) => {
+                : teamsData?.map((team: TeamPerformanceRow) => {
                     const averageResponseTime = formatTimeToNearestUnitFromSeconds(
                       team.averageResponseTime,
                     );
