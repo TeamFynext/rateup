@@ -21,7 +21,7 @@ export const HoverCardComponent = ({
   if (questionType && !Object.values(QuestionType).includes(questionType))
     return <Badge variant="destructive">{translations("Not Available")}</Badge>;
 
-  const isMultiType = [QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType);
+  const isMultiType = [QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType!);
   const isObjectContent = typeof content === "object";
 
   // The three render branches below are selected by question type and runtime
