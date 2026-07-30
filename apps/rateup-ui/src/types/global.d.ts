@@ -672,6 +672,12 @@ declare global {
         promptTokens: number;
       };
     };
+    // Loyalty is provisioned per plan and absent on older stored subscriptions.
+    loyalty?: subscriptionActiveField & {
+      action: subscriptionCountRestriction;
+      reward: subscriptionCountRestriction;
+      customer: subscriptionCountRestriction;
+    };
   }
   interface SPlan {
     id: string;
@@ -680,8 +686,11 @@ declare global {
     paymentPlan?: {
       period: string;
       amount: number;
+      currency?: string;
     };
     paymentPlanId?: string;
+    /** Present when the plan is billed through Stripe rather than Razorpay. */
+    stripeProduct?: StripeProduct;
   }
 
   interface StripeProduct {

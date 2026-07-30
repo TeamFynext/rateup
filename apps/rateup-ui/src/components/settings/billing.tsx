@@ -26,6 +26,7 @@ import { toast } from "sonner";
 
 import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
 import { useCancelStripeSubscriptionMutation } from "@/backend/payment/stripe/stripe.query";
+import type { UsageStats } from "@/backend/stats/stats.api";
 import { useUsageStats } from "@/backend/stats/stats.query";
 import Pricing from "@/components/HomePage/pages/Pricing/index.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
@@ -44,7 +45,20 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
-export function UsageCard({ subscription }) {
+/** A payment order row, as the orders endpoint returns it. */
+interface PaymentOrder {
+  id: string;
+  amount?: number;
+  currency?: string;
+  createdAt?: string;
+  status?: string;
+  paymentStatus?: string;
+  subscriptionStatus?: string;
+  subscriptionChargeAt?: string;
+  subscriptionEndedAt?: string;
+}
+
+export function UsageCard({ subscription }: { subscription: Subscription }) {
   const { t: translations } = useTranslation();
   const { data: stats, refetch, isFetching } = useUsageStats();
 
@@ -76,9 +90,18 @@ export function UsageCard({ subscription }) {
   );
 }
 
-export function OrderHistory({ orders, refresh, isRefetching }) {
+export function OrderHistory({
+  orders,
+  refresh,
+  isRefetching,
+}: {
+  orders: PaymentOrder[] | undefined;
+  refresh: () => void;
+  isRefetching: boolean;
+}) {
   const { t: translations } = useTranslation();
-  const [, setSelectedOrder] = useState([]);
+  // Write-only: kept so the details button records the row it opened.
+  const [, setSelectedOrder] = useState<PaymentOrder[] | PaymentOrder>([]);
   const [, setOpened] = useState(false);
   return (
     <>
@@ -144,7 +167,7 @@ export function OrderHistory({ orders, refresh, isRefetching }) {
   );
 }
 
-const OrderStatusBadge = ({ order }) => {
+const OrderStatusBadge = ({ order }: { order: PaymentOrder }) => {
   const { t: translations } = useTranslation();
   let color, statusText;
 
@@ -181,6 +204,14 @@ export const Billing = ({
   refetch,
   refreshOrders,
   isRefetching,
+}: {
+  subscription: Subscription;
+  activeOrderData: PaymentOrder | null;
+  latestOrderData: PaymentOrder | null;
+  processingPayment: boolean;
+  refetch: () => void;
+  refreshOrders: () => void;
+  isRefetching: boolean;
 }) => {
   const [openedUpgradeModal, setOpenedUpgradeModal] = useState(false);
   const [customUpgradeModal, setCustomUpgradeModal] = useState(false);
@@ -635,7 +666,13 @@ export const Billing = ({
   );
 };
 
-const TeamStats = ({ stats, subscription }) => {
+const TeamStats = ({
+  stats,
+  subscription,
+}: {
+  stats: UsageStats | undefined;
+  subscription: Subscription;
+}) => {
   const { t: translations } = useTranslation();
   const statsArray = [
     {
@@ -689,7 +726,13 @@ const TeamStats = ({ stats, subscription }) => {
   );
 };
 
-const SurveyStats = ({ stats, subscription }) => {
+const SurveyStats = ({
+  stats,
+  subscription,
+}: {
+  stats: UsageStats | undefined;
+  subscription: Subscription;
+}) => {
   const { t: translations } = useTranslation();
   const isActive = subscription?.features?.webSurvey?.active;
   if (!isActive) return null;
@@ -758,7 +801,13 @@ const SurveyStats = ({ stats, subscription }) => {
   );
 };
 
-const WhatsappStats = ({ stats, subscription }) => {
+const WhatsappStats = ({
+  stats,
+  subscription,
+}: {
+  stats: UsageStats | undefined;
+  subscription: Subscription;
+}) => {
   const { t: translations } = useTranslation();
   const isActive = subscription?.features?.whatsapp?.active;
   if (!isActive) return null;
@@ -826,7 +875,13 @@ const WhatsappStats = ({ stats, subscription }) => {
   );
 };
 
-const AIStats = ({ stats, subscription }) => {
+const AIStats = ({
+  stats,
+  subscription,
+}: {
+  stats: UsageStats | undefined;
+  subscription: Subscription;
+}) => {
   const { t: translations } = useTranslation();
   const aiFeature = subscription?.features?.ai;
   if (!aiFeature || !aiFeature?.active) return null;
@@ -891,7 +946,13 @@ const AIStats = ({ stats, subscription }) => {
   );
 };
 
-const LoyaltyStats = ({ stats, subscription }) => {
+const LoyaltyStats = ({
+  stats,
+  subscription,
+}: {
+  stats: UsageStats | undefined;
+  subscription: Subscription;
+}) => {
   const { t: translations } = useTranslation();
   const loyalty = subscription?.features?.loyalty;
   if (!loyalty || !loyalty?.active) return null;

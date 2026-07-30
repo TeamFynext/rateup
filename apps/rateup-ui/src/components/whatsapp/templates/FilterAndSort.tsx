@@ -1,5 +1,6 @@
 import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
@@ -20,7 +21,22 @@ const CATEGORY_OPTIONS = [
   { value: "AUTHENTICATION", label: "Authentication" },
 ];
 
-function OptionRow({ label, active, onClick }) {
+/** The status/category/type filter selection for the templates list. */
+export interface TemplateFilters {
+  status: string;
+  category: string;
+  templateType: string;
+}
+
+function OptionRow({
+  label,
+  active,
+  onClick,
+}: {
+  label: ReactNode;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -35,7 +51,7 @@ function OptionRow({ label, active, onClick }) {
   );
 }
 
-function ActiveBadge({ count }) {
+function ActiveBadge({ count }: { count: number }) {
   if (!count) return null;
   return (
     <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
@@ -45,7 +61,19 @@ function ActiveBadge({ count }) {
 }
 
 // Accordion section
-function FilterSection({ label, hint, isOpen, onToggle, children }) {
+function FilterSection({
+  label,
+  hint,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  label: ReactNode;
+  hint?: string | null;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
   return (
     <div>
       <button
@@ -86,9 +114,17 @@ function FilterSection({ label, hint, isOpen, onToggle, children }) {
   );
 }
 
-export function TemplateFilterSort({ filters, setFilters, templateTypeOptions = [] }) {
+export function TemplateFilterSort({
+  filters,
+  setFilters,
+  templateTypeOptions = [],
+}: {
+  filters: TemplateFilters;
+  setFilters: Dispatch<SetStateAction<TemplateFilters>>;
+  templateTypeOptions?: Array<{ value: string; label: string }>;
+}) {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [openSection, setOpenSection] = useState(null); // "status" | "category" | "templateType" | null
+  const [openSection, setOpenSection] = useState<string | null>(null); // "status" | "category" | "templateType" | null
 
   const activeFilterCount = [
     filters.status !== "all",
@@ -96,11 +132,11 @@ export function TemplateFilterSort({ filters, setFilters, templateTypeOptions = 
     filters.templateType !== "all",
   ].filter(Boolean).length;
 
-  function toggleSection(section) {
+  function toggleSection(section: string) {
     setOpenSection((prev) => (prev === section ? null : section));
   }
 
-  function handleFilterOpenChange(open) {
+  function handleFilterOpenChange(open: boolean) {
     setFilterOpen(open);
     if (!open) setOpenSection(null);
   }
