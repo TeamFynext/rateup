@@ -15,7 +15,7 @@ export default function Page({
   error_occured,
   fromShortUrl = false,
 }: {
-  survey: Survey;
+  survey: Survey | null;
   error_occured?: boolean;
   fromShortUrl?: boolean;
 }) {

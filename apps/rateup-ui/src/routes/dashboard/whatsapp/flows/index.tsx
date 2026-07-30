@@ -135,7 +135,7 @@ function Flows() {
           onRetry={refetch}
         >
           <div className={styles["flows-list-div"]}>
-            <FlowCardsList flows={sortedFlows} teamsData={teamsData} />
+            <FlowCardsList flows={sortedFlows} teamsData={teamsData ?? []} />
           </div>
         </ListPageContent>
       </ListPage>

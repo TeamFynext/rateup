@@ -171,7 +171,7 @@ function RateUpOnboarding() {
     },
   ];
   const [localChecklist, setLocalChecklist] = useState({});
-  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
   const navigate = useNavigate();
   const { data: sub, isLoading: isSubLoading } = useSubscription();

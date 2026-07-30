@@ -132,7 +132,7 @@ function CustomerPage() {
     sorting,
     [],
   );
-  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId);
+  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId ?? "");
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
 

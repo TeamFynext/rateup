@@ -65,6 +65,7 @@ import {
   SendMode,
   SentCampaignChoice,
 } from "@/types/enums.ts";
+import type { Campaign } from "@/types/global";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/$campaignId/")({
@@ -74,7 +75,7 @@ export const Route = createFileRoute("/dashboard/campaign/$campaignId/")({
 function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState(null);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [sorting] = useState([CONTACT_SORT]);
   const [columnFilters] = useDebouncedState([], 200);
@@ -810,7 +811,7 @@ function CampaignDetails() {
           isEdit
           campaign={editingCampaign}
           close={closeEditModal}
-          campaignType={editingCampaign.type}
+          campaignType={editingCampaign.type as CampaignType}
         />
       )}
       {isAddParticipantOpen && campaignQuery.data && (

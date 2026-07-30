@@ -555,7 +555,7 @@ function LoyaltySettingsPage() {
                 form={basicForm}
                 onSave={onSaveBasicSettings}
                 isPending={updateProgramMutation.isPending}
-                programId={program?.id}
+                programId={program?.id ?? null}
               />
 
               <NotificationSettings

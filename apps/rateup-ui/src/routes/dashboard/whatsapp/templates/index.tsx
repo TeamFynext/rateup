@@ -280,7 +280,7 @@ function TemplatePicker({ templates, translations, onSelect }: Readonly<Template
         !q ||
         t.type.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
-        t.body.toLowerCase().includes(q);
+        t.body?.toLowerCase().includes(q);
       return matchCat && matchQ;
     });
   }, [templates, search, activeCategory]);
@@ -459,7 +459,7 @@ function Template() {
   const [createDraftAccountId, setCreateDraftAccountId] = useState("");
 
   const saveDraftMutation = useSaveTemplateAsDraftMutation(
-    null,
+    "",
     async (data) => {
       console.log("saveDraftMutation onSuccess data:", data);
       toast.success(translations("Draft created"));

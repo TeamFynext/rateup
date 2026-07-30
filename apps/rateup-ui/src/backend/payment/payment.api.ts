@@ -56,9 +56,9 @@ export async function deleteRateupPaymentPlan(id: string) {
   return await axiosClient.delete(`${PAYMENT_URL}rateup-plan/${id}`);
 }
 export interface ICreateCheckoutType {
-  planId: string;
-  planName: string;
-  period: string;
+  planId: string | undefined;
+  planName: string | undefined;
+  period: string | undefined;
   orgId: string | undefined;
   isAnnualMessageLimit: boolean;
   rateupPlanId?: string;

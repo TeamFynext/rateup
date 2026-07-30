@@ -166,7 +166,7 @@ function InstagramDashboard() {
         <div className="flex items-center gap-3">
           <Select
             value={selectedSetting?.id ?? ""}
-            onValueChange={(v) => setSelectedId(v)}
+            onValueChange={(v) => setSelectedId(v ?? undefined)}
             items={connectedSettings.map((s) => ({
               value: s.id,
               label: s.igDisplayName || s.igUserName || s.phoneDisplayName || s.phone,
@@ -676,7 +676,7 @@ function PersistentMenuTab({
                 </FieldLabel>
                 <Select
                   value={item.type}
-                  onValueChange={(v: "postback" | "web_url") => updateItem(index, { type: v })}
+                  onValueChange={(v) => updateItem(index, { type: v ?? "postback" })}
                   items={[
                     { value: "postback", label: t("Postback") },
                     { value: "web_url", label: t("Web URL") },

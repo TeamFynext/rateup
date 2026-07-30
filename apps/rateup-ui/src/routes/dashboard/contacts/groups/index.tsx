@@ -61,7 +61,7 @@ function GroupPage() {
   }, [contactGroupData, debouncedSearch, selectedTeamID, sortOption]);
 
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState<ContactGroup | null>(null);
   const confirm = useConfirm();
 
   function handleEditGroup(group: ContactGroup) {
@@ -169,7 +169,7 @@ const GROUP_COLORS = [
 function getColorClass(str: string) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = str.codePointAt(i) + ((hash << 5) - hash);
+    hash = (str.codePointAt(i) ?? 0) + ((hash << 5) - hash);
   }
   return GROUP_COLORS[Math.abs(hash) % GROUP_COLORS.length];
 }

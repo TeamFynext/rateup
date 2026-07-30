@@ -35,7 +35,7 @@ export const Route = createFileRoute("/dashboard/surveys/templates/")({
 function Templates() {
   const { user } = useUser();
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Survey | null>(null);
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);

@@ -28,7 +28,7 @@ function GoogleReview({
   orgLogoUrl?: string;
   surveyTeamMapId?: string;
   isSurveyPreview?: boolean;
-  survey: Survey;
+  survey: Survey | null;
   reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const [isSuggestionCopiedModalOpen, setIsSuggestionCopiedModalOpen] = useState(false);
