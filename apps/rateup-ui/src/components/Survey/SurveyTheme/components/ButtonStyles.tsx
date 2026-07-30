@@ -29,28 +29,28 @@ function ButtonStyles() {
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const handleBackgroundColorChange = useCallback((value) => {
+  const handleBackgroundColorChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-background-color-change",
       payload: value,
     });
   }, []);
 
-  const handleTextColorChange = useCallback((value) => {
+  const handleTextColorChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-text-color-change",
       payload: value,
     });
   }, []);
 
-  const handleXCoOrdinateChange = useCallback((value) => {
+  const handleXCoOrdinateChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-x-coordinate-change",
       payload: value,
     });
   }, []);
 
-  const handleYCoOrdinateChange = useCallback((value) => {
+  const handleYCoOrdinateChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-y-coordinate-change",
       payload: value,

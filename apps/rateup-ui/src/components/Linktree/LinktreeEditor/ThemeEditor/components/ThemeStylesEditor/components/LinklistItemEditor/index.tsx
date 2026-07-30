@@ -15,21 +15,21 @@ function LinklistItemEditor() {
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
 
-  const handleColorChange = useCallback((value) => {
+  const handleColorChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "linkListItem-color-change",
       payload: value,
     });
   }, []);
 
-  const handleBackgroundColorChange = useCallback((value) => {
+  const handleBackgroundColorChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "linkListItem-background-color-change",
       payload: value,
     });
   }, []);
 
-  const handleBorderRadiusChange = useCallback((value) => {
+  const handleBorderRadiusChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "linkListItem-border-radius-change",
       payload: value,

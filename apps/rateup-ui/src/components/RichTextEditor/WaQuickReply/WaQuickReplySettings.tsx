@@ -79,7 +79,7 @@ const WaQuickReplySettings = () => {
       {/* Quick replies list container */}
       {quickReplies && quickReplies.length > 0 ? (
         <div className="bg-white dark:bg-card border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
-          {quickReplies.map((reply) => (
+          {quickReplies.map((reply: QuickReply) => (
             <QuickReplyItem
               reply={reply}
               key={reply?.id}

@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 
 import { PageType as Page, QuestionType as Q } from "@/types/enums.ts";
+import type { PageType, QuestionType } from "@/types/enums.ts";
+import type { TNC, Wop } from "@/types/global";
 
 import CustomHTML from "../../Page/Previews/CustomHTML.tsx";
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm.tsx";
@@ -30,7 +32,21 @@ import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/Tex
 import WOPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/WOPForm.tsx";
 import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm.tsx";
 
-const QuestionTypePreview = ({ type, choices, features, tnc, wop, htmlContent = null }) => {
+const QuestionTypePreview = ({
+  type,
+  choices,
+  features,
+  tnc,
+  wop,
+  htmlContent = null,
+}: {
+  type: QuestionType | PageType;
+  choices?: Record<string, Choice[]>;
+  features?: Record<string, unknown>;
+  tnc?: TNC;
+  wop?: Wop;
+  htmlContent?: string | null;
+}) => {
   const { t: translations } = useTranslation();
   switch (type) {
     case Q.Text:

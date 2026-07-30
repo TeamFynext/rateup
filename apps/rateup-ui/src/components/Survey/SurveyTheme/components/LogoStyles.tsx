@@ -34,21 +34,21 @@ function LogoStyles() {
   const openCropModal = () => setCropModalOpened(true);
   const [cropModalProps, setCropModalProps] = useState(null);
 
-  const handleHeightInputChange = useCallback((value) => {
+  const handleHeightInputChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "logo-height-change",
       payload: value,
     });
   }, []);
 
-  const handleWidthInputChange = useCallback((value) => {
+  const handleWidthInputChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "logo-width-change",
       payload: value,
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((obj) => {
+  const onCroppedImgSave = useCallback((obj: { file: File; url: string }) => {
     const { file, url } = obj;
     surveyThemeDispatch({
       type: "logo-file-change",
@@ -65,7 +65,7 @@ function LogoStyles() {
   }, []);
 
   const handleFileInputChange = useCallback(
-    (value) => {
+    (value: File | null) => {
       if (value) {
         const { name } = value;
         const url = URL.createObjectURL(value);

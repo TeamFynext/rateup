@@ -1,4 +1,5 @@
 import { useId, useCallback } from "react";
+import type { ChangeEvent } from "react";
 
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
@@ -37,29 +38,35 @@ function BackgroundStyles() {
     [selectedPreview],
   );
 
-  const handleDesktopBgImagePickerChange = useCallback((croppedImageObj) => {
-    const { url = "", file = null } = croppedImageObj || {};
-    surveyThemeDispatch({
-      type: "bg-desktopBgImg-change",
-      payload: {
-        desktopBgImg: url,
-        desktopBgImgFile: file,
-      },
-    });
-  }, []);
+  const handleDesktopBgImagePickerChange = useCallback(
+    (croppedImageObj: { file?: File; url: string }) => {
+      const { url = "", file = null } = croppedImageObj || {};
+      surveyThemeDispatch({
+        type: "bg-desktopBgImg-change",
+        payload: {
+          desktopBgImg: url,
+          desktopBgImgFile: file,
+        },
+      });
+    },
+    [],
+  );
 
-  const handleMobileBgImagePickerChange = useCallback((croppedImageObj) => {
-    const { url = "", file = null } = croppedImageObj || {};
-    surveyThemeDispatch({
-      type: "bg-mobileBgImg-change",
-      payload: {
-        mobileBgImg: url,
-        mobileBgImgFile: file,
-      },
-    });
-  }, []);
+  const handleMobileBgImagePickerChange = useCallback(
+    (croppedImageObj: { file?: File; url: string }) => {
+      const { url = "", file = null } = croppedImageObj || {};
+      surveyThemeDispatch({
+        type: "bg-mobileBgImg-change",
+        payload: {
+          mobileBgImg: url,
+          mobileBgImgFile: file,
+        },
+      });
+    },
+    [],
+  );
 
-  const handleConfettiChange = useCallback((e) => {
+  const handleConfettiChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     surveyThemeDispatch({
       type: "bg-confetti-change",
       payload: e.target.checked,

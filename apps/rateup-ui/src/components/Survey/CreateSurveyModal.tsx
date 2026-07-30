@@ -68,10 +68,17 @@ export function CreateSurveyModal({
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
   const selectThemeDropdownData =
-    allThemesArr?.map(({ id, name }) => ({ value: id, label: name })) ?? [];
+    allThemesArr?.map(({ id, name }: { id: string; name: string }) => ({
+      value: id,
+      label: name,
+    })) ?? [];
 
-  const allTeams = teamsData?.map((team) => team?.id) ?? [];
-  const teamOptions = teamsData?.map((team) => ({ value: team?.id, label: team?.name })) ?? [];
+  const allTeams = teamsData?.map((team: { id: string; name: string }) => team?.id) ?? [];
+  const teamOptions =
+    teamsData?.map((team: { id: string; name: string }) => ({
+      value: team?.id,
+      label: team?.name,
+    })) ?? [];
 
   const formSchema = z.object({
     title: z.string().min(1, translations("Cannot be empty")),
@@ -152,7 +159,7 @@ export function CreateSurveyModal({
   useEffect(() => {
     if (!watchedSelectedTheme) {
       const defaultThemeId = allThemesArr?.find(
-        (themeObj) => themeObj.name === "Default Theme",
+        (themeObj: { id: string; name: string }) => themeObj.name === "Default Theme",
       )?.id;
       setValue("selectedTheme", defaultThemeId || "");
     }
@@ -327,11 +334,13 @@ export function CreateSurveyModal({
                           <SelectValue placeholder={translations("Select Theme")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {selectThemeDropdownData.map((themeOpt) => (
-                            <SelectItem key={themeOpt.value} value={themeOpt.value}>
-                              {themeOpt.label}
-                            </SelectItem>
-                          ))}
+                          {selectThemeDropdownData.map(
+                            (themeOpt: { value: string; label: string }) => (
+                              <SelectItem key={themeOpt.value} value={themeOpt.value}>
+                                {themeOpt.label}
+                              </SelectItem>
+                            ),
+                          )}
                         </SelectContent>
                       </Select>
                       {isAllThemesFetchPending && <Spinner className="size-4 shrink-0" />}

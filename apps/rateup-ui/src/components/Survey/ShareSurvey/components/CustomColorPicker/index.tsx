@@ -1,5 +1,6 @@
 import { IconColorPicker } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -41,7 +42,7 @@ function CustomColorPicker({
   const [isFocused, setIsFocused] = useState(false);
 
   const handleBlur = useCallback(
-    (_e) => {
+    (_e: unknown) => {
       setIsFocused(false);
       if (!value?.length) {
         handleInputChange("#000000");
@@ -55,7 +56,7 @@ function CustomColorPicker({
   }, []);
 
   const handleInputChange = useCallback(
-    (eventOrvalue) => {
+    (eventOrvalue: string | ChangeEvent<HTMLInputElement>) => {
       let resultValue = eventOrvalue;
       if (typeof eventOrvalue === "object") {
         resultValue = eventOrvalue.target.value;

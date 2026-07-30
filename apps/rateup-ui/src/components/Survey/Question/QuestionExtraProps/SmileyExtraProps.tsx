@@ -74,7 +74,7 @@ const SmileyExtraProps = ({ form }) => {
   const features = form.values.features ? { ...form.values.features } : {};
   const [opened, setOpened] = useState(true);
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: string, value: unknown) => {
     const updateData: Record<string, any> = { [field]: value };
     if (
       field === "colorType" &&

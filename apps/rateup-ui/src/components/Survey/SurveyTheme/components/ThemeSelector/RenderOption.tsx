@@ -1,6 +1,7 @@
 import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import type { MouseEvent } from "react";
 
 import { useDeleteThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -21,7 +22,7 @@ function RenderOption({
 
   const deleteThemeMutation = useDeleteThemeMutation();
 
-  const handleDeleteBtnClick = async (e) => {
+  const handleDeleteBtnClick = async (e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     setIsDeletingTheme(true);
     await deleteThemeMutation.mutateAsync(option.value);
@@ -29,7 +30,7 @@ function RenderOption({
     comboboxHandleChange(surveyActiveThemeId);
   };
 
-  const handleEditBtnClick = async (e) => {
+  const handleEditBtnClick = async (e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     handleOpenRenameThemeModal(option.value);
   };

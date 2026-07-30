@@ -28,21 +28,21 @@ function HeaderStyles() {
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const handleColorChange = useCallback((value) => {
+  const handleColorChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "title-color-change",
       payload: value,
     });
   }, []);
 
-  const handleFontWeightChange = useCallback((value) => {
+  const handleFontWeightChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "title-font-weight-change",
       payload: value,
     });
   }, []);
 
-  const handleFontSizeChange = useCallback((value) => {
+  const handleFontSizeChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "title-font-size-change",
       payload: value,

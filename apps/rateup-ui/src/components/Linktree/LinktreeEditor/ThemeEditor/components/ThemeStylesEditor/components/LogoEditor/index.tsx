@@ -28,21 +28,21 @@ function LogoEditor() {
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
   const [cropModalProps, setCropModalProps] = useState(null);
 
-  const handleLogoWidthChange = useCallback((value) => {
+  const handleLogoWidthChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "logo-width-change",
       payload: value,
     });
   }, []);
 
-  const handleLogoHeightChange = useCallback((value) => {
+  const handleLogoHeightChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "logo-height-change",
       payload: value,
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((url) => {
+  const onCroppedImgSave = useCallback((url: string) => {
     themeDispatch({
       type: "logo-file-change",
       payload: url,
@@ -54,7 +54,7 @@ function LogoEditor() {
     resetFileInput();
   }, []);
 
-  const handleLogoFileChange = useCallback((fileOrNull) => {
+  const handleLogoFileChange = useCallback((fileOrNull: File | null) => {
     if (fileOrNull) {
       const { name } = fileOrNull;
       const url = URL.createObjectURL(fileOrNull);

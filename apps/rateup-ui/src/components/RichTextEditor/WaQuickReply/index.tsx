@@ -1,6 +1,7 @@
 import { Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
@@ -22,7 +23,7 @@ export const WaQuickReply = ({
 
   const filteredReplies = searchQuery
     ? quickReplies.filter(
-        (r) =>
+        (r: QuickReply) =>
           (r.key && r.key.toLowerCase().includes(searchQuery?.toLowerCase())) ||
           r.category.toLowerCase().includes(searchQuery?.toLowerCase()) ||
           r.topic.toLowerCase().includes(searchQuery?.toLowerCase()),
@@ -34,7 +35,7 @@ export const WaQuickReply = ({
     <div className="flex flex-col gap-1 max-h-32 overflow-auto">
       {filteredReplies.length > 0 ? (
         <div className="grid grid-cols-2 gap-2">
-          {filteredReplies.map((reply) => {
+          {filteredReplies.map((reply: QuickReply) => {
             return (
               <div
                 key={reply.id}

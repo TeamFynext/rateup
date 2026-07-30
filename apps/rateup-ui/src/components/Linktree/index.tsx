@@ -53,14 +53,23 @@ function LinktreeDashboard() {
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/lt`;
 
   const linktreeInfos = useMemo(() => {
-    return linktrees.map((lt) => ({
-      id: lt.id,
-      name: lt.name,
-      shortUrlId: lt.shortUrlId,
-      createdAt: lt.createdAt,
-      visitorsCount: lt.visitorsCount,
-      isPublished: lt.isPublished,
-    })) as LinktreeListEntry[];
+    return linktrees.map(
+      (lt: {
+        id: string;
+        name?: string;
+        shortUrlId?: string;
+        createdAt?: string;
+        visitorsCount?: number;
+        isPublished?: boolean;
+      }) => ({
+        id: lt.id,
+        name: lt.name,
+        shortUrlId: lt.shortUrlId,
+        createdAt: lt.createdAt,
+        visitorsCount: lt.visitorsCount,
+        isPublished: lt.isPublished,
+      }),
+    ) as LinktreeListEntry[];
   }, [linktrees]);
 
   const filteredLinktrees = useMemo(() => {

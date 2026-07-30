@@ -15,7 +15,7 @@ function InputStyles() {
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const handleColorPickerChange = useCallback((value) => {
+  const handleColorPickerChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "input-color-change",
       payload: value,

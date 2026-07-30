@@ -15,21 +15,21 @@ function SubtitleEditor() {
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
 
-  const handleFontWeightChange = useCallback((value) => {
+  const handleFontWeightChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "subtitle-font-weight-change",
       payload: value,
     });
   }, []);
 
-  const handleFontSizeChange = useCallback((value) => {
+  const handleFontSizeChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "subtitle-font-size-change",
       payload: value,
     });
   }, []);
 
-  const handleColorChange = useCallback((value) => {
+  const handleColorChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "subtitle-color-change",
       payload: value,

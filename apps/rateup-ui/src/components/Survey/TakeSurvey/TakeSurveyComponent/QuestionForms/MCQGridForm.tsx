@@ -26,7 +26,7 @@ import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQGridFormProps {
   features: any;
-  previewChoices?: Choice[];
+  previewChoices?: Record<string, Array<Choice>>;
   isPreview?: boolean;
 }
 const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) => {

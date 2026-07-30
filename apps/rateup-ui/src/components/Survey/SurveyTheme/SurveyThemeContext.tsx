@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useRef } from "react";
+import type { MutableRefObject, ReactNode } from "react";
 import { useImmerReducer } from "use-immer";
+
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 import surveyThemeReducer from "./surveyThemeReducer.ts";
@@ -25,12 +28,24 @@ const SetSelectedPreviewContext = createContext(null);
 
 const SelectedQuestionContext = createContext<Question>(null);
 
+/** An action dispatched into the survey-theme reducer. */
+export type SurveyThemeAction = {
+  type: string;
+  payload?: unknown;
+};
+
 function SurveyThemeContextProvider({
   surveyTheme,
   children,
   selectedPageTab = ThemeTabEnum.SURVEY,
   editSurveySelectedQuestion = null,
   surveyThemeContextProviderValueRef = null,
+}: {
+  surveyTheme: SurveyTheme;
+  children: ReactNode;
+  selectedPageTab?: ThemeTabEnum;
+  editSurveySelectedQuestion?: Question | null;
+  surveyThemeContextProviderValueRef?: MutableRefObject<unknown> | null;
 }) {
   // console.log({ selectedPageTab, theme: surveyThemeContextProviderValueRef.current})
   const isFirstRender = useIsFirstRender();
@@ -42,14 +57,14 @@ function SurveyThemeContextProvider({
     selectedPreview: "desktop",
   });
 
-  const setOpenEditors = (value) => {
+  const setOpenEditors = (value: string[]) => {
     dispatch({
       type: "open-editors-change",
       payload: value,
     });
   };
 
-  const setSelectedPreview = (value) => {
+  const setSelectedPreview = (value: string) => {
     dispatch({
       type: "selected-preview-change",
       payload: value,
