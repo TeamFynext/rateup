@@ -36,11 +36,7 @@ function LanguageSelectionPage({
   const [lang, setLang] = useState(languages[0]);
   const selectedPreview = useSelectedPreview();
 
-  const {
-    surveyTheme: {
-      logo: { logo: logoUrl, styles: logoStyles },
-    },
-  } = surveyThemeData;
+  const { logo: logoUrl, styles: logoStyles } = surveyThemeData?.surveyTheme?.logo ?? {};
 
   const defaultTitleSubtitleStartButtonTexts = {
     titleText: `<h3 style="text-align: center">Select a Language</h3>`,
@@ -57,13 +53,13 @@ function LanguageSelectionPage({
     startButtonText?: string;
   };
 
-  const isOrgLogoPresent = logoUrl?.length > 0;
+  const isOrgLogoPresent = (logoUrl?.length ?? 0) > 0;
   const isMobile = useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
 
-  const shouldUseSurveyTheme = pagesThemeData["languageTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = pagesThemeData?.["languageTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
-    ? surveyThemeData["surveyTheme"]
-    : pagesThemeData["languageTheme"];
+    ? surveyThemeData?.["surveyTheme"]
+    : pagesThemeData?.["languageTheme"];
 
   const titleStyles = requiredThemeObj?.title?.styles;
   let subtitleStyles = requiredThemeObj?.subtitle?.styles;
@@ -78,7 +74,7 @@ function LanguageSelectionPage({
   const buttonStyles = requiredThemeObj?.button?.styles;
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    shouldUseSurveyTheme ? surveyThemeData : pagesThemeData,
+    shouldUseSurveyTheme ? (surveyThemeData ?? null) : (pagesThemeData ?? null),
     shouldUseSurveyTheme ? "surveyTheme" : "languageTheme",
     isMobile,
   );
@@ -93,7 +89,7 @@ function LanguageSelectionPage({
     : titleText;
 
   return (
-    <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
+    <CreditsCard enableCredits={!!isUnsplashImage} url={backgroundImageSrc}>
       <div
         className={`flex ${cx("preview-language-page-container", {
           "org-logo-not-present": !isOrgLogoPresent,
@@ -113,7 +109,7 @@ function LanguageSelectionPage({
           <div className={`flex flex-col gap-2 ${cx("header")}`}>
             <div
               dangerouslySetInnerHTML={{
-                __html: newTitle,
+                __html: newTitle ?? "",
               }}
               style={{ color: titleStyles?.color }}
             />

@@ -20,13 +20,13 @@ function getBgImgAndBgColor(
     bgColor: desktopBgColor,
     chooseBgRadioInputValue: desktopChoosedBg,
     imageUrl: desktopBgImgUrl,
-  } = desktopBgObj;
+  } = desktopBgObj ?? {};
 
   const {
     bgColor: mobileBgColor,
     chooseBgRadioInputValue: mobileChoosedBg,
     imageUrl: mobileBgImgUrl,
-  } = mobileBgObj;
+  } = mobileBgObj ?? {};
 
   const bgColor = isMobile ? mobileBgColor : desktopBgColor;
   const bgImg = isMobile ? mobileBgImgUrl : desktopBgImgUrl;
