@@ -120,7 +120,7 @@ export const getIconStyle = (
 
 export const getEmptyIcon = (
   value: number,
-  color: string,
+  color: string | undefined,
   iconStyle: SmileyIconStyle,
   response?: unknown,
 ) => {
@@ -176,7 +176,11 @@ export const getEmptyIcon = (
   }
 };
 
-export const getFullIcon = (value: number, color: string, iconStyle: SmileyIconStyle) => {
+export const getFullIcon = (
+  value: number,
+  color: string | undefined,
+  iconStyle: SmileyIconStyle,
+) => {
   const { variant, emojies } = iconStyle;
   if (!variant || variant === SmileyVariantStyle.Default) {
     return (

@@ -42,7 +42,7 @@ const SmileyRating = ({
   // The survey context is null on the standalone preview.
   const { webSurveyAutoTransitionToNextQues } = (useSurveyContext() ?? {}) as Partial<Survey>;
 
-  const [iconColor, setIconColor] = useState(null);
+  const [iconColor, setIconColor] = useState<Record<number, string> | null>(null);
   const [customColor, setIsCustomColor] = useState(false);
   const [hoveredValue, setHoveredValue] = useState(-1);
 
@@ -96,7 +96,7 @@ const SmileyRating = ({
         Object.values(SmileyResponse)
           .reverse()
           .map((_s, i) => {
-            if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i];
+            if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i] ?? "";
             else newColor[i + 1] = color?.[i + 1] ?? primaryColor;
           });
         setIconColor(newColor);

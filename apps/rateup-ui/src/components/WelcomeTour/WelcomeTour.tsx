@@ -1,4 +1,5 @@
 import { IconInfoCircle } from "@tabler/icons-react";
+import type { Driver } from "driver.js";
 import { driver } from "driver.js";
 import type { DriveStep } from "driver.js";
 
@@ -12,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import styles from "./Welcome.module.css";
 
 const WelcomeTour = ({ steps }: { steps: DriveStep[] }) => {
-  const tourInstance = useRef<HTMLElement | null>(null);
+  const tourInstance = useRef<Driver | null>(null);
 
   const startTour = () => {
     tourInstance.current = driver({

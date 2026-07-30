@@ -273,8 +273,8 @@ function rgbToHex(r: number, g: number, b: number) {
 }
 
 export function generateGradient(
-  startColor: string,
-  endColor: string,
+  startColor: string | undefined,
+  endColor: string | undefined,
   steps: number,
   defaultColor: string,
 ) {
