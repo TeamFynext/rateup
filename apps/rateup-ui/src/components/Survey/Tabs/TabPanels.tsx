@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
@@ -26,6 +27,17 @@ function TabPanelsComp({
   setEncryptionPassword,
   setActiveTab,
   setFunToRunBeforeSurveyIdPageHeaderTabsChange,
+}: {
+  value: string;
+  survey: Survey;
+  surveyId: string;
+  questions: Question[];
+  addQnTrigger: number;
+  setSelectedLanguage: Dispatch<SetStateAction<string>>;
+  encryptionpassword: string;
+  setEncryptionPassword: (password: string) => void;
+  setActiveTab: (tab: string) => void;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: (fn: (() => void) | null) => void;
 }) {
   const { data: subscription } = useSubscription();
 

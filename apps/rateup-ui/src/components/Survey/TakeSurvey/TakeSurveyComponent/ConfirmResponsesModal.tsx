@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -44,6 +45,17 @@ function ConfirmResponsesModal({
   finishSurvey,
   isSavingResponses,
   largeScreen,
+}: {
+  opened: boolean;
+  close: () => void;
+  survey: Survey;
+  questionsHistory: string[];
+  responses: QuestionResponse[];
+  selectedLanguage: string;
+  surveyThemeData: SurveyTheme | null;
+  finishSurvey: () => void;
+  isSavingResponses: boolean;
+  largeScreen: boolean;
 }) {
   const { t: translations } = useTranslation();
   return (

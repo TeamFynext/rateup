@@ -6,7 +6,7 @@ import type { Dispatch, SetStateAction } from "react";
  * are used, so the mutation is modelled by what is called rather than by
  * react-query's full `UseMutationResult`.
  */
-interface SurveyUpdateMutation {
+export interface SurveyUpdateMutation {
   mutate: (variables: Record<string, unknown>) => void;
   mutateAsync: (variables: Record<string, unknown>) => Promise<unknown>;
 }
@@ -15,7 +15,8 @@ interface SurveyUpdateMutation {
 interface RedirectSetting {
   enable?: boolean;
   url?: string;
-  time?: string;
+  /** Seconds before redirecting; the settings form edits it as a number. */
+  time?: string | number;
 }
 
 export const updateKioskMode = (

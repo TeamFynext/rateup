@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, Zap } from "lucide-react";
 import { motion } from "motion/react";
+import type { ComponentType } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -14,6 +15,21 @@ function OnboardingStep4({
   setActiveIntegration,
   integrations,
   loading,
+}: {
+  data: { integrationsSelected: string[] } & Record<string, unknown>;
+  handleBack: () => void;
+  handleSubmit: () => void;
+  handleIntegrationToggle: (id: string) => void;
+  setActiveIntegration: (id: string) => void;
+  integrations: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+    required?: boolean;
+    icon: ComponentType<{ className?: string }>;
+  }>;
+  loading: boolean;
 }) {
   return (
     <div className="space-y-4">

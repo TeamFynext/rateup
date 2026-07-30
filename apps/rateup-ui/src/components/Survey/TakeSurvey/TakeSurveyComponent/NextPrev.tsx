@@ -1,6 +1,7 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
+import type { RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -11,6 +12,7 @@ import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
@@ -27,6 +29,14 @@ function NextPrev({
   isSavingResponses,
   surveyThemeData,
   errorTextDivRef,
+}: {
+  prev: () => void;
+  next: () => void;
+  questionsLength: number;
+  survey: Survey;
+  isSavingResponses: boolean;
+  surveyThemeData: SurveyTheme | null;
+  errorTextDivRef: RefObject<HTMLDivElement | null>;
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -94,7 +104,7 @@ function NextPrev({
     }
   }
 
-  function getCompletionRate(num, total) {
+  function getCompletionRate(num: number, total: number) {
     const completionPercentage = ((num / total) * 100).toFixed(0);
     return completionPercentage;
   }

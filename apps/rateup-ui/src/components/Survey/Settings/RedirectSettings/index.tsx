@@ -4,6 +4,12 @@ import { useTranslation } from "react-i18next";
 
 type RedirectError = { url: string; time: string };
 
+/** The survey's redirect setting as this form edits it. */
+type RedirectValue = { enable?: boolean; url?: string; time?: string | number };
+
+import type { Dispatch, SetStateAction } from "react";
+
+import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
@@ -28,6 +34,16 @@ function RedirectSettings({
   redirectError,
   setRedirectError,
   debounced,
+}: {
+  enabledModules: string[];
+  redirect: RedirectValue;
+  setRedirect: Dispatch<SetStateAction<RedirectValue>>;
+  editSurvey: SurveyUpdateMutation;
+  kioskMode: boolean;
+  survey: Survey;
+  redirectError: RedirectError;
+  setRedirectError: Dispatch<SetStateAction<RedirectError>>;
+  debounced: string;
 }) {
   const uid = useId();
   const { t: translations } = useTranslation();

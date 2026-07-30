@@ -185,6 +185,12 @@ declare global {
     webSurveyPagesTheme: any;
     /** Review destination per platform. The legacy "" key holds the Google link. */
     reviewPageLinks: Partial<Record<ReviewPagePlatform | "", string>>;
+    /** Recipients for survey response notification emails. */
+    notificationEmail?: string[];
+    /** Per-language overrides for the renderer's built-in UI strings. */
+    uiTextTranslations?: Record<string, Record<string, string>>;
+    /** Cached AI summaries of the survey's long-text answers. */
+    aiResponseSummary?: ResponseSummary[];
     ticketColumnId?: string;
     ticketBoardId?: string;
   }

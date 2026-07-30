@@ -1,6 +1,7 @@
 import { toBlob } from "html-to-image";
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Tags } from "lucide-react";
 import { useId, useCallback, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetShareSettings } from "@/backend/surveyShareSettings/surveyShareSettings.query";
@@ -41,6 +42,16 @@ function TagManager({
   surveyTitle,
   surveyId,
   shareUrl,
+}: {
+  isPublished: boolean;
+  selectTeamDropdownValue: string;
+  teamSelectData: Array<{ value: string; label: string }>;
+  onSelectTeamDropdownChange: (value: string) => void;
+  nothingFound: ReactNode;
+  tagsToMap: string[];
+  surveyTitle: string;
+  surveyId: string;
+  shareUrl: string;
 }) {
   const uid = useId();
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] = useState(false);
@@ -53,7 +64,7 @@ function TagManager({
   const { t: translations } = useTranslation();
 
   const downloadFiles = useCallback(
-    async (domNodeArr) => {
+    async (domNodeArr: HTMLElement[]) => {
       try {
         const results = [];
 

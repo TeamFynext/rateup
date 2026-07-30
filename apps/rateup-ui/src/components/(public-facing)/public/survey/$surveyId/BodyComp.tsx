@@ -13,6 +13,14 @@ function BodyComp({
   surveyId,
   k,
   reviewPageLinks,
+}: {
+  enableGoogleReview: boolean;
+  googleLink?: string;
+  reviews: unknown[];
+  orgLogoSrc?: string;
+  surveyId: string;
+  k?: string;
+  reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const { t: translations } = useTranslation();
   return (
