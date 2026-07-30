@@ -31,6 +31,26 @@ const extraProps = [
 interface CatalogProductRow {
   id: string;
   retailer_id?: string;
+  hotel_id?: string;
+  hotel_room_id?: string;
+  hotel_retailer_id?: string;
+  currency?: string;
+  price?: number;
+  base_price?: number;
+  sale_price?: number;
+  image?: string;
+  image_link?: string;
+  url?: string;
+  productProps?: {
+    currency?: string;
+    price?: string;
+    base_price?: string;
+    sale_price?: string;
+    image?: Array<{ url: string; tag: string[] }>;
+    image_link?: string;
+    url?: string;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 
@@ -68,16 +88,16 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
 
   function handleDelete(product: CatalogProductRow) {
     toast.loading("Deleting product…", { id: "delete-catalog-product" });
-    let productIds: string[] = [];
+    let productIds: Array<{ id: string; hotel_reatiler_id?: string }> = [];
     if (vertical === "commerce") {
-      productIds = [{ id: product.retailer_id }];
+      productIds = [{ id: String(product.retailer_id) }];
     } else if (vertical === "hotels") {
-      productIds = [{ id: product.hotel_id }];
+      productIds = [{ id: String(product.hotel_id) }];
     } else if (vertical === "hotel_room") {
       productIds = [
         {
-          id: product.hotel_room_id,
-          hotel_retailer_id: product.hotel_retailer_id,
+          id: String(product.hotel_room_id),
+          hotel_reatiler_id: product.hotel_retailer_id,
         },
       ];
     }

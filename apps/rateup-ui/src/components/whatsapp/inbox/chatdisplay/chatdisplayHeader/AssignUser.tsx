@@ -40,6 +40,17 @@ import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 
+/** An assignment row, as either the API or the local selection shape. */
+interface AssignedUserRow {
+  id?: string;
+  userId?: string;
+  name?: string;
+  teamId?: string;
+  contactId?: string;
+  assignedUserId?: string;
+  assignedUser?: { id?: string; name?: string };
+}
+
 const AssignUser = ({
   contactId,
   variant = "ghost",
@@ -82,7 +93,7 @@ const AssignUser = ({
       return;
     }
     const assignees = assignedUsers
-      ? assignedUsers?.map((a: { id?: string; name?: string; teamId?: string }) => ({
+      ? assignedUsers?.map((a: AssignedUserRow) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
           contactId: a.contactId,
@@ -90,12 +101,10 @@ const AssignUser = ({
         }))
       : [];
     setAssignedStaff(assignees);
-    prevAssignedRef.current = assignees.map(
-      (a: { id?: string; name?: string; teamId?: string }) => ({
-        userId: a.userId,
-        teamId: a.teamId,
-      }),
-    );
+    prevAssignedRef.current = assignees.map((a: AssignedUserRow) => ({
+      userId: a.userId,
+      teamId: a.teamId,
+    }));
   }, [assignedUsers, contactId]);
 
   useEffect(() => {
@@ -108,7 +117,7 @@ const AssignUser = ({
       assignees.length &&
       !isEqual(
         assignees,
-        assignedUsers?.map((a: { id?: string; name?: string; teamId?: string }) => ({
+        assignedUsers?.map((a: AssignedUserRow) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
         })),

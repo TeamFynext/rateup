@@ -43,9 +43,9 @@ const TestimonialFilter = ({
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
   const { t: translations } = useTranslation();
 
-  function removeDuplicates(surveyMultiSelectOptions) {
+  function removeDuplicates(surveyMultiSelectOptions: Array<{ value: string; label: string }>) {
     const uniqueArray = [];
-    const encounteredIds = [];
+    const encounteredIds: string[] = [];
     for (let i = 0; i < surveyMultiSelectOptions?.length; i++) {
       const obj = surveyMultiSelectOptions[i];
       if (!encounteredIds.includes(obj.value)) {
@@ -58,10 +58,10 @@ const TestimonialFilter = ({
 
   const [allRatings] = useState(true);
 
-  const filterData = (type: "date" | "rating" | "surveys" | "teams" | "length", newValue) => {
+  const filterData = <K extends keyof filterType>(type: K, newValue: filterType[K]) => {
     setFilters(
       produce((draft: filterType) => {
-        draft[type as string] = newValue;
+        draft[type] = newValue;
       }),
     );
     setType(type);

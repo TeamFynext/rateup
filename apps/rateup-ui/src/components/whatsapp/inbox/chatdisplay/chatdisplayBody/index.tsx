@@ -1,11 +1,14 @@
 import dayjs from "dayjs";
 import { Lock } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type { FC } from "react";
 
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -209,7 +212,7 @@ export default WaInboxChatDisplayBody;
  * Watches the top sentinel through the scroller's visibility hook — the
  * documented escape hatch — and asks for the next page when it comes into view.
  */
-const LoadOlderMessagesTrigger = ({
+const LoadOlderMessagesTrigger: FC<{ onLoad: () => void }> = ({
   enabled,
   onReach,
 }: Readonly<{ enabled: boolean; onReach: () => void }>) => {
@@ -223,7 +226,15 @@ const LoadOlderMessagesTrigger = ({
   return null;
 };
 
-const MessageItem = ({ message, selectedContact, previousMessage }) => {
+const MessageItem = ({
+  message,
+  selectedContact,
+  previousMessage,
+}: {
+  message: WaGetMessagesBody;
+  selectedContact: ContactWithUpdatedAt;
+  previousMessage?: WaGetMessagesBody;
+}) => {
   const { messagesByKey, selectedKey } = useMessagesStore();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;

@@ -3,6 +3,7 @@ import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -132,7 +133,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     ),
   );
 
-  function getChoiceCount(type) {
+  function getChoiceCount(type: string) {
     switch (type) {
       case QuestionType2.CheckboxGroup:
       case QuestionType2.RadioButtonsGroup:
@@ -149,7 +150,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     }
   }
 
-  const renderField = (field) => {
+  const renderField = (field: { name: string; type?: string; [key: string]: unknown }) => {
     const fieldType = initialValues[field].type;
     const FieldComponent = FieldComponentMap[fieldType] || TextField;
     const extra = initialValues[field]?.extra || {};
@@ -177,7 +178,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
               {...extra}
               value={value}
               checked={fieldType === "checkbox" ? value : undefined}
-              onChange={(e) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 // Handle different input types correctly
                 let newValue;
                 if (fieldType === "checkbox") {

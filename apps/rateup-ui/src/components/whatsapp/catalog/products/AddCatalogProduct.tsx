@@ -58,13 +58,13 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         title: "",
         description: "",
         condition: "new",
-        image: [{ url: "", tag: [] }],
-        internal_label: [],
+        image: [{ url: "", tag: [] as string[] }],
+        internal_label: [] as string[],
         link: "",
         price: 0,
         sale_price: 0,
         currencyCode: "INR",
-        video: [{ url: "", tag: [] }],
+        video: [{ url: "", tag: [] as string[] }],
         availability: "in stock",
         brand: "",
       };
@@ -81,7 +81,7 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         longitude: "",
         base_price: 0.0,
         currencyCode: "INR",
-        image: [{ url: "", tag: [] }],
+        image: [{ url: "", tag: [] as string[] }],
       };
     case CatalogProductType.HOTEL_ROOM:
       return {
@@ -92,7 +92,7 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         description: "",
         base_price: 0.0,
         currencyCode: "INR",
-        image: [{ url: "", tag: [] }],
+        image: [{ url: "", tag: [] as string[] }],
       };
   }
 }
@@ -171,9 +171,9 @@ const AddCatalogProduct = ({
   onCancel,
   productData = null,
 }: {
-  catalogData: WaCatalog;
+  catalogData: Pick<WaCatalog, "catalogId"> & { vertical?: string };
   onCancel: () => void;
-  productData?: Record<string, unknown> | null;
+  productData?: ({ image?: unknown[] } & Record<string, unknown>) | null;
 }) => {
   const uid = useId();
   const form = useForm<any>({
@@ -193,8 +193,10 @@ const AddCatalogProduct = ({
       if (productData) {
         if (productData.image?.length) setImageUpload("url");
         const initialValues = getInitialValues(type);
-        Object.keys(getInitialValues(type)).forEach((key) => {
-          initialValues[key] = productData[key];
+        // Copies only the keys the chosen product type declares.
+        const values = initialValues as Record<string, unknown>;
+        Object.keys(initialValues).forEach((key) => {
+          values[key] = productData[key];
         });
         form.reset(initialValues);
       } else {
@@ -747,7 +749,7 @@ export const AddCatalogProductModal = ({
   close,
   productData = null,
 }: {
-  catalogData: WaCatalog;
+  catalogData: Pick<WaCatalog, "catalogId"> & { vertical?: string };
   opened: boolean;
   close: () => void;
   productData?: Record<string, unknown> | null;
