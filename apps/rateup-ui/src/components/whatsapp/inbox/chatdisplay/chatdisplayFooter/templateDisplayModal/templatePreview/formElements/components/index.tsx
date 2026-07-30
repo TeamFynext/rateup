@@ -40,7 +40,7 @@ interface Props {
     component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT",
     component_data: any,
   ) => void;
-  exampleParams?: Array<{ type: string }> | string[];
+  exampleParams?: Array<string | { type: string; [key: string]: unknown }>;
   leadgenData?: {
     data: LeadgenNodeData;
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
@@ -48,9 +48,11 @@ interface Props {
 }
 
 export default function WaTemplateFormComponents(props: Props) {
-  const header = props.exampleParams?.find(
-    (item) => typeof item === "object" && item.type === props?.type?.toLowerCase(),
-  )?.[props?.type?.toLowerCase()];
+  const headerParam = props.exampleParams?.find(
+    (item): item is { type: string; [key: string]: unknown } =>
+      typeof item === "object" && item.type === props?.type?.toLowerCase(),
+  );
+  const header = headerParam?.[props?.type?.toLowerCase()];
 
   switch (props?.type) {
     case "IMAGE":
@@ -299,7 +301,7 @@ function WaBodyVariableInputComponent({
     component_format: "TEXT",
     component_data: any,
   ) => void;
-  exampleParams?: Array<{ type: string; value?: string }> | string[];
+  exampleParams?: Array<string | { type: string; [key: string]: unknown }>;
   leadgenData?: {
     data: LeadgenNodeData;
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
@@ -431,7 +433,7 @@ interface LeadFormQuestionsInputComponentProps {
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
   };
   value: string;
-  onChange: (value) => void;
+  onChange: (value: string) => void;
   label: string;
 }
 

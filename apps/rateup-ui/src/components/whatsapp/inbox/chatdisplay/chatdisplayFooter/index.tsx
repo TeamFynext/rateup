@@ -992,8 +992,8 @@ interface MessageBody {
     groupIds: string[];
   };
   location?: {
-    longitude: string;
-    latitude: string;
+    longitude: string | number;
+    latitude: string | number;
     name?: string;
     address?: string;
   } | null;

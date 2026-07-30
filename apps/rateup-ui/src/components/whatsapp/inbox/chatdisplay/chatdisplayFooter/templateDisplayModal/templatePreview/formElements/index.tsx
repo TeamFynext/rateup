@@ -22,7 +22,7 @@ export default function WaTemplateFormElements(props: Props) {
   const buildtemplatequerycomponent = useCallback(
     (
       component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
-      component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION",
+      component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT",
       component_data: any,
     ) => {
       switch (component_type) {

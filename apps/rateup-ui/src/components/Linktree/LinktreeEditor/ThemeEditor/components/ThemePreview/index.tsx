@@ -35,14 +35,14 @@ function ThemePreview() {
 
   const previewDivRef = useRef(null);
 
-  const handleTitleTextChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleTitleTextChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     themeDispatch({
       type: "title-text-change",
       payload: e.target.value,
     });
   }, []);
 
-  const handleSubtitleTextChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleSubtitleTextChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     themeDispatch({
       type: "subtitle-text-change",
       payload: e.target.value,

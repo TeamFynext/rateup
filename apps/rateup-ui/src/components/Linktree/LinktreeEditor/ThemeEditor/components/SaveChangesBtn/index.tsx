@@ -50,7 +50,7 @@ function SaveChangesBtn() {
       { prop: "mobileBgImgUrl", file: mobileBgImgFile },
       { prop: "logoUrl", file: logoFile },
     ];
-    const promisesArray: Array<Promise<string>> = [];
+    const promisesArray: Array<Promise<{ prop: string; url: string | null }>> = [];
     filesArray.forEach(({ prop, file }) => {
       if (file instanceof File) promisesArray.push(uploadFile(prop, file));
     });
