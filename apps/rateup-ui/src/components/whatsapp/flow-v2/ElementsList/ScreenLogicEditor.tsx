@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { LogicAction, LogicCondition, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
+import type { FlowLogicJumpComponentLevel } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
 import { getConditionsv2, getResponses2 } from "@/utils/survey/logic/logic.utils";
 

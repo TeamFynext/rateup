@@ -135,7 +135,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     if (!question) return [];
 
     try {
-      const responses = getResponses2(question as any);
+      const responses = getResponses2(question);
       if (!responses || responses.length === 0) return [];
       return responses
         .map((r) => {

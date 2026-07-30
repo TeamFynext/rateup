@@ -170,14 +170,16 @@ export function getResponses(
     return [];
   }
 }
-export function getResponses2(
-  question: Question & {
-    metaType?: WaQuestions;
-    /** WhatsApp flow questions carry choices under either spelling. */
-    "data-source"?: { title: string }[];
-    dataSource?: { title: string }[];
-  },
-): Array<string | { label: string; value: string }> {
+/**
+ * Callers pass either a survey `Question` or a WhatsApp flow form element, so the
+ * parameter is only the three fields this actually reads.
+ */
+export function getResponses2(question: {
+  metaType?: WaQuestions;
+  /** WhatsApp flow questions carry choices under either spelling. */
+  "data-source"?: { title: string }[];
+  dataSource?: { title: string }[];
+}): Array<string | { label: string; value: string }> {
   try {
     switch (question.metaType) {
       case WaQuestions.LD:

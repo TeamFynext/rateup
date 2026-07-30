@@ -90,7 +90,23 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
   }, [blocks]);
 
   const addBlock = (type: "If" | "Switch") => {
-    const newBlock = {
+    // Only the fields for the chosen block type are populated; the rest stay
+    // `undefined` so the saved JSON keeps the shape the flow builder expects.
+    const newBlock: {
+      type: "If" | "Switch";
+      conditions: Array<{
+        field: string;
+        operator: string;
+        value: string;
+        logic: string;
+        isNumber: boolean;
+      }>;
+      then?: string[];
+      else?: string[];
+      value?: string;
+      cases?: Record<string, unknown>;
+      screenId: string;
+    } = {
       type,
       conditions:
         type === "If" ? [{ field: "", operator: "", value: "", logic: "", isNumber: false }] : [],
