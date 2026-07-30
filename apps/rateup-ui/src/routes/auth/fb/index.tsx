@@ -36,7 +36,7 @@ function FbLoginRedirect({
   const update = useUpdateUserAccessToken();
 
   useEffect(() => {
-    const waSettingId = localStorage.getItem("waSettingsId");
+    const waSettingId = localStorage.getItem("waSettingsId") ?? "";
     const automationId = localStorage.getItem("automationId");
     const automationRouteBase =
       localStorage.getItem("automationRouteBase") || "/dashboard/whatsapp/flowbots";

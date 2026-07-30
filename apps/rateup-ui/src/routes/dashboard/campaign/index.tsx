@@ -55,7 +55,7 @@ function CampaignsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
-  const campaignByIdQuery = useCampaignById(selectedCampaignId);
+  const campaignByIdQuery = useCampaignById(selectedCampaignId ?? "");
   const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
   const dripQuery = useCampaignData(CampaignType.DRIP);
 

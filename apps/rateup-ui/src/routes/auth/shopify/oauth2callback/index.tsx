@@ -42,7 +42,7 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
         to: "/login",
       });
     }
-    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
+    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
     if (error) {
       navigate({
         to: callbackRoute,
@@ -53,7 +53,7 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
         {
           onSuccess: () => {
             setIsLoading(false);
-            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
+            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
           },
         },
       );

@@ -47,7 +47,7 @@ function ShopifyAuthCallback({
       const isExist = await Session.doesSessionExist();
       if (!isExist) {
         localStorage.setItem("shopify-auth-callback", `/auth/shopify?shop=${shop}`);
-        updateRouteAndCart(`/auth/shopify?shop=${shop}`, null);
+        updateRouteAndCart(`/auth/shopify?shop=${shop}`, {});
         navigate({
           to: "/login",
         });
