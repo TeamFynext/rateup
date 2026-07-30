@@ -19,7 +19,7 @@ function SurveyTheme({
 }: {
   survey: Survey;
   previewId?: string;
-  onEditPageBtnClick?: ((pageType: PageType) => void) | null;
+  onEditPageBtnClick?: (() => void) | null;
   isSurveyThemePreview?: boolean;
   isSurveyThemeEditView?: boolean;
 }) {

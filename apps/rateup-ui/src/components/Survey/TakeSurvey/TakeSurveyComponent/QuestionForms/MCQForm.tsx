@@ -110,7 +110,13 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
             key={"other-option-input"}
             ref={otherInputContainerRef}
             onAnimationComplete={(defObj) => {
-              if (otherInputContainerRef.current && defObj["x"] === 0) {
+              // The definition is this element's own target object, `{ x: … }`.
+              if (
+                otherInputContainerRef.current &&
+                typeof defObj === "object" &&
+                "x" in defObj &&
+                defObj.x === 0
+              ) {
                 setIsOtherInputFocusTrapActive(true);
               }
             }}

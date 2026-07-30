@@ -57,10 +57,7 @@ function CustomColorPicker({
 
   const handleInputChange = useCallback(
     (eventOrvalue: string | ChangeEvent<HTMLInputElement>) => {
-      let resultValue = eventOrvalue;
-      if (typeof eventOrvalue === "object") {
-        resultValue = eventOrvalue.target.value;
-      }
+      let resultValue = typeof eventOrvalue === "object" ? eventOrvalue.target.value : eventOrvalue;
       if (!resultValue.length) {
         resultValue = "#000000";
       }

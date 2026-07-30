@@ -116,7 +116,13 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
               key={"other-option-input"}
               ref={otherInputContainerRef}
               onAnimationComplete={(defObj) => {
-                if (otherInputContainerRef.current && defObj["x"] === 0) {
+                // The definition is this element's own target object, `{ x: … }`.
+                if (
+                  otherInputContainerRef.current &&
+                  typeof defObj === "object" &&
+                  "x" in defObj &&
+                  defObj.x === 0
+                ) {
                   setIsOtherInputFocusTrapActive(true);
                 }
               }}
@@ -134,8 +140,10 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
                         className="border-none bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
                         onChange={(e) => {
                           field.onChange(e);
+                          // A choice's value is a string here; the rich object form
+                          // is never selectable, so it simply never matches.
                           const res = options?.filter((op: Choice) =>
-                            selectedOp?.includes(op?.value),
+                            selectedOp?.some((selected) => selected === op?.value),
                           );
                           updateResponse([...res, { other: e.target.value }]);
                         }}

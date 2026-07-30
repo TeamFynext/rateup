@@ -118,7 +118,7 @@ export default function SurveyID() {
   const { setNavOpened } = useNavControlContext();
 
   const handleTabChange = useCallback(
-    (value) => {
+    (value: TabEnum) => {
       const data = funToRunBeforeSurveyIdPageHeaderTabsChange?.();
       const { haveUnsavedChanges, feedbackElement, toastMessage } = data || {};
       if (haveUnsavedChanges && feedbackElement === "modal") {

@@ -65,7 +65,7 @@ function LogoStyles() {
   }, []);
 
   const handleFileInputChange = useCallback(
-    (value: File | null) => {
+    (value: File | "" | null) => {
       if (value) {
         const { name } = value;
         const url = URL.createObjectURL(value);
