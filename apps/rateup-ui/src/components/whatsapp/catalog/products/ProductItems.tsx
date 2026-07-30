@@ -59,7 +59,7 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
   const { data: catalog, isPending } = useWaCatalog(catalogId);
   const { data: products, isLoading } = useWaCatalogProducts(catalogId);
   const [opened, setOpened] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Record<string, unknown> | null>(null);
 
   if (isLoading || isPending) return <RateupLoader />;
   if (!products || !products.length) {
@@ -68,13 +68,13 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
 
   function handleOpenEdit(product: CatalogProductRow) {
     const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
-      product.productProps;
+      product.productProps ?? {};
     const formattedProduct = {
       currencyCode: currency,
       ...(price ? { price: parseFloat(price.replace(/[^0-9.-]+/g, "")) } : {}),
       ...(base_price ? { base_price: parseFloat(base_price.replace(/[^0-9.-]+/g, "")) } : {}),
       ...(sale_price ? { sale_price: parseFloat(sale_price.replace(/[^0-9.-]+/g, "")) } : {}),
-      ...(image?.length || image_link.length
+      ...(image?.length || image_link?.length
         ? { image: image ?? [{ url: image_link, tag: [] }] }
         : {}),
       link: url,
