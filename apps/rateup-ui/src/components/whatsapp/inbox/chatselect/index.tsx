@@ -49,7 +49,7 @@ const WaInboxChatSelect = () => {
   const searchParams = useSearch({ strict: false });
   const tab = (searchParams.tab as string) ?? "open";
   const { filter, setFilter, clearFilter } = useChatFilterStore();
-  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
+  const [processedFilter, setProcessedFilter] = useState<ChatFilter | null>(null);
   const {
     setSelectedContact,
     loadContactsFromDB,

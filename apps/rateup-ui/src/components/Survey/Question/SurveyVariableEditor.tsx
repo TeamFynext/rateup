@@ -36,7 +36,7 @@ const SurveyVariableEditor = ({
   const { variables, surveyId } = useContext(SurveyContext);
   const [openedCreateVariable, setOpenedCreateVariable] = useState(false);
   const [openedEditVariable, setOpenedEditVariable] = useState(false);
-  const [selectedVariable, setSelectedVariable] = useState<SurveyVariable>(null);
+  const [selectedVariable, setSelectedVariable] = useState<SurveyVariable | null>(null);
   const deleteVariable = useDeleteSurveyVariableMutation(surveyId);
 
   const handleDeleteVariable = (variable: SurveyVariable) => {

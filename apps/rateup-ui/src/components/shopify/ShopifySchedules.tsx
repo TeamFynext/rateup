@@ -81,10 +81,11 @@ const ShopifySchedules = ({
   teams: TeamData[];
 }) => {
   const schedules = shopifyInfo.credential.shopifySurveys.flatMap((s) => s.schedules);
-  const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] = useState<ShopifySurvey>(null);
+  const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] =
+    useState<ShopifySurvey | null>(null);
   const [opened, setOpened] = useState(false);
   const [historyOpened, setHistoryOpened] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<ShopifySchedule>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<ShopifySchedule | null>(null);
   const { t: translations } = useTranslation();
 
   const templateAndteam = {

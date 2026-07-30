@@ -35,10 +35,10 @@ function GoogleReview({
   const openSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(true);
   const closeSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(false);
 
-  const [reviewIndex, setReviewIndex] = useState<number>(null);
+  const [reviewIndex, setReviewIndex] = useState<number | null>(null);
   const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion>>(null);
   const [fakeLoading, setFakeLoading] = useState(false);
-  const [lastCopiedReview, setLastCopiedReview] = useState<ReviewSuggestion>(null);
+  const [lastCopiedReview, setLastCopiedReview] = useState<ReviewSuggestion | null>(null);
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (reviewSuggestions.length > 0) {

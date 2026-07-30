@@ -63,8 +63,8 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
   const selectedPreview = useSelectedPreview();
   const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
-  const [tableHeight, setTableHeight] = useState<number>(null);
-  const [tableWidth, setTableWidth] = useState<number>(null);
+  const [tableHeight, setTableHeight] = useState<number | null>(null);
+  const [tableWidth, setTableWidth] = useState<number | null>(null);
 
   useEffect(() => {
     if (tableRef.current) {

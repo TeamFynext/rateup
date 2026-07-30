@@ -78,7 +78,7 @@ export function EditSurvey({
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(QuestionTabsEnum.None);
   const { surveyId } = useContext(SurveyContext);
   const { data: survey } = useSurvey(surveyId);
-  const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const [selectedQ, setSelectedQ] = useState<Question | null>(null);
   const [selectedSurveyThemeTab, setSelectedSurveyThemeTab] = useState(ThemeTabEnum.SURVEY);
   const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
     survey?.webSurveyTheme?.theme,

@@ -87,7 +87,7 @@ function TakeSurvey({
     survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
   );
 
-  const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const [selectedQ, setSelectedQ] = useState<Question | null>(null);
   const [alignment, setAlignment] = useState("left");
   const [isConfirmResponsesModalOpen, setIsConfirmResponsesModalOpen] = useState(false);
   const openConfirmationResponsesModal = () => setIsConfirmResponsesModalOpen(true);
