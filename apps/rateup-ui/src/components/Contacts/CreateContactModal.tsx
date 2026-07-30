@@ -351,8 +351,7 @@ export const UserSelector = ({
   allowAll = false,
 }: {
   value: string & string[];
-  onChange: ((value: string, isAll?: boolean) => void) &
-    ((value: string[], isAll?: boolean) => void);
+  onChange: (value: string & string[], isAll?: boolean) => void;
   className?: string;
   allowMultiSelect?: boolean;
   allowAll?: boolean;
@@ -371,7 +370,7 @@ export const UserSelector = ({
       <MultiSelect
         options={userOptions}
         value={value}
-        onValueChange={onChange}
+        onValueChange={(values) => onChange(values as string & string[])}
         placeholder="Select staff"
         emptyIndicator="No staff found."
         className={`${className}`}
@@ -385,7 +384,10 @@ export const UserSelector = ({
   }));
   if (allowAll) userData.unshift({ id: "all", name: "All Staff", status: "online" });
   function onValueChange(value: string) {
-    onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
+    onChange(
+      (value === "all" ? users.data.map((u) => u.id) : value) as string & string[],
+      value === "all",
+    );
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (
