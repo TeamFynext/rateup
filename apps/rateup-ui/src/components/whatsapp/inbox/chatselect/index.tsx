@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import useContactStore, {
@@ -13,6 +14,7 @@ import useContactStore, {
   useContactsStore,
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -129,13 +131,13 @@ const WaInboxChatSelect = () => {
   const validateSearchStringAsMobileNumber = useCallback((searchString: string): boolean => {
     return !!RegExp(/^\d{10}$/).exec(searchString);
   }, []);
-  function updateInitialMessagesToStore(contacts: ContactsWithLastMessage[]) {
+  function updateInitialMessagesToStore(contacts: ContactWithUpdatedAt[]) {
     contacts.map((c) => {
       // Rows are conversation-grained; bucket preview messages by the ticket key
       // (conversationId ?? id) so two tickets of one contact don't share a bucket.
       const rowKey = getRowKey(c);
       const messageMap = new Map();
-      c.messages.map((m) => {
+      c.messages.map((m: WaGetMessagesBody) => {
         const key = `${rowKey}_${m.sourceIdentifier}`;
         const all = `${rowKey}_all`;
         messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
@@ -155,7 +157,7 @@ const WaInboxChatSelect = () => {
 
     const state = useContactsStore.getState();
 
-    const getNewContacts = (page: { rows: ContactsWithLastMessage[] }) => {
+    const getNewContacts = (page: { rows: ContactWithUpdatedAt[] }) => {
       const existingIds = new Set(state.contactsByFilter[filterKey] || []);
       // Rows are tickets — dedupe on the ticket key, not the contact id, or a
       // contact's second ticket would be discarded as a duplicate of its first.

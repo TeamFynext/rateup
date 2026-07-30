@@ -37,6 +37,16 @@ const currencyOptions = [
   { value: "INR", label: "INR (₹)" },
 ];
 
+/** The plan row this admin modal edits. */
+interface RateupPlanFormValues extends RateupPaymentPlan {
+  badge?: string;
+  price?: number;
+  monthlyPrice?: number;
+  yearlyPrice?: number;
+  monthlyPaymentPlanId?: string;
+  yearlyPaymentPlanId?: string;
+}
+
 const RateupPlanModal = ({
   opened,
   close,
@@ -46,7 +56,7 @@ const RateupPlanModal = ({
   opened: boolean;
   close: () => void;
   planList: Array<{ group: string; items: unknown[] }> | undefined;
-  plan?: RateupPaymentPlan | null;
+  plan?: RateupPlanFormValues | null;
 }) => {
   const uid = useId();
   const [checked, setChecked] = useState(false);
@@ -157,7 +167,7 @@ const RateupPlanModal = ({
     }
   }, [checked]);
 
-  const handleSubmit = (values) => {
+  const handleSubmit = (values: RateupPlanFormValues) => {
     const payload = { ...values, currency: values.currency || undefined };
     if (isEdit) {
       rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan.id });

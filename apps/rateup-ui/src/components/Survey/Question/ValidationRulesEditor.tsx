@@ -329,7 +329,9 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     }, [selectedRule]);
 
     const fieldKeyOptions =
-      selectedQ?.features?.[selectedLanguage]?.fields?.map((f) => f?.fieldKey) ?? [];
+      selectedQ?.features?.[selectedLanguage]?.fields?.map(
+        (f: { fieldKey: string }) => f?.fieldKey,
+      ) ?? [];
     const availableRuleTypes =
       ruleList?.filter(
         (ruleType) => !multiInputRules?.[selectedFieldKey]?.some((r) => r.ruleType == ruleType),
@@ -344,13 +346,13 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
               <Select
                 value={selectedFieldKey}
                 onValueChange={setSelectedFieldKey}
-                items={fieldKeyOptions.map((key) => ({ value: key, label: key }))}
+                items={fieldKeyOptions.map((key: string) => ({ value: key, label: key }))}
               >
                 <SelectTrigger id="field-key-select" className="w-fit">
                   <SelectValue placeholder={translations("select key")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {fieldKeyOptions.map((key) => (
+                  {fieldKeyOptions.map((key: string) => (
                     <SelectItem key={key} value={key}>
                       {key}
                     </SelectItem>
