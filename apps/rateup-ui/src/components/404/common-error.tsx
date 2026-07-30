@@ -10,8 +10,9 @@ const CommonError = ({
   reset,
   className = "",
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  // The route-level error boundaries forward these through, so both are optional.
+  error?: Error & { digest?: string };
+  reset?: () => void;
   className?: string;
 }) => {
   const pathname = useRouterState({

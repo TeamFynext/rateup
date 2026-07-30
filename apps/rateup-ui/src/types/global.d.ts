@@ -87,6 +87,27 @@ declare global {
   // Optional because both tags are absent until their script loads (and on SSR).
   var gtag: ((...args: unknown[]) => void) | undefined;
   var fbq: ((...args: unknown[]) => void) | undefined;
+  /** The Facebook JS SDK, present once `facebook-jssdk` has loaded. */
+  interface FacebookLoginResponse {
+    status: "connected" | "not_authorized" | "unknown";
+    authResponse?: {
+      accessToken: string;
+      expiresIn: string;
+      signedRequest: string;
+      userID: string;
+      code: string;
+    };
+  }
+  var FB:
+    | {
+        init: (options: Record<string, unknown>) => void;
+        login: (
+          callback: (response: FacebookLoginResponse) => void,
+          options?: Record<string, unknown>,
+        ) => void;
+      }
+    | undefined;
+  var fbAsyncInit: (() => void) | undefined;
   interface Question {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
