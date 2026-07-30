@@ -198,7 +198,7 @@ function ContactSettings() {
 
   const { data: waSettingsData } = useWaSettings();
   const updateOrgDetails = useUpdateOrgDetailsMutation();
-  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id);
+  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id ?? "");
   const syncDatasetsMutation = useSyncDatasetsMutation(waSettingsData?.[0]?.id || "");
 
   const [isSettingUp, setIsSettingUp] = useState(false);
@@ -974,7 +974,7 @@ function SetupView({
                   onValueChange={(val) =>
                     handleUpdateConversionApi(isConversionApiActive, {
                       ...conversionData,
-                      event_name: val,
+                      event_name: val ?? undefined,
                     })
                   }
                 >
@@ -1007,7 +1007,7 @@ function SetupView({
                     onValueChange={(val) =>
                       handleUpdateConversionApi(isConversionApiActive, {
                         ...conversionData,
-                        currency: val,
+                        currency: val ?? undefined,
                       })
                     }
                   >

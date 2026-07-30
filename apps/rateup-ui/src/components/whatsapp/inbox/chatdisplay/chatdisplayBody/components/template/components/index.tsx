@@ -40,7 +40,7 @@ const WaInboxTemplateHeader = (props: Props) => {
       if (media?.link instanceof File) {
         return URL.createObjectURL(media.link);
       } else {
-        return media?.link;
+        return media?.link ?? "";
       }
     } else {
       return props?.templateComponent?.example?.header_handle[0];
@@ -73,7 +73,7 @@ const WaInboxTemplateBody = (props: Props) => {
     <p className="text-sm font-normal leading-relaxed">
       {TextWithFormatting(
         props?.templateComponent?.text ?? "",
-        (props?.parameterData?.parameters?.map((data) => data?.text) ||
+        (props?.parameterData?.parameters?.map((data) => data?.text ?? "") ||
           props?.templateComponent?.example?.body_text?.[0]) ??
           [],
       )}
@@ -103,7 +103,9 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
             <IconMessageReply size={16} />
             <span>{button?.text}</span>
           </Button>
-          {i !== props?.buttons?.length - 1 && <div className="border-t border-current/25" />}
+          {i !== (props?.buttons?.length ?? 0) - 1 && (
+            <div className="border-t border-current/25" />
+          )}
         </React.Fragment>
       ))}
     </div>

@@ -237,7 +237,7 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
 
 // This panel is given the team id, not the row the other panels receive.
 export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
-  const [memberToDelete, setMemberToDelete] = useState(null);
+  const [memberToDelete, setMemberToDelete] = useState<{ id: string; name?: string } | null>(null);
   const { t: translations } = useTranslation();
   const teamID = selectedTeam;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -339,7 +339,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
                   addTeams.mutate({
                     userId: user.id,
                     teamIds: [selectedTeam],
-                    userEmail: user.email,
+                    userEmail: user.email ?? "",
                   })
                 }
               >
@@ -526,7 +526,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
             <Button
               variant="destructive"
               onClick={() => {
-                removeTeam(memberToDelete?.id);
+                removeTeam(memberToDelete?.id ?? "");
                 setMemberToDelete(null);
               }}
             >

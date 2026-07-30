@@ -180,7 +180,7 @@ const ContactInfo = ({
         )}
       </div>
 
-      {contact.emails?.map((email: { email?: string }, idx: number) => (
+      {contact.emails?.map((email: { email?: string; type?: string }, idx: number) => (
         <div className="flex flex-col gap-0.5" key={idx}>
           <span className="text-[10px] text-muted-foreground uppercase font-semibold">
             {email.type}
@@ -190,7 +190,7 @@ const ContactInfo = ({
         </div>
       ))}
 
-      {contact.phones?.map((phone: { phone?: string }, idx: number) => (
+      {contact.phones?.map((phone: { phone?: string; type?: string }, idx: number) => (
         <div className="flex flex-col gap-0.5" key={idx}>
           <span className="text-[10px] text-muted-foreground uppercase font-semibold">
             {phone.type}
@@ -208,6 +208,7 @@ const ContactInfo = ({
             state?: string;
             zip?: string;
             country?: string;
+            type?: string;
           },
           idx: number,
         ) => (
