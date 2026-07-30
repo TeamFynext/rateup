@@ -2,10 +2,11 @@ import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import type { Testimonial, TestimonialStyleType } from "@/types/global";
+import type { TestimonialStyleType } from "@/types/global";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
@@ -14,7 +15,7 @@ const TestimonialShare = ({
   selectedTestimonials,
   currentStyle,
 }: {
-  selectedTestimonials: Testimonial[];
+  selectedTestimonials: CollectionTestimonial[];
   currentStyle: TestimonialStyleType;
 }) => {
   const filteredTestimonials = selectedTestimonials;
@@ -30,7 +31,7 @@ const TestimonialShare = ({
     <ScrollArea className="h-full">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2 p-3">
-          {filteredTestimonials?.map((testimonial: Testimonial, _index: number) => (
+          {filteredTestimonials?.map((testimonial: CollectionTestimonial, _index: number) => (
             <TestimonialCard
               testimonial={testimonial}
               currentStyle={currentStyle}

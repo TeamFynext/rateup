@@ -30,13 +30,18 @@ export async function getAllTestimonialCollections() {
   return collections;
 }
 
+/** A testimonial as it appears inside a collection; the API omits team and survey. */
+export type CollectionTestimonial = Omit<Testimonial, "teamId" | "survey"> & {
+  responseId: string;
+};
+
 interface TestiomonialCollection {
   id: string;
   createdAt: string;
   name: string;
   teamId: string;
   theme: TestimonialStyleType;
-  testimonials: Omit<Testimonial & { responseId: string }, "teamId" | "survey">[];
+  testimonials: CollectionTestimonial[];
 }
 export async function getAllTestimonialsByCollection(collectionId: string) {
   const collection = (await axiosClient.get(`/public/testimonials/${collectionId}`)).data;

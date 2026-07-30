@@ -4,6 +4,7 @@ import { useParams } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
+import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -28,7 +29,7 @@ const TestimonialEdit = ({
   setFilters,
 }: {
   currentStyle: TestimonialStyleType;
-  testimonials: Testimonial[];
+  testimonials: CollectionTestimonial[];
   filters: filterType;
   isDelete?: boolean;
   type?: string;
