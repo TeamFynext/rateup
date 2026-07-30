@@ -44,7 +44,7 @@ export default function Hero() {
       requestAnimationFrame(() => {
         d.classList.remove("opacity-0", "translate-y-2", "scale-[0.97]");
       });
-      waBody!.scrollTop = waBody?.scrollHeight;
+      waBody!.scrollTop = waBody!.scrollHeight;
       return d;
     }
 
@@ -58,7 +58,7 @@ export default function Hero() {
         <span class="w-1.5 h-1.5 rounded-full bg-[#9aa6ad] animate-blink [animation-delay:0.4s]"></span>
       `;
       waBody?.appendChild(d);
-      waBody!.scrollTop = waBody?.scrollHeight;
+      waBody!.scrollTop = waBody!.scrollHeight;
       return d;
     }
 
@@ -80,7 +80,7 @@ export default function Hero() {
         );
       });
       waBody?.appendChild(wrap);
-      waBody!.scrollTop = waBody?.scrollHeight;
+      waBody!.scrollTop = waBody!.scrollHeight;
       return wrap;
     }
 
@@ -118,8 +118,8 @@ export default function Hero() {
       requestAnimationFrame(() => {
         d.classList.remove("opacity-0", "translate-y-2", "scale-[0.97]");
       });
-      waBody!.scrollTop = waBody?.scrollHeight;
-      countUp(document.getElementById(respId), 580, 662, 1400);
+      waBody!.scrollTop = waBody!.scrollHeight;
+      countUp(document.getElementById(respId)!, 580, 662, 1400);
       return d;
     }
 
@@ -130,7 +130,7 @@ export default function Hero() {
     }
 
     function clearChat() {
-      waBody
+      waBody!
         .querySelectorAll(".msg, .typing, .fb-card, .wa-replies")
         .forEach((n: Element) => n.remove());
     }
@@ -185,9 +185,10 @@ export default function Hero() {
         mkFbCard();
         await sleep(4000);
 
-        waBody?.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n: HTMLElement) => {
-          n.style.transition = "opacity .5s ease";
-          n.style.opacity = "0";
+        waBody?.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n) => {
+          const el = n as HTMLElement;
+          el.style.transition = "opacity .5s ease";
+          el.style.opacity = "0";
         });
         await sleep(650);
       }

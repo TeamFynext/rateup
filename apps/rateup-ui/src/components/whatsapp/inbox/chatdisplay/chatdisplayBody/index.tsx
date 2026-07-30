@@ -116,7 +116,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
     isPending,
   } = useGetMessagesByContactId(
     selectedContact?.id ?? "",
-    filter?.phone,
+    filter?.phone ?? "",
     enable,
     selectedContact?.conversationId,
   );
@@ -148,11 +148,11 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
-    setIsLoading(!messagesByKey?.get(selectedKey)?.messages?.length && isPending);
+    setIsLoading(!messagesByKey?.get(selectedKey ?? "")?.messages?.length && isPending);
   }, [selectedKey, isPending, messagesByKey, enable]);
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
-  const pendingMessages = tempMessages?.[getRowKey(selectedContact)] ?? [];
+  const pendingMessages = selectedContact ? (tempMessages?.[getRowKey(selectedContact)] ?? []) : [];
 
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
@@ -183,8 +183,8 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
               <MessageScrollerItem key={message?.id ?? index} messageId={message?.id}>
                 <MessageItem
                   message={message}
-                  selectedContact={selectedContact}
-                  previousMessage={index > 0 ? visibleMessages[index - 1] : null}
+                  selectedContact={selectedContact!}
+                  previousMessage={index > 0 ? visibleMessages[index - 1] : undefined}
                 />
               </MessageScrollerItem>
             ))}
@@ -252,7 +252,7 @@ const MessageItem = ({
     !dayjs(message.waCreatedAt).isSame(dayjs(previousMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
-    allMessages: messagesByKey.get(selectedKey)?.messages || [],
+    allMessages: messagesByKey.get(selectedKey ?? "")?.messages || [],
     selectedContact,
   });
   return (
@@ -265,7 +265,7 @@ const MessageItem = ({
       <WaInboxSingleMessageLayout
         exchangeProcess={message?.messageBody?.exchangeProcess}
         messageObject={message}
-        reaction={reaction}
+        reaction={reaction ?? undefined}
       >
         {/* Revoked on WhatsApp: the row and its body are kept, only the content
             is withheld — the placeholder still sits in the timeline. */}
