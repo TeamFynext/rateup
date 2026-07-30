@@ -35,7 +35,7 @@ import { Spinner } from "../ui/spinner.tsx";
 
 interface GroupModalProps {
   opened: boolean;
-  setOpened: (value) => void;
+  setOpened: (value: boolean) => void;
   isEdit?: boolean;
   groupDetails?: any;
   type?: ContactGroupType;
@@ -98,7 +98,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
     const values = form.getValues();
 
     // Process tags for selected contact types
-    const result = {};
+    const result: Record<string, unknown> = {};
     for (const key of values.contactType ?? []) {
       if (values?.tags?.hasOwnProperty(key)) {
         result[key] = values?.tags?.[key];

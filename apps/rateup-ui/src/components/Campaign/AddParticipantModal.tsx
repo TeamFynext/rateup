@@ -60,7 +60,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
   const [selectedTab, setSelectedTab] = useState<CampaignParticipantSource>(
     CampaignParticipantSource.INDIVIDUAL,
   );
-  const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<ContactsData[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
   const [selectedCampaigns, setSelectedCampaigns] = useState<any[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>(

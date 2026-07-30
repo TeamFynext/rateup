@@ -567,14 +567,8 @@ declare global {
         contactTags: string[];
       };
     };
-    contactGroups?: [
-      {
-        contactGroup?: {
-          name?: string;
-        };
-      },
-    ];
-    campaignParticipants: any[];
+    contactGroups?: Array<{ contactGroup?: ContactGroup }>;
+    campaignParticipants: Array<{ id?: string; campaignId?: string }>;
     aiWaChat: boolean;
     /** Labels attached to the contact, as the contacts table renders them. */
     ContactLabelMap?: Array<{
@@ -1693,6 +1687,8 @@ export interface Campaign {
   campaignSentAt?: Date;
   /** Max messages dispatched per day. Null = dispatch every participant at once. */
   dailySendLimit?: number | null;
+  /** Participants enrolled, when the list endpoint includes the aggregate. */
+  campaignParticipantsCount?: number;
 }
 
 // type for org websocket messages

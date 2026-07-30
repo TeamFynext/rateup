@@ -1,4 +1,5 @@
 import { isNumber } from "@tiptap/react";
+import type { CSSProperties } from "react";
 import { useCallback } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
@@ -169,12 +170,12 @@ export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
   );
 }
 
-export function getInlineStyleFromStyleObj(styles: Record<string, string | number> | undefined) {
+export function getInlineStyleFromStyleObj(styles: CSSProperties | undefined) {
   if (!styles) return "text-align:center";
   const newStyles = [];
-  for (const key in styles) {
+  for (const [key, rawValue] of Object.entries(styles)) {
     const kebabKey = key.replace(/([A-Z])/g, "-$1").toLowerCase();
-    const value = isNumber(styles[key]) ? `${styles[key]}px` : `${styles[key]}`;
+    const value = isNumber(rawValue) ? `${rawValue}px` : `${rawValue}`;
     newStyles.push(`${kebabKey}:${value}`);
   }
   return newStyles.join(";") + ";";

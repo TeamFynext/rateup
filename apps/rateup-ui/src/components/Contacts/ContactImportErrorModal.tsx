@@ -12,7 +12,7 @@ const ContactImportErrorModal = ({
   body,
 }: {
   isError?: boolean;
-  body: unknown;
+  body: { error?: string; data?: unknown } | undefined;
 }) => {
   const responseError = body?.error ?? "";
   const failedRows: { name?: string; phone?: string }[] = Array.isArray(body?.data)
