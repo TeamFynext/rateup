@@ -100,7 +100,7 @@ export default function ThankYou({
   }, [k]);
 
   useEffect(() => {
-    let timeout = null;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     if (kioskMode === "n" && redirect && (redirect?.enable ?? false)) {
       timeout = setTimeout(
         () => {
@@ -110,7 +110,7 @@ export default function ThankYou({
             });
           else if (redirect.url?.startsWith("http:") || redirect.url?.startsWith("https:")) {
             navigate({
-              to: redirect.url,
+              to: redirect.url!,
             });
           } else {
             navigate({
@@ -121,20 +121,22 @@ export default function ThankYou({
         Number(redirect.time ?? 1) * 1000,
       );
     }
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
   }, [redirect, kioskMode, navigate]);
 
   const enableBody = k === "cs" || enableGoogleReview;
 
-  const orgLogoSrc = surveyThemeData?.surveyTheme.logo?.logo;
+  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo;
 
-  const shouldUseSurveyTheme = pagesThemeData["thankyouTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = pagesThemeData?.["thankyouTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
-    ? surveyThemeData["surveyTheme"]
-    : pagesThemeData["thankyouTheme"];
+    ? surveyThemeData?.["surveyTheme"]
+    : pagesThemeData?.["thankyouTheme"];
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    shouldUseSurveyTheme ? surveyThemeData : pagesThemeData,
+    shouldUseSurveyTheme ? (surveyThemeData ?? null) : (pagesThemeData ?? null),
     shouldUseSurveyTheme ? "surveyTheme" : "thankyouTheme",
     isMobile,
   );
@@ -160,7 +162,7 @@ export default function ThankYou({
 
   return (
     <CreditsCard
-      enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
+      enableCredits={!!backgroundImageSrc?.startsWith("https://images.unsplash.com")}
       url={backgroundImageSrc}
     >
       <div
@@ -198,7 +200,7 @@ export default function ThankYou({
                 ) : (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: newTitle,
+                      __html: newTitle ?? "",
                     }}
                     style={{ color: titleStyles?.color }}
                   />
