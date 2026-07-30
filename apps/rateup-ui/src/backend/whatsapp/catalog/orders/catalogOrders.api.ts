@@ -24,8 +24,11 @@ export interface CatalogOrder {
   status?: string;
 }
 
-export async function getWaCatalogOrders(catalogId: string, filter: WaCatalogOrderFilter) {
-  let url = `${baseUrl}/${catalogId}?page=${filter.pageIndex}&limit=${filter.pageSize}`;
+export async function getWaCatalogOrders(
+  catalogId: string,
+  filter: Partial<WaCatalogOrderFilter> | null,
+) {
+  let url = `${baseUrl}/${catalogId}?page=${filter?.pageIndex}&limit=${filter?.pageSize}`;
   if (filter?.storeType) {
     url += `&storeType=${filter.storeType}`;
   }

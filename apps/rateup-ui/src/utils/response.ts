@@ -213,7 +213,7 @@ export function getResponseArrayByQuestionType(questionType: QuestionType | WaQu
   value: string | number;
   color: string;
   Icon?: any;
-}> {
+}> | null {
   switch (questionType) {
     case QuestionType.Rating: {
       return [
@@ -294,7 +294,7 @@ export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions | Que
   value: string | number;
   color: string;
   Icon?: any;
-}> {
+}> | null {
   switch (questionType) {
     case WaQuestions.Rating: {
       return [
@@ -371,15 +371,16 @@ export async function decryptResultResponse(
   const decryptedResponses = responses;
   const { privateKey } = await decryptPrivateKey(nonceWithEncryptedPrivateKey, passkey);
   for (let i = 0; i < responses.length; i++) {
-    for (let j = 0; j < responses[i].responses.length; j++) {
-      const response = responses[i].responses[j];
+    const teamResponses = responses[i]?.responses ?? [];
+    for (let j = 0; j < teamResponses.length; j++) {
+      const response = teamResponses[j]!;
       if (response.encryptedResponses) {
         const { decryptedResponse } = await decryptResponse(
           response.encryptedResponses,
           privateKey,
           publicKey,
         );
-        decryptedResponses[i].responses[j].responses = decryptedResponse;
+        decryptedResponses[i]!.responses![j]!.responses = decryptedResponse;
       }
     }
   }

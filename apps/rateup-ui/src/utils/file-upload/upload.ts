@@ -103,7 +103,7 @@ export const dataURItoBlob = (dataURI: string) => {
   const ab = new ArrayBuffer(byteString.length);
   const ia = new Uint8Array(ab);
   for (let i = 0; i < byteString.length; i++) {
-    ia[i] = byteString.codePointAt(i);
+    ia[i] = byteString.codePointAt(i) ?? 0;
   }
   return new Blob([ab], { type: mimeString });
 };
@@ -113,7 +113,7 @@ export const getImageValue = (
   fallback = false,
   unsplashImage = false,
 ) => {
-  if (typeof image === "object") {
+  if (image && typeof image === "object") {
     return URL.createObjectURL(image);
   } else if (unsplashImage) {
     return image?.startsWith("http") ? image : `${import.meta.env.VITE_UNSPLASH_URL}${image}`;

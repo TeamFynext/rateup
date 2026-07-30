@@ -7,7 +7,7 @@ export const stringToColour = function (str: string | number) {
   let hash = 0;
   const text = typeof str === "string" ? str : undefined;
   for (let i = 0; i < (text?.length ?? 0); i++) {
-    hash = text.codePointAt(i) || 0 + ((hash << 5) - hash);
+    hash = text?.codePointAt(i) || 0 + ((hash << 5) - hash);
   }
   let colour = "#";
   for (let i = 0; i < 3; i++) {

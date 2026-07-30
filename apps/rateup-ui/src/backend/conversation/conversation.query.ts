@@ -39,7 +39,7 @@ export const useGetResolvedConversationStats = (filter: QueryFilter) => {
 
 export const useGetConversationAccountDistribution = (filter: QueryFilter | null = null) => {
   return useQuery({
-    queryFn: () => getConversationAccountDistribution(filter),
+    queryFn: () => getConversationAccountDistribution(filter ?? {}),
     queryKey: ["ConversationAccountDistribution", filter],
   });
 };

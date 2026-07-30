@@ -572,11 +572,11 @@ declare global {
     followerCount: number;
     profilePic: string;
     lastReceivedMessageTimeStamp: string;
-    closedAt: string;
+    closedAt: string | null;
     closedUser: {
-      id: sytring;
+      id: string;
       name: string;
-    };
+    } | null;
     loyaltyCustomer?: {
       id: string;
       email?: string;

@@ -31,7 +31,7 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
 
   const pagesTypeStrsArr = ["Welcome", "Language", "ThankYou", "GoogleReview"];
   // PagesObjs means objects with type key value as Welcome, Language, ThankYou.
-  const arrWithoutPagesObjs = pages.filter((obj) => !pagesTypeStrsArr.includes(obj.type));
+  const arrWithoutPagesObjs = pages.filter((obj) => !pagesTypeStrsArr.includes(obj.type ?? ""));
   if (welcomeItem) newArray.push({ ...welcomeItem });
   if (languageItem) newArray.push({ ...languageItem });
   for (const pageObj of arrWithoutPagesObjs) {
@@ -59,8 +59,8 @@ export function createPage(
   const pageDescriptions: Partial<Record<PageType, string>> = PageDescription;
 
   for (const language of languages) {
-    title[language] = pageTitles[type];
-    description[language] = pageDescriptions[type];
+    title[language] = pageTitles[type] ?? "";
+    description[language] = pageDescriptions[type] ?? "";
     if (label) {
       label[language] = "";
     }

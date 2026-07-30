@@ -12,7 +12,7 @@ const analyseEvent = ({
   label?: string;
   value?: any;
 }) => {
-  globalThis.gtag("event", action, {
+  globalThis.gtag?.("event", action, {
     event_category: category,
     event_label: label ?? undefined,
     value: value ?? undefined,
