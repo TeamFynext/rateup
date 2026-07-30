@@ -23,6 +23,13 @@ function GoogleReview({
   isSurveyPreview = false,
   survey,
   reviewPageLinks = null,
+}: {
+  reviewSuggestions?: ReviewSuggestion[];
+  orgLogoUrl?: string;
+  surveyTeamMapId?: string;
+  isSurveyPreview?: boolean;
+  survey: Survey;
+  reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const [isSuggestionCopiedModalOpen, setIsSuggestionCopiedModalOpen] = useState(false);
   const openSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(true);

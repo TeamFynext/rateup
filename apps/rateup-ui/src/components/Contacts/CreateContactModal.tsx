@@ -349,6 +349,13 @@ export const UserSelector = ({
   className = "",
   allowMultiSelect = false,
   allowAll = false,
+}: {
+  value: string & string[];
+  onChange: ((value: string, isAll?: boolean) => void) &
+    ((value: string[], isAll?: boolean) => void);
+  className?: string;
+  allowMultiSelect?: boolean;
+  allowAll?: boolean;
 }) => {
   const { data: users, isLoading } = useTeamsMembersOfOrg();
   if (isLoading) {

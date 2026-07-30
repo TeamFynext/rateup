@@ -128,7 +128,7 @@ export default function SupportWidget({
     let ws: WebSocket | null = null;
     let closedByUser = false;
 
-    function connect() {
+    function connect(): void {
       if (!orgId || !token) return null;
       ws = new WebSocket(WEBHOOK_URL);
       socketRef.current = ws;
