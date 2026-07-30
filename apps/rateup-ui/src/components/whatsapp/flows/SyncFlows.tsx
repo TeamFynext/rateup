@@ -325,7 +325,7 @@ function ConfigureFlow({
                               return (
                                 <div className="flex items-center" key={choice.id}>
                                   <p>{choice.title}</p>
-                                  {qTypesWithAmbiguousChoices.includes(qType) ? (
+                                  {qType && qTypesWithAmbiguousChoices.includes(qType) ? (
                                     <Select
                                       items={qRes.map((r) => ({ label: r, value: r }))}
                                       value={getNestedProperty(form.watch(), choicePath) ?? ""}
