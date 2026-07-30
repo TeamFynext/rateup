@@ -79,9 +79,9 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
       if (message) {
         if (message.attachment) {
           messageContent =
-            message.attachment.payload.id ||
-            message.attachment.payload.url ||
-            message.attachment.payload.attachment_id;
+            message.attachment.payload?.id ||
+            message.attachment.payload?.url ||
+            message.attachment.payload?.attachment_id;
 
           messageType = message.attachment.type;
         } else if (message.text) {
@@ -90,7 +90,7 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
         }
       } else if (sender_action && sender_action === "react") {
         messageType = "reaction";
-        messageContent = payload.emoji || payload.reaction;
+        messageContent = payload?.emoji || payload?.reaction;
       }
     }
     if (messageBody?.exchangeProcess === "receive") {
@@ -143,73 +143,75 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
           break;
         case "template":
           messageContent = send.template?.name ?? "";
-          template = send.template;
+          template = send.template!;
           break;
         case "interactive":
           messageContent = "";
           interactive = send.interactive;
           break;
         case "reaction":
-          messageContent = send.reaction.emoji;
+          messageContent = send.reaction!.emoji;
           break;
         case "document":
-          messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
+          messageContent = `${send?.document!.link}_caption_${send?.document!.filename}_caption_${send?.document!.caption ?? ""}`;
           break;
         case "contacts":
-          messageContent = [...send.contacts];
+          messageContent = [...send.contacts!];
           break;
         case "location":
-          messageContent = { ...send.location };
+          messageContent = { ...send.location! };
           break;
       }
     }
     if (messageBody?.exchangeProcess === "receive") {
       const { receive } = messageBody as { receive: WaReceiveMessageBody };
-      timeStamp = receive.messages[0].timestamp;
-      messageType = receive.messages[0].type;
+      // The `type` discriminant guarantees its matching payload field is set.
+      const inbound = receive.messages[0]!;
+      timeStamp = inbound.timestamp;
+      messageType = inbound.type;
       switch (messageType) {
         case "text":
-          messageContent = receive.messages[0].text.body;
+          messageContent = inbound.text!.body;
           break;
         case "image":
-          messageContent = `${receive.messages[0].image?.link}_caption_${receive.messages[0].image?.caption ?? ""}`;
+          messageContent = `${inbound.image?.link}_caption_${inbound.image?.caption ?? ""}`;
           break;
         case "button":
-          messageContent = receive.messages[0].button.text;
+          messageContent = inbound.button!.text;
           break;
         case "audio":
-          messageContent = `${receive.messages[0].audio?.id}_caption_${receive.messages[0].audio?.caption ?? ""}`;
+          messageContent = `${inbound.audio?.id}_caption_${inbound.audio?.caption ?? ""}`;
           break;
         case "video":
-          messageContent = `${receive.messages[0].video?.id}_caption_${receive.messages[0].video?.caption ?? ""}`;
+          messageContent = `${inbound.video?.id}_caption_${inbound.video?.caption ?? ""}`;
           break;
         case "document":
-          messageContent = `${receive.messages[0].document.id}_caption_${receive.messages[0].document.filename}_caption_${receive.messages[0].document.caption ?? ""}`;
+          messageContent = `${inbound.document!.id}_caption_${inbound.document!.filename}_caption_${inbound.document!.caption ?? ""}`;
           break;
         case "interactive":
-          switch (receive.messages[0].interactive.type) {
+          switch (inbound.interactive!.type) {
             case "button_reply":
-              messageContent = receive.messages[0].interactive.button_reply.title;
+              messageContent = inbound.interactive!.button_reply.title;
               break;
             case "list_reply":
-              messageContent = receive.messages[0].interactive.list_reply.title;
+              messageContent = inbound.interactive!.list_reply.title;
               break;
             case "nfm_reply":
-              messageContent = receive.messages[0].interactive.nfm_reply.name;
+              messageContent = inbound.interactive!.nfm_reply.name;
               break;
           }
           break;
         case "reaction":
-          messageContent = receive.messages[0].reaction.emoji;
+          messageContent = inbound.reaction!.emoji;
           break;
         case "contacts":
-          messageContent = [...receive.messages[0].contacts];
+          messageContent = [...inbound.contacts!];
           break;
         case "location":
-          messageContent = { ...receive.messages[0].location };
+          messageContent = { ...inbound.location! };
           break;
         case "order":
-          messageContent = { ...receive.messages[0].order };
+          messageContent = { ...inbound.order! };
           break;
       }
     }
@@ -219,14 +221,14 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
         internal?.assignStatus as WaMessageAssignStatus,
       );
       if (isClosedType) {
-        messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body} `;
+        messageContent = `${internal?.triggeredByUser?.name} ${internal!.text.body} `;
       } else {
-        messageContent = `${internal.text.body} by ${internal?.triggeredByUser?.name}`;
+        messageContent = `${internal!.text.body} by ${internal?.triggeredByUser?.name}`;
       }
     }
     if (messageBody?.exchangeProcess === "privateNote") {
       const { privateNote } = messageBody;
-      messageContent = `${privateNote.text.body}`;
+      messageContent = `${privateNote!.text.body}`;
     }
   }
 

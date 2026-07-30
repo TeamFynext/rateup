@@ -89,7 +89,7 @@ export const deleteWaTemplate = async (id: string) => {
 export const updateWaTemplate = async (id: string, templateData: any) => {
   return axiosClient.put(`${TEMPLATES_URL}/${id}`, templateData);
 };
-export const syncTemplates = async (input: SyncTemplatesInput) => {
+export const syncTemplates = async (input?: SyncTemplatesInput) => {
   return axiosClient.post(`${TEMPLATES_URL}/sync`, input);
 };
 export const getUnregisteredTemplates = async () => {

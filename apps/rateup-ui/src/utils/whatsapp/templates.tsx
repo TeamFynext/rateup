@@ -141,7 +141,7 @@ export function parseTemplate(template: RawTemplate) {
               text: "",
               url: "",
             },
-            product_retailer_id: cardDefaultValue.product_retailer_id,
+            product_retailer_id: cardDefaultValue?.product_retailer_id,
           };
           for (const cardComponent of card?.components ?? []) {
             if (cardComponent.type.toLowerCase() === "buttons") {
@@ -150,7 +150,7 @@ export function parseTemplate(template: RawTemplate) {
                   data.example = data.example?.[0];
                 }
               });
-              cardCarousel["button"] = cardComponent.buttons?.[0];
+              cardCarousel["button"] = cardComponent.buttons?.[0] ?? cardCarousel.button;
             }
           }
           return cardCarousel;
@@ -168,9 +168,9 @@ export function parseTemplate(template: RawTemplate) {
           for (const cardComponent of card?.components ?? []) {
             if (cardComponent.type.toLowerCase() === "header") {
               cardCarousel.format = cardComponent?.format ?? "IMAGE";
-              cardCarousel.header = cardComponent?.example?.header_handle?.[0];
+              cardCarousel.header = cardComponent?.example?.header_handle?.[0] ?? null;
             } else if ("body" === cardComponent.type.toLowerCase()) {
-              cardCarousel.body = cardComponent.text;
+              cardCarousel.body = cardComponent.text ?? "";
               cardCarousel["example"] = cardComponent.example?.body_text?.[0] ?? [];
             } else if (cardComponent.type.toLowerCase() === "buttons") {
               cardComponent.buttons?.map((data: RawTemplateButton) => {
@@ -178,7 +178,7 @@ export function parseTemplate(template: RawTemplate) {
                   data.example = data.example?.[0];
                 }
               });
-              cardCarousel["buttons"] = cardComponent.buttons;
+              cardCarousel["buttons"] = cardComponent.buttons ?? [];
             }
           }
           return cardCarousel;

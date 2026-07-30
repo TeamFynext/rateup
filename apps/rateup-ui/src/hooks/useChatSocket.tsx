@@ -86,7 +86,7 @@ export const useChatSocket = () => {
               !!useContactsStore.getState().currentFilterKey?.includes("spam:true")
             ) {
               addContactsForFilter(
-                useContactsStore.getState().currentFilterKey,
+                useContactsStore.getState().currentFilterKey!,
                 [
                   {
                     ...incomingContact,
@@ -250,14 +250,14 @@ const handleNotificationWithSound = ({
 
   const audio = new Audio("/sounds/noti.wav");
 
-  toast.info(`You have a new message from ${message.inbox.contact.name}`, {
-    id: message.inbox.message.messageId,
+  toast.info(`You have a new message from ${message?.inbox?.contact?.name}`, {
+    id: message?.inbox?.message?.messageId,
     icon: <IconBrandWhatsapp size={18} />,
     action: {
       label: "View",
       onClick: () => {
         navigate({
-          to: `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
+          to: `${pathnamesMap.inbox}?contactId=${message?.inbox?.contact?.id}`,
         });
       },
     },

@@ -41,7 +41,7 @@ export const useAllResponses = (surveyId: string) => {
   return useQuery({
     queryKey: ["allresponses", survey?.id],
     queryFn: async () => {
-      let response = await getAllResponses(survey?.id);
+      let response = await getAllResponses(survey?.id ?? "");
       if (passkey) {
         const { decryptedResponses } = await decryptResultResponse(
           response,

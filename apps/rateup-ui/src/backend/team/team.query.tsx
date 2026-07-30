@@ -139,9 +139,9 @@ async function handleCreateTeam(values: CreateTeamValues) {
     name: values.name,
     code: values.code,
     color: values.color,
-    orgId,
+    orgId: orgId!,
     userId,
-    whatsappAccessToken: values.whatsappAccessToken,
+    whatsappAccessToken: values.whatsappAccessToken!,
     features: values.features,
   };
   return createTeam(data);
