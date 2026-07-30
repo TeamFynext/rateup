@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface WaTemplateSelector {
   value?: string;
-  onChange?: (value: string) => void;
+  /** `null` clears the selection when the current value is no longer available. */
+  onChange?: (value: string | null) => void;
   label?: React.ReactNode;
   description?: React.ReactNode;
   error?: React.ReactNode;
@@ -57,7 +58,7 @@ const WaTemplateSelector = ({
 
   useEffect(() => {
     if (value?.length && templatesData && !templatesData?.map((t) => t.value).includes(value)) {
-      onChange(null);
+      onChange?.(null);
     }
   }, [value, templatesData, onChange]);
 

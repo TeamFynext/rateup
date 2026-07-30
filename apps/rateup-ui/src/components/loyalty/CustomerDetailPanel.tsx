@@ -332,7 +332,7 @@ export function CustomerDetailPanel({
                       className="h-7 w-7 p-0 hover:bg-primary/10"
                       onClick={async () => {
                         try {
-                          await navigator.clipboard.writeText(customer.referralCode);
+                          await navigator.clipboard.writeText(customer.referralCode ?? "");
                           toast.success(t("Referral code copied to clipboard!"));
                         } catch {
                           toast.error(t("Failed to copy referral code"));

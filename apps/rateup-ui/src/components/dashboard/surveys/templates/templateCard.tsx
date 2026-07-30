@@ -56,7 +56,7 @@ export default function TemplateCard({ survey }: { survey: Survey }) {
   return (
     <div className="flex h-50 w-75 items-center" style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
+        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com") ?? false}
         url={backgroundImageSrc}
       >
         <div
@@ -79,7 +79,10 @@ export default function TemplateCard({ survey }: { survey: Survey }) {
                 maxWidth: "200px",
               }}
             >
-              <span className="block truncate" dangerouslySetInnerHTML={{ __html: newTitle }} />
+              <span
+                className="block truncate"
+                dangerouslySetInnerHTML={{ __html: newTitle ?? "" }}
+              />
             </div>
           </div>
         </div>

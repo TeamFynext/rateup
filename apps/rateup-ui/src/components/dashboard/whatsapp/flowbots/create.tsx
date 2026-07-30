@@ -297,7 +297,7 @@ function getInitialValues(
   if (initialValues) {
     return {
       ...initialValues,
-      platform: forcedPlatform ?? initialValues.platform,
+      platform: forcedPlatform ?? initialValues.platform ?? AutomationPlatform.WHATSAPP,
     };
   }
 

@@ -86,7 +86,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     toast.loading(translations("Hold On..Registering webhooks"), {
       id: "webhooks",
     });
-    registerWebhooksmutate.mutate(null, {
+    registerWebhooksmutate.mutate(undefined, {
       onSuccess: () => {
         setIsWebhookEnabled(true);
       },
@@ -101,7 +101,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
   ) {
     const deleteCase = getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs, data);
     const shouldProceed = await confirm({
-      title: deleteCase?.headerTitle,
+      title: deleteCase?.headerTitle ?? "",
       description: deleteCase?.headerLabel,
       warning: deleteCase?.deleteQuotion,
       confirmText: translations(deleteCase?.confirmLabel || "Delete"),

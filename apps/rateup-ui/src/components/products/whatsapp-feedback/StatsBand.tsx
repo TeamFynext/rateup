@@ -10,7 +10,7 @@ function StatItem({
   delay,
 }: {
   count: number;
-  suffix?: string;
+  suffix: string;
   label: string;
   desc?: string;
   delay?: string;
