@@ -128,7 +128,7 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
   }
 }
 
-export const safeStrOrNull = (str: string): string | null =>
+export const safeStrOrNull = (str: string | null | undefined): string | null =>
   !str || !str.trim().length ? null : str;
 
 export function hasRealContent(

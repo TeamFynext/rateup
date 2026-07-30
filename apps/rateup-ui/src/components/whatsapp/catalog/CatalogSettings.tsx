@@ -148,8 +148,8 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
             value={wabaId}
             items={wabaIds.map((id) => ({ value: id, label: id }))}
             onValueChange={(value) => {
-              setWabaId(value);
-              handleConnect(value);
+              setWabaId(value ?? "");
+              handleConnect(value ?? "");
             }}
           >
             <SelectTrigger>

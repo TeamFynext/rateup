@@ -137,7 +137,7 @@ const CountryDropdownComponent = (
                 >
                   <div className="flex grow w-0 space-x-2 overflow-hidden">
                     <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
-                      <CircleFlag countryCode={country?.alpha2.toLowerCase()} height={20} />
+                      <CircleFlag countryCode={country?.alpha2.toLowerCase() ?? ""} height={20} />
                     </div>
                     <span className="overflow-hidden text-ellipsis whitespace-nowrap">
                       {item.label}

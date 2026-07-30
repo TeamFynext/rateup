@@ -73,12 +73,11 @@ export function WebsurveySelector({
   if (carousel) {
     const fields = carousel.split(".");
     const button = fields.reduce((acc, key) => acc?.[key], form.values);
-    value = button.url?.replace("{{1}}", `?${button.example}`);
-  } else {
-    value = form.values.buttons[index].url?.replace(
-      "{{1}}",
-      `?${form.values.buttons[index].example}`,
-    );
+    value = button.url?.replace("{{1}}", `?${button.example}`) ?? "";
+  } else if (index !== undefined) {
+    value =
+      form.values.buttons[index].url?.replace("{{1}}", `?${form.values.buttons[index].example}`) ??
+      "";
   }
 
   return (

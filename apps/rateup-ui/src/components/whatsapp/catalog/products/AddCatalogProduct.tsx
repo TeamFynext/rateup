@@ -212,9 +212,9 @@ const AddCatalogProduct = ({
 
   const [addToShopify] = useState(false);
   const [imageUpload, setImageUpload] = useState("upload");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<File | null>(null);
   const [videoUpload, setVideoUpload] = useState("upload");
-  const [video, setVideo] = useState(null);
+  const [video, setVideo] = useState<File | null>(null);
 
   const isSaving = createBatch.isPending || updateProducts.isPending || createShopifyMut.isPending;
   const type = form.watch("type");

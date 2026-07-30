@@ -378,9 +378,9 @@ function SelectField({
       <UiSelect
         items={options as any}
         value={value ?? null}
-        onValueChange={(v: string) =>
+        onValueChange={(v: string | null) =>
           onChange?.(
-            v,
+            v ?? "",
             options.find((o) => o.value === v),
           )
         }
@@ -527,7 +527,7 @@ export function ContainedDatePickerInput({
   description?: React.ReactNode;
   placeholder?: string;
   value?: Date;
-  onChange?: (date: Date) => void;
+  onChange?: (date: Date | undefined) => void;
 }>) {
   return (
     <Field label={label} description={description}>

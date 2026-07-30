@@ -461,7 +461,7 @@ export function FlowbotPreviewPlayground({
 
           const media = getNodeMedia(node);
           const rawBody = media ? (media.kind !== "audio" ? media.caption : "") : getNodeBody(node);
-          const body = parseJsonToReact(rawBody);
+          const body = parseJsonToReact(rawBody ?? "");
           const isEmptyBody = (typeof body === "string" && !body) || body == null;
           const options = getNodeOptions(node);
           const headerImage = data?.headerType === "image" ? data?.link : undefined;
