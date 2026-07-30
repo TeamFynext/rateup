@@ -23,12 +23,12 @@ function EditTranslations({
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
 
   const handleSave = useCallback(
-    async (value: string, language: string) => {
+    async (value: string, language?: string) => {
       const newUiTextTranslationsObj = produce(uiTextTranslations, (draft) => {
         if (!draft[name]) {
           draft[name] = {};
         }
-        draft[name][language.toLowerCase()] = value;
+        draft[name]![(language ?? "").toLowerCase()] = value;
       });
       await surveyUpdateMutation.mutateAsync({
         surveyId: survey.id,

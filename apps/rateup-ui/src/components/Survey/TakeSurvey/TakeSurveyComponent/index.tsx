@@ -299,7 +299,8 @@ function TakeSurvey({
       );
     let selectedColumnId: string | undefined = survey?.ticketColumnId;
     if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
-      selectedColumnId = getColumnIdFromTickets(survey?.questions ?? [], responsesRef.current);
+      selectedColumnId =
+        getColumnIdFromTickets(survey?.questions ?? [], responsesRef.current) ?? undefined;
     }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
