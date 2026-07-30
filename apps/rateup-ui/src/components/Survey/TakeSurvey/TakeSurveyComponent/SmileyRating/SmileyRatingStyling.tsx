@@ -58,10 +58,17 @@ function lighten(color: string, alpha: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+/** How a smiley set is rendered: filled/outline variant, palette, and emoji set. */
+export interface SmileyIconStyle {
+  variant: SmileyVariantStyle;
+  colorType: SmileyColorType;
+  emojies?: string[];
+}
+
 export const getIconStyle = (
   color?: string,
   iconType: string = "neutral",
-  iconStyle = {
+  iconStyle: SmileyIconStyle = {
     variant: SmileyVariantStyle.Filled,
     colorType: SmileyColorType.Default,
   },
@@ -107,7 +114,7 @@ export const getIconStyle = (
 export const getEmptyIcon = (
   value: number,
   color: string,
-  iconStyle: string,
+  iconStyle: SmileyIconStyle,
   response?: unknown,
 ) => {
   const { variant, emojies } = iconStyle;
@@ -162,7 +169,7 @@ export const getEmptyIcon = (
   }
 };
 
-export const getFullIcon = (value: number, color: string, iconStyle: string) => {
+export const getFullIcon = (value: number, color: string, iconStyle: SmileyIconStyle) => {
   const { variant, emojies } = iconStyle;
   if (!variant || variant === SmileyVariantStyle.Default) {
     return (

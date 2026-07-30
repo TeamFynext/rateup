@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+
 import { PageType } from "@/types/enums.ts";
 
 import BackgroundStyles from "./components/BackgroundStyles.tsx";
@@ -128,7 +130,16 @@ const languagePageEditors = [
   },
 ];
 
-export const supportedPageEditors = {
+/** One collapsible editor section within a page's theme panel. */
+export interface PageThemeEditor {
+  id: string;
+  Component: ComponentType<Record<string, never>>;
+  value: string;
+  label: string;
+}
+
+// Keyed by page tab, which arrives as a plain string.
+export const supportedPageEditors: Record<string, PageThemeEditor[]> = {
   surveyPage: surveyPageEditors,
   welcomePage: welcomePageEditors,
   thankyouPage: thankyouPageEditors,

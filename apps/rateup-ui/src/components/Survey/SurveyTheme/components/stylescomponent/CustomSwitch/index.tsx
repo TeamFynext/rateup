@@ -12,7 +12,7 @@ function CustomSwitch({
 }: {
   className?: string;
   checked: boolean;
-  onChange: (checked: boolean) => void;
+  onChange?: (event: { target: { checked: boolean } }) => void;
   label: ReactNode;
 }) {
   return (

@@ -39,6 +39,16 @@ function StylesComponent({
   setThemeSelectorState,
   isAllThemesFetchPending,
   onSave = onClose,
+}: {
+  survey: Survey;
+  isThemeObjBeingEditedDefaultTheme?: boolean;
+  themeObjBeingEdited?: { id: string; name: string } | null;
+  onClose: () => void;
+  allThemesArr?: Array<{ id: string; name: string }>;
+  themeSelectorState: string;
+  setThemeSelectorState: (id: string) => void;
+  isAllThemesFetchPending?: boolean;
+  onSave?: () => void;
 }) {
   const { t: translations } = useTranslation();
   const selectedPageTab = useSelectedPageTab();

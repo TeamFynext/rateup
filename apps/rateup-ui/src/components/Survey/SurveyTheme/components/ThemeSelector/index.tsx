@@ -19,6 +19,7 @@ function ThemeSelector({
   allThemesArr?: Array<{ id: string; name: string }>;
   isAllThemesFetchPending?: boolean;
   survey: Survey;
+  className?: string;
 }) {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
