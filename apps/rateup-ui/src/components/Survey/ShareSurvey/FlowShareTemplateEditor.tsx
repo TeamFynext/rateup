@@ -142,7 +142,7 @@ function FlowShareTemplateEditor({
     setImageToUpload(file);
   };
   const { t: translations } = useTranslation();
-  const [imageToUpload, setImageToUpload] = useState(null);
+  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
 
   // saving image
   useEffect(() => {
@@ -283,14 +283,14 @@ export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode:
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const { data: survey } = useSurvey(dbFlow?.surveyId ?? "");
   const updateMutation = useUpdateFlowMutation();
-  const templateInitialValues = generateTemplateInitialValues(dbFlow);
+  const templateInitialValues = generateTemplateInitialValues(dbFlow!);
 
   const templateForm = useSimpleForm({
     initialValues: templateInitialValues,
     validate: templateFormValidation,
   });
 
-  const startMessageInitialValues = generateStartMessageInitialValues(dbFlow);
+  const startMessageInitialValues = generateStartMessageInitialValues(dbFlow!);
   const startMessageForm = useSimpleForm<WaFlowStartMessageConfig>({
     initialValues: startMessageInitialValues,
   });
@@ -346,7 +346,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode:
                 footer={templateForm.values.footer}
                 body={templateForm.values.body}
                 quickReplyButtons={[templateForm.values.cta]}
-                image={getFileUrlFromKey(templateForm.values.headerImage)}
+                image={getFileUrlFromKey(templateForm.values.headerImage ?? "")}
               />
             </div>
           </div>
@@ -444,7 +444,7 @@ function SaveStatusIndicator({ status }: SaveStatusProps) {
 function generateTemplateInitialValues(dbFlow: DbFlow): WaFlowTemplateMessage {
   return {
     header: dbFlow.templateMessage.header || "",
-    headerImage: dbFlow.templateMessage.headerImage || null,
+    headerImage: dbFlow.templateMessage.headerImage || undefined,
     body: dbFlow.templateMessage.body || "Would you like to start survey?",
     footer: dbFlow.templateMessage.footer || "",
     cta: dbFlow.templateMessage.cta || "Open",
