@@ -52,7 +52,7 @@ const ButtonInput = ({
   form: TemplateForm;
   index: number;
   deleteButton: (index: number) => void;
-  data?: Record<string, unknown>;
+  data: Record<string, unknown>;
   catalog?: unknown;
   productRetailerIds?: string[];
 }) => {
@@ -120,7 +120,7 @@ const ButtonInput = ({
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -163,7 +163,7 @@ const ButtonInput = ({
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -264,7 +264,7 @@ const ButtonInput = ({
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -338,7 +338,7 @@ const ButtonInput = ({
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.example?.length}
+                  length={form.watch()?.buttons?.[index]?.example?.length ?? 0}
                   maxValue={15}
                   atStart
                 />
@@ -373,7 +373,7 @@ const ButtonInput = ({
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -417,7 +417,7 @@ const ButtonInput = ({
                 />
                 <InputGroupAddon align="inline-end">
                   <LengthTracker
-                    length={form.watch()?.buttons?.[index]?.text?.length}
+                    length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                     maxValue={25}
                     atStart
                   />
@@ -472,7 +472,7 @@ const ButtonInput = ({
             <Select
               items={toSelectOptions(productRetailerIds)}
               value={
-                form.watch()["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+                form.watch()["defaultValues"]?.["catalog"]?.["thumbnail_product_retailer_id"] ?? ""
               }
               onValueChange={(value) =>
                 setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
@@ -536,7 +536,8 @@ const ButtonInput = ({
               <Select
                 items={toSelectOptions(productRetailerIds)}
                 value={
-                  form.watch()["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+                  form.watch()["defaultValues"]?.["catalog"]?.["thumbnail_product_retailer_id"] ??
+                  ""
                 }
                 onValueChange={(value) =>
                   setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
@@ -602,9 +603,9 @@ const ButtonInput = ({
                     id={fid(`section-${index}-products`)}
                     options={toSelectOptions(productRetailerIds)}
                     value={
-                      form.watch()["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
-                        "products"
-                      ] ?? []
+                      form.watch()["defaultValues"]?.["catalog"]?.["mpm"]?.["sections"]?.[
+                        `${index}`
+                      ]?.["products"] ?? []
                     }
                     onValueChange={(value) =>
                       setValue(form, `defaultValues.catalog.mpm.sections.${index}.products`, value)
@@ -653,7 +654,9 @@ const ButtonInput = ({
             <FieldLabel htmlFor={fid("retailer")}>Product retailer id</FieldLabel>
             <Select
               items={toSelectOptions(productRetailerIds)}
-              value={form.watch()["defaultValues"]["catalog"]["spm"]["product_retailer_id"] ?? ""}
+              value={
+                form.watch()["defaultValues"]?.["catalog"]?.["spm"]?.["product_retailer_id"] ?? ""
+              }
               onValueChange={(value) =>
                 setValue(form, "defaultValues.catalog.spm.product_retailer_id", value)
               }
@@ -697,7 +700,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           <FieldLabel htmlFor={`${uid}-product-type`}>Product Type</FieldLabel>
           <Select
             items={toSelectOptions(["physical-goods", "digital-goods"])}
-            value={form.watch()["defaultValues"]["orderDetails"]["productType"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["productType"] ?? ""}
             onValueChange={(value) =>
               setValue(form, "defaultValues.orderDetails.productType", value)
             }
@@ -727,7 +730,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-product-price`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["item"]["price"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["item"]["price"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.item.price", Number(event.target.value))
             }
@@ -739,7 +742,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-product-sale-price`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["item"]["salePrice"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["item"]["salePrice"] ?? ""}
             onChange={(event) =>
               setValue(
                 form,
@@ -756,7 +759,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             type="number"
             min={0}
             step={1}
-            value={form.watch()["defaultValues"]["orderDetails"]["item"]["quantity"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["item"]["quantity"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.item.quantity", Number(event.target.value))
             }
@@ -816,7 +819,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-shipping-amount`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["shipping"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["shipping"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.shipping", Number(event.target.value))
             }
@@ -828,7 +831,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-tax-amount`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["tax"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["tax"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.tax", Number(event.target.value))
             }
@@ -848,7 +851,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             type="number"
             min={0}
             step={1}
-            value={form.watch()["defaultValues"]["orderDetails"]["discount"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["discount"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.discount", Number(event.target.value))
             }
@@ -876,7 +879,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           <FieldLabel htmlFor={`${uid}-payment-gateway-name`}>Payment gateway name</FieldLabel>
           <Select
             items={toSelectOptions(["razorpay", "payu", "zaakpay"])}
-            value={form.watch()["defaultValues"]["orderDetails"]["paymentType"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["paymentType"] ?? ""}
             onValueChange={(value) =>
               setValue(form, "defaultValues.orderDetails.paymentType", value)
             }
