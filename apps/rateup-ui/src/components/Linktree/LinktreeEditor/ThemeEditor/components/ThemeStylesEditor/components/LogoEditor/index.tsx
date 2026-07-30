@@ -48,7 +48,7 @@ function LogoEditor() {
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((url: string) => {
+  const onCroppedImgSave = useCallback((url: { file?: File; url: string; source?: string }) => {
     themeDispatch({
       type: "logo-file-change",
       payload: url,
