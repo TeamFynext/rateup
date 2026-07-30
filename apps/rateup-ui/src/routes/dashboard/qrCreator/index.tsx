@@ -51,7 +51,7 @@ function GenerateQr() {
   const { data: generatedQrs = [], isPending, isError, refetch } = useGetAllGeneratedQrsQuery();
 
   const qrInfos = useMemo(() => {
-    return generatedQrs.map((qr: { id: string; shortUrlId?: string; name?: string }) => ({
+    return generatedQrs.map((qr: QrListEntry) => ({
       id: qr.id,
       name: qr.name,
       shortUrlId: qr.shortUrlId,

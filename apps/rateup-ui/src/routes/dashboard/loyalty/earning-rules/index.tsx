@@ -30,7 +30,7 @@ import {
   useToggleLoyaltyEarningRuleStatusMutation,
   useUpdateLoyaltyEarningRuleMutation,
 } from "@/backend/loyalty/earningRules.query";
-import type { LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
+import type { LoyaltyTier, LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
 import { getLoyaltyTierById } from "@/backend/loyalty/tiers.api";
 import {
   useCreateLoyaltyTierMutation,
@@ -403,7 +403,7 @@ function EarningRulesPage() {
                         setEditingTierId(tier.id);
                       }}
                       onCancelEdit={() => setEditingTierId(null)}
-                      onDelete={(id, name) => {
+                      onDelete={(id: string, name: string) => {
                         handleTierDelete(id, name);
                         setEditingTierId(null);
                       }}
@@ -903,7 +903,21 @@ function EarningRulesPage() {
   );
 }
 
-function TierCard({ tier, index, isEditing, onStartEdit, onCancelEdit, onDelete }) {
+function TierCard({
+  tier,
+  index,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onDelete,
+}: {
+  tier: LoyaltyTier;
+  index: number;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onDelete: (id: string, name: string) => void;
+}) {
   const { t } = useTranslation();
   const tierForm = useForm<TierFormValues>({
     resolver: zodResolver(tierSchema),

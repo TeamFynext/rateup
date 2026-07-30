@@ -183,7 +183,8 @@ declare global {
     webSurveyTheme: any;
     webSurveyThemeId: string;
     webSurveyPagesTheme: any;
-    reviewPageLinks: object;
+    /** Review destination per platform. The legacy "" key holds the Google link. */
+    reviewPageLinks: Partial<Record<ReviewPagePlatform | "", string>>;
     ticketColumnId?: string;
     ticketBoardId?: string;
   }

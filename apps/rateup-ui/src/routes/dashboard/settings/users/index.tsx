@@ -252,15 +252,17 @@ function UsersPage() {
     },
   });
 
-  const filteredMembers = data?.data?.members?.filter((member) => {
+  const filteredMembers = data?.data?.members?.filter((member: SelectedUser) => {
     const q = searchQuery.toLowerCase();
     return member.name?.toLowerCase().includes(q) || member.email?.toLowerCase().includes(q);
   });
 
-  const filteredInvitations = data?.data?.invitations?.filter((invite) => {
-    const q = searchQuery.toLowerCase();
-    return invite.name?.toLowerCase().includes(q) || invite.email?.toLowerCase().includes(q);
-  });
+  const filteredInvitations = data?.data?.invitations?.filter(
+    (invite: { name?: string; email?: string }) => {
+      const q = searchQuery.toLowerCase();
+      return invite.name?.toLowerCase().includes(q) || invite.email?.toLowerCase().includes(q);
+    },
+  );
 
   const handleCopy = async (id: string) => {
     const link = `${import.meta.env.VITE_FRONTEND_URL}/invite?type=team&token=${id}`;
@@ -753,6 +755,14 @@ function EditMember({
   teams,
   currentUserRole,
   currentUserId,
+}: {
+  isEditUserDialogOpen: boolean;
+  setIsEditUserDialogOpen: (open: boolean) => void;
+  selectedUser: SelectedUser;
+  setSelectedUser: (user: SelectedUser | null) => void;
+  teams: Array<{ id: string; name: string }>;
+  currentUserRole: string;
+  currentUserId: string;
 }) {
   const { t: translations } = useTranslation();
   const queryClient = useQueryClient();

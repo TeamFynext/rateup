@@ -32,6 +32,36 @@ export interface SyncTemplatesInput {
 }
 
 /**
+ * A draft template payload as the template-creation screens assemble it before
+ * sending it to the save-as-draft endpoint.
+ */
+export interface WaTemplateDraftPayload {
+  name: string;
+  header: string | null;
+  language: string;
+  body: string;
+  footer: string;
+  category: string;
+  format: string;
+  buttons: unknown[];
+  status: string;
+  example: string[];
+  templateType: string;
+  mediaCarousel: unknown[];
+  productCarousel: unknown[];
+  whatsappSettingsPhoneId: string;
+  defaultValues: {
+    catalog: {
+      thumbnail_product_retailer_id: string;
+      mpm: { sections: unknown[] };
+      spm: { product_retailer_id: string };
+      catalogId: string;
+    };
+    whatsappSettingsPhoneId: string;
+  };
+}
+
+/**
  * Fetches whatsapp templates using orgId user belongs to.
  */
 export const getWaTemplates = async (templatType?: string) => {

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { WaTemplateDraftPayload } from "@/backend/whatsapp/whatsapp.api";
 import {
   useDeleteWaTemplateMutation,
   useSaveTemplateAsDraftMutation,
@@ -81,7 +82,23 @@ interface TemplateListEntry {
   };
 }
 
-const PREDEFINED_TEMPLATES = [
+/** A starter template offered in the "create from predefined" flow. */
+interface PredefinedTemplate {
+  type: string;
+  name: string;
+  description: string;
+  category: string;
+  body?: string;
+  templateType?: TemplateType;
+  format?: string;
+  header?: string | null;
+  footer?: string;
+  buttons?: unknown[];
+  example?: string[];
+  isBlank?: boolean;
+}
+
+const PREDEFINED_TEMPLATES: PredefinedTemplate[] = [
   {
     type: "Blank",
     templateType: TemplateType.GENERAL_NOTIFICATION,
@@ -478,7 +495,7 @@ function Template() {
       return;
     }
     setStep("loading");
-    const payload = {
+    const payload: WaTemplateDraftPayload = {
       name: selectedPredefined.name,
       header: selectedPredefined.header || null,
       language: "en",
@@ -569,7 +586,7 @@ function Template() {
     setSelectedPredefined(null);
     setCreateDraftAccountId("");
   }
-  function handleEditClick(template) {
+  function handleEditClick(template: { id: string }) {
     navigate({
       to: `/dashboard/whatsapp/templates/${template.id}`,
     });

@@ -215,8 +215,10 @@ function Account() {
     if (resetRef?.current) e.target.value = "";
   };
 
-  const handleCropImageSave = (croppedImage: File) => {
-    setFile(croppedImage);
+  const handleCropImageSave = (croppedImage: File | string) => {
+    // The avatar is always cropped from a local blob, so the modal hands back a
+    // File here; it only returns a string for Unsplash-sourced images.
+    setFile(croppedImage as File);
     closeCropDialog();
   };
 

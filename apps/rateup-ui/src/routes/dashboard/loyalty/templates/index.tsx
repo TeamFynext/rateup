@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { WaTemplateDraftPayload } from "@/backend/whatsapp/whatsapp.api";
 import { useSaveTemplateAsDraftMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
@@ -154,13 +155,13 @@ function LoyaltyTemplateListPage() {
     });
   }, [templates, search]);
 
-  function handleEditClick(template) {
+  function handleEditClick(template: { id: string }) {
     navigate({
       to: `/dashboard/loyalty/templates/${template.id}`,
     });
   }
 
-  function handleCreateFromPredefined(predef) {
+  function handleCreateFromPredefined(predef: (typeof PREDEFINED_TEMPLATES)[number]) {
     setSelectedPredefined(predef);
     setStep("account");
   }
@@ -171,7 +172,7 @@ function LoyaltyTemplateListPage() {
       return;
     }
     setStep("loading");
-    const payload = {
+    const payload: WaTemplateDraftPayload = {
       name: selectedPredefined.name,
       header: null,
       language: "en",

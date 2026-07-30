@@ -124,7 +124,19 @@ const CARD_CONFIG = {
   },
 };
 
-const CARD_ROUTES = {
+/** Onboarding card ids, shared by CARD_CONFIG, CARD_ROUTES and the sections. */
+type OnboardingCardId = keyof typeof CARD_CONFIG;
+
+/** One collapsible group of onboarding cards. */
+interface OnboardingSection {
+  id: string;
+  title: string;
+  sub: string;
+  cards: OnboardingCardId[];
+}
+
+// `verify` has no destination — it is verified in place, not navigated to.
+const CARD_ROUTES: Partial<Record<OnboardingCardId, string>> = {
   api: "/dashboard/settings/channels/whatsapp",
   payment: "https://business.facebook.com/latest/billing_hub/accounts/details/",
   invite: "/dashboard/settings/users",
@@ -138,7 +150,7 @@ const CARD_ROUTES = {
 };
 
 function RateUpOnboarding() {
-  const SECTIONS = [
+  const SECTIONS: OnboardingSection[] = [
     {
       id: "whatsapp",
       title: "Connect WhatsApp",
@@ -221,7 +233,7 @@ function RateUpOnboarding() {
     };
   }, [visibleSections, checklistMap]);
 
-  const handleToggle = async (key, value) => {
+  const handleToggle = async (key: string, value: boolean) => {
     setLocalChecklist((prev) => ({
       ...prev,
       [key]: value,
@@ -383,7 +395,7 @@ function RateUpOnboarding() {
               section={section}
               checklistMap={checklistMap}
               onToggle={handleToggle}
-              onNavigate={(id) =>
+              onNavigate={(id: OnboardingCardId) =>
                 navigate({
                   to: CARD_ROUTES[id],
                 })
@@ -435,6 +447,17 @@ function CollapsibleCard({
   isCheckingVerification,
   setIsCheckingVerification,
   waConnected,
+}: {
+  section: OnboardingSection;
+  defaultOpenSectionId: string;
+  checklistMap: Record<string, boolean>;
+  onToggle: (key: string, value: boolean) => void;
+  onNavigate: (id: OnboardingCardId) => void;
+  verificationStatus: string | null;
+  setVerificationStatus: (status: string | null) => void;
+  isCheckingVerification: boolean;
+  setIsCheckingVerification: (checking: boolean) => void;
+  waConnected: boolean;
 }) {
   const [open, setOpen] = useState(section?.id === defaultOpenSectionId);
   const handleVerify = async () => {
@@ -457,7 +480,7 @@ function CollapsibleCard({
       setIsCheckingVerification(false);
     }
   };
-  const getSectionState = (section) => {
+  const getSectionState = (section: OnboardingSection) => {
     const total = section.cards.length;
 
     const doneCount = section.cards.filter((id) => checklistMap[id]).length;

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { ColumnFilterState, PaginationState } from "@/types/api.ts";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 
 import {
   addCampaignParticipants,
@@ -57,7 +57,7 @@ export const useCampaignParticipants = (
   campaignId: string,
   pagination: PaginationState,
   search: string,
-  sort: { id: string; desc: string },
+  sort: SortState | SortState[],
   columnFilters: ColumnFilterState[],
   selectedDripStage?: string,
 ) => {

@@ -1,4 +1,4 @@
-import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, RequestPayload, SortState } from "@/types/api.ts";
 
 import { axiosClient } from "../../apiClient";
 
@@ -21,15 +21,17 @@ export const getCampaignParticipants = async (
     pageSize: number;
   },
   search: string,
-  sort: {
-    id: string;
-    desc: string;
-  },
+  /**
+   * The campaign page passes the whole TanStack sorting array here rather than
+   * a single entry; in that shape there is no `desc` flag to read and the
+   * request falls back to ascending, which is the behaviour today.
+   */
+  sort: SortState | SortState[],
   columnFilters: ColumnFilterState[],
   selectedDripStage?: string,
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
-  const desc = sort.desc ? "desc" : "asc";
+  const desc = !Array.isArray(sort) && sort.desc ? "desc" : "asc";
   const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}${selectedDripStage ? `&selectedDripStage=${selectedDripStage}` : ""}`;
   const res = await axiosClient.get(url);
   return res?.data as {
