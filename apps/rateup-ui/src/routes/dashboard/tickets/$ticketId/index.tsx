@@ -562,7 +562,7 @@ function RightSidebar({
               <MetaLabel>{t("Column")}</MetaLabel>
               <Select
                 value={ticket.ticketColumnId || ""}
-                onValueChange={handleColumnChange}
+                onValueChange={(value) => handleColumnChange(value ?? "")}
                 disabled={moveColMutation.isPending}
                 items={boardColumns.map((col: any) => ({ value: col.id, label: col.title }))}
               >
@@ -603,7 +603,7 @@ function RightSidebar({
                       }
                     >
                       <Avatar className="h-8 w-8 border-none">
-                        <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
+                        <AvatarImage src={getFileUrlFromKey(user.profilePhoto ?? "") ?? ""} />
                         <AvatarFallback
                           className="text-xs font-bold text-white"
                           style={{ backgroundColor: userColor }}
@@ -725,7 +725,7 @@ function RightSidebar({
                     className="w-14 h-14 relative group rounded-[9px] bg-muted border border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer overflow-hidden transition-colors hover:border-primary"
                     onClick={() => {
                       if (fileIsImage) {
-                        setLightboxImage(fileUrl);
+                        setLightboxImage(fileUrl ?? null);
                       } else {
                         window.open(fileUrl, "_blank", "noopener,noreferrer");
                       }
@@ -1508,7 +1508,7 @@ function Comment(data: TicketComment & { cardId: string }) {
   return (
     <div className="flex gap-4 items-start group">
       <Avatar className="h-8 w-8">
-        <AvatarImage src={data?.createdBy?.profilePhoto} />
+        <AvatarImage src={data?.createdBy?.profilePhoto ?? ""} />
         <AvatarFallback>{data?.createdBy?.name?.charAt(0)}</AvatarFallback>
       </Avatar>
       <div className="flex-1">
