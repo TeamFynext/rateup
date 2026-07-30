@@ -1,17 +1,18 @@
 import { create } from "zustand";
 
 export interface Cart {
-  id: string;
-  name: string;
-  currency: string;
-  description: string[];
+  /** Built from the selected plan, whose fields are all optional. */
+  id?: string;
+  name?: string;
+  currency?: string;
+  description?: string[];
   /** A number for real plans; the enterprise tiers store "Lets Talk!". */
-  amount: string | number;
-  currencySymbol: string;
-  period: string;
-  gateway: string;
-  planId: string;
-  priceId: string;
+  amount?: string | number;
+  currencySymbol?: string;
+  period?: string;
+  gateway?: string;
+  planId?: string;
+  priceId?: string;
   trialDays?: number;
 }
 export interface Store {

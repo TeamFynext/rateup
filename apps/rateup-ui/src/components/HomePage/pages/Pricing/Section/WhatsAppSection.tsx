@@ -14,9 +14,9 @@ export const WhatsAppSection = ({
   freePlan: PricingPlan[];
   currencySymbol: string;
 }) => {
-  const whatsAppPlan = [] // plans, removing for now
+  const whatsAppPlan = ([] as PricingPlan[]) // plans, removing for now
     ?.filter((item) => item?.name?.includes("WhatsApp"))
-    ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
+    ?.sort((a, b) => Number(a?.paymentPlan?.amount) - Number(b?.paymentPlan?.amount));
 
   whatsAppPlan?.push({
     displayName: "Business",
@@ -42,7 +42,7 @@ export const WhatsAppSection = ({
       <div className="flex flex-wrap justify-center gap-8">
         {whatsAppPlans?.map((data, index) => {
           let isPopular = false;
-          isPopular = data?.displayName && data?.displayName.toLowerCase().includes("plus");
+          isPopular = !!data?.displayName?.toLowerCase().includes("plus");
 
           return (
             <div className="relative flex flex-col items-center" key={data?.id}>

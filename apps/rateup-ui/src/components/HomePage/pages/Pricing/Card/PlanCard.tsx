@@ -144,7 +144,7 @@ const PlanCard = ({
                   "SubscribeNowButtonClick",
                   "Clicked on subscribe now button in the pricing page",
                 );
-                if (data?.displayName.includes("FREE")) {
+                if (data?.displayName?.includes("FREE")) {
                   if (data?.name?.includes("MENU")) {
                     localStorage.setItem("selected_plan", JSON.stringify(data));
                   }
