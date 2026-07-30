@@ -90,7 +90,7 @@ export default function Hero() {
       function tick(now: number) {
         const p = Math.min(1, (now - start) / dur);
         const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(from + (to - from) * eased);
+        el.textContent = String(Math.round(from + (to - from) * eased));
         if (p < 1) requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
@@ -130,7 +130,9 @@ export default function Hero() {
     }
 
     function clearChat() {
-      waBody.querySelectorAll(".msg, .typing, .fb-card, .wa-replies").forEach((n) => n.remove());
+      waBody
+        .querySelectorAll(".msg, .typing, .fb-card, .wa-replies")
+        .forEach((n: Element) => n.remove());
     }
 
     async function runHero() {
@@ -183,7 +185,7 @@ export default function Hero() {
         mkFbCard();
         await sleep(4000);
 
-        waBody.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n) => {
+        waBody.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n: HTMLElement) => {
           n.style.transition = "opacity .5s ease";
           n.style.opacity = "0";
         });

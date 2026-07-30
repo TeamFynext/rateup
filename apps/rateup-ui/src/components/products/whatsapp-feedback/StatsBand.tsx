@@ -13,7 +13,7 @@ function StatItem({
   suffix?: string;
   label: string;
   desc?: string;
-  delay?: number;
+  delay?: string;
 }) {
   const numRef = useRef(null);
   const observed = useRef(false);
