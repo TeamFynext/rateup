@@ -86,8 +86,8 @@ function ButtonStyles() {
             <Field>
               <FieldLabel htmlFor={`${uid}-x-axis`}>x axis</FieldLabel>
               <Select
-                value={button?.position?.x ?? COORDINATESX?.[1]}
-                onValueChange={handleXCoOrdinateChange}
+                value={String(button?.position?.x ?? COORDINATESX?.[1] ?? "")}
+                onValueChange={(value) => handleXCoOrdinateChange(value ?? "")}
                 items={COORDINATESX.map((c) => ({ value: c, label: c }))}
               >
                 <SelectTrigger id={`${uid}-x-axis`} className="h-9 w-full text-xs">
@@ -105,8 +105,8 @@ function ButtonStyles() {
             <Field>
               <FieldLabel htmlFor={`${uid}-y-axis`}>y axis</FieldLabel>
               <Select
-                value={button?.position?.y ?? COORDINATESY?.[3]}
-                onValueChange={handleYCoOrdinateChange}
+                value={String(button?.position?.y ?? COORDINATESY?.[3] ?? "")}
+                onValueChange={(value) => handleYCoOrdinateChange(value ?? "")}
                 items={COORDINATESY.map((c) => ({ value: c, label: c }))}
               >
                 <SelectTrigger id={`${uid}-y-axis`} className="h-9 w-full text-xs">
