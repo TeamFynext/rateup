@@ -26,7 +26,13 @@ function LogoEditor() {
   }, []);
 
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string }) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
   const handleLogoWidthChange = useCallback((value: string | number) => {
     themeDispatch({
@@ -84,7 +90,7 @@ function LogoEditor() {
       <div className={`style-section-div`}>
         <h2>Width</h2>
         <Slider
-          value={[width]}
+          value={[Number(width ?? 0)]}
           onValueChange={(value) => handleLogoWidthChange(Array.isArray(value) ? value[0] : value)}
           step={1}
           min={30}
@@ -95,7 +101,7 @@ function LogoEditor() {
       <div className={`style-section-div`}>
         <h2>Height</h2>
         <Slider
-          value={[height]}
+          value={[Number(height ?? 0)]}
           onValueChange={(value) => handleLogoHeightChange(Array.isArray(value) ? value[0] : value)}
           step={1}
           min={30}

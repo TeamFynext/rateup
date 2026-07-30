@@ -58,7 +58,7 @@ function PetpoojaConfig({
 }) {
   const uid = useId();
   const [restaurantId, setRestaurantId] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const createIntegration = useCreateIntegrationMutation(IntegratedApps.petpooja);
   const deleteIntegration = useDeleteIntegrationMutation(IntegratedApps.petpooja);
   const confirm = useConfirm();
@@ -278,7 +278,7 @@ function WaTemplateSentHistory({ integration }: { integration: AppIntegration })
       }))
     : [];
 
-  type HistoryRow = (typeof rows)[0];
+  type HistoryRow = NonNullable<typeof rows>[0];
 
   const columns: ColumnDef<HistoryRow>[] = [
     {
@@ -310,7 +310,7 @@ function WaTemplateSentHistory({ integration }: { integration: AppIntegration })
 
   return (
     <div className="flex flex-col gap-4">
-      <DataTable columns={columns} data={rows} />
+      <DataTable columns={columns} data={rows ?? []} />
     </div>
   );
 }

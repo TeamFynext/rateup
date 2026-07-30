@@ -136,7 +136,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
     ? async (values: ResetPasswordValues) => {
         try {
           const user = await checkEmailMutaion.mutateAsync({
-            email: values.email,
+            email: values.email ?? "",
           });
           if (!user?.success) {
             emailForm.setError("email", {
@@ -148,7 +148,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
             return;
           }
           setIsLoading(true);
-          sendResetEmail(values.email).finally(() => {
+          sendResetEmail(values.email ?? "").finally(() => {
             setIsLoading(false);
           });
         } catch {
@@ -157,7 +157,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
       }
     : (values: ResetPasswordValues) => {
         setIsLoading(true);
-        setNewPassword(values.confirmPassword).finally(() => {
+        setNewPassword(values.confirmPassword ?? "").finally(() => {
           setIsLoading(false);
         });
       };

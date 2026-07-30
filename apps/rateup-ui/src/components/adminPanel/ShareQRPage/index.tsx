@@ -12,7 +12,7 @@ const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
 
 function ShareQRPage() {
   const [resource, setResource] = useState<string>("Web Survey");
-  const [link, setLink] = useState(null);
+  const [link, setLink] = useState<string | null>(null);
   const { t: translations } = useTranslation();
   const handleGenerateBtnClick = useCallback(() => {
     switch (resource) {
