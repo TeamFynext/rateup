@@ -804,7 +804,7 @@ declare global {
     json: WaFlowJson;
     map: any;
     logicJumps: {
-      [screenId: string]: FlowLogicJump[];
+      [screenId: string]: Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
     };
     orgId: string;
     surveyId: string;

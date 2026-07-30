@@ -32,6 +32,7 @@ import {
 } from "@/types/enums.ts";
 import type {
   FlowLogicCondition,
+  FlowLogicConditionComponentLevel,
   FlowLogicJump,
   FlowLogicJumpComponentLevel,
 } from "@/types/global";
@@ -182,7 +183,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
       dbFlowId,
       data: {
         logicJumps: Object.fromEntries(
-          Object.entries(updatedLogicJumps).filter(([_, v]: [string, any[]]) => v.length > 0),
+          Object.entries(updatedLogicJumps).filter(([, v]) => (v as unknown[]).length > 0),
         ) as any,
       },
     });
@@ -230,10 +231,17 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   );
 };
 
+/** Conditions whose match data is a list rather than a single value. */
+const MULTI_VALUE_CONDITIONS: Array<LogicCondition | LogicConditionComponentLevel> = [
+  LogicCondition.IncludesAllOf,
+  LogicCondition.IncludesAnyOf,
+  LogicCondition.IncludesNoneOf,
+];
+
 // create props for below component
 interface AtomicConditionBlockProps {
-  condition: FlowLogicCondition;
-  setCondition: (condition: FlowLogicCondition) => void;
+  condition: FlowLogicCondition | FlowLogicConditionComponentLevel;
+  setCondition: (condition: FlowLogicCondition | FlowLogicConditionComponentLevel) => void;
   handleDelete: () => void;
   isComponentLevel?: boolean;
 }
@@ -311,11 +319,7 @@ function AtomicConditionBlock({
         {/* Match Data */}
         {selectedCondition === LogicCondition.Submitted ? (
           <></>
-        ) : [
-            LogicCondition.IncludesAllOf,
-            LogicCondition.IncludesAnyOf,
-            LogicCondition.IncludesNoneOf,
-          ].includes(selectedCondition) ||
+        ) : MULTI_VALUE_CONDITIONS.includes(selectedCondition) ||
           ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
             selectedCondition === LogicCondition.Equals) ? (
           // Array Selector
@@ -346,18 +350,18 @@ function AtomicConditionBlock({
   );
 }
 
-interface ConditionsActionMapBlockProps {
-  logic: FlowLogicJump | FlowLogicJumpComponentLevel;
-  updateLogicJumps: Updater<FlowLogicJump[] | FlowLogicJumpComponentLevel[]>;
+interface ConditionsActionMapBlockProps<T extends FlowLogicJump | FlowLogicJumpComponentLevel> {
+  logic: T;
+  updateLogicJumps: Updater<T[]>;
   index: number;
   isComponentLevel?: boolean;
 }
-function ConditionsActionMapBlock({
+function ConditionsActionMapBlock<T extends FlowLogicJump | FlowLogicJumpComponentLevel>({
   logic,
   updateLogicJumps,
   index,
   isComponentLevel = false,
-}: ConditionsActionMapBlockProps) {
+}: ConditionsActionMapBlockProps<T>) {
   const { selectedScreenId, flowJson, survey, map } = useContext(EditFlowContext);
   const currentIndex = flowJson.screens.findIndex((s) => s.id === selectedScreenId);
   const [selectedAction, setSelectedAction] = useState(logic.action || LogicAction.NextQ);
