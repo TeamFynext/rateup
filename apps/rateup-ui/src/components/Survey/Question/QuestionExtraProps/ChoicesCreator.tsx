@@ -194,7 +194,7 @@ export function ChoicesCreator({
     }
   };
 
-  const handleRemoveChoice = (choice) => {
+  const handleRemoveChoice = (choice: Choice) => {
     if (image) updateImageArray({ Key: choice?.value?.image });
     form.setFieldValue("choices", {
       ...form.values.choices,

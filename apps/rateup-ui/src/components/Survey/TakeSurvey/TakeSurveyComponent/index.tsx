@@ -14,6 +14,7 @@ import { SurveyThemeContextProvider } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { LogicAction, PageType } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";
 import { isHtml } from "@/utils/index.ts";
 import { parseLogicAction } from "@/utils/survey/logic/logic.utils";
@@ -51,6 +52,12 @@ function TakeSurvey({
   fromShortUrl = false,
   setIsThankyouPage = null,
   setIsDefaultThankyouPage = null,
+}: {
+  survey: Survey;
+  setIsReviewPage?: (language: string) => void;
+  fromShortUrl?: boolean;
+  setIsThankyouPage?: ((isThankYou: boolean) => void) | null;
+  setIsDefaultThankyouPage?: ((isDefault: boolean) => void) | null;
 }) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
 
@@ -148,6 +155,7 @@ function TakeSurvey({
 
   const pendingUpdate = useRef(false);
   const viewportHandler = (event: Event) => {
+    const visualViewport = event.target as VisualViewport;
     if (pendingUpdate.current) return;
     pendingUpdate.current = true;
 
@@ -159,7 +167,6 @@ function TakeSurvey({
         const nextPrevBtnDivHeight = nextPrevBtnDiv.getBoundingClientRect().height;
         const nextPrevBtnOffsetTop = nextPrevBtnDiv.offsetTop;
 
-        const visualViewport = event.target;
         const offsetLeft = visualViewport.offsetLeft;
 
         const nextPrevBtnDivTranslateY =
@@ -196,7 +203,8 @@ function TakeSurvey({
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
-  const currentResponse = currentQRes?.response[selectedQ.type];
+  const currentResponse =
+    currentQRes?.response[selectedQ.type as keyof QuestionResponse["response"]];
 
   const goTo = (question: Question) => {
     setSelectedQ(question);
@@ -239,7 +247,7 @@ function TakeSurvey({
               try {
                 finishSurvey(nextQ.type);
               } catch (error) {
-                toast.error(error?.message?.toString());
+                toast.error(getApiErrorMessage(error));
               }
               return;
             }
@@ -262,7 +270,7 @@ function TakeSurvey({
       try {
         finishSurvey();
       } catch (error) {
-        toast.error(error?.message?.toString());
+        toast.error(getApiErrorMessage(error));
       }
     } else {
       openConfirmationResponsesModal();

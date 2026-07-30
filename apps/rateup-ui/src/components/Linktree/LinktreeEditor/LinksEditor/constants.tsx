@@ -13,6 +13,13 @@ const linkTypeOptions = [
   },
 ];
 
+/** An option in one of the linktree editor's dropdowns. */
+export interface LinktreeSelectOption {
+  label: string;
+  value: string;
+  disabled?: boolean;
+}
+
 /** A survey row as the linktree editor's survey dropdown consumes it. */
 interface LinktreeSurvey {
   id: string;
@@ -29,7 +36,9 @@ const getLinkTypeLabel = (value: string) => {
   return label;
 };
 
-const getSelectedSurveyTitleOptions = (surveysData: LinktreeSurvey[] | undefined) => {
+const getSelectedSurveyTitleOptions = (
+  surveysData: LinktreeSurvey[] | undefined,
+): LinktreeSelectOption[] | undefined => {
   if (surveysData) {
     const data = surveysData.map((surveyObj) => {
       return {
@@ -45,7 +54,7 @@ const getSelectedSurveyTitleOptions = (surveysData: LinktreeSurvey[] | undefined
 const getSelectedTeamOptions = (
   surveysData: LinktreeSurvey[] | undefined,
   selectedSurveyTitle: string,
-) => {
+): LinktreeSelectOption[] | undefined => {
   if (surveysData) {
     const data = surveysData.find((surveyObj) => surveyObj.id === selectedSurveyTitle);
     const options = data?.teams.map(({ id, shortUrlId, team: { name: teamName } }) => {

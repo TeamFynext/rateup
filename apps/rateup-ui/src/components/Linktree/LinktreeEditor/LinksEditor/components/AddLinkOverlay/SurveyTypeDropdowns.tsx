@@ -37,6 +37,17 @@ function SurveyTypeDropdowns({
   selectedTeam,
   onSelectedTeamDDChange,
   errors,
+}: {
+  selectedLinkType: string;
+  selectedSurveyTitle: string;
+  onSurveyTitleDDChange: (value: string) => void;
+  surveyTitleAutoCompleteSearch: string;
+  onSurveyTitleAutoCompleteSearchChange: (value: string) => void;
+  linkDisplayName: string;
+  onLinkDisplayNameChange: (value: string) => void;
+  selectedTeam: string;
+  onSelectedTeamDDChange: (value: string) => void;
+  errors?: Record<string, string>;
 }) {
   const { data: selectLinkTypeOptionsData, isPending: isSelectedLinkTypeOptionsLoading } =
     useLinkTypeOptions(selectedLinkType);
@@ -44,7 +55,7 @@ function SurveyTypeDropdowns({
   const [sTAutoCompleteSearchFocused, setSTAutoCompleteSearchFocused] = useState(false);
 
   const handleSurveyTitleAutoCompleteOnBlur = useCallback(
-    (_value) => {
+    (_event?: unknown) => {
       onSurveyTitleAutoCompleteSearchChange(
         getSurveyTitleWithId(selectLinkTypeOptionsData, selectedSurveyTitle),
       );

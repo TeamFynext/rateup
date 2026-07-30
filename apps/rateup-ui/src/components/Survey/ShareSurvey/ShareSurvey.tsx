@@ -161,7 +161,7 @@ const ShareSurvey = ({
     },
   });
 
-  function shareButtonAction(btn: { id: string; [key: string]: unknown }) {
+  function shareButtonAction(btn: "fb" | "mail" | "whatsapp") {
     switch (btn) {
       case "fb":
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
@@ -190,7 +190,7 @@ const ShareSurvey = ({
   const disableShare = !(isPublished || isScheduled || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
-    (value) => {
+    (value: string) => {
       const teamObj = survey.teams[value];
       setSurveyTeamMapId(teamObj.mapId);
       setShortUrlId(teamObj.shortUrlId);
@@ -651,7 +651,7 @@ const PubliShSettingsModal = ({
 }: {
   opened: boolean;
   close: () => void;
-  editPublish: boolean;
+  editPublish: "Publish" | "Expiry" | "" | false;
   surveyUpdateMutation: SurveyUpdateMutation;
   survey: Survey;
 }) => {

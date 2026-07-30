@@ -48,7 +48,15 @@ import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
 import { Input } from "../../ui/input.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
-function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
+function SyncTemplatesModal({
+  opened,
+  onClose,
+  unsyncedFlows,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  unsyncedFlows: Array<{ id: string; name?: string; [key: string]: unknown }>;
+}) {
   const [selectedFlows, handlers] = useListState([]);
   const [currentScreen, setCurrentScreen] = useState<"selectFlows" | "configureFlows">(
     "selectFlows",
@@ -78,7 +86,9 @@ function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
           />
         ) : (
           <ImportFlows
-            flows={selectedFlows.map((flowId) => unsyncedFlows.find((flow) => flow.id === flowId))}
+            flows={selectedFlows.map((flowId: string) =>
+              unsyncedFlows.find((flow) => flow.id === flowId),
+            )}
             handleClose={handleClose}
           />
         )}
@@ -295,7 +305,7 @@ function ConfigureFlow({
                           <div className="flex flex-col pl-16">
                             {choices.map((choice) => {
                               const choicePath = `${qPath}.${choice.id}`;
-                              let qRes = [];
+                              let qRes: string[] = [];
                               const qType = getNestedProperty(form.watch(), qPath)?.type;
                               if (qType) {
                                 qRes = getQuestionResponses(qType);
@@ -351,7 +361,21 @@ function ConfigureFlow({
  * @param param0
  * @returns
  */
-function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, onImport }) {
+function DisplayTemplates({
+  selectedTemplates,
+  unregisteredTemplates,
+  handlers,
+  onImport,
+}: {
+  selectedTemplates: string[];
+  unregisteredTemplates: Array<{ id: string; name?: string; [key: string]: unknown }>;
+  handlers: {
+    remove: (index: number) => void;
+    setState: (ids: string[]) => void;
+    append: (id: string) => void;
+  };
+  onImport: () => void;
+}) {
   function handleSelect(selected: boolean, id: string) {
     if (selected) {
       if (!selectedTemplates.includes(id)) {
@@ -359,7 +383,7 @@ function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, 
       }
     } else {
       if (selectedTemplates.includes(id)) {
-        handlers.remove(selectedTemplates.findIndex((templateId) => templateId === id));
+        handlers.remove(selectedTemplates.findIndex((templateId: string) => templateId === id));
       }
     }
   }

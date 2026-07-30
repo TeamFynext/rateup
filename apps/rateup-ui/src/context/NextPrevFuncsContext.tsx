@@ -8,7 +8,7 @@ import {
 
 import { SelectedQContext } from "./SelectedQ.ts";
 
-type NavFn = (() => void) | null;
+type NavFn = ((response?: unknown) => void) | null;
 
 const NextPrevFuncsAndLastQuestionContext = createContext<{
   nextFn: NavFn;

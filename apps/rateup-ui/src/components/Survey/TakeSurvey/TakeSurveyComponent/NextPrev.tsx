@@ -31,7 +31,7 @@ function NextPrev({
   errorTextDivRef,
 }: {
   prev: () => void;
-  next: () => void;
+  next: (response?: unknown) => void;
   questionsLength: number;
   survey: Survey;
   isSavingResponses: boolean;

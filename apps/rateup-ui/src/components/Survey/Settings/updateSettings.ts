@@ -7,8 +7,16 @@ import type { Dispatch, SetStateAction } from "react";
  * react-query's full `UseMutationResult`.
  */
 export interface SurveyUpdateMutation {
-  mutate: (variables: Record<string, unknown>) => void;
+  mutate: (
+    variables: Record<string, unknown>,
+    options?: {
+      onSuccess?: (data: unknown) => void;
+      onError?: (error: unknown) => void;
+      onSettled?: () => void;
+    },
+  ) => void;
   mutateAsync: (variables: Record<string, unknown>) => Promise<unknown>;
+  isPending?: boolean;
 }
 
 /** Shape of the survey's redirect setting. */
