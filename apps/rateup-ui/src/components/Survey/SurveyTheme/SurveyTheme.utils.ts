@@ -3,8 +3,11 @@ import { produce } from "immer";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 import type { SurveyTheme } from "./surveyTheme.types";
+import type { SurveyThemePage } from "./surveyThemeReducer.ts";
 
-export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
+export async function destructureThemeAndUploadImagesIfAny(
+  surveyTheme: Record<string, SurveyThemePage>,
+) {
   const welcomeThemeBgObj = surveyTheme?.welcomeTheme?.bg;
   const welcomeDesktopBgImgUrl = welcomeThemeBgObj?.desktopBg?.imageUrl;
   const welcomeMobileBgImgUrl = welcomeThemeBgObj?.mobileBg?.imageUrl;

@@ -331,8 +331,9 @@ function WhatsappPaymentList({
       provider_name?: string;
       status?: string;
       oauth_url?: string;
-      purpose_code?: string;
-      merchant_category_code?: string;
+      /** Both arrive as code objects carrying a human-readable description. */
+      purpose_code?: { code?: string; description?: string };
+      merchant_category_code?: { code?: string; description?: string };
       expiration?: number;
       description?: string;
     }>;

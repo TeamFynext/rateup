@@ -2,10 +2,9 @@ import { createContext, useContext, useEffect, useRef } from "react";
 import type { MutableRefObject, ReactNode } from "react";
 import { useImmerReducer } from "use-immer";
 
-import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
-
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 import surveyThemeReducer from "./surveyThemeReducer.ts";
+import type { SurveyThemeAction, SurveyThemePage, SurveyThemeState } from "./surveyThemeReducer.ts";
 
 function useIsFirstRender(): boolean {
   const renderRef = useRef(true);
@@ -28,12 +27,6 @@ const SetSelectedPreviewContext = createContext(null);
 
 const SelectedQuestionContext = createContext<Question>(null);
 
-/** An action dispatched into the survey-theme reducer. */
-export type SurveyThemeAction = {
-  type: string;
-  payload?: unknown;
-};
-
 function SurveyThemeContextProvider({
   surveyTheme,
   children,
@@ -41,7 +34,7 @@ function SurveyThemeContextProvider({
   editSurveySelectedQuestion = null,
   surveyThemeContextProviderValueRef = null,
 }: {
-  surveyTheme: SurveyTheme;
+  surveyTheme: Record<string, SurveyThemePage>;
   children: ReactNode;
   selectedPageTab?: ThemeTabEnum;
   editSurveySelectedQuestion?: Question | null;
@@ -50,12 +43,15 @@ function SurveyThemeContextProvider({
   // console.log({ selectedPageTab, theme: surveyThemeContextProviderValueRef.current})
   const isFirstRender = useIsFirstRender();
 
-  const [state, dispatch] = useImmerReducer(surveyThemeReducer, {
-    selectedPageTab,
-    surveyTheme,
-    openEditors: [],
-    selectedPreview: "desktop",
-  });
+  const [state, dispatch] = useImmerReducer<SurveyThemeState, SurveyThemeAction>(
+    surveyThemeReducer,
+    {
+      selectedPageTab,
+      surveyTheme,
+      openEditors: [],
+      selectedPreview: "desktop",
+    },
+  );
 
   const setOpenEditors = (value: string[]) => {
     dispatch({

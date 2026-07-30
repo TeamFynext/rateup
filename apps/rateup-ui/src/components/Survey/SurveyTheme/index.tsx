@@ -20,6 +20,8 @@ function SurveyTheme({
   survey: Survey;
   previewId?: string;
   onEditPageBtnClick?: ((pageType: PageType) => void) | null;
+  isSurveyThemePreview?: boolean;
+  isSurveyThemeEditView?: boolean;
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme ?? {};
   const { t: translations } = useTranslation();
