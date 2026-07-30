@@ -37,7 +37,7 @@ const SurveyVariableEditor = ({
   const [openedCreateVariable, setOpenedCreateVariable] = useState(false);
   const [openedEditVariable, setOpenedEditVariable] = useState(false);
   const [selectedVariable, setSelectedVariable] = useState<SurveyVariable | null>(null);
-  const deleteVariable = useDeleteSurveyVariableMutation(surveyId);
+  const deleteVariable = useDeleteSurveyVariableMutation(surveyId ?? "");
 
   const handleDeleteVariable = (variable: SurveyVariable) => {
     deleteVariable.mutate({ variableId: variable.id });
@@ -107,7 +107,7 @@ const SurveyVariableEditor = ({
       <CreateSurveyVariableModal
         opened={openedEditVariable}
         close={() => setOpenedEditVariable(false)}
-        variable={selectedVariable}
+        variable={selectedVariable ?? undefined}
         isEdit
       />
     </div>
@@ -128,8 +128,8 @@ interface VariableFormValues {
 
 const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateVariableProps) => {
   const { surveyId, variables } = useContext(SurveyContext);
-  const variableCreation = useCreateSurveyVariableMutation(surveyId);
-  const variableUpdation = useUpdateSurveyVariableMutation(surveyId);
+  const variableCreation = useCreateSurveyVariableMutation(surveyId ?? "");
+  const variableUpdation = useUpdateSurveyVariableMutation(surveyId ?? "");
   const { t: translations } = useTranslation();
 
   const variableSchema = z.object({
@@ -159,7 +159,7 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
     }
     const data = { ...values, type: SurveyVariableType.CUSTOM };
     variableCreation.mutate(
-      { surveyId, data },
+      { surveyId: surveyId ?? "", data },
       {
         onSuccess: () => {
           reset();
@@ -178,7 +178,7 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
       return;
     }
     variableUpdation.mutate(
-      { variableId: variable?.id, data: values },
+      { variableId: variable?.id ?? "", data: values },
       {
         onSuccess: () => {
           reset();

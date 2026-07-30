@@ -74,7 +74,7 @@ const ShareSurvey = ({
   const uid = useId();
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
-  const [tag, setTag] = useState([]);
+  const [tag, setTag] = useState<string[]>([]);
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(survey?.teams[0]?.mapId);
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
@@ -89,7 +89,7 @@ const ShareSurvey = ({
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(null);
   const { t: translations } = useTranslation();
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
-  const [editPublish, setEditPublish] = useState(null);
+  const [editPublish, setEditPublish] = useState<"Publish" | "Expiry" | "" | false | null>(null);
 
   // TODO: since flow has a different share page (ShareFlow.tsx), remove the whatsapp related code
   const isWhatsapp = survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow;
@@ -651,7 +651,7 @@ const PubliShSettingsModal = ({
 }: {
   opened: boolean;
   close: () => void;
-  editPublish: "Publish" | "Expiry" | "" | false;
+  editPublish: "Publish" | "Expiry" | "" | false | null;
   surveyUpdateMutation: SurveyUpdateMutation;
   survey: Survey;
 }) => {
@@ -717,11 +717,11 @@ const PubliShSettingsModal = ({
   useEffect(() => {
     if (editPublish === "Publish") {
       setPublishChoice(PublishEnum.LATER);
-      setValue("surveyPublishAt", toDatetimeLocal(new Date(survey?.surveyPublishAt)));
+      setValue("surveyPublishAt", toDatetimeLocal(new Date(survey?.surveyPublishAt ?? "")));
     } else if (editPublish === "Expiry") {
       if (survey?.surveyEndAt) {
         setSurveyExpiry(ExpiryEnum.CUSTOM_DATE);
-        setValue("surveyEndAt", toDatetimeLocal(new Date(survey?.surveyEndAt)));
+        setValue("surveyEndAt", toDatetimeLocal(new Date(survey?.surveyEndAt ?? "")));
       } else {
         setSurveyExpiry(ExpiryEnum.NO_EXPIRY);
       }
