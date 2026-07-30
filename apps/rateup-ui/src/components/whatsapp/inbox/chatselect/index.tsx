@@ -67,7 +67,7 @@ const WaInboxChatSelect = () => {
     let cancelled = false;
 
     (async () => {
-      await loadContactsFromDB(processedFilter, user);
+      if (processedFilter) await loadContactsFromDB(processedFilter, user);
       if (cancelled) return;
     })();
 
@@ -106,11 +106,11 @@ const WaInboxChatSelect = () => {
   const { setFilterData, filterData } = useContactStore();
 
   const { mutate: bulkAssignStatusMutation, isPending: isBulkAssignStatusPending } =
-    useBulkAssignStatusMutation(null);
+    useBulkAssignStatusMutation("");
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  const [selectedChats, setSelectedChats] = useState([]);
+  const [selectedChats, setSelectedChats] = useState<string[]>([]);
   const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
   const [openConfirmHandleClose, setOpenConfirmHandleClose] = useState(false);
 
@@ -182,7 +182,7 @@ const WaInboxChatSelect = () => {
       if (!filteredContacts || !isActive) return;
       const allContacts = filteredContacts.pages.flatMap((p) => p.rows) ?? [];
       if (!allContacts?.length) {
-        clearContactsForFilter(processedFilter);
+        if (processedFilter) clearContactsForFilter(processedFilter);
         return;
       }
 
@@ -208,7 +208,7 @@ const WaInboxChatSelect = () => {
   }, [filteredContacts, currentFilterKey, processedFilter, tab]);
 
   const contactIds = useMemo(
-    () => contactsByFilter[currentFilterKey] || [],
+    () => contactsByFilter[currentFilterKey ?? ""] || [],
     [contactsById, currentFilterKey, contactsByFilter],
   );
 
@@ -293,7 +293,7 @@ const WaInboxChatSelect = () => {
           sourceIdentifier: "",
         },
         assignedUsers: [],
-      } as ContactWithUpdatedAt);
+      } as unknown as ContactWithUpdatedAt);
     },
     [setSelectedContact],
   );
@@ -429,8 +429,8 @@ const WaInboxChatSelect = () => {
               waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
               closedAt: new Date().toISOString(),
               closedUser: {
-                name: user?.userName,
-                id: user?.userId,
+                name: user?.userName ?? "",
+                id: user?.userId ?? "",
               },
               assignedUsers: [],
             }));
@@ -584,8 +584,8 @@ const WaInboxChatSelect = () => {
                     ) : (
                       <WaInboxChatSelectCard
                         contact={contact}
-                        waSettings={waSettings}
-                        lifeCycleLabels={lifeCycleLabels}
+                        waSettings={waSettings!}
+                        lifeCycleLabels={lifeCycleLabels ?? []}
                         isSelectionMode={isSelectionMode}
                         selectedChats={selectedChats}
                         setSelectedChats={setSelectedChats}
@@ -595,9 +595,9 @@ const WaInboxChatSelect = () => {
                 );
               })}
               {rowVirtualizer.getVirtualItems()?.length === 0 &&
-                (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+                (validateSearchStringAsMobileNumber(filter.searchTerm ?? "") ? (
                   <AddUnknownContactModal
-                    phone={filter.searchTerm}
+                    phone={filter.searchTerm ?? ""}
                     successCallback={(contact) => {
                       setFilter({
                         ...filter,
@@ -662,7 +662,7 @@ const WaInboxChatSelect = () => {
             </DialogDescription>
           </DialogHeader>
           <BulkAssignUser
-            filterData={filterData}
+            filterData={filterData ?? ""}
             contactIds={selectedChats}
             onSuccess={() => {
               setSelectedChats([]);
