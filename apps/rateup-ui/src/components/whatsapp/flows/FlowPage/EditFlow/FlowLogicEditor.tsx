@@ -172,7 +172,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const handleSave = () => {
     const updatedLogicJumps = {
       ...((Object.fromEntries(
-        Object.entries(dbFlow?.logicJumps).filter(([k, _v]) => {
+        Object.entries(dbFlow?.logicJumps ?? {}).filter(([k, _v]) => {
           return k !== selectedScreenId;
         }),
       ) || {}) as any),
@@ -268,7 +268,7 @@ function AtomicConditionBlock({
 
   const [selectedCondition, setSelectedCondition] = useState(condition.condition);
   const selectedScreen = getScreenObjById(flowJson.screens, selectedScreenId);
-  const questionsInScreen = getQuestionsFromScreen(selectedScreen, survey, map);
+  const questionsInScreen = getQuestionsFromScreen(selectedScreen!, survey, map);
   const logicSupportedQuestionsInScreen = questionsInScreen?.filter((q) =>
     logicSupportedTypes.includes(q.type as QuestionType),
   );
@@ -283,7 +283,7 @@ function AtomicConditionBlock({
     setCondition({
       condition: selectedCondition,
       response: matchData,
-      questionId: selectedQId,
+      questionId: selectedQId ?? "",
     });
   }, [selectedCondition, matchData, selectedQId]);
   // TODO: remove these states & update the condition directly in the parent component
@@ -293,7 +293,7 @@ function AtomicConditionBlock({
       <div className="flex flex-col gap-0.5">
         <SelectField
           label={translations("For Question")}
-          data={logicSupportedQuestionsInScreen.map((q) => ({
+          data={(logicSupportedQuestionsInScreen ?? []).map((q) => ({
             label: getQuestionLabel(q, selectedLanguage), // TODO: show index too
             value: q.id,
           }))}
