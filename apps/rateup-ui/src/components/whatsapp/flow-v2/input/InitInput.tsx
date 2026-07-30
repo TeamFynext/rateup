@@ -10,7 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 
-const InitInput = (props) => {
+import type { FlowInputProps } from "./inputProps.ts";
+
+const InitInput = (
+  props: FlowInputProps<string> & { dataSource?: Array<{ id: string; title: string }> },
+) => {
   const uid = useId();
   const options =
     props?.dataSource?.map((data: { id: string; title: string }) => ({
@@ -37,7 +41,11 @@ const InitInput = (props) => {
   ) : (
     <Field>
       <FieldLabel htmlFor={`${uid}-field-2`}>{props.label}</FieldLabel>
-      <Input id={`${uid}-field-2`} onChange={props.onChange} placeholder={props.placeholder} />
+      <Input
+        id={`${uid}-field-2`}
+        onChange={(e) => props.onChange?.(e.target.value)}
+        placeholder={props.placeholder}
+      />
     </Field>
   );
 };

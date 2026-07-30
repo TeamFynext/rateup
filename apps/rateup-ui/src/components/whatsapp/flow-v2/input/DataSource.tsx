@@ -1,5 +1,4 @@
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
 import { useId, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -14,6 +13,7 @@ import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
+import type { QuestionType2 } from "@/types/enums.ts";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
@@ -23,14 +23,7 @@ import {
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar.tsx";
-
-interface Choice {
-  id: string;
-  title: string;
-  description: string;
-  metadata: string;
-  image: string;
-}
+import type { FlowChoice, FlowInputProps } from "./inputProps.ts";
 
 const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
 
@@ -48,7 +41,7 @@ function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
   };
 }
 
-export function DataSourceInput(props) {
+export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
   const uid = useId();
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const resetRef = useRef<(() => void) | null>(null);
@@ -65,7 +58,7 @@ export function DataSourceInput(props) {
           .min(1)
           .max(30)
           .refine((title) => {
-            const isDuplicate = choices.some((c) => {
+            const isDuplicate = choices.some((c: FlowChoice) => {
               const choiceValue = c?.title?.replace(/\s+/g, "");
               return choiceValue === title.replace(/\s+/g, "");
             });
@@ -117,11 +110,12 @@ export function DataSourceInput(props) {
     }
   };
 
-  const handleRemoveChoice = (index: string) => {
+  const handleRemoveChoice = (index: number) => {
     props.removeListItem("data-source", index);
   };
 
-  const disabled = Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
+  const disabled =
+    Object.values(WaNPSQuestions2).includes(props?.metaType as QuestionType2) || props.disabled;
   const submitAdd = form.handleSubmit(handleAddChoice);
 
   return (
@@ -129,7 +123,7 @@ export function DataSourceInput(props) {
       <p className="underline">CHOICES</p>
       <p className="text-xs text-red-500">{props.error}</p>
       <div className="flex flex-col gap-2">
-        {choices?.map((choice, i) => (
+        {choices?.map((choice: FlowChoice, i: number) => (
           <ChoiceRow
             key={choice.id}
             choice={choice}
@@ -310,14 +304,14 @@ export class FileConverter {
 }
 
 interface ChoiceProps {
-  choices: Choice[];
-  choice: Choice;
-  setChoices: Dispatch<SetStateAction<Choice[]>>;
+  choices: FlowChoice[];
+  choice: FlowChoice;
+  setChoices?: (choices: FlowChoice[]) => void;
   onDelete: () => void;
   index: number;
   maxCharCount?: number;
-  disabled: boolean;
-  onlyTitle: boolean;
+  disabled?: boolean;
+  onlyTitle?: boolean;
 }
 
 function ChoiceRow({

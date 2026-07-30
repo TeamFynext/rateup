@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useChatContactCountStore, useContactsStore } from "@/components/dashboard/inbox/store.ts";
@@ -57,6 +58,14 @@ const ChatselectPanelHeader = ({
   isSelectionMode,
   setIsSelectionMode,
   setSelectedChats,
+}: {
+  isRefetchingFilteredContacts: boolean;
+  refetchFilteredContacts: () => void;
+  onUnknownContactAddSuccess?: () => void;
+  tab: string;
+  isSelectionMode: boolean;
+  setIsSelectionMode: (mode: boolean) => void;
+  setSelectedChats: Dispatch<SetStateAction<string[]>>;
 }) => {
   const [showSearchBar, setShowSearchBar] = useState(false);
   const sortData = [
@@ -297,7 +306,7 @@ const SortMenu = ({
 }: {
   data: { items: { label: string; value: string }[]; groupName: string }[];
   value: string;
-  onChange: (value) => void;
+  onChange: (value: string) => void;
   defaultValue: string;
   customSelectTrigger?: React.ReactNode;
   selectTriggerClassName?: string;
