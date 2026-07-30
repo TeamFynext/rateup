@@ -92,8 +92,8 @@ const ChatselectPanelHeader = ({
   // so it reads the same backend totals. The store's row list only holds the pages
   // fetched so far, which undercounts everything past the first page.
   const sectionCounts = useChatContactCountStore((s) => s.sectionCounts);
-  const loadedRowCount = useContactsStore(
-    (s) => s.contactsByFilter[s.currentFilterKey]?.length ?? 0,
+  const loadedRowCount = useContactsStore((s) =>
+    s.currentFilterKey ? (s.contactsByFilter[s.currentFilterKey]?.length ?? 0) : 0,
   );
   const countKey = TAB_SECTION_COUNT_KEY[tab as keyof typeof TAB_SECTION_COUNT_KEY];
   // Blocked has no backend total, and a search narrows the list below the tab
@@ -112,7 +112,7 @@ const ChatselectPanelHeader = ({
   const rowCountLabel = `${rowCount} ${rowNoun}`;
 
   useEffect(() => {
-    if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
+    if (filter.searchTerm?.length && !showSearchBar) setShowSearchBar(true);
   }, [filter.searchTerm, showSearchBar]);
 
   return (

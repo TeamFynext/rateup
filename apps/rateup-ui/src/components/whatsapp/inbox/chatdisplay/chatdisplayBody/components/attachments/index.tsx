@@ -34,7 +34,7 @@ const WaInboxAttachments = ({
   messageContent: {
     attachments: {
       content: string;
-      type: IgReceiveMessageBody["message"]["attachments"][0]["type"];
+      type: NonNullable<NonNullable<IgReceiveMessageBody["message"]>["attachments"]>[0]["type"];
     }[];
     text?: string;
   };

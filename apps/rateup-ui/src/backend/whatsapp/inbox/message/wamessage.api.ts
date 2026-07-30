@@ -193,7 +193,8 @@ export async function exportWaChats({
   filterData,
 }: {
   constraints: string;
-  filterData: string;
+  /** The store keeps `null` until a filter is applied; it is interpolated as-is. */
+  filterData: string | null;
 }) {
   return (
     await axiosClient.post(

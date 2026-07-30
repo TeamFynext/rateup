@@ -326,7 +326,7 @@ const CustomDatePicker = ({
 }: {
   label: string;
   value?: Date;
-  onChange?: (date: Date) => void;
+  onChange?: (date: Date | undefined) => void;
 }) => {
   return (
     <Field className="gap-1 p-2 border rounded-lg bg-card max-w-[140px] flex-1">

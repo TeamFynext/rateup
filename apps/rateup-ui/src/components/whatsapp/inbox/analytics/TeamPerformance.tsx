@@ -116,7 +116,7 @@ function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
                         </td>
                         <td className="hidden sm:table-cell p-4">
                           <div className="font-semibold">
-                            {team.teamMembers} {team.teamMembers > 1 ? "members" : "member"}
+                            {team.teamMembers} {(team.teamMembers ?? 0) > 1 ? "members" : "member"}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {team.teamMembersOnline} {t("online")}

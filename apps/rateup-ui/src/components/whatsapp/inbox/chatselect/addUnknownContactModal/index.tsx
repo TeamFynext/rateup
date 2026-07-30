@@ -218,7 +218,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
               control={control}
               render={({ field }) => (
                 <LifecycleSelector
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={field.onChange}
                   placeholder={"Enter lifecycle"}
                   className="w-full"

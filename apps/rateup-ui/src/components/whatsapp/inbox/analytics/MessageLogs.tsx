@@ -326,7 +326,7 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
 
           <Select
             value={selectedStatus}
-            onValueChange={(value) => setSelectedStatus(value)}
+            onValueChange={(value) => setSelectedStatus(value ?? "all")}
             items={[
               { value: "all", label: t("All Status") },
               { value: "sent", label: t("Sent") },
@@ -349,7 +349,7 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
 
           <Select
             value={selectedSource}
-            onValueChange={(value) => setSelectedSource(value)}
+            onValueChange={(value) => setSelectedSource(value ?? "all")}
             items={[
               { value: "all", label: t("All Sources") },
               { value: "CAMPAIGN", label: t("Campaign") },

@@ -153,7 +153,7 @@ export const useRegisterTemplatesMutation = (onSuccess?: () => void, onError?: (
   return registerMutation;
 };
 
-export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
+export const useSendWaTemplateToUser = (phone: string, contactId: string | undefined) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({

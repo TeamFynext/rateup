@@ -7,7 +7,8 @@ import type { WaTemplateComponent, WaTemplateFetchBodyComponent } from "@/types/
 
 interface Props {
   templateComponent: WaTemplateFetchBodyComponent;
-  parameterData: WaTemplateComponent;
+  /** Absent when the template has no parameters for this component. */
+  parameterData?: WaTemplateComponent;
 }
 
 export default function WaInboxTemplateComponents(props: Readonly<Props>) {

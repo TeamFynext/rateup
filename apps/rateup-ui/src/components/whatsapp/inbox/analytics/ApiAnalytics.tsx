@@ -35,7 +35,7 @@ const formatTime = (time: string | number | Date) => {
 function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const { t } = useTranslation("apianalytics");
   const targetRef = useRef<HTMLDivElement | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [granularity] = useState("hour");
   const [apiType, setApiType] = useState("all");
   const { data: teamData, isLoading: isTeamDataLoading } = useGetTeamApiOverview({

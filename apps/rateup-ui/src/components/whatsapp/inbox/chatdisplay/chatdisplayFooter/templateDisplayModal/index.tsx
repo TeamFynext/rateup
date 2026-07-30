@@ -50,6 +50,10 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
     filteredTemplates &&
     filteredTemplates?.length > 0 &&
     searchFilteredTemplates?.find((data) => data.id === selectedTemplateId);
+  // The preview needs the selected template itself, not just the flag above.
+  const selectedTemplate = selectedTemplateId
+    ? filteredTemplates.find((template) => template.id === selectedTemplateId)?.data
+    : undefined;
   const { t: translations } = useTranslation();
 
   return (
@@ -191,12 +195,10 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
         sm:overflow-y-auto
       "
           >
-            {hasTemplates && selectedTemplateId ? (
+            {hasTemplates && selectedTemplate ? (
               <WaInboxTemplatePreviewNew
                 teamId={teamId}
-                template={
-                  filteredTemplates.find((template) => template.id === selectedTemplateId)?.data
-                }
+                template={selectedTemplate}
                 selectedTemplateId={selectedTemplateId}
                 sendTemplate={sendTemplate}
                 onClose={onClose}

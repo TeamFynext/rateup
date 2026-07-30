@@ -146,8 +146,8 @@ export const syncMetaLeadgenForms = async (waSettingsId: string, data: fbPageQue
   return res.data as { id: string; name: string }[];
 };
 export const syncLeadgenFormQuestions = async (
-  formId: string,
-  waSettingsId: string,
+  formId: string | undefined,
+  waSettingsId: string | null,
   data: fbPageQuery,
 ) => {
   const res = await axiosClient.post(

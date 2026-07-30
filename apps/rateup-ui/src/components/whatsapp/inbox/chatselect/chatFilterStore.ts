@@ -5,7 +5,7 @@ export interface ChatFilter {
   messageType: "all" | "replied" | "unread" | "usermessages";
   strictFilter: boolean;
   searchTerm?: string;
-  waMessageAssignStatus?: string;
+  waMessageAssignStatus?: string | null;
   blockedUsers: boolean;
   status: string[];
   assignedTeams: string[];

@@ -26,7 +26,9 @@ export function PhoneNumberField({
   className?: string;
 }>) {
   const { t: translations } = useTranslation();
-  const value = (form.watch(path as never) ?? "") as string;
+  // `path` is a runtime string, so `watch` widens to the union of every field type;
+  // this field is only ever pointed at a string one.
+  const value = (form.watch(path as never) ?? "") as unknown as string;
   const error = errorAt(form, path);
   const onChange = (next: string) => setValue(form, path, next ?? "");
 

@@ -37,7 +37,7 @@ export default function TextWithFormatting(text: string, examples?: string[], ca
   };
   const parsedValue = parseText(text);
 
-  return <span>{replacePlaceholdersWithValues(parsedValue, examples)}</span>;
+  return <span>{replacePlaceholdersWithValues(parsedValue, examples ?? [])}</span>;
 }
 
 function replacePlaceholdersWithValues(inputReactContent: React.ReactNode, values: string[]) {

@@ -148,7 +148,7 @@ export default function TicketPanel({
   const { data: teamRes } = useTeamsByUser();
   const teams = teamRes?.data ?? [];
 
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const spamMutation = useSetContactSpam();
   const assignLabels = useAssignContactLabelsToContactId();
   const editConversation = useEditConversation();

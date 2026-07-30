@@ -193,7 +193,10 @@ export const useSyncMetaLeadgenForms = (waSettingsId: string) => {
   });
 };
 
-export const useSyncLeadgenFormQuestions = (formId: string, waSettingsId: string) => {
+export const useSyncLeadgenFormQuestions = (
+  formId: string | undefined,
+  waSettingsId: string | null,
+) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, waSettingsId, data),
