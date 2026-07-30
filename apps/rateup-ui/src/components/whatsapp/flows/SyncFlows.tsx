@@ -32,7 +32,7 @@ import {
 import { useListState } from "@/hooks/use-list-state.ts";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
-import type { WaTemplateStatus } from "@/types/enums.ts";
+import type { QuestionType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormChoice, WaFlowFormElement, WaFlowWa } from "@/types/global";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
 import {
@@ -279,7 +279,10 @@ function ConfigureFlow({
                         </div>
                         <Select
                           items={qTypes.map((t) => ({ label: t, value: t }))}
-                          value={getNestedProperty(form.watch(), qPath)?.type ?? ""}
+                          value={
+                            getNestedProperty<{ type?: QuestionType }>(form.watch(), qPath)?.type ??
+                            ""
+                          }
                           onValueChange={(value) => {
                             setMapValue(form, qPath, {
                               type: value,
@@ -307,7 +310,10 @@ function ConfigureFlow({
                             {choices.map((choice) => {
                               const choicePath = `${qPath}.${choice.id}`;
                               let qRes: string[] = [];
-                              const qType = getNestedProperty(form.watch(), qPath)?.type;
+                              const qType = getNestedProperty<{ type?: QuestionType }>(
+                                form.watch(),
+                                qPath,
+                              )?.type;
                               if (qType) {
                                 qRes = getQuestionResponses(qType);
                                 if (
@@ -369,7 +375,7 @@ function DisplayTemplates({
   onImport,
 }: {
   selectedTemplates: string[];
-  unregisteredTemplates: Array<{ id: string; name?: string; status?: WaTemplateStatus }>;
+  unregisteredTemplates: Array<{ id: string; name?: string; status?: WaFlowStatus }>;
   handlers: {
     remove: (index: number) => void;
     setState: (ids: string[]) => void;

@@ -43,7 +43,7 @@ export function FlowImageDetailedView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormElement]);
 
-  function handleChange(updatedData: any) {
+  function handleChange(updatedData: Record<string, unknown>) {
     Object.entries(updatedData).forEach(([key, value]) => form.setValue(key, value));
   }
   function handleSaveElement() {
@@ -100,7 +100,7 @@ function FlowImageElementEditor({
   height,
   width,
 }: {
-  onChange: (key: string, value: unknown) => void;
+  onChange: (updatedData: Record<string, unknown>) => void;
   src?: string;
   height?: number;
   width?: number;

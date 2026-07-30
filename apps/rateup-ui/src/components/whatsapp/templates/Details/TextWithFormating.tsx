@@ -9,7 +9,7 @@ export default function TextWithFormatting(text: string, examples?: string[], ca
     );
   }
   // Function to parse the text and apply formatting
-  const parseText = (text: string) => {
+  const parseText = (text: string): React.ReactNode[] => {
     return text
       .split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g)
       .map((part: string | undefined, index: number) => {
