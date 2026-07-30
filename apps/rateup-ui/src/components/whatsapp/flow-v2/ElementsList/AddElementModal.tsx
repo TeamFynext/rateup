@@ -149,7 +149,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     if (
       [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
-      formElementChildren.some((child) => ["DocumentPicker", "PhotoPicker"].includes(child.type))
+      formElementChildren.some((child) =>
+        ["DocumentPicker", "PhotoPicker"].includes(child.type ?? ""),
+      )
     ) {
       toast.error(
         translations(

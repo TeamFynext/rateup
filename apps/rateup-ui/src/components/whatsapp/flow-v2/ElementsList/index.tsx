@@ -58,7 +58,7 @@ function ElementsList() {
 
   const handleSaveTitle = () => {
     if (screenTitle.trim()) {
-      updateScreen(currentScreenId, { title: screenTitle });
+      updateScreen(currentScreenId ?? "", { title: screenTitle });
     }
     setEditingTitle(false);
   };
@@ -69,7 +69,7 @@ function ElementsList() {
     const items = screen.layout.children;
     const reorderedItems = reorder(items, result.source.index, result.destination.index);
 
-    updateComponentsInScreen(currentScreenId, reorderedItems);
+    updateComponentsInScreen(currentScreenId ?? "", reorderedItems);
   };
 
   const elements = screen.layout.children.filter((el) => el.type !== QuestionType2.Footer);
@@ -125,9 +125,11 @@ function ElementsList() {
                   index={index}
                   isExpanded={expandedElementId === element.id}
                   onToggle={() =>
-                    setExpandedElementId(expandedElementId === element.id ? null : element.id)
+                    setExpandedElementId(
+                      expandedElementId === element.id ? null : (element.id ?? null),
+                    )
                   }
-                  onDelete={() => deleteComponentFromScreen(element.id)}
+                  onDelete={() => deleteComponentFromScreen(element.id ?? "")}
                 />
               ))}
               {provided.placeholder}

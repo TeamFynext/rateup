@@ -115,7 +115,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
       else: type === "If" ? [] : undefined,
       value: type === "Switch" ? "" : undefined,
       cases: type === "Switch" ? {} : undefined,
-      screenId: currentScreenId,
+      screenId: currentScreenId ?? "",
     };
     setBlocks([...blocks, newBlock]);
   };
@@ -460,8 +460,8 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           <MultiSelect
                             id={`${uid}-field-8-${index}`}
                             options={componentsList.map((item) => ({
-                              label: item.label,
-                              value: item.value,
+                              label: item.label ?? "",
+                              value: item.value ?? "",
                             }))}
                             value={block.cases[caseKey].map((comp: any) => comp.type)}
                             onValueChange={(value: string[]) =>
@@ -502,8 +502,8 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           id={`${uid}-field-9-${index}`}
                           options={componentsList
                             ?.map((d) => ({
-                              label: d.label ?? d.value,
-                              value: d.value,
+                              label: d.label ?? d.value ?? "",
+                              value: d.value ?? "",
                             }))
                             .filter((component) => {
                               const isInElse = block.else?.includes(component.value);
@@ -530,8 +530,8 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           id={`${uid}-field-10-${index}`}
                           options={componentsList
                             ?.map((d) => ({
-                              label: d?.label ?? d.value,
-                              value: d.value,
+                              label: d?.label ?? d.value ?? "",
+                              value: d.value ?? "",
                             }))
                             .filter((component) => {
                               const isInThen = block.then?.includes(component.value);
