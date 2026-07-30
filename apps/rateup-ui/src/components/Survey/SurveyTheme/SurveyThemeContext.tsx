@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef } from "react";
-import type { MutableRefObject, ReactNode } from "react";
+import type { Dispatch, MutableRefObject, ReactNode } from "react";
 import { useImmerReducer } from "use-immer";
 
 import { ThemeTabEnum } from "./SurveyTheme.enums";
@@ -14,18 +14,22 @@ function useIsFirstRender(): boolean {
   return renderRef.current;
 }
 
-const SurveyThemeContext = createContext(null);
-const SelectedPageTabContext = createContext(null);
+// These contexts are only read inside `SurveyThemeContextProvider`, so their
+// defaults stand in for "not yet provided" rather than a usable value.
+const SurveyThemeContext = createContext<Record<string, SurveyThemePage>>(
+  {} as Record<string, SurveyThemePage>,
+);
+const SelectedPageTabContext = createContext<string>(ThemeTabEnum.SURVEY);
 
-const DispatchContext = createContext(null);
+const DispatchContext = createContext<Dispatch<SurveyThemeAction>>(() => {});
 
-const OpenEditorsContext = createContext([]);
-const SetOpenEditorsContext = createContext(null);
+const OpenEditorsContext = createContext<string[]>([]);
+const SetOpenEditorsContext = createContext<(value: string[]) => void>(() => {});
 
 const SelectedPreviewContext = createContext("desktop");
-const SetSelectedPreviewContext = createContext(null);
+const SetSelectedPreviewContext = createContext<(value: string) => void>(() => {});
 
-const SelectedQuestionContext = createContext<Question>(null);
+const SelectedQuestionContext = createContext<Question | null>(null);
 
 function SurveyThemeContextProvider({
   surveyTheme,
