@@ -150,7 +150,7 @@ export const TakeSurveyLayoutWeb = ({
   }
 
   const isLanguagePageActive =
-    !selectedLanguage && survey?.languages?.length > 1 && !isSurveyThemeEditView;
+    !selectedLanguage && (survey?.languages?.length ?? 0) > 1 && !isSurveyThemeEditView;
   const isWelcomePageActive = !startClicked && isWelcomePageEnabled;
   const useSurveyBackground = isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
   let requiredSurveyThemeObjKey = "surveyTheme";
@@ -170,7 +170,7 @@ export const TakeSurveyLayoutWeb = ({
 
   const questionsArr = survey?.questions;
 
-  if (!getQuestionsLength(survey)) {
+  if (!getQuestionsLength(survey!)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="font-medium">No Questions found!</p>
@@ -268,7 +268,7 @@ export const TakeSurveyLayoutWeb = ({
                     {startClicked &&
                       (isLanguagePageActive ? (
                         <LanguageSelectionPage
-                          languages={survey?.languages}
+                          languages={survey?.languages ?? []}
                           setSelectedLanguage={setSelectedLanguage}
                           pagesThemeData={pagesThemeData}
                           surveyThemeData={surveyThemeData}
