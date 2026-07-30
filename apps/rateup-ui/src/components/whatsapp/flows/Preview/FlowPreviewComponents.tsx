@@ -31,7 +31,7 @@ function FlowTextPreview({
   fontWeight,
   strikethrough,
 }: {
-  text: string;
+  text?: string;
   type: WaFlowFormNonInputElementType;
   fontWeight?: string;
   strikethrough?: boolean;
@@ -40,7 +40,7 @@ function FlowTextPreview({
     <span
       className={styles[type]}
       style={{
-        ...getTextStyle(fontWeight, true),
+        ...getTextStyle(fontWeight ?? "", true),
         textDecoration: strikethrough ? "line-through" : "normal",
       }}
     >
@@ -104,12 +104,18 @@ function FlowFileInputPreview({
   );
 }
 
-function FlowRadioPreview({ label = "Label", options }: { label?: string; options: string[] }) {
+function FlowRadioPreview({
+  label = "Label",
+  options,
+}: {
+  label?: string;
+  options?: string[] | false;
+}) {
   return (
     <Field>
       <p className={`${styles.inputLabel} ${styles.font}`}>{label}</p>
       <RadioGroup className="mt-2 flex flex-col gap-2">
-        {options?.map((option) => (
+        {(options || []).map((option) => (
           <FieldLabel key={option} className="flex w-full items-center justify-between">
             {option}
             <RadioGroupItem value={option} />
@@ -120,13 +126,19 @@ function FlowRadioPreview({ label = "Label", options }: { label?: string; option
   );
 }
 
-function FlowCheckBoxPreview({ label = "Label", options }: { label?: string; options: string[] }) {
+function FlowCheckBoxPreview({
+  label = "Label",
+  options,
+}: {
+  label?: string;
+  options?: string[] | false;
+}) {
   const uid = useId();
   return (
     <Field>
       <p className={`${styles.inputLabel} ${styles.font}`}>{label}</p>
       <Field className="mt-2">
-        {options?.map((option, idx) => (
+        {(options || []).map((option, idx) => (
           <FieldTitle key={option} className="flex w-full items-center justify-between">
             {option}
             <Checkbox id={`${uid}-field-2-${idx}`} value={option} />
@@ -142,13 +154,13 @@ function FlowChipsSelectorPreview({
   options,
 }: {
   label?: string;
-  options: string[];
+  options?: string[] | false;
 }) {
   return (
     <div>
       <p className="text-sm">{label}</p>
       <div className="flex flex-wrap gap-2">
-        {options?.map((option) => (
+        {(options || []).map((option) => (
           <Badge key={option} variant="outline" className="rounded-full px-3 py-1">
             {option}
           </Badge>
@@ -184,7 +196,7 @@ function FlowOptInPreview({ label = "Label" }: Readonly<{ label?: string }>) {
 }
 
 interface FlowImagePreviewProps {
-  src: string;
+  src?: string;
   width?: number;
   height?: number;
 }
