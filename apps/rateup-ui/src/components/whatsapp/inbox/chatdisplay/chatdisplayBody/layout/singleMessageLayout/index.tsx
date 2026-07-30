@@ -185,7 +185,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     }
     let reactionText;
     if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK) {
-      reactionText = emojiReactionMap(emojiData.unified);
+      reactionText = emojiReactionMap(emojiData?.unified);
       if (!reactionText) {
         toast.error(`${emoji} not supported`);
         return;
