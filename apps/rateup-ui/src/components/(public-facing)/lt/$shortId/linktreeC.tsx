@@ -17,7 +17,7 @@ type LinktreeVisitsData = Record<
   string,
   {
     lastVisitedAt?: string;
-    linkClicks?: Record<string, { lastClickedAt: string }>;
+    linkClicks: Record<string, { lastClickedAt: string } | undefined>;
   }
 >;
 
@@ -31,7 +31,7 @@ const LinkTreeC = ({
     [key: string]: unknown;
   };
 }) => {
-  const shortUrlId = linktreeObj?.shortUrlId;
+  const shortUrlId = (linktreeObj?.shortUrlId as string | undefined) ?? "";
   const pageVisitsOrLinkClicksMutation = usePageVisitsOrLinkClicksUpdateMutation(shortUrlId);
 
   const isMobile = useMediaQuery("(max-width: 425px)");
@@ -74,7 +74,7 @@ const LinkTreeC = ({
       });
     } else if (linktreeVisitsData) {
       const parsedVisitsDataObj: LinktreeVisitsData = JSON.parse(
-        localStorage.getItem("linktreeVisitsData"),
+        localStorage.getItem("linktreeVisitsData") ?? "{}",
       );
       const currentLinktreeLastVisited = parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
       if (!currentLinktreeLastVisited) {
@@ -104,7 +104,7 @@ const LinkTreeC = ({
         const updatedParsedVisitsDataObj = produce(
           parsedVisitsDataObj,
           (draft: LinktreeVisitsData) => {
-            draft[shortUrlId].lastVisitedAt = new Date().toISOString();
+            draft[shortUrlId]!.lastVisitedAt = new Date().toISOString();
           },
         );
         localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
@@ -116,16 +116,16 @@ const LinkTreeC = ({
   }, []);
 
   const handleLinkClick = useCallback((linkId: string) => {
-    const shortUrlId = linktreeObj.shortUrlId;
+    const shortUrlId = (linktreeObj.shortUrlId as string | undefined) ?? "";
     const parsedVisitsDataObj: LinktreeVisitsData = JSON.parse(
-      localStorage.getItem("linktreeVisitsData"),
+      localStorage.getItem("linktreeVisitsData") ?? "{}",
     );
-    const linkClicksObj = parsedVisitsDataObj[shortUrlId]["linkClicks"][linkId];
+    const linkClicksObj = parsedVisitsDataObj[shortUrlId]?.["linkClicks"]?.[linkId];
     if (!linkClicksObj) {
       const updatedParsedVisitsDataObj = produce(
         parsedVisitsDataObj,
         (draft: LinktreeVisitsData) => {
-          draft[shortUrlId]["linkClicks"][linkId] = {
+          draft[shortUrlId]!["linkClicks"][linkId] = {
             lastClickedAt: new Date().toISOString(),
           };
         },
@@ -145,7 +145,9 @@ const LinkTreeC = ({
         const updatedParsedVisitsDataObj = produce(
           parsedVisitsDataObj,
           (draft: LinktreeVisitsData) => {
-            draft[shortUrlId]["linkClicks"][linkId]["lastClickedAt"] = new Date().toISOString();
+            draft[shortUrlId]!["linkClicks"][linkId] = {
+              lastClickedAt: new Date().toISOString(),
+            };
           },
         );
         localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
@@ -199,7 +201,7 @@ const LinkTreeC = ({
           );
         })}
       </div>
-      <UnsplashCreditText url={isMobile ? mobileBgImgUrl : desktopBgImgUrl} />
+      <UnsplashCreditText url={(isMobile ? mobileBgImgUrl : desktopBgImgUrl) ?? ""} />
     </div>
   );
 };

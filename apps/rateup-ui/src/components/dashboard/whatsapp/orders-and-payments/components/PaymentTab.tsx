@@ -33,7 +33,7 @@ interface PaymentMethodOption {
   iconColor: string;
   label: string;
   desc: string;
-  logos?: Array<{ src: string; alt: string }>;
+  logos?: Array<{ src: string | undefined; alt: string }>;
   badges?: Array<{ label: string; className: string }>;
   fields?: Array<{ key: string; label: string; placeholder: string }>;
   collectAddressApplicable: boolean;
