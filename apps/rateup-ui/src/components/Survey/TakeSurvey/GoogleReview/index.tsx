@@ -81,7 +81,7 @@ function GoogleReview({
     }
   }, [isSuggestionCopiedModalOpen, shuffledArray, reviewIndex]);
 
-  const questionWithReviewPageOptions = survey?.questions?.find((question) => {
+  const questionWithReviewPageOptions = survey?.questions?.find((question: Question) => {
     return Boolean(question?.reviewPageOptions);
   });
 

@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useLinktreeObj } from "../../../LinktreeContext/LinktreeContext.tsx";
 import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts";
 import { useThemeDispatch, useThemeObj } from "../../ThemeContext/ThemeContext.tsx";
+import type { LinktreeTheme } from "../../ThemeContext/ThemeReducer.tsx";
 import { uploadFile } from "./uploadFile.tsx";
 
 import styles from "./SaveChangesBtn.module.css";
@@ -49,14 +50,14 @@ function SaveChangesBtn() {
       { prop: "mobileBgImgUrl", file: mobileBgImgFile },
       { prop: "logoUrl", file: logoFile },
     ];
-    const promisesArray = [];
+    const promisesArray: Array<Promise<string>> = [];
     filesArray.forEach(({ prop, file }) => {
       if (file instanceof File) promisesArray.push(uploadFile(prop, file));
     });
 
     try {
       const newBgImgValues = await Promise.all(promisesArray);
-      const newLinktreeTheme = produce(currentThemeObj, (draft) => {
+      const newLinktreeTheme = produce(currentThemeObj, (draft: LinktreeTheme) => {
         newBgImgValues.forEach(({ prop, url }) => {
           switch (prop) {
             case "desktopBgImgUrl": {

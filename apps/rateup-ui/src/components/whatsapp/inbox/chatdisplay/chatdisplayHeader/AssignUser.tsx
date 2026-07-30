@@ -38,6 +38,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
+import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 
 const AssignUser = ({
   contactId,
@@ -81,7 +82,7 @@ const AssignUser = ({
       return;
     }
     const assignees = assignedUsers
-      ? assignedUsers?.map((a) => ({
+      ? assignedUsers?.map((a: { id?: string; name?: string; teamId?: string }) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
           contactId: a.contactId,
@@ -89,10 +90,12 @@ const AssignUser = ({
         }))
       : [];
     setAssignedStaff(assignees);
-    prevAssignedRef.current = assignees.map((a) => ({
-      userId: a.userId,
-      teamId: a.teamId,
-    }));
+    prevAssignedRef.current = assignees.map(
+      (a: { id?: string; name?: string; teamId?: string }) => ({
+        userId: a.userId,
+        teamId: a.teamId,
+      }),
+    );
   }, [assignedUsers, contactId]);
 
   useEffect(() => {
@@ -105,7 +108,7 @@ const AssignUser = ({
       assignees.length &&
       !isEqual(
         assignees,
-        assignedUsers?.map((a) => ({
+        assignedUsers?.map((a: { id?: string; name?: string; teamId?: string }) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
         })),
@@ -165,7 +168,7 @@ const AssignUser = ({
       }
 
       const id = generateInternalMessageId();
-      const newMessage = {
+      const newMessage: OptimisticMessage = {
         id: id,
         contactId: contactId,
         waCreatedAt: new Date().toISOString(),

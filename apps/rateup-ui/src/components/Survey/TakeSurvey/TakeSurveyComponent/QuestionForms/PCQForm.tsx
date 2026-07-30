@@ -50,7 +50,9 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   }, [response]);
 
   const handleSelectedOp = async (value: string) => {
-    const res = options?.find((op) => (op?.value?.value ?? op?.value) === value);
+    const res = options?.find(
+      (op: Choice) => ((op?.value as { value?: string })?.value ?? op?.value) === value,
+    );
     updateResponse(res);
     const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
@@ -64,7 +66,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
     publicRoute || isSurveyThemePreview
       ? false
       : !(previewChoices?.[selectedLanguage] && previewChoices?.[selectedLanguage]?.length > 0);
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
 
   return (
     <div ref={scope} className="mr-2 w-full">

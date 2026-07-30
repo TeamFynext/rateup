@@ -914,7 +914,7 @@ export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
  * The `null` slots mirror the wire shape, where only one of
  * send/receive/privateNote is populated.
  */
-interface OptimisticMessage {
+export interface OptimisticMessage {
   id: string;
   contactId: string;
   waCreatedAt: string;

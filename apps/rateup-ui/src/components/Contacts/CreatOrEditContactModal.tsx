@@ -57,7 +57,7 @@ const CreateOrEditContactModal = ({
   createNewContactMutation,
 }: {
   opened: boolean;
-  setOpened: (value) => void;
+  setOpened: (value: boolean) => void;
   initialValues?: any;
   type?: ContactGroupType;
   createNewContactMutation?: any;

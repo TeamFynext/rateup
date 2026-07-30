@@ -1,3 +1,4 @@
+import type { QrLogoPanelState } from "./index.tsx";
 const initialLogoTabPanelState = {
   qrBgColor: "#FFFFFF",
   qrColor: "#000000",
@@ -8,7 +9,10 @@ const initialLogoTabPanelState = {
   isLogoEnabled: true,
 };
 
-const logoTabPanelReducer = (state, action) => {
+const logoTabPanelReducer = (
+  state: QrLogoPanelState,
+  action: { type: string; payload?: unknown },
+) => {
   const payload = action.payload;
   switch (action.type) {
     case "file-input": {

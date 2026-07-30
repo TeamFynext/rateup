@@ -32,15 +32,15 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
     : previewChoices?.[selectedLanguage]
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
   useEffect(() => {
     if (response) {
       setSelectedOp(response.value);
     }
   }, [response]);
 
-  const handleSelectedOp = async (value) => {
-    const res = options?.find((op) => op?.value === value);
+  const handleSelectedOp = async (value: string) => {
+    const res = options?.find((op: Choice) => op?.value === value);
     updateResponse(res);
     const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {

@@ -32,6 +32,7 @@ import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
 import { generateInternalMessageId } from "../../util.tsx";
+import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
 
 /**
@@ -109,7 +110,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
    */
   function addEventMessage(body: string, assignStatus: string) {
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),

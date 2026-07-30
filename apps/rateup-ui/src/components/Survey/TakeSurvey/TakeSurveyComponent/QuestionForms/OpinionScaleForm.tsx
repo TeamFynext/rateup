@@ -1,6 +1,7 @@
 import classNames from "classnames/bind";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
+import type { MouseEvent } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
@@ -30,7 +31,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const handleHover = (index) => {
+  const handleHover = (index: number) => {
     setIsHovered(index);
   };
 
@@ -38,7 +39,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
     setIsHovered(null);
   };
 
-  const handleBtnClick = async (e) => {
+  const handleBtnClick = async (e: MouseEvent<HTMLElement>) => {
     const clickedBtn = e.target;
     const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {

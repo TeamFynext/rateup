@@ -44,6 +44,7 @@ import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { generateInternalMessageId } from "../util.tsx";
+import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
 
 interface TicketPanelProps {
@@ -215,7 +216,7 @@ export default function TicketPanel({
     const nextIds = activeLabelIds.includes(labelId)
       ? activeLabelIds.filter((id) => id !== labelId)
       : [...activeLabelIds, labelId];
-    const nextLabels = allLabels.filter((label) => nextIds.includes(label.id));
+    const nextLabels = allLabels.filter((label: { id: string }) => nextIds.includes(label.id));
 
     assignLabels.mutate(
       { contactId: contact.id, labelIds: nextIds },
@@ -263,7 +264,7 @@ export default function TicketPanel({
   const toggleSpam = (next: boolean) => {
     if (!contact?.id) return;
     const messageId = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: messageId,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),
@@ -536,7 +537,7 @@ export default function TicketPanel({
 
         {labelPickerOpen && (
           <div className="mt-2 p-1.5 rounded-[10px] max-h-56 overflow-y-auto border border-border bg-background shadow-sm">
-            {allLabels.map((label) => {
+            {allLabels.map((label: { id: string; name?: string; color?: string }) => {
               const checked = activeLabelIds.includes(label.id);
               return (
                 <button

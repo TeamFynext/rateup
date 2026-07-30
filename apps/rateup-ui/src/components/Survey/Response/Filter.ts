@@ -17,7 +17,7 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   } else if ([QuestionType.Date].includes(responseType)) {
     formatedResponse = dayjs(cellValue as string).format("DD, MMM YYYY");
   } else if ([QuestionType.DDMS, QuestionType.MSQ].includes(responseType)) {
-    formatedResponse = cellValue.map((obj) => obj.value).join(" , ");
+    formatedResponse = cellValue.map((obj: { value?: string }) => obj.value).join(" , ");
   } else if (typeof row.getValue(columnId) === "object") {
     formatedResponse = Object.values(cellValue).join(" , ");
   } else formatedResponse = cellValue;
@@ -25,11 +25,11 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   let itemRank = rankItem(formatedResponse, value);
 
   if (responseType === QuestionType.Smiley && value?.length > 0) {
-    const temp = [];
-    value?.map((data) => {
+    const temp: string[] = [];
+    value?.map((data: { value?: string }) => {
       temp?.push(rankItem(formatedResponse, data));
     });
-    temp?.map((data) => {
+    temp?.map((data: string) => {
       if (data.passed) itemRank = data;
     });
   }

@@ -8,7 +8,7 @@ export const useGroupTableStore = create<{
   filter: GroupTableFilter;
   setFilter: (value: GroupTableFilter) => void;
   groupDetails: any;
-  setGroupDetails: (value) => void;
+  setGroupDetails: (value: ContactGroupwithContacts | null) => void;
 }>()(
   immer((set, _get) => ({
     filter: {

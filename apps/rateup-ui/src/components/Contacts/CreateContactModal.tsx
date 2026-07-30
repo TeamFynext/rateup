@@ -377,7 +377,7 @@ export const UserSelector = ({
     status: u.status,
   }));
   if (allowAll) userData.unshift({ id: "all", name: "All Staff", status: "online" });
-  function onValueChange(value) {
+  function onValueChange(value: string) {
     onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
