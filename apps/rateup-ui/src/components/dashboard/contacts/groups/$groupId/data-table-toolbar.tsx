@@ -126,7 +126,15 @@ export function DataTableToolbar<TData, TValue>({
   );
 }
 
-const AddContactToGroupDialog = ({ opened, setOpened, group }) => {
+const AddContactToGroupDialog = ({
+  opened,
+  setOpened,
+  group,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  group: ContactGroupwithContacts;
+}) => {
   function close() {
     setOpened(false);
   }

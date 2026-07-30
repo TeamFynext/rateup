@@ -77,7 +77,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const { serverFilters, setServerFilters } = useResponseFilterStore();
 
   useEffect(() => {
-    setServerFilters({});
+    setServerFilters([]);
   }, [survey]);
 
   const {
@@ -260,7 +260,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const responseCount = responseData?.totalCount;
 
   const Toolbar = useCallback(
-    (props) => (
+    (props: Record<string, unknown>) => (
       <ResponseTableToolbar
         {...props}
         CFData={CFData}
@@ -331,7 +331,15 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
 
 export default React.memo(Responses);
 
-const DeleteModal = ({ confirmDelete, opened, close }) => {
+const DeleteModal = ({
+  confirmDelete,
+  opened,
+  close,
+}: {
+  confirmDelete: () => void;
+  opened: boolean;
+  close: () => void;
+}) => {
   const { t: translations } = useTranslation();
   const [verifyEmail, setVerifyEmail] = useState("");
 

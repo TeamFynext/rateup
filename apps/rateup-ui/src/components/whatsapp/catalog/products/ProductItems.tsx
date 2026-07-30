@@ -27,7 +27,14 @@ const extraProps = [
   { key: "age_group", label: "Age Group" },
 ];
 
-const ProductItems = ({ catalogId }) => {
+/** A catalog product row as the product table renders it. */
+interface CatalogProductRow {
+  id: string;
+  retailer_id?: string;
+  [key: string]: unknown;
+}
+
+const ProductItems = ({ catalogId }: { catalogId: string }) => {
   const deleteProducts = useDeletCatalogProducts(catalogId);
   const { data: catalog, isPending } = useWaCatalog(catalogId);
   const { data: products, isLoading } = useWaCatalogProducts(catalogId);
@@ -39,7 +46,7 @@ const ProductItems = ({ catalogId }) => {
     return <NothingFound text="No products found" />;
   }
 
-  function handleOpenEdit(product) {
+  function handleOpenEdit(product: CatalogProductRow) {
     const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
       product.productProps;
     const formattedProduct = {
@@ -59,9 +66,9 @@ const ProductItems = ({ catalogId }) => {
 
   const { vertical } = catalog;
 
-  function handleDelete(product) {
+  function handleDelete(product: CatalogProductRow) {
     toast.loading("Deleting product…", { id: "delete-catalog-product" });
-    let productIds = [];
+    let productIds: string[] = [];
     if (vertical === "commerce") {
       productIds = [{ id: product.retailer_id }];
     } else if (vertical === "hotels") {

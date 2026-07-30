@@ -187,7 +187,13 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   );
 };
 
-const CountDownTimer = ({ initialTime, onComplete }) => {
+const CountDownTimer = ({
+  initialTime,
+  onComplete,
+}: {
+  initialTime: number;
+  onComplete: () => void;
+}) => {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;

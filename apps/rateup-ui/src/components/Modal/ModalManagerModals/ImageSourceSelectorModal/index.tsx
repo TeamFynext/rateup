@@ -11,7 +11,18 @@ import UnsplashImageSelectorModal from "../UnsplashImageSelectorModal/index.tsx"
 
 import styles from "./ImageSourceSelectorModal.module.css";
 
-function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerProps }) {
+function ImageSourceSelectorModal({
+  context: _context,
+  id: _thisModalId,
+  innerProps,
+}: {
+  context: { closeModal: (id: string) => void };
+  id: string;
+  innerProps: {
+    onImageSelected: (url: string, name?: string) => void;
+    aspectRatio?: number;
+  };
+}) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
   const { t: translations } = useTranslation();
@@ -21,7 +32,7 @@ function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerPr
   const [cropModalProps, setCropModalProps] = useState(null);
 
   const handleFileBtnValueChange = useCallback(
-    (fileObj) => {
+    (fileObj: File | null) => {
       if (!fileObj) {
         onImageSelected(null);
       } else if (fileObj) {

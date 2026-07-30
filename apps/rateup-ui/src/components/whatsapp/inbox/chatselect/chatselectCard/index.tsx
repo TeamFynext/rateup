@@ -443,7 +443,7 @@ export default function WaInboxChatSelectCard({
   );
 }
 
-export function getContactClosedIcon(status) {
+export function getContactClosedIcon(status: string) {
   switch (status) {
     case WaMessageAssignStatus.CLOSED:
       return {

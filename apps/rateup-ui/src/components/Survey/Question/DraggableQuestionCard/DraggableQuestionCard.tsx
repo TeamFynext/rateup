@@ -3,6 +3,7 @@ import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import cx from "clsx";
 import React, { useContext, useState } from "react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
@@ -54,7 +55,7 @@ export function DraggableQuestionCard({
     onDelete(qId);
   });
 
-  const handleDelete = async (e) => {
+  const handleDelete = async (e: MouseEvent<HTMLElement>) => {
     e?.stopPropagation();
     const shouldDelete = await confirm({
       title: ` ${translations("Delete")} ${question.type in PageType ? translations("page") : translations("question")}?`,

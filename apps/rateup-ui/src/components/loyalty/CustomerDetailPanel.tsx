@@ -49,6 +49,7 @@ import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
 export interface CustomerPanelCustomer {
@@ -143,7 +144,7 @@ export function CustomerDetailPanel({
       setPointsAmount("");
       setPointsNotes("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to issue points"));
+      toast.error(getApiErrorMessage(error, t("Failed to issue points")));
     }
   };
 
@@ -161,7 +162,7 @@ export function CustomerDetailPanel({
       setClaimRewardOpen(false);
       setSelectedRewardId("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to claim reward"));
+      toast.error(getApiErrorMessage(error, t("Failed to claim reward")));
     }
   };
 
@@ -190,7 +191,7 @@ export function CustomerDetailPanel({
       setClaimCouponOpen(false);
       setSelectedCouponRewardId("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to claim reward"));
+      toast.error(getApiErrorMessage(error, t("Failed to claim reward")));
     }
   };
 
@@ -207,7 +208,7 @@ export function CustomerDetailPanel({
       });
       toast.success(t("Reward assigned successfully"));
     } catch (error) {
-      toast.error(error?.message || t("Failed to assign reward"));
+      toast.error(getApiErrorMessage(error, t("Failed to assign reward")));
     }
   };
 
@@ -223,7 +224,7 @@ export function CustomerDetailPanel({
       setRedeemCouponOpen(false);
       setCouponCode("");
     } catch (error) {
-      toast.error(error?.message || t("Redemption failed"));
+      toast.error(getApiErrorMessage(error, t("Redemption failed")));
     }
   };
 
@@ -238,7 +239,7 @@ export function CustomerDetailPanel({
       setUseRedemptionOpen(false);
       setSelectedRedemptionId("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to use redemption"));
+      toast.error(getApiErrorMessage(error, t("Failed to use redemption")));
     }
   };
 

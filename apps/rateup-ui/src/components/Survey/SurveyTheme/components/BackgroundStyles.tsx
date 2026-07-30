@@ -29,7 +29,7 @@ function BackgroundStyles() {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
   const handleBgColorPickerChange = useCallback(
-    (value) => {
+    (value: string) => {
       surveyThemeDispatch({
         type: "bg-background-color-change",
         payload: value,

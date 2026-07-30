@@ -42,7 +42,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
 
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
 
   useEffect(() => {
     if (response) {
@@ -54,10 +54,10 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     }
   }, [response]);
 
-  const handleSelectedOp = async (value) => {
+  const handleSelectedOp = async (value: string) => {
     setSelectedOp(value);
     if (value !== selectedFeature?.other?.title) {
-      const res = options?.find((op) => op?.value === value);
+      const res = options?.find((op: Choice) => op?.value === value);
       updateResponse(res);
       const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
@@ -88,7 +88,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   if (selectedFeature?.other?.isEnabled) {
     data.push(selectedFeature?.other?.title);
   } else {
-    data?.filter((op) => op !== selectedFeature?.other?.title);
+    data?.filter((op: unknown) => op !== selectedFeature?.other?.title);
   }
 
   return (
