@@ -1,3 +1,5 @@
+import type { LinktreeLink } from "@/components/Linktree/LinktreeEditor/LinksEditor/components/LinkCard.tsx";
+import type { LinktreeTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/ThemeReducer.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../apiClient";
@@ -9,9 +11,20 @@ async function getLinktrees() {
   return res.data;
 }
 
+/** A linktree page as the editor's endpoint returns it. */
+export interface LinktreeData {
+  id: string;
+  name: string;
+  isPublished?: boolean;
+  links?: LinktreeLink[];
+  theme?: LinktreeTheme;
+  shareSettings?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 function getLinktreeWithShortId(shortUrlId: string) {
   return async () => {
-    const res = await axiosClient.get(`${url}/${shortUrlId}`);
+    const res = await axiosClient.get<LinktreeData>(`${url}/${shortUrlId}`);
     return res.data;
   };
 }

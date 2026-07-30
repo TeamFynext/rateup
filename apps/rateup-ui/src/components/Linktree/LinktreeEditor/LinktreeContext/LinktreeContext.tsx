@@ -1,9 +1,13 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 
-const LinktreeContext = createContext(null);
-const LinktreeEditorTabContext = createContext(null);
-const LinktreeEditorSetTabContext = createContext(null);
+import type { LinktreeData } from "@/backend/linktree/linktree.api";
+
+// Only read inside `LinktreeContextProvider`; the defaults stand in for
+// "not yet provided".
+const LinktreeContext = createContext<LinktreeData>({} as LinktreeData);
+const LinktreeEditorTabContext = createContext<string>("links");
+const LinktreeEditorSetTabContext = createContext<(tab: string) => void>(() => {});
 
 function LinktreeContextProvider({
   linktreeData,
@@ -11,7 +15,7 @@ function LinktreeContextProvider({
   activeTab,
   setActiveTab,
 }: {
-  linktreeData: unknown;
+  linktreeData: LinktreeData;
   children: ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
