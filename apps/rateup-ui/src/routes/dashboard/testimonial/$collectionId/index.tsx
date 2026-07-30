@@ -142,8 +142,8 @@ function CollectionById() {
 
           <TabsContent value={TestimonialTabs.Edit} className="flex-1">
             <TestimonialEdit
-              currentStyle={collection?.theme}
-              testimonials={collection?.testimonials}
+              currentStyle={collection?.theme!}
+              testimonials={collection?.testimonials ?? []}
               filters={filters}
               isDelete={isDelete}
               type={type}
@@ -155,8 +155,8 @@ function CollectionById() {
 
           <TabsContent value={TestimonialTabs.Share} className="flex-1">
             <TestimonialShare
-              selectedTestimonials={collection?.testimonials}
-              currentStyle={collection?.theme}
+              selectedTestimonials={collection?.testimonials ?? []}
+              currentStyle={collection?.theme!}
             />
           </TabsContent>
         </div>
