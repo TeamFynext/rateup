@@ -19,7 +19,7 @@ function LocalOrUnsplashImagePicker({
   value: string;
   label: string;
   forDevice: string;
-  onImageSelected: (url: string) => void;
+  onImageSelected: (result: { file?: File; url: string; source?: string } | null) => void;
 }) {
   const { t: translations } = useTranslation();
   const [uploadModalOpened, { open: openUploadModal, close: closeUploadModal }] =

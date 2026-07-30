@@ -32,6 +32,7 @@ import {
 import { useListState } from "@/hooks/use-list-state.ts";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
+import type { WaTemplateStatus } from "@/types/enums.ts";
 import type { WaFlowFormChoice, WaFlowFormElement, WaFlowWa } from "@/types/global";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
 import {
@@ -55,7 +56,7 @@ function SyncTemplatesModal({
 }: {
   opened: boolean;
   onClose: () => void;
-  unsyncedFlows: Array<{ id: string; name?: string; [key: string]: unknown }>;
+  unsyncedFlows: WaFlowWa[];
 }) {
   const [selectedFlows, handlers] = useListState([]);
   const [currentScreen, setCurrentScreen] = useState<"selectFlows" | "configureFlows">(
@@ -368,7 +369,7 @@ function DisplayTemplates({
   onImport,
 }: {
   selectedTemplates: string[];
-  unregisteredTemplates: Array<{ id: string; name?: string; [key: string]: unknown }>;
+  unregisteredTemplates: Array<{ id: string; name?: string; status?: WaTemplateStatus }>;
   handlers: {
     remove: (index: number) => void;
     setState: (ids: string[]) => void;

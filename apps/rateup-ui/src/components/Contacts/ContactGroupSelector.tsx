@@ -11,7 +11,7 @@ const ContactGroupSelector = ({
   className = "",
   allowMultiSelect = false,
 }: {
-  value: string | string[];
+  value: string & string[];
   onChange: (value: string & string[]) => void;
   className?: string;
   allowMultiSelect?: boolean;

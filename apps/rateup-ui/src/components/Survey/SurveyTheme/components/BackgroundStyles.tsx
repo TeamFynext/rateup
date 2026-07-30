@@ -1,5 +1,4 @@
 import { useId, useCallback } from "react";
-import type { ChangeEvent } from "react";
 
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
@@ -39,7 +38,7 @@ function BackgroundStyles() {
   );
 
   const handleDesktopBgImagePickerChange = useCallback(
-    (croppedImageObj: { file?: File; url: string }) => {
+    (croppedImageObj: { file?: File; url: string } | null) => {
       const { url = "", file = null } = croppedImageObj || {};
       surveyThemeDispatch({
         type: "bg-desktopBgImg-change",
@@ -53,7 +52,7 @@ function BackgroundStyles() {
   );
 
   const handleMobileBgImagePickerChange = useCallback(
-    (croppedImageObj: { file?: File; url: string }) => {
+    (croppedImageObj: { file?: File; url: string } | null) => {
       const { url = "", file = null } = croppedImageObj || {};
       surveyThemeDispatch({
         type: "bg-mobileBgImg-change",
@@ -66,7 +65,7 @@ function BackgroundStyles() {
     [],
   );
 
-  const handleConfettiChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleConfettiChange = useCallback((e: { target: { checked: boolean } }) => {
     surveyThemeDispatch({
       type: "bg-confetti-change",
       payload: e.target.checked,
@@ -74,7 +73,7 @@ function BackgroundStyles() {
   }, []);
 
   const handleChooseBackgroundRadioGroupChange = useCallback(
-    (value) => {
+    (value: string) => {
       surveyThemeDispatch({
         type: "bg-choose-background-radio-change",
         payload: value,

@@ -32,7 +32,7 @@ function UnsplashImageSelectorModal({
   id: string;
   innerProps: {
     handleUnsplashImageSave?: (url: string, name: string) => void;
-    onImageSelected?: (url: string | null, name?: string) => void;
+    onImageSelected?: (result: { file?: File; url: string; source?: string } | null) => void;
     aspectRatio?: number;
   };
 }) {

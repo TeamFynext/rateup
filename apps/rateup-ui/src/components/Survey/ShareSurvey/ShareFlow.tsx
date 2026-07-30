@@ -96,7 +96,7 @@ export const ShareFlow = ({
 
   const handleContainedSelectionChange = useCallback(
     (value: string) => {
-      const teamObj = survey.teams[value];
+      const teamObj = survey.teams[Number(value)];
       setSurveyTeamMapId(teamObj.mapId);
       console.log(teamObj.shortUrlId);
 
@@ -182,7 +182,7 @@ export const ShareFlow = ({
                         <SelectValue placeholder={translations("select a single Tag")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {tagSelectData?.map((tagItem: { value: string; label: string }) => (
+                        {tagSelectData?.map((tagItem: string) => (
                           <SelectItem key={tagItem} value={tagItem}>
                             {tagItem}
                           </SelectItem>

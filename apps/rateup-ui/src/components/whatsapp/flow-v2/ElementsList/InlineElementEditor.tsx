@@ -150,9 +150,10 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     }
   }
 
-  const renderField = (field: { name: string; type?: string; [key: string]: unknown }) => {
+  const renderField = (field: string) => {
     const fieldType = initialValues[field].type;
-    const FieldComponent = FieldComponentMap[fieldType] || TextField;
+    const FieldComponent =
+      FieldComponentMap[fieldType as keyof typeof FieldComponentMap] || TextField;
     const extra = initialValues[field]?.extra || {};
 
     if (["hidden"].includes(fieldType) || field === "visible") return null;

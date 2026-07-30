@@ -51,7 +51,7 @@ const LargeTextResponseSummary = ({
   const [height, setHeight] = useState(null);
   const { t: translations } = useTranslation();
 
-  const getResponseSummary = (questionId, teamId?) => {
+  const getResponseSummary = (questionId: string, teamId?: string) => {
     if (getSummary.isPending) return;
     toast.loading("loading", { id: "summary" });
     getSummary.mutate(
