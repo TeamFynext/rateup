@@ -32,11 +32,7 @@ const Result = ({
   survey: Survey;
   encryptionpassword?: string;
   setEncryptionPassword: (password: string) => void;
-  flow?: {
-    json?: {
-      screens?: Array<{ layout: { children: WaFlowFormElement[] } }>;
-    };
-  } | null;
+  flow?: Pick<DbFlow, "json"> | null;
   version?: number;
 }) => {
   const { defaultLanguage } = useContext(SelectedLanguageContext);
@@ -57,7 +53,8 @@ const Result = ({
   // .
   const flowQuestions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen) =>
-      screen.layout.children
+      (screen.layout.children as unknown as WaFlowFormElement[])
+        // v2 flows store elements directly under the screen layout.
         .filter((child) => String(child.type) !== String(QuestionType2.Footer))
         .map(
           ({

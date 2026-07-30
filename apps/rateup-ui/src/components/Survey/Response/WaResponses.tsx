@@ -517,7 +517,8 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
     case WaQuestions.Rating:
       return RatingScaleMap[scaleKey] || "";
     case WaQuestions.Opinion:
-      return info || "";
+      // Opinion answers render as their raw numeric value.
+      return (info as ReactNode) || "";
     case WaQuestions.RadioButtonsGroup:
     case WaQuestions.Dropdown:
       return question.dataSource?.find((data) => data.id === info)?.title || "";
@@ -529,16 +530,16 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
         ""
       );
     case WaQuestions.DocumentPicker:
-      return (
-        info && (
-          <a
-            href={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${info}`}
-            download
-            className="text-primary hover:underline"
-          >
-            Download
-          </a>
-        )
+      return info ? (
+        <a
+          href={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${info}`}
+          download
+          className="text-primary hover:underline"
+        >
+          Download
+        </a>
+      ) : (
+        ""
       );
     case WaQuestions.DatePicker:
       return info ? dayjs(info as string | number | Date).format("DD-MM-YYYY") : "";
