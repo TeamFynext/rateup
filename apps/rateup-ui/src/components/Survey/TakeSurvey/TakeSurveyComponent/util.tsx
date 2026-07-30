@@ -150,7 +150,7 @@ export function submitSurvey({
   selectedColumnId?: string;
 }) {
   return createResponsePublic({
-    surveyTeamMapId,
+    surveyTeamMapId: surveyTeamMapId ?? "",
     responses,
     encryptedResponses,
     language: selectedLanguage,
@@ -256,12 +256,12 @@ export const validateResponse = (
   selectedLanguage: string,
 ) => {
   let errMsg = "";
-  if (!selectedQ.required && !response) return errMsg;
-  switch (selectedQ.type) {
+  if (!selectedQ?.required && !response) return errMsg;
+  switch (selectedQ?.type) {
     case QuestionType.Contact:
     case QuestionType.Email:
     case QuestionType.Phone:
-      if (!selectedQ.required && response) {
+      if (!selectedQ?.required && response) {
         if (response?.phone && !isValidPhoneNumber(response?.phone)) {
           errMsg = "Invalid phone number";
           break;
@@ -271,16 +271,16 @@ export const validateResponse = (
           break;
         }
       } else {
-        if (selectedQ.features?.[selectedLanguage]?.name.isEnabled && !response?.name?.length) {
+        if (selectedQ?.features?.[selectedLanguage]?.name.isEnabled && !response?.name?.length) {
           errMsg = "Name cannot be blank";
         } else if (
-          selectedQ.features?.[selectedLanguage]?.phone.isEnabled &&
+          selectedQ?.features?.[selectedLanguage]?.phone.isEnabled &&
           (!response?.phone || !isValidPhoneNumber(response?.phone))
         ) {
           if (!response?.phone) errMsg = "phone number cannot be blank";
           else if (!isValidPhoneNumber(response?.phone)) errMsg = "Enter a valid phone number";
         } else if (
-          selectedQ.features?.[selectedLanguage]?.email.isEnabled &&
+          selectedQ?.features?.[selectedLanguage]?.email.isEnabled &&
           (!response?.email?.length || !emailPattern.test(response?.email))
         ) {
           if (!response?.email?.length) errMsg = "Email cannot be blank";
@@ -289,7 +289,7 @@ export const validateResponse = (
       }
       break;
     case QuestionType.Testimonial:
-      if (!selectedQ.required) break;
+      if (!selectedQ?.required) break;
       if (
         !response?.name ||
         !response?.testimonial ||
@@ -299,7 +299,7 @@ export const validateResponse = (
         errMsg = "Name - min 3 characters, and \n testimonial - min 5 characters";
       break;
     case QuestionType.MCQGrid:
-      if (!selectedQ.required) break;
+      if (!selectedQ?.required) break;
       const questions = selectedQ?.features?.[selectedLanguage]?.questions;
       const responsedQuestions = response ? Object.keys(response) : [];
       if (

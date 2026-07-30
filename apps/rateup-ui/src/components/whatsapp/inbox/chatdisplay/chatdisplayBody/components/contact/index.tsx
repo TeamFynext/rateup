@@ -12,10 +12,10 @@ import type { WaSendMessageBody } from "@/types/global";
 import { importMethod } from "@/utils/enums/index.ts";
 
 const WaInboxContact = ({ messageContent }: { messageContent: WaSendMessageBody["contacts"] }) => {
-  const contacts = [...messageContent];
+  const contacts = [...(messageContent ?? [])];
   const [opened, setOpened] = useState(false);
   if (contacts.length === 1) {
-    return <Contact contact={contacts[0]} showAddtoContact={true} />;
+    return <Contact contact={contacts[0]!} showAddtoContact={true} />;
   }
 
   return (
@@ -61,7 +61,7 @@ const Contact = ({
   contact,
   showAddtoContact = false,
 }: {
-  contact: WaSendMessageBody["contacts"][0];
+  contact: NonNullable<WaSendMessageBody["contacts"]>[0];
   showAddtoContact?: boolean;
 }) => {
   const [opened, setOpened] = useState(false);
@@ -151,7 +151,7 @@ const ContactInfo = ({
   open,
   showAddtoContact = false,
 }: {
-  contact: WaSendMessageBody["contacts"][0];
+  contact: NonNullable<WaSendMessageBody["contacts"]>[0];
   open?: () => void;
   showAddtoContact?: boolean;
 }) => {
@@ -180,7 +180,7 @@ const ContactInfo = ({
         )}
       </div>
 
-      {contact.emails?.map((email, idx) => (
+      {contact.emails?.map((email: { email?: string }, idx: number) => (
         <div className="flex flex-col gap-0.5" key={idx}>
           <span className="text-[10px] text-muted-foreground uppercase font-semibold">
             {email.type}
@@ -190,7 +190,7 @@ const ContactInfo = ({
         </div>
       ))}
 
-      {contact.phones?.map((phone, idx) => (
+      {contact.phones?.map((phone: { phone?: string }, idx: number) => (
         <div className="flex flex-col gap-0.5" key={idx}>
           <span className="text-[10px] text-muted-foreground uppercase font-semibold">
             {phone.type}
@@ -200,17 +200,28 @@ const ContactInfo = ({
         </div>
       ))}
 
-      {contact.addresses?.map((address, idx) => (
-        <div className="flex flex-col gap-0.5" key={idx}>
-          <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-            {address.type}
-          </span>
-          <span className="text-xs text-foreground">
-            {address.city}, {address.country}
-          </span>
-          <Separator className="mt-2" />
-        </div>
-      ))}
+      {contact.addresses?.map(
+        (
+          address: {
+            street?: string;
+            city?: string;
+            state?: string;
+            zip?: string;
+            country?: string;
+          },
+          idx: number,
+        ) => (
+          <div className="flex flex-col gap-0.5" key={idx}>
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+              {address.type}
+            </span>
+            <span className="text-xs text-foreground">
+              {address.city}, {address.country}
+            </span>
+            <Separator className="mt-2" />
+          </div>
+        ),
+      )}
     </div>
   );
 };
