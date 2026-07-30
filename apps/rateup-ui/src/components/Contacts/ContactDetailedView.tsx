@@ -151,7 +151,7 @@ const ContactDetailedView = ({
                   </div>
                 </div>
               )}
-              {selectedContact.contactLabelMap?.length > 0 && (
+              {(selectedContact.contactLabelMap?.length ?? 0) > 0 && (
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-muted-foreground mb-2">Tags</p>
                   <div className="flex gap-1 flex-wrap">

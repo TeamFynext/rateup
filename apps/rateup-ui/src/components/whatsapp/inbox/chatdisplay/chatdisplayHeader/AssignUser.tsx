@@ -335,7 +335,7 @@ const AssignUser = ({
                 return (
                   <div key={a.userId} className="relative">
                     <p className="text-sm font-semibold">
-                      {staff?.name?.length > 10 ? staff?.name?.slice(0, 10) : staff?.name}
+                      {(staff?.name?.length ?? 0) > 10 ? staff?.name?.slice(0, 10) : staff?.name}
                     </p>
                   </div>
                 );

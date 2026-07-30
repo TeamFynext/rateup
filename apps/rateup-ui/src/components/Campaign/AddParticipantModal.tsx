@@ -101,7 +101,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
   const contacts = data?.users;
   const isSelectedAll = useMemo(() => {
     if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
-      return contacts?.length > 0 && selectedContacts.length === contacts.length;
+      return (contacts?.length ?? 0) > 0 && selectedContacts.length === contacts.length;
     }
 
     if (selectedTab === CampaignParticipantSource.GROUP) {
@@ -344,7 +344,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                       <div className="space-y-2 pr-4">
                         {selectedTab === CampaignParticipantSource.INDIVIDUAL && (
                           <>
-                            {filteredContacts?.length > 0 ? (
+                            {(filteredContacts?.length ?? 0) > 0 ? (
                               filteredContacts.map((contact) => {
                                 const isAlreadySelected = contact?.campaignParticipants?.some(
                                   (c: { campaignId?: string }) => c?.campaignId === campaign?.id,
@@ -369,7 +369,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
                         {selectedTab === CampaignParticipantSource.GROUP && (
                           <>
-                            {filteredGroups?.length > 0 ? (
+                            {(filteredGroups?.length ?? 0) > 0 ? (
                               filteredGroups.map((group) => (
                                 <CustomerGroup
                                   key={group.id}
@@ -408,7 +408,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                     </ScrollArea>
 
                     {selectedTab === CampaignParticipantSource.INDIVIDUAL &&
-                      filteredContacts?.length > 0 && (
+                      (filteredContacts?.length ?? 0) > 0 && (
                         <div className="mt-0">
                           <StatePagination
                             totalItems={data?.totalCount ?? 0}
