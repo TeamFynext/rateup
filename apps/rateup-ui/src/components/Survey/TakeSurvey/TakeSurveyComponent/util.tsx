@@ -45,11 +45,11 @@ function responseValueFor(userResponse: QuestionResponse) {
 const shouldShowGoogleReview = (question: Question, userResponse: QuestionResponse) => {
   switch (question.type) {
     case QuestionType.Rating:
-      return userResponse.response.Rating >= question.reviewPageOptions.minRating;
+      return userResponse.response!.Rating! >= question.reviewPageOptions!.minRating;
     case QuestionType.Opinion:
-      return userResponse.response["Opinion Scale"] >= question.reviewPageOptions.minOpinion;
+      return userResponse.response!["Opinion Scale"]! >= question.reviewPageOptions!.minOpinion;
     case QuestionType.Smiley:
-      return question.reviewPageOptions.reqOptions.includes(userResponse.response.Smiley);
+      return question.reviewPageOptions!.reqOptions.includes(userResponse.response!.Smiley!);
     default:
       return false;
   }
@@ -75,14 +75,14 @@ const shouldRaiseTicket = (
   userResponse: QuestionResponse,
   selectedLanguage: string,
 ) => {
-  if (question.ticketIssue.submissionTicket) return true;
+  if (question.ticketIssue?.submissionTicket) return true;
   switch (question.type) {
     case QuestionType.Rating:
-      return userResponse.response.Rating <= question.ticketIssue.minRating;
+      return userResponse.response!.Rating! <= question.ticketIssue!.minRating!;
     case QuestionType.Opinion:
-      return userResponse.response["Opinion Scale"] <= question.ticketIssue.minOpinion;
+      return userResponse.response!["Opinion Scale"]! <= question.ticketIssue!.minOpinion!;
     case QuestionType.Smiley:
-      return question.ticketIssue.reqOptions.includes(userResponse.response.Smiley);
+      return question.ticketIssue!.reqOptions!.includes(userResponse.response!.Smiley!);
     case QuestionType.CustomNPS:
     case QuestionType.DDMS:
     case QuestionType.DDSS:
@@ -92,17 +92,17 @@ const shouldRaiseTicket = (
       let flag = false;
       if (Array.isArray(response)) {
         response.forEach((res: Choice) => {
-          const index = question.choices[selectedLanguage].findIndex(
+          const index = question.choices![selectedLanguage]!.findIndex(
             (c: Choice) => c.value === res.value,
           );
-          flag = question.ticketIssue.reqOptions.includes(index.toString());
+          flag = question.ticketIssue!.reqOptions!.includes(index.toString());
           if (flag) return;
         });
       } else {
-        const index = question.choices[selectedLanguage].findIndex(
+        const index = question.choices![selectedLanguage]!.findIndex(
           (c: Choice) => c.value === response.value,
         );
-        flag = question.ticketIssue.reqOptions.includes(index.toString());
+        flag = question.ticketIssue!.reqOptions!.includes(index.toString());
       }
       return flag;
     default:
@@ -234,7 +234,7 @@ export function getQuestionForm(type: QuestionType | PageType, selectedQ: Questi
     case Q.EmailOtp:
       return <EmailOTPForm key={selectedQ?.id} />;
     case Q.WOP:
-      return <WOPForm wop={selectedQ?.wop} isPreview={false} />;
+      return <WOPForm wop={selectedQ?.wop!} isPreview={false} />;
     default:
       return <div>not implemented</div>;
   }
@@ -374,13 +374,17 @@ export const getReplacedTitleFromVariable = ({
       const replacementNode = doc.createTextNode(
         isPublicPage ? String(getValueFromVariable(value, responses, surveyId)) : `{${value}}`,
       );
-      parent.replaceChild(replacementNode, component);
+      parent?.replaceChild(replacementNode, component);
     }
   });
   return doc.body.innerHTML;
 };
 
-function getValueFromVariable(variable: string, responses: QuestionResponse[], surveyId: string) {
+function getValueFromVariable(
+  variable: string,
+  responses: QuestionResponse[] | undefined,
+  surveyId: string,
+) {
   const { data: variables } = useGetSurveyVariables(surveyId, true);
   const variableObj = variables && variables?.find((val) => val?.name === variable);
   if (variableObj) {

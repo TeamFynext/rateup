@@ -306,7 +306,7 @@ declare global {
     responses?: Array<QuestionResponse>;
     encryptedResponses?: string;
     language: string;
-    tag: string;
+    tag: string | null;
     location?: {
       coordinates?: Coordinates;
       city?: string;
