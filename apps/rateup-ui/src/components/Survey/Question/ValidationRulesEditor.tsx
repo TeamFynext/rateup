@@ -74,8 +74,8 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   const close = () => setOpened(false);
   const [ruleList, setRuleList] = useState(["length", "wordCount", "textType"]);
 
-  const [multiInputRules, setMultiInputRules] = useState<Record<string, Rule[]>>(null);
-  const [selectedRule, setSelectedRule] = useState(null);
+  const [multiInputRules, setMultiInputRules] = useState<Record<string, Rule[]> | null>(null);
+  const [selectedRule, setSelectedRule] = useState<(Rule & { fieldKey?: string }) | null>(null);
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
@@ -193,7 +193,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
   const addRule = (ruleType: string) => {
     if ([Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
-      let newRule: Rule;
+      let newRule!: Rule;
       if (ruleType === "length") {
         newRule = {
           min: "3",
@@ -284,11 +284,13 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   };
 
   const MultiInputValidationRules = () => {
-    const [ruleValues, setRuleValues] = useState<Rule & { fieldKey?: string }>(selectedRule);
+    const [ruleValues, setRuleValues] = useState<(Rule & { fieldKey?: string }) | null>(
+      selectedRule,
+    );
     const [ruleErrors, setRuleErrors] = useState<Record<string, string>>({});
 
     const setRuleField = (name: string, value: any) => {
-      setRuleValues((prev) => ({ ...prev, [name]: value }));
+      setRuleValues((prev) => ({ ...prev!, [name]: value }));
     };
 
     const validateRuleForm = () => {
@@ -307,19 +309,20 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
     const handleUpdateRule = async () => {
       if (!validateRuleForm()) return;
-      const newRules = multiInputRules?.[ruleValues.fieldKey];
-      const rule = newRules.find((r) => r.ruleType == ruleValues.ruleType);
+      const fieldKey = ruleValues!.fieldKey!;
+      const newRules = multiInputRules?.[fieldKey]!;
+      const rule = newRules.find((r) => r.ruleType == ruleValues!.ruleType)!;
       if (rule.ruleType == "length") {
-        rule.min = ruleValues.min;
-        rule.max = ruleValues.max;
+        rule.min = ruleValues!.min;
+        rule.max = ruleValues!.max;
       }
       if (rule.ruleType == "textType") {
-        rule.type = ruleValues.type;
+        rule.type = ruleValues!.type;
       }
-      rule.errorMessage = ruleValues.errorMessage;
+      rule.errorMessage = ruleValues!.errorMessage;
       setMultiInputRules({
         ...multiInputRules,
-        [ruleValues.fieldKey]: newRules,
+        [fieldKey]: newRules,
       });
       setSelectedRule(null);
       close();
@@ -347,7 +350,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
               <FieldLabel htmlFor="field-key-select">{translations("select field Key")}</FieldLabel>
               <Select
                 value={selectedFieldKey}
-                onValueChange={setSelectedFieldKey}
+                onValueChange={(value) => setSelectedFieldKey(value ?? "")}
                 items={fieldKeyOptions.map((key: string) => ({ value: key, label: key }))}
               >
                 <SelectTrigger id="field-key-select" className="w-fit">
@@ -658,7 +661,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                               onValueChange={(event) => {
                                 const newValue: RuleValue = {
                                   ...(ruleData as RuleValue),
-                                  type: event,
+                                  type: event ?? "",
                                   errorMessage: `${event} only allowed.`,
                                 };
                                 setFieldValue(ruleType, newValue);

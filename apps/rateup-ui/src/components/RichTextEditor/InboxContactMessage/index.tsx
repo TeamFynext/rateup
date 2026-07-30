@@ -29,9 +29,10 @@ const InboxContactsControl = () => {
   return (
     <Popover open={opened} onOpenChange={setOpened}>
       <PopoverTrigger render={<div className="relative inline-flex" />}>
-        {(body.contacts.contactIds.length > 0 || body.contacts.groupIds.length > 0) && (
+        {((body.contacts?.contactIds.length ?? 0) > 0 ||
+          (body.contacts?.groupIds.length ?? 0) > 0) && (
           <span className="absolute -top-2 -right-2 z-10 rounded-full bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-primary-foreground">
-            {`${body.contacts.contactIds.length} contacts, ${body.contacts.groupIds.length} groups selected`}
+            {`${body.contacts?.contactIds.length ?? 0} contacts, ${body.contacts?.groupIds.length ?? 0} groups selected`}
           </span>
         )}
         <Button variant="ghost" size="icon" title="Contacts" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
@@ -46,8 +47,8 @@ const InboxContactsControl = () => {
             resetBody();
             setOpened((o) => !o);
           }}
-          contactIds={body.contacts.contactIds}
-          groupIds={body.contacts.groupIds}
+          contactIds={body.contacts?.contactIds ?? []}
+          groupIds={body.contacts?.groupIds ?? []}
         />
       </PopoverContent>
     </Popover>
@@ -79,8 +80,8 @@ const SelectContacts = ({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const [selectedContactIds, setSelectedContactIds] = useState([]);
-  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const { data: contacts, isLoading } = useContacts(pagination, searchText);
   const { data: groups, isPending } = useContactGroup();
   const totalPageCount = (contacts?.totalCount ?? 1) / pagination.pageSize;
@@ -154,9 +155,9 @@ const SelectContacts = ({
         style={{ height: selectedTab === ContactMethods.Individual ? 280 : 342 }}
       >
         <TabsContent value={ContactMethods.Individual}>
-          {contacts.users?.length > 0 ? (
+          {(contacts?.users?.length ?? 0) > 0 ? (
             <div className="flex flex-col">
-              {contacts.users.map((contact) => (
+              {contacts!.users!.map((contact) => (
                 <ContactSelectCard
                   key={contact.id}
                   contact={contact}
@@ -174,9 +175,9 @@ const SelectContacts = ({
           )}
         </TabsContent>
         <TabsContent value={ContactMethods.Group}>
-          {groups?.length > 0 ? (
+          {(groups?.length ?? 0) > 0 ? (
             <div className="flex flex-col">
-              {groups.map((group) => (
+              {groups!.map((group) => (
                 <ContactGroupSelectCard
                   key={group.id}
                   group={group}
@@ -194,7 +195,7 @@ const SelectContacts = ({
           )}
         </TabsContent>
       </ScrollArea>
-      {selectedTab === ContactMethods.Individual && contacts?.users?.length > 0 && (
+      {selectedTab === ContactMethods.Individual && (contacts?.users?.length ?? 0) > 0 && (
         <ContactPagination
           pagination={pagination}
           setPagination={setPagination}
