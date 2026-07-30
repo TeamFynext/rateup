@@ -178,7 +178,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  function sendReaction(emoji: string, emojiData: EmojiClickData) {
+  function sendReaction(emoji: string, emojiData?: EmojiClickData) {
     if (!whatsappSettingsPhoneId) {
       toast.error("Select a account to send the message");
       return;
@@ -388,7 +388,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   );
 }
 
-export function reactionEmojiMap(reaction: string) {
+export function reactionEmojiMap(reaction: string | undefined) {
   if (reaction === "love") {
     return "❤";
   }

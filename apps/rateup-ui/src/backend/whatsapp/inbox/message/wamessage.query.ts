@@ -64,15 +64,15 @@ export const useGetMessagesByContactId = (
 };
 
 export const useSendNewWaMessage = (
-  contactId: string,
-  teamId: string | null,
-  whatsappSettingsPhoneId: string,
+  contactId: string | undefined,
+  teamId: string | null | undefined,
+  whatsappSettingsPhoneId: string | undefined,
   platform = MessagePlatform.WHATSAPP,
 ) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (message: any) =>
-      sendNewWaMessage(contactId, {
+      sendNewWaMessage(contactId ?? "", {
         ...message,
         whatsappSettingsPhoneId,
         platform,

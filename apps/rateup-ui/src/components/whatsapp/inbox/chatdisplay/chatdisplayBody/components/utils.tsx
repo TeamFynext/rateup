@@ -70,7 +70,7 @@ export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
       return <WaInboxText messageContent={messageContent} />;
     case "template":
       return (
-        <WaInboxTemplate templateBody={template} parameters={message.templateComponentParams} />
+        <WaInboxTemplate templateBody={template!} parameters={message.templateComponentParams} />
       );
     case "interactive":
       return <WaInboxInteractive interactiveBody={interactive} messageContent={messageContent} />;
@@ -138,11 +138,11 @@ export function getReactionMessage({
       const reactedMessageId =
         msg.messageBody.exchangeProcess === "receive"
           ? !isInsta
-            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0].reaction?.message_id
-            : (msg.messageBody.receive as IgReceiveMessageBody).reaction.mid
+            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0]!.reaction?.message_id
+            : (msg.messageBody.receive as IgReceiveMessageBody)!.reaction!.mid
           : !isInsta
             ? (msg.messageBody.send as WaSendMessageBody).reaction?.message_id
-            : (msg.messageBody.send as IgSendMessageBody).payload.message_id;
+            : (msg.messageBody.send as IgSendMessageBody).payload!.message_id;
       return wa_id === reactedMessageId;
     }
     return false;
@@ -153,14 +153,14 @@ export function getReactionMessage({
     return {
       emoji: isSendReactionMsg
         ? !isInsta
-          ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction.emoji
-          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload.emoji ??
-            reactionEmojiMap((reactionMsg.messageBody.send as IgSendMessageBody).payload.reaction))
+          ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction!.emoji
+          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload!.emoji ??
+            reactionEmojiMap((reactionMsg.messageBody.send as IgSendMessageBody).payload!.reaction))
         : !isInsta
-          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody).messages[0].reaction.emoji
-          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction.emoji ??
+          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody).messages[0]!.reaction!.emoji
+          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction!.emoji ??
             reactionEmojiMap(
-              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction.reaction,
+              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction!.reaction,
             )),
       from: isSendReactionMsg
         ? reactionMsg.sender?.name
