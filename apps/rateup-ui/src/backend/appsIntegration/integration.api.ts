@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { IntegratedApps } from "@/types/enums.ts";
 import type { AmeliaCredential, petpoojaCredential } from "@/types/global";
 
@@ -45,7 +46,7 @@ export async function getGoogleSheetAuthorizationUrl() {
   return res.data;
 }
 
-export async function createGoogleSheetAuthToken(data) {
+export async function createGoogleSheetAuthToken(data: RequestPayload) {
   const res = await axiosClient.post(`${ROUTE_URL}google/auth-token`, data);
   return res.data;
 }
@@ -68,7 +69,7 @@ export const getWaPaymentConfigurationByName = async ({
   return response.data;
 };
 
-export const createWaPaymentConfiguration = async (data) => {
+export const createWaPaymentConfiguration = async (data: RequestPayload) => {
   const response = await axiosClient.post(`${ROUTE_URL}wa_payment_configuration`, data);
   return response.data;
 };
@@ -90,7 +91,7 @@ export async function getIntegrationStatuses() {
   return (await axiosClient.get(`${ROUTE_URL}statuses`)).data;
 }
 
-export async function deleteZapierTriggerHook(data) {
+export async function deleteZapierTriggerHook(data: RequestPayload) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
 

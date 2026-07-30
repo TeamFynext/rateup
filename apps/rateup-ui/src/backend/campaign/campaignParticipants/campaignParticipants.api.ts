@@ -1,11 +1,15 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../../apiClient";
 
-export const addContactParticipants = async ({ data, campaignId }) => {
+type CampaignPayload = { data: RequestPayload; campaignId: string };
+
+export const addContactParticipants = async ({ data, campaignId }: CampaignPayload) => {
   const res = await axiosClient.post(`/campaign/${campaignId}/participants/contacts`, data);
   return res;
 };
 
-export const addGroupParticipants = async ({ data, campaignId }) => {
+export const addGroupParticipants = async ({ data, campaignId }: CampaignPayload) => {
   const res = await axiosClient.post(`/campaign/${campaignId}/participants/groups`, data);
   return res;
 };
@@ -35,16 +39,28 @@ export const getCampaignParticipants = async (
   };
 };
 
-export const addCampaignParticipants = async ({ data, campaignId }) => {
+export const addCampaignParticipants = async ({ data, campaignId }: CampaignPayload) => {
   const res = await axiosClient.post(`/campaign/${campaignId}/participants/`, data);
   return res;
 };
 
-export const deleteCampaignParticipant = async ({ participantId, campaignId }) => {
+export const deleteCampaignParticipant = async ({
+  participantId,
+  campaignId,
+}: {
+  participantId: string;
+  campaignId: string;
+}) => {
   const res = await axiosClient.delete(`/campaign/${campaignId}/participants/${participantId}`);
   return res;
 };
-export const deleteMulitpleGroupParticipants = async ({ data, campaignId }) => {
+export const deleteMulitpleGroupParticipants = async ({
+  data,
+  campaignId,
+}: {
+  data: string[];
+  campaignId: string;
+}) => {
   const res = await axiosClient.delete(`/campaign/${campaignId}/participants/multiple-delete`, {
     data: { ids: data },
   });

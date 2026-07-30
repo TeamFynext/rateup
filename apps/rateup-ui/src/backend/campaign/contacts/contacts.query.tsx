@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import {
@@ -30,7 +31,13 @@ import {
   updateLifecycleofMultipleContacts,
 } from "./contacts.api";
 
-export const useContacts = (pagination, searchData?, sorting?, columnFilters?, type?) => {
+export const useContacts = (
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
+  type?: string,
+) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";
@@ -377,7 +384,7 @@ export const useUpdateLifecycleofMultipleContacts = () => {
   });
 };
 
-export const useBulkAssignStatusMutation = (groupId) => {
+export const useBulkAssignStatusMutation = (groupId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -20,8 +20,7 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    // renable strict mode and strictNullChecks when you can fix all errors
-    "strict": false,
+    "strict": true,
     "strictNullChecks": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

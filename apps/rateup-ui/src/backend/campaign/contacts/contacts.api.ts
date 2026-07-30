@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../../apiClient";
@@ -57,12 +58,12 @@ export const createContact = async (data: ICreateContact) => {
   return res as { data: ContactsData };
 };
 
-export const importContacts = async (data) => {
+export const importContacts = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${CONTACT_BASE_URL}/importcontacts`, data);
   return res;
 };
 
-export const importCSVContacts = async (data) => {
+export const importCSVContacts = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
     timeout: 60000,
   });
@@ -81,12 +82,24 @@ export const deleteManyContacts = async (contactIds: string[]) => {
   return res;
 };
 
-export const editContact = async ({ data, contactId }) => {
+export const editContact = async ({
+  data,
+  contactId,
+}: {
+  data: RequestPayload;
+  contactId: string;
+}) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}`, data);
   return res;
 };
 
-export const editContactLabels = async ({ data, contactId }) => {
+export const editContactLabels = async ({
+  data,
+  contactId,
+}: {
+  data: RequestPayload;
+  contactId: string;
+}) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}/labels`, data);
   return res;
 };
@@ -130,7 +143,7 @@ export const assignContactLabelsToContactId = async (
 };
 
 export const updateLifecycleofMultipleContacts = async (data: {
-  lifecycleId;
+  lifecycleId: string;
   contactIds: string[];
 }) => {
   const res = await axiosClient.put(
@@ -156,12 +169,12 @@ export const getCustomField = async () => {
   const res = await axiosClient.get(`${CONTACT_BASE_URL}/custom-fields`);
   return res?.data as CustomFieldData[];
 };
-export const createCustomField = async (data) => {
+export const createCustomField = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${CONTACT_BASE_URL}/custom-fields`, data);
   return res?.data as CustomFieldData;
 };
 
-export const updateCustomField = async (fieldId: string, data) => {
+export const updateCustomField = async (fieldId: string, data: RequestPayload) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/custom-fields/${fieldId}`, data);
   return res?.data as CustomFieldData;
 };
@@ -183,7 +196,7 @@ export const exportContacts = async (data: { format: "xlsx" | "ods"; fields: str
   return downloadBlob(blob, `contacts.${data.format}`);
 };
 
-export const bulkAssignStatus = async (data) => {
+export const bulkAssignStatus = async (data: RequestPayload) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/bulk-assign-status`, data);
   return res;
 };

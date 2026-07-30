@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import {
@@ -31,10 +32,10 @@ export const useContactGroup = (type: ContactGroupType = ContactGroupType.NORMAL
 export const useContactGroupById = (
   groupId: string,
   enabled = false,
-  pagination,
-  searchData?,
-  sorting?,
-  columnFilters?,
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
 ) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
@@ -214,7 +215,7 @@ export const useAddExistingContactMutation = (groupId: string) => {
   });
 };
 
-export const useRemoveContactsFromGroup = (groupId) => {
+export const useRemoveContactsFromGroup = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeContactsFromGroup,
@@ -295,7 +296,7 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
   });
 };
 
-export const useUpdateContactGroupsForContactMutation = (contactId) => {
+export const useUpdateContactGroupsForContactMutation = (contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({

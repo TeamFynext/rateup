@@ -31,7 +31,7 @@ export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
   });
 };
 
-export const useCreateCampaignMutation = (teamId, type) => {
+export const useCreateCampaignMutation = (teamId: string, type: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createCampaign,
@@ -51,7 +51,7 @@ export const useCreateCampaignMutation = (teamId, type) => {
   });
 };
 
-export const useCampaignById = (campaignId) => {
+export const useCampaignById = (campaignId: string) => {
   return useQuery({
     queryKey: ["campaignById", campaignId],
     queryFn: () => getCampaignById(campaignId),
@@ -59,7 +59,7 @@ export const useCampaignById = (campaignId) => {
   });
 };
 
-export const useCampaignStatsById = (campaignId, selectedDripStage) => {
+export const useCampaignStatsById = (campaignId: string, selectedDripStage?: string) => {
   return useQuery({
     queryKey: ["campaignStats", campaignId, selectedDripStage],
     queryFn: () => getCampaignStatsById(campaignId, selectedDripStage),
@@ -67,7 +67,12 @@ export const useCampaignStatsById = (campaignId, selectedDripStage) => {
   });
 };
 
-export const useUpdateCampaignMutation = (campaignId, teamId, complete = () => {}, type) => {
+export const useUpdateCampaignMutation = (
+  campaignId: string,
+  teamId: string,
+  complete: () => void = () => {},
+  type?: string,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateCampaign,
@@ -89,7 +94,7 @@ export const useUpdateCampaignMutation = (campaignId, teamId, complete = () => {
   });
 };
 
-export const useDeleteCampaignMutation = (teamId, type) => {
+export const useDeleteCampaignMutation = (teamId: string, type: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteCampaign,

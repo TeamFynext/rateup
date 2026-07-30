@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { ContactGroupType } from "@/types/enums.ts";
 
 import { axiosClient } from "../../apiClient";
@@ -66,12 +67,18 @@ export const createContactGroup = (data: ICreateContactGroup) => {
   return res;
 };
 
-export const addNewContact = ({ data, groupId }) => {
+export const addNewContact = ({ data, groupId }: { data: RequestPayload; groupId: string }) => {
   const res = axiosClient.post(`${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/new`, data);
   return res;
 };
 
-export const addNewContactFromCSV = ({ data, groupId }) => {
+export const addNewContactFromCSV = ({
+  data,
+  groupId,
+}: {
+  data: RequestPayload;
+  groupId: string;
+}) => {
   const res = axiosClient.post(
     `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/new/importcsv`,
     data,
@@ -85,17 +92,25 @@ export const addNewContactFromCSV = ({ data, groupId }) => {
   return res;
 };
 
-export const deleteContactGroup = (groupId) => {
+export const deleteContactGroup = (groupId: string) => {
   const res = axiosClient.delete(`${CONTACT_GROUP_BASE_URL}/${groupId}`);
   return res;
 };
 
-export const updateContactGroup = (groupId, data) => {
+export const updateContactGroup = (groupId: string, data: RequestPayload) => {
   const res = axiosClient.put(`${CONTACT_GROUP_BASE_URL}/${groupId}`, data);
   return res;
 };
 
-export const addExistingContactsToGroup = ({ customerList, groupId, isCustomer = false }) => {
+export const addExistingContactsToGroup = ({
+  customerList,
+  groupId,
+  isCustomer = false,
+}: {
+  customerList: string[];
+  groupId: string;
+  isCustomer?: boolean;
+}) => {
   const customerListObj = {
     contactIds: customerList,
     isCustomer,
@@ -107,7 +122,13 @@ export const addExistingContactsToGroup = ({ customerList, groupId, isCustomer =
   return res;
 };
 
-export const removeContactsFromGroup = async ({ contactIds, groupId }) => {
+export const removeContactsFromGroup = async ({
+  contactIds,
+  groupId,
+}: {
+  contactIds: string[];
+  groupId: string;
+}) => {
   const res = await axiosClient.put(`${CONTACT_GROUP_BASE_URL}/${groupId}/contacts`, contactIds);
   return res?.data;
 };
