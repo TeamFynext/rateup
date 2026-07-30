@@ -76,7 +76,7 @@ export const createColumns = ({ onEdit, onDelete }: ColumnsProps): ColumnDef<Con
   {
     accessorKey: "_count.contactLabels",
     header: createSortableHeader("Contacts"),
-    cell: ({ row }) => <ContactsCell count={row.original._count.contactLabels} />,
+    cell: ({ row }) => <ContactsCell count={row.original._count?.contactLabels ?? 0} />,
   },
   {
     accessorKey: "createdAt",

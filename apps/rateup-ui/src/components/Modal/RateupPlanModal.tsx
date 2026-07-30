@@ -249,7 +249,7 @@ const RateupPlanModal = ({
                 items={widgetIdOptions}
                 value={values.displayWidgetId ?? ""}
                 onValueChange={(value) =>
-                  form.setValue("displayWidgetId", value, { shouldDirty: true })
+                  form.setValue("displayWidgetId", value ?? undefined, { shouldDirty: true })
                 }
               >
                 <SelectTrigger id={`${uid}-field-3`} className="w-full">
@@ -272,7 +272,9 @@ const RateupPlanModal = ({
               <Select
                 items={planTypeOptions}
                 value={values.planType ?? ""}
-                onValueChange={(value) => form.setValue("planType", value, { shouldDirty: true })}
+                onValueChange={(value) =>
+                  form.setValue("planType", value ?? "", { shouldDirty: true })
+                }
               >
                 <SelectTrigger id={`${uid}-field-4`} className="w-full">
                   <SelectValue placeholder={translations("Plan Type")} />
@@ -295,7 +297,7 @@ const RateupPlanModal = ({
                 id={`${uid}-field-5`}
                 value={values.description ?? []}
                 onValueChange={(value) =>
-                  form.setValue("description", value, { shouldDirty: true })
+                  form.setValue("description", value ?? undefined, { shouldDirty: true })
                 }
                 placeholder={translations("Type Description and press enter")}
               />
@@ -322,7 +324,9 @@ const RateupPlanModal = ({
               <Select
                 items={currencyOptions}
                 value={values.currency ?? ""}
-                onValueChange={(value) => form.setValue("currency", value, { shouldDirty: true })}
+                onValueChange={(value) =>
+                  form.setValue("currency", value ?? undefined, { shouldDirty: true })
+                }
               >
                 <SelectTrigger id={`${uid}-field-6`} className="w-full">
                   <SelectValue placeholder={translations("Currency")} />
@@ -352,7 +356,7 @@ const RateupPlanModal = ({
                 items={razorpayOptions}
                 value={values.monthlyPaymentPlanId ?? ""}
                 onValueChange={(value) =>
-                  form.setValue("monthlyPaymentPlanId", value, { shouldDirty: true })
+                  form.setValue("monthlyPaymentPlanId", value ?? undefined, { shouldDirty: true })
                 }
                 disabled={!razorpayOptions.length}
               >
@@ -376,7 +380,7 @@ const RateupPlanModal = ({
                 items={razorpayOptions}
                 value={values.yearlyPaymentPlanId ?? ""}
                 onValueChange={(value) =>
-                  form.setValue("yearlyPaymentPlanId", value, { shouldDirty: true })
+                  form.setValue("yearlyPaymentPlanId", value ?? undefined, { shouldDirty: true })
                 }
                 disabled={!razorpayOptions.length}
               >
