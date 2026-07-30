@@ -72,7 +72,7 @@ function ConfirmResponsesModal({
             {survey.questions
               .filter((q: Question) => questionsHistory.includes(q.id))
               .map((question: Question) => {
-                const response: QuestionResponse = responses.find(
+                const response = responses.find(
                   (response: QuestionResponse) => response.questionId === question.id,
                 );
                 return (

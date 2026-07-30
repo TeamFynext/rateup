@@ -252,7 +252,7 @@ interface ResponseUnderValidation {
 
 export const validateResponse = (
   response: ResponseUnderValidation | undefined,
-  selectedQ: Question,
+  selectedQ: Question | null,
   selectedLanguage: string,
 ) => {
   let errMsg = "";
@@ -497,7 +497,7 @@ export function getQuestionsLength(survey: Survey) {
   }
 }
 
-export function getSelectedQPos(survey: Survey, selectedQ: Question) {
+export function getSelectedQPos(survey: Survey, selectedQ: Question | null) {
   if (survey?.questions && selectedQ) {
     const questions = getQuestionsArrWithoutPageTypeQuestions(survey);
     const selectedQuestionIndex = questions.findIndex(

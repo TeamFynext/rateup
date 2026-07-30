@@ -32,7 +32,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
 
   const selectedDate = isPreview ? value : response;
 
-  const handleSelect = (date: Date) => {
+  const handleSelect = (date: Date | undefined) => {
     if (isPreview) {
       setValue(date);
     } else {

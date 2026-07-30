@@ -73,7 +73,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   useEffect(() => {
     if (selectedOp === selectedFeature?.other?.title && otherInputContainerRef.current) {
-      bDivRef.current.scrollIntoView({ behavior: "smooth" });
+      bDivRef.current?.scrollIntoView({ behavior: "smooth" });
     } else if (isOtherInputFocusTrapActive) {
       setIsOtherInputFocusTrapActive(false);
     }

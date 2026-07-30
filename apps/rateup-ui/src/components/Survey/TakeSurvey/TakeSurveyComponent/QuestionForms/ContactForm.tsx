@@ -22,9 +22,9 @@ const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatu
   const { t: translations } = useTranslation();
   return (
     <div className="flex w-full flex-col gap-5">
-      {selectedFeature?.name.isEnabled && (
+      {selectedFeature?.name?.isEnabled && (
         <div className="flex flex-col gap-2.5">
-          <span style={{ color: themePrimaryColor }}>{selectedFeature.name.headText}</span>
+          <span style={{ color: themePrimaryColor }}>{selectedFeature?.name?.headText}</span>
           <FormPaperLayout>
             <Input
               placeholder={translations("Enter name")}
@@ -36,9 +36,9 @@ const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatu
           </FormPaperLayout>
         </div>
       )}
-      {selectedFeature?.phone.isEnabled && (
+      {selectedFeature?.phone?.isEnabled && (
         <div className="flex flex-col gap-2.5">
-          <span style={{ color: themePrimaryColor }}>{selectedFeature.phone.headText}</span>
+          <span style={{ color: themePrimaryColor }}>{selectedFeature?.phone?.headText}</span>
           <PhoneInput
             defaultCountry={(selectedFeature?.phone?.defaultCountryCode as CountryCode) || "IN"}
             international
@@ -51,9 +51,9 @@ const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatu
           />
         </div>
       )}
-      {selectedFeature?.email.isEnabled && (
+      {selectedFeature?.email?.isEnabled && (
         <div className="flex flex-col gap-2.5">
-          <span style={{ color: themePrimaryColor }}>{selectedFeature.email.headText}</span>
+          <span style={{ color: themePrimaryColor }}>{selectedFeature?.email?.headText}</span>
           <FormPaperLayout>
             <div className="flex items-center gap-2">
               <IconMail size="1.2rem" className="shrink-0 text-muted-foreground" />

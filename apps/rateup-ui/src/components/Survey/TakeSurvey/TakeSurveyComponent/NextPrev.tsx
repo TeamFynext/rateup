@@ -42,13 +42,13 @@ function NextPrev({
   const { response } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { isLastQuestion, isFirstQuestion } = useHandleNextPrevFuncs();
 
   const uiTextTranslations = survey?.uiTextTranslations;
-  let nextBtnLabel = uiTextTranslations["nextBtn"][selectedLanguage.toLowerCase()]?.trim();
-  let submitBtnLabel = uiTextTranslations["submitBtn"][selectedLanguage.toLowerCase()]?.trim();
+  let nextBtnLabel = uiTextTranslations?.["nextBtn"]?.[selectedLanguage.toLowerCase()]?.trim();
+  let submitBtnLabel = uiTextTranslations?.["submitBtn"]?.[selectedLanguage.toLowerCase()]?.trim();
   if (!nextBtnLabel) {
     nextBtnLabel = "Next";
   }
