@@ -24,6 +24,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
@@ -31,6 +32,7 @@ import { z } from "zod/v4";
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import type { useSignUp } from "@/utils/auth/index.tsx";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Button } from "../ui/button.tsx";
@@ -57,6 +59,31 @@ const signUpType = {
 const STEP_ONE_FIELDS = ["name", "email", "password"] as const;
 const STEP_TWO_FIELDS = ["orgName", "website", "phoneNumber", "industry", "teamSize"] as const;
 
+/**
+ * The wizard's react-hook-form instance. The steps are shared by two signup
+ * flows whose schemas differ in which fields are optional, so this uses
+ * react-hook-form's own open `FieldValues` rather than one concrete schema.
+ */
+export type SignupForm = UseFormReturn<FieldValues>;
+
+/**
+ * react-hook-form's `Control` is invariant in its field-values type, so a form
+ * built from either flow's concrete zod schema is not assignable to the shared
+ * `SignupForm` — even though every field the steps touch exists on both. This
+ * is the single place that gap is bridged.
+ */
+export function asSignupForm<T extends FieldValues>(form: UseFormReturn<T>): SignupForm {
+  return form as unknown as SignupForm;
+}
+
+/**
+ * react-hook-form types a field error's `message` loosely (it can nest for
+ * array/object fields). Every message this form sets is a plain string, so
+ * anything else is dropped rather than handed to React.
+ */
+const errorMessage = (error?: { message?: unknown }) =>
+  typeof error?.message === "string" ? error.message : null;
+
 const isPasswordValid = (pass: string) =>
   /.{8,}/.test(pass) &&
   /[A-Z]/.test(pass) &&
@@ -64,7 +91,15 @@ const isPasswordValid = (pass: string) =>
   /[0-9]/.test(pass) &&
   /[!@#$%^&*(),.?":{}|<>]/.test(pass);
 
-export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
+export function SignUpFlow({
+  setIsLoading,
+  signUp,
+  isLoading,
+}: {
+  setIsLoading: (loading: boolean) => void;
+  signUp: ReturnType<typeof useSignUp>;
+  isLoading: boolean;
+}) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const { t: translations } = useTranslation();
@@ -291,17 +326,21 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             </div>
             {currentStep === 1 && (
               <Step1
-                formData={signupForm}
+                formData={asSignupForm(signupForm)}
                 handleNext={handleNext}
                 authType={signUpType.SIGNUP_WITH_EMAIL}
               />
             )}
             {currentStep === 2 && (
-              <Step2 formData={signupForm} handleBack={handleBack} handleNext={handleNext} />
+              <Step2
+                formData={asSignupForm(signupForm)}
+                handleBack={handleBack}
+                handleNext={handleNext}
+              />
             )}
             {currentStep === 3 && (
               <Step3
-                formData={signupForm}
+                formData={asSignupForm(signupForm)}
                 handleBack={handleBack}
                 handleSubmit={handleSubmit}
                 isLoading={isLoading}
@@ -342,7 +381,15 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   );
 }
 
-export function Step1({ formData, handleNext, authType }) {
+export function Step1({
+  formData,
+  handleNext,
+  authType,
+}: {
+  formData: SignupForm;
+  handleNext: () => void;
+  authType?: string;
+}) {
   const values = formData.watch();
   const { errors } = formData.formState;
   const { t: translations } = useTranslation();
@@ -621,7 +668,7 @@ export function Step1({ formData, handleNext, authType }) {
                         d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    {errors.password.message}
+                    {errorMessage(errors.password)}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -738,7 +785,15 @@ export function Step1({ formData, handleNext, authType }) {
   );
 }
 
-export function Step2({ formData, handleBack, handleNext }) {
+export function Step2({
+  formData,
+  handleBack,
+  handleNext,
+}: {
+  formData: SignupForm;
+  handleBack: () => void;
+  handleNext: () => void;
+}) {
   const uid = useId();
   const industries = [
     "E-commerce",
@@ -938,7 +993,17 @@ export function Step2({ formData, handleBack, handleNext }) {
     </div>
   );
 }
-export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
+export function Step3({
+  formData,
+  handleBack,
+  handleSubmit,
+  isLoading,
+}: {
+  formData: SignupForm;
+  handleBack: () => void;
+  handleSubmit: () => void;
+  isLoading: boolean;
+}) {
   const values = formData.watch();
 
   const businessGoals = [
@@ -984,7 +1049,7 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
     const currentGoals = values.goals || [];
 
     const newGoals = currentGoals.includes(goalId)
-      ? currentGoals.filter((g) => g !== goalId)
+      ? currentGoals.filter((g: string) => g !== goalId)
       : [...currentGoals, goalId];
 
     formData.setValue("goals", newGoals);

@@ -147,7 +147,7 @@ function TakeSurvey({
   const takeSurveyRootDivRef = useRef(null);
 
   const pendingUpdate = useRef(false);
-  const viewportHandler = (event) => {
+  const viewportHandler = (event: Event) => {
     if (pendingUpdate.current) return;
     pendingUpdate.current = true;
 
@@ -268,7 +268,7 @@ function TakeSurvey({
       openConfirmationResponsesModal();
     }
   }
-  function getColumnIdFromTickets(questions, responses) {
+  function getColumnIdFromTickets(questions: Question[], responses: QuestionResponse[]) {
     for (const question of questions) {
       const ticketIssue = question?.ticketIssue;
       if (!ticketIssue) continue;

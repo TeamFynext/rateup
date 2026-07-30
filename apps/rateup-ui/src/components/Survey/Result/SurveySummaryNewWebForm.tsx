@@ -1,5 +1,6 @@
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { Star } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
 import {
@@ -7,16 +8,33 @@ import {
   getResponseArrayByQuestionTypeV2,
 } from "@/utils/response.ts";
 
-const SurveyResultByType = ({ questionType, chartData, version }) => {
+/** One aggregated choice bucket in a question's result chart. */
+interface ChartDatum {
+  choice: string | number;
+  count: number;
+  percentage?: number;
+  [key: string]: unknown;
+}
+
+const SurveyResultByType = ({
+  questionType,
+  chartData,
+  version,
+}: {
+  questionType: QuestionType | WaQuestions;
+  chartData: ChartDatum[];
+  version?: string | number;
+}) => {
   const isSmiley = questionType === QuestionType.Smiley;
   const responseArray =
     version === 2 && isSmiley
       ? getResponseArrayByQuestionTypeV2(questionType)
       : getResponseArrayByQuestionType(questionType);
 
-  const getResObj = (val) => chartData.find((res) => res?.choice?.toString() === val?.toString());
+  const getResObj = (val: string | number) =>
+    chartData.find((res) => res?.choice?.toString() === val?.toString());
 
-  const getVoteText = (count) => (count > 1 ? "votes" : "vote");
+  const getVoteText = (count: number) => (count > 1 ? "votes" : "vote");
 
   const getMostVotedChoice = () => {
     const maxCount = Math.max(...chartData?.map((c) => c.count));
@@ -25,7 +43,17 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
 
   const mostVotedChoice = getMostVotedChoice();
 
-  const renderStatRow = ({ label, value, isMostVoted, badge = null }) => (
+  const renderStatRow = ({
+    label,
+    value,
+    isMostVoted,
+    badge = null,
+  }: {
+    label: ReactNode;
+    value: ReactNode;
+    isMostVoted?: boolean;
+    badge?: ReactNode;
+  }) => (
     <div
       key={label?.toString()}
       className={`flex justify-start gap-4 items-center rounded-md px-3 py-2`}
@@ -55,11 +83,11 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
     </div>
   );
 
-  const renderAll = (renderFn) => (
+  const renderAll = (renderFn: () => ReactNode) => (
     <div className="flex max-h-[500px] flex-col gap-2 overflow-scroll">{renderFn()}</div>
   );
 
-  const getValue = (res) =>
+  const getValue = (res: ChartDatum | undefined) =>
     res ? `${res.count} ${getVoteText(res.count)} (${res.percentage}%)` : "0 vote (0.00%)";
 
   // --- Types ---

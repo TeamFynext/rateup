@@ -9,10 +9,12 @@ import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { useUserInfo } from "@/backend/user/user.query";
+import type { RequestPayload } from "@/types/api.ts";
 
 import { Card } from "../ui/card.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
 import { Step1, Step2, Step3 } from "./SignupFormNew.tsx";
+import { asSignupForm } from "./SignupFormNew.tsx";
 
 function AuthTypeSignupForm({
   setIsLoading,
@@ -20,6 +22,12 @@ function AuthTypeSignupForm({
   createAppleUserMutation,
   isLoading,
   authType,
+}: {
+  setIsLoading: (loading: boolean) => void;
+  createUserMutation: { mutate: (values: RequestPayload) => void };
+  createAppleUserMutation: { mutate: (values: RequestPayload) => void };
+  isLoading: boolean;
+  authType?: string;
 }) {
   const { data: userInfo } = useUserInfo();
   const navigate = useNavigate();
@@ -247,14 +255,22 @@ function AuthTypeSignupForm({
               <p className="font-normal text-[11px]">{getStepSubtitle()}</p>
             </div>
             {currentStep === 1 && (
-              <Step1 formData={signupForm} handleNext={handleNext} authType={authType} />
+              <Step1
+                formData={asSignupForm(signupForm)}
+                handleNext={handleNext}
+                authType={authType}
+              />
             )}
             {currentStep === 2 && (
-              <Step2 formData={signupForm} handleBack={handleBack} handleNext={handleNext} />
+              <Step2
+                formData={asSignupForm(signupForm)}
+                handleBack={handleBack}
+                handleNext={handleNext}
+              />
             )}
             {currentStep === 3 && (
               <Step3
-                formData={signupForm}
+                formData={asSignupForm(signupForm)}
                 handleBack={handleBack}
                 handleSubmit={handleSubmit}
                 isLoading={isLoading}

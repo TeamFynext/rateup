@@ -73,7 +73,13 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-const SourceSelector = ({ value, onChange }) => {
+const SourceSelector = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => {
   const ContactSources = [
     { label: "All Sources", value: "all", icon: Layers },
     { label: "WhatsApp", value: "whatsapp", icon: IconBrandWhatsapp },
@@ -107,7 +113,17 @@ const SourceSelector = ({ value, onChange }) => {
   );
 };
 
-const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = false }) => {
+const LabelSelector = ({
+  value,
+  onChange,
+  includeAll = false,
+  includeStatus = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  includeAll?: boolean;
+  includeStatus?: boolean;
+}) => {
   const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
   const labels = contactLabels.map((label) => ({
     id: label.id,
@@ -321,7 +337,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
   );
 }
 
-const ExportContacts = ({ table }) => {
+const ExportContacts = ({ table }: { table: Table<ContactsData> }) => {
   const exportMut = useExportContactsMutation();
   const leafColumns = table
     .getAllLeafColumns()
@@ -355,7 +371,13 @@ const ExportContacts = ({ table }) => {
   );
 };
 
-const ImportContactModal = ({ opened, setOpened }) => {
+const ImportContactModal = ({
+  opened,
+  setOpened,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+}) => {
   const { t } = useTranslation();
 
   const handleDownloadDemo = () => {

@@ -158,8 +158,9 @@ export function useSignUp() {
     website?: string,
     industry?: string,
     location?: string,
-    goals?: string,
-    integrationsSelected?: string,
+    // Both arrive as the multi-select arrays the signup wizard collects.
+    goals?: string[],
+    integrationsSelected?: string[],
     teamSize?: string,
   ) {
     try {

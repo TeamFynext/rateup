@@ -31,7 +31,7 @@ const TestimonialEdit = ({
 
   const updateCollection = useUpdateCollection(collectionId);
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     const reorderedTestimonials = reorder(
       testimonials,
@@ -40,7 +40,7 @@ const TestimonialEdit = ({
     ) as any;
     setFilters(null);
     updateCollection.mutate({
-      data: { testimonialIds: reorderedTestimonials.map((t) => t.id) },
+      data: { testimonialIds: reorderedTestimonials.map((t: Testimonial) => t.id) },
       collectionId,
     });
   };

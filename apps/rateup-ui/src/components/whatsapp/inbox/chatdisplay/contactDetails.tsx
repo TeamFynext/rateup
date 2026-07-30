@@ -184,12 +184,12 @@ export default function WaInboxContactDetails({
     setIsOpen(!isOpen);
   };
 
-  const getCustomFieldValue = (fieldId) => {
+  const getCustomFieldValue = (fieldId: string) => {
     const customField = getValues().customFields?.find((cf) => cf.fieldId === fieldId);
     return customField?.value || "";
   };
 
-  const updateCustomField = (fieldId, value, customFieldData) => {
+  const updateCustomField = (fieldId: string, value: unknown, customFieldData: CustomFieldDef) => {
     const currentCustomFields = getValues().customFields || [];
     const existingIndex = currentCustomFields.findIndex((cf) => cf.fieldId === fieldId);
 
@@ -206,7 +206,7 @@ export default function WaInboxContactDetails({
     setValue("customFields", [...currentCustomFields], { shouldValidate: true });
   };
 
-  const renderCustomField = (field) => {
+  const renderCustomField = (field: CustomFieldDef) => {
     const fieldValue = getCustomFieldValue(field.slug);
     const inputId = `customField-${field.slug}`;
     const fieldLabel = (
@@ -1036,7 +1036,15 @@ export default function WaInboxContactDetails({
   );
 }
 
-function DeleteContactButton({ contact, deleteContactMutation, handleToggle }) {
+function DeleteContactButton({
+  contact,
+  deleteContactMutation,
+  handleToggle,
+}: {
+  contact: { id: string; name?: string };
+  deleteContactMutation: { mutate: (id: string, options?: unknown) => void };
+  handleToggle: () => void;
+}) {
   const { t } = useTranslation();
   const confirm = useConfirm();
 
