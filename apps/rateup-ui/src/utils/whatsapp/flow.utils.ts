@@ -191,7 +191,7 @@ export function getQuestionFromFlowElementId(
   return getQuestionFromFlowFormElementName(formElement?.name ?? "", questions, map);
 }
 
-export function getFlowTextLimit(type: WaFlowFormElementType) {
+export function getFlowTextLimit(type?: WaFlowFormElementType) {
   switch (type) {
     case WaFlowFormElementType.textHeading:
       return WA_FLOW_HEADING_CHAR_LIMIT;

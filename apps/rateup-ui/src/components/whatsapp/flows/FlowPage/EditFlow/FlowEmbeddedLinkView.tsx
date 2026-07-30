@@ -66,13 +66,13 @@ export function FlowEmbeddedLinkDetailedView() {
   const onSave = form.handleSubmit(
     (values) => {
       const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-      const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement);
+      const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
         const footer = formEl?.children?.find((data) => data.type === WaFlowFormElementType.footer);
 
-        formEl!.children[index].text = values.text;
-        formEl!.children[index]["on-click-action"] = {
+        formEl!.children[index]!.text = values.text;
+        formEl!.children[index]!["on-click-action"] = {
           name: "navigate",
           next: {
             type: "screen",

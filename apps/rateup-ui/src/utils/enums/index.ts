@@ -173,7 +173,7 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
   }
 }
 
-export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
+export function getWaFlowFormElementTypeLabel(type?: WaFlowFormElementType) {
   switch (type) {
     case WaFlowFormElementType.textInput:
       return "Text Input";

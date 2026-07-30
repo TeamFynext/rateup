@@ -49,7 +49,7 @@ export function FlowImageDetailedView() {
   function handleSaveElement() {
     if (!form.getValues("src")?.length) return toast.error(translations("Unable to Save Image"));
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement);
+    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
       formEl!.children[index] = form.getValues() as any;
@@ -145,7 +145,7 @@ function FlowImageElementEditor({
         <>
           <img
             src={`data:image/jpg;base64,${src}`}
-            style={{ height, width: width - 100, maxHeight: height }}
+            style={{ height, width: (width ?? 0) - 100, maxHeight: height }}
             alt="flow Image"
           />
           <Field>
