@@ -106,7 +106,14 @@ function QuestionReviewPageEditor({
           "Kiosk mode has been turned off automatically as the review page is enabled.",
         );
       }
-      const data = { reviewPageOptions: {} };
+      const data: {
+        reviewPageOptions: {
+          minRating?: number;
+          minOpinion?: number;
+          reqOptions?: string[];
+        };
+        reviewPagePlatform?: ReviewPagePlatform;
+      } = { reviewPageOptions: {} };
       if (selectedQ.type === QuestionType.Rating) {
         data["reviewPageOptions"]["minRating"] = 3;
       } else if (selectedQ.type === QuestionType.Opinion) {

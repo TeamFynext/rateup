@@ -444,6 +444,8 @@ declare global {
       members: number;
     };
     googleLink?: string | null;
+    /** Review destination per platform, when the team row is joined with them. */
+    reviewPageLinks?: Record<string, string>;
   }
 
   interface TeamsResponse {
