@@ -13,7 +13,7 @@ type FilterableTestimonial = Omit<Testimonial, "teamId" | "survey"> & {
 export const getFilteredTestimonials = (
   testimonials: Array<FilterableTestimonial>,
   filters: filterType,
-  type: string,
+  type: string | null,
 ) => {
   if (!type) return testimonials;
   switch (type) {

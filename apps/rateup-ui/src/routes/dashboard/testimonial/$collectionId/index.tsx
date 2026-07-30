@@ -34,9 +34,10 @@ export enum TestimonialTabs {
   Share = "Share",
 }
 export interface filterType {
-  date: "new" | "old";
-  rating: number;
-  length: "longest" | "shortest";
+  /** `null` means the filter is off. */
+  date: "new" | "old" | null;
+  rating: number | null;
+  length: "longest" | "shortest" | null;
   teams: string[];
   surveys: string[];
 }
@@ -62,10 +63,10 @@ function CollectionById() {
     surveys: [],
     teams: [],
   });
-  const [type, setType] = useState("date");
+  const [type, setType] = useState<string | null>("date");
 
   const { data: alltestimonials } = useGetAllTestimonialsByOrg();
-  const filteredTestimonials = getFilteredTestimonials(alltestimonials, filters, type);
+  const filteredTestimonials = getFilteredTestimonials(alltestimonials ?? [], filters, type);
   const filteredTestimonialIds = filteredTestimonials?.map((t) => t.id);
 
   const [openedEdit, setOpenedEdit] = useState(false);
@@ -173,9 +174,9 @@ function CollectionById() {
 interface UtilityComponentProps {
   selectedTestimonialIds: string[];
   setSelectedTestimonialIds: React.Dispatch<React.SetStateAction<string[]>>;
-  activeTab: TestimonialTabs;
-  setActiveTab: React.Dispatch<React.SetStateAction<TestimonialTabs>>;
-  filteredTestimonialIds: string[];
+  activeTab: TestimonialTabs | null;
+  setActiveTab: React.Dispatch<React.SetStateAction<TestimonialTabs | null>>;
+  filteredTestimonialIds: string[] | undefined;
   openEdit: () => void;
   toggleDelete: () => void;
   isDelete: boolean;

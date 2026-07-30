@@ -35,7 +35,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [opened, setOpened] = useState(false);
-  const [capturedImg, setCapturedImg] = useState(null);
+  const [capturedImg, setCapturedImg] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [openedCropDialog, setOpenedCropDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

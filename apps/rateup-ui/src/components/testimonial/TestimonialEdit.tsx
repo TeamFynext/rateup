@@ -41,7 +41,7 @@ const TestimonialEdit = ({
     strict: false,
   });
   const collectionId = params.collectionId as string;
-  const filteredTestimonials = getFilteredTestimonials(testimonials, filters, type);
+  const filteredTestimonials = getFilteredTestimonials(testimonials, filters, type ?? null);
 
   const updateCollection = useUpdateCollection(collectionId);
 
@@ -52,7 +52,7 @@ const TestimonialEdit = ({
       result.source.index,
       result.destination?.index || 0,
     ) as any;
-    setFilters(null);
+    setFilters?.({ date: null, rating: null, length: null, surveys: [], teams: [] });
     updateCollection.mutate({
       data: { testimonialIds: reorderedTestimonials.map((t: Testimonial) => t.id) },
       collectionId,
