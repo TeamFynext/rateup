@@ -1,6 +1,5 @@
 import { IconChevronDown, IconPlus, IconTrash, IconVariable, IconX } from "@tabler/icons-react";
 import { useId } from "react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -34,6 +33,7 @@ import {
   removeItem,
   setValue,
   type TemplateForm,
+  type TemplateFormValues,
 } from "./template-form.ts";
 import { useButtonState } from "./useButtonState.ts";
 
@@ -49,7 +49,7 @@ const ButtonInput = ({
   catalog,
   productRetailerIds,
 }: {
-  form: UseFormReturn<FieldValues>;
+  form: TemplateForm;
   index: number;
   deleteButton: (index: number) => void;
   data?: Record<string, unknown>;
@@ -66,8 +66,14 @@ const ButtonInput = ({
     example: form.watch()?.buttons?.[index]?.example,
   });
   if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
-    const screeenId = flows?.find((data) => data.flowId === form?.values?.buttons?.[index]?.flow_id)
-      ?.json?.screens?.[0]?.id;
+    // NOTE: reads the Mantine-era `form.values`, which a react-hook-form
+    // instance does not expose — so this is `undefined` today. Preserved as-is;
+    // see the migration notes.
+    const legacyValues = (form as unknown as { values?: TemplateFormValues }).values;
+    const screeenId = flows?.find(
+      (flow: { flowId?: string; json?: { screens?: Array<{ id?: string }> } }) =>
+        flow.flowId === legacyValues?.buttons?.[index]?.flow_id,
+    )?.json?.screens?.[0]?.id;
     if (screeenId) {
       data["navigate_screen"] = screeenId;
     }
@@ -75,9 +81,10 @@ const ButtonInput = ({
 
   function handleAddMPMSections() {
     const defaultValues = form.watch().defaultValues ?? {};
-    const catalog = defaultValues?.catalog ?? {
+    // The seed omits `catalogId`; it is filled in once a catalog is picked.
+    const catalog = (defaultValues?.catalog ?? {
       thumbnail_product_retailer_id: "",
-    };
+    }) as NonNullable<NonNullable<TemplateFormValues["defaultValues"]>["catalog"]>;
     const mpm = catalog?.mpm
       ? {
           ...catalog?.mpm,
@@ -95,7 +102,7 @@ const ButtonInput = ({
   const err = (field: string) => errorAt(form, `buttons.${index}.${field}`);
 
   let type = data.type;
-  if (data?.url?.includes("COPY_CODE")) {
+  if (String(data?.url ?? "").includes("COPY_CODE")) {
     type = WHATSAPP_BUTTON_TYPE.OTP;
   }
 
