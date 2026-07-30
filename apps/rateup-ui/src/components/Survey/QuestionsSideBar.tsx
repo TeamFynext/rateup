@@ -33,8 +33,8 @@ import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.co
 
 interface QuestionsSideBarProps {
   questions: Question[];
-  selectedQ: Question;
-  setSelectedQ: (Q: Question) => void;
+  selectedQ: Question | null;
+  setSelectedQ: (Q: Question | null) => void;
   setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
   addQnTrigger?: number;
   surveyLanguages: string[];
@@ -83,7 +83,7 @@ export function QuestionsSideBar({
   }, [questions]);
 
   useEffect(() => {
-    if (addQnTrigger > 0) handleAddQn();
+    if ((addQnTrigger ?? 0) > 0) handleAddQn();
   }, [addQnTrigger]);
 
   const openQuestion = (question: Question) => {
@@ -110,7 +110,7 @@ export function QuestionsSideBar({
     if (selectedQ === question) {
       return;
     }
-    const haveUnsavedChanges = checkForUnsavedChanges();
+    const haveUnsavedChanges = checkForUnsavedChanges?.();
     if (haveUnsavedChanges && uniquePages.includes(selectedQ?.type as PageType)) {
       openDiscardChangesModal(() => {
         openQuestion(question);
@@ -131,11 +131,11 @@ export function QuestionsSideBar({
   const handleAddQn = () => {
     const openTypeSelection = () => {
       setActiveTab(QuestionTabsEnum.TypeSelection);
-      setSelectedLanguage(surveyLanguages[0]);
+      setSelectedLanguage(surveyLanguages[0] ?? null);
       setSelectedQ(null);
     };
 
-    if (checkForUnsavedChanges()) {
+    if (checkForUnsavedChanges?.()) {
       openDiscardChangesModal(openTypeSelection);
       return;
     }

@@ -18,7 +18,7 @@ export const LanguageCompletionView = ({
   languages: string[];
   notCompletedLanguages: string[];
   selectedLanguage?: string;
-  setSelectedLanguage?: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedLanguage?: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   const hasIncomplete = notCompletedLanguages.length > 0;
 

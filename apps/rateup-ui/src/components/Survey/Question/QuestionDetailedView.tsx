@@ -73,7 +73,7 @@ interface QuestionDetailedViewProps {
   setSelectedQ: (Q: Question) => void;
   setActiveTab: (tab: QuestionTabsEnum) => void;
   surveyLanguages: string[];
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   surveyId?: string;
   survey: Survey;
   questionDetailedViewFormRef?: any;
@@ -116,7 +116,7 @@ export function QuestionDetailedView({
 
   useEffect(() => {
     setIsGoogleReviewFeatureActive(
-      hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
+      hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview) ?? false,
     );
 
     // Tickets are free with no limits — always available.
