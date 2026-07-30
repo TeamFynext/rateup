@@ -291,7 +291,7 @@ function Step2({
       <FormField label="Business type" error={errors.businessType}>
         <Select
           value={data.businessType}
-          onValueChange={(v) => set("businessType", v)}
+          onValueChange={(v) => set("businessType", v ?? "")}
           items={[
             "Digital Agency",
             "Marketing Agency",
@@ -326,7 +326,7 @@ function Step2({
         <FormField label="Company size" error={errors.companySize}>
           <Select
             value={data.companySize}
-            onValueChange={(v) => set("companySize", v)}
+            onValueChange={(v) => set("companySize", v ?? "")}
             items={["Just me", "2–10", "11–50", "50+"].map((s) => ({ value: s, label: s }))}
           >
             <SelectTrigger className={errors.companySize ? "border-red-500" : ""}>
@@ -344,7 +344,7 @@ function Step2({
         <FormField label="Years in business" error={errors.yearsInBusiness}>
           <Select
             value={data.yearsInBusiness}
-            onValueChange={(v) => set("yearsInBusiness", v)}
+            onValueChange={(v) => set("yearsInBusiness", v ?? "")}
             items={["Less than 1 year", "1–3 years", "3–5 years", "5+ years"].map((y) => ({
               value: y,
               label: y,
@@ -423,7 +423,7 @@ function Step3({
         <FormField label="Clients you can refer per month" error={errors.referralVolume}>
           <Select
             value={data.referralVolume}
-            onValueChange={(v) => set("referralVolume", v)}
+            onValueChange={(v) => set("referralVolume", v ?? "")}
             items={["1–5", "5–20", "20+"].map((r) => ({ value: r, label: r }))}
           >
             <SelectTrigger className={errors.referralVolume ? "border-red-500" : ""}>
@@ -442,7 +442,7 @@ function Step3({
         <FormField label="Do you manage business clients?" error={errors.managesClients}>
           <RadioGroup
             value={data.managesClients}
-            onValueChange={(v) => set("managesClients", v)}
+            onValueChange={(v) => set("managesClients", v ?? "")}
             className="flex gap-2 mt-0.5"
           >
             {["Yes", "No"].map((opt) => (
@@ -488,7 +488,7 @@ function Step4({
       >
         <RadioGroup
           value={data.apiExperience}
-          onValueChange={(v) => set("apiExperience", v)}
+          onValueChange={(v) => set("apiExperience", v ?? "")}
           className={cn(
             "grid grid-cols-2 gap-2 mt-0.5",
             errors.apiExperience ? "border border-red-500 rounded p-2" : "",
@@ -517,7 +517,7 @@ function Step4({
       >
         <RadioGroup
           value={data.canOnboard}
-          onValueChange={(v) => set("canOnboard", v)}
+          onValueChange={(v) => set("canOnboard", v ?? "")}
           className={cn(
             "flex gap-2 mt-0.5",
             errors.canOnboard ? "border border-red-500 rounded p-2" : "",

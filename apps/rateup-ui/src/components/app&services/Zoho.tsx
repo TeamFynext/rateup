@@ -153,13 +153,13 @@ const ZohoAuthentication = ({ integration }: { integration: AppIntegration }) =>
       `&response_type=code` +
       `&access_type=offline` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&state=${user.user.orgId}`;
+      `&state=${user.user?.orgId}`;
 
     window.location.href = authUrl;
   }
 
   async function handleDelete() {
-    await disconnectMut.mutate(user.user.orgId);
+    await disconnectMut.mutate(user.user?.orgId ?? "");
     await deleteMut.mutate();
   }
 
@@ -173,9 +173,9 @@ const ZohoAuthentication = ({ integration }: { integration: AppIntegration }) =>
         <Field>
           <FieldLabel htmlFor="zoho-org-id">{t("Organization ID")}</FieldLabel>
           <InputGroup>
-            <InputGroupInput id="zoho-org-id" value={user.user.orgId} readOnly />
+            <InputGroupInput id="zoho-org-id" value={user.user?.orgId} readOnly />
             <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={user.user.orgId} />
+              <ApiCopyButton value={user.user?.orgId ?? ""} />
             </InputGroupAddon>
           </InputGroup>
         </Field>

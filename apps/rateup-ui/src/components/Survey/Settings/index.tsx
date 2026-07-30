@@ -46,7 +46,7 @@ const SurveySettings = ({
   surveyId,
   survey,
   enabledModules = defaultEnabledModules,
-  setSelectedLanguage = null,
+  setSelectedLanguage,
   flowName,
   flowDbId,
   anonymous,
@@ -141,7 +141,11 @@ const SurveySettings = ({
             {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
 
             {enabledModules.includes("flow") && (
-              <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
+              <FlowSettingsUpdate
+                name={flowName ?? ""}
+                dbFlowId={flowDbId ?? ""}
+                anonymous={!!anonymous}
+              />
             )}
           </div>
         </div>

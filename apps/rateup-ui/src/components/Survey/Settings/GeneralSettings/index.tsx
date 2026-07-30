@@ -49,7 +49,7 @@ const GeneralSettings = ({
 }: {
   survey: Survey;
   enabledModules: string[];
-  setSelectedLanguage: (language: string) => void;
+  setSelectedLanguage?: (language: string) => void;
 }) => {
   const uid = useId();
   const { t: translations } = useTranslation();
