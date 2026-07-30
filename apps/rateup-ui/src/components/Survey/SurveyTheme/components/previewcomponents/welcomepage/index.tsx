@@ -64,7 +64,7 @@ export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
   const orgLogoStyles = logoStyles;
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value: string, name: string) => {
+    async (value: string, name?: string) => {
       const data: {
         titleText?: string;
         subtitleText?: string | null;
@@ -73,7 +73,7 @@ export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
+          if (editSurveySelectedQuestion?.["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -87,7 +87,7 @@ export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
       }
       if (editSurveySelectedQuestion) {
         await questionUpdateMutation.mutateAsync({
-          qId: editSurveySelectedQuestion["id"],
+          qId: editSurveySelectedQuestion?.["id"],
           data,
         });
       }
@@ -111,7 +111,7 @@ export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
   return (
     <div className="flex h-full items-center" style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
+        enableCredits={!!backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
         <div
@@ -134,7 +134,7 @@ export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
             )}
 
             <ThemeTitle
-              value={newTitle}
+              value={newTitle ?? ""}
               onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
