@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface TeamSelectorProps {
   className?: string;
-  value?: string;
+  value?: string | null;
   onChange?: (teamId: string) => void;
   label?: React.ReactNode;
   enableAll?: boolean;
