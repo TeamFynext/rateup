@@ -10,6 +10,9 @@ import ImageSourceSelectorModal from "../Modal/ModalManagerModals/ImageSourceSel
 
 import styles from "./LocalOrUnsplashImagePicker.module.css";
 
+/** What the crop and Unsplash modals hand back; `null` when the image is cleared. */
+export type SelectedImage = { file?: File; url: string; source?: string } | null;
+
 function LocalOrUnsplashImagePicker({
   value,
   label,
@@ -19,7 +22,7 @@ function LocalOrUnsplashImagePicker({
   value: string;
   label: string;
   forDevice: string;
-  onImageSelected: (result: { file?: File; url: string; source?: string } | null) => void;
+  onImageSelected: (result: SelectedImage) => void;
 }) {
   const { t: translations } = useTranslation();
   const [uploadModalOpened, { open: openUploadModal, close: closeUploadModal }] =

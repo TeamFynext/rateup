@@ -2,6 +2,7 @@ import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
@@ -19,7 +20,7 @@ function ImageSourceSelectorModal({
   context: { closeModal: (id: string) => void };
   id: string;
   innerProps: {
-    onImageSelected: (result: { file?: File; url: string; source?: string } | null) => void;
+    onImageSelected: (result: SelectedImage) => void;
     handleUnsplashImageSave?: (url: string, name: string) => void;
     aspectRatio?: number;
     forDevice?: string;

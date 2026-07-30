@@ -58,6 +58,19 @@ const CHANNEL_PLATFORM_ICON = {
   [MessagePlatform.FACEBOOK]: IconBrandFacebook,
 };
 
+/**
+ * One entry in the sidebar tree. Entries are heterogeneous — a link, a labelled
+ * group of links, or a slot for a filter control — so every field is optional.
+ */
+export interface NavEntry {
+  title?: string;
+  url?: string;
+  group?: string;
+  icon?: React.ComponentType<{ size?: number | string; className?: string }>;
+  items?: NavEntry[];
+  [key: string]: unknown;
+}
+
 export function useNavMain({
   subscription,
   lifecycles,
@@ -77,7 +90,7 @@ export function useNavMain({
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
-  return useMemo(
+  return useMemo<NavEntry[]>(
     () => [
       // {
       //   title: t("Home"),
@@ -171,7 +184,10 @@ export function useNavMain({
                               (channel: { platform?: string; [key: string]: unknown }) => ({
                                 title: channel.label,
                                 url: "#",
-                                icon: CHANNEL_PLATFORM_ICON[channel.platform] ?? IconMessage,
+                                icon:
+                                  CHANNEL_PLATFORM_ICON[
+                                    channel.platform as keyof typeof CHANNEL_PLATFORM_ICON
+                                  ] ?? IconMessage,
                                 handleClick: () => {
                                   handleFilter("channel", channel.value);
                                 },

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTriggeringDownload, useUnsplashPhotosList } from "@/backend/unsplash/unsplash.query";
+import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -32,7 +33,7 @@ function UnsplashImageSelectorModal({
   id: string;
   innerProps: {
     handleUnsplashImageSave?: (url: string, name: string) => void;
-    onImageSelected?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onImageSelected?: (result: SelectedImage) => void;
     aspectRatio?: number;
   };
 }) {

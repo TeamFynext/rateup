@@ -343,19 +343,29 @@ const CreateContactModal = ({
 };
 export default CreateContactModal;
 
-export const UserSelector = ({
-  value,
-  onChange,
-  className = "",
-  allowMultiSelect = false,
-  allowAll = false,
-}: {
-  value: string & string[];
-  onChange: (value: string & string[], isAll?: boolean) => void;
-  className?: string;
-  allowMultiSelect?: boolean;
-  allowAll?: boolean;
-}) => {
+/**
+ * `allowMultiSelect` decides whether this renders a `MultiSelect` or a `Select`,
+ * and with it whether the value is a list of user ids or a single one.
+ */
+type UserSelectorProps =
+  | {
+      allowMultiSelect: true;
+      value: string[];
+      onChange: (value: string[], isAll?: boolean) => void;
+      className?: string;
+      allowAll?: boolean;
+    }
+  | {
+      allowMultiSelect?: false;
+      value: string;
+      /** Picking "All Staff" reports every user id, so the value can be a list. */
+      onChange: (value: string | string[], isAll?: boolean) => void;
+      className?: string;
+      allowAll?: boolean;
+    };
+
+export const UserSelector = (props: UserSelectorProps) => {
+  const { className = "", allowAll = false } = props;
   const { data: users, isLoading } = useTeamsMembersOfOrg();
   if (isLoading) {
     return (
@@ -364,13 +374,13 @@ export const UserSelector = ({
       </Card>
     );
   }
-  if (allowMultiSelect) {
+  if (props.allowMultiSelect) {
     const userOptions = users?.data?.map((user) => ({ value: user.id, label: user.name })) ?? [];
     return (
       <MultiSelect
         options={userOptions}
-        value={value}
-        onValueChange={(values) => onChange(values as string & string[])}
+        value={props.value}
+        onValueChange={props.onChange}
         placeholder="Select staff"
         emptyIndicator="No staff found."
         className={`${className}`}
@@ -383,11 +393,9 @@ export const UserSelector = ({
     status: u.status,
   }));
   if (allowAll) userData.unshift({ id: "all", name: "All Staff", status: "online" });
+  const { value, onChange } = props as Extract<UserSelectorProps, { allowMultiSelect?: false }>;
   function onValueChange(value: string) {
-    onChange(
-      (value === "all" ? users.data.map((u) => u.id) : value) as string & string[],
-      value === "all",
-    );
+    onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (

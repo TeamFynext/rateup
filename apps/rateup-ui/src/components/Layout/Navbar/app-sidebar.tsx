@@ -733,7 +733,10 @@ export default function AppSidebar({
           allowAll
           value={chatFilterStore.filter.assignedUserIds[0] ?? "all"}
           className="w-full group-data-[collapsible=icon]:[&>svg]:hidden group-data-[collapsible=icon]:[&>span]:hidden"
-          onChange={(value, isAll) => handleFilter("assignedStaff", isAll ? "all" : value)}
+          onChange={(value: string | string[], isAll?: boolean) =>
+            // "All Staff" reports every user id; only the flag matters here.
+            handleFilter("assignedStaff", isAll || Array.isArray(value) ? "all" : value)
+          }
         />
       ),
       teamSelector: (

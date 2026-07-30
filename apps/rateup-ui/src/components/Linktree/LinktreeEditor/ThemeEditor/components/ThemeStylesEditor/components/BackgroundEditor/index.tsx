@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 
+import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
+
 import LocalOrUnsplashImagePicker from "../../../../../../../LocalOrUnsplashImagePicker/index.tsx";
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
@@ -23,14 +25,14 @@ function BackgroundEditor() {
     });
   }, []);
 
-  const handleDesktopBackgroundImageChange = useCallback((url: string) => {
+  const handleDesktopBackgroundImageChange = useCallback((url: SelectedImage) => {
     themeDispatch({
       type: "background-destktop-img-change",
       payload: url,
     });
   }, []);
 
-  const handleMobileBackgroundImageChange = useCallback((url: string) => {
+  const handleMobileBackgroundImageChange = useCallback((url: SelectedImage) => {
     themeDispatch({
       type: "background-mobile-img-change",
       payload: url,
