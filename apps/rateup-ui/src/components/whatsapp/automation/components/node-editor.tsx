@@ -708,7 +708,7 @@ const MediaNodeEditor: React.FC<
     max: 1024,
     onChange: (value) => handleInputChange("caption", value),
   });
-  const [media, setMedia] = useState(null);
+  const [media, setMedia] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mediaError, setMediaError] = useState("");
   const { t: translations } = useTranslation();
@@ -1582,7 +1582,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
 
       <Button
         variant="outline"
-        disabled={typedData.sections?.length >= 10}
+        disabled={(typedData.sections?.length ?? 0) >= 10}
         onClick={() => {
           const newSections = [
             ...(typedData.sections || []),
@@ -1835,8 +1835,8 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
   const { data, isPending } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
     waSettings &&
-    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ?? waSettings[0]);
-  const waSettingsId = data && waSetting ? waSetting.id : null;
+    (waSettings.find((w) => w.phoneId === data?.whatsappSettingsPhoneId) ?? waSettings[0]);
+  const waSettingsId = data && waSetting ? waSetting.id : "";
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const leadgenData = useMemo(() => {
     if (waSettingsId && metaAssets) {
@@ -1849,7 +1849,7 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
         );
         return {
           data: leadgenNode?.data,
-          formQuestions: leadgenForm.questions,
+          formQuestions: leadgenForm!.questions,
         };
       }
     }
@@ -2764,14 +2764,17 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   const { data, isPending } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
     waSettings &&
-    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ?? waSettings[0]);
-  const waSettingsId = data && waSetting ? waSetting.id : null;
+    (waSettings.find((w) => w.phoneId === data?.whatsappSettingsPhoneId) ?? waSettings[0]);
+  const waSettingsId = data && waSetting ? waSetting.id : "";
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const subscribeFieldMut = useSubscribeFieldToPage(waSettingsId);
   const syncfbpageMut = useSyncFbPages(waSettingsId);
   const syncAdAccMut = useSyncAdaccounts(waSettingsId);
-  const syncAdsMut = useSyncAdsByadAccounts(typedData?.adAccountId, waSettingsId);
-  const syncformQuestionsMut = useSyncLeadgenFormQuestions(typedData?.leadgenFormId, waSettingsId);
+  const syncAdsMut = useSyncAdsByadAccounts(typedData?.adAccountId ?? "", waSettingsId);
+  const syncformQuestionsMut = useSyncLeadgenFormQuestions(
+    typedData?.leadgenFormId ?? "",
+    waSettingsId,
+  );
   const syncLeadgenFormsMut = useSyncMetaLeadgenForms(waSettingsId);
 
   const { pages, adAccounts, leadgenForms, ads, formQuestions } = useMemo(() => {
@@ -2799,12 +2802,12 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
             }))
         : [];
       ads = typedData.adAccountId
-        ? metaAssets.adAccounts
+        ? (metaAssets.adAccounts
             .find((adacc) => adacc.id === typedData.adAccountId)
             ?.ads?.map((ad) => ({
               label: ad?.name,
               value: ad?.id,
-            }))
+            })) ?? [])
         : [];
       formQuestions =
         metaAssets.leadgenForms
@@ -2848,7 +2851,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   }, [typedData?.fbPageId, metaAssets]);
 
   async function handleFbLogin() {
-    localStorage.setItem("waSettingsId", waSetting.id);
+    localStorage.setItem("waSettingsId", waSetting?.id ?? "");
     localStorage.setItem("automationId", flowbotId);
     localStorage.setItem(
       "automationRouteBase",
@@ -2867,7 +2870,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   const pageAccessTokenByUser = useMemo(() => {
     if (metaAssets && typedData?.fbPageId) {
       const page = metaAssets.pages?.find((page) => page.id === typedData?.fbPageId);
-      return page.pageAccessTokenByUser;
+      return page?.pageAccessTokenByUser;
     }
     return null;
   }, [typedData?.fbPageId, metaAssets]);
@@ -3102,7 +3105,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
   const flowbotId = params.flowbotId as string;
   const { data: automation, isPending } = useWaAutomatedReplyById(flowbotId);
   const { data, isLoading } = useConnectedWaCatalog(
-    typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId,
+    typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId || "",
   );
 
   const syncProductSetsMut = useSyncProductSets();
@@ -3392,7 +3395,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
         />
       )}
       {(typedData.sections || []).map(
-        (section: CatalogNodeData["sections"][0], sectionIndex: number) => (
+        (section: NonNullable<CatalogNodeData["sections"]>[0], sectionIndex: number) => (
           <div
             key={sectionIndex}
             className={`${styles.sectionContainer} my-2 flex flex-col gap-4 p-2`}
@@ -3452,7 +3455,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
       {typedData.type === CatalogMessages.MultiProduct && (
         <Button
           variant="outline"
-          disabled={typedData.sections?.length >= 10}
+          disabled={(typedData.sections?.length ?? 0) >= 10}
           onClick={() => {
             const newSections = [
               ...(typedData.sections || []),
@@ -3558,7 +3561,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                 value={button.type}
                 onChange={(value) => {
                   const newElements = [...(typedData.elements || [])];
-                  newElements[index].buttons[btnIndex].type = value as "web_url" | "postback";
+                  newElements[index]!.buttons![btnIndex]!.type = value as "web_url" | "postback";
                   handleInputChange("elements", newElements);
                 }}
                 data={[
@@ -3573,7 +3576,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                 value={button.title}
                 onChange={(e) => {
                   const newElements = [...(typedData.elements || [])];
-                  newElements[index].buttons[btnIndex].title = e.target.value;
+                  newElements[index]!.buttons![btnIndex]!.title = e.target.value;
                   handleInputChange("elements", newElements);
                 }}
                 maxLength={20}
@@ -3585,7 +3588,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                   value={button.url || ""}
                   onChange={(e) => {
                     const newElements = [...(typedData.elements || [])];
-                    newElements[index].buttons[btnIndex].url = e.target.value;
+                    newElements[index]!.buttons![btnIndex]!.url = e.target.value;
                     handleInputChange("elements", newElements);
                   }}
                 />
@@ -3596,7 +3599,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                 size="icon-sm"
                 onClick={() => {
                   const newElements = [...(typedData.elements || [])];
-                  newElements[index].buttons.splice(btnIndex, 1);
+                  newElements[index]!.buttons!.splice(btnIndex, 1);
                   handleInputChange("elements", newElements);
                 }}
               >
@@ -3607,11 +3610,11 @@ const InstagramGenericTemplateNodeEditor: React.FC<
           <Button
             size="xs"
             variant="ghost"
-            disabled={element.buttons?.length >= 3}
+            disabled={(element.buttons?.length ?? 0) >= 3}
             onClick={() => {
               const newElements = [...(typedData.elements || [])];
-              if (!newElements[index].buttons) {
-                newElements[index].buttons = [];
+              if (!newElements[index]!.buttons) {
+                newElements[index]!.buttons = [];
               }
               newElements[index].buttons.push({
                 type: "postback",
@@ -3765,7 +3768,7 @@ const InstagramProductTemplateNodeEditor: React.FC<
   const flowbotId = params.flowbotId as string;
   const { data: automation, isPending } = useWaAutomatedReplyById(flowbotId);
   const { data: catalogData, isLoading } = useConnectedWaCatalog(
-    typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId,
+    typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId || "",
   );
 
   const products = useMemo(
