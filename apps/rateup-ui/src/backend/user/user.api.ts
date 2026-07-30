@@ -8,9 +8,16 @@ import { axiosClient } from "../apiClient";
 export interface ICreateGoogleUser {
   name: string;
   orgName: string;
-  type: string;
+  /** Comes straight off the `authType` search param, which may repeat. */
+  type: string | string[];
   email?: string;
   referralCode?: string;
+  industry?: string;
+  website?: string;
+  phoneNumber?: string;
+  location?: string;
+  goals?: string[];
+  integrationsSelected?: string[];
 }
 
 export interface IChangePassword {

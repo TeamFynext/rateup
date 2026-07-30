@@ -388,7 +388,7 @@ export function Step1({
 }: {
   formData: SignupForm;
   handleNext: () => void;
-  authType?: string;
+  authType?: string | string[];
 }) {
   const values = formData.watch();
   const { errors } = formData.formState;

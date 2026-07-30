@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+import type { ICreateGoogleUser } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
-import type { RequestPayload } from "@/types/api.ts";
 
 import { Card } from "../ui/card.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
@@ -24,10 +24,10 @@ function AuthTypeSignupForm({
   authType,
 }: {
   setIsLoading: (loading: boolean) => void;
-  createUserMutation: { mutate: (values: RequestPayload) => void };
-  createAppleUserMutation: { mutate: (values: RequestPayload) => void };
+  createUserMutation: { mutate: (values: ICreateGoogleUser) => void };
+  createAppleUserMutation: { mutate: (values: ICreateGoogleUser) => void };
   isLoading: boolean;
-  authType?: string;
+  authType?: string | string[];
 }) {
   const { data: userInfo } = useUserInfo();
   const navigate = useNavigate();

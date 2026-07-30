@@ -80,7 +80,7 @@ function MoreOptionsMenu({ shortUrlId, name, onModalOpen }: Readonly<MoreOptions
         <CreateShortUrlModal
           opened={isEditLandingPageModalOpen}
           onClose={() => setIsEditLandingPageModalOpen(false)}
-          mode="Rename"
+          mode="edit"
           shortUrlId={shortUrlId}
           initialName={name}
         />

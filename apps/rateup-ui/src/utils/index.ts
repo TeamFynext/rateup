@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { COORDINATESX, COORDINATESY } from "./constants.ts";
 import { UserRole } from "./enums/index.ts";
 
-export function getTimeSince(date: string) {
-  // @ts-ignore
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+export function getTimeSince(date: string | Date) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   let interval = Math.floor(seconds / 31536000);
 
   if (interval >= 1) {
