@@ -32,7 +32,7 @@ const TestimonialEdit = ({
   testimonials: CollectionTestimonial[];
   filters: filterType;
   isDelete?: boolean;
-  type?: string;
+  type?: string | null;
   selectedTestimonialIds: string[];
   setSelectedTestimonialIds: Dispatch<SetStateAction<string[]>>;
   setFilters?: Dispatch<SetStateAction<filterType>>;

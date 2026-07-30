@@ -235,7 +235,7 @@ function UtilityComponent({
   );
 
   function filterAndSelectTestimonialIds(checked: boolean) {
-    if (checked) setSelectedTestimonialIds(testimonialIdsNotInCollection);
+    if (checked) setSelectedTestimonialIds(testimonialIdsNotInCollection ?? []);
     else setSelectedTestimonialIds([]);
   }
 

@@ -35,7 +35,7 @@ import TestimonialCard from "./TestimonialCard.tsx";
 interface TestimonialEditModalProps {
   opened: boolean;
   onClose: () => void;
-  theme: TestimonialStyleType;
+  theme: TestimonialStyleType | undefined;
 }
 
 enum BlockTabEnum {
