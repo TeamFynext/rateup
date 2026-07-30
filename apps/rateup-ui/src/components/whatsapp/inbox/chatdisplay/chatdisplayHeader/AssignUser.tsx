@@ -67,7 +67,7 @@ const AssignUser = ({
   const { user } = useUser();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
     useGetAssignedUserForContact(contactId);
-  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const assignMut = useAssignInboxToUer(contactId, filterData ?? "");
   const messagesStore = useMessagesStore();
   const [assignedStaff, setAssignedStaff] = useState<
     { userId: string; teamId: string; contactId: string }[]
@@ -97,7 +97,7 @@ const AssignUser = ({
           userId: a.assignedUserId,
           teamId: a.teamId,
           contactId: a.contactId,
-          name: a.assignedUser.name,
+          name: a.assignedUser?.name,
         }))
       : [];
     setAssignedStaff(assignees);
@@ -225,7 +225,7 @@ const AssignUser = ({
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: assignees.map((a) => {
                 const user = staffMembers?.find((m) => m.id === a.userId);
-                return { id: user?.id, name: user?.name, teamId: a?.teamId };
+                return { id: user?.id ?? "", name: user?.name ?? "", teamId: a?.teamId };
               }),
             }));
           },

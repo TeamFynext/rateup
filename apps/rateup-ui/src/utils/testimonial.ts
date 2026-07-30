@@ -30,7 +30,7 @@ export const getFilteredTestimonials = (
   }
 };
 
-function filterByDate(testimonials: Array<FilterableTestimonial>, order: string) {
+function filterByDate(testimonials: Array<FilterableTestimonial>, order: string | null) {
   return order
     ? testimonials?.sort((t1, t2) =>
         order === "new"
@@ -40,7 +40,7 @@ function filterByDate(testimonials: Array<FilterableTestimonial>, order: string)
     : testimonials;
 }
 
-function filterByLength(testimonials: Array<FilterableTestimonial>, length: string) {
+function filterByLength(testimonials: Array<FilterableTestimonial>, length: string | null) {
   return length
     ? testimonials?.sort((t1, t2) =>
         length == "longest"
@@ -68,7 +68,7 @@ function filterBySurveys(
   );
 }
 
-function filterByRating(testimonials: Array<FilterableTestimonial>, rating: number) {
+function filterByRating(testimonials: Array<FilterableTestimonial>, rating: number | null) {
   return testimonials?.filter((t) => (rating ? t?.testimonial?.rating === rating : t));
 }
 
