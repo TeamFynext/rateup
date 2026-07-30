@@ -264,7 +264,7 @@ function WaTextEditor({
       platform === MessagePlatform.INSTAGRAM &&
       whatsappSettingsPhoneId !== selectedContact?.lastMessage?.sourceIdentifier
     ) {
-      updatePhoneId(selectedContact?.lastMessage.sourceIdentifier);
+      updatePhoneId(selectedContact?.lastMessage.sourceIdentifier ?? "");
     }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
 
@@ -331,7 +331,11 @@ function WaTextEditor({
             return (
               <div className="relative inline-flex" key={me?.key}>
                 <span className="absolute -top-2 -right-2 z-10 flex size-4 items-center justify-center rounded-full bg-red-600 text-white">
-                  <IconX onClick={() => removeMedia(me.key)} size={12} className="cursor-pointer" />
+                  <IconX
+                    onClick={() => removeMedia(me.key ?? "")}
+                    size={12}
+                    className="cursor-pointer"
+                  />
                 </span>
                 <div
                   className="w-[50px] h-[50px] border-2 border-white flex flex-col justify-center items-center relative"
@@ -701,7 +705,7 @@ const ShowMedia = ({ opened, close }: { opened: boolean; close: () => void }) =>
             aria-label="Remove media"
             className="bg-red-600 text-white hover:bg-red-700"
             onClick={async () => {
-              await removeMedia(media.key);
+              await removeMedia(media.key ?? "");
               close();
             }}
           >

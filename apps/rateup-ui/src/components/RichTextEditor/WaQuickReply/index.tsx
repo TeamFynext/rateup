@@ -40,7 +40,7 @@ export const WaQuickReply = ({
               <div
                 key={reply.id}
                 className="flex items-center gap-1 border p-2 rounded-sm bg-gray-100 dark:bg-transparent cursor-pointer"
-                onClick={() => handleSelectQuickReply(reply?.text)}
+                onClick={() => handleSelectQuickReply(reply?.text ?? "")}
               >
                 <Zap className="text-primary w-3 h-3" />
                 <span className="text-xs">

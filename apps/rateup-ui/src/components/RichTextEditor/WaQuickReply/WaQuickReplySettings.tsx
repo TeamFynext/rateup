@@ -20,7 +20,7 @@ const WaQuickReplySettings = () => {
   const [opened, setOpened] = useState(false);
   const deleteReply = useDeleteReply();
 
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<QuickReply | null>(null);
 
   function handleEditClick(reply: QuickReply) {
     setSelectedItem(reply);

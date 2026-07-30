@@ -290,7 +290,7 @@ export function returnMessageContentBasedOnParsedMessage(
   }
 }
 
-export function isInboxSessionExpired(timeStamp: string) {
+export function isInboxSessionExpired(timeStamp?: string) {
   if (!timeStamp) return true;
   const currentTime = dayjs().utc();
   const givenTime = dayjs(timeStamp).utc();

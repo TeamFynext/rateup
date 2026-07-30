@@ -16,10 +16,10 @@ import { getFilteredVariablesForQuestion } from "@/utils/survey/question/questio
 
 const InsertVariableControl = ({ question, editor }: { question?: any; editor: Editor | null }) => {
   const { variables, surveyId } = useContext(SurveyContext);
-  const { data: questions } = useQuestions(surveyId);
+  const { data: questions } = useQuestions(surveyId ?? "");
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const fileteredVariables = variables?.length
-    ? getFilteredVariablesForQuestion(variables, selectedLanguage, questions, question)
+    ? getFilteredVariablesForQuestion(variables, selectedLanguage, questions ?? [], question)
     : [];
   const variablesData = fileteredVariables?.map((val: SurveyVariable) => val?.name) ?? [];
 

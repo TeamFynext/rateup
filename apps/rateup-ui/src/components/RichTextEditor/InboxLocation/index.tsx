@@ -51,8 +51,8 @@ const LocationMap = ({
   onCancel: () => void;
   submitBtnTitle: string;
 }) => {
-  const [coordinates, setCoordinates] = useState([]);
-  const [currentLocation, setCurrentLocation] = useState([]);
+  const [coordinates, setCoordinates] = useState<Point | []>([]);
+  const [currentLocation, setCurrentLocation] = useState<Point | []>([]);
   const [permissionStatus, setPermissionStatus] = useState("");
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const LocationMap = ({
   }
 
   function handleSubmit() {
-    onGetLocation({ latitude: coordinates[0], longitude: coordinates[1] });
+    onGetLocation({ latitude: coordinates[0] ?? 0, longitude: coordinates[1] ?? 0 });
   }
 
   if (permissionStatus === "denied") return <p>Browser location access denied</p>;
@@ -91,19 +91,19 @@ const LocationMap = ({
       <Map
         height={300}
         width={300}
-        center={coordinates as Point}
+        center={coordinates.length ? (coordinates as Point) : undefined}
         defaultCenter={[28.704, 77.1025]}
         onClick={({ latLng }) => setCoordinates(latLng)}
       >
-        <Marker anchor={[coordinates[0], coordinates[1]]} width={25} color="red" />
+        <Marker anchor={[coordinates[0] ?? 0, coordinates[1] ?? 0]} width={25} color="red" />
       </Map>
       <Button
         variant="ghost"
         onClick={() => {
           setCoordinates(currentLocation);
           onGetLocation({
-            latitude: currentLocation[0],
-            longitude: currentLocation[1],
+            latitude: currentLocation[0] ?? 0,
+            longitude: currentLocation[1] ?? 0,
           });
         }}
       >

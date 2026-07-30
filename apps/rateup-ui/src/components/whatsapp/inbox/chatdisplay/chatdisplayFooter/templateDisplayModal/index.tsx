@@ -15,7 +15,7 @@ import { WaInboxTemplatePreviewNew } from "./templatePreview/index.tsx";
 
 interface Props {
   sessionExpired: boolean;
-  contact: ContactsData;
+  contact: ContactsData | null;
   opened: boolean;
   onClose: any;
 }

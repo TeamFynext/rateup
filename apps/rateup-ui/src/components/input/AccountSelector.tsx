@@ -16,7 +16,7 @@ interface AccountSelectorProps {
   onChange?: any;
   usePhoneNumber?: boolean;
   withAllOption?: boolean;
-  platform?: MessagePlatform | "all";
+  platform?: MessagePlatform | "all" | null;
   multiple?: boolean;
   label?: string;
   value?: any;
@@ -51,7 +51,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   let accountOptions: { value: string; label: string; status?: string }[] = getChannelOptions(
     data,
     {
-      platform,
+      platform: platform ?? undefined,
       usePhoneNumber,
       filterIds,
     },

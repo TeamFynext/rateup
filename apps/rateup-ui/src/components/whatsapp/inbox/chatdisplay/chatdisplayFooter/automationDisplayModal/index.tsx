@@ -19,7 +19,7 @@ interface Props {
   sessionExpired: boolean;
   opened: boolean;
   close: () => void;
-  contact: ContactsData;
+  contact: ContactsData | null;
 }
 
 export default function WaInboxAutomationDisplayModal(props: Props) {
