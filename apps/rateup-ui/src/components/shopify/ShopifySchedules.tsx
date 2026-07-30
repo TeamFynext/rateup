@@ -19,19 +19,19 @@ import RefreshButton from "../Button/RefreshButton.tsx";
 interface ScheduleRowData {
   id: string;
   phone: string;
-  scheduleTime: string;
-  sentAt: string;
+  scheduleTime: string | null;
+  sentAt: string | null;
   status: string;
   actionStatus: any;
   apiStatus: string;
-  createdAt: string;
+  createdAt: string | null;
   history: ShopifySchedule;
-  event_details: ShopifySurvey;
+  event_details: ShopifySurvey | undefined;
 }
 
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;
-  onOpen: (event: ShopifySurvey) => void;
+  onOpen: (event: ShopifySurvey | undefined) => void;
   translations: any;
 }
 
@@ -50,8 +50,8 @@ const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCe
 );
 
 interface HistoryCellProps {
-  schedule: ShopifySchedule;
-  onOpen: (schedule: ShopifySchedule) => void;
+  schedule: ShopifySchedule | null;
+  onOpen: (schedule: ShopifySchedule | null) => void;
   translations: any;
 }
 
@@ -144,7 +144,7 @@ const ShopifySchedules = ({
       cell: ({ row }) => (
         <EventDetailsCell
           eventDetails={row.original.event_details}
-          onOpen={setSelectedShopifySurveyEvent}
+          onOpen={(event) => setSelectedShopifySurveyEvent(event ?? null)}
           translations={translations}
         />
       ),
@@ -200,7 +200,7 @@ const EventDetailsModal = ({
 }: {
   opened: boolean;
   close: () => void;
-  shopifySurvey: ShopifySurvey;
+  shopifySurvey: ShopifySurvey | null;
   templateAndTeam: {
     templateName?: string;
     teamName?: string;
@@ -259,7 +259,7 @@ const ScheduleHistoryModal = ({
   opened,
   close,
 }: {
-  schedule: ShopifySchedule;
+  schedule: ShopifySchedule | null;
   opened: boolean;
   close: () => void;
 }) => {

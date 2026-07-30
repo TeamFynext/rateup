@@ -19,7 +19,7 @@ import { IntegratedApps } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";
 
 interface ActiveBadgeProps extends React.ComponentProps<typeof Badge> {
-  active: boolean;
+  active?: boolean;
 }
 
 export function ActiveStatusBadge({ active, className, ...props }: ActiveBadgeProps) {

@@ -55,7 +55,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   const handleAddNewJump = () => {
     setCurrentLogicJumps((prev) => [
       ...prev,
-      { condition: LogicCondition.Submitted, action: LogicAction.NextQ, response: null },
+      { condition: LogicCondition.Submitted, action: LogicAction.NextQ, response: "" },
     ]);
   };
 
@@ -89,7 +89,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
             <ConditionBlock
               key={index}
               selectedQ={selectedQ}
-              questions={questions}
+              questions={questions ?? []}
               currentLogicJump={currentLogic}
               setCurrentLogicJump={(newLogicJump) =>
                 setCurrentLogicJumps((prev) => prev.map((v, i) => (i === index ? newLogicJump : v)))
@@ -218,11 +218,11 @@ function ConditionBlock({
                 options={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
                 value={Array.isArray(matchData) ? matchData : []}
                 onValueChange={(value) => {
-                  setMatchData(value);
+                  setMatchData(value ?? "");
                   setCurrentLogicJump({
                     condition: selectedCondition,
                     action: selectedAction,
-                    response: value,
+                    response: value ?? "",
                   });
                 }}
                 placeholder={translations("Select Responses")}
@@ -235,11 +235,11 @@ function ConditionBlock({
               <Select
                 value={Array.isArray(matchData) ? "" : matchData}
                 onValueChange={(value) => {
-                  setMatchData(value);
+                  setMatchData(value ?? "");
                   setCurrentLogicJump({
                     condition: selectedCondition,
                     action: selectedAction,
-                    response: value,
+                    response: value ?? "",
                   });
                 }}
                 items={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
