@@ -78,7 +78,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const { serverFilters, setServerFilters } = useResponseFilterStore();
 
   useEffect(() => {
-    setServerFilters([]);
+    setServerFilters({});
   }, [survey]);
 
   const {

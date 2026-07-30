@@ -69,7 +69,7 @@ export function ResponseTableToolbar<TData>({
   const { t: translations } = useTranslation();
   const [openedExport, setOpenedExport] = useState(false);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
-  const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
+  const filters = serverFilters ?? {};
 
   const getBackendFilterKey = (columnId: string) => {
     if (!columnId) return "";

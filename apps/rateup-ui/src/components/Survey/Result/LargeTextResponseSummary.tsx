@@ -45,7 +45,7 @@ const LargeTextResponseSummary = ({
   const getSummary = useGenerateLargeTextResponseSummaryByAI(surveyId);
   const { defaultLanguage } = useContext(SelectedLanguageContext);
   const [summaryTab, setSummaryTab] = useState(ResponseSummaryType.All);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | FormElement>(null);
   const { teams } = useContext(SurveyContext);
   const ref = useRef(null);
   const [height, setHeight] = useState(null);
@@ -99,7 +99,10 @@ const LargeTextResponseSummary = ({
           <p className="font-semibold">
             {version === 1
               ? getReplacedTitleFromVariable({
-                  title: selectedQuestion?.title[defaultLanguage],
+                  title:
+                    selectedQuestion && "title" in selectedQuestion
+                      ? selectedQuestion.title[defaultLanguage]
+                      : undefined,
                   surveyId,
                 })
               : selectedQuestion?.label}
@@ -180,7 +183,10 @@ const LargeTextResponseSummary = ({
                         <span className="font-semibold text-sm flex-1">
                           {version === 1
                             ? getReplacedTitleFromVariable({
-                                title: question?.title?.[defaultLanguage],
+                                title:
+                                  "title" in question
+                                    ? question.title?.[defaultLanguage]
+                                    : undefined,
                                 surveyId,
                               })
                             : question?.label}
