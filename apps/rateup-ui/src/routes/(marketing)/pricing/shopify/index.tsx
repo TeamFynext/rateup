@@ -26,7 +26,7 @@ function Page() {
 function ShopifySubscriptionApprovalCallback() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
-  const charge_id = searchParams.charge_id;
+  const charge_id = typeof searchParams.charge_id === "string" ? searchParams.charge_id : undefined;
   const shop = searchParams.shop;
   const plan = searchParams.plan;
 

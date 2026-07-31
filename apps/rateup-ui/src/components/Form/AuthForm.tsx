@@ -21,8 +21,8 @@ import styles from "./AuthForm.module.css";
 
 const AuthForm = ({ mode, authType }: { mode: string; authType?: string | string[] }) => {
   const searchParams = useSearch({ strict: false });
-  const token = searchParams.token;
-  const rid = searchParams.rid;
+  const token = typeof searchParams.token === "string" ? searchParams.token : undefined;
+  const rid = typeof searchParams.rid === "string" ? searchParams.rid : undefined;
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
   const colorScheme = useResolvedTheme();

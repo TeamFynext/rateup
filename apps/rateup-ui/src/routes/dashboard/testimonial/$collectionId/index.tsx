@@ -50,7 +50,7 @@ function CollectionById() {
     strict: false,
   });
 
-  const tab = searchParams.tab;
+  const tab = Object.values(TestimonialTabs).find((value) => value === searchParams.tab);
   const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(TestimonialTabs.Select);
   const [selectedTestimonialIds, setSelectedTestimonialIds] = useState<string[]>([]);
   const [isDelete, setIsDelete] = useState(false);

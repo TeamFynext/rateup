@@ -1,4 +1,4 @@
-import type { QuestionType } from "@/types/enums.ts";
+import type { PageType, QuestionType } from "@/types/enums.ts";
 import type { TNC, Wop } from "@/types/global";
 
 import type { SmileyColorType, SmileyVariantStyle } from "./SmileyExtraProps.tsx";
@@ -60,7 +60,7 @@ export interface QuestionFormFeatures {
 
 export interface QuestionFormValues {
   /** The question's type, as `QuestionType` or `PageType`. */
-  type?: QuestionType;
+  type?: QuestionType | PageType;
   /** Question heading, per language. */
   title?: Record<string, string>;
   features?: Record<string, QuestionFormFeatures>;
@@ -73,4 +73,6 @@ export interface QuestionFormValues {
 export interface QuestionExtraPropsForm {
   values?: QuestionFormValues;
   setFieldValue?: (path: string, value: unknown) => void;
+  /** Present on the react-hook-form instance some callers actually pass. */
+  getValues?: unknown;
 }

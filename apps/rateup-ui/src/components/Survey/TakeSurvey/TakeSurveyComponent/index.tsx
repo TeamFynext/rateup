@@ -337,7 +337,7 @@ function TakeSurvey({
       selectedLanguage,
       setIsSavingResponses,
       coordinates,
-      tag: searchParams.tag,
+      tag: typeof searchParams.tag === "string" ? searchParams.tag : null,
       shouldRaiseTicket,
       checkUniqueDevice,
       selectedColumnId,

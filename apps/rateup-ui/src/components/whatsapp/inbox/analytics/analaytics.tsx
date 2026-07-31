@@ -28,7 +28,7 @@ import TeamPerformance from "./TeamPerformance.tsx";
 
 const Analytics = () => {
   const searchParams = useSearch({ strict: false });
-  const tab = searchParams.tab ?? "overview";
+  const tab = typeof searchParams.tab === "string" ? searchParams.tab : "overview";
   const { t } = useTranslation();
   const [dateRange, setDateRange] = useState({
     key: "last7days",

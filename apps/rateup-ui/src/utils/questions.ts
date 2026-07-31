@@ -158,7 +158,7 @@ const CONTACT_FEATURE_KEYS = ["name", "phone", "email"] as const;
  * its own type, so it must stay on.
  */
 export function getDefaultContactFeatureEnabled(
-  qtype: QuestionType | undefined,
+  qtype: QuestionType | PageType | undefined,
 ): Record<(typeof CONTACT_FEATURE_KEYS)[number], boolean> {
   return {
     name: false,

@@ -33,6 +33,7 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { cn } from "@/lib/utils";
+import type { PageType } from "@/types/enums.ts";
 import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums.ts";
 import {
   DEFAULT_IMAGE_BASE64_START,
@@ -54,7 +55,7 @@ type ChoiceFormValues = {
 };
 
 interface ChoicesCreatorProps {
-  form: Required<QuestionExtraPropsForm>;
+  form: QuestionExtraPropsForm;
   qId: string;
   maxChoiceCount?: number;
   maxCharCount?: number;
@@ -83,8 +84,8 @@ export function ChoicesCreator({
   const metaFileInputRef = useRef<HTMLInputElement>(null);
 
   const { t: translations } = useTranslation();
-  const choices = form.values.choices?.[selectedLanguage] || [];
-  const features: QuestionFormFeatures = form.values.features?.[selectedLanguage] || {
+  const choices = form.values?.choices?.[selectedLanguage] || [];
+  const features: QuestionFormFeatures = form.values?.features?.[selectedLanguage] || {
     other: {
       isEnabled: false,
       title: translations("Other"),
@@ -167,7 +168,7 @@ export function ChoicesCreator({
                 Object.entries(values).filter(([_key, val]) => (val as string)?.trim() !== ""),
               )
             : values.title,
-        weightage: form.values.type === QuestionType.CustomNPS ? choiceWeightage : undefined,
+        weightage: form.values?.type === QuestionType.CustomNPS ? choiceWeightage : undefined,
       };
       if (image) {
         if (!selectedImageFile) {
@@ -177,15 +178,15 @@ export function ChoicesCreator({
         setFileUploadLoading(true);
         const fileKey = await uploadFile(selectedImageFile);
         setFileUploadLoading(false);
-        form.setFieldValue("choices", {
-          ...form.values.choices,
+        form.setFieldValue?.("choices", {
+          ...form.values?.choices,
           [selectedLanguage]: [...choices, { value: { value: values.title, image: fileKey } }],
         });
         setSelectedImageFile(null);
         setIsSubmited(true);
       } else {
-        form.setFieldValue("choices", {
-          ...form.values.choices,
+        form.setFieldValue?.("choices", {
+          ...form.values?.choices,
           [selectedLanguage]: [...choices, choiceObj],
         });
       }
@@ -202,8 +203,8 @@ export function ChoicesCreator({
       updateImageArray({
         Key: typeof choice?.value === "object" ? choice.value.image : undefined,
       });
-    form.setFieldValue("choices", {
-      ...form.values.choices,
+    form.setFieldValue?.("choices", {
+      ...form.values?.choices,
       [selectedLanguage]: choices.filter((c: Choice) => c !== choice),
     });
   };
@@ -262,7 +263,7 @@ export function ChoicesCreator({
       <div
         className={cn(
           "flex flex-col py-2",
-          form.values.type === QuestionType.CustomNPS ? "gap-4" : "gap-2",
+          form.values?.type === QuestionType.CustomNPS ? "gap-4" : "gap-2",
         )}
       >
         {choices.map((choice: Choice, i: number) => (
@@ -462,8 +463,10 @@ export function ChoicesCreator({
         </div>
       )}
 
-      {!!form.values.type &&
-        [QuestionType.MCQ, QuestionType.MSQ].includes(form.values.type) &&
+      {!!form.values?.type &&
+        ([QuestionType.MCQ, QuestionType.MSQ] as Array<QuestionType | PageType>).includes(
+          form.values.type,
+        ) &&
         surveyType === SurveyType.Web && (
           <div className="mt-2 rounded-lg border bg-background">
             <Field orientation="horizontal" className="p-3">
@@ -472,8 +475,8 @@ export function ChoicesCreator({
                 id={`${uid}-field`}
                 checked={features?.other?.isEnabled}
                 onCheckedChange={(checked) => {
-                  form.setFieldValue("features", {
-                    ...form.values.features,
+                  form.setFieldValue?.("features", {
+                    ...form.values?.features,
                     [selectedLanguage]: {
                       ...features,
                       other: { ...features.other, isEnabled: checked },
@@ -494,8 +497,8 @@ export function ChoicesCreator({
                     className="bg-background"
                     value={features?.other?.title}
                     onChange={(e) => {
-                      form.setFieldValue("features", {
-                        ...form.values.features,
+                      form.setFieldValue?.("features", {
+                        ...form.values?.features,
                         [selectedLanguage]: {
                           ...features,
                           other: { ...features.other, title: e.currentTarget.value },
@@ -513,8 +516,8 @@ export function ChoicesCreator({
                     className="bg-background"
                     value={features?.other?.placeholder}
                     onChange={(e) => {
-                      form.setFieldValue("features", {
-                        ...form.values.features,
+                      form.setFieldValue?.("features", {
+                        ...form.values?.features,
                         [selectedLanguage]: {
                           ...features,
                           other: { ...features.other, placeholder: e.currentTarget.value },
@@ -556,7 +559,7 @@ type ChoiceLike = { value?: Choice["value"]; weightage?: NPSWeightage; image?: s
 interface ChoiceProps {
   choice: ChoiceLike;
   onDelete: () => void;
-  form: Required<QuestionExtraPropsForm>;
+  form: QuestionExtraPropsForm;
   index: number;
   image?: boolean;
   buttonRef?: React.RefObject<HTMLButtonElement | null>;
@@ -590,7 +593,7 @@ function Choice({
   const newWeightage = choice?.weightage;
   const { t: translations } = useTranslation();
 
-  const choices = form.values.choices?.[selectedLanguage];
+  const choices = form.values?.choices?.[selectedLanguage];
 
   const choiceSchema = z.object({
     title: z
@@ -683,12 +686,12 @@ function Choice({
   };
 
   const handleChangeWeightage = (value: NPSWeightage | null) => {
-    const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c: Choice) => {
+    const updatedChoices = form.values?.choices?.[selectedLanguage]?.map((c: Choice) => {
       if (c.value === choice?.value) return { ...c, weightage: value };
       return c;
     });
-    form.setFieldValue("choices", {
-      ...form.values.choices,
+    form.setFieldValue?.("choices", {
+      ...form.values?.choices,
       [selectedLanguage]: updatedChoices,
     });
   };
@@ -724,8 +727,8 @@ function Choice({
           };
         return c;
       });
-      form.setFieldValue("choices", {
-        ...form.values.choices,
+      form.setFieldValue?.("choices", {
+        ...form.values?.choices,
         [selectedLanguage]: updatedChoices,
       });
       setSelectedImageFile(null);
@@ -738,14 +741,14 @@ function Choice({
               )
             : values.title,
       };
-      const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
+      const updatedChoices = form.values?.choices?.[selectedLanguage]?.map(
         (c: Choice, i: number) => {
           if (i === index) return { ...c, ...choiceObj };
           return c;
         },
       );
-      form.setFieldValue("choices", {
-        ...form.values.choices,
+      form.setFieldValue?.("choices", {
+        ...form.values?.choices,
         [selectedLanguage]: updatedChoices,
       });
     }
@@ -786,7 +789,7 @@ function Choice({
         aspect={4 / 3}
       />
 
-      {form.values.type === QuestionType.CustomNPS ? (
+      {form.values?.type === QuestionType.CustomNPS ? (
         <div className="flex w-[85%] items-center gap-2">
           <span
             className="mt-[5px] size-2 shrink-0 rounded-full"

@@ -60,7 +60,7 @@ export default function SurveyID() {
     strict: false,
   });
   const surveyId = params.surveyId as string;
-  const tab = searchParams.tab;
+  const tab = Object.values(TabEnum).find((value) => value === searchParams.tab);
   const { user } = useUser();
 
   if (Array.isArray(surveyId)) {
