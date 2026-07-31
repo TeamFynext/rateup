@@ -45,7 +45,8 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   useEffect(() => {
     if (response) {
-      const val = asAnswer(response).value?.value ?? asAnswer(response).value;
+      const answerValue = asAnswer(response).value;
+      const val = typeof answerValue === "object" ? asAnswer(answerValue).value : answerValue;
       setSelectedOp(typeof val === "string" ? val : "");
     }
   }, [response]);

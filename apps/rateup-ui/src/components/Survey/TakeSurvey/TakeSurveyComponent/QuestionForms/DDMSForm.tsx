@@ -34,7 +34,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (response) {
-      setSelectedOp(asAnswerList(response).map((r: Choice) => r?.value));
+      setSelectedOp(asAnswerList(response).map((r) => r?.value ?? ""));
     }
   }, [response]);
 

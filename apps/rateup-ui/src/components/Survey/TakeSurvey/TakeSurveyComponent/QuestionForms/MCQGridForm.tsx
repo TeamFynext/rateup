@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -19,14 +20,14 @@ import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
-import { asAnswer } from "@/utils/response.ts";
+import { asAnswer, asAnswerRow } from "@/utils/response.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import { isLightColor } from "./isLightColor.ts";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQGridFormProps {
-  features;
+  features: Record<string, QuestionFormFeatures>;
   previewChoices?: Record<string, Array<Choice>>;
   isPreview?: boolean;
 }
@@ -52,7 +53,10 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
 
   const { control } = useForm<Record<string, string>>({
     values: Object.fromEntries(
-      (questions ?? []).map((question: string) => [question, response?.[question]?.value ?? ""]),
+      (questions ?? []).map((question: string) => [
+        question,
+        asAnswerRow(response, question).value ?? "",
+      ]),
     ),
   });
 
@@ -80,7 +84,7 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
     return (
       <MCQGridMobileForm
         choices={choices}
-        questions={questions}
+        questions={questions ?? []}
         handleUpdateResponse={handleUpdateResponse}
         control={control}
         themePrimaryColor={themePrimaryColor}
@@ -109,7 +113,7 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
               {question}
             </TableCell>
             {choices?.map((choice: Choice) => {
-              const isSelected = response?.[question]?.value == choice?.value;
+              const isSelected = asAnswerRow(response, question).value == choice?.value;
               return (
                 <TableCell key={choiceLabel(choice)} className="px-4 py-4">
                   <Controller
@@ -210,7 +214,7 @@ const MCQGridMobileForm = ({
                   }}
                 >
                   {choices?.map((choice) => {
-                    const isSelected = response?.[question]?.value == choice?.value;
+                    const isSelected = asAnswerRow(response, question).value == choice?.value;
                     return (
                       <FieldTitle
                         key={choice?.value as string}

@@ -16,6 +16,8 @@ import {
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
+import type { StoredResponse } from "@/utils/response.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 import {
   getEmptyIcon,
@@ -32,8 +34,8 @@ const SmileyRating = ({
   response,
   features,
 }: {
-  updateResponse: (value: unknown) => void;
-  response?: unknown;
+  updateResponse: (value: StoredResponse | null | undefined) => void;
+  response?: StoredResponse | null;
   features?: { iconStyle?: SmileyIconStyle & SmileyGradientStyle; [key: string]: unknown };
 }) => {
   const [scope, animate] = useAnimate();
@@ -107,7 +109,7 @@ const SmileyRating = ({
     }
   }, [features]);
 
-  const currentValue = getNumericValue(response as string);
+  const currentValue = getNumericValue(asAnswerText(response));
 
   const handleSelect = async (value: number) => {
     updateStringResponse(value);

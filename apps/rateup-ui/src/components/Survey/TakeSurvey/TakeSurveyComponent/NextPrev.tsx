@@ -17,7 +17,9 @@ import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { validationSupportedTypes } from "@/utils/data.ts";
-import { validateQuestion } from "@/utils/validation/index.ts";
+import type { StoredResponse } from "@/utils/response.ts";
+import { asAnswer } from "@/utils/response.ts";
+import { asQuestionInput, validateQuestion } from "@/utils/validation/index.ts";
 
 import { getSelectedQPos, validateResponse } from "./util.tsx";
 
@@ -31,7 +33,7 @@ function NextPrev({
   errorTextDivRef,
 }: {
   prev: () => void;
-  next: (response?: unknown) => void;
+  next: (response?: StoredResponse | null) => void;
   questionsLength: number;
   survey: Survey;
   isSavingResponses: boolean;
@@ -64,7 +66,7 @@ function NextPrev({
   const { ...themeStylesWoBr } = themeStyles;
 
   useEffect(() => {
-    const errMsg = validateResponse(response, selectedQ, selectedLanguage);
+    const errMsg = validateResponse(asAnswer(response), selectedQ, selectedLanguage);
     setErrorMsg(errMsg);
     if (errMsg.length) setIsErrorInput(true);
     else setIsErrorInput(false);
@@ -75,7 +77,7 @@ function NextPrev({
       response &&
       validationSupportedTypes.includes(selectedQ?.type as QuestionType)
     ) {
-      const error = validateQuestion(selectedQ, response, selectedLanguage);
+      const error = validateQuestion(selectedQ, asQuestionInput(response), selectedLanguage);
       if ((error?.length ?? 0) > 0) {
         setIsErrorInput(true);
         setErrorMsg(error?.length ? error : "");

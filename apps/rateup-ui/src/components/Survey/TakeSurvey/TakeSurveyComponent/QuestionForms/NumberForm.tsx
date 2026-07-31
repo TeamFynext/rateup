@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -16,7 +17,7 @@ export function NumberForm() {
     <FormPaperLayout>
       <Input
         type="number"
-        value={parseInt(response) === 0 ? 0 : parseInt(response) || ""}
+        value={parseInt(asAnswerText(response)) === 0 ? 0 : parseInt(asAnswerText(response)) || ""}
         onChange={(e) => {
           const val = e.target.value;
           updateResponse(val === "" ? null : Number(val));

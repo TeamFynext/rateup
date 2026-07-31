@@ -33,7 +33,7 @@ export function TermsNConditionsForm({ tncData }: { tncData?: Record<string, TNC
         <FieldLabel htmlFor="tnc-checkbox" className="flex items-center gap-2 p-3">
           <Checkbox
             id="tnc-checkbox"
-            checked={response || false}
+            checked={response === true}
             onCheckedChange={(checked) => updateResponse(!!checked)}
             style={{
               borderColor: textColor,

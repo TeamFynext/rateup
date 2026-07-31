@@ -13,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import { luminance } from "./isLightColor.ts";
@@ -30,7 +31,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
   const [open, setOpen] = useState(false);
   const { t: translations } = useTranslation();
 
-  const selectedDate = isPreview ? value : response;
+  const selectedDate: string = isPreview ? String(value ?? "") : asAnswerText(response);
 
   const handleSelect = (date: Date | undefined) => {
     if (isPreview) {

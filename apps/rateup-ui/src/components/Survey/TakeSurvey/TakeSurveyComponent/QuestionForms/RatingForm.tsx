@@ -39,7 +39,7 @@ export function RatingForm() {
     <div ref={scope} className={cn("flex items-center", isMobile ? "gap-1.5" : "gap-4")}>
       {Array.from({ length: 5 }, (_, i) => {
         const starValue = i + 1;
-        const filled = starValue <= (hoveredValue !== -1 ? hoveredValue : response || 0);
+        const filled = starValue <= (hoveredValue !== -1 ? hoveredValue : Number(response) || 0);
         return (
           <button
             key={starValue}

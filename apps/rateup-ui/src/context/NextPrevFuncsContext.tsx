@@ -5,10 +5,11 @@ import {
   getFirstQuestion,
   getLastQuestion,
 } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util.tsx";
+import type { StoredResponse } from "@/utils/response.ts";
 
 import { SelectedQContext } from "./SelectedQ.ts";
 
-type NavFn = ((response?: unknown) => void) | null;
+type NavFn = ((response?: StoredResponse | null) => void) | null;
 
 const NextPrevFuncsAndLastQuestionContext = createContext<{
   nextFn: NavFn;

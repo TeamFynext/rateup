@@ -29,7 +29,7 @@ const MultiTextInputForm = ({ features }: { features?: Record<string, QuestionFo
         <FormPaperLayout key={index}>
           <Input
             placeholder={field.placeholderText}
-            value={response?.[field.fieldKey] || ""}
+            value={String(asAnswer(response)[field.fieldKey] ?? "")}
             onChange={(e) => {
               updateResponse({
                 ...asAnswer(response),

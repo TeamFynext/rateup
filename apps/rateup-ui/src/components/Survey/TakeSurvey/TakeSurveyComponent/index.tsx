@@ -17,6 +17,7 @@ import { LogicAction, PageType } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";
 import { isHtml } from "@/utils/index.ts";
+import type { StoredResponse } from "@/utils/response.ts";
 import { parseLogicAction } from "@/utils/survey/logic/logic.utils";
 
 import CustomHTML from "../../Page/Previews/CustomHTML.tsx";
@@ -218,7 +219,7 @@ function TakeSurvey({
     setApDirection(-1);
   };
 
-  const handleNext = (response) => {
+  const handleNext = (response?: StoredResponse | null) => {
     const currentResponse_ = response ? response : currentResponse;
     const lastQuestion = getLastQuestion(survey);
     const isLastQuestion = selectedQ?.id === lastQuestion?.id;
@@ -384,7 +385,7 @@ function TakeSurvey({
     goBack();
   };
 
-  const updateResponse = (response: object) => {
+  const updateResponse = (response: StoredResponse | null | undefined) => {
     const index = responsesRef.current.findIndex((r) => r.questionId === selectedQ.id);
     // Converting response to QuestionResponse
     const formattedResponse: QuestionResponse = {

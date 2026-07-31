@@ -35,7 +35,7 @@ interface ChoiceResponse {
 type ResponseRecord = Record<string, unknown>;
 
 /** A stored answer. Which member applies follows the question's type. */
-export type StoredResponse = string | number | Date | ResponseRecord | ResponseRecord[];
+export type StoredResponse = string | number | boolean | Date | ResponseRecord | ResponseRecord[];
 
 /**
  * The fields a question form reads off an answer. Which apply depends on the question type —
@@ -64,6 +64,12 @@ export const asAnswer = (response: StoredResponse | null | undefined): AnswerFie
 /** Reads an answer as the list of picks a multi-select question stores. */
 export const asAnswerList = (response: StoredResponse | null | undefined): AnswerFields[] =>
   Array.isArray(response) ? (response as AnswerFields[]) : [];
+
+/** Reads one row of a grid answer, which stores `{ [row]: { value } }`. */
+export const asAnswerRow = (
+  response: StoredResponse | null | undefined,
+  row: string,
+): AnswerFields => asAnswer(asAnswer(response)[row] as StoredResponse | undefined);
 
 /** Reads an answer as the plain text a free-text question stores. */
 export const asAnswerText = (response: StoredResponse | null | undefined): string =>

@@ -126,7 +126,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           <FormPaperLayout>
             <Input
               placeholder={translations("Enter job title")}
-              value={asAnswer(response).jobTitle}
+              value={String(asAnswer(response).jobTitle ?? "")}
               onChange={handleJobTitleChange}
               style={{ maxWidth: "400px" }}
               className={cn(unstyledInputClassName, "text-base")}
@@ -140,7 +140,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <FormPaperLayout>
           <Textarea
             placeholder={translations("Enter testimonial")}
-            value={asAnswer(response).testimonial}
+            value={String(asAnswer(response).testimonial ?? "")}
             onChange={handleTestimonialChange}
             style={{ maxWidth: "400px" }}
             className={cn(unstyledInputClassName, "text-base min-h-0")}
@@ -164,7 +164,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 <IconStar
                   size={32}
                   className={
-                    asAnswer(response).rating >= star
+                    Number(asAnswer(response).rating ?? 0) >= star
                       ? "fill-primary text-primary"
                       : "text-gray-300"
                   }
@@ -207,7 +207,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 </div>
               )}
               <img
-                src={getFileUrlFromKey(asAnswer(response).photo)}
+                src={getFileUrlFromKey(String(asAnswer(response).photo ?? ""))}
                 alt="Your uploaded image"
                 className="size-full rounded-[10px] object-cover"
                 style={{ height: fallbackImage ? 148 : 200 }}

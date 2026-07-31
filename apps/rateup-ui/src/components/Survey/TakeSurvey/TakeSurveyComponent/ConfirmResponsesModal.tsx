@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
+import type { StoredResponse } from "@/utils/response.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
@@ -259,10 +261,10 @@ function ConfirmResponsesModal({
                               if (!answers) return null;
                               return (
                                 <div className="flex flex-col gap-2">
-                                  {Object.values(answers).map((ad, index: number) => {
+                                  {Object.values(asAnswer(answers)).map((ad, index: number) => {
                                     return (
                                       <span className="font-light" key={index}>
-                                        {ad}
+                                        {String(ad ?? "")}
                                       </span>
                                     );
                                   })}
@@ -272,10 +274,10 @@ function ConfirmResponsesModal({
                               const results = Object.values(response?.response)[0];
                               return (
                                 <div className="flex flex-col gap-2">
-                                  {Object.entries(results).map(([q, res]: unknown) => {
+                                  {Object.entries(asAnswer(results)).map(([q, res]) => {
                                     return (
                                       <span className="font-light" key={q}>
-                                        {q}: {res?.value}
+                                        {q}: {String(asAnswer(res as StoredResponse).value ?? "")}
                                       </span>
                                     );
                                   })}

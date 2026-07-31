@@ -46,7 +46,17 @@ function validateTextType(input: string, type?: string) {
  * A submitted answer: MultiTextInput questions post a record keyed by field,
  * every other question posts the answer text on its own.
  */
-type QuestionInput = string | Record<string, string>;
+export type QuestionInput = string | Record<string, string>;
+
+/** Reads a stored answer as the value the validators accept. */
+export const asQuestionInput = (response: unknown): QuestionInput =>
+  typeof response === "string"
+    ? response
+    : typeof response === "object" && response !== null && !Array.isArray(response)
+      ? (Object.fromEntries(
+          Object.entries(response).map(([key, value]) => [key, String(value ?? "")]),
+        ) as Record<string, string>)
+      : "";
 
 export function validateQuestion(
   question: Question,

@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 import { Textarea } from "../../../../ui/textarea.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
@@ -12,7 +13,7 @@ import classes from "../TakeSurvey.module.css";
 export function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const [inputValue, setInputValue] = useState(response || "");
+  const [inputValue, setInputValue] = useState(asAnswerText(response));
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.currentTarget.value;

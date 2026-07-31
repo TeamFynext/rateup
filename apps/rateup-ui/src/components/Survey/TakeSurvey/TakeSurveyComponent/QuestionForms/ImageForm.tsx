@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
-import { asAnswer } from "@/utils/response.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 function getFileName(url: string | File, isNewFile: boolean): ReactNode {
   if (isNewFile || typeof url === "string") return <>{url}</>;
@@ -19,7 +19,9 @@ function getFileName(url: string | File, isNewFile: boolean): ReactNode {
 export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(isPreview ? null : response || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    isPreview ? null : asAnswerText(response) || null,
+  );
   const [isUploading, setIsUploading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +58,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     updateResponse(null);
   }
 
-  const isImageSelected = previewUrl || asAnswer(response).length > 0;
+  const isImageSelected = previewUrl || asAnswerText(response).length > 0;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -108,7 +110,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
 
             <p className="text-center text-sm" style={{ color: pickedFileTextColor }}>
               {translations("Picked file:")}{" "}
-              {file?.name || getFileName(response, isPreview || false)}
+              {file?.name || getFileName(asAnswerText(response), isPreview || false)}
             </p>
           </div>
         </div>
