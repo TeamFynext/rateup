@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 
 import {
   campaignResponseDownloadById,
@@ -42,8 +43,8 @@ export const useCreateCampaignMutation = (teamId: string, type: string) => {
         id: "campaign-create",
       });
     },
-    onError: (error: any) => {
-      if (!(error?.response?.data?.displayMessageInClient ?? false))
+    onError: (error) => {
+      if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
         toast.error(error?.message || `Error creating campaign`, {
           id: "campaign-create",
         });
@@ -161,8 +162,8 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         { id: "campaign-start" },
       );
     },
-    onError: (error: any) => {
-      if (!(error?.response?.data?.displayMessageInClient ?? false))
+    onError: (error) => {
+      if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
         toast.error(error?.message || `${error?.message ?? "Error sending campaign"}`, {
           id: "campaign-start",
         });

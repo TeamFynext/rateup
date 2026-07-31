@@ -26,7 +26,7 @@ export const useEnableInboxAutomationMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inboxAutomation"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       if (!shouldSkipLocalErrorToast(error)) {
         toast.error(error?.message || "Error enabling inbox automation");
       }
@@ -41,7 +41,7 @@ export const useDisableInboxAutomationMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inboxAutomation"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       if (!shouldSkipLocalErrorToast(error)) {
         toast.error(error?.message || "Error disabling inbox automation");
       }
@@ -62,7 +62,7 @@ export const useUpdateInboxAutomationMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inboxAutomation"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       if (!shouldSkipLocalErrorToast(error)) {
         toast.error(error?.message || "Error updating inbox automation settings");
       }

@@ -540,7 +540,7 @@ export const useExportWaMessageLogs = () => {
         id: "export-logs",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error exporting logs", error);
       toast.error(error?.message || "Error exporting logs", {
         id: "export-logs",

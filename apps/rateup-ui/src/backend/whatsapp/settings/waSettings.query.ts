@@ -270,7 +270,7 @@ export const useUpdateConversationalAutomation = () => {
       });
       toast.success("Conversational components updated");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error updating conversational components");
     },
   });
@@ -286,7 +286,7 @@ export const useSyncConversationalAutomation = () => {
       });
       toast.success("Synced from Meta successfully");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error syncing from Meta");
     },
   });
@@ -301,7 +301,7 @@ export const useSyncDatasetsMutation = (waSettingsId: string) => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Successfully synced datasets");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error syncing datasets");
     },
   });

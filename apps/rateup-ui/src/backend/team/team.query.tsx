@@ -247,7 +247,7 @@ export function useUpdateTeamFeatures(teamId: string) {
       queryClient.invalidateQueries({ queryKey: ["teamFeatures", teamId] });
       toast.success("Feature access updated successfully.");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to update feature access.");
     },
   });
@@ -272,7 +272,7 @@ export function useUpdateTeamChannels(teamId: string) {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Channel access updated successfully.");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to update channel access.");
     },
   });

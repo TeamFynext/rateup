@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
 import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 
 import {
   addExistingContactsToGroup,
@@ -120,8 +121,8 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
         id: "contact-group-add-member",
       });
     },
-    onError: (error: any) => {
-      const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+    onError: (error) => {
+      const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
       if (!isValidationError) {
         toast.error(error?.message || `Error adding member`, {
           id: "contact-group-add-member",

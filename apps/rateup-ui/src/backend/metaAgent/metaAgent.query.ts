@@ -64,7 +64,7 @@ const key = (resource: string, waSettingsId: string, ...rest: unknown[]) => [
   ...rest,
 ];
 
-const onErr = (fallback: string) => (error: any) => toast.error(error?.message || fallback);
+const onErr = (fallback: string) => (error: Error) => toast.error(error?.message || fallback);
 
 // ---- agent record ----
 export const useMetaBusinessAgent = (waSettingsId: string) =>

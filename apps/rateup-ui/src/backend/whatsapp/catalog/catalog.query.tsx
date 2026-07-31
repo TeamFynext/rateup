@@ -23,7 +23,7 @@ export const useDeleteWaCatalog = () => {
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
       toast.success("Catalog deleted");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to delete catalog");
     },
   });
@@ -56,7 +56,7 @@ export const useSyncConnectedCatalog = () => {
         toast.success("Connected catalog synced successfully");
       }
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to sync connected catalog");
     },
   });
@@ -135,7 +135,7 @@ export const useUpdateCatalogSettings = (catalogId: string) => {
       qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
       toast.success("Settings saved");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to save settings");
     },
   });
@@ -150,7 +150,7 @@ export const useCreateAddressFlow = (catalogId: string) => {
       qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
       toast.success("Address flow submitted to Meta for review!");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to create address flow");
     },
   });

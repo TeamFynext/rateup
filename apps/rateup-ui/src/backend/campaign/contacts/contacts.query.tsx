@@ -408,7 +408,7 @@ export const useBulkAssignStatusMutation = (groupId: string) => {
       });
     },
 
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error updating chats", {
         id: "bulk-chat-update",
       });
