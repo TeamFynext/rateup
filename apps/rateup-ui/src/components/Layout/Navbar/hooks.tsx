@@ -68,6 +68,23 @@ export interface NavEntry {
   group?: string;
   icon?: React.ComponentType<{ size?: number | string; className?: string }>;
   items?: NavEntry[];
+  /** Rendering hints the sidebar reads off an entry. */
+  type?: string;
+  variant?: string;
+  className?: string;
+  componentKey?: string;
+  description?: React.ReactNode;
+  hint?: React.ReactNode;
+  count?: number;
+  isActive?: boolean;
+  showTitle?: boolean;
+  settingsStyle?: boolean;
+  hasSepeartorOnTop?: boolean;
+  hasSeperatorOnBottom?: boolean;
+  showClearButton?: boolean;
+  clearButtonName?: string;
+  clearFilter?: () => void;
+  handleClick?: () => void;
   [key: string]: unknown;
 }
 
