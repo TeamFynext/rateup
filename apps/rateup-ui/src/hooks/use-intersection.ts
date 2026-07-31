@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
  * `ref` to the element to observe; `entry` is the latest IntersectionObserver
  * entry for it.
  */
-export function useIntersection<T extends HTMLElement = any>(
+export function useIntersection<T extends HTMLElement = HTMLElement>(
   options?: ConstructorParameters<typeof IntersectionObserver>[1],
 ) {
   const [entry, setEntry] = useState<IntersectionObserverEntry | null>(null);

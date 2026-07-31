@@ -79,6 +79,7 @@ import {
 } from "@/utils/constants.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
+import { getNestedProperty } from "@/utils/misc/obj.utils.ts";
 import { toSelectOptions } from "@/utils/select-options.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
@@ -161,8 +162,7 @@ export function WhatsappTemplateById({
     });
   const registerField = (path: string) => form.register(path as FieldPath<TemplateFormValues>);
   const errorAt = (path: string) =>
-    (path.split(".").reduce<any>((node, part) => node?.[part], formErrors)?.message ??
-      undefined) as string | undefined;
+    getNestedProperty<{ message?: string }>(formErrors, path)?.message;
 
   // Only the mutations are used. The list is still rendered from the watched `values`
   // rather than `fields`, because a row's rendering depends on values edited after it was
@@ -370,8 +370,10 @@ export function WhatsappTemplateById({
 
   /** First validation message from an RHF error tree, for the toast. */
   function firstErrorMessage(errors: unknown): string | undefined {
-    for (const value of Object.values((errors ?? {}) as Record<string, any>)) {
-      if (typeof value?.message === "string") return value.message;
+    if (!errors || typeof errors !== "object") return undefined;
+    for (const value of Object.values(errors as Record<string, unknown>)) {
+      const message = (value as { message?: unknown } | null)?.message;
+      if (typeof message === "string") return message;
       if (value && typeof value === "object") {
         const nested = firstErrorMessage(value);
         if (nested) return nested;

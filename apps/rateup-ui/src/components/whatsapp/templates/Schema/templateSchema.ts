@@ -62,7 +62,7 @@ export const templateSchema = z
     body: z.string().trim().min(1).max(1024),
     footer: z.string().trim().max(60),
     language: z.string(),
-    code_expiration_minutes: z.any().optional(),
+    code_expiration_minutes: z.number().optional(),
     header: z.union([
       z.null(),
       z.string().trim().min(1),

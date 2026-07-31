@@ -84,7 +84,7 @@ export default function SupportWidget({
   >({
     duration: 0,
   });
-  const ref = useClickOutside(() => setIsOpen(false));
+  const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
   const API_URL = backendUrl || import.meta.env.VITE_API_URL;
   const WEBHOOK_URL =
     webhookUrl || `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/ws/${orgId}?role=fab`;

@@ -1,5 +1,6 @@
 import type { Node } from "@xyflow/react";
 
+import type { WaTemplateComponent } from "@/types/global";
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
 
 import { CatalogMessages } from "../components/node-editor.tsx";
@@ -122,7 +123,7 @@ export interface TemplateNodeData extends BaseNodeData {
     name?: string;
   };
   teamId?: string;
-  parameters?: unknown[];
+  parameters?: WaTemplateComponent[];
 }
 
 // Reaction Node

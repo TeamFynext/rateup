@@ -1,3 +1,4 @@
+import type { Content } from "@tiptap/react";
 import { Plus, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -105,7 +106,8 @@ const WaQuickReplySettings = () => {
 };
 
 export const quickReplySchema = z.object({
-  text: z.any(),
+  // The editor stores its value as a tiptap document (or plain text); it is not validated here.
+  text: z.custom<Content>(),
   key: z.string().min(1, { message: "key is required" }),
   category: z.string(),
   topic: z.string(),

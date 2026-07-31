@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateComponent } from "@/types/global";
 
 /** A row inside a list-message section. */
 interface ListRow {
@@ -1811,7 +1812,9 @@ const TemplateNodeEditor: React.FC<
   NodeComponentProps<"templateNode"> & { templates?: WaTemplateListEntry[] }
 > = ({ nodeData, handleInputChange, templates }) => {
   const typedData = nodeData;
-  const [parameterData, setParameterData] = useImmer<any>(typedData?.parameters || []);
+  const [parameterData, setParameterData] = useImmer<WaTemplateComponent[]>(
+    typedData?.parameters || [],
+  );
   const templateData =
     templates?.map((t) => ({
       label: t.data?.name,
