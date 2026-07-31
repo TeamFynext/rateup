@@ -61,8 +61,8 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
     CampaignParticipantSource.INDIVIDUAL,
   );
   const [selectedContacts, setSelectedContacts] = useState<ContactsData[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
-  const [selectedCampaigns, setSelectedCampaigns] = useState<any[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<ContactGroup[]>([]);
+  const [selectedCampaigns, setSelectedCampaigns] = useState<Campaign[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>(
     Object.values(CampaignParticipantAddStatus) || [],
   );
@@ -521,8 +521,8 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
 interface IndividualProps {
   customer: any;
-  selectedContacts: any[];
-  setSelectedContacts: (contacts: any[]) => void;
+  selectedContacts: ContactsData[];
+  setSelectedContacts: (contacts: ContactsData[]) => void;
   isAlreadySelected?: boolean;
 }
 
@@ -573,8 +573,8 @@ const Individual = ({
 
 interface CustomerGroupProps {
   group: any;
-  selectedGroups: any[];
-  setSelectedGroups: (groups: any[]) => void;
+  selectedGroups: ContactGroup[];
+  setSelectedGroups: (groups: ContactGroup[]) => void;
   isAlreadySelected?: boolean;
 }
 
@@ -629,8 +629,8 @@ const CustomerGroup = ({
 
 interface CustomerCampaignProps {
   campaign: any;
-  selectedCampaigns: any[];
-  setSelectedCampaigns: (campaigns: any[]) => void;
+  selectedCampaigns: Campaign[];
+  setSelectedCampaigns: (campaigns: Campaign[]) => void;
 }
 
 const CustomerCampaign = ({

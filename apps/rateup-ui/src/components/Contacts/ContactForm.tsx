@@ -4,6 +4,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
@@ -23,7 +24,7 @@ import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
 type ContactFormProps = Readonly<{
   form: UseFormReturn<ContactFormValues>;
-  customFields: any[];
+  customFields: CustomFieldData[];
   type: ContactGroupType;
 }>;
 

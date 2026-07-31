@@ -3,6 +3,8 @@ import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
@@ -627,12 +629,12 @@ export default function AppSidebar({
   teams,
 }: Readonly<{
   subscription?: any;
-  lifecycles?: any[];
-  contactLabels?: any[];
+  lifecycles?: GetLabelsRes[];
+  contactLabels?: ContactLabelOption[];
   channels?: ChannelOption[];
   userData?: IUserInfoApiResponse;
-  staff: any[];
-  teams: any[];
+  staff: Array<{ id: string; name?: string }>;
+  teams: Array<{ id: string; name?: string }>;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 

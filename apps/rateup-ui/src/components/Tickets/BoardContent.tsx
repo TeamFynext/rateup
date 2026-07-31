@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useBoard, useBoardTeamMembersById, useLabels } from "@/backend/tickets/tickets.query";
+import type { EditableColumn } from "@/components/Tickets/ManageColumnsDialog.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -92,7 +93,7 @@ export function BoardContent({
     localStorage.setItem("rateup_ticket_view", v);
   };
 
-  const handleSaveColumns = async (newColumns: any[], deletedIds: string[]) => {
+  const handleSaveColumns = async (newColumns: EditableColumn[], deletedIds: string[]) => {
     // Handle deletes
     for (const id of deletedIds) {
       deleteColumn(id);

@@ -2,6 +2,8 @@ import { Info } from "lucide-react";
 import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
+import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -42,8 +44,8 @@ interface LoyaltyRewardFormProps {
   setTimeRestrictionsEnabled: (val: boolean) => void;
 
   // Data
-  loyaltyTiers: any[] | undefined;
-  loyaltyTemplates: any[] | undefined;
+  loyaltyTiers: LoyaltyTier[] | undefined;
+  loyaltyTemplates: WaTemplate[] | undefined;
 }
 
 export function LoyaltyRewardForm({
@@ -83,7 +85,9 @@ export function LoyaltyRewardForm({
                 <Input
                   id={field.name}
                   aria-invalid={fieldState.invalid}
-                  placeholder={`e.g., ${loyaltyTiers?.[0]?.program?.currencyCode || "INR"} 10 Cashback, Free Coffee, 20% OFF`}
+                  // NOTE: the tiers endpoint does not include the program, so this placeholder
+                  // has always shown the "INR" fallback.
+                  placeholder={"e.g., INR 10 Cashback, Free Coffee, 20% OFF"}
                   {...field}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

@@ -4,6 +4,7 @@ import { Calendar, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { MemberData } from "@/components/Tickets/types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 
 import { PRIORITY_CONFIG } from "./card.tsx";
@@ -20,7 +21,7 @@ export function TicketListView({
   labelFilters: string[];
   searchQuery: string;
   assigneeFilter: string | null;
-  boardMembers?: any[];
+  boardMembers?: MemberData[];
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -212,7 +213,7 @@ function ListRow({
   pConf: any;
   customerName: string | null;
   channel: string | null;
-  boardMembers: any[];
+  boardMembers: MemberData[];
   onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);

@@ -2,6 +2,8 @@ import { Edit2, Save, Trash2, X } from "lucide-react";
 import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
+import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -38,8 +40,8 @@ interface RewardCardProps {
   readonly setMinimumSpendEnabled: (val: boolean) => void;
   readonly timeRestrictionsEnabled: boolean;
   readonly setTimeRestrictionsEnabled: (val: boolean) => void;
-  readonly loyaltyTiers: any[] | undefined;
-  readonly loyaltyTemplates: any[] | undefined;
+  readonly loyaltyTiers: LoyaltyTier[] | undefined;
+  readonly loyaltyTemplates: WaTemplate[] | undefined;
 
   // Display Helpers
   readonly getRewardIcon: (type: string) => React.ReactNode;
