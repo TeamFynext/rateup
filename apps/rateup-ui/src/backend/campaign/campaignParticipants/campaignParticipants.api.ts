@@ -1,10 +1,11 @@
 import type { ColumnFilterState, RequestPayload, SortState } from "@/types/api.ts";
+import type { CampaignParticipantStatus } from "@/types/enums.ts";
 
 /** A campaign participant row, with the contact the campaign targets. */
 export interface CampaignParticipant {
   id: string;
   createdAt: string;
-  status: string;
+  status: CampaignParticipantStatus;
   sentAt?: string | null;
   respondedAt?: string | null;
   source?: string;

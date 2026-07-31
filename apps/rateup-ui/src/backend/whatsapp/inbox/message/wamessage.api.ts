@@ -398,7 +398,25 @@ export async function createPrivateMessage(contactId: string, data: RequestPaylo
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, data)).data;
 }
 
-export async function getWaMessageLogs(filter: WaMessageLogFilter) {
+/** One row of the message-logs report. */
+export interface WaMessageLogRow {
+  id: string;
+  createdAt?: string;
+  phone?: string;
+  status?: string;
+  sourceMessage?: string;
+  messageType?: string;
+  messagePreview?: string;
+  /** Meta's raw error payload, kept verbatim so the popover can pretty-print it. */
+  logs?: { message?: string; error_data?: { details?: string }; [key: string]: unknown } | null;
+}
+
+export interface WaMessageLogsResponse {
+  data: WaMessageLogRow[];
+  pagination?: { total?: number };
+}
+
+export async function getWaMessageLogs(filter: WaMessageLogFilter): Promise<WaMessageLogsResponse> {
   // Format date range if it's an array of Date objects
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {

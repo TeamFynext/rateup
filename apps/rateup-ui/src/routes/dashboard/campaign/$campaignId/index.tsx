@@ -29,6 +29,7 @@ import {
   useDeleteCampaignMutation,
   useSendCampaign,
 } from "@/backend/campaign/campaign.query";
+import type { CampaignParticipant } from "@/backend/campaign/campaignParticipants/campaignParticipants.api";
 import {
   useCampaignParticipants,
   useRemoveMulitpleGroupParticipants,
@@ -140,7 +141,7 @@ function CampaignDetails() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const columns = useMemo<ColumnDef<any>[]>(
+  const columns = useMemo<ColumnDef<CampaignParticipant>[]>(
     () => [
       // ───────────── Select Column ─────────────
       {

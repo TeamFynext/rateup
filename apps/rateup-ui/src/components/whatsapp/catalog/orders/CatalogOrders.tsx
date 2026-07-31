@@ -15,6 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Separator } from "@/components/ui/separator.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
+/** An order row, with the contact's phone and name flattened for sorting and filtering. */
+type CatalogOrderRow = CatalogOrder & { phone: string; name: string };
+
 const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
   const [pagination, setPagination] = useState({
     pageSize: Number(PAGE_SIZE[0]),
@@ -30,7 +33,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
   const [selectedOrder, setSelectedOrder] = useState<CatalogOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const data = useMemo(() => {
+  const data: CatalogOrderRow[] = useMemo(() => {
     return orders
       ? orders?.data?.map((order: CatalogOrder) => ({
           ...order,
@@ -40,7 +43,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
       : [];
   }, [orders]);
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<CatalogOrderRow>[] = [
     {
       header: () => "Created At",
       accessorKey: "createdAt",

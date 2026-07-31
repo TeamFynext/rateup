@@ -78,6 +78,26 @@ export const exportCustomers = async (format: "csv" | "excel" = "excel") => {
   ).data;
 };
 
+/** A single point movement on a loyalty account. */
+export interface LoyaltyTransaction {
+  id: string;
+  accountId: string;
+  transactionType: "earn" | "redeem" | string;
+  points: number;
+  balanceAfter: number;
+  source: string;
+  referenceId?: string | null;
+  description?: string | null;
+  metadata?: Record<string, unknown>;
+  earningRuleId?: string | null;
+  earningRuleMultiplier?: number | null;
+  basePoints?: number | null;
+  rewardId?: string | null;
+  programId: string;
+  createdAt: string;
+  createdBy?: string | null;
+}
+
 interface LoyaltyCustomerDetail extends LoyaltyCustomer {
   currentTier?: {
     id: string;
@@ -90,24 +110,7 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
     priority: number;
     createdAt: string;
   };
-  transactions: {
-    id: string;
-    accountId: string;
-    transactionType: "earn" | "redeem" | string;
-    points: number;
-    balanceAfter: number;
-    source: string;
-    referenceId?: string | null;
-    description?: string | null;
-    metadata?: Record<string, unknown>;
-    earningRuleId?: string | null;
-    earningRuleMultiplier?: number | null;
-    basePoints?: number | null;
-    rewardId?: string | null;
-    programId: string;
-    createdAt: string;
-    createdBy?: string | null;
-  }[];
+  transactions: LoyaltyTransaction[];
   redemptions: {
     id: string;
     accountId: string;

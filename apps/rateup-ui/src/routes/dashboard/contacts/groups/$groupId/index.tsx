@@ -88,7 +88,7 @@ function ContactGroup() {
     setGroupDetails(groupDetails ?? null);
   }, [groupDetails]);
 
-  const column: ColumnDef<any>[] = [
+  const column: ColumnDef<ContactsData>[] = [
     ...contactColumn(customFields ?? []),
     {
       header: "Action",

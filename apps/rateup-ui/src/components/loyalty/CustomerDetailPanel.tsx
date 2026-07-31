@@ -22,6 +22,7 @@ import {
   useCustomerRewardsByPhone,
   useUseRedemption,
 } from "@/backend/loyalty/cashier/cashier.query";
+import type { LoyaltyTransaction } from "@/backend/loyalty/customer/customer.api.ts";
 import {
   useAssignRewardMutation,
   useAwardPointsMutation,
@@ -68,7 +69,7 @@ export interface CustomerPanelCustomer {
 
 interface CustomerDetailPanelProps {
   customer: CustomerPanelCustomer;
-  transactions?: unknown[];
+  transactions?: LoyaltyTransaction[];
   onClose?: () => void;
   orgId: string;
 }
@@ -243,7 +244,7 @@ export function CustomerDetailPanel({
     }
   };
 
-  const transactionColumns: ColumnDef<any>[] = [
+  const transactionColumns: ColumnDef<LoyaltyTransaction>[] = [
     {
       accessorKey: "createdAt",
       header: t("Date"),
