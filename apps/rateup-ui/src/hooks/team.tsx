@@ -21,7 +21,7 @@ export default function useTemplatesAvailableForTeam(teamId: string) {
       if (!flow) {
         return false;
       } else {
-        return flow.survey.teams.some((t: { teamId?: string }) => t.teamId === teamId);
+        return flow.survey?.teams?.some((t) => t.teamId === teamId) ?? false;
       }
     } else {
       return true;

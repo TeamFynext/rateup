@@ -134,7 +134,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
         {isOrgLogoPresent && (
           <div className="flex justify-center">
             <img
-              src={logoUrl}
+              src={logoUrl ?? undefined}
               style={logoStyles}
               alt="logo"
               className="max-w-full object-contain"

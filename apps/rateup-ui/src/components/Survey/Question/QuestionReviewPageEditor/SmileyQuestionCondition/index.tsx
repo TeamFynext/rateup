@@ -6,13 +6,13 @@ function SmileyQuestionCondition({
   currentSelectedEmojis,
   setState,
 }: {
-  currentSelectedEmojis: string[];
+  currentSelectedEmojis?: string[];
   setState: (options: Record<string, unknown>) => void;
 }) {
   const updateSmileyResponse = (value: string) => {
     const newState = currentSelectedEmojis?.includes(value)
       ? currentSelectedEmojis.filter((smiley) => smiley !== value)
-      : [...currentSelectedEmojis, value];
+      : [...(currentSelectedEmojis ?? []), value];
     setState({ reqOptions: newState });
   };
 

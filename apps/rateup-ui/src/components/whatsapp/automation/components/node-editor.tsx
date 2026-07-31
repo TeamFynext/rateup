@@ -1812,6 +1812,11 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
 };
 
 // TemplateNode Component
+/** A saved graph's node data is untyped JSON; this narrows the leadgen one. */
+function isLeadgenNodeData(data: unknown): data is LeadgenNodeData {
+  return typeof data === "object" && data !== null && "leadgenFormId" in data;
+}
+
 const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templates: any }> = ({
   nodeData,
   handleInputChange,
@@ -1840,15 +1845,14 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const leadgenData = useMemo(() => {
     if (waSettingsId && metaAssets) {
-      const leadgenNode = data?.matchData?.json?.nodes.find(
-        (node: { type?: string }) => node.type === "leadgenNode",
-      );
-      if (leadgenNode?.data?.leadgenFormId?.length) {
+      const leadgenNode = data?.matchData?.json?.nodes.find((node) => node.type === "leadgenNode");
+      const leadgenNodeData = isLeadgenNodeData(leadgenNode?.data) ? leadgenNode.data : undefined;
+      if (leadgenNodeData?.leadgenFormId?.length) {
         const leadgenForm = metaAssets?.leadgenForms.find(
-          (form) => form.id === leadgenNode?.data?.leadgenFormId,
+          (form) => form.id === leadgenNodeData.leadgenFormId,
         );
         return {
-          data: leadgenNode?.data,
+          data: leadgenNodeData,
           formQuestions: leadgenForm!.questions,
         };
       }

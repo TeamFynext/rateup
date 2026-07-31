@@ -384,7 +384,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     {translations("Response")}
                                   </FieldLabel>
                                   <Select
-                                    value={condition.response}
+                                    value={
+                                      Array.isArray(condition.response) ? "" : condition.response
+                                    }
                                     items={getResponseOptions(condition.questionId)}
                                     onValueChange={(value) =>
                                       handleUpdateCondition(jumpIndex, condIndex, "response", value)

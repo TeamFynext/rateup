@@ -18,10 +18,13 @@ export interface SurveyThemePage {
     mobileBgImgFile?: File | null;
     /** Page themes only: reuse the survey theme's background. */
     useSurveyBackground?: boolean;
+    /** Written by older versions of the editor; still present on old rows. */
+    styles?: CSSProperties;
   };
-  title: { styles: CSSProperties };
-  subtitle: { styles: CSSProperties };
-  button: { styles: CSSProperties; position: { x?: number; y?: number } };
+  title: { title?: string; styles: CSSProperties; subtitleFontSize?: number };
+  subtitle: { subtitle?: string; styles: CSSProperties };
+  /** `position` holds the `COORDINATESX`/`COORDINATESY` names, not pixels. */
+  button: { label?: string; styles: CSSProperties; position?: { x?: string; y?: string } };
   input: { primaryColor?: string };
   logo: { styles: CSSProperties; logo?: string | null; logoFile?: File | null };
   confettiEnabled?: boolean;
@@ -156,10 +159,12 @@ function surveyThemeReducer(state: SurveyThemeState, action: SurveyThemeAction) 
       break;
     }
     case "button-x-coordinate-change": {
+      surveyTheme[surveyThemeKey].button.position ??= {};
       surveyTheme[surveyThemeKey].button.position.x = themeValue(payload);
       break;
     }
     case "button-y-coordinate-change": {
+      surveyTheme[surveyThemeKey].button.position ??= {};
       surveyTheme[surveyThemeKey].button.position.y = themeValue(payload);
       break;
     }

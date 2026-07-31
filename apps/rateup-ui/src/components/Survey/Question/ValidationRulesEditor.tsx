@@ -25,6 +25,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
+import { isFieldKeyedRules } from "@/utils/validation/index.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
@@ -48,13 +49,7 @@ type RuleValue =
       ruleType?: string;
     };
 
-interface Rule {
-  min?: string;
-  max?: string;
-  errorMessage: string;
-  type?: string;
-  ruleType: string;
-}
+type Rule = ValidationFieldRule;
 interface FormValues {
   [ruleType: string]: RuleValue;
 }
@@ -144,9 +139,10 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   useEffect(() => {
     if (
       [Q.MultiTextInput].includes(selectedQ?.type as QuestionType) &&
-      selectedQ?.validationRules
+      selectedQ?.validationRules &&
+      isFieldKeyedRules(selectedQ.validationRules)
     ) {
-      setMultiInputRules(selectedQ?.validationRules);
+      setMultiInputRules(selectedQ.validationRules);
     }
   }, [activeTab]);
 
@@ -181,9 +177,10 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     } else {
       if (
         [Q.MultiTextInput].includes(selectedQ?.type as QuestionType) &&
-        selectedQ?.validationRules !== null
+        selectedQ?.validationRules != null &&
+        isFieldKeyedRules(selectedQ.validationRules)
       ) {
-        setMultiInputRules(selectedQ?.validationRules);
+        setMultiInputRules(selectedQ.validationRules);
       } else {
         setMultiInputRules(null);
       }

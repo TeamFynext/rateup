@@ -10,7 +10,7 @@ function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsDa
       renderItem={(flow) => {
         const responseCount =
           flow.survey?.teams?.reduce(
-            (acc: number, team: any) => acc + (team.surveyStats?.completed || 0),
+            (acc: number, team) => acc + (team.surveyStats?.completed || 0),
             0,
           ) || 0;
         return (

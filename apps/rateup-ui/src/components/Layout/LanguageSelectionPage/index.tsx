@@ -37,6 +37,7 @@ function LanguageSelectionPage({
   const selectedPreview = useSelectedPreview();
 
   const { logo: logoUrl, styles: logoStyles } = surveyThemeData?.surveyTheme?.logo ?? {};
+  const logoSrc = logoUrl ?? undefined;
 
   const defaultTitleSubtitleStartButtonTexts = {
     titleText: `<h3 style="text-align: center">Select a Language</h3>`,
@@ -101,7 +102,7 @@ function LanguageSelectionPage({
       >
         {isOrgLogoPresent && (
           <div className={`flex ${cx("logo-container")}`}>
-            <img className={cx("logo")} src={logoUrl} style={logoStyles} alt="Logo" />
+            <img className={cx("logo")} src={logoSrc} style={logoStyles} alt="Logo" />
           </div>
         )}
 

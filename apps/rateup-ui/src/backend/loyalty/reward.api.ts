@@ -98,6 +98,21 @@ interface RedemptionRules {
 // Status type matching backend
 export type LoyaltyRewardStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK" | "EXPIRED";
 
+/** The reward's payload; which fields are set depends on `rewardType`. */
+export interface LoyaltyRewardValue {
+  points?: number;
+  code?: string | null;
+  description?: string | null;
+  cashbackAmount?: number;
+  discountPercentage?: number;
+  estimatedValue?: number;
+  discountType?: "percentage" | "fixed";
+  discountValue?: number;
+  termsAndConditions?: string;
+  restrictions?: string;
+  rewardType?: string;
+}
+
 // Main reward interface matching backend response
 export interface LoyaltyReward {
   id: string;
@@ -106,19 +121,7 @@ export interface LoyaltyReward {
   description?: string | null;
   rewardType: "point" | "coupon" | "assigned";
   pointsCost: number;
-  rewardValue: {
-    points?: number;
-    code?: string | null;
-    description?: string | null;
-    cashbackAmount?: number;
-    discountPercentage?: number;
-    estimatedValue?: number;
-    discountType?: "percentage" | "fixed";
-    discountValue?: number;
-    termsAndConditions?: string;
-    restrictions?: string;
-    rewardType?: string;
-  };
+  rewardValue: LoyaltyRewardValue;
   status: LoyaltyRewardStatus;
   redemptionRules?: RedemptionRules;
   stockQuantity?: number | null;
@@ -134,19 +137,7 @@ export interface LoyaltyRewardInput {
   description?: string | null;
   rewardType: "point" | "coupon" | "assigned";
   pointsCost: number;
-  rewardValue: {
-    points?: number;
-    code?: string | null;
-    description?: string | null;
-    cashbackAmount?: number;
-    discountPercentage?: number;
-    estimatedValue?: number;
-    discountType?: "percentage" | "fixed";
-    discountValue?: number;
-    termsAndConditions?: string;
-    restrictions?: string;
-    rewardType?: string;
-  };
+  rewardValue: LoyaltyRewardValue;
   status?: LoyaltyRewardStatus;
   redemptionRules?: RedemptionRules;
   stockQuantity?: number | null;

@@ -9,6 +9,7 @@ import { useQuestionCreateMutation } from "@/backend/surveys/questions/questions
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import type { ElementType } from "@/components/Survey/Question/QuestionTypeSelection.tsx";
+import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -88,7 +89,7 @@ export function EditSurvey({
   const questionDetailedViewFormRef = useRef<Question | null>(null);
 
   // To store state of surveyThemeContextProvider.
-  const surveyThemeContextProviderValueRef = useRef<Record<string, unknown> | null>(null);
+  const surveyThemeContextProviderValueRef = useRef<Record<string, SurveyThemePage> | null>(null);
 
   // Search text for the "Add Element" catalogue.
   const [elementQuery, setElementQuery] = useState("");
@@ -206,7 +207,7 @@ export function EditSurvey({
         if (uniquePages.includes(question.type)) {
           setSelectedSurveyThemeTab(getSurveyThemeTabValueFromPageType(question.type)!);
           setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
-          surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme;
+          surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme ?? null;
         }
         setSelectedQ(question);
         setActiveTab(QuestionTabsEnum.Edit);
@@ -257,7 +258,7 @@ export function EditSurvey({
 
   return (
     <SurveyThemeContextProvider
-      surveyTheme={surveyThemeContextValue}
+      surveyTheme={surveyThemeContextValue ?? {}}
       selectedPageTab={selectedSurveyThemeTab}
       editSurveySelectedQuestion={selectedQ}
       surveyThemeContextProviderValueRef={surveyThemeContextProviderValueRef}

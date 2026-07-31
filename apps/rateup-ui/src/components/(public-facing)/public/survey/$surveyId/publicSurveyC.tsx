@@ -78,7 +78,7 @@ export default function Page({
     <>
       {isReviewPage ? (
         <GoogleReview
-          orgLogoUrl={survey?.webSurveyTheme?.surveyTheme?.logo?.logo}
+          orgLogoUrl={survey?.webSurveyTheme?.theme?.surveyTheme?.logo?.logo ?? undefined}
           survey={survey}
           surveyTeamMapId={survey?.surveyTeamMapId}
         />

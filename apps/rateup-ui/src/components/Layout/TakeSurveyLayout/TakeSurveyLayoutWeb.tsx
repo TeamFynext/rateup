@@ -48,7 +48,7 @@ export const TakeSurveyLayoutWeb = ({
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
-  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo;
+  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo ?? null;
   const orgLogoStyles = surveyThemeData?.surveyTheme?.logo?.styles;
 
   // This one is being used for preview in surveyTheme editor
@@ -152,7 +152,8 @@ export const TakeSurveyLayoutWeb = ({
   const isLanguagePageActive =
     !selectedLanguage && (survey?.languages?.length ?? 0) > 1 && !isSurveyThemeEditView;
   const isWelcomePageActive = !startClicked && isWelcomePageEnabled;
-  const useSurveyBackground = isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
+  const useSurveyBackground =
+    isWelcomePageActive && pagesThemeData?.["welcomeTheme"]?.useSurveyTheme;
   let requiredSurveyThemeObjKey = "surveyTheme";
   let requiredThemeData = surveyThemeData;
   if (isWelcomePageActive && !useSurveyBackground) {
@@ -161,7 +162,7 @@ export const TakeSurveyLayoutWeb = ({
   }
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    requiredThemeData,
+    requiredThemeData ?? null,
     requiredSurveyThemeObjKey,
     isMobile,
   );

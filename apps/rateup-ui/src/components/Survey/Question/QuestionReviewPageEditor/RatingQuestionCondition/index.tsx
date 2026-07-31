@@ -7,7 +7,7 @@ function RatingQuestionCondition({
   currentMinRating,
   setState,
 }: {
-  currentMinRating: number;
+  currentMinRating?: number;
   setState: (options: Record<string, unknown>) => void;
 }) {
   const [hoveredRating, setHoveredRating] = useState(-1);
@@ -26,7 +26,9 @@ function RatingQuestionCondition({
           {Array.from({ length: 5 }, (_, i) => {
             const starValue = i + 1;
             const filled =
-              hoveredRating !== -1 ? starValue <= hoveredRating : starValue <= currentMinRating;
+              hoveredRating !== -1
+                ? starValue <= hoveredRating
+                : starValue <= (currentMinRating ?? 0);
             return (
               <button
                 key={starValue}

@@ -1,21 +1,34 @@
 import { QuestionType } from "@/types/enums.ts";
 
-function validateLength(input: string | number, min: number, max: number) {
-  if (input.toString().length < min || input.toString().length > max) {
+/**
+ * MultiTextInput questions store a rule list per field key; every other
+ * question stores the named `length`/`wordCount`/`textType` rules.
+ */
+export function isFieldKeyedRules(
+  rules: QuestionValidationRules,
+): rules is Record<string, ValidationFieldRule[]> {
+  return Object.values(rules).some((value) => Array.isArray(value));
+}
+
+function validateLength(input: string | number, min?: number | string, max?: number | string) {
+  // Rules are stored as strings; `Number(undefined)` is NaN, so an unset bound
+  // compares false and the rule passes — the same as the untyped comparison did.
+  const length = input.toString().length;
+  if (length < Number(min) || length > Number(max)) {
     return false;
   }
   return true;
 }
 
-function validateWordCount(input: string, min: number, max: number) {
+function validateWordCount(input: string, min?: number | string, max?: number | string) {
   const words = input.split(" ");
-  if (words.length < min || words.length > max) {
+  if (words.length < Number(min) || words.length > Number(max)) {
     return false;
   }
   return true;
 }
 
-function validateTextType(input: string, type: string) {
+function validateTextType(input: string, type?: string) {
   if (type === "Letters") {
     const regex = /^[a-zA-Z\s]+$/;
     return regex.test(input);
@@ -41,7 +54,10 @@ export function validateQuestion(
   selectedLanguage: string,
 ) {
   if (question?.validationRules) {
-    if (question?.type === QuestionType.MultiTextInput) {
+    if (
+      question?.type === QuestionType.MultiTextInput &&
+      isFieldKeyedRules(question.validationRules)
+    ) {
       const fieldInput = typeof input === "object" ? input : undefined;
       const fields = question?.features?.[selectedLanguage]?.fields;
       for (const field of fields) {
@@ -70,7 +86,7 @@ export function validateQuestion(
           }
         }
       }
-    } else {
+    } else if (!isFieldKeyedRules(question.validationRules)) {
       // Only the branch above produces the field-keyed record form, so the
       // answer here is the plain text the question posted.
       const textInput = input as string;

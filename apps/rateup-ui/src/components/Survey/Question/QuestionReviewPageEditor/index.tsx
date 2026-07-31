@@ -148,7 +148,10 @@ function QuestionReviewPageEditor({
     setState(selectedQ?.reviewPageOptions);
     setReviewPageDDState(selectedQ?.reviewPagePlatform);
     if (selectedQ?.reviewPagePlatform === ReviewPagePlatform.Custom) {
-      customPlatformForm.setValue("platformName", selectedQ?.reviewPageOptions?.customPlatformName);
+      customPlatformForm.setValue(
+        "platformName",
+        selectedQ?.reviewPageOptions?.customPlatformName ?? "",
+      );
     } else {
       customPlatformForm.reset();
     }
@@ -179,7 +182,7 @@ function QuestionReviewPageEditor({
     try {
       setIsSwitchStateSaving(true);
       const data = {
-        reviewPageOptions: state,
+        reviewPageOptions: { ...state },
         reviewPagePlatform: reviewPagePlatformDDState,
       };
       if (reviewPagePlatformDDState === ReviewPagePlatform.Custom) {

@@ -1,7 +1,11 @@
+import type { LoyaltyRewardValue } from "@/backend/loyalty/reward.api";
 // Any modification to this file should be reflected in the backend
 import type { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm";
+import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer";
 
+import type { RequestPayload } from "./api.ts";
 import type {
   CampaignStatus,
   IntegratedApps,
@@ -77,6 +81,44 @@ export interface Wop {
   segColors: string[];
 }
 
+/**
+ * A saved flowbot graph — React Flow's `toObject()` output as it round-trips
+ * through the database, so the node/edge extras stay open.
+ */
+export interface WaAutomationFlowNode {
+  id: string;
+  type?: string;
+  position: { x: number; y: number };
+  data: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface WaAutomationFlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  [key: string]: unknown;
+}
+
+export interface WaAutomationFlowJson {
+  nodes: WaAutomationFlowNode[];
+  edges: WaAutomationFlowEdge[];
+  viewport?: { x?: number; y?: number; zoom?: number };
+}
+
+/**
+ * A named web-survey theme. `theme` is the JSON column: one entry per themed
+ * page ("surveyTheme", "welcomeTheme", "thankyouTheme", "languageTheme").
+ */
+export interface WebSurveyTheme {
+  id: string;
+  orgId: string;
+  name: string;
+  createdAt: string;
+  updatedAt?: string;
+  theme: Record<string, SurveyThemePage>;
+}
+
 declare global {
   interface Window {
     gtag: (...args: unknown[]) => void;
@@ -108,13 +150,28 @@ declare global {
       }
     | undefined;
   var fbAsyncInit: (() => void) | undefined;
+  /** One rule in a MultiTextInput question's per-field rule list. */
+  interface ValidationFieldRule {
+    ruleType: string;
+    min?: string;
+    max?: string;
+    type?: string;
+    errorMessage: string;
+  }
+
+  /**
+   * Plain questions carry named rules (`length`/`wordCount`/`textType`);
+   * a MultiTextInput question carries a rule list per field key instead.
+   */
+  type QuestionValidationRules = ValidationRules | Record<string, ValidationFieldRule[]>;
+
   interface Question {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
     required: boolean;
     type: QuestionType | PageType;
     choices?: Zod.RecordType<string, Array<Choice>>;
-    features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
+    features?: Zod.RecordType<string, QuestionFormFeatures>;
     sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
     label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;
@@ -122,7 +179,7 @@ declare global {
     googleReview?: GoogleReview;
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
-    validationRules?: ValidationRules | any;
+    validationRules?: QuestionValidationRules;
     tnc?: Record<string, TNC>;
     enableNpsAnalytics?: boolean;
     optinScreenId?: string;
@@ -141,7 +198,13 @@ declare global {
       maxUploadedDocuments?: number;
       allowedMimeTypes?: string[];
     };
-    reviewPageOptions?: any;
+    reviewPageOptions?: {
+      minRating?: number;
+      minOpinion?: number;
+      reqOptions?: string[];
+      /** Only set when `reviewPagePlatform` is `Custom`. */
+      customPlatformName?: string;
+    };
     reviewPagePlatform?: ReviewPagePlatform;
   }
   interface ResponseSummary {
@@ -202,9 +265,11 @@ declare global {
     };
     surveyPublishAt?: string;
     surveyEndAt?: string;
-    webSurveyTheme: any;
+    /** Always included by the survey reads; the API dereferences it too. */
+    webSurveyTheme: WebSurveyTheme;
     webSurveyThemeId: string;
-    webSurveyPagesTheme: any;
+    /** Defaults to `{}` in the database, so the column is always present. */
+    webSurveyPagesTheme: Record<string, SurveyThemePage>;
     /** Review destination per platform. The legacy "" key holds the Google link. */
     reviewPageLinks: Partial<Record<ReviewPagePlatform | "", string>>;
     /** Recipient for survey response notification emails. */
@@ -237,7 +302,7 @@ declare global {
     mapId: string;
     code: string;
     shortUrlId?: string;
-    responsesCount?: any;
+    responsesCount?: { responses?: number };
   }
 
   interface STStats {
@@ -461,7 +526,7 @@ declare global {
     isLoading: boolean;
     data: MembersResponse;
     refetch: () => void;
-    error: any;
+    error: Error | null;
   }
 
   // for individual teams
@@ -487,10 +552,10 @@ declare global {
 
   interface UseTeamsByUserResult {
     isLoading: boolean;
-    error: any;
+    error: Error | null;
     data: TeamsResponse;
     refetch: () => void;
-    isError?: any;
+    isError?: boolean;
   }
 
   // for individual team
@@ -559,7 +624,7 @@ declare global {
     dob?: Date;
     source: string;
     createdAt: Date;
-    tags?: any;
+    tags?: string[];
     consent: boolean;
     lifecycleName: string;
     lifecycleId: string;
@@ -675,7 +740,7 @@ declare global {
       name?: string;
     };
     totalCount?: number;
-    loyaltyCustomers?: any;
+    loyaltyCustomers?: LoyaltyCustomerTable[];
   }
   interface ReviewsFilter {
     sentiment: {
@@ -824,14 +889,21 @@ declare global {
     name: string;
     status: WaFlowStatus;
     json: WaFlowJson;
-    map: any;
+    map: WaFlowMap;
     logicJumps: {
       [screenId: string]: Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
     };
     orgId: string;
     surveyId: string;
     templateMessage: WaFlowTemplateMessage;
-    survey: any;
+    /** The list endpoint selects only the survey's team ids. */
+    survey?: {
+      teams?: Array<{
+        teamId: string;
+        /** Not selected by the flow list endpoint; present on richer survey reads. */
+        surveyStats?: STStats;
+      }>;
+    };
     startMessageConfig: WaFlowStartMessageConfig;
     pendingSave: boolean;
     anonymous: boolean;
@@ -883,7 +955,7 @@ declare global {
       | "point"
       | "coupon"
       | "assigned";
-    rewardValue: any;
+    rewardValue: LoyaltyRewardValue;
   }
 
   interface LoyaltyCustomerTable {
@@ -900,7 +972,7 @@ declare global {
     totalPoints: number;
     balancePoints: number;
     redeems: LoyaltyRedeem[];
-    action: any;
+    action: LoyaltyAction[];
   }
 
   interface LoyaltyApiSetting {
@@ -986,7 +1058,8 @@ export interface WaFlowScreen {
   id: string;
   title: string;
   layout: WaFlowLayout;
-  data?: any; // add types
+  /** Screen-scoped payload passed through by the flow runtime. */
+  data?: Record<string, unknown>;
   terminal?: boolean;
   /** Set on the terminal screen of a completed flow; stripped when rebuilding. */
   success?: boolean;
@@ -1038,7 +1111,7 @@ export interface WaFlowMap {
   [flowElementName: string]: {
     questionId: string;
     type: QuestionType;
-    [key: string]: any; // Choices. add types
+    [key: string]: unknown; // Choices
   };
 }
 
@@ -1053,17 +1126,19 @@ export interface WaFlowOnClickAction {
     type: string; // add types
     name: string;
   };
-  payload: any;
+  payload?: Record<string, unknown>;
 }
 export interface FlowLogicCondition {
   questionId: string;
   condition: LogicCondition;
-  response: any;
+  /** The compared answer: one option, or several for multi-select questions. */
+  response?: string | string[];
 }
 export interface FlowLogicConditionComponentLevel {
   questionId: string;
   condition: LogicConditionComponentLevel;
-  response: any;
+  /** The compared answer: one option, or several for multi-select questions. */
+  response?: string | string[];
 }
 export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
@@ -1150,7 +1225,7 @@ export interface Testimonial {
 
 export interface WaAutomatedReplyMatchData {
   caseSensitive: boolean;
-  json?: any;
+  json?: WaAutomationFlowJson;
 }
 export interface WaAutomatedReply {
   id: string;
@@ -1472,7 +1547,7 @@ interface WaInteractiveMessageAction {
     flow_cta?: string; // text to be displayed on the button. max 20 chars
     flow_action_payload?: {
       screen: string; // id of the screen
-      data?: any; // data to be sent to the screen
+      data?: Record<string, unknown>; // data to be sent to the screen
     };
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
   };
@@ -1522,7 +1597,7 @@ export interface InstagramWebhookBody {
 
             quick_reply?: {
               // Included when a customer clicks a quick reply
-              payload: any; // The payload with the option selected by the customer
+              payload: string; // The payload with the option selected by the customer
             };
 
             referral?: {
@@ -1534,7 +1609,7 @@ export interface InstagramWebhookBody {
 
             referral?: {
               // Included when a customer clicks an CTD ad
-              ref: any;
+              ref: string;
               ad_id: string;
               source: "ADS";
               type: "OPEN_THREAD";
@@ -1729,7 +1804,7 @@ export interface orgWsMessage {
   message_status_update?: {
     messageId: string;
     contactId: string;
-    stats: any;
+    stats?: { read: string; delivered: string; sent: string; failed: string };
     timestamp: string;
     sourceIdentifier: string;
   };
@@ -1840,7 +1915,7 @@ export type ShopifySchedule = ScheduleObj & {
   actionStatus?: "success" | "failed";
   history: ScheduleObj[];
   apiStatus?: string;
-  body?: any;
+  body?: RequestPayload;
 };
 
 export type ZapierIntegration = Integration & {

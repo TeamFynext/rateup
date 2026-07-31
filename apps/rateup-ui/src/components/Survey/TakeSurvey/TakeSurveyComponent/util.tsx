@@ -45,11 +45,15 @@ function responseValueFor(userResponse: QuestionResponse) {
 const shouldShowGoogleReview = (question: Question, userResponse: QuestionResponse) => {
   switch (question.type) {
     case QuestionType.Rating:
-      return userResponse.response!.Rating! >= question.reviewPageOptions!.minRating;
+      return userResponse.response!.Rating! >= (question.reviewPageOptions?.minRating ?? 0);
     case QuestionType.Opinion:
-      return userResponse.response!["Opinion Scale"]! >= question.reviewPageOptions!.minOpinion;
+      return (
+        userResponse.response!["Opinion Scale"]! >= (question.reviewPageOptions?.minOpinion ?? 0)
+      );
     case QuestionType.Smiley:
-      return question.reviewPageOptions!.reqOptions.includes(userResponse.response!.Smiley!);
+      return (question.reviewPageOptions?.reqOptions ?? []).includes(
+        userResponse.response!.Smiley!,
+      );
     default:
       return false;
   }

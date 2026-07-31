@@ -4,7 +4,7 @@ function OpinionQuestionCondition({
   currentMinOpinion,
   setState,
 }: {
-  currentMinOpinion: number;
+  currentMinOpinion?: number;
   setState: (options: Record<string, unknown>) => void;
 }) {
   const handleChange = (newMinOpinion: number) => {

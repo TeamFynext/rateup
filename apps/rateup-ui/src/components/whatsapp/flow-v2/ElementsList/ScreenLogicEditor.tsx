@@ -294,7 +294,7 @@ function AtomicConditionBlock({
             <FieldLabel htmlFor={`${uid}-field-4`}>{translations("Response")}</FieldLabel>
             <Select
               value={Array.isArray(matchData) ? "" : matchData}
-              onValueChange={setMatchData}
+              onValueChange={(value) => setMatchData(value ?? "")}
               items={(getResponses2(selectedQ) ?? []).map((opt: any) => ({
                 value: opt.value,
                 label: opt.label,

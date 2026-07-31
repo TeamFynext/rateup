@@ -128,7 +128,7 @@ export default function ThankYou({
 
   const enableBody = k === "cs" || enableGoogleReview;
 
-  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo;
+  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo ?? undefined;
 
   const shouldUseSurveyTheme = pagesThemeData?.["thankyouTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
