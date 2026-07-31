@@ -30,7 +30,7 @@ import { asList } from "./inputProps.ts";
 const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
 
 /** RHF resolver that always validates against the latest schema held in `schemaRef`. */
-function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
+function schemaRefResolver(schemaRef: React.RefObject<z.ZodTypeAny>) {
   return (values: FieldValues) => {
     const result = schemaRef.current.safeParse(values);
     if (result.success) return { values: result.data, errors: {} };

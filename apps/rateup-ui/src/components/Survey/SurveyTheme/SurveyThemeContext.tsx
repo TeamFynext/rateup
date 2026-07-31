@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef } from "react";
-import type { Dispatch, MutableRefObject, ReactNode } from "react";
+import type { Dispatch, RefObject, ReactNode } from "react";
 import { useImmerReducer } from "use-immer";
 
 import { ThemeTabEnum } from "./SurveyTheme.enums";
@@ -42,7 +42,7 @@ function SurveyThemeContextProvider({
   children: ReactNode;
   selectedPageTab?: ThemeTabEnum;
   editSurveySelectedQuestion?: Question | null;
-  surveyThemeContextProviderValueRef?: MutableRefObject<unknown> | null;
+  surveyThemeContextProviderValueRef?: RefObject<unknown> | null;
 }) {
   // console.log({ selectedPageTab, theme: surveyThemeContextProviderValueRef.current})
   const isFirstRender = useIsFirstRender();

@@ -60,11 +60,12 @@ export function CreateSurveyModal({
   const { t: translations } = useTranslation();
   const [prevOpen, setPrevOpen] = useState(false);
   const searchParams = useSearch({ strict: false });
-  const tmp = searchParams.tmp;
-  const tn = searchParams.tn;
+  // A template can be pre-selected through the URL (`?tmp=<id>&tn=<title>`).
+  const tmp = typeof searchParams.tmp === "string" ? searchParams.tmp : undefined;
+  const tn = typeof searchParams.tn === "string" ? searchParams.tn : undefined;
 
-  const [templateId, setTemplateId] = useState(template?.id || tmp || null);
-  const [templateName, setTemplateName] = useState(template?.title || tn || null);
+  const [templateId, setTemplateId] = useState<string | null>(template?.id || tmp || null);
+  const [templateName, setTemplateName] = useState<string | null>(template?.title || tn || null);
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
   const selectThemeDropdownData =
@@ -110,7 +111,7 @@ export function CreateSurveyModal({
   }, [template]);
 
   useEffect(() => {
-    setValue("title", templateName);
+    setValue("title", templateName ?? "");
   }, [templateName]);
 
   useEffect(() => {

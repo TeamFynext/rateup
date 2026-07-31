@@ -187,6 +187,7 @@ function ConditionBlock({
           <Select
             value={selectedCondition}
             onValueChange={(value) => {
+              if (!value) return;
               setSelectedCondition(value);
               setCurrentLogicJump({
                 condition: value,
@@ -265,6 +266,7 @@ function ConditionBlock({
           <Select
             value={selectedAction}
             onValueChange={(value) => {
+              if (!value) return;
               setSelectedAction(value);
               setCurrentLogicJump({
                 condition: selectedCondition,

@@ -16,7 +16,7 @@ const RESET_SIZE = {
 
 export interface FileUploadButtonProps {
   /** Parent-held ref; call `resetRef.current()` to clear the native input. */
-  resetRef?: React.MutableRefObject<(() => void) | null>;
+  resetRef?: React.RefObject<(() => void) | null>;
   handleFileChange: (file: File) => Promise<void> | void;
   clearFile: () => void;
   fileSrc?: string | { id: string; image: string };

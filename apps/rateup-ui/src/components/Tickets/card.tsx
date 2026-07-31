@@ -22,7 +22,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import type { MutableRefObject } from "react";
+import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -128,8 +128,8 @@ function CardDisplay({
 }: {
   card: TCard;
   state: TCardState;
-  outerRef?: React.MutableRefObject<HTMLDivElement | null>;
-  innerRef?: MutableRefObject<HTMLDivElement | null>;
+  outerRef?: \RefObject<HTMLDivElement | null>;
+  innerRef?: \RefObject<HTMLDivElement | null>;
   onClick?: () => void;
   onDelete?: () => void;
 }) {

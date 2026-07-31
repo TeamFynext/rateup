@@ -646,7 +646,7 @@ export function FileButton({
 }: Readonly<{
   onChange: (file: File) => void;
   accept?: string;
-  resetRef?: React.MutableRefObject<(() => void) | null>;
+  resetRef?: React.RefObject<(() => void) | null>;
   children: (props: { onClick: () => void }) => React.ReactNode;
 }>) {
   const inputRef = React.useRef<HTMLInputElement>(null);

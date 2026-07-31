@@ -37,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { SurveyType } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime, roundOffMinutesAndSeconds } from "@/utils/dateTime.ts";
 import { getContent } from "@/utils/index.ts";
@@ -68,7 +69,7 @@ const ShareSurvey = ({
   allowUnpublishedShare = false,
 }: {
   survey: Survey;
-  setActiveTab: (tab) => void;
+  setActiveTab: (tab: TabEnum) => void;
   allowUnpublishedShare?: boolean;
 }) => {
   const uid = useId();
@@ -127,7 +128,7 @@ const ShareSurvey = ({
   }, [surveyId, surveyTeamMapId, tag, shortUrlId, waSettings]);
 
   const surveyUpdateMutation = useMutation({
-    mutationFn: (data) => updateSurvey(surveyId, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(surveyId, data),
     onSuccess: (data) => {
       if (data?.data?.status === "failed") {
         setIsPublished(false);
@@ -153,7 +154,7 @@ const ShareSurvey = ({
   });
 
   const surveyStatusUpdateMutation = useMutation({
-    mutationFn: (data) => updateSurvey(survey.id, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(survey.id, data),
     onSuccess: () => {
       toast.success("Survey status Updated!", { id: "survey" });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });

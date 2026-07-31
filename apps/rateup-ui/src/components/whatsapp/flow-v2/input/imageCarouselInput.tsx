@@ -21,7 +21,7 @@ interface CarouselImage {
 const ImageCarouselInput = (props: FlowInputProps<CarouselImage[]>) => {
   const uid = useId();
   const MAX_IMAGES = props.maxImages || 3;
-  const resetRefs = useRef<Array<React.MutableRefObject<(() => void) | null>>>([]);
+  const resetRefs = useRef<Array<React.RefObject<(() => void) | null>>>([]);
   const [images, setImages] = useState<CarouselImage[]>([{ src: "", "alt-text": "" }]);
 
   const getResetRef = (idx: number) => {
