@@ -89,7 +89,7 @@ export default function OrderDetailsDialog({
       const fulfillments: ShopifyFulfillmentOrder[] = response.data || [];
       setFulfillmentOrders(fulfillments);
       const initialQtys: Record<string, number> = {};
-      response.data?.forEach((fo) => {
+      fulfillments.forEach((fo) => {
         fo.lineItems?.nodes?.forEach((item) => {
           if (item.remainingQuantity > 0) {
             initialQtys[item.id] = item.remainingQuantity;
@@ -130,7 +130,14 @@ export default function OrderDetailsDialog({
 
     setSubmittingFulfillment(true);
     try {
-      const payload = {
+      const payload: {
+        lineItemsByFulfillmentOrder: Array<{
+          fulfillmentOrderId: string;
+          fulfillmentOrderLineItems: Array<{ id: string; quantity: number }>;
+        }>;
+        notifyCustomer: boolean;
+        trackingInfo?: { number?: string; company?: string; url?: string };
+      } = {
         lineItemsByFulfillmentOrder: [
           {
             fulfillmentOrderId,
@@ -229,8 +236,8 @@ export default function OrderDetailsDialog({
             </TableHeader>
             <TableBody>
               {products.map((item, idx: number) => {
-                const price = parseFloat(item.price ?? "0") || 0;
-                const qty = parseInt(item.quantity ?? "1") || 1;
+                const price = Number(item.price) || 0;
+                const qty = Number(item.quantity) || 1;
                 return (
                   <TableRow key={idx}>
                     <TableCell>

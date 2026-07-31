@@ -182,7 +182,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
                 "on-click-action": {
                   name: "complete",
                   payload: enabledFields.reduce(
-                    (acc: unknown, f) => {
+                    (acc: Record<string, string>, f) => {
                       acc[f.shopifyKey] = `\${screen.ADDRESS_SCREEN.form.${f.shopifyKey}}`;
                       return acc;
                     },

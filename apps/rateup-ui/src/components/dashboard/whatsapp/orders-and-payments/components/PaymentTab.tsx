@@ -221,7 +221,14 @@ export default function PaymentTab({
         settings.paymentMethod ??
           (settings.storeType === "shopify" ? "shopify_checkout" : "manual"),
       );
-      setPaymentConfig(settings.standardPaymentConfig ?? {});
+      setPaymentConfig(
+        Object.fromEntries(
+          Object.entries(settings.standardPaymentConfig ?? {}).map(([key, value]) => [
+            key,
+            String(value ?? ""),
+          ]),
+        ),
+      );
       setCollectAddress(settings.collectAddress ?? false);
       setCollectDelivery(settings.collectDelivery ?? false);
       setFixedDeliveryCharge(settings.fixedDeliveryCharge ?? false);

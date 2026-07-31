@@ -376,7 +376,8 @@ export function AutomatedReplyForm({
 
   const qc = useQueryClient();
   const searchParams = useSearch({ strict: false });
-  const waAutomatedReplyId = searchParams.waAutomatedReplyId;
+  const waAutomatedReplyId =
+    typeof searchParams.waAutomatedReplyId === "string" ? searchParams.waAutomatedReplyId : "";
 
   const createMutation = useCreateWaAutomatedReplyMutation();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
@@ -585,8 +586,8 @@ export function AutomatedReplyForm({
                       render={({ field }) => (
                         <AccountSelector
                           optional={true}
-                          value={field.value}
-                          onChange={field.onChange}
+                          value={field.value ?? undefined}
+                          onChange={(value) => field.onChange(value ?? "")}
                         />
                       )}
                     />
