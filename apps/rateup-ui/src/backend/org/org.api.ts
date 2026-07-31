@@ -118,7 +118,13 @@ export async function orgNameAndPhone() {
   return res.data;
 }
 
-export async function getChecklist() {
+/** Response of `GET /org/checklist`; the API defaults both fields when unset. */
+export interface OnboardingChecklistResponse {
+  onboardingChecklist: OnboardingChecklist;
+  onboardingChecklistCompleted: boolean;
+}
+
+export async function getChecklist(): Promise<OnboardingChecklistResponse> {
   const res = await axiosClient.get("/org/checklist");
   return res.data;
 }

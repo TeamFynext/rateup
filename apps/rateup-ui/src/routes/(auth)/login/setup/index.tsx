@@ -21,14 +21,18 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { OnboardingChecklist } from "@/backend/org/org.api";
 import { useChecklist, useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { getVerificationStatus } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -46,7 +50,27 @@ export const Route = createFileRoute("/(auth)/login/setup/")({
   component: RateUpOnboarding,
 });
 
-const CARD_ICONS = {
+/** The setup steps rendered by this page; mirrors the API's checklist keys. */
+type CardId = keyof OnboardingChecklist;
+
+/** Per-step completion flags. */
+type ChecklistMap = Partial<Record<CardId, boolean>>;
+
+interface Section {
+  id: string;
+  title: string;
+  sub: string;
+  cards: CardId[];
+}
+
+/** A step's icon plus its badge styling — a Tailwind class pair or a literal brand colour. */
+interface CardIcon {
+  icon: LucideIcon;
+  iconClass?: string;
+  iconBg?: CSSProperties;
+}
+
+const CARD_ICONS: Record<CardId, CardIcon> = {
   api: { icon: MessageCircle, iconClass: "bg-primary/10 text-primary" },
   payment: { icon: CreditCard, iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" } },
   verify: { icon: BadgeCheck, iconClass: "bg-primary/10 text-primary" },
@@ -60,53 +84,160 @@ const CARD_ICONS = {
   loyaltyauto: { icon: Bot, iconBg: { background: "rgba(13,148,136,0.08)", color: "#0d9488" } },
 };
 
-/** Onboarding card ids, shared by CARD_CONFIG, CARD_ROUTES and the sections. */
-type OnboardingCardId = keyof typeof CARD_CONFIG;
-
-/** One collapsible group of onboarding cards. */
-interface OnboardingSection {
-  id: string;
+/** A step's icon styling plus its translated copy. */
+interface CardConfig extends CardIcon {
   title: string;
-  sub: string;
-  cards: OnboardingCardId[];
+  desc: string;
+  btnLabel: string;
 }
 
-// `verify` has no destination — it is verified in place, not navigated to.
-const CARD_ROUTES: Partial<Record<OnboardingCardId, string>> = {
-  api: "/dashboard/settings/channels/whatsapp",
-  payment: "https://business.facebook.com/latest/billing_hub/accounts/details/",
-  invite: "/dashboard/settings/users",
-  auto: "/dashboard/automation",
-  points: "/dashboard/loyalty/settings",
-  tiers: "/dashboard/loyalty/earning-rules",
-  rewards: "/dashboard/loyalty/rewards",
-  referral: "/dashboard/loyalty/customers",
-  cmds: "/dashboard/loyalty/templates",
-  loyaltyauto: "/dashboard/loyalty/dashboard",
-};
+function useCardConfig() {
+  const { t: translations } = useTranslation();
+
+  return useMemo<Record<CardId, CardConfig>>(
+    () => ({
+      api: {
+        ...CARD_ICONS.api,
+        title: translations("Connect WhatsApp Business API"),
+        desc: translations(
+          "Link your WhatsApp Business account to enable customer messaging, loyalty commands, and broadcast campaigns.",
+        ),
+        btnLabel: translations("Connect API"),
+      },
+      payment: {
+        ...CARD_ICONS.payment,
+        title: translations("Add payment in Meta"),
+        desc: translations(
+          "Add a payment method to send WhatsApp messages and notification to customers.",
+        ),
+        btnLabel: translations("Add payment"),
+      },
+      verify: {
+        ...CARD_ICONS.verify,
+        title: translations("Verify your WhatsApp Business account"),
+        desc: translations(
+          "Complete Meta Business verification to unlock higher messaging limits.",
+        ),
+        btnLabel: translations("Check Status"),
+      },
+      invite: {
+        ...CARD_ICONS.invite,
+        title: translations("Invite your team members"),
+        desc: translations(
+          "Add staff to your RateUp workspace so they can handle customer messages, manage loyalty, and run campaigns.",
+        ),
+        btnLabel: translations("Invite team"),
+      },
+      auto: {
+        ...CARD_ICONS.auto,
+        title: translations("Add WhatsApp greeting automation"),
+        desc: translations("Set up an automated welcome message for new contacts."),
+        btnLabel: translations("Set up automation"),
+      },
+      points: {
+        ...CARD_ICONS.points,
+        title: translations("Basic settings"),
+        desc: translations(
+          "Set your program name, branding, currency, and general loyalty preferences for RateUp Cafe.",
+        ),
+        btnLabel: translations("Configure"),
+      },
+      tiers: {
+        ...CARD_ICONS.tiers,
+        title: translations("Set up points system & tiers"),
+        desc: translations(
+          "Configure earning rate (1 pt per $1 spent), redemption value (100 pts = $5), and define Bronze, Silver, and Gold tier thresholds.",
+        ),
+        btnLabel: translations("Set up"),
+      },
+      rewards: {
+        ...CARD_ICONS.rewards,
+        title: translations("Build rewards catalog"),
+        desc: translations(
+          "Add free items, discounts, and special offers that customers can unlock by redeeming their loyalty points.",
+        ),
+        btnLabel: translations("Build catalog"),
+      },
+      referral: {
+        ...CARD_ICONS.referral,
+        title: translations("Configure referral system"),
+        desc: translations(
+          "Set up referral rewards so existing members earn bonus points when they bring new customers to RateUp Cafe.",
+        ),
+        btnLabel: translations("Configure"),
+      },
+      cmds: {
+        ...CARD_ICONS.cmds,
+        title: translations("Create WhatsApp templates"),
+        desc: translations(
+          "Design and submit approved message templates for points updates, tier upgrades, and loyalty re-engagement campaigns.",
+        ),
+        btnLabel: translations("Create templates"),
+      },
+      loyaltyauto: {
+        ...CARD_ICONS.loyaltyauto,
+        title: translations("Create loyalty automations"),
+        desc: translations(
+          "Build automated WhatsApp flows — welcome messages, milestone rewards, win-back campaigns, and birthday bonuses.",
+        ),
+        btnLabel: translations("Set up automations"),
+      },
+    }),
+    [translations],
+  );
+}
+
+/** Meta's billing hub — external, so it opens in a new tab rather than routing. */
+const META_BILLING_URL = "https://business.facebook.com/latest/billing_hub/accounts/details/";
+
+/**
+ * In-app destination per step. "verify" (handled inline) and "payment" (external,
+ * see {@link META_BILLING_URL}) deliberately have no entry.
+ */
+const CARD_ROUTES = {
+  // The WhatsApp channel page is the `$channel` route, so it needs params rather
+  // than a literal "/dashboard/settings/channels/whatsapp" path.
+  api: { to: "/dashboard/settings/channels/$channel", params: { channel: "whatsapp" } },
+  invite: { to: "/dashboard/settings/users" },
+  auto: { to: "/dashboard/automation" },
+  points: { to: "/dashboard/loyalty/settings" },
+  tiers: { to: "/dashboard/loyalty/earning-rules" },
+  rewards: { to: "/dashboard/loyalty/rewards" },
+  referral: { to: "/dashboard/loyalty/customers" },
+  cmds: { to: "/dashboard/loyalty/templates" },
+  loyaltyauto: { to: "/dashboard/loyalty/dashboard" },
+} as const;
+
+type NavigableCardId = keyof typeof CARD_ROUTES;
 
 function RateUpOnboarding() {
-  const SECTIONS: OnboardingSection[] = [
-    {
-      id: "whatsapp",
-      title: "Connect WhatsApp",
-      sub: "API setup and business account verification",
-      cards: ["api", "verify", "payment"],
-    },
-    {
-      id: "team",
-      title: "Team & automation",
-      sub: "Invite staff and configure automated responses",
-      cards: ["invite", "auto"],
-    },
-    {
-      id: "loyalty",
-      title: "Design your loyalty program",
-      sub: "Basic settings, points, tiers, rewards, referrals, templates & automations",
-      cards: ["points", "tiers", "rewards", "referral", "cmds", "loyaltyauto"],
-    },
-  ];
-  const [localChecklist, setLocalChecklist] = useState({});
+  const { t: translations } = useTranslation();
+  const SECTIONS = useMemo<Section[]>(
+    () => [
+      {
+        id: "whatsapp",
+        title: translations("Connect WhatsApp"),
+        sub: translations("API setup and business account verification"),
+        cards: ["api", "verify", "payment"],
+      },
+      {
+        id: "team",
+        title: translations("Team & automation"),
+        sub: translations("Invite staff and configure automated responses"),
+        cards: ["invite", "auto"],
+      },
+      {
+        id: "loyalty",
+        title: translations("Design your loyalty program"),
+        sub: translations(
+          "Basic settings, points, tiers, rewards, referrals, templates & automations",
+        ),
+        cards: ["points", "tiers", "rewards", "referral", "cmds", "loyaltyauto"],
+      },
+    ],
+    [translations],
+  );
+  const [localChecklist, setLocalChecklist] = useState<ChecklistMap>({});
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
   const navigate = useNavigate();
@@ -130,10 +261,10 @@ function RateUpOnboarding() {
     });
   }, [SECTIONS, hasLoyaltyFeature]);
 
-  const checklistMap = useMemo(() => {
-    const base = checklist?.onboardingChecklist || {};
+  const checklistMap = useMemo<ChecklistMap>(() => {
+    const base: OnboardingChecklist = checklist?.onboardingChecklist ?? {};
 
-    let merged = {
+    let merged: ChecklistMap = {
       ...base,
       ...localChecklist,
       api: waConnected || base.api,
@@ -169,7 +300,7 @@ function RateUpOnboarding() {
     };
   }, [visibleSections, checklistMap]);
 
-  const handleToggle = async (key: string, value: boolean) => {
+  const handleToggle = async (key: CardId, value: boolean) => {
     setLocalChecklist((prev) => ({
       ...prev,
       [key]: value,
@@ -199,7 +330,8 @@ function RateUpOnboarding() {
     });
 
     navigate({
-      to: "/dashboard/inbox?tab=open",
+      to: "/dashboard/inbox",
+      search: { tab: "open" },
     });
   };
 
@@ -261,19 +393,17 @@ function RateUpOnboarding() {
             <span className="hidden sm:inline">{translations("Support")}</span>
           </Button>
 
-          <Button
-            size="sm"
-            aria-label={translations("Book a demo")}
-            className="text-xs h-8 gap-1.5 text-white border-none px-2 sm:px-3"
-            onClick={() =>
-              navigate({
-                to: "/bookdemo",
-              })
-            }
-          >
-            <CalendarDays size={12} />
-            <span className="hidden sm:inline">{translations("Book a demo")}</span>
-          </Button>
+          {/* There is no /bookdemo route — booking is the same modal the marketing site uses. */}
+          <BookDemoModal>
+            <Button
+              size="sm"
+              aria-label={translations("Book a demo")}
+              className="text-xs h-8 gap-1.5 text-white border-none px-2 sm:px-3"
+            >
+              <CalendarDays size={12} />
+              <span className="hidden sm:inline">{translations("Book a demo")}</span>
+            </Button>
+          </BookDemoModal>
         </div>
       </nav>
       <div className="w-full max-w-5xl">
@@ -360,11 +490,7 @@ function RateUpOnboarding() {
               section={section}
               checklistMap={checklistMap}
               onToggle={handleToggle}
-              onNavigate={(id: OnboardingCardId) =>
-                navigate({
-                  to: CARD_ROUTES[id],
-                })
-              }
+              onNavigate={(id) => navigate(CARD_ROUTES[id])}
               verificationStatus={verificationStatus}
               setVerificationStatus={setVerificationStatus}
               isCheckingVerification={isCheckingVerification}
@@ -401,6 +527,19 @@ function RateUpOnboarding() {
   );
 }
 
+interface CollapsibleCardProps {
+  section: Section;
+  defaultOpenSectionId: string | undefined;
+  checklistMap: ChecklistMap;
+  onToggle: (key: CardId, value: boolean) => void;
+  onNavigate: (id: NavigableCardId) => void;
+  verificationStatus: string | null;
+  setVerificationStatus: (status: string | null) => void;
+  isCheckingVerification: boolean;
+  setIsCheckingVerification: (checking: boolean) => void;
+  waConnected: boolean;
+}
+
 function CollapsibleCard({
   section,
   defaultOpenSectionId,
@@ -412,18 +551,7 @@ function CollapsibleCard({
   isCheckingVerification,
   setIsCheckingVerification,
   waConnected,
-}: {
-  section: OnboardingSection;
-  defaultOpenSectionId: string;
-  checklistMap: Record<string, boolean>;
-  onToggle: (key: string, value: boolean) => void;
-  onNavigate: (id: OnboardingCardId) => void;
-  verificationStatus: string | null;
-  setVerificationStatus: (status: string | null) => void;
-  isCheckingVerification: boolean;
-  setIsCheckingVerification: (checking: boolean) => void;
-  waConnected: boolean;
-}) {
+}: Readonly<CollapsibleCardProps>) {
   const { t: translations } = useTranslation();
   const cardConfig = useCardConfig();
   const [open, setOpen] = useState(section?.id === defaultOpenSectionId);
@@ -447,7 +575,7 @@ function CollapsibleCard({
       setIsCheckingVerification(false);
     }
   };
-  const getSectionState = (section: OnboardingSection) => {
+  const getSectionState = (section: Section) => {
     const total = section.cards.length;
 
     const doneCount = section.cards.filter((id) => checklistMap[id]).length;
@@ -609,7 +737,7 @@ function CollapsibleCard({
                                   if (id === "verify") {
                                     await handleVerify();
                                   } else if (id === "payment") {
-                                    window.open(CARD_ROUTES[id], "_blank");
+                                    window.open(META_BILLING_URL, "_blank");
                                   } else {
                                     onNavigate(id);
                                   }

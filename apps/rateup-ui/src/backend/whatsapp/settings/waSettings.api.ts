@@ -223,7 +223,12 @@ export interface MetaAssets {
 export const getMetaAssets = async (waSettingsId: string) => {
   return (await axiosClient.get(`${SettingsUrl}/meta-assets/${waSettingsId}`)).data as MetaAssets;
 };
-export const getVerificationStatus = async () => {
+/** Meta's `business_verification_status`, or `null` when the WABA isn't connected yet. */
+export interface VerificationStatusResponse {
+  verificationStatus: string | null;
+}
+
+export const getVerificationStatus = async (): Promise<VerificationStatusResponse> => {
   return (await axiosClient.get(`${SettingsUrl}/verification-status`)).data;
 };
 
