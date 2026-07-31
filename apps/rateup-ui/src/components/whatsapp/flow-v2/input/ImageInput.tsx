@@ -5,6 +5,7 @@ import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
 import type { FlowInputProps } from "./inputProps.ts";
+import { asText } from "./inputProps.ts";
 
 const ImageInput = (props: FlowInputProps<string>) => {
   const resetRef = useRef<(() => void) | null>(null);
@@ -36,7 +37,7 @@ const ImageInput = (props: FlowInputProps<string>) => {
       clearFile={clearFile}
       handleFileChange={handleFileChange}
       resetRef={resetRef}
-      fileSrc={props.value}
+      fileSrc={asText(props.value)}
       error={error ?? undefined}
       style={{ marginTop: "25px" }}
       size="md"

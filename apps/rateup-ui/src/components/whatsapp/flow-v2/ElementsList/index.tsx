@@ -1,4 +1,5 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import {
   IconChevronDown,
   IconChevronUp,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils.ts";
 import { QuestionType2 } from "@/types/enums.ts";
 import { reorder } from "@/utils/questions.ts";
 
+import type { FormElement } from "../utils/store.ts";
 import useFlowStore, { EditorType } from "../utils/store.ts";
 import AddElementModal from "./AddElementModal.tsx"; // Modal for element type selection
 import InlineElementEditor from "./InlineElementEditor.tsx"; // Inline element editor
@@ -63,7 +65,7 @@ function ElementsList() {
     setEditingTitle(false);
   };
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const items = screen.layout.children;
@@ -150,7 +152,7 @@ function ElementsList() {
 }
 
 interface ElementCardProps {
-  element;
+  element: FormElement;
   index: number;
   isExpanded: boolean;
   onToggle: () => void;
@@ -185,7 +187,7 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
 
   return (
     <>
-      <Draggable draggableId={element.id} index={index}>
+      <Draggable draggableId={element.id ?? String(index)} index={index}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}

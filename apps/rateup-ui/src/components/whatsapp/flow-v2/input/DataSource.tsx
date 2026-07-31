@@ -1,5 +1,6 @@
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useId, useEffect, useRef, useState } from "react";
+import type { FieldValues } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
@@ -24,12 +25,13 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar.tsx";
 import type { FlowChoice, FlowInputProps } from "./inputProps.ts";
+import { asList } from "./inputProps.ts";
 
 const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
 
 /** RHF resolver that always validates against the latest schema held in `schemaRef`. */
 function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
-  return (values) => {
+  return (values: FieldValues) => {
     const result = schemaRef.current.safeParse(values);
     if (result.success) return { values: result.data, errors: {} };
     const errors: Record<string, { type: string; message: string }> = {};
@@ -45,7 +47,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
   const uid = useId();
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const resetRef = useRef<(() => void) | null>(null);
-  const choices = props.value ?? [];
+  const choices = asList<FlowChoice>(props.value);
   const maxCharCount = props.maxCharCount ?? 30;
   const maxChoiceCount = props.maxChoice ?? 20;
   const { t: translations } = useTranslation();
@@ -72,7 +74,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
           .min(1)
           .max(30)
           .refine((title) => {
-            const isDuplicate = choices.some((c) => {
+            const isDuplicate = choices.some((c: FlowChoice) => {
               const choiceValue = c?.title?.replace(/\s+/g, "");
               return choiceValue === title.replace(/\s+/g, "");
             });
@@ -92,7 +94,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
       : { title: "", description: "", metadata: "", image: "" },
   });
 
-  const handleAddChoice = async (values) => {
+  const handleAddChoice = async (values: FieldValues) => {
     try {
       const choiceObj = {
         id: generateId(),
@@ -366,7 +368,7 @@ function ChoiceRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [choice]);
 
-  const handleEditChoice = async (values) => {
+  const handleEditChoice = async (values: FieldValues) => {
     const choiceObj = Object.fromEntries(
       Object.entries(values).filter(
         ([_key, value]) => typeof value === "string" && value.trim() !== "",

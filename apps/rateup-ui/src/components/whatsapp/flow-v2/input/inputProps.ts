@@ -21,7 +21,11 @@ export interface FlowInputProps<TValue = unknown> {
   metaType?: string;
   /** Restricts the choice editor to titles only. */
   onlyTitle?: boolean;
-  value?: TValue;
+  /**
+   * The stored value. The element editor dispatches to these controls dynamically, so a
+   * control receives it unnarrowed and narrows it itself.
+   */
+  value?: unknown;
   onChange?: (value: TValue) => void;
   label?: ReactNode;
   placeholder?: string;
@@ -35,3 +39,11 @@ export interface FlowInputProps<TValue = unknown> {
   insertListItem?: (path: string, item: unknown) => void;
   removeListItem?: (path: string, index: number) => void;
 }
+
+/**
+ * The controls receive their value unnarrowed (see `FlowInputProps.value`). These narrow it to
+ * the shape a given control edits; anything else is treated as "not set yet".
+ */
+export const asList = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+
+export const asText = (value: unknown): string => (typeof value === "string" ? value : "");

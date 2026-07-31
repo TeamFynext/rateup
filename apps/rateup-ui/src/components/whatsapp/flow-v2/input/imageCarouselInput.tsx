@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
 import type { FlowInputProps } from "./inputProps.ts";
+import { asList } from "./inputProps.ts";
 
 const MIN_IMAGES = 1;
 
@@ -34,8 +35,9 @@ const ImageCarouselInput = (props: FlowInputProps<CarouselImage[]>) => {
   };
 
   useEffect(() => {
-    if ((props.value?.length ?? 0) > 0) {
-      setImages(props.value ?? []);
+    const value = asList<CarouselImage>(props.value);
+    if (value.length > 0) {
+      setImages(value);
     }
   }, [props.value]);
 

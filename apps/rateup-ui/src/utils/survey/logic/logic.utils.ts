@@ -1,4 +1,4 @@
-import type { QuestionType, QuestionType2 } from "@/types/enums.ts";
+import type { QuestionType, QuestionType2, WaFlowFormElementType } from "@/types/enums.ts";
 import {
   LDResponse,
   LogicAction,
@@ -175,7 +175,8 @@ export function getResponses(
  * parameter is only the three fields this actually reads.
  */
 export function getResponses2(question: {
-  metaType?: WaQuestions;
+  /** A flow element may still carry its editor-side type name; only `WaQuestions` matches. */
+  metaType?: QuestionType2 | WaQuestions | WaFlowFormElementType;
   /** WhatsApp flow questions carry choices under either spelling. */
   "data-source"?: { title: string }[];
   dataSource?: { title: string }[];
@@ -246,7 +247,7 @@ export function getConditions(qType: Q): LogicCondition[] {
   }
 }
 export function getConditionsv2(
-  qType: WaQuestions | QuestionType | QuestionType2 | undefined,
+  qType: WaQuestions | QuestionType | QuestionType2 | WaFlowFormElementType | undefined,
 ): LogicCondition[] {
   switch (qType) {
     case WaQuestions.LD:

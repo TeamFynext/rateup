@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-import type { WaQuestions } from "@/types/enums.ts";
-import { QuestionType2 } from "@/types/enums.ts";
+import type { WaFlowFormElementType } from "@/types/enums.ts";
+import { QuestionType2, WaFlowLayoutType, WaQuestions } from "@/types/enums.ts";
 import type { FlowLogicJump, FlowLogicJumpComponentLevel } from "@/types/global";
 
 import {
@@ -12,15 +12,19 @@ import {
   REQUIRES_NAME_TYPES,
 } from "./typeConstants.ts";
 
-interface Screen {
+export interface Screen {
   id: string;
   title: string;
-  terminal: boolean;
+  terminal?: boolean;
+  /** Screen-scoped payload passed through by the flow runtime. */
+  data?: Record<string, unknown>;
+  /** Set on the terminal screen of a completed flow. */
+  success?: boolean;
   layout: Layout;
 }
 
-interface Layout {
-  type: string;
+export interface Layout {
+  type: WaFlowLayoutType;
   children: FormElement[];
 }
 
@@ -30,20 +34,29 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
+/**
+ * A flow element's component type. The same element carries its `QuestionType2` display name
+ * while it is being added, and the `WaQuestions` / `WaFlowFormElementType` API name once the
+ * flow has been serialised or read back from Meta — three enums over overlapping strings.
+ */
+export type FlowElementType = QuestionType2 | WaQuestions | WaFlowFormElementType;
+
 export interface FormElement {
   id?: string;
-  type?: QuestionType2;
+  type?: FlowElementType;
   required?: boolean;
   label?: string;
   name?: string;
   text?: string;
-  metaType?: WaQuestions;
+  /** The API type name; falls back to `type` for elements saved before it was recorded. */
+  metaType?: FlowElementType;
   header?: string;
   googleReview?: GoogleReview;
   "input-type"?: string;
   "left-caption"?: string;
   "right-caption"?: string;
   "data-source"?: Array<{ title: string; id: string }>;
+  "max-length"?: number;
   "helper-text"?: string;
   "alt-text"?: string;
   description?: string;
@@ -78,7 +91,7 @@ interface StoreState {
   addScreenWithTitle: (title: string) => void;
   deleteScreen: (screenId: string) => void;
   reorderScreens: (sourceIndex: number, destinationIndex: number) => void;
-  updateComponentInScreen: (id: string, updatedComponent: Partial<FormElement>) => void;
+  updateComponentInScreen: (id: string | undefined, updatedComponent: Partial<FormElement>) => void;
   getScreen: (screenId: string) => Screen | undefined;
   getComponent: (componentName: string) => FormElement | undefined;
   setCurrentScreenId: (screenId: string) => void;
@@ -93,8 +106,8 @@ interface StoreState {
   deleteComponentFromScreen: (feId: string) => void;
   /** The Google review step configured for the flow, if any. */
   googleReview?: GoogleReview;
-  ticketIssued: unknown[];
-  setTicketIssued: (ticketIssued: unknown[]) => void;
+  ticketIssued: FlowTicket[];
+  setTicketIssued: (ticketIssued: FlowTicket[]) => void;
   getLogicJumps: (screenId: string) => Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
   updateLogicJumps: (
     screenId: string,
@@ -175,7 +188,7 @@ const useFlowStoreV3 = create<StoreState>()(
             title,
             terminal: false,
             layout: {
-              type: "SingleColumnLayout",
+              type: WaFlowLayoutType.scl,
               children: [
                 {
                   id: "footer_" + crypto.randomUUID().replace(/[^a-zA-Z_]/g, ""),

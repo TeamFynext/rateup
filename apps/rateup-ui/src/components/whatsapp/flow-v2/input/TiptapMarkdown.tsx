@@ -155,13 +155,14 @@ function TiptapMarkdown({
   max,
   disabled,
 }: {
-  value: string;
-  onChange: (value: string) => void;
+  /** Arrives unnarrowed from the element editor's dynamic field dispatch. */
+  value?: unknown;
+  onChange?: (value: string) => void;
   label?: ReactNode;
   max?: number;
   disabled?: boolean;
 }) {
-  const content = value || "";
+  const content = typeof value === "string" ? value : "";
   const isUpdatingFromEditor = useRef(false);
 
   const editor = useEditor({

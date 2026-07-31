@@ -26,10 +26,19 @@ interface BaseFieldProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  value?;
-  onChange?: (eventOrValue) => void;
+  /** The field's stored value; each field narrows it to what its control accepts. */
+  value?: unknown;
+  onChange?: (eventOrValue: unknown) => void;
+  min?: number;
+  max?: number;
+  minDate?: string;
+  maxDate?: string;
   [key: string]: unknown;
 }
+
+/** Narrows a stored field value to what a DOM input accepts. */
+const toInputValue = (value: unknown): string | number =>
+  typeof value === "string" || typeof value === "number" ? value : "";
 
 function Shell({
   label,
@@ -61,7 +70,7 @@ export function TextField({
   return (
     <Shell label={label} description={description} error={error} className={className}>
       <Input
-        value={value ?? ""}
+        value={toInputValue(value)}
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
@@ -85,7 +94,7 @@ export function TextFieldWithCounter({ max, ...props }: BaseFieldProps & { max?:
     >
       <InputGroup aria-invalid={!!props.error}>
         <InputGroupInput
-          value={props.value ?? ""}
+          value={toInputValue(props.value)}
           onChange={props.onChange}
           placeholder={props.placeholder}
           disabled={props.disabled}
@@ -117,7 +126,7 @@ export function NumberField({
         type="number"
         min={min}
         max={max}
-        value={value ?? ""}
+        value={toInputValue(value)}
         placeholder={placeholder}
         disabled={disabled}
         aria-invalid={!!error}

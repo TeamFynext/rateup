@@ -27,6 +27,14 @@ import useFlowStore, { EditorType } from "../utils/store.ts";
 // Component logic editor for conditional component visibility
 import ComponentLogicEditor from "./ComponentLogicEditor.tsx";
 
+/**
+ * Screen-level jumps navigate to a screen, so their `action` is that screen's id; a
+ * component-level block carries a `{ success, fail }` object (or no action at all).
+ */
+const isScreenLevelJump = (
+  item: FlowLogicJump | FlowLogicJumpComponentLevel,
+): item is FlowLogicJump => typeof item.action === "string";
+
 export const ScreenLogicEditor = () => {
   const [logicJumps, updateLogicJumps] = useImmer<Array<FlowLogicJump>>([]);
   const [logicJumpsComponentLevel, updateLogicJumpsComponentLevel] = useImmer<
@@ -69,7 +77,7 @@ export const ScreenLogicEditor = () => {
 
         // Split the data based on action type
         existingJumps.forEach((item) => {
-          if (typeof item.action === "string") {
+          if (isScreenLevelJump(item)) {
             stringActions.push(item);
           } else if (!item.action) {
             objectActions.push(item);

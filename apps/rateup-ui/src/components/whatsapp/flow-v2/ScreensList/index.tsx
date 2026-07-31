@@ -1,4 +1,5 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,9 +8,10 @@ import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
-import type { WaFlowFormElement } from "@/types/global";
+import { WaQuestions } from "@/types/enums.ts";
 
 import { FlowMaxScreens } from "../../whatsappConfig.tsx";
+import type { Screen } from "../utils/store.ts";
 import useFlowStoreV3 from "../utils/store.ts";
 import CreateScreenModal from "./CreateScreenModal.tsx";
 
@@ -20,7 +22,7 @@ function ScreensList() {
   const { screens, currentScreenId, setCurrentScreenId, deleteScreen, reorderScreens } =
     useFlowStoreV3();
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     if (result.source.index === result.destination.index) return;
     reorderScreens(result.source.index, result.destination.index);
@@ -80,7 +82,7 @@ function ScreensList() {
 }
 
 interface ScreenCardProps {
-  screen;
+  screen: Screen;
   index: number;
   isSelected: boolean;
   onSelect: () => void;
@@ -141,8 +143,8 @@ function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<
                   {screen.title || `Screen ${index + 1}`}
                 </p>
                 <p className="text-xs text-muted-foreground leading-4 mt-0.5">
-                  {screen.layout?.children?.filter((c: WaFlowFormElement) => c.type !== "Footer")
-                    .length || 0}{" "}
+                  {screen.layout?.children?.filter((c) => c.type !== WaQuestions.Footer).length ||
+                    0}{" "}
                   {translations("elements")}
                 </p>
               </div>

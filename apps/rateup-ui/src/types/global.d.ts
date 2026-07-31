@@ -1152,7 +1152,11 @@ export interface FlowLogicConditionComponentLevel {
 }
 export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
-  action: LogicAction;
+  /**
+   * What to do when the conditions match: the id of the screen to jump to, or one of the
+   * `LogicAction` names for the non-navigation outcomes.
+   */
+  action: LogicAction | string;
 }
 export interface LogicActionComponentLevel {
   success: LogicAction;

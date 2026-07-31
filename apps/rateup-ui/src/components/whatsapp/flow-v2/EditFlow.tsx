@@ -4,10 +4,25 @@ import { useEffect } from "react";
 
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import type { WaFlowJson } from "@/types/global";
 
 import ElementsList from "./ElementsList/index.tsx";
 import ScreensList from "./ScreensList/index.tsx";
+import type { Screen } from "./utils/store.ts";
 import useFlowStoreV3 from "./utils/store.ts";
+
+/**
+ * The v1 and v2 flow editors write two dialects into the same `json` column: v1 nests a
+ * screen's elements inside a `Form`, v2 stores them directly under `layout.children`.
+ * `WaFlowJson` describes the v1 dialect, so these two functions are where a v2 document is
+ * read out of, and written back into, that shared type. They are the only crossing point;
+ * everything downstream of them works against the editor's own `Screen`/`FormElement`.
+ */
+const readEditorScreens = (json: WaFlowJson): Screen[] =>
+  (json.screens ?? []) as unknown as Screen[];
+
+const writeEditorScreens = (screens: Screen[]): WaFlowJson["screens"] =>
+  screens as unknown as WaFlowJson["screens"];
 
 function EditFlowV3() {
   const params = useParams({
@@ -33,7 +48,7 @@ function EditFlowV3() {
   useEffect(() => {
     if (dbFlow) {
       // Normalize elements to ensure they have metaType
-      const normalizedScreens = (dbFlow.json.screens || []).map((screen) => ({
+      const normalizedScreens = readEditorScreens(dbFlow.json).map((screen) => ({
         ...screen,
         layout: {
           ...screen.layout,
@@ -85,7 +100,7 @@ function EditFlowV3() {
             dbFlowId,
             data: {
               json: {
-                screens: getScreens(),
+                screens: writeEditorScreens(getScreens()),
                 version: "7.2",
               },
               logicJumps: logicJumpsChanged ? logicJumps : undefined,

@@ -34,10 +34,12 @@ import {
   QuestionType2,
   RatingScale,
   SmileyResponse2,
+  WaQuestions,
   YNResponse,
 } from "@/types/enums.ts";
 import { FlowQuestionTypes2 } from "@/utils/constants.ts";
 
+import type { FormElement } from "../utils/store.ts";
 import useFlowStoreV3 from "../utils/store.ts";
 import { NO_NAME_TYPES, NO_VISIBLE_TYPES } from "../utils/typeConstants.ts";
 
@@ -166,7 +168,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     if (
       type === QuestionType2.ImageCarousel &&
-      formElementChildren.filter((c) => c.type === "ImageCarousel").length >= 2
+      formElementChildren.filter((c) => c.type === WaQuestions.ImageCarousel).length >= 2
     ) {
       toast.error(translations("Maximum of 2 ImageCarousel components allowed per screen"), {
         id: "error-max-screen-elements",
@@ -178,7 +180,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
       type === QuestionType2.ImageCarousel &&
       getScreens()
         .flatMap((screen) => screen.layout.children)
-        .filter((child) => child.type === "ImageCarousel").length >= 3
+        .filter((child) => child.type === WaQuestions.ImageCarousel).length >= 3
     ) {
       toast.error(translations("Maximum of 3 ImageCarousel components allowed per flow"), {
         id: "error-max-screen-elements",
@@ -188,10 +190,11 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     // Create new element with a unique ID
     const id = crypto.randomUUID().replace(/-/g, "_");
-    const metaType = Object.keys(QuestionType2).find(
-      (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+    const typeKey = (Object.keys(QuestionType2) as Array<keyof typeof QuestionType2>).find(
+      (k) => QuestionType2[k] === type,
     );
-    const newElement = {
+    const metaType = typeKey && WaQuestions[typeKey];
+    const newElement: FormElement = {
       id,
       type,
       metaType,
@@ -214,7 +217,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
         break;
       case QuestionType2.LD:
       case QuestionType2.YN:
-        newElement.type = "RadioButtonsGroup";
+        newElement.type = WaQuestions.RadioButtonsGroup;
         newElement.label = "";
         newElement["data-source"] = getDefaultDataSource(type);
         newElement.required = true;
@@ -223,7 +226,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
       case QuestionType2.Smiley:
       case QuestionType2.Opinion:
       case QuestionType2.Dropdown:
-        newElement.type = "Dropdown";
+        newElement.type = WaQuestions.Dropdown;
         newElement.label = "";
         newElement["data-source"] = getDefaultDataSource(type);
         newElement.required = true;

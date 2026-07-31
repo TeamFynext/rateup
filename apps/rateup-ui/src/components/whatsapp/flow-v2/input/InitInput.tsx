@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select.tsx";
 
 import type { FlowInputProps } from "./inputProps.ts";
+import { asText } from "./inputProps.ts";
 
 const InitInput = (
   props: FlowInputProps<string> & { dataSource?: Array<{ id: string; title: string }> },
@@ -27,7 +28,7 @@ const InitInput = (
       <FieldLabel htmlFor={`${uid}-field`}>{props.label}</FieldLabel>
       <Select
         items={options}
-        value={props.value ?? ""}
+        value={asText(props.value)}
         onValueChange={(value) => props.onChange?.(value ?? "")}
       >
         <SelectTrigger id={`${uid}-field`} className="w-full">

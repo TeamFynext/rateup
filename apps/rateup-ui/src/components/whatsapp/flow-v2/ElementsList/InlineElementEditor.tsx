@@ -3,7 +3,6 @@ import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ChangeEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +27,9 @@ import { DataSourceInput } from "../input/DataSource.tsx";
 import ImageCarouselInput from "../input/imageCarouselInput.tsx";
 import ImageInput from "../input/ImageInput.tsx";
 import InitInput from "../input/InitInput.tsx";
+import { asList } from "../input/inputProps.ts";
 import TiptapMarkdown from "../input/TiptapMarkdown.tsx";
+import type { FormElement } from "../utils/store.ts";
 import useFlowStore from "../utils/store.ts";
 import { getInitialValues, getValidationSchema } from "../utils/util.ts";
 import { LogicJumpModal } from "./LogicJumpModal.tsx";
@@ -49,8 +50,21 @@ const FieldComponentMap = {
 };
 
 interface InlineElementEditorProps {
-  element;
+  element: FormElement;
 }
+
+/** A stored date bound, as dayjs accepts it. Bounds are saved as ISO strings. */
+const toDateInput = (value: unknown): string | Date | undefined =>
+  typeof value === "string" || value instanceof Date ? value : undefined;
+
+/** The `target` of a DOM change event, when the control emitted one rather than a bare value. */
+const getEventTarget = (
+  eventOrValue: unknown,
+): { value?: unknown; checked?: unknown } | undefined => {
+  if (typeof eventOrValue !== "object" || eventOrValue === null) return undefined;
+  const { target } = eventOrValue as { target?: unknown };
+  return typeof target === "object" && target !== null ? target : undefined;
+};
 
 // Inline editor for element properties with rich text support
 function InlineElementEditor({ element }: InlineElementEditorProps) {
@@ -77,7 +91,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     return getValidationSchema(elementType);
   }, [elementType]);
 
-  const form = useForm<any>({
+  const form = useForm<Record<string, unknown>>({
     resolver: validationSchema ? zodResolver(validationSchema) : undefined,
     defaultValues: {},
   });
@@ -86,7 +100,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
   useEffect(() => {
     if (element) {
-      const updatedValues = { ...element };
+      const updatedValues: Record<string, unknown> = { ...element };
 
       // Merge with default values from initialValues if fields are missing in element
       Object.keys(initialValues).forEach((key) => {
@@ -97,11 +111,13 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
       // Convert date strings to Date objects for date picker
       ["min-date", "max-date"].forEach((key) => {
-        if (updatedValues[key]) updatedValues[key] = dayjs(updatedValues[key]).toDate();
+        const stored = toDateInput(updatedValues[key]);
+        if (stored) updatedValues[key] = dayjs(stored).toDate();
       });
-      if (updatedValues["unavailable-dates"]) {
-        updatedValues["unavailable-dates"] = updatedValues["unavailable-dates"].map((date) =>
-          dayjs(date).toDate(),
+      const unavailableDates = updatedValues["unavailable-dates"];
+      if (Array.isArray(unavailableDates)) {
+        updatedValues["unavailable-dates"] = unavailableDates.map((date) =>
+          dayjs(toDateInput(date)).toDate(),
         );
       }
       reset(updatedValues);
@@ -111,11 +127,11 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
   const onSubmit = handleSubmit(
     useCallback(
       (values) => {
-        const updatedValues = { ...values };
+        const updatedValues: Record<string, unknown> = { ...values };
 
         // Convert Date objects back to strings for date picker
         if (updatedValues.metaType === QuestionType2.DatePicker) {
-          const formatDate = (date) => dayjs(date).format("YYYY-MM-DD");
+          const formatDate = (date: unknown) => dayjs(toDateInput(date)).format("YYYY-MM-DD");
           ["min-date", "max-date"].forEach((key) => {
             if (updatedValues[key]) updatedValues[key] = formatDate(updatedValues[key]);
           });
@@ -178,33 +194,33 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
               placeholder={`Enter ${field}`}
               {...extra}
               value={value}
-              checked={fieldType === "checkbox" ? value : undefined}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                // Handle different input types correctly
-                let newValue;
+              checked={fieldType === "checkbox" ? Boolean(value) : undefined}
+              onChange={(eventOrValue: unknown) => {
+                // Handle different input types correctly: the text inputs emit a DOM event,
+                // every other control emits its value directly.
+                const target = getEventTarget(eventOrValue);
+                let newValue: unknown;
                 if (fieldType === "checkbox") {
                   // For checkboxes, use checked property
-                  newValue = e?.target?.checked ?? e;
-                } else if (e?.target?.value !== undefined) {
+                  newValue = target?.checked ?? eventOrValue;
+                } else if (target?.value !== undefined) {
                   // For text inputs (which have e.target.value), use value property
-                  newValue = e.target.value;
+                  newValue = target.value;
                 } else {
                   // For other components (select, date, multiselect, etc.), use the value directly
-                  newValue = e;
+                  newValue = eventOrValue;
                 }
                 onChange(newValue);
               }}
               error={error?.message}
               {...(field === "data-source" && {
                 insertListItem: (_path: string, item: unknown) => {
-                  const currentValue = getValues(field) || [];
-                  setValue(field, [...currentValue, item]);
+                  setValue(field, [...asList(getValues(field)), item]);
                 },
                 removeListItem: (_path: string, index: number) => {
-                  const currentValue = getValues(field) || [];
                   setValue(
                     field,
-                    currentValue.filter((_, i: number) => i !== index),
+                    asList(getValues(field)).filter((_, i) => i !== index),
                   );
                 },
                 metaType: elementType,
@@ -213,7 +229,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                     ?.max ?? 20,
               })}
               {...(field === "init-value" && {
-                dataSource: allValues?.["data-source"],
+                dataSource: asList<{ id: string; title: string }>(allValues?.["data-source"]),
               })}
             />
           )}
@@ -272,7 +288,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                     render={({ field: { onChange, value } }) => (
                       <Checkbox
                         id="visible"
-                        checked={value}
+                        checked={Boolean(value)}
                         onCheckedChange={(checked) => {
                           onChange(checked);
                           if (checked === false) {

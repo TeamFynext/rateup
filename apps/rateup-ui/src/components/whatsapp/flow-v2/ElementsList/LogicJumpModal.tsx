@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums.ts";
-import type { FlowLogicJump } from "@/types/global";
+import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
 import { getConditionsv2, getResponses2 } from "@/utils/survey/logic/logic.utils";
 
@@ -35,7 +35,8 @@ import useFlowStoreV3 from "../utils/store.ts";
 interface LogicJumpModalProps {
   opened: boolean;
   onClose: () => void;
-  elementId: string;
+  /** The element the jump is anchored to; absent for an element that has not been saved yet. */
+  elementId: string | undefined;
 }
 
 export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalProps) {
@@ -56,7 +57,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
       {
         conditions: [
           {
-            questionId: elementId,
+            questionId: elementId ?? "",
             condition: LogicCondition.Submitted,
             response: undefined,
           },
@@ -158,8 +159,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
   const handleUpdateCondition = (
     jumpIndex: number,
     conditionIndex: number,
-    field: string,
-    value: unknown,
+    field: keyof FlowLogicCondition,
+    // Every editable field is chosen from a `Select`, which hands back `null` when cleared.
+    value: string | null,
   ) => {
     const updated = [...localJumps];
 
@@ -170,7 +172,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
 
     if (field === "questionId") {
       conditions[conditionIndex] = {
-        questionId: value,
+        questionId: value ?? "",
         condition: LogicCondition.Submitted,
         response: undefined,
       };
@@ -199,7 +201,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
               conditions: [
                 ...jump.conditions,
                 {
-                  questionId: elementId,
+                  questionId: elementId ?? "",
                   condition: LogicCondition.Submitted,
                   response: undefined,
                 },
@@ -223,9 +225,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     );
   };
 
-  const handleUpdateAction = (jumpIndex: number, action) => {
+  const handleUpdateAction = (jumpIndex: number, action: string | null) => {
     const updated = [...localJumps];
-    updated[jumpIndex].action = action;
+    updated[jumpIndex].action = action ?? "";
     setLocalJumps(updated);
   };
 
