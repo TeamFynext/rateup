@@ -1,21 +1,34 @@
 import { QuestionType } from "@/types/enums.ts";
 
-function validateLength(input, min, max) {
-  if (input.toString().length < min || input.toString().length > max) {
+/**
+ * MultiTextInput questions store a rule list per field key; every other
+ * question stores the named `length`/`wordCount`/`textType` rules.
+ */
+export function isFieldKeyedRules(
+  rules: QuestionValidationRules,
+): rules is Record<string, ValidationFieldRule[]> {
+  return Object.values(rules).some((value) => Array.isArray(value));
+}
+
+function validateLength(input: string | number, min?: number | string, max?: number | string) {
+  // Rules are stored as strings; `Number(undefined)` is NaN, so an unset bound
+  // compares false and the rule passes — the same as the untyped comparison did.
+  const length = input.toString().length;
+  if (length < Number(min) || length > Number(max)) {
     return false;
   }
   return true;
 }
 
-function validateWordCount(input, min, max) {
+function validateWordCount(input: string, min?: number | string, max?: number | string) {
   const words = input.split(" ");
-  if (words.length < min || words.length > max) {
+  if (words.length < Number(min) || words.length > Number(max)) {
     return false;
   }
   return true;
 }
 
-function validateTextType(input, type) {
+function validateTextType(input: string, type?: string) {
   if (type === "Letters") {
     const regex = /^[a-zA-Z\s]+$/;
     return regex.test(input);
@@ -29,9 +42,33 @@ function validateTextType(input, type) {
   return true;
 }
 
-export function validateQuestion(question, input, selectedLanguage) {
+/**
+ * A submitted answer: MultiTextInput questions post a record keyed by field,
+ * every other question posts the answer text on its own.
+ */
+export type QuestionInput = string | Record<string, string>;
+
+/** Reads a stored answer as the value the validators accept. */
+export const asQuestionInput = (response: unknown): QuestionInput =>
+  typeof response === "string"
+    ? response
+    : typeof response === "object" && response !== null && !Array.isArray(response)
+      ? (Object.fromEntries(
+          Object.entries(response).map(([key, value]) => [key, String(value ?? "")]),
+        ) as Record<string, string>)
+      : "";
+
+export function validateQuestion(
+  question: Question,
+  input: QuestionInput,
+  selectedLanguage: string,
+) {
   if (question?.validationRules) {
-    if ([QuestionType.MultiTextInput].includes(question?.type)) {
+    if (
+      question?.type === QuestionType.MultiTextInput &&
+      isFieldKeyedRules(question.validationRules)
+    ) {
+      const fieldInput = typeof input === "object" ? input : undefined;
       const fields = question?.features?.[selectedLanguage]?.fields;
       for (const field of fields) {
         if (question?.validationRules?.[field?.fieldKey]) {
@@ -39,31 +76,34 @@ export function validateQuestion(question, input, selectedLanguage) {
           for (const rule of validationRules) {
             if (rule?.ruleType === "length") {
               if (
-                !input?.[field?.fieldKey] ||
-                !validateLength(input?.[field?.fieldKey], rule?.min, rule?.max)
+                !fieldInput?.[field?.fieldKey] ||
+                !validateLength(fieldInput?.[field?.fieldKey], rule?.min, rule?.max)
               ) {
                 return rule?.errorMessage;
               }
             } else if (rule?.ruleType === "textType") {
               if (
-                !input?.[field?.fieldKey] ||
-                !validateTextType(input?.[field?.fieldKey], rule?.type)
+                !fieldInput?.[field?.fieldKey] ||
+                !validateTextType(fieldInput?.[field?.fieldKey], rule?.type)
               ) {
                 return rule?.errorMessage;
               }
             } else if (rule?.ruleType === "required") {
-              if (!input?.[field?.fieldKey] || !input?.[field?.fieldKey]?.trim().length) {
+              if (!fieldInput?.[field?.fieldKey] || !fieldInput?.[field?.fieldKey]?.trim().length) {
                 return rule?.errorMessage;
               }
             }
           }
         }
       }
-    } else {
+    } else if (!isFieldKeyedRules(question.validationRules)) {
+      // Only the branch above produces the field-keyed record form, so the
+      // answer here is the plain text the question posted.
+      const textInput = input as string;
       if (question?.validationRules?.length) {
         if (
           !validateLength(
-            input,
+            textInput,
             question?.validationRules?.length?.min,
             question?.validationRules?.length?.max,
           )
@@ -74,7 +114,7 @@ export function validateQuestion(question, input, selectedLanguage) {
       if (question.validationRules.wordCount) {
         if (
           !validateWordCount(
-            input,
+            textInput,
             question?.validationRules?.wordCount?.min,
             question?.validationRules?.wordCount?.max,
           )
@@ -83,7 +123,7 @@ export function validateQuestion(question, input, selectedLanguage) {
         }
       }
       if (question.validationRules.textType) {
-        if (!validateTextType(input, question?.validationRules?.textType?.type)) {
+        if (!validateTextType(textInput, question?.validationRules?.textType?.type)) {
           return question?.validationRules?.textType?.errorMessage;
         }
       }

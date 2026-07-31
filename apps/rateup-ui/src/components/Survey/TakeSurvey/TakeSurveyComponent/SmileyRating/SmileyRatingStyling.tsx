@@ -58,10 +58,24 @@ function lighten(color: string, alpha: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+/** How a smiley set is rendered: filled/outline variant, palette, and emoji set. */
+/** Per-smiley colour overrides written by the theme editor. */
+export interface SmileyGradientStyle {
+  color?: Record<number, string>;
+  gradientStartColor?: string;
+  gradientEndColor?: string;
+}
+
+export interface SmileyIconStyle {
+  variant: SmileyVariantStyle;
+  colorType: SmileyColorType;
+  emojies?: string[];
+}
+
 export const getIconStyle = (
   color?: string,
   iconType: string = "neutral",
-  iconStyle = {
+  iconStyle: SmileyIconStyle = {
     variant: SmileyVariantStyle.Filled,
     colorType: SmileyColorType.Default,
   },
@@ -104,7 +118,12 @@ export const getIconStyle = (
   };
 };
 
-export const getEmptyIcon = (value: number, color: string, iconStyle, response) => {
+export const getEmptyIcon = (
+  value: number,
+  color: string | undefined,
+  iconStyle: SmileyIconStyle,
+  response?: unknown,
+) => {
   const { variant, emojies } = iconStyle;
   if (!variant || variant === SmileyVariantStyle.Default) {
     return (
@@ -157,7 +176,11 @@ export const getEmptyIcon = (value: number, color: string, iconStyle, response) 
   }
 };
 
-export const getFullIcon = (value: number, color: string, iconStyle) => {
+export const getFullIcon = (
+  value: number,
+  color: string | undefined,
+  iconStyle: SmileyIconStyle,
+) => {
   const { variant, emojies } = iconStyle;
   if (!variant || variant === SmileyVariantStyle.Default) {
     return (
@@ -202,7 +225,7 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
   }
 };
 
-export function getSmileyEmojies(value) {
+export function getSmileyEmojies(value: number) {
   switch (value) {
     case 1:
       return "😥";

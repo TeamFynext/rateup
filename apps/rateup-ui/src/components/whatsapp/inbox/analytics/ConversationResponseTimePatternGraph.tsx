@@ -14,9 +14,10 @@ import {
 import type { ChartConfig } from "@/components/ui/chart.tsx";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 
-const ConversationResponseTimePatternGraph = ({ dateRange }) => {
+const ConversationResponseTimePatternGraph = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data = [], isLoading } = useGetAverageConversationResponseTimeGraphData({
     dateKey: dateRange.key,

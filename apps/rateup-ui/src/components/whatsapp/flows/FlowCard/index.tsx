@@ -1,6 +1,6 @@
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -48,7 +48,7 @@ interface FlowCardProps {
   status: WaFlowStatus;
   dbFlowId: string;
   createdAt: Date;
-  teamsData?: any;
+  teamsData?: TeamData[];
   version: number;
   category?: string;
   responseCount?: number;
@@ -77,7 +77,7 @@ function FlowCard({
     setTeamIdError("");
   });
   const cloneAndDeprecateFlowsMutation = useCloneAndDeprecateFlowsMutation();
-  const teamOptions = teamsData?.map((team: any) => ({
+  const teamOptions = teamsData?.map((team) => ({
     value: team?.id,
     label: team?.name,
   }));
@@ -89,8 +89,9 @@ function FlowCard({
     setTeamIdError("");
   };
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Also reached from the save hotkey, which has already prevented the default.
+  const onSubmit = (e?: SubmitEvent<HTMLFormElement>) => {
+    e?.preventDefault();
     if (!teamId) {
       setTeamIdError("Must contain one team");
       return;
@@ -266,7 +267,7 @@ function FlowCard({
           <form
             className="p-5"
             onSubmit={onSubmit}
-            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSubmit]])}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void onSubmit()]])}
           >
             <div className="flex flex-col gap-4">
               <p className="text-muted-foreground">
@@ -285,7 +286,7 @@ function FlowCard({
                     <SelectValue placeholder={translations("Select team (type in to search)")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {teamOptions.map((option) => (
+                    {teamOptions?.map((option: { value: string; label: string }) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>

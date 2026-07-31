@@ -34,9 +34,10 @@ export enum TestimonialTabs {
   Share = "Share",
 }
 export interface filterType {
-  date: "new" | "old";
-  rating: number;
-  length: "longest" | "shortest";
+  /** `null` means the filter is off. */
+  date: "new" | "old" | null;
+  rating: number | null;
+  length: "longest" | "shortest" | null;
   teams: string[];
   surveys: string[];
 }
@@ -49,7 +50,7 @@ function CollectionById() {
     strict: false,
   });
 
-  const tab = searchParams.tab;
+  const tab = Object.values(TestimonialTabs).find((value) => value === searchParams.tab);
   const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(TestimonialTabs.Select);
   const [selectedTestimonialIds, setSelectedTestimonialIds] = useState<string[]>([]);
   const [isDelete, setIsDelete] = useState(false);
@@ -62,10 +63,10 @@ function CollectionById() {
     surveys: [],
     teams: [],
   });
-  const [type, setType] = useState("date");
+  const [type, setType] = useState<string | null>("date");
 
   const { data: alltestimonials } = useGetAllTestimonialsByOrg();
-  const filteredTestimonials = getFilteredTestimonials(alltestimonials, filters, type);
+  const filteredTestimonials = getFilteredTestimonials(alltestimonials ?? [], filters, type);
   const filteredTestimonialIds = filteredTestimonials?.map((t) => t.id);
 
   const [openedEdit, setOpenedEdit] = useState(false);
@@ -142,7 +143,7 @@ function CollectionById() {
           <TabsContent value={TestimonialTabs.Edit} className="flex-1">
             <TestimonialEdit
               currentStyle={collection?.theme}
-              testimonials={collection?.testimonials}
+              testimonials={collection?.testimonials ?? []}
               filters={filters}
               isDelete={isDelete}
               type={type}
@@ -154,7 +155,7 @@ function CollectionById() {
 
           <TabsContent value={TestimonialTabs.Share} className="flex-1">
             <TestimonialShare
-              selectedTestimonials={collection?.testimonials}
+              selectedTestimonials={collection?.testimonials ?? []}
               currentStyle={collection?.theme}
             />
           </TabsContent>
@@ -173,9 +174,9 @@ function CollectionById() {
 interface UtilityComponentProps {
   selectedTestimonialIds: string[];
   setSelectedTestimonialIds: React.Dispatch<React.SetStateAction<string[]>>;
-  activeTab: TestimonialTabs;
-  setActiveTab: React.Dispatch<React.SetStateAction<TestimonialTabs>>;
-  filteredTestimonialIds: string[];
+  activeTab: TestimonialTabs | null;
+  setActiveTab: React.Dispatch<React.SetStateAction<TestimonialTabs | null>>;
+  filteredTestimonialIds: string[] | undefined;
   openEdit: () => void;
   toggleDelete: () => void;
   isDelete: boolean;
@@ -234,7 +235,7 @@ function UtilityComponent({
   );
 
   function filterAndSelectTestimonialIds(checked: boolean) {
-    if (checked) setSelectedTestimonialIds(testimonialIdsNotInCollection);
+    if (checked) setSelectedTestimonialIds(testimonialIdsNotInCollection ?? []);
     else setSelectedTestimonialIds([]);
   }
 
@@ -260,7 +261,7 @@ function UtilityComponent({
                 checked={isAllSelectedForDelete}
                 disabled={!savedTestimonialIds?.length}
                 onCheckedChange={(checked) => {
-                  if (checked) setSelectedTestimonialIds(savedTestimonialIds);
+                  if (checked) setSelectedTestimonialIds(savedTestimonialIds ?? []);
                   else setSelectedTestimonialIds([]);
                 }}
               />

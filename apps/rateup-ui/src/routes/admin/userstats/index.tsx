@@ -48,10 +48,10 @@ interface UserTableData {
   name: string;
   orgName: string;
   role: string;
-  signupDate: string;
-  recipeName: string;
-  status: boolean;
-  isPaused: boolean;
+  signupDate: string | null;
+  recipeName: string | undefined;
+  status: boolean | undefined;
+  isPaused: boolean | undefined;
 }
 
 function Index() {
@@ -69,7 +69,7 @@ function Index() {
   });
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
   const confirm = useConfirm();
 
@@ -188,7 +188,7 @@ function Index() {
     },
   ];
 
-  const handlePauseResumeClick = async (user: any) => {
+  const handlePauseResumeClick = async (user: UserData | undefined) => {
     const shouldProceed = await confirm({
       title: user?.isPaused ? translations("Resume User") : translations("Pause User"),
       description: `${translations("Are you sure to")} ${
@@ -198,7 +198,7 @@ function Index() {
       cancelText: translations("cancel"),
     });
 
-    if (!shouldProceed) return;
+    if (!shouldProceed || !user) return;
 
     setSelectedUser(user);
     updatePauseStatus.mutate({
@@ -411,7 +411,7 @@ function Index() {
           DataTableToolbar={DataTableToolbar}
           onRowClick={(row) => {
             const user = users?.find((user) => user.email === row.id);
-            setSelectedUser(user);
+            setSelectedUser(user ?? null);
             open();
           }}
         />
@@ -424,7 +424,7 @@ function Index() {
       >
         <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-225">
           <DialogTitle className="sr-only">{translations("User details")}</DialogTitle>
-          <UserModal selectedUser={selectedUser} />
+          {selectedUser && <UserModal selectedUser={selectedUser} />}
         </DialogContent>
       </Dialog>
     </div>

@@ -8,9 +8,12 @@ import {
 import { toast } from "sonner";
 
 import useContactStore, { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { AssignInboxResult } from "./wamessage.api";
+import type { WaMessageLogFilter } from "./wamessage.api";
 import {
   assignInboxToUser,
   blockWhatsAppUser,
@@ -62,15 +65,15 @@ export const useGetMessagesByContactId = (
 };
 
 export const useSendNewWaMessage = (
-  contactId: string,
-  teamId: string | null,
-  whatsappSettingsPhoneId: string,
+  contactId: string | undefined,
+  teamId: string | null | undefined,
+  whatsappSettingsPhoneId: string | undefined,
   platform = MessagePlatform.WHATSAPP,
 ) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (message: any) =>
-      sendNewWaMessage(contactId, {
+    mutationFn: (message: RequestPayloadFields) =>
+      sendNewWaMessage(contactId ?? "", {
         ...message,
         whatsappSettingsPhoneId,
         platform,
@@ -159,7 +162,7 @@ function followAssignmentToItsTicket(result: AssignInboxResult, contactId: strin
   });
 }
 
-export const useAssignInboxToUer = (_contactId, filterData) => {
+export const useAssignInboxToUer = (_contactId: string, filterData: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
@@ -223,13 +226,13 @@ export const useBulkAssignInboxToUser = (filterData?: string) => {
       });
       toast.success("Chats assigned successfully");
     },
-    onError: (e: any) => {
+    onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
     },
   });
 };
 
-export const useGetAssignedUserForContact = (contactId) => {
+export const useGetAssignedUserForContact = (contactId: string) => {
   return useQuery({
     queryKey: ["assignedInboxUser", contactId],
     queryFn: () => getAssignedUserForContact(contactId),
@@ -245,7 +248,7 @@ export const useGetInboxUserCount = (enabled: boolean) => {
   });
 };
 
-export const useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
+export const useMarkWaMessagesAsRead = (contactId: string, _filterData?: string) => {
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
@@ -360,11 +363,11 @@ export const useEditConversation = () => {
       subject?: string | null;
       description?: string | null;
     }) => updateConversation(conversationId, data),
-    onSuccess: (res: any, variables) => {
+    onSuccess: (res, variables) => {
       // Prefer what the server actually stored; fall back to what we sent.
       const subject = res?.subject !== undefined ? res.subject : variables.subject;
       const description = res?.description !== undefined ? res.description : variables.description;
-      const patch = (c) => ({
+      const patch = (c: ContactWithUpdatedAt): ContactWithUpdatedAt => ({
         ...c,
         ...(subject !== undefined ? { ticketSubject: subject } : {}),
         ...(description !== undefined ? { ticketDescription: description } : {}),
@@ -427,7 +430,7 @@ export const useBlockWhatsAppUser = () => {
   });
 };
 
-export const useUnBlockWhatsAppUser = (filterData) => {
+export const useUnBlockWhatsAppUser = (filterData: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: unblockWhatsAppUser,
@@ -494,16 +497,16 @@ export function useGenerateInboxResponse() {
 }
 
 interface CreatePrivateMessageVariables {
-  data: any;
+  data: RequestPayload;
 }
 
-export function useCreatePrivateMessage(contactId) {
+export function useCreatePrivateMessage(contactId: string) {
   return useMutation({
     mutationFn: ({ data }: CreatePrivateMessageVariables) => createPrivateMessage(contactId, data),
   });
 }
 
-export function useWaMessageLogs(filter) {
+export function useWaMessageLogs(filter: WaMessageLogFilter) {
   return useQuery({
     queryKey: [
       "wa-message-logs",
@@ -538,7 +541,7 @@ export const useExportWaMessageLogs = () => {
         id: "export-logs",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error exporting logs", error);
       toast.error(error?.message || "Error exporting logs", {
         id: "export-logs",

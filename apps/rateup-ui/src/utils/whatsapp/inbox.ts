@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { OrderContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayBody/components/order";
 import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
 import type { WaMessageAssignStatus } from "@/types/enums.ts";
 import { MessagePlatform, WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
@@ -54,19 +55,52 @@ export function getContactPlatform(
   );
 }
 
+/**
+ * A parsed message body. Which member applies follows `messageType`: the media
+ * and text kinds are strings (media pack `link_caption_caption`), and the
+ * structured kinds keep the shape their renderer expects.
+ */
+export type ParsedWaMessageContent =
+  | string
+  | { text?: string; commentId?: string; mediaId?: string }
+  | {
+      attachments: Array<{
+        content: string;
+        type: NonNullable<NonNullable<IgReceiveMessageBody["message"]>["attachments"]>[0]["type"];
+      }>;
+      text?: string;
+    }
+  | WaSendMessageBody["contacts"]
+  | WaSendMessageBody["location"]
+  | OrderContent;
+
 export interface ParsedWaMessageReturn {
   timeStamp: string;
   messageType: string;
-  messageContent: any;
+  messageContent: ParsedWaMessageContent;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
 }
+/** The attachments body carries a list of media entries. */
+function isAttachmentContent(
+  content: ParsedWaMessageContent,
+): content is { attachments: Array<{ content: string; type: string }>; text?: string } {
+  return typeof content === "object" && content !== null && "attachments" in content;
+}
+
+/** The Instagram comment body carries the comment's text and ids. */
+function isCommentContent(
+  content: ParsedWaMessageContent,
+): content is { text?: string; commentId?: string; mediaId?: string } {
+  return typeof content === "object" && content !== null && "commentId" in content;
+}
+
 export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMessageReturn {
   const { messageBody, waCreatedAt } = message;
 
   let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType = "text";
-  let messageContent = "No messages yet" as any;
+  let messageContent: ParsedWaMessageContent = "No messages yet";
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] = {} as WaSendMessageBody["interactive"];
   if (
@@ -79,9 +113,9 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
       if (message) {
         if (message.attachment) {
           messageContent =
-            message.attachment.payload.id ||
-            message.attachment.payload.url ||
-            message.attachment.payload.attachment_id;
+            message.attachment.payload?.id ||
+            message.attachment.payload?.url ||
+            message.attachment.payload?.attachment_id;
 
           messageType = message.attachment.type;
         } else if (message.text) {
@@ -90,7 +124,7 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
         }
       } else if (sender_action && sender_action === "react") {
         messageType = "reaction";
-        messageContent = payload.emoji || payload.reaction;
+        messageContent = payload?.emoji || payload?.reaction;
       }
     }
     if (messageBody?.exchangeProcess === "receive") {
@@ -143,73 +177,75 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
           break;
         case "template":
           messageContent = send.template?.name ?? "";
-          template = send.template;
+          template = send.template!;
           break;
         case "interactive":
           messageContent = "";
           interactive = send.interactive;
           break;
         case "reaction":
-          messageContent = send.reaction.emoji;
+          messageContent = send.reaction!.emoji;
           break;
         case "document":
-          messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
+          messageContent = `${send?.document!.link}_caption_${send?.document!.filename}_caption_${send?.document!.caption ?? ""}`;
           break;
         case "contacts":
-          messageContent = [...send.contacts];
+          messageContent = [...send.contacts!];
           break;
         case "location":
-          messageContent = { ...send.location };
+          messageContent = { ...send.location! };
           break;
       }
     }
     if (messageBody?.exchangeProcess === "receive") {
       const { receive } = messageBody as { receive: WaReceiveMessageBody };
-      timeStamp = receive.messages[0].timestamp;
-      messageType = receive.messages[0].type;
+      // The `type` discriminant guarantees its matching payload field is set.
+      const inbound = receive.messages[0]!;
+      timeStamp = inbound.timestamp;
+      messageType = inbound.type;
       switch (messageType) {
         case "text":
-          messageContent = receive.messages[0].text.body;
+          messageContent = inbound.text!.body;
           break;
         case "image":
-          messageContent = `${receive.messages[0].image?.link}_caption_${receive.messages[0].image?.caption ?? ""}`;
+          messageContent = `${inbound.image?.link}_caption_${inbound.image?.caption ?? ""}`;
           break;
         case "button":
-          messageContent = receive.messages[0].button.text;
+          messageContent = inbound.button!.text;
           break;
         case "audio":
-          messageContent = `${receive.messages[0].audio?.id}_caption_${receive.messages[0].audio?.caption ?? ""}`;
+          messageContent = `${inbound.audio?.id}_caption_${inbound.audio?.caption ?? ""}`;
           break;
         case "video":
-          messageContent = `${receive.messages[0].video?.id}_caption_${receive.messages[0].video?.caption ?? ""}`;
+          messageContent = `${inbound.video?.id}_caption_${inbound.video?.caption ?? ""}`;
           break;
         case "document":
-          messageContent = `${receive.messages[0].document.id}_caption_${receive.messages[0].document.filename}_caption_${receive.messages[0].document.caption ?? ""}`;
+          messageContent = `${inbound.document!.id}_caption_${inbound.document!.filename}_caption_${inbound.document!.caption ?? ""}`;
           break;
         case "interactive":
-          switch (receive.messages[0].interactive.type) {
+          switch (inbound.interactive!.type) {
             case "button_reply":
-              messageContent = receive.messages[0].interactive.button_reply.title;
+              messageContent = inbound.interactive!.button_reply.title;
               break;
             case "list_reply":
-              messageContent = receive.messages[0].interactive.list_reply.title;
+              messageContent = inbound.interactive!.list_reply.title;
               break;
             case "nfm_reply":
-              messageContent = receive.messages[0].interactive.nfm_reply.name;
+              messageContent = inbound.interactive!.nfm_reply.name;
               break;
           }
           break;
         case "reaction":
-          messageContent = receive.messages[0].reaction.emoji;
+          messageContent = inbound.reaction!.emoji;
           break;
         case "contacts":
-          messageContent = [...receive.messages[0].contacts];
+          messageContent = [...inbound.contacts!];
           break;
         case "location":
-          messageContent = { ...receive.messages[0].location };
+          messageContent = { ...inbound.location! };
           break;
         case "order":
-          messageContent = { ...receive.messages[0].order };
+          messageContent = { ...inbound.order! };
           break;
       }
     }
@@ -219,14 +255,14 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
         internal?.assignStatus as WaMessageAssignStatus,
       );
       if (isClosedType) {
-        messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body} `;
+        messageContent = `${internal?.triggeredByUser?.name} ${internal!.text.body} `;
       } else {
-        messageContent = `${internal.text.body} by ${internal?.triggeredByUser?.name}`;
+        messageContent = `${internal!.text.body} by ${internal?.triggeredByUser?.name}`;
       }
     }
     if (messageBody?.exchangeProcess === "privateNote") {
       const { privateNote } = messageBody;
-      messageContent = `${privateNote.text.body}`;
+      messageContent = `${privateNote!.text.body}`;
     }
   }
 
@@ -239,12 +275,13 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
   };
 }
 
+/** One-line preview of a message, for the chat list and notifications. */
 export function returnMessageContentBasedOnParsedMessage(
   parsedMessage: ParsedWaMessageReturn,
   exchangeProcess: "send" | "receive" | "internal" | "privateNote",
-) {
+): string {
   if (parsedMessage.messageType === "text") {
-    return parsedMessage.messageContent;
+    return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
   } else if (parsedMessage.messageType === "image") {
     return "Image";
   } else if (parsedMessage.messageType === "video") {
@@ -266,7 +303,7 @@ export function returnMessageContentBasedOnParsedMessage(
   } else if (parsedMessage.messageType === "template") {
     return "Template";
   } else if (parsedMessage.messageType === "button") {
-    return parsedMessage.messageContent;
+    return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
   } else if (parsedMessage.messageType === "interactive") {
     return "Interactive Message";
   } else if (parsedMessage.messageType === "reaction") {
@@ -278,17 +315,20 @@ export function returnMessageContentBasedOnParsedMessage(
         ? "Liked a message"
         : `Reacted ${parsedMessage.messageContent}`;
   } else if (parsedMessage.messageType === "attachments") {
-    return parsedMessage.messageContent.attachments[
-      parsedMessage.messageContent.attachments.length - 1
-    ].type;
+    const attachments = isAttachmentContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent.attachments
+      : [];
+    return attachments.at(-1)?.type ?? "Attachment";
   } else if (parsedMessage.messageType === "ig_comment") {
-    return parsedMessage.messageContent.text || "Comment";
+    return isCommentContent(parsedMessage.messageContent)
+      ? (parsedMessage.messageContent.text ?? "Comment")
+      : "Comment";
   } else {
     return "Unsupported message type";
   }
 }
 
-export function isInboxSessionExpired(timeStamp: string) {
+export function isInboxSessionExpired(timeStamp?: string) {
   if (!timeStamp) return true;
   const currentTime = dayjs().utc();
   const givenTime = dayjs(timeStamp).utc();
@@ -310,16 +350,16 @@ export function validateInboxTemplateSending(
         switch (componentC.format) {
           case "IMAGE":
             const hasDefaultImage = !!defaultValues?.image?.link;
-            const hasSelectedImage =
-              !!sendHeaderComponent?.parameters[0]?.[componentC?.format.toLowerCase()]?.link;
+            const hasSelectedImage = !!sendHeaderComponent?.parameters[0]?.image?.link;
             return hasDefaultImage || hasSelectedImage;
           case "VIDEO":
           case "DOCUMENT":
             const hasDefaultFile = !!createTemplateComponents.find(
               (data) => data.type === WaTemplateComponentTypeUpperCase.HEADER,
             )?.example?.header_handle?.[0];
-            const hasSelectedFile =
-              !!sendHeaderComponent?.parameters[0]?.[componentC?.format.toLowerCase()]?.link;
+            // "VIDEO" | "DOCUMENT" lowercased — the media key on the parameter.
+            const mediaKey = componentC.format.toLowerCase() as "video" | "document";
+            const hasSelectedFile = !!sendHeaderComponent?.parameters[0]?.[mediaKey]?.link;
             return hasDefaultFile || hasSelectedFile;
           case "LOCATION":
             if (!sendHeaderComponent) return false;

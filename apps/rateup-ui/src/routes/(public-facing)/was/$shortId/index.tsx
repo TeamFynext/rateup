@@ -10,9 +10,7 @@ export const Route = createFileRoute("/(public-facing)/was/$shortId/")({
   }),
   loaderDeps: ({ search: { tag } }) => ({ tag }),
   loader: async ({ params, deps: { tag } }) => {
-    const surveyTeamMapIdOrShortId = params.shortId
-      ? params.shortId
-      : (params as any).surveyTeamMapId;
+    const surveyTeamMapIdOrShortId = params.shortId;
 
     const data = await getShareUrlFromSurveyTeamMapId(surveyTeamMapIdOrShortId);
 
@@ -26,7 +24,7 @@ export const Route = createFileRoute("/(public-facing)/was/$shortId/")({
 });
 
 function Was() {
-  const { data, surveyTeamMapIdOrShortId, tag } = Route.useLoaderData();
+  const { data, tag } = Route.useLoaderData();
 
-  return <Redirect tag={tag} res={data} surveyTeamMapIdOrShortId={surveyTeamMapIdOrShortId} />;
+  return <Redirect tag={tag} res={data} />;
 }

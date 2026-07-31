@@ -13,20 +13,20 @@ export function getQuestionLabel(question: Question, selectedLanguage?: string) 
   );
 }
 
-export const getFormattedTitleFromVariable = (title, variables) => {
+export const getFormattedTitleFromVariable = (title: string, variables: SurveyVariable[]) => {
   const variablesInQuestion = getPropValueFromQuestionCustomComponent(title);
   if (!variablesInQuestion) return null;
   const parser = new DOMParser();
   const doc = parser.parseFromString(title, "text/html");
   variablesInQuestion.forEach((value) => {
-    if (variables.map((variable) => variable.name).includes(value)) return;
+    if (variables.map((variable: SurveyVariable) => variable.name).includes(value)) return;
     const component = Array.from(doc.querySelectorAll("variable-component")).find(
       (el) => el.getAttribute("label") === value,
     );
     if (component) {
       const parent = component.parentNode;
       const replacementNode = doc.createTextNode("");
-      parent.replaceChild(replacementNode, component);
+      parent?.replaceChild(replacementNode, component);
     }
   });
   return doc.body.innerHTML;
@@ -36,9 +36,9 @@ export const getFilteredVariablesForQuestion = (
   variables: SurveyVariable[],
   selectedLanguage: string,
   questions: Question[],
-  question: Question,
+  question: Question | undefined,
 ) => {
-  const questionIndex = questions.findIndex((q) => q.id == question.id);
+  const questionIndex = questions.findIndex((q) => q.id == question?.id);
   const previousQuestionIds = questions.slice(0, questionIndex).map((q) => q.id);
   return variables?.filter((val) => {
     if (val?.type === SurveyVariableType.DEFAULT) {

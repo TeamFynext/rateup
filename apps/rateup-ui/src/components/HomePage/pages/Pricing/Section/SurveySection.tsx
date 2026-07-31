@@ -1,15 +1,27 @@
 import PlanCard from "../Card/PlanCard.tsx";
+import type { Cart } from "../store/RouteAndCartStore.ts";
+import type { PricingPlan } from "../types.ts";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const SurveySection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
-  const surveyPlan = [] // plans, removing for now
+export const SurveySection = ({
+  largeScreen,
+  handlePlanSelection,
+  freePlan,
+  currencySymbol,
+}: {
+  largeScreen: boolean;
+  handlePlanSelection: (cart: Cart) => void;
+  freePlan: PricingPlan[];
+  currencySymbol: string;
+}) => {
+  const surveyPlan = ([] as PricingPlan[]) // plans, removing for now
     ?.filter((item) => {
       const name = item?.name;
       return (
         name && !name.includes("Menu") && !name.includes("WhatsApp") && !name.includes("Custom")
       );
     })
-    ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
+    ?.sort((a, b) => Number(a?.paymentPlan?.amount) - Number(b?.paymentPlan?.amount));
 
   surveyPlan?.push({
     displayName: "Enterprise",
@@ -20,7 +32,7 @@ export const SurveySection = ({ largeScreen, handlePlanSelection, freePlan, curr
     },
   });
 
-  if (freePlan?.length > 0) {
+  if (freePlan?.length > 0 && freePlan[0]) {
     freePlan[0].paymentPlan = {
       amount: 0,
       currency: "",
@@ -33,7 +45,7 @@ export const SurveySection = ({ largeScreen, handlePlanSelection, freePlan, curr
     <div className="my-6 flex flex-wrap justify-center gap-8">
       {surveyPlans?.map((data, index) => {
         let isPopular = false;
-        isPopular = data?.displayName && data?.displayName.toLowerCase().includes("team");
+        isPopular = !!data?.displayName?.toLowerCase().includes("team");
 
         return (
           <div className="relative flex flex-col items-center" key={data?.id}>

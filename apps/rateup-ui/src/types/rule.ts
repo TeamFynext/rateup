@@ -1,56 +1,23 @@
-import type {
-  ActionType,
-  ConditionField,
-  ConditionOperator,
-  TriggerEvent,
-} from "@/components/dashboard/automation/components/schema.ts";
+import type { CreateRuleValues } from "@/components/dashboard/automation/components/schema.ts";
 
 // import type { SendTemplateActionValue } from "@/components/dashboard/automation/components/schema.ts";
 
-export interface Rule {
+/**
+ * A saved automation rule: everything the builder's schema produces, plus the columns the
+ * server owns.
+ */
+export interface Rule extends CreateRuleValues {
   id: string;
-  name: string;
-  triggerEvent: TriggerEvent;
-  operator: "AND" | "OR";
-  groups: RuleGroup[];
-  actions: RuleAction[];
-  isActive: boolean;
   orgId: string;
-  whatsappSettingsPhoneIds: string[];
   createdAt: Date;
   updatedAt: Date;
-  options?: {
-    sendOncePerDay?: boolean;
-    shopifyEvent?: string;
-    shopifyProductIds?: string[];
-    businessHours?: {
-      enabled: boolean;
-      businessHoursId: string | undefined;
-    };
-  };
-  platform?: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
 }
 
-export interface RuleGroup {
-  id: string;
-  operator: "AND" | "OR";
-  conditions: RuleCondition[];
-  ruleId: string;
-}
+/** A rule's condition groups, as the builder's schema models them. */
+export type RuleGroup = CreateRuleValues["groups"][number];
 
-interface RuleCondition {
-  id: string;
-  field: ConditionField;
-  operator: ConditionOperator;
-  value: string;
-  ruleGroupId: string;
-}
-
-interface RuleAction {
-  id: string;
-  type: ActionType;
-  value: string | null | undefined;
-  ruleId: string;
-}
-
-export type CreateRule = Omit<Rule, "id" | "createdAt" | "updatedAt" | "orgId">;
+/**
+ * The create/update payload: exactly what the rule builder's schema produces. A saved `Rule`
+ * additionally carries the ids and back-references the server owns.
+ */
+export type CreateRule = CreateRuleValues;

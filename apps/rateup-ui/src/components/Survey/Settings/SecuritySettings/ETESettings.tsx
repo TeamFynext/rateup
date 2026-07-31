@@ -34,7 +34,7 @@ export default function ETESettings({ survey }: ETESettingsInterface) {
   const editSurvey = useEditSurveyMutation(survey?.id);
   const { data: responses } = useAllResponses(survey?.id);
 
-  const hasResponses = responses?.map((r) => r?.responses?.length).some((v) => v > 0);
+  const hasResponses = responses?.map((r) => r?.responses?.length).some((v) => (v ?? 0) > 0);
 
   const isDisabled = (!!endtoendencryption && !!user?.encryptionKeys) || !!hasResponses;
 

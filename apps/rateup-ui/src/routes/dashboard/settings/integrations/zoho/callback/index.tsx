@@ -30,10 +30,10 @@ function ZohoCallback() {
 
         await connectZoho(code, orgId);
         toast.success(t("Successfully connected to Zoho."));
-        navigate({ to: "/dashboard/settings/integrations/zoho" });
+        navigate({ to: "/dashboard/settings/integrations/$id", params: { id: "zoho" } });
       } catch {
         toast.error(t("Could not connect zoho."));
-        navigate({ to: "/dashboard/settings/integrations/zoho" });
+        navigate({ to: "/dashboard/settings/integrations/$id", params: { id: "zoho" } });
       }
     }
 

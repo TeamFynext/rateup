@@ -20,9 +20,11 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
+import type { AdminOrg } from "@/backend/org/org.api.ts";
 import {
   useAllOrgs,
   useDeleteOrgByAdminMutation,
@@ -62,7 +64,17 @@ export const Route = createFileRoute("/admin/orgs/$orgId/")({
 
 dayjs.extend(relativeTime);
 
-function StatCard({ title, count, icon: Icon, color = "blue" }) {
+function StatCard({
+  title,
+  count,
+  icon: Icon,
+  color = "blue",
+}: {
+  title: string;
+  count: ReactNode;
+  icon: ComponentType<{ className?: string; size?: number }>;
+  color?: string;
+}) {
   const getColorClasses = () => {
     switch (color) {
       case "green":
@@ -108,7 +120,15 @@ function StatCard({ title, count, icon: Icon, color = "blue" }) {
   );
 }
 
-function StatSection({ title, children, icon: Icon }) {
+function StatSection({
+  title,
+  children,
+  icon: Icon,
+}: {
+  title: string;
+  children: ReactNode;
+  icon: ComponentType<{ className?: string; size?: number }>;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -136,7 +156,7 @@ function OrgById() {
   } = useSubscriptionByOrgId(orgId);
   const { data: orgs, isLoading: isOrgsLoading } = useAllOrgs();
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
-  const [orgDetails, setOrgDetails] = useState<any>(null);
+  const [orgDetails, setOrgDetails] = useState<AdminOrg | null>(null);
   const updatePauseStatus = useUpdateOrgPause();
   const { t: translations } = useTranslation();
   const updateSubscription = useUpdateSubscriptionMutation();
@@ -144,7 +164,7 @@ function OrgById() {
 
   useEffect(() => {
     if (orgs) {
-      setOrgDetails(orgs.find((org) => org.id === orgId));
+      setOrgDetails(orgs.find((org) => org.id === orgId) ?? null);
     }
   }, [orgs]);
 
@@ -435,7 +455,7 @@ interface DeleteOrgModalProps {
   isInactive?: boolean;
   isSendingEmail?: boolean;
   onSendEmail: (orgId: string, onDone?: () => void) => void;
-  deletionMailSent: string | null;
+  deletionMailSent?: string | null;
 }
 
 function DeleteOrgModal({

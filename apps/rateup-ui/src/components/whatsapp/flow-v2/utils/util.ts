@@ -11,7 +11,7 @@ import {
 } from "@/types/enums.ts";
 
 export const getValidationSchema = (type: QuestionType2) => {
-  let schema = {};
+  let schema: z.ZodRawShape = {};
   switch (type) {
     case QuestionType2.TextInput:
       schema = {
@@ -320,8 +320,11 @@ export const getValidationSchema = (type: QuestionType2) => {
       }
     }
     if (data["min-date"] || data["max-date"]) {
+      // The bounds are stored as ISO date strings; anything else is not a bound.
+      const minDate = typeof data["min-date"] === "string" ? data["min-date"] : undefined;
+      const maxDate = typeof data["max-date"] === "string" ? data["max-date"] : undefined;
       (data["unavailable-dates"] as Date[]).forEach((date) => {
-        if (date && dayjs(date).isBefore(data["min-date"])) {
+        if (date && dayjs(date).isBefore(minDate)) {
           ctx.issues.push({
             code: "custom",
             message: "Unavailable dates must be after min-date",
@@ -329,7 +332,7 @@ export const getValidationSchema = (type: QuestionType2) => {
             input: data["unavailable-dates"],
           });
         }
-        if (date && dayjs(date).isAfter(data["max-date"])) {
+        if (date && dayjs(date).isAfter(maxDate)) {
           ctx.issues.push({
             code: "custom",
             message: "Unavailable dates must be before max-date",
@@ -363,25 +366,61 @@ export const getValidationSchema = (type: QuestionType2) => {
 interface InitialValues {
   [key: string]: {
     type: string;
-    value: string | number | boolean | string[] | { id: string; title: string }[];
-    extra?: any;
+    /** `null`/`undefined` for fields that start empty, e.g. date pickers. */
+    value:
+      | string
+      | number
+      | boolean
+      | string[]
+      | { id: string; title: string }[]
+      | null
+      | undefined;
+    /** Extra props forwarded verbatim to the field component this entry renders. */
+    extra?: {
+      max?: number;
+      required?: boolean;
+      disabled?: boolean;
+      clearable?: boolean;
+      allowDeselect?: boolean;
+      data?: string[];
+      defaultValue?: string;
+      type?: string;
+      size?: string;
+      mt?: string | number;
+      onMessage?: string;
+      offMessage?: string;
+      onlyTitle?: boolean;
+      maxImages?: number;
+      aspectRatioOptions?: unknown;
+      scaleTypeOptions?: unknown;
+    };
     metaType?: string;
   };
 }
 
+/** Reads one property off a value that may not be an object. */
+const prop = (value: unknown, key: string): unknown =>
+  typeof value === "object" && value !== null ? (value as Record<string, unknown>)[key] : undefined;
+
+/**
+ * A field's max length lives in zod's internal check descriptors, which are not part of its
+ * public types — so walk them as `unknown` rather than reaching through `def`.
+ */
+const maxLengthOf = (field: unknown): number | undefined => {
+  const checks = prop(prop(field, "def"), "checks");
+  if (!Array.isArray(checks)) return undefined;
+  const check = checks.find((c) => prop(prop(prop(c, "_zod"), "def"), "check") === "max_length");
+  const maximum = prop(prop(prop(check, "_zod"), "def"), "maximum");
+  return typeof maximum === "number" ? maximum : undefined;
+};
+
 export const getInitialValues = (type: QuestionType2) => {
   let initialValues: InitialValues = {};
   const validation = getValidationSchema(type);
-  const shape: any = validation?.shape;
-  const LABEL_MAX = shape?.label?.def?.checks?.find(
-    (data) => data?._zod?.def?.check === "max_length",
-  )?._zod?.def?.maximum;
-
-  const DESC_MAX = shape?.description?.def?.checks?.find(
-    (data) => data?._zod?.def?.check === "max_length",
-  )?._zod?.def?.maximum;
-  const TEXT_MAX = shape?.text?.def?.checks?.find((data) => data?._zod?.def?.check === "max_length")
-    ?._zod?.def?.maximum;
+  const shape = validation?.shape;
+  const LABEL_MAX = maxLengthOf(shape.label);
+  const DESC_MAX = maxLengthOf(shape.description);
+  const TEXT_MAX = maxLengthOf(shape.text);
 
   const TITLE_MAX = 4090;
   const HELPER_TEXT_MAX = 80;

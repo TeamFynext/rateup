@@ -4,6 +4,8 @@ import { currencyLabel } from "@/components/menu/util/currencyData.ts";
 import { Spoiler } from "@/components/ui/spoiler.tsx";
 import { cn } from "@/lib/utils.ts";
 
+import type { PricingPlan } from "../pricing-plan.ts";
+
 type BillingPeriod = "monthly" | "yearly";
 
 const PlanCardNew = ({
@@ -12,7 +14,7 @@ const PlanCardNew = ({
   fallbackSymbol = "$",
   onButtonClick,
 }: {
-  plan: any;
+  plan: PricingPlan;
   period?: BillingPeriod;
   fallbackSymbol?: string;
   onButtonClick: () => void;

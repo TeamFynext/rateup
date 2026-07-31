@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { QueryFilter } from "@/types/api.ts";
+
 import {
   getAllSubscriptions,
   getMessageStats,
@@ -45,7 +47,7 @@ export const useUpdateSubscriptionMutation = () => {
   });
 };
 
-export const useMessageStats = (orgId, filter: any) => {
+export const useMessageStats = (orgId: string, filter: QueryFilter) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");

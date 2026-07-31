@@ -20,13 +20,11 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    // renable strict mode and strictNullChecks when you can fix all errors
-    "strict": false,
-    "strictNullChecks": false,
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     // "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

@@ -1,6 +1,7 @@
 import { openDB } from "idb";
 import { isEqual } from "lodash";
 
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 
 import type { ContactWithUpdatedAt } from "./store.ts";
@@ -86,7 +87,7 @@ export async function loadContactIdsForFilter(filterKey: string): Promise<string
   return (await db.get(STORE_FILTERS, filterKey)) || [];
 }
 
-export async function saveMessagesToIDB(key: string, messages: any[]) {
+export async function saveMessagesToIDB(key: string, messages: WaGetMessagesBody[]) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);
@@ -96,7 +97,7 @@ export async function saveMessagesToIDB(key: string, messages: any[]) {
 
   const existingMap = new Map(existingEntries.map((e) => [e.message.id, e.message]));
 
-  const toUpdate: any[] = [];
+  const toUpdate: unknown[] = [];
   for (const m of messages) {
     const existing = existingMap.get(m.id);
     if (!existing || !isEqual(existing, m)) {
@@ -136,7 +137,7 @@ export async function getMessagesFromIDB(key: string) {
  * Matches on the WhatsApp id (`messageId`) and on the row id, because outbound
  * rows are cached under whichever of the two they have.
  */
-export async function patchMessageInIDB(messageId: string, data: Record<string, any>) {
+export async function patchMessageInIDB(messageId: string, data: Record<string, unknown>) {
   if (!messageId) return;
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");

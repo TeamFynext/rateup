@@ -64,7 +64,7 @@ export const useUpdateNotificationSettings = () => {
 export const useDeleteNotification = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (notificationId) => {
+    mutationFn: (notificationId: string) => {
       toast.loading("Hold on...deleting", {
         id: "notification",
       });

@@ -64,7 +64,7 @@ export function FlowSelector({
       <Select
         // TODO: check why flowId is saved as number in db
         value={value?.toString() ?? ""}
-        onValueChange={onChange}
+        onValueChange={(v) => onChange?.(v ?? "")}
         items={selectOptions}
         disabled={disabled}
       >

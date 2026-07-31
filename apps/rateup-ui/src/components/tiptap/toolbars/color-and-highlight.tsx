@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { MobileToolbarGroup, MobileToolbarItem } from "./mobile-toolbar-group";
 import { useToolbar } from "./toolbar-provider";
 
-export type TextStylingExtensions = Extension<ColorOptions, any> | Extension<HighlightOptions, any>;
+export type TextStylingExtensions = Extension<ColorOptions> | Extension<HighlightOptions>;
 
 const TEXT_COLORS = [
   { name: "Default", color: "var(--editor-text-default)" },

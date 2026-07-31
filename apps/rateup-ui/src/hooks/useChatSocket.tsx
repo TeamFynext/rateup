@@ -86,7 +86,7 @@ export const useChatSocket = () => {
               !!useContactsStore.getState().currentFilterKey?.includes("spam:true")
             ) {
               addContactsForFilter(
-                useContactsStore.getState().currentFilterKey,
+                useContactsStore.getState().currentFilterKey!,
                 [
                   {
                     ...incomingContact,
@@ -217,7 +217,25 @@ export const useChatSocket = () => {
   }, [browserId, queryClient, messageStore]);
 };
 
-const handleNotificationWithSound = ({ message, navigate }) => {
+/** The inbox-notification slice of the socket payload this handler reads. */
+interface ChatSocketMessage {
+  type?: string;
+  inbox?: {
+    contact?: { id?: string; name?: string };
+    message?: {
+      messageId?: string;
+      messageBody?: { exchangeProcess?: string };
+    };
+  };
+}
+
+const handleNotificationWithSound = ({
+  message,
+  navigate,
+}: {
+  message: ChatSocketMessage | null | undefined;
+  navigate: ReturnType<typeof useNavigate>;
+}) => {
   const pathnamesMap = {
     inbox: "/dashboard/inbox",
   };
@@ -232,14 +250,14 @@ const handleNotificationWithSound = ({ message, navigate }) => {
 
   const audio = new Audio("/sounds/noti.wav");
 
-  toast.info(`You have a new message from ${message.inbox.contact.name}`, {
-    id: message.inbox.message.messageId,
+  toast.info(`You have a new message from ${message?.inbox?.contact?.name}`, {
+    id: message?.inbox?.message?.messageId,
     icon: <IconBrandWhatsapp size={18} />,
     action: {
       label: "View",
       onClick: () => {
         navigate({
-          to: `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
+          to: `${pathnamesMap.inbox}?contactId=${message?.inbox?.contact?.id}`,
         });
       },
     },

@@ -34,7 +34,13 @@ const timezoneList: TimezoneOption[] = (() => {
   return [];
 })();
 
-const TimeZoneSelector = ({ value, onChange }) => {
+const TimeZoneSelector = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => {
   const [timezoneOpen, setTimezoneOpen] = React.useState(false);
   const { t } = useTranslation();
 

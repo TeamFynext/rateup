@@ -2,6 +2,7 @@ import { IconKey, IconReload, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import {
   useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
@@ -61,7 +62,7 @@ export function Zapier() {
   );
 }
 
-function APIKeyGenerate({ integration }) {
+function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
   const [apiKey, setApiKey] = useState(undefined);
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
@@ -106,9 +107,9 @@ function APIKeyGenerate({ integration }) {
         <Field>
           <FieldLabel htmlFor="zapier-org-id">Organization ID</FieldLabel>
           <InputGroup>
-            <InputGroupInput id="zapier-org-id" value={user.user.orgId} readOnly />
+            <InputGroupInput id="zapier-org-id" value={user.user?.orgId ?? ""} readOnly />
             <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={user.user.orgId} />
+              <ApiCopyButton value={user.user?.orgId ?? ""} />
             </InputGroupAddon>
           </InputGroup>
         </Field>
@@ -218,7 +219,7 @@ function ZapierTriggerList({
       })),
     [integration],
   );
-  async function handleDeleteClick(tr) {
+  async function handleDeleteClick(tr: { id?: string; [key: string]: unknown }) {
     const shouldDelete = await confirm({
       title: "Delete trigger subscription",
       description: "Are you sure you want to delete this subscription?",

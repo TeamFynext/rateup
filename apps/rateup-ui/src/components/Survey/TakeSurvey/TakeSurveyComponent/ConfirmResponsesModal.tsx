@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
+import type { StoredResponse } from "@/utils/response.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
@@ -44,6 +47,17 @@ function ConfirmResponsesModal({
   finishSurvey,
   isSavingResponses,
   largeScreen,
+}: {
+  opened: boolean;
+  close: () => void;
+  survey: Survey;
+  questionsHistory: string[];
+  responses: QuestionResponse[];
+  selectedLanguage: string;
+  surveyThemeData: SurveyTheme | null;
+  finishSurvey: () => void;
+  isSavingResponses: boolean;
+  largeScreen: boolean;
 }) {
   const { t: translations } = useTranslation();
   return (
@@ -58,10 +72,10 @@ function ConfirmResponsesModal({
         <div className="flex-1 overflow-auto pt-4">
           <div className="flex flex-col gap-4 pb-8">
             {survey.questions
-              .filter((q) => questionsHistory.includes(q.id))
-              .map((question) => {
-                const response: QuestionResponse = responses.find(
-                  (response) => response.questionId === question.id,
+              .filter((q: Question) => questionsHistory.includes(q.id))
+              .map((question: Question) => {
+                const response = responses.find(
+                  (response: QuestionResponse) => response.questionId === question.id,
                 );
                 return (
                   <div key={question.id} className="flex flex-col gap-2">
@@ -247,10 +261,10 @@ function ConfirmResponsesModal({
                               if (!answers) return null;
                               return (
                                 <div className="flex flex-col gap-2">
-                                  {Object.values(answers).map((ad: any, index: number) => {
+                                  {Object.values(asAnswer(answers)).map((ad, index: number) => {
                                     return (
                                       <span className="font-light" key={index}>
-                                        {ad}
+                                        {String(ad ?? "")}
                                       </span>
                                     );
                                   })}
@@ -260,10 +274,10 @@ function ConfirmResponsesModal({
                               const results = Object.values(response?.response)[0];
                               return (
                                 <div className="flex flex-col gap-2">
-                                  {Object.entries(results).map(([q, res]: any) => {
+                                  {Object.entries(asAnswer(results)).map(([q, res]) => {
                                     return (
                                       <span className="font-light" key={q}>
-                                        {q}: {res?.value}
+                                        {q}: {String(asAnswer(res as StoredResponse).value ?? "")}
                                       </span>
                                     );
                                   })}

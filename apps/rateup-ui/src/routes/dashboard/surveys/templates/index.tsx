@@ -35,7 +35,7 @@ export const Route = createFileRoute("/dashboard/surveys/templates/")({
 function Templates() {
   const { user } = useUser();
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Survey | null>(null);
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
@@ -47,7 +47,7 @@ function Templates() {
     backgroundColor: "#fff",
   };
 
-  const handleTemplateSelect = (template: any) => {
+  const handleTemplateSelect = (template: Survey) => {
     setSelectedTemplate(template);
     setIsTemplateDialogOpen(true);
   };
@@ -57,12 +57,12 @@ function Templates() {
     setCreateSurveyOpened(true);
   };
 
-  function Category({ categoryName, surveys }) {
+  function Category({ categoryName, surveys }: { categoryName: string; surveys: Survey[] }) {
     return (
       <div className="mt-6">
         <h3 className="text-lg font-semibold mb-4">{categoryName}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {surveys?.map((survey, index) => (
+          {surveys?.map((survey: Survey, index: number) => (
             <div
               key={survey?.id}
               className="cursor-pointer"
@@ -93,7 +93,8 @@ function Templates() {
               <Button
                 onClick={() => {
                   navigate({
-                    to: `/dashboard/surveys?action=create`,
+                    to: "/dashboard/surveys",
+                    search: { action: "create" },
                   });
                 }}
               >
@@ -116,7 +117,7 @@ function Templates() {
           <div className="px-6 pb-6">
             {allTemplates &&
               Object.entries(allTemplates).map(([categoryName, surveys], index) => (
-                <Category key={index} categoryName={categoryName} surveys={surveys as any} />
+                <Category key={index} categoryName={categoryName} surveys={surveys} />
               ))}
           </div>
         </ListPageContent>

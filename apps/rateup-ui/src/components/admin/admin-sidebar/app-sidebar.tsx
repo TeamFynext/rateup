@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import {
   Sidebar,
   SidebarContent,
@@ -101,7 +102,7 @@ const data = {
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  data?: any;
+  data?: IUserInfoApiResponse;
 }
 
 export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProps>) {
@@ -110,7 +111,7 @@ export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProp
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="#" />}>
+            <SidebarMenuButton size="lg" render={<a href="#" />}>
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <Command className="size-4" />
               </div>

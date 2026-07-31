@@ -29,11 +29,11 @@ const faqs = [
   },
 ];
 
-function FAQItem({ q, a }) {
+function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const ansRef = useRef(null);
-  const itemRef = useRef(null);
+  const ansRef = useRef<HTMLDivElement | null>(null);
+  const itemRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (ansRef.current) {

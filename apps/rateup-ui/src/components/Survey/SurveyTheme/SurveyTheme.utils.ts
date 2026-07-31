@@ -3,8 +3,11 @@ import { produce } from "immer";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 import type { SurveyTheme } from "./surveyTheme.types";
+import type { SurveyThemePage } from "./surveyThemeReducer.ts";
 
-export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
+export async function destructureThemeAndUploadImagesIfAny(
+  surveyTheme: Record<string, SurveyThemePage>,
+) {
   const welcomeThemeBgObj = surveyTheme?.welcomeTheme?.bg;
   const welcomeDesktopBgImgUrl = welcomeThemeBgObj?.desktopBg?.imageUrl;
   const welcomeMobileBgImgUrl = welcomeThemeBgObj?.mobileBg?.imageUrl;
@@ -44,7 +47,7 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   ];
 
   const urls = await Promise.all(
-    images.map((image: string | File | Blob) =>
+    images.map((image: string | File | Blob | null | undefined) =>
       image instanceof File || image instanceof Blob
         ? uploadFile(image).then(
             (fileKey) => `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,

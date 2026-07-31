@@ -92,7 +92,7 @@ function Page() {
 
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
-  const selectedBoardId = searchParams.b ?? "";
+  const selectedBoardId = typeof searchParams.b === "string" ? searchParams.b : "";
   const debouncedSearch = useDebounce(search.trim(), 200);
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
@@ -349,7 +349,7 @@ function BoardTeamFilter({
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       disabled={disabled}
       items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
     >

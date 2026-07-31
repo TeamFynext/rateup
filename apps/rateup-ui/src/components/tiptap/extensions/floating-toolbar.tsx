@@ -33,7 +33,7 @@ export function FloatingToolbar({ editor }: { editor: Editor | null }) {
       e.preventDefault();
     };
 
-    const el: any = editor.options.element;
+    const el = editor.view.dom;
     el.addEventListener("contextmenu", handleContextMenu);
 
     return () => el.removeEventListener("contextmenu", handleContextMenu);

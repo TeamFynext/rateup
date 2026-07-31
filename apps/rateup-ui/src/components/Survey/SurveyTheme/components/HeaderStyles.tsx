@@ -24,25 +24,25 @@ function HeaderStyles() {
   const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { title } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { title } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const handleColorChange = useCallback((value) => {
+  const handleColorChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "title-color-change",
       payload: value,
     });
   }, []);
 
-  const handleFontWeightChange = useCallback((value) => {
+  const handleFontWeightChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "title-font-weight-change",
       payload: value,
     });
   }, []);
 
-  const handleFontSizeChange = useCallback((value) => {
+  const handleFontSizeChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "title-font-size-change",
       payload: value,
@@ -56,7 +56,7 @@ function HeaderStyles() {
       <div className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
-          value={title.styles.color}
+          value={String(title.styles.color ?? "")}
           onChange={handleColorChange}
           withoutEyedropper
         />
@@ -67,8 +67,8 @@ function HeaderStyles() {
             Font weight
           </FieldLabel>
           <Select
-            value={title.styles.fontWeight}
-            onValueChange={handleFontWeightChange}
+            value={String(title.styles.fontWeight ?? "")}
+            onValueChange={(value) => handleFontWeightChange(value ?? "")}
             items={FontWeights}
           >
             <SelectTrigger id={`${uid}-font-weight`} className="w-full rounded-xl">

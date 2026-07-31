@@ -19,7 +19,7 @@ import {
 
 interface ShareQRProps {
   url: string;
-  sx?: any;
+  sx?: React.CSSProperties;
   title: string;
   isPublished: boolean;
   id?: string;
@@ -34,9 +34,9 @@ const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQ
   );
 
   // currently we are using only two resources(first arg below) survey, menu.
-  const shareSettings = useGetShareSettings(queryKey, resourceName, id);
+  const shareSettings = useGetShareSettings(queryKey, resourceName, id ?? "");
   // useUpdateShareSettingsMutation can return null.
-  const shareSettingsMutation = useUpdateShareSettingsMutation(queryKey, resourceName, id);
+  const shareSettingsMutation = useUpdateShareSettingsMutation(queryKey, resourceName, id ?? "");
   const { t: translations } = useTranslation();
   useEffect(() => {
     const qrSettingsFromApi = shareSettings?.data;
@@ -51,15 +51,15 @@ const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQ
   const handleSaveOfSurveyShareSettings = useCallback(async () => {
     if (shareSettingsMutation) {
       const formData = new FormData();
-      for (const property in logoTabPanelState) {
-        let value = logoTabPanelState[property];
+      for (const [property, rawValue] of Object.entries(logoTabPanelState)) {
+        let value: string | File = rawValue as string | File;
 
-        if (typeof value === "number") {
-          value = value.toString();
+        if (typeof rawValue === "number") {
+          value = rawValue.toString();
         }
 
-        if (typeof value === "boolean") {
-          value = value ? "true" : "false";
+        if (typeof rawValue === "boolean") {
+          value = rawValue ? "true" : "false";
         }
 
         formData.append(property, value);

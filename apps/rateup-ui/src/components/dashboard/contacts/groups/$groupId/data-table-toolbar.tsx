@@ -32,12 +32,12 @@ export function DataTableToolbar<TData, TValue>({
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
 
   const { groupDetails, filter, setFilter } = useGroupTableStore();
-  const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id);
+  const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id ?? "");
   const selectedMembers = Object.keys(table.getState().rowSelection);
   function handleRemoveMembers() {
     if (!selectedMembers.length) return;
     removeContactsMutation?.mutate(
-      { contactIds: selectedMembers, groupId: groupDetails?.id },
+      { contactIds: selectedMembers, groupId: groupDetails?.id ?? "" },
       {
         onSuccess: () => {
           toast.success("contact removed successfully");
@@ -120,13 +120,21 @@ export function DataTableToolbar<TData, TValue>({
       <AddContactToGroupDialog
         opened={isOpenedAddModal}
         setOpened={setIsOpenedAddModal}
-        group={groupDetails}
+        group={groupDetails!}
       />
     </div>
   );
 }
 
-const AddContactToGroupDialog = ({ opened, setOpened, group }) => {
+const AddContactToGroupDialog = ({
+  opened,
+  setOpened,
+  group,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  group: ContactGroupwithContacts;
+}) => {
   function close() {
     setOpened(false);
   }

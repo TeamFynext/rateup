@@ -1,16 +1,19 @@
 import { IconInfoCircle } from "@tabler/icons-react";
+import type { Driver } from "driver.js";
 import { driver } from "driver.js";
-import { useRef } from "react";
+import type { DriveStep } from "driver.js";
 
 import "driver.js/dist/driver.css";
+
+import { useRef } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import styles from "./Welcome.module.css";
 
-const WelcomeTour = ({ steps }) => {
-  const tourInstance = useRef(null);
+const WelcomeTour = ({ steps }: { steps: DriveStep[] }) => {
+  const tourInstance = useRef<Driver | null>(null);
 
   const startTour = () => {
     tourInstance.current = driver({

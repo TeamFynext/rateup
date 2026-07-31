@@ -70,7 +70,7 @@ export const BroadCastTypeValue = ({
     );
   }
 
-  const config = FILE_CONFIG[type];
+  const config = FILE_CONFIG[type as keyof typeof FILE_CONFIG];
   if (!config) return null;
 
   const handleFile = (file?: File) => {

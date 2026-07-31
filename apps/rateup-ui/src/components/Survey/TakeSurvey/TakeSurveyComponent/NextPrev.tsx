@@ -1,6 +1,7 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
+import type { RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -11,11 +12,14 @@ import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { validationSupportedTypes } from "@/utils/data.ts";
-import { validateQuestion } from "@/utils/validation/index.ts";
+import type { StoredResponse } from "@/utils/response.ts";
+import { asAnswer } from "@/utils/response.ts";
+import { asQuestionInput, validateQuestion } from "@/utils/validation/index.ts";
 
 import { getSelectedQPos, validateResponse } from "./util.tsx";
 
@@ -27,18 +31,26 @@ function NextPrev({
   isSavingResponses,
   surveyThemeData,
   errorTextDivRef,
+}: {
+  prev: () => void;
+  next: (response?: StoredResponse | null) => void;
+  questionsLength: number;
+  survey: Survey;
+  isSavingResponses: boolean;
+  surveyThemeData: SurveyTheme | null;
+  errorTextDivRef: RefObject<HTMLDivElement | null>;
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { isLastQuestion, isFirstQuestion } = useHandleNextPrevFuncs();
 
   const uiTextTranslations = survey?.uiTextTranslations;
-  let nextBtnLabel = uiTextTranslations["nextBtn"][selectedLanguage.toLowerCase()]?.trim();
-  let submitBtnLabel = uiTextTranslations["submitBtn"][selectedLanguage.toLowerCase()]?.trim();
+  let nextBtnLabel = uiTextTranslations?.["nextBtn"]?.[selectedLanguage.toLowerCase()]?.trim();
+  let submitBtnLabel = uiTextTranslations?.["submitBtn"]?.[selectedLanguage.toLowerCase()]?.trim();
   if (!nextBtnLabel) {
     nextBtnLabel = "Next";
   }
@@ -54,7 +66,7 @@ function NextPrev({
   const { ...themeStylesWoBr } = themeStyles;
 
   useEffect(() => {
-    const errMsg = validateResponse(response, selectedQ, selectedLanguage);
+    const errMsg = validateResponse(asAnswer(response), selectedQ, selectedLanguage);
     setErrorMsg(errMsg);
     if (errMsg.length) setIsErrorInput(true);
     else setIsErrorInput(false);
@@ -65,10 +77,10 @@ function NextPrev({
       response &&
       validationSupportedTypes.includes(selectedQ?.type as QuestionType)
     ) {
-      const error = validateQuestion(selectedQ, response, selectedLanguage);
-      if (error?.length > 0) {
+      const error = validateQuestion(selectedQ, asQuestionInput(response), selectedLanguage);
+      if ((error?.length ?? 0) > 0) {
         setIsErrorInput(true);
-        setErrorMsg(error?.length ? error : null);
+        setErrorMsg(error?.length ? error : "");
       }
       if (!error) {
         setIsErrorInput(false);
@@ -82,7 +94,7 @@ function NextPrev({
       selectedQ?.type === Q.Phone ||
       selectedQ?.type === Q.EmailPhone ||
       selectedQ?.type === Q.Testimonial ||
-      selectedQ.type === Q.Contact
+      selectedQ?.type === Q.Contact
     ) {
       if (!errorMsg) {
         next();
@@ -94,7 +106,7 @@ function NextPrev({
     }
   }
 
-  function getCompletionRate(num, total) {
+  function getCompletionRate(num: number, total: number) {
     const completionPercentage = ((num / total) * 100).toFixed(0);
     return completionPercentage;
   }

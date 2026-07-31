@@ -33,9 +33,9 @@ interface CreateSurveyModalProps {
   open: boolean;
   close: () => void;
   surveyType: "web" | "whatsapp";
-  teamsData: any;
-  template?: any;
-  setTemplate?: any;
+  teamsData: TeamData[] | undefined;
+  template?: Survey | null;
+  setTemplate?: (template: Survey | null) => void;
 }
 
 interface CreateSurveyFormValues {
@@ -60,18 +60,26 @@ export function CreateSurveyModal({
   const { t: translations } = useTranslation();
   const [prevOpen, setPrevOpen] = useState(false);
   const searchParams = useSearch({ strict: false });
-  const tmp = searchParams.tmp;
-  const tn = searchParams.tn;
+  // A template can be pre-selected through the URL (`?tmp=<id>&tn=<title>`).
+  const tmp = typeof searchParams.tmp === "string" ? searchParams.tmp : undefined;
+  const tn = typeof searchParams.tn === "string" ? searchParams.tn : undefined;
 
-  const [templateId, setTemplateId] = useState(template?.id || tmp || null);
-  const [templateName, setTemplateName] = useState(template?.title || tn || null);
+  const [templateId, setTemplateId] = useState<string | null>(template?.id || tmp || null);
+  const [templateName, setTemplateName] = useState<string | null>(template?.title || tn || null);
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
   const selectThemeDropdownData =
-    allThemesArr?.map(({ id, name }) => ({ value: id, label: name })) ?? [];
+    allThemesArr?.map(({ id, name }: { id: string; name: string }) => ({
+      value: id,
+      label: name,
+    })) ?? [];
 
-  const allTeams = teamsData?.map((team) => team?.id) ?? [];
-  const teamOptions = teamsData?.map((team) => ({ value: team?.id, label: team?.name })) ?? [];
+  const allTeams = teamsData?.map((team: { id: string; name: string }) => team?.id) ?? [];
+  const teamOptions =
+    teamsData?.map((team: { id: string; name: string }) => ({
+      value: team?.id,
+      label: team?.name,
+    })) ?? [];
 
   const formSchema = z.object({
     title: z.string().min(1, translations("Cannot be empty")),
@@ -103,7 +111,7 @@ export function CreateSurveyModal({
   }, [template]);
 
   useEffect(() => {
-    setValue("title", templateName);
+    setValue("title", templateName ?? "");
   }, [templateName]);
 
   useEffect(() => {
@@ -115,7 +123,7 @@ export function CreateSurveyModal({
     setPrevOpen(open);
   }, [open]);
 
-  function arraysEqual(a, b) {
+  function arraysEqual(a: string[], b: string[]) {
     if (a === b) return true;
     if (a == null || b == null) return false;
     if (a?.length !== b?.length) return false;
@@ -152,7 +160,7 @@ export function CreateSurveyModal({
   useEffect(() => {
     if (!watchedSelectedTheme) {
       const defaultThemeId = allThemesArr?.find(
-        (themeObj) => themeObj.name === "Default Theme",
+        (themeObj: { id: string; name: string }) => themeObj.name === "Default Theme",
       )?.id;
       setValue("selectedTheme", defaultThemeId || "");
     }
@@ -327,11 +335,13 @@ export function CreateSurveyModal({
                           <SelectValue placeholder={translations("Select Theme")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {selectThemeDropdownData.map((themeOpt) => (
-                            <SelectItem key={themeOpt.value} value={themeOpt.value}>
-                              {themeOpt.label}
-                            </SelectItem>
-                          ))}
+                          {selectThemeDropdownData.map(
+                            (themeOpt: { value: string; label: string }) => (
+                              <SelectItem key={themeOpt.value} value={themeOpt.value}>
+                                {themeOpt.label}
+                              </SelectItem>
+                            ),
+                          )}
                         </SelectContent>
                       </Select>
                       {isAllThemesFetchPending && <Spinner className="size-4 shrink-0" />}

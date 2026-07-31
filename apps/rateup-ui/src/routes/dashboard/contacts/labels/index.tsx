@@ -55,7 +55,7 @@ function LabelsPage() {
     [],
   );
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     createLabelMutation.mutate(formData, {
       onSuccess: () => {
@@ -65,7 +65,7 @@ function LabelsPage() {
     });
   };
 
-  const handleEdit = async (e: React.FormEvent) => {
+  const handleEdit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedLabel) return;
 
@@ -84,8 +84,8 @@ function LabelsPage() {
     const shouldDelete = await confirm({
       title: "Delete Label",
       description:
-        label._count.contactLabels > 0
-          ? `Are you sure you want to delete "${label.name}"? This label is currently assigned to ${label._count.contactLabels} contact${label._count.contactLabels === 1 ? "" : "s"}. Deleting this label will remove it from all contacts.`
+        (label._count?.contactLabels ?? 0) > 0
+          ? `Are you sure you want to delete "${label.name}"? This label is currently assigned to ${label._count?.contactLabels ?? 0} contact${(label._count?.contactLabels ?? 0) === 1 ? "" : "s"}. Deleting this label will remove it from all contacts.`
           : `Are you sure you want to delete "${label.name}"?`,
       confirmText: "Delete",
       cancelText: "Cancel",
@@ -104,7 +104,7 @@ function LabelsPage() {
     setSelectedLabel(label);
     setFormData({
       name: label.name,
-      color: label.color,
+      color: label.color ?? "",
       description: label.description || "",
     });
     setIsEditModalOpen(true);

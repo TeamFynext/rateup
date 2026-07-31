@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { updateSurvey } from "@/backend/surveys/survey.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -36,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { SurveyType } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime, roundOffMinutesAndSeconds } from "@/utils/dateTime.ts";
 import { getContent } from "@/utils/index.ts";
@@ -61,19 +63,27 @@ function toDatetimeLocal(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/** A question the publish check rejected, with the reasons the API listed. */
+interface SurveyPublishError {
+  id?: string;
+  /** The question heading, keyed by language. */
+  title?: Record<string, string>;
+  errors?: string[];
+}
+
 const ShareSurvey = ({
   survey,
   setActiveTab,
   allowUnpublishedShare = false,
 }: {
   survey: Survey;
-  setActiveTab: (tab: any) => void;
+  setActiveTab: (tab: TabEnum) => void;
   allowUnpublishedShare?: boolean;
 }) => {
   const uid = useId();
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
-  const [tag, setTag] = useState([]);
+  const [tag, setTag] = useState<string[]>([]);
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(survey?.teams[0]?.mapId);
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
@@ -85,10 +95,10 @@ const ShareSurvey = ({
   const [openedIframe, setOpenedIframe] = useState(false);
   const [publishSettings, setPublishSettings] = useState(false);
 
-  const [errors, setErrors] = useState<Array<any> | { error: string } | null>(null);
+  const [errors, setErrors] = useState<SurveyPublishError[] | { error: string } | null>(null);
   const { t: translations } = useTranslation();
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
-  const [editPublish, setEditPublish] = useState(null);
+  const [editPublish, setEditPublish] = useState<"Publish" | "Expiry" | "" | false | null>(null);
 
   // TODO: since flow has a different share page (ShareFlow.tsx), remove the whatsapp related code
   const isWhatsapp = survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow;
@@ -126,7 +136,7 @@ const ShareSurvey = ({
   }, [surveyId, surveyTeamMapId, tag, shortUrlId, waSettings]);
 
   const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(surveyId, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(surveyId, data),
     onSuccess: (data) => {
       if (data?.data?.status === "failed") {
         setIsPublished(false);
@@ -152,7 +162,7 @@ const ShareSurvey = ({
   });
 
   const surveyStatusUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(survey.id, data),
     onSuccess: () => {
       toast.success("Survey status Updated!", { id: "survey" });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -160,7 +170,7 @@ const ShareSurvey = ({
     },
   });
 
-  function shareButtonAction(btn) {
+  function shareButtonAction(btn: "fb" | "mail" | "whatsapp") {
     switch (btn) {
       case "fb":
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
@@ -189,8 +199,8 @@ const ShareSurvey = ({
   const disableShare = !(isPublished || isScheduled || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
-    (value) => {
-      const teamObj = survey.teams[value];
+    (value: string) => {
+      const teamObj = survey.teams[Number(value)];
       setSurveyTeamMapId(teamObj.mapId);
       setShortUrlId(teamObj.shortUrlId);
       setSelectTeamDropdownState(value);
@@ -402,12 +412,12 @@ const ShareSurvey = ({
                         <h4 className="mb-2 text-sm font-semibold">
                           {
                             getContent(
-                              Object.values(item?.title)?.[0]?.toString() ?? "",
+                              Object.values(item?.title ?? {})?.[0]?.toString() ?? "",
                             ) as React.ReactNode
                           }
                         </h4>
                         <ul className="list-disc space-y-1 pl-4 text-sm text-red-500">
-                          {item?.errors?.map((error, index) => (
+                          {item?.errors?.map((error: string, index: number) => (
                             <li key={index}>{error}</li>
                           ))}
                         </ul>
@@ -449,7 +459,7 @@ const ShareSurvey = ({
                       </FieldLabel>
                       <Select
                         value={selectTeamDropdownState}
-                        onValueChange={handleContainedSelectionChange}
+                        onValueChange={(value) => handleContainedSelectionChange(value ?? "")}
                         disabled={disableShare}
                         items={teamSelectData}
                       >
@@ -641,7 +651,19 @@ export const CopyLinkComponent = ({
   );
 };
 
-const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation, survey }) => {
+const PubliShSettingsModal = ({
+  opened,
+  close,
+  editPublish,
+  surveyUpdateMutation,
+  survey,
+}: {
+  opened: boolean;
+  close: () => void;
+  editPublish: "Publish" | "Expiry" | "" | false | null;
+  surveyUpdateMutation: SurveyUpdateMutation;
+  survey: Survey;
+}) => {
   const uid = useId();
   const { t: translations } = useTranslation();
   const [publishChoice, setPublishChoice] = useState<PublishEnum>(PublishEnum.NOW);
@@ -704,11 +726,11 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
   useEffect(() => {
     if (editPublish === "Publish") {
       setPublishChoice(PublishEnum.LATER);
-      setValue("surveyPublishAt", toDatetimeLocal(new Date(survey?.surveyPublishAt)));
+      setValue("surveyPublishAt", toDatetimeLocal(new Date(survey?.surveyPublishAt ?? "")));
     } else if (editPublish === "Expiry") {
       if (survey?.surveyEndAt) {
         setSurveyExpiry(ExpiryEnum.CUSTOM_DATE);
-        setValue("surveyEndAt", toDatetimeLocal(new Date(survey?.surveyEndAt)));
+        setValue("surveyEndAt", toDatetimeLocal(new Date(survey?.surveyEndAt ?? "")));
       } else {
         setSurveyExpiry(ExpiryEnum.NO_EXPIRY);
       }

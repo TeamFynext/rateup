@@ -3,12 +3,15 @@ import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
 import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
+import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
 import { ModeToggle } from "@/components/theme/ModeToggle.tsx";
@@ -213,9 +216,9 @@ function getRouteMatchScore(currentRoute: string, targetRoute?: string): number 
   return -1;
 }
 
-function getMostSpecificChildRoute(children: any[], currentRoute: string) {
+function getMostSpecificChildRoute(children: NavEntry[], currentRoute: string) {
   const bestMatch = children.reduce(
-    (best, child) => {
+    (best: { routeKey: string | null; score: number }, child) => {
       const routeKey = getRouteKey(child?.url);
       const score = getRouteMatchScore(currentRoute, child?.url);
 
@@ -235,7 +238,7 @@ function NavItemContent({
   showRotatingChevron,
   showDescription,
 }: Readonly<{
-  item: any;
+  item: NavEntry;
   isActive: boolean;
   showRotatingChevron?: boolean;
   showDescription?: boolean;
@@ -260,7 +263,7 @@ function NavItemContent({
                 variant="destructive"
                 onClick={(e) => {
                   e.stopPropagation();
-                  item.clearFilter();
+                  item.clearFilter?.();
                 }}
               >
                 <span className="text-[10px]">{item.clearButtonName ?? "Clear"}</span>
@@ -286,7 +289,7 @@ function NavLink({
   onClick,
   showDescription,
 }: Readonly<{
-  item: any;
+  item: NavEntry;
   isActive: boolean;
   onRouteGuard: RouteGuard;
   onClick?: () => void;
@@ -407,7 +410,7 @@ function NavItem({
   sidebarComponentMap,
   activeSubPath,
 }: Readonly<{
-  item: any;
+  item: NavEntry;
   fullPathname: string;
   onRouteGuard: RouteGuard;
   variant?: "default" | "sub" | "settings";
@@ -461,7 +464,7 @@ function NavItem({
 
   // variant === "default"
   if (item.type === "component") {
-    const Component = sidebarComponentMap?.[item.componentKey];
+    const Component = item.componentKey ? sidebarComponentMap?.[item.componentKey] : undefined;
     // An unmapped key (or a caller that forgot to pass the map) used to render as
     // a bare separator with nothing above it — fail visibly nowhere instead.
     if (!Component) return null;
@@ -476,7 +479,7 @@ function NavItem({
     );
   }
 
-  if (item.items?.length > 0) {
+  if ((item.items?.length ?? 0) > 0 && item.items) {
     const activeChildPath = getMostSpecificChildRoute(item.items, fullPathname);
 
     return (
@@ -486,7 +489,7 @@ function NavItem({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {item.items.map((subItem: any) => (
+            {item.items.map((subItem) => (
               <NavItem
                 key={subItem.title}
                 item={subItem}
@@ -527,7 +530,7 @@ function NavSection({
   isLast,
   isSettingsPanel,
 }: Readonly<{
-  item: any;
+  item: NavEntry;
   fullPathname: string;
   onRouteGuard: RouteGuard;
   sidebarComponentMap?: Record<string, React.ReactNode>;
@@ -543,7 +546,7 @@ function NavSection({
           </SidebarGroupLabel>
         )}
         <SidebarGroupContent className="flex flex-col gap-1">
-          {item.items?.map((subItem: any) => (
+          {item.items?.map((subItem) => (
             <NavItem
               key={subItem.url}
               item={subItem}
@@ -558,7 +561,8 @@ function NavSection({
     );
   }
 
-  const activeChildPath = getMostSpecificChildRoute(item.items, fullPathname);
+  const groupItems = item.items ?? [];
+  const activeChildPath = getMostSpecificChildRoute(groupItems, fullPathname);
 
   return (
     <SidebarGroup className="p-0">
@@ -567,7 +571,7 @@ function NavSection({
       <SidebarSeparator className="m-0 hidden group-data-[collapsible=icon]:block" />
       <SidebarGroupContent className="flex p-2">
         <SidebarMenu>
-          {item.items.map((groupItem: any) => (
+          {groupItems.map((groupItem) => (
             <NavItem
               key={groupItem.title ?? groupItem.url}
               item={groupItem}
@@ -587,16 +591,16 @@ function NavSection({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function isGrandchildActive(subItem: any, pathname: string): boolean {
+function isGrandchildActive(subItem: NavEntry, pathname: string): boolean {
   return (
-    subItem.items?.some((grand: any) => {
+    subItem.items?.some((grand) => {
       return isPathPrefixActive(pathname, grand.url);
     }) ?? false
   );
 }
 
-function isNavItemActive(item: any, pathname: string): boolean {
-  const hasActiveChild = item.items?.some((subItem: any) => {
+function isNavItemActive(item: NavEntry, pathname: string): boolean {
+  const hasActiveChild = item.items?.some((subItem) => {
     if (isPathPrefixActive(pathname, subItem.url)) return true;
     if (isGrandchildActive(subItem, pathname)) return true;
     return subItem.isActive ?? false;
@@ -626,13 +630,13 @@ export default function AppSidebar({
   staff,
   teams,
 }: Readonly<{
-  subscription?: any;
-  lifecycles?: any[];
-  contactLabels?: any[];
+  subscription?: Subscription;
+  lifecycles?: GetLabelsRes[];
+  contactLabels?: ContactLabelOption[];
   channels?: ChannelOption[];
   userData?: IUserInfoApiResponse;
-  staff: any[];
-  teams: any[];
+  staff: Array<{ id: string; name?: string }>;
+  teams: Array<{ id: string; name?: string }>;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
@@ -733,7 +737,10 @@ export default function AppSidebar({
           allowAll
           value={chatFilterStore.filter.assignedUserIds[0] ?? "all"}
           className="w-full group-data-[collapsible=icon]:[&>svg]:hidden group-data-[collapsible=icon]:[&>span]:hidden"
-          onChange={(value, isAll) => handleFilter("assignedStaff", isAll ? "all" : value)}
+          onChange={(value: string | string[], isAll?: boolean) =>
+            // "All Staff" reports every user id; only the flag matters here.
+            handleFilter("assignedStaff", isAll || Array.isArray(value) ? "all" : value)
+          }
         />
       ),
       teamSelector: (
@@ -775,7 +782,7 @@ export default function AppSidebar({
                   className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground`}
                 >
                   <AvatarImage
-                    src={getFileUrlFromKey(userData?.data.orgLogo)}
+                    src={getFileUrlFromKey(userData?.data.orgLogo ?? "")}
                     alt={userData?.data?.orgName}
                     className="rounded-md"
                   />
@@ -807,7 +814,7 @@ export default function AppSidebar({
                       aria-label={item.title}
                       render={item.url && item.url !== "#" ? <Link to={item.url} /> : undefined}
                     >
-                      <item.icon {...sidebarIconProps} />
+                      {item.icon && <item.icon {...sidebarIconProps} />}
                       <span className="sr-only">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -845,13 +852,13 @@ export default function AppSidebar({
           <SidebarContent className="bg-background pt-1">
             {activeItem.settingsStyle ? (
               <div className="flex flex-col px-2">
-                {activeItem.items?.map((item: any, index: number) => (
+                {activeItem.items?.map((item, index: number) => (
                   <NavSection
                     key={item.group ?? index}
                     item={item}
                     fullPathname={fullPathname}
                     onRouteGuard={handleRouteGuard}
-                    isLast={index === activeItem.items.length - 1}
+                    isLast={index === (activeItem.items?.length ?? 0) - 1}
                     isSettingsPanel
                   />
                 ))}

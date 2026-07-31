@@ -1,9 +1,13 @@
+import type { QueryFilter } from "@/types/api.ts";
+
 import { axiosClient } from "../apiClient";
 import { CONTACT_BASE_URL } from "../campaign/contacts/contacts.api";
 
 const baseUrl = `${CONTACT_BASE_URL}/conversations`;
 
-export const getConversationOverView = async (filter): Promise<ConversationOverviewStats> => {
+export const getConversationOverView = async (
+  filter: QueryFilter,
+): Promise<ConversationOverviewStats> => {
   const query = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -23,7 +27,7 @@ export interface ConversationResponseStats {
 }
 
 export const getAverageConversationResponseTimeGraphData = async (
-  filter = null,
+  filter: QueryFilter | null = null,
 ): Promise<ConversationResponseStats[]> => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
@@ -39,7 +43,7 @@ export interface ConversationResolvedResponse {
   date: string;
 }
 export const getResolvedConversationStats = async (
-  filter,
+  filter: QueryFilter,
 ): Promise<ConversationResolvedResponse[]> => {
   const query = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
@@ -59,7 +63,7 @@ export interface ConversationAccountDistribution {
 }
 
 export const getConversationAccountDistribution = async (
-  filter,
+  filter: QueryFilter,
 ): Promise<ConversationAccountDistribution[]> => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
@@ -79,7 +83,9 @@ export interface ConversationQuickStats {
   resolvedRateDifference: number;
 }
 
-export const getConversationQuickStats = async (filter): Promise<ConversationQuickStats> => {
+export const getConversationQuickStats = async (
+  filter: QueryFilter | null,
+): Promise<ConversationQuickStats> => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -103,7 +109,7 @@ export interface StaffPerformanceonConversation {
 }
 
 export const getStaffPerformanceonConversation = async (
-  filter,
+  filter: QueryFilter | null,
 ): Promise<StaffPerformanceonConversation[]> => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
@@ -151,8 +157,8 @@ export interface StaffDetailedConversationAnalytics {
   };
 }
 export const getStaffDetailedConversationAnalytics = async (
-  staffId,
-  filter,
+  staffId: string,
+  filter: QueryFilter | null,
 ): Promise<StaffDetailedConversationAnalytics> => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
@@ -163,7 +169,7 @@ export const getStaffDetailedConversationAnalytics = async (
   return response.data;
 };
 
-export const getTeamOverview = async (filter) => {
+export const getTeamOverview = async (filter: QueryFilter | null) => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -171,10 +177,35 @@ export const getTeamOverview = async (filter) => {
   return response.data;
 };
 
-export const getTeamDetailedMetrics = async (teamId, filter) => {
+/** Per-agent slice of a team's conversation metrics. */
+export interface TeamMemberMetrics {
+  userId: string;
+  name: string;
+  onlineStatus?: string;
+  averageResponseTime: number;
+  messagesHandled: number;
+  staffActiveChats: number;
+}
+
+export interface TeamDetailedMetrics {
+  teamName?: string;
+  teamColor?: string;
+  teamMembers?: number;
+  teamMembersOnline?: number;
+  activeChats?: number;
+  averageResponseTime: number;
+  averageResponseTimeComparedToLastWeek?: number;
+  resolutionRate?: number;
+  resolutionRateComparedToLastWeek?: number;
+  members: TeamMemberMetrics[];
+}
+
+export const getTeamDetailedMetrics = async (teamId: string, filter: QueryFilter | null) => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const response = await axiosClient.get(`${baseUrl}/team-metrics/${teamId}?${query}`);
+  const response = await axiosClient.get<TeamDetailedMetrics>(
+    `${baseUrl}/team-metrics/${teamId}?${query}`,
+  );
   return response.data;
 };

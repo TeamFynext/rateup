@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 
 import {
   addExistingContactsToGroup,
@@ -31,10 +33,10 @@ export const useContactGroup = (type: ContactGroupType = ContactGroupType.NORMAL
 export const useContactGroupById = (
   groupId: string,
   enabled = false,
-  pagination,
-  searchData?,
-  sorting?,
-  columnFilters?,
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
 ) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
@@ -107,7 +109,7 @@ export const useAddNewContactMutation = (groupId: string) => {
 export const useAddNewContactFromCSVMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data) => addNewContactFromCSV({ data, groupId }),
+    mutationFn: (data: FormData) => addNewContactFromCSV({ data, groupId }),
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
@@ -119,8 +121,8 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
         id: "contact-group-add-member",
       });
     },
-    onError: (error: any) => {
-      const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+    onError: (error) => {
+      const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
       if (!isValidationError) {
         toast.error(error?.message || `Error adding member`, {
           id: "contact-group-add-member",
@@ -155,7 +157,7 @@ export const useDeleteGroupMutation = () => {
   });
 };
 
-export const useEditContactGroupMutation = (groupId: string) => {
+export const useEditContactGroupMutation = (groupId: string | undefined) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Omit<Partial<ContactGroup>, "tags">) => updateContactGroup(groupId, data),
@@ -214,7 +216,7 @@ export const useAddExistingContactMutation = (groupId: string) => {
   });
 };
 
-export const useRemoveContactsFromGroup = (groupId) => {
+export const useRemoveContactsFromGroup = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeContactsFromGroup,
@@ -295,7 +297,7 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
   });
 };
 
-export const useUpdateContactGroupsForContactMutation = (contactId) => {
+export const useUpdateContactGroupsForContactMutation = (contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { ColumnFilterState, PaginationState } from "@/types/api.ts";
+
 import type {
   ConversationalAutomation,
   fbPageQuery,
@@ -87,7 +89,7 @@ export const useUpdateUserAccessToken = () => {
   return updateMutation;
 };
 
-export const useUpdateWaSettingsMutation = (settingId) => {
+export const useUpdateWaSettingsMutation = (settingId: string) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: (data: UpdateWaSettingsInput) => updateWaSettingsById(settingId, data),
@@ -117,7 +119,7 @@ export const useDeleteWaSettingsMutation = () => {
   });
 };
 
-export const useRegisterBusinessClientMutation = (completionFunction) => {
+export const useRegisterBusinessClientMutation = (completionFunction: () => void) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: registerBusinessClient,
@@ -145,7 +147,12 @@ export const useDeregisterBusinessClientMutation = () => {
   });
 };
 
-export const useWaLogs = (pagination, search, sort, columnFilters) =>
+export const useWaLogs = (
+  pagination: PaginationState,
+  search: string,
+  sort: { id: string; desc: string },
+  columnFilters: ColumnFilterState[],
+) =>
   useQuery({
     queryKey: ["waLogs", pagination, search, sort, columnFilters],
     queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
@@ -158,7 +165,7 @@ export const useMetaAssets = (waSettingsId: string) =>
     enabled: !!waSettingsId,
   });
 
-export const useSyncFbPages = (waSettingsId) => {
+export const useSyncFbPages = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncFbPages(waSettingsId),
@@ -172,7 +179,7 @@ export const useSyncFbPages = (waSettingsId) => {
   });
 };
 
-export const useSyncMetaLeadgenForms = (waSettingsId) => {
+export const useSyncMetaLeadgenForms = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: fbPageQuery) => syncMetaLeadgenForms(waSettingsId, data),
@@ -186,7 +193,10 @@ export const useSyncMetaLeadgenForms = (waSettingsId) => {
   });
 };
 
-export const useSyncLeadgenFormQuestions = (formId, waSettingsId) => {
+export const useSyncLeadgenFormQuestions = (
+  formId: string | undefined,
+  waSettingsId: string | null,
+) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, waSettingsId, data),
@@ -200,7 +210,7 @@ export const useSyncLeadgenFormQuestions = (formId, waSettingsId) => {
   });
 };
 
-export const useSyncAdaccounts = (waSettingsId) => {
+export const useSyncAdaccounts = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncAdAccounts(waSettingsId),
@@ -214,7 +224,7 @@ export const useSyncAdaccounts = (waSettingsId) => {
   });
 };
 
-export const useSyncAdsByadAccounts = (adAccountId, waSettingsId) => {
+export const useSyncAdsByadAccounts = (adAccountId: string, waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncAdsByAdAccount(adAccountId, waSettingsId),
@@ -228,7 +238,7 @@ export const useSyncAdsByadAccounts = (adAccountId, waSettingsId) => {
   });
 };
 
-export const useSubscribeFieldToPage = (waSettingsId) => {
+export const useSubscribeFieldToPage = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: fbPageQuery) => subscribeFieldtoPage(waSettingsId, data),
@@ -260,7 +270,7 @@ export const useUpdateConversationalAutomation = () => {
       });
       toast.success("Conversational components updated");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error updating conversational components");
     },
   });
@@ -276,7 +286,7 @@ export const useSyncConversationalAutomation = () => {
       });
       toast.success("Synced from Meta successfully");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error syncing from Meta");
     },
   });
@@ -291,7 +301,7 @@ export const useSyncDatasetsMutation = (waSettingsId: string) => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Successfully synced datasets");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error syncing datasets");
     },
   });

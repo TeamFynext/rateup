@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateDraftPayload } from "@/backend/whatsapp/whatsapp.api";
 import {
   useDeleteWaTemplateMutation,
   useSaveTemplateAsDraftMutation,
@@ -41,7 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.jsx";
+import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.ts";
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
@@ -63,25 +65,25 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
-interface TemplateListEntry {
-  readonly id: string;
-  readonly createdAt: string;
-  readonly templateType?: string;
-  readonly whatsappSettingsPhoneId?: string | null;
-  readonly WhatsappSettings?: {
-    readonly phoneDisplayName?: string | null;
-  };
-  readonly _count?: {
-    readonly Campaign?: number;
-  };
-  readonly data?: {
-    readonly name?: string;
-    readonly category?: string;
-    readonly status?: string;
-  };
+type TemplateListEntry = WaTemplateListEntry;
+
+/** A starter template offered in the "create from predefined" flow. */
+interface PredefinedTemplate {
+  type: string;
+  name: string;
+  description: string;
+  category: string;
+  body?: string;
+  templateType?: TemplateType;
+  format?: string;
+  header?: string | null;
+  footer?: string;
+  buttons?: Array<{ text?: string }>;
+  example?: string[];
+  isBlank?: boolean;
 }
 
-const PREDEFINED_TEMPLATES = [
+const PREDEFINED_TEMPLATES: PredefinedTemplate[] = [
   {
     type: "Blank",
     templateType: TemplateType.GENERAL_NOTIFICATION,
@@ -263,7 +265,7 @@ function TemplatePicker({ templates, translations, onSelect }: Readonly<Template
         !q ||
         t.type.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
-        t.body.toLowerCase().includes(q);
+        t.body?.toLowerCase().includes(q);
       return matchCat && matchQ;
     });
   }, [templates, search, activeCategory]);
@@ -397,7 +399,7 @@ function TemplatePicker({ templates, translations, onSelect }: Readonly<Template
               <div className="flex items-center justify-between mt-auto pt-1">
                 {tpl.buttons && tpl.buttons.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
-                    {tpl.buttons.map((btn: any, i: number) => (
+                    {tpl.buttons.map((btn, i: number) => (
                       <span
                         key={i}
                         className="rounded-md bg-primary/8 px-1.5 py-0.5 text-[10px] font-medium text-primary border border-primary/15"
@@ -437,12 +439,12 @@ function Template() {
   });
 
   const [showModal, setShowModal] = useState(false);
-  const [selectedPredefined, setSelectedPredefined] = useState<any>(null);
+  const [selectedPredefined, setSelectedPredefined] = useState<PredefinedTemplate | null>(null);
   const [step, setStep] = useState<"pick" | "account" | "loading">("pick");
   const [createDraftAccountId, setCreateDraftAccountId] = useState("");
 
   const saveDraftMutation = useSaveTemplateAsDraftMutation(
-    null,
+    "",
     async (data) => {
       console.log("saveDraftMutation onSuccess data:", data);
       toast.success(translations("Draft created"));
@@ -450,7 +452,7 @@ function Template() {
       const refetchResult = await refetch();
       const updatedTemplates = [...(refetchResult.data || [])];
 
-      updatedTemplates.sort((a: any, b: any) => {
+      updatedTemplates.sort((a, b) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
@@ -478,11 +480,11 @@ function Template() {
       return;
     }
     setStep("loading");
-    const payload = {
+    const payload: WaTemplateDraftPayload = {
       name: selectedPredefined.name,
       header: selectedPredefined.header || null,
       language: "en",
-      body: selectedPredefined.body,
+      body: selectedPredefined.body ?? "",
       footer: selectedPredefined.footer || "Powered by rateup.app",
       category: selectedPredefined.category,
       format: selectedPredefined.format || "NONE",
@@ -542,7 +544,7 @@ function Template() {
       return matchSearch && matchStatus && matchCategory && matchTemplateType && matchAccount;
     });
 
-    return sortData(filtered, sortOption) as TemplateListEntry[];
+    return sortData(filtered, sortOption);
   }, [templates, filters, sortOption, debouncedSearch, selectedAccountId]);
 
   const templateDeleteMutation = useDeleteWaTemplateMutation();
@@ -569,7 +571,7 @@ function Template() {
     setSelectedPredefined(null);
     setCreateDraftAccountId("");
   }
-  function handleEditClick(template) {
+  function handleEditClick(template: { id: string }) {
     navigate({
       to: `/dashboard/whatsapp/templates/${template.id}`,
     });
@@ -604,7 +606,11 @@ function Template() {
         setFilters={setFilters}
         templateTypeOptions={templateTypeOptions}
       />
-      <AccountSelector value={selectedAccountId} onChange={setSelectedAccountId} withAllOption />
+      <AccountSelector
+        value={selectedAccountId}
+        onChange={(value) => setSelectedAccountId(value ?? "")}
+        withAllOption
+      />
       <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
 
       {data ? (
@@ -709,7 +715,10 @@ function Template() {
                 onSelect={(tpl) => {
                   if (tpl.isBlank) {
                     setShowModal(false);
-                    navigate({ to: `/dashboard/whatsapp/templates/create` });
+                    navigate({
+                      to: "/dashboard/whatsapp/templates/$templateId",
+                      params: { templateId: "create" },
+                    });
                   } else {
                     setSelectedPredefined(tpl);
                     setStep("account");
@@ -720,7 +729,7 @@ function Template() {
               <div className="flex flex-col gap-4 py-4">
                 <AccountSelector
                   value={createDraftAccountId}
-                  onChange={setCreateDraftAccountId}
+                  onChange={(value) => setCreateDraftAccountId(value ?? "")}
                   label={translations("WhatsApp Account")}
                   withAllOption={false}
                   optional={false}

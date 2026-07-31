@@ -34,7 +34,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
   const variables = useMemo(() => {
     if (!template?.data?.components) return [];
     const bodyComponent = template.data.components.find(
-      (c: any) => c.type === "BODY" || c.type === "body",
+      (c: { type?: string }) => c.type === "BODY" || c.type === "body",
     );
     // WhatsApp templates use example.body_text[0] to store examples for parameters {{1}}, {{2}}...
     const bodyExamples = bodyComponent?.example?.body_text?.[0];
@@ -87,7 +87,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
               </FieldLabel>
               <Select
                 value={currentMapping?.shopifyPath || ""}
-                onValueChange={(val) => handleMappingChange(i, val)}
+                onValueChange={(val) => handleMappingChange(i, val ?? "")}
                 items={variableOptions}
               >
                 <SelectTrigger id={`${uid}-variable-e-g-${i}`} className="h-9">

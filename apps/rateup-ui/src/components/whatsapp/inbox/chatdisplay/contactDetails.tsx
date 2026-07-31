@@ -25,12 +25,14 @@ import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import {
   useContactDeleteMutation,
   useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -57,7 +59,7 @@ import { TicketType } from "@/utils/enums/ticket.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 interface WaInboxContactDetailsProps {
-  contact: any;
+  contact: ContactWithUpdatedAt;
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
@@ -92,7 +94,7 @@ export default function WaInboxContactDetails({
   isOpen,
   setIsOpen,
 }: Readonly<WaInboxContactDetailsProps>) {
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const { customFields } = useCustomFieldsContext();
   const { updateContactById, setSelectedContact } = useContactsStore();
   const deleteContactMutation = useContactDeleteMutation(groupId);
@@ -108,7 +110,7 @@ export default function WaInboxContactDetails({
     setEditable(false);
   }, [contact?.id]);
 
-  const labels = contact?.contactLabels?.map((label) => label?.id);
+  const labels = contact?.contactLabels?.map((label: { id: string }) => label?.id);
   const {
     register,
     handleSubmit,
@@ -159,7 +161,7 @@ export default function WaInboxContactDetails({
         },
         {
           onSuccess: () => {
-            const updatedLabels = contactLabels?.filter((label) =>
+            const updatedLabels = contactLabels?.filter((label: { id: string }) =>
               values.labels?.includes(label.id),
             );
             updateContactById(contact.id, (c) => ({
@@ -184,12 +186,12 @@ export default function WaInboxContactDetails({
     setIsOpen(!isOpen);
   };
 
-  const getCustomFieldValue = (fieldId) => {
+  const getCustomFieldValue = (fieldId: string) => {
     const customField = getValues().customFields?.find((cf) => cf.fieldId === fieldId);
     return customField?.value || "";
   };
 
-  const updateCustomField = (fieldId, value, customFieldData) => {
+  const updateCustomField = (fieldId: string, value: string, customFieldData: CustomFieldData) => {
     const currentCustomFields = getValues().customFields || [];
     const existingIndex = currentCustomFields.findIndex((cf) => cf.fieldId === fieldId);
 
@@ -206,7 +208,7 @@ export default function WaInboxContactDetails({
     setValue("customFields", [...currentCustomFields], { shouldValidate: true });
   };
 
-  const renderCustomField = (field) => {
+  const renderCustomField = (field: CustomFieldData) => {
     const fieldValue = getCustomFieldValue(field.slug);
     const inputId = `customField-${field.slug}`;
     const fieldLabel = (
@@ -253,7 +255,7 @@ export default function WaInboxContactDetails({
 
       case "multivalue": {
         const options =
-          field?.listValues?.map((option) => ({
+          field?.listValues?.map((option: string) => ({
             value: option,
             label: option,
           })) || [];
@@ -272,7 +274,7 @@ export default function WaInboxContactDetails({
                 <SelectValue placeholder={`Select ${field.name}`} />
               </SelectTrigger>
               <SelectContent>
-                {options.map((opt) => (
+                {options.map((opt: { value: string; label: string }) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -539,7 +541,7 @@ export default function WaInboxContactDetails({
                       control={control}
                       render={({ field }) => (
                         <LifecycleSelector
-                          value={field.value}
+                          value={field.value ?? ""}
                           onChange={field.onChange}
                           className="w-full"
                           placeholder={t("Enter lifecycle")}
@@ -573,7 +575,7 @@ export default function WaInboxContactDetails({
                       render={({ field }) => (
                         <MultiSelect
                           placeholder={t("Select labels")}
-                          options={contactLabels?.map((label) => ({
+                          options={contactLabels?.map((label: { id: string; name: string }) => ({
                             value: label.id,
                             label: label.name,
                           }))}
@@ -939,21 +941,23 @@ export default function WaInboxContactDetails({
                   {t("Assigned Users")}
                 </h4>
                 <div className="space-y-2">
-                  {contact.assignedUsers.map((user, index) => (
-                    <motion.div
-                      key={user.id}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.24 + index * 0.05, duration: 0.2 }}
-                      whileHover={{ scale: 1.02, x: 2 }}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <p className="text-xs font-light text-foreground">{user.name}</p>
-                    </motion.div>
-                  ))}
+                  {contact.assignedUsers.map(
+                    (user: { id?: string; name?: string }, index: number) => (
+                      <motion.div
+                        key={user.id}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.24 + index * 0.05, duration: 0.2 }}
+                        whileHover={{ scale: 1.02, x: 2 }}
+                      >
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                          {user.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <p className="text-xs font-light text-foreground">{user.name}</p>
+                      </motion.div>
+                    ),
+                  )}
                 </div>
               </div>
             ) : (
@@ -962,7 +966,7 @@ export default function WaInboxContactDetails({
               </div>
             )}
           </motion.div>
-          {contact?.contactLabels?.length > 0 && (
+          {(contact?.contactLabels?.length ?? 0) > 0 && (
             <motion.div
               className="flex items-start space-x-1.5 group"
               whileHover={{ scale: 1.01, x: 2 }}
@@ -974,20 +978,22 @@ export default function WaInboxContactDetails({
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-muted-foreground">{t("Labels")}</p>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {contact.contactLabels.map((label) => (
-                    <Badge
-                      key={label.id}
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0.5 h-auto"
-                      style={{
-                        borderColor: label.color,
-                        color: label.color,
-                        backgroundColor: `${label.color}10`,
-                      }}
-                    >
-                      {label.name}
-                    </Badge>
-                  ))}
+                  {contact.contactLabels?.map(
+                    (label: { id: string; name?: string; color?: string }) => (
+                      <Badge
+                        key={label.id}
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0.5 h-auto"
+                        style={{
+                          borderColor: label.color,
+                          color: label.color,
+                          backgroundColor: `${label.color}10`,
+                        }}
+                      >
+                        {label.name}
+                      </Badge>
+                    ),
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -1036,7 +1042,18 @@ export default function WaInboxContactDetails({
   );
 }
 
-function DeleteContactButton({ contact, deleteContactMutation, handleToggle }) {
+function DeleteContactButton({
+  contact,
+  deleteContactMutation,
+  handleToggle,
+}: {
+  contact: { id: string; name?: string };
+  deleteContactMutation: {
+    mutate: (id: string, options?: { onSuccess?: () => void }) => void;
+    isPending?: boolean;
+  };
+  handleToggle: () => void;
+}) {
   const { t } = useTranslation();
   const confirm = useConfirm();
 

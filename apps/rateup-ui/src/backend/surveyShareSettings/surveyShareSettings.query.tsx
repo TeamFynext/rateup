@@ -3,14 +3,14 @@ import { toast } from "sonner";
 
 import { getShareSettings, upadateShareSettings } from "./surveyShareSettings.api";
 
-const useGetShareSettings = (queryKey, resourceName, id) => {
+const useGetShareSettings = (queryKey?: string, resourceName?: string, id?: string) => {
   return useQuery({
-    queryKey: [queryKey, { resourceName, id }],
+    queryKey: [queryKey ?? "", { resourceName, id }],
     queryFn: getShareSettings,
   });
 };
 
-const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
+const useUpdateShareSettingsMutation = (queryKey?: string, resourceName?: string, id?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: upadateShareSettings,

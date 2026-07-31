@@ -21,6 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import {
   useAssignContactLabelsToContactId,
   useContactLabels,
@@ -32,6 +33,7 @@ import {
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -44,10 +46,11 @@ import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { generateInternalMessageId } from "../util.tsx";
+import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
 
 interface TicketPanelProps {
-  contact: any;
+  contact: ContactWithUpdatedAt;
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
@@ -147,7 +150,7 @@ export default function TicketPanel({
   const { data: teamRes } = useTeamsByUser();
   const teams = teamRes?.data ?? [];
 
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const spamMutation = useSetContactSpam();
   const assignLabels = useAssignContactLabelsToContactId();
   const editConversation = useEditConversation();
@@ -170,7 +173,7 @@ export default function TicketPanel({
     setCopied(false);
   }, [contact?.conversationId, contact?.id]);
 
-  const contactLabels: { id: string; name: string; color: string }[] = contact?.contactLabels ?? [];
+  const contactLabels: ContactLabelOption[] = contact?.contactLabels ?? [];
   const activeLabelIds = contactLabels.map((l) => l.id);
   const assignedUsers: { id: string; name: string; teamId: string }[] =
     contact?.assignedUsers ?? [];
@@ -215,7 +218,7 @@ export default function TicketPanel({
     const nextIds = activeLabelIds.includes(labelId)
       ? activeLabelIds.filter((id) => id !== labelId)
       : [...activeLabelIds, labelId];
-    const nextLabels = allLabels.filter((label) => nextIds.includes(label.id));
+    const nextLabels = allLabels.filter((label: { id: string }) => nextIds.includes(label.id));
 
     assignLabels.mutate(
       { contactId: contact.id, labelIds: nextIds },
@@ -263,7 +266,7 @@ export default function TicketPanel({
   const toggleSpam = (next: boolean) => {
     if (!contact?.id) return;
     const messageId = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: messageId,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),
@@ -274,20 +277,20 @@ export default function TicketPanel({
           text: { body: next ? "marked this contact as spam" : "marked this contact as not spam" },
           assignedUsers: [],
           assignStatus: next ? WaMessageAssignStatus.SPAM : NOT_SPAM_EVENT,
-          triggeredByUser: { id: user.userId, name: user.userName },
+          triggeredByUser: { id: user?.userId ?? "", name: user?.userName ?? "" },
         },
         exchangeProcess: "internal",
       },
       sourcePlatform: "INTERNAL",
       sourceIdentifier: null,
-      sendBy: user.userId,
-      sender: { name: user.userName, profilePhoto: user?.profilePhoto },
+      sendBy: user?.userId,
+      sender: { name: user?.userName, profilePhoto: user?.profilePhoto },
       stats: { read: "", sent: "", failed: "", delivered: "" },
       messageId,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
 
     spamMutation.mutate(
       { contactId: contact.id, isSpam: next, messageId },
@@ -536,7 +539,7 @@ export default function TicketPanel({
 
         {labelPickerOpen && (
           <div className="mt-2 p-1.5 rounded-[10px] max-h-56 overflow-y-auto border border-border bg-background shadow-sm">
-            {allLabels.map((label) => {
+            {allLabels.map((label: { id: string; name?: string; color?: string }) => {
               const checked = activeLabelIds.includes(label.id);
               return (
                 <button

@@ -16,7 +16,17 @@ import InsertEmoji from "./InsertEmoji/index.tsx";
 import InsertImage from "./InsertImage/index.tsx";
 import { Video } from "./InsertVideo/CustomVideo.tsx";
 
-export default function TicketTextEditor({ content, onUpdate, placeholder = "", saveBtn = false }) {
+export default function TicketTextEditor({
+  content,
+  onUpdate,
+  placeholder = "",
+  saveBtn = false,
+}: {
+  content: string;
+  onUpdate: (content: string) => void;
+  placeholder?: string;
+  saveBtn?: boolean;
+}) {
   // const [focus, setFocus] = useState(false);
   const editor = useEditor({
     extensions: [

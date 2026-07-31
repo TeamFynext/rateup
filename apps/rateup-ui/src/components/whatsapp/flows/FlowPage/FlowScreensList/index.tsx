@@ -1,4 +1,5 @@
 import { DragDropContext } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useContext, useEffect, useRef } from "react";
@@ -41,7 +42,7 @@ function FlowScreensList({
 
   const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-  const firstRender = useRef(null);
+  const firstRender = useRef<string | null>(null);
   const [pageNo, handlers] = useCounter(0, {
     min: 0,
     max: flowJson?.screens?.length ?? 0,
@@ -69,22 +70,22 @@ function FlowScreensList({
     }
   }, [flowJson?.screens?.length]);
 
-  function onDragEnd({ destination, source }) {
+  function onDragEnd({ destination, source }: DropResult) {
     if (!destination) return;
     if (destination.index === source.index && destination.droppableId === source.droppableId)
       return;
     if (destination.droppableId === source.droppableId) {
       const screen = getScreenObjById(flowJson.screens, destination.droppableId);
-      const elements = getFlowFormElementsFromScreen(screen) as WaFlowFormElement[];
+      const elements = getFlowFormElementsFromScreen(screen!) as WaFlowFormElement[];
 
       const newOrder = reorder(elements, source.index, destination.index);
 
       const form = getFormObjFromScreenId(flowJson.screens, destination.droppableId);
-      const footer = form.children.find((child) => child.type === WaFlowFormElementType.footer);
+      const footer = form?.children.find((child) => child.type === WaFlowFormElementType.footer);
 
       updateFlowJson((draft) => {
         const form = getFormObjFromScreenId(draft.screens, destination.droppableId);
-        form.children = [...newOrder, footer];
+        form!.children = [...newOrder, footer!];
       });
     } else {
       console.error("Inter-screen dragging Not implemented");

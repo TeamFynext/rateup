@@ -62,7 +62,7 @@ const WebhookPage = lazy(() =>
   })),
 );
 
-const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
+const INTEGRATION_PAGES: Record<string, React.ComponentType> = {
   shopify: ShopifyPage,
   googlesheet: GoogleSheetPage,
   amelia: AmeliaPage,
@@ -101,7 +101,7 @@ function IntegrationDetailPage() {
   const Component = INTEGRATION_PAGES[id];
   const integrationName = INTEGRATION_NAMES[id];
   const isInternalService = INTERNAL_SERVICE_IDS.has(id);
-  const backToIntegrations = () => navigate({ to: "/dashboard/settings/integrations/" });
+  const backToIntegrations = () => navigate({ to: "/dashboard/settings/integrations" });
 
   if (!Component) {
     return (

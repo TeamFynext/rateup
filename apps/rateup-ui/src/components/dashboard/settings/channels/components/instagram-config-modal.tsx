@@ -33,10 +33,10 @@ export function InstagramConfigModal({
   close: () => void;
   selectedWaSettings: WaSetting | null;
 }>) {
-  const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id);
+  const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id ?? "");
 
   const upsertMutation = useUpsertWaSettingsMutation();
-  const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id);
+  const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id ?? "");
 
   const { t: translations } = useTranslation();
 
@@ -163,7 +163,7 @@ export function InstagramConfigModal({
                   fbPageId: config.fbPageId,
                   ibaId: config.ibaId,
                   pageAccessToken: config.pageAccessToken,
-                  teams: undefined,
+                  teams: undefined as string[] | undefined,
                 };
 
                 if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {

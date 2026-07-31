@@ -57,7 +57,7 @@ export function getQuestionTypesFromFlowElement(formElement: WaFlowFormElement):
       return [qt.TextArea];
     case wft.dropDown:
     case wft.radioButtonsGroup: {
-      const choices = formElement["data-source"];
+      const choices = formElement["data-source"] ?? [];
       const types = [qt.MCQ, qt.CustomNPS];
       if (choices.length === 2) return types.concat([qt.YN, qt.LD]);
       else if (choices.length === 5) return types.concat([qt.Rating, qt.Smiley]);
@@ -100,7 +100,7 @@ export const qTypesWithAmbiguousChoices = [qt.YN, qt.LD, qt.Rating, qt.Smiley, q
 
 interface validateOptionsProps {
   /** Current form values (e.g. `form.watch()`). */
-  values: any;
+  values: Record<string, unknown>;
   path: string;
 }
 /**
@@ -115,7 +115,7 @@ export function validateOptions({ values, path }: validateOptionsProps) {
     return false;
   }
   for (const qData of Object.values(questions)) {
-    const { type: _, ...choices } = qData as any;
+    const { type: _, ...choices } = (qData ?? {}) as Record<string, unknown>;
     const choiceValues = Object.values(choices);
 
     const uniqueChoices = new Set(choiceValues);
@@ -157,11 +157,11 @@ export function getFlowFooterElementsFromScreen(screen: WaFlowScreen, version = 
   return elementsWithoutFooter;
 }
 
-export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map: any) {
+export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map: WaFlowMap) {
   const formElementIds = screen.layout.children
     .find((se) => se.type === "Form")
     ?.children?.map((q) => q.name);
-  const qIds = formElementIds?.map((fid) => map[fid]?.questionId);
+  const qIds = formElementIds?.map((fid) => (fid ? map[fid]?.questionId : undefined));
   const questions = qIds
     ?.map((qid) => survey.questions.find((q) => q.id === qid))
     .filter((q) => !!q);
@@ -169,14 +169,14 @@ export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map
   return questions;
 }
 
-export function getQuestionIdFromFlowFormElementName(name: string, map: any): string {
+export function getQuestionIdFromFlowFormElementName(name: string, map: WaFlowMap): string {
   return map[name]?.questionId;
 }
 export function getQuestionFromFlowFormElementName(
   name: string,
   questions: Question[],
   map: WaFlowMap,
-): Question {
+): Question | undefined {
   const questionId = getQuestionIdFromFlowFormElementName(name, map);
   return questions.find((q) => q.id === questionId);
 }
@@ -185,13 +185,13 @@ export function getQuestionFromFlowElementId(
   id: string,
   flowJson: WaFlowJson,
   questions: Question[],
-  map: any,
+  map: WaFlowMap,
 ) {
   const formElement = getFlowFormElementById(id, flowJson);
-  return getQuestionFromFlowFormElementName(formElement?.name, questions, map);
+  return getQuestionFromFlowFormElementName(formElement?.name ?? "", questions, map);
 }
 
-export function getFlowTextLimit(type: WaFlowFormElementType) {
+export function getFlowTextLimit(type?: WaFlowFormElementType) {
   switch (type) {
     case WaFlowFormElementType.textHeading:
       return WA_FLOW_HEADING_CHAR_LIMIT;
@@ -218,7 +218,7 @@ export function getFlowTextLimit(type: WaFlowFormElementType) {
  * @param map
  * @returns
  */
-export function getFlowElementText(fe: WaFlowFormElement, questions: Question[], map: any) {
+export function getFlowElementText(fe: WaFlowFormElement, questions: Question[], map: WaFlowMap) {
   if (fe.type === WaFlowFormElementType.image) {
     return "IMAGE";
   } else if (fe.type === WaFlowFormElementType.optIn) {
@@ -227,8 +227,8 @@ export function getFlowElementText(fe: WaFlowFormElement, questions: Question[],
     return fe.text;
   } else {
     try {
-      const q = getQuestionFromFlowFormElementName(fe.name, questions, map);
-      return q.title[lang] || q.description[lang] || q.label[lang];
+      const q = getQuestionFromFlowFormElementName(fe.name ?? "", questions, map)!;
+      return q.title[lang] || q.description[lang] || q.label![lang];
     } catch {
       return "";
     }
@@ -239,7 +239,7 @@ export function getAllIdsFromFlowJson(flowJson: WaFlowJson) {
   const ids = [];
   for (const screen of flowJson.screens) {
     const form = screen.layout.children.find((se) => se.type === "Form");
-    for (const fe of form.children) {
+    for (const fe of form?.children ?? []) {
       ids.push(fe.id);
     }
   }
@@ -249,7 +249,7 @@ export function getAllIdsFromFlowJson(flowJson: WaFlowJson) {
 export function getFlowFormElementById(id: string, flowJson: WaFlowJson) {
   for (const screen of flowJson.screens) {
     const form = screen.layout.children.find((se) => se.type === "Form");
-    for (const fe of form.children) {
+    for (const fe of form?.children ?? []) {
       if (fe.id === id) return fe;
     }
   }
@@ -295,10 +295,10 @@ export const getNewScreenObj = ({
 // We need to pass the draft of immer(used useImmer as state in EditFlow).
 
 export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow: DbFlow) => {
-  let screenData = null;
-  let previousPayloadData = null;
+  let screenData: Record<string, unknown> | null = null;
+  let previousPayloadData: Record<string, unknown> | null = null;
 
-  const routing_model = {};
+  const routing_model: Record<string, string[]> = {};
   let datePickerDynamicFlag = false;
 
   const screens = draft.screens;
@@ -334,12 +334,12 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
     const currentScreenPayload = formElements?.reduce(
       (prev, fe) => ({
         ...prev,
-        [fe.name]: `\${form.${fe.name}}`,
+        [fe.name!]: `\${form.${fe.name}}`,
       }),
       {},
     );
     if (currentScreenIsNotLast) {
-      footerObject["on-click-action"] = {
+      footerObject!["on-click-action"] = {
         name: flowHasLogic ? "data_exchange" : "navigate",
         next: flowHasLogic
           ? undefined
@@ -354,7 +354,7 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
         : formElements.reduce(
             (prev, fe) => ({
               ...prev,
-              [fe.name]: `\${data.${fe.name}}`,
+              [fe.name!]: `\${data.${fe.name}}`,
             }),
             {},
           );
@@ -367,7 +367,7 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
         : formElements.reduce(
             (prev, fe) => ({
               ...prev,
-              [fe.name]: getScreenDataForFormElement(fe),
+              [fe.name!]: getScreenDataForFormElement(fe),
             }),
             {},
           );
@@ -377,7 +377,7 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
       };
     } else {
       screen["terminal"] = true;
-      footerObject["on-click-action"] = flowHasLogic
+      footerObject!["on-click-action"] = flowHasLogic
         ? {
             name: "data_exchange",
             payload: {
@@ -409,8 +409,8 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
 };
 function getScreenDataForFormElement(fe: WaFlowFormElement): {
   type: string;
-  ["__example__"]: string | Array<any> | boolean;
-  items?: any;
+  ["__example__"]: string | string[] | boolean;
+  items?: { type: string };
 } {
   if (fe.type === WaFlowFormElementType.checkboxGroup) {
     return {
@@ -537,7 +537,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
         name: question.optinScreenId,
       },
       payload: {
-        [questionElement.name]: `\${form.${questionElement.name}}`,
+        [questionElement.name!]: `\${form.${questionElement.name}}`,
       },
     };
   } else if (
@@ -554,8 +554,11 @@ export function getFlowElementJsonFromQuestion(question: Question) {
     )
       ? question.required
       : undefined;
+    // extraConfig carries arbitrary, question-type-specific flow-JSON keys, so
+    // it is written through an open view rather than the narrow element type.
+    const extraConfigTarget = questionElement as unknown as Record<string, unknown>;
     Object.entries(question?.extraConfig ?? {}).forEach(([key, value]) => {
-      questionElement[key] = value;
+      extraConfigTarget[key] = value;
     });
   }
   mapData.type = question.type;
@@ -622,7 +625,7 @@ function generateDataSourceFromQuestion(q: Question) {
       id: index.toString(),
       title: c,
     }));
-    const mapData: any = choices.reduce(
+    const mapData: Record<string, string> = choices.reduce(
       (prev, _choice, index) => ({ ...prev, [index]: `${5 - index}` }),
       {},
     );
@@ -646,7 +649,7 @@ function generateDataSourceFromQuestion(q: Question) {
       case qt.MSQ:
       case qt.DDMS:
       case qt.DDSS:
-        choices = q.choices?.[lang] ? q.choices[lang].map((c) => c.value) : [];
+        choices = q.choices?.[lang] ? q.choices[lang].map((c: Choice) => c.value) : [];
         break;
     }
 
@@ -657,7 +660,7 @@ function generateDataSourceFromQuestion(q: Question) {
         ...t,
       };
     });
-    const mapData: any = choices.reduce(
+    const mapData: Record<string, string> = choices.reduce(
       (prev, choice, index) => ({ ...prev, [index]: choice }),
       {},
     );

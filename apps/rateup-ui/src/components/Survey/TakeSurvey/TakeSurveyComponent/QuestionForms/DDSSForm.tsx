@@ -14,6 +14,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import CustomSelectForMobile from "../components/CustomSelectForMobile/index.tsx";
@@ -31,7 +32,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const selectedPreview = useSelectedPreview();
   const isMobile = useIsMobile() || selectedPreview === "mobile";
   const { t: translations } = useTranslation();
-  const takeSurveyLayoutWebDomNodeRef = useRef(null);
+  const takeSurveyLayoutWebDomNodeRef = useRef<HTMLElement | null>(null);
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
@@ -40,27 +41,31 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
 
-  const data = options?.map((op) => op?.value);
-  const items = data?.map((op) => ({ value: op, label: op }));
+  const data = options?.map((op: Choice) => op?.value);
+  const items = data?.map((op: string) => ({ value: op, label: op }));
   useEffect(() => {
     if (response) {
-      setSelectedOp(response.value);
+      setSelectedOp(asAnswer(response).value ?? "");
     }
   }, [response]);
 
   useEffect(() => {
     const takeSurveyLayoutWebRootDiv = document.querySelector(".take-survey-layout-web-root-div");
-    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
+    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv as HTMLElement | null;
   }, []);
 
-  const handleSelectedOp = (value) => {
-    const res = options?.find((op) => op?.value === value);
+  const handleSelectedOp = (value: string) => {
+    const res = options?.find((op: Choice) => op?.value === value);
     updateResponse(res);
   };
 
   return !isMobile ? (
     <FormPaperLayout>
-      <Combobox value={selectedOp || null} onValueChange={handleSelectedOp} items={items}>
+      <Combobox
+        value={selectedOp || null}
+        onValueChange={(value) => handleSelectedOp(value ?? "")}
+        items={items}
+      >
         <ComboboxInput
           placeholder={translations("Select one / type in to search")}
           className="w-full border-none bg-transparent px-0 shadow-none"

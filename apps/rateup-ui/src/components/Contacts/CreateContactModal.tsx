@@ -34,6 +34,16 @@ import {
   contactFormDefaults,
 } from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
+import type {
+  ContactInitialValues,
+  CreateContactsMutation,
+  MutationCallbacks,
+} from "./CreatOrEditContactModal.tsx";
+
+/** The caller-supplied CSV/spreadsheet import mutation; it posts a `FormData` body. */
+export interface CsvImportMutation {
+  mutate(data: FormData, options?: MutationCallbacks): void;
+}
 
 const CreateContactModal = ({
   contactClose,
@@ -45,16 +55,16 @@ const CreateContactModal = ({
 }: {
   contactClose: () => void;
   close: () => void;
-  importCSVContactMutation?: any;
+  importCSVContactMutation: CsvImportMutation;
   type?: ContactGroupType;
-  initialValues?: any;
-  createNewContactMutation?: any;
+  initialValues?: ContactInitialValues | null;
+  createNewContactMutation?: CreateContactsMutation;
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [csvFileError, setCsvFileError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
 
   const { t: translations } = useTranslation();
   const { customFields } = useCustomFieldsContext();
@@ -64,7 +74,7 @@ const CreateContactModal = ({
     [translations, customFields],
   );
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema) as any,
+    resolver: zodResolver(contactSchema),
     defaultValues: { ...contactFormDefaults, ...initialValues },
   });
 
@@ -101,9 +111,11 @@ const CreateContactModal = ({
       external_id: values.external_id || undefined,
       phone: values.phone?.replace(/^\+/, "") || "",
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
-      lastReceivedMessageTimeStamp: undefined,
+      lastReceivedMessageTimeStamp: undefined as string | undefined,
     };
-    if (initialValues) {
+    // Only an id-bearing contact can be edited; the inbox's "add to contact" flow passes a
+    // draft with no id, which falls through to the create path below.
+    if (initialValues?.id) {
       editContactMutation.mutate(
         { data: contactData, contactId: initialValues.id },
         {
@@ -174,7 +186,7 @@ const CreateContactModal = ({
           e.preventDefault();
           handleSubmit();
         }}
-        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void handleSubmit()]])}
         onReset={() => form.reset()}
       >
         <div className="flex flex-col gap-4">
@@ -343,13 +355,29 @@ const CreateContactModal = ({
 };
 export default CreateContactModal;
 
-export const UserSelector = ({
-  value,
-  onChange,
-  className = "",
-  allowMultiSelect = false,
-  allowAll = false,
-}) => {
+/**
+ * `allowMultiSelect` decides whether this renders a `MultiSelect` or a `Select`,
+ * and with it whether the value is a list of user ids or a single one.
+ */
+type UserSelectorProps =
+  | {
+      allowMultiSelect: true;
+      value: string[];
+      onChange: (value: string[], isAll?: boolean) => void;
+      className?: string;
+      allowAll?: boolean;
+    }
+  | {
+      allowMultiSelect?: false;
+      value: string;
+      /** Picking "All Staff" reports every user id, so the value can be a list. */
+      onChange: (value: string | string[], isAll?: boolean) => void;
+      className?: string;
+      allowAll?: boolean;
+    };
+
+export const UserSelector = (props: UserSelectorProps) => {
+  const { className = "", allowAll = false } = props;
   const { data: users, isLoading } = useTeamsMembersOfOrg();
   if (isLoading) {
     return (
@@ -358,13 +386,13 @@ export const UserSelector = ({
       </Card>
     );
   }
-  if (allowMultiSelect) {
+  if (props.allowMultiSelect) {
     const userOptions = users?.data?.map((user) => ({ value: user.id, label: user.name })) ?? [];
     return (
       <MultiSelect
         options={userOptions}
-        value={value}
-        onValueChange={onChange}
+        value={props.value}
+        onValueChange={props.onChange}
         placeholder="Select staff"
         emptyIndicator="No staff found."
         className={`${className}`}
@@ -376,13 +404,18 @@ export const UserSelector = ({
     name: u.name,
     status: u.status,
   }));
-  if (allowAll) userData.unshift({ id: "all", name: "All Staff", status: "online" });
-  function onValueChange(value) {
-    onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
+  if (allowAll) userData?.unshift({ id: "all", name: "All Staff", status: "online" });
+  const { value, onChange } = props as Extract<UserSelectorProps, { allowMultiSelect?: false }>;
+  function onValueChange(value: string) {
+    onChange(value === "all" ? (users?.data.map((u) => u.id) ?? []) : value, value === "all");
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onValueChange} items={userSelectItems}>
+    <Select
+      value={value}
+      onValueChange={(value) => onValueChange(value ?? "")}
+      items={userSelectItems}
+    >
       <SelectTrigger className={`${className}`}>
         <div>
           <User className="size-4 text-muted-foreground" />

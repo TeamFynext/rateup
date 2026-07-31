@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 
 import { MessagePlatform } from "@/types/enums.ts";
 
-export function getSoucePlatformIconAndColor(sourcePlatform) {
+export function getSoucePlatformIconAndColor(sourcePlatform: string) {
   switch (sourcePlatform) {
     case MessagePlatform.WHATSAPP:
       return {

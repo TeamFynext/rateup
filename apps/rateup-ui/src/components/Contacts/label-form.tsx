@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
+import type { CustomFieldData, CustomFieldType } from "@/backend/campaign/contacts/contacts.api";
 import {
   useCreateCustomFieldMutation,
   useUpdateCustomFieldMutation,
@@ -24,8 +25,6 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
-type CustomFieldType = "multivalue" | "number" | "text" | "email";
-
 interface CustomFieldFormValues {
   name: string;
   slug: string;
@@ -36,7 +35,7 @@ interface CustomFieldFormValues {
 }
 
 type CustomFieldFormProps = Readonly<{
-  data?: any;
+  data?: CustomFieldData;
   onSubmitCallback: () => void;
 }>;
 

@@ -1,4 +1,6 @@
-const reviewPageLogosObj = {
+import type { ReactNode } from "react";
+// Keyed by ReviewPagePlatform; `Custom` has no logo.
+const reviewPageLogosObj: Partial<Record<string, ReactNode>> = {
   Google: (
     <img
       className="size-4 object-contain"

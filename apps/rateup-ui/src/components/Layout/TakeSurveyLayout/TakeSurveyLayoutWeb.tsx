@@ -1,5 +1,6 @@
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 import {
@@ -34,14 +35,20 @@ import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
 import { getBgImgAndBgColor } from "./utils.ts";
 
-export const TakeSurveyLayoutWeb = ({ survey, children }) => {
+export const TakeSurveyLayoutWeb = ({
+  survey,
+  children,
+}: {
+  survey: Survey | null;
+  children: ReactNode;
+}) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
   const pagesThemeData = survey?.webSurveyPagesTheme;
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
-  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo;
+  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo ?? null;
   const orgLogoStyles = surveyThemeData?.surveyTheme?.logo?.styles;
 
   // This one is being used for preview in surveyTheme editor
@@ -62,8 +69,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
 
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
-  const updateVisited = useUpdateVisitedMutation(survey?.id);
-  const updateStarted = useUpdateStartedMutation(survey?.id);
+  const updateVisited = useUpdateVisitedMutation(survey?.id ?? "");
+  const updateStarted = useUpdateStartedMutation(survey?.id ?? "");
 
   const [opened, setOpened] = useState(false);
   const open = () => setOpened(true);
@@ -105,7 +112,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   }, [isWelcomePageEnabled]);
 
   useEffect(() => {
-    setIsWelcomePageEnabled(survey?.questions?.some((q) => q.type === PageType.Welcome));
+    setIsWelcomePageEnabled(!!survey?.questions?.some((q) => q.type === PageType.Welcome));
   }, [survey?.questions]);
 
   const handleStartClick = () => {
@@ -114,7 +121,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   };
 
   const verifySurveyPassword = useVerifySurveyPwdMutation(
-    survey?.id,
+    survey?.id ?? "",
     passwordInput,
     close,
     setIsPasswordVerified,
@@ -134,8 +141,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     verifySurveyPassword.mutate();
   };
 
-  if (!selectedLanguage && survey?.languages?.length <= 1) {
-    setSelectedLanguage(survey?.languages[0]);
+  if (!selectedLanguage && (survey?.languages?.length ?? 0) <= 1) {
+    setSelectedLanguage(survey?.languages[0] ?? "");
   }
 
   if (!selectedLanguage && isSurveyThemeEditView) {
@@ -143,9 +150,10 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   }
 
   const isLanguagePageActive =
-    !selectedLanguage && survey?.languages?.length > 1 && !isSurveyThemeEditView;
+    !selectedLanguage && (survey?.languages?.length ?? 0) > 1 && !isSurveyThemeEditView;
   const isWelcomePageActive = !startClicked && isWelcomePageEnabled;
-  const useSurveyBackground = isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
+  const useSurveyBackground =
+    isWelcomePageActive && pagesThemeData?.["welcomeTheme"]?.useSurveyTheme;
   let requiredSurveyThemeObjKey = "surveyTheme";
   let requiredThemeData = surveyThemeData;
   if (isWelcomePageActive && !useSurveyBackground) {
@@ -154,7 +162,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   }
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    requiredThemeData,
+    requiredThemeData ?? null,
     requiredSurveyThemeObjKey,
     isMobile,
   );
@@ -163,7 +171,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
 
   const questionsArr = survey?.questions;
 
-  if (!getQuestionsLength(survey)) {
+  if (!getQuestionsLength(survey!)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="font-medium">No Questions found!</p>
@@ -228,7 +236,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
         style={{ position: "relative", backgroundColor }}
       >
         <CreditsCard
-          enableCredits={isUnsplashImage && !isLanguagePageActive}
+          enableCredits={!!isUnsplashImage && !isLanguagePageActive}
           url={backgroundImageSrc}
         >
           <div
@@ -261,18 +269,18 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                     {startClicked &&
                       (isLanguagePageActive ? (
                         <LanguageSelectionPage
-                          languages={survey?.languages}
+                          languages={survey?.languages ?? []}
                           setSelectedLanguage={setSelectedLanguage}
                           pagesThemeData={pagesThemeData}
                           surveyThemeData={surveyThemeData}
-                          questionsArr={questionsArr}
+                          questionsArr={questionsArr ?? []}
                         />
                       ) : (
                         selectedLanguage && (
                           <SelectedLanguageContext.Provider
                             value={{
                               selectedLanguage,
-                              defaultLanguage: survey?.languages[0],
+                              defaultLanguage: survey?.languages[0] ?? "",
                             }}
                           >
                             {children}

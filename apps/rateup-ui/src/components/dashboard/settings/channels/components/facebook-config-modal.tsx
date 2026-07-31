@@ -33,10 +33,10 @@ export function FacebookConfigModal({
   close: () => void;
   selectedWaSettings: WaSetting | null;
 }>) {
-  const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id);
+  const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id ?? "");
 
   const upsertMutation = useUpsertWaSettingsMutation();
-  const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id);
+  const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id ?? "");
 
   const { t: translations } = useTranslation();
 
@@ -153,7 +153,7 @@ export function FacebookConfigModal({
                   ...rest,
                   fbPageId: config.fbPageId,
                   pageAccessToken: config.pageAccessToken,
-                  teams: undefined,
+                  teams: undefined as string[] | undefined,
                 };
 
                 if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {

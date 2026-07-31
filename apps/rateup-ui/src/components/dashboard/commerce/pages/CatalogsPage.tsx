@@ -43,6 +43,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddCatalogProductModal } from "@/components/whatsapp/catalog/products/AddCatalogProduct";
+import type { CatalogProductRow } from "@/components/whatsapp/catalog/products/ProductItems.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";
 import { fallbackImage } from "@/utils/constants";
@@ -58,7 +59,7 @@ const TILE_CLASSES = [
   "bg-sky-500/10 text-sky-600",
 ];
 
-function stockMeta(props: any) {
+function stockMeta(props: CatalogProductRow["productProps"]) {
   const out = /out\s*of\s*stock/i.test(props?.availability ?? "");
   return out
     ? {
@@ -76,10 +77,10 @@ function stockMeta(props: any) {
 }
 
 /** Flatten a catalog product into the shape AddCatalogProduct's form expects. */
-function toFormValues(product: any) {
+function toFormValues(product: CatalogProductRow) {
   const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
     product.productProps ?? {};
-  const num = (v: any) => (v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : undefined);
+  const num = (v: unknown) => (v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : undefined);
 
   return {
     ...product,
@@ -106,10 +107,10 @@ export function CatalogsPage() {
   const deleteProducts = useDeletCatalogProducts(catalogId);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editProduct, setEditProduct] = useState<any>(null);
+  const [editProduct, setEditProduct] = useState<CatalogProductRow | null>(null);
 
-  const productList: any[] = products ?? [];
-  const collectionList: any[] = productSets ?? [];
+  const productList: CatalogProductRow[] = products ?? [];
+  const collectionList = productSets ?? [];
   const vertical = catalogData?.vertical;
 
   const handleSync = () => {
@@ -126,12 +127,12 @@ export function CatalogsPage() {
     setModalOpen(true);
   };
 
-  const openEdit = (product: any) => {
-    setEditProduct(toFormValues(product));
+  const openEdit = (product: CatalogProductRow) => {
+    setEditProduct(toFormValues(product) as CatalogProductRow);
     setModalOpen(true);
   };
 
-  const handleDelete = async (product: any) => {
+  const handleDelete = async (product: CatalogProductRow) => {
     const title = product.productProps?.title ?? product.productProps?.name ?? "this product";
     const ok = await confirm({
       title: "Delete product",
@@ -143,11 +144,13 @@ export function CatalogsPage() {
 
     let productIds: { id: string; hotel_reatiler_id?: string }[] = [];
     if (vertical === "commerce") {
-      productIds = [{ id: product.retailer_id }];
+      productIds = [{ id: product.retailer_id ?? "" }];
     } else if (vertical === "hotels") {
-      productIds = [{ id: product.hotel_id }];
+      productIds = [{ id: product.hotel_id ?? "" }];
     } else if (vertical === "hotel_room") {
-      productIds = [{ id: product.hotel_room_id, hotel_reatiler_id: product.hotel_retailer_id }];
+      productIds = [
+        { id: product.hotel_room_id ?? "", hotel_reatiler_id: product.hotel_retailer_id },
+      ];
     }
 
     toast.loading("Deleting product…", { id: "cx-delete-product" });
@@ -155,8 +158,7 @@ export function CatalogsPage() {
       { productIds },
       {
         onSuccess: () => toast.success("Product deleted", { id: "cx-delete-product" }),
-        onError: (e: any) =>
-          toast.error(e?.message || "Deletion failed", { id: "cx-delete-product" }),
+        onError: (e) => toast.error(e?.message || "Deletion failed", { id: "cx-delete-product" }),
       },
     );
   };

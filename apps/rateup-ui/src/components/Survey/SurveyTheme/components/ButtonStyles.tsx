@@ -25,32 +25,32 @@ function ButtonStyles() {
   const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { button } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { button } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const handleBackgroundColorChange = useCallback((value) => {
+  const handleBackgroundColorChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-background-color-change",
       payload: value,
     });
   }, []);
 
-  const handleTextColorChange = useCallback((value) => {
+  const handleTextColorChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-text-color-change",
       payload: value,
     });
   }, []);
 
-  const handleXCoOrdinateChange = useCallback((value) => {
+  const handleXCoOrdinateChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-x-coordinate-change",
       payload: value,
     });
   }, []);
 
-  const handleYCoOrdinateChange = useCallback((value) => {
+  const handleYCoOrdinateChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "button-y-coordinate-change",
       payload: value,
@@ -64,7 +64,7 @@ function ButtonStyles() {
       <div className={"custom-color-picker-and-heading-container"}>
         <h2>Background Color</h2>
         <CustomColorPicker
-          value={button?.styles?.backgroundColor}
+          value={String(button?.styles?.backgroundColor ?? "")}
           onChange={handleBackgroundColorChange}
           withoutEyedropper
         />
@@ -73,7 +73,7 @@ function ButtonStyles() {
       <div className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
-          value={button?.styles?.color}
+          value={String(button?.styles?.color ?? "")}
           onChange={handleTextColorChange}
           withoutEyedropper
         />
@@ -86,8 +86,8 @@ function ButtonStyles() {
             <Field>
               <FieldLabel htmlFor={`${uid}-x-axis`}>x axis</FieldLabel>
               <Select
-                value={button?.position?.x ?? COORDINATESX?.[1]}
-                onValueChange={handleXCoOrdinateChange}
+                value={String(button?.position?.x ?? COORDINATESX?.[1] ?? "")}
+                onValueChange={(value) => handleXCoOrdinateChange(value ?? "")}
                 items={COORDINATESX.map((c) => ({ value: c, label: c }))}
               >
                 <SelectTrigger id={`${uid}-x-axis`} className="h-9 w-full text-xs">
@@ -105,8 +105,8 @@ function ButtonStyles() {
             <Field>
               <FieldLabel htmlFor={`${uid}-y-axis`}>y axis</FieldLabel>
               <Select
-                value={button?.position?.y ?? COORDINATESY?.[3]}
-                onValueChange={handleYCoOrdinateChange}
+                value={String(button?.position?.y ?? COORDINATESY?.[3] ?? "")}
+                onValueChange={(value) => handleYCoOrdinateChange(value ?? "")}
                 items={COORDINATESY.map((c) => ({ value: c, label: c }))}
               >
                 <SelectTrigger id={`${uid}-y-axis`} className="h-9 w-full text-xs">

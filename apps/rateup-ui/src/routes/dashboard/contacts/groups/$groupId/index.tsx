@@ -3,6 +3,7 @@ import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/reac
 import { Image } from "@unpic/react";
 import { ArrowLeft, Check, Edit, Folder, Trash2, Upload, Users, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { toast } from "sonner";
 
 import {
@@ -15,6 +16,7 @@ import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
 import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
+import type { GroupTableFilter } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -33,6 +35,7 @@ import { getInitials } from "@/components/ui/utils.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -82,10 +85,10 @@ function ContactGroup() {
   const confirm = useConfirm();
 
   useEffect(() => {
-    setGroupDetails(groupDetails);
+    setGroupDetails(groupDetails ?? null);
   }, [groupDetails]);
 
-  const column: ColumnDef<any>[] = [
+  const column: ColumnDef<ContactsData>[] = [
     ...contactColumn(customFields ?? []),
     {
       header: "Action",
@@ -94,14 +97,14 @@ function ContactGroup() {
       enableColumnFilter: false,
       id: "action",
       cell: (info) => (
-        <ParticipantMenu contactId={info.row.original.id} groupId={groupDetails?.id} />
+        <ParticipantMenu contactId={info.row.original.id} groupId={groupDetails?.id ?? ""} />
       ),
       meta: { title: "Action" },
     },
   ];
   const loadingState = isLoading || isRefetching;
   const [showEditIconDialog, setShowEditIconDialog] = useState(false);
-  const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id);
+  const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id ?? "");
   function handleSaveGroupName() {
     if (!groupName.trim().length || groupName === groupDetails?.name) return;
     editContactGroupMutation.mutate(
@@ -147,22 +150,28 @@ function ContactGroup() {
     });
   }
 
+  /** A column is identified by its accessor key when it has one, else by its id. */
+  const columnKey = (column: { accessorKey?: unknown; id?: string }) =>
+    String(column.accessorKey ?? column.id ?? "");
+
   const defaultColumnVisibility = useMemo(
     () =>
-      column.reduce((visibility, key) => {
+      column.reduce((visibility: Record<string, boolean>, key) => {
         if (
           !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
-            (key as any)?.accessorKey || key?.id,
+            columnKey(key),
           )
         ) {
-          visibility[(key as any)?.accessorKey || key?.id] = false;
+          visibility[columnKey(key)] = false;
         }
         return visibility;
       }, {}),
     [column],
   );
   useEffect(() => {
-    const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
+    const filterKeys = (Object.keys(filter) as (keyof GroupTableFilter)[]).filter(
+      (f) => f !== "searchTerm",
+    );
     setSearchTerm(filter.searchTerm);
     setColumnFilters(filterKeys.map((key) => ({ id: key, value: filter[key] })));
   }, [filter]);
@@ -181,7 +190,7 @@ function ContactGroup() {
               >
                 {groupDetails?.icon ? (
                   <Image
-                    src={getFileUrlFromKey(groupDetails?.icon)}
+                    src={getFileUrlFromKey(groupDetails?.icon ?? "") ?? ""}
                     alt={groupDetails.name}
                     className="object-cover"
                     layout="fullWidth"
@@ -246,7 +255,7 @@ function ContactGroup() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setGroupName(groupDetails?.name);
+                          setGroupName(groupDetails?.name ?? "");
                           setIsEditingName(true);
                         }}
                         className="h-8 w-8 p-0 hover:bg-blue-50 text-primary"
@@ -315,7 +324,7 @@ function ContactGroup() {
             onPaginationChange: setPagination,
             sorting,
             onSortingChange: setSorting,
-            rowCount: groupDetails?.totalCount,
+            rowCount: groupDetails?.totalCount ?? 0,
             pagination: pagination,
           }}
           isPending={loadingState}
@@ -326,17 +335,26 @@ function ContactGroup() {
       <ContactGroupIconEditDialog
         opened={showEditIconDialog}
         setOpened={setShowEditIconDialog}
-        group={groupDetails}
+        group={groupDetails!}
       />
       <ContactImportErrorModal
-        body={(createNewContactsFromCSV?.error as any)?.response?.data}
+        body={getApiErrorData(createNewContactsFromCSV?.error)}
         isError={createNewContactsFromCSV.isError}
       />
     </div>
   );
 }
 
-function ContactGroupIconEditDialog({ opened, setOpened, group }) {
+function ContactGroupIconEditDialog({
+  opened,
+  setOpened,
+  group,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  // Only these three fields are read here.
+  group: Pick<ContactGroup, "id" | "icon" | "name">;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editContactGroupMutation = useEditContactGroupMutation(group?.id);
 
@@ -344,7 +362,7 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
     await deleteUploadedFiles({ fileKeyArray: [{ Key: group.icon }] });
     editContactGroupMutation.mutate(
       {
-        icon: null,
+        icon: "",
       },
       {
         onSuccess: () => {
@@ -357,9 +375,10 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
       },
     );
   }
-  async function handleFileSelect(event) {
+  async function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     const oldIcon = group.icon;
+    if (!file) return;
     const icon = await uploadFile(file);
     editContactGroupMutation.mutate(
       {
@@ -395,7 +414,7 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
             <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
               {group?.icon ? (
                 <Image
-                  src={getFileUrlFromKey(group?.icon)}
+                  src={getFileUrlFromKey(group?.icon ?? "") ?? ""}
                   alt={group?.name}
                   className="w-full h-full object-cover"
                   width={200}

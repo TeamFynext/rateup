@@ -1,3 +1,4 @@
+import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   IconChevronLeft,
@@ -12,6 +13,7 @@ import {
 import { useParams } from "@tanstack/react-router";
 import classNames from "classnames/bind";
 import { useId, useContext, useEffect, useRef, useState, type CSSProperties } from "react";
+import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -93,8 +95,8 @@ function ScreenListItem({
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const confirm = useConfirm();
   const [isOpen, { open, close }] = useDisclosure(false);
-  const screenTitleInputRef = useRef(null);
-  const footerLabelInputRef = useRef(null);
+  const screenTitleInputRef = useRef<HTMLInputElement | null>(null);
+  const footerLabelInputRef = useRef<HTMLInputElement | null>(null);
   const elements = getFlowFormElementsFromScreen(
     flowJson?.screens?.[pageNo],
   ) as WaFlowFormElement[];
@@ -130,11 +132,11 @@ function ScreenListItem({
 
     if (!shouldDelete) return;
 
-    setSelectedFormElementId(null);
+    setSelectedFormElementId("");
     updateFlowJson((draft) => {
       const questions = getQuestionsFromScreen(screen, survey, map);
       const qIds = questions?.map((q) => q.id);
-      const updatedQuestions = survey.questions.filter((q) => !qIds.includes(q.id));
+      const updatedQuestions = survey.questions.filter((q) => !qIds?.includes(q.id));
 
       replaceQuestionsMutation.mutate({
         questions: updatedQuestions,
@@ -151,7 +153,7 @@ function ScreenListItem({
     const feNames = getFlowFormElementsFromScreen(screen, true)?.map((fe) => fe.name);
     updateMap((draft) => {
       for (const feName of feNames || []) {
-        delete draft[feName];
+        delete draft[feName ?? ""];
       }
     });
   };
@@ -162,7 +164,7 @@ function ScreenListItem({
     if (!flowEditable) return;
     updateFlowJson((draft) => {
       const screenToBeEdited = getScreenObjById(draft.screens, screen.id);
-      screenToBeEdited["title"] = title;
+      screenToBeEdited!["title"] = title;
     });
   }
 
@@ -187,7 +189,7 @@ function ScreenListItem({
     onElementClick(element.id, screen.id);
   }
 
-  function handleScreenTitleInputChange(e) {
+  function handleScreenTitleInputChange(e: ChangeEvent<HTMLInputElement>) {
     setScreenTitleInputState(e.target.value);
   }
 
@@ -195,7 +197,7 @@ function ScreenListItem({
     updateScreenTitle(screenTitleInputState);
   }
 
-  function handleFooterLabelInputChange(e) {
+  function handleFooterLabelInputChange(e: ChangeEvent<HTMLInputElement>) {
     setFooterLabelInputState(e.target.value);
   }
 
@@ -203,15 +205,15 @@ function ScreenListItem({
     if (!flowEditable) return;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, screen.id);
-      const footer = formEl.children.filter((data) => data.type === "Footer")?.[0];
-      footer.label = footerLabelInputState;
+      const footer = formEl?.children.filter((data) => data.type === "Footer")?.[0];
+      footer!.label = footerLabelInputState;
     });
   }
   const handleSaveJsonToWa = () => {
     const errorMessages = [];
     for (const flScreen of flowJson?.screens ?? []) {
       const questions = getQuestionsFromScreen(flScreen, survey, map);
-      for (const qs of questions) {
+      for (const qs of questions ?? []) {
         if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
           const choice = Object.values(qs?.choices ?? {})?.[0];
           if (!choice || (typeof choice === "string" && choice?.length === 0)) {
@@ -357,14 +359,14 @@ function ScreenListItem({
                       variant="ghost"
                       size="icon-sm"
                       onClick={handleSaveJsonToWa}
-                      disabled={!dbFlow.pendingSave || pushToWaMutation.isPending}
+                      disabled={!dbFlow?.pendingSave || pushToWaMutation.isPending}
                     >
                       {pushToWaMutation.isPending ? <Spinner /> : <IconDeviceFloppy size={22} />}
                     </Button>
                   }
                   content={
                     <span>
-                      {dbFlow.pendingSave
+                      {dbFlow?.pendingSave
                         ? translations(
                             "Save your flow to WhatsApp, so that you can test or share draft version before publishing.",
                           )
@@ -464,7 +466,7 @@ interface FormElementCardProps {
   index: number;
   handleOpen: (index: number) => void;
   handleDelete: (index: number) => void;
-  dragHandleProps?: any;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
   screen: string;
 }
 function DraggableFormElementCard(props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>) {
@@ -511,7 +513,7 @@ function FormElementCard({
       </div>
       <Badge className="min-w-7.5 justify-center">{index + 1}</Badge>
       <p className="line-clamp-2 flex-1 px-2 font-medium">{text}</p>
-      {Object.keys(dbFlow.logicJumps).includes(screen) && (
+      {Object.keys(dbFlow?.logicJumps ?? {}).includes(screen) && (
         <img
           src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
           className="h-7.5 w-7.5 object-contain"

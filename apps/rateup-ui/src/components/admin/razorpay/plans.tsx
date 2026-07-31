@@ -25,9 +25,26 @@ import {
 } from "@/components/ui/card.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar.tsx";
+
+/** A Razorpay plan row from the sync endpoint. */
+interface RazorpayPlan {
+  id: string;
+  planId?: string;
+  paymentPlanId?: string;
+  name?: string;
+  description?: string;
+  status?: PaymentPlanStatus;
+  amount?: number;
+  currency?: string;
+  period?: string;
+  interval?: number;
+  /** Razorpay reports creation as a unix timestamp. */
+  createdAt?: number;
+}
 
 interface PlanTableData {
   id: string;
@@ -52,13 +69,13 @@ const RazorpayPlans = () => {
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
 
-  const handleUpdatePlans = (updatedData: any) => {
+  const handleUpdatePlans = (updatedData: RequestPayload) => {
     planUpdateMutate.mutate(updatedData);
   };
 
   const handleDeleteClick = () => {
     const planIdLocal = Array.isArray(plans?.data)
-      ? plans?.data?.find((plan) => plan?.planId == selectedPlanId)?.id
+      ? plans?.data?.find((plan: RazorpayPlan) => plan?.planId == selectedPlanId)?.id
       : "";
     const planInrateupPlans =
       rateupPlans && rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
@@ -173,7 +190,7 @@ const RazorpayPlans = () => {
             ]}
             onValueChange={(value) => {
               const planIdLocal = Array.isArray(plans?.data)
-                ? plans?.data?.find((plan) => plan?.planId == row.original.id)?.id
+                ? plans?.data?.find((plan: RazorpayPlan) => plan?.planId == row.original.id)?.id
                 : "";
               handleUpdatePlans({
                 id: planIdLocal,
@@ -258,18 +275,20 @@ const RazorpayPlans = () => {
 
   const tableData: PlanTableData[] = Array.isArray(plans?.data)
     ? plans?.data
-        ?.filter((p) => p.status !== "INACTIVE")
-        ?.map((plan) => ({
+        ?.filter((p: RazorpayPlan) => p.status !== "INACTIVE")
+        ?.map((plan: RazorpayPlan) => ({
           id: plan.planId,
           name: plan.name,
-          createdAt: dayjs.unix(plan.createdAt).format("DD/MM/YYYY HH:mm:ss"),
+          createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
           amount: plan.amount,
           currency: plan.currency,
           period: plan.period,
           interval: plan.interval,
           status: plan.status,
           description: plan.description,
-          canDelete: ![PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status),
+          canDelete: !(
+            plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
+          ),
         }))
     : [];
 

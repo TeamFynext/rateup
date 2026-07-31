@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { WaQuestions } from "@/types/enums.ts";
 
-export const WaHoverCardComponent = ({ content, type }) => {
+export const WaHoverCardComponent = ({ content, type }: { content: ReactNode; type: string }) => {
   const { t: translations } = useTranslation();
 
   return (

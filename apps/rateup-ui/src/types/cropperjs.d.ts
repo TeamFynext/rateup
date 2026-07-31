@@ -1,12 +1,18 @@
+import type { CropperCanvas, CropperImage, CropperSelection } from "cropperjs";
 import * as React from "react";
 
 declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
-      "cropper-canvas": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+      // The three elements a ref is ever taken on carry their cropperjs element type, so
+      // `ref.current` exposes the custom element's `$…` methods instead of a bare HTMLElement.
+      "cropper-canvas": React.DetailedHTMLProps<
+        React.HTMLAttributes<CropperCanvas>,
+        CropperCanvas
+      > & {
         background?: boolean | string;
       };
-      "cropper-image": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+      "cropper-image": React.DetailedHTMLProps<React.HTMLAttributes<CropperImage>, CropperImage> & {
         src?: string;
         alt?: string;
         rotatable?: boolean;
@@ -15,8 +21,8 @@ declare module "react" {
         crossOrigin?: string;
       };
       "cropper-selection": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
+        React.HTMLAttributes<CropperSelection>,
+        CropperSelection
       > & {
         "initial-aspect-ratio"?: number;
         "aspect-ratio"?: number;

@@ -24,10 +24,10 @@ export const TextFormateToolBar = ({
   undo,
   dynamicVariables,
 }: {
-  insertValue: (value) => void;
+  insertValue: (value: string) => void;
   applyFormatting: (value: string) => void;
   undo: () => void;
-  dynamicVariables: any[];
+  dynamicVariables: unknown[];
 }) => {
   const [variableCount, setVariableCount] = useState(1);
   const { t: translations } = useTranslation();

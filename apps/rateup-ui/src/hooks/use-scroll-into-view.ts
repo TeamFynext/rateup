@@ -12,8 +12,8 @@ interface ScrollIntoViewOptions {
  * bring into view, then call `scrollIntoView()`.
  */
 export function useScrollIntoView<
-  Target extends HTMLElement = any,
-  Scrollable extends HTMLElement = any,
+  Target extends HTMLElement = HTMLElement,
+  Scrollable extends HTMLElement = HTMLElement,
 >({ duration = 1250 }: ScrollIntoViewOptions = {}) {
   const targetRef = useRef<Target>(null);
   const scrollableRef = useRef<Scrollable>(null);

@@ -28,8 +28,8 @@ const TestimonialFilter = ({
 }: {
   filters: filterType;
   setFilters: React.Dispatch<React.SetStateAction<filterType>>;
-  activeTab: TestimonialTabs;
-  setType: React.Dispatch<React.SetStateAction<string>>;
+  activeTab: TestimonialTabs | null;
+  setType: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   const uid = useId();
   const { data: testimonials } = useGetAllTestimonialsByOrg();
@@ -43,9 +43,9 @@ const TestimonialFilter = ({
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
   const { t: translations } = useTranslation();
 
-  function removeDuplicates(surveyMultiSelectOptions) {
+  function removeDuplicates(surveyMultiSelectOptions: Array<{ value: string; label: string }>) {
     const uniqueArray = [];
-    const encounteredIds = [];
+    const encounteredIds: string[] = [];
     for (let i = 0; i < surveyMultiSelectOptions?.length; i++) {
       const obj = surveyMultiSelectOptions[i];
       if (!encounteredIds.includes(obj.value)) {
@@ -58,10 +58,10 @@ const TestimonialFilter = ({
 
   const [allRatings] = useState(true);
 
-  const filterData = (type: "date" | "rating" | "surveys" | "teams" | "length", newValue) => {
+  const filterData = <K extends keyof filterType>(type: K, newValue: filterType[K]) => {
     setFilters(
       produce((draft: filterType) => {
-        draft[type as string] = newValue;
+        draft[type] = newValue;
       }),
     );
     setType(type);
@@ -108,8 +108,8 @@ const TestimonialFilter = ({
                 <FieldLabel htmlFor={`${uid}-field`}>{translations("Select Team")}</FieldLabel>
                 <Select
                   value={filters?.teams?.[0] || ""}
-                  onValueChange={(value) => filterData("teams", [value])}
-                  items={teamMultiSelectOptions}
+                  onValueChange={(value) => filterData("teams", [value ?? ""])}
+                  items={teamMultiSelectOptions ?? []}
                 >
                   <SelectTrigger id={`${uid}-field`} className="h-8">
                     <SelectValue placeholder={translations("All Teams")} />
@@ -128,14 +128,14 @@ const TestimonialFilter = ({
                 <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Select survey")}</FieldLabel>
                 <Select
                   value={filters?.surveys?.[0] || ""}
-                  onValueChange={(value) => filterData("surveys", [value])}
-                  items={removeDuplicates(surveyMultiSelectOptions)}
+                  onValueChange={(value) => filterData("surveys", [value ?? ""])}
+                  items={removeDuplicates(surveyMultiSelectOptions ?? [])}
                 >
                   <SelectTrigger id={`${uid}-field-2`} className="h-8">
                     <SelectValue placeholder={translations("All Surveys")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {removeDuplicates(surveyMultiSelectOptions)?.map((option) => (
+                    {removeDuplicates(surveyMultiSelectOptions ?? [])?.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -216,7 +216,7 @@ const TestimonialFilter = ({
                         <IconStar
                           size={20}
                           className={
-                            filters?.rating >= star
+                            (filters?.rating ?? 0) >= star
                               ? "fill-yellow-400 text-yellow-400"
                               : "text-gray-300"
                           }

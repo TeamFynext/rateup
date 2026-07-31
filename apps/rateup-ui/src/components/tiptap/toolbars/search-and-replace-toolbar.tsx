@@ -28,7 +28,7 @@ export function SearchAndReplaceToolbar() {
 
   // Only present when the SearchAndReplace extension is registered on the editor,
   // and not every editor mounting this toolbar registers it.
-  const storage = (editor?.storage as any)?.searchAndReplace as SearchAndReplaceStorage | undefined;
+  const storage = editor?.storage?.searchAndReplace as SearchAndReplaceStorage | undefined;
   const results = storage?.results;
   const selectedResult = storage?.selectedResult;
 
@@ -112,7 +112,7 @@ export function SearchAndReplaceToolbar() {
               placeholder="Search..."
             />
             <span>
-              {results?.length === 0 ? selectedResult : selectedResult + 1}/{results?.length}
+              {results?.length === 0 ? selectedResult : (selectedResult ?? 0) + 1}/{results?.length}
             </span>
             <Button onClick={selectPrevious} size="icon" variant="ghost" className="size-7">
               <ArrowLeftIcon className="size-4" />
@@ -177,7 +177,8 @@ export function SearchAndReplaceToolbar() {
                   }}
                   placeholder="Search..."
                 />
-                {results?.length === 0 ? selectedResult : selectedResult + 1}/{results?.length}
+                {results?.length === 0 ? selectedResult : (selectedResult ?? 0) + 1}/
+                {results?.length}
               </Field>
               <Field className="mb-2">
                 <FieldLabel htmlFor={`${uid}-replace-with`} className="mb-1 text-xs text-gray-11">

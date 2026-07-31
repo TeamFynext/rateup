@@ -10,25 +10,29 @@ import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import type { WaFlowFormElement } from "@/types/global";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
 import { fileToBase64 } from "@/utils/misc/base64.utils";
 import { getFlowFormElementById, getFormObjFromScreenId } from "@/utils/whatsapp/flow.utils";
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 
+/** The image properties the editor writes back. */
+type FlowImageChange = Pick<WaFlowFormElement, "src" | "height" | "width">;
+
 export function FlowImageDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
 
-  const form = useForm<any>({
+  const form = useForm<WaFlowFormElement>({
     defaultValues: {
-      type: selectedFormElement.type,
-      id: selectedFormElement.id,
+      type: selectedFormElement?.type,
+      id: selectedFormElement?.id,
       "scale-type": "cover",
       src: "",
-      height: selectedFormElement.height || 200,
-      width: selectedFormElement.width || 300,
+      height: selectedFormElement?.height || 200,
+      width: selectedFormElement?.width || 300,
     },
   });
   const { t: translations } = useTranslation();
@@ -36,23 +40,25 @@ export function FlowImageDetailedView() {
   // TODO: figure out why this can't be set in defaultValues above
   useEffect(() => {
     if (!form.getValues("src")) {
-      form.setValue("src", selectedFormElement.src);
-      form.setValue("height", selectedFormElement.height || 200);
-      form.setValue("width", selectedFormElement.width || 300);
+      form.setValue("src", selectedFormElement?.src);
+      form.setValue("height", selectedFormElement?.height || 200);
+      form.setValue("width", selectedFormElement?.width || 300);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormElement]);
 
-  function handleChange(updatedData: any) {
-    Object.entries(updatedData).forEach(([key, value]) => form.setValue(key, value));
+  function handleChange(updatedData: FlowImageChange) {
+    if (updatedData.src !== undefined) form.setValue("src", updatedData.src);
+    if (updatedData.height !== undefined) form.setValue("height", updatedData.height);
+    if (updatedData.width !== undefined) form.setValue("width", updatedData.width);
   }
   function handleSaveElement() {
     if (!form.getValues("src")?.length) return toast.error(translations("Unable to Save Image"));
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
+    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl.children[index] = form.getValues() as any;
+      formEl!.children[index] = form.getValues();
     });
   }
 
@@ -65,7 +71,7 @@ export function FlowImageDetailedView() {
       <ScrollArea className="max-h-[65dvh]">
         <div className="flex justify-between">
           <Badge variant="outline" className="text-muted-foreground">
-            {getWaFlowFormElementTypeLabel(selectedFormElement.type)}
+            {getWaFlowFormElementTypeLabel(selectedFormElement?.type)}
           </Badge>
         </div>
         <div className="flex gap-0.5 p-0.5 pr-10">
@@ -94,7 +100,17 @@ export function FlowImageDetailedView() {
 }
 
 // currently not allowing user to edit width
-function FlowImageElementEditor({ onChange, src, height, width }) {
+function FlowImageElementEditor({
+  onChange,
+  src,
+  height,
+  width,
+}: {
+  onChange: (updatedData: FlowImageChange) => void;
+  src?: string;
+  height?: number;
+  width?: number;
+}) {
   const uid = useId();
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
@@ -135,7 +151,7 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
         <>
           <img
             src={`data:image/jpg;base64,${src}`}
-            style={{ height, width: width - 100, maxHeight: height }}
+            style={{ height, width: (width ?? 0) - 100, maxHeight: height }}
             alt="flow Image"
           />
           <Field>

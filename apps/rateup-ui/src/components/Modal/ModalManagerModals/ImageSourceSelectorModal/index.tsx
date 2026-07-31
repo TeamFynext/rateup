@@ -2,6 +2,7 @@ import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
@@ -11,17 +12,36 @@ import UnsplashImageSelectorModal from "../UnsplashImageSelectorModal/index.tsx"
 
 import styles from "./ImageSourceSelectorModal.module.css";
 
-function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerProps }) {
+function ImageSourceSelectorModal({
+  context: _context,
+  id: _thisModalId,
+  innerProps,
+}: {
+  context: { closeModal: (id: string) => void };
+  id: string;
+  innerProps: {
+    onImageSelected: (result: SelectedImage) => void;
+    handleUnsplashImageSave?: (url: string, name: string) => void;
+    aspectRatio?: number;
+    forDevice?: string;
+  };
+}) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
   const { t: translations } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
   const handleFileBtnValueChange = useCallback(
-    (fileObj) => {
+    (fileObj: File | null) => {
       if (!fileObj) {
         onImageSelected(null);
       } else if (fileObj) {

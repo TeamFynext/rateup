@@ -11,10 +11,16 @@ import {
   SelectValue,
 } from "../ui/select.tsx";
 
-const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
+const SortDropdown = ({
+  onSortChange,
+  defaultSortOption = "latest",
+}: {
+  onSortChange: (value: string) => void;
+  defaultSortOption?: string;
+}) => {
   const [sortOption, setSortOption] = useState(defaultSortOption);
   const { t: translations } = useTranslation();
-  const handleSortChange = (value) => {
+  const handleSortChange = (value: string) => {
     setSortOption(value);
     onSortChange(value);
   };
@@ -23,7 +29,7 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
     <div className={"flex items-center w-full gap-1"}>
       <p className="text-gray-600 text-xs w-14">{translations("SORT BY")}:</p>
       <Select
-        onValueChange={handleSortChange}
+        onValueChange={(value) => handleSortChange(value ?? "")}
         defaultValue={sortOption}
         items={[
           { value: "latest", label: translations("Latest First") },
@@ -53,7 +59,14 @@ export default SortDropdown;
 
 // utils/sorting.js
 
-export const sortData = (data: any[] = [], sortOption: string = "latest") => {
+/** The fields `sortData` orders on. A row carries its name directly or nested under `data`. */
+export interface SortableRow {
+  name?: string;
+  createdAt?: string | Date | null;
+  data?: { name?: string } | null;
+}
+
+export const sortData = <T extends SortableRow>(data: T[] = [], sortOption: string = "latest") => {
   return [...data].sort((a, b) => {
     const leftName = a.data?.name ?? a.name ?? "";
     const rightName = b.data?.name ?? b.name ?? "";

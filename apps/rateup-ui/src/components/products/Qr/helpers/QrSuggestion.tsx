@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
@@ -48,14 +47,14 @@ export default function SuggestionBox() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <Link to={"https://rateup.app/signup"}>
+          <a href={"https://rateup.app/signup"}>
             <Button
               size="lg"
               className="bg-[#C4D7F5] cursor-pointer hover:bg-[#bdd2f3] text-[#004F98] font-medium px-4"
             >
               Start For Free
             </Button>
-          </Link>
+          </a>
           <BookDemoModal>
             <Button
               size="lg"

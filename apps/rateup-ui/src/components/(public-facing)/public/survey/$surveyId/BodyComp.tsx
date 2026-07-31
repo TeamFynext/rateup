@@ -1,9 +1,9 @@
 import { IconHome } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import { buttonVariants } from "@/components/ui/button.tsx";
+import type { ReviewSuggestion } from "@/types/global";
 
 function BodyComp({
   enableGoogleReview,
@@ -13,6 +13,14 @@ function BodyComp({
   surveyId,
   k,
   reviewPageLinks,
+}: {
+  enableGoogleReview: boolean;
+  googleLink?: string;
+  reviews: ReviewSuggestion[];
+  orgLogoSrc?: string;
+  surveyId: string;
+  k?: string;
+  reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const { t: translations } = useTranslation();
   return (
@@ -22,7 +30,7 @@ function BodyComp({
           reviewSuggestions={reviews}
           orgLogoUrl={orgLogoSrc}
           surveyTeamMapId={surveyId}
-          survey={undefined}
+          survey={null}
           reviewPageLinks={reviewPageLinks}
         />
       )}
@@ -30,14 +38,15 @@ function BodyComp({
         <div className="m-8 flex p-8">
           {/* A single anchor styled as a button — a Button wrapping a Link would nest two
               interactive controls. */}
-          <Link
-            to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
+          <a
+            href={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
             target="_blank"
+            rel="noreferrer"
             className={buttonVariants()}
           >
             <IconHome data-icon="inline-start" />
             {translations("Go to Home")}
-          </Link>
+          </a>
         </div>
       )}
     </div>

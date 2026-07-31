@@ -33,6 +33,7 @@ import {
   useUpdateTeamChannels,
   useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
+import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -68,7 +69,16 @@ export const colorArray = [
   { from: "#6366F1", to: "#4F46E5" }, // Indigo
 ];
 
-export function EditTeam({ selectedTeam }) {
+/** The team row the settings panels operate on. */
+interface SelectedTeam {
+  id: string;
+  name?: string;
+  code?: string;
+  color?: string;
+  createdAt?: string;
+}
+
+export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
 
   const id = selectedTeam.id;
@@ -94,7 +104,7 @@ export function EditTeam({ selectedTeam }) {
     }
   }, [selectedTeam]);
 
-  const onSubmit = (values) => {
+  const onSubmit = (values: { name: string; code?: string; color?: string }) => {
     setIsLoading(true);
 
     const data = {
@@ -226,8 +236,9 @@ export function EditTeam({ selectedTeam }) {
   );
 }
 
-export function AddMembers({ selectedTeam }) {
-  const [memberToDelete, setMemberToDelete] = useState(null);
+// This panel is given the team id, not the row the other panels receive.
+export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
+  const [memberToDelete, setMemberToDelete] = useState<{ id: string; name?: string } | null>(null);
   const { t: translations } = useTranslation();
   const teamID = selectedTeam;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -235,7 +246,7 @@ export function AddMembers({ selectedTeam }) {
   const queryClient = useQueryClient();
   const removeteam = useRemoveUserFromTeam(selectedTeam);
 
-  const getRoleStyles = (role) => {
+  const getRoleStyles = (role: string) => {
     switch (role) {
       case UserRole.SUPADM:
         return {
@@ -258,7 +269,7 @@ export function AddMembers({ selectedTeam }) {
     }
   };
 
-  const removeTeam = (userid) => {
+  const removeTeam = (userid: string) => {
     removeteam.mutate(
       { teamId: selectedTeam, userId: userid },
       {
@@ -304,39 +315,41 @@ export function AddMembers({ selectedTeam }) {
   } else if (notTeamMembersData?.data?.length) {
     addTeamMembersContent = (
       <div className="space-y-1">
-        {notTeamMembersData?.data?.map((user) => (
-          <div
-            key={user.id}
-            className="w-full py-2 rounded-lg flex items-center justify-between px-6"
-          >
-            <div className="flex items-center gap-2">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={getFileUrlFromKey(user?.profilePhoto)} />
-                <AvatarFallback className="bg-primary text-white text-xs">
-                  {user.name?.toUpperCase().slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-
-              <div>
-                <p className="text-sm">{user.name}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() =>
-                addTeams.mutate({
-                  userId: user.id,
-                  teamIds: [selectedTeam],
-                  userEmail: user.email,
-                })
-              }
+        {notTeamMembersData?.data?.map(
+          (user: { id: string; name?: string; email?: string; profilePhoto?: string }) => (
+            <div
+              key={user.id}
+              className="w-full py-2 rounded-lg flex items-center justify-between px-6"
             >
-              <Plus className="w-3 h-3 mr-1" />
-              {translations("Add")}
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-center gap-2">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={getFileUrlFromKey(user?.profilePhoto ?? "")} />
+                  <AvatarFallback className="bg-primary text-white text-xs">
+                    {user.name?.toUpperCase().slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div>
+                  <p className="text-sm">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  addTeams.mutate({
+                    userId: user.id,
+                    teamIds: [selectedTeam],
+                    userEmail: user.email ?? "",
+                  })
+                }
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                {translations("Add")}
+              </Button>
+            </div>
+          ),
+        )}
       </div>
     );
   } else {
@@ -514,7 +527,7 @@ export function AddMembers({ selectedTeam }) {
             <Button
               variant="destructive"
               onClick={() => {
-                removeTeam(memberToDelete.id);
+                removeTeam(memberToDelete?.id ?? "");
                 setMemberToDelete(null);
               }}
             >
@@ -527,7 +540,7 @@ export function AddMembers({ selectedTeam }) {
   );
 }
 
-export function DeleteTeam({ selectedTeam }) {
+export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const teamId = selectedTeam.id;
@@ -551,7 +564,7 @@ export function DeleteTeam({ selectedTeam }) {
       form.setValue("googleLink", teamsMembersData.googleLink);
     }
   }, [form, teamsMembersData.googleLink]);
-  const onSubmit = (data) => {
+  const onSubmit = (data: { googleLink?: string }) => {
     // simple validation
     if (data.googleLink && !data.googleLink.startsWith("https://")) {
       return;
@@ -737,7 +750,7 @@ const FEATURES_WITH_SUBSCRIPTION: {
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 
-export function TeamFeatureAccess({ selectedTeam }) {
+export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
 
@@ -830,7 +843,7 @@ export function TeamFeatureAccess({ selectedTeam }) {
 }
 
 /** Best available human-readable name for a channel, with the platform it belongs to. */
-function describeChannel(channel: any): { label: string; platform: string } {
+function describeChannel(channel: WaSettings[number]): { label: string; platform: string } {
   if (channel?.ibaId) {
     return {
       label: channel.igDisplayName || channel.igUserName || channel.ibaId,
@@ -846,7 +859,7 @@ function describeChannel(channel: any): { label: string; platform: string } {
   };
 }
 
-export function TeamChannelAccess({ selectedTeam }) {
+export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
 
@@ -937,7 +950,7 @@ export function TeamChannelAccess({ selectedTeam }) {
                 </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {channels.map((channel: any) => {
+                  {channels.map((channel) => {
                     const { label, platform } = describeChannel(channel);
                     return (
                       <div

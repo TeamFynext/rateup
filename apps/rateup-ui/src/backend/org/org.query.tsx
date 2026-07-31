@@ -68,7 +68,7 @@ export function useUpdateRoleMutation() {
   });
 }
 
-export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
+export function useUpdateOrgLogoMutation(setIsLoadingUpload: (uploading: boolean) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateLogo) => updateOrgLogo(values),
@@ -129,7 +129,7 @@ export const useUpdateOrgPause = () => {
   });
 };
 
-export const useGetWebhookClientSecret = (webhookUrl) => {
+export const useGetWebhookClientSecret = (webhookUrl: string | undefined) => {
   return useQuery({
     queryKey: ["webhookClientSecret"],
     queryFn: getWebhookClientSecret,

@@ -15,6 +15,7 @@ import { useId, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateBoardMutation, useBoardQueries } from "@/backend/tickets/tickets.query";
+import type { EditableColumn } from "@/components/Tickets/ManageColumnsDialog.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -269,7 +270,7 @@ export default function TicketSettings({
   selectedBoard: Board;
   teamOptions: { value: string; label: string }[];
   onClose?: () => void;
-  onSaveColumns?: (newColumns: any[], deletedIds: string[]) => void;
+  onSaveColumns?: (newColumns: EditableColumn[], deletedIds: string[]) => void;
 }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();

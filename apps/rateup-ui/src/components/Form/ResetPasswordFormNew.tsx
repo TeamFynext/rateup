@@ -26,9 +26,16 @@ import {
 import { Input } from "../ui/input.tsx";
 import { Loader } from "../ui/loader.tsx";
 
-const ResetPasswordForm = ({ mode }) => {
+/** Fields of either step of the reset flow — the email step or the new-password step. */
+type ResetPasswordValues = {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+};
+
+const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false });
+  const searchParams = useSearch({ from: "/(auth)/login/reset-password/" });
   const token = searchParams.token;
   const rid = searchParams.rid;
   const [showPassword, setShowPassword] = useState(false);
@@ -126,10 +133,10 @@ const ResetPasswordForm = ({ mode }) => {
   const setNewPassword = useSetNewPassword(handleSuccess);
 
   const onSubmit = isEmailPage
-    ? async (values) => {
+    ? async (values: ResetPasswordValues) => {
         try {
           const user = await checkEmailMutaion.mutateAsync({
-            email: values.email,
+            email: values.email ?? "",
           });
           if (!user?.success) {
             emailForm.setError("email", {
@@ -141,16 +148,16 @@ const ResetPasswordForm = ({ mode }) => {
             return;
           }
           setIsLoading(true);
-          sendResetEmail(values.email).finally(() => {
+          sendResetEmail(values.email ?? "").finally(() => {
             setIsLoading(false);
           });
         } catch {
           setIsLoading(false);
         }
       }
-    : (values) => {
+    : (values: ResetPasswordValues) => {
         setIsLoading(true);
-        setNewPassword(values.confirmPassword).finally(() => {
+        setNewPassword(values.confirmPassword ?? "").finally(() => {
           setIsLoading(false);
         });
       };
@@ -184,7 +191,7 @@ const ResetPasswordForm = ({ mode }) => {
               <form
                 onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => emailForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, () => void emailForm.handleSubmit(onSubmit)()],
                 ])}
               >
                 <FieldGroup className="gap-4">
@@ -221,7 +228,7 @@ const ResetPasswordForm = ({ mode }) => {
               <form
                 onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => pwdForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, () => void pwdForm.handleSubmit(onSubmit)()],
                 ])}
               >
                 <FieldGroup className="gap-4">

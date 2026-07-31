@@ -13,6 +13,7 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { generateListItems } from "@/components/HomePage/pages/Pricing/Card/PricingCard.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
+import type { PaymentOrder } from "@/components/settings/billing.tsx";
 import { Billing, OrderHistory, UsageCard } from "@/components/settings/billing.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/dashboard/settings/billing/")({
   component: BillingPage,
 });
 
-function loadScript(src) {
+function loadScript(src: string) {
   return new Promise((resolve) => {
     const script = document.createElement("script");
     script.src = src;
@@ -47,7 +48,7 @@ function loadScript(src) {
 
 function BillingPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState<PaymentOrder | null>(null);
   const createCheckout = useCreateCheckoutSession(setIsLoading, setOrder);
   const { user } = useUser();
   const navigate = useNavigate();
@@ -58,19 +59,22 @@ function BillingPage() {
     refetch: refreshOrders,
     isRefetching: isRefetchOrders,
   } = useUserOrgOrders();
-  const updateOrderMut = useUpdateSubscriptionOrder(order?.id);
+  const updateOrderMut = useUpdateSubscriptionOrder(order?.id ?? "");
 
-  const [activeOrderData, setActiveOrderData] = useState(null);
-  const [latestOrderData, setLatestOrderData] = useState(null);
+  const [activeOrderData, setActiveOrderData] = useState<PaymentOrder | null>(null);
+  const [latestOrderData, setLatestOrderData] = useState<PaymentOrder | null>(null);
 
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
 
   useEffect(() => {
-    const order = orders?.data?.filter((o) => o.subscriptionId === subscription?.subscriptionRef);
+    const order = orders?.data?.filter(
+      (o: { subscriptionId?: string }) => o.subscriptionId === subscription?.subscriptionRef,
+    );
     if (order && order.length > 0) setActiveOrderData(order[0]);
 
     const sorted = orders?.data?.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a: { createdAt: string }, b: { createdAt: string }) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     if (sorted && sorted.length) setLatestOrderData(sorted[0]);
   }, [subscription, orders]);
@@ -114,7 +118,7 @@ function BillingPage() {
         name: translations("RateUp Payment"),
         description: "Subscription Plans in Rateup",
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
-        handler: function (_response) {
+        handler: function (_response: unknown) {
           console.log(translations("Payment Successful...!"));
           setProcessingPayment(false);
           if (order.hasTrial) {
@@ -138,7 +142,7 @@ function BillingPage() {
           rateupPlanId: selectedRateupPlan,
           subId: order?.subscriptionId,
           orgId: user?.orgId,
-          subExpiry: dayjs.unix(order?.subExpiry).format("YYYY-MM-DDTHH:mm:ss.sssZ"),
+          subExpiry: dayjs.unix(Number(order?.subExpiry)).format("YYYY-MM-DDTHH:mm:ss.sssZ"),
         },
         theme: {
           color: "#1C518E",
@@ -151,7 +155,7 @@ function BillingPage() {
         },
       };
 
-      const paymentObject = new (window as any).Razorpay(options);
+      const paymentObject = new window.Razorpay!(options);
       paymentObject.open();
     }
   }

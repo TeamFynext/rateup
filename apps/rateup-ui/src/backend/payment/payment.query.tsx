@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import type { ICreateCheckoutType } from "./payment.api";
 import {
   cancelRazorpaySubscription,
@@ -42,11 +44,11 @@ export function useUserOrgOrders(enabled = true) {
   });
 }
 
-export function useRateupPaymentsPlanMutation(close) {
+export function useRateupPaymentsPlanMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => createRateupPaymentPlan(data),
+    mutationFn: (data: RequestPayload) => createRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
       toast.success("RateUp Plan created successfully.", {
@@ -62,11 +64,11 @@ export function useRateupPaymentsPlanMutation(close) {
   });
 }
 
-export function useRateupPaymentsPlanUpdateMutation(close) {
+export function useRateupPaymentsPlanUpdateMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => updateRateupPaymentPlan(data),
+    mutationFn: (data: RequestPayload) => updateRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -122,7 +124,10 @@ export function usePlanSyncMutation() {
   });
 }
 
-export function useCreateCheckoutSession(setIsLoading, setOrder) {
+export function useCreateCheckoutSession<TOrder>(
+  setIsLoading: (loading: boolean) => void,
+  setOrder: (order: TOrder) => void,
+) {
   return useMutation({
     mutationFn: (values: ICreateCheckoutType) => createCheckoutSession(values),
     onSuccess: (data) => {
@@ -221,10 +226,10 @@ export function useSendMailPlanSelectDetails() {
   });
 }
 
-export const useUpdateSubscriptionOrder = (orderId) => {
+export const useUpdateSubscriptionOrder = (orderId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateSubscriptionOrder(orderId, data),
+    mutationFn: (data: RequestPayload) => updateSubscriptionOrder(orderId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentorders"] });
     },

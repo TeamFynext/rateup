@@ -1,5 +1,6 @@
 // Shared ticket types used across the application
 
+import type { WaFlowJson } from "@/types/global";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 export interface Label {
@@ -49,6 +50,8 @@ export interface Column {
   id: string;
   title: string;
   teamId: string;
+  /** Set by the column editor; older columns have none. */
+  color?: string;
   ticketBoardId?: string;
   ticketCards: Card[];
   _count?: {
@@ -89,24 +92,42 @@ export interface Card {
     lastReceivedMessageTimeStamp?: string;
     consent?: boolean;
   } | null;
-  checklists?: any;
+  checklists?: Checklist[];
   attachments?: string[]; // array of file keys; full metadata stored in TicketActivity
+}
+
+/** A checklist on a ticket, with its items. */
+export interface Checklist {
+  id: string;
+  name: string;
+  items: ChecklistItem[];
+}
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
 }
 
 interface surveyResponse {
   id: string;
   createdAt: string | Date;
   surveyTeamMapId: string;
-  responses: Array<any>;
+  responses: Array<QuestionResponse>;
   response: string | number;
   questionId: string;
-  encryptedResponses: null | any;
+  encryptedResponses: null | string;
   language: string;
   platform: string;
   tag: string | null;
   ip: null | string;
-  location: null | any;
-  deviceData: null | any;
+  location: null | {
+    coordinates?: Coordinates;
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+  deviceData: null | Record<string, unknown>;
   contactId: string | null;
   Contact: {
     id: string;
@@ -116,8 +137,10 @@ interface surveyResponse {
   };
   surveyTeamMap: {
     survey: {
+      /** Selected alongside the flow; present for web-survey responses. */
+      questions?: Question[];
       WaFlow: {
-        json: any;
+        json: WaFlowJson;
       };
     };
   };
@@ -284,3 +307,23 @@ export function isDraggingAColumn({
 }): boolean {
   return isColumnData(source.data);
 }
+
+/**
+ * Payload for a card update: every field is optional except the id, and the
+ * assignee/label sets are written as id arrays even though a read-back `Card`
+ * exposes them as `assignees` / `labelId`.
+ */
+export type CardUpdate = Partial<Card> & {
+  id: string;
+  assignedToIds?: string[];
+  labelIds?: string[];
+};
+
+/**
+ * Payload for a board update. `teamIds` is write-only; a read-back `Board`
+ * exposes the same relation as `teams`.
+ */
+export type BoardUpdate = Partial<Board> & {
+  id: string;
+  teamIds?: string[];
+};

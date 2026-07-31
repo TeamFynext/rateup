@@ -40,8 +40,9 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
     fileInputRef.current?.click();
   }, []);
 
+  // Only the picked file is read, so a drop handler can hand over its own input element.
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: { target: Pick<HTMLInputElement, "files"> }) => {
       const file = event.target.files?.[0];
       if (file) {
         setFileName(file.name);

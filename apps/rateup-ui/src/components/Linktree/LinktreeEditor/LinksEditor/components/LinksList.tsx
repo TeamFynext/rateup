@@ -4,12 +4,13 @@ import { useCallback } from "react";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
 import LinkCard from "./LinkCard.tsx";
+import type { LinktreeLink } from "./LinkCard.tsx";
 import Reorder from "./Reorder/index.tsx";
 import ReorderItem from "./Reorder/ReorderItem.tsx";
 
 import styles from "../LinksEditor.module.css";
 
-function LinksList({ links }) {
+function LinksList({ links }: { links: LinktreeLink[] }) {
   const params = useParams({
     strict: false,
   });
@@ -18,7 +19,7 @@ function LinksList({ links }) {
   const { mutateAsync: linktreeUpdateMutateAsync } = useUpdateLinktreeMutation(shortUrlId);
 
   const handleDragEnd = useCallback(
-    async (reorderedLinks) => {
+    async (reorderedLinks: LinktreeLink[]) => {
       await updateLinktreeMutation.mutateAsync({
         shortUrlId,
         links: reorderedLinks,
@@ -28,7 +29,7 @@ function LinksList({ links }) {
   );
 
   const handleDelete = useCallback(
-    async (linkId) => {
+    async (linkId: string) => {
       const filteredLinks = links.filter(({ id }) => id !== linkId);
       await updateLinktreeMutation.mutateAsync({
         shortUrlId,

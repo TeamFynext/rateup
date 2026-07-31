@@ -1,5 +1,6 @@
 import { IconCalendar } from "@tabler/icons-react";
 import { useState } from "react";
+import type { Range } from "react-date-range";
 
 import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -16,6 +17,11 @@ export const CalenderIconDateRangePicker = ({
   setRange,
   label = "Filter by Date",
   variant = "outline",
+}: {
+  ranges: Range[];
+  setRange: (ranges: Range[]) => void;
+  label?: string;
+  variant?: string;
 }) => {
   const [opened, setOpened] = useState(false);
 

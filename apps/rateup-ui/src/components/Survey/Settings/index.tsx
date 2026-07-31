@@ -34,7 +34,7 @@ const defaultEnabledModules = [
 
 interface SurveySettingsProps {
   surveyId: string;
-  survey: any;
+  survey: Survey;
   enabledModules?: string[];
   setSelectedLanguage?: (lang: string) => void;
   flowName?: string;
@@ -42,11 +42,13 @@ interface SurveySettingsProps {
   anonymous?: boolean;
 }
 
+import type { RedirectValue } from "./RedirectSettings/index.tsx";
+
 const SurveySettings = ({
   surveyId,
   survey,
   enabledModules = defaultEnabledModules,
-  setSelectedLanguage = null,
+  setSelectedLanguage,
   flowName,
   flowDbId,
   anonymous,
@@ -55,19 +57,21 @@ const SurveySettings = ({
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
   const [webSurveyAutoTransitionToNextQues, setwebSurveyAutoTransitionToNextQues] = useState(
-    survey?.webSurveyAutoTransitionToNextQues,
+    survey?.webSurveyAutoTransitionToNextQues ?? false,
   );
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
-  const [redirect, setRedirect] = useState(survey?.redirect);
+  const [redirect, setRedirect] = useState<RedirectValue>(survey?.redirect ?? {});
   const [redirectError, setRedirectError] = useState({ url: "", time: "" });
   const editSurvey = useEditSurveyMutation(surveyId);
-  const debounced = useDebounce(redirect?.url, 200);
+  const debounced = useDebounce(redirect?.url ?? "", 200);
 
   useEffect(() => {
     setHasGoogleReview(
       survey?.questions?.some(
-        (item) =>
-          item?.googleReview?.length ||
+        (item: Question) =>
+          // NOTE: `googleReview` is an object, so `.length` is always undefined here.
+          // Preserved as-is; see the migration notes.
+          (item?.googleReview as { length?: number } | null)?.length ||
           !!(item?.reviewPageOptions && Object.keys(item?.reviewPageOptions).length),
       ),
     );
@@ -139,7 +143,11 @@ const SurveySettings = ({
             {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
 
             {enabledModules.includes("flow") && (
-              <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
+              <FlowSettingsUpdate
+                name={flowName ?? ""}
+                dbFlowId={flowDbId ?? ""}
+                anonymous={!!anonymous}
+              />
             )}
           </div>
         </div>

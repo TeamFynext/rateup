@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query.ts";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query.ts";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -14,6 +15,7 @@ import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { parseTemplate } from "@/utils/whatsapp/templates.tsx";
 
+import type { NodeFields } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
 
 function formatTime(ts: number) {
@@ -51,7 +53,7 @@ type MediaInfo =
   | { kind: "document"; src: string; filename?: string; caption?: string };
 
 function getNodeMedia(node: TypedNode | null | undefined): MediaInfo | null {
-  const data: any = node?.data;
+  const data: NodeFields | undefined = node?.data;
   if (!data?.link) return null;
   // Same resolution image-node.tsx uses on the canvas: data.link is a stored file key, not a URL.
   const src = getFileUrlFromKey(data.link) || "/placeholder.svg";
@@ -72,7 +74,7 @@ function getNodeMedia(node: TypedNode | null | undefined): MediaInfo | null {
 // Real pause durations would be unusable in a live preview, so the wait is clamped to a
 // short, perceptible delay instead of literally waiting minutes/hours.
 function getPauseDelayMs(node: TypedNode): number {
-  const data: any = node?.data;
+  const data: NodeFields | undefined = node?.data;
   const duration = Number(data?.duration) || 0;
   const unit = data?.unit ?? "seconds";
   const multiplier = unit === "hours" ? 3600 : unit === "minutes" ? 60 : 1;
@@ -142,15 +144,15 @@ function TemplateMessageCard({
       </div>
       {(template.buttons ?? []).length > 0 && (
         <div className="border-t border-border">
-          {template.buttons.map((btn: any, i: number) => (
+          {template.buttons.map((btn, i: number) => (
             <div
-              key={btn.id ?? i}
+              key={String(btn.id ?? i)}
               className={cn(
                 "text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium",
                 i > 0 && "border-t border-border",
               )}
             >
-              {templateButtonIcon(btn.type)}
+              {templateButtonIcon(btn.type ?? "")}
               {btn.text || t("Button")}
             </div>
           ))}
@@ -183,7 +185,7 @@ function FlowMessageCard({ flowId, at }: Readonly<{ flowId: string | undefined; 
     );
   }
 
-  const tm: any = dbFlow?.templateMessage ?? {};
+  const tm: Partial<WaFlowTemplateMessage> = dbFlow?.templateMessage ?? {};
   const headerImageUrl = tm.headerImage ? getFileUrlFromKey(tm.headerImage) : null;
 
   return (
@@ -224,8 +226,8 @@ interface NodeOption {
 
 // Returns the raw body, which for several node types (text/button/list/cta) is a TipTap
 // rich-text JSON object rather than a plain string — must go through parseJsonToReact.
-function getNodeBody(node: TypedNode | null | undefined): unknown {
-  const data: any = node?.data;
+function getNodeBody(node: TypedNode | null | undefined): string | TiptapNode {
+  const data: NodeFields | undefined = node?.data;
   if (!data) return "";
   return (
     data.body ||
@@ -239,24 +241,24 @@ function getNodeBody(node: TypedNode | null | undefined): unknown {
 }
 
 function getNodeOptions(node: TypedNode | null | undefined): NodeOption[] {
-  const data: any = node?.data;
+  const data: NodeFields | undefined = node?.data;
   if (!data) return [];
   if (Array.isArray(data.buttons) && data.buttons.length > 0) {
-    return data.buttons.map((b: any, i: number) => ({
+    return data.buttons.map((b, i: number) => ({
       id: b.id ?? String(i),
       label: b.title ?? b.text ?? b.label ?? `Option ${i + 1}`,
     }));
   }
   if (Array.isArray(data.sections) && data.sections.length > 0) {
-    return data.sections.flatMap((section: any, sIdx: number) =>
-      (section.rows ?? []).map((row: any, rIdx: number) => ({
+    return data.sections.flatMap((section, sIdx: number) =>
+      (section.rows ?? []).map((row, rIdx: number) => ({
         id: row.id ?? `${sIdx}-${rIdx}`,
         label: row.title ?? row.text ?? "",
       })),
     );
   }
   if (Array.isArray(data.quick_replies) && data.quick_replies.length > 0) {
-    return data.quick_replies.map((r: any, i: number) => ({
+    return data.quick_replies.map((r, i: number) => ({
       id: r.id ?? r.payload ?? `qr_${i}`,
       label: r.title ?? `Option ${i + 1}`,
     }));
@@ -436,7 +438,7 @@ export function FlowbotPreviewPlayground({
           }
 
           const node = nodesById.get(entry.nodeId) as TypedNode | undefined;
-          const data: any = node?.data;
+          const data: NodeFields | undefined = node?.data;
 
           if (node?.type === "templateNode") {
             return (
@@ -460,7 +462,7 @@ export function FlowbotPreviewPlayground({
 
           const media = getNodeMedia(node);
           const rawBody = media ? (media.kind !== "audio" ? media.caption : "") : getNodeBody(node);
-          const body = parseJsonToReact(rawBody);
+          const body = parseJsonToReact(rawBody ?? "");
           const isEmptyBody = (typeof body === "string" && !body) || body == null;
           const options = getNodeOptions(node);
           const headerImage = data?.headerType === "image" ? data?.link : undefined;

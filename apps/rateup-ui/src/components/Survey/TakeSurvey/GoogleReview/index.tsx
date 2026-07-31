@@ -23,15 +23,22 @@ function GoogleReview({
   isSurveyPreview = false,
   survey,
   reviewPageLinks = null,
+}: {
+  reviewSuggestions?: ReviewSuggestion[];
+  orgLogoUrl?: string;
+  surveyTeamMapId?: string;
+  isSurveyPreview?: boolean;
+  survey: Survey | null;
+  reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const [isSuggestionCopiedModalOpen, setIsSuggestionCopiedModalOpen] = useState(false);
   const openSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(true);
   const closeSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(false);
 
-  const [reviewIndex, setReviewIndex] = useState<number>(null);
-  const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion>>(null);
+  const [reviewIndex, setReviewIndex] = useState<number | null>(null);
+  const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion> | null>(null);
   const [fakeLoading, setFakeLoading] = useState(false);
-  const [lastCopiedReview, setLastCopiedReview] = useState<ReviewSuggestion>(null);
+  const [lastCopiedReview, setLastCopiedReview] = useState<ReviewSuggestion | null>(null);
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (reviewSuggestions.length > 0) {
@@ -43,7 +50,7 @@ function GoogleReview({
   function handleRegenerate() {
     setFakeLoading(true);
 
-    if (reviewIndex >= reviewSuggestions.length - 1 || reviewIndex === null) {
+    if (reviewIndex === null || reviewIndex >= reviewSuggestions.length - 1) {
       setReviewIndex(0);
       setShuffledArray(shuffleArray(reviewSuggestions));
     } else {
@@ -59,7 +66,7 @@ function GoogleReview({
   }
 
   const deleteReviewMutation = useDeleteReviewSuggestionMutation(surveyTeamMapId, true);
-  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(survey?.id);
+  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(survey?.id ?? "");
   // if user clicks on go to review page, delete the last copied review
   function handleGoToReviewPage() {
     updateReviewPageVisits.mutate(surveyTeamMapId);
@@ -73,7 +80,7 @@ function GoogleReview({
   }
 
   const handleCopyBtnClick = useCallback(() => {
-    const currentReview = shuffledArray[reviewIndex];
+    const currentReview = shuffledArray?.[reviewIndex ?? 0];
     if (currentReview) {
       navigator.clipboard.writeText(currentReview.review);
       openSuggestionCopiedModal();
@@ -81,11 +88,11 @@ function GoogleReview({
     }
   }, [isSuggestionCopiedModalOpen, shuffledArray, reviewIndex]);
 
-  const questionWithReviewPageOptions = survey?.questions?.find((question) => {
+  const questionWithReviewPageOptions = survey?.questions?.find((question: Question) => {
     return Boolean(question?.reviewPageOptions);
   });
 
-  if (!reviewPageLinks) reviewPageLinks = survey?.reviewPageLinks;
+  if (!reviewPageLinks) reviewPageLinks = survey?.reviewPageLinks ?? null;
 
   let reviewPagePlatform =
     questionWithReviewPageOptions?.reviewPagePlatform || ReviewPagePlatform.Google;
@@ -142,7 +149,7 @@ function GoogleReview({
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <p className="h-[150px] w-full overflow-auto px-2.5 text-center break-words">
-                    {shuffledArray?.[reviewIndex]?.review}
+                    {shuffledArray?.[reviewIndex ?? 0]?.review}
                   </p>
                   <Button className="rounded-[1.25rem] px-6 py-2.5" onClick={handleCopyBtnClick}>
                     {translations("Copy")}

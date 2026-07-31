@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 
 const CTABanner = () => {
@@ -19,13 +18,13 @@ const CTABanner = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            to="#"
+          <a
+            href="#"
             className="bg-[#009987] hover:bg-[#009987] text-white px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-4 h-4" />
             Get Started with WhatsApp Integration
-          </Link>
+          </a>
         </div>
       </div>
     </div>

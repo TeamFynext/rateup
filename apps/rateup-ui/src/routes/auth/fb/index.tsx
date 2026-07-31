@@ -19,8 +19,12 @@ function Page() {
 
 // This component is rendered inside Suspense and uses useSearchParams directly
 function FbLoginRedirectWithParams() {
+  // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
-  return <FbLoginRedirect searchParams={searchParams} />;
+  const stringParams = Object.fromEntries(
+    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+  );
+  return <FbLoginRedirect searchParams={stringParams} />;
 }
 
 // Accept searchParams as a prop
@@ -36,7 +40,7 @@ function FbLoginRedirect({
   const update = useUpdateUserAccessToken();
 
   useEffect(() => {
-    const waSettingId = localStorage.getItem("waSettingsId");
+    const waSettingId = localStorage.getItem("waSettingsId") ?? "";
     const automationId = localStorage.getItem("automationId");
     const automationRouteBase =
       localStorage.getItem("automationRouteBase") || "/dashboard/whatsapp/flowbots";

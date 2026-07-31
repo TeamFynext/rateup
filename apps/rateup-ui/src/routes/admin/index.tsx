@@ -37,7 +37,7 @@ function Page() {
   }: {
     title: string;
     description: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     onClick: () => void;
     gradient: string;
   }) {

@@ -25,7 +25,15 @@ import {
 
 import NotificationEmailSettings from "./NotificationEmailSettings.tsx";
 
-const TicketSettings = ({ survey, surveyId, enabledModules }) => {
+const TicketSettings = ({
+  survey,
+  surveyId,
+  enabledModules,
+}: {
+  survey: Survey;
+  surveyId: string;
+  enabledModules: string[];
+}) => {
   const uid = useId();
   const [enableTickets, setEnableTickets] = useState(survey?.enableTickets);
   const [ticketBoardId, setTicketBoardId] = useState(survey?.ticketBoardId);
@@ -135,7 +143,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                       </FieldLabel>
                       <Select
                         value={ticketBoardId ?? ""}
-                        onValueChange={(v) => setTicketBoardId(v)}
+                        onValueChange={(v) => setTicketBoardId(v ?? undefined)}
                         items={boards ?? []}
                       >
                         <SelectTrigger id={`${uid}-field`}>
@@ -157,7 +165,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                       </FieldLabel>
                       <Select
                         value={ticketColumnId ?? ""}
-                        onValueChange={(v) => setTicketColumnId(v)}
+                        onValueChange={(v) => setTicketColumnId(v ?? undefined)}
                         items={columns}
                       >
                         <SelectTrigger id={`${uid}-field-2`}>

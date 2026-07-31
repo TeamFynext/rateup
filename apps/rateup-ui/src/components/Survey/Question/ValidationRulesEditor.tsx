@@ -25,6 +25,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
+import { isFieldKeyedRules } from "@/utils/validation/index.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
@@ -48,15 +49,32 @@ type RuleValue =
       ruleType?: string;
     };
 
-interface Rule {
-  min?: string;
-  max?: string;
-  errorMessage: string;
-  type?: string;
-  ruleType: string;
-}
+type Rule = ValidationFieldRule;
 interface FormValues {
   [ruleType: string]: RuleValue;
+}
+
+/**
+ * The form keeps one entry per rule type; only the three named rules are ever
+ * added (see `ruleList`), so this narrows the bag to the stored shape.
+ */
+function toValidationRules(values: FormValues): ValidationRules {
+  const rules: ValidationRules = {};
+  const { length, wordCount, textType } = values;
+  if (length && "min" in length) {
+    rules.length = { min: length.min, max: length.max, errorMessage: length.errorMessage };
+  }
+  if (wordCount && "min" in wordCount) {
+    rules.wordCount = {
+      min: wordCount.min,
+      max: wordCount.max,
+      errorMessage: wordCount.errorMessage,
+    };
+  }
+  if (textType && "type" in textType) {
+    rules.textType = { type: textType.type, errorMessage: textType.errorMessage };
+  }
+  return rules;
 }
 
 const TEXT_TYPE_OPTIONS = ["Letters", "Letters_&_Numbers", "Numbers"];
@@ -74,8 +92,8 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   const close = () => setOpened(false);
   const [ruleList, setRuleList] = useState(["length", "wordCount", "textType"]);
 
-  const [multiInputRules, setMultiInputRules] = useState<Record<string, Rule[]>>(null);
-  const [selectedRule, setSelectedRule] = useState(null);
+  const [multiInputRules, setMultiInputRules] = useState<Record<string, Rule[]> | null>(null);
+  const [selectedRule, setSelectedRule] = useState<(Rule & { fieldKey?: string }) | null>(null);
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
@@ -144,13 +162,14 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   useEffect(() => {
     if (
       [Q.MultiTextInput].includes(selectedQ?.type as QuestionType) &&
-      selectedQ?.validationRules
+      selectedQ?.validationRules &&
+      isFieldKeyedRules(selectedQ.validationRules)
     ) {
-      setMultiInputRules(selectedQ?.validationRules);
+      setMultiInputRules(selectedQ.validationRules);
     }
   }, [activeTab]);
 
-  const updateValidationRules = (validationRules: any) => {
+  const updateValidationRules = (validationRules: QuestionValidationRules | null) => {
     if (selectedQ) setSelectedQ({ ...selectedQ, validationRules });
   };
 
@@ -181,9 +200,10 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     } else {
       if (
         [Q.MultiTextInput].includes(selectedQ?.type as QuestionType) &&
-        selectedQ?.validationRules !== null
+        selectedQ?.validationRules != null &&
+        isFieldKeyedRules(selectedQ.validationRules)
       ) {
-        setMultiInputRules(selectedQ?.validationRules);
+        setMultiInputRules(selectedQ.validationRules);
       } else {
         setMultiInputRules(null);
       }
@@ -193,18 +213,20 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
   const addRule = (ruleType: string) => {
     if ([Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
-      let newRule;
+      let newRule!: Rule;
       if (ruleType === "length") {
         newRule = {
           min: "3",
           max: "5",
           ruleType,
+          errorMessage: "",
         };
         newRule.errorMessage = `${selectedFieldKey}: length should be between ${newRule.min} and ${newRule?.max} characters`;
       } else if (ruleType === "textType") {
         newRule = {
           type: "Letters_&_Numbers",
           ruleType,
+          errorMessage: "",
         };
         newRule.errorMessage = `${selectedFieldKey}: only ${newRule.type} are allowed`;
       } else if (ruleType === "required") {
@@ -270,7 +292,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     const data = {
       validationRules: [Q.MultiTextInput].includes(selectedQ?.type as QuestionType)
         ? multiInputRules
-        : { ...form.values },
+        : toValidationRules(form.values),
     };
 
     await questionUpdateMutation.mutateAsync({
@@ -282,11 +304,13 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   };
 
   const MultiInputValidationRules = () => {
-    const [ruleValues, setRuleValues] = useState<Rule & { fieldKey?: string }>(selectedRule);
+    const [ruleValues, setRuleValues] = useState<(Rule & { fieldKey?: string }) | null>(
+      selectedRule,
+    );
     const [ruleErrors, setRuleErrors] = useState<Record<string, string>>({});
 
-    const setRuleField = (name: string, value: any) => {
-      setRuleValues((prev) => ({ ...prev, [name]: value }));
+    const setRuleField = (name: string, value: unknown) => {
+      setRuleValues((prev) => ({ ...prev!, [name]: value }));
     };
 
     const validateRuleForm = () => {
@@ -305,19 +329,20 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
     const handleUpdateRule = async () => {
       if (!validateRuleForm()) return;
-      const newRules = multiInputRules?.[ruleValues.fieldKey];
-      const rule = newRules.find((r) => r.ruleType == ruleValues.ruleType);
+      const fieldKey = ruleValues!.fieldKey!;
+      const newRules = multiInputRules?.[fieldKey] ?? [];
+      const rule = newRules.find((r) => r.ruleType == ruleValues!.ruleType)!;
       if (rule.ruleType == "length") {
-        rule.min = ruleValues.min;
-        rule.max = ruleValues.max;
+        rule.min = ruleValues!.min;
+        rule.max = ruleValues!.max;
       }
       if (rule.ruleType == "textType") {
-        rule.type = ruleValues.type;
+        rule.type = ruleValues!.type;
       }
-      rule.errorMessage = ruleValues.errorMessage;
+      rule.errorMessage = ruleValues!.errorMessage;
       setMultiInputRules({
         ...multiInputRules,
-        [ruleValues.fieldKey]: newRules,
+        [fieldKey]: newRules,
       });
       setSelectedRule(null);
       close();
@@ -329,7 +354,9 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     }, [selectedRule]);
 
     const fieldKeyOptions =
-      selectedQ?.features?.[selectedLanguage]?.fields?.map((f) => f?.fieldKey) ?? [];
+      selectedQ?.features?.[selectedLanguage]?.fields?.map(
+        (f: { fieldKey: string }) => f?.fieldKey,
+      ) ?? [];
     const availableRuleTypes =
       ruleList?.filter(
         (ruleType) => !multiInputRules?.[selectedFieldKey]?.some((r) => r.ruleType == ruleType),
@@ -343,14 +370,14 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
               <FieldLabel htmlFor="field-key-select">{translations("select field Key")}</FieldLabel>
               <Select
                 value={selectedFieldKey}
-                onValueChange={setSelectedFieldKey}
-                items={fieldKeyOptions.map((key) => ({ value: key, label: key }))}
+                onValueChange={(value) => setSelectedFieldKey(value ?? "")}
+                items={fieldKeyOptions.map((key: string) => ({ value: key, label: key }))}
               >
                 <SelectTrigger id="field-key-select" className="w-fit">
                   <SelectValue placeholder={translations("select key")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {fieldKeyOptions.map((key) => (
+                  {fieldKeyOptions.map((key: string) => (
                     <SelectItem key={key} value={key}>
                       {key}
                     </SelectItem>
@@ -654,7 +681,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                               onValueChange={(event) => {
                                 const newValue: RuleValue = {
                                   ...(ruleData as RuleValue),
-                                  type: event,
+                                  type: event ?? "",
                                   errorMessage: `${event} only allowed.`,
                                 };
                                 setFieldValue(ruleType, newValue);

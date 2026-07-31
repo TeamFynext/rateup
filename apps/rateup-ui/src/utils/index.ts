@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { COORDINATESX, COORDINATESY } from "./constants.ts";
 import { UserRole } from "./enums/index.ts";
 
-export function getTimeSince(date: string) {
-  // @ts-ignore
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+export function getTimeSince(date: string | Date) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   let interval = Math.floor(seconds / 31536000);
 
   if (interval >= 1) {
@@ -37,7 +36,7 @@ export function getTimeSince(date: string) {
   return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? "" : "s"} ago`;
 }
 
-export function shuffleArray(array) {
+export function shuffleArray<T>(array: T[]) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
@@ -96,7 +95,7 @@ export const getContent = (title: string) => {
   else return title;
 };
 
-export function getUserRoleColor(role) {
+export function getUserRoleColor(role: string) {
   switch (role) {
     case UserRole.SUPADM:
       return "#B22222";
@@ -129,11 +128,17 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
   }
 }
 
-export const safeStrOrNull = (str: string): string | null =>
+export const safeStrOrNull = (str: string | null | undefined): string | null =>
   !str || !str.trim().length ? null : str;
 
-export function hasRealContent(obj) {
-  return obj?.content?.some((block) => block.content && block.content.length > 0);
+export function hasRealContent(
+  obj: string | { content?: { content?: unknown[] }[] } | null | undefined,
+) {
+  // A plain-text body has no blocks to inspect, matching the previous behaviour.
+  if (typeof obj === "string") return false;
+  return obj?.content?.some(
+    (block: { content?: unknown[] }) => block.content && block.content.length > 0,
+  );
 }
 
 export function randomHexColor(): string {

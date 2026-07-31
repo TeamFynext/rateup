@@ -2,8 +2,20 @@ import { useEffect, useRef } from "react";
 
 import style from "./feedback.module.css";
 
-function StatItem({ count, suffix, label, desc, delay }) {
-  const numRef = useRef(null);
+function StatItem({
+  count,
+  suffix,
+  label,
+  desc,
+  delay,
+}: {
+  count: number;
+  suffix: string;
+  label: string;
+  desc?: string;
+  delay?: string;
+}) {
+  const numRef = useRef<HTMLDivElement | null>(null);
   const observed = useRef(false);
 
   useEffect(() => {
@@ -15,10 +27,10 @@ function StatItem({ count, suffix, label, desc, delay }) {
         observed.current = true;
         const dur = 1600;
         const start = performance.now();
-        function tick(now) {
+        function tick(now: number) {
           const p = Math.min(1, (now - start) / dur);
           const eased = 1 - Math.pow(1 - p, 3);
-          el.textContent = Math.round(count * eased) + suffix;
+          el!.textContent = Math.round(count * eased) + suffix;
           if (p < 1) requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);

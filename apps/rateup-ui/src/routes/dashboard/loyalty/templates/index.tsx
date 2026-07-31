@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { WaTemplateDraftPayload } from "@/backend/whatsapp/whatsapp.api";
 import { useSaveTemplateAsDraftMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
@@ -129,7 +130,7 @@ function LoyaltyTemplateListPage() {
   const [sortOption, setSortOption] = useState("latest");
   const navigate = useNavigate();
   const saveDraftMutation = useSaveTemplateAsDraftMutation(
-    null,
+    "",
     () => {
       toast.success("Draft created");
       refetch();
@@ -141,7 +142,9 @@ function LoyaltyTemplateListPage() {
   );
 
   const [showModal, setShowModal] = useState(false);
-  const [selectedPredefined, setSelectedPredefined] = useState(null);
+  const [selectedPredefined, setSelectedPredefined] = useState<
+    (typeof PREDEFINED_TEMPLATES)[number] | null
+  >(null);
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [step, setStep] = useState<"pick" | "account" | "loading">("pick");
 
@@ -154,13 +157,13 @@ function LoyaltyTemplateListPage() {
     });
   }, [templates, search]);
 
-  function handleEditClick(template) {
+  function handleEditClick(template: { id: string }) {
     navigate({
       to: `/dashboard/loyalty/templates/${template.id}`,
     });
   }
 
-  function handleCreateFromPredefined(predef) {
+  function handleCreateFromPredefined(predef: (typeof PREDEFINED_TEMPLATES)[number]) {
     setSelectedPredefined(predef);
     setStep("account");
   }
@@ -171,7 +174,7 @@ function LoyaltyTemplateListPage() {
       return;
     }
     setStep("loading");
-    const payload = {
+    const payload: WaTemplateDraftPayload = {
       name: selectedPredefined.name,
       header: null,
       language: "en",
@@ -326,7 +329,7 @@ function LoyaltyTemplateListPage() {
               <>
                 <AccountSelector
                   value={selectedAccountId}
-                  onChange={setSelectedAccountId}
+                  onChange={(value) => setSelectedAccountId(value ?? "")}
                   label="WhatsApp Account"
                   withAllOption={false}
                   optional={false}

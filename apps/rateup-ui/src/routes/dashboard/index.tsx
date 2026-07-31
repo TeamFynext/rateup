@@ -57,7 +57,8 @@ export const Route = createFileRoute("/dashboard/")({
     }
 
     throw redirect({
-      to: "/dashboard/inbox?tab=open",
+      to: "/dashboard/inbox",
+      search: { tab: "open" },
       replace: true,
     });
   },

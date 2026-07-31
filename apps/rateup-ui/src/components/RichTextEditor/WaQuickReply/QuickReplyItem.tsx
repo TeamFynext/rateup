@@ -1,6 +1,7 @@
 import { Edit, Trash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 
@@ -14,7 +15,7 @@ const QuickReplyItem = ({
   onClick,
   cursor,
 }: {
-  reply: any;
+  reply: QuickReply;
   onEditClick?: () => void;
   onDelete?: () => void;
   onClick?: (value: string) => void;

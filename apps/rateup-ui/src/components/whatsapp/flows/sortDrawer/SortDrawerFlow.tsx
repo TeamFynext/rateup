@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { useListState } from "@/hooks/use-list-state.ts";
+import type { WaFlowFormElement } from "@/types/global";
 
 import useFlowStore from "../../flow-v2/utils/store.ts";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";
@@ -68,7 +69,7 @@ const SortDrawerFlow = ({ opened, close, data = [], v = 1 }: ISortDrawerProps) =
       const cloneScreens = JSON.parse(JSON.stringify(sortedScreens));
       for (const screenIndex in cloneScreens) {
         const footer = cloneScreens[screenIndex].layout.children.find(
-          (child) => child.type === "Footer",
+          (child: WaFlowFormElement) => child.type === "Footer",
         );
         const nextScreenId = cloneScreens?.[parseInt(screenIndex) + 1]?.id;
         cloneScreens[screenIndex].terminal = nextScreenId ? undefined : true;

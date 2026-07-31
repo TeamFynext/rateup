@@ -16,6 +16,7 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import type { DataTableToolbarProps } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -31,16 +32,26 @@ import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, PageType, QuestionType, SurveyType } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
 import { DataTable } from "../../Table/data-table.tsx";
 import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
+import type { ResponseRow } from "./Columns.tsx";
 import { useSurveyResponseColumns } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
-const Responses = ({ survey, defaultLanguage, questions }: any) => {
+const Responses = ({
+  survey,
+  defaultLanguage,
+  questions,
+}: Readonly<{
+  survey: Survey;
+  defaultLanguage: string;
+  questions: Question[];
+}>) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -72,7 +83,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const [rawColumnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const columnFilters = useDebounce(rawColumnFilters, 200);
   const navigate = useNavigate();
-  const [campaignIds, setSelectedCampaignIds] = useState([]);
+  const [campaignIds, setSelectedCampaignIds] = useState<string[]>([]);
 
   const { serverFilters, setServerFilters } = useResponseFilterStore();
 
@@ -114,7 +125,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
 
   const { data: CFData, isLoading: CFLoading } = useCampaignFilterForFlows(surveyId);
   const hasContactQuestion = useMemo(
-    () => questions.find((q: any) => q.type === QuestionType.Contact),
+    () => questions.find((q) => q.type === QuestionType.Contact),
     [questions],
   );
   const exportContactMutation = useExportContactResponses(surveyId);
@@ -175,8 +186,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
     }
   };
   const filteredQuestions = useMemo(
-    () =>
-      questions.filter((q: any) => q.type !== QuestionType.InfoMessage && !(q.type in PageType)),
+    () => questions.filter((q) => q.type !== QuestionType.InfoMessage && !(q.type in PageType)),
     [questions],
   );
 
@@ -205,10 +215,10 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
               id: "success",
             });
           },
-          onError: async (error: any) => {
+          onError: async (error) => {
             setIsSyncing(false);
             console.log(error);
-            if (error.response.data?.error === "invalid_grant") {
+            if (getApiErrorData(error)?.error === "invalid_grant") {
               const shouldRedirect = await confirm({
                 title: translations("Sync Google Sheet"),
                 description: translations(
@@ -218,7 +228,10 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
               });
 
               if (shouldRedirect) {
-                navigate({ to: "/dashboard/apps&services/googlesheet" });
+                navigate({
+                  to: "/dashboard/settings/integrations/$id",
+                  params: { id: "googlesheet" },
+                });
               }
             } else {
               toast.error(error?.message || translations("Error in syncing response"));
@@ -237,7 +250,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
     });
 
     if (shouldRedirect) {
-      navigate({ to: "/dashboard/apps&services/googlesheet" });
+      navigate({ to: "/dashboard/settings/integrations/$id", params: { id: "googlesheet" } });
     }
   };
 
@@ -260,7 +273,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const responseCount = responseData?.totalCount;
 
   const Toolbar = useCallback(
-    (props) => (
+    (props: DataTableToolbarProps<ResponseRow, unknown>) => (
       <ResponseTableToolbar
         {...props}
         CFData={CFData}
@@ -308,8 +321,8 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
       <DataTable
         data={responseData ? responseData?.responses : []}
         columns={
-          responseData?.responses?.every((row: any) => !row.tag)
-            ? columns?.filter((col: any) => col.accessorKey !== "tag")
+          responseData?.responses?.every((row: ResponseRow) => !row.tag)
+            ? columns?.filter((col) => !("accessorKey" in col) || col.accessorKey !== "tag")
             : columns
         }
         serverSide={{
@@ -331,7 +344,15 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
 
 export default React.memo(Responses);
 
-const DeleteModal = ({ confirmDelete, opened, close }) => {
+const DeleteModal = ({
+  confirmDelete,
+  opened,
+  close,
+}: {
+  confirmDelete: (verifyEmail: string) => void;
+  opened: boolean;
+  close: () => void;
+}) => {
   const { t: translations } = useTranslation();
   const [verifyEmail, setVerifyEmail] = useState("");
 

@@ -13,7 +13,7 @@ export function FlowNonQuestionDetailedView() {
 
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
 
-  switch (selectedFormElement.type) {
+  switch (selectedFormElement?.type) {
     case WaFlowFormElementType.image:
       return <FlowImageDetailedView />;
     case WaFlowFormElementType.embeddedLink:

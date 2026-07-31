@@ -4,6 +4,7 @@ import { Calendar, CreditCard, Edit, Package, Star, Trash2, Zap } from "lucide-r
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 import {
   usePaymentsPlans,
   useRateupPaymentsPlanDeleteMutation,
@@ -12,6 +13,7 @@ import {
 import { useGetStripeProducts } from "@/backend/payment/stripe/stripe.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import RateupPlanModal from "@/components/Modal/RateupPlanModal.tsx";
+import type { RateupPlanFormValues } from "@/components/Modal/RateupPlanModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -41,7 +43,7 @@ interface RateupPlanTableData {
   name: string;
   description: string[];
   displayWidgetId: string;
-  features: any;
+  features: RateupPaymentPlan;
   planType: string;
   paymentPlanId: string;
   stripeId: string;
@@ -51,7 +53,7 @@ interface RateupPlanTableData {
 
 function RateupPlan() {
   const [opened, { toggle, close }] = useDisclosure(false);
-  const [editPlan, setEditPlan] = useState<any>(null);
+  const [editPlan, setEditPlan] = useState<RateupPlanFormValues | null>(null);
   const { t: translations } = useTranslation();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {
@@ -215,7 +217,7 @@ function RateupPlan() {
   if (isPending || isRazorPayPlansLoading) return <RateupLoader className="h-dvh" />;
 
   const razorPayPlanFiltered =
-    razorPayPlans?.data?.map((filteredPlan) => ({
+    razorPayPlans?.data?.map((filteredPlan: { id: string; name: string }) => ({
       value: filteredPlan.id,
       label: filteredPlan.name,
     })) ?? [];
@@ -231,7 +233,7 @@ function RateupPlan() {
   ];
 
   const tableData: RateupPlanTableData[] =
-    plans?.map((plan) => ({
+    plans?.map((plan: RateupPaymentPlan) => ({
       id: plan.id,
       displayName: plan.displayName,
       name: plan.name,

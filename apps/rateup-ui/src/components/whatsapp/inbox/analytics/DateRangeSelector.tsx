@@ -13,9 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
-const DateRangeSelector = ({ value, onChange }) => {
+const DateRangeSelector = ({
+  value,
+  onChange,
+}: {
+  value: AnalyticsDateRange;
+  onChange: (range: AnalyticsDateRange) => void;
+}) => {
   const data = [
     { label: "Today", key: "today" },
     { label: "Yesterday", key: "yesterday" },
@@ -23,8 +30,8 @@ const DateRangeSelector = ({ value, onChange }) => {
     { label: "Last 30 days", key: "last30days" },
     { label: "Custom Range", key: "custom-range" },
   ];
-  function handleChange(key) {
-    let range = [];
+  function handleChange(key: string) {
+    let range: Date[] = [];
     switch (key) {
       case "today":
         range = [dayjs().startOf("day").toDate(), new Date()];
@@ -51,7 +58,7 @@ const DateRangeSelector = ({ value, onChange }) => {
     <div className="flex gap-1 items-center">
       <Select
         value={value.key}
-        onValueChange={handleChange}
+        onValueChange={(value) => handleChange(value ?? "")}
         items={data.map((date) => ({ value: date.key, label: date.label }))}
       >
         <SelectTrigger className="*:data-[slot=select-value]:text-sm">
@@ -82,7 +89,13 @@ const DateRangeSelector = ({ value, onChange }) => {
                 from: value.range[0],
                 to: value.range[1],
               }}
-              onSelect={(range) => onChange({ key: "custom-range", range: [range.from, range.to] })}
+              onSelect={(range) =>
+                onChange({
+                  key: "custom-range",
+                  // Either end can be unset mid-selection; the range keeps only what is picked.
+                  range: [range?.from, range?.to].filter((d) => d !== undefined),
+                })
+              }
               numberOfMonths={2}
               className="rounded-lg border shadow-sm"
             />
@@ -95,7 +108,7 @@ const DateRangeSelector = ({ value, onChange }) => {
 
 export default DateRangeSelector;
 
-export function DateSelector({ days, setDays }) {
+export function DateSelector({ days, setDays }: { days: number; setDays: (days: number) => void }) {
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-1 flex-col sm:flex-row">

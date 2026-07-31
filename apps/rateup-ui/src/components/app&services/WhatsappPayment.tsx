@@ -73,7 +73,7 @@ export function WhatsappPayment() {
       .regex(/^\S*$/, "configuration_name cannot contain spaces"),
     purpose_code: z.string().min(1),
     merchant_category_code: z.string().min(1),
-    provider_name: z.nativeEnum(Providers),
+    provider_name: z.enum(Providers),
   });
   const getConfigSchema = z.object({
     configuration_name: z
@@ -324,6 +324,22 @@ function WhatsappPaymentList({
   data,
   deleteMutation: _deleteMutation,
   regenerateWaPaymentConfigurationOauthMutation,
+}: {
+  data?: {
+    credential?: Array<{
+      configuration_name?: string;
+      provider_name?: string;
+      status?: string;
+      oauth_url?: string;
+      /** Both arrive as code objects carrying a human-readable description. */
+      purpose_code?: { code?: string; description?: string };
+      merchant_category_code?: { code?: string; description?: string };
+      expiration?: number;
+      description?: string;
+    }>;
+  };
+  deleteMutation?: unknown;
+  regenerateWaPaymentConfigurationOauthMutation: { mutate: (name: string) => void };
 }) {
   if (!data?.credential || data?.credential?.length === 0) return <NothingFound text="" />;
   return (
@@ -367,7 +383,7 @@ function WhatsappPaymentList({
                             size="icon"
                             onClick={() =>
                               regenerateWaPaymentConfigurationOauthMutation.mutate(
-                                credential?.configuration_name,
+                                credential?.configuration_name ?? "",
                               )
                             }
                           />

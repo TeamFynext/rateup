@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 
 import {
   campaignResponseDownloadById,
@@ -31,7 +32,7 @@ export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
   });
 };
 
-export const useCreateCampaignMutation = (teamId, type) => {
+export const useCreateCampaignMutation = (teamId: string, type: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createCampaign,
@@ -42,8 +43,8 @@ export const useCreateCampaignMutation = (teamId, type) => {
         id: "campaign-create",
       });
     },
-    onError: (error: any) => {
-      if (!(error?.response?.data?.displayMessageInClient ?? false))
+    onError: (error) => {
+      if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
         toast.error(error?.message || `Error creating campaign`, {
           id: "campaign-create",
         });
@@ -51,7 +52,7 @@ export const useCreateCampaignMutation = (teamId, type) => {
   });
 };
 
-export const useCampaignById = (campaignId) => {
+export const useCampaignById = (campaignId: string) => {
   return useQuery({
     queryKey: ["campaignById", campaignId],
     queryFn: () => getCampaignById(campaignId),
@@ -59,7 +60,7 @@ export const useCampaignById = (campaignId) => {
   });
 };
 
-export const useCampaignStatsById = (campaignId, selectedDripStage) => {
+export const useCampaignStatsById = (campaignId: string, selectedDripStage?: string) => {
   return useQuery({
     queryKey: ["campaignStats", campaignId, selectedDripStage],
     queryFn: () => getCampaignStatsById(campaignId, selectedDripStage),
@@ -67,7 +68,12 @@ export const useCampaignStatsById = (campaignId, selectedDripStage) => {
   });
 };
 
-export const useUpdateCampaignMutation = (campaignId, teamId, complete = () => {}, type) => {
+export const useUpdateCampaignMutation = (
+  campaignId: string,
+  teamId: string,
+  complete: () => void = () => {},
+  type?: string,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateCampaign,
@@ -89,7 +95,7 @@ export const useUpdateCampaignMutation = (campaignId, teamId, complete = () => {
   });
 };
 
-export const useDeleteCampaignMutation = (teamId, type) => {
+export const useDeleteCampaignMutation = (teamId: string, type: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteCampaign,
@@ -156,8 +162,8 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         { id: "campaign-start" },
       );
     },
-    onError: (error: any) => {
-      if (!(error?.response?.data?.displayMessageInClient ?? false))
+    onError: (error) => {
+      if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
         toast.error(error?.message || `${error?.message ?? "Error sending campaign"}`, {
           id: "campaign-start",
         });

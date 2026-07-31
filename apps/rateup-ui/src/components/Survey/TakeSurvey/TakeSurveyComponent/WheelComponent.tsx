@@ -69,7 +69,7 @@ const WheelComponent = ({
 
   // to draw each segment of a wheel
   const drawSegment = useCallback(
-    (key, lastAngle, angle) => {
+    (key: number, lastAngle: number, angle: number) => {
       const ctx = canvasContextRef.current;
       const value = segments[key];
       if (!ctx) return;
@@ -112,10 +112,10 @@ const WheelComponent = ({
 
   // to draw image in the circle shape in another canvas
   const drawImageToBuffer = useCallback(
-    (callback) => {
+    (callback: () => void) => {
       bufferCanvasRef.current = document.createElement("canvas");
-      bufferCanvasRef.current.width = canvasContextRef.current.canvas.width;
-      bufferCanvasRef.current.height = canvasContextRef.current.canvas.height;
+      bufferCanvasRef.current.width = canvasContextRef.current!.canvas.width;
+      bufferCanvasRef.current.height = canvasContextRef.current!.canvas.height;
       bufferContextRef.current = bufferCanvasRef.current.getContext("2d");
 
       const ctx = bufferContextRef.current;

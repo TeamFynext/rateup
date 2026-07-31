@@ -131,7 +131,7 @@ export default function ComponentSidebar({ platform }: Readonly<{ platform: stri
 
   // Function to get default node data based on node type. The visible label is
   // filled in on drop from the shared node-config, so nodes get friendly names.
-  const getDefaultNodeData = useCallback((nodeId: string) => {
+  const getDefaultNodeData = useCallback((nodeId: string): Record<string, unknown> => {
     const baseData = { type: nodeId };
 
     switch (nodeId) {
@@ -170,7 +170,7 @@ export default function ComponentSidebar({ platform }: Readonly<{ platform: stri
 
   // Function to handle drag start
   const onDragStart = useCallback(
-    (event: React.DragEvent, nodeType: string, nodeData: any) => {
+    (event: React.DragEvent, nodeType: string, nodeData: Record<string, unknown>) => {
       event.dataTransfer.setData("application/reactflow", nodeType);
       event.dataTransfer.setData(
         "application/nodeData",

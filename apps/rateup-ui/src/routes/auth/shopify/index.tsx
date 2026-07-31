@@ -21,8 +21,12 @@ function Page() {
 }
 
 function ShopifyAuthCallbackWithParams() {
+  // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
-  return <ShopifyAuthCallback searchParams={searchParams} />;
+  const stringParams = Object.fromEntries(
+    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+  );
+  return <ShopifyAuthCallback searchParams={stringParams} />;
 }
 
 function ShopifyAuthCallback({
@@ -47,7 +51,7 @@ function ShopifyAuthCallback({
       const isExist = await Session.doesSessionExist();
       if (!isExist) {
         localStorage.setItem("shopify-auth-callback", `/auth/shopify?shop=${shop}`);
-        updateRouteAndCart(`/auth/shopify?shop=${shop}`, null);
+        updateRouteAndCart(`/auth/shopify?shop=${shop}`, {});
         navigate({
           to: "/login",
         });

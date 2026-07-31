@@ -26,7 +26,15 @@ const urlSchema = z.object({
 });
 type UrlFormValues = z.infer<typeof urlSchema>;
 
-const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
+const AddGoogleReviewLinkForTeamModal = ({
+  team,
+  surveyId,
+  platform,
+}: {
+  team: TeamData;
+  surveyId: string;
+  platform: ReviewPagePlatform;
+}) => {
   const { t: translations } = useTranslation();
   const { control, handleSubmit, reset, setValue } = useForm<UrlFormValues>({
     resolver: zodResolver(urlSchema),
@@ -36,7 +44,7 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
   const editTeamMutation = useEditTeamMutation(team.id, () => {}, surveyId);
 
   const onSubmit = async ({ url }: UrlFormValues) => {
-    let newReviewPageLinks = {};
+    let newReviewPageLinks: Record<string, string> = {};
     if (!team.reviewPageLinks) {
       newReviewPageLinks = {
         [platform]: url,

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/(marketing)/blog/tag/$slug/")({
     const { slug } = params;
     if (!slug) throw notFound();
     const posts = await getPosts({ tag: slug });
-    if (!posts || (posts as any).meta?.pagination.total === 0) throw notFound();
+    if (!posts || posts.meta?.pagination.total === 0) throw notFound();
     return posts;
   },
 });

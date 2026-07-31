@@ -18,7 +18,19 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
+function CreateQrModal({
+  opened,
+  onClose,
+  mode,
+  shortUrlId,
+  initialName,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  mode: "create" | "edit";
+  shortUrlId: string;
+  initialName: string;
+}) {
   const { t: translations } = useTranslation();
   const formSchema = z.object({
     name: z
@@ -43,7 +55,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const createQrMutation = useCreateQrMutation();
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
-  const handleCreateQrFormSubmit = useCallback(async (values) => {
+  const handleCreateQrFormSubmit = useCallback(async (values: { name: string; url: string }) => {
     await createQrMutation.mutateAsync({
       name: values.name,
       link: values.url,
@@ -53,7 +65,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   }, []);
 
   const handleUpdateQrFormSubmit = useCallback(
-    async (values) => {
+    async (values: { name: string; url?: string }) => {
       const name = values.name;
       await updateQrMutation.mutateAsync({
         shortUrlId: shortUrlId,

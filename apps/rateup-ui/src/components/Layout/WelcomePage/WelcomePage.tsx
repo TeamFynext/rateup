@@ -1,4 +1,7 @@
+import type { CSSProperties } from "react";
+
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PageType } from "@/types/enums.ts";
@@ -21,29 +24,33 @@ function WelcomePage({
   questionsArr,
   isMobile,
 }: Readonly<{
-  surveyThemeData: any;
-  onStart: any;
-  largeScreen: any;
+  surveyThemeData: Record<string, SurveyThemePage> | undefined;
+  onStart: () => void;
+  largeScreen?: boolean;
   orgLogoSrc: string | null;
-  orgLogoStyles: any;
-  questionsArr: any;
-  pagesThemeData: any;
+  orgLogoStyles: CSSProperties | undefined;
+  questionsArr: Question[] | undefined;
+  pagesThemeData: Record<string, SurveyThemePage> | undefined;
   isMobile: boolean;
 }>) {
-  const defaultTitleSubtitleStartButtonTexts = {
+  const defaultTitleSubtitleStartButtonTexts: Pick<
+    Question,
+    "titleText" | "subtitleText" | "startButtonText"
+  > = {
     titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
+    subtitleText: null,
     startButtonText: "Start Survey",
   };
 
   const welcomeTypeQuestionObj =
-    questionsArr?.find((question) => question.type === PageType.Welcome) ||
+    questionsArr?.find((question: Question) => question.type === PageType.Welcome) ||
     defaultTitleSubtitleStartButtonTexts;
   const { titleText, subtitleText, startButtonText } = welcomeTypeQuestionObj;
 
-  const shouldUseSurveyTheme = pagesThemeData["welcomeTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = pagesThemeData?.["welcomeTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
-    ? surveyThemeData["surveyTheme"]
-    : pagesThemeData["welcomeTheme"];
+    ? surveyThemeData?.["surveyTheme"]
+    : pagesThemeData?.["welcomeTheme"];
 
   const titleStyles = requiredThemeObj?.title?.styles;
   let subtitleStyles = requiredThemeObj?.subtitle?.styles;
@@ -87,7 +94,7 @@ function WelcomePage({
         )}
         <div
           dangerouslySetInnerHTML={{
-            __html: newTitle,
+            __html: newTitle ?? "",
           }}
           style={{ color: titleStyles?.color }}
         />

@@ -29,7 +29,7 @@ import { ShareSection } from "./ShareSection.tsx";
 interface FlowShareProps {
   flowName: string;
   flowDbId: string;
-  survey: any;
+  survey: Survey;
   surveyId: string;
 }
 
@@ -82,7 +82,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
 
   const selectedTeamObj = survey?.teams?.find((team) => team?.code === selectedTeam);
   const tagOptions =
-    selectedTeamObj?.tags?.map((tag) => ({
+    selectedTeamObj?.tags?.map((tag: string) => ({
       value: tag,
       label: tag,
     })) || [];
@@ -135,7 +135,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
           body: templateBody,
           cta: templateCTA,
           footer: templateFooter,
-          headerImage: headerImage,
+          headerImage: headerImage ?? undefined,
         },
       },
     });
@@ -159,7 +159,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                   </FieldLabel>
                   <Select
                     value={selectedTeam}
-                    onValueChange={(value) => setSelectedTeam(value)}
+                    onValueChange={(value) => setSelectedTeam(value ?? "")}
                     items={teamOptions}
                   >
                     <SelectTrigger id={`${uid}-select-team`} className="h-9 text-sm w-full">
@@ -183,7 +183,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                   </FieldLabel>
                   <Select
                     value={selectedTag}
-                    onValueChange={(value) => setSelectedTag(value)}
+                    onValueChange={(value) => setSelectedTag(value ?? "")}
                     items={tagOptions}
                   >
                     <SelectTrigger id={`${uid}-select-tag`} className="h-9 text-sm w-full">

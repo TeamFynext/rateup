@@ -1,11 +1,14 @@
 import dayjs from "dayjs";
 import { Lock } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type { FC } from "react";
 
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -112,8 +115,8 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
     isFetchingNextPage,
     isPending,
   } = useGetMessagesByContactId(
-    selectedContact?.id,
-    filter?.phone,
+    selectedContact?.id ?? "",
+    filter?.phone ?? "",
     enable,
     selectedContact?.conversationId,
   );
@@ -145,11 +148,11 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
-    setIsLoading(!messagesByKey?.get(selectedKey)?.messages?.length && isPending);
+    setIsLoading(!messagesByKey?.get(selectedKey ?? "")?.messages?.length && isPending);
   }, [selectedKey, isPending, messagesByKey, enable]);
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
-  const pendingMessages = tempMessages?.[getRowKey(selectedContact)] ?? [];
+  const pendingMessages = selectedContact ? (tempMessages?.[getRowKey(selectedContact)] ?? []) : [];
 
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
@@ -180,8 +183,8 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
               <MessageScrollerItem key={message?.id ?? index} messageId={message?.id}>
                 <MessageItem
                   message={message}
-                  selectedContact={selectedContact}
-                  previousMessage={index > 0 ? visibleMessages[index - 1] : null}
+                  selectedContact={selectedContact!}
+                  previousMessage={index > 0 ? visibleMessages[index - 1] : undefined}
                 />
               </MessageScrollerItem>
             ))}
@@ -209,7 +212,7 @@ export default WaInboxChatDisplayBody;
  * Watches the top sentinel through the scroller's visibility hook — the
  * documented escape hatch — and asks for the next page when it comes into view.
  */
-const LoadOlderMessagesTrigger = ({
+const LoadOlderMessagesTrigger: FC<{ enabled: boolean; onReach: () => void }> = ({
   enabled,
   onReach,
 }: Readonly<{ enabled: boolean; onReach: () => void }>) => {
@@ -223,7 +226,15 @@ const LoadOlderMessagesTrigger = ({
   return null;
 };
 
-const MessageItem = ({ message, selectedContact, previousMessage }) => {
+const MessageItem = ({
+  message,
+  selectedContact,
+  previousMessage,
+}: {
+  message: WaGetMessagesBody;
+  selectedContact: ContactWithUpdatedAt;
+  previousMessage?: WaGetMessagesBody;
+}) => {
   const { messagesByKey, selectedKey } = useMessagesStore();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
@@ -241,7 +252,7 @@ const MessageItem = ({ message, selectedContact, previousMessage }) => {
     !dayjs(message.waCreatedAt).isSame(dayjs(previousMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
-    allMessages: messagesByKey.get(selectedKey)?.messages || [],
+    allMessages: messagesByKey.get(selectedKey ?? "")?.messages || [],
     selectedContact,
   });
   return (
@@ -254,7 +265,7 @@ const MessageItem = ({ message, selectedContact, previousMessage }) => {
       <WaInboxSingleMessageLayout
         exchangeProcess={message?.messageBody?.exchangeProcess}
         messageObject={message}
-        reaction={reaction}
+        reaction={reaction ?? undefined}
       >
         {/* Revoked on WhatsApp: the row and its body are kept, only the content
             is withheld — the placeholder still sits in the timeline. */}

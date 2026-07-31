@@ -17,13 +17,51 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import { QuestionType } from "@/types/enums.ts";
+import { PageType, QuestionType } from "@/types/enums.ts";
 import { getFileNameFromKey, getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import type { StoredResponse } from "@/utils/response.ts";
 import { getResponse, getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import { HoverCardComponent } from "../HoverCard/HoverCard.tsx";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { fuzzyFilter } from "./Filter.ts";
+
+/** The cell context these response column definitions read. */
+interface ResponseCellInfo {
+  getValue: () => StoredResponse;
+  row: { original: { Ticket?: Array<{ id: string }>; [key: string]: unknown } };
+}
+
+/** Rating/opinion/number answers sort and filter numerically. */
+const NUMERIC_QUESTION_TYPES: Array<QuestionType | PageType> = [
+  QuestionType.Rating,
+  QuestionType.Opinion,
+  QuestionType.Number,
+];
+const isNumericQuestion = (type: QuestionType | PageType) => NUMERIC_QUESTION_TYPES.includes(type);
+
+/** Attachment answers are neither filterable nor sortable in the table. */
+const UNFILTERABLE_QUESTION_TYPES: Array<QuestionType | PageType> = [
+  QuestionType.DocumentPicker,
+  QuestionType.PhotoPicker,
+  QuestionType.Photo,
+  QuestionType.PCQ,
+];
+
+/** A response row, as the responses table holds it. */
+export interface ResponseRow {
+  id?: string;
+  phone?: string;
+  surveyTeamMapId?: string;
+  teamId?: string;
+  responses?: Array<QuestionResponse>;
+  Ticket?: Array<{ id: string }>;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+/** A stored answer keyed by question type, as a response row carries it. */
+type ResponseByType = QuestionResponse["response"];
 
 export const useSurveyResponseColumns = ({
   questions = [],
@@ -36,41 +74,52 @@ export const useSurveyResponseColumns = ({
   enableTicket,
   surveyId,
   typeWa = false,
-}: any) => {
+}: Readonly<{
+  questions?: Question[];
+  defaultLanguage?: string;
+  setSelectedRowId?: (id: string) => void;
+  setSelectedRowSurveyTeamMapId?: (id: string) => void;
+  open?: () => void;
+  setSelectedResponseId?: (id: string) => void;
+  setResponseTeamId?: (id: string) => void;
+  enableTicket?: boolean;
+  surveyId?: string;
+  typeWa?: boolean;
+}>) => {
   const { t: translations } = useTranslation();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const column: ColumnDef<any>[] = useMemo(
+  // The definitions are assembled per question, so their accessor shapes differ.
+  const column: ColumnDef<ResponseRow, StoredResponse>[] = useMemo(
     () => [
       {
         header: translations("Created At"),
         filterFn: fuzzyFilter,
         accessorKey: "createdAt",
-        cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        cell: (info: ResponseCellInfo) =>
+          dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...(questions?.length > 0
-        ? questions.map((q: any) => {
+        ? questions.map((q) => {
             const content =
               getReplacedTitleFromVariable({
-                title: q?.title[selectedLanguage ? selectedLanguage : defaultLanguage],
-                surveyId,
+                title: q?.title[selectedLanguage ? selectedLanguage : (defaultLanguage ?? "")],
+                surveyId: surveyId ?? "",
               }) ||
               q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
               q?.description[selectedLanguage ? selectedLanguage : defaultLanguage] ||
               q?.label?.[selectedLanguage ? selectedLanguage : defaultLanguage] ||
               "";
             return {
-              ...(![QuestionType.Rating, QuestionType.Opinion, QuestionType.Number].includes(
-                q?.type,
-              ) && {
+              ...(!isNumericQuestion(q?.type) && {
                 filterFn: fuzzyFilter,
               }),
-              accessorFn: (row: any) => {
+              accessorFn: (row: ResponseRow) => {
                 const response = row.responses
-                  ?.filter((item: any) => item?.questionId === q.id)
-                  ?.find((item: any) => item?.type === q.type)?.response[q.type];
-                if (
-                  [QuestionType.Rating, QuestionType.Opinion, QuestionType.Number].includes(q.type)
-                ) {
+                  ?.filter((item: QuestionResponse) => item?.questionId === q.id)
+                  ?.find((item: QuestionResponse) => item?.type === q.type)?.response[
+                  q.type as keyof ResponseByType
+                ];
+                if (isNumericQuestion(q.type)) {
                   return Number(response);
                 }
 
@@ -92,19 +141,9 @@ export const useSurveyResponseColumns = ({
                 }
                 return content;
               },
-              enableColumnFilter: ![
-                QuestionType.DocumentPicker,
-                QuestionType.PhotoPicker,
-                QuestionType.Photo,
-                QuestionType.PCQ,
-              ].includes(q.type),
-              enableSorting: ![
-                QuestionType.Photo,
-                QuestionType.PCQ,
-                QuestionType.DocumentPicker,
-                QuestionType.PhotoPicker,
-              ].includes(q.type),
-              cell: (info) => {
+              enableColumnFilter: !UNFILTERABLE_QUESTION_TYPES.includes(q.type),
+              enableSorting: !UNFILTERABLE_QUESTION_TYPES.includes(q.type),
+              cell: (info: ResponseCellInfo) => {
                 return (
                   <BadgeorTextorPreview
                     questionType={q?.type}
@@ -118,16 +157,16 @@ export const useSurveyResponseColumns = ({
       {
         header: translations("Tags"),
         accessorKey: "tag",
-        cell: (info) => info.getValue(),
+        cell: (info: ResponseCellInfo) => info.getValue(),
       },
       ...(typeWa
         ? [
             {
               header: "Respondent&apos;s Mobile Number",
               filterFn: fuzzyFilter,
-              accessorFn: (row: any) => row?.phone,
+              accessorFn: (row: ResponseRow) => row?.phone,
               id: "respondentsMobileNumber",
-              cell: (info) => info.getValue(),
+              cell: (info: ResponseCellInfo) => info.getValue(),
             },
           ]
         : []),
@@ -138,7 +177,7 @@ export const useSurveyResponseColumns = ({
               enableColumnFilter: false,
               enableSorting: false,
               accessorKey: "ticket",
-              cell: (info) => {
+              cell: (info: ResponseCellInfo) => {
                 const ticketData = info.row.original.Ticket;
                 const ticket = ticketData?.[0];
 
@@ -179,13 +218,13 @@ export const useSurveyResponseColumns = ({
         header: translations("Action"),
         enableColumnFilter: false,
         enableSorting: false,
-        cell: (info) => {
+        cell: (info: ResponseCellInfo) => {
           return (
             <ActionMenu
               open={open}
-              resId={info.row.original.id}
-              resTeamId={info.row.original.teamId}
-              resSurveyTeamMapId={info.row.original.surveyTeamMapId}
+              resId={info.row.original.id as string | undefined}
+              resTeamId={info.row.original.teamId as string | undefined}
+              resSurveyTeamMapId={info.row.original.surveyTeamMapId as string | undefined}
               setSelectedResponseId={setSelectedResponseId}
               setResponseTeamId={setResponseTeamId}
               setSelectedRowId={setSelectedRowId}
@@ -215,8 +254,11 @@ export const useSurveyResponseColumns = ({
   return column;
 };
 
-const previewRequired = [QuestionType.Photo, QuestionType.PhotoPicker];
-const badgeRequired = [
+const previewRequired: Array<QuestionType | PageType> = [
+  QuestionType.Photo,
+  QuestionType.PhotoPicker,
+];
+const badgeRequired: Array<QuestionType | PageType> = [
   QuestionType.Rating,
   QuestionType.Smiley,
   QuestionType.LD,
@@ -227,8 +269,8 @@ function BadgeorTextorPreview({
   questionType,
   response,
 }: Readonly<{
-  questionType: QuestionType;
-  response: any;
+  questionType: QuestionType | PageType;
+  response: ReturnType<typeof getResponse>;
 }>) {
   const { t: translations } = useTranslation();
   const [previewModalOpened, setPreviewModalOpened] = useState(false);
@@ -373,8 +415,20 @@ export function ActionMenu({
   setSelectedRowSurveyTeamMapId,
   ticketData,
   enableTicket,
-}: any) {
-  const ticketExist = ticketData?.length > 0;
+}: Readonly<{
+  resId?: string;
+  resTeamId?: string;
+  resSurveyTeamMapId?: string;
+  surveyId?: string;
+  open?: () => void;
+  setSelectedResponseId?: (id: string) => void;
+  setResponseTeamId?: (id: string) => void;
+  setSelectedRowId?: (id: string) => void;
+  setSelectedRowSurveyTeamMapId?: (id: string) => void;
+  ticketData?: Array<{ id: string }>;
+  enableTicket?: boolean;
+}>) {
+  const ticketExist = (ticketData?.length ?? 0) > 0;
   const { t: translations } = useTranslation();
 
   return (
@@ -399,11 +453,11 @@ export function ActionMenu({
               className={ticketExist ? "text-orange-500" : "text-blue-700"}
               onClick={() => {
                 if (ticketExist) {
-                  const url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                  const url = `/dashboard/tickets/${ticketData?.[0]?.id}`;
                   window.open(url, "_blank");
                 } else {
-                  setSelectedResponseId(resId);
-                  setResponseTeamId?.(resTeamId);
+                  setSelectedResponseId?.(resId ?? "");
+                  setResponseTeamId?.(resTeamId ?? "");
                 }
               }}
             >
@@ -414,9 +468,9 @@ export function ActionMenu({
           <DropdownMenuItem
             className="text-red-500"
             onClick={() => {
-              setSelectedRowId(resId);
-              setSelectedRowSurveyTeamMapId?.(resSurveyTeamMapId);
-              open();
+              setSelectedRowId?.(resId ?? "");
+              setSelectedRowSurveyTeamMapId?.(resSurveyTeamMapId ?? "");
+              open?.();
             }}
           >
             <Trash2 className="size-4" />

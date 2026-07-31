@@ -1,9 +1,12 @@
 import { toBlob } from "html-to-image";
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Tags } from "lucide-react";
 import { useId, useCallback, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetShareSettings } from "@/backend/surveyShareSettings/surveyShareSettings.query";
+import type { QrLogoPanelState } from "@/components/Survey/ShareSurvey/ShareQR/LogoTabPanel/index.tsx";
+import { initialLogoTabPanelState } from "@/components/Survey/ShareSurvey/ShareQR/LogoTabPanel/LogoTabPanelReducer.tsx";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import Heading from "../../../styled/Heading/Heading.tsx";
@@ -41,6 +44,16 @@ function TagManager({
   surveyTitle,
   surveyId,
   shareUrl,
+}: {
+  isPublished: boolean;
+  selectTeamDropdownValue: string;
+  teamSelectData: Array<{ value: string; label: string }>;
+  onSelectTeamDropdownChange: (value: string) => void;
+  nothingFound: ReactNode;
+  tagsToMap: string[];
+  surveyTitle: string;
+  surveyId: string;
+  shareUrl: string;
 }) {
   const uid = useId();
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] = useState(false);
@@ -49,11 +62,11 @@ function TagManager({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-  const dataGridCompRef = useRef(null);
+  const dataGridCompRef = useRef<HTMLDivElement | null>(null);
   const { t: translations } = useTranslation();
 
   const downloadFiles = useCallback(
-    async (domNodeArr) => {
+    async (domNodeArr: HTMLElement[]) => {
       try {
         const results = [];
 
@@ -99,16 +112,17 @@ function TagManager({
         qrPreviewContainerClassName,
       );
       setIsAllQrDownloadProcessing(true);
-      await downloadFiles(allQrsPreviewContainerDomNodes);
+      await downloadFiles([...allQrsPreviewContainerDomNodes] as HTMLElement[]);
       setIsAllQrDownloadProcessing(false);
     }
   }, []);
 
   const shareSettings = useGetShareSettings("surveyShareSettings", "survey", surveyId);
 
-  const settingsData = shareSettings.data
+  const settingsData: QrLogoPanelState = shareSettings.data
     ? shareSettings.data
     : {
+        ...initialLogoTabPanelState,
         logoSize: 50,
         logoBorderRadius: 50,
       };
@@ -172,7 +186,7 @@ function TagManager({
                 <Select
                   items={teamSelectData}
                   value={selectTeamDropdownValue ?? ""}
-                  onValueChange={onSelectTeamDropdownChange}
+                  onValueChange={(value) => onSelectTeamDropdownChange(value ?? "")}
                   disabled={!isPublished}
                 >
                   <SelectTrigger id={`${uid}-field`} className="w-full">

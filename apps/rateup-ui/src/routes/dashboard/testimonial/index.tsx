@@ -41,7 +41,7 @@ function Testimonials() {
   const filteredCollections = useMemo(() => {
     return selectedTeamId === "all" || !selectedTeamId
       ? collections
-      : collections.filter((c) => c.teamId === selectedTeamId);
+      : collections.filter((c: { teamId?: string }) => c.teamId === selectedTeamId);
   }, [collections, selectedTeamId]);
 
   const filteredTestimonials = useMemo(() => {
@@ -106,8 +106,8 @@ function Testimonials() {
               >
                 <CardGrid
                   items={filteredCollections}
-                  getKey={(c: any) => c.id}
-                  renderItem={(c: any) => <TestimonialCollectionCard collection={c} />}
+                  getKey={(c) => c.id}
+                  renderItem={(c) => <TestimonialCollectionCard collection={c} />}
                 />
               </ListPageContent>
             </TabsContent>

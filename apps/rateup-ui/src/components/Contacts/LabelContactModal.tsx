@@ -18,9 +18,19 @@ import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import LabelSelector from "./LabelSelector.tsx";
 
-const LabelContactModal = ({ opened, setOpened, contactIds, onSuccess = null }) => {
+const LabelContactModal = ({
+  opened,
+  setOpened,
+  contactIds,
+  onSuccess = null,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  contactIds: string[];
+  onSuccess?: (() => void) | null;
+}) => {
   const { t } = useTranslation();
-  const [labelIds, setLabelIds] = useState([]);
+  const [labelIds, setLabelIds] = useState<string[]>([]);
   const assign = useAssignContactLabelsToMultipleContacts();
   function handleApplyLabels() {
     assign.mutate(

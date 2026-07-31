@@ -91,12 +91,12 @@ export const ShareFlow = ({
     label: team?.code,
   }));
 
-  const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
+  const isPublished = dbFlow?.status === WaFlowStatus.PUBLISHED;
   const disableShare = !(isPublished || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
-    (value) => {
-      const teamObj = survey.teams[value];
+    (value: string) => {
+      const teamObj = survey.teams[Number(value)];
       setSurveyTeamMapId(teamObj.mapId);
       console.log(teamObj.shortUrlId);
 
@@ -105,7 +105,7 @@ export const ShareFlow = ({
     },
     [survey],
   );
-  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map((tag) => {
+  const tagSelectData = survey?.teams[Number(selectTeamDropdownState)]?.tags?.map((tag: string) => {
     return tag;
   });
 
@@ -121,7 +121,7 @@ export const ShareFlow = ({
             <Tooltip>
               <TooltipTrigger render={<span className="inline-block" />}>
                 <Button
-                  disabled={!dbFlow.pendingSave || pushToWaMutation.isPending}
+                  disabled={!dbFlow?.pendingSave || pushToWaMutation.isPending}
                   onClick={handleSaveToWa}
                 >
                   {pushToWaMutation.isPending && <Spinner data-icon="inline-start" />}
@@ -129,7 +129,7 @@ export const ShareFlow = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {dbFlow.pendingSave
+                {dbFlow?.pendingSave
                   ? translations("Save your flow to WhatsApp")
                   : translations("No changes to save")}
               </TooltipContent>
@@ -154,7 +154,7 @@ export const ShareFlow = ({
                   <Select
                     disabled={disableShare}
                     value={surveyTeamMapId}
-                    onValueChange={setSurveyTeamMapId}
+                    onValueChange={(value) => setSurveyTeamMapId(value ?? "")}
                     items={teamSelectData}
                   >
                     <SelectTrigger id={`${uid}-field`} className="w-full min-w-[150px]">
@@ -175,14 +175,14 @@ export const ShareFlow = ({
                     <Select
                       disabled={disableShare || tagSelectData.length === 0}
                       value={tag}
-                      onValueChange={(value) => setTag(value)}
-                      items={tagSelectData}
+                      onValueChange={(value) => setTag(value ?? "")}
+                      items={tagSelectData?.map((tagItem) => ({ value: tagItem, label: tagItem }))}
                     >
                       <SelectTrigger id={`${uid}-field-2`} className="w-full min-w-[150px]">
                         <SelectValue placeholder={translations("select a single Tag")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {tagSelectData?.map((tagItem) => (
+                        {tagSelectData?.map((tagItem: string) => (
                           <SelectItem key={tagItem} value={tagItem}>
                             {tagItem}
                           </SelectItem>
@@ -195,8 +195,8 @@ export const ShareFlow = ({
                     selectTeamDropdownValue={selectTeamDropdownState}
                     teamSelectData={teamSelectData}
                     onSelectTeamDropdownChange={handleContainedSelectionChange}
-                    nothingFound={NothingFound}
-                    tagsToMap={survey.teams[selectTeamDropdownState].tags}
+                    nothingFound={<NothingFound text={translations("No tags found")} />}
+                    tagsToMap={survey.teams[Number(selectTeamDropdownState)].tags}
                     surveyTitle={survey?.title}
                     surveyId={surveyId}
                     shareUrl={shareUrl}
@@ -209,7 +209,7 @@ export const ShareFlow = ({
           </div>
         </Card>
         <FlowShareMessageEditor
-          selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label}
+          selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label ?? ""}
         />
         <ShareQR
           url={shareUrl || import.meta.env.VITE_FRONTEND_URL}

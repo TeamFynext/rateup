@@ -1,6 +1,6 @@
 import styles from "./UnsplashCraditText.module.css";
 
-function UnsplashCreditText({ url }) {
+function UnsplashCreditText({ url }: { url: string }) {
   const params = new URLSearchParams(url?.split("?")[1]);
   const author = params?.get("author");
   const username = params?.get("username");

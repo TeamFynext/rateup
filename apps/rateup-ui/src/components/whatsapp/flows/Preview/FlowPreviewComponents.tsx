@@ -31,8 +31,9 @@ function FlowTextPreview({
   fontWeight,
   strikethrough,
 }: {
-  text: string;
-  type: WaFlowFormNonInputElementType;
+  text?: string;
+  /** One of the non-input element names; both enums spell them the same way. */
+  type: `${WaFlowFormNonInputElementType}`;
   fontWeight?: string;
   strikethrough?: boolean;
 }) {
@@ -40,7 +41,7 @@ function FlowTextPreview({
     <span
       className={styles[type]}
       style={{
-        ...getTextStyle(fontWeight, true),
+        ...getTextStyle(fontWeight ?? "", true),
         textDecoration: strikethrough ? "line-through" : "normal",
       }}
     >
@@ -104,12 +105,18 @@ function FlowFileInputPreview({
   );
 }
 
-function FlowRadioPreview({ label = "Label", options }: { label?: string; options: string[] }) {
+function FlowRadioPreview({
+  label = "Label",
+  options,
+}: {
+  label?: string;
+  options?: string[] | false;
+}) {
   return (
     <Field>
       <p className={`${styles.inputLabel} ${styles.font}`}>{label}</p>
       <RadioGroup className="mt-2 flex flex-col gap-2">
-        {options?.map((option) => (
+        {(options || []).map((option) => (
           <FieldLabel key={option} className="flex w-full items-center justify-between">
             {option}
             <RadioGroupItem value={option} />
@@ -120,13 +127,19 @@ function FlowRadioPreview({ label = "Label", options }: { label?: string; option
   );
 }
 
-function FlowCheckBoxPreview({ label = "Label", options }: { label?: string; options: string[] }) {
+function FlowCheckBoxPreview({
+  label = "Label",
+  options,
+}: {
+  label?: string;
+  options?: string[] | false;
+}) {
   const uid = useId();
   return (
     <Field>
       <p className={`${styles.inputLabel} ${styles.font}`}>{label}</p>
       <Field className="mt-2">
-        {options?.map((option, idx) => (
+        {(options || []).map((option, idx) => (
           <FieldTitle key={option} className="flex w-full items-center justify-between">
             {option}
             <Checkbox id={`${uid}-field-2-${idx}`} value={option} />
@@ -142,13 +155,13 @@ function FlowChipsSelectorPreview({
   options,
 }: {
   label?: string;
-  options: string[];
+  options?: string[] | false;
 }) {
   return (
     <div>
       <p className="text-sm">{label}</p>
       <div className="flex flex-wrap gap-2">
-        {options?.map((option) => (
+        {(options || []).map((option) => (
           <Badge key={option} variant="outline" className="rounded-full px-3 py-1">
             {option}
           </Badge>
@@ -184,7 +197,7 @@ function FlowOptInPreview({ label = "Label" }: Readonly<{ label?: string }>) {
 }
 
 interface FlowImagePreviewProps {
-  src: string;
+  src?: string;
   width?: number;
   height?: number;
 }
@@ -199,24 +212,32 @@ function FlowImagePreview({ src, width, height }: FlowImagePreviewProps) {
   );
 }
 
-function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe: any }) {
+function FlowImageCarouselPreview({
+  label = "Label",
+  fe,
+}: {
+  label?: string;
+  fe: WaFlowFormElement & { images?: Array<{ src?: string; "alt-text"?: string }> };
+}) {
   return (
     <div>
       <p>{label}</p>
       <Carousel className="w-full">
         <CarouselContent>
-          {fe.images?.map((img, idx) => (
-            <CarouselItem key={idx}>
-              <img
-                src={`data:image/png;base64,${img.src}`}
-                alt={img["alt-text"]}
-                className="max-h-50"
-                style={{
-                  aspectRatio: fe?.["aspect-ratio"] || "4/3",
-                }}
-              />
-            </CarouselItem>
-          ))}
+          {fe.images?.map(
+            (img: { src?: string; "alt-text"?: string; [key: string]: unknown }, idx: number) => (
+              <CarouselItem key={idx}>
+                <img
+                  src={`data:image/png;base64,${img.src}`}
+                  alt={img["alt-text"]}
+                  className="max-h-50"
+                  style={{
+                    aspectRatio: fe?.["aspect-ratio"] || "4/3",
+                  }}
+                />
+              </CarouselItem>
+            ),
+          )}
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
@@ -253,7 +274,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return (
         <FlowTextPreview
           text={fe.text}
-          type={fe.type as any}
+          type={fe.type}
           fontWeight={fe["font-weight"]}
           strikethrough={fe.strikethrough}
         />

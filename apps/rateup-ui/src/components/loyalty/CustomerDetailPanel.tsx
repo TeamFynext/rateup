@@ -22,6 +22,7 @@ import {
   useCustomerRewardsByPhone,
   useUseRedemption,
 } from "@/backend/loyalty/cashier/cashier.query";
+import type { LoyaltyTransaction } from "@/backend/loyalty/customer/customer.api.ts";
 import {
   useAssignRewardMutation,
   useAwardPointsMutation,
@@ -49,6 +50,7 @@ import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
 export interface CustomerPanelCustomer {
@@ -67,7 +69,7 @@ export interface CustomerPanelCustomer {
 
 interface CustomerDetailPanelProps {
   customer: CustomerPanelCustomer;
-  transactions?: any[];
+  transactions?: LoyaltyTransaction[];
   onClose?: () => void;
   orgId: string;
 }
@@ -143,7 +145,7 @@ export function CustomerDetailPanel({
       setPointsAmount("");
       setPointsNotes("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to issue points"));
+      toast.error(getApiErrorMessage(error, t("Failed to issue points")));
     }
   };
 
@@ -161,7 +163,7 @@ export function CustomerDetailPanel({
       setClaimRewardOpen(false);
       setSelectedRewardId("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to claim reward"));
+      toast.error(getApiErrorMessage(error, t("Failed to claim reward")));
     }
   };
 
@@ -190,7 +192,7 @@ export function CustomerDetailPanel({
       setClaimCouponOpen(false);
       setSelectedCouponRewardId("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to claim reward"));
+      toast.error(getApiErrorMessage(error, t("Failed to claim reward")));
     }
   };
 
@@ -207,7 +209,7 @@ export function CustomerDetailPanel({
       });
       toast.success(t("Reward assigned successfully"));
     } catch (error) {
-      toast.error(error?.message || t("Failed to assign reward"));
+      toast.error(getApiErrorMessage(error, t("Failed to assign reward")));
     }
   };
 
@@ -223,7 +225,7 @@ export function CustomerDetailPanel({
       setRedeemCouponOpen(false);
       setCouponCode("");
     } catch (error) {
-      toast.error(error?.message || t("Redemption failed"));
+      toast.error(getApiErrorMessage(error, t("Redemption failed")));
     }
   };
 
@@ -238,11 +240,11 @@ export function CustomerDetailPanel({
       setUseRedemptionOpen(false);
       setSelectedRedemptionId("");
     } catch (error) {
-      toast.error(error?.message || t("Failed to use redemption"));
+      toast.error(getApiErrorMessage(error, t("Failed to use redemption")));
     }
   };
 
-  const transactionColumns: ColumnDef<any>[] = [
+  const transactionColumns: ColumnDef<LoyaltyTransaction>[] = [
     {
       accessorKey: "createdAt",
       header: t("Date"),
@@ -331,7 +333,7 @@ export function CustomerDetailPanel({
                       className="h-7 w-7 p-0 hover:bg-primary/10"
                       onClick={async () => {
                         try {
-                          await navigator.clipboard.writeText(customer.referralCode);
+                          await navigator.clipboard.writeText(customer.referralCode ?? "");
                           toast.success(t("Referral code copied to clipboard!"));
                         } catch {
                           toast.error(t("Failed to copy referral code"));
@@ -543,7 +545,7 @@ export function CustomerDetailPanel({
                       </p>
                       {reward.rewardType === "coupon" && (
                         <p className="text-xs text-muted-foreground">
-                          {t("Code:")} {(reward.rewardValue as any)?.code}
+                          {t("Code:")} {reward.rewardValue?.code}
                         </p>
                       )}
                     </div>

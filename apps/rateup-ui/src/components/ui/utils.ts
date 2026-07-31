@@ -36,7 +36,7 @@ export const isEmojiName = (name: string): boolean => isEmoji(firstGrapheme(name
  * A name that starts with an emoji is returned as that emoji instead — there is
  * nothing to abbreviate, and the emoji *is* how the contact identifies.
  */
-export const getInitials = (name: string) => {
+export const getInitials = (name: string | undefined) => {
   const trimmed = name?.trim();
   if (!trimmed) return "";
 
@@ -66,7 +66,7 @@ export const getAvatarInitials = (name: string): string => {
   if (isEmoji(lead)) return lead;
 
   const parts = trimmed.split(/\s+/);
-  const last = parts.length > 1 ? firstGrapheme(parts.at(-1)) : "";
+  const last = parts.length > 1 ? firstGrapheme(parts.at(-1) ?? "") : "";
 
   // A trailing emoji ("Bob 🔥") is not an initial — use the first word alone.
   return (lead + (isLetterOrDigit(last) ? last : "")).toUpperCase();

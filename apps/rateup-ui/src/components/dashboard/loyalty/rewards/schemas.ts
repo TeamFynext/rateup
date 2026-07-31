@@ -44,6 +44,15 @@ export const giftSchema = z.object({
   tierIds: z.array(z.string()).optional(),
 });
 
-export type PointRewardFormValues = z.infer<typeof pointRewardSchema>;
-export type CouponFormValues = z.infer<typeof couponSchema>;
-export type GiftFormValues = z.infer<typeof giftSchema>;
+/**
+ * The forms hold what the inputs produce (`z.input`): the numeric fields are
+ * coerced on submit, so the parsed output type differs.
+ */
+export type PointRewardFormValues = z.input<typeof pointRewardSchema>;
+export type CouponFormValues = z.input<typeof couponSchema>;
+export type GiftFormValues = z.input<typeof giftSchema>;
+
+/** The parsed values a submit handler receives. */
+export type PointRewardValues = z.output<typeof pointRewardSchema>;
+export type CouponValues = z.output<typeof couponSchema>;
+export type GiftValues = z.output<typeof giftSchema>;

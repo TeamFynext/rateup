@@ -55,7 +55,13 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
   );
 }
 
-const AddCustomField = ({ opened, setOpened }) => {
+const AddCustomField = ({
+  opened,
+  setOpened,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+}) => {
   const { t } = useTranslation();
 
   return (

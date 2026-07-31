@@ -9,7 +9,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 
-export const WhatsAppSettingsModal = ({ opened, onClose, intendedRoute }) => {
+export const WhatsAppSettingsModal = ({
+  opened,
+  onClose,
+  intendedRoute,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  intendedRoute?: string | null;
+}) => {
   const navigate = useNavigate();
   return (
     <Dialog open={opened} onOpenChange={onClose}>

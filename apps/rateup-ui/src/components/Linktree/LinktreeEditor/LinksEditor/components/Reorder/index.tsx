@@ -1,7 +1,19 @@
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
+import type { ReactNode } from "react";
 
-function Reorder({ onDragEnd, className = "", children, itemsArr }) {
-  const handleDragEnd = (result) => {
+function Reorder<T>({
+  onDragEnd,
+  className = "",
+  children,
+  itemsArr,
+}: {
+  onDragEnd: (reordered: T[]) => void;
+  className?: string;
+  children: ReactNode;
+  itemsArr: T[];
+}) {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) {
       return;
     }

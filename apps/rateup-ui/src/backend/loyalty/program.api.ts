@@ -1,4 +1,9 @@
+import type { JSONContent } from "@tiptap/react";
+
 import { axiosClient } from "../apiClient";
+
+/** The join message: plain text, or the editor's document nodes. */
+export type ReferralMessageTemplate = string | unknown[] | JSONContent;
 
 export interface LoyaltyProgram {
   id: string;
@@ -19,7 +24,7 @@ export interface LoyaltyProgram {
   tiersEnabled: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
-  referralMessageTemplate?: string;
+  referralMessageTemplate?: ReferralMessageTemplate;
   enablePointsExpiration?: boolean;
   pointsExpirationMonths?: number;
   customerNotifications?: boolean;
@@ -49,7 +54,7 @@ export interface LoyaltyProgramInput {
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
-  referralMessageTemplate?: any;
+  referralMessageTemplate?: ReferralMessageTemplate;
   pointsExpirationMonths?: number;
   customerNotifications?: boolean;
   autoApproveAdjustments?: boolean;

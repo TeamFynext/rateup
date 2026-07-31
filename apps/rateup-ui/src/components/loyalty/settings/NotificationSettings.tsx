@@ -3,6 +3,7 @@ import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
+import type { LoyaltyProgramUpdateInput } from "@/backend/loyalty/program.api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -11,7 +12,7 @@ import type { NotificationsSettingsSchema } from "./schemas.ts";
 
 interface NotificationSettingsProps {
   form: UseFormReturn<z.infer<typeof NotificationsSettingsSchema>>;
-  onSave: (updates: any) => void;
+  onSave: (updates: LoyaltyProgramUpdateInput) => void;
   disabled?: boolean;
 }
 

@@ -33,6 +33,10 @@ import {
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/surveys/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): { action?: string } => ({
+    action: typeof search.action === "string" ? search.action : undefined,
+  }),
   component: Page,
 });
 
@@ -83,7 +87,7 @@ function Page() {
     const filtered = webSurveys.filter((survey) => {
       const matchesSearch = !searchValue || survey.title.toLowerCase().includes(searchValue);
       const matchesTeam =
-        selectedTeamId === "all" || survey.teams?.some((team: any) => team.id === selectedTeamId);
+        selectedTeamId === "all" || survey.teams?.some((team) => team.id === selectedTeamId);
       const matchesFilter =
         filterParam === "all" ||
         (filterParam === "active" && survey.active) ||
@@ -192,7 +196,7 @@ function SurveysPageFilter({
     <div className="flex flex-col sm:flex-row gap-2">
       <Select
         value={filterParam}
-        onValueChange={setFilterParam}
+        onValueChange={(value) => setFilterParam(value ?? "")}
         items={[
           { value: "all", label: t("All") },
           { value: "active", label: t("Active") },
@@ -213,7 +217,7 @@ function SurveysPageFilter({
 
       <Select
         value={selectedTeamId}
-        onValueChange={setSelectedTeamId}
+        onValueChange={(value) => setSelectedTeamId(value ?? "")}
         disabled={disabled}
         items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
       >

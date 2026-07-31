@@ -22,8 +22,12 @@ function Page() {
 }
 
 function AuthCallBackWithParams() {
+  // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
-  return <AuthCallBack searchParams={searchParams} />;
+  const stringParams = Object.fromEntries(
+    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+  );
+  return <AuthCallBack searchParams={stringParams} />;
 }
 function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }) {
   const navigate = useNavigate();
@@ -42,7 +46,7 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
         to: "/login",
       });
     }
-    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
+    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
     if (error) {
       navigate({
         to: callbackRoute,
@@ -53,7 +57,7 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
         {
           onSuccess: () => {
             setIsLoading(false);
-            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
+            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
           },
         },
       );

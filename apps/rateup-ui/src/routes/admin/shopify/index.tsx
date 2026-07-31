@@ -4,6 +4,7 @@ import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.query";
 import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
@@ -23,9 +24,9 @@ export const Route = createFileRoute("/admin/shopify/")({
 
 interface ShopifyTableData {
   id: string;
-  shop: string;
+  shop: string | undefined;
   orgId: string;
-  createdAt: string;
+  createdAt: string | null;
   status: boolean;
 }
 
@@ -108,7 +109,7 @@ function Shopify() {
 
             if (!shouldDelete) return;
 
-            handleDelete(row.original.shop);
+            handleDelete(row.original.shop ?? "");
           }}
           className="h-8 w-8 p-0"
         >
@@ -121,10 +122,10 @@ function Shopify() {
 
   const tableData: ShopifyTableData[] = integrations
     ? integrations
-        .filter((integration) => integration.name === IntegratedApps.shopify)
-        ?.map((integration) => ({
+        .filter((integration: AppIntegration) => integration.name === IntegratedApps.shopify)
+        ?.map((integration: AppIntegration) => ({
           id: integration.id,
-          shop: integration.credential.session.shop,
+          shop: integration.credential.session?.shop,
           orgId: integration.orgId,
           createdAt: formatIsoDateStringWithTime(integration.createdAt),
           status: integration.active,

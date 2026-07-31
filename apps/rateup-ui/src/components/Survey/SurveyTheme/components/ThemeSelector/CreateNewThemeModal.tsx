@@ -23,7 +23,13 @@ import {
 
 const NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_\s]{0,}$/;
 
-function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
+function CreateNewThemeModal({
+  setThemeSelectorState,
+  surveyThemeDispatch,
+}: {
+  setThemeSelectorState: (id: string) => void;
+  surveyThemeDispatch: (action: { type: string; payload?: unknown }) => void;
+}) {
   const params = useParams({ strict: false });
   const surveyId = params.surveyId as string;
   const { t: translations } = useTranslation();
@@ -42,7 +48,7 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
   }, [opened]);
 
   const handleFormSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!NAME_REGEX.test(name)) {
         setError(

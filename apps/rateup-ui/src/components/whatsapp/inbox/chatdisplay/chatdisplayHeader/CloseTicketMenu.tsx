@@ -32,6 +32,7 @@ import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
 import { generateInternalMessageId } from "../../util.tsx";
+import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
 
 /**
@@ -67,7 +68,7 @@ interface CloseTicketMenuProps {
  * a ticket that no tab but Spam can show would be a dead end.
  */
 export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuProps>) {
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -75,7 +76,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const blockmut = useBlockWhatsAppUser();
   const spamMutation = useSetContactSpam();
   const { filterData } = useContactStore();
-  const reopenMutation = useReopenConversation(filterData);
+  const reopenMutation = useReopenConversation(filterData ?? undefined);
 
   const closed = isTicketClosed(contact);
   const isSpam = !!contact?.isSpam;
@@ -109,7 +110,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
    */
   function addEventMessage(body: string, assignStatus: string) {
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),
@@ -121,25 +122,25 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           assignedUsers: [],
           assignStatus,
           triggeredByUser: {
-            id: user.userId,
-            name: user.userName,
+            id: user?.userId ?? "",
+            name: user?.userName ?? "",
           },
         },
         exchangeProcess: "internal",
       },
       sourcePlatform: "INTERNAL",
       sourceIdentifier: null,
-      sendBy: user.userId,
+      sendBy: user?.userId,
       sender: {
-        name: user.userName,
+        name: user?.userName,
         profilePhoto: user?.profilePhoto,
       },
       stats: { read: "", sent: "", failed: "", delivered: "" },
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
     return {
       id,
       rollback: () => {
@@ -222,7 +223,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             conversationStatus: status,
             resolutionResult,
             closedAt: closed ? null : new Date().toISOString(),
-            closedUser: closed ? null : { name: user?.userName, id: user.userId },
+            closedUser: closed ? null : { name: user?.userName ?? "", id: user?.userId ?? "" },
             assignedUsers: [],
           }));
         },
@@ -340,7 +341,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           <DropdownMenuGroup>
             {CLOSE_STATUSES.map(({ status, label, tooltip }) => {
               const closedStatusIcon = getContactClosedIcon(status);
-              const Icon = closedStatusIcon.icon;
+              const Icon = closedStatusIcon?.icon;
               return (
                 <DropdownMenuItem
                   key={status}
@@ -349,7 +350,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
                   }
                   onClick={() => applyStatus(status, null)}
                 >
-                  <Icon className={closedStatusIcon.color} />
+                  {Icon && <Icon className={closedStatusIcon?.color} />}
                   {tooltip ? (
                     <CustomTooltip trigger={<p>{label}</p>} content={<p>{tooltip}</p>} />
                   ) : (

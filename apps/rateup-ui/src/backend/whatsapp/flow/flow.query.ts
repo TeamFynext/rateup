@@ -208,7 +208,7 @@ export const useDeprecateFlowMutation = () => {
   });
 };
 
-export const useSendFlowToUser = (phone: string) => {
+export const useSendFlowToUser = (phone: string | undefined) => {
   return useMutation({
     mutationFn: ({
       dbFlowId,
@@ -217,10 +217,11 @@ export const useSendFlowToUser = (phone: string) => {
       whatsappSettingsPhoneId,
     }: {
       dbFlowId: string;
-      teamId: string;
-      flowId: string;
-      whatsappSettingsPhoneId: string;
-    }) => sendFlow(dbFlowId, phone, teamId, flowId, whatsappSettingsPhoneId),
+      teamId: string | null;
+      flowId: string | undefined;
+      whatsappSettingsPhoneId: string | undefined;
+    }) =>
+      sendFlow(dbFlowId, phone ?? "", teamId ?? "", flowId ?? "", whatsappSettingsPhoneId ?? ""),
     onSuccess: () => {
       toast.success("Flow Sent Successfully");
     },

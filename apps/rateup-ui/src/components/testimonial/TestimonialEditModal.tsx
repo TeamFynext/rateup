@@ -35,7 +35,7 @@ import TestimonialCard from "./TestimonialCard.tsx";
 interface TestimonialEditModalProps {
   opened: boolean;
   onClose: () => void;
-  theme: TestimonialStyleType;
+  theme: TestimonialStyleType | undefined;
 }
 
 enum BlockTabEnum {
@@ -245,7 +245,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
   const [activeBlockTab, setActiveBlockTab] = useState<BlockTabEnum>(BlockTabEnum.Background);
 
   useEffect(() => {
-    setCurrentstyle(theme);
+    if (theme) setCurrentstyle(theme);
     setActiveBlockTab(BlockTabEnum.Background);
   }, [theme]);
 
@@ -348,7 +348,9 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                           </FieldLabel>
                           <Select
                             value={font.fontWeight}
-                            onValueChange={(value) => handleFontWeightChange(value, font.name)}
+                            onValueChange={(value) =>
+                              handleFontWeightChange(value ?? "", font.name)
+                            }
                             items={FontWeights}
                           >
                             <SelectTrigger id={`${uid}-field-3-${idx}`} className="h-9">
@@ -402,7 +404,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                     </FieldLabel>
                     <Select
                       value={currentStyle?.layout}
-                      onValueChange={handleLayout}
+                      onValueChange={(value) => handleLayout(value ?? "")}
                       items={[
                         { value: "layout1", label: "Layout 1" },
                         { value: "layout2", label: "Layout 2" },
@@ -428,7 +430,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                       value={currentStyle?.ratingBlock?.ratingType}
                       onValueChange={(value) =>
                         setCurrentstyle((draft) => {
-                          if (draft.ratingBlock) draft.ratingBlock.ratingType = value;
+                          if (draft.ratingBlock) draft.ratingBlock.ratingType = value ?? undefined;
                         })
                       }
                       items={[
@@ -522,7 +524,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
           <Button
             variant="outline"
             onClick={() => {
-              setCurrentstyle(theme);
+              if (theme) setCurrentstyle(theme);
               onClose();
             }}
           >

@@ -96,7 +96,7 @@ function ImageCheckbox({
       {!titleTypeString ? (
         <div className="flex w-full flex-col">
           <img
-            src={getImageValue(title.image, fallbackEnable)}
+            src={getImageValue(title.image, fallbackEnable) ?? ""}
             style={{ aspectRatio: "4 / 3" }}
             alt="image of pcq"
             className="w-full object-cover"

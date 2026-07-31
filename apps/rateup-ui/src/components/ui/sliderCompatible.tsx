@@ -13,7 +13,7 @@ interface Props {
   onChange?: (value: number | number[]) => void; // Mantine-style
   onValueChange?: (value: number[]) => void; // Radix-style
   // pass-through any other props
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export default function SliderCompatible({
@@ -31,7 +31,7 @@ export default function SliderCompatible({
   const normalizeToArray = (v: unknown, fallback: number) => {
     if (Array.isArray(v)) return v as number[];
     if (v == null) return [fallback];
-    const n = Number(v as any);
+    const n = Number(v);
     return Number.isFinite(n) ? [n] : [fallback];
   };
 
@@ -41,9 +41,9 @@ export default function SliderCompatible({
 
   // Handler invoked by Radix/shadcn Slider which gives number[].
   // Map it to onChange (Mantine) as number or to onValueChange as array.
-  const handleValueChange = (arr: number[]) => {
+  const handleValueChange = (next: number | readonly number[]) => {
     // Defensive: ensure numbers
-    const safeArr = arr.map((x) => Number(x));
+    const safeArr = (Array.isArray(next) ? next : [next]).map((x) => Number(x));
     try {
       if (typeof onValueChange === "function") onValueChange(safeArr);
       if (typeof onChange === "function") {

@@ -148,7 +148,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
   const { user } = useUser();
   const { selectedContact } = useContactsStore();
-  const currentUser = selectedContact.assignedUsers?.find((c) => c.id === user?.userId);
+  const currentUser = selectedContact?.assignedUsers?.find((c) => c.id === user?.userId);
 
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef<HTMLDivElement | null>(null);
@@ -178,14 +178,14 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  function sendReaction(emoji: string, emojiData: EmojiClickData) {
+  function sendReaction(emoji: string, emojiData?: EmojiClickData) {
     if (!whatsappSettingsPhoneId) {
       toast.error("Select a account to send the message");
       return;
     }
     let reactionText;
     if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK) {
-      reactionText = emojiReactionMap(emojiData.unified);
+      reactionText = emojiReactionMap(emojiData?.unified);
       if (!reactionText) {
         toast.error(`${emoji} not supported`);
         return;
@@ -388,7 +388,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   );
 }
 
-export function reactionEmojiMap(reaction) {
+export function reactionEmojiMap(reaction: string | undefined) {
   if (reaction === "love") {
     return "❤";
   }

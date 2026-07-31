@@ -30,7 +30,7 @@ import {
   useToggleLoyaltyEarningRuleStatusMutation,
   useUpdateLoyaltyEarningRuleMutation,
 } from "@/backend/loyalty/earningRules.query";
-import type { LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
+import type { LoyaltyTier, LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
 import { getLoyaltyTierById } from "@/backend/loyalty/tiers.api";
 import {
   useCreateLoyaltyTierMutation,
@@ -403,7 +403,7 @@ function EarningRulesPage() {
                         setEditingTierId(tier.id);
                       }}
                       onCancelEdit={() => setEditingTierId(null)}
-                      onDelete={(id, name) => {
+                      onDelete={(id: string, name: string) => {
                         handleTierDelete(id, name);
                         setEditingTierId(null);
                       }}
@@ -903,7 +903,21 @@ function EarningRulesPage() {
   );
 }
 
-function TierCard({ tier, index, isEditing, onStartEdit, onCancelEdit, onDelete }) {
+function TierCard({
+  tier,
+  index,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onDelete,
+}: {
+  tier: LoyaltyTier;
+  index: number;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onDelete: (id: string, name: string) => void;
+}) {
   const { t } = useTranslation();
   const tierForm = useForm<TierFormValues>({
     resolver: zodResolver(tierSchema),
@@ -1160,7 +1174,21 @@ function TierCard({ tier, index, isEditing, onStartEdit, onCancelEdit, onDelete 
   );
 }
 
-function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDeleting }: any) {
+function RuleCard({
+  rule,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onDelete,
+  isDeleting,
+}: Readonly<{
+  rule: LoyaltyEarningRule;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}>) {
   const uid = useId();
   const { t } = useTranslation();
   const { data: loyaltyTiers = [] } = useLoyaltyTiers();
@@ -1610,7 +1638,7 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                     <Field className="border-t pt-3" data-invalid={fieldState.invalid}>
                       <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                       <div className="space-y-2">
-                        {loyaltyTiers.map((tier: any) => (
+                        {loyaltyTiers.map((tier) => (
                           <Field key={tier.id} orientation="horizontal" className="w-auto gap-2">
                             <Checkbox
                               id={`edit-tier-${rule.id}-${tier.id}`}

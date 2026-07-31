@@ -29,6 +29,7 @@ import { getFromSessionStorage } from "@/utils/essential/index.ts";
 import ErrorComponent from "../404/ErrorComponent.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import SurveyPageHeader, { type SurveyHeaderTab } from "./SurveyPageHeader.tsx";
+import type { UnsavedChangesCheck } from "./Tabs/TabPanels.tsx";
 import TabPanelsComp from "./Tabs/TabPanels.tsx";
 
 export enum TabEnum {
@@ -59,7 +60,7 @@ export default function SurveyID() {
     strict: false,
   });
   const surveyId = params.surveyId as string;
-  const tab = searchParams.tab;
+  const tab = Object.values(TabEnum).find((value) => value === searchParams.tab);
   const { user } = useUser();
 
   if (Array.isArray(surveyId)) {
@@ -91,24 +92,25 @@ export default function SurveyID() {
     update({ surveyId: survey?.title });
   }, [survey?.title]);
 
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
-  const [defaultLanguage, setdefaultLanguage] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [defaultLanguage, setdefaultLanguage] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
   const [addQnTrigger] = useState(0);
-  const [teamOptions, setTeamOptions] = useState([]);
-  const [filterTeams, setFilterTeams] = useState([]);
-  const [filterTags] = useState([]);
+  const [teamOptions, setTeamOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [filterTeams, setFilterTeams] = useState<string[]>([]);
+  const [filterTags] = useState<string[]>([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
-  const [variables, setVariables] = useState([]);
+  const [variables, setVariables] = useState<SurveyVariable[]>([]);
   const { t: translations } = useTranslation();
 
+  /** Set by the active tab so it can veto a tab change with unsaved edits. */
   const [
     funToRunBeforeSurveyIdPageHeaderTabsChange,
     setFunToRunBeforeSurveyIdPageHeaderTabsChange,
-  ] = useState(null);
+  ] = useState<UnsavedChangesCheck | null>(null);
 
   const [discardTabChangeDialog, setDiscardTabChangeDialog] = useState<{
     open: boolean;
@@ -118,7 +120,7 @@ export default function SurveyID() {
   const { setNavOpened } = useNavControlContext();
 
   const handleTabChange = useCallback(
-    (value) => {
+    (value: TabEnum) => {
       const data = funToRunBeforeSurveyIdPageHeaderTabsChange?.();
       const { haveUnsavedChanges, feedbackElement, toastMessage } = data || {};
       if (haveUnsavedChanges && feedbackElement === "modal") {
@@ -150,12 +152,12 @@ export default function SurveyID() {
 
   useEffect(() => {
     if (survey) {
-      if (!RESULT_TABS.includes(activeTab)) {
-        setSelectedLanguage(selectedLanguage ? selectedLanguage : survey?.languages?.[0]);
+      if (!activeTab || !RESULT_TABS.includes(activeTab)) {
+        setSelectedLanguage(selectedLanguage ? selectedLanguage : (survey?.languages?.[0] ?? null));
       } else {
         setSelectedLanguage("");
       }
-      setdefaultLanguage(survey?.languages?.[0]);
+      setdefaultLanguage(survey?.languages?.[0] ?? null);
       const options = survey?.teams?.map((team) => ({
         value: team?.id,
         label: team?.name,
@@ -165,13 +167,13 @@ export default function SurveyID() {
   }, [survey, activeTab]);
 
   useEffect(() => {
-    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value ?? "");
   }, [teamOptions]);
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
-      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId ?? "");
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name ?? "");
     }
   }, [selectedTeamId]);
 
@@ -191,7 +193,8 @@ export default function SurveyID() {
     setNavOpened(false);
   }, []);
 
-  if (isLoading || isSurveyLoading || !activeTab) return <RateupLoader className="h-[80dvh]" />;
+  if (isLoading || isSurveyLoading || !activeTab || !survey || !questions)
+    return <RateupLoader className="h-[80dvh]" />;
 
   if (error || surveyError) {
     return (
@@ -204,7 +207,9 @@ export default function SurveyID() {
 
   return (
     <SurveyContextProvider survey={survey}>
-      <SelectedLanguageContext.Provider value={{ selectedLanguage, defaultLanguage }}>
+      <SelectedLanguageContext.Provider
+        value={{ selectedLanguage: selectedLanguage ?? "", defaultLanguage: defaultLanguage ?? "" }}
+      >
         <SurveyContext.Provider
           value={{
             selectedTeamId,
@@ -222,7 +227,7 @@ export default function SurveyID() {
           <div className="flex flex-col h-full">
             {user?.role !== UserRole.MEMBER && (
               <SurveyPageHeader
-                title={survey?.title}
+                title={survey?.title ?? ""}
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
                 tabs={HEADER_TABS}
@@ -230,11 +235,11 @@ export default function SurveyID() {
             )}
             {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
             <div id="SurveyIssueAlert"> </div>
-            {RESULT_TABS.includes(activeTab) && (
+            {activeTab && RESULT_TABS.includes(activeTab) && (
               <div className="absolute right-[30px]">
                 <MultiSelect
                   className="w-56 rounded-[10px]"
-                  options={multiSelectOptions}
+                  options={multiSelectOptions ?? []}
                   value={filterTeams}
                   onValueChange={setFilterTeams}
                   placeholder={filterTeams.length > 0 ? "" : translations("All Teams")}

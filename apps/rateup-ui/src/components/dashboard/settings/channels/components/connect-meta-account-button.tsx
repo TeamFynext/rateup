@@ -20,7 +20,7 @@ const initFacebookSdk = () => {
     }
 
     globalThis.fbAsyncInit = function () {
-      globalThis.FB.init({
+      globalThis.FB?.init({
         appId: import.meta.env.VITE_META_APP_ID,
         autoLogAppEvents: true,
         xfbml: true,

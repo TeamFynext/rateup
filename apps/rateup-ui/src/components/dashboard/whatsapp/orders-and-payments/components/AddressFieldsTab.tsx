@@ -182,7 +182,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
                 "on-click-action": {
                   name: "complete",
                   payload: enabledFields.reduce(
-                    (acc: any, f) => {
+                    (acc: Record<string, string>, f) => {
                       acc[f.shopifyKey] = `\${screen.ADDRESS_SCREEN.form.${f.shopifyKey}}`;
                       return acc;
                     },
@@ -195,7 +195,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
         },
       ];
 
-      const map: Record<string, any> = {};
+      const map: Record<string, { type: string }> = {};
       enabledFields.forEach((f) => {
         map[f.shopifyKey] = {
           type: f.shopifyKey === "phone" ? "Phone" : "ShortText",

@@ -51,7 +51,7 @@ function CustomSelectForMobile({
 
   const [scope, animate] = useAnimate();
   const { t: translations } = useTranslation();
-  const optionsMotionDivRefs = useRef(null);
+  const optionsMotionDivRefs = useRef<Map<string, HTMLElement> | null>(null);
 
   const filteredData = data?.filter((item) =>
     item.toLowerCase().includes(search.toLowerCase().trim()),

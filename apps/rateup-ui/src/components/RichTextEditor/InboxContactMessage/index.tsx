@@ -22,16 +22,17 @@ const InboxContactsControl = () => {
 
   const { body, setBody, resetBody } = useMessageBodyStore();
 
-  function handleSubmit(contacts) {
+  function handleSubmit(contacts: { contactIds: string[]; groupIds: string[] }) {
     setBody({ ...body, type: "contact", contacts });
     setOpened((o) => !o);
   }
   return (
     <Popover open={opened} onOpenChange={setOpened}>
       <PopoverTrigger render={<div className="relative inline-flex" />}>
-        {(body.contacts.contactIds.length > 0 || body.contacts.groupIds.length > 0) && (
+        {((body.contacts?.contactIds.length ?? 0) > 0 ||
+          (body.contacts?.groupIds.length ?? 0) > 0) && (
           <span className="absolute -top-2 -right-2 z-10 rounded-full bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-primary-foreground">
-            {`${body.contacts.contactIds.length} contacts, ${body.contacts.groupIds.length} groups selected`}
+            {`${body.contacts?.contactIds.length ?? 0} contacts, ${body.contacts?.groupIds.length ?? 0} groups selected`}
           </span>
         )}
         <Button variant="ghost" size="icon" title="Contacts" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
@@ -46,8 +47,8 @@ const InboxContactsControl = () => {
             resetBody();
             setOpened((o) => !o);
           }}
-          contactIds={body.contacts.contactIds}
-          groupIds={body.contacts.groupIds}
+          contactIds={body.contacts?.contactIds ?? []}
+          groupIds={body.contacts?.groupIds ?? []}
         />
       </PopoverContent>
     </Popover>
@@ -59,7 +60,19 @@ enum ContactMethods {
   Group = "Group",
 }
 
-const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], groupIds = [] }) => {
+const SelectContacts = ({
+  submitbtnTitle,
+  onSubmit,
+  onCancel,
+  contactIds = [],
+  groupIds = [],
+}: {
+  submitbtnTitle: string;
+  onSubmit: (selection: { contactIds: string[]; groupIds: string[] }) => void;
+  onCancel: () => void;
+  contactIds?: string[];
+  groupIds?: string[];
+}) => {
   const { t: translations } = useTranslation();
   const [selectedTab, setSelectedTab] = useState(ContactMethods.Individual);
   const [searchText, setSearchText] = useState("");
@@ -67,8 +80,8 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const [selectedContactIds, setSelectedContactIds] = useState([]);
-  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const { data: contacts, isLoading } = useContacts(pagination, searchText);
   const { data: groups, isPending } = useContactGroup();
   const totalPageCount = (contacts?.totalCount ?? 1) / pagination.pageSize;
@@ -142,9 +155,9 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
         style={{ height: selectedTab === ContactMethods.Individual ? 280 : 342 }}
       >
         <TabsContent value={ContactMethods.Individual}>
-          {contacts.users?.length > 0 ? (
+          {(contacts?.users?.length ?? 0) > 0 ? (
             <div className="flex flex-col">
-              {contacts.users.map((contact) => (
+              {contacts!.users!.map((contact) => (
                 <ContactSelectCard
                   key={contact.id}
                   contact={contact}
@@ -162,9 +175,9 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
           )}
         </TabsContent>
         <TabsContent value={ContactMethods.Group}>
-          {groups?.length > 0 ? (
+          {(groups?.length ?? 0) > 0 ? (
             <div className="flex flex-col">
-              {groups.map((group) => (
+              {groups!.map((group) => (
                 <ContactGroupSelectCard
                   key={group.id}
                   group={group}
@@ -182,7 +195,7 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
           )}
         </TabsContent>
       </ScrollArea>
-      {selectedTab === ContactMethods.Individual && contacts?.users?.length > 0 && (
+      {selectedTab === ContactMethods.Individual && (contacts?.users?.length ?? 0) > 0 && (
         <ContactPagination
           pagination={pagination}
           setPagination={setPagination}
@@ -193,7 +206,15 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
   );
 };
 
-const ContactSelectCard = ({ contact, checked, onToggle }) => {
+const ContactSelectCard = ({
+  contact,
+  checked,
+  onToggle,
+}: {
+  contact: ContactsData;
+  checked: boolean;
+  onToggle: (next: boolean) => void;
+}) => {
   if (!contact) return null;
   return (
     <FieldTitle
@@ -216,7 +237,15 @@ const ContactSelectCard = ({ contact, checked, onToggle }) => {
   );
 };
 
-const ContactGroupSelectCard = ({ group, checked, onToggle }) => {
+const ContactGroupSelectCard = ({
+  group,
+  checked,
+  onToggle,
+}: {
+  group: ContactGroup;
+  checked: boolean;
+  onToggle: (next: boolean) => void;
+}) => {
   if (!group) return null;
   return (
     <FieldTitle

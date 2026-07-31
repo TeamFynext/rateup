@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { CampaignType } from "@/types/enums.ts";
+import type { Campaign } from "@/types/global";
+import { asApiError } from "@/utils/apiError.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/")({
@@ -54,7 +56,7 @@ function CampaignsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
-  const campaignByIdQuery = useCampaignById(selectedCampaignId);
+  const campaignByIdQuery = useCampaignById(selectedCampaignId ?? "");
   const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
   const dripQuery = useCampaignData(CampaignType.DRIP);
 
@@ -62,18 +64,18 @@ function CampaignsPage() {
 
   const { data, isPending, isError, error, refetch } = activeQuery;
 
-  const openEditCampaign = (campaign: any) => {
+  const openEditCampaign = (campaign: Campaign) => {
     setSelectedCampaignId(campaign.id);
   };
 
   const debouncedSearch = useDebounce(search.trim(), 200);
 
-  const campaigns = data?.data ?? [];
+  const campaigns: Campaign[] = data?.data ?? [];
   const filteredCampaigns = useMemo(() => {
     const filtered = campaigns
-      .filter((c) => selectedTeam === "all" || c.teamId === selectedTeam)
-      .filter((c) => selectedStatus === "all" || c.status === selectedStatus)
-      .filter((c) => c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()));
+      .filter((c: Campaign) => selectedTeam === "all" || c.teamId === selectedTeam)
+      .filter((c: Campaign) => selectedStatus === "all" || c.status === selectedStatus)
+      .filter((c: Campaign) => c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
     return sortData(filtered, sortOption);
   }, [campaigns, debouncedSearch, selectedStatus, selectedTeam, sortOption]);
@@ -93,13 +95,13 @@ function CampaignsPage() {
     setSelectedStatus("all");
   };
 
-  const handleViewDetails = (campaign: any) => {
+  const handleViewDetails = (campaign: Campaign) => {
     navigate({
       to: `/dashboard/campaign/${campaign.id}`,
     });
   };
 
-  if (isError && (error as any)?.response?.status === 403) {
+  if (isError && asApiError(error)?.response?.status === 403) {
     return <UnauthorizedPage />;
   }
 
@@ -123,7 +125,7 @@ function CampaignsPage() {
             </FieldLabel>
             <Select
               value={selectedStatus}
-              onValueChange={setSelectedStatus}
+              onValueChange={(value) => setSelectedStatus(value ?? "")}
               items={[
                 { value: "all", label: t("All Statuses") },
                 { value: "ACTIVE", label: t("Active") },

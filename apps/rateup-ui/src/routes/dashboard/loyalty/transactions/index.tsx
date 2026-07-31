@@ -30,7 +30,7 @@ function CustomerCell({ customerName }: { customerName: string }) {
   return <div className="font-medium">{customerName}</div>;
 }
 
-function TypeCell({ type }) {
+function TypeCell({ type }: { type: string }) {
   const colorMap: Record<string, string> = {
     Earn: "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10 border border-green-500/20",
     Redeem:

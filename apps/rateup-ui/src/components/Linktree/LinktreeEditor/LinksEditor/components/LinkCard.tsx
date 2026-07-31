@@ -12,7 +12,23 @@ import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "../LinksEditor.module.css";
 
-function LinkCard({ linkObj, onDelete }) {
+/** A single link row in the linktree editor. */
+export interface LinktreeLink {
+  id: string;
+  linkType?: string;
+  linkDisplayName?: string;
+  linkUrl?: string;
+  noOfClicks?: number;
+  [key: string]: unknown;
+}
+
+function LinkCard({
+  linkObj,
+  onDelete,
+}: {
+  linkObj: LinktreeLink;
+  onDelete: (id: string) => void;
+}) {
   const { id, linkDisplayName, linkUrl } = linkObj;
   const [linkDisplayNameInputState, setLinkDisplayNameInputState] = useState(linkDisplayName);
 
@@ -47,8 +63,8 @@ function LinkCard({ linkObj, onDelete }) {
   }, [isLinkUrlBeingEdited]);
 
   const getNewLinksArr = useCallback(
-    (changedValueObj) => {
-      const newLinksArr = links.map((linkObj) => {
+    (changedValueObj: Partial<LinktreeLink>) => {
+      const newLinksArr = (links ?? []).map((linkObj: LinktreeLink) => {
         if (linkObj.id === id) {
           return {
             ...linkObj,

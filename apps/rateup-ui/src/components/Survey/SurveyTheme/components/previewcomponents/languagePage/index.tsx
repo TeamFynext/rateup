@@ -19,13 +19,13 @@ import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
 
 import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
-function LanguagePage({ survey }) {
+function LanguagePage({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
 
   const selectedPreview = useSelectedPreview();
 
-  const startBtnInputRef = useRef(null);
+  const startBtnInputRef = useRef<HTMLElement | null>(null);
 
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const questionUpdateMutation = useQuestionUpdateMutation({
@@ -40,7 +40,7 @@ function LanguagePage({ survey }) {
     logo: { logo: logoUrl, styles: logoStyles },
   } = surveyTheme;
 
-  const isOrgLogoPresent = logoUrl?.length > 0;
+  const isOrgLogoPresent = (logoUrl?.length ?? 0) > 0;
   const isMobile = selectedPreview === "mobile";
 
   const shouldUseSurveyTheme = webSurveyPagesTheme["languageTheme"]?.useSurveyTheme;
@@ -74,19 +74,23 @@ function LanguagePage({ survey }) {
 
   useEffect(() => {
     if (startBtnInputRef.current) {
-      startBtnInputRef.current.setAttribute("size", startBtnLabel?.length - 1);
+      startBtnInputRef.current.setAttribute("size", String((startBtnLabel?.length ?? 0) - 1));
     }
   }, [startBtnLabel]);
 
   const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value, name) => {
-      const data = {};
+    async (value: string, name?: string) => {
+      const data: {
+        titleText?: string;
+        subtitleText?: string | null;
+        startButtonText?: string;
+      } = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
+          if (editSurveySelectedQuestion?.["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -116,7 +120,7 @@ function LanguagePage({ survey }) {
     : title;
 
   return (
-    <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
+    <CreditsCard enableCredits={!!isUnsplashImage} url={backgroundImageSrc}>
       <div
         className={cn(
           "flex h-full flex-col gap-4 bg-no-repeat bg-center bg-cover",
@@ -130,7 +134,7 @@ function LanguagePage({ survey }) {
         {isOrgLogoPresent && (
           <div className="flex justify-center">
             <img
-              src={logoUrl}
+              src={logoUrl ?? undefined}
               style={logoStyles}
               alt="logo"
               className="max-w-full object-contain"
@@ -142,8 +146,8 @@ function LanguagePage({ survey }) {
           <div className="flex w-full flex-col items-stretch gap-4">
             <div className={startBtnWrapperStyles["titleBox"]}>
               <ThemeTitle
-                value={newTitle}
-                onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+                value={newTitle ?? ""}
+                onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
             </div>
@@ -160,7 +164,7 @@ function LanguagePage({ survey }) {
               <AutosaveInput
                 className={startBtnWrapperStyles["start-btn-input-div"]}
                 name="startBtn"
-                value={startBtnLabel}
+                value={startBtnLabel ?? ""}
                 onSave={handleSaveTitleSubtitleStartTextSave}
                 style={{
                   color: "inherit",

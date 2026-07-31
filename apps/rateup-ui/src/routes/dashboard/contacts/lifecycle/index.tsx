@@ -26,6 +26,7 @@ import {
   useReorderLifeCycleMutation,
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
+import type { LifecycleWithContactCount } from "@/backend/lifecycle/lifecycle.types";
 import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { useUserInfo } from "@/backend/user/user.query";
 import {
@@ -74,20 +75,8 @@ const EMOJI_PRESETS = [
   "📂",
 ];
 
-interface BackendLifecycleStage {
-  id: string;
-  name: string;
-  ordering: number;
-  isDefault: boolean;
-  category: "active" | "won" | "lost";
-  emoji: string;
-  description: string;
-  isWon: boolean;
-  color: string;
-  _count: {
-    contacts: number;
-  };
-}
+// The shape the lifecycles-with-contact-count endpoint returns.
+type BackendLifecycleStage = LifecycleWithContactCount;
 
 interface UILifecycleStage {
   id: string;
@@ -209,7 +198,7 @@ function ContactSettings() {
 
   const { data: waSettingsData } = useWaSettings();
   const updateOrgDetails = useUpdateOrgDetailsMutation();
-  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id);
+  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id ?? "");
   const syncDatasetsMutation = useSyncDatasetsMutation(waSettingsData?.[0]?.id || "");
 
   const [isSettingUp, setIsSettingUp] = useState(false);
@@ -985,7 +974,7 @@ function SetupView({
                   onValueChange={(val) =>
                     handleUpdateConversionApi(isConversionApiActive, {
                       ...conversionData,
-                      event_name: val,
+                      event_name: val ?? undefined,
                     })
                   }
                 >
@@ -1018,7 +1007,7 @@ function SetupView({
                     onValueChange={(val) =>
                       handleUpdateConversionApi(isConversionApiActive, {
                         ...conversionData,
-                        currency: val,
+                        currency: val ?? undefined,
                       })
                     }
                   >

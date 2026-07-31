@@ -10,6 +10,11 @@ function SurveyThemePreviewLayout({
   previewId,
   isSurveyThemeEditView,
   isSurveyThemePreview,
+}: {
+  survey: Survey;
+  previewId?: string;
+  isSurveyThemeEditView?: boolean;
+  isSurveyThemePreview?: boolean;
 }) {
   let selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();

@@ -21,7 +21,7 @@ export interface CreateApprovalRequestInput {
   accountId: string;
   points?: number | null;
   reason: string;
-  requestData?: Record<string, any>;
+  requestData?: Record<string, unknown>;
   requestedBy?: string | null;
   requestedByType?: RequestedByType;
   requestedByName?: string | null;
@@ -63,7 +63,7 @@ export interface ApprovalRequest {
   customerName?: string;
   points?: number | null;
   reason: string;
-  requestData: Record<string, any>;
+  requestData: Record<string, unknown>;
   requestedBy?: string | null;
   requestedByType: RequestedByType;
   requestedByName?: string | null;

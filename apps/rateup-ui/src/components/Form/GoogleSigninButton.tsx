@@ -2,10 +2,12 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
 
+import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
+
 import { GoogleIcon } from "../Button/GoogleIcon.tsx";
 import { Button } from "../ui/button.tsx";
 
-function GoogleSignInButton({ buttonText, className }) {
+function GoogleSignInButton({ buttonText, className }: { buttonText: string; className?: string }) {
   const { t: translations } = useTranslation();
   async function googleSignInClicked() {
     try {
@@ -24,8 +26,8 @@ function GoogleSignInButton({ buttonText, className }) {
 
       // we redirect the user to google for auth.
       window.location.assign(authUrl);
-    } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err.message, {
           id: "load-data",

@@ -1,5 +1,6 @@
 import { IconColorPicker } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -12,7 +13,7 @@ enum Size {
 
 function useEyeDropper() {
   const supported = typeof window !== "undefined" && "EyeDropper" in window;
-  const open = () => new (window as any).EyeDropper().open();
+  const open = () => new window.EyeDropper!().open();
   return { supported, open };
 }
 
@@ -21,7 +22,7 @@ interface CustomColorPickerProps {
   id?: string;
   className?: string;
   value: string;
-  onChange: any;
+  onChange: (value: string) => void;
   size?: string;
   elementToBeDisplayed?: React.ReactNode;
   withoutEyedropper?: boolean;
@@ -40,26 +41,20 @@ function CustomColorPicker({
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleBlur = useCallback(
-    (_e) => {
-      setIsFocused(false);
-      if (!value?.length) {
-        handleInputChange("#000000");
-      }
-    },
-    [value],
-  );
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+    if (!value?.length) {
+      handleInputChange("#000000");
+    }
+  }, [value]);
 
   const handleFocus = useCallback(() => {
     setIsFocused(true);
   }, []);
 
   const handleInputChange = useCallback(
-    (eventOrvalue) => {
-      let resultValue = eventOrvalue;
-      if (typeof eventOrvalue === "object") {
-        resultValue = eventOrvalue.target.value;
-      }
+    (eventOrvalue: string | ChangeEvent<HTMLInputElement>) => {
+      let resultValue = typeof eventOrvalue === "object" ? eventOrvalue.target.value : eventOrvalue;
       if (!resultValue.length) {
         resultValue = "#000000";
       }

@@ -30,9 +30,9 @@ const WhatsAppSurveyHeader = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
-            <Link to="https://rateup.app" className="flex items-center gap-2">
+            <a href="https://rateup.app" className="flex items-center gap-2">
               <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
-            </Link>
+            </a>
           </div>
 
           <nav className="hidden md:flex items-center gap-10">
@@ -50,19 +50,19 @@ const WhatsAppSurveyHeader = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="https://rateup.app/signup">
+            <a href="https://rateup.app/signup">
               <Button
                 variant="ghost"
                 className="text-gray-700 cursor-pointer hover:text-teal-500 transition-colors duration-300"
               >
                 Log in
               </Button>
-            </Link>
-            <Link to="https://rateup.app/login">
+            </a>
+            <a href="https://rateup.app/login">
               <Button className="bg-[#009987] text-white cursor-pointer hover:bg-[#009987] transition-colors duration-300 shadow-md">
                 Get Started
               </Button>
-            </Link>
+            </a>
           </div>
 
           <div className="md:hidden">
@@ -102,11 +102,11 @@ const WhatsAppSurveyHeader = () => {
                 Log in
               </Button>
             </Link>
-            <Link to="/get-started">
+            <a href="/get-started">
               <Button className="mt-3 w-full bg-[#009987] text-white hover:bg-[#009987] transition-colors duration-300 shadow-sm">
                 Get Started
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       )}

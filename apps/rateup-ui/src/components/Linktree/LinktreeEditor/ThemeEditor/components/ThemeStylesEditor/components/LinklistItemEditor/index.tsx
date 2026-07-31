@@ -15,21 +15,21 @@ function LinklistItemEditor() {
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
 
-  const handleColorChange = useCallback((value) => {
+  const handleColorChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "linkListItem-color-change",
       payload: value,
     });
   }, []);
 
-  const handleBackgroundColorChange = useCallback((value) => {
+  const handleBackgroundColorChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "linkListItem-background-color-change",
       payload: value,
     });
   }, []);
 
-  const handleBorderRadiusChange = useCallback((value) => {
+  const handleBorderRadiusChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "linkListItem-border-radius-change",
       payload: value,
@@ -40,18 +40,21 @@ function LinklistItemEditor() {
     <div className={styles["link-list-editor"]}>
       <div className={`style-section-div`}>
         <h2>Text Color</h2>
-        <CustomColorPicker value={color} onChange={handleColorChange} />
+        <CustomColorPicker value={String(color ?? "")} onChange={handleColorChange} />
       </div>
 
       <div className={`style-section-div`}>
         <h2>Background Color</h2>
-        <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
+        <CustomColorPicker
+          value={String(backgroundColor ?? "")}
+          onChange={handleBackgroundColorChange}
+        />
       </div>
 
       <div className={`style-section-div`}>
         <h2>Border Radius</h2>
         <Slider
-          value={[borderRadius]}
+          value={[Number(borderRadius ?? 0)]}
           onValueChange={(value) =>
             handleBorderRadiusChange(Array.isArray(value) ? value[0] : value)
           }

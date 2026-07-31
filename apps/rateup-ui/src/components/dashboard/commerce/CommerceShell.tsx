@@ -19,7 +19,7 @@ function StoreSwitcher() {
   return (
     <Select
       value={selectedSettingId}
-      onValueChange={setSelectedSettingId}
+      onValueChange={(value) => setSelectedSettingId(value ?? "")}
       items={waSettings.map((s) => ({
         value: s.id,
         label: s.phoneDisplayName || s.phone || "Unknown",
@@ -47,7 +47,7 @@ function CatalogSwitcher() {
   return (
     <Select
       value={catalogId}
-      onValueChange={setCatalogId}
+      onValueChange={(value) => setCatalogId(value ?? "")}
       items={catalogs.map((c) => ({ value: c.catalogId, label: c.name || c.catalogId }))}
     >
       <SelectTrigger aria-label="Select catalog" className="w-[220px]">

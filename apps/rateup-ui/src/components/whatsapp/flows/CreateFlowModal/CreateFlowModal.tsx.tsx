@@ -30,7 +30,7 @@ interface CreateFlowFormValues {
   teamId: string[];
 }
 
-function CreateFlowModal({ opened, onClose }) {
+function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
   const uid = useId();
   const { t: translations } = useTranslation();
 
@@ -89,7 +89,7 @@ function CreateFlowModal({ opened, onClose }) {
 
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && handleModalClose()}>
-      <DialogContent onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submit]])}>
+      <DialogContent onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submit()]])}>
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">{translations("Create Flow")}</DialogTitle>
         </DialogHeader>

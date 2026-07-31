@@ -15,13 +15,13 @@ export default function useTemplatesAvailableForTeam(teamId: string) {
   return templates.filter((template) => {
     const flowButton = template.data.components
       .find((c) => c.type === "BUTTONS")
-      ?.buttons.find((b) => b.type === "FLOW");
+      ?.buttons?.find((b) => b.type === "FLOW");
     if (flowButton) {
       const flow = flows?.find((f) => f.flowId == flowButton["flow_id"]);
       if (!flow) {
         return false;
       } else {
-        return flow.survey.teams.some((t) => t.teamId === teamId);
+        return flow.survey?.teams?.some((t) => t.teamId === teamId) ?? false;
       }
     } else {
       return true;

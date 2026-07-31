@@ -348,6 +348,13 @@ export enum WaFlowFormNonInputElementType {
   if = "If",
 }
 
+/** Every kind of element the survey/flow editors can list in their "add element" catalogue. */
+export type ElementType =
+  | QuestionType
+  | PageType
+  | WaFlowFormElementType
+  | WaFlowFormNonInputElementType;
+
 export enum SaveStatus {
   saved = "Saved",
   notSaved = "Pending Save",
@@ -387,6 +394,28 @@ export enum WaTemplateCategory {
   UTILITY = "UTILITY",
   AUTHENTICATION = "AUTHENTICATION",
 }
+/**
+ * Component names in an outgoing template payload. Meta accepts these lowercase, unlike the
+ * uppercase names it uses when returning a template's definition.
+ */
+/** The parameter kinds a template component accepts. */
+export enum WaTemplateSupportedParameters {
+  IMAGE = "image",
+  TEXT = "text",
+  DOCUMENT = "document",
+  VIDEO = "video",
+  LOCATION = "location",
+  PAYLOAD = "payload",
+  CURRENCY = "currency",
+  DATE_TIME = "date_time",
+}
+
+export enum WaTemplateComponentType {
+  header = "header",
+  body = "body",
+  button = "button",
+}
+
 export enum WaTemplateComponentTypeUpperCase {
   BODY = "BODY",
   BUTTONS = "BUTTONS",

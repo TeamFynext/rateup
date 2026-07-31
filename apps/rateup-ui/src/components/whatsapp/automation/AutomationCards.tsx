@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -145,7 +146,7 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
     setCloneDialogOpened(true);
   }
 
-  function handleClone(e) {
+  function handleClone(e: MouseEvent<HTMLElement>) {
     e?.preventDefault();
     e?.stopPropagation();
     if (isClonePending) return;

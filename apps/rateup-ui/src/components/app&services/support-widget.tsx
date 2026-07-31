@@ -84,7 +84,7 @@ export default function SupportWidget({
   >({
     duration: 0,
   });
-  const ref = useClickOutside(() => setIsOpen(false));
+  const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
   const API_URL = backendUrl || import.meta.env.VITE_API_URL;
   const WEBHOOK_URL =
     webhookUrl || `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/ws/${orgId}?role=fab`;
@@ -128,8 +128,8 @@ export default function SupportWidget({
     let ws: WebSocket | null = null;
     let closedByUser = false;
 
-    function connect() {
-      if (!orgId || !token) return null;
+    function connect(): void {
+      if (!orgId || !token) return;
       ws = new WebSocket(WEBHOOK_URL);
       socketRef.current = ws;
 
@@ -210,7 +210,7 @@ export default function SupportWidget({
       try {
         const support_contact_id = localStorage.getItem("support_contact_id");
         const support_contact_name = localStorage.getItem("support_contact_name");
-        const phone = support_contact_name;
+        const phone = support_contact_name ?? "";
         if (!support_contact_id) return;
         const timestamp = Math.floor(Date.now() / 1000);
 
@@ -284,7 +284,7 @@ export default function SupportWidget({
 
             <Tabs
               value={activeTab}
-              onValueChange={(value) => setActiveTab(value as any)}
+              onValueChange={(value) => setActiveTab(value)}
               className="w-full h-full px-4"
             >
               <TabsContent value="contact" className="flex flex-col text-black">
@@ -406,7 +406,8 @@ export default function SupportWidget({
                                   <p className="leading-relaxed">
                                     {parseWhatsAppToReact(
                                       message.messageBody?.receive?.messages?.[0]?.text?.body ||
-                                        message.messageBody?.send?.text?.body,
+                                        message.messageBody?.send?.text?.body ||
+                                        "",
                                     )}
                                   </p>
                                 </div>

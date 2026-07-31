@@ -15,7 +15,7 @@ export function getRouter() {
     defaultErrorComponent: ErrorPage,
     defaultNotFoundComponent: NotFoundPage,
     defaultPendingComponent: RoutePending,
-  } as unknown as any);
+  });
 
   return router;
 }

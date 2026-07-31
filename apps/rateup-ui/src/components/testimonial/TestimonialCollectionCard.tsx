@@ -14,14 +14,17 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
+/** A testimonial collection as the org listing returns it. */
+export interface TestimonialCollectionSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly createdAt: string | Date;
+  readonly _count?: { readonly testimonials: number };
+  readonly teamId?: string;
+}
+
 interface TestimonialCollectionCardProps {
-  readonly collection: {
-    readonly id: string;
-    readonly name: string;
-    readonly createdAt: string | Date;
-    readonly _count?: { readonly testimonials: number };
-    readonly teamId?: string;
-  };
+  readonly collection: TestimonialCollectionSummary;
 }
 
 function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectionCardProps>) {

@@ -49,8 +49,8 @@ interface CurrencySelectProps extends Omit<SelectProps, "onValueChange"> {
   variant?: "default" | "small";
   valid?: boolean;
 }
-const customCurrencies = [];
-const allCurrencies = [];
+const customCurrencies: string[] = [];
+const allCurrencies: string[] = [];
 
 const CurrencySelect = React.forwardRef<HTMLButtonElement, CurrencySelectProps>(
   (
@@ -132,7 +132,7 @@ const CurrencySelect = React.forwardRef<HTMLButtonElement, CurrencySelectProps>(
     return (
       <Select
         value={value}
-        onValueChange={handleValueChange}
+        onValueChange={(value) => handleValueChange(value ?? "")}
         {...props}
         name={name}
         data-valid={valid}

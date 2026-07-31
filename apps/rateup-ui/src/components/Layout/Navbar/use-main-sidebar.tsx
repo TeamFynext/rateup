@@ -138,7 +138,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     }
 
     void navigate({
-      to: signupRedirect,
+      ...signupRedirect,
       replace: true,
     });
   }, [navigate, signupRedirect, userInfoErrorMessage, welcomeMessage]);
@@ -150,7 +150,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   useEffect(() => {
     if (resolvedUserData?.isOrgPaused) {
       void navigate({
-        to: "/login/callback/paused?pausedby=rateup",
+        to: "/login/callback/paused",
+        search: { pausedby: "rateup" },
         replace: true,
       });
 

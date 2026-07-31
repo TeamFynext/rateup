@@ -38,6 +38,18 @@ import { useUser } from "@/context/UserContext.tsx";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
+import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
+
+/** An assignment row, as either the API or the local selection shape. */
+interface AssignedUserRow {
+  id?: string;
+  userId?: string;
+  name?: string;
+  teamId?: string;
+  contactId?: string;
+  assignedUserId?: string;
+  assignedUser?: { id?: string; name?: string };
+}
 
 const AssignUser = ({
   contactId,
@@ -55,12 +67,14 @@ const AssignUser = ({
   const { user } = useUser();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
     useGetAssignedUserForContact(contactId);
-  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const assignMut = useAssignInboxToUer(contactId, filterData ?? "");
   const messagesStore = useMessagesStore();
   const [assignedStaff, setAssignedStaff] = useState<
     { userId: string; teamId: string; contactId: string }[]
   >([]);
-  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>([]);
+  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<
+    { userId: string; teamId: string; contactId: string }[]
+  >([]);
   const { updateContactById, selectedContact } = useContactsStore();
   const isDefault = variant === "default";
   // Land the optimistic assign note in the open ticket's message bucket. AssignUser
@@ -81,15 +95,15 @@ const AssignUser = ({
       return;
     }
     const assignees = assignedUsers
-      ? assignedUsers?.map((a) => ({
+      ? assignedUsers?.map((a: AssignedUserRow) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
           contactId: a.contactId,
-          name: a.assignedUser.name,
+          name: a.assignedUser?.name,
         }))
       : [];
     setAssignedStaff(assignees);
-    prevAssignedRef.current = assignees.map((a) => ({
+    prevAssignedRef.current = assignees.map((a: AssignedUserRow) => ({
       userId: a.userId,
       teamId: a.teamId,
     }));
@@ -105,7 +119,7 @@ const AssignUser = ({
       assignees.length &&
       !isEqual(
         assignees,
-        assignedUsers?.map((a) => ({
+        assignedUsers?.map((a: AssignedUserRow) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
         })),
@@ -165,7 +179,7 @@ const AssignUser = ({
       }
 
       const id = generateInternalMessageId();
-      const newMessage = {
+      const newMessage: OptimisticMessage = {
         id: id,
         contactId: contactId,
         waCreatedAt: new Date().toISOString(),
@@ -179,17 +193,17 @@ const AssignUser = ({
             assignedUsers: [],
             assignStatus: assignStatus,
             triggeredByUser: {
-              id: user.userId,
-              name: user.userName,
+              id: user?.userId ?? "",
+              name: user?.userName ?? "",
             },
           },
           exchangeProcess: "internal",
         },
         sourcePlatform: "INTERNAL",
         sourceIdentifier: null,
-        sendBy: user.userId,
+        sendBy: user?.userId,
         sender: {
-          name: user.userName,
+          name: user?.userName,
           profilePhoto: user?.profilePhoto,
         },
         stats: {
@@ -206,14 +220,14 @@ const AssignUser = ({
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
-            messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-            messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+            messagesStore.addMessage(`${rowKey}_all`, newMessage);
+            messagesStore.addMessage(`${rowKey}_internal`, newMessage);
             updateContactById(contactId, (contact) => ({
               ...contact,
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: assignees.map((a) => {
                 const user = staffMembers?.find((m) => m.id === a.userId);
-                return { id: user?.id, name: user?.name, teamId: a?.teamId };
+                return { id: user?.id ?? "", name: user?.name ?? "", teamId: a?.teamId };
               }),
             }));
           },
@@ -250,7 +264,7 @@ const AssignUser = ({
     );
   };
 
-  const updateStaffAssignment = (staff: any, teamId: string) => {
+  const updateStaffAssignment = (staff: TeamMembersData, teamId: string) => {
     const existing = assignedStaff.find((s) => s.userId === staff.id);
 
     if (existing && existing.teamId === teamId) {
@@ -261,7 +275,7 @@ const AssignUser = ({
     }
   };
 
-  const handleSelectTeam = (team: any) => {
+  const handleSelectTeam = (team: TeamData) => {
     const teamStaff = staffMembers.filter((m) => m.teams.some((t) => t.team_id === team.id));
     const allSelected = teamStaff.every((m) =>
       assignedStaff.some((a) => a.userId === m.id && a.teamId === team.id),
@@ -323,7 +337,7 @@ const AssignUser = ({
                 return (
                   <div key={a.userId} className="relative">
                     <p className="text-sm font-semibold">
-                      {staff?.name?.length > 10 ? staff?.name?.slice(0, 10) : staff?.name}
+                      {(staff?.name?.length ?? 0) > 10 ? staff?.name?.slice(0, 10) : staff?.name}
                     </p>
                   </div>
                 );
@@ -435,7 +449,7 @@ const AssignUser = ({
                             <div>
                               <div className="text-sm">
                                 {staff.name}
-                                {staff.id === user.userId && (
+                                {staff.id === user?.userId && (
                                   <span className="ml-1">( {translations("You")} )</span>
                                 )}
                               </div>

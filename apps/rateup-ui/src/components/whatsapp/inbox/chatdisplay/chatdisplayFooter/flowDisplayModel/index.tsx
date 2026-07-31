@@ -17,7 +17,7 @@ import WaInboxFlowSelectCard from "./flowSelectCard/index.tsx";
 
 interface Props {
   sessionExpired: boolean;
-  contact: ContactsData;
+  contact: ContactsData | null;
   opened: boolean;
   close: () => void;
 }
@@ -25,7 +25,7 @@ interface Props {
 export default function WaInboxFlowDisplayModal(props: Props) {
   const [selectedDbFlowId, setSelectedDbFlowId] = useState<string>("");
   const { data, isLoading, error } = useWaFlowsFromDb();
-  const [teamId, setTeamId] = useState(null);
+  const [teamId, setTeamId] = useState<string | null>(null);
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
 
@@ -72,7 +72,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             <Badge variant="destructive">{translations("Error")}</Badge>
           </div>
         )}
-        {data && acceptedFlows.length > 0 ? (
+        {data && (acceptedFlows?.length ?? 0) > 0 ? (
           <>
             <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto p-1">
               <TeamSelector

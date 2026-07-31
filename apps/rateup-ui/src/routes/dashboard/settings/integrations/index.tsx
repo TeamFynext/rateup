@@ -121,7 +121,7 @@ function IntegrationsPage() {
     if (integrationId === "webhook") {
       return webhook?.url ? "connected" : "disconnected";
     }
-    const status = integrationStatuses.find((s) => s.name === integrationId);
+    const status = integrationStatuses.find((s: { name?: string }) => s.name === integrationId);
     return status?.isConnected ? "connected" : "disconnected";
   };
 

@@ -69,6 +69,7 @@ import {
   WaTemplateCategory,
   WaTemplateStatus,
 } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import {
   SAVE_HOTKEY,
   WHATSAPP_BUTTON_TYPE,
@@ -78,6 +79,7 @@ import {
 } from "@/utils/constants.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
+import { getNestedProperty } from "@/utils/misc/obj.utils.ts";
 import { toSelectOptions } from "@/utils/select-options.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
@@ -98,12 +100,13 @@ export function WhatsappTemplateById({
   templateId = templateId === "create" ? "" : templateId;
   const { data: editingItem, isPending } = useWaTemplateById(templateId);
   const [selectedText, setSelectedText] = useState("");
-  const contentHistory = useRef([]); // Ref to store content history
-  const inputRef = useRef(null);
+  /** Undo stack for the body text. */
+  const contentHistory = useRef<string[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
   const form = useForm<TemplateFormValues>({
-    resolver: zodResolver(templateSchema) as any,
+    resolver: zodResolver(templateSchema),
     defaultValues: {
       name: "",
       header: null,
@@ -159,8 +162,7 @@ export function WhatsappTemplateById({
     });
   const registerField = (path: string) => form.register(path as FieldPath<TemplateFormValues>);
   const errorAt = (path: string) =>
-    (path.split(".").reduce<any>((node, part) => node?.[part], formErrors as any)?.message ??
-      undefined) as string | undefined;
+    getNestedProperty<{ message?: string }>(formErrors, path)?.message;
 
   // Only the mutations are used. The list is still rendered from the watched `values`
   // rather than `fields`, because a row's rendering depends on values edited after it was
@@ -288,7 +290,7 @@ export function WhatsappTemplateById({
           currentTemplateType === previousTemplateType
         ) {
           const buttons = editingItem?.data?.components?.find(
-            (component) => component.type.toLowerCase() === "buttons",
+            (component: { type: string }) => component.type.toLowerCase() === "buttons",
           )?.buttons;
           setTemplateValue("buttons", buttons || []);
         } else {
@@ -303,7 +305,7 @@ export function WhatsappTemplateById({
       form.reset();
       setIsSubmitting(false);
       navigate({
-        to: "/dashboard/whatsapp/templates/",
+        to: "/dashboard/whatsapp/templates",
       });
     },
     () => {
@@ -311,9 +313,9 @@ export function WhatsappTemplateById({
     },
   );
 
-  const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId);
+  const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId ?? "");
   const productRetailerIds = useMemo(
-    () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
+    () => catalog?.products?.map((p) => p.retailer_id ?? "") ?? [],
     [catalog],
   );
   useEffect(() => {
@@ -356,7 +358,7 @@ export function WhatsappTemplateById({
       setIsSubmittingDraft(false);
       if (templateId?.length === 0) {
         navigate({
-          to: "/dashboard/whatsapp/templates/",
+          to: "/dashboard/whatsapp/templates",
         });
       }
     },
@@ -368,8 +370,10 @@ export function WhatsappTemplateById({
 
   /** First validation message from an RHF error tree, for the toast. */
   function firstErrorMessage(errors: unknown): string | undefined {
-    for (const value of Object.values((errors ?? {}) as Record<string, any>)) {
-      if (typeof value?.message === "string") return value.message;
+    if (!errors || typeof errors !== "object") return undefined;
+    for (const value of Object.values(errors as Record<string, unknown>)) {
+      const message = (value as { message?: unknown } | null)?.message;
+      if (typeof message === "string") return message;
       if (value && typeof value === "object") {
         const nested = firstErrorMessage(value);
         if (nested) return nested;
@@ -398,7 +402,7 @@ export function WhatsappTemplateById({
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         toast.error("Dynamic variables name should is sequential numeric order");
         return;
-      } else if (values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
+      } else if (values.example!.length !== dynamicVariableArray.length || hasEmptyExamples) {
         toast.error("Please provide example values for all dynamic variables");
         return;
       }
@@ -438,7 +442,7 @@ export function WhatsappTemplateById({
       }
     }
     if (values.templateType === TemplateType.CAROUSEL) {
-      for (const card of values.mediaCarousel) {
+      for (const card of values.mediaCarousel!) {
         const dynamicVariableArr = parseStringWithVariables(card.body);
         if (dynamicVariableArr.length > 0) {
           if (!isArrayInCorrectOrder(dynamicVariableArr)) {
@@ -450,11 +454,11 @@ export function WhatsappTemplateById({
           }
         }
       }
-      const defaultValueCards = values.defaultValues.productCarousel ?? [];
-      values.productCarousel.map((card, index) => {
+      const defaultValueCards = values.defaultValues!.productCarousel ?? [];
+      values.productCarousel!.map((card, index) => {
         const cardIndex = defaultValueCards.findIndex((c) => c.cardIndex === index);
         if (cardIndex !== -1) {
-          defaultValueCards[cardIndex].product_retailer_id = card.product_retailer_id;
+          defaultValueCards[cardIndex]!.product_retailer_id = card.product_retailer_id;
         } else {
           defaultValueCards.push({
             cardIndex: index,
@@ -487,21 +491,20 @@ export function WhatsappTemplateById({
         const publicImageLink = await uploadFile(values.header);
         const filename = values.header.name ?? "";
         values.header = file?.id ?? "";
-        defaultValues[values.format?.toLowerCase()] = {
+        defaultValues[values.format?.toLowerCase() as keyof WaTemplateDefaultValues] = {
           link: publicImageLink,
           filename,
         };
-        // @ts-ignore
         values.defaultValues = { ...values.defaultValues, ...defaultValues };
       }
       if (values.templateType === TemplateType.CAROUSEL) {
         await Promise.all(
-          values.mediaCarousel.map(async (card, index) => {
+          values.mediaCarousel!.map(async (card, index) => {
             if (card.header instanceof File) {
               const file = await uploadTemplateMedia(card.header);
               const publicImageLink = await uploadFile(card.header);
-              values.mediaCarousel[index].header = file?.id ?? "";
-              const defValues = values.defaultValues.mediaCarousel ?? [];
+              values.mediaCarousel![index]!.header = file?.id ?? "";
+              const defValues = values.defaultValues!.mediaCarousel ?? [];
               const defCardIndex = defValues.findIndex((v) => v.cardIndex === index);
               const obj = {
                 cardIndex: index,
@@ -527,13 +530,10 @@ export function WhatsappTemplateById({
           setIsSubmitting(false);
           return;
         }
-        const mutationData = saveAsDraft
-          ? { ...values, id: editingItem.id }
-          : { templateId: editingItem.id, templateData };
         if (saveAsDraft) {
-          saveTemplateAsDraftMutation.mutate(mutationData);
+          saveTemplateAsDraftMutation.mutate({ ...values, id: editingItem.id });
         } else {
-          updateTemplateMutation.mutate(mutationData);
+          updateTemplateMutation.mutate({ templateId: editingItem.id, templateData });
         }
       } else {
         const mutationData = { ...templateData, id: editingItem?.id };
@@ -549,16 +549,16 @@ export function WhatsappTemplateById({
       toast.error(
         typeof error === "string"
           ? error
-          : typeof error.message === "string"
-            ? error.message
+          : typeof getApiErrorMessage(error) === "string"
+            ? getApiErrorMessage(error)
             : "error in uploading",
       );
     }
   }
   const handleSelect = () => {
     const selection = window.getSelection();
-    const selectedText = selection.toString();
-    setSelectedText(selectedText?.trim());
+    const selectedText = selection?.toString();
+    setSelectedText(selectedText?.trim() ?? "");
   };
   const getNextVariable = () => {
     const variables = parseStringWithVariables(values.body);
@@ -567,7 +567,7 @@ export function WhatsappTemplateById({
     const max = Math.max(...numbers);
     return `{{${max + 1}}}`;
   };
-  const applyFormatting = (style) => {
+  const applyFormatting = (style: string) => {
     const content = values.body;
     if (style.startsWith("{{")) {
       insertValue(getNextVariable());
@@ -582,7 +582,7 @@ export function WhatsappTemplateById({
 
   const undo = () => {
     if (contentHistory.current.length > 0) {
-      const previousContent = contentHistory.current.pop();
+      const previousContent = contentHistory.current.pop()!;
       setTemplateValue("body", previousContent);
     }
   };
@@ -733,7 +733,7 @@ export function WhatsappTemplateById({
             <p className="text-xs">${"{{}}"}</p>
           </div>
         </div>
-        {HeaderWithFormatting(values?.header, values?.format)}
+        {HeaderWithFormatting(values?.header ?? "", values?.format ?? "")}
         <p
           style={{
             wordBreak: "break-all",
@@ -758,7 +758,7 @@ export function WhatsappTemplateById({
       </ResponseMessageContainer>
       {values?.buttons?.slice(0, 2).map((data) => (
         <QuickReplyButton
-          text={data?.text}
+          text={data?.text ?? ""}
           key={data?.text}
           type={data.type}
           style={{ backgroundColor: bubbleBg }}
@@ -786,7 +786,7 @@ export function WhatsappTemplateById({
               key={index}
               style={{ borderRadius: "10px", background: bubbleBg }}
             >
-              {HeaderWithFormatting(card?.header, card?.format)}
+              {HeaderWithFormatting(card?.header ?? "", card?.format ?? "")}
               <p
                 className="p-2.5"
                 style={{
@@ -1075,7 +1075,9 @@ export function WhatsappTemplateById({
                     />
                     <div className="relative">
                       <Textarea
-                        ref={inputRef}
+                        // NOTE: the `registerField` spread below also sets `ref`,
+                        // so `inputRef` stays null and `insertValue` no-ops.
+                        // Left as-is; see the migration notes.
                         className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
                         placeholder={translations("Enter the text")}
                         rows={3}
@@ -1084,7 +1086,7 @@ export function WhatsappTemplateById({
                         {...registerField("body")}
                       />
                       <div className="pointer-events-none absolute right-2 bottom-2">
-                        <LengthTracker length={values?.body?.length} maxValue={1024} atStart />
+                        <LengthTracker length={values?.body?.length ?? 0} maxValue={1024} atStart />
                       </div>
                     </div>
                     {formErrors.body && <FieldError>{formErrors.body.message}</FieldError>}
@@ -1172,7 +1174,7 @@ export function WhatsappTemplateById({
                       spmBtn={spmBtn}
                       btnLen={values?.buttons?.length}
                       disabled={isOrderCreate}
-                      category={values?.category as any}
+                      category={values?.category}
                     />
                     {values?.buttons?.length > 0 && (
                       <div className="flex flex-col gap-3">

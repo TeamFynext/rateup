@@ -28,12 +28,16 @@ import { SurveyVariableType } from "@/types/enums.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
-const SurveyVariableEditor = ({ setActiveTab }) => {
+const SurveyVariableEditor = ({
+  setActiveTab,
+}: {
+  setActiveTab: (tab: QuestionTabsEnum) => void;
+}) => {
   const { variables, surveyId } = useContext(SurveyContext);
   const [openedCreateVariable, setOpenedCreateVariable] = useState(false);
   const [openedEditVariable, setOpenedEditVariable] = useState(false);
-  const [selectedVariable, setSelectedVariable] = useState<SurveyVariable>(null);
-  const deleteVariable = useDeleteSurveyVariableMutation(surveyId);
+  const [selectedVariable, setSelectedVariable] = useState<SurveyVariable | null>(null);
+  const deleteVariable = useDeleteSurveyVariableMutation(surveyId ?? "");
 
   const handleDeleteVariable = (variable: SurveyVariable) => {
     deleteVariable.mutate({ variableId: variable.id });
@@ -103,7 +107,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
       <CreateSurveyVariableModal
         opened={openedEditVariable}
         close={() => setOpenedEditVariable(false)}
-        variable={selectedVariable}
+        variable={selectedVariable ?? undefined}
         isEdit
       />
     </div>
@@ -124,8 +128,8 @@ interface VariableFormValues {
 
 const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateVariableProps) => {
   const { surveyId, variables } = useContext(SurveyContext);
-  const variableCreation = useCreateSurveyVariableMutation(surveyId);
-  const variableUpdation = useUpdateSurveyVariableMutation(surveyId);
+  const variableCreation = useCreateSurveyVariableMutation(surveyId ?? "");
+  const variableUpdation = useUpdateSurveyVariableMutation(surveyId ?? "");
   const { t: translations } = useTranslation();
 
   const variableSchema = z.object({
@@ -149,13 +153,13 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
   const isPending = isEdit ? variableUpdation.isPending : variableCreation.isPending;
 
   const onCreate = async (values: VariableFormValues) => {
-    if (variables.find((v) => v?.name == values.name)) {
+    if (variables?.find((v) => v?.name == values.name)) {
       setError("name", { message: translations("Variable already exist") });
       return;
     }
     const data = { ...values, type: SurveyVariableType.CUSTOM };
     variableCreation.mutate(
-      { surveyId, data },
+      { surveyId: surveyId ?? "", data },
       {
         onSuccess: () => {
           reset();
@@ -169,12 +173,12 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
   };
 
   const onUpdate = async (values: VariableFormValues) => {
-    if (variables.find((v) => v?.name == values.name) && variable?.name !== values.name) {
+    if (variables?.find((v) => v?.name == values.name) && variable?.name !== values.name) {
       setError("name", { message: translations("Variable already exist") });
       return;
     }
     variableUpdation.mutate(
-      { variableId: variable.id, data: values },
+      { variableId: variable?.id ?? "", data: values },
       {
         onSuccess: () => {
           reset();

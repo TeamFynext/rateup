@@ -140,7 +140,7 @@ function InstagramDashboard() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link to="/dashboard/settings" className={buttonVariants()}>
+          <Link to="/dashboard/settings/channels" className={buttonVariants()}>
             {t("Go to Settings")}
           </Link>
         </EmptyContent>
@@ -166,7 +166,7 @@ function InstagramDashboard() {
         <div className="flex items-center gap-3">
           <Select
             value={selectedSetting?.id ?? ""}
-            onValueChange={(v) => setSelectedId(v)}
+            onValueChange={(v) => setSelectedId(v ?? undefined)}
             items={connectedSettings.map((s) => ({
               value: s.id,
               label: s.igDisplayName || s.igUserName || s.phoneDisplayName || s.phone,
@@ -676,7 +676,7 @@ function PersistentMenuTab({
                 </FieldLabel>
                 <Select
                   value={item.type}
-                  onValueChange={(v: "postback" | "web_url") => updateItem(index, { type: v })}
+                  onValueChange={(v) => updateItem(index, { type: v ?? "postback" })}
                   items={[
                     { value: "postback", label: t("Postback") },
                     { value: "web_url", label: t("Web URL") },
@@ -944,7 +944,11 @@ function CommentsTab() {
           <Button
             size="sm"
             render={
-              <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT" />
+              <Link
+                to="/dashboard/automation/$automationId"
+                params={{ automationId: "new" }}
+                search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_COMMENT" }}
+              />
             }
           >
             <IconPlus className="mr-1.5 size-4" />
@@ -968,7 +972,11 @@ function CommentsTab() {
               <Button
                 size="sm"
                 render={
-                  <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT" />
+                  <Link
+                    to="/dashboard/automation/$automationId"
+                    params={{ automationId: "new" }}
+                    search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_COMMENT" }}
+                  />
                 }
               >
                 <IconPlus className="mr-1.5 size-4" />
@@ -983,7 +991,7 @@ function CommentsTab() {
             items={commentRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to={`/dashboard/automation/${item.id}`}>
+              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>
@@ -1033,7 +1041,11 @@ function StoriesTab() {
           <Button
             size="sm"
             render={
-              <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION" />
+              <Link
+                to="/dashboard/automation/$automationId"
+                params={{ automationId: "new" }}
+                search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_STORY_MENTION" }}
+              />
             }
           >
             <IconPlus className="mr-1.5 size-4" />
@@ -1059,7 +1071,11 @@ function StoriesTab() {
               <Button
                 size="sm"
                 render={
-                  <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION" />
+                  <Link
+                    to="/dashboard/automation/$automationId"
+                    params={{ automationId: "new" }}
+                    search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_STORY_MENTION" }}
+                  />
                 }
               >
                 <IconPlus className="mr-1.5 size-4" />
@@ -1074,7 +1090,7 @@ function StoriesTab() {
             items={storyMentionRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to={`/dashboard/automation/${item.id}`}>
+              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>

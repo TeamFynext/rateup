@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 interface ImportChoicesProps {
-  setValue: (name: string, value: any) => void;
+  setValue: (name: string, value: unknown) => void;
   surveyLanguagesArr: string[];
   questionObj: Question;
   handleSave: () => void;
@@ -24,8 +24,8 @@ function ImportChoices({
   const { t: translations } = useTranslation();
 
   const areAllSurveyLanguagesColumnsPresent = useCallback(
-    (headerRow) => {
-      const headerRowArr = headerRow.map((languageStr) => languageStr.toString().toLowerCase());
+    (headerRow: unknown[]) => {
+      const headerRowArr = headerRow.map((languageStr) => String(languageStr).toLowerCase());
       return surveyLanguagesArr.every((lang) => headerRowArr.includes(lang.toLowerCase()));
     },
     [surveyLanguagesArr],
@@ -52,7 +52,8 @@ function ImportChoices({
         if (!choiceStringsSets[surveyLanguage]) {
           const newSet = new Set();
           if (questionObj.choices) {
-            const existing = questionObj.choices[surveyLanguage]?.map((obj) => obj.value) || [];
+            const existing =
+              questionObj.choices[surveyLanguage]?.map((obj: Choice) => obj.value) || [];
             for (const str of existing) newSet.add(str);
           }
           choiceStringsSets[surveyLanguage] = newSet;
@@ -66,8 +67,8 @@ function ImportChoices({
       }
 
       for (let i = 1; i < rows.length; i++) {
-        const rowArr = rows[i]?.data;
-        if (!rowArr.includes(null)) {
+        const rowArr = rows[i]?.data ?? [];
+        if (!rowArr.includes(null as never)) {
           for (const key in columnLanguageObj) {
             choiceStringsSets[columnLanguageObj[key]].add(rowArr[key]);
           }

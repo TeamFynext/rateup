@@ -7,7 +7,8 @@ import type { WaTemplateComponent, WaTemplateFetchBodyComponent } from "@/types/
 
 interface Props {
   templateComponent: WaTemplateFetchBodyComponent;
-  parameterData: WaTemplateComponent;
+  /** Absent when the template has no parameters for this component. */
+  parameterData?: WaTemplateComponent;
 }
 
 export default function WaInboxTemplateComponents(props: Readonly<Props>) {
@@ -31,18 +32,16 @@ export default function WaInboxTemplateComponents(props: Readonly<Props>) {
 const WaInboxTemplateHeader = (props: Props) => {
   function getUrlIfParameterIsPresent(): string {
     if (props?.parameterData) {
-      if (
-        props?.parameterData?.parameters[0]?.[props?.templateComponent?.format?.toLowerCase()]
-          ?.link instanceof File
-      ) {
-        return URL.createObjectURL(
-          props?.parameterData?.parameters[0]?.[props?.templateComponent?.format?.toLowerCase()]
-            ?.link,
-        );
+      // A media header's payload sits under the lowercased format key.
+      const mediaKey = props?.templateComponent?.format?.toLowerCase() as
+        | "image"
+        | "video"
+        | "document";
+      const media = props?.parameterData?.parameters[0]?.[mediaKey];
+      if (media?.link instanceof File) {
+        return URL.createObjectURL(media.link);
       } else {
-        return props?.parameterData?.parameters[0]?.[
-          props?.templateComponent?.format?.toLowerCase()
-        ]?.link;
+        return media?.link ?? "";
       }
     } else {
       return props?.templateComponent?.example?.header_handle[0];
@@ -74,8 +73,10 @@ const WaInboxTemplateBody = (props: Props) => {
   return (
     <p className="text-sm font-normal leading-relaxed">
       {TextWithFormatting(
-        props?.templateComponent?.text,
-        (props?.parameterData?.parameters?.map((data) => data?.text) ||
+        props?.templateComponent?.text ?? "",
+        (props?.parameterData?.parameters?.map((data) =>
+          typeof data?.text === "string" ? data.text : (data?.text?.value ?? ""),
+        ) ||
           props?.templateComponent?.example?.body_text?.[0]) ??
           [],
       )}
@@ -105,7 +106,9 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
             <IconMessageReply size={16} />
             <span>{button?.text}</span>
           </Button>
-          {i !== props?.buttons?.length - 1 && <div className="border-t border-current/25" />}
+          {i !== (props?.buttons?.length ?? 0) - 1 && (
+            <div className="border-t border-current/25" />
+          )}
         </React.Fragment>
       ))}
     </div>

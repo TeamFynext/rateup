@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+import type { WaTemplateComponent } from "@/types/global";
+
 import type { SyncTemplatesInput } from "./whatsapp.api";
 import {
   createWaTemplate,
@@ -16,7 +19,7 @@ import {
   updateWaTemplate,
 } from "./whatsapp.api";
 
-export const useWaTemplates = (templateType?) =>
+export const useWaTemplates = (templateType?: string) =>
   useQuery({
     queryKey: ["watemplates", templateType],
     queryFn: () => getWaTemplates(templateType),
@@ -29,10 +32,10 @@ export const useWaTemplateById = (id: string) =>
     queryFn: () => getWaTemplateById(id),
   });
 
-export const useCreateTemplateMutation = (onSuccess, onError) => {
+export const useCreateTemplateMutation = (onSuccess: () => void, onError: () => void) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (templateData: any) => createWaTemplate(templateData),
+    mutationFn: (templateData: RequestPayload) => createWaTemplate(templateData),
     onSuccess: () => {
       toast.success("Template Created Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -47,10 +50,14 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
   return createMutation;
 };
 
-export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
+export const useSaveTemplateAsDraftMutation = (
+  id: string,
+  onSuccess: (data: unknown) => void,
+  onError: () => void,
+) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (templateData: any) => saveTemplateAsDraft(templateData),
+    mutationFn: (templateData: RequestPayload) => saveTemplateAsDraft(templateData),
     onSuccess: (data) => {
       toast.success("Template Saved as Draft Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -65,10 +72,20 @@ export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
 
   return createMutation;
 };
-export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
+export const useUpdateTemplateMutation = (
+  id: string,
+  onSuccess?: () => void,
+  onError?: () => void,
+) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: ({ templateId, templateData }: any) => updateWaTemplate(templateId, templateData),
+    mutationFn: ({
+      templateId,
+      templateData,
+    }: {
+      templateId: string;
+      templateData: RequestPayload;
+    }) => updateWaTemplate(templateId, templateData),
     onSuccess: () => {
       toast.success("Template Updated Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -83,7 +100,7 @@ export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
   return updateMutation;
 };
 
-export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
+export const useDeleteWaTemplateMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: deleteWaTemplate,
@@ -104,7 +121,7 @@ export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
   return deleteMutation;
 };
 
-export const useSyncTemplatesMutation = (onSuccess?, onError?) => {
+export const useSyncTemplatesMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
   const syncMutation = useMutation({
     mutationFn: (data?: SyncTemplatesInput) => syncTemplates(data),
@@ -128,7 +145,7 @@ export const useUnregisteredTemplates = (enabled: boolean) =>
     queryFn: getUnregisteredTemplates,
   });
 
-export const useRegisterTemplatesMutation = (onSuccess?, onError?) => {
+export const useRegisterTemplatesMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
   const registerMutation = useMutation({
     mutationFn: registerTemplates,
@@ -145,7 +162,7 @@ export const useRegisterTemplatesMutation = (onSuccess?, onError?) => {
   return registerMutation;
 };
 
-export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
+export const useSendWaTemplateToUser = (phone: string, contactId: string | undefined) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -155,7 +172,7 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
       whatsappSettingsPhoneId,
     }: {
       templateId: string;
-      parameterData: any;
+      parameterData: WaTemplateComponent[];
       teamId: string;
       whatsappSettingsPhoneId: string;
     }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createLinktree,
   deleteLinktree,
@@ -19,7 +21,7 @@ function useLinktrees() {
   });
 }
 
-function useGetLinktreeWithShortId(shortUrlId) {
+function useGetLinktreeWithShortId(shortUrlId: string) {
   return useQuery({
     queryKey: ["linktree", shortUrlId],
     queryFn: getLinktreeWithShortId(shortUrlId),
@@ -45,10 +47,10 @@ function useCreateLinktreeMutation() {
   });
 }
 
-function useUpdateLinktreeMutation(shortUrlId) {
+function useUpdateLinktreeMutation(shortUrlId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: RequestPayload) => {
       return updateLinktree(data);
     },
     onSuccess: () => {
@@ -66,7 +68,7 @@ function useUpdateLinktreeMutation(shortUrlId) {
   });
 }
 
-function useDeleteLinktreeMutation(id) {
+function useDeleteLinktreeMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => {
@@ -87,7 +89,7 @@ function useDeleteLinktreeMutation(id) {
 }
 
 // This is being used to get options for dropdowns in linktree AddLinkOverlay component.
-function useLinkTypeOptions(linkType) {
+function useLinkTypeOptions(linkType: string) {
   return useQuery({
     queryKey: ["linktype-options", linkType],
     queryFn: getDropdownOptionsOfLinkType(linkType),
@@ -95,7 +97,7 @@ function useLinkTypeOptions(linkType) {
   });
 }
 
-function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId) {
+function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId: string) {
   return useMutation({
     mutationFn: (bodyData: { resourceToBeUpdated: string; linkId?: string }) => {
       return updatePageVisitsOrLinkClicks(shortUrlId, bodyData);

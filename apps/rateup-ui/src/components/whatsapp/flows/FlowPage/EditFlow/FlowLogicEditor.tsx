@@ -52,8 +52,16 @@ interface SelectOption {
 }
 
 /** Normalises the `string[] | {label,value}[]` shapes the logic utils return. */
-const toOptions = (data: any[]): SelectOption[] =>
+const toOptions = (data: Array<string | SelectOption>): SelectOption[] =>
   (data ?? []).map((d) => (typeof d === "string" ? { label: d, value: d } : d));
+
+/**
+ * Screen-level jumps navigate to a screen, so their `action` is that screen's id; a
+ * component-level block carries a `{ success, fail }` object instead.
+ */
+const isScreenLevelJump = (
+  item: FlowLogicJump | FlowLogicJumpComponentLevel,
+): item is FlowLogicJump => typeof item.action === "string";
 
 /** Labelled shadcn Select used throughout the logic editor. */
 function SelectField({
@@ -65,7 +73,7 @@ function SelectField({
   className,
 }: Readonly<{
   label?: string;
-  data: any[];
+  data: Array<string | SelectOption>;
   value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -75,7 +83,7 @@ function SelectField({
   return (
     <Field className={cn("flex flex-col gap-1", className)}>
       {label && <FieldTitle>{label}</FieldTitle>}
-      <Select value={value ?? ""} onValueChange={onChange} items={options}>
+      <Select value={value ?? ""} onValueChange={(value) => onChange(value ?? "")} items={options}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -149,12 +157,12 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (dbFlow && logicJumps.length === 0 && componentLeventLogicJumps.length === 0) {
-      const stringActions = [];
-      const objectActions = [];
+      const stringActions: FlowLogicJump[] = [];
+      const objectActions: FlowLogicJumpComponentLevel[] = [];
 
       // Split the data based on action type
       (dbFlow?.logicJumps?.[selectedScreenId] || []).forEach((item) => {
-        if (typeof item.action === "string") {
+        if (isScreenLevelJump(item)) {
           stringActions.push(item);
         } else if (typeof item.action === "object") {
           objectActions.push(item);
@@ -170,11 +178,11 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
 
   const handleSave = () => {
     const updatedLogicJumps = {
-      ...((Object.fromEntries(
-        Object.entries(dbFlow.logicJumps).filter(([k, _v]) => {
+      ...Object.fromEntries(
+        Object.entries(dbFlow?.logicJumps ?? {}).filter(([k, _v]) => {
           return k !== selectedScreenId;
         }),
-      ) || {}) as any),
+      ),
       [selectedScreenId]: [...logicJumps, ...componentLeventLogicJumps],
     };
 
@@ -182,8 +190,8 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
       dbFlowId,
       data: {
         logicJumps: Object.fromEntries(
-          Object.entries(updatedLogicJumps).filter(([_, v]: [string, any[]]) => v.length > 0),
-        ) as any,
+          Object.entries(updatedLogicJumps).filter(([, v]) => (v as unknown[]).length > 0),
+        ),
       },
     });
   };
@@ -192,7 +200,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2">
         <h3 className="text-lg font-semibold">{translations("Logic Jumps for Screen:")}</h3>
-        <h3 className="text-lg font-medium text-(--whatsapp-green)">{screen.title}</h3>
+        <h3 className="text-lg font-medium text-(--whatsapp-green)">{screen?.title}</h3>
       </div>
       <ScrollArea className="grow">
         <div className="my-2 flex flex-1 flex-col gap-2 rounded-xl py-2">
@@ -230,10 +238,19 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   );
 };
 
+/** Conditions whose match data is a list rather than a single value. */
+const MULTI_VALUE_CONDITIONS: Array<LogicCondition | LogicConditionComponentLevel> = [
+  LogicCondition.IncludesAllOf,
+  LogicCondition.IncludesAnyOf,
+  LogicCondition.IncludesNoneOf,
+];
+
 // create props for below component
 interface AtomicConditionBlockProps {
-  condition: FlowLogicCondition;
-  setCondition: (condition: FlowLogicCondition) => void;
+  condition: FlowLogicCondition | FlowLogicJumpComponentLevel["conditions"][number];
+  setCondition: (
+    condition: FlowLogicCondition | FlowLogicJumpComponentLevel["conditions"][number],
+  ) => void;
   handleDelete: () => void;
   isComponentLevel?: boolean;
 }
@@ -260,13 +277,13 @@ function AtomicConditionBlock({
 
   const [selectedCondition, setSelectedCondition] = useState(condition.condition);
   const selectedScreen = getScreenObjById(flowJson.screens, selectedScreenId);
-  const questionsInScreen = getQuestionsFromScreen(selectedScreen, survey, map);
-  const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
+  const questionsInScreen = getQuestionsFromScreen(selectedScreen!, survey, map);
+  const logicSupportedQuestionsInScreen = questionsInScreen?.filter((q) =>
     logicSupportedTypes.includes(q.type as QuestionType),
   );
   const { t: translations } = useTranslation();
   const [selectedQId, setSelectedQId] = useState(condition?.questionId || editingQuestion?.id);
-  const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
+  const selectedQ = questionsInScreen?.find((q) => q.id === selectedQId);
   if (!selectedQ) return;
 
   const [matchData, setMatchData] = useState(condition.response);
@@ -275,7 +292,7 @@ function AtomicConditionBlock({
     setCondition({
       condition: selectedCondition,
       response: matchData,
-      questionId: selectedQId,
+      questionId: selectedQId ?? "",
     });
   }, [selectedCondition, matchData, selectedQId]);
   // TODO: remove these states & update the condition directly in the parent component
@@ -285,7 +302,7 @@ function AtomicConditionBlock({
       <div className="flex flex-col gap-0.5">
         <SelectField
           label={translations("For Question")}
-          data={logicSupportedQuestionsInScreen.map((q) => ({
+          data={(logicSupportedQuestionsInScreen ?? []).map((q) => ({
             label: getQuestionLabel(q, selectedLanguage), // TODO: show index too
             value: q.id,
           }))}
@@ -305,17 +322,13 @@ function AtomicConditionBlock({
               : getConditions(selectedQ.type as QuestionType)
           }
           value={selectedCondition}
-          onChange={setSelectedCondition as any}
+          onChange={(value) => setSelectedCondition(value as LogicCondition)}
         />
 
         {/* Match Data */}
         {selectedCondition === LogicCondition.Submitted ? (
           <></>
-        ) : [
-            LogicCondition.IncludesAllOf,
-            LogicCondition.IncludesAnyOf,
-            LogicCondition.IncludesNoneOf,
-          ].includes(selectedCondition) ||
+        ) : (selectedCondition && MULTI_VALUE_CONDITIONS.includes(selectedCondition)) ||
           ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
             selectedCondition === LogicCondition.Equals) ? (
           // Array Selector
@@ -346,18 +359,18 @@ function AtomicConditionBlock({
   );
 }
 
-interface ConditionsActionMapBlockProps {
-  logic: FlowLogicJump | FlowLogicJumpComponentLevel;
-  updateLogicJumps: Updater<FlowLogicJump[] | FlowLogicJumpComponentLevel[]>;
+interface ConditionsActionMapBlockProps<T extends FlowLogicJump | FlowLogicJumpComponentLevel> {
+  logic: T;
+  updateLogicJumps: Updater<T[]>;
   index: number;
   isComponentLevel?: boolean;
 }
-function ConditionsActionMapBlock({
+function ConditionsActionMapBlock<T extends FlowLogicJump | FlowLogicJumpComponentLevel>({
   logic,
   updateLogicJumps,
   index,
   isComponentLevel = false,
-}: ConditionsActionMapBlockProps) {
+}: ConditionsActionMapBlockProps<T>) {
   const { selectedScreenId, flowJson, survey, map } = useContext(EditFlowContext);
   const currentIndex = flowJson.screens.findIndex((s) => s.id === selectedScreenId);
   const [selectedAction, setSelectedAction] = useState(logic.action || LogicAction.NextQ);
@@ -411,9 +424,8 @@ function ConditionsActionMapBlock({
   const { t: translations } = useTranslation();
   useEffect(() => {
     updateLogicJumps((draft) => {
-      draft[index].action = isComponentLevel
-        ? { success: selectedActionSuccess, fail: selectedActionFail }
-        : selectedAction;
+      if (isComponentLevel) return;
+      draft[index].action = selectedAction;
     });
   }, [selectedAction, selectedActionSuccess, selectedActionFail, isComponentLevel]);
 
@@ -470,13 +482,13 @@ function ConditionsActionMapBlock({
                 label="Success Action"
                 data={possibleActionsComponentLevel}
                 value={selectedActionSuccess}
-                onChange={setSelectedActionSuccess as any}
+                onChange={setSelectedActionSuccess}
               />
               <SelectField
                 label="Fail Action"
                 data={possibleActionsComponentLevel}
                 value={selectedActionFail}
-                onChange={setSelectedActionFail as any}
+                onChange={setSelectedActionFail}
               />
             </div>
           ) : (
@@ -484,7 +496,7 @@ function ConditionsActionMapBlock({
               label={translations("Action")}
               data={possibleActions}
               value={selectedAction as LogicAction}
-              onChange={setSelectedAction as any}
+              onChange={setSelectedAction}
             />
           )}
         </div>

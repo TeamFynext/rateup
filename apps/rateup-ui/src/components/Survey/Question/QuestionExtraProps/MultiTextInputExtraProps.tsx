@@ -17,21 +17,22 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import DraggableTable from "../../../styled/Table/DraggableTable.tsx";
+import type { QuestionExtraPropsForm, QuestionFormField } from "./questionForm.ts";
 
 type FieldFormValues = {
   fieldKey: string;
   placeholderText: string;
 };
 
-const MultiTextInputExtraProps = ({ form }) => {
+const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const features = form.values.features?.[selectedLanguage];
+  const features = form.values?.features?.[selectedLanguage];
   const { t: translations } = useTranslation();
 
   const [openedEditModal, setOpenedEditModal] = useState(false);
   const [displayText, setDisplayText] = useState("");
-  const [selectedField, setSelectedField] = useState<any>(null);
+  const [selectedField, setSelectedField] = useState<QuestionFormField | null>(null);
 
   const headers = [
     { headerKey: "fieldKey", headerValue: translations("Field Key") },
@@ -47,26 +48,27 @@ const MultiTextInputExtraProps = ({ form }) => {
     defaultValues: { fieldKey: "", placeholderText: "" },
   });
 
-  const handleDragEnd = (values: any[]) => {
-    form.setFieldValue("features", {
-      ...form.values.features,
+  const handleDragEnd = (values: QuestionFormField[]) => {
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: { ...features, fields: values },
     });
   };
 
   const addField = handleSubmit((values) => {
-    const existingFields: any[] = form.values.features?.[selectedLanguage]?.fields ?? [];
+    const existingFields: QuestionFormField[] =
+      form.values?.features?.[selectedLanguage]?.fields ?? [];
     if (existingFields.find((f) => f.fieldKey === values.fieldKey)) return;
-    form.setFieldValue("features", {
-      ...form.values.features,
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: { ...features, fields: [...existingFields, values] },
     });
     resetFieldForm();
   });
 
   const handleEditDisplayText = () => {
-    form.setFieldValue("features", {
-      ...form.values.features,
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: {
         ...features,
         fields: features?.fields?.map((f) =>
@@ -78,15 +80,15 @@ const MultiTextInputExtraProps = ({ form }) => {
     setOpenedEditModal(false);
   };
 
-  const handleEdit = (field: any) => {
-    setDisplayText(field?.placeholderText);
+  const handleEdit = (field: QuestionFormField) => {
+    setDisplayText(field?.placeholderText ?? "");
     setSelectedField(field);
     setOpenedEditModal(true);
   };
 
-  const handleDelete = (field: any) => {
-    form.setFieldValue("features", {
-      ...form.values.features,
+  const handleDelete = (field: QuestionFormField) => {
+    form.setFieldValue?.("features", {
+      ...form.values?.features,
       [selectedLanguage]: {
         ...features,
         fields: features?.fields?.filter((f) => f.fieldKey !== field?.fieldKey),
@@ -95,9 +97,9 @@ const MultiTextInputExtraProps = ({ form }) => {
   };
 
   useEffect(() => {
-    if (!form.values.features?.[selectedLanguage]?.fields) {
-      form.setFieldValue("features", {
-        ...form.values.features,
+    if (!form.values?.features?.[selectedLanguage]?.fields) {
+      form.setFieldValue?.("features", {
+        ...form.values?.features,
         [selectedLanguage]: {
           ...features,
           fields: [{ fieldKey: "name", placeholderText: "Name" }],
@@ -111,7 +113,7 @@ const MultiTextInputExtraProps = ({ form }) => {
       <DraggableTable
         headers={headers}
         handleDragEnd={handleDragEnd}
-        items={features?.fields}
+        items={features?.fields ?? []}
         editEnabled
         deleteEnabled
         handleEdit={handleEdit}

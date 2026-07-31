@@ -1,5 +1,6 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
+import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
 import { getAllTestimonialsByCollection } from "@/backend/testimonials/testimonial.api";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
@@ -93,7 +94,7 @@ function Collections() {
           className="w-full"
         >
           <CarouselContent>
-            {collection.testimonials.map((testimonial) => (
+            {collection.testimonials.map((testimonial: CollectionTestimonial) => (
               <CarouselItem key={testimonial.id} className="basis-67.5 xs:basis-80 pl-4 py-2">
                 <TestimonialCard testimonial={testimonial} currentStyle={collection.theme} />
               </CarouselItem>
@@ -104,7 +105,7 @@ function Collections() {
     }
     return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {collection.testimonials.map((testimonial) => (
+        {collection.testimonials.map((testimonial: CollectionTestimonial) => (
           <TestimonialCard
             testimonial={testimonial}
             currentStyle={collection.theme}

@@ -26,7 +26,7 @@ function Page() {
 function ShopifySubscriptionApprovalCallback() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
-  const charge_id = searchParams.charge_id;
+  const charge_id = typeof searchParams.charge_id === "string" ? searchParams.charge_id : undefined;
   const shop = searchParams.shop;
   const plan = searchParams.plan;
 
@@ -62,7 +62,8 @@ function ShopifySubscriptionApprovalCallback() {
   const updateRoute = () => {
     localStorage.removeItem("shopify-subscription-callback");
     navigate({
-      to: `/dashboard/settings/billing#order-history`,
+      to: "/dashboard/settings/billing",
+      hash: "order-history",
     });
   };
 
@@ -70,7 +71,7 @@ function ShopifySubscriptionApprovalCallback() {
     ? subscription?.subscriptionRef === charge_id.toString()
     : false;
   const isOrderCreated = orders
-    ? orders.data?.find((order) => order.subscriptionId === charge_id.toString())
+    ? orders.data?.find((order: { subscriptionId?: string }) => order.subscriptionId === charge_id)
     : false;
 
   if (!charge_id || !isSessionExist) return null;

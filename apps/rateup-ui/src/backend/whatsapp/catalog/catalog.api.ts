@@ -1,10 +1,21 @@
 import { axiosClient } from "@/backend/apiClient";
+import type { RequestPayload } from "@/types/api.ts";
 
 import { WHATSAPP_URL } from "..";
 
 export const waCatalogUrl = `${WHATSAPP_URL}/catalog`;
 
-export async function updateWaCatalog(catalogId, data) {
+/** A WhatsApp product catalog as the catalog endpoints return it. */
+export interface WaCatalog {
+  catalogId: string;
+  name: string;
+  vertical?: string;
+  checkoutMessage?: string;
+  autoCheckoutEnabled?: boolean;
+  connectedWaPhoneIds: Array<{ whatsappSettingsPhoneId?: string }>;
+}
+
+export async function updateWaCatalog(catalogId: string, data: RequestPayload) {
   await axiosClient.put(`${waCatalogUrl}/${catalogId}`, data);
 }
 
@@ -13,7 +24,7 @@ export async function getWaCatalogs() {
     catalogId: string;
     name: string;
     vertical: string;
-    connectedWaPhoneIds?: any[];
+    connectedWaPhoneIds?: Array<{ whatsappSettingsPhoneId?: string }>;
   }[];
 }
 
@@ -27,11 +38,41 @@ export async function syncConnectedWaCatalog(): Promise<
   return (await axiosClient.post(`${waCatalogUrl}/sync-connected`)).data;
 }
 
-export async function getWaCatalogById(catalogId) {
+export async function getWaCatalogById(catalogId: string) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }
 
-export async function getWaConnectedCatalog(whatsappSettingsPhoneId: string) {
+/**
+ * A synced catalog product. Meta's product fields live in the `productProps` JSON column, and
+ * some screens read them flattened onto the row — both spellings are declared rather than
+ * silently changing which one a screen reads.
+ */
+export interface WaCatalogProduct {
+  productDbId?: string;
+  retailer_id?: string;
+  type?: string;
+  productProps?: {
+    title?: string;
+    name?: string;
+    price?: string;
+    image_link?: string;
+    image?: Array<{ url?: string }>;
+  } | null;
+  title?: string;
+  name?: string;
+  price?: string;
+  image_link?: string;
+  image?: Array<{ url?: string }>;
+}
+
+/** A catalog with its synced products, as the "connected catalog" endpoint returns it. */
+export interface WaConnectedCatalog extends WaCatalog {
+  products?: WaCatalogProduct[];
+}
+
+export async function getWaConnectedCatalog(
+  whatsappSettingsPhoneId: string,
+): Promise<WaConnectedCatalog> {
   return (await axiosClient.get(`${waCatalogUrl}/connected/${whatsappSettingsPhoneId}`)).data;
 }
 
@@ -39,7 +80,7 @@ export async function deleteWaCatalog(catalogId: string) {
   await axiosClient.delete(`${waCatalogUrl}/${catalogId}`);
 }
 
-export async function disconnectCatalogFromWaba(data) {
+export async function disconnectCatalogFromWaba(data: RequestPayload) {
   return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data })).data;
 }
 
@@ -57,7 +98,7 @@ export interface CatalogSettings {
   catalogId: string;
   storeType: "standard" | "shopify";
   paymentMethod?: string;
-  standardPaymentConfig?: Record<string, any>;
+  standardPaymentConfig?: Record<string, unknown>;
   collectAddress: boolean;
   collectDelivery: boolean;
   fixedDeliveryCharge?: boolean;
@@ -65,7 +106,7 @@ export interface CatalogSettings {
   addressFlowId?: string;
   addressFlowDbId?: string;
   addressFlowStatus: "idle" | "submitting" | "review" | "approved" | "rejected";
-  addressFlowFields?: any[];
+  addressFlowFields?: string[];
   deliveryOptions: DeliveryOption[];
 }
 
@@ -77,7 +118,11 @@ export async function updateCatalogSettings(catalogId: string, data: Partial<Cat
   return (await axiosClient.put(`${waCatalogUrl}/${catalogId}/settings`, data)).data;
 }
 
-export async function createCatalogAddressFlow(catalogId: string, json?: any, map?: any) {
+export async function createCatalogAddressFlow(
+  catalogId: string,
+  json?: RequestPayload,
+  map?: RequestPayload,
+) {
   return (
     await axiosClient.post(`${waCatalogUrl}/${catalogId}/create-address-flow`, {
       json,

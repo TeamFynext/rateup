@@ -24,7 +24,8 @@ import { ProductsDataTableToolbar } from "./products-data-table-toolbar.tsx";
 interface ProductTableData {
   id: string;
   name: string;
-  description: string;
+  /** Stripe products may have no description; the column renders "N/A" then. */
+  description: string | undefined;
   type: string;
   amount: number;
   currency: string;

@@ -8,7 +8,7 @@ import {
   mergeAttributes,
 } from "@tiptap/react";
 import { ImageIcon, Link, Upload, Loader2, X } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type MouseEvent, useState } from "react";
 
 /* eslint-disable */
 // @ts-nocheck
@@ -21,7 +21,7 @@ import { NODE_HANDLES_SELECTED_STYLE_CLASSNAME, isValidUrl } from "@/lib/tiptap-
 import { cn } from "@/lib/utils";
 
 export interface ImagePlaceholderOptions {
-  HTMLAttributes: Record<string, any>;
+  HTMLAttributes: Record<string, unknown>;
   onUpload?: (url: string) => void;
   onError?: (error: string) => void;
 }
@@ -129,12 +129,12 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         input.files = dataTransfer.files;
-        handleFileChange({ target: input } as any);
+        handleFileChange({ target: input });
       }
     }
   };
 
-  const handleInsertEmbed = (e: FormEvent) => {
+  const handleInsertEmbed = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const valid = isValidUrl(url);
     if (!valid) {
@@ -179,7 +179,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
               </Button>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="upload">
                   <Upload className="mr-2 h-4 w-4" />

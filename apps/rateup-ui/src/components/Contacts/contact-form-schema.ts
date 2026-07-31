@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import z from "zod";
 
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { importMethod } from "@/utils/enums/index.ts";
 
 export interface ContactCustomFieldValue {
@@ -58,7 +59,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * is also how `ContactForm` reads their errors. The definition for each entry is found
  * by its `fieldId`, so a value whose custom field has since been deleted is left alone.
  */
-export const buildContactSchema = (t: TFunction, customFields: any[] = []) =>
+export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[] = []) =>
   z
     .object({
       name: z.string(),

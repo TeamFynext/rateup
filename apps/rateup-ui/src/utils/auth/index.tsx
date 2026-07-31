@@ -13,6 +13,21 @@ import {
   resendCode,
 } from "supertokens-auth-react/recipe/passwordless";
 
+/**
+ * SuperTokens reports recoverable problems (bad OTP, unknown email, …) as a
+ * general error carrying a user-facing message.
+ */
+export function isSuperTokensGeneralError(
+  error: unknown,
+): error is { isSuperTokensGeneralError: true; message?: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "isSuperTokensGeneralError" in error &&
+    (error as { isSuperTokensGeneralError?: unknown }).isSuperTokensGeneralError === true
+  );
+}
+
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 
 /**
@@ -47,8 +62,8 @@ const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof
     } else {
       // this can happen due to automatic account linking. See that section in our docs.
     }
-  } catch (err: any) {
-    if (err.isSuperTokensGeneralError === true) {
+  } catch (err) {
+    if (isSuperTokensGeneralError(err)) {
       // this may be a custom error message sent from the API by you,
       // or if the input email / phone number is not valid.
       toast.error(err.message || "Failed to send OTP", {
@@ -65,7 +80,7 @@ export function useSignIn() {
   const navigate = useNavigate();
   const { route } = useRouteAndCartStore();
 
-  return async function (email: string, password: string, phoneNumber: string) {
+  return async function (email?: string, password?: string, phoneNumber?: string) {
     try {
       if (phoneNumber) {
         await handleCreateCode(phoneNumber, navigate);
@@ -74,11 +89,11 @@ export function useSignIn() {
           formFields: [
             {
               id: "email",
-              value: email,
+              value: email ?? "",
             },
             {
               id: "password",
-              value: password,
+              value: password ?? "",
             },
           ],
         });
@@ -105,8 +120,8 @@ export function useSignIn() {
           });
         }
       }
-    } catch (err: any) {
-      if (err?.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err?.message || "Error", { id: "load-data" });
       } else {
@@ -133,10 +148,10 @@ export async function resendOTP() {
     } else {
       toast.success("Otp resend sucessfully", { id: "load-data" });
     }
-  } catch (err: any) {
+  } catch (err) {
     console.log(err);
 
-    if (err.isSuperTokensGeneralError === true) {
+    if (isSuperTokensGeneralError(err)) {
       // this may be a custom error message sent from the API by you.
       toast.error(err.message || "Failed", { id: "load-data" });
     } else {
@@ -158,8 +173,9 @@ export function useSignUp() {
     website?: string,
     industry?: string,
     location?: string,
-    goals?: string,
-    integrationsSelected?: string,
+    // Both arrive as the multi-select arrays the signup wizard collects.
+    goals?: string[],
+    integrationsSelected?: string[],
     teamSize?: string,
   ) {
     try {
@@ -168,7 +184,7 @@ export function useSignUp() {
         .find((row) => row.startsWith("referral_code="));
       const referralCode = existingCookie?.split("=")[1];
 
-      const optionalFormFields = [
+      const optionalFormFields: Array<{ id: string; value: string | string[] | null }> = [
         {
           id: "phoneNumber",
           value: phoneNumber || null,
@@ -226,7 +242,9 @@ export function useSignUp() {
             value: orgName,
           },
           ...optionalFormFields,
-        ],
+          // `goals` and `integrationsSelected` are sent as the arrays the signup
+          // wizard collects, which SuperTokens' formFields type does not model.
+        ] as Array<{ id: string; value: string }>,
       });
 
       if (response?.status === "FIELD_ERROR") {
@@ -254,8 +272,8 @@ export function useSignUp() {
         // consumeVerificationCode()
       }
       // }
-    } catch (err: any) {
-      if (err?.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err?.message || "Failed", { id: "load-data" });
       } else {
@@ -295,8 +313,8 @@ export const useConsumeVerificationCode = () => {
           to: "/dashboard",
         });
       }
-    } catch (err: any) {
-      if (err?.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err?.message || "Error", {
           id: "verify-email",
@@ -328,8 +346,8 @@ export function useEmailSend() {
           id: "send-mail-error",
         });
       }
-    } catch (err: any) {
-      if (err?.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         toast.error(err?.message || "Error", { id: "send-mail-error" });
       } else {
         toast.error("Oops! Something went wrong.", { id: "send-mail-error" });

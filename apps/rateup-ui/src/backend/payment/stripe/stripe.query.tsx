@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   cancelStripeSubscription,
   createStripeCheckoutSession,
@@ -12,9 +14,9 @@ import {
   updateStripeProduct,
 } from "./stripe.api";
 
-export function useCreateStripeCheckoutSession(setIsLoading) {
+export function useCreateStripeCheckoutSession(setIsLoading: (loading: boolean) => void) {
   return useMutation({
-    mutationFn: (values: any) => createStripeCheckoutSession(values),
+    mutationFn: (values: RequestPayload) => createStripeCheckoutSession(values),
     onSuccess: (_data) => {
       toast.loading("Please wait get ready for payment", {
         id: "load-data",
@@ -33,7 +35,7 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
   });
 }
 
-export const useGetStripeCheckoutSession = (sessionId) => {
+export const useGetStripeCheckoutSession = (sessionId: string) => {
   return useQuery({
     enabled: !!sessionId,
     queryFn: () => getCheckoutSession(sessionId),

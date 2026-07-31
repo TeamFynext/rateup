@@ -19,7 +19,7 @@ interface Props {
   sessionExpired: boolean;
   opened: boolean;
   close: () => void;
-  contact: ContactsData;
+  contact: ContactsData | null;
 }
 
 export default function WaInboxAutomationDisplayModal(props: Props) {
@@ -33,7 +33,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
   const { t: translations } = useTranslation();
   function handleSendAutomatedReply() {
     initiate.mutate(
-      { phone: props?.contact?.phone },
+      { phone: props?.contact?.phone ?? "" },
       {
         onSuccess: () => {
           onClose();

@@ -14,11 +14,29 @@ const PLACEHOLDER_REGEX = /(\{\{[^{}]+\}\}|\{[^{}]+\}|%\d*\$?[sd]|:[a-zA-Z_]\w*)
 const SPLIT_TOKEN = "\n__SPLIT__\n";
 const MAX_BATCH_CHARS = 1200;
 
-function isObject(value) {
-  return value && typeof value === "object" && !Array.isArray(value);
+/** A locale dictionary: nested objects whose leaves are the translated strings. */
+type Dictionary = { [key: string]: string | Dictionary };
+
+/** One `""` leaf that still needs translating, located by its path through the dictionary. */
+interface EmptyLeaf {
+  path: string[];
 }
 
-function collectEmptyStringLeaves(obj, out = [], path = []) {
+/** A source string with its placeholders swapped out for tokens the translator won't mangle. */
+interface ProtectedText {
+  protectedText: string;
+  placeholders: string[];
+}
+
+function isObject(value: unknown): value is Dictionary {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function collectEmptyStringLeaves(
+  obj: Dictionary,
+  out: EmptyLeaf[] = [],
+  path: string[] = [],
+): EmptyLeaf[] {
   for (const [key, value] of Object.entries(obj)) {
     const currentPath = [...path, key];
     if (isObject(value)) {
@@ -32,8 +50,8 @@ function collectEmptyStringLeaves(obj, out = [], path = []) {
   return out;
 }
 
-function protectPlaceholders(text) {
-  const placeholders = [];
+function protectPlaceholders(text: string): ProtectedText {
+  const placeholders: string[] = [];
   const protectedText = String(text).replaceAll(PLACEHOLDER_REGEX, (match) => {
     const token = `__PH${placeholders.length}__`;
     placeholders.push(match);
@@ -42,7 +60,7 @@ function protectPlaceholders(text) {
   return { protectedText, placeholders };
 }
 
-function restorePlaceholders(text, placeholders) {
+function restorePlaceholders(text: string, placeholders: string[]) {
   let out = String(text);
   placeholders.forEach((placeholder, idx) => {
     out = out.replaceAll(`__PH${idx}__`, placeholder);
@@ -50,7 +68,7 @@ function restorePlaceholders(text, placeholders) {
   return out;
 }
 
-async function translateChunk(lines, lang) {
+async function translateChunk(lines: ProtectedText[], lang: string): Promise<string[]> {
   const joined = lines.map((x) => x.protectedText).join(SPLIT_TOKEN);
   const params = new URLSearchParams({
     client: "gtx",
@@ -66,12 +84,16 @@ async function translateChunk(lines, lang) {
     throw new Error(`Translate request failed ${res.status}`);
   }
 
-  const json = await res.json();
-  const translatedJoined = (json?.[0] || []).map((part) => part?.[0] || "").join("");
+  // The endpoint answers with `[[[translatedChunk, sourceChunk, …], …], …].
+  const json: unknown = await res.json();
+  const segments = Array.isArray(json) && Array.isArray(json[0]) ? json[0] : [];
+  const translatedJoined = segments
+    .map((part) => (Array.isArray(part) && typeof part[0] === "string" ? part[0] : ""))
+    .join("");
   const split = translatedJoined.split(SPLIT_TOKEN);
 
   if (split.length !== lines.length) {
-    const fallback = [];
+    const fallback: string[] = [];
     for (const line of lines) {
       const single = await translateChunk([line], lang);
       fallback.push(single[0]);
@@ -82,8 +104,8 @@ async function translateChunk(lines, lang) {
   return split.map((text, idx) => restorePlaceholders(text, lines[idx].placeholders));
 }
 
-async function translateUniqueStrings(uniqueStrings, lang) {
-  const translated = new Map();
+async function translateUniqueStrings(uniqueStrings: string[], lang: string) {
+  const translated = new Map<string, string>();
   const protectedItems = uniqueStrings.map((text) => ({
     source: text,
     ...protectPlaceholders(text),
@@ -91,7 +113,7 @@ async function translateUniqueStrings(uniqueStrings, lang) {
 
   let i = 0;
   while (i < protectedItems.length) {
-    const chunk = [];
+    const chunk: Array<ProtectedText & { source: string }> = [];
     let charCount = 0;
 
     while (i < protectedItems.length) {
@@ -118,7 +140,7 @@ async function translateUniqueStrings(uniqueStrings, lang) {
 async function main() {
   for (const target of TARGETS) {
     const outPath = join(DICT_DIR, target.file);
-    const existing = JSON.parse(readFileSync(outPath, "utf8"));
+    const existing = JSON.parse(readFileSync(outPath, "utf8")) as Dictionary;
 
     // Search for empty keys in the entire file, not just under translation
     const leavesToTranslate = collectEmptyStringLeaves(existing);
@@ -137,10 +159,12 @@ async function main() {
     const translatedMap = await translateUniqueStrings(uniqueKeys, target.lang);
 
     // Helper to set value at a path in an object
-    function setValueAtPath(obj, path, value) {
+    function setValueAtPath(obj: Dictionary, path: string[], value: string) {
       let node = obj;
       for (let i = 0; i < path.length - 1; i++) {
-        node = node[path[i]];
+        const next = node[path[i]];
+        if (!isObject(next)) return;
+        node = next;
       }
       node[path[path.length - 1]] = value;
     }

@@ -1,6 +1,8 @@
 import axios from "axios";
 import { toast } from "sonner";
 
+import { asApiError, getApiErrorData } from "@/utils/apiError.ts";
+
 const axiosClient = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api`,
   timeout: 8000,
@@ -9,17 +11,19 @@ const axiosClient = axios.create({
   },
 });
 
-const shouldSkipLocalErrorToast = (error) => !!error?.response?.data?.displayMessageInClient;
+const shouldSkipLocalErrorToast = (error: unknown) =>
+  !!getApiErrorData(error)?.displayMessageInClient;
 
-const interceptorErrorHandler = (error) => {
-  const { response, request } = error;
+const interceptorErrorHandler = (error: unknown) => {
+  const { response, request } = asApiError(error);
 
   if (globalThis.window !== undefined && shouldSkipLocalErrorToast(error)) {
-    const message = response?.data?.message ?? response?.data?.error ?? "Something went wrong";
+    const errorData = getApiErrorData(error);
+    const message = errorData?.message ?? errorData?.error ?? "Something went wrong";
     toast.error(message, { id: "api-error" });
 
     return Promise.reject({
-      ...error,
+      ...asApiError(error),
       message,
     });
   }
@@ -37,13 +41,13 @@ const interceptorErrorHandler = (error) => {
     }
   } else if (request) {
     message = "Network error. Please try again.";
-  } else if (error.message) {
-    message = error.message;
+  } else if (asApiError(error).message) {
+    message = asApiError(error).message as string;
   }
 
   // Normalize error message without losing original error
   return Promise.reject({
-    ...error,
+    ...asApiError(error),
     message,
   });
 };

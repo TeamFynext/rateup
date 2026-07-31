@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select.tsx";
 
 import { linkTypeOptions } from "../../constants.tsx";
+import type { LinktreeLink } from "../LinkCard.tsx";
 import CustomLinkInputs from "./CustomLinkInputs.tsx";
 import SurveyTypeDropdowns from "./SurveyTypeDropdowns.tsx";
 
@@ -30,7 +31,7 @@ const customLinkFormSchema = z.object({
     .string()
     .min(1, "Link url is required.")
     .refine(
-      (value) => {
+      (value: string) => {
         try {
           new URL(value);
           return true;
@@ -44,7 +45,24 @@ const customLinkFormSchema = z.object({
 
 export type CustomLinkFormValues = z.infer<typeof customLinkFormSchema>;
 
-function AddLinkModal({ title, opened, onClose, links }) {
+/** Per-field validation messages for the add-link form. */
+interface AddLinkErrors {
+  selectedSurveyTitleErr: string;
+  selectedTeamErr: string;
+  wsOrWasLinkDisplayNameErr: string;
+}
+
+function AddLinkModal({
+  title,
+  opened,
+  onClose,
+  links,
+}: {
+  title: string;
+  opened: boolean;
+  onClose: () => void;
+  links: LinktreeLink[];
+}) {
   const queryClient = useQueryClient();
 
   const params = useParams({
@@ -54,11 +72,11 @@ function AddLinkModal({ title, opened, onClose, links }) {
   // SurveyTypeDropdowns states
   const [selectedLinkType, setSelectedLinkType] = useState("web-survey");
   const [surveyTitleAutoCompleteSearch, setSurveyTitleAutoCompleteSearch] = useState("");
-  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState(null);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState("");
   // Web Survey or Whatsapp Survey Link Display name.
   const [wsOrWasLinkDisplayName, setWsOrWasLinkDisplayName] = useState("");
-  const [dropdownErrors, setDropdownErrors] = useState({
+  const [dropdownErrors, setDropdownErrors] = useState<AddLinkErrors>({
     selectedSurveyTitleErr: "",
     selectedTeamErr: "",
     wsOrWasLinkDisplayNameErr: "",
@@ -76,7 +94,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
   const updateLinktreeMutation = useUpdateLinktreeMutation(shortUrlId);
 
   const handleSelectedLinkTypeDropdownChange = useCallback(
-    (value) => {
+    (value: string) => {
       if (selectedLinkType === "custom-link") {
         queryClient.setQueryData(["linktype-options", selectedLinkType], null);
       }
@@ -92,7 +110,11 @@ function AddLinkModal({ title, opened, onClose, links }) {
 
   const validateDropdownValues = useCallback(() => {
     let isValid = true;
-    const newErrState = {};
+    const newErrState: AddLinkErrors = {
+      selectedSurveyTitleErr: "",
+      selectedTeamErr: "",
+      wsOrWasLinkDisplayNameErr: "",
+    };
     if (selectedSurveyTitle) {
       newErrState["selectedSurveyTitleErr"] = "";
     } else if (!selectedSurveyTitle) {
@@ -111,7 +133,6 @@ function AddLinkModal({ title, opened, onClose, links }) {
       isValid = false;
       newErrState["wsOrWasLinkDisplayNameErr"] = "This field is required";
     }
-    // @ts-ignore
     setDropdownErrors(newErrState);
     return isValid;
   }, [selectedLinkType, selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName, dropdownErrors]);
@@ -161,13 +182,13 @@ function AddLinkModal({ title, opened, onClose, links }) {
   }, [selectedLinkType, selectedSurveyTitle, selectedTeam, customLinksInputsForm]);
 
   useEffect(() => {
-    setSelectedSurveyTitle(null);
+    setSelectedSurveyTitle("");
     setSurveyTitleAutoCompleteSearch("");
     setWsOrWasLinkDisplayName("");
   }, [selectedLinkType]);
 
   useEffect(() => {
-    setSelectedTeam(null);
+    setSelectedTeam("");
   }, [selectedSurveyTitle]);
 
   useEffect(() => {
@@ -197,7 +218,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
             <FieldLabel htmlFor="link-type">Select Link type</FieldLabel>
             <Select
               value={selectedLinkType}
-              onValueChange={handleSelectedLinkTypeDropdownChange}
+              onValueChange={(value) => handleSelectedLinkTypeDropdownChange(value ?? "")}
               items={linkTypeOptions}
             >
               <SelectTrigger id="link-type" className="w-full">

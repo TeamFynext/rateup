@@ -12,11 +12,18 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 import PlanCardNew from "./Card/PlanCardNew.tsx";
+import type { PricingPlan } from "./pricing-plan.ts";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
 
 type BillingPeriod = "monthly" | "yearly";
 
-const PricingSection = ({ onPlanSelect = null, plans }) => {
+const PricingSection = ({
+  onPlanSelect = null,
+  plans,
+}: {
+  onPlanSelect?: (() => void) | null;
+  plans: PricingPlan[];
+}) => {
   const [period, setPeriod] = useState<BillingPeriod>("yearly");
   const navigate = useNavigate();
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -55,7 +62,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   const sendMail = useSendMailPlanSelectDetails();
   const session = useCheckSession();
 
-  function handlePlanSelection(plan) {
+  function handlePlanSelection(plan: PricingPlan) {
     if (onPlanSelect) onPlanSelect();
     if (plan.name === "FREE PLAN") {
       navigate({ to: "/signup" });

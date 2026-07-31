@@ -8,9 +8,12 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { motion } from "motion/react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+
+import type { OnboardingFormData } from "./onboarding-types.ts";
 
 export default function OnboardingStep1({
   data,
@@ -19,11 +22,11 @@ export default function OnboardingStep1({
   handleBack,
   handleNext,
 }: {
-  data: any;
-  setData: (fn: (prev: any) => any) => void;
+  data: OnboardingFormData;
+  setData: Dispatch<SetStateAction<OnboardingFormData>>;
   currentStep: number;
-  handleNext: any;
-  handleBack: any;
+  handleNext: () => void;
+  handleBack: () => void;
 }) {
   const services = [
     {
@@ -61,7 +64,7 @@ export default function OnboardingStep1({
     setData((prev) => ({
       ...prev,
       services: prev.services.includes(serviceId)
-        ? prev.services.filter((s) => s !== serviceId)
+        ? prev.services.filter((s: string) => s !== serviceId)
         : [...prev.services, serviceId],
     }));
   };

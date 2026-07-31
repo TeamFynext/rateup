@@ -1,4 +1,5 @@
 import { useContext, useEffect } from "react";
+import type { CSSProperties } from "react";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
@@ -7,7 +8,19 @@ import { getReplacedTitleFromVariable } from "./util.tsx";
 
 import classes from "./TakeSurvey.module.css";
 
-function QuestionTitle({ largeScreen, themeStyles, responses, surveyId, setAlignment }) {
+function QuestionTitle({
+  largeScreen,
+  themeStyles,
+  responses,
+  surveyId,
+  setAlignment,
+}: {
+  largeScreen: boolean;
+  themeStyles?: CSSProperties;
+  responses: QuestionResponse[];
+  surveyId: string;
+  setAlignment: (alignment: string) => void;
+}) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const data = {
@@ -37,14 +50,14 @@ function QuestionTitle({ largeScreen, themeStyles, responses, surveyId, setAlign
       className={classes.questionTitle}
       style={{ fontSize: largeScreen ? "30px" : "20px", ...themeStyles }}
     >
-      {selectedQ.title[selectedLanguage]}
+      {selectedQ?.title[selectedLanguage]}
     </p>
   );
 }
 
 export default QuestionTitle;
 
-function getFirstLineAlignmentFromHTML(htmlContent) {
+function getFirstLineAlignmentFromHTML(htmlContent: string) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, "text/html");
 

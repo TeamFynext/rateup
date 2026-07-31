@@ -45,11 +45,11 @@ function page() {
       });
     }
   };
-  const { data, isLoading } = useGetTeamDetailedMetrics(teamid, {
+  const { data, isLoading } = useGetTeamDetailedMetrics(teamid ?? "", {
     days: day,
   });
   const averageResponsesTime = formatTimeToNearestUnitFromSeconds(data?.averageResponseTime);
-  const textColor = (value) => {
+  const textColor = (value: number) => {
     if (value > 0) return "text-green-500";
     return "text-red-500";
   };
@@ -70,7 +70,8 @@ function page() {
                 size="sm"
                 onClick={() => {
                   navigate({
-                    to: "/dashboard/analytics?tab=team-performance",
+                    to: "/dashboard/analytics",
+                    search: { tab: "team-performance" },
                   });
                 }}
                 className="gap-2"
@@ -147,9 +148,10 @@ function page() {
                   : "NA"}
               </p>
               <p
-                className={`text-xs mt-1 ${textColor(data?.averageResponseTimeComparedToLastWeek)}`}
+                className={`text-xs mt-1 ${textColor(data?.averageResponseTimeComparedToLastWeek ?? 0)}`}
               >
-                {Math.floor(data?.averageResponseTimeComparedToLastWeek) ?? 0}% {t("vs last week")}
+                {Math.floor(data?.averageResponseTimeComparedToLastWeek ?? 0) ?? 0}%{" "}
+                {t("vs last week")}
               </p>
             </CardContent>
           </Card>
@@ -171,11 +173,11 @@ function page() {
                 <Target className="w-5 h-5 text-primary" />
                 <p className="text-sm text-muted-foreground">{t("Resolution Rate")}</p>
               </div>
-              <p className="text-2xl font-semibold">{Math.floor(data?.resolutionRate)}%</p>
+              <p className="text-2xl font-semibold">{Math.floor(data?.resolutionRate ?? 0)}%</p>
               <p
-                className={`text-xs text-green-600 mt-1 ${textColor(data?.resolutionRateComparedToLastWeek)}`}
+                className={`text-xs text-green-600 mt-1 ${textColor(data?.resolutionRateComparedToLastWeek ?? 0)}`}
               >
-                {Math.floor(data?.resolutionRateComparedToLastWeek)}% {t("vs last week")}
+                {Math.floor(data?.resolutionRateComparedToLastWeek ?? 0)}% {t("vs last week")}
               </p>
             </CardContent>
           </Card>

@@ -17,12 +17,18 @@ function SaveButton({
   themeObjBeingEdited,
   isThemeObjBeingEditedDefaultTheme,
   onSave = null,
+}: {
+  survey: Survey;
+  themeObjBeingEdited?: { id: string; name: string } | null;
+  isThemeObjBeingEditedDefaultTheme?: boolean;
+  onSave?: (() => void) | null;
+  className?: string;
 }) {
   const selectedPageTab = useSelectedPageTab();
   const themeObjState = useSurveyThemeContextValue();
   const [isSaving, setIsSaving] = useState(false);
   const { t: translations } = useTranslation();
-  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id, survey?.id);
+  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id ?? "", survey?.id);
 
   const handleSaveTheme = useCallback(async () => {
     if (!themeObjBeingEdited?.id) {

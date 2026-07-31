@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge.tsx";
 import { getTypeLabel } from "@/utils/enums/index.ts";
 
-function QuestionDetailedViewBadge({ question }) {
+function QuestionDetailedViewBadge({ question }: { question: Question }) {
   const { t: translations } = useTranslation();
   const label = getTypeLabel(question.type);
 

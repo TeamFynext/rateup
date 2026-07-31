@@ -4,6 +4,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
@@ -23,7 +24,7 @@ import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
 type ContactFormProps = Readonly<{
   form: UseFormReturn<ContactFormValues>;
-  customFields: any[];
+  customFields: CustomFieldData[];
   type: ContactGroupType;
 }>;
 
@@ -38,7 +39,11 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
    * Custom field values live in a positional array, so editing one means finding (or
    * appending) its entry and writing the whole array back.
    */
-  const updateCustomField = (fieldId: string, value: string, customFieldData: any) => {
+  const updateCustomField = (
+    fieldId: string,
+    value: string,
+    customFieldData: CustomFieldData | undefined,
+  ) => {
     const current = form.getValues("customFields") ?? [];
     const existingIndex = current.findIndex((entry) => entry.fieldId === fieldId);
     const next =
@@ -212,7 +217,12 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
                 <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Labels")}</FieldLabel>
                 <MultiSelect
                   id={`${uid}-field-3`}
-                  options={labels?.map((label) => ({ value: label.id, label: label.name })) ?? []}
+                  options={
+                    labels?.map((label: { id: string; name: string }) => ({
+                      value: label.id,
+                      label: label.name,
+                    })) ?? []
+                  }
                   value={field.value ?? []}
                   onValueChange={field.onChange}
                   placeholder="Select labels"

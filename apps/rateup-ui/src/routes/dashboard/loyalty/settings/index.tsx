@@ -14,6 +14,7 @@ import {
   useCreateEventTriggerMutation,
   useEventTriggers,
 } from "@/backend/loyalty/eventTriggers.query";
+import type { LoyaltyProgramUpdateInput } from "@/backend/loyalty/program.api";
 import {
   useCreateLoyaltyProgramMutation,
   useDeleteLoyaltyProgramMutation,
@@ -147,6 +148,10 @@ function LoyaltySettingsPage() {
     },
   });
 
+  // The trigger fields are addressed by a runtime `<eventType>.<field>` path,
+  // which react-hook-form's per-path value type cannot express.
+  const setEventTriggerField = eventTriggersForm.setValue as (path: string, value: unknown) => void;
+
   // Basic Settings Form
   const basicForm = useForm<z.infer<typeof BasicSettingsSchema>>({
     resolver: zodResolver(BasicSettingsSchema),
@@ -231,37 +236,34 @@ function LoyaltySettingsPage() {
         case LoyaltyEventType.REWARD_ISSUED:
         case LoyaltyEventType.REWARD_REDEEMED:
         case LoyaltyEventType.TIER_UPGRADED:
-          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
+          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
+            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
           }
           break;
         case LoyaltyEventType.BIRTHDAY:
-          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
+          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
+            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
           }
           if (trigger.rewardId) {
-            eventTriggersForm.setValue(`${eventType}.rewardId` as any, trigger.rewardId);
+            setEventTriggerField(`${eventType}.rewardId`, trigger.rewardId);
           }
           break;
         case LoyaltyEventType.INACTIVITY_REMINDER:
-          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
+          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
           if (trigger.triggerDays) {
-            eventTriggersForm.setValue(
-              `${eventType}.triggerDays` as any,
-              trigger.triggerDays.toString(),
-            );
+            setEventTriggerField(`${eventType}.triggerDays`, trigger.triggerDays.toString());
           }
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
+            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
           }
           break;
         case LoyaltyEventType.POINTS_EXPIRY_ALERT:
         case LoyaltyEventType.POINTS_EXPIRED:
-          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
+          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
+            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
           }
           break;
       }
@@ -370,7 +372,7 @@ function LoyaltySettingsPage() {
     }
   };
 
-  const handleSaveNotifications = (updates: any) => {
+  const handleSaveNotifications = (updates: LoyaltyProgramUpdateInput) => {
     if (program?.id) {
       updateProgramMutation.mutate(updates);
     }
@@ -415,13 +417,13 @@ function LoyaltySettingsPage() {
   };
 
   const handleToggleEventTrigger = async (eventType: LoyaltyEventType, enabled: boolean) => {
-    eventTriggersForm.setValue(`${eventType}.enabled` as any, enabled);
+    setEventTriggerField(`${eventType}.enabled`, enabled);
     const success = await handleSaveEventTrigger(eventType);
     if (success) {
       toast.success(enabled ? t("Notification enabled") : t("Notification disabled"));
     } else {
       // Revert if failed
-      eventTriggersForm.setValue(`${eventType}.enabled` as any, !enabled);
+      setEventTriggerField(`${eventType}.enabled`, !enabled);
     }
   };
 
@@ -555,7 +557,7 @@ function LoyaltySettingsPage() {
                 form={basicForm}
                 onSave={onSaveBasicSettings}
                 isPending={updateProgramMutation.isPending}
-                programId={program?.id}
+                programId={program?.id ?? null}
               />
 
               <NotificationSettings

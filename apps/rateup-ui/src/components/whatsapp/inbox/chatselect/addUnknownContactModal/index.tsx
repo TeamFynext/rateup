@@ -141,7 +141,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
       email: values.email || undefined,
       countryCode: values.countryCode,
       lifecycleId: values.lifecycleId || undefined,
-      source: values.source as any,
+      source: values.source,
     };
 
     contactMutation.mutate(payload, {
@@ -218,7 +218,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
               control={control}
               render={({ field }) => (
                 <LifecycleSelector
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={field.onChange}
                   placeholder={"Enter lifecycle"}
                   className="w-full"

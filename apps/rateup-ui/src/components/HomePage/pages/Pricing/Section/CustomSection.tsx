@@ -1,10 +1,22 @@
 import PlanCard from "../Card/PlanCard.tsx";
+import type { Cart } from "../store/RouteAndCartStore.ts";
+import type { PricingPlan } from "../types.ts";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const CustomSection = ({ largeScreen, handlePlanSelection, plans, currencySymbol }) => {
+export const CustomSection = ({
+  largeScreen,
+  handlePlanSelection,
+  plans,
+  currencySymbol,
+}: {
+  largeScreen: boolean;
+  handlePlanSelection: (cart: Cart) => void;
+  plans: PricingPlan[];
+  currencySymbol: string;
+}) => {
   const customPlan = plans
     ?.filter((item) => item?.name?.includes("Custom"))
-    ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
+    ?.sort((a, b) => Number(a?.paymentPlan?.amount) - Number(b?.paymentPlan?.amount));
 
   if (customPlan?.length >= 0) {
     customPlan?.push({

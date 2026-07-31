@@ -138,7 +138,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
           items={data}
           getKey={(item) => item.id}
           renderItem={(item) => (
-            <Link to={`/dashboard/automation/${item.id}`}>
+            <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
               <RuleCard
                 item={item}
                 onToggleActive={() => {

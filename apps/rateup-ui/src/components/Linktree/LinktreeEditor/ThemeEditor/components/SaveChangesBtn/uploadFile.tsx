@@ -1,6 +1,6 @@
 import { uploadFile as uploadFileFuncFromUtils } from "@/utils/file-upload/upload.ts";
 
-const uploadFile = async (prop, file) => {
+const uploadFile = async (prop: string, file: File) => {
   if (file) {
     try {
       const uploadedFileKey = await uploadFileFuncFromUtils(file);

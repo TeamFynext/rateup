@@ -21,13 +21,14 @@ import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
 import ConversationAccountDistribution from "./ConversationAccountDistribution.tsx";
 import ConversationResponseTimePatternGraph from "./ConversationResponseTimePatternGraph.tsx";
 import ConversationTrendsGraph from "./ConversationTrendsGraph.tsx";
 
-const ConversationStatsOverview = ({ dateRange }) => {
+const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data, isLoading, error, refetch, isRefetching } = useGetConversationOverView({
     dateKey: dateRange.key,

@@ -14,6 +14,10 @@ interface ToolbarProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * The toolbar is only ever mounted alongside its `EditorContent`, so callers
+ * assert the editor here rather than every button optional-chaining it.
+ */
 export const ToolbarProvider = ({ editor, children }: ToolbarProviderProps) => {
   return <ToolbarContext.Provider value={{ editor }}>{children}</ToolbarContext.Provider>;
 };

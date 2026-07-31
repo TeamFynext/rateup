@@ -57,7 +57,7 @@ interface CreateTeamValues {
 
 export function useCreateTeamMutation(
   setIsCreateTeamDialogOpen: (arg: boolean) => void,
-  createTeamForm: any,
+  createTeamForm: { reset: () => void },
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   const queryClient = useQueryClient();
@@ -139,9 +139,9 @@ async function handleCreateTeam(values: CreateTeamValues) {
     name: values.name,
     code: values.code,
     color: values.color,
-    orgId,
+    orgId: orgId!,
     userId,
-    whatsappAccessToken: values.whatsappAccessToken,
+    whatsappAccessToken: values.whatsappAccessToken!,
     features: values.features,
   };
   return createTeam(data);
@@ -159,7 +159,7 @@ export function userResendInviteTeamMutation() {
     },
   });
 }
-export function useDeleteInviteMutation(teamId) {
+export function useDeleteInviteMutation(teamId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteInviteById(id),
@@ -204,7 +204,7 @@ export function useAddUsertoTeams() {
   });
 }
 
-export function useRemoveUserFromTeam(teamId) {
+export function useRemoveUserFromTeam(teamId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeUserFromTeam,
@@ -247,7 +247,7 @@ export function useUpdateTeamFeatures(teamId: string) {
       queryClient.invalidateQueries({ queryKey: ["teamFeatures", teamId] });
       toast.success("Feature access updated successfully.");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to update feature access.");
     },
   });
@@ -272,7 +272,7 @@ export function useUpdateTeamChannels(teamId: string) {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Channel access updated successfully.");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to update channel access.");
     },
   });

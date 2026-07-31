@@ -8,7 +8,7 @@ import { getStatusBadgeStyle } from "./utils.ts";
 
 interface StatusBadgeProps {
   status: CampaignParticipantStatus;
-  errorMessage?: string;
+  errorMessage?: string | null;
 }
 
 export function StatusBadge({ status, errorMessage }: Readonly<StatusBadgeProps>) {

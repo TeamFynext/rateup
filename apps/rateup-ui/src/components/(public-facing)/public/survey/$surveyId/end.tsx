@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
+import type { ReviewSuggestion } from "@/types/global";
 
 import BodyComp from "./BodyComp.tsx";
 
@@ -39,19 +41,33 @@ export default function ThankYou({
   subtitleText,
   isSurveyPreview = false,
   reviewPageLinks = null,
+}: {
+  enableGoogleReview?: boolean;
+  googleLink?: string;
+  reviews?: ReviewSuggestion[];
+  kioskMode?: string;
+  surveyIdValue?: string;
+  fromShortUrl?: boolean;
+  redirect?: { enable?: boolean; url?: string; time?: string | number } | null;
+  surveyThemeData?: SurveyTheme | null;
+  pagesThemeData?: SurveyTheme | null;
+  titleText?: string;
+  subtitleText?: string | null;
+  isSurveyPreview?: boolean;
+  reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const isMobile = useMediaQuery("(max-width: 480px)");
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
   const searchParams = useSearch({ strict: false });
   const err = searchParams.err && searchParams.err === "oops";
-  let k,
-    surveyId = "";
+  let k = "";
+  let surveyId = "";
   if (fromShortUrl) {
     k = kioskMode;
   } else {
-    k = searchParams.k;
-    surveyId = searchParams.surveyId as string;
+    k = typeof searchParams.k === "string" ? searchParams.k : "";
+    surveyId = typeof searchParams.surveyId === "string" ? searchParams.surveyId : "";
   }
   const params = useParams({
     strict: false,
@@ -84,7 +100,7 @@ export default function ThankYou({
   }, [k]);
 
   useEffect(() => {
-    let timeout = null;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     if (kioskMode === "n" && redirect && (redirect?.enable ?? false)) {
       timeout = setTimeout(
         () => {
@@ -94,7 +110,7 @@ export default function ThankYou({
             });
           else if (redirect.url?.startsWith("http:") || redirect.url?.startsWith("https:")) {
             navigate({
-              to: redirect.url,
+              to: redirect.url!,
             });
           } else {
             navigate({
@@ -102,23 +118,25 @@ export default function ThankYou({
             });
           }
         },
-        (redirect.time ?? 1) * 1000,
+        Number(redirect.time ?? 1) * 1000,
       );
     }
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
   }, [redirect, kioskMode, navigate]);
 
   const enableBody = k === "cs" || enableGoogleReview;
 
-  const orgLogoSrc = surveyThemeData?.surveyTheme.logo?.logo;
+  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo ?? undefined;
 
-  const shouldUseSurveyTheme = pagesThemeData["thankyouTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = pagesThemeData?.["thankyouTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
-    ? surveyThemeData["surveyTheme"]
-    : pagesThemeData["thankyouTheme"];
+    ? surveyThemeData?.["surveyTheme"]
+    : pagesThemeData?.["thankyouTheme"];
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    shouldUseSurveyTheme ? surveyThemeData : pagesThemeData,
+    shouldUseSurveyTheme ? (surveyThemeData ?? null) : (pagesThemeData ?? null),
     shouldUseSurveyTheme ? "surveyTheme" : "thankyouTheme",
     isMobile,
   );
@@ -144,7 +162,7 @@ export default function ThankYou({
 
   return (
     <CreditsCard
-      enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
+      enableCredits={!!backgroundImageSrc?.startsWith("https://images.unsplash.com")}
       url={backgroundImageSrc}
     >
       <div
@@ -182,7 +200,7 @@ export default function ThankYou({
                 ) : (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: newTitle,
+                      __html: newTitle ?? "",
                     }}
                     style={{ color: titleStyles?.color }}
                   />

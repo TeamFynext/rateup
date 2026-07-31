@@ -81,7 +81,7 @@ export function PointsExpirationSettings({
                 <Select
                   value={field.value.toString()}
                   onValueChange={
-                    disabled ? undefined : (val) => field.onChange(Number.parseInt(val))
+                    disabled ? undefined : (val) => field.onChange(Number.parseInt(val ?? ""))
                   }
                   disabled={disabled}
                   items={[

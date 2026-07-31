@@ -55,7 +55,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   const handleAddNewJump = () => {
     setCurrentLogicJumps((prev) => [
       ...prev,
-      { condition: LogicCondition.Submitted, action: LogicAction.NextQ, response: null },
+      { condition: LogicCondition.Submitted, action: LogicAction.NextQ, response: "" },
     ]);
   };
 
@@ -89,7 +89,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
             <ConditionBlock
               key={index}
               selectedQ={selectedQ}
-              questions={questions}
+              questions={questions ?? []}
               currentLogicJump={currentLogic}
               setCurrentLogicJump={(newLogicJump) =>
                 setCurrentLogicJumps((prev) => prev.map((v, i) => (i === index ? newLogicJump : v)))
@@ -187,9 +187,10 @@ function ConditionBlock({
           <Select
             value={selectedCondition}
             onValueChange={(value) => {
-              setSelectedCondition(value as any);
+              if (!value) return;
+              setSelectedCondition(value);
               setCurrentLogicJump({
-                condition: value as any,
+                condition: value,
                 action: selectedAction,
                 response: matchData,
               });
@@ -218,11 +219,11 @@ function ConditionBlock({
                 options={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
                 value={Array.isArray(matchData) ? matchData : []}
                 onValueChange={(value) => {
-                  setMatchData(value);
+                  setMatchData(value ?? "");
                   setCurrentLogicJump({
                     condition: selectedCondition,
                     action: selectedAction,
-                    response: value,
+                    response: value ?? "",
                   });
                 }}
                 placeholder={translations("Select Responses")}
@@ -235,11 +236,11 @@ function ConditionBlock({
               <Select
                 value={Array.isArray(matchData) ? "" : matchData}
                 onValueChange={(value) => {
-                  setMatchData(value);
+                  setMatchData(value ?? "");
                   setCurrentLogicJump({
                     condition: selectedCondition,
                     action: selectedAction,
-                    response: value,
+                    response: value ?? "",
                   });
                 }}
                 items={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
@@ -265,10 +266,11 @@ function ConditionBlock({
           <Select
             value={selectedAction}
             onValueChange={(value) => {
-              setSelectedAction(value as any);
+              if (!value) return;
+              setSelectedAction(value);
               setCurrentLogicJump({
                 condition: selectedCondition,
-                action: value as any,
+                action: value,
                 response: matchData,
               });
             }}

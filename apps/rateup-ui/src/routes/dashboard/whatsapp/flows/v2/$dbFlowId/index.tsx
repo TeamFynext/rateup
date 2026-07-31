@@ -9,6 +9,9 @@ import ResultComparison from "@/components/Survey/Result/ResultComparison.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow.tsx";
 import { FlowScreenSheet } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
+import { readEditorScreens } from "@/components/whatsapp/flow-v2/utils/flow-json.ts";
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import type { IEditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import FlowPageHeader, {
   FlowTabEnum,
@@ -17,6 +20,7 @@ import FlowSettings from "@/components/whatsapp/flows/FlowSettings/index.tsx";
 import FlowShare from "@/components/whatsapp/flows/FlowShare/index.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { WaQuestions } from "@/types/enums.ts";
 
 import styles from "../../../../../../components/dashboard/whatsapp/flows/v2/FlowPage.module.css";
 
@@ -34,8 +38,8 @@ function Flow() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-  const [teamOptions, setTeamOptions] = useState([]);
-  const [filterTeams, setFilterTeams] = useState([]);
+  const [teamOptions, setTeamOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [filterTeams, setFilterTeams] = useState<string[]>([]);
 
   const params = useParams({
     strict: false,
@@ -45,24 +49,25 @@ function Flow() {
   const tabView = searchParams.tab as string;
 
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
-  const { data: survey, isPending: isSurveyPending } = useSurvey(flow?.surveyId);
+  const { data: survey, isPending: isSurveyPending } = useSurvey(flow?.surveyId ?? "");
 
-  const flowQuestions = useMemo(() => {
-    if (!flow?.json?.screens) return [];
-    return flow.json.screens.flatMap((screen: any) =>
-      screen.layout.children
-        .filter((child: any) => child.type !== "Footer")
-        .map(({ id, label, metaType, name, "data-source": dataSource, header }: any) => ({
-          id,
-          label,
-          metaType,
-          dataSource,
-          name,
-          header,
-        }))
-        .filter(({ name }: any) => name),
-    );
-  }, [flow]);
+  const flowQuestions: FlowQuestionSummary[] = useMemo(
+    () =>
+      readEditorScreens(flow?.json).flatMap((screen) =>
+        screen.layout.children
+          .filter((child) => child.type !== WaQuestions.Footer)
+          .map(({ id, label, metaType, name, "data-source": dataSource, header }) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          }))
+          .filter(({ name }) => name),
+      ),
+    [flow],
+  );
 
   const { update } = useRouteParams();
 
@@ -72,13 +77,13 @@ function Flow() {
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
-      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId ?? "");
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name ?? "");
     }
   }, [selectedTeamId]);
 
   useEffect(() => {
-    if (teamOptions) setSelectedTeamId(teamOptions?.[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions?.[0]?.value ?? "");
   }, [teamOptions]);
 
   useEffect(() => {
@@ -92,32 +97,21 @@ function Flow() {
   }, [survey]);
 
   useEffect(() => {
-    if (tabView && Object.values(FlowTabEnum).includes(tabView as any)) {
-      setTab(tabView as any);
+    const known = Object.values(FlowTabEnum).find((value) => value === tabView);
+    if (known) {
+      setTab(known);
     }
   }, [tabView]);
 
-  if (isPending || isSurveyPending) return <RateupLoader />;
+  if (isPending || isSurveyPending || !flow || !survey) return <RateupLoader />;
 
   return (
     <div className={styles["flow-page-container"]}>
       <div className={styles["flow-page-content"]}>
         <EditFlowContext.Provider
-          value={{
-            flowJson: null,
-            updateFlowJson: null,
-            map: null,
-            updateMap: null,
-            survey,
-            updateSurvey: null,
-            selectedLang: null,
-            selectedScreenId: null,
-            setSelectedScreenId: null,
-            setSelectedFormElementId: null,
-            selectedFormElementId: null,
-            screenNumber: null,
-            setScreenNumber: null,
-          }}
+          // Only the Result and Share tabs render below, so the flow-editor
+          // fields of the context are deliberately left unset.
+          value={{ survey } as IEditFlowContext}
         >
           <SurveyContext.Provider
             value={{
@@ -127,7 +121,7 @@ function Flow() {
               selectedTeamName,
               filterTeams,
               setFilterTeams,
-              filterTags: null,
+              filterTags: [],
               surveyId: survey?.id,
               teams: teamOptions,
             }}
@@ -179,7 +173,7 @@ function Flow() {
                 >
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}
-                    aiResponseSummary={(survey as any)?.aiResponseSummary}
+                    aiResponseSummary={survey?.aiResponseSummary ?? []}
                     flowId={flow?.flowId}
                     version={flow?.version}
                     flowQuestions={flowQuestions}
@@ -195,7 +189,7 @@ function Flow() {
                   surveyId={survey.id}
                   version={flow.version}
                   flowQuestions={flowQuestions}
-                  questions={flowQuestions}
+                  questions={[]}
                 />
               </TabsContent>
             </Tabs>

@@ -27,27 +27,61 @@ const extraProps = [
   { key: "age_group", label: "Age Group" },
 ];
 
-const ProductItems = ({ catalogId }) => {
+/** A catalog product row as the product table renders it. */
+export interface CatalogProductRow {
+  id: string;
+  retailer_id?: string;
+  shopifyVariantId?: string;
+  hotel_id?: string;
+  hotel_room_id?: string;
+  hotel_retailer_id?: string;
+  currency?: string;
+  price?: number;
+  base_price?: number;
+  sale_price?: number;
+  image?: string;
+  image_link?: string;
+  url?: string;
+  productProps?: {
+    title?: string;
+    name?: string;
+    brand?: string;
+    description?: string;
+    condition?: string;
+    availability?: string;
+    currency?: string;
+    price?: string;
+    base_price?: string;
+    sale_price?: string;
+    image?: Array<{ url: string; tag: string[] }>;
+    image_link?: string;
+    url?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+const ProductItems = ({ catalogId }: { catalogId: string }) => {
   const deleteProducts = useDeletCatalogProducts(catalogId);
   const { data: catalog, isPending } = useWaCatalog(catalogId);
   const { data: products, isLoading } = useWaCatalogProducts(catalogId);
   const [opened, setOpened] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Record<string, unknown> | null>(null);
 
   if (isLoading || isPending) return <RateupLoader />;
   if (!products || !products.length) {
     return <NothingFound text="No products found" />;
   }
 
-  function handleOpenEdit(product) {
+  function handleOpenEdit(product: CatalogProductRow) {
     const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
-      product.productProps;
+      product.productProps ?? {};
     const formattedProduct = {
       currencyCode: currency,
       ...(price ? { price: parseFloat(price.replace(/[^0-9.-]+/g, "")) } : {}),
       ...(base_price ? { base_price: parseFloat(base_price.replace(/[^0-9.-]+/g, "")) } : {}),
       ...(sale_price ? { sale_price: parseFloat(sale_price.replace(/[^0-9.-]+/g, "")) } : {}),
-      ...(image?.length || image_link.length
+      ...(image?.length || image_link?.length
         ? { image: image ?? [{ url: image_link, tag: [] }] }
         : {}),
       link: url,
@@ -59,18 +93,18 @@ const ProductItems = ({ catalogId }) => {
 
   const { vertical } = catalog;
 
-  function handleDelete(product) {
+  function handleDelete(product: CatalogProductRow) {
     toast.loading("Deleting product…", { id: "delete-catalog-product" });
-    let productIds = [];
+    let productIds: Array<{ id: string; hotel_reatiler_id?: string }> = [];
     if (vertical === "commerce") {
-      productIds = [{ id: product.retailer_id }];
+      productIds = [{ id: String(product.retailer_id) }];
     } else if (vertical === "hotels") {
-      productIds = [{ id: product.hotel_id }];
+      productIds = [{ id: String(product.hotel_id) }];
     } else if (vertical === "hotel_room") {
       productIds = [
         {
-          id: product.hotel_room_id,
-          hotel_retailer_id: product.hotel_retailer_id,
+          id: String(product.hotel_room_id),
+          hotel_reatiler_id: product.hotel_retailer_id,
         },
       ];
     }
@@ -89,8 +123,8 @@ const ProductItems = ({ catalogId }) => {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {products.map((product: any) => {
-          const { productProps } = product;
+        {products.map((product) => {
+          const productProps = product.productProps ?? {};
           const itemId = product.id ?? product.retailer_id;
           const hasSalePrice =
             productProps.sale_price && productProps.sale_price !== productProps.price;
@@ -185,7 +219,7 @@ const ProductItems = ({ catalogId }) => {
                         <div className="flex flex-wrap gap-1">
                           {filledAttrs.map((pp) => (
                             <Badge key={pp.key} variant="secondary" className="text-xs font-normal">
-                              {pp.label}: {productProps[pp.key]}
+                              {pp.label}: {String(productProps[pp.key] ?? "")}
                             </Badge>
                           ))}
                         </div>

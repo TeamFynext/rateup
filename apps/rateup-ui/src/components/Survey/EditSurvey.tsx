@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 import { useQuestionCreateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
+import type { ElementType } from "@/components/Survey/Question/QuestionTypeSelection.tsx";
+import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -42,6 +44,7 @@ import {
 } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
+import type { UnsavedChangesCheck } from "./Tabs/TabPanels.tsx";
 
 const isQuestionType = (type: QuestionType | PageType | undefined): type is QuestionType =>
   Object.values(QuestionType).includes(type as QuestionType);
@@ -61,9 +64,11 @@ interface EditSurveyProps {
   questions: Array<Question>;
   addQnTrigger?: number;
   surveyLanguages: string[];
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
-  subscription: Subscription;
-  setFunToRunBeforeSurveyIdPageHeaderTabsChange: any;
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
+  subscription?: Subscription;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: React.Dispatch<
+    React.SetStateAction<UnsavedChangesCheck | null>
+  >;
 }
 
 export function EditSurvey({
@@ -76,18 +81,18 @@ export function EditSurvey({
 }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(QuestionTabsEnum.None);
   const { surveyId } = useContext(SurveyContext);
-  const { data: survey } = useSurvey(surveyId);
-  const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const { data: survey } = useSurvey(surveyId ?? "");
+  const [selectedQ, setSelectedQ] = useState<Question | null>(null);
   const [selectedSurveyThemeTab, setSelectedSurveyThemeTab] = useState(ThemeTabEnum.SURVEY);
   const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
     survey?.webSurveyTheme?.theme,
   );
 
   // To store questionDetailedViewForm State.
-  const questionDetailedViewFormRef = useRef(null);
+  const questionDetailedViewFormRef = useRef<Question | null>(null);
 
   // To store state of surveyThemeContextProvider.
-  const surveyThemeContextProviderValueRef = useRef(null);
+  const surveyThemeContextProviderValueRef = useRef<Record<string, SurveyThemePage> | null>(null);
 
   // Search text for the "Add Element" catalogue.
   const [elementQuery, setElementQuery] = useState("");
@@ -104,7 +109,9 @@ export function EditSurvey({
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
 
-  const themeObjBeingEdited = allThemesArr?.find((obj) => obj.id === themeSelectorState);
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj: { id: string }) => obj.id === themeSelectorState,
+  );
   const isThemeObjBeingEditedDefaultTheme = themeObjBeingEdited?.name === "Default Theme";
 
   const [isStylesEditorDrawerOpen, setIsStylesEditorDrawerOpen] = useState(false);
@@ -113,11 +120,11 @@ export function EditSurvey({
 
   const checkForUnsavedChanges = useCallback(() => {
     if (uniquePages.includes(selectedQ?.type as PageType)) {
-      const themeObjKey = getSurveyThemeKeyFromPageType(selectedQ?.type);
+      const themeObjKey = getSurveyThemeKeyFromPageType(selectedQ!.type)!;
       if (
         !isEqual(
           survey?.webSurveyPagesTheme[themeObjKey],
-          surveyThemeContextProviderValueRef.current[themeObjKey],
+          surveyThemeContextProviderValueRef.current?.[themeObjKey],
         )
       ) {
         return true;
@@ -127,12 +134,12 @@ export function EditSurvey({
     } else if (isQuestionType(selectedQ?.type)) {
       if (questionDetailedViewFormRef.current) {
         const missingLanguages = validateAllLanguagesArePopulated(
-          questionDetailedViewFormRef.current as Question,
+          questionDetailedViewFormRef.current,
           surveyLanguages,
           ["title", "choices"],
         );
         const missingContactFeatures = validateContactFeaturesPopulated(
-          questionDetailedViewFormRef.current as Question,
+          questionDetailedViewFormRef.current,
           surveyLanguages,
         );
         return missingLanguages?.length > 0 || missingContactFeatures?.length > 0;
@@ -190,10 +197,10 @@ export function EditSurvey({
   }, [questions]);
 
   const questionCreateMutation = useQuestionCreateMutation({
-    surveyId,
+    surveyId: surveyId ?? "",
   });
 
-  const handleTypeSelection = (type: QuestionType | PageType) => {
+  const handleTypeSelection = (type: ElementType) => {
     if (type in PageType) {
       // Page types (Welcome/ThankYou/etc.) get valid default titles, so it's
       // safe to persist them immediately.
@@ -201,9 +208,9 @@ export function EditSurvey({
       questionCreateMutation.mutateAsync(newQ).then((r) => {
         const question = r.data;
         if (uniquePages.includes(question.type)) {
-          setSelectedSurveyThemeTab(getSurveyThemeTabValueFromPageType(question.type));
+          setSelectedSurveyThemeTab(getSurveyThemeTabValueFromPageType(question.type)!);
           setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
-          surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme;
+          surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme ?? null;
         }
         setSelectedQ(question);
         setActiveTab(QuestionTabsEnum.Edit);
@@ -254,7 +261,7 @@ export function EditSurvey({
 
   return (
     <SurveyThemeContextProvider
-      surveyTheme={surveyThemeContextValue}
+      surveyTheme={surveyThemeContextValue ?? {}}
       selectedPageTab={selectedSurveyThemeTab}
       editSurveySelectedQuestion={selectedQ}
       surveyThemeContextProviderValueRef={surveyThemeContextProviderValueRef}
@@ -282,7 +289,7 @@ export function EditSurvey({
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
                 addQnTrigger={addQnTrigger}
-                survey={survey}
+                survey={survey!}
                 setSurveyThemeContextValue={setSurveyThemeContextValue}
                 setSelectedSurveyThemeTab={setSelectedSurveyThemeTab}
                 checkForUnsavedChanges={checkForUnsavedChanges}
@@ -308,8 +315,8 @@ export function EditSurvey({
                           <div className="flex flex-col h-full">
                             <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
                               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rateup-blue-4 font-nunito text-sm font-black text-white">
-                                {(survey?.questions?.findIndex((q: any) => q.id === selectedQ.id) ??
-                                  0) + 1}
+                                {(survey?.questions?.findIndex((q) => q.id === selectedQ.id) ?? 0) +
+                                  1}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">
@@ -329,7 +336,7 @@ export function EditSurvey({
                             </div>
                             {survey && (
                               <SurveyTheme
-                                survey={survey}
+                                survey={survey!}
                                 previewId={`${selectedQ.type}-preview`}
                                 onEditPageBtnClick={openStylesEditorDrawer}
                               />
@@ -337,13 +344,13 @@ export function EditSurvey({
                           </div>
                         ) : (
                           <QuestionDetailedView
-                            survey={survey}
-                            question={selectedQ}
+                            survey={survey!}
+                            question={selectedQ!}
                             setSelectedQ={setSelectedQ}
                             setActiveTab={setActiveTab}
                             surveyLanguages={surveyLanguages}
                             setSelectedLanguage={setSelectedLanguage}
-                            key={selectedQ.id}
+                            key={selectedQ!.id}
                             questionDetailedViewFormRef={questionDetailedViewFormRef}
                             openSurveyPreviewModal={openSurveyPreviewModal}
                           />
@@ -373,7 +380,7 @@ export function EditSurvey({
                         <PageTypeSelection
                           questions={questions}
                           handleTypeSelection={handleTypeSelection}
-                          subscription={subscription}
+                          subscription={subscription!}
                           query={elementQuery}
                         />
                       )}
@@ -391,35 +398,35 @@ export function EditSurvey({
                 )}
                 {activeTab === QuestionTabsEnum.LogicEditor && selectedQ && (
                   <LogicEditor
-                    selectedQ={selectedQ}
+                    selectedQ={selectedQ!}
                     setActiveTab={setActiveTab}
-                    key={selectedQ.id}
+                    key={selectedQ!.id}
                   />
                 )}
                 {activeTab === QuestionTabsEnum.GoogleReviewEditor && (
                   <GoogleReviewEditor
-                    selectedQ={selectedQ}
+                    selectedQ={selectedQ!}
                     setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                   />
                 )}
                 {activeTab === QuestionTabsEnum.QuestionReviewPageEditor && (
                   <QuestionReviewPageEditor
-                    selectedQ={selectedQ}
-                    survey={survey}
+                    selectedQ={selectedQ!}
+                    survey={survey!}
                     setActiveTab={setActiveTab}
                   />
                 )}
                 {activeTab === QuestionTabsEnum.TicketIssueEditor && (
                   <TicketIssueEditor
-                    selectedQ={selectedQ}
+                    selectedQ={selectedQ!}
                     setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                   />
                 )}
                 {activeTab === QuestionTabsEnum.ValidationRulesEditor && (
                   <ValidationRulesEditor
-                    selectedQ={selectedQ}
+                    selectedQ={selectedQ!}
                     setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                     activeTab={activeTab}
@@ -467,7 +474,7 @@ export function EditSurvey({
               >
                 <Card className="h-full rounded-none border-0 p-0">
                   <StylesComponent
-                    survey={survey}
+                    survey={survey!}
                     isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
                     themeObjBeingEdited={themeObjBeingEdited}
                     onClose={() => {
@@ -495,7 +502,7 @@ export function EditSurvey({
             <SurveyTheme
               key={"preview" + surveyPreviewCompKey}
               previewId={"survey-theme-prod-preview"}
-              survey={survey}
+              survey={survey!}
               isSurveyThemePreview
             />
           </SurveyPreviewModal>

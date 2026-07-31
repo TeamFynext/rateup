@@ -1,5 +1,6 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import React, { useMemo } from "react";
+import type { ControllerRenderProps } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
@@ -23,13 +24,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { ActionType, CreateRuleInput, Platform } from "./schema.ts";
 import { getActionTypesForPlatform } from "./schema.ts";
 
 // ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
-const ActionValueInput = ({ index, valueField }: { index: number; valueField: any }) => {
+const ActionValueInput = ({
+  index,
+  valueField,
+}: {
+  index: number;
+  valueField: ControllerRenderProps<CreateRuleInput, `actions.${number}.value`>;
+}) => {
   const { control } = useFormContext<CreateRuleInput>();
   const { data: waData } = useAllWaAutomatedReplies();
   const { data: igData } = useAllInstagramAutomations();
@@ -92,13 +100,16 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     };
   };
 
+  /** Every action but SEND_TEMPLATE stores a plain string; that one stores a config object. */
+  const textValue = typeof valueField.value === "string" ? valueField.value : "";
+
   // All fields are wrapped in Field for shadcn consistency
   if (actionType === "SEND_MESSAGE") {
     return (
       <Input
         placeholder="Message text"
         {...valueField}
-        value={valueField.value || ""}
+        value={textValue}
         className="w-full bg-background"
       />
     );
@@ -107,14 +118,19 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-        items={labelsData?.map((l) => ({ value: l?.id, label: l?.name })) ?? []}
+        value={textValue}
+        items={
+          labelsData?.map((l: { id: string; name: string }) => ({
+            value: l?.id,
+            label: l?.name,
+          })) ?? []
+        }
       >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
         <SelectContent>
-          {labelsData?.map((l) => (
+          {labelsData?.map((l: { id: string; name: string }) => (
             <SelectItem key={l?.id} value={l?.id}>
               {l?.name}
             </SelectItem>
@@ -127,7 +143,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value || ""}
+        value={textValue}
         items={teamMembers?.data?.map((u) => ({ value: u.id, label: u.name })) ?? []}
       >
         <SelectTrigger className="w-full bg-background">
@@ -147,7 +163,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value || ""}
+        value={textValue}
         items={teamsData?.data?.map((t) => ({ value: t.id, label: t.name })) ?? []}
       >
         <SelectTrigger className="w-full bg-background">
@@ -167,7 +183,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value || ""}
+        value={textValue}
         items={flowsData?.map((t) => ({ value: t.dbFlowId, label: t.name })) ?? []}
       >
         <SelectTrigger className="w-full bg-background">
@@ -187,7 +203,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value || ""}
+        value={textValue}
         items={filteredAutomations?.map((t) => ({ value: t.id, label: t.name })) ?? []}
       >
         <SelectTrigger className="w-full bg-background">
@@ -205,11 +221,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "SEND_WEB_SURVEY") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-        items={webSurveyOptions}
-      >
+      <Select onValueChange={valueField.onChange} value={textValue} items={webSurveyOptions}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select web survey" />
         </SelectTrigger>
@@ -230,7 +242,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
       (template) => String(template.id) === templateValue.templateId,
     );
     const headerFormat = selectedTemplate?.data?.components?.find(
-      (c: any) => c.type === "HEADER" || c.type === "header",
+      (c) => c.type === WaTemplateComponentTypeUpperCase.HEADER,
     )?.format;
     const canUseProductImage = triggerEvent === "SHOPIFY_EVENT" && headerFormat === "IMAGE";
 
@@ -322,7 +334,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
         type="url"
         placeholder="https://example.com/test"
         {...valueField}
-        value={valueField.value || ""}
+        value={textValue}
         className="w-full bg-background"
       />
     );
@@ -331,7 +343,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value || ""}
+        value={textValue}
         items={lifecyclesData?.map((t) => ({ value: t.id, label: t.name })) ?? []}
       >
         <SelectTrigger className="w-full bg-background">
@@ -355,11 +367,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
       { value: WaMessageAssignStatus.UNRESOLVED, label: "Unresolved" },
     ];
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-        items={statusOptions}
-      >
+      <Select onValueChange={valueField.onChange} value={textValue} items={statusOptions}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select close status" />
         </SelectTrigger>
@@ -374,7 +382,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
     );
   }
   // Default fallback
-  return <Input placeholder="Value" {...valueField} value={valueField.value || ""} />;
+  return <Input placeholder="Value" {...valueField} value={textValue} />;
 };
 const ExternalApiExample = () => {
   const { control } = useFormContext<CreateRuleInput>();

@@ -27,7 +27,7 @@ function QrWhyIsStillStuck() {
     },
   ];
 
-  const sectionRef = useRef(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
   const isInView = useInView(sectionRef, { once: true });
   const [hasAnimated, setHasAnimated] = useState(false);
 

@@ -5,7 +5,7 @@ export interface ChatFilter {
   messageType: "all" | "replied" | "unread" | "usermessages";
   strictFilter: boolean;
   searchTerm?: string;
-  waMessageAssignStatus?: string;
+  waMessageAssignStatus?: string | null;
   blockedUsers: boolean;
   status: string[];
   assignedTeams: string[];
@@ -29,7 +29,7 @@ export interface ChatFilter {
   spam?: boolean;
 }
 
-interface ChatFilterStore {
+export interface ChatFilterStore {
   filter: ChatFilter;
   setFilter: (value: ChatFilter) => void;
   clearFilter: () => void;
@@ -68,17 +68,21 @@ export const useChatFilterStore = create<ChatFilterStore>()(
       // clear `status`. A selection persisted from v0 would keep narrowing the
       // Open/All lists with nothing on screen to undo it, so drop it once. The
       // popover's write-only `previousFilterForTab` bucket goes with it.
-      migrate: (persisted: any, version) => {
-        if (version >= 1 || !persisted) return persisted;
-        const { previousFilterForTab: _dropped, ...rest } = persisted;
+      migrate: (persisted: unknown, version) => {
+        if (version >= 1 || typeof persisted !== "object" || persisted === null) return persisted;
+        const stored = persisted as {
+          previousFilterForTab?: unknown;
+          filter?: ChatFilterStore["filter"];
+        };
+        const { previousFilterForTab: _dropped, ...rest } = stored;
         return {
           ...rest,
           filter: {
-            ...persisted.filter,
+            ...stored.filter,
             status: [],
             // The popover's "All" wrote the sentinel "all"; the sidebar's list has
             // no such row and reads an empty string as every channel.
-            phone: persisted.filter?.phone === "all" ? "" : persisted.filter?.phone,
+            phone: stored.filter?.phone === "all" ? "" : stored.filter?.phone,
           },
         };
       },

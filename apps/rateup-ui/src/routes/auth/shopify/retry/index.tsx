@@ -21,8 +21,12 @@ function Page() {
 }
 
 function ShopifyCallbackRetryWithParams() {
+  // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
-  return <ShopifyCallbackRetry searchParams={searchParams} />;
+  const stringParams = Object.fromEntries(
+    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+  );
+  return <ShopifyCallbackRetry searchParams={stringParams} />;
 }
 
 function ShopifyCallbackRetry({

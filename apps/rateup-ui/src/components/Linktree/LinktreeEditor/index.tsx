@@ -18,7 +18,7 @@ function LinktreeEdtior() {
     strict: false,
   });
   const shortUrlId = params?.shortUrlId as string;
-  const tab = searchParams.tab;
+  const tab = typeof searchParams.tab === "string" ? searchParams.tab : undefined;
 
   const defaultActiveTab = tab ? tab : "links";
   const { isPending, isError, data } = useGetLinktreeWithShortId(shortUrlId);
@@ -64,7 +64,7 @@ function LinktreeEdtior() {
   }
 
   return (
-    <LinktreeContextProvider linktreeData={data} activeTab={activeTab} setActiveTab={setActiveTab}>
+    <LinktreeContextProvider linktreeData={data!} activeTab={activeTab} setActiveTab={setActiveTab}>
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}

@@ -33,6 +33,7 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { cn } from "@/lib/utils";
+import type { PageType } from "@/types/enums.ts";
 import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums.ts";
 import {
   DEFAULT_IMAGE_BASE64_START,
@@ -44,6 +45,7 @@ import {
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { getNpsColor } from "../QuestionDetailedView.tsx";
+import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
 
 type ChoiceFormValues = {
   title: string;
@@ -53,7 +55,7 @@ type ChoiceFormValues = {
 };
 
 interface ChoicesCreatorProps {
-  form: any;
+  form: QuestionExtraPropsForm;
   qId: string;
   maxChoiceCount?: number;
   maxCharCount?: number;
@@ -82,8 +84,8 @@ export function ChoicesCreator({
   const metaFileInputRef = useRef<HTMLInputElement>(null);
 
   const { t: translations } = useTranslation();
-  const choices = form.values.choices?.[selectedLanguage] || [];
-  const features = form.values.features?.[selectedLanguage] || {
+  const choices = form.values?.choices?.[selectedLanguage] || [];
+  const features: QuestionFormFeatures = form.values?.features?.[selectedLanguage] || {
     other: {
       isEnabled: false,
       title: translations("Other"),
@@ -100,12 +102,14 @@ export function ChoicesCreator({
       .min(1)
       .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
-        const isDuplicate = choices.some((c) => {
+        const isDuplicate = choices.some((c: Choice) => {
+          // Picture choices nest the text under `value.value`, WhatsApp choices
+          // under `value.title`, and web choices store a plain string.
           const choiceValue = image
-            ? c?.value?.value.replace(/\s+/g, "")
+            ? (c?.value as { value?: string })?.value?.replace(/\s+/g, "")
             : surveyType !== SurveyType.Web
-              ? c?.value?.title?.replace(/\s+/g, "")
-              : c?.value?.replace(/\s+/g, "");
+              ? (c?.value as { title?: string })?.title?.replace(/\s+/g, "")
+              : (c?.value as string)?.replace(/\s+/g, "");
           return choiceValue === title.replace(/\s+/g, "");
         });
         return !isDuplicate;
@@ -164,7 +168,7 @@ export function ChoicesCreator({
                 Object.entries(values).filter(([_key, val]) => (val as string)?.trim() !== ""),
               )
             : values.title,
-        weightage: form.values.type === QuestionType.CustomNPS ? choiceWeightage : undefined,
+        weightage: form.values?.type === QuestionType.CustomNPS ? choiceWeightage : undefined,
       };
       if (image) {
         if (!selectedImageFile) {
@@ -174,15 +178,15 @@ export function ChoicesCreator({
         setFileUploadLoading(true);
         const fileKey = await uploadFile(selectedImageFile);
         setFileUploadLoading(false);
-        form.setFieldValue("choices", {
-          ...form.values.choices,
+        form.setFieldValue?.("choices", {
+          ...form.values?.choices,
           [selectedLanguage]: [...choices, { value: { value: values.title, image: fileKey } }],
         });
         setSelectedImageFile(null);
         setIsSubmited(true);
       } else {
-        form.setFieldValue("choices", {
-          ...form.values.choices,
+        form.setFieldValue?.("choices", {
+          ...form.values?.choices,
           [selectedLanguage]: [...choices, choiceObj],
         });
       }
@@ -194,11 +198,14 @@ export function ChoicesCreator({
     }
   };
 
-  const handleRemoveChoice = (choice) => {
-    if (image) updateImageArray({ Key: choice?.value?.image });
-    form.setFieldValue("choices", {
-      ...form.values.choices,
-      [selectedLanguage]: choices.filter((c) => c !== choice),
+  const handleRemoveChoice = (choice: Choice) => {
+    if (image)
+      updateImageArray({
+        Key: typeof choice?.value === "object" ? choice.value.image : undefined,
+      });
+    form.setFieldValue?.("choices", {
+      ...form.values?.choices,
+      [selectedLanguage]: choices.filter((c: Choice) => c !== choice),
     });
   };
 
@@ -213,8 +220,10 @@ export function ChoicesCreator({
     if (imagePickerRef.current) imagePickerRef.current.value = "";
   };
 
-  const handleCropImageSave = (cropedImage: File) => {
-    setSelectedImageFile(cropedImage);
+  const handleCropImageSave = (cropedImage: File | string) => {
+    // Choice images are always cropped from a local blob, so the modal hands
+    // back a File here; it only returns a string for Unsplash-sourced images.
+    setSelectedImageFile(cropedImage as File);
     setFileError("");
   };
 
@@ -254,13 +263,13 @@ export function ChoicesCreator({
       <div
         className={cn(
           "flex flex-col py-2",
-          form.values.type === QuestionType.CustomNPS ? "gap-4" : "gap-2",
+          form.values?.type === QuestionType.CustomNPS ? "gap-4" : "gap-2",
         )}
       >
-        {choices.map((choice, i) => (
+        {choices.map((choice: Choice, i: number) => (
           <Choice
             key={i}
-            choice={image ? choice?.value : choice}
+            choice={image && typeof choice?.value === "object" ? choice.value : choice}
             onDelete={() => handleRemoveChoice(choice)}
             form={form}
             index={i}
@@ -454,7 +463,10 @@ export function ChoicesCreator({
         </div>
       )}
 
-      {[QuestionType.MCQ, QuestionType.MSQ].includes(form.values.type) &&
+      {!!form.values?.type &&
+        ([QuestionType.MCQ, QuestionType.MSQ] as Array<QuestionType | PageType>).includes(
+          form.values.type,
+        ) &&
         surveyType === SurveyType.Web && (
           <div className="mt-2 rounded-lg border bg-background">
             <Field orientation="horizontal" className="p-3">
@@ -463,8 +475,8 @@ export function ChoicesCreator({
                 id={`${uid}-field`}
                 checked={features?.other?.isEnabled}
                 onCheckedChange={(checked) => {
-                  form.setFieldValue("features", {
-                    ...form.values.features,
+                  form.setFieldValue?.("features", {
+                    ...form.values?.features,
                     [selectedLanguage]: {
                       ...features,
                       other: { ...features.other, isEnabled: checked },
@@ -485,8 +497,8 @@ export function ChoicesCreator({
                     className="bg-background"
                     value={features?.other?.title}
                     onChange={(e) => {
-                      form.setFieldValue("features", {
-                        ...form.values.features,
+                      form.setFieldValue?.("features", {
+                        ...form.values?.features,
                         [selectedLanguage]: {
                           ...features,
                           other: { ...features.other, title: e.currentTarget.value },
@@ -504,8 +516,8 @@ export function ChoicesCreator({
                     className="bg-background"
                     value={features?.other?.placeholder}
                     onChange={(e) => {
-                      form.setFieldValue("features", {
-                        ...form.values.features,
+                      form.setFieldValue?.("features", {
+                        ...form.values?.features,
                         [selectedLanguage]: {
                           ...features,
                           other: { ...features.other, placeholder: e.currentTarget.value },
@@ -538,15 +550,21 @@ class FileConverter {
   }
 }
 
+/**
+ * Either a stored choice or, for image choices, its inner `{ value, image }` payload — the list
+ * hands the row itself for text choices and the payload for image ones.
+ */
+type ChoiceLike = { value?: Choice["value"]; weightage?: NPSWeightage; image?: string };
+
 interface ChoiceProps {
-  choice: any;
+  choice: ChoiceLike;
   onDelete: () => void;
-  form: any;
+  form: QuestionExtraPropsForm;
   index: number;
-  image?: any;
-  buttonRef?: React.RefObject<HTMLButtonElement>;
+  image?: boolean;
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
   maxCharCount?: number;
-  surveyType: SurveyType;
+  surveyType?: SurveyType;
 }
 
 function Choice({
@@ -575,7 +593,7 @@ function Choice({
   const newWeightage = choice?.weightage;
   const { t: translations } = useTranslation();
 
-  const choices = form.values.choices?.[selectedLanguage];
+  const choices = form.values?.choices?.[selectedLanguage];
 
   const choiceSchema = z.object({
     title: z
@@ -584,12 +602,14 @@ function Choice({
       .min(1)
       .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
-        const isDuplicate = choices?.some((c, i) => {
+        const isDuplicate = choices?.some((c: Choice, i: number) => {
+          // Picture choices nest the text under `value.value`, WhatsApp choices
+          // under `value.title`, and web choices store a plain string.
           const choiceValue = image
-            ? c?.value?.value.replace(/\s+/g, "")
+            ? (c?.value as { value?: string })?.value?.replace(/\s+/g, "")
             : surveyType !== SurveyType.Web
-              ? c?.value?.title?.replace(/\s+/g, "")
-              : c?.value?.replace(/\s+/g, "");
+              ? (c?.value as { title?: string })?.title?.replace(/\s+/g, "")
+              : (c?.value as string)?.replace(/\s+/g, "");
           return i !== index && choiceValue === title.replace(/\s+/g, "");
         });
         return !isDuplicate;
@@ -657,19 +677,21 @@ function Choice({
     if (imagePickerRef.current) imagePickerRef.current.value = "";
   };
 
-  const handleCropImageSave = (cropedImage: File) => {
-    setSelectedImageFile(cropedImage);
+  const handleCropImageSave = (cropedImage: File | string) => {
+    // Choice images are always cropped from a local blob, so the modal hands
+    // back a File here; it only returns a string for Unsplash-sourced images.
+    setSelectedImageFile(cropedImage as File);
     setFileError("");
     setOpenedEditModal(true);
   };
 
-  const handleChangeWeightage = (value: string) => {
-    const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c) => {
+  const handleChangeWeightage = (value: NPSWeightage | null) => {
+    const updatedChoices = form.values?.choices?.[selectedLanguage]?.map((c: Choice) => {
       if (c.value === choice?.value) return { ...c, weightage: value };
       return c;
     });
-    form.setFieldValue("choices", {
-      ...form.values.choices,
+    form.setFieldValue?.("choices", {
+      ...form.values?.choices,
       [selectedLanguage]: updatedChoices,
     });
   };
@@ -694,16 +716,19 @@ function Choice({
         fileKey = await uploadFile(selectedImageFile);
         setFileUploadLoading(false);
       }
-      const updatedChoices = choices?.map((c, i) => {
+      const updatedChoices = choices?.map((c: Choice, i: number) => {
         if (i === index)
           return {
             ...c,
-            value: { value: values.title, image: fileKey ? fileKey : c?.value?.image },
+            value: {
+              value: values.title,
+              image: fileKey ? fileKey : (c?.value as { image?: string })?.image,
+            },
           };
         return c;
       });
-      form.setFieldValue("choices", {
-        ...form.values.choices,
+      form.setFieldValue?.("choices", {
+        ...form.values?.choices,
         [selectedLanguage]: updatedChoices,
       });
       setSelectedImageFile(null);
@@ -716,12 +741,14 @@ function Choice({
               )
             : values.title,
       };
-      const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c, i) => {
-        if (i === index) return { ...c, ...choiceObj };
-        return c;
-      });
-      form.setFieldValue("choices", {
-        ...form.values.choices,
+      const updatedChoices = form.values?.choices?.[selectedLanguage]?.map(
+        (c: Choice, i: number) => {
+          if (i === index) return { ...c, ...choiceObj };
+          return c;
+        },
+      );
+      form.setFieldValue?.("choices", {
+        ...form.values?.choices,
         [selectedLanguage]: updatedChoices,
       });
     }
@@ -762,7 +789,7 @@ function Choice({
         aspect={4 / 3}
       />
 
-      {form.values.type === QuestionType.CustomNPS ? (
+      {form.values?.type === QuestionType.CustomNPS ? (
         <div className="flex w-[85%] items-center gap-2">
           <span
             className="mt-[5px] size-2 shrink-0 rounded-full"

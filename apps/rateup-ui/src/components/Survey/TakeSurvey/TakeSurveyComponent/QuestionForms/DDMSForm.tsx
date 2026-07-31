@@ -6,6 +6,7 @@ import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswerList } from "@/utils/response.ts";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -25,21 +26,21 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
 
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
   const comboboxOptions = useMemo(
-    () => data?.map((value) => ({ label: value, value })) ?? [],
+    () => data?.map((value: string) => ({ label: value, value })) ?? [],
     [data],
   );
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (response) {
-      setSelectedOp(response?.map((r) => r?.value));
+      setSelectedOp(asAnswerList(response).map((r) => r?.value ?? ""));
     }
   }, [response]);
 
   const handleSelectedOp = (values: string[]) => {
     setSelectedOp(values);
-    const res = values?.map((val) => options?.find((op) => op?.value === val));
+    const res = values?.map((val: string) => options?.find((op: Choice) => op?.value === val));
     updateResponse(res);
   };
 

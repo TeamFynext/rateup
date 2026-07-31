@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
+import type { FlowLogicJumpComponentLevel } from "@/types/global";
+import { toSelectOptions } from "@/utils/select-options.ts";
 import { getResponses2 } from "@/utils/survey/logic/logic.utils";
 
 import useFlowStoreV3 from "../utils/store.ts";
@@ -45,8 +47,8 @@ const logicalOperators = [
 ];
 
 interface ComponentLogicEditorProps {
-  blocks: any[];
-  setBlocks: (updater: any) => void;
+  blocks: FlowLogicJumpComponentLevel[];
+  setBlocks: (blocks: FlowLogicJumpComponentLevel[]) => void;
 }
 
 const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) => {
@@ -90,7 +92,9 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
   }, [blocks]);
 
   const addBlock = (type: "If" | "Switch") => {
-    const newBlock = {
+    // Only the fields for the chosen block type are populated; the rest stay
+    // `undefined` so the saved JSON keeps the shape the flow builder expects.
+    const newBlock: FlowLogicJumpComponentLevel = {
       type,
       conditions:
         type === "If" ? [{ field: "", operator: "", value: "", logic: "", isNumber: false }] : [],
@@ -99,7 +103,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
       else: type === "If" ? [] : undefined,
       value: type === "Switch" ? "" : undefined,
       cases: type === "Switch" ? {} : undefined,
-      screenId: currentScreenId,
+      screenId: currentScreenId ?? "",
     };
     setBlocks([...blocks, newBlock]);
   };
@@ -108,7 +112,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
     blockIndex: number,
     conditionIndex: number,
     field: string,
-    value: any,
+    value: string | number | boolean | null,
   ) => {
     const updatedBlocks = [...blocks];
     if (field === "field") {
@@ -116,11 +120,17 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
       updatedBlocks[blockIndex].conditions[conditionIndex].value = null;
     }
 
-    if (!isNaN(value)) {
-      updatedBlocks[blockIndex].conditions[conditionIndex].isNumber = true;
+    if (typeof value === "string" && value !== "" && !isNaN(Number(value))) {
+      const numeric = updatedBlocks[blockIndex]?.conditions[conditionIndex];
+      if (numeric) numeric.isNumber = true;
     }
 
-    updatedBlocks[blockIndex].conditions[conditionIndex][field] = value;
+    const condition = updatedBlocks[blockIndex]?.conditions[conditionIndex];
+    if (condition && (field === "operator" || field === "value" || field === "logic")) {
+      condition[field] = value === null ? null : String(value);
+    } else if (condition && field === "field") {
+      condition.field = value === null ? "" : String(value);
+    }
     setBlocks(updatedBlocks);
   };
 
@@ -136,69 +146,73 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
     components: string[],
   ) => {
     const updatedBlocks = [...blocks];
-    updatedBlocks[blockIndex].cases[caseKey] = components.map((type) => ({
-      type,
-      content: "",
-    }));
+    const block = updatedBlocks[blockIndex];
+    if (!block) return;
+    block.cases = { ...block.cases, [caseKey]: components.map((type) => ({ type, content: "" })) };
     setBlocks(updatedBlocks);
   };
 
   const updateSwitchCaseKey = (blockIndex: number, oldKey: string, newKey: string) => {
     const updatedBlocks = [...blocks];
-    const components = updatedBlocks[blockIndex].cases[oldKey];
-    delete updatedBlocks[blockIndex].cases[oldKey];
-    updatedBlocks[blockIndex].cases[newKey] = components;
+    const block = updatedBlocks[blockIndex];
+    if (!block?.cases) return;
+    const components = block.cases[oldKey] ?? [];
+    delete block.cases[oldKey];
+    block.cases[newKey] = components;
     setBlocks(updatedBlocks);
   };
 
   const removeSwitchCase = (blockIndex: number, caseKey: string) => {
     const updatedBlocks = [...blocks];
-    delete updatedBlocks[blockIndex].cases[caseKey];
+    delete updatedBlocks[blockIndex]?.cases?.[caseKey];
     setBlocks(updatedBlocks);
   };
 
   const addCondition = (blockIndex: number) => {
     const updatedBlocks = [...blocks];
-    updatedBlocks[blockIndex].conditions.push({
+    updatedBlocks[blockIndex]?.conditions.push({
       field: "",
       operator: "",
       value: "",
       logic: "&&",
+      isNumber: false,
     });
     setBlocks(updatedBlocks);
   };
 
   const removeCondition = (blockIndex: number, conditionIndex: number) => {
     const updatedBlocks = [...blocks];
-    updatedBlocks[blockIndex].conditions = updatedBlocks[blockIndex].conditions.filter(
-      (_: any, i: number) => i !== conditionIndex,
-    );
+    const block = updatedBlocks[blockIndex];
+    if (!block) return;
+    block.conditions = block.conditions.filter((_, i: number) => i !== conditionIndex);
     setBlocks(updatedBlocks);
   };
 
-  const addComponent = (blockIndex: number, key: string, componentTypes: string[]) => {
+  const addComponent = (blockIndex: number, key: "then" | "else", componentTypes: string[]) => {
     const updatedBlocks = [...blocks];
-    updatedBlocks[blockIndex][key] = componentTypes;
+    const block = updatedBlocks[blockIndex];
+    if (!block) return;
+    block[key] = componentTypes;
     setBlocks(updatedBlocks);
   };
 
   const addSwitchCase = (blockIndex: number, caseKey: string) => {
     const updatedBlocks = [...blocks];
-    updatedBlocks[blockIndex].cases[caseKey] = [];
+    const block = updatedBlocks[blockIndex];
+    if (!block) return;
+    block.cases = { ...block.cases, [caseKey]: [] };
     setBlocks(updatedBlocks);
   };
 
   const ensurePredefinedCases = (blockIndex: number) => {
     const updatedBlocks = [...blocks];
-    if (!updatedBlocks[blockIndex].cases["Case 1"]) {
-      updatedBlocks[blockIndex].cases["Case 1"] = [];
+    const block = updatedBlocks[blockIndex];
+    if (!block) return;
+    const cases = { ...block.cases };
+    for (const key of ["Case 1", "Case 2", "default"]) {
+      cases[key] ??= [];
     }
-    if (!updatedBlocks[blockIndex].cases["Case 2"]) {
-      updatedBlocks[blockIndex].cases["Case 2"] = [];
-    }
-    if (!updatedBlocks[blockIndex].cases["default"]) {
-      updatedBlocks[blockIndex].cases["default"] = [];
-    }
+    block.cases = cases;
     setBlocks(updatedBlocks);
   };
 
@@ -224,7 +238,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                   className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setBlocks(blocks.filter((_: any, i: number) => i !== index));
+                    setBlocks(blocks.filter((_, i: number) => i !== index));
                   }}
                 >
                   <IconTrash size={16} />
@@ -236,7 +250,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                 {block.type === "If" && (
                   <>
                     <h4 className="text-sm font-semibold">{translations("Conditions")}:</h4>
-                    {block.conditions.map((condition: any, condIndex: number) => {
+                    {block.conditions.map((condition, condIndex: number) => {
                       const q = filteredQuestions.find((qs) => qs.id === condition.field);
                       const operatorData = q && getResponses2(q);
                       return (
@@ -273,13 +287,13 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               onValueChange={(value) => {
                                 updateCondition(index, condIndex, "operator", value);
                               }}
-                              items={getOperators(condition.field)}
+                              items={getOperators(condition.field ?? "")}
                             >
                               <SelectTrigger id={`${uid}-field-2-${index}`}>
                                 <SelectValue placeholder={translations("Select operator")} />
                               </SelectTrigger>
                               <SelectContent>
-                                {getOperators(condition.field).map((op) => (
+                                {getOperators(condition.field ?? "").map((op) => (
                                   <SelectItem key={op.value} value={op.value}>
                                     {op.label}
                                   </SelectItem>
@@ -293,19 +307,17 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 {translations("Value")}
                               </FieldLabel>
                               <Select
-                                value={condition.value}
+                                value={condition.value ?? ""}
                                 onValueChange={(value) => {
                                   updateCondition(index, condIndex, "value", value);
                                 }}
-                                items={operatorData.map((item: any) =>
-                                  typeof item === "string" ? { value: item, label: item } : item,
-                                )}
+                                items={toSelectOptions(operatorData)}
                               >
                                 <SelectTrigger id={`${uid}-field-3-${index}`}>
                                   <SelectValue placeholder={translations("Select value")} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {operatorData.map((item: any) => (
+                                  {toSelectOptions(operatorData).map((item) => (
                                     <SelectItem key={item.value} value={item.value}>
                                       {item.label}
                                     </SelectItem>
@@ -321,7 +333,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               <Input
                                 id={`${uid}-field-4-${index}`}
                                 placeholder={translations("Enter value")}
-                                value={condition.value}
+                                value={condition.value ?? ""}
                                 type={q?.["input-type"] || "text"}
                                 onChange={(e) => {
                                   const value =
@@ -390,7 +402,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                       </FieldLabel>
                       <Select
                         value={block.value}
-                        onValueChange={(value) => updateSwitchValue(index, value)}
+                        onValueChange={(value) => updateSwitchValue(index, value ?? "")}
                         items={questions}
                       >
                         <SelectTrigger id={`${uid}-field-6-${index}`}>
@@ -405,7 +417,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                         </SelectContent>
                       </Select>
                     </Field>
-                    {Object.keys(block.cases).map((caseKey, caseIndex) => (
+                    {Object.keys(block.cases ?? {}).map((caseKey, caseIndex) => (
                       <div key={caseIndex} className="flex flex-col gap-3">
                         {caseKey !== "default" ? (
                           <Field className="items-end">
@@ -444,10 +456,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           <MultiSelect
                             id={`${uid}-field-8-${index}`}
                             options={componentsList.map((item) => ({
-                              label: item.label,
-                              value: item.value,
+                              label: item.label ?? "",
+                              value: item.value ?? "",
                             }))}
-                            value={block.cases[caseKey].map((comp: any) => comp.type)}
+                            value={(block.cases?.[caseKey] ?? []).map((comp) => comp.type)}
                             onValueChange={(value: string[]) =>
                               updateSwitchCaseComponents(index, caseKey, value)
                             }
@@ -462,7 +474,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                       size="sm"
                       className="w-full"
                       onClick={() =>
-                        addSwitchCase(index, `Case ${Object.keys(block.cases).length}`)
+                        addSwitchCase(index, `Case ${Object.keys(block.cases ?? {}).length}`)
                       }
                     >
                       <IconPlus size={14} className="mr-2" />
@@ -486,13 +498,13 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           id={`${uid}-field-9-${index}`}
                           options={componentsList
                             ?.map((d) => ({
-                              label: d.label ?? d.value,
-                              value: d.value,
+                              label: d.label ?? d.value ?? "",
+                              value: d.value ?? "",
                             }))
                             .filter((component) => {
                               const isInElse = block.else?.includes(component.value);
                               const isInConditions = block.conditions?.some(
-                                (condition: any) => condition?.field === component.value,
+                                (condition) => condition?.field === component.value,
                               );
                               return !isInElse && !isInConditions;
                             })}
@@ -514,13 +526,13 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           id={`${uid}-field-10-${index}`}
                           options={componentsList
                             ?.map((d) => ({
-                              label: d?.label ?? d.value,
-                              value: d.value,
+                              label: d?.label ?? d.value ?? "",
+                              value: d.value ?? "",
                             }))
                             .filter((component) => {
                               const isInThen = block.then?.includes(component.value);
                               const isInConditions = block.conditions?.some(
-                                (condition: any) => condition?.field === component.value,
+                                (condition) => condition?.field === component.value,
                               );
                               return !isInThen && !isInConditions;
                             })}

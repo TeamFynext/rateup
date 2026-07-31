@@ -5,7 +5,7 @@ import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal"
 
 import style from "./feedback.module.css";
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function getTime() {
   const now = new Date();
@@ -13,7 +13,7 @@ function getTime() {
 }
 
 export default function Hero() {
-  const waBodyRef = useRef(null);
+  const waBodyRef = useRef<HTMLDivElement | null>(null);
   const heroVisibleRef = useRef(true);
   const runningRef = useRef(false);
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function Hero() {
     if (runningRef.current) return;
     runningRef.current = true;
 
-    function mkMsg(side, html, showTime) {
+    function mkMsg(side: string, html: string, showTime?: boolean) {
       const d = document.createElement("div");
       const base =
         "msg max-w-[84%] px-2.5 pt-[7px] pb-2 text-[13px] leading-[1.4] text-[#111b21] rounded-[10px] relative shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] break-words transition-all duration-[320ms] ease-[cubic-bezier(0.22,1,0.36,1)] opacity-0 translate-y-2 scale-[0.97]";
@@ -40,11 +40,11 @@ export default function Hero() {
         : "";
 
       d.innerHTML = html + timeHtml;
-      waBody.appendChild(d);
+      waBody?.appendChild(d);
       requestAnimationFrame(() => {
         d.classList.remove("opacity-0", "translate-y-2", "scale-[0.97]");
       });
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody!.scrollTop = waBody!.scrollHeight;
       return d;
     }
 
@@ -57,8 +57,8 @@ export default function Hero() {
         <span class="w-1.5 h-1.5 rounded-full bg-[#9aa6ad] animate-blink [animation-delay:0.2s]"></span>
         <span class="w-1.5 h-1.5 rounded-full bg-[#9aa6ad] animate-blink [animation-delay:0.4s]"></span>
       `;
-      waBody.appendChild(d);
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody?.appendChild(d);
+      waBody!.scrollTop = waBody!.scrollHeight;
       return d;
     }
 
@@ -79,18 +79,18 @@ export default function Hero() {
           100 * (i + 1),
         );
       });
-      waBody.appendChild(wrap);
-      waBody.scrollTop = waBody.scrollHeight;
+      waBody?.appendChild(wrap);
+      waBody!.scrollTop = waBody!.scrollHeight;
       return wrap;
     }
 
-    function countUp(el, from, to, dur) {
+    function countUp(el: HTMLElement, from: number, to: number, dur: number) {
       if (!el) return;
       const start = performance.now();
-      function tick(now) {
+      function tick(now: number) {
         const p = Math.min(1, (now - start) / dur);
         const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(from + (to - from) * eased);
+        el.textContent = String(Math.round(from + (to - from) * eased));
         if (p < 1) requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
@@ -114,23 +114,25 @@ export default function Hero() {
           <span>📈 Response Rate</span>
           <span class="font-extrabold text-[13px] text-[#2a6254]">35%</span>
         </div>`;
-      waBody.appendChild(d);
+      waBody?.appendChild(d);
       requestAnimationFrame(() => {
         d.classList.remove("opacity-0", "translate-y-2", "scale-[0.97]");
       });
-      waBody.scrollTop = waBody.scrollHeight;
-      countUp(document.getElementById(respId), 580, 662, 1400);
+      waBody!.scrollTop = waBody!.scrollHeight;
+      countUp(document.getElementById(respId)!, 580, 662, 1400);
       return d;
     }
 
-    async function typingThen(ms) {
+    async function typingThen(ms: number) {
       const t = mkTyping();
       await sleep(ms);
       t.remove();
     }
 
     function clearChat() {
-      waBody.querySelectorAll(".msg, .typing, .fb-card, .wa-replies").forEach((n) => n.remove());
+      waBody!
+        .querySelectorAll(".msg, .typing, .fb-card, .wa-replies")
+        .forEach((n: Element) => n.remove());
     }
 
     async function runHero() {
@@ -183,9 +185,10 @@ export default function Hero() {
         mkFbCard();
         await sleep(4000);
 
-        waBody.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n) => {
-          n.style.transition = "opacity .5s ease";
-          n.style.opacity = "0";
+        waBody?.querySelectorAll(".msg, .fb-card, .wa-replies").forEach((n) => {
+          const el = n as HTMLElement;
+          el.style.transition = "opacity .5s ease";
+          el.style.opacity = "0";
         });
         await sleep(650);
       }

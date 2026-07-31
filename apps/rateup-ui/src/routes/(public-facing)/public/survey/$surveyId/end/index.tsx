@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 
 import { getPublicSurvey, getPublicSurveyGoogleLink } from "@/backend/surveys/survey.api";
@@ -36,14 +36,15 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/e
       return {
         surveyId,
         googleLink,
-        reviews,
+        // The endpoint answers `{ reviews, reviewLink }`; the page renders the suggestions.
+        reviews: reviews.reviews,
         reviewPageLinks,
         redirect: survey.redirect,
         kioskMode: survey.kioskMode ? "y" : "n",
         surveyThemeData: survey?.webSurveyTheme?.theme,
         pagesThemeData: survey?.webSurveyPagesTheme,
         titleText:
-          thankyouPageTypeObj.titleText ||
+          thankyouPageTypeObj?.titleText ||
           `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
         subtitleText: thankyouPageTypeObj?.subtitleText ?? null,
       };
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/e
         surveyThemeData: survey?.webSurveyTheme?.theme,
         pagesThemeData: survey?.webSurveyPagesTheme,
         titleText:
-          thankyouPageTypeObj.titleText ||
+          thankyouPageTypeObj?.titleText ||
           `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
         subtitleText: thankyouPageTypeObj?.subtitleText ?? null,
       };
@@ -72,7 +73,7 @@ function End() {
   const propsToPass = Route.useLoaderData();
   return (
     <ThankYou
-      redirect={redirect}
+      redirect={propsToPass?.redirect}
       kioskMode={propsToPass?.kioskMode ? "y" : "n"}
       surveyIdValue={propsToPass?.surveyId}
       fromShortUrl={false}
@@ -80,7 +81,6 @@ function End() {
       pagesThemeData={propsToPass?.pagesThemeData}
       titleText={propsToPass?.titleText}
       subtitleText={propsToPass?.subtitleText || null}
-      enableGoogleReview={propsToPass?.enableGoogleReview}
       googleLink={propsToPass?.googleLink || ""}
       reviewPageLinks={propsToPass?.reviewPageLinks || {}}
       reviews={propsToPass?.reviews || []}

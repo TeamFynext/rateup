@@ -1,6 +1,6 @@
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
 import { useId, useEffect, useRef, useState } from "react";
+import type { FieldValues, Resolver } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
@@ -14,6 +14,7 @@ import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
+import type { QuestionType2 } from "@/types/enums.ts";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
@@ -23,36 +24,43 @@ import {
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar.tsx";
+import type { FlowChoice, FlowInputProps } from "./inputProps.ts";
+import { asList } from "./inputProps.ts";
 
-interface Choice {
-  id: string;
-  title: string;
-  description: string;
-  metadata: string;
-  image: string;
-}
-
-const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
+const generateId = () => "_" + Math.random().toString(36).slice(2, 11);
 
 /** RHF resolver that always validates against the latest schema held in `schemaRef`. */
-function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
-  return (values: any) => {
+function schemaRefResolver<TValues extends FieldValues>(
+  schemaRef: React.RefObject<z.ZodType>,
+): Resolver<TValues> {
+  const resolve = (values: FieldValues) => {
     const result = schemaRef.current.safeParse(values);
     if (result.success) return { values: result.data, errors: {} };
     const errors: Record<string, { type: string; message: string }> = {};
     for (const issue of result.error.issues) {
-      const key = issue.path[0] as string;
+      const key = String(issue.path[0] ?? "");
       if (key && !errors[key]) errors[key] = { type: "validation", message: issue.message };
     }
     return { values: {}, errors };
   };
+  // The schema held in the ref is rebuilt on every render, so it is only known to produce
+  // the caller's form values by construction at the call site.
+  return resolve as Resolver<TValues>;
 }
 
-export function DataSourceInput(props) {
+/** The add/edit choice form: a title, and the optional fields shown when not in title-only mode. */
+interface ChoiceFormValues {
+  title: string;
+  description?: string;
+  metadata?: string;
+  image?: string | null;
+}
+
+export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
   const uid = useId();
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const resetRef = useRef<(() => void) | null>(null);
-  const choices = props.value ?? [];
+  const choices = asList<FlowChoice>(props.value);
   const maxCharCount = props.maxCharCount ?? 30;
   const maxChoiceCount = props.maxChoice ?? 20;
   const { t: translations } = useTranslation();
@@ -65,7 +73,7 @@ export function DataSourceInput(props) {
           .min(1)
           .max(30)
           .refine((title) => {
-            const isDuplicate = choices.some((c) => {
+            const isDuplicate = choices.some((c: FlowChoice) => {
               const choiceValue = c?.title?.replace(/\s+/g, "");
               return choiceValue === title.replace(/\s+/g, "");
             });
@@ -79,7 +87,7 @@ export function DataSourceInput(props) {
           .min(1)
           .max(30)
           .refine((title) => {
-            const isDuplicate = choices.some((c) => {
+            const isDuplicate = choices.some((c: FlowChoice) => {
               const choiceValue = c?.title?.replace(/\s+/g, "");
               return choiceValue === title.replace(/\s+/g, "");
             });
@@ -89,17 +97,17 @@ export function DataSourceInput(props) {
         metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
         image: z.string().optional().nullable(),
       });
-  const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
+  const schemaRef = useRef<z.ZodType>(choiceSchema);
   schemaRef.current = choiceSchema;
 
-  const form = useForm<any>({
+  const form = useForm<ChoiceFormValues>({
     resolver: schemaRefResolver(schemaRef),
     defaultValues: props?.onlyTitle
       ? { title: "" }
       : { title: "", description: "", metadata: "", image: "" },
   });
 
-  const handleAddChoice = async (values: any) => {
+  const handleAddChoice = async (values: FieldValues) => {
     try {
       const choiceObj = {
         id: generateId(),
@@ -109,7 +117,7 @@ export function DataSourceInput(props) {
           ),
         ),
       };
-      props.insertListItem("data-source", choiceObj);
+      props.insertListItem?.("data-source", choiceObj);
       form.reset();
     } catch {
       form.reset();
@@ -117,11 +125,12 @@ export function DataSourceInput(props) {
     }
   };
 
-  const handleRemoveChoice = (index: string) => {
-    props.removeListItem("data-source", index);
+  const handleRemoveChoice = (index: number) => {
+    props.removeListItem?.("data-source", index);
   };
 
-  const disabled = Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
+  const disabled =
+    Object.values(WaNPSQuestions2).includes(props?.metaType as QuestionType2) || props.disabled;
   const submitAdd = form.handleSubmit(handleAddChoice);
 
   return (
@@ -129,7 +138,7 @@ export function DataSourceInput(props) {
       <p className="underline">CHOICES</p>
       <p className="text-xs text-red-500">{props.error}</p>
       <div className="flex flex-col gap-2">
-        {choices?.map((choice, i) => (
+        {choices?.map((choice: FlowChoice, i: number) => (
           <ChoiceRow
             key={choice.id}
             choice={choice}
@@ -146,7 +155,7 @@ export function DataSourceInput(props) {
       {(!maxChoiceCount || choices?.length < maxChoiceCount) && (
         <div
           className={disabled ? "hidden" : "mt-2 flex flex-col"}
-          onKeyDown={getHotkeyHandler([["Enter", submitAdd]])}
+          onKeyDown={getHotkeyHandler([["Enter", () => void submitAdd()]])}
         >
           <div className="flex w-full grow flex-col gap-1">
             <div className="flex items-start gap-2">
@@ -310,14 +319,14 @@ export class FileConverter {
 }
 
 interface ChoiceProps {
-  choices: Choice[];
-  choice: Choice;
-  setChoices: Dispatch<SetStateAction<Choice[]>>;
+  choices: FlowChoice[];
+  choice: FlowChoice;
+  setChoices?: (choices: FlowChoice[]) => void;
   onDelete: () => void;
   index: number;
   maxCharCount?: number;
-  disabled: boolean;
-  onlyTitle: boolean;
+  disabled?: boolean;
+  onlyTitle?: boolean;
 }
 
 function ChoiceRow({
@@ -355,10 +364,10 @@ function ChoiceRow({
           image: z.string().optional().nullable(),
         },
   );
-  const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
+  const schemaRef = useRef<z.ZodType>(choiceSchema);
   schemaRef.current = choiceSchema;
 
-  const form = useForm<any>({
+  const form = useForm<ChoiceFormValues>({
     resolver: schemaRefResolver(schemaRef),
     defaultValues: onlyTitle
       ? { title: "" }
@@ -372,14 +381,14 @@ function ChoiceRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [choice]);
 
-  const handleEditChoice = async (values: any) => {
+  const handleEditChoice = async (values: FieldValues) => {
     const choiceObj = Object.fromEntries(
       Object.entries(values).filter(
         ([_key, value]) => typeof value === "string" && value.trim() !== "",
       ),
     );
     const updatedChoices = choices.map((c, i) => (i === index ? { ...c, ...choiceObj } : c));
-    setChoices(updatedChoices);
+    setChoices?.(updatedChoices);
     closeEditModal();
   };
 

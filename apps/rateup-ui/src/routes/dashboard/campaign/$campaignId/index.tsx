@@ -29,6 +29,7 @@ import {
   useDeleteCampaignMutation,
   useSendCampaign,
 } from "@/backend/campaign/campaign.query";
+import type { CampaignParticipant } from "@/backend/campaign/campaignParticipants/campaignParticipants.api";
 import {
   useCampaignParticipants,
   useRemoveMulitpleGroupParticipants,
@@ -65,6 +66,7 @@ import {
   SendMode,
   SentCampaignChoice,
 } from "@/types/enums.ts";
+import type { Campaign } from "@/types/global";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/$campaignId/")({
@@ -74,7 +76,7 @@ export const Route = createFileRoute("/dashboard/campaign/$campaignId/")({
 function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState(null);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [sorting] = useState([CONTACT_SORT]);
   const [columnFilters] = useDebouncedState([], 200);
@@ -139,7 +141,7 @@ function CampaignDetails() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const columns = useMemo<ColumnDef<any>[]>(
+  const columns = useMemo<ColumnDef<CampaignParticipant>[]>(
     () => [
       // ───────────── Select Column ─────────────
       {
@@ -295,7 +297,7 @@ function CampaignDetails() {
     failed: stats.failed,
   };
 
-  const openEditCampaign = (campaign: any) => {
+  const openEditCampaign = (campaign: Campaign) => {
     setEditingCampaign(campaign);
     setIsEditOpen(true);
   };
@@ -810,7 +812,7 @@ function CampaignDetails() {
           isEdit
           campaign={editingCampaign}
           close={closeEditModal}
-          campaignType={editingCampaign.type}
+          campaignType={editingCampaign.type as CampaignType}
         />
       )}
       {isAddParticipantOpen && campaignQuery.data && (

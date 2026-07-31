@@ -29,7 +29,7 @@ function TeamManagement() {
   const { teamId } = useParams({
     strict: false,
   });
-  const { data: teamsData, isPending } = useGetTeamById(teamId);
+  const { data: teamsData, isPending } = useGetTeamById(teamId ?? "");
   const { user } = useUser();
   const isSuperAdmin = user?.role === UserRole.SUPADM;
   if (isPending) {
@@ -79,7 +79,7 @@ function TeamManagement() {
           </TabsList>
 
           <TabsContent value="members">
-            <AddMembers selectedTeam={teamId} />
+            <AddMembers selectedTeam={teamId ?? ""} />
           </TabsContent>
 
           {isSuperAdmin && (

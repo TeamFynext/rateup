@@ -1,3 +1,15 @@
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
+
+/** A referral this customer made, as the detail endpoint returns it. */
+export interface LoyaltyCustomerReferral {
+  id: string;
+  createdAt: string;
+  status?: string;
+  refereeName?: string | null;
+  refereePhone?: string | null;
+  pointsAwarded?: number;
+}
+
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base.ts";
 
@@ -22,7 +34,7 @@ export async function getAllCustomers(
     id: string;
     desc: boolean;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
 ) {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
   const desc = sort.desc ? "desc" : "asc";
@@ -32,15 +44,23 @@ export async function getAllCustomers(
   return response.data;
 }
 
-export async function deleteLoyaltyCustomer(id) {
+export async function deleteLoyaltyCustomer(id: string) {
   return (await axiosClient.delete(`${base}/${id}`)).data;
 }
 
-export async function createLCAction({ phone, actionId, amount }) {
+export async function createLCAction({
+  phone,
+  actionId,
+  amount,
+}: {
+  phone: string;
+  actionId: string;
+  amount: number;
+}) {
   await axiosClient.post(`${base}/${phone}/${actionId}`, { amount });
 }
 
-export const importCustomers = async (data) => {
+export const importCustomers = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${base}/importcsv`, data, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -58,6 +78,26 @@ export const exportCustomers = async (format: "csv" | "excel" = "excel") => {
   ).data;
 };
 
+/** A single point movement on a loyalty account. */
+export interface LoyaltyTransaction {
+  id: string;
+  accountId: string;
+  transactionType: "earn" | "redeem" | string;
+  points: number;
+  balanceAfter: number;
+  source: string;
+  referenceId?: string | null;
+  description?: string | null;
+  metadata?: Record<string, unknown>;
+  earningRuleId?: string | null;
+  earningRuleMultiplier?: number | null;
+  basePoints?: number | null;
+  rewardId?: string | null;
+  programId: string;
+  createdAt: string;
+  createdBy?: string | null;
+}
+
 interface LoyaltyCustomerDetail extends LoyaltyCustomer {
   currentTier?: {
     id: string;
@@ -70,24 +110,7 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
     priority: number;
     createdAt: string;
   };
-  transactions: {
-    id: string;
-    accountId: string;
-    transactionType: "earn" | "redeem" | string;
-    points: number;
-    balanceAfter: number;
-    source: string;
-    referenceId?: string | null;
-    description?: string | null;
-    metadata?: Record<string, any>;
-    earningRuleId?: string | null;
-    earningRuleMultiplier?: number | null;
-    basePoints?: number | null;
-    rewardId?: string | null;
-    programId: string;
-    createdAt: string;
-    createdBy?: string | null;
-  }[];
+  transactions: LoyaltyTransaction[];
   redemptions: {
     id: string;
     accountId: string;
@@ -97,13 +120,13 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
     status: "APPROVED" | "PENDING" | "REJECTED" | string;
     expiresAt?: string | null;
     usedAt?: string | null;
-    usedContext?: Record<string, any>;
+    usedContext?: Record<string, unknown>;
     rulesValidatedAt?: string;
     rulesValidationPassed?: boolean;
     createdAt: string;
     updatedAt: string;
   }[];
-  referrals: any[];
+  referrals: LoyaltyCustomerReferral[];
 }
 
 export async function getLoyaltyCustomerById(customerId: string) {

@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { Building2, Calendar, CreditCard, Package, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 import {
   useAllSubscriptions,
@@ -45,7 +46,7 @@ interface SubscriptionTableData {
   orgName: string;
   planId: string;
   planName: string;
-  features: any;
+  features: Subscription;
   createdAt: string;
   renewedAt: string;
   expiresAt: string;
@@ -92,7 +93,12 @@ function SubscriptionPage() {
         return (
           <Select
             value={row.original.planId}
-            items={rateupPlans?.map((plan) => ({ value: plan.id, label: plan.name })) ?? []}
+            items={
+              rateupPlans?.map((plan: RateupPaymentPlan) => ({
+                value: plan.id,
+                label: plan.name,
+              })) ?? []
+            }
             onValueChange={async (value) => {
               const shouldUpdate = await confirm({
                 title: translations("Update Plan"),
@@ -123,7 +129,7 @@ function SubscriptionPage() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {rateupPlans?.map((plan) => (
+              {rateupPlans?.map((plan: RateupPaymentPlan) => (
                 <SelectItem key={plan.id} value={plan.id}>
                   {plan.name}
                 </SelectItem>
@@ -145,9 +151,13 @@ function SubscriptionPage() {
         // Tickets/menu are no longer subscription-managed; hide them from the badges too.
         const HIDDEN_FEATURES = ["menu", "ticket"];
         const activeFeatures = features
-          ? Object.keys(features).filter(
-              (feature) => features[feature]?.active && !HIDDEN_FEATURES.includes(feature),
-            )
+          ? Object.entries(features)
+              .filter(
+                ([feature, value]) =>
+                  (value as { active?: boolean } | undefined)?.active &&
+                  !HIDDEN_FEATURES.includes(feature),
+              )
+              .map(([feature]) => feature)
           : [];
 
         return (
@@ -240,8 +250,8 @@ function SubscriptionPage() {
 
       return {
         id: subscription.orgId,
-        orgId: (subscription as any).org.id,
-        orgName: (subscription as any).org.name,
+        orgId: subscription.orgId,
+        orgName: subscription.org?.name ?? "",
         planId: subscription?.basePlan?.id || "",
         planName: subscription?.basePlan?.name || "Unknown",
         features: subscription,

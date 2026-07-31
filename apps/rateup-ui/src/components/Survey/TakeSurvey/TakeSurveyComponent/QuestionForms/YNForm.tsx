@@ -1,5 +1,6 @@
 import { animate } from "motion/react";
 import { useContext } from "react";
+import type { MouseEvent } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
@@ -19,8 +20,9 @@ export function YNForm() {
   const themePrimaryColor = useThemePrimaryColor();
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
-  const handleYesOrNOClick = async (e, value: YNResponse) => {
-    const clickedBtn = e.target;
+  const handleYesOrNOClick = async (e: MouseEvent<HTMLElement>, value: YNResponse) => {
+    // The click lands on the button element itself; `target` is typed only as EventTarget.
+    const clickedBtn = e.target as HTMLElement;
     updateResponse(value);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (clickedBtn) {

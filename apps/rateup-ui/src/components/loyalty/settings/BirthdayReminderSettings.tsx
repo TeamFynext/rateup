@@ -18,10 +18,11 @@ import {
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
+import type { EventTriggersFormValues } from "./schemas.ts";
 import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils.ts";
 
 interface BirthdayReminderSettingsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<EventTriggersFormValues>;
   isPending: boolean;
   onToggle: (eventType: LoyaltyEventType, enabled: boolean) => void;
   onSave: () => void;

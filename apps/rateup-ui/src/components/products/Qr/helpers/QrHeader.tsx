@@ -49,19 +49,19 @@ const QrHeader = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="https://rateup.app/login">
+            <a href="https://rateup.app/login">
               <Button
                 variant="outline"
                 className="text-gray-700 hover:text-[#1c518e] cursor-pointer transition-colors duration-300"
               >
                 Log in
               </Button>
-            </Link>
-            <Link to="https://rateup.app/signup">
+            </a>
+            <a href="https://rateup.app/signup">
               <Button className="bg-[#1c518e] text-white cursor-pointer hover:bg-[#1c518e] transition-colors duration-300 shadow-md">
                 Get Started
               </Button>
-            </Link>
+            </a>
           </div>
 
           <div className="md:hidden">
@@ -100,11 +100,11 @@ const QrHeader = () => {
                 Log in
               </Button>
             </Link>
-            <Link to="/get-started">
+            <a href="/get-started">
               <Button className="mt-3 w-full bg-[#1c518e] text-white hover:bg-[#1c518e] transition-colors duration-300 shadow-sm">
                 Get Started
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       )}

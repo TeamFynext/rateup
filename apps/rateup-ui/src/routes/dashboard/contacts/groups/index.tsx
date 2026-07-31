@@ -61,17 +61,17 @@ function GroupPage() {
   }, [contactGroupData, debouncedSearch, selectedTeamID, sortOption]);
 
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState<ContactGroup | null>(null);
   const confirm = useConfirm();
 
-  function handleEditGroup(group) {
+  function handleEditGroup(group: ContactGroup) {
     setSelectedGroup(group);
     setIsCreateGroupOpen(true);
   }
 
   const deleteGroupMutation = useDeleteGroupMutation();
 
-  async function handleDeleteGroup(group) {
+  async function handleDeleteGroup(group: ContactGroup) {
     const shouldDelete = await confirm({
       title: translations("Delete Group"),
       description: translations("Are you sure you want to delete this group?"),
@@ -149,7 +149,7 @@ function GroupPage() {
         setOpened={setIsCreateGroupOpen}
         type={ContactGroupType.NORMAL}
         isEdit={!!selectedGroup}
-        groupDetails={selectedGroup}
+        groupDetails={selectedGroup ?? undefined}
       />
     </>
   );
@@ -169,12 +169,18 @@ const GROUP_COLORS = [
 function getColorClass(str: string) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = str.codePointAt(i) + ((hash << 5) - hash);
+    hash = (str.codePointAt(i) ?? 0) + ((hash << 5) - hash);
   }
   return GROUP_COLORS[Math.abs(hash) % GROUP_COLORS.length];
 }
 
-function ContactGroupCard({ group, handleEdit, handleDelete }) {
+interface ContactGroupCardProps {
+  group: ContactGroup;
+  handleEdit: (group: ContactGroup) => void;
+  handleDelete: (group: ContactGroup) => void;
+}
+
+function ContactGroupCard({ group, handleEdit, handleDelete }: ContactGroupCardProps) {
   const navigate = useNavigate();
   return (
     <ActionCard
@@ -212,7 +218,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }) {
   );
 }
 
-function GroupCardMenu({ group, handleEdit, handleDelete }) {
+function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

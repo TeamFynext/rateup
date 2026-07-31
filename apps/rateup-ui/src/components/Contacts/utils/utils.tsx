@@ -1,5 +1,5 @@
 import { IconBrandInstagram } from "@tabler/icons-react";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { Column, ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   ArrowUpDown,
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
 
-const selectCheckBox: ColumnDef<any>[] = [
+const selectCheckBox: ColumnDef<ContactsData>[] = [
   {
     id: "select",
     accessorKey: "select",
@@ -51,7 +51,7 @@ const selectCheckBox: ColumnDef<any>[] = [
   },
 ];
 
-const HeaderWithSort = ({ column, title }) => {
+const HeaderWithSort = ({ column, title }: { column: Column<ContactsData>; title: string }) => {
   return (
     <div className="flex gap-2 items-center">
       <span>{title}</span>
@@ -62,7 +62,7 @@ const HeaderWithSort = ({ column, title }) => {
   );
 };
 
-const contactDetailsColumn: ColumnDef<any>[] = [
+const contactDetailsColumn: ColumnDef<ContactsData>[] = [
   {
     header: ({ column }) => <HeaderWithSort column={column} title={"Name"} />,
     accessorKey: "name",
@@ -81,7 +81,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
   },
 ];
 
-export const getSourceBadge = (source: string) => {
+export const getSourceBadge = (source: string | undefined) => {
   const config = {
     whatsapp: {
       icon: MessageSquare,
@@ -124,7 +124,10 @@ export const getSourceBadge = (source: string) => {
   );
 };
 
-export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle = false) => {
+export const contactColumn = (
+  contactTags: CustomFieldData[] = [],
+  showLifecycle = false,
+): ColumnDef<ContactsData>[] => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
@@ -168,10 +171,13 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
       accessorKey: "ContactLabelMap",
       id: "ContactLabelMap",
       cell: (info) => {
-        const labels = info.row.original.ContactLabelMap?.map((label) => label?.label?.name) || [];
+        const labels =
+          info.row.original.ContactLabelMap?.map(
+            (label: { label?: { name?: string } }) => label?.label?.name,
+          ) || [];
         return labels.length > 0 ? (
           <div className="flex flex-wrap gap-1">
-            {labels.map((label, index) => (
+            {labels.map((label: string | undefined, index: number) => (
               <Badge key={index} variant="secondary" color="blue">
                 {label}
               </Badge>
@@ -192,21 +198,26 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
             cell: (info) => info.getValue(),
             enableSorting: false,
             meta: { title: "Lifecycle Stage" },
-          },
+          } satisfies ColumnDef<ContactsData>,
         ]
       : []),
     ...(contactTags?.length > 0
       ? contactTags
           .filter((tag) => tag?.visibility)
-          .map((data) => ({
-            header: data?.name,
-            accessorFn: (row) => row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
-            id: data?.name,
-            cell: (info) => info.getValue()?.toString() ?? "-",
+          .map(
+            (data) =>
+              ({
+                header: data?.name,
+                accessorFn: (row: ContactsData) =>
+                  row?.customFields?.find((f: { fieldId?: string }) => f?.fieldId === data?.id)
+                    ?.value,
+                id: data?.name,
+                cell: (info) => info.getValue()?.toString() ?? "-",
 
-            enableSorting: false,
-            meta: { title: data?.name },
-          }))
+                enableSorting: false,
+                meta: { title: data?.name },
+              }) satisfies ColumnDef<ContactsData>,
+          )
       : []),
     {
       header: "Source",
@@ -233,7 +244,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
           </Badge>
         ),
       meta: {
-        filterComponent: (setFilterValue) => {
+        filterComponent: (setFilterValue: (value: boolean | null) => void) => {
           const consentItems = [
             { value: "true", label: "true" },
             { value: "false", label: "false" },

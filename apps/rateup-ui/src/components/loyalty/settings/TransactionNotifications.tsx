@@ -6,10 +6,11 @@ import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 import { EventTriggerItem } from "./EventTriggerItem.tsx";
+import type { EventTriggersFormValues } from "./schemas.ts";
 import { LoyaltyTemplateTypes } from "./utils.ts";
 
 interface TransactionNotificationsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<EventTriggersFormValues>;
   isPending: boolean;
   onToggle: (eventType: LoyaltyEventType, enabled: boolean) => void;
   onSavePointsIssued: () => void;

@@ -34,12 +34,12 @@ import { useResponseFilterStore } from "./store.ts";
 
 interface ResponseTableToolbarProps<TData> {
   table: Table<TData>;
-  CFData?: any[];
+  CFData?: Array<{ id: string; name: string }>;
   campaignIds: string[];
   setCampaignIds: (ids: string[]) => void;
   ranges: Range[];
   setRange: (range: Range[]) => void;
-  survey: any;
+  survey: Survey;
   isSyncing: boolean;
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;
@@ -69,7 +69,7 @@ export function ResponseTableToolbar<TData>({
   const { t: translations } = useTranslation();
   const [openedExport, setOpenedExport] = useState(false);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
-  const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
+  const filters = serverFilters ?? {};
 
   const getBackendFilterKey = (columnId: string) => {
     if (!columnId) return "";
@@ -229,7 +229,9 @@ export function ResponseTableToolbar<TData>({
       return (
         <Select
           value={searchTerm || "__none__"}
-          onValueChange={(value) => form.setValue("searchTerm", value === "__none__" ? "" : value)}
+          onValueChange={(value) =>
+            form.setValue("searchTerm", value === "__none__" ? "" : (value ?? ""))
+          }
           items={[
             { value: "__none__", label: translations("Select value") },
             ...numericOptions.map((option) => ({ value: option, label: option })),
@@ -320,7 +322,7 @@ export function ResponseTableToolbar<TData>({
             <Select
               value={searchBy}
               onValueChange={(value) => {
-                form.setValue("searchBy", value);
+                form.setValue("searchBy", value ?? "");
                 form.setValue("searchTerm", "");
               }}
               items={filterableColumns.map((column) => ({ value: column.id, label: column.label }))}

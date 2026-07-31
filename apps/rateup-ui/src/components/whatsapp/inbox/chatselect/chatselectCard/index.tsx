@@ -14,13 +14,13 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import useContactStore, {
   useContactsStore,
   useMessagesStore,
@@ -29,9 +29,11 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
 import {
@@ -52,7 +54,7 @@ import { generateInternalMessageId, getSoucePlatformIconAndColor } from "../../u
  */
 type DerivedStatus = "new" | "assigned" | "closed";
 
-export function getDerivedStatus(contact: ContactsWithLastMessage): DerivedStatus {
+export function getDerivedStatus(contact: ContactWithUpdatedAt): DerivedStatus {
   const status = (contact?.conversationStatus ??
     contact?.waMessageAssignStatus) as WaMessageAssignStatus;
   if (WaMessageClosedStatus.includes(status)) return "closed";
@@ -73,7 +75,7 @@ const STATUS_PILL_COLORS: Record<DerivedStatus, string> = {
 };
 
 interface WaInboxChatSelectCardProps {
-  contact: ContactsWithLastMessage;
+  contact: ContactWithUpdatedAt;
   waSettings: WaSettings;
   lifeCycleLabels: Array<{
     id: string;
@@ -125,7 +127,7 @@ export default function WaInboxChatSelectCard({
   const primaryAssignee = contact?.assignedUsers?.[0];
 
   const { mutate: toggleFavorite } = useToggleFavorite();
-  const assignMut = useAssignInboxToUer(contact?.id, filterData);
+  const assignMut = useAssignInboxToUer(contact?.id, filterData ?? "");
 
   function handleToggleFavorite(e: React.MouseEvent) {
     e.stopPropagation();
@@ -140,30 +142,30 @@ export default function WaInboxChatSelectCard({
     }
     const contactId = contact.id;
     const messageId = generateInternalMessageId();
-    const internalMessage = {
+    const internalMessage: OptimisticMessage = {
       id: messageId,
       contactId,
       waCreatedAt: new Date().toISOString(),
       messageBody: {
-        send: null,
-        receive: null,
+        send: undefined as WaInboxMessage["send"],
+        receive: undefined as WaInboxMessage["receive"],
         internal: {
           text: { body: `Chat assigned to ${user.userName}` },
-          assignedUsers: [],
+          assignedUsers: [] as WaInternalMessageBody["assignedUsers"],
           assignStatus: WaMessageAssignStatus.ASSIGNED,
           triggeredByUser: { id: user.userId, name: user.userName },
         },
         exchangeProcess: "internal",
       },
       sourcePlatform: "INTERNAL",
-      sourceIdentifier: null,
+      sourceIdentifier: null as string | null,
       sendBy: user.userId,
       sender: { name: user.userName, profilePhoto: user?.profilePhoto },
       stats: { read: "", sent: "", failed: "", delivered: "" },
       messageId,
     };
-    messagesStore.addMessage(`${rowKey}_all`, internalMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, internalMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, internalMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, internalMessage);
     assignMut.mutate(
       {
         messageId,
@@ -357,11 +359,11 @@ export default function WaInboxChatSelectCard({
             </span>
           )}
 
-          {contact?.mentionCount > 0 && (
+          {(contact?.mentionCount ?? 0) > 0 && (
             <span className="inline-flex items-center gap-0.75 text-[10px] font-extrabold text-primary">
               <AtSign className="size-2.75" />
               {translations("Mention")}
-              {contact.mentionCount > 1 ? ` ${contact.mentionCount}` : ""}
+              {(contact.mentionCount ?? 0) > 1 ? ` ${contact.mentionCount}` : ""}
             </span>
           )}
 
@@ -443,7 +445,7 @@ export default function WaInboxChatSelectCard({
   );
 }
 
-export function getContactClosedIcon(status) {
+export function getContactClosedIcon(status: string) {
   switch (status) {
     case WaMessageAssignStatus.CLOSED:
       return {

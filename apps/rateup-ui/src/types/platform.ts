@@ -5,7 +5,9 @@ export enum AutomationPlatform {
 }
 
 // Component compatibility mapping
-const PLATFORM_COMPONENT_SUPPORT = {
+// Keyed by node id, which arrives as an arbitrary string — the lookup below
+// guards for absence rather than relying on the literal key set.
+const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   // Supported on both platforms
   textNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
   imageNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],

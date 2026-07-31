@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useChatContactCountStore, useContactsStore } from "@/components/dashboard/inbox/store.ts";
@@ -33,6 +34,7 @@ import { cn } from "@/lib/utils.ts";
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
+import type { ChatFilter } from "./chatFilterStore.ts";
 import { useChatFilterStore } from "./chatFilterStore.ts";
 import InboxTabStrip from "./InboxTabStrip.tsx";
 
@@ -57,6 +59,14 @@ const ChatselectPanelHeader = ({
   isSelectionMode,
   setIsSelectionMode,
   setSelectedChats,
+}: {
+  isRefetchingFilteredContacts: boolean;
+  refetchFilteredContacts: () => void;
+  onUnknownContactAddSuccess?: (contact: ContactsData) => void;
+  tab: string;
+  isSelectionMode: boolean;
+  setIsSelectionMode: (mode: boolean) => void;
+  setSelectedChats: Dispatch<SetStateAction<string[]>>;
 }) => {
   const [showSearchBar, setShowSearchBar] = useState(false);
   const sortData = [
@@ -82,8 +92,8 @@ const ChatselectPanelHeader = ({
   // so it reads the same backend totals. The store's row list only holds the pages
   // fetched so far, which undercounts everything past the first page.
   const sectionCounts = useChatContactCountStore((s) => s.sectionCounts);
-  const loadedRowCount = useContactsStore(
-    (s) => s.contactsByFilter[s.currentFilterKey]?.length ?? 0,
+  const loadedRowCount = useContactsStore((s) =>
+    s.currentFilterKey ? (s.contactsByFilter[s.currentFilterKey]?.length ?? 0) : 0,
   );
   const countKey = TAB_SECTION_COUNT_KEY[tab as keyof typeof TAB_SECTION_COUNT_KEY];
   // Blocked has no backend total, and a search narrows the list below the tab
@@ -102,7 +112,7 @@ const ChatselectPanelHeader = ({
   const rowCountLabel = `${rowCount} ${rowNoun}`;
 
   useEffect(() => {
-    if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
+    if (filter.searchTerm?.length && !showSearchBar) setShowSearchBar(true);
   }, [filter.searchTerm, showSearchBar]);
 
   return (
@@ -272,7 +282,7 @@ const ChatselectPanelHeader = ({
           <SortMenu
             data={sortData}
             value={filter?.sortBy}
-            onChange={(value) => setFilter({ ...filter, sortBy: value })}
+            onChange={(value) => setFilter({ ...filter, sortBy: value as ChatFilter["sortBy"] })}
             defaultValue="newest"
             selectTriggerClassName="h-auto w-auto gap-1 border-0 bg-transparent px-0 text-xs! shadow-none hover:bg-transparent text-muted-foreground focus:ring-0 focus:ring-offset-0"
             customSelectTrigger={
@@ -297,13 +307,18 @@ const SortMenu = ({
 }: {
   data: { items: { label: string; value: string }[]; groupName: string }[];
   value: string;
-  onChange: (value) => void;
+  onChange: (value: string) => void;
   defaultValue: string;
   customSelectTrigger?: React.ReactNode;
   selectTriggerClassName?: string;
 }) => {
   return (
-    <Select onValueChange={onChange} value={value} defaultValue={defaultValue} items={data}>
+    <Select
+      onValueChange={(value) => onChange(value ?? "")}
+      value={value}
+      defaultValue={defaultValue}
+      items={data}
+    >
       <SelectTrigger className={selectTriggerClassName}>
         <SelectValue placeholder={customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />} />
       </SelectTrigger>

@@ -48,7 +48,8 @@ function RegisterForm() {
   const params = useParams({
     strict: false,
   });
-  const referCodeParam = searchParams.refer_code || searchParams.ref;
+  const referCodeRaw = searchParams.refer_code ?? searchParams.ref;
+  const referCodeParam = typeof referCodeRaw === "string" ? referCodeRaw : "";
 
   const { mutate, isPending } = useCreateLoyaltyCustomerMutation();
 
@@ -59,7 +60,7 @@ function RegisterForm() {
       phone: "",
       email: "",
       dob: undefined,
-      referCode: referCodeParam || "",
+      referCode: referCodeParam,
     },
   });
 

@@ -19,7 +19,7 @@ export function FeatureBadge({
   return (
     <Badge
       key={featurePathName}
-      style={{ backgroundColor: cssColorMap[color] ?? color, color: "white" }}
+      style={{ backgroundColor: cssColorMap[color ?? ""] ?? color, color: "white" }}
     >
       {getSubscriptionFeatureLabel(featurePathName)}
     </Badge>

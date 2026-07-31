@@ -81,7 +81,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
   return useMutation({
     mutationFn: (data: IUpdateTicketStatusRequest) => {
       const { id, ...rest } = data;
-      const selectedTicketId = ticketId ?? id;
+      const selectedTicketId = (ticketId ?? id)!;
       return updateTicketStatus(selectedTicketId, rest);
     },
     onSuccess: () => {
@@ -101,7 +101,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
 };
 
 // update ticket
-export const useUpdateTicketMutation = (id) => {
+export const useUpdateTicketMutation = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketRequest) => {
@@ -148,7 +148,7 @@ export function useDeleteTicket() {
 }
 
 // create ticket comment
-export const useCreateCommentMutation = (id) => {
+export const useCreateCommentMutation = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createComment,
@@ -497,7 +497,7 @@ export function useBoard(boardId: string) {
           const orderedCards = params.cards.map((cardOrder) => {
             // Find the card in the original cards array
             const card = column.ticketCards.find((c) => c.id === cardOrder.id);
-            return card; // Using ! because we know the card exists
+            return card!; // The reorder payload only ever names existing cards.
           });
 
           // Replace the column's cards with the ordered cards
@@ -546,7 +546,7 @@ export function useBoard(boardId: string) {
         const orderedColumns = params.columns.map((columnOrder) => {
           // Find the column in the original columns array
           const column = optimisticBoard.ticketColumns.find((c) => c.id === columnOrder.id);
-          return column; // Using ! because we know the column exists
+          return column!; // The reorder payload only ever names existing columns.
         });
 
         // Replace the board's columns with the ordered columns
@@ -601,7 +601,7 @@ export function useBoard(boardId: string) {
 export function useCardById(cardId: string | undefined) {
   return useQuery({
     queryKey: ["card", cardId],
-    queryFn: () => fetchCardById(cardId),
+    queryFn: () => fetchCardById(cardId!),
     enabled: !!cardId,
   });
 }
@@ -609,7 +609,7 @@ export function useCardById(cardId: string | undefined) {
 export function useCardTeamMembersById(cardId: string | undefined) {
   return useQuery({
     queryKey: ["teamMembersByCardId", cardId],
-    queryFn: () => fetchCardTeamMemberById(cardId),
+    queryFn: () => fetchCardTeamMemberById(cardId!),
     enabled: !!cardId,
   });
 }
@@ -617,7 +617,7 @@ export function useCardTeamMembersById(cardId: string | undefined) {
 export function useBoardTeamMembersById(cardId: string | undefined) {
   return useQuery({
     queryKey: ["teamMembersByBoardId", cardId],
-    queryFn: () => fetchBoardTeamMemberById(cardId),
+    queryFn: () => fetchBoardTeamMemberById(cardId!),
     enabled: !!cardId,
   });
 }

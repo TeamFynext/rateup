@@ -28,9 +28,9 @@ const QrHeader = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
-            <Link to="https://rateup.app" className="flex items-center gap-2">
+            <a href="https://rateup.app" className="flex items-center gap-2">
               <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
-            </Link>
+            </a>
           </div>
 
           <nav className="hidden md:flex items-center gap-10">
@@ -47,14 +47,14 @@ const QrHeader = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="https://rateup.app/login">
+            <a href="https://rateup.app/login">
               <Button
                 variant="outline"
                 className="text-gray-700 hover:text-[#1c518e] cursor-pointer transition-colors duration-300"
               >
                 Log in
               </Button>
-            </Link>
+            </a>
             <BookDemoModal>
               <Button className="bg-[#1c518e] cursor-pointer text-white hover:bg-[#1c518e] transition-colors duration-300 shadow-md">
                 Get Started
@@ -99,11 +99,11 @@ const QrHeader = () => {
                 Log in
               </Button>
             </Link>
-            <Link to="/get-started">
+            <a href="/get-started">
               <Button className="mt-3 w-full bg-[#1c518e] text-white hover:bg-[#1c518e] transition-colors duration-300 shadow-sm">
                 Get Started
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       )}

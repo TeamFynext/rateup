@@ -13,24 +13,24 @@ const QrFooter = () => {
               packaging solutions.
             </p>
             <div className="flex space-x-4 mt-3">
-              <Link
-                to="https://www.instagram.com/rateupsoftware/"
+              <a
+                href="https://www.instagram.com/rateupsoftware/"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandInstagram size={20} />
-              </Link>
-              <Link
-                to="https://www.linkedin.com/company/rateup"
+              </a>
+              <a
+                href="https://www.linkedin.com/company/rateup"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandLinkedin size={20} />
-              </Link>
-              <Link
-                to="https://www.facebook.com/people/RateUp/61556199852468/"
+              </a>
+              <a
+                href="https://www.facebook.com/people/RateUp/61556199852468/"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandFacebook size={20} />
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -38,9 +38,9 @@ const QrFooter = () => {
             <h4 className="font-bold mb-4">Company</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="#" className="hover:text-gray-300 transition">
+                <a href="#" className="hover:text-gray-300 transition">
                   Resources
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/about-us" className="hover:text-gray-300 transition">
@@ -53,9 +53,9 @@ const QrFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link to="https://blog.rateup.app/" className="hover:text-gray-300 transition">
+                <a href="https://blog.rateup.app/" className="hover:text-gray-300 transition">
                   Blog
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -107,9 +107,9 @@ const QrFooter = () => {
             <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm">
               Privacy Policy
             </Link>
-            <Link to="#" className="text-gray-400 hover:text-white text-sm">
+            <a href="#" className="text-gray-400 hover:text-white text-sm">
               Terms of Service
-            </Link>
+            </a>
           </div>
         </div>
       </div>

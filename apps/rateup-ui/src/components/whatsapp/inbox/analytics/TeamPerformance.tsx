@@ -6,9 +6,22 @@ import { useGetTeamOverview } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
-function TeamPerformance({ dateRange }) {
+/** One row of the team performance table. */
+interface TeamPerformanceRow {
+  teamId: string;
+  teamName: string;
+  teamColor?: string;
+  teamMembers?: number;
+  teamMembersOnline?: number;
+  messagesSent?: number;
+  assignedConversations?: number;
+  averageResponseTime?: number;
+}
+
+function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { data: teamsData, isLoading } = useGetTeamOverview({
@@ -72,7 +85,7 @@ function TeamPerformance({ dateRange }) {
                       </td>
                     </tr>
                   ))
-                : teamsData?.map((team) => {
+                : teamsData?.map((team: TeamPerformanceRow) => {
                     const averageResponseTime = formatTimeToNearestUnitFromSeconds(
                       team.averageResponseTime,
                     );
@@ -103,7 +116,7 @@ function TeamPerformance({ dateRange }) {
                         </td>
                         <td className="hidden sm:table-cell p-4">
                           <div className="font-semibold">
-                            {team.teamMembers} {team.teamMembers > 1 ? "members" : "member"}
+                            {team.teamMembers} {(team.teamMembers ?? 0) > 1 ? "members" : "member"}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {team.teamMembersOnline} {t("online")}

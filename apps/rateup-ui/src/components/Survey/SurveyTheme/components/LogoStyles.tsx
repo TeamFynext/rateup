@@ -20,7 +20,7 @@ function LogoStyles() {
   const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { logo } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { logo } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
@@ -32,24 +32,30 @@ function LogoStyles() {
   const [cropModalOpened, setCropModalOpened] = useState(false);
   const closeCropModal = () => setCropModalOpened(false);
   const openCropModal = () => setCropModalOpened(true);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
-  const handleHeightInputChange = useCallback((value) => {
+  const handleHeightInputChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "logo-height-change",
       payload: value,
     });
   }, []);
 
-  const handleWidthInputChange = useCallback((value) => {
+  const handleWidthInputChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "logo-width-change",
       payload: value,
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((obj) => {
-    const { file, url } = obj;
+  const onCroppedImgSave = useCallback((obj: { file?: File; url: string } | null) => {
+    const { file, url } = obj ?? {};
     surveyThemeDispatch({
       type: "logo-file-change",
       payload: {
@@ -65,7 +71,7 @@ function LogoStyles() {
   }, []);
 
   const handleFileInputChange = useCallback(
-    (value) => {
+    (value: File | "" | null) => {
       if (value) {
         const { name } = value;
         const url = URL.createObjectURL(value);

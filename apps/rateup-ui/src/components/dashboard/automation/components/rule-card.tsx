@@ -1,5 +1,6 @@
 import { IconDots } from "@tabler/icons-react";
 import { Trash2 } from "lucide-react";
+import type { MouseEvent } from "react";
 
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -15,8 +16,8 @@ import type { Rule } from "@/types/rule.ts";
 
 interface RuleCardProps {
   item: Rule;
-  onToggleActive: (e) => void;
-  onDelete: (e) => void;
+  onToggleActive: (isActive: boolean) => void;
+  onDelete: (e: MouseEvent<HTMLElement>) => void;
 }
 
 export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardProps>) {

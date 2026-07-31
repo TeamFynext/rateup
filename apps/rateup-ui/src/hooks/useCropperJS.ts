@@ -1,9 +1,10 @@
+import type { CropperCanvas, CropperImage, CropperSelection } from "cropperjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useCropperJS() {
-  const canvasRef = useRef<any>(null);
-  const selectionRef = useRef<any>(null);
-  const imageRef = useRef<any>(null);
+  const canvasRef = useRef<CropperCanvas | null>(null);
+  const selectionRef = useRef<CropperSelection | null>(null);
+  const imageRef = useRef<CropperImage | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -61,10 +62,13 @@ export function useCropperJS() {
   }, []);
 
   const getImageDimensions = useCallback(() => {
-    if (!imageRef.current) return null;
+    // The natural size lives on the `<img>` cropper-image renders in its shadow root; the
+    // custom element itself has no naturalWidth/naturalHeight.
+    const image = imageRef.current?.$image;
+    if (!image) return null;
     return {
-      naturalWidth: imageRef.current.naturalWidth,
-      naturalHeight: imageRef.current.naturalHeight,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
     };
   }, []);
 

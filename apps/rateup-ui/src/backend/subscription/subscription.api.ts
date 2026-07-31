@@ -22,7 +22,7 @@ export async function updateSubscription(
   return (await axiosClient.put(url, updatedData)).data;
 }
 
-export async function getMessageStats(orgId, filter = "") {
+export async function getMessageStats(orgId: string, filter = "") {
   return (
     await axiosClient.get(`${SUBSCRIPTION_URL}/message-stats/${orgId}?${filter}`, { timeout: 0 })
   ).data;

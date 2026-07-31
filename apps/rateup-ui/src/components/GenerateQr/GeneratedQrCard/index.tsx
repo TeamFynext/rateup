@@ -7,7 +7,19 @@ import { ActionCard } from "@/components/common/action-card.tsx";
 
 import MoreOptionsMenu from "./MoreOptionsMenu.tsx";
 
-function GeneratedQrCard({ name, shortUrlId, id, createdAt, scans }) {
+function GeneratedQrCard({
+  name,
+  shortUrlId,
+  id,
+  createdAt,
+  scans,
+}: {
+  name: string;
+  shortUrlId: string;
+  id: string;
+  createdAt: string | Date;
+  scans: number;
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const qrUrl = `${import.meta.env.VITE_FRONTEND_URL}/qr/${shortUrlId}`;

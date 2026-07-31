@@ -1,4 +1,4 @@
-import type { ColumnDef, PaginationState } from "@tanstack/react-table";
+import type { ColumnDef, PaginationState, Updater } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   CheckCircle2,
@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { WaMessageLogRow } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
 import {
   useExportWaMessageLogs,
   useWaMessageLogs,
@@ -32,8 +33,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 
-function MessageLogs({ dateRange }) {
+/** A log row, or a placeholder the table renders as a shimmer while the page loads. */
+type MessageLogTableRow = Partial<WaMessageLogRow> & { id: string; isSkeleton?: boolean };
+
+function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSource, setSelectedSource] = useState("all");
@@ -68,7 +73,7 @@ function MessageLogs({ dateRange }) {
   const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
   const { mutate: exportLogs, isPending: isExporting } = useExportWaMessageLogs();
 
-  const handlePaginationChange = useCallback((updater: any) => {
+  const handlePaginationChange = useCallback((updater: Updater<PaginationState>) => {
     setPagination((prev) => {
       const newPagination = typeof updater === "function" ? updater(prev) : updater;
       return newPagination;
@@ -154,7 +159,7 @@ function MessageLogs({ dateRange }) {
     exportLogs(params);
   }
 
-  const columns = useMemo<ColumnDef<any>[]>(
+  const columns = useMemo<ColumnDef<MessageLogTableRow>[]>(
     () => [
       {
         accessorKey: "createdAt",
@@ -294,10 +299,12 @@ function MessageLogs({ dateRange }) {
     [],
   );
 
-  const skeletonData = Array.from({ length: pagination.pageSize }).map((_, i) => ({
-    id: i,
-    isSkeleton: true,
-  }));
+  const skeletonData: MessageLogTableRow[] = Array.from({ length: pagination.pageSize }).map(
+    (_, i) => ({
+      id: String(i),
+      isSkeleton: true,
+    }),
+  );
 
   return (
     <div className="h-full relative">
@@ -325,7 +332,7 @@ function MessageLogs({ dateRange }) {
 
           <Select
             value={selectedStatus}
-            onValueChange={(value) => setSelectedStatus(value)}
+            onValueChange={(value) => setSelectedStatus(value ?? "all")}
             items={[
               { value: "all", label: t("All Status") },
               { value: "sent", label: t("Sent") },
@@ -348,7 +355,7 @@ function MessageLogs({ dateRange }) {
 
           <Select
             value={selectedSource}
-            onValueChange={(value) => setSelectedSource(value)}
+            onValueChange={(value) => setSelectedSource(value ?? "all")}
             items={[
               { value: "all", label: t("All Sources") },
               { value: "CAMPAIGN", label: t("Campaign") },

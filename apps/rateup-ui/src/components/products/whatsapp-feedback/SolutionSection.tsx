@@ -1,11 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { ReactNode } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
 import style from "./feedback.module.css";
 
-function Stars({ n }) {
+function Stars({ n }: { n: number }) {
   return (
     <div className="flex gap-px">
       {Array.from({ length: 5 }, (_, i) => (
@@ -24,7 +25,17 @@ function Stars({ n }) {
   );
 }
 
-function CopyBlock({ eyebrow, h3, p, pills }) {
+function CopyBlock({
+  eyebrow,
+  h3,
+  p,
+  pills,
+}: {
+  eyebrow: string;
+  h3: string;
+  p: string;
+  pills: string[];
+}) {
   const navigate = useNavigate();
   return (
     <div>
@@ -36,7 +47,7 @@ function CopyBlock({ eyebrow, h3, p, pills }) {
       </h6>
       <p className="text-white/70 text-[16px] leading-[1.6] mt-5 mb-[22px] max-w-[460px]">{p}</p>
       <div className="flex flex-wrap gap-2.5 mb-7">
-        {pills.map((t) => (
+        {pills.map((t: string) => (
           <span
             key={t}
             className="inline-flex items-center gap-2 text-[13px] font-semibold text-white/80 bg-white/[0.05] border border-white/10 rounded-full py-[7px] px-[15px] before:content-[''] before:w-[7px] before:h-[7px] before:rounded-full before:bg-wa-green before:flex-shrink-0"
@@ -88,7 +99,7 @@ function CopyBlock({ eyebrow, h3, p, pills }) {
   );
 }
 
-const triggerIcon = (color) => ({
+const triggerIcon = (color: string): Record<string, ReactNode> => ({
   purchase: (
     <svg
       viewBox="0 0 24 24"

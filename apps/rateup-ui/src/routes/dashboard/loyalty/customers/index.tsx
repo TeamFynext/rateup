@@ -36,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { WaInboxMessage } from "@/types/global";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/customers/")({
@@ -73,7 +74,7 @@ interface CustomerDetails {
     phone: string;
     source: string;
     orgId: string;
-    tags: any;
+    tags: string[] | null;
     consent: boolean;
     email: string;
     dob: string | null;
@@ -89,14 +90,14 @@ interface CustomerDetails {
     profilePic: string | null;
     followerCount: number | null;
     isIgVerifiedUser: boolean | null;
-    other: any | null;
+    other: unknown | null;
     lifecycleId: string;
     closedAt: string | null;
     closedBy: string | null;
-    lastMessageBody: any;
+    lastMessageBody: WaInboxMessage | null;
     lastMessageWaCreatedAt: string;
     lastMessagePlatform: string;
-    lastReceivedMetadata: any | null;
+    lastReceivedMetadata: unknown | null;
     lastMessageSourceIdentifier: string;
     lastSentMessageTimeStamp: string;
     notes: string | null;
@@ -132,7 +133,7 @@ function CustomerPage() {
     sorting,
     [],
   );
-  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId);
+  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId ?? "");
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
 
@@ -278,7 +279,7 @@ function CustomerPage() {
     },
   ];
 
-  const handleViewCustomer = (customer: any) => {
+  const handleViewCustomer = (customer: CustomerDetails) => {
     setSelectedCustomer(customer);
     setSelectedCustomerId(customer.id);
     setViewMode("details");

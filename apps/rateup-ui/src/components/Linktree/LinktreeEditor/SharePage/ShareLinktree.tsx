@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
+import type { QrLogoPanelState } from "@/components/Survey/ShareSurvey/ShareQR/LogoTabPanel/index.tsx";
 import { cn } from "@/lib/utils";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -19,11 +20,19 @@ import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "./ShareLinktree.module.css";
 
-function ShareLinktree({ url, isPublished, title }) {
-  const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
-    logoTabPanelReducer,
-    initialLogoTabPanelState,
-  );
+function ShareLinktree({
+  url,
+  isPublished,
+  title,
+}: {
+  url: string;
+  isPublished: boolean;
+  title: string;
+}) {
+  const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer<
+    QrLogoPanelState,
+    { type: string; payload?: unknown }
+  >(logoTabPanelReducer, initialLogoTabPanelState);
 
   const params = useParams({
     strict: false,
@@ -45,15 +54,18 @@ function ShareLinktree({ url, isPublished, title }) {
   const handleSaveOfShareSettings = useCallback(async () => {
     setIsSavingSettings(true);
     if (linktreeUpdateMutateAsync) {
-      const newState = { ...logoTabPanelState };
+      // `logoFile` still holds the picked File until it is uploaded below.
+      const newState = { ...logoTabPanelState } as Omit<QrLogoPanelState, "logoFile"> & {
+        logoFile: File | string | null;
+      };
       if (newState?.logoFile instanceof File) {
         const uploadedFileKey = await uploadFile(newState.logoFile);
         newState["logoFile"] = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${uploadedFileKey}`;
       }
       const formData = new FormData();
       for (const property in newState) {
-        const value = newState[property];
-        formData.append(property, value);
+        const value = newState[property as keyof typeof newState];
+        formData.append(property, String(value));
       }
       try {
         await linktreeUpdateMutateAsync({

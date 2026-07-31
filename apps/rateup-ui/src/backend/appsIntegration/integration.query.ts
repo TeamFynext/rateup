@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums.ts";
 
-import type { updateIntegrationSchema } from "./integration.api";
+import type { integrationSchemaProps, updateIntegrationSchema } from "./integration.api";
 import {
   createGoogleSheetAuthToken,
   createIntegration,
@@ -110,7 +110,8 @@ export const useDeleteWaPaymentConfigurationMutation = (type: IntegratedApps) =>
 export const useCreateIntegrationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { credential: any }) => createIntegration({ name: type, ...data }),
+    mutationFn: (data: { credential: integrationSchemaProps["credential"] }) =>
+      createIntegration({ name: type, ...data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       toast.success("Integration created successfully", {

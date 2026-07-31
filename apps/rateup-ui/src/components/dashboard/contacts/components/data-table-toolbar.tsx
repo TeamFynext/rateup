@@ -64,16 +64,24 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { useContactTableStore } from "../store/contact-table-store.ts";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps {
+  table: Table<ContactsData>;
 }
 
-const SourceSelector = ({ value, onChange }) => {
+const SourceSelector = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => {
   const ContactSources = [
     { label: "All Sources", value: "all", icon: Layers },
     { label: "WhatsApp", value: "whatsapp", icon: IconBrandWhatsapp },
@@ -85,7 +93,7 @@ const SourceSelector = ({ value, onChange }) => {
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       items={ContactSources.map((source) => ({ value: source.value, label: source.label }))}
     >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
@@ -107,7 +115,17 @@ const SourceSelector = ({ value, onChange }) => {
   );
 };
 
-const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = false }) => {
+const LabelSelector = ({
+  value,
+  onChange,
+  includeAll = false,
+  includeStatus = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  includeAll?: boolean;
+  includeStatus?: boolean;
+}) => {
   const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
   const labels = contactLabels.map((label) => ({
     id: label.id,
@@ -134,7 +152,7 @@ const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = fa
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       items={labels.map((label) => ({ value: label.id, label: label.name }))}
     >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
@@ -156,7 +174,7 @@ const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = fa
   );
 };
 
-export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   const isFiltered = table.getState().columnFilters.length > 0;
   const { filter, setFilter } = useContactTableStore();
   const { t } = useTranslation();
@@ -321,7 +339,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
   );
 }
 
-const ExportContacts = ({ table }) => {
+const ExportContacts = ({ table }: { table: Table<ContactsData> }) => {
   const exportMut = useExportContactsMutation();
   const leafColumns = table
     .getAllLeafColumns()
@@ -355,14 +373,20 @@ const ExportContacts = ({ table }) => {
   );
 };
 
-const ImportContactModal = ({ opened, setOpened }) => {
+const ImportContactModal = ({
+  opened,
+  setOpened,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+}) => {
   const { t } = useTranslation();
 
   const handleDownloadDemo = () => {
     // Example: download a text file (you can replace this with any file URL)
     const fileUrl = getFileUrlFromKey("/File/contact/demo.csv", false);
     const link = document.createElement("a");
-    link.href = fileUrl;
+    link.href = fileUrl ?? "";
     link.download = "example.pdf"; // Suggested filename
     link.click();
   };
@@ -371,13 +395,13 @@ const ImportContactModal = ({ opened, setOpened }) => {
   const [hasHeaderRow, setHasHeaderRow] = useState(true);
   const importCSVContactMutation = useImportCSVContactMutation();
   const [error, setError] = useState<string | null>(null);
-  const [fields, setFields] = useState([]);
+  const [fields, setFields] = useState<CustomField[]>([]);
   const { customFields } = useCustomFieldsContext();
 
   useEffect(() => {
     if (csvfile) {
       const fileExtension = csvfile.name.split(".").pop()?.toLowerCase();
-      if (!["csv", "xlsx", "ods"].includes(fileExtension)) {
+      if (!["csv", "xlsx", "ods"].includes(fileExtension ?? "")) {
         setError(t("Please upload a valid CSV, XLSX, or ODS file."));
       } else {
         setError(null);
@@ -404,8 +428,8 @@ const ImportContactModal = ({ opened, setOpened }) => {
         toast.success("Contact imported successfully");
         setOpened(false);
       },
-      onError: (error: any) => {
-        const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+      onError: (error) => {
+        const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
         if (!isValidationError) {
           toast.error(error?.message || "Importing failed");
         }
@@ -517,7 +541,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         </div>
       </DialogContent>
       <ContactImportErrorModal
-        body={(importCSVContactMutation?.error as any)?.response?.data}
+        body={getApiErrorData(importCSVContactMutation?.error)}
         isError={importCSVContactMutation.isError}
       />
     </Dialog>

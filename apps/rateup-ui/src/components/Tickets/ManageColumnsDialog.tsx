@@ -4,10 +4,19 @@ import { useTranslation } from "react-i18next";
 
 import type { Column as ColumnType } from "./types.ts";
 
+/** A column row in the editor: an existing column, or one being added. */
+export interface EditableColumn {
+  id: string;
+  title: string;
+  color?: string;
+  isNew?: boolean;
+  ticketCardsCount?: number;
+}
+
 interface ManageColumnsDialogProps {
   columns: ColumnType[];
   onClose: () => void;
-  onSave: (newColumns: any[], deletedIds: string[]) => void;
+  onSave: (newColumns: EditableColumn[], deletedIds: string[]) => void;
 }
 
 export function ManageColumnsDialog({
@@ -17,15 +26,7 @@ export function ManageColumnsDialog({
 }: Readonly<ManageColumnsDialogProps>) {
   const { t } = useTranslation();
   // Map internal columns to a generic shape that handles "new" vs "existing"
-  const [localCols, setLocalCols] = useState<
-    {
-      id: string;
-      title: string;
-      color?: string;
-      isNew?: boolean;
-      ticketCardsCount?: number;
-    }[]
-  >([]);
+  const [localCols, setLocalCols] = useState<EditableColumn[]>([]);
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -40,7 +41,7 @@ export function ManageColumnsDialog({
       columns.map((c) => ({
         id: c.id,
         title: c.title,
-        color: (c as any).color || "#8B8E8A",
+        color: c.color || "#8B8E8A",
         isNew: false,
         ticketCardsCount: c._count?.ticketCards ?? c.ticketCards?.length ?? 0,
       })),

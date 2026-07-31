@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button.tsx";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
+import type { QrLogoPanelState } from "../ShareQR/LogoTabPanel/index.tsx";
 
 import styles from "./Preview.module.css";
 
@@ -17,6 +18,12 @@ function Preview({
   isSurveyPublished = true,
   customAttrForDownloadedQrFileName = "",
   logoTabPanelState,
+}: {
+  url: string;
+  surveyTitle: string;
+  logoTabPanelState: QrLogoPanelState;
+  isSurveyPublished?: boolean;
+  customAttrForDownloadedQrFileName?: string;
 }) {
   const {
     qrBgColor,
@@ -30,7 +37,7 @@ function Preview({
 
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] = useState(false);
 
-  const previewContainerRef = useRef(undefined);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const { t: translations } = useTranslation();
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const FALLBACK_LOGO = "/images/rateup-icon.png";

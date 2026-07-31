@@ -15,7 +15,7 @@ import {
 
 import { updateEmailSurvey } from "./updateSettings.ts";
 
-const NotificationEmailSettings = ({ survey, surveyId }) => {
+const NotificationEmailSettings = ({ survey, surveyId }: { survey: Survey; surveyId: string }) => {
   const uid = useId();
   const [enableNotificationEmail, setEnabledNotificationEmail] = useState(
     survey?.enableNotificationEmail,
@@ -26,7 +26,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {
-    if (!/^\S+@\S+$/.test(notificationEmail)) setError(translations("Invalid Email"));
+    if (!/^\S+@\S+$/.test(notificationEmail ?? "")) setError(translations("Invalid Email"));
     else setError("");
   }, [notificationEmail]);
 

@@ -30,6 +30,8 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { emailPattern } from "@/utils/constants.ts";
 
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
+
 enum AllowEmailForOTP {
   allEmail = "All Emails",
   emailFromList = "Emails from list",
@@ -40,7 +42,15 @@ enum EmailAddMethod {
   Import = "Import from file",
 }
 
-const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
+const EmailOtpExtraProps = ({
+  form,
+  qId,
+  surveyLanguages,
+}: {
+  form: QuestionExtraPropsForm;
+  qId: string;
+  surveyLanguages: string[];
+}) => {
   const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {
@@ -63,9 +73,9 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
     const remainingIds = allowedEmailIDs.filter((e) => !selectedEmailIds.includes(e));
     const featuresObj = { ...form.values?.features };
     for (const lang of surveyLanguages) {
-      featuresObj[lang] = { ...form.values.features?.[lang], allowedEmails: remainingIds };
+      featuresObj[lang] = { ...form.values?.features?.[lang], allowedEmails: remainingIds };
     }
-    form.setFieldValue("features", featuresObj);
+    form.setFieldValue?.("features", featuresObj);
     setSelectedEmailIds([]);
   };
 
@@ -81,9 +91,9 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
     const updated = [...allowedEmailIDs, newEmail];
     const featuresObj = { ...form.values?.features };
     for (const lang of surveyLanguages) {
-      featuresObj[lang] = { ...form.values.features?.[lang], allowedEmails: updated };
+      featuresObj[lang] = { ...form.values?.features?.[lang], allowedEmails: updated };
     }
-    form.setFieldValue("features", featuresObj);
+    form.setFieldValue?.("features", featuresObj);
     setNewEmail("");
   };
 
@@ -97,7 +107,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
         }
         onValueChange={(values) => {
           if (!values.length) return;
-          form.setFieldValue("features", {
+          form.setFieldValue?.("features", {
             ...form.values?.features,
             [selectedLanguage]: {
               ...features,
@@ -238,7 +248,7 @@ const ImportAllowedEmailIDs = ({ qId }: { qId: string }) => {
   const [file, setFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { surveyId } = useContext(SurveyContext);
-  const importEmailIdsMutate = useImportEmailIdsMutation(surveyId);
+  const importEmailIdsMutate = useImportEmailIdsMutation(surveyId ?? "");
   const { t: translations } = useTranslation();
 
   const handleUploadFile = () => {
@@ -246,7 +256,7 @@ const ImportAllowedEmailIDs = ({ qId }: { qId: string }) => {
     const formData = new FormData();
     formData.append("file", file);
     importEmailIdsMutate.mutate(
-      { questionId: qId, data: formData, surveyId },
+      { questionId: qId, data: formData, surveyId: surveyId ?? "" },
       {
         onSuccess: () => {
           toast.success(translations("Email Ids imported"));

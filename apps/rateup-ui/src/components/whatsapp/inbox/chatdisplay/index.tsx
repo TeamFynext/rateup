@@ -41,7 +41,7 @@ export default function WaInboxChatDisplay() {
   const [showCustomerInfo, setShowCustomerInfo] = useState(true);
   const [showDetailsOverlay, setShowDetailsOverlay] = useState(false);
   const contactId = contact?.id;
-  const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
+  const { data: assignedUserList } = useGetAssignedUserForContact(contactId ?? "");
   const MAX_FILES = 10;
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
@@ -67,11 +67,17 @@ export default function WaInboxChatDisplay() {
   useEffect(() => {
     if (!contact?.id || !assignedUserList) return;
 
-    const mapped = assignedUserList.map((a) => ({
-      id: a.assignedUserId,
-      name: a.assignedUser?.name,
-      teamId: a.teamId,
-    }));
+    const mapped = assignedUserList.map(
+      (a: {
+        assignedUserId?: string;
+        teamId?: string;
+        assignedUser?: { id?: string; name?: string };
+      }) => ({
+        id: a.assignedUserId,
+        name: a.assignedUser?.name,
+        teamId: a.teamId,
+      }),
+    );
 
     updateContactById(contact.id, (prev) => {
       if (
@@ -101,7 +107,7 @@ export default function WaInboxChatDisplay() {
   } else if (isClosedTicket || !contact?.assignedUsers?.length) {
     // Closed or unassigned → the assign/closed banner (which explains a closed
     // ticket and offers reopen-by-assign), not the message editor.
-    footerContent = <WaInboxAssignUserFooter contact={contact} user={user} />;
+    footerContent = <WaInboxAssignUserFooter contact={contact!} user={user!} />;
   } else if (isAssignedToMe) {
     footerContent = <WaInboxChatDisplayFooter contact={contact} />;
   } else {

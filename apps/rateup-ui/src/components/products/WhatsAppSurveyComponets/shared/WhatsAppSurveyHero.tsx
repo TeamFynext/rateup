@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -22,11 +21,11 @@ export default function WhatsAppSurveyHero() {
           into growth.
         </p>
         <div className="flex flex-col sm:flex-row sm:justify-center md:justify-start gap-4">
-          <Link to={"https://rateup.app/login"}>
+          <a href={"https://rateup.app/login"}>
             <button className="bg-[#009987] w-full cursor-pointer hover:bg-[#075E54] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition">
               Start Free Trial
             </button>
-          </Link>
+          </a>
           <BookDemoModal>
             <button className="bg-white border cursor-pointer border-gray-300 hover:border-gray-400 text-gray-900 font-semibold py-3 px-6 rounded-lg shadow-md transition">
               Schedule a Demo

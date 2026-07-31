@@ -3,6 +3,7 @@ import type { NodeProps } from "@xyflow/react";
 import type { JSX, ReactNode } from "react";
 import { memo } from "react";
 
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import {
   Attachment,
@@ -14,6 +15,7 @@ import {
 import { cn } from "@/lib/utils.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
+import type { NodeFields } from "../../types/node-types.ts";
 import { isNodeValid } from "../../types/node-validation.ts";
 import BaseNode from "./base-node.tsx";
 import { NodeChoice, NodePlaceholder, NodeText } from "./node-parts.tsx";
@@ -32,8 +34,14 @@ type Choice = { id?: string; title: ReactNode; description?: ReactNode };
 
 type Part =
   | { t: "field"; label?: string; value: ReactNode; mono?: boolean }
-  | { t: "rich"; label?: string; value: unknown; placeholder?: string }
-  | { t: "media"; kind: MediaKind; src?: string | null; title: ReactNode; caption?: unknown }
+  | { t: "rich"; label?: string; value?: string | TiptapNode; placeholder?: string }
+  | {
+      t: "media";
+      kind: MediaKind;
+      src?: string | null;
+      title: ReactNode;
+      caption?: string | TiptapNode;
+    }
   | { t: "choices"; items: Choice[] };
 
 // ── part builders ───────────────────────────────────────────────────────
@@ -43,7 +51,11 @@ const field = (label: string | undefined, value: ReactNode, mono = false): Part 
   value,
   mono,
 });
-const rich = (label: string, value: unknown, placeholder?: string): Part => ({
+const rich = (
+  label: string,
+  value: string | TiptapNode | undefined,
+  placeholder?: string,
+): Part => ({
   t: "rich",
   label,
   value,
@@ -53,19 +65,19 @@ const media = (
   kind: MediaKind,
   src: string | null | undefined,
   title: ReactNode,
-  caption?: unknown,
+  caption?: string | TiptapNode,
 ): Part => ({ t: "media", kind, src, title, caption });
 const choices = (items: Choice[]): Part => ({ t: "choices", items });
 
 // Shared spec for all user-input node types.
-const inputSpec = (d: any): Part[] => {
+const inputSpec = (d: NodeFields): Part[] => {
   const parts: Part[] = [rich("Question", d.question, "Empty question")];
   if (d.variableName) parts.push(field("Saves to", d.variableName, true));
   return parts;
 };
 
 // ── per-type body specs (return only the relevant fields) ───────────────
-const NODE_BODY: Record<string, (d: any) => Part[]> = {
+const NODE_BODY: Record<string, (d: NodeFields) => Part[]> = {
   textNode: (d) => [rich("Message", d.body, "Empty message")],
   catalogNode: (d) => [rich("Message", d.body, "Empty message")],
 
@@ -106,7 +118,7 @@ const NODE_BODY: Record<string, (d: any) => Part[]> = {
     if (d.footer) parts.push(rich("Footer", d.footer));
     parts.push(
       choices(
-        (d.buttons || []).map((b: any) => ({
+        (d.buttons || []).map((b) => ({
           id: typeof b === "object" ? b?.id : undefined,
           title: typeof b === "object" ? b.title : b,
         })),
@@ -122,8 +134,8 @@ const NODE_BODY: Record<string, (d: any) => Part[]> = {
     if (d.footer) parts.push(rich("Footer", d.footer));
     if (d.button) parts.push(field("Button", d.button));
     const items: Choice[] = [];
-    (d.sections || []).forEach((s: any) =>
-      (s.rows || []).forEach((r: any) =>
+    (d.sections || []).forEach((s) =>
+      (s.rows || []).forEach((r) =>
         items.push({ id: r.id, title: r.title, description: r.description }),
       ),
     );
@@ -187,8 +199,8 @@ const NODE_BODY: Record<string, (d: any) => Part[]> = {
     const count = d.elements?.length || 0;
     const parts: Part[] = [field("Cards", `${count} card${count !== 1 ? "s" : ""}`)];
     const items: Choice[] = [];
-    (d.elements || []).forEach((el: any, ci: number) =>
-      (el.buttons || []).forEach((b: any, bi: number) => {
+    (d.elements || []).forEach((el, ci: number) =>
+      (el.buttons || []).forEach((b, bi: number) => {
         if (b.type === "postback") {
           items.push({ id: b.id || b.payload || `btn_${ci}_${bi}`, title: b.title || "Button" });
         }
@@ -201,7 +213,7 @@ const NODE_BODY: Record<string, (d: any) => Part[]> = {
   instagramQuickReplyNode: (d) => {
     const parts: Part[] = [];
     if (d.text) parts.push(rich("Message", d.text));
-    const items: Choice[] = (d.quick_replies || []).map((r: any, i: number) => ({
+    const items: Choice[] = (d.quick_replies || []).map((r, i: number) => ({
       id: r.id || r.payload || `qr_${i}`,
       title: r.title || `Option ${i + 1}`,
     }));

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import {
   useDeleteIntegrationMutation,
   useIntegrationByType,
@@ -109,7 +110,7 @@ export function Zoho() {
   );
 }
 
-const ZohoAuthentication = ({ integration }) => {
+const ZohoAuthentication = ({ integration }: { integration: AppIntegration }) => {
   const { t } = useTranslation();
   const user = useUser();
   const [connectionMode, setConnectionMode] = useState<"crm" | "bigin" | "both" | null>(null);
@@ -152,13 +153,13 @@ const ZohoAuthentication = ({ integration }) => {
       `&response_type=code` +
       `&access_type=offline` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&state=${user.user.orgId}`;
+      `&state=${user.user?.orgId}`;
 
     window.location.href = authUrl;
   }
 
   async function handleDelete() {
-    await disconnectMut.mutate(user.user.orgId);
+    await disconnectMut.mutate(user.user?.orgId ?? "");
     await deleteMut.mutate();
   }
 
@@ -172,9 +173,9 @@ const ZohoAuthentication = ({ integration }) => {
         <Field>
           <FieldLabel htmlFor="zoho-org-id">{t("Organization ID")}</FieldLabel>
           <InputGroup>
-            <InputGroupInput id="zoho-org-id" value={user.user.orgId} readOnly />
+            <InputGroupInput id="zoho-org-id" value={user.user?.orgId} readOnly />
             <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={user.user.orgId} />
+              <ApiCopyButton value={user.user?.orgId ?? ""} />
             </InputGroupAddon>
           </InputGroup>
         </Field>
@@ -191,7 +192,7 @@ const ZohoAuthentication = ({ integration }) => {
 
             <Select
               value={connectionMode || ""}
-              onValueChange={(value: any) => setConnectionMode(value)}
+              onValueChange={(value) => setConnectionMode(value as "crm" | "bigin" | "both" | null)}
               items={[
                 { value: "crm", label: "Zoho CRM Only" },
                 { value: "bigin", label: "Zoho Bigin Only" },
@@ -239,14 +240,14 @@ const ZohoTriggerList = ({
   refetch,
   isLoading,
 }: {
-  integration: any;
+  integration: AppIntegration;
   refetch: () => void;
   isLoading: boolean;
 }) => {
   const { user } = useUser();
   const { t } = useTranslation();
   const { data: zohoUsersResponse, isLoading: zohoUsersLoading } = useZohoUsers(
-    user.orgId,
+    user?.orgId,
     "bigin",
   );
 
@@ -260,10 +261,11 @@ const ZohoTriggerList = ({
     }
   }, [integration?.credential?.bigin?.biginOwner]);
 
-  const zohoUsers = Array.isArray(zohoUsersResponse?.users)
-    ? zohoUsersResponse.users
-    : Array.isArray(zohoUsersResponse?.users?.users)
-      ? zohoUsersResponse.users.users
+  const usersField = zohoUsersResponse?.users;
+  const zohoUsers = Array.isArray(usersField)
+    ? usersField
+    : Array.isArray(usersField?.users)
+      ? usersField.users
       : [];
 
   const triggers = integration ? (integration.credential?.triggerSubscriptions ?? []) : [];
@@ -275,7 +277,7 @@ const ZohoTriggerList = ({
       t.active,
   );
 
-  const selectedOwner = zohoUsers.find((owner: any) => owner.id === selectedBiginOwnerId);
+  const selectedOwner = zohoUsers.find((owner) => owner.id === selectedBiginOwnerId);
 
   const savedPipeline = integration?.credential?.bigin?.pipeline?.selectedPipeline;
 
@@ -292,13 +294,20 @@ const ZohoTriggerList = ({
     savedSubPipeline?.id ? String(savedSubPipeline.id) : "",
   );
 
-  const [requiredFieldValues, setRequiredFieldValues] = useState<Record<string, any>>(
+  const [requiredFieldValues, setRequiredFieldValues] = useState<Record<string, string>>(
     savedRequiredFieldMappings,
   );
 
   const [openLifecycleMappingModal, setOpenLifecycleMappingModal] = useState(false);
 
-  const [lifecycleMappings, setLifecycleMappings] = useState<any[]>([]);
+  const [lifecycleMappings, setLifecycleMappings] = useState<
+    Array<{
+      lifecycleId: string;
+      lifecycleName?: string;
+      biginStageId?: string;
+      biginStageName?: string;
+    }>
+  >([]);
 
   const { data: lifecycles } = useLifecyclesWithContactCount();
 
@@ -311,16 +320,16 @@ const ZohoTriggerList = ({
   const stages = zohopipelines?.stages ?? [];
 
   const selectedPipeline = pipelines.find(
-    (pipeline: any) => String(pipeline.id) === String(selectedPipelineId),
+    (pipeline) => String(pipeline.id) === String(selectedPipelineId),
   );
 
   const handleSavePipelineConfig = () => {
     const selectedPipelineObj = pipelines.find(
-      (pipeline: any) => String(pipeline.id) === String(selectedPipelineId),
+      (pipeline) => String(pipeline.id) === String(selectedPipelineId),
     );
 
     const selectedSubPipelineObj = subPipelines.find(
-      (pipeline: any) => String(pipeline.id) === String(selectedSubPipelineId),
+      (pipeline) => String(pipeline.id) === String(selectedSubPipelineId),
     );
 
     updateMut.mutate({
@@ -350,8 +359,8 @@ const ZohoTriggerList = ({
 
     const existingMappings = integration?.credential?.bigin?.pipeline?.lifecycleStageMappings || [];
 
-    const mappings = lifecycles.map((lifecycle: any) => {
-      const existing = existingMappings.find((m: any) => m.lifecycleId === lifecycle.id);
+    const mappings = lifecycles.map((lifecycle) => {
+      const existing = existingMappings.find((m) => m.lifecycleId === lifecycle.id);
 
       return {
         lifecycleId: lifecycle.id,
@@ -368,11 +377,11 @@ const ZohoTriggerList = ({
 
   const handleSaveLifecycleMappings = () => {
     const selectedPipelineObj = pipelines.find(
-      (pipeline: any) => String(pipeline.id) === String(selectedPipelineId),
+      (pipeline) => String(pipeline.id) === String(selectedPipelineId),
     );
 
     const selectedSubPipelineObj = subPipelines.find(
-      (pipeline: any) => String(pipeline.id) === String(selectedSubPipelineId),
+      (pipeline) => String(pipeline.id) === String(selectedSubPipelineId),
     );
 
     updateMut.mutate({
@@ -538,7 +547,7 @@ const ZohoTriggerList = ({
                 value={selectedBiginOwnerId}
                 onValueChange={(value) => setSelectedBiginOwnerId(String(value))}
                 disabled={zohoUsersLoading}
-                items={zohoUsers.map((owner: any) => ({
+                items={zohoUsers.map((owner) => ({
                   value: owner.id,
                   label: `${owner.name} ${owner.email ? `(${owner.email})` : ""}`,
                 }))}
@@ -550,7 +559,7 @@ const ZohoTriggerList = ({
                 </SelectTrigger>
 
                 <SelectContent>
-                  {zohoUsers.map((owner: any) => (
+                  {zohoUsers.map((owner) => (
                     <SelectItem key={owner.id} value={owner.id}>
                       {owner.name} {owner.email ? `(${owner.email})` : ""}
                     </SelectItem>
@@ -622,7 +631,7 @@ const ZohoTriggerList = ({
                   onValueChange={(value) => {
                     setSelectedPipelineId(String(value));
                   }}
-                  items={pipelines.map((pipeline: any) => ({
+                  items={pipelines.map((pipeline) => ({
                     value: String(pipeline.id),
                     label: pipeline.name,
                   }))}
@@ -632,7 +641,7 @@ const ZohoTriggerList = ({
                   </SelectTrigger>
 
                   <SelectContent>
-                    {pipelines.map((pipeline: any) => (
+                    {pipelines.map((pipeline) => (
                       <SelectItem key={String(pipeline.id)} value={String(pipeline.id)}>
                         {pipeline.name}
                       </SelectItem>
@@ -655,7 +664,7 @@ const ZohoTriggerList = ({
                   onValueChange={(value) => {
                     setSelectedSubPipelineId(String(value));
                   }}
-                  items={subPipelines.map((pipeline: any) => ({
+                  items={subPipelines.map((pipeline) => ({
                     value: String(pipeline.id),
                     label: pipeline.name,
                   }))}
@@ -665,7 +674,7 @@ const ZohoTriggerList = ({
                   </SelectTrigger>
 
                   <SelectContent>
-                    {subPipelines.map((pipeline: any) => (
+                    {subPipelines.map((pipeline) => (
                       <SelectItem key={String(pipeline.id)} value={String(pipeline.id)}>
                         {pipeline.name}
                       </SelectItem>
@@ -676,7 +685,7 @@ const ZohoTriggerList = ({
             </div>
 
             {/* REQUIRED FIELDS */}
-            {selectedPipeline?.requiredFields?.length > 0 && (
+            {(selectedPipeline?.requiredFields?.length ?? 0) > 0 && (
               <div className="space-y-4 rounded-2xl border bg-muted/20 p-5">
                 <div>
                   <h3 className="font-semibold">{t("Required Fields")}</h3>
@@ -687,9 +696,9 @@ const ZohoTriggerList = ({
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  {selectedPipeline.requiredFields
-                    .filter((field: any) => !autoManagedFields.includes(field.apiName))
-                    .map((field: any) => (
+                  {(selectedPipeline?.requiredFields ?? [])
+                    .filter((field) => !autoManagedFields.includes(field.apiName))
+                    .map((field) => (
                       <div key={field.apiName} className="space-y-2">
                         <Label>{field.label}</Label>
 
@@ -789,7 +798,7 @@ const ZohoTriggerList = ({
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             {(() => {
               const unmatchedStages = stages.filter(
-                (stage: any) =>
+                (stage) =>
                   !lifecycleMappings.some(
                     (mapping) => String(mapping.biginStageId) === String(stage.id),
                   ),
@@ -814,16 +823,16 @@ const ZohoTriggerList = ({
                 <Select
                   value={mapping.biginStageId}
                   onValueChange={(value) => {
-                    const stage = stages.find((s: any) => String(s.id) === String(value));
+                    const stage = stages.find((s) => String(s.id) === String(value));
                     const updated = [...lifecycleMappings];
                     updated[index] = {
                       ...mapping,
-                      biginStageId: stage?.id,
+                      biginStageId: stage?.id === undefined ? undefined : String(stage.id),
                       biginStageName: stage?.name,
                     };
                     setLifecycleMappings(updated);
                   }}
-                  items={stages.map((stage: any) => ({
+                  items={stages.map((stage) => ({
                     value: String(stage.id),
                     label: stage.name,
                   }))}
@@ -833,7 +842,7 @@ const ZohoTriggerList = ({
                   </SelectTrigger>
 
                   <SelectContent>
-                    {stages.map((stage: any) => (
+                    {stages.map((stage) => (
                       <SelectItem key={stage.id} value={String(stage.id)}>
                         {stage.name}
                       </SelectItem>
@@ -856,7 +865,7 @@ const ZohoTriggerList = ({
   );
 };
 
-function ZohoContactsTable({ integration }: { integration: any }) {
+function ZohoContactsTable({ integration }: { integration: AppIntegration }) {
   const { user } = useUser();
   const { t } = useTranslation();
   const syncMutation = useSyncZohoContactsMutation("crm");
@@ -868,7 +877,7 @@ function ZohoContactsTable({ integration }: { integration: any }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user.orgId, "crm"],
+        queryKey: ["zoho-contacts", user?.orgId, "crm"],
       });
 
       toast.success(t("Zoho contacts synced successfully"), {
@@ -915,30 +924,34 @@ function ZohoContactsTable({ integration }: { integration: any }) {
   );
 }
 
-function ZohoLeadsTable({ integration }: { integration: any }) {
+function ZohoLeadsTable({ integration }: { integration: AppIntegration }) {
   const { user } = useUser();
   const { t } = useTranslation();
   const { data: lifecycles } = useLifecyclesWithContactCount();
   const syncMutation = useSyncZohoLeadsMutation();
   const updateIntegrationMutation = useUpdateIntegrationMutation(IntegratedApps.zoho);
-  const { data } = useZohoLeads(user.orgId);
+  const { data } = useZohoLeads(user?.orgId);
   const leads = data?.leads?.leads || [];
   const queryClient = useQueryClient();
   const [openMappingModal, setOpenMappingModal] = useState(false);
-  const [leadStatusMappings, setLeadStatusMappings] = useState<any[]>([]);
+  const [leadStatusMappings, setLeadStatusMappings] = useState<
+    Array<{ zohoLeadStatus: string; lifecycleId?: string; lifecycleName?: string }>
+  >([]);
 
   async function handleSync() {
     if (!lifecycles || !leads.length) return;
     const uniqueLeadStatuses = Array.from(
       new Set<string>(
-        leads.map((lead) => lead.Lead_Status).filter((status): status is string => !!status),
+        leads
+          .map((lead: { Lead_Status?: string }) => lead.Lead_Status)
+          .filter((status: string | undefined): status is string => !!status),
       ),
     );
 
     const existingMappings = integration?.credential?.crm?.leadLifecycleMappings || [];
 
     const mappings = uniqueLeadStatuses.map((status) => {
-      const existing = existingMappings.find((m: any) => m.zohoLeadStatus === status);
+      const existing = existingMappings.find((m) => m.zohoLeadStatus === status);
 
       return {
         zohoLeadStatus: status,
@@ -957,7 +970,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-leads", user.orgId],
+        queryKey: ["zoho-leads", user?.orgId],
       });
 
       toast.success(t("Zoho leads synced successfully"), {
@@ -1129,7 +1142,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
   );
 }
 
-function BiginContactsTable({ integration }: { integration: any }) {
+function BiginContactsTable({ integration }: { integration: AppIntegration }) {
   const { user } = useUser();
   const { t } = useTranslation();
   const syncMutation = useSyncZohoContactsMutation("bigin");
@@ -1139,7 +1152,7 @@ function BiginContactsTable({ integration }: { integration: any }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user.orgId, "bigin"],
+        queryKey: ["zoho-contacts", user?.orgId, "bigin"],
       });
       toast.success(t("Bigin contacts synced successfully"), {
         id: toastId,

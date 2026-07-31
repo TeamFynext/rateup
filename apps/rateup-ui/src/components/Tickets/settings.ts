@@ -53,7 +53,7 @@ export const fields = {
   },
 } as const satisfies Record<string, TBooleanField | TSelectField>;
 
-type TupleToUnion<T extends any[]> = T[number];
+type TupleToUnion<T extends readonly unknown[]> = T[number];
 
 type GetFieldValues<TRecord extends Record<string, TBooleanField | TSelectField>> = {
   // [TKey in keyof TRecord]: TRecord[TKey] extends TBooleanField ? boolean : TRecord[TKey] extends TSelectField ? 'fast' | 'standard' : never

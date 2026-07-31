@@ -42,12 +42,12 @@ import { shopifyEventData } from "@/utils/constants.ts";
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
 import RuleOptions from "./RuleOptions.tsx";
-import type { CreateRuleInput, Platform } from "./schema.ts";
+import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
 import { getTriggerEventsForPlatform, INSTAGRAM_SCOPE_OPTIONS, PLATFORMS } from "./schema.ts";
 
 interface RuleBuilderFormProps {
-  form: UseFormReturn<CreateRuleInput>;
-  onSubmit: (data: CreateRuleInput) => void;
+  form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
+  onSubmit: (data: CreateRuleValues) => void;
   onCancel: () => void;
   isPending: boolean;
   buttonText: string;
@@ -141,7 +141,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   );
 
   const mediaItems = isInstagramCommentTrigger ? (mediaPosts ?? []) : (stories ?? []);
-  const mediaOptions = mediaItems.map((item: any) => {
+  const mediaOptions = mediaItems.map((item) => {
     const label = item.caption
       ? `${item.caption.slice(0, 60)}${item.caption.length > 60 ? "…" : ""}`
       : `${item.media_type} · ${new Date(item.timestamp).toLocaleDateString()}`;
@@ -157,7 +157,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
       const products = await getProductsFromShopify();
       setProductData(
         products
-          ? products.map((product: any) => ({
+          ? products.map((product) => ({
               label: product.title,
               value: product.id.toString(),
             }))
@@ -276,7 +276,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                     multiple
                     value={field.value}
                     onChange={field.onChange}
-                    platform={platform as any}
+                    platform={platform}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
@@ -482,7 +482,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
 /* ── Trigger panel ── */
 const TriggerPanel: React.FC<{
-  form: UseFormReturn<CreateRuleInput>;
+  form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
   filteredTriggerEvents: { label: string; value: string }[];
   isShopifyTrigger: boolean;
 }> = ({ form, filteredTriggerEvents, isShopifyTrigger }) => (
@@ -571,9 +571,9 @@ const TriggerPanel: React.FC<{
 
 /* ── Conditions panel ── */
 const ConditionsPanel: React.FC<{
-  form: UseFormReturn<CreateRuleInput>;
-  groupFields: any[];
-  appendGroup: (val: any) => void;
+  form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
+  groupFields: Array<{ id: string }>;
+  appendGroup: (group: CreateRuleInput["groups"][number]) => void;
   removeGroup: (idx: number) => void;
   triggerEvent: string;
   isMessageReceivedTrigger: boolean;
@@ -581,7 +581,7 @@ const ConditionsPanel: React.FC<{
   isInstagramTrigger: boolean;
   isInstagramCommentTrigger: boolean;
   isInstagramStoryTrigger: boolean;
-  shopifyEvent: any;
+  shopifyEvent: string | undefined;
   shopifyProductIds: string[];
   instagramScope: string;
   activeIbaId: string | undefined;
@@ -722,7 +722,7 @@ const ConditionsPanel: React.FC<{
               The rule triggers if the order contains any selected product.
             </p>
 
-            {shopifyProductIds.map((_: any, index: number) => (
+            {shopifyProductIds.map((_, index: number) => (
               <div key={index} className="flex items-end gap-2 mt-2">
                 <Controller
                   control={form.control}
@@ -755,7 +755,7 @@ const ConditionsPanel: React.FC<{
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    const next = shopifyProductIds.filter((_: any, i: number) => i !== index);
+                    const next = shopifyProductIds.filter((_, i: number) => i !== index);
                     form.setValue("options.shopifyProductIds", next);
                   }}
                   className="text-muted-foreground hover:text-red-500"
@@ -800,7 +800,7 @@ const ConditionsPanel: React.FC<{
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
       !isShopifyTrigger &&
-      groupFields.map((group: any, groupIndex: number) => (
+      groupFields.map((group, groupIndex: number) => (
         <div key={group.id} className="rounded-xl border p-4 bg-muted/20">
           <div className="flex items-center justify-between mb-3 pb-3 border-b">
             <span className="text-sm font-semibold">Block {groupIndex + 1}</span>

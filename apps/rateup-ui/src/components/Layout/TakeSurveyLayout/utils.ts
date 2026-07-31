@@ -1,4 +1,10 @@
-function getBgImgAndBgColor(surveyThemeData, surveyThemeObjKey, isMobile) {
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
+
+function getBgImgAndBgColor(
+  surveyThemeData: SurveyTheme | null,
+  surveyThemeObjKey: string,
+  isMobile: boolean,
+) {
   if (!surveyThemeData || Object.keys(surveyThemeData).length === 0 || !surveyThemeObjKey) {
     return {
       backgroundColor: "#f7f7f7",
@@ -14,13 +20,13 @@ function getBgImgAndBgColor(surveyThemeData, surveyThemeObjKey, isMobile) {
     bgColor: desktopBgColor,
     chooseBgRadioInputValue: desktopChoosedBg,
     imageUrl: desktopBgImgUrl,
-  } = desktopBgObj;
+  } = desktopBgObj ?? {};
 
   const {
     bgColor: mobileBgColor,
     chooseBgRadioInputValue: mobileChoosedBg,
     imageUrl: mobileBgImgUrl,
-  } = mobileBgObj;
+  } = mobileBgObj ?? {};
 
   const bgColor = isMobile ? mobileBgColor : desktopBgColor;
   const bgImg = isMobile ? mobileBgImgUrl : desktopBgImgUrl;
