@@ -140,7 +140,7 @@ function InstagramDashboard() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link to="/dashboard/settings" className={buttonVariants()}>
+          <Link to="/dashboard/settings/channels" className={buttonVariants()}>
             {t("Go to Settings")}
           </Link>
         </EmptyContent>
