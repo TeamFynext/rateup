@@ -12,29 +12,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 import PlanCardNew from "./Card/PlanCardNew.tsx";
+import type { PricingPlan } from "./pricing-plan.ts";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
 
 type BillingPeriod = "monthly" | "yearly";
-
-/** One gateway's pricing for a plan. */
-interface PricingGatewayPlan {
-  amount: string | number;
-  currency?: string;
-  period?: string;
-  planId?: string;
-}
-
-/** A subscription plan as the public pricing page renders it. */
-interface PricingPlan {
-  id: string;
-  name: string;
-  displayName?: string;
-  description?: string[];
-  currency?: string;
-  paymentPlan?: PricingGatewayPlan;
-  monthlyPaymentPlan?: PricingGatewayPlan;
-  yearlyPaymentPlan?: PricingGatewayPlan;
-}
 
 const PricingSection = ({
   onPlanSelect = null,

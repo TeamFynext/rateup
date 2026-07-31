@@ -37,7 +37,7 @@ interface GroupModalProps {
   opened: boolean;
   setOpened: (value: boolean) => void;
   isEdit?: boolean;
-  groupDetails?;
+  groupDetails?: ContactGroup;
   type?: ContactGroupType;
 }
 

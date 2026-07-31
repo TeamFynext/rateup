@@ -81,7 +81,7 @@ const contactDetailsColumn: ColumnDef<ContactsData>[] = [
   },
 ];
 
-export const getSourceBadge = (source: string) => {
+export const getSourceBadge = (source: string | undefined) => {
   const config = {
     whatsapp: {
       icon: MessageSquare,

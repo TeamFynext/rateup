@@ -29,6 +29,7 @@ import { getFromSessionStorage } from "@/utils/essential/index.ts";
 import ErrorComponent from "../404/ErrorComponent.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import SurveyPageHeader, { type SurveyHeaderTab } from "./SurveyPageHeader.tsx";
+import type { UnsavedChangesCheck } from "./Tabs/TabPanels.tsx";
 import TabPanelsComp from "./Tabs/TabPanels.tsx";
 
 export enum TabEnum {
@@ -109,14 +110,7 @@ export default function SurveyID() {
   const [
     funToRunBeforeSurveyIdPageHeaderTabsChange,
     setFunToRunBeforeSurveyIdPageHeaderTabsChange,
-  ] = useState<
-    | (() => {
-        haveUnsavedChanges?: boolean;
-        feedbackElement?: string;
-        toastMessage?: string;
-      })
-    | null
-  >(null);
+  ] = useState<UnsavedChangesCheck | null>(null);
 
   const [discardTabChangeDialog, setDiscardTabChangeDialog] = useState<{
     open: boolean;

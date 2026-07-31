@@ -101,7 +101,7 @@ export const deleteContactGroup = (groupId: string) => {
   return res;
 };
 
-export const updateContactGroup = (groupId: string, data: RequestPayload) => {
+export const updateContactGroup = (groupId: string | undefined, data: RequestPayload) => {
   const res = axiosClient.put(`${CONTACT_GROUP_BASE_URL}/${groupId}`, data);
   return res;
 };

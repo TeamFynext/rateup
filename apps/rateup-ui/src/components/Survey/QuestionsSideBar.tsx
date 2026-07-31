@@ -30,6 +30,8 @@ import { reorder, reOrderPages } from "@/utils/questions.ts";
 import { QuestionTabsEnum } from "./EditSurvey.tsx";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard/index.ts";
 import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
+import type { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums.ts";
+import type { SurveyThemePage } from "./SurveyTheme/surveyThemeReducer.ts";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -41,8 +43,10 @@ interface QuestionsSideBarProps {
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   isWaSurvey?: boolean;
   survey?: Survey;
-  setSurveyThemeContextValue?;
-  setSelectedSurveyThemeTab?;
+  setSurveyThemeContextValue: React.Dispatch<
+    React.SetStateAction<Record<string, SurveyThemePage> | undefined>
+  >;
+  setSelectedSurveyThemeTab: React.Dispatch<React.SetStateAction<ThemeTabEnum>>;
   checkForUnsavedChanges?: () => boolean;
   hasContactFeatureIssue?: () => boolean;
 }
@@ -90,7 +94,8 @@ export function QuestionsSideBar({
     setSelectedQ(question);
     if (uniquePages.includes(question.type as PageType)) {
       const webSurveyPagesThemeCopy = cloneDeep(survey?.webSurveyPagesTheme);
-      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type as PageType);
+      // `uniquePages` is exactly the set of page types the helper maps, so this is never undefined.
+      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type as PageType)!;
       setSelectedSurveyThemeTab(surveyThemeTabValue);
       setSurveyThemeContextValue(webSurveyPagesThemeCopy);
     }

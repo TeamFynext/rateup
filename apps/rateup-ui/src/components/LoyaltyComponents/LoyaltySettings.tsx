@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
+import type { Content } from "@tiptap/react";
 import { EditorContent } from "@tiptap/react";
 import { TypeOutline } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -90,7 +91,7 @@ interface LoyaltyTemplateFormValues {
   type: LoyaltyTemplateTypes;
   waTemplateId: string;
   requestMessage: string;
-  content;
+  content: Content;
   responseType: WaAutomatedReplyResponseType;
   whatsappSettingsPhoneId: string;
 }
@@ -193,7 +194,7 @@ const LoyaltyWaTemplateConfig = ({
           type: z.custom<LoyaltyTemplateTypes>(),
           waTemplateId: z.string(),
           requestMessage: z.string().trim().min(1, "required"),
-          content: z.custom<any>(),
+          content: z.custom<Content>(),
           responseType: z.custom<WaAutomatedReplyResponseType>(),
           whatsappSettingsPhoneId: z.string().trim().min(1, "required"),
         })
@@ -606,12 +607,6 @@ function useLoyaltyTemplateLabel() {
   );
 }
 
-interface LoyaltyTemplate {
-  type: string;
-  requestMessage: string;
-  responseType: string;
-  id?: string;
-}
 function useLoyaltyTemplateColumns(
   setSelectedConfig: (value: LoyaltyTemplateConfig | null) => void,
   open: () => void,
@@ -619,7 +614,7 @@ function useLoyaltyTemplateColumns(
 ) {
   const { t: translations } = useTranslation();
   const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();
-  const columnHelper = createColumnHelper<LoyaltyTemplate>();
+  const columnHelper = createColumnHelper<LoyaltyTemplateConfig>();
 
   return useMemo(
     () => [
@@ -802,9 +797,10 @@ function getPlainTextFromRichContent(content: unknown): string {
   }
 
   if (typeof content === "object") {
-    const text = typeof content.text === "string" ? content.text : "";
-    const nested = Array.isArray(content.content)
-      ? content.content.map(getPlainTextFromRichContent).join(" ")
+    const node = content as { text?: unknown; content?: unknown };
+    const text = typeof node.text === "string" ? node.text : "";
+    const nested = Array.isArray(node.content)
+      ? node.content.map(getPlainTextFromRichContent).join(" ")
       : "";
 
     return `${text} ${nested}`.trim();

@@ -137,16 +137,36 @@ const OverallResponseGraphWebForm = ({
   );
 };
 
+/**
+ * One point of the happiness-journey series. Recharts hands the tooltip the raw datum it was
+ * given, so these are the fields `data` carries; every one is read defensively because the
+ * series is assembled per time period.
+ */
+interface HappinessDatum {
+  date?: string;
+  total?: number;
+  promoters?: number;
+  passives?: number;
+  detractors?: number;
+  npsScore?: number;
+  avgNPSRating?: number;
+  happinessIndex?: number;
+}
+
+/**
+ * `active`/`payload`/`label` are injected by recharts' `<Tooltip content={...} />`, which is why
+ * they are optional here — only `timePeriod` is passed at the call site.
+ */
 const CustomTooltip = ({
   active,
   payload,
   label,
   timePeriod,
 }: {
-  active?;
-  payload?;
-  label?;
-  timePeriod?;
+  active?: boolean;
+  payload?: Array<{ dataKey?: string | number; payload: HappinessDatum }>;
+  label?: string | number;
+  timePeriod?: string;
 }) => {
   if (active && payload && payload.length) {
     const d = payload.find((p) => p.dataKey === "date")?.payload || payload[0].payload;

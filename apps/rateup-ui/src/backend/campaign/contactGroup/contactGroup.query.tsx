@@ -157,7 +157,7 @@ export const useDeleteGroupMutation = () => {
   });
 };
 
-export const useEditContactGroupMutation = (groupId: string) => {
+export const useEditContactGroupMutation = (groupId: string | undefined) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Omit<Partial<ContactGroup>, "tags">) => updateContactGroup(groupId, data),

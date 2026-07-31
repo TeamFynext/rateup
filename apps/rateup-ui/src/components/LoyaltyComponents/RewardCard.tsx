@@ -2,6 +2,7 @@ import { Edit2, Save, Trash2, X } from "lucide-react";
 import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
+import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import type {
@@ -19,7 +20,7 @@ import { LoyaltyRewardStatus } from "@/types/enums.ts";
 import { LoyaltyRewardForm } from "./LoyaltyRewardForm.tsx";
 
 interface RewardCardProps {
-  readonly reward; // Type this properly if possible
+  readonly reward: LoyaltyReward;
   readonly category: string;
   readonly isEditing: boolean;
   readonly onEditStart: () => void;

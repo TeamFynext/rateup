@@ -44,6 +44,7 @@ import {
 } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
+import type { UnsavedChangesCheck } from "./Tabs/TabPanels.tsx";
 
 const isQuestionType = (type: QuestionType | PageType | undefined): type is QuestionType =>
   Object.values(QuestionType).includes(type as QuestionType);
@@ -65,7 +66,9 @@ interface EditSurveyProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   subscription?: Subscription;
-  setFunToRunBeforeSurveyIdPageHeaderTabsChange;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: React.Dispatch<
+    React.SetStateAction<UnsavedChangesCheck | null>
+  >;
 }
 
 export function EditSurvey({

@@ -11,6 +11,7 @@ import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/
 import { Card } from "@/components/ui/card.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
+import type { OnboardingFormData } from "./onboarding-types.ts";
 import OnboardingStep1 from "./Onboarding1.tsx";
 import OnboardingStep2 from "./Onboarding2.tsx";
 import OnboardingStep4 from "./Onboarding4.tsx";
@@ -19,11 +20,11 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: info, isLoading } = useOrgNameAndPhone();
-  const [formData, setFormData] = useState({
-    services: [] as string[],
+  const [formData, setFormData] = useState<OnboardingFormData>({
+    services: [],
     industry: "",
     selectedTemplate: "",
-    integrationsSelected: [] as string[],
+    integrationsSelected: [],
   });
 
   const [currentStep, setCurrentStep] = useState<number>(1);

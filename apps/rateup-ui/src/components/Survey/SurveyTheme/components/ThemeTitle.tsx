@@ -1,4 +1,5 @@
 import { IconPencil } from "@tabler/icons-react";
+import type { CSSProperties } from "react";
 import { useState } from "react";
 
 import CustomTextEditor from "@/components/RichTextEditor/CustomTextEditor.tsx";
@@ -8,8 +9,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface ThemeTitleProps {
   value: string;
-  onChange;
-  styles?;
+  onChange: (value: string) => void;
+  styles?: CSSProperties;
 }
 
 const ThemeTitle = ({ value, onChange, styles }: ThemeTitleProps) => {

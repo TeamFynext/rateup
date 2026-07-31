@@ -10,6 +10,7 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
@@ -49,6 +50,45 @@ const collectErrorMessages = (node: unknown, messages: string[] = []): string[] 
   return messages;
 };
 
+/**
+ * Prefilled form values. Callers pass either a saved contact being edited (`id` present) or a
+ * draft assembled elsewhere — the inbox's "add this sender" flow supplies only a few fields.
+ */
+export interface ContactInitialValues {
+  id?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  dob?: Date | string | null;
+  source?: string;
+  profilePic?: string;
+  labels?: (string | undefined)[];
+  contactGroupIds?: (string | undefined)[];
+  assignedUserIds?: (string | undefined)[];
+  lifecycleId?: string;
+  notes?: string;
+  external_id?: string;
+  contactType?: string[];
+  updateExisting?: boolean;
+}
+
+/**
+ * The caller-supplied "create contacts" mutation (`useAddNewContactMutation`, which posts to a
+ * contact group). Only the members this modal touches are declared, so any react-query mutation
+ * over a contact payload satisfies it.
+ */
+export interface CreateContactsMutation {
+  mutate(contacts: RequestPayload, options?: MutationCallbacks): void;
+  isPending: boolean;
+}
+
+/** The subset of react-query's per-call `MutateOptions` these modals pass. */
+export interface MutationCallbacks {
+  onSuccess?: () => void;
+  onError?: () => void;
+  onSettled?: () => void;
+}
+
 const CreateOrEditContactModal = ({
   opened,
   setOpened,
@@ -58,9 +98,9 @@ const CreateOrEditContactModal = ({
 }: {
   opened: boolean;
   setOpened: (value: boolean) => void;
-  initialValues?;
+  initialValues?: ContactInitialValues;
   type?: ContactGroupType;
-  createNewContactMutation?;
+  createNewContactMutation?: CreateContactsMutation;
 }) => {
   const { t } = useTranslation();
   const { customFields = [] } = useCustomFieldsContext();
@@ -85,7 +125,8 @@ const CreateOrEditContactModal = ({
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
       lastReceivedMessageTimeStamp: undefined as string | undefined,
     };
-    if (initialValues) {
+    // Edit mode is keyed on the contact's id; a draft without one takes the create path below.
+    if (initialValues?.id) {
       editContactMutation.mutate(
         { data: contactData, contactId: initialValues.id },
         {

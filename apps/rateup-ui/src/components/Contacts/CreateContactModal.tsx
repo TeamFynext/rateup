@@ -34,6 +34,16 @@ import {
   contactFormDefaults,
 } from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
+import type {
+  ContactInitialValues,
+  CreateContactsMutation,
+  MutationCallbacks,
+} from "./CreatOrEditContactModal.tsx";
+
+/** The caller-supplied CSV/spreadsheet import mutation; it posts a `FormData` body. */
+export interface CsvImportMutation {
+  mutate(data: FormData, options?: MutationCallbacks): void;
+}
 
 const CreateContactModal = ({
   contactClose,
@@ -45,10 +55,10 @@ const CreateContactModal = ({
 }: {
   contactClose: () => void;
   close: () => void;
-  importCSVContactMutation?;
+  importCSVContactMutation: CsvImportMutation;
   type?: ContactGroupType;
-  initialValues?;
-  createNewContactMutation?;
+  initialValues?: ContactInitialValues | null;
+  createNewContactMutation?: CreateContactsMutation;
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [csvFileError, setCsvFileError] = useState("");
@@ -103,7 +113,9 @@ const CreateContactModal = ({
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
       lastReceivedMessageTimeStamp: undefined as string | undefined,
     };
-    if (initialValues) {
+    // Only an id-bearing contact can be edited; the inbox's "add to contact" flow passes a
+    // draft with no id, which falls through to the create path below.
+    if (initialValues?.id) {
       editContactMutation.mutate(
         { data: contactData, contactId: initialValues.id },
         {

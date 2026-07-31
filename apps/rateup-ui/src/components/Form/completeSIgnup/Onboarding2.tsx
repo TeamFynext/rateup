@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 
+import type { OnboardingFormData } from "./onboarding-types.ts";
+
 export default function OnboardingStep2({
   currentStep,
   data,
@@ -20,10 +22,10 @@ export default function OnboardingStep2({
   handleNext,
 }: {
   currentStep: number;
-  data;
-  handleInputChange;
-  handleNext;
-  handleBack;
+  data: OnboardingFormData;
+  handleInputChange: (field: string, value: string) => void;
+  handleNext: () => void;
+  handleBack: () => void;
 }) {
   const uid = useId();
   const canProceed = () => {
@@ -68,7 +70,7 @@ export default function OnboardingStep2({
             Select Your Industry
           </FieldLabel>
           <Select
-            onValueChange={(value) => handleInputChange("industry", value)}
+            onValueChange={(value) => handleInputChange("industry", value ?? "")}
             value={data.industry}
             items={industries.map((industry) => ({ value: industry, label: industry }))}
           >

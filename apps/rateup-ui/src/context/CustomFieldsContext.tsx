@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
+import type { CustomFieldType } from "@/backend/campaign/contacts/contacts.api";
+
 export interface CustomField {
   id: string;
   slug: string;
   name: string;
-  type: string;
+  type: CustomFieldType;
   description: string | null;
   createdAt: string;
   orgId: string;

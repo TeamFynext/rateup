@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 
+import type { OnboardingFormData } from "./onboarding-types.ts";
+
 function OnboardingStep4({
   data,
   handleBack,
@@ -16,7 +18,7 @@ function OnboardingStep4({
   integrations,
   loading,
 }: {
-  data: { integrationsSelected: string[] } & Record<string, unknown>;
+  data: OnboardingFormData;
   handleBack: () => void;
   handleSubmit: () => void;
   handleIntegrationToggle: (id: string) => void;

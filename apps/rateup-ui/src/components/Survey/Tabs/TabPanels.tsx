@@ -17,11 +17,14 @@ import { TabEnum } from "../SurveyId.tsx";
 const ResultsOverviewWebForm = lazy(() => import("../Result/ResultsOverviewWebForm.tsx"));
 
 /** What the active tab reports when the user tries to leave it. */
-export type UnsavedChangesCheck = () => {
-  haveUnsavedChanges?: boolean;
-  feedbackElement?: string;
-  toastMessage?: string;
-};
+export type UnsavedChangesCheck = () =>
+  | {
+      haveUnsavedChanges?: boolean;
+      feedbackElement?: string;
+      toastMessage?: string;
+    }
+  /** Nothing to report — the tab has no unsaved edits. */
+  | undefined;
 
 function TabPanelsComp({
   value,

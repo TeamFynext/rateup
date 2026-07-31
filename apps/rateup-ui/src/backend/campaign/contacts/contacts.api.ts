@@ -163,6 +163,9 @@ export const updateLifecycleofMultipleContacts = async (data: {
   );
   return res.data;
 };
+/** Mirrors `contact.schema.ts`'s `z.enum([...])` for a custom field's data type. */
+export type CustomFieldType = "text" | "number" | "email" | "multivalue";
+
 export interface CustomFieldData {
   id: string;
   orgId: string;
@@ -171,7 +174,7 @@ export interface CustomFieldData {
   description: string | null;
   visibility: boolean;
   required?: boolean;
-  type: string;
+  type: CustomFieldType;
   createdAt: string;
   values: string;
   listValues?: string[];

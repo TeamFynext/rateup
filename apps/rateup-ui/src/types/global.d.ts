@@ -721,7 +721,8 @@ declare global {
     icon: string;
     createdAt: string;
     type: string;
-    tags: string[];
+    /** `ContactGroup.tags` is a JSON column: tag selections keyed by contact type. */
+    tags: Record<string, unknown>;
     contactType: string[];
     team: {
       name: string;

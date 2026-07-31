@@ -1,3 +1,4 @@
+import type { AnyExtension } from "@tiptap/core";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
 import { CharacterCount } from "@tiptap/extensions";
@@ -54,7 +55,7 @@ export function createWaExtensions({
   enableMention = false,
   mentionUsersRef,
 }: WaExtensionOptions = {}) {
-  const ext: unknown[] = [
+  const ext: AnyExtension[] = [
     StarterKit.configure({ link: false }),
     Placeholder.configure({ placeholder }),
     CharacterCount.configure({ limit: max }),

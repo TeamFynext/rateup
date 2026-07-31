@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 // element types
 interface Bg {
   desktopbg?: string;
@@ -12,21 +14,22 @@ interface Bg {
 }
 interface Logo {
   logo?: string;
-  styles?;
+  styles?: CSSProperties;
 }
 interface Title {
   title: string;
-  styles?;
+  styles?: CSSProperties;
   subtitleFontSize: number;
 }
 interface Subtitle {
   subtitle: string;
-  styles?;
+  styles?: CSSProperties;
 }
 interface Button {
   label: string;
-  styles?;
-  position?;
+  styles?: CSSProperties;
+  /** `position` holds the `COORDINATESX`/`COORDINATESY` names, not pixels. */
+  position?: { x?: string; y?: string };
 }
 
 interface Input {
