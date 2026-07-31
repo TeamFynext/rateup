@@ -122,3 +122,5 @@ export const EventTriggersFormSchema = z.object({
   [LoyaltyEventType.POINTS_EXPIRY_ALERT]: EventTriggerSchema,
   [LoyaltyEventType.POINTS_EXPIRED]: EventTriggerSchema,
 });
+
+export type EventTriggersFormValues = z.infer<typeof EventTriggersFormSchema>;

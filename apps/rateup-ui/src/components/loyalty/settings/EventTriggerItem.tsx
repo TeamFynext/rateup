@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
+import type { EventTriggersFormValues } from "./schemas.ts";
 import type { LoyaltyTemplateTypes } from "./utils.ts";
 import { getLoyaltyTemplateLabel } from "./utils.ts";
 
 interface EventTriggerItemProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<EventTriggersFormValues>;
   eventType: LoyaltyEventType;
   templateType: LoyaltyTemplateTypes;
   title: string;
