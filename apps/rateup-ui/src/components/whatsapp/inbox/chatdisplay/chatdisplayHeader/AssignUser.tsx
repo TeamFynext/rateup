@@ -191,8 +191,8 @@ const AssignUser = ({
             assignedUsers: [],
             assignStatus: assignStatus,
             triggeredByUser: {
-              id: user?.userId,
-              name: user?.userName,
+              id: user?.userId ?? "",
+              name: user?.userName ?? "",
             },
           },
           exchangeProcess: "internal",
@@ -262,7 +262,7 @@ const AssignUser = ({
     );
   };
 
-  const updateStaffAssignment = (staff: unknown, teamId: string) => {
+  const updateStaffAssignment = (staff: TeamMembersData, teamId: string) => {
     const existing = assignedStaff.find((s) => s.userId === staff.id);
 
     if (existing && existing.teamId === teamId) {
@@ -273,7 +273,7 @@ const AssignUser = ({
     }
   };
 
-  const handleSelectTeam = (team) => {
+  const handleSelectTeam = (team: TeamData) => {
     const teamStaff = staffMembers.filter((m) => m.teams.some((t) => t.team_id === team.id));
     const allSelected = teamStaff.every((m) =>
       assignedStaff.some((a) => a.userId === m.id && a.teamId === team.id),
