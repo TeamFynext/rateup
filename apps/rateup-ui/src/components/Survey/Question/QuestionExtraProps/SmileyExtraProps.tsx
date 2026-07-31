@@ -80,7 +80,7 @@ const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const [opened, setOpened] = useState(true);
 
   const handleChange = (field: string, value: unknown) => {
-    const updateData: Record<string, any> = { [field]: value };
+    const updateData: Record<string, unknown> = { [field]: value };
     if (
       field === "colorType" &&
       value === SmileyColorType.Gradient &&

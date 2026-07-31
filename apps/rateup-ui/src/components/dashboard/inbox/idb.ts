@@ -137,7 +137,7 @@ export async function getMessagesFromIDB(key: string) {
  * Matches on the WhatsApp id (`messageId`) and on the row id, because outbound
  * rows are cached under whichever of the two they have.
  */
-export async function patchMessageInIDB(messageId: string, data: Record<string, any>) {
+export async function patchMessageInIDB(messageId: string, data: Record<string, unknown>) {
   if (!messageId) return;
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");

@@ -195,7 +195,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
         },
       ];
 
-      const map: Record<string, any> = {};
+      const map: Record<string, { type: string }> = {};
       enabledFields.forEach((f) => {
         map[f.shopifyKey] = {
           type: f.shopifyKey === "phone" ? "Phone" : "ShortText",

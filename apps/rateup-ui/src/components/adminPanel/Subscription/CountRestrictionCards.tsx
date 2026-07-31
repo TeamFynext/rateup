@@ -29,7 +29,7 @@ function CountField({
       <Input
         type="number"
         name={field.name}
-        value={field.value ?? ""}
+        value={typeof field.value === "number" ? field.value : ""}
         onBlur={field.onBlur}
         onChange={(e) => field.onChange(Number(e.target.value))}
       />

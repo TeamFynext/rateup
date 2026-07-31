@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Field } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -15,7 +16,7 @@ import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
 interface MSQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
-  features?: Record<string, any>;
+  features?: Record<string, QuestionFormFeatures>;
 }
 
 interface MSQFormValues {
@@ -56,7 +57,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
       setValue(
         "selectedOptions",
         asAnswerList(response).map((r: { other?: string; value?: string }) =>
-          r?.other ? selectedFeature?.other.title : r?.value,
+          r?.other ? (selectedFeature?.other?.title ?? "") : (r?.value ?? ""),
         ),
       );
     }
@@ -65,7 +66,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   const handleSelectedOp = (values: string[]) => {
     setValue("selectedOptions", values);
     const res = values?.map((val: string) => options?.find((op: Choice) => op?.value === val));
-    if (values.includes(selectedFeature?.other?.title)) {
+    if (values.includes(selectedFeature?.other?.title ?? "")) {
       if (otherInput?.length) updateResponse([...res, { other: otherInput }]);
       else updateResponse(null);
     } else {
@@ -75,7 +76,10 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   };
 
   useEffect(() => {
-    if (selectedOp.includes(selectedFeature?.other?.title) && otherInputContainerRef.current) {
+    if (
+      selectedOp.includes(selectedFeature?.other?.title ?? "") &&
+      otherInputContainerRef.current
+    ) {
       bDivRef.current?.scrollIntoView({ behavior: "smooth" });
     } else if (isOtherInputFocusTrapActive) {
       setIsOtherInputFocusTrapActive(false);
@@ -104,7 +108,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
       />
       <AnimatePresence initial={false}>
         {selectedFeature?.other?.isEnabled &&
-          selectedOp.includes(selectedFeature?.other?.title) && (
+          selectedOp.includes(selectedFeature?.other?.title ?? "") && (
             <motion.div
               transition={{
                 type: "tween",

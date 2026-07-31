@@ -773,8 +773,20 @@ declare global {
     active: boolean;
   }
   type subscriptionWithActiveAndCount = subscriptionCountRestriction & subscriptionActiveField;
+  /**
+   * One node of the feature tree: an `active` flag, an optional bag of numeric limits,
+   * and any number of nested sub-features. The admin plan editor walks the tree by key,
+   * so `SubscriptionFeatures` carries this as its index signature alongside the named
+   * features the rest of the app reads directly.
+   */
+  interface SubscriptionFeatureNode {
+    active?: boolean;
+    count?: Record<string, number>;
+    [subFeature: string]: SubscriptionFeatureNode | Record<string, number> | boolean | undefined;
+  }
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
+    [feature: string]: SubscriptionFeatureNode;
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &

@@ -21,7 +21,7 @@ import { NODE_HANDLES_SELECTED_STYLE_CLASSNAME, isValidUrl } from "@/lib/tiptap-
 import { cn } from "@/lib/utils";
 
 export interface ImagePlaceholderOptions {
-  HTMLAttributes: Record<string, any>;
+  HTMLAttributes: Record<string, unknown>;
   onUpload?: (url: string) => void;
   onError?: (error: string) => void;
 }

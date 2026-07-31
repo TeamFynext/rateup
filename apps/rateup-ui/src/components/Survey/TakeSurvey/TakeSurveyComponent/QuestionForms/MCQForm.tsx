@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useContext, useEffect, useRef, useState } from "react";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -15,7 +16,7 @@ import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
-  features?: Record<string, any>;
+  features?: Record<string, QuestionFormFeatures>;
 }
 
 export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
@@ -50,7 +51,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
       if (asAnswer(response).value) {
         if (selectedOp !== asAnswer(response).value) setSelectedOp(asAnswer(response).value ?? "");
       } else if (asAnswer(response).other) {
-        setSelectedOp(selectedFeature?.other?.title);
+        setSelectedOp(selectedFeature?.other?.title ?? "");
       }
     }
   }, [response]);

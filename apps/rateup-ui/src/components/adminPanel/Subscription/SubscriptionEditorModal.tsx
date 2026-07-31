@@ -17,7 +17,7 @@ import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { FeatureCard } from "./FeatureCard.tsx";
 
 export type SubscriptionFormValues = {
-  features: Record<string, any>;
+  features: SubscriptionFeatures;
   expiresAt: Date;
 };
 
