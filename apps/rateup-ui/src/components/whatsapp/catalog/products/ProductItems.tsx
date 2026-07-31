@@ -28,7 +28,7 @@ const extraProps = [
 ];
 
 /** A catalog product row as the product table renders it. */
-interface CatalogProductRow {
+export interface CatalogProductRow {
   id: string;
   retailer_id?: string;
   hotel_id?: string;
@@ -42,6 +42,10 @@ interface CatalogProductRow {
   image_link?: string;
   url?: string;
   productProps?: {
+    title?: string;
+    name?: string;
+    brand?: string;
+    availability?: string;
     currency?: string;
     price?: string;
     base_price?: string;

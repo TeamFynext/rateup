@@ -1,4 +1,5 @@
 import { axiosClient } from "@/backend/apiClient";
+import type { CatalogProductRow } from "@/components/whatsapp/catalog/products/ProductItems.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 
 /** A Shopify product that is not in the catalog yet, as the import list returns it. */
@@ -29,7 +30,7 @@ export async function syncCatalogProducts(
 }
 
 export async function getCatalogProducts(catalogId: string) {
-  return (await axiosClient.get(`${baseUrl}/${catalogId}`)).data;
+  return (await axiosClient.get(`${baseUrl}/${catalogId}`)).data as CatalogProductRow[];
 }
 
 export async function deleteCatalogProducts(catalogId: string, data: RequestPayload) {
