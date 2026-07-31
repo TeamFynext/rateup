@@ -57,6 +57,7 @@ async function requireAgentRecord(orgId: string, whatsappSettingsId: string) {
 export async function checkAgentEligibility(orgId: string, whatsappSettingsId: string) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  console.log("🚀 ~ checkAgentEligibility ~ accessToken:", accessToken);
   const data = await callMetaAgentApi<{ is_eligible: boolean }>(
     `/${entityId}/agent_eligibility`,
     "GET",
