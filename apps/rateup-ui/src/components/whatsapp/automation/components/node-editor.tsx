@@ -22,17 +22,7 @@ import { FormProvider, useForm as useRHForm, useFormContext } from "react-hook-f
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-/** A WhatsApp template row, as the templates endpoint returns it. */
-interface WaTemplateRow {
-  id: string;
-  data?: {
-    name?: string;
-    components?: Array<{
-      type?: string;
-      buttons?: Array<Record<string, unknown>>;
-    }>;
-  };
-}
+import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 
 /** A row inside a list-message section. */
 interface ListRow {
@@ -204,10 +194,17 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node.id]);
 
-  // Writes any field of the node currently being edited. The child editors
-  // declare their own node's `keyof`, which is assignable to `string` here.
+  // Writes any field of the node currently being edited. Each child editor
+  // writes its own node type's fields; `NodeData` is the union of all of them,
+  // so react-hook-form's per-path value type cannot be satisfied statically —
+  // the setter is narrowed to the (key, value) pair the children actually use.
+  const setNodeField = form.setValue as (
+    key: string,
+    value: unknown,
+    options?: { shouldDirty?: boolean },
+  ) => void;
   const handleInputChange = (key: string, value: unknown) => {
-    form.setValue(key as any, value, {
+    setNodeField(key, value, {
       shouldDirty: true,
     });
     onChange(node.id, form.getValues());
@@ -462,7 +459,7 @@ function FieldMsg({ name, message }: Readonly<{ name?: string; message?: string 
 
 interface NodeComponentProps<T extends NodeType> {
   nodeData: NodeTypeMap[T];
-  handleInputChange: (key: keyof NodeTypeMap[T], value: any) => void;
+  handleInputChange: (key: keyof NodeTypeMap[T], value: unknown) => void;
 }
 
 // TextNode Component
@@ -1254,7 +1251,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       <p className="mt-2 text-sm">Buttons (At least one required)</p>
       <FieldMsg name="buttons" />
 
-      {(typedData.buttons || []).map((button: any, index: number) => (
+      {(typedData.buttons || []).map((button, index: number) => (
         <div key={index} className={styles.optionRow}>
           <ContainedTextField
             flex={1}
@@ -1331,7 +1328,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
     max: 60,
     onChange: (value) => handleInputChange("footer", value),
   });
-  const getTotalRowCount = (sections: any[] = []) => {
+  const getTotalRowCount = (sections: Array<{ rows?: ListRow[] }> = []) => {
     return sections.reduce((count, section) => {
       return count + (section.rows?.length || 0);
     }, 0);
@@ -1473,7 +1470,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
       </p>
       <FieldMsg name="sections" />
 
-      {(typedData.sections || []).map((section: any, sectionIndex: number) => (
+      {(typedData.sections || []).map((section, sectionIndex: number) => (
         <div
           key={sectionIndex}
           className={`${styles.sectionContainer} my-2 flex flex-col gap-4 p-2`}
@@ -1510,7 +1507,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
           />
 
           <p className="text-sm font-medium">Rows</p>
-          {(section.rows || []).map((row: any, rowIndex: number) => (
+          {(section.rows || []).map((row, rowIndex: number) => (
             <div key={rowIndex} className={`${styles.rowContainer} flex flex-col gap-2 p-2`}>
               <div className="flex flex-wrap items-center justify-end gap-2.5">
                 <Button
@@ -1817,15 +1814,13 @@ function isLeadgenNodeData(data: unknown): data is LeadgenNodeData {
   return typeof data === "object" && data !== null && "leadgenFormId" in data;
 }
 
-const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templates: any }> = ({
-  nodeData,
-  handleInputChange,
-  templates,
-}) => {
+const TemplateNodeEditor: React.FC<
+  NodeComponentProps<"templateNode"> & { templates?: WaTemplate[] }
+> = ({ nodeData, handleInputChange, templates }) => {
   const typedData = nodeData;
   const [parameterData, setParameterData] = useImmer<any>(typedData?.parameters || []);
   const templateData =
-    templates?.map((t: WaTemplateRow) => ({
+    templates?.map((t) => ({
       label: t.data?.name,
       value: t.id,
       flowId: t.data?.components?.find((c) => c.type === "BUTTONS")?.buttons?.[0]?.["flow_id"],
@@ -1895,18 +1890,20 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
           w={"100%"}
         />
       )}
-      {selectedTemplate?.data?.components?.length <= 1 &&
+      {(selectedTemplate?.data?.components?.length ?? 0) <= 1 &&
       selectedTemplate?.data?.components?.[0]?.example === undefined ? (
         <div className="flex h-[60dvh] flex-col items-center justify-center gap-4">
           <NoParams type={"Body"} />
         </div>
       ) : (
-        <WaTemplateFormElements
-          setParameterData={setParameterData}
-          template={selectedTemplate?.data}
-          parameters={parameterData}
-          leadgenData={leadgenData}
-        />
+        selectedTemplate?.data && (
+          <WaTemplateFormElements
+            setParameterData={setParameterData}
+            template={selectedTemplate.data}
+            parameters={parameterData}
+            leadgenData={leadgenData}
+          />
+        )
       )}
     </div>
   );
@@ -1993,7 +1990,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
     setActiveContactIndex(Math.min(index, newContacts.length - 1));
   };
 
-  const updateContactField = (index: number, path: string[], value: any) => {
+  const updateContactField = (index: number, path: string[], value: unknown) => {
     const newContacts = [...(typedData.contacts || [])];
 
     // If newContacts[index] is undefined, initialize it as an empty object
@@ -2519,7 +2516,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
 };
 
 // TicketNode Component
-const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: any }> = ({
+const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options?: Board[] }> = ({
   nodeData,
   handleInputChange,
   options,
@@ -2587,11 +2584,11 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
 };
 
 // TicketNode Component
-const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: any }> = ({
-  nodeData,
-  handleInputChange,
-  options,
-}) => {
+const AssignNodeEditor: React.FC<
+  NodeComponentProps<"assignNode"> & {
+    options?: Partial<MembersResponse> & { currentUserId?: string };
+  }
+> = ({ nodeData, handleInputChange, options }) => {
   const typedData = nodeData;
 
   const form = useForm({
@@ -2712,7 +2709,7 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
   );
 };
 // FlowNode Component
-const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> = ({
+const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows?: DbFlow[] }> = ({
   nodeData,
   handleInputChange,
   flows,
@@ -2722,7 +2719,7 @@ const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> 
     <div className="flex flex-col gap-4">
       <ContainedSelection
         data={
-          flows?.map((t: { dbFlowId?: string; id?: string; name?: string }) => ({
+          flows?.map((t) => ({
             label: t.name,
             value: t.dbFlowId,
           })) ?? []
