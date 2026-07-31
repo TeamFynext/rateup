@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
@@ -141,7 +142,7 @@ export default function WaInboxChatSelectCard({
     }
     const contactId = contact.id;
     const messageId = generateInternalMessageId();
-    const internalMessage = {
+    const internalMessage: OptimisticMessage = {
       id: messageId,
       contactId,
       waCreatedAt: new Date().toISOString(),
