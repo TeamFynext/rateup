@@ -64,7 +64,7 @@ const CreateContactModal = ({
     [translations, customFields],
   );
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema) as any,
+    resolver: zodResolver(contactSchema),
     defaultValues: { ...contactFormDefaults, ...initialValues },
   });
 

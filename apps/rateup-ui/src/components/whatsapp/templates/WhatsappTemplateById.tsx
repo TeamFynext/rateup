@@ -105,7 +105,7 @@ export function WhatsappTemplateById({
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
   const form = useForm<TemplateFormValues>({
-    resolver: zodResolver(templateSchema) as any,
+    resolver: zodResolver(templateSchema),
     defaultValues: {
       name: "",
       header: null,

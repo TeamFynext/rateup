@@ -223,7 +223,7 @@ const LoyaltyWaTemplateConfig = ({
   );
 
   const form = useForm<LoyaltyTemplateFormValues>({
-    resolver: zodResolver(loyaltyTemplateSchema) as any,
+    resolver: zodResolver(loyaltyTemplateSchema),
     defaultValues: initialValues,
   });
   const values = form.watch();

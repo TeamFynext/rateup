@@ -68,7 +68,7 @@ const CreateOrEditContactModal = ({
   const editContactMutation = useEditContactMutation();
   const contactSchema = useMemo(() => buildContactSchema(t, customFields), [t, customFields]);
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema) as any,
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       ...contactFormDefaults,
       contactType: customFields?.map((field) => field.slug) || [],

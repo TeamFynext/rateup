@@ -258,7 +258,7 @@ function ElementEditor({
   };
 
   const extraConfigForm = useForm<any>({
-    resolver: zodResolver(fileSchema) as any,
+    resolver: zodResolver(fileSchema),
     defaultValues: {
       "photo-source": PhotoSource.cameraGallery,
       "max-file-size-kb": 5120,
