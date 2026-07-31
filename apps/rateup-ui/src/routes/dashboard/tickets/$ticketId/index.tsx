@@ -384,7 +384,7 @@ function useMoveCardColumnMutation(ticketId: string) {
       queryClient.invalidateQueries({ queryKey: ["board"] });
       toast.success("Column updated!", { id: "move-col-success" });
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to move card.", {
         id: "move-col-error",
       });

@@ -33,6 +33,7 @@ import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensLi
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import {
@@ -346,10 +347,10 @@ const WaResponses = ({
             });
             toggle();
           },
-          onError: (error: any) => {
+          onError: (error) => {
             setIsSyncing(false);
             console.log(error);
-            if (error.response.data?.error === "invalid_grant") {
+            if (getApiErrorData(error)?.error === "invalid_grant") {
               setAlertMsg(
                 translations(
                   "Your access has been revoked. Please sign out and sign in again in the Apps & Services",

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
 
 import { Button } from "@/components/ui/button.tsx";
+import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 
 interface AppleSignInButtonProps {
   className?: string;
@@ -21,8 +22,8 @@ export default function AppleSignInButton({ buttonText, className }: AppleSignIn
         redirectURIOnProviderDashboard: `${import.meta.env.VITE_API_URL}/api/auth/callback/apple`,
       });
       window.location.assign(authUrl);
-    } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         toast.error(err.message);
       } else {
         toast.error(translations("Oops! Something went wrong..."));

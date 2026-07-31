@@ -66,6 +66,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { useContactTableStore } from "../store/contact-table-store.ts";
@@ -427,8 +428,8 @@ const ImportContactModal = ({
         toast.success("Contact imported successfully");
         setOpened(false);
       },
-      onError: (error: any) => {
-        const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+      onError: (error) => {
+        const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
         if (!isValidationError) {
           toast.error(error?.message || "Importing failed");
         }

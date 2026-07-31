@@ -32,6 +32,7 @@ import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, PageType, QuestionType, SurveyType } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
@@ -206,10 +207,10 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
               id: "success",
             });
           },
-          onError: async (error: any) => {
+          onError: async (error) => {
             setIsSyncing(false);
             console.log(error);
-            if (error.response.data?.error === "invalid_grant") {
+            if (getApiErrorData(error)?.error === "invalid_grant") {
               const shouldRedirect = await confirm({
                 title: translations("Sync Google Sheet"),
                 description: translations(

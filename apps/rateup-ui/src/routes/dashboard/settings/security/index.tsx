@@ -151,7 +151,7 @@ function Security() {
           to: "/logout",
         });
       },
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error?.message || translations("Failed to delete user"), {
           id: "delete-user",
         });

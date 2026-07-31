@@ -81,7 +81,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
         });
         onClose();
       },
-      onError: (err: any) => {
+      onError: (err) => {
         console.error("Demo booking failed:", err);
         toast.error("Failed to submit demo request. Please try again.");
       },

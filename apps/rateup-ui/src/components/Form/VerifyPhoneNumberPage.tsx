@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { clearLoginAttemptInfo, consumeCode } from "supertokens-auth-react/recipe/passwordless";
 
 import { fetchUserProfile } from "@/backend/user/user.api";
+import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 import { resendOTP } from "@/utils/auth/index.tsx";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
@@ -72,8 +73,8 @@ function VerifyPhoneNumberPage() {
           to: "/login",
         });
       }
-    } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err.message, { id: "super-tokens-error" });
       } else {

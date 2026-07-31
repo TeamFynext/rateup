@@ -246,7 +246,7 @@ function UsersPage() {
       userForm.reset();
       setIsAddUserDialogOpen(false);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error creating invite:", error?.message);
       toast.error(error?.message || "An error occurred");
     },
@@ -861,7 +861,7 @@ function EditMember({
         });
         closeDialog();
       },
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error?.message || translations("Failed to delete user"), {
           id: "delete-user",
         });
@@ -911,7 +911,7 @@ function EditMember({
       closeDialog();
     };
 
-    const onError = (error: any) => {
+    const onError = (error: Error) => {
       toast.error(error?.message || translations("Failed to update user"), {
         id: "update-profile",
       });
@@ -926,7 +926,7 @@ function EditMember({
         { userId: selectedUser?.id ?? "", data: profileData },
         {
           onSuccess,
-          onError: (error: any) => {
+          onError: (error) => {
             onError(error);
           },
         },
