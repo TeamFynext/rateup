@@ -81,14 +81,15 @@ export interface IUpdateOrgDetails {
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);
 
+/** An organisation row as the admin org list returns it. */
+export type AdminOrg = Org & {
+  _count: { members: number; teams: number; invitations: number };
+  owner: { id: string; name: string; email: string };
+  AuditLog: { createdAt: string }[];
+};
+
 export async function getAllOrgs() {
-  return (await axiosClient.get("/org")).data as Array<
-    Org & {
-      _count: { members: number; teams: number; invitations: number };
-      owner: { id: string; name: string; email: string };
-      AuditLog: { createdAt: string }[];
-    }
-  >;
+  return (await axiosClient.get("/org")).data as AdminOrg[];
 }
 export async function getOrgStats(orgId: string) {
   return (await axiosClient.get(`/org/${orgId}`)).data;

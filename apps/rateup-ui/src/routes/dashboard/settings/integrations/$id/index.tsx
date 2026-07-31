@@ -62,7 +62,7 @@ const WebhookPage = lazy(() =>
   })),
 );
 
-const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
+const INTEGRATION_PAGES: Record<string, React.ComponentType> = {
   shopify: ShopifyPage,
   googlesheet: GoogleSheetPage,
   amelia: AmeliaPage,

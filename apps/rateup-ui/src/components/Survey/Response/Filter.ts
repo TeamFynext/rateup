@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 import { QuestionType } from "@/types/enums.ts";
 
-export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+export const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
   if (!value) return false;
   const cellValue = row.getValue(columnId);
   const responseType = columnId.split("_,_")?.[1] as QuestionType;

@@ -50,7 +50,7 @@ const VoiceRecorder = () => {
     resetRecordingState,
   } = useVoiceRecordStore();
 
-  const [wavesurfer, setWavesurfer] = useState<any>(null);
+  const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [barHeights, setBarHeights] = useState<number[]>([]);
   const animationRef = useRef<number | null>(null);

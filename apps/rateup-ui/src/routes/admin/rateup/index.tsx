@@ -13,6 +13,7 @@ import {
 import { useGetStripeProducts } from "@/backend/payment/stripe/stripe.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import RateupPlanModal from "@/components/Modal/RateupPlanModal.tsx";
+import type { RateupPlanFormValues } from "@/components/Modal/RateupPlanModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -52,7 +53,7 @@ interface RateupPlanTableData {
 
 function RateupPlan() {
   const [opened, { toggle, close }] = useDisclosure(false);
-  const [editPlan, setEditPlan] = useState<any>(null);
+  const [editPlan, setEditPlan] = useState<RateupPlanFormValues | null>(null);
   const { t: translations } = useTranslation();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {

@@ -273,7 +273,7 @@ const Responses = ({
   const responseCount = responseData?.totalCount;
 
   const Toolbar = useCallback(
-    (props: DataTableToolbarProps<any, unknown>) => (
+    (props: DataTableToolbarProps<ResponseRow, unknown>) => (
       <ResponseTableToolbar
         {...props}
         CFData={CFData}

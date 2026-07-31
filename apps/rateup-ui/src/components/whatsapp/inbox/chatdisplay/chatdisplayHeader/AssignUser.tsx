@@ -72,7 +72,9 @@ const AssignUser = ({
   const [assignedStaff, setAssignedStaff] = useState<
     { userId: string; teamId: string; contactId: string }[]
   >([]);
-  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>([]);
+  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<
+    { userId: string; teamId: string; contactId: string }[]
+  >([]);
   const { updateContactById, selectedContact } = useContactsStore();
   const isDefault = variant === "default";
   // Land the optimistic assign note in the open ticket's message bucket. AssignUser

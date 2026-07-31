@@ -6,7 +6,7 @@ import { Button } from "../ui/button.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 
 interface ErrorComponentProps {
-  refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<any, Error>>;
+  refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<unknown, Error>>;
   isRefetching?: boolean;
 }
 const ErrorComponent = ({ refetch, isRefetching }: ErrorComponentProps) => {

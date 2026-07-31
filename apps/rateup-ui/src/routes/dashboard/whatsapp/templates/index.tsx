@@ -439,7 +439,7 @@ function Template() {
   });
 
   const [showModal, setShowModal] = useState(false);
-  const [selectedPredefined, setSelectedPredefined] = useState<any>(null);
+  const [selectedPredefined, setSelectedPredefined] = useState<PredefinedTemplate | null>(null);
   const [step, setStep] = useState<"pick" | "account" | "loading">("pick");
   const [createDraftAccountId, setCreateDraftAccountId] = useState("");
 
@@ -484,7 +484,7 @@ function Template() {
       name: selectedPredefined.name,
       header: selectedPredefined.header || null,
       language: "en",
-      body: selectedPredefined.body,
+      body: selectedPredefined.body ?? "",
       footer: selectedPredefined.footer || "Powered by rateup.app",
       category: selectedPredefined.category,
       format: selectedPredefined.format || "NONE",

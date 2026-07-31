@@ -69,7 +69,7 @@ function Index() {
   });
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
   const confirm = useConfirm();
 
@@ -411,7 +411,7 @@ function Index() {
           DataTableToolbar={DataTableToolbar}
           onRowClick={(row) => {
             const user = users?.find((user) => user.email === row.id);
-            setSelectedUser(user);
+            setSelectedUser(user ?? null);
             open();
           }}
         />
@@ -424,7 +424,7 @@ function Index() {
       >
         <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-225">
           <DialogTitle className="sr-only">{translations("User details")}</DialogTitle>
-          <UserModal selectedUser={selectedUser} />
+          {selectedUser && <UserModal selectedUser={selectedUser} />}
         </DialogContent>
       </Dialog>
     </div>

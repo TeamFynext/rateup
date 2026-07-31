@@ -38,7 +38,7 @@ const currencyOptions = [
 ];
 
 /** The plan row this admin modal edits. */
-interface RateupPlanFormValues extends RateupPaymentPlan {
+export interface RateupPlanFormValues extends RateupPaymentPlan {
   badge?: string;
   price?: number;
   monthlyPrice?: number;

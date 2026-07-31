@@ -24,6 +24,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
+import type { AdminOrg } from "@/backend/org/org.api.ts";
 import {
   useAllOrgs,
   useDeleteOrgByAdminMutation,
@@ -155,7 +156,7 @@ function OrgById() {
   } = useSubscriptionByOrgId(orgId);
   const { data: orgs, isLoading: isOrgsLoading } = useAllOrgs();
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
-  const [orgDetails, setOrgDetails] = useState<any>(null);
+  const [orgDetails, setOrgDetails] = useState<AdminOrg | null>(null);
   const updatePauseStatus = useUpdateOrgPause();
   const { t: translations } = useTranslation();
   const updateSubscription = useUpdateSubscriptionMutation();
@@ -163,7 +164,7 @@ function OrgById() {
 
   useEffect(() => {
     if (orgs) {
-      setOrgDetails(orgs.find((org) => org.id === orgId));
+      setOrgDetails(orgs.find((org) => org.id === orgId) ?? null);
     }
   }, [orgs]);
 
@@ -454,7 +455,7 @@ interface DeleteOrgModalProps {
   isInactive?: boolean;
   isSendingEmail?: boolean;
   onSendEmail: (orgId: string, onDone?: () => void) => void;
-  deletionMailSent: string | null;
+  deletionMailSent?: string | null;
 }
 
 function DeleteOrgModal({

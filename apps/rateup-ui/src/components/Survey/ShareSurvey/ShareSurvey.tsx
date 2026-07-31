@@ -63,6 +63,14 @@ function toDatetimeLocal(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/** A question the publish check rejected, with the reasons the API listed. */
+interface SurveyPublishError {
+  id?: string;
+  /** The question heading, keyed by language. */
+  title?: Record<string, string>;
+  errors?: string[];
+}
+
 const ShareSurvey = ({
   survey,
   setActiveTab,
@@ -87,7 +95,7 @@ const ShareSurvey = ({
   const [openedIframe, setOpenedIframe] = useState(false);
   const [publishSettings, setPublishSettings] = useState(false);
 
-  const [errors, setErrors] = useState<Array<any> | { error: string } | null>(null);
+  const [errors, setErrors] = useState<SurveyPublishError[] | { error: string } | null>(null);
   const { t: translations } = useTranslation();
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
   const [editPublish, setEditPublish] = useState<"Publish" | "Expiry" | "" | false | null>(null);
@@ -404,7 +412,7 @@ const ShareSurvey = ({
                         <h4 className="mb-2 text-sm font-semibold">
                           {
                             getContent(
-                              Object.values(item?.title)?.[0]?.toString() ?? "",
+                              Object.values(item?.title ?? {})?.[0]?.toString() ?? "",
                             ) as React.ReactNode
                           }
                         </h4>

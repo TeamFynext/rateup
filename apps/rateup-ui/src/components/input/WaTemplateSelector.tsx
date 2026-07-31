@@ -25,7 +25,7 @@ interface WaTemplateSelector {
   /** Accepts a react-hook-form field spread. */
   name?: string;
   onBlur?: () => void;
-  ref?: React.Ref<any>;
+  ref?: React.Ref<HTMLElement>;
 }
 
 const WaTemplateSelector = ({
