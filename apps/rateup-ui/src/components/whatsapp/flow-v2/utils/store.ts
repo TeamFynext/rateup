@@ -44,6 +44,12 @@ export interface FormElement {
   "left-caption"?: string;
   "right-caption"?: string;
   "data-source"?: Array<{ title: string; id: string }>;
+  "helper-text"?: string;
+  "alt-text"?: string;
+  description?: string;
+  src?: string;
+  /** Elements hidden by a component-level logic block. */
+  visible?: boolean;
   "on-click-action"?: {
     name: string;
     next?: {

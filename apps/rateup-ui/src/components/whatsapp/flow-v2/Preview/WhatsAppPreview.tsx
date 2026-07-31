@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import {
   FlowSheetShell,
   WhatsAppChatHeader,
@@ -28,7 +29,8 @@ import useFlowStoreV3 from "../utils/store.ts";
 export function FlowScreenSheet() {
   const { t: translations } = useTranslation();
   const { getCurrentScreen } = useFlowStoreV3();
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  // Preview-only answers: a text value, a multi-select list, or a picked date.
+  const [formData, setFormData] = useState<Record<string, string | string[] | Date | null>>({});
 
   const screen = getCurrentScreen();
 
@@ -45,19 +47,25 @@ export function FlowScreenSheet() {
     );
   }
 
-  const allElements = (screen.layout.children || []).filter((el: any) => el.visible !== false);
+  const allElements = (screen.layout.children || []).filter((el) => el.visible !== false);
 
-  const footerElement = allElements.find(
-    (el: any) =>
-      el.type === QuestionType2.Footer || el.type === "Footer" || el.metaType === "Footer",
-  );
-  const elements = allElements.filter(
-    (el: any) =>
-      el.type !== QuestionType2.Footer && el.type !== "Footer" && el.metaType !== "Footer",
-  );
+  const isFooter = (el: FormElement) =>
+    el.type === QuestionType2.Footer || String(el.metaType) === "Footer";
+  const footerElement = allElements.find((el) => isFooter(el));
+  const elements = allElements.filter((el) => !isFooter(el));
 
   // Renders only the input control widget, no label/description wrapper
-  const renderControl = (element: any) => {
+  /** The preview keeps one answer per element; these read it in the shape a control needs. */
+  const textValue = (id?: string) => {
+    const value = formData[id ?? ""];
+    return typeof value === "string" ? value : "";
+  };
+  const listValue = (id?: string) => {
+    const value = formData[id ?? ""];
+    return Array.isArray(value) ? value : [];
+  };
+
+  const renderControl = (element: FormElement) => {
     switch (element.type || element.metaType) {
       case QuestionType2.TextInput:
       case "TextInput":
@@ -65,8 +73,8 @@ export function FlowScreenSheet() {
           <Input
             placeholder={element["helper-text"] || translations("Type your answer")}
             type={element["input-type"] || "text"}
-            value={formData[element.id] || ""}
-            onChange={(e) => setFormData({ ...formData, [element.id]: e.target.value })}
+            value={textValue(element.id)}
+            onChange={(e) => setFormData({ ...formData, [element.id ?? ""]: e.target.value })}
           />
         );
 
@@ -76,8 +84,8 @@ export function FlowScreenSheet() {
           <Textarea
             placeholder={element["helper-text"] || translations("Type your answer")}
             rows={3}
-            value={formData[element.id] || ""}
-            onChange={(e) => setFormData({ ...formData, [element.id]: e.target.value })}
+            value={textValue(element.id)}
+            onChange={(e) => setFormData({ ...formData, [element.id ?? ""]: e.target.value })}
           />
         );
 
@@ -85,7 +93,7 @@ export function FlowScreenSheet() {
       case "CheckboxGroup":
         return (
           <Field>
-            {(element["data-source"] || []).map((option: any) => (
+            {(element["data-source"] || []).map((option) => (
               <Field key={option.id} orientation="horizontal" className="gap-2 justify-between">
                 <FieldLabel
                   htmlFor={`${element.id}-${option.id}`}
@@ -95,18 +103,18 @@ export function FlowScreenSheet() {
                 </FieldLabel>
                 <Checkbox
                   id={`${element.id}-${option.id}`}
-                  checked={formData[element.id]?.includes(option.id) || false}
+                  checked={listValue(element.id).includes(option.id)}
                   onCheckedChange={(checked) => {
-                    const current = formData[element.id] || [];
+                    const current = listValue(element.id);
                     if (checked) {
                       setFormData({
                         ...formData,
-                        [element.id]: [...current, option.id],
+                        [element.id ?? ""]: [...current, option.id],
                       });
                     } else {
                       setFormData({
                         ...formData,
-                        [element.id]: current.filter((id: string) => id !== option.id),
+                        [element.id ?? ""]: current.filter((id) => id !== option.id),
                       });
                     }
                   }}
@@ -122,11 +130,11 @@ export function FlowScreenSheet() {
       case QuestionType2.YN:
         return (
           <RadioGroup
-            value={formData[element.id] || ""}
-            onValueChange={(value) => setFormData({ ...formData, [element.id]: value })}
+            value={textValue(element.id)}
+            onValueChange={(value) => setFormData({ ...formData, [element.id ?? ""]: value })}
           >
             <Field>
-              {(element["data-source"] || []).map((option: any) => (
+              {(element["data-source"] || []).map((option) => (
                 <Field key={option.id} orientation="horizontal" className="gap-2 justify-between">
                   <FieldLabel htmlFor={`${element.id}-${option.id}`}>{option.title}</FieldLabel>
                   <RadioGroupItem value={option.id} id={`${element.id}-${option.id}`} />
@@ -140,9 +148,9 @@ export function FlowScreenSheet() {
       case "Dropdown":
         return (
           <Select
-            value={formData[element.id] || ""}
-            onValueChange={(value) => setFormData({ ...formData, [element.id]: value })}
-            items={(element["data-source"] || []).map((opt: any) => ({
+            value={textValue(element.id)}
+            onValueChange={(value) => setFormData({ ...formData, [element.id ?? ""]: value })}
+            items={(element["data-source"] || []).map((opt) => ({
               value: opt.id,
               label: opt.title,
             }))}
@@ -151,7 +159,7 @@ export function FlowScreenSheet() {
               <SelectValue placeholder={translations("Select an option")} />
             </SelectTrigger>
             <SelectContent>
-              {(element["data-source"] || []).map((opt: any) => (
+              {(element["data-source"] || []).map((opt) => (
                 <SelectItem key={opt.id} value={opt.id}>
                   {opt.title}
                 </SelectItem>
@@ -165,8 +173,12 @@ export function FlowScreenSheet() {
         return (
           <Calendar
             mode="single"
-            selected={formData[element.id]}
-            onSelect={(date) => setFormData({ ...formData, [element.id]: date })}
+            selected={
+              formData[element.id ?? ""] instanceof Date
+                ? (formData[element.id ?? ""] as Date)
+                : undefined
+            }
+            onSelect={(date) => setFormData({ ...formData, [element.id ?? ""]: date ?? null })}
             className="rounded-md border"
           />
         );
@@ -177,12 +189,12 @@ export function FlowScreenSheet() {
       case "Smiley":
         return (
           <div className="flex gap-2 flex-wrap">
-            {(element["data-source"] || []).map((option: any) => (
+            {(element["data-source"] || []).map((option) => (
               <Button
                 key={option.id}
                 size="sm"
-                variant={formData[element.id] === option.id ? "default" : "outline"}
-                onClick={() => setFormData({ ...formData, [element.id]: option.id })}
+                variant={formData[element.id ?? ""] === option.id ? "default" : "outline"}
+                onClick={() => setFormData({ ...formData, [element.id ?? ""]: option.id })}
               >
                 {option.title}
               </Button>
@@ -195,7 +207,7 @@ export function FlowScreenSheet() {
     }
   };
 
-  const renderElement = (element: any, index: number) => {
+  const renderElement = (element: FormElement, index: number) => {
     const key = element.id || index;
     const type = element.type || element.metaType;
 
