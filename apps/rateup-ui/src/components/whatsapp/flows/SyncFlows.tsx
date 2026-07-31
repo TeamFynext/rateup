@@ -49,6 +49,12 @@ import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
 import { Input } from "../../ui/input.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
+/**
+ * The flow-import mapping the wizard builds: `map[flowId][questionId]` holds the chosen
+ * question type alongside one entry per mapped choice.
+ */
+type FlowImportMapValues = { map: Record<string, Record<string, Record<string, unknown>>> };
+
 function SyncTemplatesModal({
   opened,
   onClose,
@@ -136,7 +142,7 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
     }
   }
 
-  const form = useForm<{ map: Record<string, any> }>({
+  const form = useForm<FlowImportMapValues>({
     defaultValues: {
       map: {},
     },
@@ -182,7 +188,7 @@ function ConfigureFlow({
   handleNext,
 }: {
   flow: WaFlowWa;
-  form: UseFormReturn<{ map: Record<string, any> }>;
+  form: UseFormReturn<FlowImportMapValues>;
   handleNext: () => void;
 }) {
   const uid = useId();
@@ -482,10 +488,6 @@ export function SyncFlowsButton({ disabled = false }) {
  * Writes to a `map.<flowId>.<questionId>` path. These are built at runtime from flow data,
  * so they cannot be expressed as a statically-known RHF `FieldPath`.
  */
-function setMapValue(
-  form: UseFormReturn<{ map: Record<string, any> }>,
-  path: string,
-  value: unknown,
-) {
+function setMapValue(form: UseFormReturn<FlowImportMapValues>, path: string, value: unknown) {
   form.setValue(path as never, value as never, { shouldDirty: true });
 }

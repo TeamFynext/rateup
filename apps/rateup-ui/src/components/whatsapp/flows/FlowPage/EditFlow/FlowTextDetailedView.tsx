@@ -29,6 +29,14 @@ import {
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 
+/** The text element's editable properties. `fontWeight` is stored as `font-weight` on the element. */
+interface FlowTextFormValues {
+  text: string;
+  type: WaFlowFormElementType;
+  fontWeight: string;
+  strikethrough: boolean;
+}
+
 export function FlowTextDetailedView() {
   const uid = useId();
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -41,7 +49,7 @@ export function FlowTextDetailedView() {
   );
   const { t: translations } = useTranslation();
 
-  const form = useForm<any>({
+  const form = useForm<FlowTextFormValues>({
     defaultValues: {
       text: selectedFormElement?.text || "",
       type: nonInputTextType,

@@ -31,6 +31,13 @@ import {
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 
+/** The embedded-link element's editable properties, plus the screen it navigates to. */
+interface EmbeddedLinkFormValues {
+  text: string;
+  type: WaFlowFormElementType;
+  embeddedLinkScreenId: string;
+}
+
 export function FlowEmbeddedLinkDetailedView() {
   const uid = useId();
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -50,11 +57,11 @@ export function FlowEmbeddedLinkDetailedView() {
       .trim()
       .min(1, "Text is required")
       .max(limit, `Text should be less than ${limit} characters`),
-    type: z.any(),
+    type: z.custom<WaFlowFormElementType>(),
     embeddedLinkScreenId: z.string(),
   });
 
-  const form = useForm<any>({
+  const form = useForm<EmbeddedLinkFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       text: selectedFormElement?.text || "",

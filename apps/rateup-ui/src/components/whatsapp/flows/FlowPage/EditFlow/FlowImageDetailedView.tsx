@@ -10,18 +10,22 @@ import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import type { WaFlowFormElement } from "@/types/global";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
 import { fileToBase64 } from "@/utils/misc/base64.utils";
 import { getFlowFormElementById, getFormObjFromScreenId } from "@/utils/whatsapp/flow.utils";
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 
+/** The image properties the editor writes back. */
+type FlowImageChange = Pick<WaFlowFormElement, "src" | "height" | "width">;
+
 export function FlowImageDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
 
-  const form = useForm<any>({
+  const form = useForm<WaFlowFormElement>({
     defaultValues: {
       type: selectedFormElement?.type,
       id: selectedFormElement?.id,
@@ -43,8 +47,10 @@ export function FlowImageDetailedView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormElement]);
 
-  function handleChange(updatedData: Record<string, unknown>) {
-    Object.entries(updatedData).forEach(([key, value]) => form.setValue(key, value));
+  function handleChange(updatedData: FlowImageChange) {
+    if (updatedData.src !== undefined) form.setValue("src", updatedData.src);
+    if (updatedData.height !== undefined) form.setValue("height", updatedData.height);
+    if (updatedData.width !== undefined) form.setValue("width", updatedData.width);
   }
   function handleSaveElement() {
     if (!form.getValues("src")?.length) return toast.error(translations("Unable to Save Image"));
@@ -100,7 +106,7 @@ function FlowImageElementEditor({
   height,
   width,
 }: {
-  onChange: (updatedData: Record<string, unknown>) => void;
+  onChange: (updatedData: FlowImageChange) => void;
   src?: string;
   height?: number;
   width?: number;
