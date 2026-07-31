@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -27,14 +26,14 @@ const WhatsAppSurveyCta = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-              <Link to={"https://rateup.app/login"}>
+              <a href={"https://rateup.app/login"}>
                 <Button
                   size="lg"
                   className="bg-[#009987] w-full hover:bg-[#009987] text-white font-semibold px-6 py-3 text-base transition"
                 >
                   Get Started
                 </Button>
-              </Link>
+              </a>
               <BookDemoModal>
                 <Button
                   size="lg"

@@ -314,11 +314,7 @@ function RateUpOnboarding() {
             size="sm"
             className="text-xs h-8 gap-1.5 text-white border-none"
             style={{ background: "#1873E8" }}
-            onClick={() =>
-              navigate({
-                to: "/bookdemo",
-              })
-            }
+            onClick={() => globalThis.location.assign("/bookdemo")}
           >
             <CalendarDays size={12} /> Book a demo
           </Button>
@@ -424,7 +420,8 @@ function RateUpOnboarding() {
               });
 
               navigate({
-                to: "/dashboard/inbox?tab=open",
+                to: "/dashboard/inbox",
+                search: { tab: "open" },
               });
             }}
           >

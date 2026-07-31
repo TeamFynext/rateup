@@ -62,7 +62,8 @@ function ShopifySubscriptionApprovalCallback() {
   const updateRoute = () => {
     localStorage.removeItem("shopify-subscription-callback");
     navigate({
-      to: `/dashboard/settings/billing#order-history`,
+      to: "/dashboard/settings/billing",
+      hash: "order-history",
     });
   };
 

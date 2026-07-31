@@ -24,9 +24,9 @@ const TicketHeaderBar = () => {
       <div className="container mx-auto max-w-7xl px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Link to="https://rateup.app" className="flex items-center gap-2">
+            <a href="https://rateup.app" className="flex items-center gap-2">
               <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
-            </Link>
+            </a>
           </div>
 
           {/* Desktop Navigation */}
@@ -44,19 +44,19 @@ const TicketHeaderBar = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to={"https://rateup.app/login"}>
+            <a href={"https://rateup.app/login"}>
               <Button
                 variant="outline"
                 className="border-[#0041a8] cursor-pointer text-[#0041a8] hover:bg-[#e6f7ff]"
               >
                 Login
               </Button>
-            </Link>
-            <Link to={"https://rateup.app/signup"}>
+            </a>
+            <a href={"https://rateup.app/signup"}>
               <Button className="bg-[#0041a8] hover:bg-[#0040a8ee] cursor-pointer text-[#FFFFFF]">
                 Get Started
               </Button>
-            </Link>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}

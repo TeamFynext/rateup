@@ -41,7 +41,8 @@ function VerifyPhoneNumberPage() {
         const profile = await fetchUserProfile();
         if (Object.keys(profile?.data?.data || {}).length === 0) {
           navigate({
-            to: "/signup?auth=phone",
+            to: "/signup",
+            search: { auth: "phone" },
           });
         } else {
           navigate({

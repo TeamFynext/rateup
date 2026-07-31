@@ -726,7 +726,10 @@ function Template() {
                 onSelect={(tpl) => {
                   if (tpl.isBlank) {
                     setShowModal(false);
-                    navigate({ to: `/dashboard/whatsapp/templates/create` });
+                    navigate({
+                      to: "/dashboard/whatsapp/templates/$templateId",
+                      params: { templateId: "create" },
+                    });
                   } else {
                     setSelectedPredefined(tpl);
                     setStep("account");

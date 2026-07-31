@@ -49,7 +49,8 @@ function ChannelsPage() {
           actionVariant={waConnected ? "outline" : "default"}
           onAction={() =>
             navigate({
-              to: "/dashboard/settings/channels/whatsapp",
+              to: "/dashboard/settings/channels/$channel",
+              params: { channel: "whatsapp" },
             })
           }
           summary={
@@ -73,7 +74,8 @@ function ChannelsPage() {
           actionDisabled={!waConnected && !isLoading}
           onAction={() =>
             navigate({
-              to: "/dashboard/settings/channels/facebook",
+              to: "/dashboard/settings/channels/$channel",
+              params: { channel: "facebook" },
             })
           }
           helperText={
@@ -100,7 +102,8 @@ function ChannelsPage() {
           actionDisabled={!waConnected && !isLoading}
           onAction={() =>
             navigate({
-              to: "/dashboard/settings/channels/instagram",
+              to: "/dashboard/settings/channels/$channel",
+              params: { channel: "instagram" },
             })
           }
           helperText={

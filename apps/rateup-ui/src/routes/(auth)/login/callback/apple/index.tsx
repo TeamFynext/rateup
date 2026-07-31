@@ -20,7 +20,8 @@ function AppleCallback() {
         if (response.createdNewRecipeUser && response.user.loginMethods.length === 1) {
           // sign up successful
           navigate({
-            to: "/signup?auth=apple",
+            to: "/signup",
+            search: { auth: "apple" },
           });
 
           toast.success("Sign up success", {

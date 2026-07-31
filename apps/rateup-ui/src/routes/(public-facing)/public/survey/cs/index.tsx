@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -84,23 +84,23 @@ function StartPage({ largeScreen }: { largeScreen: boolean }) {
         Select one option :
       </h3>
 
-      <Link to={`${survey1}`}>
+      <a href={`${survey1}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
           I Have Ration Card & Aadhaar Card
         </Button>
-      </Link>
+      </a>
 
-      <Link to={`${survey2}`}>
+      <a href={`${survey2}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
           I have Aadhaar only [No Ration Card]
         </Button>
-      </Link>
+      </a>
 
-      <Link to={`${survey3}`}>
+      <a href={`${survey3}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
           I have No Aadhaar & Ration Card
         </Button>
-      </Link>
+      </a>
     </div>
   );
 }

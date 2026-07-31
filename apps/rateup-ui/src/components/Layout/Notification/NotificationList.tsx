@@ -54,7 +54,8 @@ const NotificationList = ({
               A chat from <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
               has been assigned to you.
               <Link
-                to={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
+                to="/dashboard/inbox"
+                search={{ tab: "mine", contactId: data?.contactId }}
                 onClick={close}
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >
@@ -70,7 +71,8 @@ const NotificationList = ({
               Chat from <span className="font-medium text-foreground">{data?.contactName}</span> has
               been closed.
               <Link
-                to={`/dashboard/inbox?tab=closed&contactId=${data?.contactId}`}
+                to="/dashboard/inbox"
+                search={{ tab: "closed", contactId: data?.contactId }}
                 onClick={close}
                 className="ml-1 inline font-medium text-primary hover:underline"
               >
@@ -87,7 +89,8 @@ const NotificationList = ({
               <span className="font-medium text-foreground">{data?.board_name}</span> has been
               assigned to you.
               <Link
-                to={`/dashboard/tickets/${data?.cardId}`}
+                to="/dashboard/tickets/$ticketId"
+                params={{ ticketId: String(data?.cardId ?? "") }}
                 onClick={close}
                 className="ml-1 inline font-medium text-primary hover:underline"
               >
@@ -103,7 +106,8 @@ const NotificationList = ({
               You were mentioned in a chat from{" "}
               <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
               <Link
-                to={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
+                to="/dashboard/inbox"
+                search={{ tab: "mine", contactId: data?.contactId }}
                 onClick={close}
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >
@@ -118,7 +122,8 @@ const NotificationList = ({
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               Your campaign "{data?.campaignName}" completed.
               <Link
-                to={`/dashboard/campaign/${data?.campaignId}`}
+                to="/dashboard/campaign/$campaignId"
+                params={{ campaignId: String(data?.campaignId ?? "") }}
                 onClick={close}
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >

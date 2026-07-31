@@ -222,7 +222,8 @@ const EventDetailsModal = ({
           <p>
             {translations("WhatsApp Template :")}{" "}
             <Link
-              to={`/dashboard/whatsapp/templates/${shopifySurvey?.waTemplateId}`}
+              to="/dashboard/whatsapp/templates/$templateId"
+              params={{ templateId: shopifySurvey?.waTemplateId ?? "" }}
               className="text-primary underline"
             >
               {templateAndTeam?.templateName}

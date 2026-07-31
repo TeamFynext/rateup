@@ -68,7 +68,8 @@ function Home() {
 
   const handleCreate = () => {
     navigate({
-      to: "/dashboard/automation/new",
+      to: "/dashboard/automation/$automationId",
+      params: { automationId: "new" },
     });
   };
 

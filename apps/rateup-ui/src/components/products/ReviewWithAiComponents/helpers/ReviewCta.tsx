@@ -1,5 +1,3 @@
-import { Link } from "@tanstack/react-router";
-
 const ReviewCta = () => {
   return (
     <section className="py-24 px-6 lg:px-8 bg-linear-to-br from-[#075E54] via-[#009987] to-[#075E54] text-white">
@@ -13,13 +11,13 @@ const ReviewCta = () => {
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-          <Link
-            to={"https://rateup.app/login"}
+          <a
+            href={"https://rateup.app/login"}
             className="bg-white  text-[#075E54] hover:bg-gray-100  
             text-lg px-8 py-4 rounded-lg shadow transition"
           >
             Get Started with RateUp Free
-          </Link>
+          </a>
         </div>
       </div>
     </section>

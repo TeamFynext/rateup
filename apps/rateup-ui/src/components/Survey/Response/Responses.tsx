@@ -219,7 +219,10 @@ const Responses = ({ survey, defaultLanguage, questions }: unknown) => {
               });
 
               if (shouldRedirect) {
-                navigate({ to: "/dashboard/apps&services/googlesheet" });
+                navigate({
+                  to: "/dashboard/settings/integrations/$id",
+                  params: { id: "googlesheet" },
+                });
               }
             } else {
               toast.error(error?.message || translations("Error in syncing response"));
@@ -238,7 +241,7 @@ const Responses = ({ survey, defaultLanguage, questions }: unknown) => {
     });
 
     if (shouldRedirect) {
-      navigate({ to: "/dashboard/apps&services/googlesheet" });
+      navigate({ to: "/dashboard/settings/integrations/$id", params: { id: "googlesheet" } });
     }
   };
 

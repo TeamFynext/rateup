@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -63,14 +62,14 @@ const InboxHero = () => {
           </p>
 
           <div className="mt-10 flex flex-row gap-4">
-            <Link to="https://rateup.app/login">
+            <a href="https://rateup.app/login">
               <Button
                 size="lg"
                 className="bg-[#1c518e] cursor-pointer hover:bg-[#1c518e] text-white font-medium px-8"
               >
                 Start Your Free Trial
               </Button>
-            </Link>
+            </a>
             <BookDemoModal>
               <Button
                 size="lg"

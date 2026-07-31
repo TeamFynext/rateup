@@ -33,6 +33,10 @@ import {
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/surveys/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): { action?: string } => ({
+    action: typeof search.action === "string" ? search.action : undefined,
+  }),
   component: Page,
 });
 

@@ -944,7 +944,11 @@ function CommentsTab() {
           <Button
             size="sm"
             render={
-              <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT" />
+              <Link
+                to="/dashboard/automation/$automationId"
+                params={{ automationId: "new" }}
+                search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_COMMENT" }}
+              />
             }
           >
             <IconPlus className="mr-1.5 size-4" />
@@ -968,7 +972,11 @@ function CommentsTab() {
               <Button
                 size="sm"
                 render={
-                  <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT" />
+                  <Link
+                    to="/dashboard/automation/$automationId"
+                    params={{ automationId: "new" }}
+                    search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_COMMENT" }}
+                  />
                 }
               >
                 <IconPlus className="mr-1.5 size-4" />
@@ -983,7 +991,7 @@ function CommentsTab() {
             items={commentRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to={`/dashboard/automation/${item.id}`}>
+              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>
@@ -1033,7 +1041,11 @@ function StoriesTab() {
           <Button
             size="sm"
             render={
-              <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION" />
+              <Link
+                to="/dashboard/automation/$automationId"
+                params={{ automationId: "new" }}
+                search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_STORY_MENTION" }}
+              />
             }
           >
             <IconPlus className="mr-1.5 size-4" />
@@ -1059,7 +1071,11 @@ function StoriesTab() {
               <Button
                 size="sm"
                 render={
-                  <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION" />
+                  <Link
+                    to="/dashboard/automation/$automationId"
+                    params={{ automationId: "new" }}
+                    search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_STORY_MENTION" }}
+                  />
                 }
               >
                 <IconPlus className="mr-1.5 size-4" />
@@ -1074,7 +1090,7 @@ function StoriesTab() {
             items={storyMentionRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
-              <Link to={`/dashboard/automation/${item.id}`}>
+              <Link to="/dashboard/automation/$automationId" params={{ automationId: item.id }}>
                 <RuleCard
                   item={item}
                   onToggleActive={() =>

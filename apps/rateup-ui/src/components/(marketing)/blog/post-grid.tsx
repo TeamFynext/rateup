@@ -79,7 +79,7 @@ export default function PostGrid({
               key={post.id}
               className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow"
             >
-              <Link to={`/blog/${post.slug}`} className="block overflow-hidden">
+              <Link to="/blog/$slug" params={{ slug: post.slug }} className="block overflow-hidden">
                 <div className="aspect-video overflow-hidden bg-slate-100">
                   {post.feature_image ? (
                     <img

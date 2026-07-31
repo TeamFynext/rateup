@@ -67,7 +67,8 @@ export function FeaturedPost({ post }: { post?: Post }) {
             <div className="text-[11.5px] text-[#8B8E8A]">{formattedDate}</div>
           </div>
           <Link
-            to={`/blog/${post.slug}`}
+            to="/blog/$slug"
+            params={{ slug: post.slug }}
             className="inline-flex items-center gap-[7px] text-[13.5px] font-bold text-[#1C518E] py-[9px] px-[18px] rounded-[9px] bg-[#EEF4FB] border border-[#A9C3E3] no-underline transition-all duration-200 hover:bg-[#D6E4F3] hover:border-[#7BA1D1] hover:text-[#0E2B52] hover:translate-x-0.5"
           >
             Read more

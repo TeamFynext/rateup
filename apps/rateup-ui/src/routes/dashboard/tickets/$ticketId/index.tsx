@@ -678,7 +678,8 @@ function RightSidebar({
                   </div>
                 </div>
                 <Link
-                  to={`/dashboard/inbox?tab=All&contactId=${linkedContact.id}`}
+                  to="/dashboard/inbox"
+                  search={{ tab: "All", contactId: linkedContact.id }}
                   className="w-full"
                 >
                   <Button className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">

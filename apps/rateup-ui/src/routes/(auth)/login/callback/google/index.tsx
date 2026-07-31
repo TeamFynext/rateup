@@ -21,7 +21,8 @@ function GoogleCallbacck() {
         if (response.createdNewRecipeUser && response.user.loginMethods.length === 1) {
           // sign up successful
           navigate({
-            to: "/signup?auth=google",
+            to: "/signup",
+            search: { auth: "google" },
           });
 
           toast.success("Sign up success", {

@@ -1,5 +1,4 @@
 import { IconHome } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
@@ -39,14 +38,15 @@ function BodyComp({
         <div className="m-8 flex p-8">
           {/* A single anchor styled as a button — a Button wrapping a Link would nest two
               interactive controls. */}
-          <Link
-            to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
+          <a
+            href={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
             target="_blank"
+            rel="noreferrer"
             className={buttonVariants()}
           >
             <IconHome data-icon="inline-start" />
             {translations("Go to Home")}
-          </Link>
+          </a>
         </div>
       )}
     </div>

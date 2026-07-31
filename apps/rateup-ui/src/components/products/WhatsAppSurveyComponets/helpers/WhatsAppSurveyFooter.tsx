@@ -20,45 +20,45 @@ const WhatsAppSurveyFooter = () => {
               Unlock the hidden power of customer feedback with WhatsApp Surveys.
             </p>
             <div className="flex space-x-4 mt-3">
-              <Link to="https://x.com/rateup_app" className="text-gray-400 hover:text-white">
+              <a href="https://x.com/rateup_app" className="text-gray-400 hover:text-white">
                 <IconBrandX size={20} />
-              </Link>
-              <Link
-                to="https://www.instagram.com/rateupsoftware/"
+              </a>
+              <a
+                href="https://www.instagram.com/rateupsoftware/"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandInstagram size={20} />
-              </Link>
-              <Link
-                to="https://www.linkedin.com/company/rateup"
+              </a>
+              <a
+                href="https://www.linkedin.com/company/rateup"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandLinkedin size={20} />
-              </Link>
-              <Link
-                to="https://www.facebook.com/rateupsapp/"
+              </a>
+              <a
+                href="https://www.facebook.com/rateupsapp/"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandFacebook size={20} />
-              </Link>
-              <Link
-                to="https://www.threads.com/@rateupsoftware"
+              </a>
+              <a
+                href="https://www.threads.com/@rateupsoftware"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandThreads size={20} />
-              </Link>
-              <Link
-                to="https://www.youtube.com/@TeamRateup"
+              </a>
+              <a
+                href="https://www.youtube.com/@TeamRateup"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandYoutube size={20} />
-              </Link>
-              <Link
-                to="https://www.pinterest.com/rateupapp/"
+              </a>
+              <a
+                href="https://www.pinterest.com/rateupapp/"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandPinterest size={20} />
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -66,9 +66,9 @@ const WhatsAppSurveyFooter = () => {
             <h4 className="font-bold mb-4">Company</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="#" className="hover:text-gray-300 transition">
+                <a href="#" className="hover:text-gray-300 transition">
                   Resources
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/about-us" className="hover:text-gray-300 transition">
@@ -119,9 +119,9 @@ const WhatsAppSurveyFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-gray-300 transition">
+                <a href="#" className="hover:text-gray-300 transition">
                   Terms of Service
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

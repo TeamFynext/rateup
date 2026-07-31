@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { ArrowRight, BrainCog, Globe, Layers, Wand2 } from "lucide-react";
 
 const features = [
@@ -53,13 +52,13 @@ export default function WhyAutomation() {
             <div>
               <h4 className="text-xl font-semibold text-[#013553]">{feature.title}</h4>
               <p className="text-gray-600 pt-2 leading-relaxed">{feature.description}</p>
-              <Link
-                to="https://rateup.app/login"
+              <a
+                href="https://rateup.app/login"
                 className="text-[#009987] font-semibold inline-flex items-center mt-4 group"
               >
                 Learn More
                 <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-              </Link>
+              </a>
             </div>
           </div>
         ))}

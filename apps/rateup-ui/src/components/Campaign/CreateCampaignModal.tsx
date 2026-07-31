@@ -665,7 +665,8 @@ const CreateCampaignModal = ({
                                       type="button"
                                       onClick={() =>
                                         navigate({
-                                          to: "/dashboard/whatsapp/templates/create",
+                                          to: "/dashboard/whatsapp/templates/$templateId",
+                                          params: { templateId: "create" },
                                         })
                                       }
                                     >
@@ -817,7 +818,8 @@ const CreateCampaignModal = ({
                                 type="button"
                                 onClick={() =>
                                   navigate({
-                                    to: "/dashboard/whatsapp/templates/create",
+                                    to: "/dashboard/whatsapp/templates/$templateId",
+                                    params: { templateId: "create" },
                                   })
                                 }
                               >

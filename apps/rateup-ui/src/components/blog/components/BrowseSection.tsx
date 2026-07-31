@@ -49,7 +49,8 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
             {tags.map((tag) => (
               <Link
                 key={tag.id}
-                to={`/blog/tag/${encodeURIComponent(tag.slug)}`}
+                to="/blog/tag/$slug"
+                params={{ slug: tag.slug }}
                 className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#4A4C49] bg-white hover:bg-[#F4F5F2] border border-[#DCDEDD] no-underline transition-all duration-150"
               >
                 {tag.name}
@@ -75,7 +76,8 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
             {authors.map((author) => (
               <Link
                 key={author.id}
-                to={`/blog/author/${encodeURIComponent(author.slug)}`}
+                to="/blog/author/$slug"
+                params={{ slug: author.slug }}
                 className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#4A4C49] bg-white hover:bg-[#F4F5F2] border border-[#DCDEDD] no-underline transition-all duration-150"
               >
                 {author.name}

@@ -70,7 +70,8 @@ function page() {
                 size="sm"
                 onClick={() => {
                   navigate({
-                    to: "/dashboard/analytics?tab=team-performance",
+                    to: "/dashboard/analytics",
+                    search: { tab: "team-performance" },
                   });
                 }}
                 className="gap-2"

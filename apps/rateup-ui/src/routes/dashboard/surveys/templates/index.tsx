@@ -93,7 +93,8 @@ function Templates() {
               <Button
                 onClick={() => {
                   navigate({
-                    to: `/dashboard/surveys?action=create`,
+                    to: "/dashboard/surveys",
+                    search: { action: "create" },
                   });
                 }}
               >

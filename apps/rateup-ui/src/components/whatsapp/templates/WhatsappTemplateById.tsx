@@ -305,7 +305,7 @@ export function WhatsappTemplateById({
       form.reset();
       setIsSubmitting(false);
       navigate({
-        to: "/dashboard/whatsapp/templates/",
+        to: "/dashboard/whatsapp/templates",
       });
     },
     () => {
@@ -358,7 +358,7 @@ export function WhatsappTemplateById({
       setIsSubmittingDraft(false);
       if (templateId?.length === 0) {
         navigate({
-          to: "/dashboard/whatsapp/templates/",
+          to: "/dashboard/whatsapp/templates",
         });
       }
     },

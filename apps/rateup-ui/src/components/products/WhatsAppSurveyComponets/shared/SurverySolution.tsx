@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
 import { imagesPath } from "@/utils/constants.ts";
@@ -22,12 +21,12 @@ export default function SurveySection() {
 
           <div className="space-y-6 sm:space-y-8">
             <div className="flex justify-start">
-              <Link
-                to={"https://rateup.app/login"}
+              <a
+                href={"https://rateup.app/login"}
                 className="bg-[#009987] hover:bg-[#075E54] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition"
               >
                 Start Free Trial
-              </Link>
+              </a>
             </div>
           </div>
         </div>

@@ -108,7 +108,8 @@ function page() {
                   size="sm"
                   onClick={() =>
                     navigate({
-                      to: "/dashboard/analytics?tab=agent-performance",
+                      to: "/dashboard/analytics",
+                      search: { tab: "agent-performance" },
                     })
                   }
                   className="shrink-0"

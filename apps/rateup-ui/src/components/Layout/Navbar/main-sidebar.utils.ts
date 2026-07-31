@@ -27,21 +27,22 @@ export const getStoredRedirect = (key: string) => {
   return redirect;
 };
 
+/** Where to send a visitor whose session has no usable RateUp account, if anywhere. */
 export const getSignupRedirect = ({
   hasUserData,
   missingOrgId,
   userInfoErrorMessage,
-}: SignupRedirectArgs) => {
+}: SignupRedirectArgs): { to: "/signup"; search: { auth?: string } } | null => {
   if (hasUserData && missingOrgId) {
-    return "/signup?auth=google";
+    return { to: "/signup", search: { auth: "google" } };
   }
 
   if (userInfoErrorMessage === "Google User missing in Rateup") {
-    return "/signup?auth=google";
+    return { to: "/signup", search: { auth: "google" } };
   }
 
   if (userInfoErrorMessage === "User missing in Rateup") {
-    return "/signup";
+    return { to: "/signup", search: {} };
   }
 
   return null;

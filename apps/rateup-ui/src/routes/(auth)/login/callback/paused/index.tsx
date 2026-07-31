@@ -6,6 +6,10 @@ import { Card } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 export const Route = createFileRoute("/(auth)/login/callback/paused/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): { pausedby?: string } => ({
+    pausedby: typeof search.pausedby === "string" ? search.pausedby : undefined,
+  }),
   component: PausedPage,
 });
 

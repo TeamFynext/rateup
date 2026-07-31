@@ -17,6 +17,11 @@ import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): { tab?: string; contactId?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    contactId: typeof search.contactId === "string" ? search.contactId : undefined,
+  }),
   component: WhatsAppInbox,
 });
 

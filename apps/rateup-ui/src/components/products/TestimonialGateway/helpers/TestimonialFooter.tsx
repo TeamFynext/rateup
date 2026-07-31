@@ -20,9 +20,9 @@ const TestimonialFooter = () => {
             <h4 className="font-semibold text-lg pb-4 text-[#013553]">Product</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="#features" className="text-[#1c518e] transition-colors">
+                <a href="#features" className="text-[#1c518e] transition-colors">
                   Features
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/pricing" className="text-[#1c518e] transition-colors">
@@ -41,9 +41,9 @@ const TestimonialFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link to="https://blog.rateup.app/" className="text-[#1c518e] transition-colors">
+                <a href="https://blog.rateup.app/" className="text-[#1c518e] transition-colors">
                   Blog
-                </Link>
+                </a>
               </li>
 
               <li>
@@ -76,15 +76,15 @@ const TestimonialFooter = () => {
             © {currentYear} Testimonique. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-[#00397b]">
-            <Link to="https://www.facebook.com/people/RateUp/61556199852468/">
+            <a href="https://www.facebook.com/people/RateUp/61556199852468/">
               <IconBrandFacebook className="h-5 w-5 hover:text-[#1c518e] transition-colors" />
-            </Link>
-            <Link to="https://www.instagram.com/rateupsoftware/">
+            </a>
+            <a href="https://www.instagram.com/rateupsoftware/">
               <IconBrandInstagram className="h-5 w-5 hover:text-[#1c518e] transition-colors" />
-            </Link>
-            <Link to="https://www.linkedin.com/company/rateup">
+            </a>
+            <a href="https://www.linkedin.com/company/rateup">
               <IconBrandLinkedin className="h-5 w-5 hover:text-[#1c518e] transition-colors" />
-            </Link>
+            </a>
           </div>
         </div>
       </div>

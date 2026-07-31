@@ -54,7 +54,7 @@ export function ArticleCard({
   });
 
   return (
-    <Link to={`/blog/${post.slug}`} className="no-underline text-inherit group">
+    <Link to="/blog/$slug" params={{ slug: post.slug }} className="no-underline text-inherit group">
       <article
         className="reveal in rounded-[20px] overflow-hidden bg-white flex flex-col h-full cursor-pointer transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] border border-[#ECECEA] shadow-[0_1px_2px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:border-[#C5D5EC] hover:shadow-[0_12px_36px_rgba(11,31,72,0.1)]"
         data-d={delay}

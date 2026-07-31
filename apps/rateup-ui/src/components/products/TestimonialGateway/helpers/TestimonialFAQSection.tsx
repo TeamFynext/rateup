@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
 import {
@@ -82,9 +81,9 @@ const TestimonialFAQSection = () => {
         >
           <p className="text-white/70 text-sm">
             Have more questions?{" "}
-            <Link to="#" className="text-[#f8951d] hover:underline">
+            <a href="#" className="text-[#f8951d] hover:underline">
               Contact our support team
-            </Link>
+            </a>
           </p>
         </motion.div>
       </div>

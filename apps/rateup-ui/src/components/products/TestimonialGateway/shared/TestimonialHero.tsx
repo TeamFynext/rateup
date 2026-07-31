@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
@@ -35,7 +34,7 @@ const TestimonialHero = () => {
                 Book a Demo
               </Button>
             </BookDemoModal>
-            <Link to="https://rateup.app/login">
+            <a href="https://rateup.app/login">
               <Button
                 variant="outline"
                 className="text-[#0041a8] cursor-pointer border-[#0041a8] hover:bg-[#f0f4ff] px-6 py-3 text-base"
@@ -43,7 +42,7 @@ const TestimonialHero = () => {
               >
                 Start for free
               </Button>
-            </Link>
+            </a>
           </div>
         </motion.div>
 
