@@ -52,7 +52,7 @@ export default function ThankYou({
   surveyThemeData?: SurveyTheme | null;
   pagesThemeData?: SurveyTheme | null;
   titleText?: string;
-  subtitleText?: string;
+  subtitleText?: string | null;
   isSurveyPreview?: boolean;
   reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
@@ -61,13 +61,13 @@ export default function ThankYou({
   const { t: translations } = useTranslation();
   const searchParams = useSearch({ strict: false });
   const err = searchParams.err && searchParams.err === "oops";
-  let k,
-    surveyId = "";
+  let k = "";
+  let surveyId = "";
   if (fromShortUrl) {
     k = kioskMode;
   } else {
-    k = searchParams.k;
-    surveyId = searchParams.surveyId as string;
+    k = typeof searchParams.k === "string" ? searchParams.k : "";
+    surveyId = typeof searchParams.surveyId === "string" ? searchParams.surveyId : "";
   }
   const params = useParams({
     strict: false,

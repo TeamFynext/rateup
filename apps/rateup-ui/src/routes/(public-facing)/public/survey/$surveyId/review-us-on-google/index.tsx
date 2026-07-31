@@ -43,8 +43,8 @@ function ReviewUsOnGoogle() {
 
   return (
     <GoogleReview
-      reviewSuggestions={propsToPass?.reviews}
-      orgLogoUrl={propsToPass?.orgLogoUrl}
+      reviewSuggestions={propsToPass?.reviews?.reviews}
+      orgLogoUrl={propsToPass?.orgLogoUrl ?? undefined}
       surveyTeamMapId={propsToPass?.surveyTeamMapId}
       survey={null}
     />

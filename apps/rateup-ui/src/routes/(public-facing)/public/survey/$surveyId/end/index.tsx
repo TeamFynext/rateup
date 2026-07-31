@@ -36,7 +36,8 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/e
       return {
         surveyId,
         googleLink,
-        reviews,
+        // The endpoint answers `{ reviews, reviewLink }`; the page renders the suggestions.
+        reviews: reviews.reviews,
         reviewPageLinks,
         redirect: survey.redirect,
         kioskMode: survey.kioskMode ? "y" : "n",
@@ -80,7 +81,6 @@ function End() {
       pagesThemeData={propsToPass?.pagesThemeData}
       titleText={propsToPass?.titleText}
       subtitleText={propsToPass?.subtitleText || null}
-      enableGoogleReview={propsToPass?.enableGoogleReview}
       googleLink={propsToPass?.googleLink || ""}
       reviewPageLinks={propsToPass?.reviewPageLinks || {}}
       reviews={propsToPass?.reviews || []}
