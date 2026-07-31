@@ -1,6 +1,7 @@
 import { Info, Loader2, MapPin, Save, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import type { CatalogSettings } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useCatalogSettings,
   useUpdateCatalogSettings,
@@ -17,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
  * Shopify's hosted checkout collects address and delivery on the Shopify store,
  * so these options don't apply to it. Every other method collects in WhatsApp.
  */
-function isApplicable(settings: unknown) {
+function isApplicable(settings: CatalogSettings | undefined) {
   return !(settings?.storeType === "shopify" && settings?.paymentMethod === "shopify_checkout");
 }
 

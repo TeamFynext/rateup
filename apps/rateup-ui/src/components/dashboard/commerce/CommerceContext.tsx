@@ -4,22 +4,24 @@ import type { ReactNode } from "react";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import type { CommerceFilter } from "@/backend/commerce/commerce.api";
+import type { getWaCatalogs } from "@/backend/whatsapp/catalog/catalog.api";
 import { useAllWaCatalogs, useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { IntegratedApps } from "@/types/enums";
 
 export type CommerceDateRange = { key: string; range: Date[] };
 
 type CommerceContextValue = {
-  waSettings: unknown[];
+  waSettings: WaSettings;
   isLoadingSettings: boolean;
   selectedSettingId: string;
   setSelectedSettingId: (id: string) => void;
-  currentSetting: unknown | undefined;
+  currentSetting: WaSettings[number] | undefined;
   phoneId: string | undefined;
 
   /** All catalogs the org has synced from Meta. */
-  catalogs: unknown[];
+  catalogs: Awaited<ReturnType<typeof getWaCatalogs>>;
   /** The catalog currently being viewed — the store's connected one unless overridden. */
   catalogId: string;
   setCatalogId: (id: string) => void;
@@ -69,7 +71,7 @@ export function CommerceProvider({ children }: Readonly<{ children: ReactNode }>
     setSelectedCatalogId("");
   }, [selectedSettingId]);
 
-  const catalogList: unknown[] = catalogs ?? [];
+  const catalogList: CommerceContextValue["catalogs"] = catalogs ?? [];
   const selectionIsValid =
     !!selectedCatalogId && catalogList.some((c) => c.catalogId === selectedCatalogId);
   const catalogId = selectionIsValid ? selectedCatalogId : connectedCatalogId;

@@ -48,11 +48,19 @@ import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-r
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
+import type { ChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
+import type { ChannelOption } from "@/components/input/channelOptions.ts";
+import type { ChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
+import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
+import type { User } from "@/context/UserContext.tsx";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
-const CHANNEL_PLATFORM_ICON = {
+const CHANNEL_PLATFORM_ICON: Partial<
+  Record<MessagePlatform, React.ComponentType<{ size?: number | string; className?: string }>>
+> = {
   [MessagePlatform.WHATSAPP]: IconBrandWhatsapp,
   [MessagePlatform.INSTAGRAM]: IconBrandInstagram,
   [MessagePlatform.FACEBOOK]: IconBrandFacebook,
@@ -88,11 +96,27 @@ export interface NavEntry {
   [key: string]: unknown;
 }
 
+/** Everything the sidebar's nav tree is derived from, gathered by `AppSidebar`. */
+interface NavMainInput {
+  subscription?: Subscription;
+  lifecycles?: GetLabelsRes[];
+  contactLabels?: ContactLabelOption[];
+  channels?: ChannelOption[];
+  staff: Array<{ id: string; name?: string }>;
+  teams: Array<{ id: string; name?: string }>;
+  chatFilterStore: ChatFilterStore;
+  hiddenModules: string[];
+  handleFilter: (label: string, value: string) => void;
+  allowedFeatures: AllowedFeatures;
+  user: User | null;
+  sectionCounts: ChatContactCountStore["sectionCounts"];
+}
+
 export function useNavMain({
   subscription,
-  lifecycles,
-  contactLabels,
-  channels,
+  lifecycles = [],
+  contactLabels = [],
+  channels = [],
   staff,
   teams,
   chatFilterStore,
@@ -101,7 +125,7 @@ export function useNavMain({
   allowedFeatures,
   user,
   sectionCounts,
-}: unknown) {
+}: NavMainInput) {
   const { t } = useTranslation();
 
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
@@ -197,20 +221,15 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 phone: "",
                               }),
-                            items: channels.map(
-                              (channel: { platform?: string; [key: string]: unknown }) => ({
-                                title: channel.label,
-                                url: "#",
-                                icon:
-                                  CHANNEL_PLATFORM_ICON[
-                                    channel.platform as keyof typeof CHANNEL_PLATFORM_ICON
-                                  ] ?? IconMessage,
-                                handleClick: () => {
-                                  handleFilter("channel", channel.value);
-                                },
-                                isActive: chatFilterStore.filter.phone === channel.value,
-                              }),
-                            ),
+                            items: channels.map((channel) => ({
+                              title: channel.label,
+                              url: "#",
+                              icon: CHANNEL_PLATFORM_ICON[channel.platform] ?? IconMessage,
+                              handleClick: () => {
+                                handleFilter("channel", channel.value);
+                              },
+                              isActive: chatFilterStore.filter.phone === channel.value,
+                            })),
                           },
                         ]
                       : []),

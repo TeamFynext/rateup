@@ -3,6 +3,7 @@ import { isEqual } from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import type { ITicket } from "@/backend/tickets/tickets.d.ts";
 import type {
   ContactsWithLastMessage,
   WaGetMessagesBody,
@@ -30,14 +31,14 @@ interface ContactStore {
   opened: boolean;
   open: () => void;
   close: () => void;
-  selectedTicket;
-  setSelectedTicket: (ticket) => void;
-  setTicketAndOpen: (ticket) => void;
+  selectedTicket: ITicket | null;
+  setSelectedTicket: (ticket: ITicket | null) => void;
+  setTicketAndOpen: (ticket: ITicket | null) => void;
   filterData: string | null;
   setFilterData: (value: string) => void;
 }
 
-interface ChatContactCountStore {
+export interface ChatContactCountStore {
   /** Ticket counts, not contact counts — the inbox list is conversation-grained. */
   sectionCounts: {
     /** Assigned (not Unassigned) */

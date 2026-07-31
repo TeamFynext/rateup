@@ -9,7 +9,7 @@ import { UserRole } from "@/utils/enums/index.ts";
  * Set   → restrict to the features the member's teams have enabled
  */
 
-type AllowedFeatures = Set<string> | null;
+export type AllowedFeatures = Set<string> | null;
 interface TeamFeaturesContextValue {
   allowedFeatures: AllowedFeatures;
   isPending: boolean;

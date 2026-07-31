@@ -3,6 +3,7 @@ import { LogOut, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useDeleteWaCatalog,
   useDisconnectCatalogFromWa,
@@ -25,11 +26,11 @@ import { Switch } from "@/components/ui/switch";
 import { useConfirm } from "@/context/confirm-provider";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";
 
-export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogData }>) {
+export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogData?: WaCatalog }>) {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
-  const catalogId = catalogData?.catalogId;
+  const catalogId = catalogData?.catalogId ?? "";
   const update = useUpateCatalog(catalogId);
   const disconnect = useDisconnectCatalogFromWa(catalogId);
   const deleteCatalog = useDeleteWaCatalog();
@@ -55,7 +56,9 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
   useEffect(() => {
     if (waSettings && catalogData) {
       const setting = waSettings.find((s) =>
-        catalogData.connectedWaPhoneIds?.some((c) => c.whatsappSettingsPhoneId === s.phoneId),
+        catalogData.connectedWaPhoneIds?.some(
+          (c: { whatsappSettingsPhoneId?: string }) => c.whatsappSettingsPhoneId === s.phoneId,
+        ),
       );
       setWabaId(setting?.wabaId ?? "");
     }

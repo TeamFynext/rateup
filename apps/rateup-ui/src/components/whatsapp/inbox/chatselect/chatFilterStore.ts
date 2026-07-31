@@ -29,7 +29,7 @@ export interface ChatFilter {
   spam?: boolean;
 }
 
-interface ChatFilterStore {
+export interface ChatFilterStore {
   filter: ChatFilter;
   setFilter: (value: ChatFilter) => void;
   clearFilter: () => void;
