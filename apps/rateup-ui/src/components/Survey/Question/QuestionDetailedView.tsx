@@ -24,6 +24,10 @@ import {
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor.tsx";
+import type {
+  QuestionExtraPropsForm,
+  QuestionFormValues,
+} from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { TipTapFloatingMenu } from "@/components/tiptap/extensions/floating-menu";
 import { FloatingToolbar } from "@/components/tiptap/extensions/floating-toolbar";
 import { ImageExtension } from "@/components/tiptap/extensions/image";
@@ -68,6 +72,14 @@ import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps.tsx";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
+/**
+ * The Mantine-style surface the not-yet-migrated ExtraProps children use. It is
+ * `QuestionExtraPropsForm` with both members present.
+ */
+type QuestionFormAdapter = Required<QuestionExtraPropsForm> & {
+  getValues: () => QuestionFormValues;
+};
+
 interface QuestionDetailedViewProps {
   question: Question;
   setSelectedQ: (Q: Question) => void;
@@ -76,7 +88,7 @@ interface QuestionDetailedViewProps {
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   surveyId?: string;
   survey: Survey;
-  questionDetailedViewFormRef?: any;
+  questionDetailedViewFormRef?: React.RefObject<Question | null>;
   openSurveyPreviewModal?: () => void;
 }
 
@@ -131,12 +143,20 @@ export function QuestionDetailedView({
   // Reactive snapshot of all values — used for QuestionTypePreview and ExtraProps children
   const allValues = watch();
 
-  // Mantine-compatible adapter for ExtraProps children not yet migrated to RHF
-  const extraPropsForm = {
-    values: allValues,
-    setFieldValue: (path: string, value: any) =>
-      setValue(path as any, value, { shouldDirty: true }),
-    getValues: () => getValues(),
+  // Mantine-compatible adapter for ExtraProps children not yet migrated to RHF.
+  // The children address fields by a runtime path (`title.<language>`), which
+  // react-hook-form's per-path value type cannot express, so the setter is
+  // narrowed once here.
+  const setFieldByPath = setValue as (
+    path: string,
+    value: unknown,
+    options?: { shouldDirty?: boolean },
+  ) => void;
+  const extraPropsForm: QuestionFormAdapter = {
+    values: { ...allValues },
+    setFieldValue: (path: string, value: unknown) =>
+      setFieldByPath(path, value, { shouldDirty: true }),
+    getValues: () => ({ ...getValues() }),
   };
 
   // Reset form when question ID or languages change.
@@ -162,7 +182,7 @@ export function QuestionDetailedView({
 
   const handleSave = async () => {
     try {
-      const titleValues = getValues("title" as any);
+      const titleValues = getValues("title");
       if (!titleValues?.[selectedLanguage] || titleValues[selectedLanguage] === "") {
         toast.error(translations("Question title is missing"));
         setIsSaved(false);
@@ -226,7 +246,7 @@ export function QuestionDetailedView({
   handleSaveRef.current = handleSave;
 
   // Auto-save when choices change (skip initial mount)
-  const watchedChoices = watch("choices" as any);
+  const watchedChoices = watch("choices");
   const isFirstChoicesRender = useRef(true);
   useEffect(() => {
     if (isFirstChoicesRender.current) {
@@ -237,7 +257,7 @@ export function QuestionDetailedView({
   }, [watchedChoices]);
 
   // Auto-save when features change (prev-value comparison naturally skips first render)
-  const watchedFeatures = watch("features" as any);
+  const watchedFeatures = watch("features");
   const prevFeaturesStr = useRef(JSON.stringify(watchedFeatures));
   useEffect(() => {
     const current = JSON.stringify(watchedFeatures);
@@ -248,8 +268,8 @@ export function QuestionDetailedView({
   }, [watchedFeatures]);
 
   // Auto-save when required or enableNpsAnalytics change
-  const watchedRequired = watch("required" as any);
-  const watchedEnableNpsAnalytics = watch("enableNpsAnalytics" as any);
+  const watchedRequired = watch("required");
+  const watchedEnableNpsAnalytics = watch("enableNpsAnalytics");
   useEffect(() => {
     if (formState.isDirty) handleSaveRef.current?.();
   }, [watchedRequired, watchedEnableNpsAnalytics]);
@@ -289,7 +309,7 @@ export function QuestionDetailedView({
         <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-card px-4">
           {/* Question number badge */}
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary font-nunito text-sm font-black text-primary-foreground">
-            {(survey?.questions?.findIndex((q: any) => q.id === question.id) ?? 0) + 1}
+            {(survey?.questions?.findIndex((q) => q.id === question.id) ?? 0) + 1}
           </div>
           {/* Label */}
           <div className="min-w-0 flex-1">
@@ -313,10 +333,10 @@ export function QuestionDetailedView({
             required={watchedRequired}
             enableNpsAnalytics={watchedEnableNpsAnalytics}
             onRequiredChange={(checked) =>
-              setValue("required" as any, checked, { shouldDirty: true })
+              setFieldByPath("required", checked, { shouldDirty: true })
             }
             onNpsAnalyticsChange={(checked) =>
-              setValue("enableNpsAnalytics" as any, checked, { shouldDirty: true })
+              setFieldByPath("enableNpsAnalytics", checked, { shouldDirty: true })
             }
             setActiveTab={setActiveTab}
             isGoogleReviewFeatureActive={isGoogleReviewFeatureActive}
@@ -370,17 +390,17 @@ export function QuestionDetailedView({
                       titleValue={allValues?.title?.[selectedLanguage]}
                       descriptionValue={allValues?.description?.[selectedLanguage]}
                       onTitleChange={(v) =>
-                        setValue(`title.${selectedLanguage}` as any, v, { shouldDirty: true })
+                        setFieldByPath(`title.${selectedLanguage}`, v, { shouldDirty: true })
                       }
                       onDescriptionChange={(v) =>
-                        setValue(`description.${selectedLanguage}` as any, v, { shouldDirty: true })
+                        setFieldByPath(`description.${selectedLanguage}`, v, { shouldDirty: true })
                       }
                     />
                   ) : (
                     <QuestionTitleEditor
                       content={allValues?.title?.[selectedLanguage]}
                       onChange={(v) =>
-                        setValue(`title.${selectedLanguage}` as any, v, { shouldDirty: true })
+                        setFieldByPath(`title.${selectedLanguage}`, v, { shouldDirty: true })
                       }
                       placeholder={
                         questionTypeLabel
@@ -441,7 +461,7 @@ export function getNpsColor(npstype: string) {
 }
 
 interface ExtraPropsProps {
-  form: any;
+  form: QuestionFormAdapter;
   question: Question;
   surveyType: SurveyType;
   surveyLanguages: string[];
