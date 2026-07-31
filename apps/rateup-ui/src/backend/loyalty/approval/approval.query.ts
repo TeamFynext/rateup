@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import type {
   ApproveRequestInput,
   CancelRequestInput,
@@ -19,13 +21,13 @@ import {
 
 export const useGetApprovalRequests = (filters?: GetApprovalRequestsInput) =>
   useQuery({
-    queryKey: ["loyaltyApprovals", filters],
+    queryKey: loyaltyKeys.approvalsFiltered(filters),
     queryFn: () => getApprovalRequests(filters),
   });
 
 export const useGetApprovalRequestById = (approvalId: string) =>
   useQuery({
-    queryKey: ["loyaltyApprovals", approvalId],
+    queryKey: loyaltyKeys.approval(approvalId),
     queryFn: () => getApprovalRequestById(approvalId),
     enabled: !!approvalId,
   });
@@ -36,7 +38,7 @@ export const useCreateApprovalRequest = () => {
   return useMutation({
     mutationFn: (data: CreateApprovalRequestInput) => createApprovalRequest(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.approvals() });
       toast.success("Approval request created successfully");
     },
     onError: (error) => {
@@ -52,10 +54,10 @@ export const useApproveApprovalRequest = () => {
     mutationFn: ({ approvalId, data }: { approvalId: string; data: ApproveRequestInput }) =>
       approveApprovalRequest(approvalId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyTransactions"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.approvals() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.redemptions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       toast.success("Approval request approved successfully");
     },
     onError: (error) => {
@@ -71,10 +73,10 @@ export const useRejectApprovalRequest = () => {
     mutationFn: ({ approvalId, data }: { approvalId: string; data: RejectRequestInput }) =>
       rejectApprovalRequest(approvalId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyTransactions"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.approvals() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.redemptions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       toast.success("Approval request rejected successfully");
     },
     onError: (error) => {
@@ -90,7 +92,7 @@ export const useCancelApprovalRequest = () => {
     mutationFn: ({ approvalId, data }: { approvalId: string; data: CancelRequestInput }) =>
       cancelApprovalRequest(approvalId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.approvals() });
       toast.success("Approval request cancelled successfully");
     },
     onError: (error) => {

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import type { RequestPayload } from "@/types/api.ts";
 
 import type { CatalogSettings } from "./catalog.api";
@@ -73,7 +74,7 @@ export const useUpateCatalog = (catalogId: string) => {
       toast.success("updated");
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
     },
     onError: (error) => {
       toast.error(error?.message || "Connection failed");
@@ -88,7 +89,7 @@ export const useDisconnectCatalogFromWa = (catalogId: string) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("disconnected");
     },
     onError: (error) => {

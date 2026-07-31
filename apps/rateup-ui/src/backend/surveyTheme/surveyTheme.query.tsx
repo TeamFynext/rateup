@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+
 import {
   createNewTheme,
   deleteTheme,
@@ -14,7 +16,7 @@ import {
 
 export const useSurveyTheme = (surveyThemeId: string) => {
   return useQuery({
-    queryKey: ["surveyTheme", surveyThemeId],
+    queryKey: surveyKeys.theme(surveyThemeId),
     queryFn: () => getSurveyTheme(surveyThemeId),
     enabled: !!surveyThemeId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -37,10 +39,10 @@ export const useUpdateSurveyTheme = (surveyThemeId: string, surveyId: string) =>
         queryKey: ["allThemes"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["survey", surveyId],
+        queryKey: surveyKeys.detail(surveyId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["surveyTheme", surveyThemeId],
+        queryKey: surveyKeys.theme(surveyThemeId),
       });
       toast.success("Survey theme updated successfully");
     },
@@ -75,7 +77,7 @@ export const useCreateNewThemeMutation = (surveyId: string) => {
         queryKey: ["allThemes"],
       });
       await queryClient.invalidateQueries({
-        queryKey: ["survey", surveyId],
+        queryKey: surveyKeys.detail(surveyId),
       });
       toast.success("Created and applied new theme successfully");
     },

@@ -3,6 +3,7 @@ import { Edit, Share2, Trash2 } from "lucide-react";
 import { MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { TestimonialCollectionSummary } from "@/backend/testimonials/testimonial.api.ts";
 import { useDeleteTestimonialCollection } from "@/backend/testimonials/testimonial.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -13,15 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
-
-/** A testimonial collection as the org listing returns it. */
-export interface TestimonialCollectionSummary {
-  readonly id: string;
-  readonly name: string;
-  readonly createdAt: string | Date;
-  readonly _count?: { readonly testimonials: number };
-  readonly teamId?: string;
-}
 
 interface TestimonialCollectionCardProps {
   readonly collection: TestimonialCollectionSummary;

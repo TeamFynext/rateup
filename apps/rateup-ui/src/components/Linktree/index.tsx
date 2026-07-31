@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { linktreeKeys } from "@/backend/campaign/campaign.keys";
 import { useLinktrees } from "@/backend/linktree/linktree.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
@@ -87,7 +88,7 @@ function LinktreeDashboard() {
   };
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+    queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
   };
 
   return (

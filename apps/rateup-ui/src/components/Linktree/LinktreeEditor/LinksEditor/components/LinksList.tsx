@@ -1,10 +1,10 @@
 import { useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
 import LinkCard from "./LinkCard.tsx";
-import type { LinktreeLink } from "./LinkCard.tsx";
 import Reorder from "./Reorder/index.tsx";
 import ReorderItem from "./Reorder/ReorderItem.tsx";
 

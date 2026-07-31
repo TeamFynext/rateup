@@ -1,6 +1,9 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { orgKeys, teamKeys } from "@/backend/org/org.keys";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
 
 import type { IEditTeam, UpdateTeamChannelsInput } from "./team.api";
@@ -25,7 +28,7 @@ import {
 
 export function useTeamsByUser() {
   return useQuery({
-    queryKey: ["teamsDataUserQuery"],
+    queryKey: teamKeys.byUser(),
     queryFn: getTeamsByUser,
     staleTime: Infinity,
     gcTime: 1000 * 60 * 60 * 24,
@@ -33,7 +36,7 @@ export function useTeamsByUser() {
 }
 export function useTeamMembersFromInvitation(teamId: string) {
   return useQuery({
-    queryKey: ["invitedTeamMembers", teamId],
+    queryKey: teamKeys.invitedByTeam(teamId),
     queryFn: () => getTeamMembersFromInvitation(teamId),
     enabled: !!teamId,
   });
@@ -41,7 +44,7 @@ export function useTeamMembersFromInvitation(teamId: string) {
 
 export function useNotTeamMembers(teamId: string) {
   return useQuery({
-    queryKey: ["notTeamMembers", teamId],
+    queryKey: teamKeys.notMembersByTeam(teamId),
     queryFn: () => getNotTeamMembers(teamId),
     enabled: !!teamId,
   });
@@ -64,7 +67,7 @@ export function useCreateTeamMutation(
   return useMutation({
     mutationFn: (values: CreateTeamValues) => handleCreateTeam(values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
       toast.success("Team created successfully.", {
         id: "load-data",
       });
@@ -96,11 +99,11 @@ export function useEditTeamMutation(
         id: "load-data",
       });
       setIsLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers", id] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.details() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.invitedByTeam(id) });
       if (surveyId) {
-        queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+        queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
       }
     },
     onError: (error) => {
@@ -119,7 +122,7 @@ export function useDeleteTeamMutation() {
   return useMutation({
     mutationFn: deleteTeamById,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
       toast.success("Team deleted successfully.", {
         id: "load-data",
       });
@@ -152,7 +155,7 @@ export function userResendInviteTeamMutation() {
   return useMutation({
     mutationFn: (id: string) => resendInviteTeamMember(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
       toast.success("Team Invitation Resend successfully.", {
         id: "load-data-invitaion",
       });
@@ -164,11 +167,11 @@ export function useDeleteInviteMutation(teamId: string) {
   return useMutation({
     mutationFn: (id: string) => deleteInviteById(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.details() });
       queryClient.invalidateQueries({
-        queryKey: ["invitedTeamMembers", teamId],
+        queryKey: teamKeys.invitedByTeam(teamId),
       });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
       toast.success("Invite deleted successfully.", {
         id: "load-data-deleting",
       });
@@ -179,7 +182,7 @@ export function useDeleteInviteMutation(teamId: string) {
 
 export function useSurveyLanguagesFromTeam(teamId: string) {
   return useQuery({
-    queryKey: ["surveyLanguages", teamId],
+    queryKey: surveyKeys.languages(teamId),
     queryFn: () => getSurveyLanguagesFromTeam(teamId),
     enabled: !!teamId,
   });
@@ -190,11 +193,11 @@ export function useAddUsertoTeams() {
   return useMutation({
     mutationFn: addUsertoTeams,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.notMembers() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
 
       toast.success("success");
     },
@@ -209,10 +212,10 @@ export function useRemoveUserFromTeam(teamId: string) {
   return useMutation({
     mutationFn: removeUserFromTeam,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
       queryClient.invalidateQueries({
-        queryKey: ["invitedTeamMembers", teamId],
+        queryKey: teamKeys.invitedByTeam(teamId),
       });
 
       toast.success("success");
@@ -225,7 +228,7 @@ export function useRemoveUserFromTeam(teamId: string) {
 
 export function useGetTeamById(teamId: string) {
   return useQuery({
-    queryKey: ["teamsDetailsQuery", teamId],
+    queryKey: teamKeys.detail(teamId),
     queryFn: () => getTeamById(teamId),
     enabled: !!teamId,
   });
@@ -233,7 +236,7 @@ export function useGetTeamById(teamId: string) {
 
 export function useTeamFeatures(teamId: string) {
   return useQuery({
-    queryKey: ["teamFeatures", teamId],
+    queryKey: teamKeys.features(teamId),
     queryFn: () => getTeamFeatures(teamId),
     enabled: !!teamId,
   });
@@ -244,7 +247,7 @@ export function useUpdateTeamFeatures(teamId: string) {
   return useMutation({
     mutationFn: (features: string[]) => updateTeamFeatures(teamId, features),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamFeatures", teamId] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.features(teamId) });
       toast.success("Feature access updated successfully.");
     },
     onError: (error) => {
@@ -255,7 +258,7 @@ export function useUpdateTeamFeatures(teamId: string) {
 
 export function useTeamChannels(teamId: string) {
   return useQuery({
-    queryKey: ["teamChannels", teamId],
+    queryKey: teamKeys.channels(teamId),
     queryFn: () => getTeamChannels(teamId),
     enabled: !!teamId,
   });
@@ -266,10 +269,10 @@ export function useUpdateTeamChannels(teamId: string) {
   return useMutation({
     mutationFn: (input: UpdateTeamChannelsInput) => updateTeamChannels(teamId, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamChannels", teamId] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.channels(teamId) });
       // The caller's own channel list is derived from their teams, so it can change here too.
       // `waSettings` is cached with staleTime: Infinity and would otherwise stay stale until reload.
-      queryClient.invalidateQueries({ queryKey: ["waSettings"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("Channel access updated successfully.");
     },
     onError: (error) => {
@@ -288,7 +291,7 @@ export function useMyAllowedFeatures(teamIds: string[]): {
 } {
   const results = useQueries({
     queries: teamIds.map((id) => ({
-      queryKey: ["teamFeatures", id],
+      queryKey: teamKeys.features(id),
       queryFn: () => getTeamFeatures(id),
       enabled: !!id,
     })),

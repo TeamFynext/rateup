@@ -1,0 +1,68 @@
+/**
+ * Query keys for the loyalty domain.
+ *
+ * Every literal below is byte-identical to the live inline key it replaced, so the cache
+ * layout is unchanged.
+ *
+ * The roots are a mix of camelCase (`loyaltyCustomers`, `loyaltyRedeems`) and kebab-case
+ * (`loyalty-tiers`, `loyalty-rewards`) because they grew that way. They are preserved
+ * as-is here rather than normalised, since renaming a root changes what every existing
+ * `invalidateQueries` matches. Centralising them first is what makes that normalisation
+ * safe to do later, in one place.
+ *
+ * One exception, called out explicitly — see `customer` / `customers` below.
+ */
+
+/** Opaque state (pagination, filters, search) that only ever gets serialised into a key. */
+type KeyPart = unknown;
+
+export const loyaltyKeys = {
+  dashboard: () => ["loyaltyDashboardData"] as const,
+
+  /**
+   * NOTE — behaviour change. Two invalidations in `customer.query.ts` (the assign-reward
+   * mutation) previously used the kebab spellings `["loyalty-customers"]` and
+   * `["loyalty-customer", id]`. No query is ever registered under those names — every
+   * customer query uses the camel form below — so both invalidations silently matched
+   * nothing and the customer list/detail did not refresh after assigning a reward. Routing
+   * those call sites here fixes that. Revert those two sites to the kebab literals if the
+   * dead behaviour was somehow intentional.
+   */
+  customers: () => ["loyaltyCustomers"] as const,
+  customerList: (pagination: KeyPart, search: KeyPart, sort: KeyPart, filters: KeyPart) =>
+    ["loyaltyCustomers", pagination, search, sort, filters] as const,
+  customer: (customerId: KeyPart) => ["loyaltyCustomer", customerId] as const,
+  customerByContact: (contactId: KeyPart) => ["loyaltyCustomerByContact", contactId] as const,
+
+  tiers: () => ["loyalty-tiers"] as const,
+  tier: (tierId: KeyPart) => ["loyalty-tier", tierId] as const,
+
+  rewards: () => ["loyalty-rewards"] as const,
+  reward: (rewardId: KeyPart) => ["loyalty-reward", rewardId] as const,
+
+  earningRules: () => ["loyalty-earning-rules"] as const,
+  earningRule: (ruleId: KeyPart) => ["loyalty-earning-rule", ruleId] as const,
+
+  program: () => ["loyalty-program"] as const,
+
+  redeems: () => ["loyaltyRedeems"] as const,
+  redemptions: () => ["loyaltyRedemptions"] as const,
+  redemptionsByCustomer: (customerId: KeyPart) =>
+    ["loyaltyRedemptions", "customer", customerId] as const,
+
+  transactions: () => ["loyaltyTransactions"] as const,
+  transactionsFiltered: (filters: KeyPart) => ["loyaltyTransactions", filters] as const,
+
+  approvals: () => ["loyaltyApprovals"] as const,
+  approvalsFiltered: (filters: KeyPart) => ["loyaltyApprovals", filters] as const,
+  approval: (approvalId: KeyPart) => ["loyaltyApprovals", approvalId] as const,
+
+  templates: () => ["LoyaltyTemplate"] as const,
+
+  cashierSearch: (search: KeyPart) => ["loyalty-cashier-search", search] as const,
+  /** Without a phone this is the prefix that sweeps every cashier lookup. */
+  cashierCustomer: (phone?: KeyPart) =>
+    (phone === undefined
+      ? ["loyalty-cashier-customer"]
+      : ["loyalty-cashier-customer", phone]) as readonly unknown[],
+} as const;

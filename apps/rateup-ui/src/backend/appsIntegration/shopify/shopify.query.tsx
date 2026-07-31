@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { integrationKeys } from "@/backend/campaign/campaign.keys";
 import { IntegratedApps } from "@/types/enums.ts";
 
 import {
@@ -45,7 +46,7 @@ export const useRegisterWebhooks = () => {
         id: "webhooks",
       });
       queryClient.invalidateQueries({
-        queryKey: ["integrations", IntegratedApps.shopify],
+        queryKey: integrationKeys.byType(IntegratedApps.shopify),
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
@@ -66,7 +67,7 @@ export const useRegisterWebhookByTopic = () => {
         id: "webhooks",
       });
       queryClient.invalidateQueries({
-        queryKey: ["integrations", IntegratedApps.shopify],
+        queryKey: integrationKeys.byType(IntegratedApps.shopify),
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
@@ -87,7 +88,7 @@ export const useDeleteAllWebhooks = () => {
         id: "webhooks",
       });
       queryClient.invalidateQueries({
-        queryKey: ["integrations", IntegratedApps.shopify],
+        queryKey: integrationKeys.byType(IntegratedApps.shopify),
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
@@ -108,7 +109,7 @@ export const useDeleteWebhookByTopic = () => {
         id: "webhooks",
       });
       queryClient.invalidateQueries({
-        queryKey: ["integrations", IntegratedApps.shopify],
+        queryKey: integrationKeys.byType(IntegratedApps.shopify),
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
@@ -128,7 +129,7 @@ export const useDeleteShopifyIntegrationByShop = () => {
       toast.success("Integration deleted", {
         id: "integration",
       });
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || `Error in deleting integration ${error?.message ?? ""}`, {

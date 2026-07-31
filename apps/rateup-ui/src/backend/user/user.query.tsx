@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import { orgKeys, teamKeys } from "@/backend/org/org.keys";
 import type { RequestPayload } from "@/types/api.ts";
 
 import type {
@@ -19,9 +20,6 @@ import {
   checkEmailExist,
   createAppleUser,
   createGoogleUser,
-  fetchUserInfo,
-  fetchUserProfile,
-  getAllUsers,
   getAuditLogs,
   updateActiveStatus,
   updateMemberProfile,
@@ -32,25 +30,14 @@ import {
   updateUserProfile,
   updateUserProfilePhoto,
 } from "./user.api";
+import { userKeys } from "./user.keys";
+import { allUsersQuery, userInfoQuery, userProfileQuery } from "./user.options";
 
-export const useGetUserProfile = () =>
-  useQuery({
-    queryKey: ["userProfile"],
-    queryFn: () => fetchUserProfile(),
-  });
+export const useGetUserProfile = () => useQuery(userProfileQuery());
 
-export const useUserInfo = () =>
-  useQuery({
-    queryKey: ["userInfoQuery"],
-    queryFn: fetchUserInfo,
-    notifyOnChangeProps: ["data"],
-  });
+export const useUserInfo = () => useQuery({ ...userInfoQuery(), notifyOnChangeProps: ["data"] });
 
-export const useGetAllUsers = () =>
-  useQuery({
-    queryKey: ["allUsers"],
-    queryFn: getAllUsers,
-  });
+export const useGetAllUsers = () => useQuery(allUsersQuery());
 
 export function useCreateUserMutation(setIsLoading: (loading: boolean) => void) {
   const navigate = useNavigate();
@@ -62,8 +49,8 @@ export function useCreateUserMutation(setIsLoading: (loading: boolean) => void) 
         id: "load-data",
       });
       setIsLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       navigate({
         to: "/dashboard",
       });
@@ -89,8 +76,8 @@ export function useCreateAppleUserMutation(setIsLoading: (loading: boolean) => v
         id: "load-data",
       });
       setIsLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       navigate({
         to: "/dashboard",
       });
@@ -128,9 +115,9 @@ export function useUpdateProfileMutation() {
       toast.success("Profile Updated Successfully!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.resetQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
     onError: (error) => {
       console.error("Error Profile Update:", error.message);
@@ -146,8 +133,8 @@ export function useUpdateMemberProfileMutation() {
     mutationFn: (values: { userId: string; data: IUpdateMemberProfile }) =>
       updateMemberProfile(values.userId, values.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error updating member profile");
@@ -164,9 +151,9 @@ export function useUpdateUserLanguageMutation(setIsLoading: (loading: boolean) =
         id: "load-data",
       });
       setIsLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.resetQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
     onError: (error) => {
       console.error("Error updating language:", error.message);
@@ -187,9 +174,9 @@ export function useUpdateProfilePhotoMutation(setIsLoadingUpload: (uploading: bo
         id: "load-data",
       });
       setIsLoadingUpload(false);
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.resetQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
     onError: (error) => {
       console.error("Error Profile photo Update:", error.message);
@@ -210,11 +197,11 @@ export function useUpdateActiveStatusMutation() {
       toast.success("Member Deleted Successfully!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.resetQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
     },
     onError: (error) => {
       console.error("Error deleting member", error.message);
@@ -239,7 +226,7 @@ export function useUpdateRecipeNameMutation() {
       toast.success("updated recipe name", {
         id: "user-recipe",
       });
-      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "error in updating recipe name", {
@@ -255,9 +242,9 @@ export const useUpdateUserPause = () => {
     mutationFn: updateUserPause,
     onSuccess: () => {
       toast.success("Pause status has been updated");
-      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.all() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error in updating pause status");
@@ -278,9 +265,9 @@ export const useUpdateUserAvailabilityStatus = () => {
       toast.success("Status updated", {
         id: "user-status",
       });
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      queryClient.invalidateQueries({ queryKey: ["team-member-stats"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.memberStats() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error in updating status", {
@@ -293,7 +280,7 @@ export const useUpdateUserAvailabilityStatus = () => {
 
 export function useUserAuditLogs(pagination: Parameters<typeof getAuditLogs>[0]) {
   return useQuery({
-    queryKey: ["user-audit-logs", pagination],
+    queryKey: userKeys.auditLogs(pagination),
     queryFn: () => getAuditLogs(pagination),
     placeholderData: keepPreviousData, // don't have 0 rows flash while changing pages/loading next page
   });

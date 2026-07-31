@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import type { QueryFilter } from "@/types/api.ts";
 
 import {
@@ -33,6 +34,6 @@ export const useGetTemplateOverview = (filter: QueryFilter) => {
 export const useGetTeamApiOverview = (filter: QueryFilter) => {
   return useQuery({
     queryFn: () => getTeamOverview(filter),
-    queryKey: ["teamapioverview", filter],
+    queryKey: teamKeys.apiOverview(filter),
   });
 };

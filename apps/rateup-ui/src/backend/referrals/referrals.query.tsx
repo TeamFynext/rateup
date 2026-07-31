@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { referralKeys } from "@/backend/campaign/campaign.keys";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { createReferral, deleteReferral, getAllReferrals, trackVisit } from "./referrals.api";
@@ -44,7 +45,7 @@ export function useDeleteReferralMutation({
     mutationFn: (id: string) => deleteReferral(id),
     onSuccess: () => {
       toast.success(translations("Referral deleted successfully!"));
-      queryClient.invalidateQueries({ queryKey: ["referrals"] });
+      queryClient.invalidateQueries({ queryKey: referralKeys.all() });
       if (onSuccess) onSuccess();
     },
     onError: (error) => {
@@ -58,7 +59,7 @@ export function useDeleteReferralMutation({
 
 export function useAllReferralsQuery() {
   return useQuery({
-    queryKey: ["referrals"],
+    queryKey: referralKeys.all(),
     queryFn: () => getAllReferrals(),
   });
 }

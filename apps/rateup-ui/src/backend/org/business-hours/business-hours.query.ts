@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { BusinessHoursFormValues } from "@/components/account/business-hours/schema.ts";
-
+import type { BusinessHoursInput } from "./business-hours.api";
 import {
   createBusinessHour,
   deleteBusinessHour,
@@ -36,7 +35,7 @@ export const useCreateBusinessHour = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: BusinessHoursFormValues) => createBusinessHour(data),
+    mutationFn: (data: BusinessHoursInput) => createBusinessHour(data),
     onSuccess: () => {
       toast.success("Business hours created successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
@@ -51,7 +50,7 @@ export const useUpdateBusinessHour = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: BusinessHoursFormValues }) =>
+    mutationFn: ({ id, data }: { id: string; data: BusinessHoursInput }) =>
       updateBusinessHour(id, data),
     onSuccess: () => {
       toast.success("Business hours updated successfully!");

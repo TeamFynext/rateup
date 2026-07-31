@@ -1,8 +1,8 @@
 import { produce } from "immer";
 
+import type { SurveyTheme } from "@/backend/surveyTheme/surveyTheme.types";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
-import type { SurveyTheme } from "./surveyTheme.types";
 import type { SurveyThemePage } from "./surveyThemeReducer.ts";
 
 export async function destructureThemeAndUploadImagesIfAny(

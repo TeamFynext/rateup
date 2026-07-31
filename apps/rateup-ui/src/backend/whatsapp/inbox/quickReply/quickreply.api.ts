@@ -1,7 +1,4 @@
-import type z from "zod";
-
 import { axiosClient } from "@/backend/apiClient";
-import type { quickReplySchema } from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 
 import { WA_INBOX_BASE_PATH } from "..";
@@ -12,7 +9,19 @@ export async function getWaQuickReplies() {
   return (await axiosClient.get(WA_QUICK_REPLY_BASE)).data;
 }
 
-export async function createWaQuickReply(data: z.infer<typeof quickReplySchema>) {
+/**
+ * The payload the quick-reply create endpoint accepts. `text` is the composer's editor
+ * document — a tiptap `Content` value or plain text — which is serialised on the way out,
+ * so this layer deliberately does not model the editor's own type.
+ */
+export interface CreateQuickReplyInput {
+  text: unknown;
+  key: string;
+  category: string;
+  topic: string;
+}
+
+export async function createWaQuickReply(data: CreateQuickReplyInput) {
   await axiosClient.post(WA_QUICK_REPLY_BASE, data);
 }
 

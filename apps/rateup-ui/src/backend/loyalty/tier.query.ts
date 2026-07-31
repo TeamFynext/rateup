@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import type { LoyaltyTierInput, LoyaltyTierUpdateInput } from "./tier.api";
 import {
   createLoyaltyTier,
@@ -15,7 +17,7 @@ import {
  */
 export const useLoyaltyTiers = () =>
   useQuery({
-    queryKey: ["loyalty-tiers"],
+    queryKey: loyaltyKeys.tiers(),
     queryFn: getLoyaltyTiers,
   });
 
@@ -25,7 +27,7 @@ export const useLoyaltyTiers = () =>
 export const useLoyaltyTierById = (tierId: string) =>
   useQuery({
     enabled: !!tierId,
-    queryKey: ["loyalty-tier", tierId],
+    queryKey: loyaltyKeys.tier(tierId),
     queryFn: () => getLoyaltyTierById(tierId),
   });
 
@@ -39,7 +41,7 @@ export const useCreateLoyaltyTierMutation = (onSuccess?: () => void, onError?: (
     mutationFn: (tierData: LoyaltyTierInput) => createLoyaltyTier(tierData),
     onSuccess: () => {
       toast.success("Loyalty tier created successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -63,8 +65,8 @@ export const useUpdateLoyaltyTierMutation = (
     mutationFn: (tierData: LoyaltyTierUpdateInput) => updateLoyaltyTier(tierId, tierData),
     onSuccess: () => {
       toast.success("Loyalty tier updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tier", tierId] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tier(tierId) });
       onSuccess?.();
     },
     onError: (error) => {
@@ -86,7 +88,7 @@ export const useDeleteLoyaltyTierMutation = (onSuccess?: () => void, onError?: (
       toast.success("Loyalty tier deleted successfully", {
         id: "loyalty-tier-delete",
       });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
       onSuccess?.();
     },
     onError: (error) => {

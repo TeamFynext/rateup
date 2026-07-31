@@ -1,8 +1,16 @@
-import type { TestimonialCollectionSummary } from "@/components/testimonial/TestimonialCollectionCard.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
 import { axiosClient } from "../apiClient";
+
+/** A testimonial collection as the org listing returns it. */
+export interface TestimonialCollectionSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly createdAt: string | Date;
+  readonly _count?: { readonly testimonials: number };
+  readonly teamId?: string;
+}
 
 const TESTIMONIAL_BASE_URL = "/testimonials";
 const TESTIMONIAL_COLLECTION_BASE_URL = "/testimonial/collections";

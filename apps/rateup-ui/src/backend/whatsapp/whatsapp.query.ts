@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import type { RequestPayload } from "@/types/api.ts";
 import type { WaTemplateComponent } from "@/types/global";
 
@@ -21,14 +22,14 @@ import {
 
 export const useWaTemplates = (templateType?: string) =>
   useQuery({
-    queryKey: ["watemplates", templateType],
+    queryKey: whatsappKeys.templatesByType(templateType),
     queryFn: () => getWaTemplates(templateType),
   });
 
 export const useWaTemplateById = (id: string) =>
   useQuery({
     enabled: !!id,
-    queryKey: ["watemplate", id],
+    queryKey: whatsappKeys.template(id),
     queryFn: () => getWaTemplateById(id),
   });
 
@@ -38,7 +39,7 @@ export const useCreateTemplateMutation = (onSuccess: () => void, onError: () => 
     mutationFn: (templateData: RequestPayload) => createWaTemplate(templateData),
     onSuccess: () => {
       toast.success("Template Created Successfully");
-      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       onSuccess();
     },
     onError: (error) => {
@@ -60,8 +61,8 @@ export const useSaveTemplateAsDraftMutation = (
     mutationFn: (templateData: RequestPayload) => saveTemplateAsDraft(templateData),
     onSuccess: (data) => {
       toast.success("Template Saved as Draft Successfully");
-      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
-      queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.template(id) });
       onSuccess(data);
     },
     onError: (error) => {
@@ -88,8 +89,8 @@ export const useUpdateTemplateMutation = (
     }) => updateWaTemplate(templateId, templateData),
     onSuccess: () => {
       toast.success("Template Updated Successfully");
-      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
-      queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.template(id) });
       onSuccess?.();
     },
     onError: (error) => {
@@ -108,7 +109,7 @@ export const useDeleteWaTemplateMutation = (onSuccess?: () => void, onError?: ()
       toast.success("Template Deleted Successfully", {
         id: "template-delete",
       });
-      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -126,7 +127,7 @@ export const useSyncTemplatesMutation = (onSuccess?: () => void, onError?: () =>
   const syncMutation = useMutation({
     mutationFn: (data?: SyncTemplatesInput) => syncTemplates(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       toast.success("Templates Synced Successfully");
       onSuccess?.();
     },
@@ -141,7 +142,7 @@ export const useSyncTemplatesMutation = (onSuccess?: () => void, onError?: () =>
 export const useUnregisteredTemplates = (enabled: boolean) =>
   useQuery({
     enabled: enabled,
-    queryKey: ["waTemplates", "unregistered"],
+    queryKey: whatsappKeys.unregisteredTemplates(),
     queryFn: getUnregisteredTemplates,
   });
 
@@ -151,7 +152,7 @@ export const useRegisterTemplatesMutation = (onSuccess?: () => void, onError?: (
     mutationFn: registerTemplates,
     onSuccess: () => {
       toast.success("Templates synced successfully");
-      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -177,9 +178,9 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string | undef
       whatsappSettingsPhoneId: string;
     }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-      queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["wa-contact", contactId] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.contacts() });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.contact(contactId) });
       toast.success("Template sent successfully");
     },
     onError: (error) => {
@@ -191,6 +192,6 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string | undef
 export const useWaShareUrl = (surveyTeamMapShortId: string) =>
   useQuery({
     enabled: !!surveyTeamMapShortId,
-    queryKey: ["wa-share-url", surveyTeamMapShortId],
+    queryKey: whatsappKeys.shareUrl(surveyTeamMapShortId),
     queryFn: () => getShareUrlFromSurveyTeamMapId(surveyTeamMapShortId),
   });

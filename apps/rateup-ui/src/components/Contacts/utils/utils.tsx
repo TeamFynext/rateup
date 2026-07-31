@@ -290,5 +290,3 @@ export const contactColumn = (
     },
   ];
 };
-
-export const CONTACT_SORT = { id: "createdAt", desc: true };

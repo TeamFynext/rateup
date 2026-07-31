@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import type { ChangeEvent, CSSProperties } from "react";
 
-import type { LinktreeLink } from "@/components/Linktree/LinktreeEditor/LinksEditor/components/LinkCard.tsx";
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useLinktreeObj } from "@/components/Linktree/LinktreeEditor/LinktreeContext/LinktreeContext.tsx";
 import { Textarea } from "@/components/ui/textarea";
 

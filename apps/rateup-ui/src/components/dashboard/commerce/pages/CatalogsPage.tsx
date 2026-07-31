@@ -13,6 +13,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import type { CatalogProductRow } from "@/backend/whatsapp/catalog/products/products.api.ts";
 import {
   useDeletCatalogProducts,
   useSyncCatalogProducts,
@@ -43,7 +44,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddCatalogProductModal } from "@/components/whatsapp/catalog/products/AddCatalogProduct";
-import type { CatalogProductRow } from "@/components/whatsapp/catalog/products/ProductItems.tsx";
 import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";
 import { fallbackImage } from "@/utils/constants";

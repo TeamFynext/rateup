@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { integrationKeys } from "@/backend/campaign/campaign.keys";
 import { IntegratedApps } from "@/types/enums.ts";
 
 import type { integrationSchemaProps, updateIntegrationSchema } from "./integration.api";
@@ -23,7 +24,7 @@ import {
 
 export const useIntegrationByType = (type: IntegratedApps) => {
   return useQuery({
-    queryKey: ["integrations", type],
+    queryKey: integrationKeys.byType(type),
     queryFn: () => getIntegrationByType(type),
   });
 };
@@ -44,7 +45,7 @@ export const useGetWaPaymentConfigurationByNameMutation = (type: IntegratedApps)
       toast.success("whatsapp payment configuration found successfully", {
         id: "waPaymentConfiguration-get-by-name",
       });
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
     },
     onError: (error) => {
       toast.error(error?.message || `Error getting waPaymentConfiguration`, {
@@ -62,7 +63,7 @@ export const useCreateWaPaymentConfigurationMutation = (type: IntegratedApps) =>
       toast.success("whatsapp payment configuration created successfully", {
         id: "waPaymentConfigurations-create",
       });
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
     },
     onError: (error) => {
       toast.error(error?.message || `Error creating waPaymentConfigurations`, {
@@ -76,7 +77,7 @@ export const useRegenerateWaPaymentConfigurationOauthMutation = (type: Integrate
   return useMutation({
     mutationFn: regenerateWaPaymentConfigurationOauth,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
       toast.success("whatsapp payment configuration oauth link updated successfully", {
         id: "waPaymentConfigurations-oauth",
       });
@@ -93,7 +94,7 @@ export const useDeleteWaPaymentConfigurationMutation = (type: IntegratedApps) =>
   return useMutation({
     mutationFn: deleteWaPaymentConfiguration,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
 
       toast.success("whatsapp payment configuration created successfully", {
         id: "waPaymentConfigurations-delete",
@@ -113,7 +114,7 @@ export const useCreateIntegrationMutation = (type: IntegratedApps) => {
     mutationFn: (data: { credential: integrationSchemaProps["credential"] }) =>
       createIntegration({ name: type, ...data }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
       toast.success("Integration created successfully", {
         id: "Integration-create",
       });
@@ -131,7 +132,7 @@ export const useUpdateIntegrationMutation = (type: IntegratedApps) => {
   return useMutation({
     mutationFn: (data: updateIntegrationSchema) => updateIntegration(type, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
       toast.success("Integration updated successfully", {
         id: "integration-update",
       });
@@ -149,7 +150,7 @@ export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
   return useMutation({
     mutationFn: () => deleteIntegration(type),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
       toast.success("Integration deleted successfully", {
         id: "integration-delete",
       });
@@ -182,7 +183,7 @@ export const useCreateAuthToken = () => {
 
 export const useGetAllIntegrations = () => {
   return useQuery({
-    queryKey: ["integrations"],
+    queryKey: integrationKeys.all(),
     queryFn: getAllIntegrations,
   });
 };
@@ -193,7 +194,7 @@ export const useDeleteZapierTriggerHook = () => {
     mutationFn: deleteZapierTriggerHook,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["integrations", IntegratedApps.zapier],
+        queryKey: integrationKeys.byType(IntegratedApps.zapier),
       });
       toast.success("success");
     },

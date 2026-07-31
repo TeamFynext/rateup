@@ -2,6 +2,7 @@ import { IconGripVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -13,15 +14,6 @@ import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 import styles from "../LinksEditor.module.css";
 
 /** A single link row in the linktree editor. */
-export interface LinktreeLink {
-  id: string;
-  linkType?: string;
-  linkDisplayName?: string;
-  linkUrl?: string;
-  noOfClicks?: number;
-  [key: string]: unknown;
-}
-
 function LinkCard({
   linkObj,
   onDelete,

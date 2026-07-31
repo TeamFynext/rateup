@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { RequestPayload } from "@/types/api.ts";
 
 import type { ICreateCheckoutType } from "./payment.api";
@@ -38,7 +39,7 @@ export function useRateupPaymentsPlans() {
 
 export function useUserOrgOrders(enabled = true) {
   return useQuery({
-    queryKey: ["userOrgOrdersQuery"],
+    queryKey: subscriptionKeys.orgOrders(),
     queryFn: getAllOrdersUserOrg,
     enabled,
   });
@@ -71,7 +72,7 @@ export function useRateupPaymentsPlanUpdateMutation(close: () => void) {
     mutationFn: (data: RequestPayload) => updateRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
       toast.success("RateUp Plan updated successfully.", {
         id: "load-data",
       });
@@ -179,15 +180,15 @@ export function useCancelRazorpaySubscriptionMutation() {
   return useMutation({
     mutationFn: () => cancelRazorpaySubscription(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.success("Rateup Subscription cancelled. Enjoy services till expiry date.", {
         id: "load-data",
       });
     },
     onError: (error) => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.error(error?.message || "Error cancelling Rateup Subscription", {
         id: "load-data",
       });

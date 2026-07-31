@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import type { LoyaltyEarningRuleInput, LoyaltyEarningRuleUpdateInput } from "./earningRules.api";
 import {
   createLoyaltyEarningRule,
@@ -15,7 +17,7 @@ import {
  */
 export const useLoyaltyEarningRules = () =>
   useQuery({
-    queryKey: ["loyalty-earning-rules"],
+    queryKey: loyaltyKeys.earningRules(),
     queryFn: getLoyaltyEarningRules,
   });
 
@@ -25,7 +27,7 @@ export const useLoyaltyEarningRules = () =>
 export const useLoyaltyEarningRuleById = (ruleId: string) =>
   useQuery({
     enabled: !!ruleId,
-    queryKey: ["loyalty-earning-rule", ruleId],
+    queryKey: loyaltyKeys.earningRule(ruleId),
     queryFn: () => getLoyaltyEarningRuleById(ruleId),
   });
 
@@ -42,7 +44,7 @@ export const useCreateLoyaltyEarningRuleMutation = (
     mutationFn: (ruleData: LoyaltyEarningRuleInput) => createLoyaltyEarningRule(ruleData),
     onSuccess: () => {
       toast.success("Earning rule created successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.earningRules() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -67,9 +69,9 @@ export const useUpdateLoyaltyEarningRuleMutation = (
       updateLoyaltyEarningRule(ruleId, ruleData),
     onSuccess: () => {
       toast.success("Earning rule updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.earningRules() });
       queryClient.invalidateQueries({
-        queryKey: ["loyalty-earning-rule", ruleId],
+        queryKey: loyaltyKeys.earningRule(ruleId),
       });
       onSuccess?.();
     },
@@ -95,7 +97,7 @@ export const useDeleteLoyaltyEarningRuleMutation = (
       toast.success("Earning rule deleted successfully", {
         id: "earning-rule-delete",
       });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.earningRules() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -122,9 +124,9 @@ export const useToggleLoyaltyEarningRuleStatusMutation = (
       updateLoyaltyEarningRule(ruleId, { status }),
     onSuccess: () => {
       toast.success("Earning rule status updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.earningRules() });
       queryClient.invalidateQueries({
-        queryKey: ["loyalty-earning-rule", ruleId],
+        queryKey: loyaltyKeys.earningRule(ruleId),
       });
       onSuccess?.();
     },

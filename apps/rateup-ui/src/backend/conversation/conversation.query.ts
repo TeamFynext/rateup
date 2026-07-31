@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { teamKeys, staffKeys } from "@/backend/org/org.keys";
 import type { QueryFilter } from "@/types/api.ts";
 
 import {
@@ -53,7 +54,7 @@ export const useGetConversationQuickStats = (filter: QueryFilter | null = null) 
 export const useGetStaffPerformanceonConversation = (filter: QueryFilter | null = null) => {
   return useQuery({
     queryFn: () => getStaffPerformanceonConversation(filter),
-    queryKey: ["StaffPerformanceonConversation", filter],
+    queryKey: staffKeys.conversationPerformance(filter),
   });
 };
 
@@ -63,7 +64,7 @@ export const useGetStaffDetailedConversationAnalytics = (
 ) => {
   return useQuery({
     queryFn: () => getStaffDetailedConversationAnalytics(staffId, filter),
-    queryKey: ["StaffDetailedConversationAnalytics", staffId, filter],
+    queryKey: staffKeys.detailedConversationAnalytics(staffId, filter),
     enabled: !!staffId,
   });
 };
@@ -71,14 +72,14 @@ export const useGetStaffDetailedConversationAnalytics = (
 export const useGetTeamOverview = (filter: QueryFilter | null = null) => {
   return useQuery({
     queryFn: () => getTeamOverview(filter),
-    queryKey: ["teamoverview", filter],
+    queryKey: teamKeys.overview(filter),
   });
 };
 
 export const useGetTeamDetailedMetrics = (teamId: string, filter: QueryFilter | null = null) => {
   return useQuery({
     queryFn: () => getTeamDetailedMetrics(teamId, filter),
-    queryKey: ["teamdetailedmetrics", teamId, filter],
+    queryKey: teamKeys.detailedMetrics(teamId, filter),
     enabled: !!teamId,
   });
 };

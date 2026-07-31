@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 
 import {
@@ -23,7 +24,7 @@ export const useAllInstagramAutomations = () =>
 
 export const useInstagramAutomationById = (automationId: string) =>
   useQuery({
-    queryKey: ["instagramAutomation", { automationId }],
+    queryKey: automationKeys.instagramAutomation({ automationId }),
     queryFn: async () => {
       const response = await getInstagramAutomationById(automationId);
       return response.data;

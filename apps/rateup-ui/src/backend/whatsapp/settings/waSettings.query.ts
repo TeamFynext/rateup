@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { userKeys } from "@/backend/user/user.keys";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import type { ColumnFilterState, PaginationState } from "@/types/api.ts";
 
 import type {
@@ -33,7 +35,7 @@ import {
 
 export const useWaSettings = (enabled = true) =>
   useQuery({
-    queryKey: ["waSettings"],
+    queryKey: whatsappKeys.settings(),
     queryFn: getWaSettings,
     enabled,
     staleTime: Infinity,
@@ -45,7 +47,7 @@ export const useCreateWaSettingsMutation = () => {
   const createMutation = useMutation({
     mutationFn: createWaSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["waSettings"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -61,8 +63,8 @@ export const useUpsertWaSettingsMutation = () => {
   const updateMutation = useMutation({
     mutationFn: upsertWaSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["waSettings"] });
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -78,7 +80,7 @@ export const useUpdateUserAccessToken = () => {
   const updateMutation = useMutation({
     mutationFn: (data: { code: string; waSettingId: string }) => updateUserAccessToken(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["waSettings"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -94,7 +96,7 @@ export const useUpdateWaSettingsMutation = (settingId: string) => {
   const updateMutation = useMutation({
     mutationFn: (data: UpdateWaSettingsInput) => updateWaSettingsById(settingId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["waSettings"] });
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("Updated Successfully");
     },
     onError: (error) => {
@@ -110,7 +112,7 @@ export const useDeleteWaSettingsMutation = () => {
   return useMutation({
     mutationFn: deleteWaSettings,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("Deleted Successfully");
     },
     onError: (error) => {
@@ -125,7 +127,7 @@ export const useRegisterBusinessClientMutation = (completionFunction: () => void
     mutationFn: registerBusinessClient,
     onSuccess: () => {
       completionFunction?.();
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
     },
     onError: (error) => {
       completionFunction?.();
@@ -139,7 +141,7 @@ export const useDeregisterBusinessClientMutation = () => {
   return useMutation({
     mutationFn: deRegisterBusinessClient,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error deregistering business client!");
@@ -160,7 +162,7 @@ export const useWaLogs = (
 
 export const useMetaAssets = (waSettingsId: string) =>
   useQuery({
-    queryKey: ["metaAssets", waSettingsId],
+    queryKey: whatsappKeys.metaAssets(waSettingsId),
     queryFn: () => getMetaAssets(waSettingsId),
     enabled: !!waSettingsId,
   });
@@ -170,7 +172,7 @@ export const useSyncFbPages = (waSettingsId: string) => {
   return useMutation({
     mutationFn: () => syncFbPages(waSettingsId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       toast.success("success");
     },
     onError: (error) => {
@@ -184,7 +186,7 @@ export const useSyncMetaLeadgenForms = (waSettingsId: string) => {
   return useMutation({
     mutationFn: (data: fbPageQuery) => syncMetaLeadgenForms(waSettingsId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       toast.success("success");
     },
     onError: (error) => {
@@ -201,7 +203,7 @@ export const useSyncLeadgenFormQuestions = (
   return useMutation({
     mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, waSettingsId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       toast.success("success");
     },
     onError: (error) => {
@@ -215,7 +217,7 @@ export const useSyncAdaccounts = (waSettingsId: string) => {
   return useMutation({
     mutationFn: () => syncAdAccounts(waSettingsId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       toast.success("success");
     },
     onError: (error) => {
@@ -229,7 +231,7 @@ export const useSyncAdsByadAccounts = (adAccountId: string, waSettingsId: string
   return useMutation({
     mutationFn: () => syncAdsByAdAccount(adAccountId, waSettingsId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       toast.success("success");
     },
     onError: (error) => {
@@ -243,7 +245,7 @@ export const useSubscribeFieldToPage = (waSettingsId: string) => {
   return useMutation({
     mutationFn: (data: fbPageQuery) => subscribeFieldtoPage(waSettingsId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
       toast.success("success");
     },
     onError: (error) => {
@@ -297,8 +299,8 @@ export const useSyncDatasetsMutation = (waSettingsId: string) => {
   return useMutation({
     mutationFn: () => syncDatasets(waSettingsId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("Successfully synced datasets");
     },
     onError: (error) => {

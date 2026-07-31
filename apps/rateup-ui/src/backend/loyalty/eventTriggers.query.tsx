@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
+
 import type { EventTriggerInput, EventTriggerUpdateInput } from "./eventTriggers.api";
 import {
   createEventTrigger,
@@ -12,7 +14,7 @@ import {
 
 export const useEventTriggers = (programId: string) =>
   useQuery({
-    queryKey: ["event-triggers", programId],
+    queryKey: automationKeys.eventTriggers(programId),
     queryFn: () => getEventTriggers(programId),
     enabled: !!programId,
   });
@@ -31,7 +33,7 @@ export const useCreateEventTriggerMutation = (onSuccess?: () => void) => {
     mutationFn: (data: EventTriggerInput) => createEventTrigger(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["event-triggers", variables.programId],
+        queryKey: automationKeys.eventTriggers(variables.programId),
       });
       onSuccess?.();
     },
@@ -52,7 +54,7 @@ export const useUpdateEventTriggerMutation = (
     mutationFn: (data: EventTriggerUpdateInput) => updateEventTrigger(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["event-triggers", programId],
+        queryKey: automationKeys.eventTriggers(programId),
       });
       queryClient.invalidateQueries({ queryKey: ["event-trigger", id] });
       onSuccess?.();
@@ -70,7 +72,7 @@ export const useDeleteEventTriggerMutation = (programId: string, onSuccess?: () 
     mutationFn: (id: string) => deleteEventTrigger(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["event-triggers", programId],
+        queryKey: automationKeys.eventTriggers(programId),
       });
       onSuccess?.();
     },
