@@ -1174,7 +1174,21 @@ function TierCard({
   );
 }
 
-function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDeleting }: unknown) {
+function RuleCard({
+  rule,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onDelete,
+  isDeleting,
+}: Readonly<{
+  rule: LoyaltyEarningRule;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}>) {
   const uid = useId();
   const { t } = useTranslation();
   const { data: loyaltyTiers = [] } = useLoyaltyTiers();

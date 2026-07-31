@@ -4,11 +4,11 @@ import type { WaCatalogOrderFilter } from "./catalogOrders.api";
 import { getWaCatalogOrders } from "./catalogOrders.api";
 
 export const useWaCatalogOrders = (
-  catalogId: string,
+  catalogId: string | undefined,
   filter: WaCatalogOrderFilter | null = null,
 ) => {
   return useQuery({
-    queryFn: () => getWaCatalogOrders(catalogId, filter),
+    queryFn: () => getWaCatalogOrders(catalogId ?? "", filter),
     queryKey: ["waCatalogOrders", catalogId, filter],
   });
 };

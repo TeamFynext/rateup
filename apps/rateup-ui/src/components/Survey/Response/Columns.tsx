@@ -49,7 +49,7 @@ const UNFILTERABLE_QUESTION_TYPES: Array<QuestionType | PageType> = [
 ];
 
 /** A response row, as the responses table holds it. */
-interface ResponseRow {
+export interface ResponseRow {
   id?: string;
   phone?: string;
   surveyTeamMapId?: string;

@@ -45,6 +45,9 @@ export interface CatalogOrder {
   products: CatalogOrderProduct[];
   status?: string;
   orderStage?: string;
+  paymentMethod?: string | null;
+  paymentStatus?: string;
+  storeType?: string | null;
   currency?: string;
   shippingAddress?: CatalogOrderAddress;
   deliveryOption?: CatalogOrderDelivery;
@@ -53,10 +56,16 @@ export interface CatalogOrder {
   shopifyInvoiceUrl?: string;
 }
 
+/** One page of catalog orders. */
+export interface CatalogOrderPage {
+  data: CatalogOrder[];
+  totalCount?: number;
+}
+
 export async function getWaCatalogOrders(
   catalogId: string,
   filter: Partial<WaCatalogOrderFilter> | null,
-) {
+): Promise<CatalogOrderPage> {
   let url = `${baseUrl}/${catalogId}?page=${filter?.pageIndex}&limit=${filter?.pageSize}`;
   if (filter?.storeType) {
     url += `&storeType=${filter.storeType}`;

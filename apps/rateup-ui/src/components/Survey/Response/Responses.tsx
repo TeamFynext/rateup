@@ -38,11 +38,20 @@ import { TicketType } from "@/utils/enums/ticket.ts";
 
 import { DataTable } from "../../Table/data-table.tsx";
 import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
+import type { ResponseRow } from "./Columns.tsx";
 import { useSurveyResponseColumns } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
-const Responses = ({ survey, defaultLanguage, questions }: unknown) => {
+const Responses = ({
+  survey,
+  defaultLanguage,
+  questions,
+}: Readonly<{
+  survey: Survey;
+  defaultLanguage: string;
+  questions: Question[];
+}>) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -312,8 +321,8 @@ const Responses = ({ survey, defaultLanguage, questions }: unknown) => {
       <DataTable
         data={responseData ? responseData?.responses : []}
         columns={
-          responseData?.responses?.every((row) => !row.tag)
-            ? columns?.filter((col) => col.accessorKey !== "tag")
+          responseData?.responses?.every((row: ResponseRow) => !row.tag)
+            ? columns?.filter((col) => !("accessorKey" in col) || col.accessorKey !== "tag")
             : columns
         }
         serverSide={{

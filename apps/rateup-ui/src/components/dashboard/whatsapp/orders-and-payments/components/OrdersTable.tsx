@@ -3,7 +3,11 @@ import { Loader2, Package } from "lucide-react";
 import { useState } from "react";
 
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
-import type { CatalogOrder } from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
+import type {
+  CatalogOrder,
+  CatalogOrderDelivery,
+  CatalogOrderProduct,
+} from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,9 +37,12 @@ const STAGE_CONFIG: Record<
   CANCELLED: { label: "Cancelled", variant: "destructive" },
 };
 
-function calcTotal(products: unknown[], deliveryOption?: unknown): string {
+function calcTotal(
+  products: CatalogOrderProduct[] | undefined,
+  deliveryOption?: CatalogOrderDelivery,
+): string {
   const items = (products ?? []).reduce(
-    (s: number, p) => s + (parseFloat(p.price ?? "0") || 0) * (parseInt(p.quantity ?? "1") || 1),
+    (sum, product) => sum + (Number(product.price) || 0) * (Number(product.quantity) || 1),
     0,
   );
   const delivery = deliveryOption?.charge ?? 0;
@@ -124,7 +131,7 @@ export default function OrdersTable({
               </TableRow>
             ) : (
               orders.map((order) => {
-                const stageCfg = STAGE_CONFIG[order.orderStage] ?? {
+                const stageCfg = STAGE_CONFIG[order.orderStage ?? ""] ?? {
                   label: order.orderStage ?? order.status ?? "—",
                   variant: "outline" as const,
                 };
@@ -150,7 +157,7 @@ export default function OrdersTable({
                     </TableCell>
                     <TableCell className="text-center text-sm">
                       {order.products?.reduce(
-                        (a: number, p) => a + (parseInt(p.quantity ?? "1") || 1),
+                        (count, product) => count + (Number(product.quantity) || 1),
                         0,
                       ) ?? 0}
                     </TableCell>
