@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { OrderContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayBody/components/order";
 import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
 import type { WaMessageAssignStatus } from "@/types/enums.ts";
 import { MessagePlatform, WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
@@ -54,19 +55,52 @@ export function getContactPlatform(
   );
 }
 
+/**
+ * A parsed message body. Which member applies follows `messageType`: the media
+ * and text kinds are strings (media pack `link_caption_caption`), and the
+ * structured kinds keep the shape their renderer expects.
+ */
+export type ParsedWaMessageContent =
+  | string
+  | { text?: string; commentId?: string; mediaId?: string }
+  | {
+      attachments: Array<{
+        content: string;
+        type: NonNullable<NonNullable<IgReceiveMessageBody["message"]>["attachments"]>[0]["type"];
+      }>;
+      text?: string;
+    }
+  | WaSendMessageBody["contacts"]
+  | WaSendMessageBody["location"]
+  | OrderContent;
+
 export interface ParsedWaMessageReturn {
   timeStamp: string;
   messageType: string;
-  messageContent: any;
+  messageContent: ParsedWaMessageContent;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
 }
+/** The attachments body carries a list of media entries. */
+function isAttachmentContent(
+  content: ParsedWaMessageContent,
+): content is { attachments: Array<{ content: string; type: string }>; text?: string } {
+  return typeof content === "object" && content !== null && "attachments" in content;
+}
+
+/** The Instagram comment body carries the comment's text and ids. */
+function isCommentContent(
+  content: ParsedWaMessageContent,
+): content is { text?: string; commentId?: string; mediaId?: string } {
+  return typeof content === "object" && content !== null && "commentId" in content;
+}
+
 export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMessageReturn {
   const { messageBody, waCreatedAt } = message;
 
   let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType = "text";
-  let messageContent = "No messages yet" as any;
+  let messageContent: ParsedWaMessageContent = "No messages yet";
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] = {} as WaSendMessageBody["interactive"];
   if (
@@ -241,12 +275,13 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
   };
 }
 
+/** One-line preview of a message, for the chat list and notifications. */
 export function returnMessageContentBasedOnParsedMessage(
   parsedMessage: ParsedWaMessageReturn,
   exchangeProcess: "send" | "receive" | "internal" | "privateNote",
-) {
+): string {
   if (parsedMessage.messageType === "text") {
-    return parsedMessage.messageContent;
+    return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
   } else if (parsedMessage.messageType === "image") {
     return "Image";
   } else if (parsedMessage.messageType === "video") {
@@ -268,7 +303,7 @@ export function returnMessageContentBasedOnParsedMessage(
   } else if (parsedMessage.messageType === "template") {
     return "Template";
   } else if (parsedMessage.messageType === "button") {
-    return parsedMessage.messageContent;
+    return typeof parsedMessage.messageContent === "string" ? parsedMessage.messageContent : "";
   } else if (parsedMessage.messageType === "interactive") {
     return "Interactive Message";
   } else if (parsedMessage.messageType === "reaction") {
@@ -280,11 +315,14 @@ export function returnMessageContentBasedOnParsedMessage(
         ? "Liked a message"
         : `Reacted ${parsedMessage.messageContent}`;
   } else if (parsedMessage.messageType === "attachments") {
-    return parsedMessage.messageContent.attachments[
-      parsedMessage.messageContent.attachments.length - 1
-    ].type;
+    const attachments = isAttachmentContent(parsedMessage.messageContent)
+      ? parsedMessage.messageContent.attachments
+      : [];
+    return attachments.at(-1)?.type ?? "Attachment";
   } else if (parsedMessage.messageType === "ig_comment") {
-    return parsedMessage.messageContent.text || "Comment";
+    return isCommentContent(parsedMessage.messageContent)
+      ? (parsedMessage.messageContent.text ?? "Comment")
+      : "Comment";
   } else {
     return "Unsupported message type";
   }

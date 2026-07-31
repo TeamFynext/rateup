@@ -25,6 +25,7 @@ import type {
   WaSendMessageBody,
 } from "@/types/global";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
+import type { ParsedWaMessageContent } from "@/utils/whatsapp/inbox.ts";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import { reactionEmojiMap } from "../layout/singleMessageLayout/index.tsx";
@@ -35,6 +36,7 @@ import WaInboxDocument from "./document/index.tsx";
 import WaInboxImage from "./image/index.tsx";
 import WaInboxInteractive from "./interactive/index.tsx";
 import WaInboxLocation from "./location/index.tsx";
+import type { OrderContent } from "./order";
 import WaInboxOrder from "./order/index.tsx";
 import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
@@ -55,40 +57,81 @@ const IgCommentBubble = ({
   );
 };
 
+/**
+ * `messageType` decides which member of `ParsedWaMessageContent` the parser
+ * produced, but the two are separate values — these read the content in the
+ * shape each renderer needs, and fall back to an empty one if a message ever
+ * arrives with a body that does not match its type.
+ */
+const asText = (content: ParsedWaMessageContent): string =>
+  typeof content === "string" ? content : "";
+
+const asRecord = (content: ParsedWaMessageContent): Record<string, unknown> =>
+  typeof content === "object" && content !== null && !Array.isArray(content)
+    ? (content as Record<string, unknown>)
+    : {};
+
+const asComment = (content: ParsedWaMessageContent) =>
+  asRecord(content) as { text?: string; commentId?: string; mediaId?: string };
+
+const asAttachments = (content: ParsedWaMessageContent) => {
+  const record = asRecord(content);
+  return Array.isArray(record.attachments)
+    ? (record as Parameters<typeof WaInboxAttachments>[0]["messageContent"])
+    : { attachments: [] };
+};
+
+const asContacts = (content: ParsedWaMessageContent): WaSendMessageBody["contacts"] =>
+  Array.isArray(content) ? content : [];
+
+const asLocation = (content: ParsedWaMessageContent): WaSendMessageBody["location"] =>
+  asRecord(content) as WaSendMessageBody["location"];
+
+const asOrder = (content: ParsedWaMessageContent): OrderContent => {
+  const record = asRecord(content);
+  return {
+    text: typeof record.text === "string" ? record.text : undefined,
+    catalog_id: typeof record.catalog_id === "string" ? record.catalog_id : "",
+    product_items: Array.isArray(record.product_items) ? record.product_items : [],
+  };
+};
+
 export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
   const { t: translations } = useTranslation();
   const { messageContent, messageType, template, interactive, timeStamp } = parseWaMessage(message);
   switch (messageType) {
     case "text":
     case "quickreply":
-      return <WaInboxText messageContent={messageContent} />;
+      return <WaInboxText messageContent={asText(messageContent)} />;
     case "ig_comment":
-      return <IgCommentBubble messageContent={messageContent} />;
+      return <IgCommentBubble messageContent={asComment(messageContent)} />;
     case "image":
-      return <WaInboxImage messageContent={messageContent} />;
+      return <WaInboxImage messageContent={asText(messageContent)} />;
     case "button":
-      return <WaInboxText messageContent={messageContent} />;
+      return <WaInboxText messageContent={asText(messageContent)} />;
     case "template":
       return (
         <WaInboxTemplate templateBody={template!} parameters={message.templateComponentParams} />
       );
     case "interactive":
-      return <WaInboxInteractive interactiveBody={interactive} messageContent={messageContent} />;
+      return (
+        <WaInboxInteractive interactiveBody={interactive} messageContent={asText(messageContent)} />
+      );
     case "audio":
-      return <WaInboxAudio messageContent={messageContent} />;
+      return <WaInboxAudio messageContent={asText(messageContent)} />;
     case "video":
-      return <WaInboxVideo messageContent={messageContent} />;
+      return <WaInboxVideo messageContent={asText(messageContent)} />;
     case "document":
     case "file":
-      return <WaInboxDocument messageContent={messageContent} />;
+      return <WaInboxDocument messageContent={asText(messageContent)} />;
     case "contacts":
-      return <WaInboxContact messageContent={messageContent} />;
+      return <WaInboxContact messageContent={asContacts(messageContent)} />;
     case "location":
-      return <WaInboxLocation messageContent={messageContent} />;
+      return <WaInboxLocation messageContent={asLocation(messageContent)} />;
     case "attachments":
-      return <WaInboxAttachments messageContent={messageContent} />;
+      return <WaInboxAttachments messageContent={asAttachments(messageContent)} />;
     case "order":
-      return <WaInboxOrder messageContent={messageContent} timestamp={timeStamp} />;
+      return <WaInboxOrder messageContent={asOrder(messageContent)} timestamp={timeStamp} />;
     default:
       return (
         <span className="text-xs text-red-500 font-medium">

@@ -14,7 +14,7 @@ interface OrderProductItem {
   product_retailer_id: string;
 }
 
-interface OrderContent {
+export interface OrderContent {
   text?: string;
   catalog_id: string;
   product_items: OrderProductItem[];
