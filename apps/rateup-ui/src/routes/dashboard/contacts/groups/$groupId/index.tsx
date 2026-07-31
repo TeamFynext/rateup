@@ -149,15 +149,19 @@ function ContactGroup() {
     });
   }
 
+  /** A column is identified by its accessor key when it has one, else by its id. */
+  const columnKey = (column: { accessorKey?: unknown; id?: string }) =>
+    String(column.accessorKey ?? column.id ?? "");
+
   const defaultColumnVisibility = useMemo(
     () =>
       column.reduce((visibility: Record<string, boolean>, key) => {
         if (
           !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
-            key?.accessorKey || key?.id,
+            columnKey(key),
           )
         ) {
-          visibility[key?.accessorKey || key?.id] = false;
+          visibility[columnKey(key)] = false;
         }
         return visibility;
       }, {}),

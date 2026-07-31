@@ -1,5 +1,4 @@
 import type { ColumnDef, PaginationState, Updater } from "@tanstack/react-table";
-import type { PaginationState, Updater } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   CheckCircle2,

@@ -149,7 +149,7 @@ function GroupPage() {
         setOpened={setIsCreateGroupOpen}
         type={ContactGroupType.NORMAL}
         isEdit={!!selectedGroup}
-        groupDetails={selectedGroup}
+        groupDetails={selectedGroup ?? undefined}
       />
     </>
   );

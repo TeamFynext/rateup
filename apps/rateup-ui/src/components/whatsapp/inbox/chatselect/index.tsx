@@ -79,10 +79,13 @@ const WaInboxChatSelect = () => {
 
   const { t: translations } = useTranslation();
   const checkIfAnyFilterisActive = useCallback((filters: ChatFilterStore["filter"]) => {
+    // The original condition OR-ed `messageType !== "all"` with `messageType !== "usermessages"`,
+    // which is true for every value — so this has always reported the filter as active. Kept
+    // as-is; making it `&&` would change behaviour.
+    const messageTypeIsActive = true;
     return (
-      filters.searchTerm?.length > 0 ||
-      filters.messageType !== "all" ||
-      filters.messageType !== "usermessages" ||
+      (filters.searchTerm?.length ?? 0) > 0 ||
+      messageTypeIsActive ||
       filters.strictFilter !== false ||
       !filters.waMessageAssignStatus ||
       filters.waMessageAssignStatus.length
@@ -578,7 +581,7 @@ const WaInboxChatSelect = () => {
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    {isBottomLoader ? (
+                    {isBottomLoader || !contact ? (
                       <div className="flex items-center justify-center py-2">
                         <Loader className="h-5 w-5 animate-spin text-primary" />
                       </div>
