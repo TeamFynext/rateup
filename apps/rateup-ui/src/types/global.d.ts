@@ -30,6 +30,7 @@ import type {
   WaMessageAssignStatus,
   WaMessageTypes,
   WaTemplateCategory,
+  WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
 } from "./enums.ts";
@@ -1783,9 +1784,17 @@ export interface WaTemplateComponent {
   parameters: WaTemplateParameter[];
 }
 
-interface WaTemplateParameter {
+/**
+ * Declared as a type alias, not an interface, so it also satisfies the looser
+ * `{ type: string; [key: string]: unknown }` shape the template editor works against.
+ */
+type WaTemplateParameter = {
   type: WaTemplateSupportedParameters;
-  text?: string;
+  /**
+   * Literal text, or a reference the sender resolves at send time — a contact field or a
+   * lead-form question key, as the flowbot's template editor writes them.
+   */
+  text?: string | { type: string; value?: string };
   currency?: Currency;
   date_time?: DateTime;
   payload?: string;
@@ -1793,7 +1802,7 @@ interface WaTemplateParameter {
   image?: Image;
   video?: Video;
   document?: Document;
-}
+};
 
 interface Currency {
   fallback_value: string;
@@ -1805,12 +1814,13 @@ interface DateTime {
   fallback_value: string;
 }
 
-interface Location {
+export interface WaTemplateParameterLocation {
   latitude: string;
   longitude: string;
   name: string;
   address: string;
 }
+type Location = WaTemplateParameterLocation;
 interface Image {
   link: string | File;
 }

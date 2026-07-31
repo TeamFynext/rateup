@@ -1,5 +1,5 @@
 import { IconPhoto, IconRefresh } from "@tabler/icons-react";
-import { useParams } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
 import { cn } from "@/lib/utils.ts";
+import type { WaTemplateParameterLocation } from "@/types/global";
 
 interface Props {
   type: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT";
@@ -52,7 +53,12 @@ export default function WaTemplateFormComponents(props: Props) {
     (item): item is { type: string; [key: string]: unknown } =>
       typeof item === "object" && item.type === props?.type?.toLowerCase(),
   );
-  const header = headerParam?.[props?.type?.toLowerCase()];
+  const headerValue = headerParam?.[props?.type?.toLowerCase()];
+  /** The header's stored value; only the location editor reads its shape. */
+  const header =
+    typeof headerValue === "object" && headerValue !== null
+      ? (headerValue as WaTemplateParameterLocation)
+      : undefined;
 
   switch (props?.type) {
     case "IMAGE":
@@ -189,7 +195,8 @@ function WaLocationInputComponent({
     component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION",
     component_data: unknown,
   ) => void;
-  defaultValue?;
+  /** The location a previously configured header carries. */
+  defaultValue?: WaTemplateParameterLocation;
 }) {
   const uid = useId();
   const [latitude, setLatitude] = useState(defaultValue?.latitude || "");
@@ -309,7 +316,7 @@ function WaBodyVariableInputComponent({
 }) {
   const uid = useId();
   const [paramChoice, setParamChoice] = useState<string[]>([]);
-  const [dynamicTags, setDynamicTags] = useState<any[]>(exampleParams || []);
+  const [dynamicTags, setDynamicTags] = useState<DynamicTag[]>(exampleParams || []);
 
   const updateParamChoice = (index: number, value: string) => {
     setParamChoice((prev) => {
@@ -319,7 +326,7 @@ function WaBodyVariableInputComponent({
     });
   };
 
-  const updateDynamicTag = (index: number, value) => {
+  const updateDynamicTag = (index: number, value: DynamicTag) => {
     const nextTags = [...dynamicTags];
     nextTags[index] = value;
     setDynamicTags(nextTags);
@@ -387,7 +394,7 @@ function WaBodyVariableInputComponent({
                     id={`${uid}-field-5-${i}`}
                     type="text"
                     placeholder={translations("select a dynamic tag value")}
-                    value={dynamicTags[i] || ""}
+                    value={asTagText(dynamicTags[i])}
                     onChange={(e) => updateDynamicTag(i, e.target.value)}
                   />
                 </Field>
@@ -395,7 +402,7 @@ function WaBodyVariableInputComponent({
               {paramChoice[i] === "leadgenform-question-key" && (
                 <LeadFormQuestionsInputComponent
                   leadgenData={leadgenData}
-                  value={dynamicTags[i]?.value ?? ""}
+                  value={asTagValue(dynamicTags[i])}
                   onChange={(value) =>
                     updateDynamicTag(i, {
                       type: "leadgenform-question-key",
@@ -417,7 +424,7 @@ function WaBodyVariableInputComponent({
               id={`${uid}-field-6-${i}`}
               type="text"
               placeholder={translations("select a dynamic tag value")}
-              value={dynamicTags[i] || ""}
+              value={asTagText(dynamicTags[i])}
               onChange={(e) => updateDynamicTag(i, e.target.value)}
             />
           </Field>
@@ -426,6 +433,19 @@ function WaBodyVariableInputComponent({
     </>
   );
 }
+
+/**
+ * A body variable: literal text, or a reference the flowbot resolves when it sends
+ * (a contact field or a lead-form question key).
+ */
+type DynamicTag = string | { type: string; value?: string; [key: string]: unknown };
+
+/** The literal text of a tag; a reference has none to show in a plain text input. */
+const asTagText = (tag: DynamicTag | undefined): string => (typeof tag === "string" ? tag : "");
+
+/** The referenced key of a tag; literal text has none. */
+const asTagValue = (tag: DynamicTag | undefined): string =>
+  typeof tag === "object" && typeof tag.value === "string" ? tag.value : "";
 
 interface LeadFormQuestionsInputComponentProps {
   leadgenData: {
@@ -439,10 +459,10 @@ interface LeadFormQuestionsInputComponentProps {
 
 function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentProps) {
   const uid = useId();
-  const params = useParams({
-    strict: false,
-  });
-  const automatedId = params.waAutomatedReplyId as string;
+  // The flowbot editor carries the automation's id in the URL's search, not its path.
+  const searchParams = useSearch({ strict: false });
+  const automatedId =
+    typeof searchParams.waAutomatedReplyId === "string" ? searchParams.waAutomatedReplyId : "";
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data: automatedReply, isPending } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation = automatedReply && automatedReply?.commands[0]?.startsWith("lead");

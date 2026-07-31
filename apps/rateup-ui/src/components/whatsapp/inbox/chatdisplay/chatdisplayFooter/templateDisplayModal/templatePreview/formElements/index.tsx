@@ -4,19 +4,24 @@ import type { Updater } from "use-immer";
 
 import type { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
-import type { WaTemplateFetchBody } from "@/types/global";
+import { WaTemplateComponentType } from "@/types/enums.ts";
+import type { WaTemplateComponent, WaTemplateFetchBody, WaTemplateParameter } from "@/types/global";
+import { WaTemplateSupportedParameters } from "@/types/global";
 
 import WaTemplateFormComponents from "./components/index.tsx";
 
 interface Props {
-  setParameterData: Updater<any>;
+  setParameterData: Updater<WaTemplateComponent[]>;
   template: WaTemplateFetchBody;
-  parameters?: Array<any>;
+  parameters?: WaTemplateComponent[];
   leadgenData?: {
     data: LeadgenNodeData;
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
   };
 }
+/** One `{{n}}` slot's value: literal text, or a reference the sender resolves. */
+type BodyVariable = NonNullable<WaTemplateParameter["text"]>;
+
 export default function WaTemplateFormElements(props: Props) {
   const { t: translations } = useTranslation();
   const buildtemplatequerycomponent = useCallback(
@@ -27,43 +32,37 @@ export default function WaTemplateFormElements(props: Props) {
     ) => {
       switch (component_type) {
         case "HEADER":
-          props?.setParameterData((draft: Array<any>) => {
-            const existingItem = draft.find((item) => item.type === component_type.toLowerCase());
+          props?.setParameterData((draft) => {
+            const parameter: WaTemplateParameter = {
+              type: component_format.toLowerCase() as WaTemplateSupportedParameters,
+              [component_format.toLowerCase()]: component_data,
+            };
+            const existingItem = draft.find((item) => item.type === WaTemplateComponentType.header);
             if (existingItem) {
-              existingItem.parameters[0] = {
-                type: component_format.toLowerCase(),
-                [component_format.toLowerCase()]: component_data,
-              };
+              existingItem.parameters[0] = parameter;
             } else {
-              draft.push({
-                type: component_type.toLowerCase(),
-                parameters: [
-                  {
-                    type: component_format.toLowerCase(),
-                    [component_format.toLowerCase()]: component_data,
-                  },
-                ],
-              });
+              draft.push({ type: WaTemplateComponentType.header, parameters: [parameter] });
             }
           });
           break;
         case "BODY":
-          props?.setParameterData((draft: Array<any>) => {
-            const existingItem = draft.find((item) => {
-              return item.type === component_type.toLowerCase();
-            });
+          props?.setParameterData((draft) => {
+            const variables = Array.isArray(component_data)
+              ? (component_data as BodyVariable[])
+              : [];
+            const existingItem = draft.find((item) => item.type === WaTemplateComponentType.body);
             if (existingItem) {
-              component_data?.forEach((variable: { text?: string }, i: number) => {
+              variables.forEach((variable, i) => {
                 existingItem.parameters[i] = {
-                  type: "text",
+                  type: WaTemplateSupportedParameters.TEXT,
                   text: variable,
                 };
               });
             } else {
               draft.push({
-                type: component_type.toLowerCase(),
-                parameters: component_data?.map((variable: { text?: string }) => ({
-                  type: "text",
+                type: WaTemplateComponentType.body,
+                parameters: variables.map((variable) => ({
+                  type: WaTemplateSupportedParameters.TEXT,
                   text: variable,
                 })),
               });
@@ -124,8 +123,8 @@ export default function WaTemplateFormElements(props: Props) {
                     type={"TEXT"}
                     buildtemplatequerycomponent={buildtemplatequerycomponent}
                     exampleParams={
-                      exampleParams?.length > 0
-                        ? exampleParams?.map((ep: { text?: string }) => ep?.text)
+                      exampleParams && exampleParams.length > 0
+                        ? exampleParams.map((ep) => ep?.text ?? "")
                         : component?.example?.body_text?.[0]
                     }
                     leadgenData={props?.leadgenData}

@@ -387,6 +387,16 @@ export enum WaTemplateCategory {
   UTILITY = "UTILITY",
   AUTHENTICATION = "AUTHENTICATION",
 }
+/**
+ * Component names in an outgoing template payload. Meta accepts these lowercase, unlike the
+ * uppercase names it uses when returning a template's definition.
+ */
+export enum WaTemplateComponentType {
+  header = "header",
+  body = "body",
+  button = "button",
+}
+
 export enum WaTemplateComponentTypeUpperCase {
   BODY = "BODY",
   BUTTONS = "BUTTONS",

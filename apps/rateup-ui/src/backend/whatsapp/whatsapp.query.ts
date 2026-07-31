@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { RequestPayload } from "@/types/api.ts";
+import type { WaTemplateComponent } from "@/types/global";
 
 import type { SyncTemplatesInput } from "./whatsapp.api";
 import {
@@ -171,7 +172,7 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string | undef
       whatsappSettingsPhoneId,
     }: {
       templateId: string;
-      parameterData: RequestPayload;
+      parameterData: WaTemplateComponent[];
       teamId: string;
       whatsappSettingsPhoneId: string;
     }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),

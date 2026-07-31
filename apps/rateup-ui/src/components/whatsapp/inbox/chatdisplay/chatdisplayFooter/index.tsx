@@ -91,10 +91,11 @@ function countEditorCharacters(content: unknown): number {
   if (!content) return 0;
   if (typeof content === "string") return content.length;
   let count = 0;
-  const walk = (node) => {
-    if (!node) return;
-    if (node.type === "text" && typeof node.text === "string") count += node.text.length;
-    if (Array.isArray(node.content)) node.content.forEach(walk);
+  const walk = (node: unknown) => {
+    if (!node || typeof node !== "object") return;
+    const { type, text, content: children } = node as TiptapNode;
+    if (type === "text" && typeof text === "string") count += text.length;
+    if (Array.isArray(children)) children.forEach(walk);
   };
   walk(content);
   return count;

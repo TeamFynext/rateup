@@ -16,10 +16,11 @@ import type { ReactNode } from "react";
  */
 export function extractMentionUserIds(editorContent: unknown): string[] {
   const ids = new Set<string>();
-  const walk = (node) => {
-    if (!node) return;
-    if (node.type === "mention" && node.attrs?.id) ids.add(String(node.attrs.id));
-    if (Array.isArray(node.content)) node.content.forEach(walk);
+  const walk = (node: unknown) => {
+    if (!node || typeof node !== "object") return;
+    const { type, attrs, content } = node as TiptapNode;
+    if (type === "mention" && attrs?.id) ids.add(String(attrs.id));
+    if (Array.isArray(content)) content.forEach(walk);
   };
   walk(editorContent);
   return Array.from(ids);
@@ -95,7 +96,8 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
 }
 /** A node of a Tiptap document, as the WhatsApp editor produces it. */
 export interface TiptapNode {
-  type: string;
+  /** Optional so a `JSONContent` straight out of the editor satisfies this. */
+  type?: string;
   content?: TiptapNode[];
   marks?: { type: string }[];
   text?: string;

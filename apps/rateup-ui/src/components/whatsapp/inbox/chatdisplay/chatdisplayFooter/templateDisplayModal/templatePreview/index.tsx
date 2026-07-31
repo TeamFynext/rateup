@@ -7,7 +7,9 @@ import { useImmer } from "use-immer";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
-import type { WaTemplateFetchBody } from "@/types/global";
+import { WaTemplateComponentType } from "@/types/enums.ts";
+import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
+import { WaTemplateSupportedParameters } from "@/types/global";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { validateInboxTemplateSending } from "@/utils/whatsapp/inbox.ts";
 
@@ -18,11 +20,11 @@ import WaTemplateFormElements from "./formElements/index.tsx";
 interface Props {
   template: WaTemplateFetchBody;
   sendTemplate: UseMutationResult<
-    AxiosResponse<any, any>,
-    any,
+    AxiosResponse<unknown>,
+    Error,
     {
       templateId: string;
-      parameterData;
+      parameterData: WaTemplateComponent[];
       teamId: string;
       whatsappSettingsPhoneId: string;
     },
@@ -35,42 +37,58 @@ interface Props {
   whatsappSettingsPhoneId: string;
 }
 
+/** The parameter kinds a template header can carry; each holds a `{ link }`. */
+type MediaParameterType =
+  | WaTemplateSupportedParameters.IMAGE
+  | WaTemplateSupportedParameters.VIDEO
+  | WaTemplateSupportedParameters.DOCUMENT;
+
+const isMediaParameter = (
+  type: WaTemplateSupportedParameters | undefined,
+): type is MediaParameterType =>
+  type === WaTemplateSupportedParameters.IMAGE ||
+  type === WaTemplateSupportedParameters.VIDEO ||
+  type === WaTemplateSupportedParameters.DOCUMENT;
+
 export function WaInboxTemplatePreviewNew(props: Props) {
-  const [parameterData, setParameterData] = useImmer<any>([]);
+  const [parameterData, setParameterData] = useImmer<WaTemplateComponent[]>([]);
   const [loading, setLoading] = useState(false);
   const { t: translations } = useTranslation();
 
   const { data: dbTemplate } = useWaTemplateById(props?.selectedTemplateId);
 
-  async function handleFilesIfAny(data: Array<any>) {
+  async function handleFilesIfAny(data: WaTemplateComponent[]): Promise<WaTemplateComponent[]> {
     const newData = await Promise.all(
-      data.map(async (item, _index) => {
-        if (
-          item?.type === "header" &&
-          ["image", "video", "document"].includes(item?.parameters[0]?.type)
-        ) {
-          const fileKey = await uploadFile(item?.parameters[0]?.[item?.parameters[0]?.type]?.link);
-          const filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
-          const isDocument = item?.parameters?.[0]?.type === "document";
-
-          return {
-            ...item,
-            parameters: item.parameters.map((param: Record<string, unknown>, paramIndex: number) =>
-              paramIndex === 0
-                ? {
-                    ...param,
-                    [item?.parameters[0]?.type]: {
-                      ...(param[item?.parameters[0]?.type] as Record<string, unknown>),
-                      link: `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
-                      ...(isDocument && { filename }),
-                    },
-                  }
-                : param,
-            ),
-          };
-        } else {
+      data.map(async (item) => {
+        const media = item?.parameters?.[0];
+        const mediaType = media?.type;
+        if (item?.type !== WaTemplateComponentType.header || !isMediaParameter(mediaType)) {
           return item;
         }
+
+        // Only a freshly picked file needs uploading; an already-uploaded header carries its URL.
+        const link = media[mediaType]?.link;
+        if (!(link instanceof File)) return item;
+
+        const fileKey = await uploadFile(link);
+        const filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
+        const isDocument = mediaType === WaTemplateSupportedParameters.DOCUMENT;
+
+        return {
+          ...item,
+          parameters: item.parameters.map((param, paramIndex) =>
+            paramIndex === 0
+              ? {
+                  ...param,
+                  [mediaType]: {
+                    ...param[mediaType],
+                    link: `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
+                    ...(isDocument && { filename }),
+                  },
+                }
+              : param,
+          ),
+        };
       }),
     );
     return newData;
@@ -88,7 +106,7 @@ export function WaInboxTemplatePreviewNew(props: Props) {
     props?.onClose();
   }
   useEffect(() => {
-    setParameterData(() => [] as unknown[]);
+    setParameterData(() => []);
   }, [props?.selectedTemplateId]);
 
   return (
