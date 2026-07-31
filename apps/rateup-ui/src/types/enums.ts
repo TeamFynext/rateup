@@ -678,3 +678,18 @@ export const COMMON_CARRIERS = [
   "GLS",
   "Hermes",
 ];
+
+/** Smiley-question appearance. Persisted in a question's `features.iconStyle`. */
+export enum SmileyVariantStyle {
+  Default = "Default",
+  Filled = "Filled",
+  FilledOnHover = "FilledOnHover",
+  Emojis = "Emojis",
+  Custom = "Custom",
+}
+
+export enum SmileyColorType {
+  Default = "Default",
+  Individual = "Individual",
+  Gradient = "Gradient",
+}

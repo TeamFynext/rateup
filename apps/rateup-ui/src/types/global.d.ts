@@ -1,9 +1,9 @@
 import type { LoyaltyRewardValue } from "@/backend/loyalty/reward.api";
+import type { QuestionFormFeatures } from "@/backend/surveys/questions/questions.types.ts";
+import type { SurveyThemePage } from "@/backend/surveyTheme/surveyTheme.types";
 // Any modification to this file should be reflected in the backend
 import type { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm";
-import type { SurveyThemePage } from "@/components/Survey/SurveyTheme/surveyThemeReducer";
 
 import type { RequestPayload } from "./api.ts";
 import type {

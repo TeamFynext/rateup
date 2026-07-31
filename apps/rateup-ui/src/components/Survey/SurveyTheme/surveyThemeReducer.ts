@@ -1,36 +1,6 @@
-import type { CSSProperties } from "react";
+import type { SurveyThemePage } from "@/backend/surveyTheme/surveyTheme.types";
 
 import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
-
-/** One background layer (desktop or mobile) of a themed page. */
-interface SurveyThemeBgLayer {
-  bgColor?: string;
-  imageUrl?: string | null;
-  chooseBgRadioInputValue?: string;
-}
-
-/** The editable theme of a single page (survey, thank-you, …). */
-export interface SurveyThemePage {
-  bg: {
-    desktopBg: SurveyThemeBgLayer;
-    mobileBg: SurveyThemeBgLayer;
-    desktopBgImgFile?: File | null;
-    mobileBgImgFile?: File | null;
-    /** Page themes only: reuse the survey theme's background. */
-    useSurveyBackground?: boolean;
-    /** Written by older versions of the editor; still present on old rows. */
-    styles?: CSSProperties;
-  };
-  title: { title?: string; styles: CSSProperties; subtitleFontSize?: number };
-  subtitle: { subtitle?: string; styles: CSSProperties };
-  /** `position` holds the `COORDINATESX`/`COORDINATESY` names, not pixels. */
-  button: { label?: string; styles: CSSProperties; position?: { x?: string; y?: string } };
-  input: { primaryColor?: string };
-  logo: { styles: CSSProperties; logo?: string | null; logoFile?: File | null };
-  confettiEnabled?: boolean;
-  /** Page themes only: mirror the survey theme instead of their own styles. */
-  useSurveyTheme?: boolean;
-}
 
 /** The reducer's working state: the theme document plus editor UI state. */
 export interface SurveyThemeState {
@@ -192,3 +162,5 @@ function surveyThemeReducer(state: SurveyThemeState, action: SurveyThemeAction) 
 }
 
 export default surveyThemeReducer;
+
+export type { SurveyThemePage } from "@/backend/surveyTheme/surveyTheme.types";
