@@ -45,7 +45,7 @@ export function DataTableRowActions({ row }: Readonly<DataTableRowActionsProps>)
 
     if (!confirmed) return;
 
-    deleteCustomFieldMutation.mutate((row.original as any)?.id);
+    deleteCustomFieldMutation.mutate(row.original?.id);
   };
 
   const handleEdit = (e: React.MouseEvent) => {

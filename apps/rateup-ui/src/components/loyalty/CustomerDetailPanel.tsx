@@ -544,7 +544,7 @@ export function CustomerDetailPanel({
                       </p>
                       {reward.rewardType === "coupon" && (
                         <p className="text-xs text-muted-foreground">
-                          {t("Code:")} {(reward.rewardValue as any)?.code}
+                          {t("Code:")} {reward.rewardValue?.code}
                         </p>
                       )}
                     </div>

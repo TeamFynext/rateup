@@ -41,7 +41,7 @@ export function ManageColumnsDialog({
       columns.map((c) => ({
         id: c.id,
         title: c.title,
-        color: (c as any).color || "#8B8E8A",
+        color: c.color || "#8B8E8A",
         isNew: false,
         ticketCardsCount: c._count?.ticketCards ?? c.ticketCards?.length ?? 0,
       })),

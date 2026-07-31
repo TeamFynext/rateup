@@ -541,7 +541,7 @@ const ImportContactModal = ({
         </div>
       </DialogContent>
       <ContactImportErrorModal
-        body={(importCSVContactMutation?.error as any)?.response?.data}
+        body={getApiErrorData(importCSVContactMutation?.error)}
         isError={importCSVContactMutation.isError}
       />
     </Dialog>

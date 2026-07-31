@@ -50,6 +50,8 @@ export interface Column {
   id: string;
   title: string;
   teamId: string;
+  /** Set by the column editor; older columns have none. */
+  color?: string;
   ticketBoardId?: string;
   ticketCards: Card[];
   _count?: {

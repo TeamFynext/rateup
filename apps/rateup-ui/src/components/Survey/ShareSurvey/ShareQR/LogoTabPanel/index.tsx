@@ -35,7 +35,7 @@ function LogoTabpanel({
   const ensureArray = (v: unknown, fallback: number) => {
     if (Array.isArray(v)) return v as number[];
     if (v == null) return [fallback];
-    const n = Number(v as any);
+    const n = Number(v);
     return Number.isFinite(n) ? [n] : [fallback];
   };
 

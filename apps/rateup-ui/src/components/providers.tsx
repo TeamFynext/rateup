@@ -22,6 +22,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import RouteChangeHandler from "@/utils/routeHandler.tsx";
 
 function makeQueryClient() {
@@ -45,7 +46,7 @@ function makeQueryClient() {
       onError: async (error) => {
         // Check if error is an instance of an Axios error
         if (!axios.isAxiosError(error)) return;
-        const serverError = (error as any)?.response?.data;
+        const serverError = getApiErrorData(error);
         if (error?.response?.status === 401 && serverError?.message === "Not authorized") {
           await Session.attemptRefreshingSession();
         }
