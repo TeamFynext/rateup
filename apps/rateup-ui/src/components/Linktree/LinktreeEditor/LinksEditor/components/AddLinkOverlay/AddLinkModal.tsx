@@ -47,10 +47,9 @@ export type CustomLinkFormValues = z.infer<typeof customLinkFormSchema>;
 
 /** Per-field validation messages for the add-link form. */
 interface AddLinkErrors {
-  selectedSurveyTitleErr?: string;
-  selectedTeamErr?: string;
-  wsOrWasLinkDisplayNameErr?: string;
-  [key: string]: string | undefined;
+  selectedSurveyTitleErr: string;
+  selectedTeamErr: string;
+  wsOrWasLinkDisplayNameErr: string;
 }
 
 function AddLinkModal({
@@ -77,7 +76,7 @@ function AddLinkModal({
   const [selectedTeam, setSelectedTeam] = useState("");
   // Web Survey or Whatsapp Survey Link Display name.
   const [wsOrWasLinkDisplayName, setWsOrWasLinkDisplayName] = useState("");
-  const [dropdownErrors, setDropdownErrors] = useState({
+  const [dropdownErrors, setDropdownErrors] = useState<AddLinkErrors>({
     selectedSurveyTitleErr: "",
     selectedTeamErr: "",
     wsOrWasLinkDisplayNameErr: "",
@@ -111,7 +110,11 @@ function AddLinkModal({
 
   const validateDropdownValues = useCallback(() => {
     let isValid = true;
-    const newErrState: AddLinkErrors = {};
+    const newErrState: AddLinkErrors = {
+      selectedSurveyTitleErr: "",
+      selectedTeamErr: "",
+      wsOrWasLinkDisplayNameErr: "",
+    };
     if (selectedSurveyTitle) {
       newErrState["selectedSurveyTitleErr"] = "";
     } else if (!selectedSurveyTitle) {
@@ -130,7 +133,6 @@ function AddLinkModal({
       isValid = false;
       newErrState["wsOrWasLinkDisplayNameErr"] = "This field is required";
     }
-    // @ts-ignore
     setDropdownErrors(newErrState);
     return isValid;
   }, [selectedLinkType, selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName, dropdownErrors]);

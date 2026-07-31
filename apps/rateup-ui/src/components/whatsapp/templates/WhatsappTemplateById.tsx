@@ -493,7 +493,6 @@ export function WhatsappTemplateById({
           link: publicImageLink,
           filename,
         };
-        // @ts-ignore
         values.defaultValues = { ...values.defaultValues, ...defaultValues };
       }
       if (values.templateType === TemplateType.CAROUSEL) {

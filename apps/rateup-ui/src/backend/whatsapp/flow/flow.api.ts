@@ -11,7 +11,6 @@ const axiosInstanceConfig: CreateAxiosDefaults = {
   timeout: 15000,
 };
 // cloning axios instance with default config
-// @ts-ignore  (Ignoring known error https://github.com/axios/axios/issues/5095)
 const axiosClient = ac.create(axiosInstanceConfig);
 
 axiosClient.interceptors.response.use(undefined, (error) => {

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { toast } from "sonner";
 
 import {
@@ -79,13 +80,12 @@ export const useCreateNewThemeMutation = (surveyId: string) => {
       toast.success("Created and applied new theme successfully");
     },
     onError: (error) => {
-      // @ts-ignore
-      if (err?.response?.data?.message) {
-        // @ts-ignore
-        toast.error(error?.message || err?.response?.data?.message);
-      } else {
-        toast.error(error?.message || "Unable to create theme, please try again later.");
-      }
+      const apiMessage = axios.isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+      toast.error(
+        error?.message || apiMessage || "Unable to create theme, please try again later.",
+      );
     },
   });
 };

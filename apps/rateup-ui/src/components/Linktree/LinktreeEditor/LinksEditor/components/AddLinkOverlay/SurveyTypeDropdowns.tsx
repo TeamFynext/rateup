@@ -47,7 +47,11 @@ function SurveyTypeDropdowns({
   onLinkDisplayNameChange: (value: string) => void;
   selectedTeam: string;
   onSelectedTeamDDChange: (value: string) => void;
-  errors?: Record<string, string>;
+  errors?: {
+    selectedSurveyTitleErr?: string;
+    selectedTeamErr?: string;
+    wsOrWasLinkDisplayNameErr?: string;
+  };
 }) {
   const { data: selectLinkTypeOptionsData, isPending: isSelectedLinkTypeOptionsLoading } =
     useLinkTypeOptions(selectedLinkType);
