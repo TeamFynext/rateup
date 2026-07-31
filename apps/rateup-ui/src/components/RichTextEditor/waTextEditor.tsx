@@ -1,18 +1,21 @@
-import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconBolt,
+  IconClearFormatting,
+  IconDots,
+  IconFileFilled,
+  IconLayoutBoard,
+  IconPaperclip,
+  IconRobot,
+  IconTrash,
+  IconTypography,
+  IconWaveSine,
+  IconX,
+} from "@tabler/icons-react";
 import { Plugin } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
-import {
-  LayoutTemplate,
-  MoreHorizontal,
-  Paperclip,
-  Redo2,
-  RemoveFormatting,
-  TypeOutline,
-  Undo2,
-  X,
-  Zap,
-} from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -371,7 +374,7 @@ function WaTextEditor({
               className="h-6 text-xs"
               onClick={() => setShowQuickReplies(false)}
             >
-              <X className="w-3 h-3" />
+              <IconX className="w-3 h-3" />
             </Button>
           </div>
           <div className="overflow-auto min-w-40 min-h-20 max-h-50 ">
@@ -423,7 +426,7 @@ function WaTextEditor({
                         className="h-7 w-7 p-0"
                         onClick={() => setShowQuickReplies((prev) => !prev)}
                       >
-                        <Zap className="w-4 h-4 text-cyan-600" />
+                        <IconBolt className="w-4 h-4 text-cyan-600" />
                       </Button>
                     }
                     content={<p>Quick Replies</p>}
@@ -473,7 +476,7 @@ function WaTextEditor({
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <TypeOutline className="w-5 h-5" />
+                            <IconTypography className="w-5 h-5" />
                           </Button>
                         }
                         content={<span>Format Message</span>}
@@ -495,7 +498,7 @@ function WaTextEditor({
                               editor?.chain().focus().unsetAllMarks().clearNodes().run()
                             }
                           >
-                            <RemoveFormatting className="h-4 w-4" />
+                            <IconClearFormatting className="h-4 w-4" />
                           </Button>
                           <CodeToolbar />
                         </div>
@@ -525,7 +528,7 @@ function WaTextEditor({
                         <CustomTooltip
                           trigger={
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Paperclip className="w-5 h-5" />
+                              <IconPaperclip className="w-5 h-5" />
                             </Button>
                           }
                           content={<span>Insert Media</span>}
@@ -560,7 +563,7 @@ function WaTextEditor({
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" onClick={() => openModal()} size="sm">
-                            <LayoutTemplate className="w-4 h-4" />
+                            <IconLayoutBoard className="w-4 h-4" />
                           </Button>
                         }
                         content={<span>Template</span>}
@@ -600,13 +603,13 @@ function WaTextEditor({
                           />
                         }
                       >
-                        <MoreHorizontal className="size-5" />
+                        <IconDots className="size-5" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
                         {platform === MessagePlatform.WHATSAPP && (
                           <>
                             <DropdownMenuItem className="gap-2 text-xs" onClick={() => openModal()}>
-                              <LayoutTemplate className="size-4" />
+                              <IconLayoutBoard className="size-4" />
                               Template
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -630,14 +633,14 @@ function WaTextEditor({
                           className="gap-2 text-xs"
                           onClick={() => editor?.chain().focus().undo().run()}
                         >
-                          <Undo2 className="size-4" />
+                          <IconArrowBackUp className="size-4" />
                           Undo
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="gap-2 text-xs"
                           onClick={() => editor?.chain().focus().redo().run()}
                         >
-                          <Redo2 className="size-4" />
+                          <IconArrowForwardUp className="size-4" />
                           Redo
                         </DropdownMenuItem>
                       </DropdownMenuContent>

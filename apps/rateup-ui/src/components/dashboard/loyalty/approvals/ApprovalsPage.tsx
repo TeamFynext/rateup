@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/loyalty/approvals/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconCheck, IconDownload, IconFilter, IconLoader2, IconX } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Download, Filter, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -193,9 +193,9 @@ export function ApprovalsPage() {
                 disabled={approveMutation.isPending}
               >
                 {approveMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
-                  <Check className="w-4 h-4 mr-1" />
+                  <IconCheck className="w-4 h-4 mr-1" />
                 )}
                 {t("Approve")}
               </Button>
@@ -207,9 +207,9 @@ export function ApprovalsPage() {
                 disabled={rejectMutation.isPending}
               >
                 {rejectMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
-                  <X className="w-4 h-4 mr-1" />
+                  <IconX className="w-4 h-4 mr-1" />
                 )}
                 {t("Reject")}
               </Button>
@@ -224,7 +224,7 @@ export function ApprovalsPage() {
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <IconLoader2 className="w-8 h-8 animate-spin" />
       </div>
     );
 
@@ -240,11 +240,11 @@ export function ApprovalsPage() {
         </div>
         <div className="flex gap-3">
           <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
+            <IconFilter className="w-4 h-4 mr-2" />
             {t("Filter")}
           </Button>
           <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
+            <IconDownload className="w-4 h-4 mr-2" />
             {t("Export")}
           </Button>
           <InfoButton docUrl={`${docsPath}/loyality/approvals`} />
@@ -301,7 +301,7 @@ export function ApprovalsPage() {
       {/* DataTable */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <IconLoader2 className="w-6 h-6 animate-spin" />
         </div>
       ) : (
         <DataTable columns={columns} data={approvals} />

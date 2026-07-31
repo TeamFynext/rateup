@@ -1,18 +1,18 @@
 // Extracted verbatim from the `/admin/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { useNavigate } from "@tanstack/react-router";
 import {
-  BarChart3,
-  Building2,
-  CreditCard,
-  Database,
-  Settings,
-  ShoppingBag,
-  ShoppingCart,
-  Users,
-  Zap,
-} from "lucide-react";
+  IconBolt,
+  IconBuilding,
+  IconChartBar,
+  IconCreditCard,
+  IconDatabase,
+  IconSettings,
+  IconShoppingBag,
+  IconShoppingCart,
+  IconUsers,
+} from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -67,7 +67,7 @@ export function AdminPage() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <Settings className="h-5 w-5 text-primary" />
+            <IconSettings className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-semibold tracking-tight">
               {translations("Admin Dashboard")}
             </h1>
@@ -80,14 +80,14 @@ export function AdminPage() {
       {/* Organization & User Management */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-          <Users className="h-5 w-5" />
+          <IconUsers className="h-5 w-5" />
           Organization & User Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <NavigationCard
             title="Organizations"
             description="Manage all organizations and their settings"
-            icon={Building2}
+            icon={IconBuilding}
             onClick={() =>
               navigate({
                 to: "/admin/orgs",
@@ -99,7 +99,7 @@ export function AdminPage() {
           <NavigationCard
             title="User Statistics"
             description="View user analytics and manage user accounts"
-            icon={BarChart3}
+            icon={IconChartBar}
             onClick={() =>
               navigate({
                 to: "/admin/userstats",
@@ -111,7 +111,7 @@ export function AdminPage() {
           <NavigationCard
             title={translations("Manage User Access")}
             description="Control user subscriptions and access levels"
-            icon={Users}
+            icon={IconUsers}
             onClick={() =>
               navigate({
                 to: "/admin/subscriptions",
@@ -123,7 +123,7 @@ export function AdminPage() {
           <NavigationCard
             title="Referrals"
             description="Create influencer referral tracking codes and links"
-            icon={Users}
+            icon={IconUsers}
             onClick={() =>
               navigate({
                 to: "/admin/referrals",
@@ -136,14 +136,14 @@ export function AdminPage() {
       {/* Payment & Billing */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
+          <IconCreditCard className="h-5 w-5" />
           Payment & Billing Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <NavigationCard
             title={translations("Manage Razorpay Plans")}
             description="Configure Razorpay payment plans and subscriptions"
-            icon={CreditCard}
+            icon={IconCreditCard}
             onClick={() =>
               navigate({
                 to: "/admin/razorpay",
@@ -155,7 +155,7 @@ export function AdminPage() {
           <NavigationCard
             title="Stripe Dashboard"
             description="Manage Stripe products and subscriptions"
-            icon={CreditCard}
+            icon={IconCreditCard}
             onClick={() =>
               navigate({
                 to: "/admin/stripe",
@@ -167,7 +167,7 @@ export function AdminPage() {
           <NavigationCard
             title="Orders"
             description="View and manage all payment orders"
-            icon={ShoppingCart}
+            icon={IconShoppingCart}
             onClick={() =>
               navigate({
                 to: "/admin/orders",
@@ -179,7 +179,7 @@ export function AdminPage() {
           <NavigationCard
             title="RateUp Plans"
             description="Configure internal RateUp subscription plans"
-            icon={Zap}
+            icon={IconBolt}
             onClick={() =>
               navigate({
                 to: "/admin/rateup",
@@ -192,14 +192,14 @@ export function AdminPage() {
       {/* System Management */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-          <Settings className="h-5 w-5" />
+          <IconSettings className="h-5 w-5" />
           System Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <NavigationCard
             title="Update Center"
             description="Manage system updates and data migrations"
-            icon={Database}
+            icon={IconDatabase}
             onClick={() =>
               navigate({
                 to: "/admin/updateCenter",
@@ -211,7 +211,7 @@ export function AdminPage() {
           <NavigationCard
             title="Generate Test Data"
             description="Create test data for development purposes"
-            icon={Database}
+            icon={IconDatabase}
             onClick={() =>
               navigate({
                 to: "/admin/generate",
@@ -223,7 +223,7 @@ export function AdminPage() {
           <NavigationCard
             title="Shopify Integration"
             description="Manage Shopify store integrations"
-            icon={ShoppingBag}
+            icon={IconShoppingBag}
             onClick={() =>
               navigate({
                 to: "/admin/shopify",
@@ -237,7 +237,7 @@ export function AdminPage() {
       <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-blue-600" />
+            <IconChartBar className="h-4 w-4 text-blue-600" />
             <CardTitle className="text-sm text-blue-800 dark:text-blue-200">Quick Access</CardTitle>
           </div>
         </CardHeader>

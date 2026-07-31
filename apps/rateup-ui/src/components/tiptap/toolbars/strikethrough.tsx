@@ -1,6 +1,6 @@
 "use client";
 
-import { Strikethrough } from "lucide-react";
+import { IconStrikethrough } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ const StrikeThroughToolbar = React.forwardRef<
           />
         }
       >
-        {children ?? <Strikethrough className="h-4 w-4" />}
+        {children ?? <IconStrikethrough className="h-4 w-4" />}
       </TooltipTrigger>
       <TooltipContent>
         <span>Strikethrough</span>

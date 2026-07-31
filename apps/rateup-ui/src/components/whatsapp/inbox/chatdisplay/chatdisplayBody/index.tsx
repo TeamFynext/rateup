@@ -1,5 +1,5 @@
+import { IconLock } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { Lock } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { FC } from "react";
 
@@ -171,7 +171,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
             {isNotesView && !visibleMessages.length && (
               <MessageScrollerItem messageId="wa-inbox-notes-empty">
                 <div className="flex flex-col items-center gap-1.5 py-10 text-center">
-                  <Lock className="size-5 text-amber-600 dark:text-amber-500" />
+                  <IconLock className="size-5 text-amber-600 dark:text-amber-500" />
                   <p className="text-sm font-medium text-foreground">No internal notes yet</p>
                   <p className="max-w-xs text-xs text-muted-foreground">
                     Notes stay with the ticket and are never sent to the customer.

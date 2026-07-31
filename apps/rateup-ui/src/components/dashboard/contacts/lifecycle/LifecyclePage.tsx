@@ -1,7 +1,7 @@
 // Extracted verbatim from the `/dashboard/contacts/lifecycle/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { Activity, AlertTriangle, Plus, Settings } from "lucide-react";
+import { IconActivity, IconAlertTriangle, IconPlus, IconSettings } from "@tabler/icons-react";
 import * as React from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -320,7 +320,7 @@ export function ContactSettings() {
     return (
       <div className="grid h-full place-content-center py-12">
         <div className="flex flex-col items-center gap-4 text-center">
-          <Activity className="size-12 text-muted-foreground" />
+          <IconActivity className="size-12 text-muted-foreground" />
           <div className="flex flex-col gap-1">
             <h3 className="text-lg font-medium text-foreground">{t("No lifecycle stages yet")}</h3>
             <p className="text-sm text-muted-foreground">
@@ -330,7 +330,7 @@ export function ContactSettings() {
             </p>
           </div>
           <Button onClick={() => setIsSettingUp(true)}>
-            <Plus data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             {t("Create Lifecycle Stage")}
           </Button>
         </div>
@@ -356,14 +356,14 @@ export function ContactSettings() {
                 onClick={() => setIsSettingUp(true)}
                 className="rounded-xl px-4 py-2 text-xs font-bold"
               >
-                <Settings data-icon="inline-start" />
+                <IconSettings data-icon="inline-start" />
                 {t("Setup")}
               </Button>
             </Card>
 
             {!showStagesGlobal ? (
               <Alert className="rounded-2xl border-border bg-muted/30">
-                <AlertTriangle className="size-5 text-muted-foreground" />
+                <IconAlertTriangle className="size-5 text-muted-foreground" />
                 <AlertDescription className="flex flex-col gap-3 text-center sm:text-left">
                   <div>
                     <h3 className="text-sm font-bold text-foreground">

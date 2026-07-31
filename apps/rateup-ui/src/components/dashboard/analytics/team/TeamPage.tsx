@@ -1,17 +1,17 @@
 // Extracted verbatim from the `/dashboard/analytics/team/$teamid/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconArrowRight,
+  IconClock,
+  IconFileText,
+  IconMessageCircle,
+  IconRefresh,
+  IconTarget,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Clock,
-  FileText,
-  MessageCircle,
-  RefreshCcw,
-  Target,
-  Users,
-} from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -76,7 +76,7 @@ export function TeamPage() {
                 }}
                 className="gap-2"
               >
-                <ArrowRight className="w-4 h-4 rotate-180" />
+                <IconArrowRight className="w-4 h-4 rotate-180" />
                 {t("Back to Teams")}
               </Button>
               <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ export function TeamPage() {
                     backgroundColor: data?.teamColor === "null" ? "blue" : data?.teamColor,
                   }}
                 >
-                  <Users className="w-5 h-5 text-white" />
+                  <IconUsers className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold">{data?.teamName}</h3>
@@ -102,7 +102,7 @@ export function TeamPage() {
                 onClick={refresh}
                 className="flex items-center justify-center gap-1"
               >
-                <RefreshCcw />
+                <IconRefresh />
                 <span>{t("Refresh")}</span>
               </Button>
               <DateSelector days={day} setDays={setDay} />
@@ -111,7 +111,7 @@ export function TeamPage() {
                 onClick={handleDownloadPDF}
                 className="flex items-center justify-center gap-1"
               >
-                <FileText />
+                <IconFileText />
                 <span>{t("Export")}</span>
               </Button>
             </div>
@@ -139,7 +139,7 @@ export function TeamPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-primary" />
+                <IconClock className="w-5 h-5 text-primary" />
                 <p className="text-sm text-muted-foreground">{t("Avg Response Time")}</p>
               </div>
               <p className="text-2xl font-semibold">
@@ -159,7 +159,7 @@ export function TeamPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
-                <MessageCircle className="w-5 h-5 text-primary" />
+                <IconMessageCircle className="w-5 h-5 text-primary" />
                 <p className="text-sm text-muted-foreground">{t("Active Chats")}</p>
               </div>
               <p className="text-2xl font-semibold">{data?.activeChats}</p>
@@ -170,7 +170,7 @@ export function TeamPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
-                <Target className="w-5 h-5 text-primary" />
+                <IconTarget className="w-5 h-5 text-primary" />
                 <p className="text-sm text-muted-foreground">{t("Resolution Rate")}</p>
               </div>
               <p className="text-2xl font-semibold">{Math.floor(data?.resolutionRate ?? 0)}%</p>

@@ -1,6 +1,6 @@
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
-import { UserPlus } from "lucide-react";
+import { IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -37,7 +37,7 @@ export function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
             />
           }
         >
-          <UserPlus className="h-4 w-4" /> {t("Add Contact")}
+          <IconUserPlus className="h-4 w-4" /> {t("Add Contact")}
         </PopoverTrigger>
         <PopoverContent className="w-72 p-1" align="start">
           <div className="p-2 border-b">

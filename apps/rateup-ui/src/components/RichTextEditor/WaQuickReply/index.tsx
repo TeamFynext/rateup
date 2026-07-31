@@ -1,4 +1,4 @@
-import { Zap } from "lucide-react";
+import { IconBolt } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
@@ -42,7 +42,7 @@ export const WaQuickReply = ({
                 className="flex items-center gap-1 border p-2 rounded-sm bg-gray-100 dark:bg-transparent cursor-pointer"
                 onClick={() => handleSelectQuickReply(reply?.text ?? "")}
               >
-                <Zap className="text-primary w-3 h-3" />
+                <IconBolt className="text-primary w-3 h-3" />
                 <span className="text-xs">
                   {reply?.key && reply.key.length > 50
                     ? `${reply.key.slice(0, 60)}...`

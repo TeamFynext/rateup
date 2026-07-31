@@ -1,6 +1,6 @@
 // Extracted verbatim from `SignupFormNew.tsx`. Behaviour is unchanged.
 
-import { ArrowLeft, ArrowRight, Building, Globe } from "lucide-react";
+import { IconArrowLeft, IconArrowRight, IconBuilding, IconGlobe } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller } from "react-hook-form";
 
@@ -57,7 +57,7 @@ export function Step2({
             <span className="text-red-500">*</span>
           </FieldLabel>
           <div className="relative">
-            <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <IconBuilding className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
               name="orgName"
               control={formData.control}
@@ -83,7 +83,7 @@ export function Step2({
             Website URL
           </FieldLabel>
           <div className="relative">
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <IconGlobe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
               name="website"
               control={formData.control}
@@ -206,7 +206,7 @@ export function Step2({
           onClick={handleBack}
           className="h-8 px-4 text-xs border border-gray-300"
         >
-          <ArrowLeft className="w-4 h-4 mr-1" />
+          <IconArrowLeft className="w-4 h-4 mr-1" />
           Back
         </Button>
 
@@ -215,7 +215,7 @@ export function Step2({
           className="h-8 px-4 text-xs bg-primary text-white disabled:opacity-50"
         >
           Continue
-          <ArrowRight className="w-4 h-4 ml-1" />
+          <IconArrowRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
     </div>

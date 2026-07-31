@@ -1,4 +1,4 @@
-import { CalendarClock, Plus, ShoppingCart, TicketPercent } from "lucide-react";
+import { IconCalendarClock, IconPlus, IconShoppingCart, IconTicket } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -91,7 +91,7 @@ export function CouponsPage() {
       description="Create and manage promo codes for your store."
       actions={
         <Button size="sm">
-          <Plus data-icon="inline-start" />
+          <IconPlus data-icon="inline-start" />
           Create Coupon
         </Button>
       }
@@ -107,7 +107,7 @@ export function CouponsPage() {
               <div className="flex items-start justify-between border-b border-dashed px-4.5 py-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <TicketPercent className={cn("size-4", c.accent)} />
+                    <IconTicket className={cn("size-4", c.accent)} />
                     <span className="font-mono text-sm font-bold tracking-wide text-foreground">
                       {c.code}
                     </span>
@@ -120,11 +120,11 @@ export function CouponsPage() {
               </div>
               <div className="flex flex-col gap-2.5 px-4.5 py-3.5">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <ShoppingCart className="size-3.5" />
+                  <IconShoppingCart className="size-3.5" />
                   {c.cond.split("{c}").join(sym)}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarClock className="size-3.5" />
+                  <IconCalendarClock className="size-3.5" />
                   {c.expiry}
                 </div>
                 <Separator className="my-1" />

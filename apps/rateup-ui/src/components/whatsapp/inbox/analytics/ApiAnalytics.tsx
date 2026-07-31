@@ -1,6 +1,12 @@
+import {
+  IconBolt,
+  IconCircleCheck,
+  IconCircleX,
+  IconDownload,
+  IconSend,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
-import { CheckCircle2, Download, Send, XCircle, Zap } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -107,7 +113,7 @@ function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
               });
             }}
           >
-            <Download />
+            <IconDownload />
             {t("Export")}
           </Button>
         </div>
@@ -130,7 +136,7 @@ function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
             title={t("Total Messages Sent")}
             bg={"bg-blue-50"}
             iconColor={"text-blue-500"}
-            Icon={Send}
+            Icon={IconSend}
             trendLogoRequired={true}
             trendValue={data?.totalMessagesChange}
           />
@@ -139,7 +145,7 @@ function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
             title={t("Successful Delivery")}
             bg={"bg-green-50"}
             iconColor={"text-green-500"}
-            Icon={CheckCircle2}
+            Icon={IconCircleCheck}
             trendLogoRequired={false}
             trendValue={data?.deliveredPercentage?.toFixed(1)}
           />
@@ -148,7 +154,7 @@ function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
             title={t("Failed Messages")}
             bg={"bg-red-50"}
             iconColor={"text-red-500"}
-            Icon={XCircle}
+            Icon={IconCircleX}
             trendLogoRequired={false}
             trendValue={data?.failedPercentage?.toFixed(1)}
           />
@@ -161,7 +167,7 @@ function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
             title={t("Avg Delivery Time")}
             bg={"bg-purple-50"}
             iconColor={"text-purple-500"}
-            Icon={Zap}
+            Icon={IconBolt}
             trendLogoRequired={true}
             trendValue={data?.averageDeliveryTimeChange}
           />

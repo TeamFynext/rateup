@@ -1,10 +1,10 @@
 // Extracted verbatim from the `/admin/referrals/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconCheck, IconCopy, IconRefresh, IconTrash, IconUsers } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Check, Copy, RefreshCw, Trash2, Users } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -93,7 +93,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
             >
               {deleteMutation.isPending ? (
                 <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  <IconRefresh className="mr-2 h-4 w-4 animate-spin" />
                   {translations("Deleting...")}
                 </>
               ) : (
@@ -113,7 +113,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
             />
           }
         >
-          <Copy className="h-4 w-4" />
+          <IconCopy className="h-4 w-4" />
         </PopoverTrigger>
         <PopoverContent className="w-80 p-4" align="start">
           <div className="space-y-3">
@@ -141,9 +141,9 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
                   onClick={copyCode}
                 >
                   {copiedCode ? (
-                    <Check className="h-3.5 w-3.5 text-green-600" />
+                    <IconCheck className="h-3.5 w-3.5 text-green-600" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5" />
+                    <IconCopy className="h-3.5 w-3.5" />
                   )}
                 </Button>
               </div>
@@ -166,9 +166,9 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
                   onClick={copyLink}
                 >
                   {copiedLink ? (
-                    <Check className="h-3.5 w-3.5 text-green-600" />
+                    <IconCheck className="h-3.5 w-3.5 text-green-600" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5" />
+                    <IconCopy className="h-3.5 w-3.5" />
                   )}
                 </Button>
               </div>
@@ -184,9 +184,9 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
         disabled={deleteMutation.isPending}
       >
         {deleteMutation.isPending ? (
-          <RefreshCw className="h-4 w-4 animate-spin" />
+          <IconRefresh className="h-4 w-4 animate-spin" />
         ) : (
-          <Trash2 className="h-4 w-4" />
+          <IconTrash className="h-4 w-4" />
         )}
       </Button>
     </div>
@@ -317,7 +317,7 @@ export function ReferralsPage() {
       {/* Header Section */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-primary" />
+          <IconUsers className="h-5 w-5 text-primary" />
           <h1 className="text-2xl font-semibold tracking-tight text-black dark:text-white">
             Referrals
           </h1>
@@ -334,7 +334,7 @@ export function ReferralsPage() {
           <CardHeader className="relative">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <Users className="h-5 w-5 text-purple-600" />
+                <IconUsers className="h-5 w-5 text-purple-600" />
               </div>
               <div>
                 <CardTitle className="text-lg text-black dark:text-white">
@@ -385,7 +385,7 @@ export function ReferralsPage() {
               >
                 {createReferralMutation.isPending ? (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    <IconRefresh className="mr-2 h-4 w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
@@ -418,9 +418,9 @@ export function ReferralsPage() {
                       title="Copy referral code"
                     >
                       {copiedCode ? (
-                        <Check className="h-4 w-4 text-green-600" />
+                        <IconCheck className="h-4 w-4 text-green-600" />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <IconCopy className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
@@ -448,9 +448,9 @@ export function ReferralsPage() {
                       title="Copy referral link"
                     >
                       {copiedLink ? (
-                        <Check className="h-4 w-4 text-green-600" />
+                        <IconCheck className="h-4 w-4 text-green-600" />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <IconCopy className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
@@ -476,7 +476,7 @@ export function ReferralsPage() {
             onClick={() => refetch()}
             disabled={isFetching || isLoading}
           >
-            <RefreshCw
+            <IconRefresh
               className={`mr-2 h-4 w-4 ${isFetching || isLoading ? "animate-spin" : ""}`}
             />
             {translations("Refresh")}
@@ -485,7 +485,7 @@ export function ReferralsPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              <IconRefresh className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <DataTable columns={columns} data={referrals || []} />

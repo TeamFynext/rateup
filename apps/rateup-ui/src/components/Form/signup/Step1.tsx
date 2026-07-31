@@ -1,18 +1,18 @@
 // Extracted verbatim from `SignupFormNew.tsx`. Behaviour is unchanged.
 
-import { useNavigate } from "@tanstack/react-router";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CheckCircle,
-  Dot,
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-  User,
-} from "lucide-react";
+  IconArrowLeft,
+  IconArrowRight,
+  IconCheck,
+  IconCircleCheck,
+  IconEye,
+  IconEyeOff,
+  IconLock,
+  IconMail,
+  IconPoint,
+  IconUser,
+} from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
@@ -120,7 +120,7 @@ export function Step1({
         {isSocial ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <IconCircleCheck className="w-5 h-5 text-green-600" />
               <div>
                 <p className="text-sm font-medium text-green-800">
                   Account connected successfully!
@@ -164,7 +164,7 @@ export function Step1({
               <span className="text-red-500">*</span>
             </FieldLabel>
             <div className="relative">
-              <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <IconUser className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Controller
                 name="name"
                 control={formData.control}
@@ -195,7 +195,7 @@ export function Step1({
                     <span className="text-red-500">*</span>
                   </FieldLabel>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <IconMail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Controller
                       name="email"
                       control={formData.control}
@@ -257,7 +257,7 @@ export function Step1({
                   <span className="text-red-500">*</span>
                 </FieldLabel>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <IconLock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Controller
                     name="password"
                     control={formData.control}
@@ -287,7 +287,11 @@ export function Step1({
                     aria-controls="password"
                     className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <IconEyeOff className="w-4 h-4" />
+                    ) : (
+                      <IconEye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </Field>
@@ -338,11 +342,11 @@ export function Step1({
                         <li key={rule.label} className="flex items-center space-x-1">
                           {rule.valid ? (
                             <span className="text-green-600">
-                              <Check size={16} className="sm:w-[18px] sm:h-[18px]" />
+                              <IconCheck size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </span>
                           ) : (
                             <span className="text-gray-400">
-                              <Dot size={16} className="sm:w-[18px] sm:h-[18px]" />
+                              <IconPoint size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </span>
                           )}
                           <span
@@ -417,7 +421,7 @@ export function Step1({
             disabled={true}
             className="flex items-center px-4 h-8 border-2 border-gray-300 hover:border-gray-400 text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <IconArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
 
@@ -426,7 +430,7 @@ export function Step1({
             className="flex items-center px-4 h-8 bg-primary hover:bg-primary/90 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader /> : translations("Continue")}
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <IconArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>

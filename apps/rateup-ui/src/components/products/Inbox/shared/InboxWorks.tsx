@@ -1,23 +1,23 @@
-import { BarChart4, MessageSquareText, Settings2 } from "lucide-react";
+import { IconChartBar, IconMessage2, IconSettings2 } from "@tabler/icons-react";
 import { easeOut, motion } from "motion/react";
 
 const cardData = [
   {
-    icon: <MessageSquareText className="w-7 h-7 text-white" />,
+    icon: <IconMessage2 className="w-7 h-7 text-white" />,
     label: "Launch via WhatsApp",
     description:
       "Send automated, friendly check-ins to employees on the app they already use and trust. No downloads needed.",
     iconBg: "from-[#1c518e] to-[#3b82f6]",
   },
   {
-    icon: <BarChart4 className="w-7 h-7 text-white" />,
+    icon: <IconChartBar className="w-7 h-7 text-white" />,
     label: "Gather Rich Insights",
     description:
       "Collect real-time quantitative scores (eNPS) and qualitative feedback through natural conversation.",
     iconBg: "from-[#1c518e] to-[#10b981]",
   },
   {
-    icon: <Settings2 className="w-7 h-7 text-white" />,
+    icon: <IconSettings2 className="w-7 h-7 text-white" />,
     label: "Analyze & Resolve",
     description:
       "Visualize data on your dashboard, identify key issues with AI, and create trackable tickets for resolution.",

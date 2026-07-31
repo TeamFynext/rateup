@@ -1,7 +1,7 @@
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
+import { IconTrash, IconUser } from "@tabler/icons-react";
 import parse from "html-react-parser";
-import { Trash, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -32,7 +32,7 @@ export function TicketComments({
       <div className="flex gap-4 items-start">
         <Avatar className="h-8 w-8 mt-1">
           <AvatarFallback>
-            <User className="h-4 w-4" />
+            <IconUser className="h-4 w-4" />
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
@@ -82,7 +82,7 @@ export function Comment(data: TicketComment & { cardId: string }) {
           disabled={isPending}
           onClick={() => mutate(data.id)}
         >
-          <Trash className="h-4 w-4" />
+          <IconTrash className="h-4 w-4" />
         </Button>
       )}
     </div>

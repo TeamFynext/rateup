@@ -1,8 +1,16 @@
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import {
+  IconBrandWhatsapp,
+  IconExternalLink,
+  IconLoader2,
+  IconPaperclip,
+  IconPlus,
+  IconTrash,
+  IconX,
+  IconZoomIn,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Loader2, Paperclip, Plus, Trash2, X, ZoomIn } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -282,7 +290,7 @@ export function RightSidebar({
                     className="absolute top-3 right-3 text-muted-foreground hover:text-red-500 transition-colors z-10 bg-background rounded-full p-1 border shadow-sm"
                     title={t("Remove contact")}
                   >
-                    <X className="h-4 w-4" />
+                    <IconX className="h-4 w-4" />
                   </button>
                 )}
                 <div className="flex items-center gap-3 relative">
@@ -305,7 +313,7 @@ export function RightSidebar({
                   <Button className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">
                     <IconBrandWhatsapp className="h-4 w-4" />
                     {t("Open Chat In Inbox")}
-                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                    <IconExternalLink className="h-3.5 w-3.5 ml-1" />
                   </Button>
                 </Link>
               </div>
@@ -381,7 +389,7 @@ export function RightSidebar({
                           }}
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                          <ZoomIn
+                          <IconZoomIn
                             size={18}
                             className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
                           />
@@ -389,12 +397,12 @@ export function RightSidebar({
                       </>
                     ) : (
                       <>
-                        <Paperclip size={18} />
+                        <IconPaperclip size={18} />
                         <span className="text-[9px] truncate w-full text-center px-1 mt-1 opacity-60">
                           {ext}
                         </span>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                          <ExternalLink
+                          <IconExternalLink
                             size={14}
                             className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
                           />
@@ -409,7 +417,7 @@ export function RightSidebar({
                       className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       title="Remove attachment"
                     >
-                      <X size={10} />
+                      <IconX size={10} />
                     </button>
                   </div>
                 );
@@ -418,9 +426,9 @@ export function RightSidebar({
               {((ticket.attachments as string[]) || []).length < 4 && (
                 <FieldTitle className="w-14 h-14 rounded-[9px] border-[1.5px] border-dashed border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors bg-background">
                   {isUploadingFile ? (
-                    <Loader2 size={15} className="animate-spin text-primary" />
+                    <IconLoader2 size={15} className="animate-spin text-primary" />
                   ) : (
-                    <Plus size={15} />
+                    <IconPlus size={15} />
                   )}
                   <input
                     type="file"
@@ -441,7 +449,7 @@ export function RightSidebar({
               onClick={() => setConfirmDelete(true)}
               className="w-full py-2 rounded-lg border-none bg-transparent text-destructive font-body text-[12.5px] font-medium cursor-pointer flex items-center justify-center gap-1.5 transition-colors hover:bg-destructive/10"
             >
-              <Trash2 size={13} strokeWidth={2} />
+              <IconTrash size={13} strokeWidth={2} />
               {t("Delete ticket")}
             </button>
           </div>
@@ -487,7 +495,7 @@ export function RightSidebar({
             className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-1.5 hover:bg-black/80 transition-colors"
             onClick={() => setLightboxImage(null)}
           >
-            <X size={20} />
+            <IconX size={20} />
           </button>
           <img
             src={lightboxImage}

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconEye, IconEyeOff, IconKey, IconLock, IconMail } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -74,7 +74,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
           <Card className="flex flex-col p-4 sm:p-5 md:p-6 w-full">
             <div className="flex flex-col gap-1">
               <p className="text-sm font-semibold capitalize text-primary flex items-center gap-1">
-                <Lock size={14} /> Sign In
+                <IconLock size={14} /> Sign In
               </p>
               <h2 className="text-2xl font-bold">Welcome Back</h2>
               <p className="font-normal text-xs">Continue your growth journey with RateUp</p>
@@ -114,7 +114,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                       <FieldLabel htmlFor={field.name}>{translations("Email")}</FieldLabel>
                       <InputGroup>
                         <InputGroupAddon>
-                          <Mail />
+                          <IconMail />
                         </InputGroupAddon>
                         <InputGroupInput
                           {...field}
@@ -139,7 +139,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                       <FieldLabel htmlFor={field.name}>{translations("Password")}</FieldLabel>
                       <InputGroup>
                         <InputGroupAddon>
-                          <Lock />
+                          <IconLock />
                         </InputGroupAddon>
                         <InputGroupInput
                           {...field}
@@ -158,7 +158,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                             }
                             onClick={() => setShowPassword(!showPassword)}
                           >
-                            {showPassword ? <EyeOff /> : <Eye />}
+                            {showPassword ? <IconEyeOff /> : <IconEye />}
                           </InputGroupButton>
                         </InputGroupAddon>
                       </InputGroup>
@@ -186,7 +186,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                   }
                   className="text-xs sm:text-sm text-primary hover:text-primary/80 underline flex items-center space-x-1 transition-colors cursor-pointer"
                 >
-                  <Key className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <IconKey className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   <span className="text-xs sm:text-sm">Forgot password?</span>
                 </button>
               </div>

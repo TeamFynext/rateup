@@ -1,13 +1,13 @@
 import {
-  Bell,
-  ClipboardList,
-  MapPin,
-  MessageCircle,
-  MessageSquareText,
-  Pencil,
-  Truck,
-  UserRound,
-} from "lucide-react";
+  IconBell,
+  IconClipboardList,
+  IconMapPin,
+  IconMessage2,
+  IconMessageCircle,
+  IconPencil,
+  IconTruck,
+  IconUser,
+} from "@tabler/icons-react";
 import { useState } from "react";
 
 import CollectionOptionsTab from "@/components/dashboard/commerce/CollectionOptionsTab";
@@ -33,19 +33,19 @@ const TIMINGS = [
 const CHECKOUT_TOGGLES = [
   {
     key: "orderConfirm",
-    icon: Bell,
+    icon: IconBell,
     label: "Send order confirmation",
     desc: "Auto-message the customer when an order is placed",
   },
   {
     key: "guest",
-    icon: UserRound,
+    icon: IconUser,
     label: "Guest checkout",
     desc: "Let customers buy without sharing extra details",
   },
   {
     key: "notes",
-    icon: MessageSquareText,
+    icon: IconMessage2,
     label: "Order notes",
     desc: "Allow customers to add a note at checkout",
   },
@@ -54,7 +54,7 @@ const CHECKOUT_TOGGLES = [
 function NoCatalog({ children }: Readonly<{ children: string }>) {
   return (
     <Alert>
-      <MapPin />
+      <IconMapPin />
       <AlertTitle>No catalog connected</AlertTitle>
       <AlertDescription>{children}</AlertDescription>
     </Alert>
@@ -92,15 +92,15 @@ export function CheckoutSettingsPage() {
             General
           </TabsTrigger> */}
           <TabsTrigger value="collection">
-            <ClipboardList data-icon="inline-start" />
+            <IconClipboardList data-icon="inline-start" />
             Collection
           </TabsTrigger>
           <TabsTrigger value="address">
-            <MapPin data-icon="inline-start" />
+            <IconMapPin data-icon="inline-start" />
             Address Fields
           </TabsTrigger>
           <TabsTrigger value="delivery">
-            <Truck data-icon="inline-start" />
+            <IconTruck data-icon="inline-start" />
             Delivery Options
           </TabsTrigger>
         </TabsList>
@@ -121,7 +121,7 @@ export function CheckoutSettingsPage() {
                     <div className="mb-1.5 text-xs font-semibold text-foreground">{f.label}</div>
                     <div className="flex items-center gap-2 rounded-md border px-3 py-2.5">
                       <span className="flex-1 text-sm font-medium text-foreground">{f.value}</span>
-                      <Pencil className="size-3.5 text-muted-foreground" />
+                      <IconPencil className="size-3.5 text-muted-foreground" />
                     </div>
                   </div>
                 ))}
@@ -154,7 +154,7 @@ export function CheckoutSettingsPage() {
                     ))}
                   </ToggleGroup>
                   <div className="mt-1 flex items-start gap-2.5 rounded-lg bg-muted p-3">
-                    <MessageCircle className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                    <IconMessageCircle className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                     <p className="text-sm text-muted-foreground">
                       "Hi {"{name}"} 👋 You left {"{items}"} in your cart. Complete your order now
                       and get free shipping —{" "}

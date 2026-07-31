@@ -1,5 +1,5 @@
+import { IconTicket } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { TicketCheck } from "lucide-react";
 import { motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants.ts";
@@ -63,7 +63,7 @@ export const InboxFeatures = () => {
                     viewport={{ once: true }}
                     className="flex items-start gap-4"
                   >
-                    <TicketCheck color="#006156" />
+                    <IconTicket color="#006156" />
                     <div>
                       <p className="font-semibold text-[#1c518e] text-lg">{item.title}</p>
                       <p className="text-gray-700">{item.description}</p>

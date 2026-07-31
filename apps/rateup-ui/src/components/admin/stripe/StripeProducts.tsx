@@ -1,6 +1,14 @@
+import {
+  IconCalendar,
+  IconClock,
+  IconCreditCard,
+  IconCurrencyDollar,
+  IconPackage,
+  IconTrash,
+  IconTypography,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Calendar, Clock, CreditCard, DollarSign, Package, Trash2, Type } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -87,7 +95,7 @@ const StripeProducts = () => {
       header: createSortableHeader("Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <IconPackage className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
@@ -108,7 +116,7 @@ const StripeProducts = () => {
       header: "Type",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Type className="h-4 w-4 text-muted-foreground" />
+          <IconTypography className="h-4 w-4 text-muted-foreground" />
           <Badge variant="outline">{row.getValue("type")}</Badge>
         </div>
       ),
@@ -119,7 +127,7 @@ const StripeProducts = () => {
       header: createSortableHeader("Amount"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <IconCurrencyDollar className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
@@ -146,7 +154,7 @@ const StripeProducts = () => {
       header: "Interval Count",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <IconClock className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono">{row.getValue("intervalCount")}</span>
         </div>
       ),
@@ -231,7 +239,7 @@ const StripeProducts = () => {
       header: createSortableHeader("Created At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -251,7 +259,7 @@ const StripeProducts = () => {
           disabled={!row.original.canDelete}
           className="h-8 w-8 p-0"
         >
-          <Trash2 className="h-4 w-4" />
+          <IconTrash className="h-4 w-4" />
         </Button>
       ),
       meta: { title: "Actions" },
@@ -289,7 +297,7 @@ const StripeProducts = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-blue-600" />
+              <IconCreditCard className="h-4 w-4 text-blue-600" />
               <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
                 {translations("List of products from Stripe DB")}
               </CardTitle>

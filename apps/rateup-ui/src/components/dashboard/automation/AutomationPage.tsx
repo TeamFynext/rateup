@@ -1,9 +1,8 @@
 // Extracted verbatim from the `/dashboard/automation/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { IconPlus } from "@tabler/icons-react";
+import { IconChevronDown, IconFilter, IconGrid3x3, IconList, IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, Filter, Grid3x3, List } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -110,9 +109,9 @@ export function AutomationPage() {
                   />
                 }
               >
-                <Filter className="w-3.5 h-3.5" />
+                <IconFilter className="w-3.5 h-3.5" />
                 Filter
-                <ChevronDown className="w-3.5 h-3.5" />
+                <IconChevronDown className="w-3.5 h-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="text-sm">
                 <DropdownMenuItem
@@ -146,7 +145,7 @@ export function AutomationPage() {
                 className="gap-2"
                 disabled={isLoading}
               >
-                <Grid3x3 className="w-4 h-4" />
+                <IconGrid3x3 className="w-4 h-4" />
                 Grid
               </Button>
               <Button
@@ -156,7 +155,7 @@ export function AutomationPage() {
                 className="gap-2"
                 disabled={isLoading}
               >
-                <List className="w-4 h-4" />
+                <IconList className="w-4 h-4" />
                 List
               </Button>
             </div>

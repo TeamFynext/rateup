@@ -1,10 +1,19 @@
 // Extracted verbatim from the `/dashboard/contacts/groups/$groupId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconEdit,
+  IconFolder,
+  IconTrash,
+  IconUpload,
+  IconUsers,
+  IconX,
+} from "@tabler/icons-react";
 import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { Image } from "@unpic/react";
-import { ArrowLeft, Check, Edit, Folder, Trash2, Upload, Users, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
@@ -197,15 +206,15 @@ export function ContactGroup() {
                     objectFit="cover"
                   />
                 ) : (
-                  <Folder />
+                  <IconFolder />
                 )}
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-white" />
+                  <IconUpload className="w-5 h-5 text-white" />
                 </div>
               </div>
               <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-primary to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
-                <Users className="w-3.5 h-3.5 text-white" />
+                <IconUsers className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
 
@@ -233,7 +242,7 @@ export function ContactGroup() {
                         {editContactGroupMutation.isPending ? (
                           <Spinner className="w-4 h-4" />
                         ) : (
-                          <Check className="w-4 h-4" />
+                          <IconCheck className="w-4 h-4" />
                         )}
                       </Button>
                       <Button
@@ -242,7 +251,7 @@ export function ContactGroup() {
                         onClick={handleCancelEditName}
                         className="h-9 w-9 p-0 hover:bg-gray-100"
                       >
-                        <X className="w-4 h-4" />
+                        <IconX className="w-4 h-4" />
                       </Button>
                     </div>
                   ) : (
@@ -259,7 +268,7 @@ export function ContactGroup() {
                         }}
                         className="h-8 w-8 p-0 hover:bg-blue-50 text-primary"
                       >
-                        <Edit className="w-3.5 h-3.5" />
+                        <IconEdit className="w-3.5 h-3.5" />
                       </Button>
                     </>
                   )}
@@ -299,7 +308,7 @@ export function ContactGroup() {
                 }}
                 className="gap-2 hover:bg-gray-100 h-9"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <IconArrowLeft className="w-4 h-4" />
                 <span className="text-sm">Back to Groups</span>
               </Button>
               <Button
@@ -308,7 +317,7 @@ export function ContactGroup() {
                 onClick={() => handleDeleteGroup()}
                 className="h-9 gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-400 transition-all"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <IconTrash className="w-3.5 h-3.5" />
                 Delete Group
               </Button>
             </div>
@@ -400,7 +409,7 @@ function ContactGroupIconEditDialog({
       <DialogContent className="border-0 shadow-2xl max-w-md">
         <DialogHeader>
           <div className="w-14 h-14 rounded-full bg-linear-to-br from-orange-100 to-orange-200 flex items-center justify-center mb-4">
-            <Folder className="w-7 h-7 text-rateup-orange" />
+            <IconFolder className="w-7 h-7 text-rateup-orange" />
           </div>
           <DialogTitle className="text-2xl">Edit Group Icon</DialogTitle>
           <DialogDescription className="text-base">
@@ -438,7 +447,7 @@ function ContactGroupIconEditDialog({
               onClick={() => fileInputRef.current?.click()}
               className="w-full h-12 gap-3 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700"
             >
-              <Upload className="w-5 h-5" />
+              <IconUpload className="w-5 h-5" />
               Upload New Icon
             </Button>
             {group?.icon && (
@@ -447,7 +456,7 @@ function ContactGroupIconEditDialog({
                 onClick={handleRemoveIcon}
                 className="w-full h-12 gap-3 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
               >
-                <X className="w-5 h-5" />
+                <IconX className="w-5 h-5" />
                 Remove Icon
               </Button>
             )}

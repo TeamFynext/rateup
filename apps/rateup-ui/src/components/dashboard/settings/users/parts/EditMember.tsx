@@ -1,22 +1,22 @@
 // Extracted verbatim from `UsersPage.tsx`. Behaviour is unchanged.
 
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  Clock,
-  Database,
-  Lock,
-  Mail,
-  MessageCircle,
-  MessageSquare,
-  Pencil,
-  Save,
-  Shield,
-  Trash2,
-  Upload,
-  User,
-  UserCog,
-  Zap,
-} from "lucide-react";
+  IconBolt,
+  IconClock,
+  IconDatabase,
+  IconDeviceFloppy,
+  IconLock,
+  IconMail,
+  IconMessage,
+  IconMessageCircle,
+  IconPencil,
+  IconShield,
+  IconTrash,
+  IconUpload,
+  IconUser,
+  IconUserCog,
+} from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -349,7 +349,7 @@ export function EditMember({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#2E5BFF] flex items-center justify-center">
-              <Pencil className="w-4 h-4 text-white" />
+              <IconPencil className="w-4 h-4 text-white" />
             </div>
             {translations("Edit User")}
           </DialogTitle>
@@ -374,7 +374,7 @@ export function EditMember({
                       <AvatarImage src={profileImage} />
                     ) : (
                       <AvatarFallback className="bg-[#2E5BFF] text-white">
-                        <User className="w-12 h-12" />
+                        <IconUser className="w-12 h-12" />
                       </AvatarFallback>
                     )}
                   </Avatar>
@@ -401,7 +401,7 @@ export function EditMember({
                       input.click();
                     }}
                   >
-                    <Upload className="w-3 h-3 mr-1.5" />
+                    <IconUpload className="w-3 h-3 mr-1.5" />
                     {translations("Change Photo")}
                   </Button>
                   <div className="flex items-center gap-2 mt-2">
@@ -478,7 +478,7 @@ export function EditMember({
                     </FieldLabel>
                     <InputGroup className="h-9">
                       <InputGroupAddon>
-                        <Mail />
+                        <IconMail />
                       </InputGroupAddon>
                       <InputGroupInput
                         id="edit-email"
@@ -492,7 +492,7 @@ export function EditMember({
                   <Field className="gap-1.5">
                     <FieldTitle className="text-xs">{translations("Last Active")}</FieldTitle>
                     <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                      <IconClock className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">
                         {selectedUser.lastActive || translations("Not available")}
                       </span>
@@ -555,7 +555,7 @@ export function EditMember({
                     <SelectContent>
                       <SelectItem value={UserRole.SUPADM}>
                         <div className="flex items-center gap-2">
-                          <Shield className="w-3.5 h-3.5 text-primary" />
+                          <IconShield className="w-3.5 h-3.5 text-primary" />
                           <span>{translations("Super Admin")}</span>
                           <Badge className="bg-primary text-[10px] h-4 px-1.5">
                             {translations("Full Access")}
@@ -564,7 +564,7 @@ export function EditMember({
                       </SelectItem>
                       <SelectItem value={UserRole.ADM}>
                         <div className="flex items-center gap-2">
-                          <UserCog className="w-3.5 h-3.5 text-rateup-orange" />
+                          <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
                           <span>{translations("Admin")}</span>
                           <Badge className="bg-rateup-orange text-[10px] h-4 px-1.5">
                             {translations("Team Lead")}
@@ -573,7 +573,7 @@ export function EditMember({
                       </SelectItem>
                       <SelectItem value={UserRole.MEMBER}>
                         <div className="flex items-center gap-2">
-                          <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+                          <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
                           <span>{translations("Staff")}</span>
                           <Badge className="bg-green-600 text-[10px] h-4 px-1.5">
                             {translations("Support")}
@@ -605,7 +605,7 @@ export function EditMember({
                   </FieldLegend>
                   <FieldGroup className="gap-2 p-3 bg-muted rounded-lg border">
                     <Field orientation="horizontal" data-disabled>
-                      <MessageSquare className="w-4 h-4 shrink-0 text-primary" />
+                      <IconMessage className="w-4 h-4 shrink-0 text-primary" />
                       <FieldContent>
                         <FieldLabel htmlFor="perm-inbox" className="font-normal">
                           {translations("Access to Inbox")}
@@ -618,7 +618,7 @@ export function EditMember({
                     </Field>
                     <Separator />
                     <Field orientation="horizontal" data-disabled>
-                      <Zap className="w-4 h-4 shrink-0 text-rateup-orange" />
+                      <IconBolt className="w-4 h-4 shrink-0 text-rateup-orange" />
                       <FieldContent>
                         <FieldLabel htmlFor="perm-automations" className="font-normal">
                           {translations("Manage Automations")}
@@ -631,7 +631,7 @@ export function EditMember({
                     </Field>
                     <Separator />
                     <Field orientation="horizontal" data-disabled>
-                      <Database className="w-4 h-4 shrink-0 text-green-600" />
+                      <IconDatabase className="w-4 h-4 shrink-0 text-green-600" />
                       <FieldContent>
                         <FieldLabel htmlFor="perm-analytics" className="font-normal">
                           {translations("View Analytics")}
@@ -675,7 +675,7 @@ export function EditMember({
 
               <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" />
+                  <IconLock className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <h4 className="text-sm text-orange-700 mb-1">
                       {translations("Password Reset")}
@@ -689,7 +689,7 @@ export function EditMember({
                       className="border-orange-300 hover:bg-orange-100"
                       disabled
                     >
-                      <Mail className="w-3.5 h-3.5 mr-1.5" />
+                      <IconMail className="w-3.5 h-3.5 mr-1.5" />
                       {translations("Send Reset Link")}
                     </Button>
                   </div>
@@ -700,7 +700,7 @@ export function EditMember({
 
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <Trash2 className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+                  <IconTrash className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <h4 className="text-sm text-red-700 mb-1">
                       {translations("Delete User Account")}
@@ -716,7 +716,7 @@ export function EditMember({
                       disabled={updateActiveStatus.isPending}
                       onClick={handleDeleteUser}
                     >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                      <IconTrash className="w-3.5 h-3.5 mr-1.5" />
                       {updateActiveStatus.isPending
                         ? translations("Deleting")
                         : translations("Delete User")}
@@ -737,7 +737,7 @@ export function EditMember({
             onClick={handleSaveProfile}
             disabled={updateProfile.isPending || updateMemberProfile.isPending}
           >
-            <Save className="w-4 h-4 mr-2" />
+            <IconDeviceFloppy className="w-4 h-4 mr-2" />
             {updateProfile.isPending || updateMemberProfile.isPending
               ? translations("Saving")
               : translations("Save Changes")}

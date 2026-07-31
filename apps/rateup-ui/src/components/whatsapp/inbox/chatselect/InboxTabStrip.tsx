@@ -1,14 +1,14 @@
-import { Link } from "@tanstack/react-router";
 import {
-  AtSign,
-  CircleCheck,
-  Inbox,
-  Layers,
-  ShieldAlert,
-  Sparkles,
-  Star,
-  UserCheck,
-} from "lucide-react";
+  IconAt,
+  IconCircleCheck,
+  IconInbox,
+  IconShieldExclamation,
+  IconSparkles,
+  IconStack2,
+  IconStar,
+  IconUserCheck,
+} from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils.ts";
@@ -23,14 +23,14 @@ import { useChatContactCountStore } from "@/store/inbox.store.ts";
  * differs, so nothing here can disagree with the rail.
  */
 const TABS = [
-  { value: "open", label: "Open", icon: Inbox, countKey: "openCount" },
-  { value: "new", label: "New", icon: Sparkles, countKey: "newCount" },
-  { value: "closed", label: "Closed", icon: CircleCheck, countKey: "closedCount" },
-  { value: "all", label: "All", icon: Layers, countKey: "allCount" },
-  { value: "mine", label: "Mine", icon: UserCheck, countKey: "mineCount" },
-  { value: "mentions", label: "@Mentions", icon: AtSign, countKey: "mentionsCount" },
-  { value: "favourites", label: "Favourites", icon: Star, countKey: "favouriteCount" },
-  { value: "spam", label: "Spam", icon: ShieldAlert, countKey: "spamCount" },
+  { value: "open", label: "Open", icon: IconInbox, countKey: "openCount" },
+  { value: "new", label: "New", icon: IconSparkles, countKey: "newCount" },
+  { value: "closed", label: "Closed", icon: IconCircleCheck, countKey: "closedCount" },
+  { value: "all", label: "All", icon: IconStack2, countKey: "allCount" },
+  { value: "mine", label: "Mine", icon: IconUserCheck, countKey: "mineCount" },
+  { value: "mentions", label: "@Mentions", icon: IconAt, countKey: "mentionsCount" },
+  { value: "favourites", label: "Favourites", icon: IconStar, countKey: "favouriteCount" },
+  { value: "spam", label: "Spam", icon: IconShieldExclamation, countKey: "spamCount" },
 ] as const;
 
 export default function InboxTabStrip({ tab }: Readonly<{ tab: string }>) {

@@ -1,20 +1,20 @@
 // Extracted verbatim from the `/dashboard/loyalty/customers/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import type { ColumnDef } from "@tanstack/react-table";
 import {
-  ArrowLeft,
-  ChevronRight,
-  Copy,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Filter,
-  Link,
-  Loader2,
-  Phone,
-  Search,
-} from "lucide-react";
+  IconArrowLeft,
+  IconChevronRight,
+  IconCopy,
+  IconDownload,
+  IconFileSpreadsheet,
+  IconFileText,
+  IconFilter,
+  IconLink,
+  IconLoader2,
+  IconPhone,
+  IconSearch,
+} from "@tabler/icons-react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -159,7 +159,7 @@ export function CustomerPage() {
           <div>
             <p className="font-semibold text-sm">{row.getValue("customerName")}</p>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Phone className="w-3 h-3" />
+              <IconPhone className="w-3 h-3" />
               {row.original.contact?.phone}
             </p>
           </div>
@@ -236,7 +236,7 @@ export function CustomerPage() {
             }}
             title={t("Copy referral code")}
           >
-            <Copy className="w-3.5 h-3.5 text-primary" />
+            <IconCopy className="w-3.5 h-3.5 text-primary" />
           </Button>
           <Button
             variant="ghost"
@@ -253,7 +253,7 @@ export function CustomerPage() {
             }}
             title={t("Copy referral link")}
           >
-            <Link className="w-3.5 h-3.5 text-primary" />
+            <IconLink className="w-3.5 h-3.5 text-primary" />
           </Button>
         </div>
       ),
@@ -271,7 +271,7 @@ export function CustomerPage() {
           }}
         >
           {t("View")}
-          <ChevronRight className="w-4 h-4 ml-1" />
+          <IconChevronRight className="w-4 h-4 ml-1" />
         </Button>
       ),
     },
@@ -300,19 +300,19 @@ export function CustomerPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger render={<Button disabled={exportMutation.isPending} />}>
                   {exportMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <Download className="w-4 h-4 mr-2" />
+                    <IconDownload className="w-4 h-4 mr-2" />
                   )}
                   {t("Export Data")}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => exportMutation.mutate("csv")}>
-                    <FileText className="w-4 h-4 mr-2" />
+                    <IconFileText className="w-4 h-4 mr-2" />
                     {t("Export as CSV")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportMutation.mutate("excel")}>
-                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    <IconFileSpreadsheet className="w-4 h-4 mr-2" />
                     {t("Export as Excel")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -324,7 +324,7 @@ export function CustomerPage() {
           {/* Search and Filter */}
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t("Search by name or phone...")}
                 className="pl-9"
@@ -333,7 +333,7 @@ export function CustomerPage() {
               />
             </div>
             <Button variant="outline">
-              <Filter className="w-4 h-4 mr-2" />
+              <IconFilter className="w-4 h-4 mr-2" />
               {t("Filter")}
             </Button>
           </div>
@@ -351,7 +351,7 @@ export function CustomerPage() {
                 setSelectedCustomerId(null);
               }}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <IconArrowLeft className="w-4 h-4 mr-2" />
               {t("Back to Customers")}
             </Button>
             <CustomerDetailPanel

@@ -2,7 +2,17 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from "lucide-react";
+import {
+  IconBuilding,
+  IconCamera,
+  IconEdit,
+  IconGlobe,
+  IconHome,
+  IconMail,
+  IconMapPin,
+  IconPhone,
+  IconUpload,
+} from "@tabler/icons-react";
 import React, { useEffect, useRef, useState } from "react";
 
 import "react-phone-number-input/style.css";
@@ -314,7 +324,7 @@ export function AccountPage() {
                 onClick={() => setIsEditProfileDialogOpen(true)}
                 className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1.5 sm:p-2 shadow-md transition-all group-hover:scale-110"
               >
-                <Camera className="w-4 h-4 text-gray-600" />
+                <IconCamera className="w-4 h-4 text-gray-600" />
               </button>
             </div>
 
@@ -357,7 +367,7 @@ export function AccountPage() {
                     className="gap-2 w-full sm:w-auto mt-2 sm:mt-0"
                     onClick={() => setIsEditProfileDialogOpen(true)}
                   >
-                    <Edit className="w-4 h-4" />
+                    <IconEdit className="w-4 h-4" />
                     {translations("Edit")}
                   </Button>
                 </div>
@@ -371,7 +381,7 @@ export function AccountPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Building className="w-5 h-5 text-white" />
+              <IconBuilding className="w-5 h-5 text-white" />
             </div>
             <div>
               <h3 className="">{translations("Business Information")}</h3>
@@ -387,7 +397,7 @@ export function AccountPage() {
               className="gap-2"
               onClick={() => setIsBusinessDialogOpen(true)}
             >
-              <Edit className="w-4 h-4" />
+              <IconEdit className="w-4 h-4" />
               {translations("Edit")}
             </Button>
           )}
@@ -407,7 +417,7 @@ export function AccountPage() {
                 onClick={() => setIsBusinessDialogOpen(true)}
                 className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1 sm:p-1.5 shadow-md transition-all hover:scale-110"
               >
-                <Camera className="w-3 h-3 text-gray-600" />
+                <IconCamera className="w-3 h-3 text-gray-600" />
               </button>
             )}
           </div>
@@ -420,7 +430,7 @@ export function AccountPage() {
         {/* Detailed Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
           <div className="flex items-start gap-2.5">
-            <Phone className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconPhone className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Phone")}</p>
               <p className="text-gray-500">{orgPhone || "—"}</p>
@@ -428,7 +438,7 @@ export function AccountPage() {
           </div>
 
           <div className="flex items-start gap-2.5">
-            <Mail className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconMail className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Email")}</p>
               <p className="text-gray-500">{user?.onboarding?.businessmail || "—"}</p>
@@ -436,7 +446,7 @@ export function AccountPage() {
           </div>
 
           <div className="flex items-start gap-2.5">
-            <Globe className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconGlobe className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Website")}</p>
               <p className="text-gray-500">{user?.onboarding?.website || "—"}</p>
@@ -444,7 +454,7 @@ export function AccountPage() {
           </div>
 
           <div className="flex items-start gap-2.5">
-            <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconMapPin className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Location")}</p>
               <p className="text-gray-500">{user?.onboarding?.location || "—"}</p>
@@ -452,7 +462,7 @@ export function AccountPage() {
           </div>
 
           <div className="flex items-start gap-2.5 md:col-span-2">
-            <Home className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconHome className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Address")}</p>
               <p className="text-gray-500">{orgAddress || "—"}</p>
@@ -484,7 +494,7 @@ export function AccountPage() {
                   <div className="flex-1">
                     <FieldLabel htmlFor="orgLogoUpload" className="cursor-pointer">
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
-                        <Upload className="w-4 h-4" />
+                        <IconUpload className="w-4 h-4" />
                         <span className="text-sm">{translations("Upload Logo")}</span>
                       </div>
                       <input
@@ -690,7 +700,7 @@ export function AccountPage() {
       <Card className="p-5 shadow-sm border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <Globe className="w-4 h-4 text-white" />
+            <IconGlobe className="w-4 h-4 text-white" />
           </div>
           <div>
             <h4 className="mb-0">{translations("Regional Settings")}</h4>
@@ -731,7 +741,7 @@ export function AccountPage() {
                 <div className="flex-1">
                   <FieldLabel htmlFor="profileImageUpload" className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
-                      <Upload className="w-4 h-4" />
+                      <IconUpload className="w-4 h-4" />
                       <span className="text-sm">{translations("Upload Photo")}</span>
                     </div>
                     <input

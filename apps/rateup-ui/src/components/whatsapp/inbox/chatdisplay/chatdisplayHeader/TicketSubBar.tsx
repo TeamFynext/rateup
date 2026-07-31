@@ -1,4 +1,4 @@
-import { CircleCheckBig, Ticket } from "lucide-react";
+import { IconCircleCheck, IconTicket } from "@tabler/icons-react";
 
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 
@@ -23,7 +23,7 @@ export default function TicketSubBar({ contact }: Readonly<TicketSubBarProps>) {
     // h-9 with the divider on the bottom edge — matching the chat list's second
     // header row exactly, so this bar's line lands on the same y as that one.
     <div className="flex h-9 shrink-0 items-center gap-2.5 border-b border-border bg-muted px-5">
-      <Ticket className="size-3.5 shrink-0 text-muted-foreground" />
+      <IconTicket className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="shrink-0 font-mono text-[11px] text-muted-foreground mt-1">
         #{ticketNumber}
       </span>
@@ -33,7 +33,7 @@ export default function TicketSubBar({ contact }: Readonly<TicketSubBarProps>) {
       <span className="flex-1" />
       {resultLabel && (
         <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-green-600">
-          <CircleCheckBig className="size-3" />
+          <IconCircleCheck className="size-3" />
           {resultLabel}
         </span>
       )}

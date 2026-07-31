@@ -1,6 +1,6 @@
+import { IconCircleCheck } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
@@ -200,7 +200,7 @@ const PricingSection = ({
                   "Custom Integrations & SLA",
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16A34A]" />
+                    <IconCircleCheck className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16A34A]" />
                     <span className="text-sm leading-snug text-gray-700">{item}</span>
                   </div>
                 ))}

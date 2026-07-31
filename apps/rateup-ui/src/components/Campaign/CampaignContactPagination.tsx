@@ -1,10 +1,10 @@
 import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  MoreHorizontal,
-} from "lucide-react";
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
+  IconDots,
+} from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -77,7 +77,7 @@ const StatePagination = ({
         onClick={() => goTo(0)}
         aria-label="First page"
       >
-        <ChevronsLeft className="h-4 w-4" />
+        <IconChevronsLeft className="h-4 w-4" />
       </Button>
 
       {/* Previous */}
@@ -89,7 +89,7 @@ const StatePagination = ({
         onClick={() => goTo(pageIndex - 1)}
         aria-label="Previous page"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <IconChevronLeft className="h-4 w-4" />
       </Button>
 
       {/* Page numbers with ellipsis */}
@@ -99,7 +99,7 @@ const StatePagination = ({
             key={`ellipsis-${i}`}
             className="flex items-center justify-center h-8 w-8 text-sm text-muted-foreground"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <IconDots className="h-4 w-4" />
           </span>
         ) : (
           <Button
@@ -125,7 +125,7 @@ const StatePagination = ({
         onClick={() => goTo(pageIndex + 1)}
         aria-label="Next page"
       >
-        <ChevronRight className="h-4 w-4" />
+        <IconChevronRight className="h-4 w-4" />
       </Button>
 
       {/* Last */}
@@ -137,7 +137,7 @@ const StatePagination = ({
         onClick={() => goTo(totalPageCount - 1)}
         aria-label="Last page"
       >
-        <ChevronsRight className="h-4 w-4" />
+        <IconChevronsRight className="h-4 w-4" />
       </Button>
 
       {/* Page size selector — inline, right after nav */}

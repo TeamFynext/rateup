@@ -1,7 +1,6 @@
 // Extracted verbatim from `InstagramDashboard.tsx`. Behaviour is unchanged.
 
-import { IconPlus, IconRobot } from "@tabler/icons-react";
-import { AlertCircle } from "lucide-react";
+import { IconAlertCircle, IconPlus, IconRobot } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -97,7 +96,7 @@ export function ChatbotsTab() {
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <AlertCircle className="size-5" />
+                <IconAlertCircle className="size-5" />
               </EmptyMedia>
               <EmptyTitle>{t("Failed to load chatbots")}</EmptyTitle>
               <EmptyDescription>{t("Something went wrong. Please try again.")}</EmptyDescription>

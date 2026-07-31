@@ -1,4 +1,4 @@
-import { RotateCcwIcon, Trash2Icon, UploadIcon } from "lucide-react";
+import { IconRotate, IconTrash, IconUpload } from "@tabler/icons-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -98,7 +98,7 @@ export function FileUploadButton({
         {...fileButton}
       >
         {error || (fileSrc ? "Replace" : `Select ${type}`)}
-        <UploadIcon />
+        <IconUpload />
       </Button>
       <Button
         type="button"
@@ -109,7 +109,7 @@ export function FileUploadButton({
         className="text-destructive"
         {...resetButton}
       >
-        {fileSrc ? <Trash2Icon /> : <RotateCcwIcon />}
+        {fileSrc ? <IconTrash /> : <IconRotate />}
       </Button>
       {rightSection}
     </div>

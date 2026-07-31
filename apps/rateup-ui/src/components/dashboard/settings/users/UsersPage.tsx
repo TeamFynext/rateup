@@ -2,23 +2,23 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Check,
-  CheckCircle,
-  Copy,
-  Mail,
-  MessageCircle,
-  Pencil,
-  Plus,
-  Search,
-  Shield,
-  Trash2,
-  Upload,
-  User,
-  UserCog,
-  Users,
-} from "lucide-react";
+  IconCheck,
+  IconCircleCheck,
+  IconCopy,
+  IconMail,
+  IconMessageCircle,
+  IconPencil,
+  IconPlus,
+  IconSearch,
+  IconShield,
+  IconTrash,
+  IconUpload,
+  IconUser,
+  IconUserCog,
+  IconUsers,
+} from "@tabler/icons-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -246,7 +246,7 @@ export function UsersPage() {
             }}
           >
             <DialogTrigger render={<Button className="h-10 shrink-0" />}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Add New User")}
             </DialogTrigger>
 
@@ -254,7 +254,7 @@ export function UsersPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-                    <Plus className="w-4 h-4 text-white" />
+                    <IconPlus className="w-4 h-4 text-white" />
                   </div>
                   {translations("Add New User")}
                 </DialogTitle>
@@ -275,7 +275,7 @@ export function UsersPage() {
                         <AvatarImage src={newUserProfileImage} />
                       ) : (
                         <AvatarFallback className="bg-primary text-white">
-                          <User className="w-12 h-12" />
+                          <IconUser className="w-12 h-12" />
                         </AvatarFallback>
                       )}
                     </Avatar>
@@ -301,7 +301,7 @@ export function UsersPage() {
                         input.click();
                       }}
                     >
-                      <Upload className="w-3 h-3 mr-1.5" />
+                      <IconUpload className="w-3 h-3 mr-1.5" />
                       {translations("Upload")}
                     </Button>
                   </div>
@@ -356,7 +356,7 @@ export function UsersPage() {
                           </FieldLabel>
                           <InputGroup className="h-9">
                             <InputGroupAddon>
-                              <Mail />
+                              <IconMail />
                             </InputGroupAddon>
                             <InputGroupInput
                               {...field}
@@ -390,7 +390,7 @@ export function UsersPage() {
                           <SelectContent>
                             <SelectItem value={UserRole.SUPADM}>
                               <div className="flex items-center gap-2">
-                                <Shield className="w-3.5 h-3.5 text-primary" />
+                                <IconShield className="w-3.5 h-3.5 text-primary" />
                                 <span>{translations("Super Admin")}</span>
                                 <Badge className="bg-primary text-[10px] h-4 px-1.5">
                                   {translations("Full Access")}
@@ -399,7 +399,7 @@ export function UsersPage() {
                             </SelectItem>
                             <SelectItem value={UserRole.ADM}>
                               <div className="flex items-center gap-2">
-                                <UserCog className="w-3.5 h-3.5 text-rateup-orange" />
+                                <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
                                 <span>{translations("Admin")}</span>
                                 <Badge className="bg-rateup-orange text-[10px] h-4 px-1.5">
                                   {translations("Team Lead")}
@@ -408,7 +408,7 @@ export function UsersPage() {
                             </SelectItem>
                             <SelectItem value={UserRole.MEMBER}>
                               <div className="flex items-center gap-2">
-                                <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+                                <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
                                 <span>{translations("Staff")}</span>
                                 <Badge className="bg-green-600 text-[10px] h-4 px-1.5">
                                   {translations("Support")}
@@ -494,7 +494,7 @@ export function UsersPage() {
                     {translations("Cancel")}
                   </Button>
                   <Button type="submit" disabled={addResourceMutation.isPending}>
-                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <IconCircleCheck className="w-4 h-4 mr-2" />
                     {addResourceMutation.isPending
                       ? translations("Inviting")
                       : translations("Invite User")}
@@ -505,7 +505,7 @@ export function UsersPage() {
           </Dialog>
 
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <IconSearch className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={translations("Search users by name or email")}
               className="pl-10 h-10"
@@ -548,7 +548,7 @@ export function UsersPage() {
                     <Badge className="text-[10px] h-5 px-2 mb-2">{member.role}</Badge>
 
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
-                      <Users className="w-3 h-3" />
+                      <IconUsers className="w-3 h-3" />
 
                       <Tooltip>
                         <TooltipTrigger
@@ -594,7 +594,7 @@ export function UsersPage() {
                         setIsEditUserDialogOpen(true);
                       }}
                     >
-                      <Pencil className="w-3 h-3 mr-1" />
+                      <IconPencil className="w-3 h-3 mr-1" />
                       {translations("Edit Profile")}
                     </Button>
                   </div>
@@ -622,7 +622,11 @@ export function UsersPage() {
                     aria-label={translations("Copy")}
                     title={copied ? translations("Copied") : translations("Copy")}
                   >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? (
+                      <IconCheck className="w-4 h-4" />
+                    ) : (
+                      <IconCopy className="w-3.5 h-3.5" />
+                    )}
                   </button>
 
                   <div className="flex flex-col items-center text-center justify-center gap-1">
@@ -642,7 +646,7 @@ export function UsersPage() {
                       {invite.status}
                     </Badge>
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
-                      <Users className="w-3 h-3" />
+                      <IconUsers className="w-3 h-3" />
                       <span className="line-clamp-1">
                         {invite.teams.map((t) => t.team_name).join(", ")}
                       </span>
@@ -658,7 +662,7 @@ export function UsersPage() {
                       }}
                       disabled={resendInviteMutation.isPending}
                     >
-                      <Mail className="w-3 h-3 mr-1" />
+                      <IconMail className="w-3 h-3 mr-1" />
                       {translations("Resend Invite")}
                     </Button>
                     <Button
@@ -671,7 +675,7 @@ export function UsersPage() {
                       }}
                       disabled={deleteInviteMutation.isPending}
                     >
-                      <Trash2 className="w-3 h-3 mr-1" />
+                      <IconTrash className="w-3 h-3 mr-1" />
                       {translations("Delete Invite")}
                     </Button>
                   </div>

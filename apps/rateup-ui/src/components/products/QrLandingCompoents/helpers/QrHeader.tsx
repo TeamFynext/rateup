@@ -1,6 +1,6 @@
+import { IconMenu, IconX } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -68,7 +68,7 @@ const QrHeader = () => {
                text-gray-700 hover:text-[#1c518e] transition-colors duration-300"
               onClick={toggleMenu}
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? <IconX className="h-6 w-6" /> : <IconMenu className="h-6 w-6" />}
             </button>
           </div>
         </div>

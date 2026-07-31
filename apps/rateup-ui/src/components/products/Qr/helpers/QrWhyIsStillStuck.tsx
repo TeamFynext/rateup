@@ -1,27 +1,32 @@
-import { IconArrowDown } from "@tabler/icons-react";
-import { ClockIcon, EyeOffIcon, ScrollTextIcon, TrendingDownIcon } from "lucide-react";
+import {
+  IconArrowDown,
+  IconClock,
+  IconEyeOff,
+  IconScript,
+  IconTrendingDown,
+} from "@tabler/icons-react";
 import { motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 function QrWhyIsStillStuck() {
   const problems = [
     {
-      icon: <TrendingDownIcon className="w-10 h-10" color="#343A40" />,
+      icon: <IconTrendingDown className="w-10 h-10" color="#343A40" />,
       title: "Low Participation",
       description: "Customers rarely bother to write feedback manually.",
     },
     {
-      icon: <ClockIcon className="text-gray-700 w-10 h-10" />,
+      icon: <IconClock className="text-gray-700 w-10 h-10" />,
       title: "Time-Consuming",
       description: "It's hard to compile, read, and find patterns in handwritten notes.",
     },
     {
-      icon: <EyeOffIcon className="text-gray-700 w-10 h-10" />,
+      icon: <IconEyeOff className="text-gray-700 w-10 h-10" />,
       title: "No Visibility",
       description: "No way to track or escalate serious issues, especially when you're not there.",
     },
     {
-      icon: <ScrollTextIcon className="text-gray-700 w-10 h-10" />,
+      icon: <IconScript className="text-gray-700 w-10 h-10" />,
       title: "Manual Work",
       description: "Paper registers are hard to maintain, store, and audit.",
     },

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconBriefcase, IconSparkles, IconUserPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Briefcase, Sparkles, UserPlus } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -123,21 +123,21 @@ function AuthTypeSignupForm({
       case 1:
         return (
           <div className="text-primary flex items-center gap-1">
-            <UserPlus size={12} strokeWidth={2.5} />
+            <IconUserPlus size={12} strokeWidth={2.5} />
             <span className="text-xs">Get started</span>
           </div>
         );
       case 2:
         return (
           <div className="text-primary flex items-center gap-1">
-            <Briefcase size={12} strokeWidth={2.5} />
+            <IconBriefcase size={12} strokeWidth={2.5} />
             <span className="text-xs">Your business</span>
           </div>
         );
       case 3:
         return (
           <div className="text-primary flex items-center gap-1">
-            <Sparkles size={12} strokeWidth={2.5} />
+            <IconSparkles size={12} strokeWidth={2.5} />
             <span className="text-xs">Personalize</span>
           </div>
         );

@@ -2,9 +2,9 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -509,7 +509,7 @@ export function LoyaltySettingsPage() {
   if (isProgramLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <IconLoader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
@@ -716,7 +716,7 @@ export function LoyaltySettingsPage() {
               onClick={handleDeleteProgram}
             >
               {deleteProgramMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
               {t("Delete Program")}
             </Button>

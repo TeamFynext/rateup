@@ -1,6 +1,5 @@
+import { IconDotsVertical, IconEdit, IconShare2, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Edit, Share2, Trash2 } from "lucide-react";
-import { MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { TestimonialCollectionSummary } from "@/backend/testimonials/testimonial.api.ts";
@@ -63,19 +62,19 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
   const actions = (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
-        <MoreVertical className="w-4 h-4" />
+        <IconDotsVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleEdit}>
-          <Edit className="w-4 h-4 mr-2" />
+          <IconEdit className="w-4 h-4 mr-2" />
           {translations("Edit")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleShare}>
-          <Share2 className="w-4 h-4 mr-2" />
+          <IconShare2 className="w-4 h-4 mr-2" />
           {translations("Share")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-          <Trash2 className="w-4 h-4 mr-2" />
+          <IconTrash className="w-4 h-4 mr-2" />
           {translations("Delete")}
         </DropdownMenuItem>
       </DropdownMenuContent>

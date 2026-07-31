@@ -1,4 +1,4 @@
-import { CircleCheck, Users } from "lucide-react";
+import { IconCircleCheck, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -61,7 +61,7 @@ const ApplyLifecycletoContactsModal = ({
           <DialogDescription>{t("Update Lifecycle Stage of Contacts")}</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 text-muted-foreground">
-          <Users className="w-5 h-5" />{" "}
+          <IconUsers className="w-5 h-5" />{" "}
           <span>
             {contactIds.length} {t("contacts selected")}
           </span>
@@ -75,7 +75,7 @@ const ApplyLifecycletoContactsModal = ({
             {t("Cancel")}
           </Button>
           <Button onClick={handleUpdateLifecycleStage}>
-            {update.isPending ? <Spinner /> : <CircleCheck />}
+            {update.isPending ? <Spinner /> : <IconCircleCheck />}
             {t("Update")}
           </Button>
         </DialogFooter>

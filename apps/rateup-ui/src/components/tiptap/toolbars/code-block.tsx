@@ -1,6 +1,6 @@
 "use client";
 
-import { Code } from "lucide-react";
+import { IconCode } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const CodeBlockToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProp
             />
           }
         >
-          {children ?? <Code className="h-4 w-4" />}
+          {children ?? <IconCode className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Code Block</span>

@@ -1,5 +1,4 @@
-import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
-import { Star } from "lucide-react";
+import { IconStar, IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
@@ -135,7 +134,7 @@ const SurveyResultByType = ({
               label: (
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: Number(item.choice) }, (_, i) => (
-                    <Star key={i} className="size-4 fill-blue-500 text-blue-500" />
+                    <IconStar key={i} className="size-4 fill-blue-500 text-blue-500" />
                   ))}
                 </div>
               ),

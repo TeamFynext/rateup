@@ -1,4 +1,4 @@
-import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useRef, useState } from "react";
 import type { FieldValues, Resolver } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
@@ -288,7 +288,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
             onClick={submitAdd}
             disabled={fileUploadLoading}
           >
-            <PlusIcon />
+            <IconPlus />
             {translations("Add choice")}
           </Button>
         </div>
@@ -425,7 +425,7 @@ function ChoiceRow({
         </div>
       </div>
       <Button variant="ghost" size="icon-sm" onClick={openEditModal} disabled={disabled}>
-        <PencilIcon />
+        <IconPencil />
       </Button>
       <Button
         variant="ghost"
@@ -434,7 +434,7 @@ function ChoiceRow({
         onClick={onDelete}
         disabled={disabled}
       >
-        <Trash2Icon />
+        <IconTrash />
       </Button>
       <Dialog open={openedEditModal} onOpenChange={(open) => !open && closeEditModal()}>
         <DialogContent>

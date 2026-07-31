@@ -1,4 +1,4 @@
-import { Globe, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { IconGlobe, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
@@ -34,7 +34,7 @@ export function WebsitesPanel({ waSettingsId }: { waSettingsId: string }) {
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>Websites ({websites?.length ?? 0})</CardTitle>
         <Button variant="outline" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
-          <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+          <IconRefresh data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
           Sync crawl status
         </Button>
       </CardHeader>
@@ -55,7 +55,7 @@ export function WebsitesPanel({ waSettingsId }: { waSettingsId: string }) {
               disabled={!url || createWebsite.isPending}
               onClick={() => createWebsite.mutate(url, { onSuccess: () => setUrl("") })}
             >
-              <Plus data-icon="inline-start" />
+              <IconPlus data-icon="inline-start" />
               Add
             </Button>
           </Field>
@@ -78,7 +78,7 @@ export function WebsitesPanel({ waSettingsId }: { waSettingsId: string }) {
           {websites?.map((site) => (
             <div key={site.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
-                <Globe className="shrink-0 text-muted-foreground" />
+                <IconGlobe className="shrink-0 text-muted-foreground" />
                 <span className="truncate text-sm">{site.url}</span>
                 <Badge variant={STATUS_VARIANT[site.crawlStatus ?? "pending"]}>
                   {site.crawlStatus ?? "pending"}
@@ -94,7 +94,7 @@ export function WebsitesPanel({ waSettingsId }: { waSettingsId: string }) {
                 disabled={deleteWebsite.isPending}
                 onClick={() => deleteWebsite.mutate(site.id)}
               >
-                <Trash2 className="text-destructive" />
+                <IconTrash className="text-destructive" />
               </Button>
             </div>
           ))}

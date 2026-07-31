@@ -1,5 +1,5 @@
+import { IconCookie } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { CookieIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -68,7 +68,7 @@ export function CookieConsent({
         <div className="grid gap-2">
           <div className="border-b border-border h-12 sm:h-14 flex items-center justify-between p-3 sm:p-4">
             <h6 className="text-base sm:text-lg font-medium text-black">Cookie Preferences</h6>
-            <CookieIcon className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem]" />
+            <IconCookie className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem]" />
           </div>
           <div className="p-3 sm:p-4">
             <p className="text-xs sm:text-sm font-normal text-start text-muted-foreground">
@@ -110,7 +110,7 @@ export function CookieConsent({
       <div className="m-0 sm:m-3 dark:bg-card bg-background border border-border rounded-lg shadow-lg">
         <div className="flex items-center justify-between p-3">
           <h6 className="text-base sm:text-lg font-medium text-black">Cookie Preferences</h6>
-          <CookieIcon className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] text-black" />
+          <IconCookie className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] text-black" />
         </div>
         <div className="p-3 -mt-2">
           <p className="text-xs sm:text-sm text-left text-muted-foreground">
@@ -145,7 +145,7 @@ export function CookieConsent({
         <div className="m-0 sm:m-3 dark:bg-card bg-background border border-border rounded-lg shadow-lg">
           <div className="p-3 flex items-center justify-between border-b border-border">
             <div className="flex items-center gap-2">
-              <CookieIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <IconCookie className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="text-xs sm:text-sm font-medium">Cookie Notice</span>
             </div>
           </div>

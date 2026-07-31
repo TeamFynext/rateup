@@ -1,13 +1,13 @@
 import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Plug,
-  PlayCircle,
-  Rocket,
-  Settings2,
-  Sparkles,
-} from "lucide-react";
+  IconArrowLeft,
+  IconArrowRight,
+  IconBook,
+  IconPlayerPlay,
+  IconPlug,
+  IconRocket,
+  IconSettings2,
+  IconSparkles,
+} from "@tabler/icons-react";
 import { useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -47,31 +47,31 @@ const SECTIONS = [
   {
     id: "knowledge",
     label: "Knowledge",
-    icon: BookOpen,
+    icon: IconBook,
     description: "Business info, FAQs, files & websites the agent can draw answers from.",
   },
   {
     id: "skills",
     label: "Skills",
-    icon: Sparkles,
+    icon: IconSparkles,
     description: "Custom capabilities the agent is allowed to perform in a conversation.",
   },
   {
     id: "connectors",
     label: "Connectors",
-    icon: Plug,
+    icon: IconPlug,
     description: "External APIs and tools the agent can call for live data.",
   },
   {
     id: "settings",
     label: "Settings",
-    icon: Settings2,
+    icon: IconSettings2,
     description: "Rollout percentage, human handoff rules, and audience targeting.",
   },
   {
     id: "operate",
     label: "Operate",
-    icon: PlayCircle,
+    icon: IconPlayerPlay,
     description: "Test conversations, inspect events, and pause or resume the agent.",
   },
 ] as const;
@@ -91,7 +91,7 @@ export function MetaAgentPage() {
       <div className="flex flex-wrap items-end justify-between gap-4 border-b pb-5">
         <div className="flex flex-col gap-2">
           <Badge variant="secondary" className="w-fit">
-            <Rocket data-icon="inline-start" />
+            <IconRocket data-icon="inline-start" />
             Meta Business Agent
           </Badge>
           <h1 className="text-2xl font-semibold tracking-tight">AI Agent for WhatsApp</h1>
@@ -127,7 +127,7 @@ export function MetaAgentPage() {
         <Empty className="rounded-xl border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <Rocket />
+              <IconRocket />
             </EmptyMedia>
             <EmptyTitle>No WhatsApp channel connected</EmptyTitle>
             <EmptyDescription>
@@ -164,7 +164,7 @@ export function MetaAgentPage() {
                       <CardTitle className="mt-2">{s.label}</CardTitle>
                       <CardDescription>{s.description}</CardDescription>
                       <CardAction>
-                        <ArrowRight className="size-4 text-muted-foreground" />
+                        <IconArrowRight className="size-4 text-muted-foreground" />
                       </CardAction>
                     </CardHeader>
                   </Card>
@@ -174,7 +174,7 @@ export function MetaAgentPage() {
           ) : (
             <div className="space-y-4">
               <Button variant="ghost" size="sm" className="-ml-2" onClick={() => setSection(null)}>
-                <ArrowLeft data-icon="inline-start" />
+                <IconArrowLeft data-icon="inline-start" />
                 Back to overview
               </Button>
 

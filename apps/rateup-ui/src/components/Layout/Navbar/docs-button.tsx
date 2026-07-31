@@ -1,4 +1,4 @@
-import { BookOpen } from "lucide-react";
+import { IconBook } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -29,7 +29,7 @@ export default function DocsButton() {
           />
         }
       >
-        <BookOpen className="size-5" strokeWidth={1.8} />
+        <IconBook className="size-5" strokeWidth={1.8} />
       </TooltipTrigger>
       <TooltipContent side="right" align="center">
         {label}

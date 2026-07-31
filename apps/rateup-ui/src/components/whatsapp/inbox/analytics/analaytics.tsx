@@ -1,16 +1,16 @@
+import {
+  IconActivity,
+  IconAward,
+  IconChartBar,
+  IconChartLine,
+  IconFileText,
+  IconFilter,
+  IconRefresh,
+  IconSend,
+} from "@tabler/icons-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {
-  Activity,
-  Award,
-  BarChart,
-  FileText,
-  Filter,
-  LineChart,
-  RefreshCcw,
-  Send,
-} from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -92,37 +92,37 @@ const Analytics = () => {
     overview: {
       title: t("Overview"),
       description: t("Real-time overview of your team performance and activities"),
-      icon: <BarChart className="w-4 h-4 text-white" />,
+      icon: <IconChartBar className="w-4 h-4 text-white" />,
     },
 
     "agent-performance": {
       title: t("Agent Performance"),
       description: t("Track individual agent metrics, response times, and customer satisfaction"),
-      icon: <Award className="w-4 h-4 text-white" />,
+      icon: <IconAward className="w-4 h-4 text-white" />,
     },
 
     "team-performance": {
       title: t("Team Performance"),
       description: t("Monitor team-level statistics, collaboration, and productivity"),
-      icon: <Activity className="w-4 h-4 text-white" />,
+      icon: <IconActivity className="w-4 h-4 text-white" />,
     },
 
     "api-analytics": {
       title: t("API Analytics"),
       description: t("Analyze API usage, request patterns, and integration performance"),
-      icon: <LineChart className="w-4 h-4 text-white" />,
+      icon: <IconChartLine className="w-4 h-4 text-white" />,
     },
 
     "message-logs": {
       title: t("Message Logs"),
       description: t("Complete history of all messages sent via API, Inbox, and Campaigns"),
-      icon: <Send className="w-4 h-4 text-white" />,
+      icon: <IconSend className="w-4 h-4 text-white" />,
     },
 
     "team-activity": {
       title: t("Team Activity"),
       description: t("View detailed activity logs and actions performed by team members"),
-      icon: <FileText className="w-4 h-4 text-white" />,
+      icon: <IconFileText className="w-4 h-4 text-white" />,
     },
   };
   const headerConfig =
@@ -142,13 +142,13 @@ const Analytics = () => {
                 className="w-full sm:w-auto justify-center"
                 onClick={() => refresh()}
               >
-                <RefreshCcw className={`${isFetching ? "animate-spin" : ""} mr-1`} />
+                <IconRefresh className={`${isFetching ? "animate-spin" : ""} mr-1`} />
                 {t("Refresh")}
               </Button>
 
               <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-xs sm:text-sm text-muted-foreground flex gap-1 items-center">
-                  <Filter className="w-3 h-3" />
+                  <IconFilter className="w-3 h-3" />
                   {t("Filter by")}:
                 </span>
                 <DateRangeSelector value={dateRange} onChange={setDateRange} />
@@ -160,7 +160,7 @@ const Analytics = () => {
                   className="w-full sm:w-auto justify-center ml-2"
                   onClick={handleExport}
                 >
-                  <FileText className="mr-1" />
+                  <IconFileText className="mr-1" />
                   {t("Export")}
                 </Button>
               )}

@@ -1,9 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTrash, IconTypography } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 import type { Content } from "@tiptap/react";
 import { EditorContent } from "@tiptap/react";
-import { TypeOutline } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -471,7 +470,7 @@ const LoyaltyWaTemplateConfig = ({
                                     className="h-8 w-8 p-0"
                                     title="Format"
                                   >
-                                    <TypeOutline className="h-5 w-5" />
+                                    <IconTypography className="h-5 w-5" />
                                   </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-full">

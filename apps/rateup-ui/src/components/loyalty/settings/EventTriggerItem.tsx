@@ -1,4 +1,4 @@
-import { Loader2, Save } from "lucide-react";
+import { IconDeviceFloppy, IconLoader2 } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -84,9 +84,9 @@ export function EventTriggerItem({
           {isModified && (
             <Button size="sm" onClick={onSave} disabled={isPending || disabled} className="w-full">
               {isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <Save className="w-4 h-4 mr-2" />
+                <IconDeviceFloppy className="w-4 h-4 mr-2" />
               )}
               {t("Save")}
             </Button>

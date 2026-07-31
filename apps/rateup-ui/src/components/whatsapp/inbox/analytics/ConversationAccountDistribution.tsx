@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import { IconMessageCircle } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -40,7 +40,7 @@ const ConversationAccountDistribution = ({ dateRange }: { dateRange: AnalyticsDa
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <MessageCircle className="w-4 h-4 text-primary" />
+          <IconMessageCircle className="w-4 h-4 text-primary" />
           {t("Channel Distribution")}
         </CardTitle>
       </CardHeader>

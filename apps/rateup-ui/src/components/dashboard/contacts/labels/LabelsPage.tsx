@@ -1,7 +1,7 @@
 // Extracted verbatim from the `/dashboard/contacts/labels/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { Plus, Tag } from "lucide-react";
+import { IconPlus, IconTag } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 
 import {
@@ -129,7 +129,7 @@ export function LabelsPage() {
       {labels.length === 0 ? (
         <div className="grid place-content-center py-12 h-full">
           <div className="text-center">
-            <Tag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <IconTag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No labels yet</h3>
             <p className="text-gray-600 mb-4">
               Create your first label to start organizing contacts.
@@ -140,7 +140,7 @@ export function LabelsPage() {
                 setIsCreateModalOpen(true);
               }}
             >
-              <Plus data-icon="inline-start" />
+              <IconPlus data-icon="inline-start" />
               Create Label
             </Button>
           </div>

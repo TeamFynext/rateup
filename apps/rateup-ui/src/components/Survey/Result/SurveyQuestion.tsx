@@ -1,4 +1,4 @@
-import { Smile, Target, Users } from "lucide-react";
+import { IconMoodSmile, IconTarget, IconUsers } from "@tabler/icons-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
@@ -158,17 +158,17 @@ const SurveyQuestion = ({
                           {
                             label: "Responses",
                             value: responseCount,
-                            icon: <Users size={18} color="#2B82DE" />,
+                            icon: <IconUsers size={18} color="#2B82DE" />,
                           },
                           {
                             label: "NPS",
                             value: npsScore >= 0 ? `+${npsScore}` : npsScore,
-                            icon: <Target size={20} color="#2B82DE" />,
+                            icon: <IconTarget size={20} color="#2B82DE" />,
                           },
                           {
                             label: "Happiness Index",
                             value: happinessIndex,
-                            icon: <Smile size={20} color="#2B82DE" />,
+                            icon: <IconMoodSmile size={20} color="#2B82DE" />,
                           },
                         ].map((item) => (
                           <div

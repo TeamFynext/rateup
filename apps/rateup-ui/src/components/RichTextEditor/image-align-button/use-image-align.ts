@@ -1,10 +1,10 @@
+import {
+  IconLayoutAlignCenter,
+  IconLayoutAlignLeft,
+  IconLayoutAlignRight,
+} from "@tabler/icons-react";
 import { NodeSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
-import {
-  AlignCenterVerticalIcon,
-  AlignEndVerticalIcon,
-  AlignStartVerticalIcon,
-} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTiptapEditor } from "./image-align-button.tsx";
@@ -53,9 +53,9 @@ const IMAGE_ALIGN_SHORTCUT_KEYS: Record<ImageAlign, string> = {
 };
 
 const imageAlignIcons = {
-  left: AlignStartVerticalIcon,
-  center: AlignCenterVerticalIcon,
-  right: AlignEndVerticalIcon,
+  left: IconLayoutAlignLeft,
+  center: IconLayoutAlignCenter,
+  right: IconLayoutAlignRight,
 };
 
 const imageAlignLabels: Record<ImageAlign, string> = {

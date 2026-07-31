@@ -1,8 +1,15 @@
 // Extracted verbatim from the `/dashboard/contacts/groups/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconDotsVertical,
+  IconEdit,
+  IconFolder,
+  IconPlus,
+  IconTrash,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Edit, Folder, MoreVertical, Plus, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -101,7 +108,7 @@ export function GroupPage() {
                 setIsCreateGroupOpen(true);
               }}
             >
-              <Plus className="size-4" />
+              <IconPlus className="size-4" />
               {translations("Create Group")}
             </Button>
           </ListPageHeaderSection>
@@ -191,7 +198,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }: ContactGroupCardP
                 <AvatarImage src={getFileUrlFromKey(group.icon)} />
               </Avatar>
             ) : (
-              <Folder className="w-5 h-5" />
+              <IconFolder className="w-5 h-5" />
             )}
           </div>
           {group.name}
@@ -201,7 +208,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }: ContactGroupCardP
       content={
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-1">
-            <Users className="w-4 h-4 text-muted-foreground" />
+            <IconUsers className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">{group._count.contacts}</span>
           </div>
         </div>
@@ -223,7 +230,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
       <DropdownMenuTrigger
         render={<Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()} />}
       >
-        <MoreVertical className="w-4 h-4" />
+        <IconDotsVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
@@ -235,7 +242,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
               handleEdit(group);
             }}
           >
-            <Edit className="w-4 h-4 mr-2" />
+            <IconEdit className="w-4 h-4 mr-2" />
             Edit Group
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -245,7 +252,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
             }}
             className="text-red-600"
           >
-            <Trash2 className="w-4 h-4 mr-2 text-red-500" />
+            <IconTrash className="w-4 h-4 mr-2 text-red-500" />
             Delete Group
           </DropdownMenuItem>
         </DropdownMenuGroup>

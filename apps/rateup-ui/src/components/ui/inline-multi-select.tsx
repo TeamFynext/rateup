@@ -1,4 +1,4 @@
-import { CheckIcon } from "lucide-react";
+import { IconCheck } from "@tabler/icons-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -117,7 +117,7 @@ export function InlineMultiSelect({
                     )}
                   >
                     <span className="flex size-4 shrink-0 items-center justify-center rounded-sm border border-input">
-                      {checked && <CheckIcon className="size-3" />}
+                      {checked && <IconCheck className="size-3" />}
                     </span>
                     {option.label}
                   </button>

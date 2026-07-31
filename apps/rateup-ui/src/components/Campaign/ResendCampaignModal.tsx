@@ -1,5 +1,11 @@
+import {
+  IconAlertCircle,
+  IconCalendar,
+  IconChevronDown,
+  IconClock,
+  IconSend,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { AlertCircle, CalendarIcon, ChevronDownIcon, Clock, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -189,11 +195,11 @@ export const ResendCampaignModal = ({
             >
               <TabsList>
                 <TabsTrigger value="NOW">
-                  <Send />
+                  <IconSend />
                   {t("Send Now")}
                 </TabsTrigger>
                 <TabsTrigger value="SCHEDULED">
-                  <CalendarIcon />
+                  <IconCalendar />
                   {t("Schedule Later")}
                 </TabsTrigger>
               </TabsList>
@@ -210,11 +216,11 @@ export const ResendCampaignModal = ({
                         />
                       }
                     >
-                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      <IconCalendar className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-medium">
                         {scheduleDate ? dayjs(scheduleDate).format("MMMM D, YYYY") : t("Date")}
                       </span>
-                      <ChevronDownIcon className="w-4 h-4" />
+                      <IconChevronDown className="w-4 h-4" />
                     </PopoverTrigger>
 
                     <PopoverContent className="w-auto p-0" align="start">
@@ -236,7 +242,7 @@ export const ResendCampaignModal = ({
                     <FieldLabel htmlFor="resend-schedule-time" className="sr-only">
                       {t("Send time")}
                     </FieldLabel>
-                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <IconClock className="w-4 h-4 text-muted-foreground" />
                     <Input
                       id="resend-schedule-time"
                       type="time"
@@ -296,7 +302,7 @@ export const ResendCampaignModal = ({
                     role="alert"
                     className="text-xs text-destructive flex items-center gap-1.5"
                   >
-                    <AlertCircle className="w-3 h-3" />
+                    <IconAlertCircle className="w-3 h-3" />
                     {t("Enter a daily send limit of at least 1")}
                   </p>
                 ) : (
@@ -343,7 +349,7 @@ export const ResendCampaignModal = ({
 
               {selectedStatuses.length === 0 && (
                 <p className="text-xs text-destructive flex items-center gap-1.5">
-                  <AlertCircle className="w-3 h-3" />
+                  <IconAlertCircle className="w-3 h-3" />
                   {t("Select at least one status")}
                 </p>
               )}

@@ -3,13 +3,16 @@
 import {
   IconDeviceFloppy,
   IconFile,
+  IconFileAlert,
   IconMusic,
   IconPhoto,
+  IconRefresh,
+  IconTypography,
   IconUpload,
   IconVideo,
+  IconX,
 } from "@tabler/icons-react";
 import { EditorContent } from "@tiptap/react";
-import { FileWarningIcon, RefreshCwIcon, TypeOutline, XIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -226,7 +229,7 @@ export const MediaNodeEditor: React.FC<
               {loading ? (
                 <Spinner />
               ) : mediaError ? (
-                <FileWarningIcon />
+                <IconFileAlert />
               ) : isImage && previewSrc ? (
                 <img src={previewSrc} alt="Media preview" />
               ) : (
@@ -259,7 +262,7 @@ export const MediaNodeEditor: React.FC<
                       <TooltipTrigger
                         render={
                           <AttachmentAction aria-label="Replace file" onClick={props.onClick}>
-                            <RefreshCwIcon />
+                            <IconRefresh />
                           </AttachmentAction>
                         }
                       />
@@ -277,7 +280,7 @@ export const MediaNodeEditor: React.FC<
                         className="text-muted-foreground hover:text-destructive"
                         onClick={() => clearFile(!!typedData?.link)}
                       >
-                        <XIcon />
+                        <IconX />
                       </AttachmentAction>
                     }
                   />
@@ -353,7 +356,7 @@ export const MediaNodeEditor: React.FC<
                     <Popover>
                       <PopoverTrigger>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
-                          <TypeOutline className="h-5 w-5" />
+                          <IconTypography className="h-5 w-5" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full">

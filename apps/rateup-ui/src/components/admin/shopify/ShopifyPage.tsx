@@ -1,8 +1,14 @@
 // Extracted verbatim from the `/admin/shopify/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconBuilding,
+  IconBuildingStore,
+  IconCalendar,
+  IconShoppingBag,
+  IconTrash,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -49,7 +55,7 @@ export function ShopifyPage() {
       header: createSortableHeader("Shop"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Store className="h-4 w-4 text-muted-foreground" />
+          <IconBuildingStore className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("shop")}</span>
         </div>
       ),
@@ -60,7 +66,7 @@ export function ShopifyPage() {
       header: createSortableHeader("Organization ID"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <IconBuilding className="h-4 w-4 text-muted-foreground" />
           <div className="font-mono text-xs text-muted-foreground max-w-[200px] truncate">
             {row.getValue("orgId")}
           </div>
@@ -82,7 +88,7 @@ export function ShopifyPage() {
       header: createSortableHeader("Created At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -110,7 +116,7 @@ export function ShopifyPage() {
           }}
           className="h-8 w-8 p-0"
         >
-          <Trash2 className="h-4 w-4" />
+          <IconTrash className="h-4 w-4" />
         </Button>
       ),
       meta: { title: "Actions" },
@@ -145,7 +151,7 @@ export function ShopifyPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <ShoppingBag className="h-5 w-5 text-primary" />
+              <IconShoppingBag className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 {translations("Integrated Shopify")}
               </h1>
@@ -158,7 +164,7 @@ export function ShopifyPage() {
       <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <ShoppingBag className="h-4 w-4 text-blue-600" />
+            <IconShoppingBag className="h-4 w-4 text-blue-600" />
             <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
               Shopify Integration Management
             </CardTitle>

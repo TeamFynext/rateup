@@ -1,4 +1,4 @@
-import { ChevronDown, Loader2 } from "lucide-react";
+import { IconChevronDown, IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
@@ -44,9 +44,9 @@ function ComboBoxComponent({
           )}
         </span>
         {isLoading ? (
-          <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+          <IconLoader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
         ) : (
-          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+          <IconChevronDown className="size-4 shrink-0 text-muted-foreground" />
         )}
       </PopoverTrigger>
       <PopoverContent className="min-w-[18.75rem] overflow-hidden p-0" align="start" side="bottom">

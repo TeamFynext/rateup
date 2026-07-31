@@ -1,9 +1,8 @@
-import { IconDeviceMobile, IconWorld } from "@tabler/icons-react";
-import { QrCode } from "lucide-react";
+import { IconDeviceMobile, IconQrcode, IconWorld } from "@tabler/icons-react";
 
 export const cardData = [
   {
-    icon: <QrCode className="w-8 h-8 text-[#009987]" />,
+    icon: <IconQrcode className="w-8 h-8 text-[#009987]" />,
     value: "5-25x",
     label: "Generate Your QR Code ",
     description:

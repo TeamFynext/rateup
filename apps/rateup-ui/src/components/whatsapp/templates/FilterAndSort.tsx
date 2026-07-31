@@ -1,4 +1,4 @@
-import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { IconAdjustmentsHorizontal, IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
@@ -46,7 +46,7 @@ function OptionRow({
       )}
     >
       {label}
-      {active && <Check className="h-3.5 w-3.5 shrink-0" />}
+      {active && <IconCheck className="h-3.5 w-3.5 shrink-0" />}
     </button>
   );
 }
@@ -90,7 +90,7 @@ function FilterSection({
               {hint.toLowerCase()}
             </span>
           )}
-          <ChevronDown
+          <IconChevronDown
             className={cn(
               "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
               isOpen && "rotate-180",
@@ -156,7 +156,7 @@ export function TemplateFilterSort({
             />
           }
         >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
+          <IconAdjustmentsHorizontal className="h-3.5 w-3.5" />
           Filter
           <ActiveBadge count={activeFilterCount} />
         </PopoverTrigger>

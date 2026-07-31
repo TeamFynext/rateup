@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 import type { ComponentType, ReactNode } from "react";
 
 import { Card, CardContent } from "../ui/card.tsx";
@@ -47,9 +47,9 @@ function OverviewCard({
               }`}
             >
               {isNegative ? (
-                <TrendingDown className="w-3 h-3" />
+                <IconTrendingDown className="w-3 h-3" />
               ) : (
-                <TrendingUp className="w-3 h-3" />
+                <IconTrendingUp className="w-3 h-3" />
               )}
               <span>
                 {(trendValue ?? 0) > 0 ? "+" : ""}

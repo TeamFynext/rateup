@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import { IconClock } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -47,7 +47,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }: { dateRange: Analyt
       <CardHeader className="flex flex-col gap-0 w-full">
         <div className="flex justify-between items-center gap-2 w-full">
           <CardTitle className="flex gap-1 items-center">
-            <Clock className="w-5 h-5 text-primary mr-1" />
+            <IconClock className="w-5 h-5 text-primary mr-1" />
             {t("Response Time Pattern")}
           </CardTitle>
           <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">

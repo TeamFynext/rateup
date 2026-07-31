@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import type { BusinessInfo } from "@/backend/metaAgent/metaAgent.api";
@@ -36,7 +36,7 @@ export function BusinessInfoPanel({ waSettingsId }: { waSettingsId: string }) {
           </p>
         </div>
         <Button variant="outline" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
-          <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+          <IconRefresh data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
           Sync from Meta
         </Button>
       </CardHeader>

@@ -1,7 +1,7 @@
 // Extracted verbatim from the `/admin/generate/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { Database, MessageCircle, Zap } from "lucide-react";
+import { IconBolt, IconDatabase, IconMessageCircle } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -56,7 +56,7 @@ export function GenerateData() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <Database className="h-5 w-5 text-primary" />
+            <IconDatabase className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-semibold tracking-tight">Generate Test Data</h1>
           </div>
           {isProduction && (
@@ -77,7 +77,7 @@ export function GenerateData() {
           <CardHeader className="relative">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                <Zap className="h-5 w-5 text-blue-600" />
+                <IconBolt className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <CardTitle className="text-lg">
@@ -129,7 +129,7 @@ export function GenerateData() {
                 </>
               ) : (
                 <>
-                  <Zap className="mr-2 h-4 w-4" />
+                  <IconBolt className="mr-2 h-4 w-4" />
                   {translations("Generate Survey Response")}
                 </>
               )}
@@ -154,7 +154,7 @@ export function GenerateData() {
           <CardHeader className="relative">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <MessageCircle className="h-5 w-5 text-green-600" />
+                <IconMessageCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <CardTitle className="text-lg">{translations("Generate WhatsApp Chat")}</CardTitle>
@@ -206,7 +206,7 @@ export function GenerateData() {
                 </>
               ) : (
                 <>
-                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <IconMessageCircle className="mr-2 h-4 w-4" />
                   {translations("Generate WhatsApp Chat")}
                 </>
               )}
@@ -239,7 +239,7 @@ export function GenerateData() {
       <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 text-amber-600" />
+            <IconDatabase className="h-4 w-4 text-amber-600" />
             <CardTitle className="text-sm text-amber-800 dark:text-amber-200">
               Important Notes
             </CardTitle>

@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/surveys/templates/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -97,7 +97,7 @@ export function TemplatesPage() {
                   });
                 }}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <IconPlus className="w-4 h-4 mr-2" />
                 {translations("Start Blank")}
               </Button>
             )}

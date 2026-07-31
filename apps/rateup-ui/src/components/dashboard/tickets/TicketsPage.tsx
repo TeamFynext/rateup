@@ -1,10 +1,10 @@
 // Extracted verbatim from the `/dashboard/tickets/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconLayoutRows, IconUsers } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { LayoutPanelTop, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -355,7 +355,7 @@ function BoardTeamFilter({
       <SelectTrigger className="min-w-42">
         <div className="flex items-center gap-2 truncate">
           <div className="flex size-7 items-center justify-center rounded-md bg-muted">
-            <Users className="size-4 text-muted-foreground" />
+            <IconUsers className="size-4 text-muted-foreground" />
           </div>
           <SelectValue placeholder={t("Team")} />
         </div>
@@ -412,7 +412,7 @@ function BoardFormDialog({
 
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <LayoutPanelTop className="w-5 h-5 text-primary" />
+            <IconLayoutRows className="w-5 h-5 text-primary" />
           </div>
           <div>
             <div className="font-bold text-xl">{modalTitle}</div>
@@ -489,7 +489,7 @@ function BoardFormDialog({
             {t("Cancel")}
           </Button>
           <Button size="sm" onClick={onSubmit} disabled={isSubmitDisabled}>
-            <LayoutPanelTop className="w-4 h-4 mr-2" />
+            <IconLayoutRows className="w-4 h-4 mr-2" />
             {submitLabel}
           </Button>
         </DialogFooter>

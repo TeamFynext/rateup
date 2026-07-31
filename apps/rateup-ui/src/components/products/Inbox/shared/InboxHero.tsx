@@ -1,5 +1,5 @@
+import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -77,7 +77,7 @@ const InboxHero = () => {
                 className="border-[#1c518e] text-[#1c518e] cursor-pointer hover:bg-[#e6f7ff] group"
               >
                 Learn More
-                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
             </BookDemoModal>
           </div>

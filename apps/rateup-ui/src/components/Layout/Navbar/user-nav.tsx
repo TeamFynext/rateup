@@ -1,5 +1,11 @@
+import {
+  IconActivity,
+  IconCircle,
+  IconCircleX,
+  IconLogout,
+  IconSelector,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { Activity, ChevronsUpDown, Circle, CircleX, LogOut } from "lucide-react";
 import type { JSX } from "react";
 import { startTransition, useCallback, useMemo, useOptimistic } from "react";
 
@@ -38,22 +44,22 @@ const statusOptions: {
   {
     value: "automatic",
     label: "Automatic",
-    icon: <Activity className="mr-2 h-4 w-4 text-blue-500" />,
+    icon: <IconActivity className="mr-2 h-4 w-4 text-blue-500" />,
   },
   {
     value: "online",
     label: "Available",
-    icon: <Circle className="mr-2 h-4 w-4 text-green-500 fill-green-500" />,
+    icon: <IconCircle className="mr-2 h-4 w-4 text-green-500 fill-green-500" />,
   },
   {
     value: "busy",
     label: "Busy",
-    icon: <Circle className="mr-2 h-4 w-4 text-red-500 fill-red-500" />,
+    icon: <IconCircle className="mr-2 h-4 w-4 text-red-500 fill-red-500" />,
   },
   {
     value: "offline",
     label: "Offline",
-    icon: <CircleX className="mr-2 h-4 w-4 text-black " />,
+    icon: <IconCircleX className="mr-2 h-4 w-4 text-black " />,
   },
 ];
 
@@ -160,7 +166,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
               <span className="truncate font-medium">{user?.userName}</span>
               <span className="truncate text-xs">{user?.email}</span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4" />
+            <IconSelector className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -256,7 +262,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
             <DropdownMenuSeparator /> */}
             <Link to="/logout">
               <DropdownMenuItem>
-                <LogOut />
+                <IconLogout />
                 Log out
               </DropdownMenuItem>
             </Link>

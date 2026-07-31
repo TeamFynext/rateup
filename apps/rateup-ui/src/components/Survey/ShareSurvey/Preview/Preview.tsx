@@ -1,6 +1,5 @@
-import { IconDownload } from "@tabler/icons-react";
+import { IconDownload, IconSparkles } from "@tabler/icons-react";
 import { toPng } from "html-to-image";
-import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -91,7 +90,7 @@ function Preview({
     <div className="flex flex-col items-center justify-center gap-4 w-full">
       <div className="flex flex-col items-center justify-center">
         <div className="flex items-center gap-1">
-          <Sparkles className="text-primary h-4 w-4" />
+          <IconSparkles className="text-primary h-4 w-4" />
           <h2 className="font-bold text-sm">{translations("Live Preview")}</h2>
         </div>
         <span className="text-[11px] opacity-85">{translations("Updates in real-time")}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, X } from "lucide-react";
+import { IconTrash, IconX } from "@tabler/icons-react";
 import React, { type SubmitEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ const LinkToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
 
         <PopoverContent className="relative px-3 py-2.5" render={<div className="relative" />}>
           <button type="button" onClick={() => setOpen(false)} className="absolute right-3 top-3">
-            <X className="h-4 w-4" />
+            <IconX className="h-4 w-4" />
           </button>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
@@ -89,7 +89,7 @@ const LinkToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
                       setLink("");
                     }}
                   >
-                    <Trash2 data-icon="inline-start" />
+                    <IconTrash data-icon="inline-start" />
                     Remove
                   </Button>
                 )}

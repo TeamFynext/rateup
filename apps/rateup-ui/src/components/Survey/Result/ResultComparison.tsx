@@ -1,4 +1,8 @@
-import { BarChart2, PieChart as PieChartIcon, Radar as RadarIcon } from "lucide-react";
+import {
+  IconChartBar,
+  IconChartPie as PieChartIcon,
+  IconRadar as RadarIcon,
+} from "@tabler/icons-react";
 import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -174,7 +178,7 @@ const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count
     <Tabs value={activePlot} onValueChange={(v) => setActivePlot(v as ActivePlot)}>
       <TabsList>
         <TabsTrigger value={ActivePlot.Bar}>
-          <BarChart2 className="size-4" />
+          <IconChartBar className="size-4" />
           {translations("Bar")}
         </TabsTrigger>
         <TabsTrigger value={ActivePlot.Pie}>

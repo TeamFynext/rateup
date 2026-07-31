@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { IconStar } from "@tabler/icons-react";
 import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils.ts";
@@ -39,7 +39,7 @@ export default function TestimonialCard({
       {rating && (
         <div className="flex items-center gap-1 text-yellow-400">
           {[...Array(rating)].map((_, i) => (
-            <Star key={i} className="h-4 w-4 fill-yellow-400" />
+            <IconStar key={i} className="h-4 w-4 fill-yellow-400" />
           ))}
         </div>
       )}

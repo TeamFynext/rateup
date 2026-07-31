@@ -1,5 +1,9 @@
-import { IconBrandFacebook, IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
-import { MessageCircle } from "lucide-react";
+import {
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandWhatsapp,
+  IconMessageCircle,
+} from "@tabler/icons-react";
 
 import { MessagePlatform } from "@/types/enums.ts";
 
@@ -17,7 +21,7 @@ export function getSoucePlatformIconAndColor(sourcePlatform: string) {
       };
     case MessagePlatform.WEBCHAT:
       return {
-        icon: <MessageCircle className="w-4 h-4 text-white" />,
+        icon: <IconMessageCircle className="w-4 h-4 text-white" />,
         bgColor: "bg-blue-600",
       };
     case MessagePlatform.FACEBOOK:

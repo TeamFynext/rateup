@@ -1,18 +1,18 @@
 // Extracted verbatim from the `/dashboard/loyalty/dashboard/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import dayjs from "dayjs";
 import {
-  Award,
-  Gift,
-  Package,
-  Tag,
-  Ticket,
-  TrendingUp,
-  Trophy,
-  UserCheck,
-  Users,
-} from "lucide-react";
+  IconAward,
+  IconGift,
+  IconPackage,
+  IconTag,
+  IconTicket,
+  IconTrendingUp,
+  IconTrophy,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import {
   Area,
@@ -43,7 +43,7 @@ function ChangeIndicator({ change }: Readonly<{ change: number | null }>) {
     <p
       className={`text-xs mt-1 flex items-center gap-1 ${isPositive ? "text-chart-2" : "text-destructive"}`}
     >
-      <TrendingUp className="w-3 h-3" />
+      <IconTrendingUp className="w-3 h-3" />
       {isPositive ? "+" : ""}
       {change}% from last month
     </p>
@@ -102,7 +102,7 @@ export function LoyaltyPrograms() {
                   <ChangeIndicator change={dashboardData?.summary?.totalMembersChange ?? null} />
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-primary" />
+                  <IconUsers className="w-5 h-5 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -119,7 +119,7 @@ export function LoyaltyPrograms() {
                   <ChangeIndicator change={dashboardData?.summary?.activeThisMonthChange ?? null} />
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center">
-                  <UserCheck className="w-5 h-5 text-chart-2" />
+                  <IconUserCheck className="w-5 h-5 text-chart-2" />
                 </div>
               </div>
             </CardContent>
@@ -136,7 +136,7 @@ export function LoyaltyPrograms() {
                   <ChangeIndicator change={dashboardData?.summary?.pointsIssuedChange ?? null} />
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
-                  <Gift className="w-5 h-5 text-chart-3" />
+                  <IconGift className="w-5 h-5 text-chart-3" />
                 </div>
               </div>
             </CardContent>
@@ -153,7 +153,7 @@ export function LoyaltyPrograms() {
                   <ChangeIndicator change={dashboardData?.summary?.rewardsRedeemedChange ?? null} />
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
-                  <Award className="w-5 h-5 text-chart-4" />
+                  <IconAward className="w-5 h-5 text-chart-4" />
                 </div>
               </div>
             </CardContent>
@@ -265,7 +265,7 @@ export function LoyaltyPrograms() {
                   name: r.name,
                   redeemed: r.redemptions,
                   points: 0,
-                  icon: [Tag, Package, Ticket, Gift, Trophy][i % 5],
+                  icon: [IconTag, IconPackage, IconTicket, IconGift, IconTrophy][i % 5],
                 }))
                 .map((reward) => {
                   const Icon = reward.icon;

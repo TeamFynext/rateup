@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { IconCircleCheck } from "@tabler/icons-react";
 import { motion } from "motion/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -53,7 +53,7 @@ const PricingSection = ({ color1, color2 }: Colors) => {
                 "WhatsApp: Single Flow, One Automation, One Campaign with 1000 monthly template messages",
               ].map((item, index) => (
                 <li key={index} className="flex items-center gap-2">
-                  <CheckCircle2 className="text-green-500 w-5 h-5 shrink-0" />
+                  <IconCircleCheck className="text-green-500 w-5 h-5 shrink-0" />
                   <span>{item}</span>
                 </li>
               ))}

@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -90,7 +90,7 @@ export function ImportFromShopifyModal({
 
         {isPending ? (
           <div className="flex h-48 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : isError ? (
           <p className="text-sm text-red-500">

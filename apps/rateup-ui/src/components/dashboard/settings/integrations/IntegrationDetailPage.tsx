@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/settings/integrations/$id/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconChevronLeft } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
 // Lazy load integration pages
 import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
@@ -106,7 +106,7 @@ export function IntegrationDetailPage() {
     return (
       <div className="space-y-4">
         <Button variant="ghost" size="sm" onClick={backToIntegrations}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
+          <IconChevronLeft className="h-4 w-4 mr-2" />
           {t("Back")}
         </Button>
         <Card>
@@ -121,7 +121,7 @@ export function IntegrationDetailPage() {
   return (
     <div className="space-y-4 pb-2">
       <Button variant="ghost" size="sm" onClick={backToIntegrations}>
-        <ChevronLeft className="h-4 w-4 mr-2" />
+        <IconChevronLeft className="h-4 w-4 mr-2" />
         {t("Back")} {t("to")} {integrationName}
       </Button>
       <div>

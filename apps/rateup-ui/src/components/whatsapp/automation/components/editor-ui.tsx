@@ -3,7 +3,7 @@
  * node editor used to rely on. These keep the old prop names/shapes so the large
  * editor form can switch off Mantine without rewriting every field's logic.
  */
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import * as React from "react";
 
 import { Badge as UiBadge } from "@/components/ui/badge.tsx";
@@ -227,7 +227,7 @@ export function Button({
       style={{ marginTop: mt ? 8 : undefined, ...style }}
       {...buttonProps}
     >
-      {loading ? <Loader2 className="animate-spin" /> : leftSection}
+      {loading ? <IconLoader2 className="animate-spin" /> : leftSection}
       {children}
     </UiButton>
   );
@@ -260,7 +260,7 @@ export function ActionIcon({
       style={{ marginTop: mt ? 24 : undefined, ...style }}
       {...buttonProps}
     >
-      {loading ? <Loader2 className="animate-spin" /> : children}
+      {loading ? <IconLoader2 className="animate-spin" /> : children}
     </UiButton>
   );
 }

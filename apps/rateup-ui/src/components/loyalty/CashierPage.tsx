@@ -1,5 +1,11 @@
+import {
+  IconAlertTriangle,
+  IconLoader2,
+  IconPlus,
+  IconSearch,
+  IconUser,
+} from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
@@ -136,7 +142,7 @@ export function CashierPage() {
             }}
             className="flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
+            <IconPlus className="w-4 h-4" />
             Register Customer
           </Button>
           <InfoButton docUrl={`${docsPath}/loyality/cashierPortal`} />
@@ -149,7 +155,7 @@ export function CashierPage() {
           <div className="space-y-2">
             <FieldLabel htmlFor="cashier-search">Search Customer by Name or Phone</FieldLabel>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
+              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
               <Input
                 id="cashier-search"
                 placeholder="Search by name or phone..."
@@ -174,7 +180,7 @@ export function CashierPage() {
                 <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-background border rounded-lg shadow-lg overflow-hidden">
                   {isSearchLoading && (
                     <div className="flex items-center gap-2 px-4 py-3 text-muted-foreground">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <IconLoader2 className="w-4 h-4 animate-spin" />
                       <span className="text-sm">Searching...</span>
                     </div>
                   )}
@@ -194,7 +200,7 @@ export function CashierPage() {
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left border-b last:border-b-0"
                       >
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <User className="w-4 h-4 text-primary" />
+                          <IconUser className="w-4 h-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
@@ -226,12 +232,12 @@ export function CashierPage() {
               >
                 {isLoadingCustomer ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                     Searching...
                   </>
                 ) : (
                   <>
-                    <Search className="w-4 h-4 mr-2" />
+                    <IconSearch className="w-4 h-4 mr-2" />
                     Search &quot;{searchInput}&quot;
                   </>
                 )}
@@ -249,7 +255,7 @@ export function CashierPage() {
         <div className="mb-4">
           <Card className="bg-destructive/10 border-destructive">
             <CardContent className="flex items-center gap-2 py-3">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <IconAlertTriangle className="w-5 h-5 text-destructive" />
               <span className="text-destructive text-sm">
                 {error?.message || "Failed to load customer data"}
               </span>

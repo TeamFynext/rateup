@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Info, Loader2, Trash2, Webhook } from "lucide-react";
+import { IconInfoCircle, IconLoader2, IconTrash, IconWebhook } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -180,7 +180,7 @@ export default function WebhookIntegration() {
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Webhook className="w-5 h-5 text-primary" />
+              <IconWebhook className="w-5 h-5 text-primary" />
             </div>
             <div>
               <CardTitle>{t("Webhook")}</CardTitle>
@@ -193,13 +193,13 @@ export default function WebhookIntegration() {
 
         {isLoading ? (
           <CardContent className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <IconLoader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </CardContent>
         ) : (
           <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
             <CardContent className="space-y-2">
               <Alert>
-                <Info className="h-4 w-4" />
+                <IconInfoCircle className="h-4 w-4" />
                 <AlertTitle>{t("URL Verification")}</AlertTitle>
                 <AlertDescription className="text-muted-foreground">
                   {t(
@@ -281,9 +281,9 @@ export default function WebhookIntegration() {
                     disabled={deleteMutation.isPending}
                   >
                     {deleteMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <Trash2 className="mr-2 h-4 w-4" />
+                      <IconTrash className="mr-2 h-4 w-4" />
                     )}
                     {t("Remove Webhook")}
                   </Button>
@@ -296,7 +296,7 @@ export default function WebhookIntegration() {
                   disabled={saveMutation.isPending || (!!webhook && !form.formState.isDirty)}
                 >
                   {saveMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   {saveMutation.isPending ? t("Verifying URL...") : t("Verify and Save")}
                 </Button>
@@ -354,7 +354,9 @@ export default function WebhookIntegration() {
               }}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {deleteMutation.isPending ? (
+                <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               {t("Delete")}
             </Button>
           </DialogFooter>

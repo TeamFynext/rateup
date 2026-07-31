@@ -1,8 +1,17 @@
 // Extracted verbatim from the `/admin/userstats/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconBuilding,
+  IconCalendar,
+  IconMail,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconShield,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Building2, Calendar, Mail, Pause, Play, Shield, UserCheck, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -76,7 +85,7 @@ export function UserstatsPage() {
       header: createSortableHeader("Email ID"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-muted-foreground" />
+          <IconMail className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">{row.getValue("id")}</span>
         </div>
       ),
@@ -87,7 +96,7 @@ export function UserstatsPage() {
       header: createSortableHeader("Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <UserCheck className="h-4 w-4 text-muted-foreground" />
+          <IconUserCheck className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
@@ -98,7 +107,7 @@ export function UserstatsPage() {
       header: createSortableHeader("Organization"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <IconBuilding className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("orgName")}</span>
         </div>
       ),
@@ -111,7 +120,7 @@ export function UserstatsPage() {
         const role: keyof typeof UserRole = row.getValue("role");
         return (
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <IconShield className="h-4 w-4 text-muted-foreground" />
             <Badge variant="outline" className={`text-${getUserRoleColor(role)}-600`}>
               <UserRoleLabel role={role} />
             </Badge>
@@ -125,7 +134,7 @@ export function UserstatsPage() {
       header: createSortableHeader("SignUp Date"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("signupDate")}</span>
         </div>
       ),
@@ -177,7 +186,11 @@ export function UserstatsPage() {
             }}
             className="h-8 w-8 p-0"
           >
-            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+            {isPaused ? (
+              <IconPlayerPlay className="h-4 w-4" />
+            ) : (
+              <IconPlayerPause className="h-4 w-4" />
+            )}
           </Button>
         );
       },
@@ -268,7 +281,7 @@ export function UserstatsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-primary" />
+              <IconUsers className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 {translations("User Stats")}
               </h1>
@@ -293,7 +306,7 @@ export function UserstatsPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Organizations
                 </CardTitle>
-                <Building2 className="h-4 w-4 text-blue-600" />
+                <IconBuilding className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">
@@ -309,7 +322,7 @@ export function UserstatsPage() {
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Users</CardTitle>
-                <Users className="h-4 w-4 text-purple-600" />
+                <IconUsers className="h-4 w-4 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">
@@ -345,7 +358,7 @@ export function UserstatsPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {translations("Yesterday")}
                 </CardTitle>
-                <Calendar className="h-4 w-4 text-amber-600" />
+                <IconCalendar className="h-4 w-4 text-amber-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">

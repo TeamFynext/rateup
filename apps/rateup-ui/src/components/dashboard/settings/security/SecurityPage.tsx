@@ -2,9 +2,17 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  IconAlertTriangle,
+  IconEye,
+  IconEyeOff,
+  IconLoader2,
+  IconLock,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, Eye, EyeOff, Loader2, Lock, Trash2, X } from "lucide-react";
 import { useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -199,7 +207,11 @@ export function SecurityPage() {
                       className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                       aria-label={showCurrent ? "Hide password" : "Show password"}
                     >
-                      {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showCurrent ? (
+                        <IconEyeOff className="w-4 h-4" />
+                      ) : (
+                        <IconEye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -229,7 +241,11 @@ export function SecurityPage() {
                       className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                       aria-label={showNew ? "Hide password" : "Show password"}
                     >
-                      {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showNew ? (
+                        <IconEyeOff className="w-4 h-4" />
+                      ) : (
+                        <IconEye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -261,7 +277,11 @@ export function SecurityPage() {
                       className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                       aria-label={showConfirm ? "Hide password" : "Show password"}
                     >
-                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirm ? (
+                        <IconEyeOff className="w-4 h-4" />
+                      ) : (
+                        <IconEye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -281,7 +301,7 @@ export function SecurityPage() {
 
             {/* Submit Button */}
             <Button className="w-full bg-primary" disabled={isLoading} type="submit">
-              <Lock className="w-4 h-4 mr-2" />
+              <IconLock className="w-4 h-4 mr-2" />
               {isLoading ? translations("Updating") : translations("Update Password")}
             </Button>
           </form>
@@ -294,7 +314,7 @@ export function SecurityPage() {
               <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <IconTrash className="w-4 h-4 text-red-600" />
                     <FieldTitle className="text-red-700">
                       {translations("Delete Organization")}
                     </FieldTitle>
@@ -317,7 +337,7 @@ export function SecurityPage() {
             <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <Trash2 className="w-4 h-4 text-red-600" />
+                  <IconTrash className="w-4 h-4 text-red-600" />
                   <FieldTitle className="text-red-700">{translations("Delete Account")}</FieldTitle>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -345,7 +365,7 @@ export function SecurityPage() {
             <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                  <IconAlertTriangle className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
                   <DialogTitle className="text-xl text-red-700">
@@ -360,7 +380,7 @@ export function SecurityPage() {
 
             <div className="space-y-4 py-4">
               <Alert variant="destructive" className="border-red-200 bg-red-50">
-                <AlertTriangle className="h-4 w-4" />
+                <IconAlertTriangle className="h-4 w-4" />
                 <AlertTitle>{translations("Warning: High Risk Action")}</AlertTitle>
                 <AlertDescription className="text-sm">
                   {translations("Deleting your organization will permanently remove")}:
@@ -369,19 +389,19 @@ export function SecurityPage() {
 
               <div className="pl-4 space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-start gap-2">
-                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <IconX className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                   <span>{translations("All team members and their access")}</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <IconX className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                   <span>{translations("All chats and contacts")}</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <IconX className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                   <span>{translations("All billing information")}</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <IconX className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                   <span>{translations("All integrations")}</span>
                 </div>
               </div>
@@ -432,12 +452,12 @@ export function SecurityPage() {
               >
                 {isDeleting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                     {translations("Deleting")}
                   </>
                 ) : (
                   <>
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <IconTrash className="w-4 h-4 mr-2" />
                     {translations("Delete Organization")}
                   </>
                 )}
@@ -451,7 +471,7 @@ export function SecurityPage() {
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+                <IconAlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
                 <DialogTitle className="text-xl text-red-700">
@@ -466,7 +486,7 @@ export function SecurityPage() {
 
           <div className="space-y-4 py-4">
             <Alert variant="destructive" className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4" />
+              <IconAlertTriangle className="h-4 w-4" />
               <AlertTitle>{translations("Warning: High Risk Action")}</AlertTitle>
               <AlertDescription>
                 {translations("This will permanently delete your account")}
@@ -509,7 +529,7 @@ export function SecurityPage() {
               onClick={handleDeleteUser}
               className="w-full sm:w-auto"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <IconTrash className="w-4 h-4 mr-2" />
               {translations("Delete Account")}
             </Button>
           </DialogFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ItalicIcon } from "lucide-react";
+import { IconItalic } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const ItalicToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<t
             />
           }
         >
-          {children ?? <ItalicIcon className="h-4 w-4" />}
+          {children ?? <IconItalic className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Italic</span>

@@ -1,16 +1,16 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
 import {
-  ArrowDown,
-  ArrowUp,
-  Check,
-  ChevronDown,
-  GripVertical,
-  Layers,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+  IconArrowDown,
+  IconArrowUp,
+  IconCheck,
+  IconChevronDown,
+  IconGripVertical,
+  IconPlus,
+  IconStack2,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useId, useMemo, useState } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -229,7 +229,7 @@ export function SetupView({
                       }
                       className="absolute right-1 top-1/2 -translate-y-1/2 size-6"
                     >
-                      <Check className="size-3.5" />
+                      <IconCheck className="size-3.5" />
                     </Button>
                   )}
                 </div>
@@ -314,7 +314,7 @@ export function SetupView({
                 }}
                 className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border bg-background py-2.5 text-xs font-bold text-muted-foreground"
               >
-                <Plus className="size-3.5" />
+                <IconPlus className="size-3.5" />
                 <span>{t("Add Stage")}</span>
               </Button>
             ) : (
@@ -387,7 +387,7 @@ export function SetupView({
                 }}
                 className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border bg-background py-2.5 text-xs font-bold text-muted-foreground"
               >
-                <Plus className="size-3.5" />
+                <IconPlus className="size-3.5" />
                 <span>{t("Add Stage")}</span>
               </Button>
             ) : (
@@ -460,7 +460,7 @@ export function StageListItem({
     <Card className="bg-muted/40 p-3">
       <div className="flex items-center gap-2.5">
         <div className="flex shrink-0 items-center text-muted-foreground">
-          <GripVertical className="size-3.5" />
+          <IconGripVertical className="size-3.5" />
         </div>
 
         <div
@@ -505,7 +505,7 @@ export function StageListItem({
             className="size-6 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
             title={t("Delete stage")}
           >
-            <Trash2 className="size-3.5" />
+            <IconTrash className="size-3.5" />
           </Button>
         ) : null}
 
@@ -518,7 +518,7 @@ export function StageListItem({
             onClick={() => onMoveStage("up")}
             className="size-5 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-20"
           >
-            <ArrowUp className="size-3" />
+            <IconArrowUp className="size-3" />
           </Button>
           <Button
             type="button"
@@ -528,7 +528,7 @@ export function StageListItem({
             onClick={() => onMoveStage("down")}
             className="size-5 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-20"
           >
-            <ArrowDown className="size-3" />
+            <IconArrowDown className="size-3" />
           </Button>
         </div>
       </div>
@@ -584,7 +584,7 @@ export function AddStageForm({
     >
       <div className="flex items-center justify-between">
         <h4 className="flex items-center gap-1 text-[12px] font-black tracking-tight text-foreground">
-          <Layers className={cn("size-3", isLost ? "text-destructive" : "text-primary")} />
+          <IconStack2 className={cn("size-3", isLost ? "text-destructive" : "text-primary")} />
           {isLost ? t("Add Lost Stage") : t("Add Lifecycle Stage")}
         </h4>
         <Button
@@ -594,7 +594,7 @@ export function AddStageForm({
           onClick={onCancel}
           className="size-6 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <X className="size-3" />
+          <IconX className="size-3" />
         </Button>
       </div>
 
@@ -661,7 +661,7 @@ export function AddStageForm({
               className="mt-0.5 h-auto p-0 text-[10px] font-extrabold text-primary hover:underline"
             >
               <span>{t("Customize")}</span>
-              <ChevronDown className="size-3" />
+              <IconChevronDown className="size-3" />
             </Button>
           </div>
         </div>
@@ -690,7 +690,7 @@ export function AddStageForm({
           disabled={isCreating || !addName.trim()}
           className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isCreating ? <Spinner data-icon="inline-start" /> : <Check className="size-3" />}
+          {isCreating ? <Spinner data-icon="inline-start" /> : <IconCheck className="size-3" />}
           <span>{isCreating ? t("Adding...") : t("Add Stage")}</span>
         </Button>
       </div>

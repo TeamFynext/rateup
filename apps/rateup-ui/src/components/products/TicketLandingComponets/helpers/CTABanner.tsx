@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import { IconMessageCircle } from "@tabler/icons-react";
 
 const CTABanner = () => {
   return (
@@ -6,7 +6,7 @@ const CTABanner = () => {
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-[#009987] flex items-center justify-center">
-            <MessageCircle className="w-6 h-6 text-white" />
+            <IconMessageCircle className="w-6 h-6 text-white" />
           </div>
           <div>
             <h3 className="font-medium text-lg">
@@ -22,7 +22,7 @@ const CTABanner = () => {
             href="#"
             className="bg-[#009987] hover:bg-[#009987] text-white px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2"
           >
-            <MessageCircle className="w-4 h-4" />
+            <IconMessageCircle className="w-4 h-4" />
             Get Started with WhatsApp Integration
           </a>
         </div>

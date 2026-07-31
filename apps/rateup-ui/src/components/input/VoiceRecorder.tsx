@@ -1,5 +1,11 @@
+import {
+  IconMicrophone,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconSquare,
+  IconTrash,
+} from "@tabler/icons-react";
 import WavesurferPlayer from "@wavesurfer/react";
-import { Mic, Pause, Play, Square, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type WaveSurfer from "wavesurfer.js";
 import { create } from "zustand";
@@ -201,7 +207,7 @@ const VoiceRecorder = () => {
           <CustomTooltip
             trigger={
               <Button onClick={onPlayPause} variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isPlaying ? <Pause /> : <Play />}
+                {isPlaying ? <IconPlayerPause /> : <IconPlayerPlay />}
               </Button>
             }
             content={<p>{isPlaying ? "Pause" : "Play"}</p>}
@@ -247,7 +253,7 @@ const VoiceRecorder = () => {
               size="sm"
               className="h-8 w-8 p-0"
             >
-              <Trash className="text-red-500" />
+              <IconTrash className="text-red-500" />
             </Button>
           }
           content={<p>Delete</p>}
@@ -267,7 +273,7 @@ const VoiceRecorder = () => {
                 startRecording();
               }}
             >
-              <Mic />
+              <IconMicrophone />
             </Button>
           }
           content={<p>Record</p>}
@@ -281,7 +287,7 @@ const VoiceRecorder = () => {
               className="h-8 w-8 p-0"
               onClick={async () => await stopAndUploadRecording()}
             >
-              <Square />
+              <IconSquare />
             </Button>
           }
           content={<p>Stop</p>}

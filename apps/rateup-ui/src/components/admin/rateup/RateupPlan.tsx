@@ -1,8 +1,16 @@
 // Extracted verbatim from the `/admin/rateup/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconBolt,
+  IconCalendar,
+  IconCreditCard,
+  IconEdit,
+  IconPackage,
+  IconStar,
+  IconTrash,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Calendar, CreditCard, Edit, Package, Star, Trash2, Zap } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -76,7 +84,7 @@ export function RateupPlan() {
       header: createSortableHeader("Display Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Star className="h-4 w-4 text-muted-foreground" />
+          <IconStar className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("displayName")}</span>
         </div>
       ),
@@ -87,7 +95,7 @@ export function RateupPlan() {
       header: createSortableHeader("Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <IconPackage className="h-4 w-4 text-muted-foreground" />
           <span>{row.getValue("name")}</span>
         </div>
       ),
@@ -135,7 +143,7 @@ export function RateupPlan() {
       header: createSortableHeader("Trial Days"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <Badge variant="outline" className="font-mono">
             {row.getValue("trialDays") || 0}
           </Badge>
@@ -157,7 +165,7 @@ export function RateupPlan() {
       header: createSortableHeader("Created At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">
             {new Date(row.getValue("createdAt")).toLocaleDateString()}
           </span>
@@ -179,7 +187,7 @@ export function RateupPlan() {
             }}
             className="h-8 w-8 p-0"
           >
-            <Edit className="h-4 w-4" />
+            <IconEdit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
@@ -190,7 +198,7 @@ export function RateupPlan() {
             }}
             className="h-8 w-8 p-0"
           >
-            <Trash2 className="h-4 w-4" />
+            <IconTrash className="h-4 w-4" />
           </Button>
         </div>
       ),
@@ -256,7 +264,7 @@ export function RateupPlan() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <Zap className="h-5 w-5 text-primary" />
+            <IconBolt className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-semibold tracking-tight">
               {translations("Rateup Plans")}
             </h1>
@@ -272,7 +280,7 @@ export function RateupPlan() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Plans
                 </CardTitle>
-                <Package className="h-4 w-4 text-blue-600" />
+                <IconPackage className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">
@@ -310,7 +318,7 @@ export function RateupPlan() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Paid Plans
                 </CardTitle>
-                <CreditCard className="h-4 w-4 text-purple-600" />
+                <IconCreditCard className="h-4 w-4 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">
@@ -328,7 +336,7 @@ export function RateupPlan() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   With Trials
                 </CardTitle>
-                <Calendar className="h-4 w-4 text-amber-600" />
+                <IconCalendar className="h-4 w-4 text-amber-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">

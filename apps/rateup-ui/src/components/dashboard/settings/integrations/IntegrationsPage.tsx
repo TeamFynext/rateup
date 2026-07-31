@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/settings/integrations/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconAppWindow, IconKey, IconLoader2, IconWebhook } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { AppWindow, KeyRound, Loader2, Webhook } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -90,21 +90,21 @@ const INTEGRATIONS_CONFIG: Record<string, IntegrationConfig> = {
   apiservice: {
     id: "apiservice",
     name: "API Service",
-    icon: KeyRound,
+    icon: IconKey,
     description: "Manage RateUp API access keys",
     scope: "internal",
   },
   widget: {
     id: "widget",
     name: "Widget",
-    icon: AppWindow,
+    icon: IconAppWindow,
     description: "Configure your RateUp support widget",
     scope: "internal",
   },
   webhook: {
     id: "webhook",
     name: "Webhook",
-    icon: Webhook,
+    icon: IconWebhook,
     description: "Configure webhook endpoint and event delivery",
     scope: "internal",
   },
@@ -137,7 +137,7 @@ export function IntegrationsPage() {
       </div>
       {statusesLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <IconLoader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <div className="space-y-6">

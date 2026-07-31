@@ -1,15 +1,15 @@
 import {
-  ArrowLeft,
-  ArrowRight,
-  Building2,
-  CheckCircle2,
-  CircleUser,
-  Cpu,
-  Handshake,
-  Send,
-  ShieldCheck,
-  Target,
-} from "lucide-react";
+  IconArrowLeft,
+  IconArrowRight,
+  IconBuilding,
+  IconCircleCheck,
+  IconCpu,
+  IconHeartHandshake,
+  IconSend,
+  IconShieldCheck,
+  IconTarget,
+  IconUserCircle,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod/v4";
@@ -88,10 +88,10 @@ const SERVICES = [
 ];
 
 const STEPS = [
-  { label: "Basic info", icon: CircleUser },
-  { label: "Business", icon: Building2 },
-  { label: "Qualification", icon: Target },
-  { label: "Technical", icon: Cpu },
+  { label: "Basic info", icon: IconUserCircle },
+  { label: "Business", icon: IconBuilding },
+  { label: "Qualification", icon: IconTarget },
+  { label: "Technical", icon: IconCpu },
 ];
 
 /* ─────────────── validation utilities ─────────────── */
@@ -541,7 +541,7 @@ function Step4({
       </FormField>
 
       <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 mt-2">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <IconShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-xs text-muted-foreground leading-relaxed">
           Your information is confidential and will only be used to process your partner
           application. We'll respond within 3–5 business days.
@@ -555,7 +555,7 @@ function SuccessScreen() {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center gap-4">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-        <CheckCircle2 className="h-8 w-8 text-primary" />
+        <IconCircleCheck className="h-8 w-8 text-primary" />
       </div>
       <div>
         <h3 className="text-xl font-semibold text-foreground mb-1">Application submitted!</h3>
@@ -567,7 +567,7 @@ function SuccessScreen() {
       <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
         {["No joining fees", "Free demo account", "Recurring commissions"].map((t) => (
           <Badge key={t} variant="secondary" className="gap-1 text-xs">
-            <CheckCircle2 className="h-3 w-3 text-primary" />
+            <IconCircleCheck className="h-3 w-3 text-primary" />
             {t}
           </Badge>
         ))}
@@ -658,7 +658,7 @@ export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyM
         <div className="relative bg-gradient-to-br from-[#0f1729] via-[#1a2642] to-[#0f1729] px-6 pt-6 pb-5">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white text-lg font-semibold">
-              <Handshake className="h-5 w-5 text-[#FF9500]" />
+              <IconHeartHandshake className="h-5 w-5 text-[#FF9500]" />
               Partner Application
             </DialogTitle>
             <p className="text-sm text-white/60 mt-1">
@@ -724,7 +724,7 @@ export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyM
                   onClick={back}
                   disabled={partnerMutation.isPending}
                 >
-                  <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+                  <IconArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                   Back
                 </Button>
               )}
@@ -741,13 +741,13 @@ export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyM
                   </>
                 ) : step === STEPS.length - 1 ? (
                   <>
-                    <Send className="mr-1.5 h-3.5 w-3.5" />
+                    <IconSend className="mr-1.5 h-3.5 w-3.5" />
                     Submit application
                   </>
                 ) : (
                   <>
                     Continue
-                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    <IconArrowRight className="ml-1.5 h-3.5 w-3.5" />
                   </>
                 )}
               </Button>

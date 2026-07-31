@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, Loader2, Pencil, Zap } from "lucide-react";
+import { IconArrowRight, IconBolt, IconClock, IconLoader2, IconPencil } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -170,7 +170,7 @@ export default function InboxAutomation() {
         <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full">
           {/* Icon Badge */}
           <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <Zap className="w-4 h-4 fill-primary/10" />
+            <IconBolt className="w-4 h-4 fill-primary/10" />
           </div>
 
           {/* Title and subtitle */}
@@ -190,12 +190,12 @@ export default function InboxAutomation() {
             <span className="bg-primary/10 text-primary text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("New / Unassigned")}
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
             <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 select-none">
-              <Clock className="w-3.5 h-3.5" />
+              <IconClock className="w-3.5 h-3.5" />
               {getHourLabel(unassignedDelayHours)}
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
             <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("Close")}
             </span>
@@ -217,7 +217,7 @@ export default function InboxAutomation() {
               onClick={() => setEditingRule("UNASSIGNED")}
               disabled={isPending || !unassignedActive}
             >
-              <Pencil className="w-4 h-4" />
+              <IconPencil className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function InboxAutomation() {
         <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full">
           {/* Icon Badge */}
           <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <Zap className="w-4 h-4 fill-emerald-50/20" />
+            <IconBolt className="w-4 h-4 fill-emerald-50/20" />
           </div>
 
           {/* Title and subtitle */}
@@ -244,12 +244,12 @@ export default function InboxAutomation() {
             <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("Assigned")}
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
             <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 select-none">
-              <Clock className="w-3.5 h-3.5" />
+              <IconClock className="w-3.5 h-3.5" />
               {getHourLabel(assignedDelayHours)}
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
             <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("Close")}
             </span>
@@ -271,7 +271,7 @@ export default function InboxAutomation() {
               onClick={() => setEditingRule("ASSIGNED")}
               disabled={isPending || !assignedActive}
             >
-              <Pencil className="w-4 h-4" />
+              <IconPencil className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -436,7 +436,7 @@ export default function InboxAutomation() {
               disabled={isPending}
               className="bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-semibold px-4 flex items-center gap-1.5"
             >
-              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {isPending && <IconLoader2 className="w-3.5 h-3.5 animate-spin" />}
               {t("Save Changes")}
             </Button>
           </DialogFooter>

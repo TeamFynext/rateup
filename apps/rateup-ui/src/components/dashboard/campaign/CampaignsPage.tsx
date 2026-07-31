@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/campaign/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconFilter, IconMessage, IconRotate, IconSend } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Filter, MessageSquare, RotateCcw, Send } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -107,7 +107,7 @@ export function CampaignsPage() {
   const rightControls = (
     <Popover open={showFilters} onOpenChange={setShowFilters}>
       <PopoverTrigger render={<Button variant="outline" size="sm" />}>
-        <Filter className="mr-2 h-4 w-4" />
+        <IconFilter className="mr-2 h-4 w-4" />
         {t("Filters")}
       </PopoverTrigger>
 
@@ -150,7 +150,7 @@ export function CampaignsPage() {
 
           <div className="flex gap-2 border-t pt-2">
             <Button variant="outline" size="sm" className="flex-1" onClick={resetFilters}>
-              <RotateCcw className="mr-2 h-3 w-3" />
+              <IconRotate className="mr-2 h-3 w-3" />
               {t("Reset")}
             </Button>
             <Button size="sm" className="flex-1" onClick={() => setShowFilters(false)}>
@@ -166,13 +166,13 @@ export function CampaignsPage() {
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CampaignType)}>
       <TabsList>
         <TabsTrigger value={CampaignType.WHATSAPP}>
-          <MessageSquare className="mr-2 h-4 w-4" />
+          <IconMessage className="mr-2 h-4 w-4" />
           {t("Broadcast")}
           <Badge className="ml-2">{whatsappQuery.data?.data?.length ?? 0}</Badge>
         </TabsTrigger>
 
         <TabsTrigger value={CampaignType.DRIP}>
-          <Send className="mr-2 h-4 w-4" />
+          <IconSend className="mr-2 h-4 w-4" />
           {t("Drip")}
           <Badge className="ml-2">{dripQuery.data?.data?.length ?? 0}</Badge>
         </TabsTrigger>

@@ -1,14 +1,14 @@
 import {
-  ChevronRight,
-  Ellipsis,
-  LayoutGrid,
-  Package,
-  Plus,
-  RefreshCw,
-  Settings2,
-  ShoppingBag,
-  Trash2,
-} from "lucide-react";
+  IconChevronRight,
+  IconDots,
+  IconLayoutGrid,
+  IconPackage,
+  IconPlus,
+  IconRefresh,
+  IconSettings2,
+  IconShoppingBag,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -179,12 +179,12 @@ export function CatalogsPage() {
             {syncProducts.isPending ? (
               <Spinner data-icon="inline-start" />
             ) : (
-              <RefreshCw data-icon="inline-start" className="text-emerald-600" />
+              <IconRefresh data-icon="inline-start" className="text-emerald-600" />
             )}
             Sync with Meta
           </Button>
           <Button size="sm" onClick={openCreate} disabled={!catalogId}>
-            <Plus data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             Add Product
           </Button>
         </>
@@ -194,7 +194,7 @@ export function CatalogsPage() {
         <Empty className="rounded-xl border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <ShoppingBag />
+              <IconShoppingBag />
             </EmptyMedia>
             <EmptyTitle>No catalog connected</EmptyTitle>
             <EmptyDescription>
@@ -206,15 +206,15 @@ export function CatalogsPage() {
         <Tabs defaultValue="products" className="flex flex-col gap-5">
           <TabsList>
             <TabsTrigger value="products">
-              <ShoppingBag data-icon="inline-start" />
+              <IconShoppingBag data-icon="inline-start" />
               Products · {productList.length}
             </TabsTrigger>
             <TabsTrigger value="collections">
-              <LayoutGrid data-icon="inline-start" />
+              <IconLayoutGrid data-icon="inline-start" />
               Collections · {collectionList.length}
             </TabsTrigger>
             <TabsTrigger value="settings">
-              <Settings2 data-icon="inline-start" />
+              <IconSettings2 data-icon="inline-start" />
               Settings
             </TabsTrigger>
           </TabsList>
@@ -230,7 +230,7 @@ export function CatalogsPage() {
               <Empty className="rounded-xl border">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Package />
+                    <IconPackage />
                   </EmptyMedia>
                   <EmptyTitle>No products yet</EmptyTitle>
                   <EmptyDescription>
@@ -242,7 +242,7 @@ export function CatalogsPage() {
               <Empty className="rounded-xl border">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Package />
+                    <IconPackage />
                   </EmptyMedia>
                   <EmptyTitle>Unsupported catalog type</EmptyTitle>
                   <EmptyDescription>{vertical} items are not supported yet.</EmptyDescription>
@@ -281,7 +281,7 @@ export function CatalogsPage() {
                             className="size-full object-cover"
                           />
                         ) : (
-                          <Package className="size-11" />
+                          <IconPackage className="size-11" />
                         )}
 
                         <Badge
@@ -333,7 +333,7 @@ export function CatalogsPage() {
                                 />
                               }
                             >
-                              <Ellipsis />
+                              <IconDots />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuGroup>
@@ -342,7 +342,7 @@ export function CatalogsPage() {
                                   onClick={() => handleDelete(p)}
                                   disabled={deleteProducts.isPending}
                                 >
-                                  <Trash2 />
+                                  <IconTrash />
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuGroup>
@@ -368,7 +368,7 @@ export function CatalogsPage() {
                 {syncSets.isPending ? (
                   <Spinner data-icon="inline-start" />
                 ) : (
-                  <RefreshCw data-icon="inline-start" />
+                  <IconRefresh data-icon="inline-start" />
                 )}
                 Sync collections
               </Button>
@@ -387,7 +387,7 @@ export function CatalogsPage() {
                         tile,
                       )}
                     >
-                      <LayoutGrid className="size-[22px]" />
+                      <IconLayoutGrid className="size-[22px]" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-foreground">
@@ -397,12 +397,12 @@ export function CatalogsPage() {
                         {c.productIds?.length ?? 0} products
                       </div>
                     </div>
-                    <ChevronRight className="size-4 text-muted-foreground" />
+                    <IconChevronRight className="size-4 text-muted-foreground" />
                   </Card>
                 );
               })}
               <div className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed p-4.5 text-sm font-semibold text-muted-foreground">
-                <Plus className="size-4" />
+                <IconPlus className="size-4" />
                 New collection
               </div>
             </div>

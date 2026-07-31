@@ -1,7 +1,7 @@
 // Extracted verbatim from the `/dashboard/testimonial/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { Plus } from "lucide-react";
+import { IconPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -55,7 +55,7 @@ export function Testimonials() {
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Collection")}
             </Button>
             <InfoButton docUrl={`${docsPath}/testimonial`} />

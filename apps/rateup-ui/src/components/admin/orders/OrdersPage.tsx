@@ -1,9 +1,16 @@
 // Extracted verbatim from the `/admin/orders/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconBuilding,
+  IconCalendar,
+  IconPackage,
+  IconReceipt,
+  IconShoppingCart,
+  IconUserCheck,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Building2, Calendar, Package, Receipt, ShoppingCart, UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -65,7 +72,7 @@ export function OrdersPage() {
       header: createSortableHeader("Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Receipt className="h-4 w-4 text-muted-foreground" />
+          <IconReceipt className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
@@ -79,7 +86,7 @@ export function OrdersPage() {
         const isDeleted = orgName === "DELETED ORG";
         return (
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <IconBuilding className="h-4 w-4 text-muted-foreground" />
             <span className={isDeleted ? "text-red-500 italic" : ""}>{orgName}</span>
           </div>
         );
@@ -91,7 +98,7 @@ export function OrdersPage() {
       header: "Subscription ID",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <IconPackage className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono text-xs max-w-[150px] truncate">{row.getValue("subId")}</span>
         </div>
       ),
@@ -131,7 +138,7 @@ export function OrdersPage() {
         const isDeleted = createdBy === "DELETED";
         return (
           <div className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <IconUserCheck className="h-4 w-4 text-muted-foreground" />
             <span
               className={`text-sm max-w-[180px] truncate ${isDeleted ? "text-red-500 italic" : ""}`}
             >
@@ -147,7 +154,7 @@ export function OrdersPage() {
       header: createSortableHeader("Ordered At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -221,7 +228,7 @@ export function OrdersPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <ShoppingCart className="h-5 w-5 text-primary" />
+              <IconShoppingCart className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-semibold tracking-tight">{translations("Orders")}</h1>
             </div>
             <RefreshButton queryKeys={["paymentorders"]} />

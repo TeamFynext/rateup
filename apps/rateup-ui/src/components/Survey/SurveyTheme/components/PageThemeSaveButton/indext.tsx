@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
@@ -35,7 +35,7 @@ function PageThemeSaveBtn({
 
   return (
     <Button className={className} onClick={handlePageThemeSave} disabled={disabled || isSaving}>
-      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {isSaving && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
       Save
     </Button>
   );

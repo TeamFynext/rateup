@@ -1,19 +1,19 @@
+import {
+  IconCalendar,
+  IconClock,
+  IconCopy,
+  IconGift,
+  IconLink,
+  IconLoader2,
+  IconMail,
+  IconPhone,
+  IconPlus,
+  IconTicket,
+  IconTrophy,
+  IconX,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  Calendar,
-  Clock,
-  Copy,
-  Gift,
-  Link,
-  Loader2,
-  Mail,
-  Phone,
-  Plus,
-  Ticket,
-  Trophy,
-  X,
-} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -304,19 +304,19 @@ export function CustomerDetailPanel({
                 <h2 className="text-xl font-semibold">{customer.name}</h2>
                 <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
+                    <IconPhone className="w-4 h-4" />
                     <span>{customer.phone}</span>
                   </div>
                   {customer.email && (
                     <div className="flex items-center gap-1">
-                      <Mail className="w-4 h-4" />
+                      <IconMail className="w-4 h-4" />
                       <span>{customer.email}</span>
                     </div>
                   )}
                 </div>
                 {customer.createdAt && (
                   <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
+                    <IconCalendar className="w-4 h-4" />
                     <span>
                       {t("Joined")} {dayjs(customer.createdAt).format("MMMM D, YYYY")}
                     </span>
@@ -341,7 +341,7 @@ export function CustomerDetailPanel({
                       }}
                       title={t("Copy referral code")}
                     >
-                      <Copy className="w-3.5 h-3.5 text-primary" />
+                      <IconCopy className="w-3.5 h-3.5 text-primary" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -358,7 +358,7 @@ export function CustomerDetailPanel({
                       }}
                       title={t("Copy referral link")}
                     >
-                      <Link className="w-3.5 h-3.5 text-primary" />
+                      <IconLink className="w-3.5 h-3.5 text-primary" />
                     </Button>
                   </div>
                 )}
@@ -369,7 +369,7 @@ export function CustomerDetailPanel({
                 <TooltipTrigger
                   render={<Button variant="destructive" size="icon-sm" onClick={onClose} />}
                 >
-                  <X className="w-4 h-4" />
+                  <IconX className="w-4 h-4" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{t("Close customer details")}</p>
@@ -436,7 +436,7 @@ export function CustomerDetailPanel({
             >
               <div className="flex items-center gap-3 w-full">
                 <div className="w-9 h-9 bg-[#1873E8] rounded-lg flex items-center justify-center shrink-0">
-                  <Plus className="w-4 h-4 text-white" />
+                  <IconPlus className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-blue-900">{t("Issue Points")}</p>
@@ -455,7 +455,7 @@ export function CustomerDetailPanel({
             >
               <div className="flex items-center gap-3 w-full">
                 <div className="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center shrink-0">
-                  <Gift className="w-4 h-4 text-white" />
+                  <IconGift className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-purple-900">{t("Issue Reward")}</p>
@@ -473,7 +473,7 @@ export function CustomerDetailPanel({
             >
               <div className="flex items-center gap-3 w-full">
                 <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center shrink-0">
-                  <Ticket className="w-4 h-4 text-white" />
+                  <IconTicket className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-amber-900">{t("Redeem Coupon")}</p>
@@ -491,7 +491,7 @@ export function CustomerDetailPanel({
             >
               <div className="flex items-center gap-3 w-full">
                 <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
-                  <Ticket className="w-4 h-4 text-white" />
+                  <IconTicket className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-orange-900">{t("Use coupon")}</p>
@@ -509,7 +509,7 @@ export function CustomerDetailPanel({
             >
               <div className="flex items-center gap-3 w-full">
                 <div className="w-9 h-9 bg-indigo-500 rounded-lg flex items-center justify-center shrink-0">
-                  <Trophy className="w-4 h-4 text-white" />
+                  <IconTrophy className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-indigo-900">{t("Redeem Reward")}</p>
@@ -536,7 +536,7 @@ export function CustomerDetailPanel({
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Gift className="w-5 h-5 text-primary" />
+                      <IconGift className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{reward.name}</p>
@@ -562,7 +562,7 @@ export function CustomerDetailPanel({
               ))}
             {availableRewards.filter((r) => r.status === "ACTIVE").length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                <Gift className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                <IconGift className="w-8 h-8 mx-auto mb-2 opacity-20" />
                 <p className="text-sm">{t("No rewards available with current points")}</p>
               </div>
             )}
@@ -584,7 +584,7 @@ export function CustomerDetailPanel({
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                      <Ticket className="w-5 h-5 text-foreground" />
+                      <IconTicket className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{redemption.reward?.name}</p>
@@ -608,7 +608,7 @@ export function CustomerDetailPanel({
       {transactions !== undefined && (
         <div className="space-y-3">
           <h3 className="font-semibold flex items-center gap-2">
-            <Clock className="w-5 h-5" />
+            <IconClock className="w-5 h-5" />
             {t("Transaction History")}
           </h3>
           <DataTable columns={transactionColumns} data={transactions} />
@@ -654,7 +654,7 @@ export function CustomerDetailPanel({
             <Button onClick={handleIssuePoints} disabled={!pointsAmount || awardPoints.isPending}>
               {awardPoints.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   {t("Issuing...")}
                 </>
               ) : (
@@ -715,7 +715,7 @@ export function CustomerDetailPanel({
             >
               {redeemRewardMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   {t("Claiming...")}
                 </>
               ) : (
@@ -777,7 +777,7 @@ export function CustomerDetailPanel({
             >
               {assignReward.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   {t("Assigning...")}
                 </>
               ) : (
@@ -842,7 +842,7 @@ export function CustomerDetailPanel({
             >
               {redeemRewardMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   {t("Claiming...")}
                 </>
               ) : (
@@ -930,7 +930,7 @@ export function CustomerDetailPanel({
             >
               {useRedemption.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   {t("Processing...")}
                 </>
               ) : (

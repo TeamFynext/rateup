@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/tickets/$ticketId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconFileText, IconHistory, IconMessage } from "@tabler/icons-react";
 import { useParams, useRouter } from "@tanstack/react-router";
-import { FileText, History, MessageSquare } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -94,7 +94,7 @@ export function CardDetailPage() {
                     value="comments"
                     className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-3 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <IconMessage className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     {t("Comments")}
                     {(card.ticketComments?.length || 0) > 0 && (
                       <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-primary/10 group-data-[state=active]:text-primary">
@@ -106,7 +106,7 @@ export function CardDetailPage() {
                     value="activity"
                     className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-3 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                   >
-                    <History className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <IconHistory className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     {t("Activity")}
                     {(card.ticketActivities?.length || 0) > 0 && (
                       <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-primary/10 group-data-[state=active]:text-primary">
@@ -119,7 +119,7 @@ export function CardDetailPage() {
                       value="response"
                       className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                     >
-                      <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <IconFileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       {t("Response Details")}
                     </TabsTrigger>
                   )}
@@ -128,7 +128,7 @@ export function CardDetailPage() {
                       value="automation"
                       className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <IconMessage className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       {t("Automation")}
                     </TabsTrigger>
                   )}

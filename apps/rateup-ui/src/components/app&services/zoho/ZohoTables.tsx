@@ -1,7 +1,7 @@
 // Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
 
+import { IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -80,7 +80,9 @@ export function ZohoContactsTable({ integration }: { integration: AppIntegration
 
           <div className="flex items-center gap-2">
             <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              <RefreshCcw className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+              <IconRefresh
+                className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+              />
               {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
             </Button>
           </div>
@@ -202,7 +204,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
 
             <div className="flex items-center gap-2">
               <Button onClick={handleSync} disabled={syncMutation.isPending}>
-                <RefreshCcw
+                <IconRefresh
                   className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
                 />
 
@@ -356,7 +358,9 @@ export function BiginContactsTable({ integration }: { integration: AppIntegratio
 
           <div className="flex items-center gap-2">
             <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              <RefreshCcw className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+              <IconRefresh
+                className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+              />
               {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
             </Button>
           </div>

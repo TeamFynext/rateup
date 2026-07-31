@@ -1,7 +1,12 @@
-import { IconFileDownload, IconTableExport } from "@tabler/icons-react";
+import {
+  IconFileDownload,
+  IconRefresh,
+  IconSearch,
+  IconTableExport,
+  IconUsers,
+} from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { RefreshCw, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
@@ -351,7 +356,7 @@ export function ResponseTableToolbar<TData>({
                 onClick={applySearch}
                 aria-label={translations("Search")}
               >
-                <Search className="size-4 text-muted-foreground" />
+                <IconSearch className="size-4 text-muted-foreground" />
               </Button>
             </div>
             <Button
@@ -399,7 +404,7 @@ export function ResponseTableToolbar<TData>({
                     else handleSyncGoogleSheet();
                   }}
                 >
-                  <RefreshCw className={`mr-2 size-4 ${isSyncing ? "animate-spin" : ""}`} />
+                  <IconRefresh className={`mr-2 size-4 ${isSyncing ? "animate-spin" : ""}`} />
                   {survey.spreadSheetId
                     ? translations("Resync with Google Sheet")
                     : translations("Sync with Google Sheet")}
@@ -426,7 +431,7 @@ export function ResponseTableToolbar<TData>({
                 ))}
                 {hasContactQuestion && handleExportContacts && (
                   <DropdownMenuItem onClick={handleExportContacts}>
-                    <Users className="mr-2 size-4" />
+                    <IconUsers className="mr-2 size-4" />
                     {translations("Contacts")}
                   </DropdownMenuItem>
                 )}

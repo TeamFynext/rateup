@@ -1,5 +1,5 @@
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
@@ -33,7 +33,7 @@ export default function CorruptedSessionScreen() {
       <Card className="w-[420px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="text-red-500" size={18} />
+            <IconAlertTriangle className="text-red-500" size={18} />
             {t("Session Error")}
           </CardTitle>
           <CardDescription>{t("Your login session data appears to be corrupted")}.</CardDescription>

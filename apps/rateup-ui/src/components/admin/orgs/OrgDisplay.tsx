@@ -1,10 +1,18 @@
 // Extracted verbatim from the `/admin/orgs/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconArrowRight,
+  IconBuilding,
+  IconCalendar,
+  IconMail,
+  IconSend,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { ArrowRight, Building2, Calendar, Mail, Send, UserCheck, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAllOrgs } from "@/backend/org/org.query";
@@ -66,7 +74,7 @@ export function OrgDisplay() {
       header: createSortableHeader("Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <IconBuilding className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
@@ -77,7 +85,7 @@ export function OrgDisplay() {
       header: createSortableHeader("Created At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -97,7 +105,7 @@ export function OrgDisplay() {
 
         return (
           <div className="flex items-center gap-2">
-            <Calendar
+            <IconCalendar
               className={`h-4 w-4 ${isOld ? "text-red-500 font-medium" : "text-muted-foreground"}`}
             />
             <span className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}>
@@ -112,7 +120,7 @@ export function OrgDisplay() {
       header: createSortableHeader("Owner"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <UserCheck className="h-4 w-4 text-muted-foreground" />
+          <IconUserCheck className="h-4 w-4 text-muted-foreground" />
           <span>{row.getValue("owner")}</span>
         </div>
       ),
@@ -123,7 +131,7 @@ export function OrgDisplay() {
       header: createSortableHeader("Owner Email"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-muted-foreground" />
+          <IconMail className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("ownerEmail")}</span>
         </div>
       ),
@@ -144,7 +152,7 @@ export function OrgDisplay() {
       header: createSortableHeader("Staff"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
+          <IconUsers className="h-4 w-4 text-muted-foreground" />
           <Badge variant="outline" className="font-mono">
             {row.getValue("members")}
           </Badge>
@@ -157,7 +165,7 @@ export function OrgDisplay() {
       header: createSortableHeader("Invitations"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Send className="h-4 w-4 text-muted-foreground" />
+          <IconSend className="h-4 w-4 text-muted-foreground" />
           <Badge
             variant={Number(row.getValue("invitations") ?? 0) > 0 ? "default" : "secondary"}
             className="font-mono"
@@ -182,7 +190,7 @@ export function OrgDisplay() {
 
         return (
           <div className="flex items-center gap-2">
-            <Mail className={`h-4 w-4 ${isOld ? "text-red-500" : "text-muted-foreground"}`} />
+            <IconMail className={`h-4 w-4 ${isOld ? "text-red-500" : "text-muted-foreground"}`} />
             <span className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}>
               {formatIsoDateStringWithTime(value)}
             </span>
@@ -205,7 +213,7 @@ export function OrgDisplay() {
           }}
           className="h-8 w-8 p-0"
         >
-          <ArrowRight className="h-4 w-4" />
+          <IconArrowRight className="h-4 w-4" />
         </Button>
       ),
       meta: { title: "Actions" },
@@ -264,7 +272,7 @@ export function OrgDisplay() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <Building2 className="h-5 w-5 text-primary" />
+              <IconBuilding className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
             </div>
             <RefreshButton queryKeys={["org"]} />
@@ -280,7 +288,7 @@ export function OrgDisplay() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Organizations
                 </CardTitle>
-                <Building2 className="h-4 w-4 text-blue-600" />
+                <IconBuilding className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">
@@ -316,7 +324,7 @@ export function OrgDisplay() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Created Yesterday
                 </CardTitle>
-                <Calendar className="h-4 w-4 text-amber-600" />
+                <IconCalendar className="h-4 w-4 text-amber-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">

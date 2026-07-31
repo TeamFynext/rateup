@@ -1,6 +1,5 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconBan, IconBrandWhatsapp, IconClock } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { Ban, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -151,7 +150,7 @@ export const DeletedMessage = () => {
   const { t: translations } = useTranslation();
   return (
     <span className="flex items-center gap-1.5 text-sm text-muted-foreground italic">
-      <Ban className="size-3.5 shrink-0" />
+      <IconBan className="size-3.5 shrink-0" />
       {translations("This message was deleted")}
     </span>
   );
@@ -261,7 +260,7 @@ export const TempMessageBody = ({
         </Bubble>
         <MessageFooter className="gap-1.5">
           <span>{formatToCustomTime(timestamp)}</span>
-          <Clock className="size-3" />
+          <IconClock className="size-3" />
         </MessageFooter>
       </MessageContent>
     </Message>

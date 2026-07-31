@@ -1,8 +1,7 @@
 // Extracted verbatim from the `/dashboard/whatsapp/conversational-components/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { IconRefresh } from "@tabler/icons-react";
-import { Plus, Trash2 } from "lucide-react";
+import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -184,13 +183,13 @@ function DisplayConversationalSettings({
               />
               <span className="shrink-0 text-xs text-muted-foreground">{prompt.length}/80</span>
               <Button variant="ghost" size="icon" onClick={() => handleRemovePrompt(index)}>
-                <Trash2 className="h-4 w-4" />
+                <IconTrash className="h-4 w-4" />
               </Button>
             </div>
           ))}
           {prompts.length < 4 && (
             <Button variant="outline" size="sm" onClick={handleAddPrompt}>
-              <Plus className="mr-1 h-4 w-4" />
+              <IconPlus className="mr-1 h-4 w-4" />
               {t("Add Ice Breaker")}
             </Button>
           )}
@@ -249,13 +248,13 @@ function DisplayConversationalSettings({
                 className="mt-6"
                 onClick={() => handleRemoveCommand(index)}
               >
-                <Trash2 className="h-4 w-4" />
+                <IconTrash className="h-4 w-4" />
               </Button>
             </div>
           ))}
           {commands.length < 30 && (
             <Button variant="outline" size="sm" onClick={handleAddCommand}>
-              <Plus className="mr-1 h-4 w-4" />
+              <IconPlus className="mr-1 h-4 w-4" />
               {t("Add Command")}
             </Button>
           )}

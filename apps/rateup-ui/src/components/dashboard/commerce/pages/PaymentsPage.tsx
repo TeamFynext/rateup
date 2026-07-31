@@ -1,4 +1,4 @@
-import { CreditCard } from "lucide-react";
+import { IconCreditCard } from "@tabler/icons-react";
 
 import PaymentTab from "@/components/dashboard/whatsapp/orders-and-payments/components/PaymentTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,7 +23,7 @@ export function PaymentsPage() {
         <div className="flex flex-col gap-6">
           {!isCatalogConnected && (
             <Alert>
-              <CreditCard />
+              <IconCreditCard />
               <AlertTitle>No catalog connected</AlertTitle>
               <AlertDescription>
                 No WhatsApp catalog is connected to this store. Connect one in the Catalogs section

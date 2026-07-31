@@ -1,27 +1,27 @@
 // Extracted verbatim from the `/admin/orgs/$orgId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconBolt,
+  IconBuilding,
+  IconCalendar,
+  IconCircleCheck,
+  IconGlobe,
+  IconInfoCircle,
+  IconLayoutBoard,
+  IconMail,
+  IconMessage,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconSettings,
+  IconShield,
+  IconStar,
+  IconTrash,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {
-  Building2,
-  Calendar,
-  CheckCircle,
-  Globe,
-  Info,
-  LayoutTemplate,
-  Mail,
-  MessageSquare,
-  Pause,
-  Play,
-  Settings,
-  Shield,
-  Star,
-  Trash,
-  Users,
-  Zap,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import type { Range } from "react-date-range";
@@ -253,7 +253,7 @@ export function OrgById() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <Building2 className="h-5 w-5 text-primary" />
+              <IconBuilding className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-semibold tracking-tight">{stats.name}</h1>
               {orgDetails?.isPaused && <Badge variant="destructive">Paused</Badge>}
             </div>
@@ -299,7 +299,7 @@ export function OrgById() {
                 {subscription?.basePlan?.paymentPlan && (
                   <Tooltip>
                     <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                      <IconInfoCircle className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Updation will affect only in current subscription year</p>
@@ -311,7 +311,7 @@ export function OrgById() {
 
             {/* Action Buttons */}
             <Button variant="outline" onClick={open}>
-              <Settings className="h-4 w-4 mr-2" />
+              <IconSettings className="h-4 w-4 mr-2" />
               {translations("Manage Subscription")}
             </Button>
 
@@ -321,9 +321,9 @@ export function OrgById() {
                 onClick={handlePauseResumeClick}
               >
                 {orgDetails?.isPaused ? (
-                  <Play className="h-4 w-4 mr-2" />
+                  <IconPlayerPlay className="h-4 w-4 mr-2" />
                 ) : (
-                  <Pause className="h-4 w-4 mr-2" />
+                  <IconPlayerPause className="h-4 w-4 mr-2" />
                 )}
                 {orgDetails?.isPaused
                   ? translations("Resume Organization")
@@ -331,7 +331,7 @@ export function OrgById() {
               </Button>
             )}
             <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>
-              <Info />
+              <IconInfoCircle />
               Delete Options
             </Button>
           </div>
@@ -340,73 +340,88 @@ export function OrgById() {
       {/* Stats Sections */}
       <div className="space-y-8">
         {/* Organization Stats */}
-        <StatSection title="Organization" icon={Building2}>
-          <StatCard title="Staff" count={stats.members} icon={Users} color="blue" />
-          <StatCard title="Invitations" count={stats.invitations} icon={Calendar} color="amber" />
+        <StatSection title="Organization" icon={IconBuilding}>
+          <StatCard title="Staff" count={stats.members} icon={IconUsers} color="blue" />
+          <StatCard
+            title="Invitations"
+            count={stats.invitations}
+            icon={IconCalendar}
+            color="amber"
+          />
         </StatSection>
 
         {/* Teams Stats */}
-        <StatSection title={translations("Teams")} icon={Users}>
-          <StatCard title="Total Teams" count={stats.teams.total} icon={Users} color="purple" />
-          <StatCard title="Team Staff" count={stats.teams.members} icon={Users} color="blue" />
+        <StatSection title={translations("Teams")} icon={IconUsers}>
+          <StatCard title="Total Teams" count={stats.teams.total} icon={IconUsers} color="purple" />
+          <StatCard title="Team Staff" count={stats.teams.members} icon={IconUsers} color="blue" />
           <StatCard
             title="Team Invitations"
             count={stats.teams.invitations}
-            icon={Calendar}
+            icon={IconCalendar}
             color="amber"
           />
         </StatSection>
 
         {/* Web Surveys Stats */}
-        <StatSection title={translations("Web Surveys")} icon={Globe}>
-          <StatCard title="Surveys" count={stats.web.surveys} icon={Globe} color="green" />
-          <StatCard title="Responses" count={stats.web.responses} icon={Star} color="blue" />
-          <StatCard title="Visited" count={stats.web.visited} icon={Users} color="purple" />
+        <StatSection title={translations("Web Surveys")} icon={IconGlobe}>
+          <StatCard title="Surveys" count={stats.web.surveys} icon={IconGlobe} color="green" />
+          <StatCard title="Responses" count={stats.web.responses} icon={IconStar} color="blue" />
+          <StatCard title="Visited" count={stats.web.visited} icon={IconUsers} color="purple" />
         </StatSection>
 
         {/* WhatsApp Surveys Stats */}
-        <StatSection title={translations("WhatsApp Surveys")} icon={MessageSquare}>
+        <StatSection title={translations("WhatsApp Surveys")} icon={IconMessage}>
           <StatCard
             title="Surveys"
             count={stats.whatsapp.surveys}
-            icon={MessageSquare}
+            icon={IconMessage}
             color="green"
           />
-          <StatCard title="Responses" count={stats.whatsapp.responses} icon={Star} color="blue" />
+          <StatCard
+            title="Responses"
+            count={stats.whatsapp.responses}
+            icon={IconStar}
+            color="blue"
+          />
           <StatCard
             title="Templates"
             count={stats.whatsapp.templates}
-            icon={Settings}
+            icon={IconSettings}
             color="purple"
           />
-          <StatCard title="Visited" count={stats.whatsapp.visited} icon={Users} color="amber" />
+          <StatCard title="Visited" count={stats.whatsapp.visited} icon={IconUsers} color="amber" />
         </StatSection>
 
         {/* Reputation Management Stats */}
-        <StatSection title={translations("Reputation Mangement")} icon={Star}>
-          <StatCard title="Reviews" count={stats.rm.reviews} icon={Star} color="rose" />
+        <StatSection title={translations("Reputation Mangement")} icon={IconStar}>
+          <StatCard title="Reviews" count={stats.rm.reviews} icon={IconStar} color="rose" />
           <StatCard
             title="Analyzed Reviews"
             count={stats.rm.analyzedReviews}
-            icon={Shield}
+            icon={IconShield}
             color="blue"
           />
         </StatSection>
 
         {/* Campaigns Stats */}
-        <StatSection title={translations("Campaigns")} icon={Zap}>
-          <StatCard title="Campaigns" count={stats.campaigns.campaigns} icon={Zap} color="purple" />
+        <StatSection title={translations("Campaigns")} icon={IconBolt}>
+          <StatCard
+            title="Campaigns"
+            count={stats.campaigns.campaigns}
+            icon={IconBolt}
+            color="purple"
+          />
           <StatCard
             title="Participants"
             count={stats.campaigns.participants}
-            icon={Users}
+            icon={IconUsers}
             color="green"
           />
         </StatSection>
       </div>
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
+          <IconLayoutBoard className="h-5 w-5 text-muted-foreground" />
           <h3 className="text-lg font-semibold tracking-tight">Template Message Count</h3>
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
         </div>
@@ -419,7 +434,7 @@ export function OrgById() {
             <StatCard
               title="Template Messages Sent"
               count={messageStats?.count}
-              icon={LayoutTemplate}
+              icon={IconLayoutBoard}
               color="green"
             />
           )}
@@ -515,18 +530,18 @@ function DeleteOrgModal({
               }}
               className="relative"
             >
-              <Mail />
+              <IconMail />
               {isSendingEmail ? "Sending Mail..." : "Send Warning Email"}
 
               {/* ✅ Green Tick */}
               {deletionMailSent && (
-                <CheckCircle className="h-4 w-4 text-green-500 absolute top-1 right-1" />
+                <IconCircleCheck className="h-4 w-4 text-green-500 absolute top-1 right-1" />
               )}
             </Button>
 
             {/* Delete Org → opens second modal */}
             <Button variant="destructive" onClick={() => setOpenConfirmDelete(true)}>
-              <Trash />
+              <IconTrash />
               Delete Organization
             </Button>
           </div>

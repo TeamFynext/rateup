@@ -4,13 +4,13 @@ import {
   IconBrandWhatsapp,
   IconCheck,
   IconLayoutGrid,
+  IconLoader2,
   IconSearch,
   IconTemplate,
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -618,7 +618,7 @@ export function AutomatedReplyForm({
 
           {/* Right: Save with proper spinner */}
           <Button type="submit" disabled={isSaving} className="min-w-30">
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
             {!isSaving && saveSuccess && editMode && <IconCheck size={16} className="mr-2" />}
             {submitLabel}
           </Button>

@@ -1,5 +1,5 @@
+import { IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { X } from "lucide-react";
 
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -30,7 +30,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
             onClick={() => table.setGlobalFilter("")}
             className="h-8 w-8 p-0"
           >
-            <X className="h-4 w-4" />
+            <IconX className="h-4 w-4" />
           </Button>
         )}
       </div>

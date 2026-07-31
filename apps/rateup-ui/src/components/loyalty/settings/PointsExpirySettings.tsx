@@ -1,4 +1,9 @@
-import { AlertTriangle, Info, Loader2, Save } from "lucide-react";
+import {
+  IconAlertTriangle,
+  IconDeviceFloppy,
+  IconInfoCircle,
+  IconLoader2,
+} from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -45,7 +50,7 @@ export function PointsExpirySettings({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-primary" />
+          <IconAlertTriangle className="w-4 h-4 text-primary" />
           {t("Points Expiry Notifications")}
         </CardTitle>
       </CardHeader>
@@ -100,7 +105,7 @@ export function PointsExpirySettings({
 
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                 <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <IconInfoCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground">
                     {t(
                       "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)",
@@ -112,9 +117,9 @@ export function PointsExpirySettings({
               {isAlertModified && (
                 <Button size="sm" onClick={onSaveAlert} disabled={isPending || disabled}>
                   {isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <IconDeviceFloppy className="w-4 h-4 mr-2" />
                   )}
                   {t("Save Settings")}
                 </Button>
@@ -172,7 +177,7 @@ export function PointsExpirySettings({
 
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                 <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <IconInfoCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground">
                     {t(
                       "Sent automatically when points expire after 12 months of no purchase activity",
@@ -184,9 +189,9 @@ export function PointsExpirySettings({
               {isExpiredModified && (
                 <Button size="sm" onClick={onSaveExpired} disabled={isPending || disabled}>
                   {isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <IconDeviceFloppy className="w-4 h-4 mr-2" />
                   )}
                   {t("Save Settings")}
                 </Button>

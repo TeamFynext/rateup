@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -199,7 +199,7 @@ const BulkAssignUser = ({
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "assign" && (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <IconLoader2 className="w-4 h-4 animate-spin" />
           )}
           {t("Assign Chats")}
         </Button>
@@ -219,7 +219,7 @@ const BulkAssignUser = ({
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "self" && (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <IconLoader2 className="w-4 h-4 animate-spin" />
           )}
           {t("Assign To Me")}
         </Button>

@@ -3,19 +3,19 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ArrowRight,
-  Gift,
-  Link2,
-  Loader2,
-  MessageCircle,
-  Plus,
-  Save,
-  ShoppingBag,
-  Sparkles,
-  Tag,
-  UserPlus,
-  Users,
-} from "lucide-react";
+  IconArrowRight,
+  IconDeviceFloppy,
+  IconGift,
+  IconLink,
+  IconLoader2,
+  IconMessageCircle,
+  IconPlus,
+  IconShoppingBag,
+  IconSparkles,
+  IconTag,
+  IconUserPlus,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -527,7 +527,7 @@ export function RewardsPage() {
             <TabsList>
               <TabsTrigger value="point-rewards">
                 <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4" />
+                  <IconTag className="w-4 h-4" />
                   <span>Point Rewards</span>
                   <Badge variant="outline" className="text-xs">
                     {rewardsList.length}
@@ -536,7 +536,7 @@ export function RewardsPage() {
               </TabsTrigger>
               <TabsTrigger value="coupons">
                 <div className="flex items-center gap-2">
-                  <Gift className="w-4 h-4" />
+                  <IconGift className="w-4 h-4" />
                   <span>Coupons</span>
                   <Badge variant="outline" className="text-xs">
                     {couponsList.length}
@@ -545,7 +545,7 @@ export function RewardsPage() {
               </TabsTrigger>
               <TabsTrigger value="free-gifts">
                 <div className="flex items-center gap-2">
-                  <Gift className="w-4 h-4" />
+                  <IconGift className="w-4 h-4" />
                   <span>Free Gifts</span>
                   <Badge variant="outline" className="text-xs">
                     {freeGiftsList.length}
@@ -554,7 +554,7 @@ export function RewardsPage() {
               </TabsTrigger>
               <TabsTrigger value="referral">
                 <div className="flex items-center gap-2">
-                  <UserPlus className="w-4 h-4" />
+                  <IconUserPlus className="w-4 h-4" />
                   <span>Referral Program</span>
                   <Badge variant="outline" className="text-xs">
                     Auto
@@ -577,7 +577,7 @@ export function RewardsPage() {
                     resetForm();
                   }}
                 >
-                  <Plus className="w-4 h-4 mr-1.5" />
+                  <IconPlus className="w-4 h-4 mr-1.5" />
                   Create Reward
                 </Button>
               </div>
@@ -632,7 +632,7 @@ export function RewardsPage() {
                     resetForm();
                   }}
                 >
-                  <Plus className="w-4 h-4 mr-1.5" />
+                  <IconPlus className="w-4 h-4 mr-1.5" />
                   Create Coupon
                 </Button>
               </div>
@@ -688,7 +688,7 @@ export function RewardsPage() {
                     resetForm();
                   }}
                 >
-                  <Plus className="w-4 h-4 mr-1.5" />
+                  <IconPlus className="w-4 h-4 mr-1.5" />
                   Create Gift
                 </Button>
               </div>
@@ -735,7 +735,7 @@ export function RewardsPage() {
               <div className="rounded-xl bg-linear-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-5">
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-primary-foreground" />
+                    <IconUsers className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -753,22 +753,22 @@ export function RewardsPage() {
                 {/* Flow visualization */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
-                    <MessageCircle className="w-3.5 h-3.5 text-primary" />
+                    <IconMessageCircle className="w-3.5 h-3.5 text-primary" />
                     Customer shares link
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
-                    <Link2 className="w-3.5 h-3.5 text-blue-500" />
+                    <IconLink className="w-3.5 h-3.5 text-blue-500" />
                     Friend joins
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
-                    <ShoppingBag className="w-3.5 h-3.5 text-orange-500" />
+                    <IconShoppingBag className="w-3.5 h-3.5 text-orange-500" />
                     First purchase
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
-                    <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
+                    <IconSparkles className="w-3.5 h-3.5 text-yellow-500" />
                     Both get rewarded
                   </div>
                 </div>
@@ -781,7 +781,7 @@ export function RewardsPage() {
                   <CardHeader>
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                        <UserPlus className="w-4 h-4 text-blue-600" />
+                        <IconUserPlus className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
                         <CardTitle className="text-sm font-semibold leading-none">
@@ -874,7 +874,7 @@ export function RewardsPage() {
                   <CardHeader>
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                        <Users className="w-4 h-4 text-green-600" />
+                        <IconUsers className="w-4 h-4 text-green-600" />
                       </div>
                       <div>
                         <CardTitle className="text-sm font-semibold leading-none">
@@ -967,9 +967,9 @@ export function RewardsPage() {
                 disabled={updateLoyaltyProgramMutation.isPending}
               >
                 {updateLoyaltyProgramMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 )}
                 Save Referral Settings
               </Button>
@@ -980,7 +980,7 @@ export function RewardsPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center space-y-2">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                      <MessageCircle className="w-5 h-5 text-primary" />
+                      <IconMessageCircle className="w-5 h-5 text-primary" />
                     </div>
                     <p className="text-xs font-medium">Customer types &quot;refer&quot;</p>
                     <p className="text-xs text-muted-foreground">
@@ -989,7 +989,7 @@ export function RewardsPage() {
                   </div>
                   <div className="text-center space-y-2">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                      <Link2 className="w-5 h-5 text-primary" />
+                      <IconLink className="w-5 h-5 text-primary" />
                     </div>
                     <p className="text-xs font-medium">Friend joins via link</p>
                     <p className="text-xs text-muted-foreground">
@@ -998,7 +998,7 @@ export function RewardsPage() {
                   </div>
                   <div className="text-center space-y-2">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                      <ShoppingBag className="w-5 h-5 text-primary" />
+                      <IconShoppingBag className="w-5 h-5 text-primary" />
                     </div>
                     <p className="text-xs font-medium">Friend makes first purchase</p>
                     <p className="text-xs text-muted-foreground">

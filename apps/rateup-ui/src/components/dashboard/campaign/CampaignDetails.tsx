@@ -1,26 +1,26 @@
 // Extracted verbatim from the `/dashboard/campaign/$campaignId/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconArrowLeft,
+  IconCalendarClock,
+  IconCircleCheck,
+  IconDotsVertical,
+  IconFileDownload,
+  IconPencil,
+  IconPlus,
+  IconRefresh,
+  IconRotate,
+  IconSearch,
+  IconSend,
+  IconSquare,
+  IconTrash,
+  IconTrendingUp,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  ArrowLeft,
-  CalendarClock,
-  CheckCircle,
-  Edit2,
-  FileDown,
-  MoreVertical,
-  Plus,
-  RefreshCw,
-  RotateCcw,
-  Search,
-  Send,
-  Square,
-  Trash2,
-  TrendingUp,
-  Users,
-} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -201,7 +201,7 @@ export function CampaignDetails() {
           row.original.contact?.consent ? (
             <div className="flex justify-center">
               <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
-                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <IconCircleCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
               </div>
             </div>
           ) : null,
@@ -224,7 +224,7 @@ export function CampaignDetails() {
               {sendingParticipantId === row.original.id ? (
                 <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Send className="w-4 h-4" />
+                <IconSend className="w-4 h-4" />
               )}
             </Button>
           </div>
@@ -486,7 +486,7 @@ export function CampaignDetails() {
                   }
                   className="hover:bg-slate-100 dark:hover:bg-slate-800 gap-2 text-slate-600 dark:text-slate-400"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <IconArrowLeft className="w-4 h-4" />
                   {t("Back to Campaigns")}
                 </Button>
                 <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
@@ -505,20 +505,20 @@ export function CampaignDetails() {
                   onClick={() => openEditCampaign(campaignQuery.data)}
                   className="gap-2 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <IconPencil className="w-4 h-4" />
                   {t("Edit")}
                 </Button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
-                    <MoreVertical className="w-4 h-4" />
+                    <IconDotsVertical className="w-4 h-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
                       onClick={handleDelete}
                       className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <IconTrash className="w-4 h-4 mr-2" />
                       {t("Delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -539,11 +539,11 @@ export function CampaignDetails() {
               <div className="flex items-center justify-between">
                 <TabsList>
                   <TabsTrigger value="info">
-                    <TrendingUp className="w-4 h-4 mr-2" />
+                    <IconTrendingUp className="w-4 h-4 mr-2" />
                     {t("Overview")}
                   </TabsTrigger>
                   <TabsTrigger value="participants">
-                    <Users className="w-4 h-4 mr-2" />
+                    <IconUsers className="w-4 h-4 mr-2" />
                     {t("Participants")}
                     <Badge
                       variant="secondary"
@@ -579,7 +579,7 @@ export function CampaignDetails() {
                         }
                       }}
                     >
-                      <Send className="w-4 h-4" />
+                      <IconSend className="w-4 h-4" />
                       {canSend ? t("Send") : t("Resend")}
                     </Button>
                   )}
@@ -594,7 +594,7 @@ export function CampaignDetails() {
                         onClick={handleStopCampaign}
                       >
                         Stop
-                        <Square className="w-4 h-4" />
+                        <IconSquare className="w-4 h-4" />
                       </Button>
                     )}
 
@@ -609,7 +609,7 @@ export function CampaignDetails() {
                       {campaign.status === CampaignStatus.INACTIVE
                         ? t("Start Drip")
                         : t("Pause Drip")}
-                      <Send className="w-4 h-4" />
+                      <IconSend className="w-4 h-4" />
                     </Button>
                   )}
 
@@ -623,7 +623,7 @@ export function CampaignDetails() {
                         />
                       }
                     >
-                      <FileDown className="w-3.5 h-3.5" />
+                      <IconFileDownload className="w-3.5 h-3.5" />
                       {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -649,7 +649,7 @@ export function CampaignDetails() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                          <Send className="w-6 h-6 text-primary-foreground" />
+                          <IconSend className="w-6 h-6 text-primary-foreground" />
                         </div>
                         <div className="flex-1">
                           <h2 className="text-xl dark:text-slate-50">{campaign.name}</h2>
@@ -662,7 +662,7 @@ export function CampaignDetails() {
                         <div className="px-6 py-4 rounded-xl bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-1 border-slate-200 dark:border-slate-700">
                           <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center">
-                              <Users className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                              <IconUsers className="w-6 h-6 text-slate-700 dark:text-slate-300" />
                             </div>
                             <div>
                               <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
@@ -698,7 +698,7 @@ export function CampaignDetails() {
                       onClick={handleRefresh}
                       className="text-slate-400 dark:text-slate-600 hover:text-primary hover:bg-primary/10"
                     >
-                      <RefreshCw className="w-4 h-4" />
+                      <IconRefresh className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -707,7 +707,7 @@ export function CampaignDetails() {
               {scheduledCount > 0 && (
                 <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
                   <CardContent className="flex items-start gap-3 py-4">
-                    <CalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-blue-600" />
+                    <IconCalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-blue-600" />
                     <div className="text-sm text-blue-900 dark:text-blue-100">
                       <p className="font-medium">
                         {t("{total} message(s) still scheduled", { total: scheduledCount })}
@@ -749,7 +749,7 @@ export function CampaignDetails() {
                         onClick={() => setIsAddParticipantOpen(true)}
                         className="gap-2"
                       >
-                        <Plus className="w-4 h-4" />
+                        <IconPlus className="w-4 h-4" />
                         {t("Add Participant")}
                       </Button>
                       {selectedIds?.length > 0 && (
@@ -767,7 +767,7 @@ export function CampaignDetails() {
 
                     <div className="flex items-center gap-2">
                       <div className="relative w-80">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
+                        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <Input
                           placeholder={t("Search by name or phone...")}
                           value={searchInput}
@@ -782,7 +782,7 @@ export function CampaignDetails() {
                         className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
                         onClick={() => setSearchInput("")}
                       >
-                        <RotateCcw className="w-4 h-4 mr-2" />
+                        <IconRotate className="w-4 h-4 mr-2" />
                         {t("Reset")}
                       </Button>
                     </div>

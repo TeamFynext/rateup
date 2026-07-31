@@ -2,7 +2,7 @@
 // carries routing config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2, Plus } from "lucide-react";
+import { IconArrowLeft, IconLoader2, IconPlus } from "@tabler/icons-react";
 import { useId, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -249,7 +249,7 @@ export function EarningRulesPage() {
   if (isLoading || tiersLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <IconLoader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -286,7 +286,7 @@ export function EarningRulesPage() {
                   setEarningRulesViewMode("create");
                 }}
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <IconPlus className="mr-2 h-4 w-4" />
                 {t("Add Rule")}
               </Button>
               <InfoButton docUrl={`${docsPath}/loyality/earningRules`} />
@@ -312,9 +312,9 @@ export function EarningRulesPage() {
                   disabled={createTierMutation.isPending}
                 >
                   {createTierMutation.isPending ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    <IconLoader2 className="mr-1.5 h-4 w-4 animate-spin" />
                   ) : (
-                    <Plus className="mr-1.5 h-4 w-4" />
+                    <IconPlus className="mr-1.5 h-4 w-4" />
                   )}
                   {t("Add Tier")}
                 </Button>
@@ -373,7 +373,7 @@ export function EarningRulesPage() {
                   <Card className="border-2 border-dashed border-gray-300">
                     <CardContent className="p-8 text-center">
                       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                        <Plus className="h-6 w-6 text-gray-400" />
+                        <IconPlus className="h-6 w-6 text-gray-400" />
                       </div>
                       <h4 className="mb-1 font-semibold">{t("No additional rules yet")}</h4>
                       <p className="mb-4 text-sm text-muted-foreground">
@@ -389,7 +389,7 @@ export function EarningRulesPage() {
                         }}
                         className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
                       >
-                        <Plus className="mr-2 h-4 w-4" />
+                        <IconPlus className="mr-2 h-4 w-4" />
                         {t("Create Your First Rule")}
                       </Button>
                     </CardContent>
@@ -413,7 +413,7 @@ export function EarningRulesPage() {
               }}
               className="text-gray-600 hover:text-gray-900"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <IconArrowLeft className="mr-2 h-4 w-4" />
               {t("Back")}
             </Button>
           </div>
@@ -815,12 +815,12 @@ export function EarningRulesPage() {
                   >
                     {createRuleMutation.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
                         {t("Creating...")}
                       </>
                     ) : (
                       <>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <IconPlus className="mr-2 h-4 w-4" />
                         {t("Create Earning Rule")}
                       </>
                     )}

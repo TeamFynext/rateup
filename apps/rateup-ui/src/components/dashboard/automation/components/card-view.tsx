@@ -1,6 +1,6 @@
+import { IconTrash } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -123,7 +123,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
             size="icon"
             className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
           >
-            <Trash2 className="h-4 w-4" />
+            <IconTrash className="h-4 w-4" />
           </Button>
         ),
       },

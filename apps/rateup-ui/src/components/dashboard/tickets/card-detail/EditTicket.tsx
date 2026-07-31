@@ -1,6 +1,14 @@
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
-import { Check, CheckSquare, FileText, Plus, Tag, Trash2, X } from "lucide-react";
+import {
+  IconCheck,
+  IconFileText,
+  IconPlus,
+  IconSquareCheck,
+  IconTag,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -114,7 +122,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
       {/* Description Editor */}
       <div>
         <div className="flex items-center gap-2 mb-2">
-          <FileText className="h-4 w-4 text-muted-foreground" />
+          <IconFileText className="h-4 w-4 text-muted-foreground" />
           <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
             {t("Description")}
           </span>
@@ -129,7 +137,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
 
       {/* Labels */}
       <div>
-        <SectionLabel label={t("Labels")} icon={Tag} />
+        <SectionLabel label={t("Labels")} icon={IconTag} />
         <div className="mt-[9px] flex flex-wrap items-center gap-1.5">
           {ticket.labels?.map((label) => {
             const pColor = parseColor(label.color);
@@ -144,7 +152,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                 }}
               >
                 <span className="text-xs">{label.name}</span>
-                <X size={11} className="opacity-50 group-hover:opacity-100" strokeWidth={2.5} />
+                <IconX size={11} className="opacity-50 group-hover:opacity-100" strokeWidth={2.5} />
               </button>
             );
           })}
@@ -155,7 +163,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                 <button className="flex items-center gap-[3px] px-3 py-0.5 rounded-full border-[1.5px] border-dashed border-muted-foreground/60 bg-transparent font-body text-[11px] font-semibold text-muted-foreground/80 transition-all duration-150 hover:border-primary hover:text-primary cursor-pointer" />
               }
             >
-              <Plus size={10} strokeWidth={2.5} />
+              <IconPlus size={10} strokeWidth={2.5} />
               <span className="text-xs">{t("Add label")}</span>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2" align="start">
@@ -186,7 +194,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                         }}
                       >
                         {label.name}
-                        {isSelected && <Check size={12} strokeWidth={3} />}
+                        {isSelected && <IconCheck size={12} strokeWidth={3} />}
                       </button>
                     );
                   })
@@ -200,13 +208,13 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
       {/* Checklists */}
       <div>
         <div className="flex items-center justify-between mb-3.5">
-          <SectionLabel label={t("Checklists")} icon={CheckSquare} />
+          <SectionLabel label={t("Checklists")} icon={IconSquareCheck} />
           <button
             onClick={() => setAddingChecklist(true)}
             className="font-body text-xs font-semibold text-primary bg-primary/10 border-none rounded-md cursor-pointer flex items-center gap-1 transition-colors hover:bg-primary/20"
             style={{ padding: "4px 10px" }}
           >
-            <Plus size={12} strokeWidth={2.5} /> {t("Add checklist")}
+            <IconPlus size={12} strokeWidth={2.5} /> {t("Add checklist")}
           </button>
         </div>
 
@@ -233,7 +241,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                 className="flex items-center gap-2"
                 style={{ marginBottom: clTotal > 0 ? 8 : 10 }}
               >
-                <CheckSquare size={14} className="text-muted-foreground" strokeWidth={2} />
+                <IconSquareCheck size={14} className="text-muted-foreground" strokeWidth={2} />
                 <span className="font-body font-bold text-[13px] text-foreground flex-1">
                   {cl.name}
                 </span>
@@ -248,7 +256,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                   onClick={() => deleteChecklist(cl.id)}
                   className="w-[22px] h-[22px] rounded-[5px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <Trash2 size={12} strokeWidth={2} />
+                  <IconTrash size={12} strokeWidth={2} />
                 </button>
               </div>
 
@@ -272,7 +280,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                       onClick={() => toggleItem(cl.id, item.id)}
                       className={`w-[17px] h-[17px] rounded-[5px] shrink-0 flex items-center justify-center cursor-pointer transition-all duration-150 ${item.done ? "bg-green-600 border-none" : "bg-transparent border-2 border-border"}`}
                     >
-                      {item.done && <Check size={10} className="text-white" strokeWidth={3} />}
+                      {item.done && <IconCheck size={10} className="text-white" strokeWidth={3} />}
                     </div>
                     <span
                       onClick={() => toggleItem(cl.id, item.id)}
@@ -288,7 +296,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
                       onClick={() => deleteItem(cl.id, item.id)}
                       className="w-[18px] h-[18px] rounded border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity absolute right-1.5 hover:text-destructive"
                     >
-                      <X size={11} strokeWidth={2.5} />
+                      <IconX size={11} strokeWidth={2.5} />
                     </button>
                   </div>
                 ))}
@@ -304,7 +312,7 @@ export function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticket
             className="flex gap-2 items-center bg-primary/5 rounded-[10px] border-[1.5px] border-primary/20 mt-2"
             style={{ padding: "10px 14px" }}
           >
-            <CheckSquare size={14} className="text-primary" strokeWidth={2} />
+            <IconSquareCheck size={14} className="text-primary" strokeWidth={2} />
             <input
               autoFocus
               value={newClName}

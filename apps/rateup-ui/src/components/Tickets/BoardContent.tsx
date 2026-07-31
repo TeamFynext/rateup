@@ -1,5 +1,11 @@
+import {
+  IconChevronLeft,
+  IconLayoutRows,
+  IconList,
+  IconSearch,
+  IconSettings,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, LayoutPanelTop, List, Search, Settings } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -130,7 +136,7 @@ export function BoardContent({
                 onClick={() => navigate({ to: "/dashboard/tickets" })}
                 className="flex items-center text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors shrink-0"
               >
-                <ChevronLeft className="w-4 h-4 mr-1" /> {t("All boards")}
+                <IconChevronLeft className="w-4 h-4 mr-1" /> {t("All boards")}
               </button>
 
               <Separator orientation="vertical" className="h-6 mx-0 hidden md:block" />
@@ -158,13 +164,13 @@ export function BoardContent({
                     value="board"
                     className="text-xs px-3 sm:px-4 data-[state=active]:text-primary"
                   >
-                    <LayoutPanelTop className="w-3.5 h-3.5 mr-1.5" /> {t("Board")}
+                    <IconLayoutRows className="w-3.5 h-3.5 mr-1.5" /> {t("Board")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="list"
                     className="text-xs px-3 sm:px-4 data-[state=active]:text-primary"
                   >
-                    <List className="w-3.5 h-3.5 mr-1.5" /> {t("List")}
+                    <IconList className="w-3.5 h-3.5 mr-1.5" /> {t("List")}
                   </TabsTrigger>
                 </TabsList>
 
@@ -174,7 +180,7 @@ export function BoardContent({
                   className="h-9 shrink-0"
                   onClick={() => setShowSettings(true)}
                 >
-                  <Settings className="w-4 h-4 sm:mr-2 text-muted-foreground" />
+                  <IconSettings className="w-4 h-4 sm:mr-2 text-muted-foreground" />
                   <span className="hidden sm:inline">{t("Settings")}</span>
                 </Button>
               </div>
@@ -187,7 +193,7 @@ export function BoardContent({
           <div className="h-[46px] flex items-center px-4 md:px-6 gap-2.5 shrink-0">
             <div className="relative">
               <span className="absolute left-[9px] top-1/2 -translate-y-1/2 pointer-events-none">
-                <Search size={13} className="text-muted-foreground" />
+                <IconSearch size={13} className="text-muted-foreground" />
               </span>
               <input
                 value={searchQuery}

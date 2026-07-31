@@ -1,5 +1,5 @@
+import { IconCheck, IconCopy, IconLink, IconPointer } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Check, Copy, LinkIcon, MousePointerClick } from "lucide-react";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -65,13 +65,13 @@ function LinktreeCard({
     <div className="flex flex-col items-center justify-center gap-3">
       <div className="flex gap-5">
         <div className="flex items-center gap-2 text-xs text-gray-600">
-          <MousePointerClick className="w-4 h-4" />
+          <IconPointer className="w-4 h-4" />
           <span>{translations("Clicks")}</span>
         </div>
         <span className="text-lg font-semibold">{visitorsCount || 0}</span>
       </div>
       <div className="flex items-center gap-2 min-w-0 px-2.5 flex-1">
-        <LinkIcon className="w-3 h-3 text-gray-400 shrink-0" />
+        <IconLink className="w-3 h-3 text-gray-400 shrink-0" />
         <span
           className={`text-xs text-gray-500 truncate ${
             isPublished ? "opacity-100" : "opacity-50 cursor-not-allowed"
@@ -87,9 +87,9 @@ function LinktreeCard({
           onClick={handleCopy}
         >
           {copiedId ? (
-            <Check className="w-3.5 h-3.5 text-gray-500" />
+            <IconCheck className="w-3.5 h-3.5 text-gray-500" />
           ) : (
-            <Copy className="w-3.5 h-3.5 text-gray-500" />
+            <IconCopy className="w-3.5 h-3.5 text-gray-500" />
           )}
         </Button>
       </div>

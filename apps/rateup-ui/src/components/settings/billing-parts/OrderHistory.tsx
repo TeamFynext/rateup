@@ -1,6 +1,6 @@
 // Extracted verbatim from `billing.tsx`. Behaviour is unchanged.
 
-import { ClipboardX, RefreshCcw } from "lucide-react";
+import { IconClipboardX, IconRefresh } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,7 +36,7 @@ export function OrderHistory({
             disabled={isRefetching}
             className="flex items-center gap-2"
           >
-            <RefreshCcw
+            <IconRefresh
               className={`w-4 h-4 transition-transform ${isRefetching ? "animate-spin" : ""}`}
             />
             {translations("Refresh")}
@@ -44,7 +44,7 @@ export function OrderHistory({
         </div>
         {orders?.length === 0 ? (
           <div className="flex items-center justify-center gap-1 p-8">
-            <ClipboardX />
+            <IconClipboardX />
             {translations("No Orders Found")}
           </div>
         ) : (

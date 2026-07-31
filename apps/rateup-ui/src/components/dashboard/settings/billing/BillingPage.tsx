@@ -1,9 +1,9 @@
 // Extracted verbatim from the `/dashboard/settings/billing/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconCircleCheck, IconInfoCircle, IconRefresh } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { CheckCircle, Info, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -206,7 +206,7 @@ export function BillingPage() {
             size="sm"
             className="gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
+            <IconRefresh className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
             {translations("Refresh")}
           </Button>
         </div>
@@ -280,7 +280,7 @@ export function BillingPage() {
           ) : (
             <div className="py-6 max-w-lg space-y-6">
               <Alert className="border-blue-200 bg-blue-50">
-                <Info className="h-5 w-5 text-blue-600" />
+                <IconInfoCircle className="h-5 w-5 text-blue-600" />
                 <AlertDescription className="ml-2">
                   <p className="text-sm text-blue-900">
                     {translations(
@@ -339,7 +339,7 @@ export function BillingPage() {
               >
                 {isLoading ? (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    <IconRefresh className="mr-2 h-4 w-4 animate-spin" />
                     {translations("Processing")}
                   </>
                 ) : (
@@ -363,7 +363,7 @@ export function BillingPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+              <IconCircleCheck className="h-6 w-6 text-green-600" />
               {translations("Order Processing Started")}
             </DialogTitle>
           </DialogHeader>

@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { IconX } from "@tabler/icons-react";
 import { useId, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -122,7 +122,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
             className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
             onClick={() => !props.multiple && props.onChange?.(undefined)}
           >
-            <X className="h-3 w-3 mr-1" />
+            <IconX className="h-3 w-3 mr-1" />
             {translations("Clear")}
           </Button>
         )}

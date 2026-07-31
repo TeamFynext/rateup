@@ -2,8 +2,8 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconChevronRight, IconPlus, IconRefresh, IconUser, IconUsers } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { ChevronRight, Plus, RefreshCcw, User, Users } from "lucide-react";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -226,7 +226,7 @@ export function TeamPage() {
               onClick={() => void refetchTeams()}
               className="flex items-center justify-center gap-1"
             >
-              <RefreshCcw />
+              <IconRefresh />
             </Button>
           </div>
 
@@ -248,7 +248,7 @@ export function TeamPage() {
               setIsCreateTeamDialogOpen(true);
             }}
           >
-            <Plus className="w-4 h-4" />
+            <IconPlus className="w-4 h-4" />
             {translations("Create Team")}
           </Button>
         )}
@@ -272,7 +272,7 @@ export function TeamPage() {
                   className="w-[38px] h-[38px] rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: team.color || "#7F77DD" }}
                 >
-                  <Users className="w-[17px] h-[17px] text-white" />
+                  <IconUsers className="w-[17px] h-[17px] text-white" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -299,7 +299,7 @@ export function TeamPage() {
                         className="w-[26px] h-[26px] rounded-full border-2 border-background flex items-center justify-center -ml-1.5 first:ml-0"
                         style={{ backgroundColor: team.color || "#7F77DD" }}
                       >
-                        <User className="h-3 w-3 text-white" />
+                        <IconUser className="h-3 w-3 text-white" />
                       </div>
                     ))}
                     {team._count.members > 3 && (
@@ -315,7 +315,7 @@ export function TeamPage() {
                     {team._count.members === 1 ? translations("member") : translations("members")}
                   </span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                <IconChevronRight className="w-4 h-4 text-muted-foreground/40" />
               </div>
             }
           />

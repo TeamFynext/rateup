@@ -1,18 +1,18 @@
-import { useNavigate } from "@tanstack/react-router";
 import {
-  AlertCircle,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  DollarSign,
-  Info,
-  Mail,
-  Package,
-  RefreshCw,
-  Sparkles,
-  TrendingUp,
-  X,
-} from "lucide-react";
+  IconAlertCircle,
+  IconCalendar,
+  IconCircleCheck,
+  IconClock,
+  IconCurrencyDollar,
+  IconInfoCircle,
+  IconMail,
+  IconPackage,
+  IconRefresh,
+  IconSparkles,
+  IconTrendingUp,
+  IconX,
+} from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -133,7 +133,7 @@ export const Billing = ({
         {/* Processing Plan Alert */}
         {isProcessingPlan && (
           <Alert className="border-blue-200 bg-linear-to-r from-blue-50 to-blue-100/50">
-            <Info className="h-5 w-5 text-blue-600" />
+            <IconInfoCircle className="h-5 w-5 text-blue-600" />
             <AlertDescription>
               <div className="flex items-center justify-between gap-4 ml-2">
                 <div className="space-y-1">
@@ -153,7 +153,7 @@ export const Billing = ({
                   variant="outline"
                   className="shrink-0 border-blue-300 hover:bg-blue-50"
                 >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
+                  <IconRefresh className={`mr-2 h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
                   {translations("Refresh Status")}
                 </Button>
               </div>
@@ -169,7 +169,7 @@ export const Billing = ({
               <div className="flex items-center justify-between w-full">
                 <div className="space-y-3 flex-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Package className="h-4 w-4" />
+                    <IconPackage className="h-4 w-4" />
                     <span className="font-medium">{translations("Plan Name")}</span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export const Billing = ({
                         variant="outline"
                         className="bg-amber-50 text-amber-700 border-amber-200"
                       >
-                        <Sparkles className="h-3 w-3 mr-1" />
+                        <IconSparkles className="h-3 w-3 mr-1" />
                         {translations("Trial Period")}
                       </Badge>
                     )}
@@ -198,14 +198,14 @@ export const Billing = ({
                       }
                       className="gap-2"
                     >
-                      <TrendingUp className="h-4 w-4" />
+                      <IconTrendingUp className="h-4 w-4" />
                       {translations("Upgrade plan")}
                     </Button>
                   ) : (
                     subscription?.basePlan?.name &&
                     (activeOrderData?.subscriptionStatus === "cancelled" && !isCustomPlan ? (
                       <Button disabled variant="secondary" className="gap-2">
-                        <X className="h-4 w-4" />
+                        <IconX className="h-4 w-4" />
                         {translations("Cancelled")}
                       </Button>
                     ) : (
@@ -217,7 +217,7 @@ export const Billing = ({
                           onClick={() => setCancelDialogOpened(true)}
                           className="gap-2"
                         >
-                          <X className="h-4 w-4" />
+                          <IconX className="h-4 w-4" />
                           {translations("Cancel Subscription")}
                         </Button>
                       )
@@ -226,7 +226,7 @@ export const Billing = ({
 
                   {isCustomPlan && (
                     <Button onClick={() => setCustomUpgradeModal(true)} className="gap-2">
-                      <TrendingUp className="h-4 w-4" />
+                      <IconTrendingUp className="h-4 w-4" />
                       {translations("Upgrade plan")}
                     </Button>
                   )}
@@ -238,7 +238,7 @@ export const Billing = ({
                 !isCustomPlan && (
                   <div className="space-y-3 text-right">
                     <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
+                      <IconCalendar className="h-4 w-4" />
                       <span className="font-medium">{translations("Next Charging on")}:</span>
                     </div>
                     <p className="text-lg font-semibold">
@@ -252,7 +252,7 @@ export const Billing = ({
                 !isCustomPlan && (
                   <div className="space-y-3 text-right">
                     <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                      <X className="h-4 w-4" />
+                      <IconX className="h-4 w-4" />
                       <span className="font-medium">{translations("Cancelled on")}:</span>
                     </div>
                     <p className="text-lg font-semibold">
@@ -268,7 +268,7 @@ export const Billing = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
+                  <IconClock className="h-4 w-4" />
                   <span className="font-medium">
                     {subscription?.basePlan?.paymentPlanId
                       ? translations("Next Due")
@@ -286,12 +286,12 @@ export const Billing = ({
                     >
                       {checkExpiry(subscription?.expiresAt) ? (
                         <>
-                          <AlertCircle className="h-3 w-3" />
+                          <IconAlertCircle className="h-3 w-3" />
                           {translations("Expired")}
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="h-3 w-3" />
+                          <IconCircleCheck className="h-3 w-3" />
                           {translations("Active")}
                         </>
                       )}
@@ -302,7 +302,7 @@ export const Billing = ({
                         onClick={() => setOpenedUpgradeModal(true)}
                         className="gap-1"
                       >
-                        <TrendingUp className="h-3 w-3" />
+                        <IconTrendingUp className="h-3 w-3" />
                         {translations("Upgrade")}
                       </Button>
                     )}
@@ -312,7 +312,7 @@ export const Billing = ({
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
+                  <IconCalendar className="h-4 w-4" />
                   <span className="font-medium">{translations("Billing Cycle")}</span>
                 </div>
                 <p className="text-base font-semibold">
@@ -324,7 +324,7 @@ export const Billing = ({
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <DollarSign className="h-4 w-4" />
+                  <IconCurrencyDollar className="h-4 w-4" />
                   <span className="font-medium">{translations("Plan Cost")}</span>
                 </div>
                 {isShopifyPlan ? (
@@ -335,7 +335,7 @@ export const Billing = ({
                     className="text-base font-semibold text-primary hover:underline inline-flex items-center gap-2"
                   >
                     See in Shopify
-                    <TrendingUp className="h-3 w-3" />
+                    <IconTrendingUp className="h-3 w-3" />
                   </a>
                 ) : (
                   <p className="text-base font-semibold">
@@ -355,7 +355,7 @@ export const Billing = ({
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Package className="h-4 w-4" />
+                      <IconPackage className="h-4 w-4" />
                       <span className="font-medium">{translations("Addons")}</span>
                     </div>
                     <p className="text-base font-semibold text-muted-foreground">
@@ -369,7 +369,7 @@ export const Billing = ({
                         size="sm"
                         className="gap-2"
                       >
-                        <TrendingUp className="h-4 w-4" />
+                        <IconTrendingUp className="h-4 w-4" />
                         {translations("Upgrade plan")}
                       </Button>
                     )}
@@ -385,7 +385,7 @@ export const Billing = ({
                 {translations("*For Custom Plans / Support / Assistance")}
               </p>
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
+                <IconMail className="h-4 w-4 text-muted-foreground" />
                 <a
                   href="mailto:hello@rateup.app"
                   className="text-sm font-medium hover:underline text-primary"
@@ -402,7 +402,7 @@ export const Billing = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+              <IconTrendingUp className="h-5 w-5" />
               {translations("Upgrade Your Plan")}
             </DialogTitle>
           </DialogHeader>
@@ -416,7 +416,7 @@ export const Billing = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <IconCircleCheck className="h-5 w-5 text-green-600" />
               {translations("Subscription Cancelled !")}
             </DialogTitle>
           </DialogHeader>
@@ -438,7 +438,7 @@ export const Billing = ({
             </div>
             <Separator />
             <div className="flex items-center justify-center gap-2 pt-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
+              <IconMail className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{translations("Need help")}?</span>
               <a
                 href="mailto:hello@rateup.app"
@@ -455,7 +455,7 @@ export const Billing = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-500" />
+              <IconSparkles className="h-5 w-5 text-amber-500" />
               {translations("Upgrade Custom Plan")}
             </DialogTitle>
           </DialogHeader>
@@ -466,7 +466,7 @@ export const Billing = ({
             </div>
             <Separator />
             <div className="flex items-center justify-center gap-2 pt-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
+              <IconMail className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{translations("Contact us at")}</span>
               <a
                 href="mailto:hello@rateup.app"
@@ -483,7 +483,7 @@ export const Billing = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+              <IconAlertCircle className="h-5 w-5 text-destructive" />
               {translations("Cancel Subscription")}
             </DialogTitle>
             <DialogDescription className="text-base pt-2">

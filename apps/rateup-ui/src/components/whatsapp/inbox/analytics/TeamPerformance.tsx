@@ -1,5 +1,5 @@
+import { IconArrowRight, IconUsers } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useGetTeamOverview } from "@/backend/conversation/conversation.query";
@@ -109,7 +109,7 @@ function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
                                   team?.teamColor !== "null" ? team.teamColor : "blue",
                               }}
                             >
-                              <Users className="w-5 h-5 text-white" />
+                              <IconUsers className="w-5 h-5 text-white" />
                             </div>
                             <span className="font-semibold">{team.teamName}</span>
                           </div>
@@ -137,7 +137,7 @@ function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
                           </Badge>
                         </td>
                         <td className="p-4">
-                          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+                          <IconArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
                         </td>
                       </tr>
                     );

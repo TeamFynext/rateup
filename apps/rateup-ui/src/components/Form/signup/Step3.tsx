@@ -1,6 +1,14 @@
 // Extracted verbatim from `SignupFormNew.tsx`. Behaviour is unchanged.
 
-import { ArrowLeft, ArrowRight, Globe, Inbox, MessageSquare, Target, Users } from "lucide-react";
+import {
+  IconArrowLeft,
+  IconArrowRight,
+  IconGlobe,
+  IconInbox,
+  IconMessage,
+  IconTarget,
+  IconUsers,
+} from "@tabler/icons-react";
 
 import { Button } from "../../ui/button.tsx";
 import type { SignupForm } from "./shared.tsx";
@@ -23,37 +31,37 @@ export function Step3({
       id: "whatsapp-api",
       label: "WhatsApp Business API",
       description: "Verified sender + templates",
-      icon: MessageSquare,
+      icon: IconMessage,
     },
     {
       id: "loyalty-program",
       label: "Loyalty on WhatsApp",
       description: "Points, tiers and rewards",
-      icon: Users,
+      icon: IconUsers,
     },
     {
       id: "whatsapp-campaigns",
       label: "WhatsApp Campaigns",
       description: "Broadcasts with 98% open rate",
-      icon: Target,
+      icon: IconTarget,
     },
     {
       id: "customer-feedback",
       label: "Customer Feedback",
       description: "NPS, CSAT, review drives",
-      icon: MessageSquare,
+      icon: IconMessage,
     },
     {
       id: "web-feedback-forms",
       label: "Web Feedback Forms",
       description: "Surveys without the tools",
-      icon: Globe,
+      icon: IconGlobe,
     },
     {
       id: "unified-inbox",
       label: "Unified Inbox",
       description: "WhatsApp + Instagram in one place",
-      icon: Inbox,
+      icon: IconInbox,
     },
   ];
 
@@ -126,7 +134,7 @@ export function Step3({
           onClick={handleBack}
           className="h-8 px-4 text-xs border border-gray-300"
         >
-          <ArrowLeft className="w-4 h-4 mr-1" />
+          <IconArrowLeft className="w-4 h-4 mr-1" />
           Back
         </Button>
 
@@ -136,7 +144,7 @@ export function Step3({
           className="h-8 px-4 text-xs bg-primary text-white disabled:opacity-50"
         >
           {isLoading ? "Loading..." : "Continue"}
-          <ArrowRight className="w-4 h-4 ml-1" />
+          <IconArrowRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
     </div>

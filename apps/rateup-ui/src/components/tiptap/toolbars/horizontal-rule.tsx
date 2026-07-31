@@ -1,6 +1,6 @@
 "use client";
 
-import { SeparatorHorizontal } from "lucide-react";
+import { IconSeparatorHorizontal } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ const HorizontalRuleToolbar = React.forwardRef<
           />
         }
       >
-        {children ?? <SeparatorHorizontal className="h-4 w-4" />}
+        {children ?? <IconSeparatorHorizontal className="h-4 w-4" />}
       </TooltipTrigger>
       <TooltipContent>
         <span>Horizontal Rule</span>

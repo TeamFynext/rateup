@@ -1,5 +1,4 @@
-import { IconDots } from "@tabler/icons-react";
-import { Trash2 } from "lucide-react";
+import { IconDots, IconTrash } from "@tabler/icons-react";
 import type { MouseEvent } from "react";
 
 import { ActionCard } from "@/components/common/action-card.tsx";
@@ -53,7 +52,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
           }}
           className="text-red-600 focus:text-red-600"
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <IconTrash className="mr-2 h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

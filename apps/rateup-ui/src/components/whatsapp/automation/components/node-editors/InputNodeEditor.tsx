@@ -1,7 +1,7 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
+import { IconTypography } from "@tabler/icons-react";
 import { EditorContent } from "@tiptap/react";
-import { TypeOutline } from "lucide-react";
 
 import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
 import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
@@ -66,7 +66,7 @@ export const InputNodeEditor: React.FC<
                 <Popover>
                   <PopoverTrigger>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
-                      <TypeOutline className="h-5 w-5" />
+                      <IconTypography className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full">

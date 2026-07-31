@@ -1,26 +1,26 @@
-import { ArrowRight, BrainCog, Globe, Layers, Wand2 } from "lucide-react";
+import { IconArrowRight, IconBrain, IconGlobe, IconStack2, IconWand } from "@tabler/icons-react";
 
 const features = [
   {
-    icon: Wand2,
+    icon: IconWand,
     title: "Unmatched Simplicity",
     description:
       "Our no-code builder means anyone can create sophisticated AI workflows, regardless of technical skill. Focus on strategy, not syntax.",
   },
   {
-    icon: BrainCog,
+    icon: IconBrain,
     title: "Intelligent & Adaptive",
     description:
       "Beyond basic automation, our AI agents learn, adapt, and personalize interactions, delivering a truly intelligent customer experience.",
   },
   {
-    icon: Layers,
+    icon: IconStack2,
     title: "Scalable & Versatile",
     description:
       "From small businesses to large enterprises, RateUp scales with your needs and adapts to a wide range of use cases and industries.",
   },
   {
-    icon: Globe,
+    icon: IconGlobe,
     title: "Seamless Multi-Channel Experience",
     description:
       "Ensure consistent, high-quality interactions across all your customer touchpoints, from web to WhatsApp.",
@@ -57,7 +57,7 @@ export default function WhyAutomation() {
                 className="text-[#009987] font-semibold inline-flex items-center mt-4 group"
               >
                 Learn More
-                <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <IconArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
             </div>
           </div>

@@ -1,14 +1,14 @@
 import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  MoreVertical,
-  RefreshCw,
-  X,
-  XCircle,
-  Zap,
-} from "lucide-react";
+  IconAlertCircle,
+  IconBolt,
+  IconCircleCheck,
+  IconCircleX,
+  IconClock,
+  IconDotsVertical,
+  IconLoader2,
+  IconRefresh,
+  IconX,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { useCatalogSettings, useCreateAddressFlow } from "@/backend/whatsapp/catalog/catalog.query";
@@ -49,9 +49,9 @@ function AddressFlowPreview() {
 
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
-        <X className="size-5 text-muted-foreground" />
+        <IconX className="size-5 text-muted-foreground" />
         <span className="text-sm font-semibold text-foreground">Shipping Address</span>
-        <MoreVertical className="size-5 text-muted-foreground" />
+        <IconDotsVertical className="size-5 text-muted-foreground" />
       </div>
 
       {/* Fields */}
@@ -95,31 +95,31 @@ function AddressFlowPreview() {
 
 const STATUS_CONFIG = {
   idle: {
-    icon: <AlertCircle className="h-5 w-5 text-muted-foreground" />,
+    icon: <IconAlertCircle className="h-5 w-5 text-muted-foreground" />,
     label: "Not Created",
     color: "text-muted-foreground",
     badge: "secondary" as const,
   },
   submitting: {
-    icon: <Loader2 className="h-5 w-5 animate-spin text-blue-500" />,
+    icon: <IconLoader2 className="h-5 w-5 animate-spin text-blue-500" />,
     label: "Submitting…",
     color: "text-blue-600",
     badge: "default" as const,
   },
   review: {
-    icon: <Clock className="h-5 w-5 text-amber-500" />,
+    icon: <IconClock className="h-5 w-5 text-amber-500" />,
     label: "Under Meta Review",
     color: "text-amber-600",
     badge: "outline" as const,
   },
   approved: {
-    icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+    icon: <IconCircleCheck className="h-5 w-5 text-green-500" />,
     label: "Approved & Active",
     color: "text-green-600",
     badge: "default" as const,
   },
   rejected: {
-    icon: <XCircle className="h-5 w-5 text-red-500" />,
+    icon: <IconCircleX className="h-5 w-5 text-red-500" />,
     label: "Rejected by Meta",
     color: "text-red-600",
     badge: "destructive" as const,
@@ -283,9 +283,9 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
                 className="gap-2"
               >
                 {isCreating ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Zap className="h-3.5 w-3.5" />
+                  <IconBolt className="h-3.5 w-3.5" />
                 )}
                 {status === "rejected" ? "Resubmit Address Flow" : "Create Address Flow"}
               </Button>
@@ -293,7 +293,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
 
             {isPolling && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <IconRefresh className="h-3.5 w-3.5 animate-spin" />
                 Auto-refreshing…
               </div>
             )}

@@ -1,4 +1,9 @@
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
+} from "@tabler/icons-react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { PaginationState } from "@/types/api.ts";
@@ -37,7 +42,7 @@ const ContactPagination = ({
         disabled={isFirst}
         onClick={() => goTo(0)}
       >
-        <ChevronsLeft />
+        <IconChevronsLeft />
       </Button>
       <Button
         variant="outline"
@@ -46,7 +51,7 @@ const ContactPagination = ({
         disabled={isFirst}
         onClick={() => goTo(pagination.pageIndex - 1)}
       >
-        <ChevronLeft />
+        <IconChevronLeft />
       </Button>
       <span className="text-sm text-muted-foreground" aria-current="page">
         {pagination.pageIndex + 1} / {totalPages}
@@ -58,7 +63,7 @@ const ContactPagination = ({
         disabled={isLast}
         onClick={() => goTo(pagination.pageIndex + 1)}
       >
-        <ChevronRight />
+        <IconChevronRight />
       </Button>
       <Button
         variant="outline"
@@ -67,7 +72,7 @@ const ContactPagination = ({
         disabled={isLast}
         onClick={() => goTo(totalPages - 1)}
       >
-        <ChevronsRight />
+        <IconChevronsRight />
       </Button>
       <Select
         items={pageSizeOptions}

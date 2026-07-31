@@ -1,4 +1,4 @@
-import { Star, User } from "lucide-react";
+import { IconStar, IconUser } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -31,7 +31,7 @@ const TestimonialsSection = () => {
                 {/* Stars */}
                 <div className="flex mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-[#FACC15] text-[#FACC15] mr-1" />
+                    <IconStar key={i} className="w-5 h-5 fill-[#FACC15] text-[#FACC15] mr-1" />
                   ))}
                 </div>
 
@@ -43,7 +43,7 @@ const TestimonialsSection = () => {
                   <Avatar className="h-10 w-10 mr-3">
                     <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
                     <AvatarFallback className="bg-[#1c518e] text-white">
-                      <User className="h-5 w-5" />
+                      <IconUser className="h-5 w-5" />
                     </AvatarFallback>
                   </Avatar>
                   <div>

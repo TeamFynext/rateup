@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export const MobileToolbarGroup = ({ label, children, className }: MobileToolbar
         }
       >
         {label}
-        <ChevronDown className="h-4 w-4" />
+        <IconChevronDown className="h-4 w-4" />
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

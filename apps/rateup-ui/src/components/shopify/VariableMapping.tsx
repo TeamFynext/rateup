@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useId, useMemo } from "react";
 
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
@@ -55,7 +55,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 py-4">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <IconLoader2 className="h-4 w-4 animate-spin" />
         <span className="text-sm text-muted-foreground">Loading template variables...</span>
       </div>
     );

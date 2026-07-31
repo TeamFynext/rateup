@@ -1,9 +1,8 @@
 // Extracted verbatim from `node-editor.tsx`. Behaviour is unchanged.
 
-import { IconRefresh, IconX } from "@tabler/icons-react";
+import { IconRefresh, IconTypography, IconX } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { EditorContent } from "@tiptap/react";
-import { TypeOutline } from "lucide-react";
 import { useEffect, useMemo } from "react";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
@@ -199,7 +198,7 @@ export const CatalogNodeEditor = ({
                     <Popover>
                       <PopoverTrigger>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
-                          <TypeOutline className="h-5 w-5" />
+                          <IconTypography className="h-5 w-5" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full">
@@ -254,7 +253,7 @@ export const CatalogNodeEditor = ({
                 <Popover>
                   <PopoverTrigger>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
-                      <TypeOutline className="h-5 w-5" />
+                      <IconTypography className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full">
@@ -307,7 +306,7 @@ export const CatalogNodeEditor = ({
                 <Popover>
                   <PopoverTrigger>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
-                      <TypeOutline className="h-5 w-5" />
+                      <IconTypography className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full">

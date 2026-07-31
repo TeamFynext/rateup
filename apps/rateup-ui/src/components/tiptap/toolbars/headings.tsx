@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export const HeadingsToolbar = React.forwardRef<
           }
         >
           {activeLevel ? `H${activeLevel}` : "Normal"}
-          <ChevronDown className="h-4 w-4" />
+          <IconChevronDown className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem

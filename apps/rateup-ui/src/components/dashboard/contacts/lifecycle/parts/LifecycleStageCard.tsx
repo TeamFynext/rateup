@@ -1,6 +1,6 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
-import { Minus, Plus } from "lucide-react";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +78,7 @@ export function LifecycleStageCard({
             className="size-5 rounded p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
             title="Decrease"
           >
-            <Minus className="size-3" />
+            <IconMinus className="size-3" />
           </Button>
           <Button
             type="button"
@@ -88,7 +88,7 @@ export function LifecycleStageCard({
             className="size-5 rounded p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
             title="Increase"
           >
-            <Plus className="size-3" />
+            <IconPlus className="size-3" />
           </Button>
         </div>
       </div>

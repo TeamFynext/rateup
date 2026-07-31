@@ -1,6 +1,6 @@
 // Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
 
-import { Save, Settings } from "lucide-react";
+import { IconDeviceFloppy, IconSettings } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -555,7 +555,7 @@ export const ZohoTriggerList = ({
                 disabled={!selectedPipelineId || !selectedSubPipelineId}
                 onClick={handleSavePipelineConfig}
               >
-                <Save />
+                <IconDeviceFloppy />
                 {t("Save Configuration")}
               </Button>
 
@@ -565,7 +565,7 @@ export const ZohoTriggerList = ({
                 disabled={!selectedPipelineId || !selectedSubPipelineId}
                 onClick={handleOpenLifecycleMapping}
               >
-                <Settings />
+                <IconSettings />
                 {t("Configure Lifecycle Mapping")}
               </Button>
             </div>
@@ -649,7 +649,7 @@ export const ZohoTriggerList = ({
 
           <DialogFooter>
             <Button onClick={handleSaveLifecycleMappings}>
-              <Save />
+              <IconDeviceFloppy />
               {t("Save Mapping")}
             </Button>
           </DialogFooter>

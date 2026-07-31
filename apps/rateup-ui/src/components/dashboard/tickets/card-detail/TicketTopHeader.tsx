@@ -1,6 +1,6 @@
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
-import { AlertCircle, CheckSquare, X } from "lucide-react";
+import { IconAlertCircle, IconSquareCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -103,7 +103,7 @@ export function TicketTopHeader({
               className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 font-body text-[11px] font-bold border border-red-200"
               style={{ padding: "2px 9px" }}
             >
-              <AlertCircle size={11} className="text-red-700" strokeWidth={2} /> {t("Overdue")}
+              <IconAlertCircle size={11} className="text-red-700" strokeWidth={2} /> {t("Overdue")}
             </span>
           )}
           {totalItems > 0 && (
@@ -115,7 +115,7 @@ export function TicketTopHeader({
                 color: doneItems === totalItems ? "#15803D" : "#666864",
               }}
             >
-              <CheckSquare
+              <IconSquareCheck
                 size={11}
                 strokeWidth={2}
                 style={{
@@ -164,7 +164,7 @@ export function TicketTopHeader({
           onClick={onClose}
           className="w-7.5 h-7.5 rounded-[7px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-colors hover:bg-muted/50"
         >
-          <X size={16} strokeWidth={1.75} />
+          <IconX size={16} strokeWidth={1.75} />
         </button>
       </div>
     </div>

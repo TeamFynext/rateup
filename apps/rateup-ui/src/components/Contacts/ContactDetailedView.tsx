@@ -1,4 +1,14 @@
-import { CircleCheck, Edit, Folder, Mail, MapPin, Phone, Plus, Send, X } from "lucide-react";
+import {
+  IconCircleCheck,
+  IconEdit,
+  IconFolder,
+  IconMail,
+  IconMapPin,
+  IconPhone,
+  IconPlus,
+  IconSend,
+  IconX,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -127,7 +137,7 @@ const ContactDetailedView = ({
           <TabsContent value="details" className="space-y-4">
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Phone className="w-4 h-4 text-muted-foreground" />
+                <IconPhone className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Phone</p>
                   <p className="text-sm">{selectedContact.phone}</p>
@@ -135,7 +145,7 @@ const ContactDetailedView = ({
               </div>
               {selectedContact.email && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <IconMail className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Email</p>
                     <p className="text-sm">{selectedContact.email}</p>
@@ -144,7 +154,7 @@ const ContactDetailedView = ({
               )}
               {selectedContact.location && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <IconMapPin className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Location</p>
                     <p className="text-sm">{selectedContact.location}</p>
@@ -179,7 +189,7 @@ const ContactDetailedView = ({
                     setIsAddToGroupOpen(true);
                   }}
                 >
-                  <Plus className="w-4 h-4 mr-1" />
+                  <IconPlus className="w-4 h-4 mr-1" />
                   Add to Group
                 </Button>
               </div>
@@ -194,7 +204,7 @@ const ContactDetailedView = ({
                         <Card key={group?.id} className="p-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <Folder className="w-4 h-4 text-indigo-600" />
+                              <IconFolder className="w-4 h-4 text-indigo-600" />
                               <span className="text-sm">{group?.name}</span>
                             </div>
                             <Button
@@ -206,7 +216,7 @@ const ContactDetailedView = ({
                                 handleRemoveContactFromGroup(group!, [selectedContact.id]);
                               }}
                             >
-                              <X className="w-4 h-4" />
+                              <IconX className="w-4 h-4" />
                             </Button>
                           </div>
                         </Card>
@@ -216,7 +226,7 @@ const ContactDetailedView = ({
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  <Folder className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <IconFolder className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p className="text-sm">Not a member of any groups</p>
                   <p className="text-xs mt-1">
                     Click "Add to Group" to add this contact to a group
@@ -252,7 +262,7 @@ const ContactDetailedView = ({
                     setEditNotes(true);
                   }}
                 >
-                  <Edit />
+                  <IconEdit />
                   Edit Notes
                 </Button>
               ) : (
@@ -267,7 +277,7 @@ const ContactDetailedView = ({
                     Cancel
                   </Button>
                   <Button size="sm" onClick={handleSaveNotes}>
-                    {updateContact.isPending ? <Spinner /> : <CircleCheck />}
+                    {updateContact.isPending ? <Spinner /> : <IconCircleCheck />}
                     Save Notes
                   </Button>
                 </div>
@@ -287,7 +297,7 @@ const ContactDetailedView = ({
               }
             }}
           >
-            <Send className="w-4 h-4 mr-2" />
+            <IconSend className="w-4 h-4 mr-2" />
             Send Message
           </Button>
         </DialogFooter>

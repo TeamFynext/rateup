@@ -1,5 +1,5 @@
+import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { ArrowRight } from "lucide-react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -36,7 +36,7 @@ const TicketHero = () => {
                   className="border-[#1c518e] cursor-pointer text-[#1c518e] hover:bg-[#e6f7ff] group"
                 >
                   Book a Demo
-                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </BookDemoModal>
             </div>

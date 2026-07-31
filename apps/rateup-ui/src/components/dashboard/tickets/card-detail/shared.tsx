@@ -1,8 +1,8 @@
 // Shared helpers for the modules in `./`.
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
+import { IconAlertCircle, IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -61,7 +61,7 @@ export function DateRow({
           style={{ color: color || undefined }}
         >
           {warn && (
-            <AlertCircle
+            <IconAlertCircle
               size={11}
               className={!color ? "text-red-600" : undefined}
               style={{ color: color || undefined }}
@@ -106,7 +106,7 @@ export function AddItemRow({ onAdd }: { onAdd: (text: string) => void }) {
         className="font-body text-xs text-muted-foreground bg-transparent border-none cursor-pointer flex items-center gap-1 rounded-md transition-all duration-150 hover:bg-muted hover:text-primary mt-2"
         style={{ padding: "5px 8px" }}
       >
-        <Plus size={11} strokeWidth={2.5} /> {t("Add an item")}
+        <IconPlus size={11} strokeWidth={2.5} /> {t("Add an item")}
       </button>
     );
   }

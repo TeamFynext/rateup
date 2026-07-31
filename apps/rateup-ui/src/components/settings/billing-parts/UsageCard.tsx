@@ -1,6 +1,6 @@
 // Extracted verbatim from `billing.tsx`. Behaviour is unchanged.
 
-import { RefreshCcw } from "lucide-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { useUsageStats } from "@/backend/stats/stats.query";
@@ -24,7 +24,7 @@ export function UsageCard({ subscription }: { subscription?: Subscription }) {
           disabled={isFetching}
           className="flex items-center gap-2"
         >
-          <RefreshCcw
+          <IconRefresh
             className={`w-4 h-4 transition-transform ${isFetching ? "animate-spin" : ""}`}
           />
           {translations("Refresh")}

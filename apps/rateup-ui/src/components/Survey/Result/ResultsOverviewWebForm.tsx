@@ -1,4 +1,4 @@
-import { FileDown } from "lucide-react";
+import { IconFileDownload } from "@tabler/icons-react";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
@@ -114,7 +114,7 @@ const ResultsOverviewWebForm = ({
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <Button variant="outline" size="sm" onClick={handleExport}>
-                  <FileDown className="mr-1.5 size-4" />
+                  <IconFileDownload className="mr-1.5 size-4" />
                   {translations("Export to PDF")}
                 </Button>
                 <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />

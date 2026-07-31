@@ -1,11 +1,11 @@
 import {
-  CalendarClock,
-  MessageSquareText,
-  PhoneForwarded,
-  PhoneOff,
-  FlaskConical,
-  Gauge,
-} from "lucide-react";
+  IconCalendarClock,
+  IconFlask,
+  IconGauge,
+  IconMessage2,
+  IconPhoneOff,
+  IconPhoneOutgoing,
+} from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
@@ -67,7 +67,7 @@ function TestAgentCard({ waSettingsId }: { waSettingsId: string }) {
 
   return (
     <OperateCard
-      icon={FlaskConical}
+      icon={IconFlask}
       title="Test the agent"
       description="Send a message and see how the AI agent would respond, without notifying a real consumer."
     >
@@ -115,7 +115,7 @@ function ThreadControlCard({ waSettingsId }: { waSettingsId: string }) {
 
   return (
     <OperateCard
-      icon={PhoneForwarded}
+      icon={IconPhoneOutgoing}
       title="Thread control"
       description="Pass a live conversation to the AI agent, or release it back to standby."
     >
@@ -133,7 +133,7 @@ function ThreadControlCard({ waSettingsId }: { waSettingsId: string }) {
           disabled={!to || setThreadControl.isPending}
           onClick={() => setThreadControl.mutate({ action: "pass", to })}
         >
-          <PhoneForwarded data-icon="inline-start" />
+          <IconPhoneOutgoing data-icon="inline-start" />
           Pass to agent
         </Button>
         <Button
@@ -141,7 +141,7 @@ function ThreadControlCard({ waSettingsId }: { waSettingsId: string }) {
           disabled={!to || setThreadControl.isPending}
           onClick={() => setThreadControl.mutate({ action: "release", to })}
         >
-          <PhoneOff data-icon="inline-start" />
+          <IconPhoneOff data-icon="inline-start" />
           Release control
         </Button>
       </div>
@@ -158,7 +158,7 @@ function AgentEventCard({ waSettingsId }: { waSettingsId: string }) {
 
   return (
     <OperateCard
-      icon={CalendarClock}
+      icon={IconCalendarClock}
       title="Send a business event"
       description="Notify the agent of a business event (e.g. order shipped) so it can proactively update the consumer."
     >
@@ -191,7 +191,7 @@ function AgentEventCard({ waSettingsId }: { waSettingsId: string }) {
         disabled={!to || !type || !description || submitEvent.isPending}
         onClick={() => submitEvent.mutate({ to, event: { type, description, payload } })}
       >
-        <MessageSquareText data-icon="inline-start" />
+        <IconMessage2 data-icon="inline-start" />
         Submit event
       </Button>
       {submitEvent.data && (
@@ -210,7 +210,7 @@ function EvalRunCard({ waSettingsId }: { waSettingsId: string }) {
 
   return (
     <OperateCard
-      icon={Gauge}
+      icon={IconGauge}
       title="Run an evaluation"
       description="Run the agent against a set of evaluation cases to measure quality."
     >

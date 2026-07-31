@@ -1,6 +1,6 @@
 // Extracted verbatim from `CardDetailPage.tsx`. Behaviour is unchanged.
 
-import { User } from "lucide-react";
+import { IconUser } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
@@ -84,7 +84,7 @@ export function TicketAutomationResponse({
         </div>
         <div className="flex flex-col gap-3">
           <div className="flex items-start gap-3">
-            <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <IconUser className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold">{response?.contact?.name}</span>
               <span className="text-xs text-muted-foreground">{response?.contact?.phone}</span>

@@ -1,6 +1,12 @@
 // Extracted verbatim from `billing.tsx`. Behaviour is unchanged.
 
-import { Bot, ClipboardList, Gift, MessageCircle, Users } from "lucide-react";
+import {
+  IconClipboardList,
+  IconGift,
+  IconMessageCircle,
+  IconRobot,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { UsageStats } from "@/backend/stats/stats.api";
@@ -31,7 +37,7 @@ export const TeamStats = ({
   return (
     <Card className="p-6">
       <h3 className="flex items-center gap-1">
-        <Users className="w-4 h-4" />
+        <IconUsers className="w-4 h-4" />
         {translations("Team")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
@@ -98,7 +104,7 @@ export const SurveyStats = ({
   return (
     <Card className="p-6">
       <h3 className="flex items-center gap-1">
-        <ClipboardList className="w-4 h-4" />
+        <IconClipboardList className="w-4 h-4" />
         {translations("Web Survey")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
@@ -174,7 +180,7 @@ export const WhatsappStats = ({
   return (
     <Card className="p-6">
       <h3 className="flex items-center gap-1">
-        <MessageCircle className="w-4 h-4" />
+        <IconMessageCircle className="w-4 h-4" />
         {translations("Whatsapp")}
       </h3>
       <div className="flex flex-col justify-center gap-2">
@@ -243,7 +249,7 @@ export const AIStats = ({
   return (
     <Card className="p-6 shadow-sm border-gray-200">
       <h3 className="flex items-center gap-1">
-        <Bot className="w-4 h-4" />
+        <IconRobot className="w-4 h-4" />
         {translations("AI")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
@@ -319,7 +325,7 @@ export const LoyaltyStats = ({
   return (
     <Card className="p-6">
       <h3 className="flex items-center gap-1">
-        <Gift className="w-4 h-4" />
+        <IconGift className="w-4 h-4" />
         {translations("Loyalty")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">

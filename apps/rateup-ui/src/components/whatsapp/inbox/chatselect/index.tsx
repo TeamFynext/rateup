@@ -1,6 +1,6 @@
+import { IconCircleCheck, IconLoader, IconLoader2, IconUserCheck } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -513,7 +513,7 @@ const WaInboxChatSelect = () => {
                             />
                           }
                         >
-                          <UserCheck className="w-4 h-4" />
+                          <IconUserCheck className="w-4 h-4" />
                         </TooltipTrigger>
 
                         <TooltipContent>
@@ -536,7 +536,7 @@ const WaInboxChatSelect = () => {
                             />
                           }
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          <IconCircleCheck className="w-4 h-4" />
                         </TooltipTrigger>
 
                         <TooltipContent>
@@ -583,7 +583,7 @@ const WaInboxChatSelect = () => {
                   >
                     {isBottomLoader || !contact ? (
                       <div className="flex items-center justify-center py-2">
-                        <Loader className="h-5 w-5 animate-spin text-primary" />
+                        <IconLoader className="h-5 w-5 animate-spin text-primary" />
                       </div>
                     ) : (
                       <WaInboxChatSelectCard
@@ -646,7 +646,7 @@ const WaInboxChatSelect = () => {
                 handleBulkClose();
               }}
             >
-              {isBulkAssignStatusPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isBulkAssignStatusPending && <IconLoader2 className="w-4 h-4 animate-spin" />}
               {translations("Confirm")}
             </Button>
           </DialogFooter>

@@ -1,8 +1,8 @@
 // Extracted verbatim from the `/dashboard/qrCreator/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconPlus } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -79,7 +79,7 @@ export function GenerateQr() {
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={handleCreateQr}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create QR Code")}
             </Button>
             <RefreshButton queryKeys={["qrs"]} />

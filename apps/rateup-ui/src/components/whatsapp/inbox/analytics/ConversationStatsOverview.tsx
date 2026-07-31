@@ -1,15 +1,15 @@
 import {
-  CheckCircle2,
-  Clock,
-  Eye,
-  MessageCircle,
-  MessageSquare,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Users,
-  Zap,
-} from "lucide-react";
+  IconBolt,
+  IconCircleCheck,
+  IconClock,
+  IconEye,
+  IconMessage,
+  IconMessageCircle,
+  IconTarget,
+  IconTrendingDown,
+  IconTrendingUp,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -46,7 +46,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
           hoverShadow: "hover:shadow-blue-300/50",
           text: "text-blue-500",
         },
-        icon: MessageCircle,
+        icon: IconMessageCircle,
         suffix: "",
         progressTotal: 1000,
         value: data?.totalConversations,
@@ -60,7 +60,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
           hoverShadow: "hover:shadow-green-300/50",
           text: "text-green-500",
         },
-        icon: Clock,
+        icon: IconClock,
         suffix: formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)?.suffix,
         progressTotal: 60,
         value: formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)?.value ?? "NA",
@@ -74,7 +74,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
           hoverShadow: "hover:shadow-purple-300/50",
           text: "text-purple-500",
         },
-        icon: Target,
+        icon: IconTarget,
         suffix: "%",
         progressTotal: 100,
         value: data?.resolutionRate != null ? Number(data.resolutionRate.toFixed(1)) : 0,
@@ -99,7 +99,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary" />
+            <IconTarget className="w-4 h-4 text-primary" />
             {t("Performance Metrics")}
           </CardTitle>
         </CardHeader>
@@ -135,7 +135,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" />
+            <IconBolt className="w-4 h-4 text-primary" />
             {t("Quick Stats")}
           </CardTitle>
         </CardHeader>
@@ -144,7 +144,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
             <div className="flex items-center justify-between p-3 rounded-lg border ">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <Eye className="w-4 h-4 text-primary" />
+                  <IconEye className="w-4 h-4 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("New Conversations")}</p>
@@ -162,7 +162,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
             <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-green-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <IconCircleCheck className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("Resolved")}</p>
@@ -172,9 +172,9 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
               {quickStats?.resolvedRateDifference ? (
                 <div className="flex items-center gap-1 text-xs">
                   {quickStats?.resolvedRateDifference < 0 ? (
-                    <TrendingDown className="w-3 h-3 text-red-600" />
+                    <IconTrendingDown className="w-3 h-3 text-red-600" />
                   ) : (
-                    <TrendingUp className="w-3 h-3 text-green-600" />
+                    <IconTrendingUp className="w-3 h-3 text-green-600" />
                   )}
                   <span
                     className={`${quickStats?.resolvedRateDifference < 0 ? "text-red-600" : "text-green-600"}`}
@@ -190,7 +190,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
             <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-orange-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-orange-600" />
+                  <IconMessage className="w-4 h-4 text-orange-600" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("In Progress")}</p>
@@ -204,7 +204,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
             <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <Users className="w-4 h-4 text-primary" />
+                  <IconUsers className="w-4 h-4 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("Agents Online")}</p>

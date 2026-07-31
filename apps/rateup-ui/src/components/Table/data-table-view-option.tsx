@@ -1,5 +1,5 @@
+import { IconSettings2 } from "@tabler/icons-react";
 import type { Column, Table } from "@tanstack/react-table";
-import { Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -22,7 +22,7 @@ export function DataTableViewOptions<TData>({
       <DropdownMenuTrigger
         render={<Button variant="outline" size="sm" className="ml-auto hidden lg:flex" />}
       >
-        <Settings2 />
+        <IconSettings2 />
         <span className="font-medium text-sm">View</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-37.5">

@@ -1,4 +1,4 @@
-import { BarChart, MessageSquare, RefreshCcw } from "lucide-react";
+import { IconChartBar, IconMessage, IconRefresh } from "@tabler/icons-react";
 import { easeOut, motion } from "motion/react";
 
 const cardVariants = {
@@ -33,32 +33,32 @@ const ReviewAiFeatures = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              icon: <RefreshCcw className="h-8 w-8 text-[#009987] mb-4" />,
+              icon: <IconRefresh className="h-8 w-8 text-[#009987] mb-4" />,
               title: "AI-Powered QR Codes",
               desc: "Generate dynamic QR codes optimized for review collection.",
             },
             {
-              icon: <BarChart className="h-8 w-8 text-[#009987] mb-4" />,
+              icon: <IconChartBar className="h-8 w-8 text-[#009987] mb-4" />,
               title: "Smart Review Filtering",
               desc: "Guide happy customers to Google, capture negative feedback internally.",
             },
             {
-              icon: <MessageSquare className="h-8 w-8 text-[#009987] mb-4" />,
+              icon: <IconMessage className="h-8 w-8 text-[#009987] mb-4" />,
               title: "Negative Feedback Management",
               desc: "Automatically create tickets for negative reviews for fast resolution.",
             },
             {
-              icon: <BarChart className="h-8 w-8 text-[#009987] mb-4" />,
+              icon: <IconChartBar className="h-8 w-8 text-[#009987] mb-4" />,
               title: "Online Reputation Analysis",
               desc: "AI analyzes reviews across platforms for sentiment and key insights.",
             },
             {
-              icon: <RefreshCcw className="h-8 w-8 text-[#009987] mb-4" />,
+              icon: <IconRefresh className="h-8 w-8 text-[#009987] mb-4" />,
               title: "AI Agents & Assistance",
               desc: "Get AI-driven suggestions for responding to reviews and improving service.",
             },
             {
-              icon: <MessageSquare className="h-8 w-8 text-[#009987] mb-4" />,
+              icon: <IconMessage className="h-8 w-8 text-[#009987] mb-4" />,
               title: "WhatsApp Integration",
               desc: "Connect via WhatsApp for instant support and issue resolution.",
             },

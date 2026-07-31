@@ -1,7 +1,15 @@
 // Extracted verbatim from `EarningRulesPage.tsx`. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Award, Edit2, Info, Loader2, Save, Trash2, X } from "lucide-react";
+import {
+  IconAward,
+  IconDeviceFloppy,
+  IconInfoCircle,
+  IconLoader2,
+  IconPencil,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -67,7 +75,7 @@ export function TierCard({
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
               style={{ backgroundColor: tier.color }}
             >
-              <Award className="h-5 w-5 text-background" />
+              <IconAward className="h-5 w-5 text-background" />
             </div>
 
             <div className="flex flex-1 items-center gap-4">
@@ -101,7 +109,7 @@ export function TierCard({
                 className="h-7 w-7 p-0 text-[#1873E8] hover:bg-blue-50"
                 onClick={onStartEdit}
               >
-                <Edit2 className="h-3.5 w-3.5" />
+                <IconPencil className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -132,7 +140,7 @@ export function TierCard({
                 }}
                 className="h-8"
               >
-                <X className="mr-1 h-3.5 w-3.5" />
+                <IconX className="mr-1 h-3.5 w-3.5" />
                 Cancel
               </Button>
               <Button
@@ -142,9 +150,9 @@ export function TierCard({
                 disabled={updateTierMutation.isPending}
               >
                 {updateTierMutation.isPending ? (
-                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Save className="mr-1 h-3.5 w-3.5" />
+                  <IconDeviceFloppy className="mr-1 h-3.5 w-3.5" />
                 )}
                 Save
               </Button>
@@ -258,7 +266,7 @@ export function TierCard({
             <div className="text-xs text-muted-foreground">
               {tier.threshold === 0 ? (
                 <>
-                  <Info className="mr-1 inline h-3 w-3" />
+                  <IconInfoCircle className="mr-1 inline h-3 w-3" />
                   {t("Base tier - All new customers start here. Cannot be deleted.")}
                 </>
               ) : (
@@ -276,7 +284,7 @@ export function TierCard({
                 className="h-8 text-red-600 hover:bg-red-50"
                 onClick={() => onDelete(tier.id, tierForm.getValues("name"))}
               >
-                <Trash2 className="mr-1 h-3.5 w-3.5" />
+                <IconTrash className="mr-1 h-3.5 w-3.5" />
                 Delete Tier
               </Button>
             )}

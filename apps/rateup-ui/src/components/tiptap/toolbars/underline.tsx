@@ -1,6 +1,6 @@
 "use client";
 
-import { UnderlineIcon } from "lucide-react";
+import { IconUnderline } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const UnderlineToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProp
             />
           }
         >
-          {children ?? <UnderlineIcon className="h-4 w-4" />}
+          {children ?? <IconUnderline className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Underline</span>

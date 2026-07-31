@@ -1,7 +1,13 @@
 // Extracted verbatim from the `/admin/updateCenter/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
-import { AlertTriangle, Database, RefreshCw, Settings, Shield } from "lucide-react";
+import {
+  IconAlertTriangle,
+  IconDatabase,
+  IconRefresh,
+  IconSettings,
+  IconShield,
+} from "@tabler/icons-react";
 
 import {
   useMigrateLoyaltyTierPriority,
@@ -83,7 +89,7 @@ export function UpdateAllThemes() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <Settings className="h-5 w-5 text-primary" />
+            <IconSettings className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-semibold tracking-tight">Update Center</h1>
           </div>
           {isProduction && (
@@ -99,7 +105,7 @@ export function UpdateAllThemes() {
 
       {/* Warning Alert */}
       <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
-        <AlertTriangle className="h-4 w-4 text-red-600" />
+        <IconAlertTriangle className="h-4 w-4 text-red-600" />
         <AlertDescription className="text-red-800 dark:text-red-200">
           <strong>Warning:</strong> These operations can modify system data. Ensure you have proper
           backups before proceeding.
@@ -108,7 +114,7 @@ export function UpdateAllThemes() {
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-          <Database className="h-5 w-5" />
+          <IconDatabase className="h-5 w-5" />
           Data Migration
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -116,7 +122,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">
@@ -141,7 +147,7 @@ export function UpdateAllThemes() {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <IconRefresh className="mr-2 h-4 w-4" />
                     Run Migration
                   </>
                 )}
@@ -152,7 +158,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Sync Team Features</CardTitle>
@@ -175,7 +181,7 @@ export function UpdateAllThemes() {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <IconRefresh className="mr-2 h-4 w-4" />
                     Run Sync
                   </>
                 )}
@@ -186,7 +192,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Update Free Plan Features</CardTitle>
@@ -210,7 +216,7 @@ export function UpdateAllThemes() {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <IconRefresh className="mr-2 h-4 w-4" />
                     Run Migration
                   </>
                 )}
@@ -221,7 +227,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Migrate Non-Free Plan Features</CardTitle>
@@ -247,7 +253,7 @@ export function UpdateAllThemes() {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <IconRefresh className="mr-2 h-4 w-4" />
                     Run Migration
                   </>
                 )}
@@ -258,7 +264,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Migrate Loyalty Tier Priority</CardTitle>
@@ -282,7 +288,7 @@ export function UpdateAllThemes() {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <IconRefresh className="mr-2 h-4 w-4" />
                     Run Migration
                   </>
                 )}
@@ -293,7 +299,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Seed Inbox Stats</CardTitle>
@@ -316,7 +322,7 @@ export function UpdateAllThemes() {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <IconRefresh className="mr-2 h-4 w-4" />
                     Run Seeding
                   </>
                 )}
@@ -327,7 +333,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Reconcile Inbox Status</CardTitle>
@@ -353,7 +359,7 @@ export function UpdateAllThemes() {
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="mr-2 h-4 w-4" />
+                      <IconRefresh className="mr-2 h-4 w-4" />
                       Dry Run
                     </>
                   )}
@@ -363,7 +369,7 @@ export function UpdateAllThemes() {
                   disabled={reconcileInboxStatusMutation.isPending}
                   className="flex-1"
                 >
-                  <Database className="mr-2 h-4 w-4" />
+                  <IconDatabase className="mr-2 h-4 w-4" />
                   Apply Repairs
                 </Button>
               </div>
@@ -373,7 +379,7 @@ export function UpdateAllThemes() {
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <Database className="h-5 w-5 text-amber-600" />
+                  <IconDatabase className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">Backfill Missing Conversations</CardTitle>
@@ -401,7 +407,7 @@ export function UpdateAllThemes() {
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="mr-2 h-4 w-4" />
+                      <IconRefresh className="mr-2 h-4 w-4" />
                       Dry Run
                     </>
                   )}
@@ -411,7 +417,7 @@ export function UpdateAllThemes() {
                   disabled={backfillConversationsMutation.isPending}
                   className="flex-1"
                 >
-                  <Database className="mr-2 h-4 w-4" />
+                  <IconDatabase className="mr-2 h-4 w-4" />
                   Apply Backfill
                 </Button>
               </div>
@@ -424,7 +430,7 @@ export function UpdateAllThemes() {
       <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-blue-600" />
+            <IconShield className="h-4 w-4 text-blue-600" />
             <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
               Environment Information
             </CardTitle>

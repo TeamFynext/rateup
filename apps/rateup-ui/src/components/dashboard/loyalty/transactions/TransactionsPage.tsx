@@ -1,9 +1,9 @@
 // Extracted verbatim from the `/dashboard/loyalty/transactions/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import { IconDownload, IconFilter, IconLoader2 } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Download, Filter, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -135,11 +135,11 @@ export function TransactionsPage() {
         </div>
         <div className="flex gap-3">
           <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
+            <IconFilter className="w-4 h-4 mr-2" />
             {t("Filter")}
           </Button>
           <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
+            <IconDownload className="w-4 h-4 mr-2" />
             {t("Export")}
           </Button>
           <InfoButton docUrl={`${docsPath}/loyality/transctions`} />
@@ -148,7 +148,7 @@ export function TransactionsPage() {
       {/* DataTable */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <IconLoader2 className="w-6 h-6 animate-spin" />
         </div>
       ) : (
         <DataTable columns={columns} data={transactionsData?.transactions || []} />

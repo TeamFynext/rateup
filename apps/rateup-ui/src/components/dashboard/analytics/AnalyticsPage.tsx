@@ -1,19 +1,19 @@
 // Extracted verbatim from the `/dashboard/analytics/$staffid/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconArrowLeft,
+  IconArrowRight,
+  IconClock,
+  IconClock2,
+  IconFileText,
+  IconMessageCircle,
+  IconRefresh,
+  IconThumbUp,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Clock,
-  Clock2,
-  FileText,
-  MessageCircle,
-  RefreshCcw,
-  ThumbsUp,
-} from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -114,7 +114,7 @@ export function AnalyticsPage() {
                   }
                   className="shrink-0"
                 >
-                  <ArrowLeft className="w-4 h-4 md:mr-2" />
+                  <IconArrowLeft className="w-4 h-4 md:mr-2" />
                   <span className="hidden md:inline">{t("Back to Agents")}</span>
                 </Button>
 
@@ -147,7 +147,7 @@ export function AnalyticsPage() {
                   onClick={refresh}
                   className="flex items-center justify-center gap-1"
                 >
-                  <RefreshCcw />
+                  <IconRefresh />
                   <span>{t("Refresh")}</span>
                 </Button>
                 <DateSelector days={day} setDays={setDay} />
@@ -156,7 +156,7 @@ export function AnalyticsPage() {
                   onClick={handleDownloadPDF}
                   className="flex items-center justify-center gap-1"
                 >
-                  <FileText />
+                  <IconFileText />
                   <span>{t("Export")}</span>
                 </Button>
               </div>
@@ -184,7 +184,7 @@ export function AnalyticsPage() {
           <div className="space-y-6 w-full">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <AnalyticsStatCard
-                icon={<MessageCircle className="w-6 h-6 text-primary" />}
+                icon={<IconMessageCircle className="w-6 h-6 text-primary" />}
                 label={t("Messages Handled")}
                 value={analytics?.userPerformance?.totalMessagesHandled ?? 0}
                 trendValue={
@@ -196,7 +196,7 @@ export function AnalyticsPage() {
               />
 
               <AnalyticsStatCard
-                icon={<Clock className="w-6 h-6 text-primary" />}
+                icon={<IconClock className="w-6 h-6 text-primary" />}
                 label={t("Avg Response Time")}
                 value={
                   averageResponseTime
@@ -217,7 +217,7 @@ export function AnalyticsPage() {
               />
 
               <AnalyticsStatCard
-                icon={<ThumbsUp className="w-6 h-6 text-primary" />}
+                icon={<IconThumbUp className="w-6 h-6 text-primary" />}
                 label={t("Resolution Rate")}
                 value={
                   analytics?.metrics?.resolutionRate != null
@@ -238,7 +238,7 @@ export function AnalyticsPage() {
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
-                      <Clock2 className="w-6 h-6 text-primary" />
+                      <IconClock2 className="w-6 h-6 text-primary" />
                     </div>
                   </div>
 
@@ -260,7 +260,7 @@ export function AnalyticsPage() {
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-orange-100 dark:bg-transparent">
-                      <ArrowLeft className="w-6 h-6 text-orange-500" />
+                      <IconArrowLeft className="w-6 h-6 text-orange-500" />
                     </div>
                     <div className="px-2 py-1 text-xs rounded-lg bg-orange-100 dark:bg-transparent text-orange-500 border border-orange-300">
                       OUT
@@ -283,7 +283,7 @@ export function AnalyticsPage() {
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-green-100 dark:bg-transparent">
-                      <ArrowRight className="w-6 h-6 text-green-500" />
+                      <IconArrowRight className="w-6 h-6 text-green-500" />
                     </div>
                     <div className="px-2 py-1 text-xs border border-green-300 rounded-lg bg-green-100 dark:bg-transparent text-green-500">
                       IN

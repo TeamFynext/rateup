@@ -1,7 +1,6 @@
-import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
+import { IconCheck, IconChevronLeft, IconStar } from "@tabler/icons-react";
 import { Image as NextImage } from "@unpic/react";
 import dayjs from "dayjs";
-import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -24,7 +23,7 @@ function ReadOnlyRating({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
-        <Star
+        <IconStar
           key={i}
           className={cn(
             "size-4",

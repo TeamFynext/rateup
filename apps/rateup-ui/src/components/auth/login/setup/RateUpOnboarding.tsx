@@ -1,30 +1,30 @@
 // Extracted verbatim from the `/(auth)/login/setup/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconArrowRight,
+  IconBolt,
+  IconBook,
+  IconCalendar,
+  IconChevronDown,
+  IconCircleCheck,
+  IconCircleX,
+  IconCoins,
+  IconCreditCard,
+  IconGift,
+  IconHeadphones,
+  IconLoader2,
+  IconMessageCircle,
+  IconRobot,
+  IconRosetteDiscountCheck,
+  IconSettings2,
+  IconShare2,
+  IconUsers,
+  IconVideo,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BadgeCheck,
-  BookOpen,
-  Bot,
-  CalendarDays,
-  CheckCircle2,
-  ChevronDown,
-  Coins,
-  CreditCard,
-  Gift,
-  Headphones,
-  Loader2,
-  MessageCircle,
-  Settings2,
-  Share2,
-  Users,
-  Video,
-  XCircle,
-  Zap,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -65,23 +65,32 @@ interface Section {
 
 /** A step's icon plus its badge styling — a Tailwind class pair or a literal brand colour. */
 interface CardIcon {
-  icon: LucideIcon;
+  icon: TablerIcon;
   iconClass?: string;
   iconBg?: CSSProperties;
 }
 
 const CARD_ICONS: Record<CardId, CardIcon> = {
-  api: { icon: MessageCircle, iconClass: "bg-primary/10 text-primary" },
-  payment: { icon: CreditCard, iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" } },
-  verify: { icon: BadgeCheck, iconClass: "bg-primary/10 text-primary" },
-  invite: { icon: Users, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
-  auto: { icon: Zap, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
-  points: { icon: Settings2, iconClass: "bg-primary/10 text-primary" },
-  tiers: { icon: Coins, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
-  rewards: { icon: Gift, iconBg: { background: "rgba(225,29,72,0.08)", color: "#e11d48" } },
-  referral: { icon: Share2, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
-  cmds: { icon: MessageCircle, iconBg: { background: "rgba(5,150,105,0.08)", color: "#059669" } },
-  loyaltyauto: { icon: Bot, iconBg: { background: "rgba(13,148,136,0.08)", color: "#0d9488" } },
+  api: { icon: IconMessageCircle, iconClass: "bg-primary/10 text-primary" },
+  payment: {
+    icon: IconCreditCard,
+    iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" },
+  },
+  verify: { icon: IconRosetteDiscountCheck, iconClass: "bg-primary/10 text-primary" },
+  invite: { icon: IconUsers, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
+  auto: { icon: IconBolt, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
+  points: { icon: IconSettings2, iconClass: "bg-primary/10 text-primary" },
+  tiers: { icon: IconCoins, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
+  rewards: { icon: IconGift, iconBg: { background: "rgba(225,29,72,0.08)", color: "#e11d48" } },
+  referral: { icon: IconShare2, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
+  cmds: {
+    icon: IconMessageCircle,
+    iconBg: { background: "rgba(5,150,105,0.08)", color: "#059669" },
+  },
+  loyaltyauto: {
+    icon: IconRobot,
+    iconBg: { background: "rgba(13,148,136,0.08)", color: "#0d9488" },
+  },
 };
 
 /** A step's icon styling plus its translated copy. */
@@ -362,7 +371,7 @@ export function RateUpOnboarding() {
             className="text-xs h-8 gap-1.5 border-gray-200 px-2 sm:px-3"
             onClick={() => window.open("https://www.youtube.com/@TeamRateup", "_blank")}
           >
-            <Video size={12} />
+            <IconVideo size={12} />
             <span className="hidden sm:inline">{translations("Watch intro")}</span>
           </Button>
 
@@ -373,7 +382,7 @@ export function RateUpOnboarding() {
             className="text-xs h-8 gap-1.5 border-gray-200 px-2 sm:px-3"
             onClick={() => window.open("https://docs.rateup.app", "_blank")}
           >
-            <BookOpen size={12} />
+            <IconBook size={12} />
             <span className="hidden sm:inline">{translations("View docs")}</span>
           </Button>
 
@@ -389,7 +398,7 @@ export function RateUpOnboarding() {
               window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
             }}
           >
-            <Headphones size={12} />
+            <IconHeadphones size={12} />
             <span className="hidden sm:inline">{translations("Support")}</span>
           </Button>
 
@@ -400,7 +409,7 @@ export function RateUpOnboarding() {
               aria-label={translations("Book a demo")}
               className="text-xs h-8 gap-1.5 text-white border-none px-2 sm:px-3"
             >
-              <CalendarDays size={12} />
+              <IconCalendar size={12} />
               <span className="hidden sm:inline">{translations("Book a demo")}</span>
             </Button>
           </BookDemoModal>
@@ -470,7 +479,7 @@ export function RateUpOnboarding() {
                 className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-white underline-offset-4 cursor-pointer hover:underline focus-visible:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 {translations("Skip setup")}
-                <ArrowRight size={12} />
+                <IconArrowRight size={12} />
               </button>
             </div>
 
@@ -625,7 +634,7 @@ function CollapsibleCard({
                   : "border-gray-200 bg-transparent",
             )}
           >
-            {allDone && <CheckCircle2 size={14} color="white" />}
+            {allDone && <IconCircleCheck size={14} color="white" />}
           </div>
           {/* Title */}
           <div className="flex-1 min-w-0">
@@ -636,7 +645,9 @@ function CollapsibleCard({
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 shrink-0 whitespace-nowrap">
             {doneCount} / {total}
           </span>
-          <ChevronDown className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+          <IconChevronDown
+            className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          />
         </CollapsibleTrigger>
       </Card>
       {/* Content */}
@@ -686,21 +697,21 @@ function CollapsibleCard({
                                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                   {verificationStatus === "verified" && (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                                      <CheckCircle2 size={12} />
+                                      <IconCircleCheck size={12} />
                                       {translations("Verified")}
                                     </span>
                                   )}
 
                                   {verificationStatus === "pending" && (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
-                                      <Loader2 size={12} className="animate-spin" />
+                                      <IconLoader2 size={12} className="animate-spin" />
                                       {translations("Under review")}
                                     </span>
                                   )}
 
                                   {verificationStatus === "not_verified" && (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
-                                      <XCircle size={12} />
+                                      <IconCircleX size={12} />
                                       {translations("Not verified")}
                                     </span>
                                   )}
@@ -713,7 +724,7 @@ function CollapsibleCard({
 
                                   {isCheckingVerification && (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                                      <Loader2 size={12} className="animate-spin" />
+                                      <IconLoader2 size={12} className="animate-spin" />
                                       {translations("Checking...")}
                                     </span>
                                   )}

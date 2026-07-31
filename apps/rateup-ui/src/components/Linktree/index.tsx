@@ -1,6 +1,6 @@
+import { IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -97,7 +97,7 @@ function LinktreeDashboard() {
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={handleCreateLinktree}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Access Link")}
             </Button>
             <RefreshButton queryKeys={["linktrees"]} />

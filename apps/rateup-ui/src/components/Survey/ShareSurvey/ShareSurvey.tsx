@@ -1,5 +1,12 @@
+import {
+  IconCalendarClock,
+  IconChevronLeft,
+  IconCopy,
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, ChevronLeft, Copy, Pause, Pencil, Play } from "lucide-react";
 import { useId } from "react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -319,7 +326,7 @@ const ShareSurvey = ({
                             setPublishSettings(true);
                           }}
                         >
-                          <Pencil className="size-3.5" />
+                          <IconPencil className="size-3.5" />
                         </Button>
                       )}
                     </div>
@@ -341,7 +348,7 @@ const ShareSurvey = ({
                           setPublishSettings(true);
                         }}
                       >
-                        <Pencil className="size-3.5" />
+                        <IconPencil className="size-3.5" />
                       </Button>
                     </div>
                   )}
@@ -362,7 +369,7 @@ const ShareSurvey = ({
                           />
                         }
                       >
-                        <CalendarClock className="size-4" />
+                        <IconCalendarClock className="size-4" />
                       </TooltipTrigger>
                       <TooltipContent>{translations("Schedule survey expiry")}</TooltipContent>
                     </Tooltip>
@@ -376,12 +383,12 @@ const ShareSurvey = ({
                   >
                     {survey?.active ? (
                       <>
-                        <Pause data-icon="inline-start" />
+                        <IconPlayerPause data-icon="inline-start" />
                         {translations("Pause")}
                       </>
                     ) : (
                       <>
-                        <Play data-icon="inline-start" />
+                        <IconPlayerPlay data-icon="inline-start" />
                         {translations("Resume")}
                       </>
                     )}
@@ -439,7 +446,7 @@ const ShareSurvey = ({
                     setActiveTab(TabEnum.Edit);
                   }}
                 >
-                  <ChevronLeft data-icon="inline-start" />
+                  <IconChevronLeft data-icon="inline-start" />
                   {translations("Back to Edit Questions")}
                 </Button>
               </div>
@@ -644,7 +651,7 @@ export const CopyLinkComponent = ({
           disabled={disabled}
           className="shrink-0 rounded-l-none"
         >
-          <Copy data-icon="inline-start" />
+          <IconCopy data-icon="inline-start" />
           {copied ? "Copied!" : "Copy URL"}
         </Button>
       </div>

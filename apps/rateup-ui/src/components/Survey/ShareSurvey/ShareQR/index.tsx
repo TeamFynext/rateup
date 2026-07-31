@@ -1,4 +1,4 @@
-import { Loader2, Save } from "lucide-react";
+import { IconDeviceFloppy, IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -98,12 +98,12 @@ const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQ
             >
               {shareSettingsMutation?.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <IconLoader2 className="h-4 w-4 animate-spin" />
                   {translations("Saving...")}
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" />
+                  <IconDeviceFloppy className="h-4 w-4" />
                   {translations("Save")}
                 </>
               )}

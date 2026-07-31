@@ -1,15 +1,15 @@
+import {
+  IconArrowRight,
+  IconCoin,
+  IconEye,
+  IconLoader2,
+  IconPackage,
+  IconReceipt,
+  IconTrendingDown,
+  IconTrendingUp,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {
-  ArrowRight,
-  CircleDollarSign,
-  Eye,
-  Loader2,
-  Package,
-  Receipt,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
 
 import type { SpreadsheetFormat } from "@/backend/commerce/commerce.api";
 import {
@@ -51,7 +51,7 @@ function DeltaBadge({ value }: Readonly<{ value: number | null }>) {
       variant="secondary"
       className={cn("gap-1", up ? "text-emerald-600" : "text-destructive")}
     >
-      {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+      {up ? <IconTrendingUp className="size-3" /> : <IconTrendingDown className="size-3" />}
       {up ? "+" : ""}
       {value}%
     </Badge>
@@ -80,28 +80,28 @@ export function OverviewPage() {
       label: "Total Sales",
       value: money(overview?.totalSales ?? 0, sym),
       delta: overview?.delta.totalSales ?? null,
-      icon: CircleDollarSign,
+      icon: IconCoin,
       tile: TILE_CLASSES[0],
     },
     {
       label: "Orders",
       value: String(overview?.orderCount ?? 0),
       delta: overview?.delta.orderCount ?? null,
-      icon: Package,
+      icon: IconPackage,
       tile: TILE_CLASSES[1],
     },
     {
       label: "Avg Order Value",
       value: money(Math.round(overview?.avgOrderValue ?? 0), sym),
       delta: overview?.delta.avgOrderValue ?? null,
-      icon: Receipt,
+      icon: IconReceipt,
       tile: TILE_CLASSES[2],
     },
     {
       label: "Products Live",
       value: String(overview?.productsLive ?? 0),
       delta: null,
-      icon: Eye,
+      icon: IconEye,
       tile: TILE_CLASSES[3],
     },
   ];
@@ -137,7 +137,7 @@ export function OverviewPage() {
                 </div>
                 <div className="mt-3 text-2xl font-bold tracking-tight text-foreground">
                   {loadingOverview ? (
-                    <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
                   ) : (
                     s.value
                   )}
@@ -166,7 +166,7 @@ export function OverviewPage() {
             <CardContent>
               {loadingChart ? (
                 <div className="flex h-48 items-center justify-center">
-                  <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                  <IconLoader2 className="size-6 animate-spin text-muted-foreground" />
                 </div>
               ) : chart.length === 0 ? (
                 <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
@@ -228,7 +228,7 @@ export function OverviewPage() {
                     {p.image ? (
                       <img src={p.image} alt="" className="size-full object-cover" />
                     ) : (
-                      <Package className="size-4" />
+                      <IconPackage className="size-4" />
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -265,7 +265,7 @@ export function OverviewPage() {
               to="/dashboard/commerce/orders"
               className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
             >
-              View all <ArrowRight className="size-3.5" />
+              View all <IconArrowRight className="size-3.5" />
             </Link>
           </div>
           {recentOrders.length === 0 && (

@@ -1,5 +1,11 @@
-import { IconGps } from "@tabler/icons-react";
-import { BarChart3, ChartBar, Coins, Funnel, Layers, Settings } from "lucide-react";
+import {
+  IconChartBar,
+  IconCoins,
+  IconFilter,
+  IconGps,
+  IconSettings,
+  IconStack2,
+} from "@tabler/icons-react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -12,7 +18,7 @@ export const Surveysteps = [
     number: 1,
     title: "Create Account",
     description: "Sign up quickly to access the RateUp dashboard.",
-    icon: <Settings size={32} />,
+    icon: <IconSettings size={32} />,
   },
   {
     number: 2,
@@ -24,7 +30,7 @@ export const Surveysteps = [
     number: 3,
     title: "Customize QR Code",
     description: "Add your logo and brand colors for a cohesive look.",
-    icon: <ChartBar size={32} />,
+    icon: <IconChartBar size={32} />,
   },
 ];
 
@@ -57,25 +63,25 @@ export const articles = [
 
 export const features = [
   {
-    icon: BarChart3,
+    icon: IconChartBar,
     title: "Retail & E-commerce",
     description:
       "Understand post-purchase satisfaction, product feedback, and delivery experience. Reduce returns and build loyalty.",
   },
   {
-    icon: Funnel,
+    icon: IconFilter,
     title: "Restaurants & Hospitality",
     description:
       "Collect feedback on food quality, service, and ambiance instantly. Boost online ratings on Google and TripAdvisor.",
   },
   {
-    icon: Layers,
+    icon: IconStack2,
     title: "Service Providers",
     description:
       "Gauge client satisfaction after appointments (salons, repairs, etc.), identify improvements, and encourage repeat business.",
   },
   {
-    icon: Coins,
+    icon: IconCoins,
     title: "SaaS & Software",
     description:
       "Gather user feedback on features, onboarding, and support directly within the messaging apps they use.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon } from "lucide-react";
+import { IconPhoto } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ const ImagePlaceholderToolbar = React.forwardRef<
           />
         }
       >
-        {children ?? <ImageIcon className="h-4 w-4" aria-hidden="true" />}
+        {children ?? <IconPhoto className="h-4 w-4" aria-hidden="true" />}
       </TooltipTrigger>
       <TooltipContent>
         <span>Image</span>

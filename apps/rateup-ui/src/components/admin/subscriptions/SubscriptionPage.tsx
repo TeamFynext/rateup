@@ -1,9 +1,15 @@
 // Extracted verbatim from the `/admin/subscriptions/` route so the route file carries routing
 // config only. Behaviour is unchanged.
 
+import {
+  IconBuilding,
+  IconCalendar,
+  IconCreditCard,
+  IconPackage,
+  IconStar,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Building2, Calendar, CreditCard, Package, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
@@ -76,7 +82,7 @@ export function SubscriptionPage() {
       header: createSortableHeader("Organization"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <IconBuilding className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("orgName")}</span>
         </div>
       ),
@@ -118,7 +124,7 @@ export function SubscriptionPage() {
             <SelectTrigger className="w-[180px]">
               <SelectValue>
                 <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <IconPackage className="h-4 w-4 text-muted-foreground" />
                   <Badge variant="outline" className="font-medium">
                     {String(planName ?? "")}
                   </Badge>
@@ -183,7 +189,7 @@ export function SubscriptionPage() {
       header: createSortableHeader("Created"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -196,7 +202,7 @@ export function SubscriptionPage() {
         const renewedAt = row.getValue("renewedAt");
         return (
           <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <IconStar className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm">{String(renewedAt ?? "N/A")}</span>
           </div>
         );
@@ -211,7 +217,7 @@ export function SubscriptionPage() {
         const isExpired = row.original.isExpired;
         return (
           <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <IconCreditCard className="h-4 w-4 text-muted-foreground" />
             <Badge variant={isExpired ? "destructive" : "secondary"}>{expiresAt as string}</Badge>
           </div>
         );
@@ -275,7 +281,7 @@ export function SubscriptionPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-primary" />
+              <IconCreditCard className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 {translations("Subscriptions")}
               </h1>
@@ -293,7 +299,7 @@ export function SubscriptionPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Subscriptions
                 </CardTitle>
-                <Package className="h-4 w-4 text-blue-600" />
+                <IconPackage className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">
@@ -349,7 +355,7 @@ export function SubscriptionPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Renewed This Month
                 </CardTitle>
-                <Star className="h-4 w-4 text-purple-600" />
+                <IconStar className="h-4 w-4 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent className="relative">

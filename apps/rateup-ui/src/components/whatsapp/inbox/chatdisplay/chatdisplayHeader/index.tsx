@@ -1,4 +1,10 @@
-import { ArrowLeft, AtSign, BellOff, PanelRight, Star } from "lucide-react";
+import {
+  IconArrowLeft,
+  IconAt,
+  IconBellOff,
+  IconLayoutSidebarRight,
+  IconStar,
+} from "@tabler/icons-react";
 
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -90,7 +96,7 @@ export default function WaInboxChatDisplayHeader({
             className="shrink-0 rounded-md p-1.5 transition-colors hover:bg-accent lg:hidden"
             aria-label="Back to chat list"
           >
-            <ArrowLeft className="size-5" />
+            <IconArrowLeft className="size-5" />
           </button>
           <div className="relative shrink-0">
             <CreativeAvatar
@@ -124,7 +130,7 @@ export default function WaInboxChatDisplayHeader({
                         className="w-full h-4.5 text-[10px] text-red-600 bg-red-100"
                         variant={"secondary"}
                       >
-                        <BellOff /> DND
+                        <IconBellOff /> DND
                       </Badge>
                     }
                     content={
@@ -159,7 +165,7 @@ export default function WaInboxChatDisplayHeader({
                 }
                 className={cn(contact?.isFavorite && "bg-amber-50 dark:bg-amber-950/40")}
               >
-                <Star
+                <IconStar
                   className={cn(
                     "size-4",
                     contact?.isFavorite ? "text-amber-500" : "text-muted-foreground",
@@ -188,7 +194,7 @@ export default function WaInboxChatDisplayHeader({
                   }
                   className="bg-primary/10"
                 >
-                  <AtSign className="size-4 text-primary" />
+                  <IconAt className="size-4 text-primary" />
                 </Button>
               }
             />
@@ -225,7 +231,7 @@ export default function WaInboxChatDisplayHeader({
                   aria-label="Toggle details panel"
                   className="hidden xl:inline-flex"
                 >
-                  <PanelRight className="size-4 text-muted-foreground" />
+                  <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
                 </Button>
               }
             />
@@ -239,7 +245,7 @@ export default function WaInboxChatDisplayHeader({
               aria-label="Show ticket details"
               className="xl:hidden"
             >
-              <PanelRight className="size-4 text-muted-foreground" />
+              <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
             </Button>
           )}
           {/* TODO: CHATBOT */}

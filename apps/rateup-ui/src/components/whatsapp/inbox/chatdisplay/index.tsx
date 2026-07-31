@@ -1,5 +1,4 @@
-import { IconExclamationCircle, IconPaperclip } from "@tabler/icons-react";
-import { MessageSquare } from "lucide-react";
+import { IconExclamationCircle, IconMessage, IconPaperclip } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -175,7 +174,7 @@ export default function WaInboxChatDisplay() {
       {!contact ? (
         <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
           <div className="text-center">
-            <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <IconMessage className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="mb-2">{translations("Select a chat to see messages")}</h3>
           </div>
         </div>

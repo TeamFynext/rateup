@@ -1,4 +1,10 @@
-import { Info, Loader2, MapPin, Save, Truck } from "lucide-react";
+import {
+  IconDeviceFloppy,
+  IconInfoCircle,
+  IconLoader2,
+  IconMapPin,
+  IconTruck,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import type { CatalogSettings } from "@/backend/whatsapp/catalog/catalog.api";
@@ -58,7 +64,7 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
   if (!isApplicable(settings)) {
     return (
       <Alert className="max-w-[760px]">
-        <Info />
+        <IconInfoCircle />
         <AlertTitle>Not applicable</AlertTitle>
         <AlertDescription>
           Your store uses the Shopify Checkout URL, which collects the address and delivery method
@@ -81,7 +87,7 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
           {/* Shipping address */}
           <div className="flex items-center justify-between gap-4 py-2.5">
             <div className="flex items-center gap-2.5">
-              <MapPin className="size-4 text-muted-foreground" />
+              <IconMapPin className="size-4 text-muted-foreground" />
               <div>
                 <div className="text-sm font-medium text-foreground">Collect shipping address</div>
                 <div className="text-xs text-muted-foreground">
@@ -107,7 +113,7 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
           {/* Delivery charge */}
           <div className="flex items-center justify-between gap-4 py-2.5">
             <div className="flex items-center gap-2.5">
-              <Truck className="size-4 text-muted-foreground" />
+              <IconTruck className="size-4 text-muted-foreground" />
               <div>
                 <div className="text-sm font-medium text-foreground">Add delivery charge</div>
                 <div className="text-xs text-muted-foreground">
@@ -155,7 +161,7 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
 
       {collectDelivery && !collectAddress && (
         <Alert>
-          <Info />
+          <IconInfoCircle />
           <AlertTitle>No address will be collected</AlertTitle>
           <AlertDescription>
             Delivery selection is on but address collection is off. The delivery charge is added to
@@ -166,9 +172,9 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
 
       <Button onClick={handleSave} disabled={isSaving || !catalogId} className="w-fit">
         {isSaving ? (
-          <Loader2 data-icon="inline-start" className="animate-spin" />
+          <IconLoader2 data-icon="inline-start" className="animate-spin" />
         ) : (
-          <Save data-icon="inline-start" />
+          <IconDeviceFloppy data-icon="inline-start" />
         )}
         Save Settings
       </Button>

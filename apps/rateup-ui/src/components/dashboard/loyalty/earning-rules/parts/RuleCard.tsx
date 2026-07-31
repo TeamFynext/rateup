@@ -1,7 +1,15 @@
 // Extracted verbatim from `EarningRulesPage.tsx`. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Clock, Edit2, Loader2, Save, Trash2, X } from "lucide-react";
+import {
+  IconCalendar,
+  IconClock,
+  IconDeviceFloppy,
+  IconLoader2,
+  IconPencil,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -165,7 +173,7 @@ export function RuleCard({
                 className="h-7 w-7 p-0 text-[#1873E8] hover:bg-blue-50"
                 onClick={onStartEdit}
               >
-                <Edit2 className="h-3.5 w-3.5" />
+                <IconPencil className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -174,13 +182,13 @@ export function RuleCard({
             <div className="mt-3 flex items-center gap-4 border-t pt-3 text-xs text-muted-foreground">
               {rule.allowedDays && rule.allowedDays.length > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
+                  <IconClock className="h-3.5 w-3.5" />
                   <span>{rule.allowedDays.join(", ")}</span>
                 </div>
               )}
               {(rule.validFrom || rule.validUntil) && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
+                  <IconCalendar className="h-3.5 w-3.5" />
                   <span>
                     {rule.validFrom ? new Date(rule.validFrom).toLocaleDateString() : t("Start")}
                     {" - "}
@@ -212,7 +220,7 @@ export function RuleCard({
                 }}
                 className="h-8"
               >
-                <X className="mr-1 h-3.5 w-3.5" />
+                <IconX className="mr-1 h-3.5 w-3.5" />
                 Cancel
               </Button>
               <Button
@@ -222,9 +230,9 @@ export function RuleCard({
                 disabled={updateRuleMutation.isPending}
               >
                 {updateRuleMutation.isPending ? (
-                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Save className="mr-1 h-3.5 w-3.5" />
+                  <IconDeviceFloppy className="mr-1 h-3.5 w-3.5" />
                 )}
                 Save
               </Button>
@@ -614,9 +622,9 @@ export function RuleCard({
               disabled={isDeleting}
             >
               {isDeleting ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Trash2 className="mr-1 h-3.5 w-3.5" />
+                <IconTrash className="mr-1 h-3.5 w-3.5" />
               )}
               Delete Rule
             </Button>

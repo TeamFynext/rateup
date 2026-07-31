@@ -1,5 +1,5 @@
+import { IconArrowRight } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useGetStaffPerformanceonConversation } from "@/backend/conversation/conversation.query";
@@ -166,7 +166,7 @@ const ConversationStatsAgentPerformance = ({ dateRange }: { dateRange: Analytics
                         </Badge>
                       </td>
                       <td>
-                        <ArrowRight className="opacity-40" />
+                        <IconArrowRight className="opacity-40" />
                       </td>
                     </tr>
                   );

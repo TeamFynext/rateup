@@ -1,5 +1,12 @@
+import {
+  IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
+  IconCopy,
+  IconDownload,
+  IconTags,
+} from "@tabler/icons-react";
 import { toBlob } from "html-to-image";
-import { Check, ChevronLeft, ChevronRight, Copy, Download, Tags } from "lucide-react";
 import { useId, useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -170,7 +177,7 @@ function TagManager({
             />
           }
         >
-          <Tags className="h-4 w-4" />
+          <IconTags className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent side="right">
           <p>{translations("Manage URL Tags")}</p>
@@ -211,7 +218,7 @@ function TagManager({
                 <>Processing...</>
               ) : (
                 <>
-                  <Download className="mr-2 h-4 w-4" />
+                  <IconDownload className="mr-2 h-4 w-4" />
                   {translations("Download all QRs")}
                 </>
               )}
@@ -264,9 +271,9 @@ function TagManager({
                                 onClick={() => handleCopyUrl(url)}
                               >
                                 {copiedUrl === url ? (
-                                  <Check className="h-4 w-4" />
+                                  <IconCheck className="h-4 w-4" />
                                 ) : (
-                                  <Copy className="h-4 w-4" />
+                                  <IconCopy className="h-4 w-4" />
                                 )}
                               </Button>
                             </div>
@@ -317,7 +324,7 @@ function TagManager({
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <IconChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
@@ -325,7 +332,7 @@ function TagManager({
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <IconChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
