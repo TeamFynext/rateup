@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { axiosClient } from "@/backend/apiClient";
+import type {
+  CatalogOrderAddress,
+  CatalogOrderProduct,
+} from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +21,43 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { COMMON_CARRIERS, EXCLUDED_KEYS, STAGE_LABELS } from "@/types/enums";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
+
+/**
+ * What the dialog reads off an order. Both the commerce list's `CommerceOrder`
+ * and the catalog's `CatalogOrder` satisfy it.
+ */
+export interface OrderDetails {
+  id: string;
+  createdAt: string;
+  contact?: { name?: string | null; phone?: string | null } | null;
+  products?: CatalogOrderProduct[];
+  status?: string | null;
+  orderStage?: string | null;
+  currency?: string | null;
+  shippingAddress?: CatalogOrderAddress | null;
+  deliveryOption?: { charge?: number; name?: string; days?: number } | null;
+  shopifyDraftOrderId?: string | null;
+  shopifyInvoiceUrl?: string | null;
+}
+
+/** A Shopify fulfillment order line item, from the integration proxy. */
+interface ShopifyFulfillmentLineItem {
+  id: string;
+  remainingQuantity: number;
+  totalQuantity?: number;
+  title?: string;
+  name?: string;
+  sku?: string | null;
+  image?: { url?: string } | null;
+}
+
+/** A Shopify fulfillment order, from the integration proxy. */
+interface ShopifyFulfillmentOrder {
+  id: string;
+  status?: string;
+  lineItems?: { nodes?: ShopifyFulfillmentLineItem[] };
+}
 
 export default function OrderDetailsDialog({
   open,
@@ -25,9 +66,9 @@ export default function OrderDetailsDialog({
 }: {
   open: boolean;
   onOpenChange: (b: boolean) => void;
-  order: any;
+  order: OrderDetails | null;
 }) {
-  const [fulfillmentOrders, setFulfillmentOrders] = useState<any[]>([]);
+  const [fulfillmentOrders, setFulfillmentOrders] = useState<ShopifyFulfillmentOrder[]>([]);
   const [loadingFulfillments, setLoadingFulfillments] = useState(false);
   const [submittingFulfillment, setSubmittingFulfillment] = useState(false);
   const [trackingCompany, setTrackingCompany] = useState("");
@@ -45,7 +86,8 @@ export default function OrderDetailsDialog({
       const response = await axiosClient.get(
         `/integrations/shopify/orders/${order.id}/fulfillment-orders`,
       );
-      setFulfillmentOrders(response.data || []);
+      const fulfillments: ShopifyFulfillmentOrder[] = response.data || [];
+      setFulfillmentOrders(fulfillments);
       const initialQtys: Record<string, number> = {};
       response.data?.forEach((fo: any) => {
         fo.lineItems?.nodes?.forEach((item: any) => {
@@ -55,7 +97,7 @@ export default function OrderDetailsDialog({
         });
       });
       setQuantitiesToFulfill(initialQtys);
-    } catch (e: any) {
+    } catch (e) {
       console.error("Failed to fetch fulfillment orders", e);
     } finally {
       setLoadingFulfillments(false);
@@ -71,15 +113,15 @@ export default function OrderDetailsDialog({
   }, [open, order?.id]);
 
   const handleCreateFulfillment = async (fulfillmentOrderId: string) => {
-    const fo = fulfillmentOrders.find((f: any) => f.id === fulfillmentOrderId);
+    const fo = fulfillmentOrders.find((f) => f.id === fulfillmentOrderId);
     if (!fo) return;
 
     const lineItemsToFulfill = fo.lineItems?.nodes
-      ?.map((item: any) => ({
+      ?.map((item) => ({
         id: item.id,
         quantity: quantitiesToFulfill[item.id] ?? 0,
       }))
-      .filter((item: any) => item.quantity > 0);
+      .filter((item) => item.quantity > 0);
 
     if (!lineItemsToFulfill || lineItemsToFulfill.length === 0) {
       toast.error("Please enter a quantity greater than 0 for at least one item.");
@@ -114,9 +156,9 @@ export default function OrderDetailsDialog({
       setSelectedCarrier("");
       setCustomCarrierName("");
       await fetchFulfillmentOrders();
-    } catch (e: any) {
+    } catch (e) {
       console.error("Failed to create fulfillment", e);
-      toast.error(e.message || "Failed to create fulfillment in Shopify");
+      toast.error(getApiErrorMessage(e, "Failed to create fulfillment in Shopify"));
     } finally {
       setSubmittingFulfillment(false);
     }
@@ -124,18 +166,22 @@ export default function OrderDetailsDialog({
 
   if (!order) return null;
 
-  const products: any[] = order.products ?? [];
-  const address: any = order.shippingAddress;
-  const delivery: any = order.deliveryOption;
+  const products = order.products ?? [];
+  const address = order.shippingAddress;
+  const delivery = order.deliveryOption;
   const itemsTotal = products.reduce(
-    (s, p) => s + (parseFloat(p.price ?? 0) || 0) * (parseInt(p.quantity ?? 1) || 1),
+    (s, p) => s + (Number(p.price) || 0) * (Number(p.quantity) || 1),
     0,
   );
   const deliveryCharge = delivery?.charge ?? 0;
   const grandTotal = itemsTotal + deliveryCharge;
   const currency = products[0]?.currency ?? "₹";
 
-  const stageLabel = STAGE_LABELS[order.orderStage] ?? order.orderStage ?? order.status ?? "—";
+  const stageLabel =
+    (order.orderStage ? STAGE_LABELS[order.orderStage] : undefined) ??
+    order.orderStage ??
+    order.status ??
+    "—";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -369,10 +415,9 @@ export default function OrderDetailsDialog({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {fulfillmentOrders.map((fo: any) => {
+                    {fulfillmentOrders.map((fo) => {
                       const unfulfilledItems =
-                        fo.lineItems?.nodes?.filter((item: any) => item.remainingQuantity > 0) ||
-                        [];
+                        fo.lineItems?.nodes?.filter((item) => item.remainingQuantity > 0) || [];
                       const isFulfilled = fo.status === "FULFILLED";
 
                       return (
@@ -392,7 +437,7 @@ export default function OrderDetailsDialog({
                           </div>
 
                           <div className="text-sm space-y-2">
-                            {fo.lineItems?.nodes?.map((item: any) => {
+                            {fo.lineItems?.nodes?.map((item) => {
                               const hasRemaining = item.remainingQuantity > 0;
                               return (
                                 <div

@@ -13,6 +13,28 @@ export interface CatalogOrderProduct {
   quantity: number;
   price: number;
   currency: string;
+  title?: string;
+  image?: string;
+}
+
+/** Where a delivered order is going, in Shopify's address shape. */
+export interface CatalogOrderAddress {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  province?: string;
+  zip?: string;
+  country_code?: string;
+}
+
+/** The delivery option chosen at checkout. */
+export interface CatalogOrderDelivery {
+  name?: string;
+  charge?: number;
+  days?: number;
 }
 
 /** A catalog order as the orders endpoint returns it. */
@@ -22,6 +44,13 @@ export interface CatalogOrder {
   contact: { name: string; phone: string };
   products: CatalogOrderProduct[];
   status?: string;
+  orderStage?: string;
+  currency?: string;
+  shippingAddress?: CatalogOrderAddress;
+  deliveryOption?: CatalogOrderDelivery;
+  /** Set once the order has been pushed to Shopify as a draft. */
+  shopifyDraftOrderId?: string;
+  shopifyInvoiceUrl?: string;
 }
 
 export async function getWaCatalogOrders(
