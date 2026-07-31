@@ -526,7 +526,7 @@ export const useDeleteConnectorTool = (waSettingsId: string, connectorId: string
 
 export const useRunConnectorTool = (waSettingsId: string, connectorId: string) =>
   useMutation({
-    mutationFn: ({ toolId, input }: { toolId: string; input?: Record<string, any> }) =>
+    mutationFn: ({ toolId, input }: { toolId: string; input?: Record<string, unknown> }) =>
       runConnectorTool(waSettingsId, connectorId, toolId, input),
     onError: onErr("Tool run failed"),
   });

@@ -40,7 +40,7 @@ interface CustomerReward {
   };
   stockQuantity: number | null;
   stockRedeemed: number;
-  redemptionRules: Record<string, any>;
+  redemptionRules: Record<string, unknown>;
   availableForTiers: string[];
   createdAt: string;
   updatedAt: string;

@@ -99,7 +99,7 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
     source: string;
     referenceId?: string | null;
     description?: string | null;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
     earningRuleId?: string | null;
     earningRuleMultiplier?: number | null;
     basePoints?: number | null;
@@ -117,7 +117,7 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
     status: "APPROVED" | "PENDING" | "REJECTED" | string;
     expiresAt?: string | null;
     usedAt?: string | null;
-    usedContext?: Record<string, any>;
+    usedContext?: Record<string, unknown>;
     rulesValidatedAt?: string;
     rulesValidationPassed?: boolean;
     createdAt: string;

@@ -185,7 +185,7 @@ interface IPagination {
   hasPrevPage: boolean;
 }
 
-export type AuditLog = Record<string, any>;
+export type AuditLog = Record<string, unknown>;
 export interface AuditLogData {
   id: string;
   userId: string;

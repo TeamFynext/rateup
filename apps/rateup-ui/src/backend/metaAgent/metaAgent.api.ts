@@ -325,7 +325,7 @@ export interface ConnectorTool {
   metaId?: string | null;
   name: string;
   description: string;
-  requestDefinition: Record<string, any>;
+  requestDefinition: Record<string, unknown>;
   userAuthRequired?: boolean;
   createdAt: string;
 }
@@ -338,7 +338,7 @@ export const listConnectorTools = async (waSettingsId: string, connectorId: stri
 export const createConnectorTool = async (
   waSettingsId: string,
   connectorId: string,
-  data: { name: string; description: string; request_definition: Record<string, any> },
+  data: { name: string; description: string; request_definition: Record<string, unknown> },
 ) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/connectors/${connectorId}/tools`, data);
   return res.data as ConnectorTool;
@@ -356,7 +356,7 @@ export const runConnectorTool = async (
   waSettingsId: string,
   connectorId: string,
   toolId: string,
-  input?: Record<string, any>,
+  input?: Record<string, unknown>,
 ) => {
   const res = await axiosClient.post(
     `${base(waSettingsId)}/connectors/${connectorId}/tools/${toolId}/run`,

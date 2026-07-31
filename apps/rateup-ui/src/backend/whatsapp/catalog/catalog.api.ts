@@ -68,7 +68,7 @@ export interface CatalogSettings {
   catalogId: string;
   storeType: "standard" | "shopify";
   paymentMethod?: string;
-  standardPaymentConfig?: Record<string, any>;
+  standardPaymentConfig?: Record<string, unknown>;
   collectAddress: boolean;
   collectDelivery: boolean;
   fixedDeliveryCharge?: boolean;
