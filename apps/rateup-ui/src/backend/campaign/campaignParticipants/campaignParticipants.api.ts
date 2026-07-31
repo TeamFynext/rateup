@@ -1,5 +1,19 @@
 import type { ColumnFilterState, RequestPayload, SortState } from "@/types/api.ts";
 
+/** A campaign participant row, with the contact the campaign targets. */
+export interface CampaignParticipant {
+  id: string;
+  createdAt: string;
+  status: string;
+  sentAt?: string | null;
+  respondedAt?: string | null;
+  source?: string;
+  errorMessage?: string | null;
+  campaignId: string;
+  contactId: string;
+  contact?: ContactsData;
+}
+
 import { axiosClient } from "../../apiClient";
 
 type CampaignPayload = { data: RequestPayload; campaignId: string };
@@ -35,7 +49,7 @@ export const getCampaignParticipants = async (
   const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}${selectedDripStage ? `&selectedDripStage=${selectedDripStage}` : ""}`;
   const res = await axiosClient.get(url);
   return res?.data as {
-    participants: any[];
+    participants: CampaignParticipant[];
     searchCount: number;
     totalCount: number;
   };

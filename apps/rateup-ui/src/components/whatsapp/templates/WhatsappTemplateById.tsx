@@ -528,13 +528,10 @@ export function WhatsappTemplateById({
           setIsSubmitting(false);
           return;
         }
-        const mutationData = saveAsDraft
-          ? { ...values, id: editingItem.id }
-          : { templateId: editingItem.id, templateData };
         if (saveAsDraft) {
-          saveTemplateAsDraftMutation.mutate(mutationData);
+          saveTemplateAsDraftMutation.mutate({ ...values, id: editingItem.id });
         } else {
-          updateTemplateMutation.mutate(mutationData);
+          updateTemplateMutation.mutate({ templateId: editingItem.id, templateData });
         }
       } else {
         const mutationData = { ...templateData, id: editingItem?.id };

@@ -1,6 +1,16 @@
 import { axiosClient } from "@/backend/apiClient";
 import type { RequestPayload } from "@/types/api.ts";
 
+/** A Shopify product that is not in the catalog yet, as the import list returns it. */
+export interface ShopifyAvailableProduct {
+  retailer_id: string;
+  title: string;
+  sale_price?: string;
+  currencyCode?: string;
+  availability?: string;
+  image?: Array<{ url: string }>;
+}
+
 import { waCatalogUrl } from "../catalog.api";
 
 const baseUrl = `${waCatalogUrl}/products`;
@@ -31,12 +41,13 @@ export async function updateCatalogProducts(catalogId: string, data: RequestPayl
 }
 
 export async function getShopifyAvailableProducts(catalogId: string) {
-  return (await axiosClient.get(`${baseUrl}/shopify-available/${catalogId}`)).data as any[];
+  return (await axiosClient.get(`${baseUrl}/shopify-available/${catalogId}`))
+    .data as ShopifyAvailableProduct[];
 }
 
 export async function importShopifyProducts(
   catalogId: string,
-  items: any[],
+  items: RequestPayload[],
 ): Promise<{ imported: number }> {
   return (await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`, { items })).data;
 }

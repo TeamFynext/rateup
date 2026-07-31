@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import useContactStore, { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { AssignInboxResult } from "./wamessage.api";
@@ -71,7 +72,7 @@ export const useSendNewWaMessage = (
 ) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (message: any) =>
+    mutationFn: (message: RequestPayloadFields) =>
       sendNewWaMessage(contactId ?? "", {
         ...message,
         whatsappSettingsPhoneId,
@@ -225,7 +226,7 @@ export const useBulkAssignInboxToUser = (filterData?: string) => {
       });
       toast.success("Chats assigned successfully");
     },
-    onError: (e: any) => {
+    onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
     },
   });
@@ -362,7 +363,7 @@ export const useEditConversation = () => {
       subject?: string | null;
       description?: string | null;
     }) => updateConversation(conversationId, data),
-    onSuccess: (res: any, variables) => {
+    onSuccess: (res, variables) => {
       // Prefer what the server actually stored; fall back to what we sent.
       const subject = res?.subject !== undefined ? res.subject : variables.subject;
       const description = res?.description !== undefined ? res.description : variables.description;
@@ -496,7 +497,7 @@ export function useGenerateInboxResponse() {
 }
 
 interface CreatePrivateMessageVariables {
-  data: any;
+  data: RequestPayload;
 }
 
 export function useCreatePrivateMessage(contactId: string) {

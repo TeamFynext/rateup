@@ -229,7 +229,7 @@ export function useSendMailPlanSelectDetails() {
 export const useUpdateSubscriptionOrder = (orderId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateSubscriptionOrder(orderId, data),
+    mutationFn: (data: RequestPayload) => updateSubscriptionOrder(orderId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentorders"] });
     },

@@ -289,7 +289,7 @@ export function useUpdateSurveyPwdMutation(surveyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSurveyPassword,
-    onSuccess: (_res: any) => {
+    onSuccess: () => {
       toast.success("Sucessfully updated Password Protection ", {
         id: "load-data",
       });
@@ -307,8 +307,8 @@ export function useUpdateSurveyPwdMutation(surveyId: string) {
 export function useVerifySurveyPwdMutation(
   surveyId: string,
   password: string,
-  close: any,
-  setIsPasswordVerified: any,
+  close: () => void,
+  setIsPasswordVerified: (verified: boolean) => void,
 ) {
   return useMutation({
     mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
@@ -336,7 +336,7 @@ async function handleSurveyVerifyPwd(surveyId: string, password: string) {
 export function useEditSurveyMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateSurvey(id, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(id, data),
     onSuccess: () => {
       toast.success("Survey Updated Successfully!", {
         id: "load-data",
@@ -360,7 +360,7 @@ export const useUpdateSurveyGoogleLinkMutation = (
   setLinkUpdateStatus: (value: boolean) => void,
 ) => {
   const updateMutation = useMutation({
-    mutationFn: ({ data }: any) => {
+    mutationFn: ({ data }: { data: RequestPayload }) => {
       return updateSurveyGoogleLink(surveyTeamMapId, data);
     },
     onSuccess: (_data) => {

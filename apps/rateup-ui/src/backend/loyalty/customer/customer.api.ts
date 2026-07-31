@@ -1,5 +1,15 @@
 import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 
+/** A referral this customer made, as the detail endpoint returns it. */
+export interface LoyaltyCustomerReferral {
+  id: string;
+  createdAt: string;
+  status?: string;
+  refereeName?: string | null;
+  refereePhone?: string | null;
+  pointsAwarded?: number;
+}
+
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base.ts";
 
@@ -113,7 +123,7 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
     createdAt: string;
     updatedAt: string;
   }[];
-  referrals: any[];
+  referrals: LoyaltyCustomerReferral[];
 }
 
 export async function getLoyaltyCustomerById(customerId: string) {

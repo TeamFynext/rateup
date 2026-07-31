@@ -36,7 +36,7 @@ export interface WaGetMessagesBody {
   readUsers?: string[];
   reactionMessage?: {
     id: string;
-    messageBody: any;
+    messageBody: WaGetMessagesBody;
     createdAt: string;
     sender?: {
       name?: string;
@@ -71,7 +71,7 @@ export async function getMessagesByContactId(
     .data as WaMessagePage;
 }
 
-export async function sendNewWaMessage(contactId: string, message: any) {
+export async function sendNewWaMessage(contactId: string, message: RequestPayload) {
   return await axiosClient.post(`${WA_CONTACT_BASE_PATH}/${contactId}`, message);
 }
 
@@ -335,7 +335,14 @@ export async function updateConversation(
   data: { subject?: string | null; description?: string | null },
 ) {
   // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
-  return (await axiosClient.put(`/contact/conversations/${conversationId}`, data)).data;
+  return (await axiosClient.put(`/contact/conversations/${conversationId}`, data))
+    .data as UpdatedConversation;
+}
+
+/** What the conversation edit endpoint echoes back. */
+export interface UpdatedConversation {
+  subject?: string | null;
+  description?: string | null;
 }
 
 /**

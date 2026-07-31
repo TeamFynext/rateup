@@ -1,4 +1,5 @@
 import type { RequestPayload } from "@/types/api.ts";
+import type { ReviewSuggestion, WebSurveyTheme } from "@/types/global";
 
 import { axiosClient, axiosClientIP } from "../apiClient";
 
@@ -39,8 +40,9 @@ export async function cloneSurvey(surveyId: string, teamIds: string[]) {
 
 export async function getSurveyTemplates(surveyType: string) {
   try {
-    const surveyTemplates: any = (await axiosClient.get(`${SURVEYURL}/templates/${surveyType}`))
-      .data;
+    const surveyTemplates: Survey[] = (
+      await axiosClient.get(`${SURVEYURL}/templates/${surveyType}`)
+    ).data;
     return surveyTemplates;
   } catch (e) {
     console.error(e);
@@ -132,9 +134,9 @@ export async function getSurveyByLandingId(landingid: string) {
 
 type ExtendedSurvey = Survey & {
   googleLink: string;
-  reviews: Array<any>;
+  reviews: ReviewSuggestion[];
   webSurveyThemeId: string;
-  webSurveyTheme: any;
+  webSurveyTheme: WebSurveyTheme;
   message?: string;
 };
 

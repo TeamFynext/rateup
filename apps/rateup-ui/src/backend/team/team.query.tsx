@@ -57,7 +57,7 @@ interface CreateTeamValues {
 
 export function useCreateTeamMutation(
   setIsCreateTeamDialogOpen: (arg: boolean) => void,
-  createTeamForm: any,
+  createTeamForm: { reset: () => void },
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   const queryClient = useQueryClient();

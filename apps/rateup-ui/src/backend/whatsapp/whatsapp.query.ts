@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import type { SyncTemplatesInput } from "./whatsapp.api";
 import {
   createWaTemplate,
@@ -32,7 +34,7 @@ export const useWaTemplateById = (id: string) =>
 export const useCreateTemplateMutation = (onSuccess: () => void, onError: () => void) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (templateData: any) => createWaTemplate(templateData),
+    mutationFn: (templateData: RequestPayload) => createWaTemplate(templateData),
     onSuccess: () => {
       toast.success("Template Created Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -54,7 +56,7 @@ export const useSaveTemplateAsDraftMutation = (
 ) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (templateData: any) => saveTemplateAsDraft(templateData),
+    mutationFn: (templateData: RequestPayload) => saveTemplateAsDraft(templateData),
     onSuccess: (data) => {
       toast.success("Template Saved as Draft Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -76,7 +78,13 @@ export const useUpdateTemplateMutation = (
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: ({ templateId, templateData }: any) => updateWaTemplate(templateId, templateData),
+    mutationFn: ({
+      templateId,
+      templateData,
+    }: {
+      templateId: string;
+      templateData: RequestPayload;
+    }) => updateWaTemplate(templateId, templateData),
     onSuccess: () => {
       toast.success("Template Updated Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -163,7 +171,7 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string | undef
       whatsappSettingsPhoneId,
     }: {
       templateId: string;
-      parameterData: any;
+      parameterData: RequestPayload;
       teamId: string;
       whatsappSettingsPhoneId: string;
     }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),

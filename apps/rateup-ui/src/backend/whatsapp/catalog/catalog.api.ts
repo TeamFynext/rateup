@@ -24,7 +24,7 @@ export async function getWaCatalogs() {
     catalogId: string;
     name: string;
     vertical: string;
-    connectedWaPhoneIds?: any[];
+    connectedWaPhoneIds?: Array<{ whatsappSettingsPhoneId?: string }>;
   }[];
 }
 
@@ -76,7 +76,7 @@ export interface CatalogSettings {
   addressFlowId?: string;
   addressFlowDbId?: string;
   addressFlowStatus: "idle" | "submitting" | "review" | "approved" | "rejected";
-  addressFlowFields?: any[];
+  addressFlowFields?: string[];
   deliveryOptions: DeliveryOption[];
 }
 
@@ -88,7 +88,11 @@ export async function updateCatalogSettings(catalogId: string, data: Partial<Cat
   return (await axiosClient.put(`${waCatalogUrl}/${catalogId}/settings`, data)).data;
 }
 
-export async function createCatalogAddressFlow(catalogId: string, json?: any, map?: any) {
+export async function createCatalogAddressFlow(
+  catalogId: string,
+  json?: RequestPayload,
+  map?: RequestPayload,
+) {
   return (
     await axiosClient.post(`${waCatalogUrl}/${catalogId}/create-address-flow`, {
       json,
