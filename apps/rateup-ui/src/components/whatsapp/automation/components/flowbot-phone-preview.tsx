@@ -51,8 +51,45 @@ type MediaInfo =
   | { kind: "audio"; src: string }
   | { kind: "document"; src: string; filename?: string; caption?: string };
 
+/**
+ * The node fields this preview renders. Every flowbot node contributes a few,
+ * so it reads a structural view of `NodeData` (see node-validation's
+ * ValidatedNodeData for the validator's equivalent).
+ */
+interface PreviewNodeData {
+  label?: string;
+  body?: string;
+  text?: string;
+  caption?: string;
+  link?: string;
+  filename?: string;
+  question?: string;
+  startMessage?: string;
+  endMessage?: string;
+  duration?: number;
+  unit?: "seconds" | "minutes" | "hours";
+  buttons?: Array<{ id?: string; title?: string; text?: string; label?: string }>;
+  sections?: Array<{
+    title?: string;
+    rows?: Array<{ id?: string; title?: string; text?: string; description?: string }>;
+  }>;
+  quick_replies?: Array<{
+    id?: string;
+    payload?: string;
+    title?: string;
+    text?: string;
+    label?: string;
+  }>;
+  template?: { id?: string };
+  flow?: { id?: string; name?: string };
+  headerType?: string;
+  footer?: string;
+  display_text?: string;
+  url?: string;
+}
+
 function getNodeMedia(node: TypedNode | null | undefined): MediaInfo | null {
-  const data: any = node?.data;
+  const data: PreviewNodeData | undefined = node?.data;
   if (!data?.link) return null;
   // Same resolution image-node.tsx uses on the canvas: data.link is a stored file key, not a URL.
   const src = getFileUrlFromKey(data.link) || "/placeholder.svg";
@@ -73,7 +110,7 @@ function getNodeMedia(node: TypedNode | null | undefined): MediaInfo | null {
 // Real pause durations would be unusable in a live preview, so the wait is clamped to a
 // short, perceptible delay instead of literally waiting minutes/hours.
 function getPauseDelayMs(node: TypedNode): number {
-  const data: any = node?.data;
+  const data: PreviewNodeData | undefined = node?.data;
   const duration = Number(data?.duration) || 0;
   const unit = data?.unit ?? "seconds";
   const multiplier = unit === "hours" ? 3600 : unit === "minutes" ? 60 : 1;
@@ -143,15 +180,15 @@ function TemplateMessageCard({
       </div>
       {(template.buttons ?? []).length > 0 && (
         <div className="border-t border-border">
-          {template.buttons.map((btn: any, i: number) => (
+          {template.buttons.map((btn, i: number) => (
             <div
-              key={btn.id ?? i}
+              key={String(btn.id ?? i)}
               className={cn(
                 "text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium",
                 i > 0 && "border-t border-border",
               )}
             >
-              {templateButtonIcon(btn.type)}
+              {templateButtonIcon(btn.type ?? "")}
               {btn.text || t("Button")}
             </div>
           ))}
@@ -184,7 +221,7 @@ function FlowMessageCard({ flowId, at }: Readonly<{ flowId: string | undefined; 
     );
   }
 
-  const tm: any = dbFlow?.templateMessage ?? {};
+  const tm: Partial<WaFlowTemplateMessage> = dbFlow?.templateMessage ?? {};
   const headerImageUrl = tm.headerImage ? getFileUrlFromKey(tm.headerImage) : null;
 
   return (
@@ -226,7 +263,7 @@ interface NodeOption {
 // Returns the raw body, which for several node types (text/button/list/cta) is a TipTap
 // rich-text JSON object rather than a plain string — must go through parseJsonToReact.
 function getNodeBody(node: TypedNode | null | undefined): string | TiptapNode {
-  const data: any = node?.data;
+  const data: PreviewNodeData | undefined = node?.data;
   if (!data) return "";
   return (
     data.body ||
@@ -240,24 +277,24 @@ function getNodeBody(node: TypedNode | null | undefined): string | TiptapNode {
 }
 
 function getNodeOptions(node: TypedNode | null | undefined): NodeOption[] {
-  const data: any = node?.data;
+  const data: PreviewNodeData | undefined = node?.data;
   if (!data) return [];
   if (Array.isArray(data.buttons) && data.buttons.length > 0) {
-    return data.buttons.map((b: any, i: number) => ({
+    return data.buttons.map((b, i: number) => ({
       id: b.id ?? String(i),
       label: b.title ?? b.text ?? b.label ?? `Option ${i + 1}`,
     }));
   }
   if (Array.isArray(data.sections) && data.sections.length > 0) {
-    return data.sections.flatMap((section: any, sIdx: number) =>
-      (section.rows ?? []).map((row: any, rIdx: number) => ({
+    return data.sections.flatMap((section, sIdx: number) =>
+      (section.rows ?? []).map((row, rIdx: number) => ({
         id: row.id ?? `${sIdx}-${rIdx}`,
         label: row.title ?? row.text ?? "",
       })),
     );
   }
   if (Array.isArray(data.quick_replies) && data.quick_replies.length > 0) {
-    return data.quick_replies.map((r: any, i: number) => ({
+    return data.quick_replies.map((r, i: number) => ({
       id: r.id ?? r.payload ?? `qr_${i}`,
       label: r.title ?? `Option ${i + 1}`,
     }));
@@ -437,7 +474,7 @@ export function FlowbotPreviewPlayground({
           }
 
           const node = nodesById.get(entry.nodeId) as TypedNode | undefined;
-          const data: any = node?.data;
+          const data: PreviewNodeData | undefined = node?.data;
 
           if (node?.type === "templateNode") {
             return (
