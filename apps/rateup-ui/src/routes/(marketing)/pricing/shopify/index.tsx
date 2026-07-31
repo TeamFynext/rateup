@@ -71,9 +71,7 @@ function ShopifySubscriptionApprovalCallback() {
     ? subscription?.subscriptionRef === charge_id.toString()
     : false;
   const isOrderCreated = orders
-    ? orders.data?.find(
-        (order: { subscriptionId?: string }) => order.subscriptionId === charge_id.toString(),
-      )
+    ? orders.data?.find((order: { subscriptionId?: string }) => order.subscriptionId === charge_id)
     : false;
 
   if (!charge_id || !isSessionExist) return null;

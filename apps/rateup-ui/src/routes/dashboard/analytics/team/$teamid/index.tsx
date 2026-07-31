@@ -45,7 +45,7 @@ function page() {
       });
     }
   };
-  const { data, isLoading } = useGetTeamDetailedMetrics(teamid, {
+  const { data, isLoading } = useGetTeamDetailedMetrics(teamid ?? "", {
     days: day,
   });
   const averageResponsesTime = formatTimeToNearestUnitFromSeconds(data?.averageResponseTime);

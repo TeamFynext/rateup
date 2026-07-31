@@ -286,7 +286,7 @@ function FlowCard({
                     <SelectValue placeholder={translations("Select team (type in to search)")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {teamOptions.map((option: { value: string; label: string }) => (
+                    {teamOptions?.map((option: { value: string; label: string }) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>

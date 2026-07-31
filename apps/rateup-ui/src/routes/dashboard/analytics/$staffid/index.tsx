@@ -49,7 +49,7 @@ function page() {
       });
     }
   };
-  const { data: analytics, isLoading } = useGetStaffDetailedConversationAnalytics(staffid, {
+  const { data: analytics, isLoading } = useGetStaffDetailedConversationAnalytics(staffid ?? "", {
     days: day,
   });
   const graphdata = analytics

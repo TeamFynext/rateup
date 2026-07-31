@@ -110,6 +110,8 @@ declare global {
     fbq: (...args: unknown[]) => void;
     /** The EyeDropper API, in Chromium browsers only — feature-detected before use. */
     EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
+    /** Razorpay's checkout widget, present once its script has loaded. */
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
   }
   // The analytics snippets are read off `globalThis`, which only picks up
   // global `var` declarations — an `interface Window` member is not enough.
