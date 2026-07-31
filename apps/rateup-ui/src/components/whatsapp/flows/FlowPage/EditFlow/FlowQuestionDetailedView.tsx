@@ -3,7 +3,7 @@ import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
 import { useId, useContext, useEffect, useRef, useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldPath, UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -78,6 +78,34 @@ enum EditorType {
   GoogleReviewEditor = "google-review-editor",
   ElementEditor = "element-editor",
 }
+/** The question form's values: the question itself, plus the NPS analytics flag the editor adds. */
+type FlowQuestionFormValues = ReturnType<typeof getInitialQuestionValues>;
+
+/** The per-question upload/input constraints stored under `question.extraConfig`. */
+interface QuestionExtraConfigValues {
+  "photo-source"?: PhotoSource | null;
+  "max-file-size-kb": number;
+  "min-uploaded-photos": number;
+  "max-uploaded-photos": number;
+  "min-uploaded-documents": number;
+  "max-uploaded-documents": number;
+  "allowed-mime-types"?: string[];
+  "input-type"?: InputType | null;
+}
+
+/**
+ * Writes any field of the question form, including the `<field>.<language>` paths built from
+ * the active locale. `Question` is deep enough that react-hook-form's `FieldPathValue` bottoms
+ * out at `never`, so the path and value are reconciled here instead of at every call site.
+ */
+function setQuestionValue(
+  form: UseFormReturn<FlowQuestionFormValues>,
+  path: string,
+  value: unknown,
+) {
+  form.setValue(path as FieldPath<FlowQuestionFormValues>, value as never, { shouldDirty: true });
+}
+
 export function FlowQuestionDetailedView({
   question,
   surveyLanguages,
@@ -166,7 +194,7 @@ function ElementEditor({
   }
 
   const formInitialValues = getInitialQuestionValues(question, surveyLanguages, SurveyType.WaFlow);
-  const form = useForm<any>({
+  const form = useForm<FlowQuestionFormValues>({
     defaultValues: formInitialValues,
   });
   const values = form.watch();
@@ -177,8 +205,7 @@ function ElementEditor({
    * callers, so it cannot await RHF's async `trigger()`.
    */
   /** Writes a `<field>.<language>` path; these are built from the active locale. */
-  const setLocalised = (path: string, value: unknown) =>
-    form.setValue(path, value, { shouldDirty: true });
+  const setLocalised = (path: string, value: unknown) => setQuestionValue(form, path, value);
 
   const validateSelectedLanguage = () => {
     const current = form.getValues();
@@ -197,7 +224,7 @@ function ElementEditor({
 
     form.clearErrors(["title", "description", "label"]);
     for (const [name, message] of issues) {
-      form.setError(name, { type: "validation", message });
+      form.setError(name as FieldPath<FlowQuestionFormValues>, { type: "validation", message });
     }
     return issues.length === 0;
   };
@@ -257,7 +284,7 @@ function ElementEditor({
     }
   };
 
-  const extraConfigForm = useForm<any>({
+  const extraConfigForm = useForm<QuestionExtraConfigValues>({
     resolver: zodResolver(fileSchema),
     defaultValues: {
       "photo-source": PhotoSource.cameraGallery,
@@ -325,7 +352,7 @@ function ElementEditor({
 
       toast.dismiss();
       const updatedValues = getUpdatedValues();
-      form.setValue("extraConfig", updatedValues, { shouldDirty: true });
+      setQuestionValue(form, "extraConfig", updatedValues);
     }
     // Save the question - create new or update existing
     if (!question.id) {
@@ -511,9 +538,7 @@ function ElementEditor({
             <FieldTitle className="flex items-center gap-2 font-semibold">
               <Checkbox
                 checked={!!values?.required}
-                onCheckedChange={(checked) =>
-                  form.setValue("required", !!checked, { shouldDirty: true })
-                }
+                onCheckedChange={(checked) => setQuestionValue(form, "required", !!checked)}
               />
               {translations("Required")}
             </FieldTitle>
@@ -522,7 +547,7 @@ function ElementEditor({
                 <Checkbox
                   checked={!!values?.enableNpsAnalytics}
                   onCheckedChange={(checked) =>
-                    form.setValue("enableNpsAnalytics", !!checked, { shouldDirty: true })
+                    setQuestionValue(form, "enableNpsAnalytics", !!checked)
                   }
                 />
                 {translations("NPS Analytics")}
@@ -601,10 +626,10 @@ function LabelTextInput(
 }
 
 interface ExtraPropsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<FlowQuestionFormValues>;
   question: Question;
   nextScreens?: WaFlowScreen[];
-  extraConfigForm: UseFormReturn<any>;
+  extraConfigForm: UseFormReturn<QuestionExtraConfigValues>;
 }
 function FlowQuestionExtraProps({
   form,
@@ -658,7 +683,7 @@ function FlowQuestionExtraProps({
           <Select
             items={nextScreenOptions}
             value={form.watch("optinScreenId") ?? ""}
-            onValueChange={(value) => form.setValue("optinScreenId", value, { shouldDirty: true })}
+            onValueChange={(value) => setQuestionValue(form, "optinScreenId", value)}
           >
             <SelectTrigger id={`${uid}-field`} className="w-full">
               <SelectValue placeholder={translations("select next screen to show the details")} />
@@ -679,9 +704,7 @@ function FlowQuestionExtraProps({
           <FieldLabel htmlFor={`${uid}-label`} className="flex items-center gap-2">
             <Switch
               checked={!!form.watch().onSelectAction}
-              onCheckedChange={(checked) =>
-                form.setValue("onSelectAction", !!checked, { shouldDirty: true })
-              }
+              onCheckedChange={(checked) => setQuestionValue(form, "onSelectAction", !!checked)}
             />
             {translations("Enable dynamic datepicker")}
           </FieldLabel>
@@ -693,7 +716,7 @@ function FlowQuestionExtraProps({
               <Select
                 items={integrationAppOptions}
                 value={form.watch("waAppName") ?? ""}
-                onValueChange={(value) => form.setValue("waAppName", value, { shouldDirty: true })}
+                onValueChange={(value) => setQuestionValue(form, "waAppName", value)}
               >
                 <SelectTrigger id={`${uid}-label`} className="w-full">
                   <SelectValue placeholder={translations("Select Integration App Name")} />
@@ -735,7 +758,11 @@ function FlowQuestionExtraProps({
               items={photoSourceOptions}
               value={extraConfigForm.watch("photo-source") ?? ""}
               onValueChange={(value) =>
-                extraConfigForm.setValue("photo-source", value, { shouldDirty: true })
+                extraConfigForm.setValue(
+                  "photo-source",
+                  Object.values(PhotoSource).find((source) => source === value) ?? null,
+                  { shouldDirty: true },
+                )
               }
             >
               <SelectTrigger id={`${uid}-field-3`} className="w-full">
@@ -928,7 +955,11 @@ function FlowQuestionExtraProps({
               items={inputTypeOptions}
               value={extraConfigForm.watch("input-type") ?? ""}
               onValueChange={(value) =>
-                extraConfigForm.setValue("input-type", value, { shouldDirty: true })
+                extraConfigForm.setValue(
+                  "input-type",
+                  Object.values(InputType).find((type) => type === value) ?? null,
+                  { shouldDirty: true },
+                )
               }
             >
               <SelectTrigger id={`${uid}-field-11`} className="w-full">
