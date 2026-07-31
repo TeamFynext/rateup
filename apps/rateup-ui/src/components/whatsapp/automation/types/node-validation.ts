@@ -1,3 +1,5 @@
+import type { Resolver } from "react-hook-form";
+
 /*
  * Field-level validation for flow nodes.
  *
@@ -10,7 +12,7 @@
  */
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
 
-import type { TypedNode } from "./node-types.ts";
+import type { TypedNode, NodeData } from "./node-types.ts";
 
 // Mirror of the CatalogMessages enum in node-editor.tsx. Duplicated here (not
 // imported) to avoid a circular dependency — this module is pulled in by the
@@ -27,7 +29,61 @@ export type NodeFieldErrors = Record<string, string>;
 const isBlank = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-export function getNodeFieldErrors(node: { type: string; data: any }): NodeFieldErrors {
+/**
+ * The fields the validator reads. Every node type contributes a few, so this is
+ * a structural view of `NodeData` rather than the discriminated union — each
+ * member of the union satisfies it.
+ */
+export interface ValidatedNodeData {
+  label?: string;
+  body?: string;
+  header?: string;
+  headerType?: string;
+  type?: string;
+  link?: string;
+  filename?: string;
+  url?: string;
+  display_text?: string;
+  button?: string;
+  buttons?: Array<{ title?: string }>;
+  sections?: Array<{
+    title?: string;
+    rows?: Array<{ title?: string; description?: string }>;
+    /** Catalog sections hold retailer ids. */
+    productItems?: string[];
+  }>;
+  options?: string[];
+  condition?: string;
+  duration?: number;
+  variableName?: string;
+  question?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  phone?: string;
+  phoneField?: string;
+  teamId?: string;
+  fbPageId?: string;
+  pageAccessToken?: string;
+  productRetailerId?: string;
+  productSetId?: string;
+  template?: { id?: string };
+  flow?: { id?: string };
+  ad?: { id?: string };
+  ticket?: { selectedBoardColumnId?: string };
+  iceBreakers?: Array<{ question?: string }>;
+  contacts?: Array<{
+    name?: { formatted_name?: string; first_name?: string };
+    phones?: Array<{ phone?: string }>;
+    emails?: Array<{ email?: string }>;
+    addresses?: Array<{ street?: string; city?: string }>;
+    urls?: Array<{ url?: string }>;
+  }>;
+}
+
+export function getNodeFieldErrors(node: {
+  type: string;
+  data?: ValidatedNodeData;
+}): NodeFieldErrors {
   const errors: NodeFieldErrors = {};
   const data = node.data ?? {};
 
@@ -50,10 +106,7 @@ export function getNodeFieldErrors(node: { type: string; data: any }): NodeField
           if (!data.sections?.length) {
             errors.sections = "At least one section is required.";
           } else {
-            if (
-              data.sections.length > 1 &&
-              data.sections.some((s: any) => !safeStrOrNull(s.title))
-            ) {
+            if (data.sections.length > 1 && data.sections.some((s) => !safeStrOrNull(s.title))) {
               errors.sections = "Section title is required.";
             }
             let sum = 0;
@@ -123,14 +176,17 @@ export function getNodeFieldErrors(node: { type: string; data: any }): NodeField
         errors.buttons = "At least one button is required.";
       } else if (data.buttons.length > 3) {
         errors.buttons = "Maximum 3 buttons are allowed.";
-      } else if (data.buttons.some((b: any) => isBlank(b?.title))) {
+      } else if (data.buttons.some((b) => isBlank(b?.title))) {
         errors.buttons = "All buttons must have a title.";
-      } else if (data.buttons.some((b: any) => b?.title && b.title.length > 20)) {
+      } else if (data.buttons.some((b) => b?.title && b.title.length > 20)) {
         errors.buttons = "Button titles must be 20 characters or less.";
       }
       if (data.headerType === "text" && isBlank(data.header)) {
         errors.header = "Header content is required.";
-      } else if (["image", "video", "document"].includes(data.headerType) && isBlank(data.link)) {
+      } else if (
+        ["image", "video", "document"].includes(data.headerType ?? "") &&
+        isBlank(data.link)
+      ) {
         errors.link = "Media is required for this header type.";
       }
       if (data.headerType === "document" && isBlank(data.filename)) {
@@ -144,11 +200,11 @@ export function getNodeFieldErrors(node: { type: string; data: any }): NodeField
       if (isBlank(data.button)) errors.button = "Button text is required.";
       if (!data.sections?.length) {
         errors.sections = "At least one section is required.";
-      } else if (data.sections.some((s: any) => isBlank(s?.title))) {
+      } else if (data.sections.some((s) => isBlank(s?.title))) {
         errors.sections = "All sections must have a title.";
-      } else if (data.sections.some((s: any) => !s.rows?.length)) {
+      } else if (data.sections.some((s) => !s.rows?.length)) {
         errors.sections = "All sections must have at least one row.";
-      } else if (data.sections.some((s: any) => s.rows.some((r: any) => isBlank(r?.title)))) {
+      } else if (data.sections.some((s) => s.rows?.some((r) => isBlank(r?.title)))) {
         errors.sections = "All list rows must have a title.";
       }
       break;
@@ -205,19 +261,19 @@ export function getNodeFieldErrors(node: { type: string; data: any }): NodeField
           errors.contacts = "Each contact must have a first name.";
           break;
         }
-        if (contact.phones?.some((p: any) => isBlank(p?.phone))) {
+        if (contact.phones?.some((p) => isBlank(p?.phone))) {
           errors.contacts = "All phone numbers must have a value.";
           break;
         }
-        if (contact.emails?.some((e: any) => isBlank(e?.email))) {
+        if (contact.emails?.some((e) => isBlank(e?.email))) {
           errors.contacts = "All email addresses must have a value.";
           break;
         }
-        if (contact.addresses?.some((a: any) => isBlank(a?.street) || isBlank(a?.city))) {
+        if (contact.addresses?.some((a) => isBlank(a?.street) || isBlank(a?.city))) {
           errors.contacts = "All addresses must have a street and city.";
           break;
         }
-        if (contact.urls?.some((u: any) => isBlank(u?.url))) {
+        if (contact.urls?.some((u) => isBlank(u?.url))) {
           errors.contacts = "All URLs must have a value.";
           break;
         }
@@ -228,7 +284,7 @@ export function getNodeFieldErrors(node: { type: string; data: any }): NodeField
     case "instagramIceBreakerNode":
       if (!data.iceBreakers?.length) {
         errors.iceBreakers = "At least one ice breaker is required.";
-      } else if (data.iceBreakers.some((i: any) => isBlank(i?.question))) {
+      } else if (data.iceBreakers.some((i) => isBlank(i?.question))) {
         errors.iceBreakers = "All ice breakers must have a question.";
       }
       break;
@@ -241,13 +297,13 @@ export function getNodeFieldErrors(node: { type: string; data: any }): NodeField
 }
 
 /** True when the node has no validation errors. */
-export function isNodeValid(node: { type: string; data: any }): boolean {
+export function isNodeValid(node: { type: string; data?: ValidatedNodeData }): boolean {
   return Object.keys(getNodeFieldErrors(node)).length === 0;
 }
 
 /** react-hook-form resolver backed by {@link getNodeFieldErrors}. */
-export function nodeResolver(nodeType: string) {
-  return (values: any) => {
+export function nodeResolver(nodeType: string): Resolver<NodeData> {
+  return (values) => {
     const fieldErrors = getNodeFieldErrors({ type: nodeType, data: values });
     const errors = Object.fromEntries(
       Object.entries(fieldErrors).map(([name, message]) => [name, { type: "validate", message }]),
@@ -261,10 +317,10 @@ export function nodeResolver(nodeType: string) {
  * label) — used for the Save toast.
  */
 export function firstNodeError(node: TypedNode): string {
-  const errors = getNodeFieldErrors(node as { type: string; data: any });
+  const errors = getNodeFieldErrors(node);
   const keys = Object.keys(errors);
   if (!keys.length) return "";
-  const label = (node.data as any)?.label;
+  const label = node.data?.label;
   const message = errors[keys[0]];
   return label ? `${label}: ${message}` : message;
 }
