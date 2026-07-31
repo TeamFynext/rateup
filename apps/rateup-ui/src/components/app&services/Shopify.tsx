@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import type { ShopifyProduct } from "@/backend/appsIntegration/shopify/shopify.api";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -48,7 +49,7 @@ export function Shopify() {
   const { data: templates } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
   const { t: translations } = useTranslation();
-  const [shopifyProducts, setShopifyProducts] = useState([]);
+  const [shopifyProducts, setShopifyProducts] = useState<ShopifyProduct[]>([]);
 
   const handleLoadProducts = async () => {
     try {
