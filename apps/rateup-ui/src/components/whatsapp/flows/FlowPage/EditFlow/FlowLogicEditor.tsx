@@ -32,7 +32,6 @@ import {
 } from "@/types/enums.ts";
 import type {
   FlowLogicCondition,
-  FlowLogicConditionComponentLevel,
   FlowLogicJump,
   FlowLogicJumpComponentLevel,
 } from "@/types/global";
@@ -240,8 +239,10 @@ const MULTI_VALUE_CONDITIONS: Array<LogicCondition | LogicConditionComponentLeve
 
 // create props for below component
 interface AtomicConditionBlockProps {
-  condition: FlowLogicCondition | FlowLogicConditionComponentLevel;
-  setCondition: (condition: FlowLogicCondition | FlowLogicConditionComponentLevel) => void;
+  condition: FlowLogicCondition | FlowLogicJumpComponentLevel["conditions"][number];
+  setCondition: (
+    condition: FlowLogicCondition | FlowLogicJumpComponentLevel["conditions"][number],
+  ) => void;
   handleDelete: () => void;
   isComponentLevel?: boolean;
 }
@@ -319,7 +320,7 @@ function AtomicConditionBlock({
         {/* Match Data */}
         {selectedCondition === LogicCondition.Submitted ? (
           <></>
-        ) : MULTI_VALUE_CONDITIONS.includes(selectedCondition) ||
+        ) : (selectedCondition && MULTI_VALUE_CONDITIONS.includes(selectedCondition)) ||
           ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
             selectedCondition === LogicCondition.Equals) ? (
           // Array Selector

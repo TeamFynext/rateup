@@ -1151,9 +1151,36 @@ export interface LogicActionComponentLevel {
   success: LogicAction;
   fail: LogicAction;
 }
+/**
+ * A component-level logic block. The v2 editor writes `If` blocks with
+ * `then`/`else` component lists and `Switch` blocks with `cases`; older jumps
+ * carry a single `action` instead.
+ */
 export interface FlowLogicJumpComponentLevel {
-  conditions: Array<FlowLogicConditionComponentLevel>;
-  action: LogicActionComponentLevel;
+  type?: "If" | "Switch";
+  /**
+   * Condition rows. The flow editor writes question-level rows
+   * (`questionId`/`condition`/`response`); the v2 element editor writes
+   * component-level ones (`field`/`operator`/`value`), and both are stored
+   * under the same key.
+   */
+  conditions: Array<{
+    questionId?: string;
+    condition?: LogicConditionComponentLevel;
+    response?: string | string[];
+    field?: string;
+    operator?: string | null;
+    value?: string | null;
+    /** The join with the previous condition ("&&" / "||"). */
+    logic?: string | null;
+    isNumber?: boolean;
+  }>;
+  action?: LogicActionComponentLevel;
+  then?: string[];
+  else?: string[];
+  value?: string;
+  cases?: Record<string, Array<{ type: string }>>;
+  screenId?: string;
 }
 
 interface Profile {
