@@ -199,7 +199,7 @@ export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,
   type = SurveyType.Web,
-): Question & { enableNpsAnalytics?: boolean; extraConfig: any } => {
+): Question & { enableNpsAnalytics?: boolean; extraConfig: Question["extraConfig"] } => {
   const emptyText: Record<string, string> = {};
   languages?.forEach((lang) => {
     emptyText[lang] = "";

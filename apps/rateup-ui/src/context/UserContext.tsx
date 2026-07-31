@@ -23,7 +23,14 @@ export interface User {
   };
   waAssignedChatPermission: WaAssignedChatPermission;
   status: UserAvailabilityStatus;
-  onboarding?: any;
+  /** The signup wizard's saved answers — free-form JSON on the org row. */
+  onboarding?: {
+    location?: string;
+    website?: string;
+    industry?: string;
+    businessmail?: string;
+    [key: string]: unknown;
+  };
   showLifecycle: boolean;
 }
 

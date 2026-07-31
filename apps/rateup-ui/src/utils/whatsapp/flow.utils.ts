@@ -100,7 +100,7 @@ export const qTypesWithAmbiguousChoices = [qt.YN, qt.LD, qt.Rating, qt.Smiley, q
 
 interface validateOptionsProps {
   /** Current form values (e.g. `form.watch()`). */
-  values: any;
+  values: Record<string, unknown>;
   path: string;
 }
 /**
@@ -115,7 +115,7 @@ export function validateOptions({ values, path }: validateOptionsProps) {
     return false;
   }
   for (const qData of Object.values(questions)) {
-    const { type: _, ...choices } = qData as any;
+    const { type: _, ...choices } = (qData ?? {}) as Record<string, unknown>;
     const choiceValues = Object.values(choices);
 
     const uniqueChoices = new Set(choiceValues);
@@ -157,7 +157,7 @@ export function getFlowFooterElementsFromScreen(screen: WaFlowScreen, version = 
   return elementsWithoutFooter;
 }
 
-export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map: any) {
+export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map: WaFlowMap) {
   const formElementIds = screen.layout.children
     .find((se) => se.type === "Form")
     ?.children?.map((q) => q.name);
@@ -169,7 +169,7 @@ export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map
   return questions;
 }
 
-export function getQuestionIdFromFlowFormElementName(name: string, map: any): string {
+export function getQuestionIdFromFlowFormElementName(name: string, map: WaFlowMap): string {
   return map[name]?.questionId;
 }
 export function getQuestionFromFlowFormElementName(
@@ -185,7 +185,7 @@ export function getQuestionFromFlowElementId(
   id: string,
   flowJson: WaFlowJson,
   questions: Question[],
-  map: any,
+  map: WaFlowMap,
 ) {
   const formElement = getFlowFormElementById(id, flowJson);
   return getQuestionFromFlowFormElementName(formElement?.name ?? "", questions, map);
@@ -218,7 +218,7 @@ export function getFlowTextLimit(type?: WaFlowFormElementType) {
  * @param map
  * @returns
  */
-export function getFlowElementText(fe: WaFlowFormElement, questions: Question[], map: any) {
+export function getFlowElementText(fe: WaFlowFormElement, questions: Question[], map: WaFlowMap) {
   if (fe.type === WaFlowFormElementType.image) {
     return "IMAGE";
   } else if (fe.type === WaFlowFormElementType.optIn) {
@@ -409,8 +409,8 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
 };
 function getScreenDataForFormElement(fe: WaFlowFormElement): {
   type: string;
-  ["__example__"]: string | Array<any> | boolean;
-  items?: any;
+  ["__example__"]: string | string[] | boolean;
+  items?: { type: string };
 } {
   if (fe.type === WaFlowFormElementType.checkboxGroup) {
     return {
@@ -625,7 +625,7 @@ function generateDataSourceFromQuestion(q: Question) {
       id: index.toString(),
       title: c,
     }));
-    const mapData: any = choices.reduce(
+    const mapData: Record<string, string> = choices.reduce(
       (prev, _choice, index) => ({ ...prev, [index]: `${5 - index}` }),
       {},
     );
@@ -660,7 +660,7 @@ function generateDataSourceFromQuestion(q: Question) {
         ...t,
       };
     });
-    const mapData: any = choices.reduce(
+    const mapData: Record<string, string> = choices.reduce(
       (prev, choice, index) => ({ ...prev, [index]: choice }),
       {},
     );

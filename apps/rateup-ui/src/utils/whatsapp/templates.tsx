@@ -61,22 +61,49 @@ interface MediaCarouselCard {
   example: string[];
 }
 
+/**
+ * The template as the editor and preview consume it. Component sections are
+ * written under their lowercased component type ("header", "body", "footer"),
+ * so the named fields sit alongside an open index.
+ */
+export interface ParsedTemplate {
+  name?: string;
+  category?: WaTemplateCategory;
+  status?: string;
+  language?: string;
+  format: string;
+  header: string | null;
+  body?: string;
+  footer: string;
+  example?: string[];
+  buttons: RawTemplateButton[];
+  templateType?: RawTemplate["templateType"];
+  defaultValues?: RawTemplate["defaultValues"];
+  whatsappSettingsPhoneId: string;
+  mediaCarousel: MediaCarouselCard[];
+  productCarousel: unknown[];
+  code_expiration_minutes?: number;
+  [section: string]: unknown;
+}
+
 export function parseTemplate(template: RawTemplate) {
-  const parsedTemplate: any = {};
+  const parsedTemplate: ParsedTemplate = {
+    format: "NONE",
+    header: null,
+    footer: "",
+    buttons: [],
+    whatsappSettingsPhoneId: "",
+    mediaCarousel: [],
+    productCarousel: [],
+  };
   parsedTemplate.name = template?.data?.name;
   parsedTemplate.category = template?.data?.category;
   parsedTemplate.status = template?.data?.status;
   parsedTemplate.language = template?.data?.language;
-  parsedTemplate.format = "NONE";
-  parsedTemplate.header = null;
-  parsedTemplate.buttons = [];
-  parsedTemplate.footer = "";
   parsedTemplate.templateType = template?.templateType;
   parsedTemplate.defaultValues = template?.defaultValues;
   parsedTemplate.whatsappSettingsPhoneId =
     template?.whatsappSettingsPhoneId || template?.defaultValues?.whatsappSettingsPhoneId || "";
-  parsedTemplate.mediaCarousel = [];
-  parsedTemplate.productCarousel = [];
   // parsedTemplate.config = template?.config;
 
   for (const component of template?.data?.components ?? []) {
@@ -122,7 +149,7 @@ export function parseTemplate(template: RawTemplate) {
           return parsedButton;
         }
       });
-      parsedTemplate["buttons"] = parsedButtons;
+      parsedTemplate["buttons"] = parsedButtons ?? [];
     } else if (component.type.toLowerCase() === "carousel") {
       const headerComp = component.cards?.[0]?.components?.find(
         (c: RawTemplateComponent) => c.type.toLowerCase() === "header",
@@ -155,7 +182,7 @@ export function parseTemplate(template: RawTemplate) {
           }
           return cardCarousel;
         });
-        parsedTemplate["productCarousel"] = cards;
+        parsedTemplate["productCarousel"] = cards ?? [];
       } else {
         const cards = component.cards?.map((card) => {
           const cardCarousel: MediaCarouselCard = {
@@ -183,7 +210,7 @@ export function parseTemplate(template: RawTemplate) {
           }
           return cardCarousel;
         });
-        parsedTemplate["mediaCarousel"] = cards;
+        parsedTemplate["mediaCarousel"] = cards ?? [];
       }
     }
   }
