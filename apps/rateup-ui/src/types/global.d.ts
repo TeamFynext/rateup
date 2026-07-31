@@ -700,11 +700,12 @@ declare global {
     /** Groups the contact belongs to, when the row is joined with them. */
     contactGroups?: Array<{ contactGroup?: ContactGroup }>;
     customFields?: Array<{
-      id: string;
-      contactId: string;
+      /** Only a saved row carries the join columns; a form value has just the field and value. */
+      id?: string;
+      contactId?: string;
       fieldId: string;
       value: string;
-      createdAt: string;
+      createdAt?: string;
     }>;
     waInboxAssign: Array<{
       assignedUser: {

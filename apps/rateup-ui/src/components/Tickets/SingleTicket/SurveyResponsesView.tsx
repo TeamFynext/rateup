@@ -33,7 +33,7 @@ const SurveyResponsesView = ({
   no,
   language,
 }: {
-  question;
+  question: Question;
   response: QuestionResponse;
   type: string;
   no: number;
@@ -100,7 +100,7 @@ const SurveyResponsesView = ({
                         {responseData.map((item) => {
                           const choices = question?.choices?.[language] ?? question?.choices;
 
-                          const choice = choices?.find((c) => c.id === item);
+                          const choice = choices?.find((c: { id?: string }) => c.id === item);
 
                           return <li key={choice?.title}>{choice?.title || item?.value}</li>;
                         })}
@@ -183,7 +183,7 @@ const SurveyResponsesView = ({
 
                   const choices = question?.choices?.[language] ?? question?.choices;
 
-                  const choice = choices?.find((c) => c.id === selectedValue);
+                  const choice = choices?.find((c: { id?: string }) => c.id === selectedValue);
 
                   return <p>{choice?.title || selectedValue?.value}</p>;
                 }

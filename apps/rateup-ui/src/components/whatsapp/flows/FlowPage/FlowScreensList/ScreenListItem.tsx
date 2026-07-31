@@ -1,3 +1,4 @@
+import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   IconChevronLeft,
@@ -465,7 +466,7 @@ interface FormElementCardProps {
   index: number;
   handleOpen: (index: number) => void;
   handleDelete: (index: number) => void;
-  dragHandleProps?;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
   screen: string;
 }
 function DraggableFormElementCard(props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>) {

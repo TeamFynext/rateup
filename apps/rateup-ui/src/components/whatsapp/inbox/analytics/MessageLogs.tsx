@@ -1,4 +1,5 @@
-import type { ColumnDef, PaginationState } from "@tanstack/react-table";
+import type { ColumnDef, PaginationState, Updater } from "@tanstack/react-table";
+import type { PaginationState, Updater } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   CheckCircle2,
@@ -69,7 +70,7 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
   const { mutate: exportLogs, isPending: isExporting } = useExportWaMessageLogs();
 
-  const handlePaginationChange = useCallback((updater) => {
+  const handlePaginationChange = useCallback((updater: Updater<PaginationState>) => {
     setPagination((prev) => {
       const newPagination = typeof updater === "function" ? updater(prev) : updater;
       return newPagination;

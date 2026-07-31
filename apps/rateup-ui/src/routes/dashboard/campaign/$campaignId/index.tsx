@@ -296,7 +296,7 @@ function CampaignDetails() {
     failed: stats.failed,
   };
 
-  const openEditCampaign = (campaign) => {
+  const openEditCampaign = (campaign: Campaign) => {
     setEditingCampaign(campaign);
     setIsEditOpen(true);
   };

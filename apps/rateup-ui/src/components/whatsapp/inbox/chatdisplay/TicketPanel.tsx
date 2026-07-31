@@ -21,6 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import {
   useAssignContactLabelsToContactId,
   useContactLabels,
@@ -32,6 +33,7 @@ import {
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -48,7 +50,7 @@ import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
 
 interface TicketPanelProps {
-  contact;
+  contact: ContactWithUpdatedAt;
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
@@ -171,7 +173,7 @@ export default function TicketPanel({
     setCopied(false);
   }, [contact?.conversationId, contact?.id]);
 
-  const contactLabels: { id: string; name: string; color: string }[] = contact?.contactLabels ?? [];
+  const contactLabels: ContactLabelOption[] = contact?.contactLabels ?? [];
   const activeLabelIds = contactLabels.map((l) => l.id);
   const assignedUsers: { id: string; name: string; teamId: string }[] =
     contact?.assignedUsers ?? [];

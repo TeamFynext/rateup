@@ -48,7 +48,7 @@ interface FlowCardProps {
   status: WaFlowStatus;
   dbFlowId: string;
   createdAt: Date;
-  teamsData?;
+  teamsData?: TeamData[];
   version: number;
   category?: string;
   responseCount?: number;

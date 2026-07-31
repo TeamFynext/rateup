@@ -4,6 +4,7 @@ import { Ban, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
@@ -163,7 +164,7 @@ export function getReactionMessage({
 }: {
   message: WaGetMessagesBody;
   allMessages: WaGetMessagesBody[];
-  selectedContact;
+  selectedContact: ContactWithUpdatedAt;
 }) {
   const exchangeProcess = message?.messageBody?.exchangeProcess;
   const isInsta =

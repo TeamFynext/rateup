@@ -32,6 +32,7 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -58,7 +59,7 @@ import { TicketType } from "@/utils/enums/ticket.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 interface WaInboxContactDetailsProps {
-  contact;
+  contact: ContactWithUpdatedAt;
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
@@ -965,7 +966,7 @@ export default function WaInboxContactDetails({
               </div>
             )}
           </motion.div>
-          {contact?.contactLabels?.length > 0 && (
+          {(contact?.contactLabels?.length ?? 0) > 0 && (
             <motion.div
               className="flex items-start space-x-1.5 group"
               whileHover={{ scale: 1.01, x: 2 }}
@@ -977,7 +978,7 @@ export default function WaInboxContactDetails({
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-muted-foreground">{t("Labels")}</p>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {contact.contactLabels.map(
+                  {contact.contactLabels?.map(
                     (label: { id: string; name?: string; color?: string }) => (
                       <Badge
                         key={label.id}

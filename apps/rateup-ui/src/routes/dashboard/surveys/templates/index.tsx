@@ -47,7 +47,7 @@ function Templates() {
     backgroundColor: "#fff",
   };
 
-  const handleTemplateSelect = (template) => {
+  const handleTemplateSelect = (template: Survey) => {
     setSelectedTemplate(template);
     setIsTemplateDialogOpen(true);
   };

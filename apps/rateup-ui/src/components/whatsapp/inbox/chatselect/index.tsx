@@ -39,6 +39,7 @@ import type { WaInboxMessage } from "@/types/global";
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
 import BulkAssignUser from "./AssignUser.tsx";
+import type { ChatFilterStore } from "./chatFilterStore.ts";
 import type { ChatFilter } from "./chatFilterStore.ts";
 import { useChatFilterStore } from "./chatFilterStore.ts";
 import WaInboxChatSelectCard from "./chatselectCard/index.tsx";
@@ -77,7 +78,7 @@ const WaInboxChatSelect = () => {
   }, [processedFilter]);
 
   const { t: translations } = useTranslation();
-  const checkIfAnyFilterisActive = useCallback((filters) => {
+  const checkIfAnyFilterisActive = useCallback((filters: ChatFilterStore["filter"]) => {
     return (
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
@@ -117,7 +118,7 @@ const WaInboxChatSelect = () => {
   const parentRef = useRef<HTMLDivElement | null>(null);
 
   const prepareFilters = useCallback(
-    (filters) => {
+    (filters: ChatFilterStore["filter"]) => {
       if (checkIfAnyFilterisActive(filters)) {
         const processedFilters = {
           ...filters,

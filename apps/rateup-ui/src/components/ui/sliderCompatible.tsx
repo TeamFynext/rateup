@@ -28,7 +28,7 @@ export default function SliderCompatible({
   ...rest
 }: Props) {
   // Ensure we always pass an array to the real Slider
-  const normalizeToArray = (v, fallback: number) => {
+  const normalizeToArray = (v: unknown, fallback: number) => {
     if (Array.isArray(v)) return v as number[];
     if (v == null) return [fallback];
     const n = Number(v);

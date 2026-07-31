@@ -211,7 +211,13 @@ function FlowImagePreview({ src, width, height }: FlowImagePreviewProps) {
   );
 }
 
-function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe }) {
+function FlowImageCarouselPreview({
+  label = "Label",
+  fe,
+}: {
+  label?: string;
+  fe: WaFlowFormElement;
+}) {
   return (
     <div>
       <p>{label}</p>

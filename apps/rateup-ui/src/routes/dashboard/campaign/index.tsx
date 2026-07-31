@@ -63,7 +63,7 @@ function CampaignsPage() {
 
   const { data, isPending, isError, error, refetch } = activeQuery;
 
-  const openEditCampaign = (campaign) => {
+  const openEditCampaign = (campaign: Campaign) => {
     setSelectedCampaignId(campaign.id);
   };
 
@@ -94,7 +94,7 @@ function CampaignsPage() {
     setSelectedStatus("all");
   };
 
-  const handleViewDetails = (campaign) => {
+  const handleViewDetails = (campaign: Campaign) => {
     navigate({
       to: `/dashboard/campaign/${campaign.id}`,
     });

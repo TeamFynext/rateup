@@ -122,8 +122,8 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           assignedUsers: [],
           assignStatus,
           triggeredByUser: {
-            id: user?.userId,
-            name: user?.userName,
+            id: user?.userId ?? "",
+            name: user?.userName ?? "",
           },
         },
         exchangeProcess: "internal",
