@@ -19,6 +19,7 @@ import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import { isLightColor } from "./isLightColor.ts";
@@ -57,7 +58,7 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
 
   const handleUpdateResponse = (value: string, question: string) => {
     const choice = choices?.find((ch: Choice) => ch.value === value);
-    updateResponse({ ...response, [question]: choice });
+    updateResponse({ ...asAnswer(response), [question]: choice });
   };
 
   const selectedPreview = useSelectedPreview();

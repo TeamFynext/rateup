@@ -15,6 +15,7 @@ import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { emailPattern } from "@/utils/constants.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
@@ -41,8 +42,8 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (response) {
-      setEmail(response?.email);
-      setTimerComplete(response?.isValid);
+      setEmail(asAnswer(response).email ?? "");
+      setTimerComplete(asAnswer(response).isValid ?? false);
     }
   }, [response]);
 
@@ -110,7 +111,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      {isOtpSend && !response?.isValid ? (
+      {isOtpSend && !asAnswer(response).isValid ? (
         <div className="flex flex-col gap-4">
           <p className="text-sm">{translations("An OTP has been sent to your email")}</p>
           <p className="text-sm">{translations("Enter OTP")}</p>
@@ -136,7 +137,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
               )}{" "}
               {timeLeft}
             </p>
-          ) : !response?.isValid ? (
+          ) : !asAnswer(response).isValid ? (
             <>
               <p className="text-sm" style={{ color: themePrimaryColor }}>
                 {translations("Note: * The OTP expires in 10 minutes once it is sent.")}
@@ -159,18 +160,18 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
               <IconMail size="1.2rem" className="shrink-0 text-muted-foreground" />
               <Input
                 placeholder="Enter email"
-                value={response?.email || email}
+                value={asAnswer(response).email || email}
                 onChange={(e) => {
                   setError("");
                   setEmail(e.target.value);
                 }}
                 className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
                 onClick={handleInputScrollIntoView}
-                disabled={response?.isValid}
+                disabled={asAnswer(response).isValid}
               />
             </div>
           </div>
-          {!response?.isValid && (
+          {!asAnswer(response).isValid && (
             <Button
               onClick={handleGetOTP}
               disabled={sendOtpMailMutation.isPending || isPreview || isSurveyThemePreview}

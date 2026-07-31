@@ -7,6 +7,7 @@ import type {
 import { Input } from "@/components/ui/input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -31,7 +32,7 @@ const MultiTextInputForm = ({ features }: { features?: Record<string, QuestionFo
             value={response?.[field.fieldKey] || ""}
             onChange={(e) => {
               updateResponse({
-                ...response,
+                ...asAnswer(response),
                 [field.fieldKey]: e.target.value,
               });
             }}

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -28,8 +29,8 @@ const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatu
           <FormPaperLayout>
             <Input
               placeholder={translations("Enter name")}
-              value={response?.name || ""}
-              onChange={(e) => updateResponse({ ...response, name: e.target.value })}
+              value={asAnswer(response).name || ""}
+              onChange={(e) => updateResponse({ ...asAnswer(response), name: e.target.value })}
               className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
               onClick={handleInputScrollIntoView}
             />
@@ -44,8 +45,8 @@ const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatu
             international
             countryCallingCodeEditable={false}
             placeholder={translations("Enter phone number")}
-            value={response?.phone || undefined}
-            onChange={(value) => updateResponse({ ...response, phone: value })}
+            value={asAnswer(response).phone || undefined}
+            onChange={(value) => updateResponse({ ...asAnswer(response), phone: value })}
             className="not-prose w-full max-w-[500px]"
             onClick={handleInputScrollIntoView}
           />
@@ -59,8 +60,8 @@ const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatu
               <IconMail size="1.2rem" className="shrink-0 text-muted-foreground" />
               <Input
                 placeholder={translations("Enter email")}
-                value={response?.email || ""}
-                onChange={(e) => updateResponse({ ...response, email: e.target.value })}
+                value={asAnswer(response).email || ""}
+                onChange={(e) => updateResponse({ ...asAnswer(response), email: e.target.value })}
                 className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
                 onClick={handleInputScrollIntoView}
               />

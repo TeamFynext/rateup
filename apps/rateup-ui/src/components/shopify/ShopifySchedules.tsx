@@ -2,6 +2,7 @@ import { IconEye } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +24,7 @@ interface ScheduleRowData {
   scheduleTime: string | null;
   sentAt: string | null;
   status: string;
-  actionStatus;
+  actionStatus?: ShopifySchedule["actionStatus"];
   apiStatus: string;
   createdAt: string | null;
   history: ShopifySchedule;
@@ -33,7 +34,7 @@ interface ScheduleRowData {
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;
   onOpen: (event: ShopifySurvey | undefined) => void;
-  translations;
+  translations: TFunction;
 }
 
 const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCellProps) => (
@@ -53,7 +54,7 @@ const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCe
 interface HistoryCellProps {
   schedule: ShopifySchedule | null;
   onOpen: (schedule: ShopifySchedule | null) => void;
-  translations;
+  translations: TFunction;
 }
 
 const HistoryCell = ({ schedule, onOpen, translations }: HistoryCellProps) => (

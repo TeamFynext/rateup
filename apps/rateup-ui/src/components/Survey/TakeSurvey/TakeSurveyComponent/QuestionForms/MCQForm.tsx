@@ -8,6 +8,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
@@ -46,9 +47,9 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   useEffect(() => {
     if (response) {
-      if (response?.value) {
-        if (selectedOp !== response?.value) setSelectedOp(response.value);
-      } else if (response?.other) {
+      if (asAnswer(response).value) {
+        if (selectedOp !== asAnswer(response).value) setSelectedOp(asAnswer(response).value ?? "");
+      } else if (asAnswer(response).other) {
         setSelectedOp(selectedFeature?.other?.title);
       }
     }
@@ -128,7 +129,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
               <Input
                 ref={otherInputRef}
                 placeholder={selectedFeature?.other?.placeholder}
-                value={response?.other || ""}
+                value={asAnswer(response).other || ""}
                 onChange={(e) =>
                   !e.target.value?.length
                     ? updateResponse(null)

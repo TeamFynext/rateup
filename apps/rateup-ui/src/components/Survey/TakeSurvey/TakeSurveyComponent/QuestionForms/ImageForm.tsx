@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 function getFileName(url: string | File, isNewFile: boolean): ReactNode {
   if (isNewFile || typeof url === "string") return <>{url}</>;
@@ -55,7 +56,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     updateResponse(null);
   }
 
-  const isImageSelected = previewUrl || response?.length > 0;
+  const isImageSelected = previewUrl || asAnswer(response).length > 0;
 
   return (
     <div className="flex w-full flex-col gap-4">

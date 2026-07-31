@@ -8,6 +8,7 @@ import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer, asAnswerList } from "@/utils/response.ts";
 
 import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -44,7 +45,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   const { control, watch, setValue } = useForm<MSQFormValues>({
     defaultValues: {
       selectedOptions: [],
-      otherText: response?.find((r: { other?: string }) => r?.other)?.other || "",
+      otherText: asAnswer(response).find((r: { other?: string }) => r?.other)?.other || "",
     },
   });
   const selectedOp = watch("selectedOptions");
@@ -54,7 +55,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
     if (response) {
       setValue(
         "selectedOptions",
-        response?.map((r: { other?: string; value?: string }) =>
+        asAnswerList(response).map((r: { other?: string; value?: string }) =>
           r?.other ? selectedFeature?.other.title : r?.value,
         ),
       );

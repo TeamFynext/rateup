@@ -8,6 +8,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
 
@@ -35,7 +36,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const data = options?.map((op: Choice) => op?.value);
   useEffect(() => {
     if (response) {
-      setSelectedOp(response.value);
+      setSelectedOp(asAnswer(response).value ?? "");
     }
   }, [response]);
 

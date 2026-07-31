@@ -37,6 +37,38 @@ type ResponseRecord = Record<string, unknown>;
 /** A stored answer. Which member applies follows the question's type. */
 export type StoredResponse = string | number | Date | ResponseRecord | ResponseRecord[];
 
+/**
+ * The fields a question form reads off an answer. Which apply depends on the question type —
+ * a choice question stores `{ value, other }`, a contact question `{ name, phone, email }` —
+ * so the shared ones are named and the rest stay open.
+ */
+export interface AnswerFields {
+  value?: string;
+  other?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  isValid?: boolean;
+  [key: string]: unknown;
+}
+
+/** Reads an answer as the keyed bag a question form stores; other shapes have no fields. */
+export const asAnswer = (response: StoredResponse | null | undefined): AnswerFields =>
+  typeof response === "object" &&
+  response !== null &&
+  !Array.isArray(response) &&
+  !(response instanceof Date)
+    ? (response as AnswerFields)
+    : {};
+
+/** Reads an answer as the list of picks a multi-select question stores. */
+export const asAnswerList = (response: StoredResponse | null | undefined): AnswerFields[] =>
+  Array.isArray(response) ? (response as AnswerFields[]) : [];
+
+/** Reads an answer as the plain text a free-text question stores. */
+export const asAnswerText = (response: StoredResponse | null | undefined): string =>
+  typeof response === "string" ? response : "";
+
 /** Narrows an answer to the choice shape(s) the choice questions store. */
 function asChoices(response: StoredResponse): ChoiceResponse | ChoiceResponse[] {
   if (Array.isArray(response)) return response as ChoiceResponse[];

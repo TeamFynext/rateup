@@ -8,6 +8,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { samplePictureChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
@@ -44,7 +45,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   useEffect(() => {
     if (response) {
-      const val = response.value?.value ?? response.value;
+      const val = asAnswer(response).value?.value ?? asAnswer(response).value;
       setSelectedOp(typeof val === "string" ? val : "");
     }
   }, [response]);

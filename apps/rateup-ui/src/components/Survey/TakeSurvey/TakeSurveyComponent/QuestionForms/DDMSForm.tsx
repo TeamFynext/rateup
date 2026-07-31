@@ -6,6 +6,7 @@ import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswerList } from "@/utils/response.ts";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -33,7 +34,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (response) {
-      setSelectedOp(response?.map((r: Choice) => r?.value));
+      setSelectedOp(asAnswerList(response).map((r: Choice) => r?.value));
     }
   }, [response]);
 

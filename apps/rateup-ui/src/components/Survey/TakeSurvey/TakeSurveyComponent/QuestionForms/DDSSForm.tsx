@@ -14,6 +14,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import CustomSelectForMobile from "../components/CustomSelectForMobile/index.tsx";
@@ -44,7 +45,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const items = data?.map((op: string) => ({ value: op, label: op }));
   useEffect(() => {
     if (response) {
-      setSelectedOp(response.value);
+      setSelectedOp(asAnswer(response).value ?? "");
     }
   }, [response]);
 
