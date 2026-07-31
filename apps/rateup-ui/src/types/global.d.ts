@@ -1716,8 +1716,9 @@ export type IgReceiveMessageBody = InstagramWebhookBody["entry"][0]["messaging"]
 
 export interface WaInboxMessage {
   exchangeProcess: "send" | "receive" | "internal" | "privateNote";
-  send?: WaSendMessageBody | IgSendMessageBody;
-  receive?: WaReceiveMessageBody | IgReceiveMessageBody;
+  /** The composer writes the unused direction as `null` when adding a message optimistically. */
+  send?: WaSendMessageBody | IgSendMessageBody | null;
+  receive?: WaReceiveMessageBody | IgReceiveMessageBody | null;
   internal?: WaInternalMessageBody;
   privateNote?: WaPrivateMessageBody;
 }

@@ -22,11 +22,15 @@ const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
 
 export interface WaGetMessagesBody {
   id: string;
-  waContctId: string;
-  createdAt: string;
+  /**
+   * Set by the server. A message the composer has added optimistically carries neither this,
+   * `createdAt`, nor `templateComponentParams` until the send round-trips.
+   */
+  waContctId?: string;
+  createdAt?: string;
   waCreatedAt: string;
   messageBody: WaInboxMessage;
-  templateComponentParams: WaTemplateComponent[];
+  templateComponentParams?: WaTemplateComponent[];
   stats?: { read: string; delivered: string; sent: string; failed: string };
   sender?: {
     name?: string;
@@ -43,8 +47,9 @@ export interface WaGetMessagesBody {
       profilePhoto?: string;
     };
   };
-  sourcePlatform: MessagePlatform;
-  sourceIdentifier: string;
+  /** `INTERNAL` for a private note, which belongs to no channel. */
+  sourcePlatform: MessagePlatform | "INTERNAL";
+  sourceIdentifier: string | null;
   // The ticket a message belongs to. Nullable for legacy messages that predate
   // the conversation backfill.
   conversationId?: string | null;

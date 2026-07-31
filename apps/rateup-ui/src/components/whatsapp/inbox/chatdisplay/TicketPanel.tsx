@@ -275,7 +275,7 @@ export default function TicketPanel({
           text: { body: next ? "marked this contact as spam" : "marked this contact as not spam" },
           assignedUsers: [],
           assignStatus: next ? WaMessageAssignStatus.SPAM : NOT_SPAM_EVENT,
-          triggeredByUser: { id: user?.userId, name: user?.userName },
+          triggeredByUser: { id: user?.userId ?? "", name: user?.userName ?? "" },
         },
         exchangeProcess: "internal",
       },

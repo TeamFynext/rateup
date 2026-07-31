@@ -21,6 +21,7 @@ import { create } from "zustand";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useConversationLimit } from "@/backend/stats/stats.query";
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
@@ -339,8 +340,8 @@ export default function WaInboxChatDisplayFooter({
           },
           mentionedUser,
           triggeredByUser: {
-            id: user?.userId,
-            name: user?.userName,
+            id: user?.userId ?? "",
+            name: user?.userName ?? "",
           },
         },
         exchangeProcess: "privateNote",
@@ -914,24 +915,13 @@ export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
  * The `null` slots mirror the wire shape, where only one of
  * send/receive/privateNote is populated.
  */
-export interface OptimisticMessage {
-  id: string;
+/**
+ * A message the composer adds to the thread before the send round-trips. It is the same row
+ * the list renders, minus the fields only the server can fill in.
+ */
+export interface OptimisticMessage extends WaGetMessagesBody {
   contactId: string;
-  waCreatedAt: string;
-  messageBody: {
-    send: unknown;
-    receive: unknown;
-    privateNote?: unknown;
-    exchangeProcess: string;
-    [key: string]: unknown;
-  };
-  sourcePlatform: string;
-  sourceIdentifier: string | null;
   sendBy?: string;
-  sender?: { name?: string; profilePhoto?: string };
-  stats?: { read: string; sent: string; failed: string; delivered: string };
-  messageId: string;
-  [key: string]: unknown;
 }
 
 interface WaMedia {
