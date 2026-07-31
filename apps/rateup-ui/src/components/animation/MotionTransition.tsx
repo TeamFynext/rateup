@@ -2,7 +2,8 @@ import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 
 interface MotionTransitionProps {
-  keyValue;
+  /** Identity of the animated subject; a change swaps the transition. */
+  keyValue?: { id?: string } | null;
   type?: "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut";
   apEnable?: boolean;
   duration?: number;

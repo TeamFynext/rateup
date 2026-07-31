@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import {
   useCreateWaQuickReply,
   useUpdateReply,
@@ -56,7 +57,7 @@ const CreateOrEditQuickReply = ({
   setOpen,
 }: {
   isEdit?: boolean;
-  reply?;
+  reply?: QuickReply | null;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
@@ -96,7 +97,7 @@ const CreateOrEditQuickReply = ({
     const payload = { ...values, text: JSON.stringify(values.text) };
     if (isEdit) {
       update.mutate(
-        { id: reply.id, data: payload },
+        { id: reply?.id ?? "", data: payload },
         {
           onSuccess: () => {
             toast.success("Quick reply Updated");

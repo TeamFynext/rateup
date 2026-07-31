@@ -34,12 +34,12 @@ import { useResponseFilterStore } from "./store.ts";
 
 interface ResponseTableToolbarProps<TData> {
   table: Table<TData>;
-  CFData?: unknown[];
+  CFData?: Array<{ id: string; name: string }>;
   campaignIds: string[];
   setCampaignIds: (ids: string[]) => void;
   ranges: Range[];
   setRange: (range: Range[]) => void;
-  survey;
+  survey: Survey;
   isSyncing: boolean;
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;

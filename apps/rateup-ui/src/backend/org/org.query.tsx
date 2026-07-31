@@ -125,7 +125,7 @@ export const useUpdateOrgPause = () => {
   });
 };
 
-export const useGetWebhookClientSecret = (webhookUrl: string) => {
+export const useGetWebhookClientSecret = (webhookUrl: string | undefined) => {
   return useQuery({
     queryKey: ["webhookClientSecret"],
     queryFn: getWebhookClientSecret,

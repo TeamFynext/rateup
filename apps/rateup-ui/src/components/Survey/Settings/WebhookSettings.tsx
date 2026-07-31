@@ -25,7 +25,7 @@ const WebhookSettings = ({
   editSurvey,
   enabledModules,
 }: {
-  responseWebhookEndpoint: string;
+  responseWebhookEndpoint: string | undefined;
   editSurvey: SurveyUpdateMutation;
   enabledModules: string[];
 }) => {

@@ -34,13 +34,15 @@ const defaultEnabledModules = [
 
 interface SurveySettingsProps {
   surveyId: string;
-  survey;
+  survey: Survey;
   enabledModules?: string[];
   setSelectedLanguage?: (lang: string) => void;
   flowName?: string;
   flowDbId?: string;
   anonymous?: boolean;
 }
+
+import type { RedirectValue } from "./RedirectSettings/index.tsx";
 
 const SurveySettings = ({
   surveyId,
@@ -55,13 +57,13 @@ const SurveySettings = ({
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
   const [webSurveyAutoTransitionToNextQues, setwebSurveyAutoTransitionToNextQues] = useState(
-    survey?.webSurveyAutoTransitionToNextQues,
+    survey?.webSurveyAutoTransitionToNextQues ?? false,
   );
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
-  const [redirect, setRedirect] = useState(survey?.redirect);
+  const [redirect, setRedirect] = useState<RedirectValue>(survey?.redirect ?? {});
   const [redirectError, setRedirectError] = useState({ url: "", time: "" });
   const editSurvey = useEditSurveyMutation(surveyId);
-  const debounced = useDebounce(redirect?.url, 200);
+  const debounced = useDebounce(redirect?.url ?? "", 200);
 
   useEffect(() => {
     setHasGoogleReview(

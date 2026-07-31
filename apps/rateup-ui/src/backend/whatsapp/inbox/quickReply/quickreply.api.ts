@@ -19,8 +19,8 @@ export async function createWaQuickReply(data: z.infer<typeof quickReplySchema>)
 /** A saved WhatsApp quick reply. */
 export interface QuickReply {
   id: string;
-  key?: string;
-  text?: string;
+  key: string;
+  text: string;
   category: string;
   topic: string;
   message?: string;

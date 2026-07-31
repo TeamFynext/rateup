@@ -36,9 +36,9 @@ export const getFilteredVariablesForQuestion = (
   variables: SurveyVariable[],
   selectedLanguage: string,
   questions: Question[],
-  question: Question,
+  question: Question | undefined,
 ) => {
-  const questionIndex = questions.findIndex((q) => q.id == question.id);
+  const questionIndex = questions.findIndex((q) => q.id == question?.id);
   const previousQuestionIds = questions.slice(0, questionIndex).map((q) => q.id);
   return variables?.filter((val) => {
     if (val?.type === SurveyVariableType.DEFAULT) {

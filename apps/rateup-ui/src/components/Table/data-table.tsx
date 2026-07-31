@@ -1,4 +1,5 @@
 import type {
+  Column,
   ColumnDef,
   ColumnFiltersState,
   PaginationState,
@@ -44,7 +45,7 @@ export interface DataTableToolbarProps<TData, _TValue> {
   table: ReturnType<typeof useReactTable<TData>>;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends { id?: string | number }, TValue>({
   columns,
   data,
   DataTableToolbar,
@@ -103,12 +104,12 @@ export function DataTable<TData, TValue>({
 
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getRowId: (row) => row.id,
+    getRowId: (row) => String(row.id),
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
-      const search = filterValue.toLowerCase();
+      const search = String(filterValue).toLowerCase();
 
-      return Object.values(row.original).some((value) =>
+      return Object.values(row.original as Record<string, unknown>).some((value) =>
         String(value).toLowerCase().includes(search),
       );
     },
@@ -176,7 +177,7 @@ export function DataTable<TData, TValue>({
 }
 
 export const createSortableHeader = (title: string) => {
-  const SortableHeader = ({ column }: { column }) => {
+  const SortableHeader = <TData, TValue>({ column }: { column: Column<TData, TValue> }) => {
     return <DataTableColumnHeader column={column} title={title} />;
   };
 

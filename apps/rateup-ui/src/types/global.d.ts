@@ -260,6 +260,8 @@ declare global {
     welcomePageEnabled: boolean;
     orgLogo?: string;
     surveyTeamMapId?: string;
+    /** The Google Sheet responses are synced to, when the integration is connected. */
+    spreadSheetId?: string | null;
     skipPreview: boolean;
     publicKey?: string;
     isEncrypted: boolean;

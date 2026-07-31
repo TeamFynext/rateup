@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 type RedirectError = { url: string; time: string };
 
 /** The survey's redirect setting as this form edits it. */
-type RedirectValue = { enable?: boolean; url?: string; time?: string | number };
+export type RedirectValue = { enable?: boolean; url?: string; time?: string | number };
 
 import type { Dispatch, SetStateAction } from "react";
 

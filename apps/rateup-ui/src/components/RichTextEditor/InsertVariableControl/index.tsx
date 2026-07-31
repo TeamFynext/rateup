@@ -14,7 +14,13 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { getFilteredVariablesForQuestion } from "@/utils/survey/question/question.utils";
 
-const InsertVariableControl = ({ question, editor }: { question?; editor: Editor | null }) => {
+const InsertVariableControl = ({
+  question,
+  editor,
+}: {
+  question?: Question;
+  editor: Editor | null;
+}) => {
   const { variables, surveyId } = useContext(SurveyContext);
   const { data: questions } = useQuestions(surveyId ?? "");
   const { selectedLanguage } = useContext(SelectedLanguageContext);
