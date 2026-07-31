@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createLinktree,
   deleteLinktree,
@@ -48,7 +50,7 @@ function useCreateLinktreeMutation() {
 function useUpdateLinktreeMutation(shortUrlId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: RequestPayload) => {
       return updateLinktree(data);
     },
     onSuccess: () => {

@@ -55,22 +55,6 @@ interface TNC {
   content: string;
 }
 
-interface ValidationRules {
-  length?: {
-    min: string;
-    max: string;
-    errorMessage: string;
-  };
-  wordCount?: {
-    min: string;
-    max: string;
-    errorMessage: string;
-  };
-  textType?: {
-    type: string;
-    errorMessage: string;
-  } | null;
-}
 export interface Wop {
   imageSrc?: string;
   primaryColor: string;
@@ -150,6 +134,23 @@ declare global {
       }
     | undefined;
   var fbAsyncInit: (() => void) | undefined;
+  interface ValidationRules {
+    length?: {
+      min: string;
+      max: string;
+      errorMessage: string;
+    };
+    wordCount?: {
+      min: string;
+      max: string;
+      errorMessage: string;
+    };
+    textType?: {
+      type: string;
+      errorMessage: string;
+    } | null;
+  }
+
   /** One rule in a MultiTextInput question's per-field rule list. */
   interface ValidationFieldRule {
     ruleType: string;
@@ -179,14 +180,15 @@ declare global {
     googleReview?: GoogleReview;
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
-    validationRules?: QuestionValidationRules;
+    /** `null` clears the rules. */
+    validationRules?: QuestionValidationRules | null;
     tnc?: Record<string, TNC>;
     enableNpsAnalytics?: boolean;
     optinScreenId?: string;
     wop?: Wop;
     onSelectAction?: boolean;
     waAppName?: IntegratedApps;
-    subtitleText?: string;
+    subtitleText?: string | null;
     titleText?: string;
     startButtonText?: string;
     extraConfig?: {
@@ -198,13 +200,14 @@ declare global {
       maxUploadedDocuments?: number;
       allowedMimeTypes?: string[];
     };
+    /** `null` clears the review-page config. */
     reviewPageOptions?: {
       minRating?: number;
       minOpinion?: number;
       reqOptions?: string[];
       /** Only set when `reviewPagePlatform` is `Custom`. */
       customPlatformName?: string;
-    };
+    } | null;
     reviewPagePlatform?: ReviewPagePlatform;
   }
   interface ResponseSummary {

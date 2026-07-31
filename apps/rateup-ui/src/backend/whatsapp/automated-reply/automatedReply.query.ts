@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { shouldSkipLocalErrorToast } from "@/backend/apiClient";
+import type { RequestPayload } from "@/types/api.ts";
 
 import {
   cloneWaAutomatedReply,
@@ -45,7 +46,7 @@ export const useWaAutomatedReplyById = (waAutomatedReplyId: string) =>
 export const useCreateWaAutomatedReplyMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => createWaAutomatedReply(data),
+    mutationFn: (data: RequestPayload) => createWaAutomatedReply(data),
     onSuccess: (_, _data) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       toast.success("Automated Reply Created Successfully");

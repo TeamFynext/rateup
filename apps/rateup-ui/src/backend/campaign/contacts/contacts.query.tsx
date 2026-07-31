@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { RequestPayload } from "@/types/api.ts";
 import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
@@ -29,6 +30,7 @@ import {
   updateContactLabel,
   updateCustomField,
   updateLifecycleofMultipleContacts,
+  type IUpdateContactLabel,
 } from "./contacts.api";
 
 export const useContacts = (
@@ -167,7 +169,7 @@ export const useEditContactLabelsMutation = (_contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContactLabels,
-    onSuccess: (_data: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
       toast.success("Contact updated successfully.", {
         id: "contact-update",
@@ -235,7 +237,7 @@ export const useCreateCustomFieldMutation = () => {
 export const useUpdateCustomFieldMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ fieldId, data }: { fieldId: string; data: any }) =>
+    mutationFn: ({ fieldId, data }: { fieldId: string; data: RequestPayload }) =>
       updateCustomField(fieldId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customFields"] });
@@ -318,7 +320,7 @@ export const useCreateContactLabelMutation = () => {
 export const useUpdateContactLabelMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ labelId, data }: { labelId: string; data: any }) =>
+    mutationFn: ({ labelId, data }: { labelId: string; data: IUpdateContactLabel }) =>
       updateContactLabel(labelId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactLabels"] });

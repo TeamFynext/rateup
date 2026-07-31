@@ -5,7 +5,7 @@ import { axiosClient } from "../../apiClient";
 const STRIPE_URL = "/payment/stripe";
 const STRIPE_SUBSCRIPTIONS = `${STRIPE_URL}/subscriptions`;
 
-export async function createStripeCheckoutSession(data: any) {
+export async function createStripeCheckoutSession(data: RequestPayload) {
   return await axiosClient.post(`${STRIPE_URL}/create-checkout-session`, data);
 }
 

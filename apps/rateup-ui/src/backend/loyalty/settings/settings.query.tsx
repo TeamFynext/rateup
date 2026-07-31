@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createLoyaltyTemplate,
   deleteLoyaltyTemplate,
@@ -26,7 +28,7 @@ export const useCreateLoyaltyTemplate = () => {
 export const useUpdateLoyaltyTemplate = (commandId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateLoyaltyTemplate(commandId, data),
+    mutationFn: (data: RequestPayload) => updateLoyaltyTemplate(commandId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import { getTeamSurveys } from "../team/team.api";
 import {
   cloneSurvey,
@@ -428,7 +430,7 @@ export const useDeleteSurveyMutation = () => {
 export function useUpdateSurveyMutation() {
   const queryClient = useQueryClient();
   const surveyUpdateMutation = useMutation({
-    mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) =>
+    mutationFn: ({ surveyId, data }: { surveyId: string; data: RequestPayload }) =>
       updateSurvey(surveyId, data),
     onSuccess: () => {
       toast.success("Survey Updated Successfully!");
@@ -531,7 +533,7 @@ export const useValidateOtp = () => {
 export const useSurveyUpdateMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) => {
+    mutationFn: ({ surveyId, data }: { surveyId: string; data: RequestPayload }) => {
       return updateSurvey(surveyId, data);
     },
     onSuccess: () => {

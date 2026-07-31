@@ -9,7 +9,7 @@ export async function createLoyaltyTemplate(data: RequestPayload) {
   await axiosClient.post(`${base}/template`, data);
 }
 
-export async function updateLoyaltyTemplate(id: string, data: any) {
+export async function updateLoyaltyTemplate(id: string, data: RequestPayload) {
   await axiosClient.put(`${base}/template/${id}`, data);
 }
 

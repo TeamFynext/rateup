@@ -28,7 +28,7 @@ async function createQr(data: RequestPayload) {
   return res.data;
 }
 
-async function updateQr(data: any) {
+async function updateQr(data: RequestPayload) {
   const res = await axiosClient.put(url, data);
   return res.data;
 }

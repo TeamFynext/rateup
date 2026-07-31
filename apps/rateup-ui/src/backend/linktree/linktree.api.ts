@@ -39,7 +39,7 @@ async function createLinktree(data: RequestPayload) {
   return res.data;
 }
 
-async function updateLinktree(data: any) {
+async function updateLinktree(data: RequestPayload) {
   const res = await axiosClient.put(url, data);
   return res.data;
 }

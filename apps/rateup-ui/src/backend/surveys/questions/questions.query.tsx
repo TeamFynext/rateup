@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createQuestion,
   deleteQuestion,
@@ -20,7 +22,8 @@ export const useQuestions = (surveyId: string) => {
 
 interface QuestionUpdateMutationArgs {
   qId: string;
-  data: any;
+  /** The edited question; `type` is stripped before it is sent. */
+  data: Partial<Question>;
 }
 
 interface iProps {
@@ -29,7 +32,7 @@ interface iProps {
 export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (data: any) => createQuestion(surveyId, data),
+    mutationFn: (data: RequestPayload) => createQuestion(surveyId, data),
     onSuccess: () => {
       toast.success("Question created");
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });

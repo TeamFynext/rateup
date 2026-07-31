@@ -54,6 +54,29 @@ interface FormValues {
   [ruleType: string]: RuleValue;
 }
 
+/**
+ * The form keeps one entry per rule type; only the three named rules are ever
+ * added (see `ruleList`), so this narrows the bag to the stored shape.
+ */
+function toValidationRules(values: FormValues): ValidationRules {
+  const rules: ValidationRules = {};
+  const { length, wordCount, textType } = values;
+  if (length && "min" in length) {
+    rules.length = { min: length.min, max: length.max, errorMessage: length.errorMessage };
+  }
+  if (wordCount && "min" in wordCount) {
+    rules.wordCount = {
+      min: wordCount.min,
+      max: wordCount.max,
+      errorMessage: wordCount.errorMessage,
+    };
+  }
+  if (textType && "type" in textType) {
+    rules.textType = { type: textType.type, errorMessage: textType.errorMessage };
+  }
+  return rules;
+}
+
 const TEXT_TYPE_OPTIONS = ["Letters", "Letters_&_Numbers", "Numbers"];
 
 const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTab }: IProps) => {
@@ -269,7 +292,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     const data = {
       validationRules: [Q.MultiTextInput].includes(selectedQ?.type as QuestionType)
         ? multiInputRules
-        : { ...form.values },
+        : toValidationRules(form.values),
     };
 
     await questionUpdateMutation.mutateAsync({
