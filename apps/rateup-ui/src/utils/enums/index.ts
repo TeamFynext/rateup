@@ -1,3 +1,4 @@
+import type { ElementType } from "@/types/enums.ts";
 import {
   PageType,
   QuestionType,
@@ -57,7 +58,7 @@ export function getPageTypeLabel(type: PageType) {
       return false;
   }
 }
-export function getQuestionTypeLabel(type: QuestionType | WaFlowFormNonInputElementType) {
+export function getQuestionTypeLabel(type: ElementType) {
   switch (type) {
     case QuestionType.Rating:
       return "Rating";

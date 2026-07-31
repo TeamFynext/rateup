@@ -348,6 +348,13 @@ export enum WaFlowFormNonInputElementType {
   if = "If",
 }
 
+/** Every kind of element the survey/flow editors can list in their "add element" catalogue. */
+export type ElementType =
+  | QuestionType
+  | PageType
+  | WaFlowFormElementType
+  | WaFlowFormNonInputElementType;
+
 export enum SaveStatus {
   saved = "Saved",
   notSaved = "Pending Save",

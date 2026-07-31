@@ -231,7 +231,10 @@ const LoyaltyWaTemplateConfig = ({
   const contentEditor = useWaEditor({
     content: form.getValues("content"),
     onChange: (value) =>
-      form.setValue("content", value, { shouldDirty: true, shouldValidate: true }),
+      form.setValue("content", value, {
+        shouldDirty: true,
+        shouldValidate: true,
+      }),
   });
 
   const hanldeTemplateConfig = form.handleSubmit((submitted) => {
@@ -325,7 +328,9 @@ const LoyaltyWaTemplateConfig = ({
                     <Select
                       value={values.type}
                       onValueChange={(value) =>
-                        form.setValue("type", value as LoyaltyTemplateTypes, { shouldDirty: true })
+                        form.setValue("type", value as LoyaltyTemplateTypes, {
+                          shouldDirty: true,
+                        })
                       }
                       disabled={!!config}
                       items={typeData}
@@ -863,15 +868,20 @@ function useSampleReplyMessage() {
   );
 }
 
-function getWaTemplateBodyText(templateComponents?: Array<any>) {
+function getWaTemplateBodyText(templateComponents?: unknown[]) {
   if (!Array.isArray(templateComponents)) {
     return "";
   }
 
-  const bodyComponent = templateComponents.find(
-    (component) =>
-      String(component?.type || "").toUpperCase() === "BODY" && typeof component?.text === "string",
-  );
+  const bodyComponent = templateComponents
+    .filter(
+      (component): component is Record<string, unknown> =>
+        typeof component === "object" && component !== null,
+    )
+    .find(
+      (component) =>
+        String(component.type || "").toUpperCase() === "BODY" && typeof component.text === "string",
+    );
 
-  return bodyComponent?.text || "";
+  return typeof bodyComponent?.text === "string" ? bodyComponent.text : "";
 }

@@ -34,23 +34,15 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  PageType,
-  QuestionType,
-  WaFlowFormElementType,
-  WaFlowFormNonInputElementType,
-} from "@/types/enums.ts";
+import type { ElementType } from "@/types/enums.ts";
+import { PageType, QuestionType, WaFlowFormNonInputElementType } from "@/types/enums.ts";
 import { googleReviewSupportedTypes } from "@/utils/data.ts";
 import { getQuestionTypeLabel, getTypeLabel } from "@/utils/enums/index.ts";
 
 import { GoogleIcon } from "../../Button/GoogleIcon.tsx";
 import { pageIcons } from "../Page/PageIcons.ts";
 
-export type ElementType =
-  | QuestionType
-  | PageType
-  | WaFlowFormElementType
-  | WaFlowFormNonInputElementType;
+export type { ElementType };
 
 interface ElementTypeChipProps {
   type: ElementType;
@@ -92,7 +84,9 @@ export function ElementTypeChip({
     >
       <span
         className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white"
-        style={{ backgroundColor: questionTypeColors[type] ?? "var(--primary)" }}
+        style={{
+          backgroundColor: questionTypeColors[type] ?? "var(--primary)",
+        }}
       >
         {Icon && <Icon size={15} strokeWidth={2} />}
       </span>
@@ -115,7 +109,7 @@ export function ElementGroupTitle({ children }: Readonly<{ children: ReactNode }
 interface QuestionTypeSelectionProps {
   questionTypeGroups: Array<{
     title: string;
-    questionTypes: Array<any>;
+    questionTypes: Array<ElementType>;
   }>;
   handleTypeSelection: (type: ElementType) => void;
   /** Optional filter text coming from the "Add Element" search box. */
@@ -129,7 +123,7 @@ export function QuestionTypeSelection({
 }: Readonly<QuestionTypeSelectionProps>) {
   // The hovered type, so the "Review Supported" hint shows on its own group's
   // header instead of always on the first group's.
-  const [hoveredType, setHoveredType] = useState<QuestionType | null>(null);
+  const [hoveredType, setHoveredType] = useState<ElementType | null>(null);
 
   const handleQuestionTypeClick = (type: ElementType) => {
     handleTypeSelection(type);
@@ -162,9 +156,9 @@ export function QuestionTypeSelection({
               variant="outline"
               className={cn(
                 "h-5 gap-1 rounded-md px-1.5 text-[11px] font-medium capitalize transition-opacity",
-                qtype?.questionTypes?.includes(hoveredType) &&
-                  hoveredType &&
-                  googleReviewSupportedTypes.includes(hoveredType)
+                hoveredType &&
+                  qtype?.questionTypes?.includes(hoveredType) &&
+                  googleReviewSupportedTypes.some((supported) => supported === hoveredType)
                   ? "opacity-100"
                   : "pointer-events-none opacity-0",
               )}
@@ -178,7 +172,7 @@ export function QuestionTypeSelection({
               <ElementTypeChip
                 key={type}
                 type={type}
-                onClick={() => handleQuestionTypeClick(type as QuestionType)}
+                onClick={() => handleQuestionTypeClick(type)}
                 onMouseOver={() => setHoveredType(type)}
                 onMouseLeave={() => setHoveredType(null)}
               />

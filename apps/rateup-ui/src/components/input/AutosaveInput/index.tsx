@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils.ts";
 interface AutosaveInputProps {
   value?: string;
   isTextArea?: boolean;
-  onSave: (value: string, name?: string) => Promise<any>;
+  onSave: (value: string, name?: string) => Promise<unknown>;
   style?: React.CSSProperties;
   className?: string;
   name?: string;
