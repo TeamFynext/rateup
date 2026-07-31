@@ -39,7 +39,8 @@ interface ButtonSelectionProps {
   checkoutBtn: boolean;
   catalogBtn: boolean;
   spmBtn: boolean;
-  category?: "AUTHENTICATION" | "MARKETING" | "UTILITY";
+  /** The template category, as `templateSchema` stores it. */
+  category?: string;
 }
 
 interface MenuEntry {

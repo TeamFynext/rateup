@@ -315,7 +315,7 @@ export function WhatsappTemplateById({
 
   const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId ?? "");
   const productRetailerIds = useMemo(
-    () => (catalog ? catalog.products?.map((p: { retailer_id: string }) => p.retailer_id) : []),
+    () => catalog?.products?.map((p) => p.retailer_id ?? "") ?? [],
     [catalog],
   );
   useEffect(() => {
@@ -984,7 +984,7 @@ export function WhatsappTemplateById({
               <div>
                 <AccountSelector
                   value={values.whatsappSettingsPhoneId}
-                  onChange={(value: string) => {
+                  onChange={(value) => {
                     setTemplateValue("whatsappSettingsPhoneId", value ?? "");
                     setTemplateValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
                   }}
