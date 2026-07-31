@@ -89,7 +89,7 @@ function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => 
 
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && handleModalClose()}>
-      <DialogContent onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submit]])}>
+      <DialogContent onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submit()]])}>
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">{translations("Create Flow")}</DialogTitle>
         </DialogHeader>

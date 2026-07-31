@@ -181,7 +181,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
           <form
             className="p-5"
             onSubmit={submitClone}
-            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitClone]])}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submitClone()]])}
           >
             <Field>
               <p className="text-sm text-muted-foreground">

@@ -112,7 +112,7 @@ export function FlowEmbeddedLinkDetailedView() {
                     value={field.value ?? ""}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSave]])}
+                    onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void onSave()]])}
                     maxValue={getFlowTextLimit(nonInputTextType)}
                     placeholder={translations("Enter your text here *")}
                     aria-invalid={fieldState.invalid}

@@ -174,7 +174,7 @@ const CreateContactModal = ({
           e.preventDefault();
           handleSubmit();
         }}
-        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void handleSubmit()]])}
         onReset={() => form.reset()}
       >
         <div className="flex flex-col gap-4">

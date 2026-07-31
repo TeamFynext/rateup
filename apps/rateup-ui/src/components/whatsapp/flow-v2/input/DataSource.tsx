@@ -140,7 +140,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
       {(!maxChoiceCount || choices?.length < maxChoiceCount) && (
         <div
           className={disabled ? "hidden" : "mt-2 flex flex-col"}
-          onKeyDown={getHotkeyHandler([["Enter", submitAdd]])}
+          onKeyDown={getHotkeyHandler([["Enter", () => void submitAdd()]])}
         >
           <div className="flex w-full grow flex-col gap-1">
             <div className="flex items-start gap-2">

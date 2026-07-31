@@ -210,7 +210,7 @@ const RateupPlanModal = ({
         <form
           className="p-5"
           onSubmit={submitPlan}
-          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitPlan]])}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submitPlan()]])}
         >
           <div className="grid grid-cols-2 gap-4">
             <Field>

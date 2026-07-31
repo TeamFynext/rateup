@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { QuestionType } from "@/types/enums.ts";
 import { getFileNameFromKey, getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import type { StoredResponse } from "@/utils/response.ts";
 import { getResponse, getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import { HoverCardComponent } from "../HoverCard/HoverCard.tsx";
@@ -27,7 +28,7 @@ import { fuzzyFilter } from "./Filter.ts";
 
 /** The cell context these response column definitions read. */
 interface ResponseCellInfo {
-  getValue: () => unknown;
+  getValue: () => StoredResponse;
   row: { original: { Ticket?: Array<{ id: string }>; [key: string]: unknown } };
 }
 

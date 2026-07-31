@@ -17,7 +17,7 @@ export const stringToColour = function (str: string | number) {
   return colour;
 };
 
-export function pushToSessionStorage(key: string, value: any) {
+export function pushToSessionStorage(key: string, value: unknown) {
   sessionStorage.setItem(key, JSON.stringify(value));
 }
 

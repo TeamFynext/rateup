@@ -119,7 +119,7 @@ function CreateFlowScreenModal({
             {screenId ? translations("Edit Screen") : translations("Create Screen")}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submit]])}>
+        <form onSubmit={submit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submit()]])}>
           <FieldGroup>
             <Controller
               name="screenTitle"

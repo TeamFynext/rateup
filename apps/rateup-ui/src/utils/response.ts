@@ -32,36 +32,59 @@ interface ChoiceResponse {
 /** An answer as stored on a response record: text, or a keyed bag of values. */
 type ResponseRecord = Record<string, unknown>;
 
-export function getResponse(q: any, response: any) {
+/** A stored answer. Which member applies follows the question's type. */
+export type StoredResponse = string | number | Date | ResponseRecord | ResponseRecord[];
+
+/** Narrows an answer to the choice shape(s) the choice questions store. */
+function asChoices(response: StoredResponse): ChoiceResponse | ChoiceResponse[] {
+  if (Array.isArray(response)) return response as ChoiceResponse[];
+  return typeof response === "object" && response !== null && !(response instanceof Date)
+    ? (response as ChoiceResponse)
+    : {};
+}
+
+/** Narrows an answer to its keyed form; a non-object answer has no fields. */
+function asRecord(response: StoredResponse): ResponseRecord {
+  return typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    !(response instanceof Date)
+    ? response
+    : {};
+}
+
+export function getResponse(q: Question | undefined, response: StoredResponse) {
   if (!response && response !== 0) return "";
 
   switch (q?.type) {
     case QuestionType.Testimonial:
-      return formatTestimonialResponse(response);
+      return formatTestimonialResponse(
+        typeof response === "string" ? response : asRecord(response),
+      );
     case QuestionType.Date:
-      return formatDateTime(response);
+      return formatDateTime(response instanceof Date ? response : String(response));
     case QuestionType.Contact:
     case QuestionType.Phone:
     case QuestionType.Email:
     case QuestionType.EmailPhone:
-      return formatContactInfo(response);
+      return formatContactInfo(typeof response === "string" ? response : asRecord(response));
     case QuestionType.DDMS:
     case QuestionType.MSQ:
     case QuestionType.CustomNPS:
     case QuestionType.MCQ:
     case QuestionType.DDSS:
     case QuestionType.WaButtons:
-      return formatChoiceTypeQuestions(q, response);
+      return formatChoiceTypeQuestions(q, asChoices(response));
     case QuestionType.WaList:
-      return formatWaList(response);
+      return formatWaList(asRecord(response));
     case QuestionType.MultiTextInput:
-      return formatMultiTextInput(q, response);
+      return formatMultiTextInput(q, typeof response === "string" ? response : asRecord(response));
     case QuestionType.MCQGrid:
-      return formatMCQGridResponse(q, response);
+      return formatMCQGridResponse(q, asRecord(response));
     case QuestionType.EmailOtp:
-      return formatEmailOtpResponse(response);
+      return formatEmailOtpResponse(asRecord(response));
     default:
-      return formatDefaultResponse(q, response);
+      return formatDefaultResponse(response);
   }
 }
 
@@ -78,7 +101,7 @@ function formatContactInfo(response: string | ResponseRecord) {
     .join(", ");
 }
 
-function formatEmailOtpResponse(response: { email?: string }) {
+function formatEmailOtpResponse(response: ResponseRecord) {
   return `Verified Email Id: ${response?.email}`;
 }
 function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
@@ -92,11 +115,14 @@ function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
   }
 }
 
-function formatMCQGridResponse(question: Question, response: Record<string, { value?: unknown }>) {
+function formatMCQGridResponse(question: Question, response: ResponseRecord) {
   if (!response) return;
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
-  return gridQuestions?.map((q: string) => `${q}: ${response?.[q]?.value ?? "NA"}`);
+  return gridQuestions?.map((q: string) => {
+    const cell = response?.[q] as { value?: unknown } | undefined;
+    return `${q}: ${cell?.value ?? "NA"}`;
+  });
 }
 
 function formatChoiceTypeQuestions(q: Question, response: ChoiceResponse | ChoiceResponse[]) {
@@ -127,8 +153,11 @@ function formatChoiceTypeQuestions(q: Question, response: ChoiceResponse | Choic
   return formattedValue;
 }
 
-function formatWaList(response: Record<string, { title?: string; description?: string }>) {
-  const { title, description } = response[QuestionType.WaList];
+function formatWaList(response: ResponseRecord) {
+  const { title, description } = (response[QuestionType.WaList] ?? {}) as {
+    title?: string;
+    description?: string;
+  };
   return description ? `${title}: ${description}` : title;
 }
 
@@ -145,7 +174,7 @@ function formatTestimonialResponse(response: string | ResponseRecord) {
   };
 }
 
-function formatDefaultResponse(_q: Question, response: unknown) {
+function formatDefaultResponse(response: StoredResponse) {
   // Handle other types or default case
   return response;
 }
@@ -212,7 +241,12 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
 export function getResponseArrayByQuestionType(questionType: QuestionType | WaQuestions): Array<{
   value: string | number;
   color: string;
-  Icon?: any;
+  Icon?: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    stroke?: number;
+    className?: string;
+  }>;
 }> | null {
   switch (questionType) {
     case QuestionType.Rating: {
@@ -293,7 +327,12 @@ export function getResponseArrayByQuestionType(questionType: QuestionType | WaQu
 export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions | QuestionType): Array<{
   value: string | number;
   color: string;
-  Icon?: any;
+  Icon?: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    stroke?: number;
+    className?: string;
+  }>;
 }> | null {
   switch (questionType) {
     case WaQuestions.Rating: {

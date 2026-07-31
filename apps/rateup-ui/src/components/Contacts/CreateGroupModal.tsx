@@ -158,7 +158,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
       <DialogContent onClick={(e) => e.stopPropagation()}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, form.handleSubmit(onSubmit)]])}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void form.handleSubmit(onSubmit)()]])}
         >
           <DialogHeader>
             <DialogTitle>Create New Group</DialogTitle>

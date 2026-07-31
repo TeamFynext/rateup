@@ -210,7 +210,7 @@ const SurveyResultByType = ({
           return renderStatRow({
             label: (
               <div className="flex items-center gap-2">
-                {version !== 2 && <Icon size={20} color={item.color} stroke={2} />}
+                {version !== 2 && Icon && <Icon size={20} color={item.color} stroke={2} />}
                 <span>{item.value}</span>
               </div>
             ),

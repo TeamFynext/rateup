@@ -89,8 +89,9 @@ function FlowCard({
     setTeamIdError("");
   };
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Also reached from the save hotkey, which has already prevented the default.
+  const onSubmit = (e?: FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
     if (!teamId) {
       setTeamIdError("Must contain one team");
       return;
@@ -266,7 +267,7 @@ function FlowCard({
           <form
             className="p-5"
             onSubmit={onSubmit}
-            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSubmit]])}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void onSubmit()]])}
           >
             <div className="flex flex-col gap-4">
               <p className="text-muted-foreground">

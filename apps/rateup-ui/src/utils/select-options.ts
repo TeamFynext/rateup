@@ -11,11 +11,13 @@ export interface SelectOption {
 export function toSelectOptions(data: unknown): SelectOption[] {
   if (!Array.isArray(data)) return [];
 
-  return data.flatMap((entry: any): SelectOption[] => {
+  return data.flatMap((entry): SelectOption[] => {
     if (typeof entry === "string") return [{ value: entry, label: entry }];
-    if (entry && Array.isArray(entry.items)) return toSelectOptions(entry.items);
-    if (entry && entry.value !== undefined) {
-      return [{ value: String(entry.value), label: String(entry.label ?? entry.value) }];
+    if (!entry || typeof entry !== "object") return [];
+    const option = entry as { items?: unknown; value?: unknown; label?: unknown };
+    if (Array.isArray(option.items)) return toSelectOptions(option.items);
+    if (option.value !== undefined) {
+      return [{ value: String(option.value), label: String(option.label ?? option.value) }];
     }
     return [];
   });
