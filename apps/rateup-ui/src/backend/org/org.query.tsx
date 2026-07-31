@@ -90,12 +90,16 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload: (uploading: boolean
   });
 }
 
-export function useUpdateOrgDetailsMutation() {
+export function useUpdateOrgDetailsMutation(options?: { showSuccessToast?: boolean }) {
   const queryClient = useQueryClient();
+  const showSuccessToast = options?.showSuccessToast ?? true;
   return useMutation({
     mutationFn: (values: Partial<IUpdateOrgDetails>) => updateOrgDetails(values),
     onSuccess: (_, variables) => {
-      if (Object.keys(variables).length > 1 || !("isConversionApiActive" in variables)) {
+      if (
+        showSuccessToast &&
+        (Object.keys(variables).length > 1 || !("isConversionApiActive" in variables))
+      ) {
         toast.success("Org details updated successfully", {
           id: "load-data",
         });

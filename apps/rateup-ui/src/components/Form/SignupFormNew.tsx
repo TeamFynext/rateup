@@ -957,7 +957,7 @@ export function Step2({
                     onClick={() => field.onChange(size)}
                     className={`px-3 py-1.5 text-xs rounded-md border ${
                       field.value === size
-                        ? "bg-blue-500 text-white border-blue-500"
+                        ? "bg-primary text-white border-primary"
                         : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
