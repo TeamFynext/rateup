@@ -10,7 +10,7 @@ export interface ChannelOption {
 }
 
 interface ChannelOptionsInput {
-  platform?: MessagePlatform | "all";
+  platform?: MessagePlatform | `${MessagePlatform}` | "all";
   /** WhatsApp entries carry the bare phone number rather than the phone id. */
   usePhoneNumber?: boolean;
   filterIds?: string[];

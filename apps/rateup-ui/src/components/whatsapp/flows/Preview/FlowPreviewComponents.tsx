@@ -32,7 +32,8 @@ function FlowTextPreview({
   strikethrough,
 }: {
   text?: string;
-  type: WaFlowFormNonInputElementType;
+  /** One of the non-input element names; both enums spell them the same way. */
+  type: `${WaFlowFormNonInputElementType}`;
   fontWeight?: string;
   strikethrough?: boolean;
 }) {
@@ -216,7 +217,7 @@ function FlowImageCarouselPreview({
   fe,
 }: {
   label?: string;
-  fe: WaFlowFormElement;
+  fe: WaFlowFormElement & { images?: Array<{ src?: string; "alt-text"?: string }> };
 }) {
   return (
     <div>
