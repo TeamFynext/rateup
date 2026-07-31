@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { Campaign } from "@/types/global";
 
 import { Separator } from "../ui/separator.tsx";
 
@@ -37,16 +38,6 @@ function getStatusColor(status: string) {
   }
 }
 
-export interface Campaign {
-  readonly id: string;
-  readonly teamId: string;
-  readonly teamName?: string;
-  readonly type: string;
-  readonly status?: string;
-  readonly name?: string;
-  readonly campaignParticipantsCount?: number;
-  readonly createdAt?: string;
-}
 interface CampaignCardProps {
   readonly campaign: Campaign;
   readonly onView: (campaign: Campaign) => void;

@@ -1,3 +1,4 @@
+import type { TestimonialCollectionSummary } from "@/components/testimonial/TestimonialCollectionCard.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
@@ -25,7 +26,7 @@ export async function createTestimonialCollection(data: RequestPayload) {
   return testimonials.data;
 }
 
-export async function getAllTestimonialCollections() {
+export async function getAllTestimonialCollections(): Promise<TestimonialCollectionSummary[]> {
   const collections = (await axiosClient.get(TESTIMONIAL_COLLECTION_BASE_URL)).data;
   return collections;
 }

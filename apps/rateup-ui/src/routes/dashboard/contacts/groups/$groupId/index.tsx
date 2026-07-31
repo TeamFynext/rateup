@@ -35,6 +35,7 @@ import { getInitials } from "@/components/ui/utils.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -337,7 +338,7 @@ function ContactGroup() {
         group={groupDetails!}
       />
       <ContactImportErrorModal
-        body={createNewContactsFromCSV?.error?.response?.data}
+        body={getApiErrorData(createNewContactsFromCSV?.error)}
         isError={createNewContactsFromCSV.isError}
       />
     </div>

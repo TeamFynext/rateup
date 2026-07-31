@@ -1857,6 +1857,8 @@ export interface WaFlowStartMessageConfig {
 export interface Campaign {
   id: string;
   createdAt: Date;
+  /** Included when the list endpoint joins the owning team. */
+  teamName?: string;
   name: string;
   startedAt: Date;
   endedAt: Date;

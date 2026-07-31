@@ -35,6 +35,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
+import { asApiError } from "@/utils/apiError.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/")({
@@ -69,7 +70,7 @@ function CampaignsPage() {
 
   const debouncedSearch = useDebounce(search.trim(), 200);
 
-  const campaigns = data?.data ?? [];
+  const campaigns: Campaign[] = data?.data ?? [];
   const filteredCampaigns = useMemo(() => {
     const filtered = campaigns
       .filter((c: Campaign) => selectedTeam === "all" || c.teamId === selectedTeam)
@@ -100,7 +101,7 @@ function CampaignsPage() {
     });
   };
 
-  if (isError && error?.response?.status === 403) {
+  if (isError && asApiError(error)?.response?.status === 403) {
     return <UnauthorizedPage />;
   }
 
