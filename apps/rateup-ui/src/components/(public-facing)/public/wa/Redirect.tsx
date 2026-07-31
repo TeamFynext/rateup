@@ -3,7 +3,10 @@ import { useEffect } from "react";
 
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
-export function Redirect({ tag = null, res }: unknown) {
+export function Redirect({
+  tag = null,
+  res,
+}: Readonly<{ tag?: string | null; res?: { shareUrl?: string } }>) {
   const navigate = useNavigate();
 
   useEffect(() => {

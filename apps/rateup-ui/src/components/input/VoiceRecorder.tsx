@@ -1,6 +1,7 @@
 import WavesurferPlayer from "@wavesurfer/react";
 import { Mic, Pause, Play, Square, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type WaveSurfer from "wavesurfer.js";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
@@ -54,7 +55,7 @@ const VoiceRecorder = () => {
   const [barHeights, setBarHeights] = useState<number[]>([]);
   const animationRef = useRef<number | null>(null);
 
-  const onReady = (ws) => {
+  const onReady = (ws: WaveSurfer) => {
     setWavesurfer(ws);
     setIsPlaying(false);
   };

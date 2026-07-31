@@ -169,7 +169,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     }
   }, [activeTab]);
 
-  const updateValidationRules = (validationRules) => {
+  const updateValidationRules = (validationRules: QuestionValidationRules | null) => {
     if (selectedQ) setSelectedQ({ ...selectedQ, validationRules });
   };
 

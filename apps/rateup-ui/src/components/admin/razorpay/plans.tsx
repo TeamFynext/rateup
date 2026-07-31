@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar.tsx";
@@ -68,7 +69,7 @@ const RazorpayPlans = () => {
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
 
-  const handleUpdatePlans = (updatedData) => {
+  const handleUpdatePlans = (updatedData: RequestPayload) => {
     planUpdateMutate.mutate(updatedData);
   };
 

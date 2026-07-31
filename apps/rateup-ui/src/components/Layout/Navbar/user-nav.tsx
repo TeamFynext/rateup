@@ -118,17 +118,19 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
           { status, presenceMode },
           {
             onSuccess: () => {
-              updateUserAvailabilityStatus.queryClient.setQueryData(["userInfoQuery"], (oldData) =>
-                oldData?.data
-                  ? {
-                      ...oldData,
-                      data: {
-                        ...oldData.data,
-                        status,
-                        presenceMode,
-                      },
-                    }
-                  : oldData,
+              updateUserAvailabilityStatus.queryClient.setQueryData(
+                ["userInfoQuery"],
+                (oldData: IUserInfoApiResponse | undefined) =>
+                  oldData?.data
+                    ? {
+                        ...oldData,
+                        data: {
+                          ...oldData.data,
+                          status,
+                          presenceMode,
+                        },
+                      }
+                    : oldData,
               );
             },
           },

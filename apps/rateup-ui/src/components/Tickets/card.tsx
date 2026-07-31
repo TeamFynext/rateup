@@ -370,7 +370,7 @@ function CardDisplay({
                     className="h-[22px] w-[22px] border-2 border-background"
                     style={{ zIndex: 3 - i }}
                   >
-                    <AvatarImage src={getFileUrlFromKey(a.profilePhoto)} />
+                    <AvatarImage src={getFileUrlFromKey(a.profilePhoto ?? "")} />
                     <AvatarFallback
                       className="text-[9px] font-bold text-white"
                       style={{ backgroundColor: getUserColor(a.id) }}

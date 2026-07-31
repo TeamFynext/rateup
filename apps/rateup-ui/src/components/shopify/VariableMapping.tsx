@@ -34,7 +34,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
   const variables = useMemo(() => {
     if (!template?.data?.components) return [];
     const bodyComponent = template.data.components.find(
-      (c) => c.type === "BODY" || c.type === "body",
+      (c: { type?: string }) => c.type === "BODY" || c.type === "body",
     );
     // WhatsApp templates use example.body_text[0] to store examples for parameters {{1}}, {{2}}...
     const bodyExamples = bodyComponent?.example?.body_text?.[0];
