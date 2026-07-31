@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Alert, AlertTitle } from "@/components/ui/alert.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {

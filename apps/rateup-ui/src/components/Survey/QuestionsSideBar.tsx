@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -181,8 +182,8 @@ export function QuestionsSideBar({
         reorderedQuestions?.map((q) => q.id),
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 

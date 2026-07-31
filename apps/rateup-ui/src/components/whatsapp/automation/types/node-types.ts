@@ -3,8 +3,6 @@ import type { Node } from "@xyflow/react";
 import type { WaTemplateComponent } from "@/types/global";
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
 
-import { CatalogMessages } from "../components/node-editor.tsx";
-
 // Base node data interface with common properties
 interface BaseNodeData {
   label: string;
@@ -1116,4 +1114,12 @@ export function validateNodeData(node: TypedNode): {
 
   // If we get here, all validations passed
   return { valid: true, message: "" };
+}
+
+/** The catalog message shapes a catalog node can send. */
+export enum CatalogMessages {
+  Catalog = "Catalog",
+  SingleProduct = "Single-Product",
+  MultiProduct = "Multi-Product",
+  ProductSet = "Product-Set",
 }

@@ -1,6 +1,6 @@
 import { CircleCheckBig, Ticket } from "lucide-react";
 
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 
 import { resolutionResultLabel } from "./ticket.ts";
 

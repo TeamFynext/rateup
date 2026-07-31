@@ -10,11 +10,6 @@ import {
   useReopenConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -27,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 

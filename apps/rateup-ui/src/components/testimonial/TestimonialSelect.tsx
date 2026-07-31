@@ -5,10 +5,10 @@ import {
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
 } from "@/backend/testimonials/testimonial.query";
+import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
-import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";

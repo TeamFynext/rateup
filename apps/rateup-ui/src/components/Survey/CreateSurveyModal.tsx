@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import type { CreateSurveyResponse } from "@/backend/surveys/survey.api";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useCreateSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import { Button } from "@/components/ui/button.tsx";
@@ -183,8 +184,8 @@ export function CreateSurveyModal({
       { ...values, type: surveyType, templateId: templateId || "" },
       {
         onSuccess: (data: CreateSurveyResponse) => {
-          queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
-          queryClient.invalidateQueries({ queryKey: ["surveys"] });
+          queryClient.invalidateQueries({ queryKey: surveyKeys.whatsapp() });
+          queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
           if (data?.id) {
             setIsLoading(true);
             navigate({

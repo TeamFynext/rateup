@@ -21,6 +21,7 @@ import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import {
   useCreateInstagramAutomationMutation,
   useUpdateInstagramAutomationMutation,
@@ -414,7 +415,7 @@ export function AutomatedReplyForm({
           {
             onSuccess: () => {
               qc.invalidateQueries({
-                queryKey: ["instagramAutomation", { automationId: waAutomatedReplyId }],
+                queryKey: automationKeys.instagramAutomation({ automationId: waAutomatedReplyId }),
               });
               toast.success(t("Instagram Automation updated successfully"));
               setSaveSuccess(true);
@@ -427,7 +428,7 @@ export function AutomatedReplyForm({
           {
             onSuccess: () => {
               qc.invalidateQueries({
-                queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+                queryKey: automationKeys.waAutomatedReply({ waAutomatedReplyId }),
               });
               toast.success(t("Automated Reply updated successfully"));
               setSaveSuccess(true);

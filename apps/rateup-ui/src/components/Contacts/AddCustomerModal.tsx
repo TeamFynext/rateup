@@ -10,8 +10,8 @@ import {
   useContactGroup,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
+import { FilterSelect } from "@/components/dashboard/contacts/ContactsPage.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
-import { FilterSelect } from "@/routes/dashboard/contacts/index.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { contactAddType } from "@/utils/enums/index.ts";

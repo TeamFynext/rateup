@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { updateSurvey } from "@/backend/surveys/survey.api";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -155,8 +156,8 @@ const ShareSurvey = ({
             : translations("Survey Published Successfully!"),
           { id: "load-data" },
         );
-        queryClient.invalidateQueries({ queryKey: ["surveys"] });
-        queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
+        queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+        queryClient.invalidateQueries({ queryKey: surveyKeys.detail(survey.id) });
       }
     },
   });
@@ -165,8 +166,8 @@ const ShareSurvey = ({
     mutationFn: (data: RequestPayload) => updateSurvey(survey.id, data),
     onSuccess: () => {
       toast.success("Survey status Updated!", { id: "survey" });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(survey.id) });
     },
   });
 

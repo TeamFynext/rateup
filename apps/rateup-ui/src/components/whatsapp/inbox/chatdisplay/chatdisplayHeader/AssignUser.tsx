@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -19,10 +20,7 @@ import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
@@ -35,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
@@ -219,7 +218,7 @@ const AssignUser = ({
         { contactId, assignees, messageId: id },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+            queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
             messagesStore.addMessage(`${rowKey}_all`, newMessage);
             messagesStore.addMessage(`${rowKey}_internal`, newMessage);
             updateContactById(contactId, (contact) => ({
@@ -241,12 +240,12 @@ const AssignUser = ({
             );
 
             await queryClient.refetchQueries({
-              queryKey: ["assignedInboxUser", contactId],
+              queryKey: whatsappKeys.assignedInboxUserByContact(contactId),
               exact: true,
             });
 
             await queryClient.refetchQueries({
-              queryKey: ["teamsDataUserQuery"],
+              queryKey: teamKeys.byUser(),
             });
           },
         },

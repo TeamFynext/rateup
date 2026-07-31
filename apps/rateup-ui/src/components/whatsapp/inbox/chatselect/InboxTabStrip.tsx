@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { cn } from "@/lib/utils.ts";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
 
 /**
  * The inbox tabs, for widths where the sidebar's filter rail is not on screen.

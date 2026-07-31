@@ -33,8 +33,6 @@ import {
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -42,6 +40,8 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 

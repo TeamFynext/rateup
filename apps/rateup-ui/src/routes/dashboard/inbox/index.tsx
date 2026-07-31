@@ -2,8 +2,6 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { Activity, useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -15,6 +13,8 @@ import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx"
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
   /** Declares the search params this route reads, so links to it type-check. */

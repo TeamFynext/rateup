@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 
 import type { ContactConversation } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
 import { useConversationsByContact } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { getSoucePlatformIconAndColor } from "../../util.tsx";

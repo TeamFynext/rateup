@@ -30,11 +30,7 @@ import {
   useSetContactSpam,
   useUnBlockWhatsAppUser,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
 import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
 import {
@@ -64,6 +60,8 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
@@ -712,7 +710,7 @@ export const WaInboxAssignUserFooter = ({
               },
             ],
           }));
-          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+          qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         },
         onError: () => {
           messagesStore.removeMessage(`${rowKey}_all`, id);

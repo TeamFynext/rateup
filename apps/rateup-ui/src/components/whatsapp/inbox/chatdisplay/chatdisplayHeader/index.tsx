@@ -5,13 +5,13 @@ import {
   useClearMention,
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 

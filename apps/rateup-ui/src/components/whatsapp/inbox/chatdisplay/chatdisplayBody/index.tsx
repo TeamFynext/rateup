@@ -6,9 +6,6 @@ import type { FC } from "react";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -19,11 +16,14 @@ import {
   useMessageScrollerVisibility,
 } from "@/components/ui/message-scroller.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { getMessagesFromIDB } from "@/store/inbox.idb.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
-import { useChatFilterStore } from "../../chatselect/chatFilterStore.ts";
 import WhatsAppInboxLoader from "../../loader/index.tsx";
 import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
 import { useTemperoryMessageStore } from "../chatdisplayFooter/index.tsx";

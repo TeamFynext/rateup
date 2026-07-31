@@ -11,12 +11,12 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
+import { SmileyVariantStyle } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 import type { StoredResponse } from "@/utils/response.ts";
 import { asAnswer } from "@/utils/response.ts";
 
-import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
 import { getDefaultSmileySrc } from "./SmileyRating/SmileyRatingStyling.tsx";
 

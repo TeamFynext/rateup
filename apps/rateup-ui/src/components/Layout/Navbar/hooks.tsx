@@ -50,11 +50,11 @@ import { useTranslation } from "react-i18next";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
-import type { ChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
-import type { ChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
 import type { User } from "@/context/UserContext.tsx";
+import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
+import type { ChatContactCountStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 

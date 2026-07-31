@@ -6,13 +6,13 @@ import { toast } from "sonner";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { getBrowserId } from "@/lib/browserId.ts";
 import {
   resolveIncomingRowKey,
   useChatContactCountStore,
   useContactsStore,
   useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
-import { getBrowserId } from "@/lib/browserId.ts";
+} from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 export const useChatSocket = () => {

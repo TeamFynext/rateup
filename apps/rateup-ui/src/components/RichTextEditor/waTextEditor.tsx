@@ -16,7 +16,6 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
 import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
@@ -39,6 +38,7 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";

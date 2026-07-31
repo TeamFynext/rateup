@@ -8,7 +8,6 @@ import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
@@ -44,10 +43,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import DocsButton from "./docs-button.tsx";

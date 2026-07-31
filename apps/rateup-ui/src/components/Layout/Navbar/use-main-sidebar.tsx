@@ -10,10 +10,10 @@ import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
 
 import {
   getSignupRedirect,

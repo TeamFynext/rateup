@@ -10,12 +10,6 @@ import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessa
 import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import useContactStore, {
-  makeFilterKey,
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -33,15 +27,21 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
+import type { ChatFilter } from "@/store/chat-filter.store.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import useContactStore, {
+  makeFilterKey,
+  useContactsStore,
+  useMessagesStore,
+} from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage } from "@/types/global";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
 import BulkAssignUser from "./AssignUser.tsx";
-import type { ChatFilterStore } from "./chatFilterStore.ts";
-import type { ChatFilter } from "./chatFilterStore.ts";
-import { useChatFilterStore } from "./chatFilterStore.ts";
 import WaInboxChatSelectCard from "./chatselectCard/index.tsx";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton.tsx";
 import ChatselectPanelHeader from "./ChatselectPanelHeader.tsx";

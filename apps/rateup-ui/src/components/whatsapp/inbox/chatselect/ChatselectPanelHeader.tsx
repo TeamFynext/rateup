@@ -13,7 +13,6 @@ import React, { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useChatContactCountStore, useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
@@ -30,12 +29,13 @@ import {
 } from "@/components/ui/select.tsx";
 import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ChatFilter } from "@/store/chat-filter.store.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useChatContactCountStore, useContactsStore } from "@/store/inbox.store.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
-import type { ChatFilter } from "./chatFilterStore.ts";
-import { useChatFilterStore } from "./chatFilterStore.ts";
 import InboxTabStrip from "./InboxTabStrip.tsx";
 
 // Inbox tab → the sidebar rail's count for that tab. Blocked is absent on

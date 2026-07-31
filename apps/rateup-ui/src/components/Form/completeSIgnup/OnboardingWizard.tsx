@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import React, { useState } from "react";
 
 import { useCompleteOrgDetails, useOrgNameAndPhone } from "@/backend/org/org.query";
+import { userKeys } from "@/backend/user/user.keys";
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "@/components/ui/card.tsx";
@@ -50,10 +51,10 @@ export default function OnboardingWizard() {
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({
-            queryKey: ["userInfoQuery"],
+            queryKey: userKeys.info(),
           });
           await queryClient.refetchQueries({
-            queryKey: ["userInfoQuery"],
+            queryKey: userKeys.info(),
           });
 
           const data = localStorage.getItem("subscriptionRoutAndCart");

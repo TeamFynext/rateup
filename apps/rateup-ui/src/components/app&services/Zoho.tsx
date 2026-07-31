@@ -20,6 +20,7 @@ import {
   useZohoUsers,
 } from "@/backend/appsIntegration/zoho/zoho.query";
 import { useLifecyclesWithContactCount } from "@/backend/lifecycle/lifecycle.query";
+import { zohoKeys } from "@/backend/whatsapp/automation.keys";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
@@ -877,7 +878,7 @@ function ZohoContactsTable({ integration }: { integration: AppIntegration }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user?.orgId, "crm"],
+        queryKey: zohoKeys.contacts(user?.orgId, "crm"),
       });
 
       toast.success(t("Zoho contacts synced successfully"), {
@@ -970,7 +971,7 @@ function ZohoLeadsTable({ integration }: { integration: AppIntegration }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-leads", user?.orgId],
+        queryKey: zohoKeys.leads(user?.orgId),
       });
 
       toast.success(t("Zoho leads synced successfully"), {
@@ -1152,7 +1153,7 @@ function BiginContactsTable({ integration }: { integration: AppIntegration }) {
     try {
       await syncMutation.mutateAsync();
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user?.orgId, "bigin"],
+        queryKey: zohoKeys.contacts(user?.orgId, "bigin"),
       });
       toast.success(t("Bigin contacts synced successfully"), {
         id: toastId,

@@ -5,6 +5,7 @@ import { startTransition, useCallback, useMemo, useOptimistic } from "react";
 
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus, UserPresenceMode } from "@/backend/user/user.api";
+import { userKeys } from "@/backend/user/user.keys";
 import { useUpdateUserAvailabilityStatus } from "@/backend/user/user.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -119,7 +120,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
           {
             onSuccess: () => {
               updateUserAvailabilityStatus.queryClient.setQueryData(
-                ["userInfoQuery"],
+                userKeys.info(),
                 (oldData: IUserInfoApiResponse | undefined) =>
                   oldData?.data
                     ? {

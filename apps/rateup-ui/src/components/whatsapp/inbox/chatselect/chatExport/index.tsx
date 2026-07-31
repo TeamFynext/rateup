@@ -8,13 +8,13 @@ import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useExportWaChats } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import useContactStore from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
 import { Field, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import useContactStore from "@/store/inbox.store.ts";
 
 const DateType = {
   BETWEEN: "between",

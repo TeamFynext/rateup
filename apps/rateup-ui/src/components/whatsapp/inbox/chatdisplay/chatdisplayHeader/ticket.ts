@@ -1,5 +1,5 @@
 import type { ResolutionResult } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 /**

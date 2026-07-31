@@ -19,7 +19,6 @@ import { toast } from "sonner";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Bubble, BubbleContent, BubbleReactions } from "@/components/ui/bubble.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -41,6 +40,7 @@ import {
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";

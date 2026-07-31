@@ -20,6 +20,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import {
   useAddUsertoTeams,
@@ -274,9 +275,9 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
       { teamId: selectedTeam, userId: userid },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
-          queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
-          queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+          queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
+          queryClient.invalidateQueries({ queryKey: teamKeys.notMembers() });
+          queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
         },
       },
     );

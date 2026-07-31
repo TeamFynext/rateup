@@ -20,11 +20,7 @@ import {
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -32,6 +28,8 @@ import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
@@ -185,7 +183,7 @@ export default function WaInboxChatSelectCard({
               assignedUsers: [{ id: user.userId, name: user?.userName, teamId: user.teams?.[0] }],
             }));
           }
-          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+          qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         },
         onError: () => {
           messagesStore.removeMessage(`${rowKey}_all`, messageId);
