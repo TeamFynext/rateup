@@ -1,3 +1,4 @@
+import type { Content, JSONContent } from "@tiptap/react";
 import { EditorContent } from "@tiptap/react";
 import { Loader2 } from "lucide-react";
 import { TypeOutline } from "lucide-react";
@@ -222,20 +223,21 @@ function getPlainText(value: unknown): string {
   }
 
   const nodeToText = (node: unknown): string => {
-    if (!node) return "";
+    if (!node || typeof node !== "object") return "";
+    const { type, text, content: children } = node as JSONContent;
 
-    if (node.type === "text") {
-      return node.text || "";
+    if (type === "text") {
+      return text || "";
     }
 
-    if (node.type === "hardBreak") {
+    if (type === "hardBreak") {
       return "\n";
     }
 
-    if (Array.isArray(node.content)) {
-      const nestedText = node.content.map(nodeToText).join("");
+    if (Array.isArray(children)) {
+      const nestedText = children.map(nodeToText).join("");
 
-      if (node.type === "paragraph") {
+      if (type === "paragraph") {
         return `${nestedText}\n`;
       }
 
@@ -246,7 +248,11 @@ function getPlainText(value: unknown): string {
   };
 
   // Handle TipTap JSON structure - could be array or object with content
-  const content = Array.isArray(value) ? value : value?.content;
+  const content = Array.isArray(value)
+    ? value
+    : typeof value === "object" && value !== null
+      ? (value as JSONContent).content
+      : undefined;
 
   if (Array.isArray(content)) {
     return content.map(nodeToText).join("").trimEnd();
@@ -266,7 +272,7 @@ function normalizeTemplateValue(value: unknown) {
   return parsed;
 }
 
-function toEditorContent(value: unknown) {
+function toEditorContent(value: unknown): Content {
   if (!value) return "";
 
   if (Array.isArray(value)) {
@@ -277,19 +283,20 @@ function toEditorContent(value: unknown) {
   }
 
   if (typeof value === "object") {
-    if (value.type === "doc" && Array.isArray(value.content)) {
-      return value;
+    const doc = value as JSONContent;
+    if (doc.type === "doc" && Array.isArray(doc.content)) {
+      return doc;
     }
 
-    if (Array.isArray(value.content)) {
+    if (Array.isArray(doc.content)) {
       return {
         type: "doc",
-        content: value.content,
+        content: doc.content,
       };
     }
   }
 
-  return value;
+  return typeof value === "string" ? value : null;
 }
 
 function tryParseJson(value: string) {

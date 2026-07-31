@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import { useContext } from "react";
 
 import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
+import type { QuestionType2, WaFlowFormElementType } from "@/types/enums.ts";
 import {
   PageType,
   LDResponse,
@@ -239,9 +240,19 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
   }
 }
 
-export function getResponseArrayByQuestionType(
-  questionType: QuestionType | WaQuestions | PageType,
-): Array<{
+/**
+ * A question's type as any of the vocabularies it can arrive in — a survey `QuestionType` or
+ * `PageType`, or one of the flow editor's names — and `undefined` when the question is gone.
+ */
+export type AnyQuestionType =
+  | QuestionType
+  | PageType
+  | QuestionType2
+  | WaQuestions
+  | WaFlowFormElementType
+  | undefined;
+
+export function getResponseArrayByQuestionType(questionType: AnyQuestionType): Array<{
   value: string | number;
   color: string;
   Icon?: React.ComponentType<{
@@ -327,7 +338,7 @@ export function getResponseArrayByQuestionType(
     }
   }
 }
-export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions | QuestionType): Array<{
+export function getResponseArrayByQuestionTypeV2(questionType: AnyQuestionType): Array<{
   value: string | number;
   color: string;
   Icon?: React.ComponentType<{

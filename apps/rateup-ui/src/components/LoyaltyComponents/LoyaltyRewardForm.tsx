@@ -48,6 +48,13 @@ interface LoyaltyRewardFormProps {
   loyaltyTemplates: WaTemplate[] | undefined;
 }
 
+/**
+ * The numeric fields are `z.coerce.number()`, whose *input* type is `unknown`, so
+ * react-hook-form hands their value back unnarrowed. The inputs render it as typed.
+ */
+const numberInputValue = (value: unknown): string | number =>
+  typeof value === "number" || typeof value === "string" ? value : "";
+
 export function LoyaltyRewardForm({
   category,
   pointRewardForm,
@@ -159,6 +166,7 @@ export function LoyaltyRewardForm({
                     placeholder="1000"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -181,6 +189,7 @@ export function LoyaltyRewardForm({
                     placeholder="10"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                   />
                   <FieldDescription>The amount to return to the customer</FieldDescription>
@@ -205,6 +214,7 @@ export function LoyaltyRewardForm({
                     min="0"
                     max="100"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                   />
                   <FieldDescription>Percentage to discount from the total</FieldDescription>
@@ -229,6 +239,7 @@ export function LoyaltyRewardForm({
                     placeholder="25"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                   <FieldDescription>Estimated monetary value of this reward</FieldDescription>
@@ -290,6 +301,7 @@ export function LoyaltyRewardForm({
                           placeholder="100"
                           min="0"
                           {...field}
+                          value={numberInputValue(field.value)}
                           onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                         />
                         <FieldDescription>
@@ -560,6 +572,7 @@ export function LoyaltyRewardForm({
                     placeholder="20"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -581,6 +594,7 @@ export function LoyaltyRewardForm({
                   placeholder="100"
                   min="0"
                   {...field}
+                  value={numberInputValue(field.value)}
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                 />
                 <FieldDescription>Minimum order value required to use this coupon</FieldDescription>
@@ -605,6 +619,7 @@ export function LoyaltyRewardForm({
                       placeholder="500"
                       min="1"
                       {...field}
+                      value={numberInputValue(field.value)}
                       onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
                     />
                     <FieldDescription>
@@ -628,6 +643,7 @@ export function LoyaltyRewardForm({
                       placeholder="1"
                       min="1"
                       {...field}
+                      value={numberInputValue(field.value)}
                       onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
                     />
                     <FieldDescription>How many times a single user can redeem</FieldDescription>
@@ -809,6 +825,7 @@ export function LoyaltyRewardForm({
                   placeholder="100"
                   min="1"
                   {...field}
+                  value={numberInputValue(field.value)}
                   onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 />
                 <FieldDescription>Total number of gifts available for assignment</FieldDescription>

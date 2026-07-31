@@ -33,6 +33,7 @@ import {
   useUpdateTeamChannels,
   useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
+import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -842,7 +843,7 @@ export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam
 }
 
 /** Best available human-readable name for a channel, with the platform it belongs to. */
-function describeChannel(channel: unknown): { label: string; platform: string } {
+function describeChannel(channel: WaSettings[number]): { label: string; platform: string } {
   if (channel?.ibaId) {
     return {
       label: channel.igDisplayName || channel.igUserName || channel.ibaId,

@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
+import type { AnyQuestionType } from "@/utils/response.ts";
 import {
   getResponseArrayByQuestionType,
   getResponseArrayByQuestionTypeV2,
@@ -21,7 +22,7 @@ const SurveyResultByType = ({
   chartData,
   version,
 }: {
-  questionType: QuestionType | WaQuestions;
+  questionType: AnyQuestionType;
   chartData: ChartDatum[];
   version?: string | number;
 }) => {
