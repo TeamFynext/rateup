@@ -56,7 +56,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
       /** Per-contact-type tag selections, keyed by contact type. */
       tags: z.record(z.string(), z.unknown()).optional(),
     })
-    .passthrough()
+    .loose()
     .superRefine((values, ctx) => {
       if (!isEdit && !values.teamId) {
         ctx.addIssue({

@@ -55,7 +55,7 @@ function LabelsPage() {
     [],
   );
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     createLabelMutation.mutate(formData, {
       onSuccess: () => {
@@ -65,7 +65,7 @@ function LabelsPage() {
     });
   };
 
-  const handleEdit = async (e: React.FormEvent) => {
+  const handleEdit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedLabel) return;
 

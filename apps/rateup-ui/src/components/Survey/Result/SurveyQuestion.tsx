@@ -1,14 +1,5 @@
 import { Smile, Target, Users } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { stringToColour } from "@/utils/essential/index.ts";
@@ -154,11 +145,7 @@ const SurveyQuestion = ({
                         <XAxis dataKey="choice" tick={{ fontSize: 12 }} tickLine={false} />
                         <YAxis tick={{ fontSize: 12 }} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
-                        <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                          {chartData.map((_, i) => (
-                            <Cell key={`cell-${i}`} fill={"#607D8B"} />
-                          ))}
-                        </Bar>
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#607D8B" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

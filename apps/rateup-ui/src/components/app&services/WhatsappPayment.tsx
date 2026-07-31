@@ -73,7 +73,7 @@ export function WhatsappPayment() {
       .regex(/^\S*$/, "configuration_name cannot contain spaces"),
     purpose_code: z.string().min(1),
     merchant_category_code: z.string().min(1),
-    provider_name: z.nativeEnum(Providers),
+    provider_name: z.enum(Providers),
   });
   const getConfigSchema = z.object({
     configuration_name: z

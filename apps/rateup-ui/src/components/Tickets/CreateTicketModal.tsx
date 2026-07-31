@@ -128,7 +128,7 @@ const CreateTicketModal = ({
         : [...prev.labelIds, labelId],
     }));
 
-  async function handleSubmit(e?: React.FormEvent) {
+  async function handleSubmit(e?: React.SyntheticEvent) {
     if (e) e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);

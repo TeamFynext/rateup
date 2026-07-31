@@ -147,7 +147,7 @@ interface CatalogProductFormValues {
 /** Conditional required-field validation mirroring the original Mantine `validate`. */
 const catalogProductSchema = z
   .object({ type: z.custom<CatalogProductType>() })
-  .passthrough()
+  .loose()
   .superRefine((values: CatalogProductFormValues, ctx) => {
     const require = (field: string, invalid: boolean) => {
       if (invalid) ctx.addIssue({ code: "custom", path: [field], message: "required" });

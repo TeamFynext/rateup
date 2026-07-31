@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2, X } from "lucide-react";
-import React, { type FormEvent } from "react";
+import React, { type SubmitEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -19,7 +19,7 @@ const LinkToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
     const [link, setLink] = React.useState("");
     const [open, setOpen] = React.useState(false);
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
       const url = getUrlFromString(link);
       if (url) editor?.chain().focus().setLink({ href: url }).run();

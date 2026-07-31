@@ -72,8 +72,9 @@ function TakeSurvey({
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Calling preventDefault is what triggers the browser's leave-confirmation prompt;
+      // the old `returnValue = ""` companion is deprecated and no longer needed.
       event.preventDefault();
-      event.returnValue = "";
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

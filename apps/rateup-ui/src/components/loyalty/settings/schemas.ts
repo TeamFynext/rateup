@@ -60,7 +60,7 @@ const ReferralMessageTemplateSchema = z
 
     if (!plainText.trim()) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Join message template is required",
       });
       return;
@@ -68,14 +68,14 @@ const ReferralMessageTemplateSchema = z
 
     if ((plainText.match(/\{\{1\}\}/g) || []).length !== 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Message must include exactly one {{1}} for contact name",
       });
     }
 
     if ((plainText.match(/\{\{2\}\}/g) || []).length !== 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Message must include exactly one {{2}} for referral code",
       });
     }

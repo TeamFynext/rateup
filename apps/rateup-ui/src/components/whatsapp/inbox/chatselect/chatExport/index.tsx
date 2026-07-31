@@ -42,33 +42,33 @@ const chatExportSchema = z
     if (val.date.type === "between") {
       if (!val.date.between.from) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "From date is required",
           path: ["date", "between", "from"],
         });
       }
       if (!val.date.between.to) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "To date is required",
           path: ["date", "between", "to"],
         });
       }
     } else if (val.date.type === "before" && !val.date.before) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Date is required",
         path: ["date", "before"],
       });
     } else if (val.date.type === "after" && !val.date.after) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Date is required",
         path: ["date", "after"],
       });
     } else if (val.date.type === "on" && !val.date.on) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Date is required",
         path: ["date", "on"],
       });

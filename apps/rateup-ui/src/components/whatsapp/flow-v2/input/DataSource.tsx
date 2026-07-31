@@ -27,11 +27,11 @@ import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar.t
 import type { FlowChoice, FlowInputProps } from "./inputProps.ts";
 import { asList } from "./inputProps.ts";
 
-const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
+const generateId = () => "_" + Math.random().toString(36).slice(2, 11);
 
 /** RHF resolver that always validates against the latest schema held in `schemaRef`. */
 function schemaRefResolver<TValues extends FieldValues>(
-  schemaRef: React.RefObject<z.ZodTypeAny>,
+  schemaRef: React.RefObject<z.ZodType>,
 ): Resolver<TValues> {
   const resolve = (values: FieldValues) => {
     const result = schemaRef.current.safeParse(values);
@@ -97,7 +97,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
         metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
         image: z.string().optional().nullable(),
       });
-  const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
+  const schemaRef = useRef<z.ZodType>(choiceSchema);
   schemaRef.current = choiceSchema;
 
   const form = useForm<ChoiceFormValues>({
@@ -364,7 +364,7 @@ function ChoiceRow({
           image: z.string().optional().nullable(),
         },
   );
-  const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
+  const schemaRef = useRef<z.ZodType>(choiceSchema);
   schemaRef.current = choiceSchema;
 
   const form = useForm<ChoiceFormValues>({

@@ -48,7 +48,7 @@ function CreateNewThemeModal({
   }, [opened]);
 
   const handleFormSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!NAME_REGEX.test(name)) {
         setError(

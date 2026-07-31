@@ -1,6 +1,6 @@
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -90,7 +90,7 @@ function FlowCard({
   };
 
   // Also reached from the save hotkey, which has already prevented the default.
-  const onSubmit = (e?: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e?: SubmitEvent<HTMLFormElement>) => {
     e?.preventDefault();
     if (!teamId) {
       setTeamIdError("Must contain one team");

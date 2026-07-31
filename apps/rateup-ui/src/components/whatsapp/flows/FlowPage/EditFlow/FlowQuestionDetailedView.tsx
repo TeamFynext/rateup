@@ -253,7 +253,7 @@ function ElementEditor({
         .min(1, translations("Must upload at least 1 document"))
         .max(30, translations("Cannot upload more than 30 documents")),
       "allowed-mime-types": z.array(z.string()).optional(),
-      "input-type": z.nativeEnum(InputType).optional().nullable(),
+      "input-type": z.enum(InputType).optional().nullable(),
     })
     .check((ctx) => {
       const { value: values } = ctx;

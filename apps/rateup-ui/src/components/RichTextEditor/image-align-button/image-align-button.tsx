@@ -263,7 +263,7 @@ const formatShortcutKey = (key: string, isMac: boolean, capitalize: boolean = tr
   return capitalize ? key.charAt(0).toUpperCase() + key.slice(1) : key;
 };
 function isMac(): boolean {
-  return typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac");
+  return typeof navigator !== "undefined" && /mac/i.test(navigator.userAgent);
 }
 
 export function useTiptapEditor(providedEditor?: Editor | null): {
