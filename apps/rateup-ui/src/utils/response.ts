@@ -10,6 +10,7 @@ import { useContext } from "react";
 
 import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
 import {
+  PageType,
   LDResponse,
   LDResponse2,
   NPSWeightage,
@@ -238,7 +239,9 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
   }
 }
 
-export function getResponseArrayByQuestionType(questionType: QuestionType | WaQuestions): Array<{
+export function getResponseArrayByQuestionType(
+  questionType: QuestionType | WaQuestions | PageType,
+): Array<{
   value: string | number;
   color: string;
   Icon?: React.ComponentType<{

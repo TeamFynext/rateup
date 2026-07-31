@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge.tsx";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { QuestionType } from "@/types/enums.ts";
+import { PageType, QuestionType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 
@@ -14,14 +14,19 @@ export const HoverCardComponent = ({
 }: {
   /** Either a rendered node, a list of answers, or a single choice object. */
   content: ReactNode | string[] | { value?: { image?: string; value?: string } };
-  questionType?: QuestionType | null;
+  questionType?: QuestionType | PageType | null;
 }) => {
   const { t: translations } = useTranslation();
 
-  if (questionType && !Object.values(QuestionType).includes(questionType))
+  const knownTypes: Array<QuestionType | PageType> = Object.values(QuestionType);
+  if (questionType && !knownTypes.includes(questionType))
     return <Badge variant="destructive">{translations("Not Available")}</Badge>;
 
-  const isMultiType = [QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType!);
+  const multiTypes: Array<QuestionType | PageType> = [
+    QuestionType.MultiTextInput,
+    QuestionType.MCQGrid,
+  ];
+  const isMultiType = questionType ? multiTypes.includes(questionType) : false;
   const isObjectContent = typeof content === "object";
 
   // The three render branches below are selected by question type and runtime
