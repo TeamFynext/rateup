@@ -167,7 +167,8 @@ export const templateSchema = z
                 type: z.string(),
                 example: z.array(z.string().trim().min(1).max(2000)).optional(),
                 phone_number: z.string().max(25).refine(isValidPhoneNumber).optional(),
-                url: z.url().trim().max(2000).optional(),
+                // Trimmed before the URL check, as the deprecated `z.string().trim().url()` did.
+                url: z.string().trim().max(2000).pipe(z.url()).optional(),
               }),
             )
             .max(2)
@@ -182,7 +183,8 @@ export const templateSchema = z
             text: z.string().max(25),
             type: z.string(),
             example: z.array(z.string().trim().min(1).max(2000)).optional(),
-            url: z.url().trim().max(2000).optional(),
+            // Trimmed before the URL check, as the deprecated `z.string().trim().url()` did.
+            url: z.string().trim().max(2000).pipe(z.url()).optional(),
           }),
           product_retailer_id: z.string(),
         }),
