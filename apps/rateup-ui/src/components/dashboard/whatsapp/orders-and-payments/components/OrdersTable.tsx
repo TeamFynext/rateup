@@ -33,10 +33,9 @@ const STAGE_CONFIG: Record<
   CANCELLED: { label: "Cancelled", variant: "destructive" },
 };
 
-function calcTotal(products: any[], deliveryOption?: any): string {
+function calcTotal(products: unknown[], deliveryOption?: unknown): string {
   const items = (products ?? []).reduce(
-    (s: number, p: any) =>
-      s + (parseFloat(p.price ?? "0") || 0) * (parseInt(p.quantity ?? "1") || 1),
+    (s: number, p) => s + (parseFloat(p.price ?? "0") || 0) * (parseInt(p.quantity ?? "1") || 1),
     0,
   );
   const delivery = deliveryOption?.charge ?? 0;
@@ -124,7 +123,7 @@ export default function OrdersTable({
                 </TableCell>
               </TableRow>
             ) : (
-              orders.map((order: any) => {
+              orders.map((order) => {
                 const stageCfg = STAGE_CONFIG[order.orderStage] ?? {
                   label: order.orderStage ?? order.status ?? "—",
                   variant: "outline" as const,
@@ -151,7 +150,7 @@ export default function OrdersTable({
                     </TableCell>
                     <TableCell className="text-center text-sm">
                       {order.products?.reduce(
-                        (a: number, p: any) => a + (parseInt(p.quantity ?? "1") || 1),
+                        (a: number, p) => a + (parseInt(p.quantity ?? "1") || 1),
                         0,
                       ) ?? 0}
                     </TableCell>

@@ -29,7 +29,7 @@ const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
 
 /** RHF resolver that always validates against the latest schema held in `schemaRef`. */
 function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
-  return (values: any) => {
+  return (values) => {
     const result = schemaRef.current.safeParse(values);
     if (result.success) return { values: result.data, errors: {} };
     const errors: Record<string, { type: string; message: string }> = {};
@@ -92,7 +92,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
       : { title: "", description: "", metadata: "", image: "" },
   });
 
-  const handleAddChoice = async (values: any) => {
+  const handleAddChoice = async (values) => {
     try {
       const choiceObj = {
         id: generateId(),
@@ -366,7 +366,7 @@ function ChoiceRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [choice]);
 
-  const handleEditChoice = async (values: any) => {
+  const handleEditChoice = async (values) => {
     const choiceObj = Object.fromEntries(
       Object.entries(values).filter(
         ([_key, value]) => typeof value === "string" && value.trim() !== "",

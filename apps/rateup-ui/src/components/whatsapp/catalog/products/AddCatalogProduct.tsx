@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useId, useEffect, useState } from "react";
+import type { Control } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -115,11 +116,39 @@ function SourceToggle({
   );
 }
 
+/**
+ * The product form's values. Which fields are filled in depends on the
+ * catalog's vertical (product item, hotel, hotel room, flight, …), so all of
+ * them are optional here and `catalogProductSchema` enforces the required set.
+ */
+interface CatalogProductFormValues {
+  type: CatalogProductType;
+  retailer_id?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  condition?: string;
+  brand?: string;
+  availability?: string;
+  currencyCode?: string;
+  price?: number;
+  sale_price?: number;
+  base_price?: number;
+  link?: string;
+  image?: Array<{ url: string; tag: string[] }>;
+  video?: Array<{ url: string; tag: string[] }>;
+  internal_label?: string[];
+  hotel_id?: string;
+  hotel_room_id?: string;
+  hotel_retailer_id?: string;
+  [key: string]: unknown;
+}
+
 /** Conditional required-field validation mirroring the original Mantine `validate`. */
 const catalogProductSchema = z
   .object({ type: z.any() })
   .passthrough()
-  .superRefine((values: any, ctx) => {
+  .superRefine((values: CatalogProductFormValues, ctx) => {
     const require = (field: string, invalid: boolean) => {
       if (invalid) ctx.addIssue({ code: "custom", path: [field], message: "required" });
     };
@@ -128,8 +157,8 @@ const catalogProductSchema = z
       require("title", !values.title?.length);
       require("description", !values.description?.length);
       require("condition", !values.condition?.length);
-      require("price", values.price < 0);
-      require("sale_price", values.sale_price < 0);
+      require("price", (values.price ?? 0) < 0);
+      require("sale_price", (values.sale_price ?? 0) < 0);
       require("currencyCode", !values.currencyCode?.length);
       require("availability", !values.availability?.length);
       require("brand", !values.brand?.length);
@@ -137,14 +166,14 @@ const catalogProductSchema = z
       require("hotel_id", !values.hotel_id?.length);
       require("name", !values.name?.length);
       require("description", !values.description?.length);
-      require("base_price", values.base_price < 0);
+      require("base_price", (values.base_price ?? 0) < 0);
       require("currencyCode", !values.currencyCode?.length);
     } else if (values.type === CatalogProductType.HOTEL_ROOM) {
       require("hotel_retailer_id", !values.hotel_retailer_id?.length);
       require("hotel_room_id", !values.hotel_room_id?.length);
       require("name", !values.name?.length);
       require("description", !values.description?.length);
-      require("base_price", values.base_price < 0);
+      require("base_price", (values.base_price ?? 0) < 0);
       require("currencyCode", !values.currencyCode?.length);
     }
   });
@@ -154,13 +183,17 @@ function TagController({
   control,
   name,
   maxTags,
-}: Readonly<{ control: any; name: string; maxTags?: number }>) {
+}: Readonly<{ control: Control<CatalogProductFormValues>; name: string; maxTags?: number }>) {
   return (
     <Controller
       name={name}
       control={control}
       render={({ field }) => (
-        <TagsInput value={field.value ?? []} onValueChange={field.onChange} maxTags={maxTags} />
+        <TagsInput
+          value={Array.isArray(field.value) ? field.value : []}
+          onValueChange={field.onChange}
+          maxTags={maxTags}
+        />
       )}
     />
   );
@@ -176,7 +209,7 @@ const AddCatalogProduct = ({
   productData?: ({ image?: unknown[] } & Record<string, unknown>) | null;
 }) => {
   const uid = useId();
-  const form = useForm<any>({
+  const form = useForm<CatalogProductFormValues>({
     resolver: zodResolver(catalogProductSchema),
     defaultValues: getInitialValues(),
   });
@@ -219,7 +252,7 @@ const AddCatalogProduct = ({
   const isSaving = createBatch.isPending || updateProducts.isPending || createShopifyMut.isPending;
   const type = form.watch("type");
 
-  async function handleSave(values: any) {
+  async function handleSave(values: CatalogProductFormValues) {
     // ── Shopify mode ──────────────────────────────────────────────────────
     if (addToShopify && type === CatalogProductType.PRODUCT_ITEM) {
       form.clearErrors();
@@ -227,10 +260,10 @@ const AddCatalogProduct = ({
       if (!values.title?.length) errs.title = "required";
       if (!values.description?.length) errs.description = "required";
       if (!values.brand?.length) errs.brand = "required";
-      if (values.price < 0) errs.price = "required";
+      if ((values.price ?? 0) < 0) errs.price = "required";
       if (!values.currencyCode?.length) errs.currencyCode = "required";
       if (Object.keys(errs).length > 0) {
-        Object.entries(errs).forEach(([k, v]) => form.setError(k as any, { message: v }));
+        Object.entries(errs).forEach(([k, v]) => form.setError(k, { message: v }));
         return;
       }
 
@@ -248,11 +281,11 @@ const AddCatalogProduct = ({
 
       createShopifyMut.mutate(
         {
-          title: values.title,
-          description: values.description,
-          brand: values.brand,
-          price: values.price,
-          currencyCode: values.currencyCode,
+          title: values.title ?? "",
+          description: values.description ?? "",
+          brand: values.brand ?? "",
+          price: values.price ?? 0,
+          currencyCode: values.currencyCode ?? "",
           imageUrl,
         },
         {
@@ -279,13 +312,13 @@ const AddCatalogProduct = ({
     const { type: formType, ...rest } = values;
 
     try {
-      if (imageUpload === "upload" && image) {
+      if (imageUpload === "upload" && image && rest.image?.[0]) {
         const key = await uploadFile(image);
-        rest.image[0].url = getFileUrlFromKey(key);
+        rest.image[0].url = getFileUrlFromKey(key) ?? "";
       }
-      if (videoUpload === "upload" && video) {
+      if (videoUpload === "upload" && video && rest.video?.[0]) {
         const key = await uploadFile(video);
-        rest.video[0].url = getFileUrlFromKey(key);
+        rest.video[0].url = getFileUrlFromKey(key) ?? "";
       }
     } catch {}
 
@@ -412,7 +445,7 @@ const AddCatalogProduct = ({
                   <FieldLabel htmlFor="currency">Currency *</FieldLabel>
                   <Select
                     value={form.watch("currencyCode")}
-                    onValueChange={(v) => form.setValue("currencyCode", v)}
+                    onValueChange={(v) => form.setValue("currencyCode", v ?? "")}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="currency">
@@ -434,7 +467,7 @@ const AddCatalogProduct = ({
                     <FieldLabel htmlFor="availability">Availability *</FieldLabel>
                     <Select
                       value={form.watch("availability")}
-                      onValueChange={(v) => form.setValue("availability", v)}
+                      onValueChange={(v) => form.setValue("availability", v ?? "")}
                       items={CATALOG_PRODUCT_AVAILABILITY.map((a) => ({ value: a, label: a }))}
                     >
                       <SelectTrigger id="availability">
@@ -457,7 +490,7 @@ const AddCatalogProduct = ({
                     <FieldLabel htmlFor="condition">Product condition *</FieldLabel>
                     <Select
                       value={form.watch("condition")}
-                      onValueChange={(v) => form.setValue("condition", v)}
+                      onValueChange={(v) => form.setValue("condition", v ?? "")}
                       items={CATALOG_PRODUCT_CONDITIONS.map((c) => ({ value: c, label: c }))}
                     >
                       <SelectTrigger id="condition">
@@ -598,7 +631,7 @@ const AddCatalogProduct = ({
                   <FieldLabel htmlFor="hotel_currency">Currency *</FieldLabel>
                   <Select
                     value={form.watch("currencyCode")}
-                    onValueChange={(v) => form.setValue("currencyCode", v)}
+                    onValueChange={(v) => form.setValue("currencyCode", v ?? "")}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="hotel_currency">
@@ -694,7 +727,7 @@ const AddCatalogProduct = ({
                   <FieldLabel htmlFor="room_currency">Currency *</FieldLabel>
                   <Select
                     value={form.watch("currencyCode")}
-                    onValueChange={(v) => form.setValue("currencyCode", v)}
+                    onValueChange={(v) => form.setValue("currencyCode", v ?? "")}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="room_currency">

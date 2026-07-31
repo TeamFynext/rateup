@@ -23,7 +23,7 @@ interface ScheduleRowData {
   scheduleTime: string | null;
   sentAt: string | null;
   status: string;
-  actionStatus: any;
+  actionStatus;
   apiStatus: string;
   createdAt: string | null;
   history: ShopifySchedule;
@@ -33,7 +33,7 @@ interface ScheduleRowData {
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;
   onOpen: (event: ShopifySurvey | undefined) => void;
-  translations: any;
+  translations;
 }
 
 const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCellProps) => (
@@ -53,7 +53,7 @@ const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCe
 interface HistoryCellProps {
   schedule: ShopifySchedule | null;
   onOpen: (schedule: ShopifySchedule | null) => void;
-  translations: any;
+  translations;
 }
 
 const HistoryCell = ({ schedule, onOpen, translations }: HistoryCellProps) => (

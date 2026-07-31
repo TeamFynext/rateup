@@ -42,7 +42,7 @@ export default function ResultComparison({
 }: {
   surveyId: string;
   version: number;
-  flowQuestions: any[];
+  flowQuestions: unknown[];
   questions: Question[];
 }) {
   const { filterTeams } = useContext(SurveyContext);

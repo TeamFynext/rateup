@@ -20,7 +20,7 @@ function ScreensList() {
   const { screens, currentScreenId, setCurrentScreenId, deleteScreen, reorderScreens } =
     useFlowStoreV3();
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result) => {
     if (!result.destination) return;
     if (result.source.index === result.destination.index) return;
     reorderScreens(result.source.index, result.destination.index);
@@ -80,7 +80,7 @@ function ScreensList() {
 }
 
 interface ScreenCardProps {
-  screen: any;
+  screen;
   index: number;
   isSelected: boolean;
   onSelect: () => void;

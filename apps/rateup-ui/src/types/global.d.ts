@@ -782,6 +782,12 @@ declare global {
       };
     [sfpn.Whatsapp]: subscriptionActiveField & {
       conversation: subscriptionWithActiveAndCount;
+      /** Monthly send allowance, as the plans endpoint reports it. */
+      count?: { monthlyMessageLimit?: number };
+      automation?: subscriptionActiveField & {
+        automationTrigger?: subscriptionCountRestriction;
+      };
+      campaign?: subscriptionActiveField & subscriptionCountRestriction;
     };
     [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
     // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.

@@ -38,7 +38,7 @@ interface Props {
   buildtemplatequerycomponent: (
     component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
     component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT",
-    component_data: any,
+    component_data: unknown,
   ) => void;
   exampleParams?: Array<string | { type: string; [key: string]: unknown }>;
   leadgenData?: {
@@ -121,7 +121,7 @@ function WaDropZoneInputComponent(props: Props) {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       if (file.size <= 5 * 1024 * 1024) {
-        props?.buildtemplatequerycomponent("HEADER", props?.type as any, {
+        props?.buildtemplatequerycomponent("HEADER", props?.type, {
           link: file,
         });
       } else {
@@ -135,7 +135,7 @@ function WaDropZoneInputComponent(props: Props) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size <= 5 * 1024 * 1024) {
-        props?.buildtemplatequerycomponent("HEADER", props?.type as any, {
+        props?.buildtemplatequerycomponent("HEADER", props?.type, {
           link: file,
         });
       } else {
@@ -187,9 +187,9 @@ function WaLocationInputComponent({
   buildtemplatequerycomponent: (
     component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
     component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION",
-    component_data: any,
+    component_data: unknown,
   ) => void;
-  defaultValue?: any;
+  defaultValue?;
 }) {
   const uid = useId();
   const [latitude, setLatitude] = useState(defaultValue?.latitude || "");
@@ -299,7 +299,7 @@ function WaBodyVariableInputComponent({
   buildtemplatequerycomponent: (
     component_type: "BODY",
     component_format: "TEXT",
-    component_data: any,
+    component_data: unknown,
   ) => void;
   exampleParams?: Array<string | { type: string; [key: string]: unknown }>;
   leadgenData?: {
@@ -319,7 +319,7 @@ function WaBodyVariableInputComponent({
     });
   };
 
-  const updateDynamicTag = (index: number, value: any) => {
+  const updateDynamicTag = (index: number, value) => {
     const nextTags = [...dynamicTags];
     nextTags[index] = value;
     setDynamicTags(nextTags);

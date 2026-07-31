@@ -19,7 +19,7 @@ import { LoyaltyRewardStatus } from "@/types/enums.ts";
 import { LoyaltyRewardForm } from "./LoyaltyRewardForm.tsx";
 
 interface RewardCardProps {
-  readonly reward: any; // Type this properly if possible
+  readonly reward; // Type this properly if possible
   readonly category: string;
   readonly isEditing: boolean;
   readonly onEditStart: () => void;

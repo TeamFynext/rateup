@@ -54,7 +54,7 @@ const VoiceRecorder = () => {
   const [barHeights, setBarHeights] = useState<number[]>([]);
   const animationRef = useRef<number | null>(null);
 
-  const onReady = (ws: any) => {
+  const onReady = (ws) => {
     setWavesurfer(ws);
     setIsPlaying(false);
   };

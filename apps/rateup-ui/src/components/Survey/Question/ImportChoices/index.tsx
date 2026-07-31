@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 interface ImportChoicesProps {
-  setValue: (name: string, value: any) => void;
+  setValue: (name: string, value: unknown) => void;
   surveyLanguagesArr: string[];
   questionObj: Question;
   handleSave: () => void;

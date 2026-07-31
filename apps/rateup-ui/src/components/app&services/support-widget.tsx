@@ -284,7 +284,7 @@ export default function SupportWidget({
 
             <Tabs
               value={activeTab}
-              onValueChange={(value) => setActiveTab(value as any)}
+              onValueChange={(value) => setActiveTab(value)}
               className="w-full h-full px-4"
             >
               <TabsContent value="contact" className="flex flex-col text-black">

@@ -17,11 +17,11 @@ import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/
 import SurveyResultByType from "./SurveySummaryNewWebForm.tsx";
 
 interface SurveyQuestionProps {
-  choiceWise: any;
-  NPS: any;
+  choiceWise;
+  NPS;
   version?: number;
-  flowQuestions?: any[];
-  questions?: any[];
+  flowQuestions?: unknown[];
+  questions?: unknown[];
   surveyId: string;
   defaultLanguage: string;
 }
@@ -74,7 +74,7 @@ const SurveyQuestion = ({
   const getPercentage = (count: number, total: number) =>
     total > 0 ? Math.round((count / total) * 100) : "0";
 
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: unknown[] }) => {
     if (active && payload?.length) {
       const { count, percentage } = payload[0].payload;
       return (

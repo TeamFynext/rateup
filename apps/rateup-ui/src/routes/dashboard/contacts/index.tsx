@@ -75,10 +75,10 @@ function Contacts() {
       column.reduce((visibility: Record<string, boolean>, key) => {
         if (
           !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
-            (key as any)?.accessorKey || key?.id,
+            key?.accessorKey || key?.id,
           )
         ) {
-          visibility[(key as any)?.accessorKey || key?.id] = false;
+          visibility[key?.accessorKey || key?.id] = false;
         }
         return visibility;
       }, {}),

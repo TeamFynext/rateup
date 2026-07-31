@@ -68,7 +68,7 @@ export interface CustomerPanelCustomer {
 
 interface CustomerDetailPanelProps {
   customer: CustomerPanelCustomer;
-  transactions?: any[];
+  transactions?: unknown[];
   onClose?: () => void;
   orgId: string;
 }

@@ -23,6 +23,7 @@ import {
   useLoyaltyProgram,
   useUpdateLoyaltyProgramMutation,
 } from "@/backend/loyalty/program.query";
+import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
 import {
   useCreateLoyaltyRewardMutation,
   useDeleteLoyaltyRewardMutation,
@@ -139,18 +140,22 @@ function RewardsPage() {
   };
 
   // Form instances
-  const pointRewardForm = useForm<z.infer<typeof pointRewardSchema>>({
-    resolver: zodResolver(pointRewardSchema as any),
+  const pointRewardForm = useForm<
+    z.input<typeof pointRewardSchema>,
+    unknown,
+    z.output<typeof pointRewardSchema>
+  >({
+    resolver: zodResolver(pointRewardSchema),
     defaultValues: defaultPointRewardValues,
   });
 
-  const couponForm = useForm<z.infer<typeof couponSchema>>({
-    resolver: zodResolver(couponSchema as any),
+  const couponForm = useForm<z.input<typeof couponSchema>, unknown, z.output<typeof couponSchema>>({
+    resolver: zodResolver(couponSchema),
     defaultValues: defaultCouponValues,
   });
 
-  const giftForm = useForm<z.infer<typeof giftSchema>>({
-    resolver: zodResolver(giftSchema as any),
+  const giftForm = useForm<z.input<typeof giftSchema>, unknown, z.output<typeof giftSchema>>({
+    resolver: zodResolver(giftSchema),
     defaultValues: defaultGiftValues,
   });
 
@@ -194,7 +199,7 @@ function RewardsPage() {
     setRewardTierRestriction(false);
   };
 
-  const resetPointRewardForm = (reward: any) => {
+  const resetPointRewardForm = (reward: LoyaltyReward) => {
     const pointRewardValue = reward.rewardValue || {};
     const cashbackAmount = Number(pointRewardValue.cashbackAmount || 0);
     const discountPercentage = Number(pointRewardValue.discountPercentage || 0);
@@ -367,10 +372,10 @@ function RewardsPage() {
       };
     }
 
-    const payload: any = {
+    const payload = {
       name: data.name,
       description: data.description,
-      rewardType: "point",
+      rewardType: "point" as const,
       pointsCost: data.pointsCost,
       rewardValue: {
         points: data.pointsCost,
@@ -415,10 +420,10 @@ function RewardsPage() {
       };
     }
 
-    const payload: any = {
+    const payload = {
       name: data.name,
       description: data.description,
-      rewardType: "coupon",
+      rewardType: "coupon" as const,
       pointsCost: 0,
       rewardValue: {
         code: data.couponCode,
@@ -442,10 +447,10 @@ function RewardsPage() {
   };
 
   const onSubmitGift = (data: z.infer<typeof giftSchema>) => {
-    const payload: any = {
+    const payload = {
       name: data.name,
       description: data.description,
-      rewardType: "assigned",
+      rewardType: "assigned" as const,
       pointsCost: 0,
       rewardValue: {
         description: data.description || "",

@@ -47,9 +47,7 @@ const BulkAssignUser = ({
   const teamMembersFiltered = useMemo(() => {
     if (!selectedTeam) return [];
 
-    return staffMembers.filter((member) =>
-      member.teams.some((t: any) => t.team_id === selectedTeam),
-    );
+    return staffMembers.filter((member) => member.teams.some((t) => t.team_id === selectedTeam));
   }, [selectedTeam, staffMembers]);
 
   const handleAssign = () => {
@@ -165,7 +163,7 @@ const BulkAssignUser = ({
             value={selectedUser}
             onValueChange={(value) => setSelectedUser(value ?? "")}
             disabled={!selectedTeam}
-            items={teamMembersFiltered.map((staff: any) => ({
+            items={teamMembersFiltered.map((staff) => ({
               value: staff.id,
               label: staff.name,
             }))}
@@ -175,7 +173,7 @@ const BulkAssignUser = ({
             </SelectTrigger>
 
             <SelectContent>
-              {teamMembersFiltered.map((staff: any) => (
+              {teamMembersFiltered.map((staff) => (
                 <SelectItem key={staff.id} value={staff.id}>
                   <div className="flex items-center gap-2 py-1">
                     <CreativeAvatar

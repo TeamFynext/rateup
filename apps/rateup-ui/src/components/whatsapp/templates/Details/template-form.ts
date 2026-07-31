@@ -29,7 +29,7 @@ export const setValue = (form: TemplateForm, p: string, value: unknown) =>
 
 /** Reads the error message at a dotted path, if any. */
 export const errorAt = (form: TemplateForm, p: string): string | undefined =>
-  p.split(".").reduce<any>((node, part) => node?.[part], form.formState.errors as any)?.message;
+  p.split(".").reduce<any>((node, part) => node?.[part], form.formState.errors)?.message;
 
 /**
  * Controlled `value`/`onChange` pair for components that take them directly (selectors,

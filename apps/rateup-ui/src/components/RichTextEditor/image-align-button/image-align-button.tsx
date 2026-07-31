@@ -159,11 +159,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const shortcuts = useMemo<string[]>(() => parseShortcutKeys({ shortcutKeys }), [shortcutKeys]);
 
     // Handle data-style and data-size props from legacy code if passed
-    const finalVariant = (props as any)["data-style"] || variant;
-    const finalSize = (props as any)["data-size"] || size;
+    const finalVariant = props["data-style"] || variant;
+    const finalSize = props["data-size"] || size;
 
     // Map legacy 'subdued' appearance or ghost style to ghost variant
-    const isGhost = finalVariant === "ghost" || (props as any)["data-appearence"] === "subdued";
+    const isGhost = finalVariant === "ghost" || props["data-appearence"] === "subdued";
     const computedVariantClass = isGhost
       ? buttonVariants.ghost
       : buttonVariants[finalVariant as keyof typeof buttonVariants] || buttonVariants.secondary;

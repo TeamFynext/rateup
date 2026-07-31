@@ -325,8 +325,8 @@ export function BusinessHoursEditorDialog({
                     {days.map((day, idx) => {
                       const daySchedule = field.value[day];
                       const dayErrors =
-                        (fieldState.error as any)?.[day]?.timeSlots?.length > 0
-                          ? (fieldState.error as any)[day].timeSlots
+                        fieldState.error?.[day]?.timeSlots?.length > 0
+                          ? fieldState.error[day].timeSlots
                           : null;
                       return (
                         <div key={day} className="space-y-3">
@@ -367,7 +367,7 @@ export function BusinessHoursEditorDialog({
                           </div>
                           {daySchedule.isOpen && (
                             <div className="ml-28 space-y-2">
-                              {daySchedule.timeSlots.map((slot: any, slotIndex: number) => (
+                              {daySchedule.timeSlots.map((slot, slotIndex: number) => (
                                 <TimeSlotRow
                                   key={slotIndex + slot?.openTime + slot?.closeTime}
                                   slot={slot}

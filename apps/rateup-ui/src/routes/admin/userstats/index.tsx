@@ -188,7 +188,7 @@ function Index() {
     },
   ];
 
-  const handlePauseResumeClick = async (user: any) => {
+  const handlePauseResumeClick = async (user) => {
     const shouldProceed = await confirm({
       title: user?.isPaused ? translations("Resume User") : translations("Pause User"),
       description: `${translations("Are you sure to")} ${

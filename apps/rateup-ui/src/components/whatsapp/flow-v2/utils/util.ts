@@ -372,7 +372,7 @@ interface InitialValues {
       | { id: string; title: string }[]
       | null
       | undefined;
-    extra?: any;
+    extra?;
     metaType?: string;
   };
 }
@@ -382,7 +382,7 @@ export const getInitialValues = (type: QuestionType2) => {
   const validation = getValidationSchema(type);
   /** zod's internal check descriptors, as this reads max-length limits off them. */
   type ZodCheckLike = { _zod?: { def?: { check?: string; maximum?: number } } };
-  const shape: any = validation?.shape;
+  const shape = validation?.shape;
   const LABEL_MAX = shape?.label?.def?.checks?.find(
     (data: ZodCheckLike) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;

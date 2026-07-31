@@ -14,7 +14,7 @@ const QuickReplyItem = ({
   onClick,
   cursor,
 }: {
-  reply: any;
+  reply;
   onEditClick?: () => void;
   onDelete?: () => void;
   onClick?: (value: string) => void;

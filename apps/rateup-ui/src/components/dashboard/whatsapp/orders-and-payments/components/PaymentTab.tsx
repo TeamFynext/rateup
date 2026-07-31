@@ -221,7 +221,7 @@ export default function PaymentTab({
         settings.paymentMethod ??
           (settings.storeType === "shopify" ? "shopify_checkout" : "manual"),
       );
-      setPaymentConfig((settings.standardPaymentConfig as any) ?? {});
+      setPaymentConfig(settings.standardPaymentConfig ?? {});
       setCollectAddress(settings.collectAddress ?? false);
       setCollectDelivery(settings.collectDelivery ?? false);
       setFixedDeliveryCharge(settings.fixedDeliveryCharge ?? false);
@@ -232,7 +232,7 @@ export default function PaymentTab({
   const handleSave = async () => {
     await save({
       storeType,
-      paymentMethod: paymentMethod as any,
+      paymentMethod: paymentMethod,
       standardPaymentConfig: paymentConfig,
       collectAddress,
       collectDelivery,
@@ -370,7 +370,7 @@ export default function PaymentTab({
 
                   {(logos.length > 0 || badges.length > 0) && (
                     <div className="flex shrink-0 items-center gap-1.5 pl-2">
-                      {logos.map((logo: any) => (
+                      {logos.map((logo) => (
                         <span
                           key={logo.src}
                           className="flex h-6 items-center justify-center rounded border bg-background px-1.5"
@@ -382,7 +382,7 @@ export default function PaymentTab({
                           />
                         </span>
                       ))}
-                      {badges.map((b: any) => (
+                      {badges.map((b) => (
                         <Badge key={b.label} variant="outline" className="text-[10px]">
                           {b.label}
                         </Badge>
@@ -394,7 +394,7 @@ export default function PaymentTab({
                 {isSelected && fields.length > 0 && (
                   <div className="border-t bg-muted/30 p-4">
                     <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {fields.map((f: any) => (
+                      {fields.map((f) => (
                         <Field key={f.key}>
                           <FieldLabel htmlFor={`pay-${f.key}`}>{f.label}</FieldLabel>
                           <Input

@@ -46,7 +46,7 @@ interface SubscriptionTableData {
   orgName: string;
   planId: string;
   planName: string;
-  features: any;
+  features;
   createdAt: string;
   renewedAt: string;
   expiresAt: string;
@@ -246,8 +246,8 @@ function SubscriptionPage() {
 
       return {
         id: subscription.orgId,
-        orgId: (subscription as any).org.id,
-        orgName: (subscription as any).org.name,
+        orgId: subscription.org.id,
+        orgName: subscription.org.name,
         planId: subscription?.basePlan?.id || "",
         planName: subscription?.basePlan?.name || "Unknown",
         features: subscription,

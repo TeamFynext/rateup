@@ -14,9 +14,9 @@ import type { ReactNode } from "react";
  * private note so the backend resolves mentions by id (robust to names that
  * contain spaces, which the text-based `@name` extraction can't match).
  */
-export function extractMentionUserIds(editorContent: any): string[] {
+export function extractMentionUserIds(editorContent: unknown): string[] {
   const ids = new Set<string>();
-  const walk = (node: any) => {
+  const walk = (node) => {
     if (!node) return;
     if (node.type === "mention" && node.attrs?.id) ids.add(String(node.attrs.id));
     if (Array.isArray(node.content)) node.content.forEach(walk);

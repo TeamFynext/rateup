@@ -63,7 +63,7 @@ function CampaignsPage() {
 
   const { data, isPending, isError, error, refetch } = activeQuery;
 
-  const openEditCampaign = (campaign: any) => {
+  const openEditCampaign = (campaign) => {
     setSelectedCampaignId(campaign.id);
   };
 
@@ -94,13 +94,13 @@ function CampaignsPage() {
     setSelectedStatus("all");
   };
 
-  const handleViewDetails = (campaign: any) => {
+  const handleViewDetails = (campaign) => {
     navigate({
       to: `/dashboard/campaign/${campaign.id}`,
     });
   };
 
-  if (isError && (error as any)?.response?.status === 403) {
+  if (isError && error?.response?.status === 403) {
     return <UnauthorizedPage />;
   }
 

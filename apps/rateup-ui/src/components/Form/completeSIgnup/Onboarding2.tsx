@@ -20,10 +20,10 @@ export default function OnboardingStep2({
   handleNext,
 }: {
   currentStep: number;
-  data: any;
-  handleInputChange: any;
-  handleNext: any;
-  handleBack: any;
+  data;
+  handleInputChange;
+  handleNext;
+  handleBack;
 }) {
   const uid = useId();
   const canProceed = () => {

@@ -1174,7 +1174,7 @@ function TierCard({
   );
 }
 
-function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDeleting }: any) {
+function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDeleting }: unknown) {
   const uid = useId();
   const { t } = useTranslation();
   const { data: loyaltyTiers = [] } = useLoyaltyTiers();
@@ -1624,7 +1624,7 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                     <Field className="border-t pt-3" data-invalid={fieldState.invalid}>
                       <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                       <div className="space-y-2">
-                        {loyaltyTiers.map((tier: any) => (
+                        {loyaltyTiers.map((tier) => (
                           <Field key={tier.id} orientation="horizontal" className="w-auto gap-2">
                             <Checkbox
                               id={`edit-tier-${rule.id}-${tier.id}`}

@@ -31,8 +31,8 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
 
   const keywordOptions = (groups || [])
     .flatMap((g) => g.conditions)
-    .filter((c: any) => c.field === "MESSAGE_BODY" && c.value)
-    .map((c: any) => c.value);
+    .filter((c) => c.field === "MESSAGE_BODY" && c.value)
+    .map((c) => c.value);
 
   const validKeyword =
     shareKeyword && keywordOptions.includes(shareKeyword) ? shareKeyword : keywordOptions[0] || "";
@@ -67,7 +67,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
                 value={validAccountId}
                 onChange={setShareAccountId}
                 filterIds={channels.length > 0 ? channels : undefined}
-                platform={platform as any}
+                platform={platform}
               />
             </div>
           </div>

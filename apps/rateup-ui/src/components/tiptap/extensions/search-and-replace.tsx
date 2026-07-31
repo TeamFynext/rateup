@@ -106,7 +106,7 @@ function processSearches(
   };
 }
 
-const replace = (replaceTerm: string, results: Range[], { state, dispatch }: any) => {
+const replace = (replaceTerm: string, results: Range[], { state, dispatch }: unknown) => {
   const firstResult = results[0];
 
   if (!firstResult) {
@@ -151,11 +151,7 @@ const rebaseNextResult = (
   return [offset, results];
 };
 
-const replaceAll = (
-  replaceTerm: string,
-  results: Range[],
-  { tr, dispatch }: { tr: any; dispatch: any },
-) => {
+const replaceAll = (replaceTerm: string, results: Range[], { tr, dispatch }: { tr; dispatch }) => {
   if (!results.length) {
     return;
   }

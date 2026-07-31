@@ -101,7 +101,7 @@ export function useNavMain({
   allowedFeatures,
   user,
   sectionCounts,
-}: any) {
+}: unknown) {
   const { t } = useTranslation();
 
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)

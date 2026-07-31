@@ -159,7 +159,7 @@ function EditFlow() {
     );
     if (
       !selectedQuestion &&
-      Object.values(WaFlowFormNonInputElementType).includes(selectedFormElement?.type as any)
+      Object.values(WaFlowFormNonInputElementType).includes(selectedFormElement?.type)
     ) {
       selectedNonQuestion = selectedFormElement;
     }
@@ -184,7 +184,7 @@ function EditFlow() {
     setActiveEditor(null);
     setSelectedFormElementId("");
 
-    if (Object.values(WaFlowFormInputElementType).includes(fe.type as any)) {
+    if (Object.values(WaFlowFormInputElementType).includes(fe.type)) {
       const questionId = getQuestionIdFromFlowFormElementName(fe.name ?? "", map);
       // deleting element from flowJson
       updateFlowJson((draft) => {
@@ -201,7 +201,7 @@ function EditFlow() {
 
       // TODO: delete question from survey
       deleteQuestionMutation.mutate(questionId);
-    } else if (Object.values(WaFlowFormNonInputElementType).includes(fe.type as any)) {
+    } else if (Object.values(WaFlowFormNonInputElementType).includes(fe.type)) {
       updateFlowJson((draft) => {
         const screenToBeEdited = getScreenObjById(draft.screens, screenId)!;
         const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form")!;

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/(marketing)/blog/rss.xml")({
   },
 });
 
-function generateRSSFeed(posts: any[], baseUrl: string) {
+function generateRSSFeed(posts: unknown[], baseUrl: string) {
   const blogUrl = `${baseUrl}/blog`;
 
   const items = posts

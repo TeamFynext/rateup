@@ -29,7 +29,7 @@ import type { ActionType, CreateRuleInput, Platform } from "./schema.ts";
 import { getActionTypesForPlatform } from "./schema.ts";
 
 // ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
-const ActionValueInput = ({ index, valueField }: { index: number; valueField: any }) => {
+const ActionValueInput = ({ index, valueField }: { index: number; valueField }) => {
   const { control } = useFormContext<CreateRuleInput>();
   const { data: waData } = useAllWaAutomatedReplies();
   const { data: igData } = useAllInstagramAutomations();
@@ -235,7 +235,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
       (template) => String(template.id) === templateValue.templateId,
     );
     const headerFormat = selectedTemplate?.data?.components?.find(
-      (c: any) => c.type === "HEADER" || c.type === "header",
+      (c) => c.type === "HEADER" || c.type === "header",
     )?.format;
     const canUseProductImage = triggerEvent === "SHOPIFY_EVENT" && headerFormat === "IMAGE";
 

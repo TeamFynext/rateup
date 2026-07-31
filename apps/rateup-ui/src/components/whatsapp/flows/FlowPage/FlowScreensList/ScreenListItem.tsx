@@ -465,7 +465,7 @@ interface FormElementCardProps {
   index: number;
   handleOpen: (index: number) => void;
   handleDelete: (index: number) => void;
-  dragHandleProps?: any;
+  dragHandleProps?;
   screen: string;
 }
 function DraggableFormElementCard(props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>) {

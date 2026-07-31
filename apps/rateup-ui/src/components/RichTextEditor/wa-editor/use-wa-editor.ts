@@ -6,12 +6,12 @@ import { createWaExtensions } from "./extensions.ts";
 
 export interface UseWaEditorOptions {
   /** Current value, as stored (tiptap JSON or a WhatsApp-formatted string). */
-  content?: any;
+  content?;
   placeholder?: string;
   max?: number;
   editable?: boolean;
   /** Receives the editor's JSON on every change. */
-  onChange?: (value: any) => void;
+  onChange?: (value) => void;
   /** Enter submits instead of inserting a newline. */
   customEnter?: () => void;
   enableMention?: boolean;

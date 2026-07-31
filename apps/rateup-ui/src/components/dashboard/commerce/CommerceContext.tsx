@@ -11,15 +11,15 @@ import { IntegratedApps } from "@/types/enums";
 export type CommerceDateRange = { key: string; range: Date[] };
 
 type CommerceContextValue = {
-  waSettings: any[];
+  waSettings: unknown[];
   isLoadingSettings: boolean;
   selectedSettingId: string;
   setSelectedSettingId: (id: string) => void;
-  currentSetting: any | undefined;
+  currentSetting: unknown | undefined;
   phoneId: string | undefined;
 
   /** All catalogs the org has synced from Meta. */
-  catalogs: any[];
+  catalogs: unknown[];
   /** The catalog currently being viewed — the store's connected one unless overridden. */
   catalogId: string;
   setCatalogId: (id: string) => void;
@@ -69,7 +69,7 @@ export function CommerceProvider({ children }: Readonly<{ children: ReactNode }>
     setSelectedCatalogId("");
   }, [selectedSettingId]);
 
-  const catalogList: any[] = catalogs ?? [];
+  const catalogList: unknown[] = catalogs ?? [];
   const selectionIsValid =
     !!selectedCatalogId && catalogList.some((c) => c.catalogId === selectedCatalogId);
   const catalogId = selectionIsValid ? selectedCatalogId : connectedCatalogId;

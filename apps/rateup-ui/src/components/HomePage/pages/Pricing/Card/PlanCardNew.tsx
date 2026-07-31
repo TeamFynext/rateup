@@ -12,7 +12,7 @@ const PlanCardNew = ({
   fallbackSymbol = "$",
   onButtonClick,
 }: {
-  plan: any;
+  plan;
   period?: BillingPeriod;
   fallbackSymbol?: string;
   onButtonClick: () => void;

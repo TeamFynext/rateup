@@ -159,7 +159,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     jumpIndex: number,
     conditionIndex: number,
     field: string,
-    value: any,
+    value: unknown,
   ) => {
     const updated = [...localJumps];
 
@@ -223,7 +223,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     );
   };
 
-  const handleUpdateAction = (jumpIndex: number, action: any) => {
+  const handleUpdateAction = (jumpIndex: number, action) => {
     const updated = [...localJumps];
     updated[jumpIndex].action = action;
     setLocalJumps(updated);
@@ -239,7 +239,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     const allLogicJumps = getLogicJumps(currentScreen.id);
 
     const otherJumps = (allLogicJumps || []).filter(
-      (jump: any) => !jump.conditions?.some((cond: any) => cond.questionId === elementId),
+      (jump) => !jump.conditions?.some((cond) => cond.questionId === elementId),
     );
 
     const allJumps = [...otherJumps, ...localJumps];
@@ -360,7 +360,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     <SelectValue placeholder={translations("Select condition")} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {getConditions(condition.questionId).map((c: any) => (
+                                    {getConditions(condition.questionId).map((c) => (
                                       <SelectItem key={c.value} value={c.value}>
                                         {c.label}
                                       </SelectItem>
@@ -394,7 +394,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                       <SelectValue placeholder={translations("Select response")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {getResponseOptions(condition.questionId).map((r: any) => (
+                                      {getResponseOptions(condition.questionId).map((r) => (
                                         <SelectItem key={r.value} value={r.value}>
                                           {r.label}
                                         </SelectItem>

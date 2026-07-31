@@ -29,7 +29,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const options: any = selectedQ
+  const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage] && previewChoices?.[selectedLanguage]?.length > 0
       ? previewChoices?.[selectedLanguage]

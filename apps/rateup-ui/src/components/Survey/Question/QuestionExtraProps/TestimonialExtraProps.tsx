@@ -18,7 +18,7 @@ type QuestionTitles = {
   photoQn: string;
 };
 
-const TestimonialExtraProps = ({ form }: { form: any }) => {
+const TestimonialExtraProps = ({ form }: { form }) => {
   const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
@@ -54,7 +54,7 @@ const TestimonialExtraProps = ({ form }: { form: any }) => {
     });
   }, [selectedLanguage]);
 
-  function updateFeatures(featurekey: string, value: any) {
+  function updateFeatures(featurekey: string, value: unknown) {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: { ...features, [featurekey]: value },

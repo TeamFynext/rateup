@@ -49,7 +49,7 @@ const FieldComponentMap = {
 };
 
 interface InlineElementEditorProps {
-  element: any;
+  element;
 }
 
 // Inline editor for element properties with rich text support
@@ -100,7 +100,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
         if (updatedValues[key]) updatedValues[key] = dayjs(updatedValues[key]).toDate();
       });
       if (updatedValues["unavailable-dates"]) {
-        updatedValues["unavailable-dates"] = updatedValues["unavailable-dates"].map((date: any) =>
+        updatedValues["unavailable-dates"] = updatedValues["unavailable-dates"].map((date) =>
           dayjs(date).toDate(),
         );
       }
@@ -110,12 +110,12 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
   const onSubmit = handleSubmit(
     useCallback(
-      (values: any) => {
+      (values) => {
         const updatedValues = { ...values };
 
         // Convert Date objects back to strings for date picker
         if (updatedValues.metaType === QuestionType2.DatePicker) {
-          const formatDate = (date: any) => dayjs(date).format("YYYY-MM-DD");
+          const formatDate = (date) => dayjs(date).format("YYYY-MM-DD");
           ["min-date", "max-date"].forEach((key) => {
             if (updatedValues[key]) updatedValues[key] = formatDate(updatedValues[key]);
           });
@@ -196,7 +196,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
               }}
               error={error?.message}
               {...(field === "data-source" && {
-                insertListItem: (_path: string, item: any) => {
+                insertListItem: (_path: string, item: unknown) => {
                   const currentValue = getValues(field) || [];
                   setValue(field, [...currentValue, item]);
                 },
@@ -204,7 +204,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                   const currentValue = getValues(field) || [];
                   setValue(
                     field,
-                    currentValue.filter((_: any, i: number) => i !== index),
+                    currentValue.filter((_, i: number) => i !== index),
                   );
                 },
                 metaType: elementType,

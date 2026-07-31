@@ -48,14 +48,14 @@ export function DataTableViewOptions<TData>({
   );
 }
 
-function getColumnLabel(column: any) {
+function getColumnLabel(column: unknown) {
   const header = column.columnDef.header;
 
   if (typeof header === "string") {
     return header;
   } else if (typeof column.columnDef.header === "function") {
     try {
-      const result = column.columnDef.header({} as any);
+      const result = column.columnDef.header({});
       if (typeof result === "string") return result;
     } catch {
       // header requires column context (e.g. createSortableHeader)

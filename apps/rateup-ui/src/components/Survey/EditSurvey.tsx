@@ -65,7 +65,7 @@ interface EditSurveyProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   subscription?: Subscription;
-  setFunToRunBeforeSurveyIdPageHeaderTabsChange: any;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange;
 }
 
 export function EditSurvey({
@@ -312,8 +312,8 @@ export function EditSurvey({
                           <div className="flex flex-col h-full">
                             <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
                               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rateup-blue-4 font-nunito text-sm font-black text-white">
-                                {(survey?.questions?.findIndex((q: any) => q.id === selectedQ.id) ??
-                                  0) + 1}
+                                {(survey?.questions?.findIndex((q) => q.id === selectedQ.id) ?? 0) +
+                                  1}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">

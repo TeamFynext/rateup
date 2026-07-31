@@ -10,9 +10,7 @@ export const Route = createFileRoute("/(public-facing)/was/$shortId/")({
   }),
   loaderDeps: ({ search: { tag } }) => ({ tag }),
   loader: async ({ params, deps: { tag } }) => {
-    const surveyTeamMapIdOrShortId = params.shortId
-      ? params.shortId
-      : (params as any).surveyTeamMapId;
+    const surveyTeamMapIdOrShortId = params.shortId ? params.shortId : params.surveyTeamMapId;
 
     const data = await getShareUrlFromSurveyTeamMapId(surveyTeamMapIdOrShortId);
 

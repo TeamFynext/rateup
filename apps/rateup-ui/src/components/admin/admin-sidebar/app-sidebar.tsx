@@ -101,7 +101,7 @@ const data = {
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  data?: any;
+  data?;
 }
 
 export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProps>) {

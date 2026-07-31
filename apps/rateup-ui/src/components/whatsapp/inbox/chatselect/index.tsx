@@ -77,7 +77,7 @@ const WaInboxChatSelect = () => {
   }, [processedFilter]);
 
   const { t: translations } = useTranslation();
-  const checkIfAnyFilterisActive = useCallback((filters: any) => {
+  const checkIfAnyFilterisActive = useCallback((filters) => {
     return (
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
@@ -117,7 +117,7 @@ const WaInboxChatSelect = () => {
   const parentRef = useRef<HTMLDivElement | null>(null);
 
   const prepareFilters = useCallback(
-    (filters: any) => {
+    (filters) => {
       if (checkIfAnyFilterisActive(filters)) {
         const processedFilters = {
           ...filters,
@@ -556,7 +556,7 @@ const WaInboxChatSelect = () => {
                   hasNextPageFilteredContacts &&
                   isFilteredContactsFetchingNextPage &&
                   virtualRow.index === rowCount - 1;
-                let contact: any = null;
+                let contact = null;
                 if (!isBottomLoader) {
                   contact = contactsById.get(contactIds[virtualRow.index]);
                 }

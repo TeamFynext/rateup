@@ -56,7 +56,7 @@ const CreateOrEditQuickReply = ({
   setOpen,
 }: {
   isEdit?: boolean;
-  reply?: any;
+  reply?;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {

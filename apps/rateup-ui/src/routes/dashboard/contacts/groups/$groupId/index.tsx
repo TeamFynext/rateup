@@ -154,10 +154,10 @@ function ContactGroup() {
       column.reduce((visibility: Record<string, boolean>, key) => {
         if (
           !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
-            (key as any)?.accessorKey || key?.id,
+            key?.accessorKey || key?.id,
           )
         ) {
-          visibility[(key as any)?.accessorKey || key?.id] = false;
+          visibility[key?.accessorKey || key?.id] = false;
         }
         return visibility;
       }, {}),
@@ -333,7 +333,7 @@ function ContactGroup() {
         group={groupDetails!}
       />
       <ContactImportErrorModal
-        body={(createNewContactsFromCSV?.error as any)?.response?.data}
+        body={createNewContactsFromCSV?.error?.response?.data}
         isError={createNewContactsFromCSV.isError}
       />
     </div>

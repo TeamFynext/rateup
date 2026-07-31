@@ -842,7 +842,7 @@ export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam
 }
 
 /** Best available human-readable name for a channel, with the platform it belongs to. */
-function describeChannel(channel: any): { label: string; platform: string } {
+function describeChannel(channel: unknown): { label: string; platform: string } {
   if (channel?.ibaId) {
     return {
       label: channel.igDisplayName || channel.igUserName || channel.ibaId,
@@ -949,7 +949,7 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
                 </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {channels.map((channel: any) => {
+                  {channels.map((channel) => {
                     const { label, platform } = describeChannel(channel);
                     return (
                       <div

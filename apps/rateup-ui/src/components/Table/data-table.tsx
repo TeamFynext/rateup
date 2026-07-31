@@ -103,7 +103,7 @@ export function DataTable<TData, TValue>({
 
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getRowId: (row: any) => row.id,
+    getRowId: (row) => row.id,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
       const search = filterValue.toLowerCase();
@@ -176,7 +176,7 @@ export function DataTable<TData, TValue>({
 }
 
 export const createSortableHeader = (title: string) => {
-  const SortableHeader = ({ column }: { column: any }) => {
+  const SortableHeader = ({ column }: { column }) => {
     return <DataTableColumnHeader column={column} title={title} />;
   };
 

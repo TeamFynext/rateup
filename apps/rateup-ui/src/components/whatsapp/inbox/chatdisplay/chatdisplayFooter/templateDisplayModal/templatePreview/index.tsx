@@ -22,7 +22,7 @@ interface Props {
     any,
     {
       templateId: string;
-      parameterData: any;
+      parameterData;
       teamId: string;
       whatsappSettingsPhoneId: string;
     },

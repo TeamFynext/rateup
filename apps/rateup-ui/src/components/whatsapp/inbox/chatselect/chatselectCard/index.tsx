@@ -163,8 +163,8 @@ export default function WaInboxChatSelectCard({
       stats: { read: "", sent: "", failed: "", delivered: "" },
       messageId,
     };
-    messagesStore.addMessage(`${rowKey}_all`, internalMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, internalMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, internalMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, internalMessage);
     assignMut.mutate(
       {
         messageId,

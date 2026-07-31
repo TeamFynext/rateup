@@ -23,11 +23,11 @@ interface IDraggableTableProps {
   headers: TableHeader[];
   items: Array<any>;
   itemUniqueKey: string;
-  handleDragEnd: (values: any[]) => void;
+  handleDragEnd: (values: unknown[]) => void;
   editEnabled?: boolean;
   deleteEnabled?: boolean;
-  handleEdit?: (item: any) => void;
-  handleDelete?: (item: any) => void;
+  handleEdit?: (item) => void;
+  handleDelete?: (item) => void;
   withRowBorder?: boolean;
   maxHeight?: string | number;
 }

@@ -36,7 +36,7 @@ interface CustomFieldFormValues {
 }
 
 type CustomFieldFormProps = Readonly<{
-  data?: any;
+  data?;
   onSubmitCallback: () => void;
 }>;
 

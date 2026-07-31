@@ -15,7 +15,7 @@ import { SurveyType } from "@/types/enums.ts";
 interface WebsurveySelectorProps {
   onChange?: (flowId: string) => void;
   onlyPublished?: boolean;
-  form: any;
+  form;
   carousel?: string;
   index?: number;
   label?: React.ReactNode;

@@ -63,7 +63,7 @@ function ElementsList() {
     setEditingTitle(false);
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result) => {
     if (!result.destination) return;
 
     const items = screen.layout.children;
@@ -150,7 +150,7 @@ function ElementsList() {
 }
 
 interface ElementCardProps {
-  element: any;
+  element;
   index: number;
   isExpanded: boolean;
   onToggle: () => void;

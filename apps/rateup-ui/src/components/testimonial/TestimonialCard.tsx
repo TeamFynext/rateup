@@ -11,7 +11,7 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 interface TestimonialCardInterface {
   readonly testimonial: Omit<Testimonial, "teamId" | "survey">;
-  readonly currentStyle?: any;
+  readonly currentStyle?;
 }
 
 function TestimonialCard({ testimonial, currentStyle = null }: Readonly<TestimonialCardInterface>) {

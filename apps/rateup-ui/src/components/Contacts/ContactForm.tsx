@@ -39,7 +39,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
    * Custom field values live in a positional array, so editing one means finding (or
    * appending) its entry and writing the whole array back.
    */
-  const updateCustomField = (fieldId: string, value: string, customFieldData: any) => {
+  const updateCustomField = (fieldId: string, value: string, customFieldData: unknown) => {
     const current = form.getValues("customFields") ?? [];
     const existingIndex = current.findIndex((entry) => entry.fieldId === fieldId);
     const next =

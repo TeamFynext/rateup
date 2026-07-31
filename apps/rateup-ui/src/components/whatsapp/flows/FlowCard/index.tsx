@@ -48,7 +48,7 @@ interface FlowCardProps {
   status: WaFlowStatus;
   dbFlowId: string;
   createdAt: Date;
-  teamsData?: any;
+  teamsData?;
   version: number;
   category?: string;
   responseCount?: number;
@@ -77,7 +77,7 @@ function FlowCard({
     setTeamIdError("");
   });
   const cloneAndDeprecateFlowsMutation = useCloneAndDeprecateFlowsMutation();
-  const teamOptions = teamsData?.map((team: any) => ({
+  const teamOptions = teamsData?.map((team) => ({
     value: team?.id,
     label: team?.name,
   }));

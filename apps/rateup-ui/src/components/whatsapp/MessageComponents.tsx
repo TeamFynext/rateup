@@ -68,8 +68,8 @@ export function SentMessageContainer({
 interface QuickReplyButtonProps {
   text: string;
   style?: React.CSSProperties;
-  onClick?: any;
-  type?: any;
+  onClick?;
+  type?;
 }
 export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButtonProps) {
   return (

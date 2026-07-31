@@ -58,9 +58,9 @@ const CreateOrEditContactModal = ({
 }: {
   opened: boolean;
   setOpened: (value: boolean) => void;
-  initialValues?: any;
+  initialValues?;
   type?: ContactGroupType;
-  createNewContactMutation?: any;
+  createNewContactMutation?;
 }) => {
   const { t } = useTranslation();
   const { customFields = [] } = useCustomFieldsContext();

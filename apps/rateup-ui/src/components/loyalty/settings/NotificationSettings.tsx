@@ -11,7 +11,7 @@ import type { NotificationsSettingsSchema } from "./schemas.ts";
 
 interface NotificationSettingsProps {
   form: UseFormReturn<z.infer<typeof NotificationsSettingsSchema>>;
-  onSave: (updates: any) => void;
+  onSave: (updates) => void;
   disabled?: boolean;
 }
 

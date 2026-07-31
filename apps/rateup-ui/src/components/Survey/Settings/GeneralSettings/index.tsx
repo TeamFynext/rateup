@@ -84,7 +84,7 @@ const GeneralSettings = ({
       reset({
         title: survey.title || "",
         languages: survey.languages || [],
-        teams: survey.teams?.map((t: any) => t?.id) || [],
+        teams: survey.teams?.map((t) => t?.id) || [],
         sendWeeklyReport: survey.sendWeeklyReport ?? true,
       });
     }
@@ -117,7 +117,7 @@ const GeneralSettings = ({
           onKeyDown={(e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "s") {
               e.preventDefault();
-              handleSubmit(onSubmit)(e as any);
+              handleSubmit(onSubmit)(e);
             }
           }}
           className="flex flex-col gap-4"

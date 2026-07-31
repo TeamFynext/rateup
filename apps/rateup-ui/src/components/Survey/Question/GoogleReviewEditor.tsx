@@ -58,7 +58,7 @@ const GoogleReviewEditor = ({
     selectedQ?.googleReview?.reqOptions || ["VeryHappy", "Happy"],
   );
 
-  const updateGoogleReview = (googleReview: any) => {
+  const updateGoogleReview = (googleReview) => {
     if (selectedQ) setSelectedQ({ ...selectedQ, googleReview });
   };
   const { t: translations } = useTranslation();
@@ -143,7 +143,7 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const handleError = (error: unknown) => {
+  const handleError = (error) => {
     console.error("Failed to update", error);
     toast.error(
       `${translations("Failed to update.. try again. Error:")} ${getApiErrorMessage(error)}`,

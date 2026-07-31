@@ -93,8 +93,8 @@ interface StoreState {
   deleteComponentFromScreen: (feId: string) => void;
   /** The Google review step configured for the flow, if any. */
   googleReview?: GoogleReview;
-  ticketIssued: any[];
-  setTicketIssued: (ticketIssued: any[]) => void;
+  ticketIssued: unknown[];
+  setTicketIssued: (ticketIssued: unknown[]) => void;
   getLogicJumps: (screenId: string) => Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
   updateLogicJumps: (
     screenId: string,
@@ -141,7 +141,7 @@ const useFlowStoreV3 = create<StoreState>()(
                   ? `field_${Math.random().toString(36).substring(2, 10)}`
                   : child.name;
 
-              const result: any = {
+              const result = {
                 ...child,
                 type: mappedType as QuestionType2,
                 ...(name && !isNonInteractive && { name }),

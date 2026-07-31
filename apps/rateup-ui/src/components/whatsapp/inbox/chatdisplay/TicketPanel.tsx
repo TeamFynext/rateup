@@ -48,7 +48,7 @@ import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
 
 interface TicketPanelProps {
-  contact: any;
+  contact;
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
@@ -287,8 +287,8 @@ export default function TicketPanel({
       messageId,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
 
     spamMutation.mutate(
       { contactId: contact.id, isSpam: next, messageId },

@@ -18,11 +18,11 @@ export function AuditLogs() {
   const params = useMemo(() => ({ pagination, sorting }), [pagination, sorting]);
   const { data, isFetched, isLoading, isError, error } = useUserAuditLogs(params);
 
-  const handlePaginationChange = useCallback((updater: any) => {
+  const handlePaginationChange = useCallback((updater) => {
     setPagination(updater);
   }, []);
 
-  const handleSortingChange = useCallback((updater: any) => {
+  const handleSortingChange = useCallback((updater) => {
     setSorting(updater);
   }, []);
 

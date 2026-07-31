@@ -23,7 +23,7 @@ export default function WaTemplateFormElements(props: Props) {
     (
       component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
       component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT",
-      component_data: any,
+      component_data: unknown,
     ) => {
       switch (component_type) {
         case "HEADER":

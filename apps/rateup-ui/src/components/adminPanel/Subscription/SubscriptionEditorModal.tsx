@@ -53,7 +53,7 @@ export function SubscriptionEditorModal({
       toast.loading(translations("Plan is getting updated.."), {
         id: "load-data",
       });
-      const updatedData: any = {
+      const updatedData = {
         id: subscription?.id,
         paymentPlanId: subscription?.paymentPlanId,
         features: values.features,

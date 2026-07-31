@@ -32,7 +32,7 @@ function makeQueryClient() {
         placeholderData: (previousData: unknown, _previousQuery: unknown) => previousData, // This will apply to all queries
         staleTime: 60 * 1000,
         gcTime: 600 * 1000,
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: unknown) => {
           // Don't retry for certain error responses
           const serverError = error?.response?.data;
           if (error?.response?.status === 401 || serverError?.message === "Not authorized") {

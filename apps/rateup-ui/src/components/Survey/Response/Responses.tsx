@@ -42,7 +42,7 @@ import { useSurveyResponseColumns } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
-const Responses = ({ survey, defaultLanguage, questions }: any) => {
+const Responses = ({ survey, defaultLanguage, questions }: unknown) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -116,7 +116,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
 
   const { data: CFData, isLoading: CFLoading } = useCampaignFilterForFlows(surveyId);
   const hasContactQuestion = useMemo(
-    () => questions.find((q: any) => q.type === QuestionType.Contact),
+    () => questions.find((q) => q.type === QuestionType.Contact),
     [questions],
   );
   const exportContactMutation = useExportContactResponses(surveyId);
@@ -177,8 +177,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
     }
   };
   const filteredQuestions = useMemo(
-    () =>
-      questions.filter((q: any) => q.type !== QuestionType.InfoMessage && !(q.type in PageType)),
+    () => questions.filter((q) => q.type !== QuestionType.InfoMessage && !(q.type in PageType)),
     [questions],
   );
 
@@ -310,8 +309,8 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
       <DataTable
         data={responseData ? responseData?.responses : []}
         columns={
-          responseData?.responses?.every((row: any) => !row.tag)
-            ? columns?.filter((col: any) => col.accessorKey !== "tag")
+          responseData?.responses?.every((row) => !row.tag)
+            ? columns?.filter((col) => col.accessorKey !== "tag")
             : columns
         }
         serverSide={{

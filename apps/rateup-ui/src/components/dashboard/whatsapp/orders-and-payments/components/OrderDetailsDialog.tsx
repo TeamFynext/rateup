@@ -89,8 +89,8 @@ export default function OrderDetailsDialog({
       const fulfillments: ShopifyFulfillmentOrder[] = response.data || [];
       setFulfillmentOrders(fulfillments);
       const initialQtys: Record<string, number> = {};
-      response.data?.forEach((fo: any) => {
-        fo.lineItems?.nodes?.forEach((item: any) => {
+      response.data?.forEach((fo) => {
+        fo.lineItems?.nodes?.forEach((item) => {
           if (item.remainingQuantity > 0) {
             initialQtys[item.id] = item.remainingQuantity;
           }
@@ -130,7 +130,7 @@ export default function OrderDetailsDialog({
 
     setSubmittingFulfillment(true);
     try {
-      const payload: any = {
+      const payload = {
         lineItemsByFulfillmentOrder: [
           {
             fulfillmentOrderId,
@@ -228,7 +228,7 @@ export default function OrderDetailsDialog({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((item: any, idx: number) => {
+              {products.map((item, idx: number) => {
                 const price = parseFloat(item.price ?? "0") || 0;
                 const qty = parseInt(item.quantity ?? "1") || 1;
                 return (
@@ -258,7 +258,7 @@ export default function OrderDetailsDialog({
                         {Object.entries(item).map(([k, v]) => {
                           if (EXCLUDED_KEYS.has(k)) return null;
                           if (k === "additional_variant_attributes" && typeof v === "object" && v) {
-                            return Object.entries(v as any).map(([kk, vv]) => (
+                            return Object.entries(v).map(([kk, vv]) => (
                               <span key={kk} className="capitalize">
                                 {kk.replace(/_/g, " ")}: {String(vv)}
                               </span>

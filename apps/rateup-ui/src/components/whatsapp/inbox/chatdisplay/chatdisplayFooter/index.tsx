@@ -90,7 +90,7 @@ function countEditorCharacters(content: unknown): number {
   if (!content) return 0;
   if (typeof content === "string") return content.length;
   let count = 0;
-  const walk = (node: any) => {
+  const walk = (node) => {
     if (!node) return;
     if (node.type === "text" && typeof node.text === "string") count += node.text.length;
     if (Array.isArray(node.content)) node.content.forEach(walk);
@@ -361,8 +361,8 @@ export default function WaInboxChatDisplayFooter({
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
 
     createPrivateMessage.mutate(
       {
@@ -453,7 +453,7 @@ export default function WaInboxChatDisplayFooter({
       <div className="flex flex-col gap-2">
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as any)}
+          onValueChange={(v) => setActiveTab(v)}
           className="bg-white p-1.5 dark:bg-transparent sm:p-2"
         >
           {/* One line, always: the tabs give up width (the note tab shortens its
@@ -673,8 +673,8 @@ export const WaInboxAssignUserFooter = ({
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
     assignMut.mutate(
       {
         messageId: id,
@@ -696,8 +696,8 @@ export const WaInboxAssignUserFooter = ({
           if (assignedRowKey && assignedRowKey !== rowKey) {
             messagesStore.removeMessage(`${rowKey}_all`, id);
             messagesStore.removeMessage(`${rowKey}_internal`, id);
-            messagesStore.addMessage(`${assignedRowKey}_all`, newMessage as any);
-            messagesStore.addMessage(`${assignedRowKey}_internal`, newMessage as any);
+            messagesStore.addMessage(`${assignedRowKey}_all`, newMessage);
+            messagesStore.addMessage(`${assignedRowKey}_internal`, newMessage);
           }
           updateContactById(assignedRowKey ?? contactId, (contact) => ({
             ...contact,

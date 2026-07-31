@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 
 interface MotionTransitionProps {
-  keyValue: any;
+  keyValue;
   type?: "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut";
   apEnable?: boolean;
   duration?: number;

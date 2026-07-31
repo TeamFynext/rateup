@@ -50,7 +50,7 @@ import StatePagination from "./CampaignContactPagination.tsx";
 
 interface AddParticipantModalProps {
   close: () => void;
-  campaign: any;
+  campaign;
   campaignType: string;
 }
 
@@ -520,7 +520,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 };
 
 interface IndividualProps {
-  customer: any;
+  customer;
   selectedContacts: ContactsData[];
   setSelectedContacts: (contacts: ContactsData[]) => void;
   isAlreadySelected?: boolean;
@@ -572,7 +572,7 @@ const Individual = ({
 };
 
 interface CustomerGroupProps {
-  group: any;
+  group;
   selectedGroups: ContactGroup[];
   setSelectedGroups: (groups: ContactGroup[]) => void;
   isAlreadySelected?: boolean;
@@ -628,7 +628,7 @@ const CustomerGroup = ({
 };
 
 interface CustomerCampaignProps {
-  campaign: any;
+  campaign;
   selectedCampaigns: Campaign[];
   setSelectedCampaigns: (campaigns: Campaign[]) => void;
 }

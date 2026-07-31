@@ -54,7 +54,7 @@ export function createWaExtensions({
   enableMention = false,
   mentionUsersRef,
 }: WaExtensionOptions = {}) {
-  const ext: any[] = [
+  const ext: unknown[] = [
     StarterKit.configure({ link: false }),
     Placeholder.configure({ placeholder }),
     CharacterCount.configure({ limit: max }),

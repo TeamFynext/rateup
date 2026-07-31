@@ -139,8 +139,8 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
     return {
       id,
       rollback: () => {

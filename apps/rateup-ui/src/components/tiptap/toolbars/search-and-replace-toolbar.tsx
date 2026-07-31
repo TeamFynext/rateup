@@ -28,7 +28,7 @@ export function SearchAndReplaceToolbar() {
 
   // Only present when the SearchAndReplace extension is registered on the editor,
   // and not every editor mounting this toolbar registers it.
-  const storage = (editor?.storage as any)?.searchAndReplace as SearchAndReplaceStorage | undefined;
+  const storage = editor?.storage?.searchAndReplace as SearchAndReplaceStorage | undefined;
   const results = storage?.results;
   const selectedResult = storage?.selectedResult;
 

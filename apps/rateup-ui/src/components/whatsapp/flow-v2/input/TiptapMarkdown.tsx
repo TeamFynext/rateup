@@ -191,13 +191,13 @@ function TiptapMarkdown({
     ],
     onUpdate: ({ editor }) => {
       isUpdatingFromEditor.current = true;
-      onChange?.((editor.storage as any).markdown.getMarkdown());
+      onChange?.(editor.storage.markdown.getMarkdown());
       setTimeout(() => {
         isUpdatingFromEditor.current = false;
       }, 0);
     },
     onBlur: ({ editor }) => {
-      onChange?.((editor.storage as any).markdown.getMarkdown());
+      onChange?.(editor.storage.markdown.getMarkdown());
     },
     editorProps: {
       attributes: {
@@ -207,7 +207,7 @@ function TiptapMarkdown({
   });
   useEffect(() => {
     if (editor && !isUpdatingFromEditor.current) {
-      const currentMarkdown = (editor.storage as any).markdown.getMarkdown();
+      const currentMarkdown = editor.storage.markdown.getMarkdown();
       // Only update content from props if it differs from editor content
       // and either the editor is NOT focused (external update)
       // or the content is completely different (reset/change)

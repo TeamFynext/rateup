@@ -83,7 +83,7 @@ function Page() {
     const filtered = webSurveys.filter((survey) => {
       const matchesSearch = !searchValue || survey.title.toLowerCase().includes(searchValue);
       const matchesTeam =
-        selectedTeamId === "all" || survey.teams?.some((team: any) => team.id === selectedTeamId);
+        selectedTeamId === "all" || survey.teams?.some((team) => team.id === selectedTeamId);
       const matchesFilter =
         filterParam === "all" ||
         (filterParam === "active" && survey.active) ||

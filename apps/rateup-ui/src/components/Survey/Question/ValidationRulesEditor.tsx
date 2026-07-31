@@ -169,7 +169,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     }
   }, [activeTab]);
 
-  const updateValidationRules = (validationRules: any) => {
+  const updateValidationRules = (validationRules) => {
     if (selectedQ) setSelectedQ({ ...selectedQ, validationRules });
   };
 
@@ -309,7 +309,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     );
     const [ruleErrors, setRuleErrors] = useState<Record<string, string>>({});
 
-    const setRuleField = (name: string, value: any) => {
+    const setRuleField = (name: string, value: unknown) => {
       setRuleValues((prev) => ({ ...prev!, [name]: value }));
     };
 

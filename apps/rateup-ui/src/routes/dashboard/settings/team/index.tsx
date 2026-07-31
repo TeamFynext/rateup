@@ -140,9 +140,9 @@ function Team() {
     refetch: refetchTeams,
   } = useTeamsByUser() as {
     isLoading: boolean;
-    error: any;
+    error;
     data: TeamsResponse;
-    refetch: any;
+    refetch;
   };
   const getDefaultColor = () => {
     if (!teamsData?.data) {

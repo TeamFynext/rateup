@@ -165,7 +165,7 @@ export function Column({
       return;
     }
 
-    const payload: any = {
+    const payload = {
       title: newCard.title,
       ticketColumnId: newCard.columnId || column.id,
       type: TicketType.CUSTOM,
@@ -503,11 +503,11 @@ export function Column({
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t("Select a column")}>
-                  {board?.ticketColumns?.find((c: any) => c.id === newCard.columnId)?.title}
+                  {board?.ticketColumns?.find((c) => c.id === newCard.columnId)?.title}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {board?.ticketColumns?.map((c: any) => (
+                {board?.ticketColumns?.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.title}
                   </SelectItem>

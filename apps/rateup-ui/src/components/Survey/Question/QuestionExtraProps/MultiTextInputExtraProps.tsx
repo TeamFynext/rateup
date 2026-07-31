@@ -48,7 +48,7 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
     defaultValues: { fieldKey: "", placeholderText: "" },
   });
 
-  const handleDragEnd = (values: any[]) => {
+  const handleDragEnd = (values: unknown[]) => {
     form.setFieldValue?.("features", {
       ...form.values?.features,
       [selectedLanguage]: { ...features, fields: values },
@@ -56,7 +56,7 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
   };
 
   const addField = handleSubmit((values) => {
-    const existingFields: any[] = form.values?.features?.[selectedLanguage]?.fields ?? [];
+    const existingFields: unknown[] = form.values?.features?.[selectedLanguage]?.fields ?? [];
     if (existingFields.find((f) => f.fieldKey === values.fieldKey)) return;
     form.setFieldValue?.("features", {
       ...form.values?.features,
@@ -79,13 +79,13 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
     setOpenedEditModal(false);
   };
 
-  const handleEdit = (field: any) => {
+  const handleEdit = (field) => {
     setDisplayText(field?.placeholderText);
     setSelectedField(field);
     setOpenedEditModal(true);
   };
 
-  const handleDelete = (field: any) => {
+  const handleDelete = (field) => {
     form.setFieldValue?.("features", {
       ...form.values?.features,
       [selectedLanguage]: {

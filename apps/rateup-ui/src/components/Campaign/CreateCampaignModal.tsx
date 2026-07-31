@@ -299,7 +299,7 @@ const CreateCampaignModal = ({
   const handleNext = async () => {
     const fieldsToValidate = isEdit ? ["name"] : ["teamId", "name"];
 
-    const isValid = await form.trigger(fieldsToValidate as any);
+    const isValid = await form.trigger(fieldsToValidate);
 
     if (isValid) {
       setActiveTab("templates");

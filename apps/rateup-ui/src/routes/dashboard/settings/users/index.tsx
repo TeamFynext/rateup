@@ -102,7 +102,7 @@ interface SelectedUser {
   phone?: string;
   gender?: string;
   role?: string;
-  teams?: any[];
+  teams?: unknown[];
   status?: string;
   profilePhoto?: string;
   isPaused?: boolean;
@@ -575,7 +575,7 @@ function UsersPage() {
               {translations("Active Members")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
-              {filteredMembers?.map((member: any) => (
+              {filteredMembers?.map((member) => (
                 <Card key={member.id} className="p-3 group relative">
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <div className="relative mb-2">
@@ -612,7 +612,7 @@ function UsersPage() {
                               ? "Not in any team"
                               : member.teams
                                   .slice(0, 2)
-                                  .map((t: any) => t.team_name)
+                                  .map((t) => t.team_name)
                                   .join(", ")}
                             {member.teams.length > 2 ? "..." : ""}
                           </span>
@@ -620,7 +620,7 @@ function UsersPage() {
 
                         <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-52">
                           <div className="flex flex-col gap-1">
-                            {member.teams.map((t: any) => (
+                            {member.teams.map((t) => (
                               <div key={t.id} className="flex items-center gap-2">
                                 <span
                                   className="w-2 h-2 rounded-full"
@@ -663,7 +663,7 @@ function UsersPage() {
               {translations("Pending Invitations")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full">
-              {filteredInvitations?.map((invite: any) => (
+              {filteredInvitations?.map((invite) => (
                 <Card
                   key={invite.id}
                   className="p-3 border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
@@ -697,7 +697,7 @@ function UsersPage() {
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
                       <Users className="w-3 h-3" />
                       <span className="line-clamp-1">
-                        {invite.teams.map((t: any) => t.team_name).join(", ")}
+                        {invite.teams.map((t) => t.team_name).join(", ")}
                       </span>
                     </div>
 
@@ -794,7 +794,7 @@ function EditMember({
     setEditableGender(selectedUser.gender || "");
     setSelectedTeamIds(
       (selectedUser.teams || [])
-        .map((team: any) => team?.id || team?.team_id || team?.teamId)
+        .map((team) => team?.id || team?.team_id || team?.teamId)
         .filter(Boolean),
     );
   }, [selectedUser]);

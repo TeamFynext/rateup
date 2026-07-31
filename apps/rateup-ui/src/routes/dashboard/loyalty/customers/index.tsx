@@ -73,7 +73,7 @@ interface CustomerDetails {
     phone: string;
     source: string;
     orgId: string;
-    tags: any;
+    tags;
     consent: boolean;
     email: string;
     dob: string | null;
@@ -89,14 +89,14 @@ interface CustomerDetails {
     profilePic: string | null;
     followerCount: number | null;
     isIgVerifiedUser: boolean | null;
-    other: any | null;
+    other: unknown | null;
     lifecycleId: string;
     closedAt: string | null;
     closedBy: string | null;
-    lastMessageBody: any;
+    lastMessageBody;
     lastMessageWaCreatedAt: string;
     lastMessagePlatform: string;
-    lastReceivedMetadata: any | null;
+    lastReceivedMetadata: unknown | null;
     lastMessageSourceIdentifier: string;
     lastSentMessageTimeStamp: string;
     notes: string | null;
@@ -278,7 +278,7 @@ function CustomerPage() {
     },
   ];
 
-  const handleViewCustomer = (customer: any) => {
+  const handleViewCustomer = (customer) => {
     setSelectedCustomer(customer);
     setSelectedCustomerId(customer.id);
     setViewMode("details");

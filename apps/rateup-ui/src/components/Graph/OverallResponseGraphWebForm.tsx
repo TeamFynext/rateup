@@ -143,13 +143,13 @@ const CustomTooltip = ({
   label,
   timePeriod,
 }: {
-  active?: any;
-  payload?: any;
-  label?: any;
-  timePeriod?: any;
+  active?;
+  payload?;
+  label?;
+  timePeriod?;
 }) => {
   if (active && payload && payload.length) {
-    const d = payload.find((p: any) => p.dataKey === "date")?.payload || payload[0].payload;
+    const d = payload.find((p) => p.dataKey === "date")?.payload || payload[0].payload;
 
     const labelFormatted =
       timePeriod === "hourly"

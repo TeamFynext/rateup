@@ -109,7 +109,7 @@ export function FlowTextDetailedView() {
         <div className="flex justify-between">
           <Select
             value={nonInputTextType}
-            onValueChange={(v) => setNonInputTextType(v as any)}
+            onValueChange={(v) => setNonInputTextType(v)}
             items={TEXT_TYPE_OPTIONS(translations)}
           >
             <SelectTrigger>

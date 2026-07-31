@@ -68,7 +68,7 @@ const RazorpayPlans = () => {
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
 
-  const handleUpdatePlans = (updatedData: any) => {
+  const handleUpdatePlans = (updatedData) => {
     planUpdateMutate.mutate(updatedData);
   };
 

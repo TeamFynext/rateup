@@ -20,7 +20,7 @@ interface TeamSelectorProps {
   disabled?: boolean;
   name?: string;
   /** Extra props from legacy call sites (Mantine layout/select props) are ignored. */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 export function TeamSelector({
   value,

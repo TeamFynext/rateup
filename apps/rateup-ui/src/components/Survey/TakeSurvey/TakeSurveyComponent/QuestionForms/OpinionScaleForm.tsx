@@ -17,7 +17,7 @@ import styles from "./OpinionScaleForm.module.css";
 
 const cx = classNames.bind(styles);
 interface iProps {
-  initValue?: any;
+  initValue?;
 }
 export function OpinionScaleForm({ initValue }: iProps) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);

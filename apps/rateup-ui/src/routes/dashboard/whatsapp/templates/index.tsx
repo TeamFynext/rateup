@@ -414,7 +414,7 @@ function TemplatePicker({ templates, translations, onSelect }: Readonly<Template
               <div className="flex items-center justify-between mt-auto pt-1">
                 {tpl.buttons && tpl.buttons.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
-                    {tpl.buttons.map((btn: any, i: number) => (
+                    {tpl.buttons.map((btn, i: number) => (
                       <span
                         key={i}
                         className="rounded-md bg-primary/8 px-1.5 py-0.5 text-[10px] font-medium text-primary border border-primary/15"
@@ -467,7 +467,7 @@ function Template() {
       const refetchResult = await refetch();
       const updatedTemplates = [...(refetchResult.data || [])];
 
-      updatedTemplates.sort((a: any, b: any) => {
+      updatedTemplates.sort((a: unknown, b: unknown) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 

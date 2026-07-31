@@ -15,6 +15,7 @@ import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { parseTemplate } from "@/utils/whatsapp/templates.tsx";
 
+import type { NodeFields } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
 
 function formatTime(ts: number) {
@@ -51,45 +52,8 @@ type MediaInfo =
   | { kind: "audio"; src: string }
   | { kind: "document"; src: string; filename?: string; caption?: string };
 
-/**
- * The node fields this preview renders. Every flowbot node contributes a few,
- * so it reads a structural view of `NodeData` (see node-validation's
- * ValidatedNodeData for the validator's equivalent).
- */
-interface PreviewNodeData {
-  label?: string;
-  body?: string;
-  text?: string;
-  caption?: string;
-  link?: string;
-  filename?: string;
-  question?: string;
-  startMessage?: string;
-  endMessage?: string;
-  duration?: number;
-  unit?: "seconds" | "minutes" | "hours";
-  buttons?: Array<{ id?: string; title?: string; text?: string; label?: string }>;
-  sections?: Array<{
-    title?: string;
-    rows?: Array<{ id?: string; title?: string; text?: string; description?: string }>;
-  }>;
-  quick_replies?: Array<{
-    id?: string;
-    payload?: string;
-    title?: string;
-    text?: string;
-    label?: string;
-  }>;
-  template?: { id?: string };
-  flow?: { id?: string; name?: string };
-  headerType?: string;
-  footer?: string;
-  display_text?: string;
-  url?: string;
-}
-
 function getNodeMedia(node: TypedNode | null | undefined): MediaInfo | null {
-  const data: PreviewNodeData | undefined = node?.data;
+  const data: NodeFields | undefined = node?.data;
   if (!data?.link) return null;
   // Same resolution image-node.tsx uses on the canvas: data.link is a stored file key, not a URL.
   const src = getFileUrlFromKey(data.link) || "/placeholder.svg";
@@ -110,7 +74,7 @@ function getNodeMedia(node: TypedNode | null | undefined): MediaInfo | null {
 // Real pause durations would be unusable in a live preview, so the wait is clamped to a
 // short, perceptible delay instead of literally waiting minutes/hours.
 function getPauseDelayMs(node: TypedNode): number {
-  const data: PreviewNodeData | undefined = node?.data;
+  const data: NodeFields | undefined = node?.data;
   const duration = Number(data?.duration) || 0;
   const unit = data?.unit ?? "seconds";
   const multiplier = unit === "hours" ? 3600 : unit === "minutes" ? 60 : 1;
@@ -263,7 +227,7 @@ interface NodeOption {
 // Returns the raw body, which for several node types (text/button/list/cta) is a TipTap
 // rich-text JSON object rather than a plain string — must go through parseJsonToReact.
 function getNodeBody(node: TypedNode | null | undefined): string | TiptapNode {
-  const data: PreviewNodeData | undefined = node?.data;
+  const data: NodeFields | undefined = node?.data;
   if (!data) return "";
   return (
     data.body ||
@@ -277,7 +241,7 @@ function getNodeBody(node: TypedNode | null | undefined): string | TiptapNode {
 }
 
 function getNodeOptions(node: TypedNode | null | undefined): NodeOption[] {
-  const data: PreviewNodeData | undefined = node?.data;
+  const data: NodeFields | undefined = node?.data;
   if (!data) return [];
   if (Array.isArray(data.buttons) && data.buttons.length > 0) {
     return data.buttons.map((b, i: number) => ({
@@ -474,7 +438,7 @@ export function FlowbotPreviewPlayground({
           }
 
           const node = nodesById.get(entry.nodeId) as TypedNode | undefined;
-          const data: PreviewNodeData | undefined = node?.data;
+          const data: NodeFields | undefined = node?.data;
 
           if (node?.type === "templateNode") {
             return (

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils.ts";
 
 import classes from "../../TakeSurvey.module.css";
 
-export default function FormPaperLayout(props: any) {
+export default function FormPaperLayout(props: unknown) {
   return (
     <div
       {...props}

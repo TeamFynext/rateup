@@ -30,9 +30,9 @@ interface ContactStore {
   opened: boolean;
   open: () => void;
   close: () => void;
-  selectedTicket: any;
-  setSelectedTicket: (ticket: any) => void;
-  setTicketAndOpen: (ticket: any) => void;
+  selectedTicket;
+  setSelectedTicket: (ticket) => void;
+  setTicketAndOpen: (ticket) => void;
   filterData: string | null;
   setFilterData: (value: string) => void;
 }
@@ -921,7 +921,7 @@ export const useMessagesStore = create<MessagesStore>()(
 
         const existing = new Map(entry.messages.map((x) => [x.messageId ?? x.id, x]));
 
-        const changedOrNew: any[] = [];
+        const changedOrNew: unknown[] = [];
 
         for (const msg of messages) {
           const id = msg.messageId ?? msg.id;

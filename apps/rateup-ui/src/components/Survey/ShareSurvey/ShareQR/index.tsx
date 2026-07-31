@@ -19,7 +19,7 @@ import {
 
 interface ShareQRProps {
   url: string;
-  sx?: any;
+  sx?;
   title: string;
   isPublished: boolean;
   id?: string;

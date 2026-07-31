@@ -129,7 +129,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         input.files = dataTransfer.files;
-        handleFileChange({ target: input } as any);
+        handleFileChange({ target: input });
       }
     }
   };
@@ -179,7 +179,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
               </Button>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="upload">
                   <Upload className="mr-2 h-4 w-4" />

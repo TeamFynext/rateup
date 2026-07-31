@@ -117,7 +117,7 @@ function FlowPage() {
               ?.filter((data) => Object.values(QuestionType).includes(data.type as QuestionType))
               .forEach((newQ) => {
                 const newElement = {
-                  type: newQ.type as any,
+                  type: newQ.type,
                   name: newQ.id,
                   id: newQ.id,
                   label: newQ.label,
@@ -125,7 +125,7 @@ function FlowPage() {
                 const screenToBeEdited = getScreenObjById(draft.screens, id)!;
                 screenToBeEdited.layout.children
                   .find((se) => se.type === "Form")!
-                  .children.push(newElement as any);
+                  .children.push(newElement);
                 updateFlowJsonNavigationAndDataPassing(draft, flow!);
               });
           }

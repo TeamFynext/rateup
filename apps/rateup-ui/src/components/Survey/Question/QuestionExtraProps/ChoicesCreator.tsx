@@ -53,7 +53,7 @@ type ChoiceFormValues = {
 };
 
 interface ChoicesCreatorProps {
-  form: any;
+  form;
   qId: string;
   maxChoiceCount?: number;
   maxCharCount?: number;
@@ -546,11 +546,11 @@ class FileConverter {
 }
 
 interface ChoiceProps {
-  choice: any;
+  choice;
   onDelete: () => void;
-  form: any;
+  form;
   index: number;
-  image?: any;
+  image?;
   buttonRef?: React.RefObject<HTMLButtonElement | null>;
   maxCharCount?: number;
   surveyType?: SurveyType;

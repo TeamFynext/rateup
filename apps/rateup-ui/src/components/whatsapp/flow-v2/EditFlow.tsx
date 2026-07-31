@@ -33,11 +33,11 @@ function EditFlowV3() {
   useEffect(() => {
     if (dbFlow) {
       // Normalize elements to ensure they have metaType
-      const normalizedScreens = (dbFlow.json.screens || []).map((screen: any) => ({
+      const normalizedScreens = (dbFlow.json.screens || []).map((screen) => ({
         ...screen,
         layout: {
           ...screen.layout,
-          children: (screen.layout.children || []).map((element: any) => ({
+          children: (screen.layout.children || []).map((element) => ({
             ...element,
             // Ensure metaType is set, fallback to type if missing
             metaType: element.metaType || element.type,
@@ -45,7 +45,7 @@ function EditFlowV3() {
         },
       }));
 
-      addScreens(normalizedScreens as any);
+      addScreens(normalizedScreens);
       if (currentScreenId) {
         const screenExists = getScreens().some((screen) => screen.id === currentScreenId);
         if (!screenExists) {
@@ -85,7 +85,7 @@ function EditFlowV3() {
             dbFlowId,
             data: {
               json: {
-                screens: getScreens() as any,
+                screens: getScreens(),
                 version: "7.2",
               },
               logicJumps: logicJumpsChanged ? logicJumps : undefined,

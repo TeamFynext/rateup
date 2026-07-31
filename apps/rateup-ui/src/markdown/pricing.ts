@@ -1,12 +1,15 @@
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
+
 // src/routes/(marketing)/_markdown/pricing.ts
 
-function formatPrice(amount?: number, currency?: string, period?: string) {
-  if (!amount) return "Custom Pricing";
+function formatPrice(amount?: string | number, currency?: string, period?: string) {
+  const value = Number(amount);
+  if (!value) return "Custom Pricing";
 
-  return `${currency || "INR"} ${(amount / 100).toLocaleString()} / ${period || "plan"}`;
+  return `${currency || "INR"} ${(value / 100).toLocaleString()} / ${period || "plan"}`;
 }
 
-function getPlanHighlights(plan: any) {
+function getPlanHighlights(plan: RateupPaymentPlan) {
   const features = plan.features || {};
 
   return [
@@ -33,7 +36,7 @@ function getPlanHighlights(plan: any) {
   ].filter(Boolean);
 }
 
-export function buildPricingMarkdown(plans: any[]) {
+export function buildPricingMarkdown(plans: RateupPaymentPlan[]) {
   return `
 # RateUp Pricing
 
@@ -67,7 +70,7 @@ Businesses use RateUp to:
 ## Available Pricing Plans
 
 ${plans
-  .map((plan: any) => {
+  .map((plan) => {
     const payment = plan.paymentPlan;
     const description = Array.isArray(plan.description)
       ? plan.description.map((item: string) => `- ${item}`).join("\n")

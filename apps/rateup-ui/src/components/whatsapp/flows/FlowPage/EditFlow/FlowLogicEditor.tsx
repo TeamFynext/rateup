@@ -52,7 +52,7 @@ interface SelectOption {
 }
 
 /** Normalises the `string[] | {label,value}[]` shapes the logic utils return. */
-const toOptions = (data: any[]): SelectOption[] =>
+const toOptions = (data: unknown[]): SelectOption[] =>
   (data ?? []).map((d) => (typeof d === "string" ? { label: d, value: d } : d));
 
 /** Labelled shadcn Select used throughout the logic editor. */
@@ -65,7 +65,7 @@ function SelectField({
   className,
 }: Readonly<{
   label?: string;
-  data: any[];
+  data: unknown[];
   value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -170,11 +170,11 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
 
   const handleSave = () => {
     const updatedLogicJumps = {
-      ...((Object.fromEntries(
+      ...(Object.fromEntries(
         Object.entries(dbFlow?.logicJumps ?? {}).filter(([k, _v]) => {
           return k !== selectedScreenId;
         }),
-      ) || {}) as any),
+      ) || {}),
       [selectedScreenId]: [...logicJumps, ...componentLeventLogicJumps],
     };
 
@@ -183,7 +183,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
       data: {
         logicJumps: Object.fromEntries(
           Object.entries(updatedLogicJumps).filter(([, v]) => (v as unknown[]).length > 0),
-        ) as any,
+        ),
       },
     });
   };
@@ -314,7 +314,7 @@ function AtomicConditionBlock({
               : getConditions(selectedQ.type as QuestionType)
           }
           value={selectedCondition}
-          onChange={setSelectedCondition as any}
+          onChange={setSelectedCondition}
         />
 
         {/* Match Data */}
@@ -475,13 +475,13 @@ function ConditionsActionMapBlock<T extends FlowLogicJump | FlowLogicJumpCompone
                 label="Success Action"
                 data={possibleActionsComponentLevel}
                 value={selectedActionSuccess}
-                onChange={setSelectedActionSuccess as any}
+                onChange={setSelectedActionSuccess}
               />
               <SelectField
                 label="Fail Action"
                 data={possibleActionsComponentLevel}
                 value={selectedActionFail}
-                onChange={setSelectedActionFail as any}
+                onChange={setSelectedActionFail}
               />
             </div>
           ) : (
@@ -489,7 +489,7 @@ function ConditionsActionMapBlock<T extends FlowLogicJump | FlowLogicJumpCompone
               label={translations("Action")}
               data={possibleActions}
               value={selectedAction as LogicAction}
-              onChange={setSelectedAction as any}
+              onChange={setSelectedAction}
             />
           )}
         </div>

@@ -211,7 +211,7 @@ function FlowImagePreview({ src, width, height }: FlowImagePreviewProps) {
   );
 }
 
-function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe: any }) {
+function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe }) {
   return (
     <div>
       <p>{label}</p>
@@ -267,7 +267,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return (
         <FlowTextPreview
           text={fe.text}
-          type={fe.type as any}
+          type={fe.type}
           fontWeight={fe["font-weight"]}
           strikethrough={fe.strikethrough}
         />

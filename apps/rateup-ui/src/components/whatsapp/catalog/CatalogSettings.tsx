@@ -310,7 +310,7 @@ const ProductSetsSection = ({ catalogId }: { catalogId: string }) => {
         <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
       ) : productSets && productSets.length > 0 ? (
         <div className="flex flex-col gap-3 mt-2">
-          {productSets.map((set: any) => (
+          {productSets.map((set) => (
             <div
               key={set.productSetId}
               className="flex justify-between items-center p-3 border rounded-lg bg-muted/40"

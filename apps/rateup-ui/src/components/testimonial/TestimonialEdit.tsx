@@ -51,7 +51,7 @@ const TestimonialEdit = ({
       testimonials,
       result.source.index,
       result.destination?.index || 0,
-    ) as any;
+    );
     setFilters?.({ date: null, rating: null, length: null, surveys: [], teams: [] });
     updateCollection.mutate({
       data: { testimonialIds: reorderedTestimonials.map((t: Testimonial) => t.id) },

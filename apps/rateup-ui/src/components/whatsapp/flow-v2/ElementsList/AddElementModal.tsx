@@ -166,7 +166,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     if (
       type === QuestionType2.ImageCarousel &&
-      formElementChildren.filter((c) => c.type === ("ImageCarousel" as any)).length >= 2
+      formElementChildren.filter((c) => c.type === "ImageCarousel").length >= 2
     ) {
       toast.error(translations("Maximum of 2 ImageCarousel components allowed per screen"), {
         id: "error-max-screen-elements",
@@ -178,7 +178,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
       type === QuestionType2.ImageCarousel &&
       getScreens()
         .flatMap((screen) => screen.layout.children)
-        .filter((child) => child.type === ("ImageCarousel" as any)).length >= 3
+        .filter((child) => child.type === "ImageCarousel").length >= 3
     ) {
       toast.error(translations("Maximum of 3 ImageCarousel components allowed per flow"), {
         id: "error-max-screen-elements",
@@ -191,7 +191,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
     const metaType = Object.keys(QuestionType2).find(
       (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
     );
-    const newElement: any = {
+    const newElement = {
       id,
       type,
       metaType,

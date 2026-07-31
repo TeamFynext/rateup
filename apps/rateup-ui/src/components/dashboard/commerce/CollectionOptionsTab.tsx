@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
  * Shopify's hosted checkout collects address and delivery on the Shopify store,
  * so these options don't apply to it. Every other method collects in WhatsApp.
  */
-function isApplicable(settings: any) {
+function isApplicable(settings: unknown) {
   return !(settings?.storeType === "shopify" && settings?.paymentMethod === "shopify_checkout");
 }
 

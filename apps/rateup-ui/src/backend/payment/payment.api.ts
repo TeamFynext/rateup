@@ -30,7 +30,7 @@ export interface RateupPaymentPlan {
   stripeId: string;
   createdAt: string;
   trialDays: number;
-  features?: unknown;
+  features?: Partial<SubscriptionFeatures>;
   currency?: string;
   /** Gateway pricing, joined onto the plan by the plans endpoint. */
   paymentPlan?: {

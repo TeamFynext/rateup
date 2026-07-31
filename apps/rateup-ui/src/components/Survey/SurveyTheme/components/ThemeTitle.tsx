@@ -8,8 +8,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface ThemeTitleProps {
   value: string;
-  onChange: any;
-  styles?: any;
+  onChange;
+  styles?;
 }
 
 const ThemeTitle = ({ value, onChange, styles }: ThemeTitleProps) => {

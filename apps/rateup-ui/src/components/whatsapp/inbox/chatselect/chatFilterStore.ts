@@ -68,7 +68,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
       // clear `status`. A selection persisted from v0 would keep narrowing the
       // Open/All lists with nothing on screen to undo it, so drop it once. The
       // popover's write-only `previousFilterForTab` bucket goes with it.
-      migrate: (persisted: any, version) => {
+      migrate: (persisted: unknown, version) => {
         if (version >= 1 || !persisted) return persisted;
         const { previousFilterForTab: _dropped, ...rest } = persisted;
         return {

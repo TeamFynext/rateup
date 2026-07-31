@@ -5,8 +5,11 @@ import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
+  CouponValues,
   GiftFormValues,
+  GiftValues,
   PointRewardFormValues,
+  PointRewardValues,
 } from "@/components/dashboard/loyalty/rewards/schemas.ts";
 import { LoyaltyRewardForm } from "@/components/LoyaltyComponents/LoyaltyRewardForm.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -16,13 +19,13 @@ interface RewardFormContainerProps {
   category: string;
   onCancel: () => void;
   // Forms
-  pointRewardForm: UseFormReturn<PointRewardFormValues>;
-  couponForm: UseFormReturn<CouponFormValues>;
-  giftForm: UseFormReturn<GiftFormValues>;
+  pointRewardForm: UseFormReturn<PointRewardFormValues, unknown, PointRewardValues>;
+  couponForm: UseFormReturn<CouponFormValues, unknown, CouponValues>;
+  giftForm: UseFormReturn<GiftFormValues, unknown, GiftValues>;
   // Submit handlers
-  onSubmitPointReward: (data: PointRewardFormValues) => void;
-  onSubmitCoupon: (data: CouponFormValues) => void;
-  onSubmitGift: (data: GiftFormValues) => void;
+  onSubmitPointReward: (data: PointRewardValues) => void;
+  onSubmitCoupon: (data: CouponValues) => void;
+  onSubmitGift: (data: GiftValues) => void;
   // State
   isPending: boolean;
   editingId: string | null;

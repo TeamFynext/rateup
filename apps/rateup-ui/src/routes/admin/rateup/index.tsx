@@ -42,7 +42,7 @@ interface RateupPlanTableData {
   name: string;
   description: string[];
   displayWidgetId: string;
-  features: any;
+  features;
   planType: string;
   paymentPlanId: string;
   stripeId: string;

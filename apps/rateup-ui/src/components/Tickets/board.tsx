@@ -315,7 +315,7 @@ export function Board({
                 ticketCards: column.ticketCards.filter((card) => {
                   let matches = true;
                   if (labelFilters && labelFilters.length > 0) {
-                    if (!card.labels?.some((l: any) => labelFilters.includes(l.id))) {
+                    if (!card.labels?.some((l) => labelFilters.includes(l.id))) {
                       matches = false;
                     }
                   }

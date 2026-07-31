@@ -37,14 +37,15 @@ import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
+import type { RequestPayload } from "@/types/api.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 interface SurveyMenuProps {
   survey: Survey;
   selectedTeamId: string;
-  teamsData: any;
-  refetchSurveys: any;
+  teamsData?: TeamData[];
+  refetchSurveys?: () => void;
 }
 
 export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }: SurveyMenuProps) {
@@ -59,8 +60,8 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   const confirm = useConfirm();
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const allTeams = teamsData?.map((team: { id: string; name: string }) => team?.id);
-  const teamOptions = teamsData?.map((team: { id: string; name: string }) => ({
+  const allTeams = (teamsData ?? []).map((team) => team.id);
+  const teamOptions = (teamsData ?? []).map((team) => ({
     value: team?.id,
     label: team?.name,
   }));
@@ -123,12 +124,12 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   });
 
   const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(survey.id, data),
     onSuccess: () => {
       toast.success(translations("Survey status Updated!"), {
         id: "survey",
       });
-      refetchSurveys();
+      refetchSurveys?.();
     },
   });
 
@@ -152,7 +153,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     } else {
       await surveyDeleteMutation.mutateAsync({ id: survey?.id });
     }
-    refetchSurveys();
+    refetchSurveys?.();
   }
 
   const closeCloneModal = () => {

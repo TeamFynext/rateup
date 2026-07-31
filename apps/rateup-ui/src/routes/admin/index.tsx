@@ -37,7 +37,7 @@ function Page() {
   }: {
     title: string;
     description: string;
-    icon: any;
+    icon;
     onClick: () => void;
     gradient: string;
   }) {

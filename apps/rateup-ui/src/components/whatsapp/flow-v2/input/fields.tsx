@@ -26,9 +26,9 @@ interface BaseFieldProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  value?: any;
-  onChange?: (eventOrValue: any) => void;
-  [key: string]: any;
+  value?;
+  onChange?: (eventOrValue) => void;
+  [key: string]: unknown;
 }
 
 function Shell({

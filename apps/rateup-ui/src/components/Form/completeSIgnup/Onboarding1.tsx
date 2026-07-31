@@ -19,11 +19,11 @@ export default function OnboardingStep1({
   handleBack,
   handleNext,
 }: {
-  data: any;
-  setData: (fn: (prev: any) => any) => void;
+  data;
+  setData: (fn: (prev) => any) => void;
   currentStep: number;
-  handleNext: any;
-  handleBack: any;
+  handleNext;
+  handleBack;
 }) {
   const services = [
     {

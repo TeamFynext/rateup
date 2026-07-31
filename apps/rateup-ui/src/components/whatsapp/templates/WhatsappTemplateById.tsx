@@ -161,7 +161,7 @@ export function WhatsappTemplateById({
     });
   const registerField = (path: string) => form.register(path as FieldPath<TemplateFormValues>);
   const errorAt = (path: string) =>
-    (path.split(".").reduce<any>((node, part) => node?.[part], formErrors as any)?.message ??
+    (path.split(".").reduce<any>((node, part) => node?.[part], formErrors)?.message ??
       undefined) as string | undefined;
 
   // Only the mutations are used. The list is still rendered from the watched `values`
@@ -1172,7 +1172,7 @@ export function WhatsappTemplateById({
                       spmBtn={spmBtn}
                       btnLen={values?.buttons?.length}
                       disabled={isOrderCreate}
-                      category={values?.category as any}
+                      category={values?.category}
                     />
                     {values?.buttons?.length > 0 && (
                       <div className="flex flex-col gap-3">

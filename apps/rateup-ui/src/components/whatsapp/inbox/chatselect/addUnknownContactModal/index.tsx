@@ -141,7 +141,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
       email: values.email || undefined,
       countryCode: values.countryCode,
       lifecycleId: values.lifecycleId || undefined,
-      source: values.source as any,
+      source: values.source,
     };
 
     contactMutation.mutate(payload, {

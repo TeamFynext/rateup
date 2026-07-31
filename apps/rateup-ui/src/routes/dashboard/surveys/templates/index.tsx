@@ -47,7 +47,7 @@ function Templates() {
     backgroundColor: "#fff",
   };
 
-  const handleTemplateSelect = (template: any) => {
+  const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
     setIsTemplateDialogOpen(true);
   };
@@ -116,7 +116,7 @@ function Templates() {
           <div className="px-6 pb-6">
             {allTemplates &&
               Object.entries(allTemplates).map(([categoryName, surveys], index) => (
-                <Category key={index} categoryName={categoryName} surveys={surveys as any} />
+                <Category key={index} categoryName={categoryName} surveys={surveys} />
               ))}
           </div>
         </ListPageContent>

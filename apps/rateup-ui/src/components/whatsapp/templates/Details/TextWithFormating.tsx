@@ -42,7 +42,7 @@ export default function TextWithFormatting(text: string, examples?: string[], ca
 
 function replacePlaceholdersWithValues(inputReactContent: React.ReactNode, values: string[]) {
   // Recursive function to process each node in the React element tree
-  function processNode(node: React.ReactNode | string | number): any {
+  function processNode(node: React.ReactNode | string | number) {
     if (typeof node === "string" || typeof node === "number") {
       // If the node is a string or number, perform placeholder replacement
       let processedNode = String(node);

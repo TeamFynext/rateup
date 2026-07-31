@@ -83,14 +83,14 @@ interface LoyaltyTemplateConfig {
   waTemplateId?: string;
   content?: string | null;
   whatsappSettingsPhoneId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface LoyaltyTemplateFormValues {
   type: LoyaltyTemplateTypes;
   waTemplateId: string;
   requestMessage: string;
-  content: any;
+  content;
   responseType: WaAutomatedReplyResponseType;
   whatsappSettingsPhoneId: string;
 }
@@ -790,7 +790,7 @@ function replaceDynamicVariables({
   }, message);
 }
 
-function getPlainTextFromRichContent(content: any): string {
+function getPlainTextFromRichContent(content: unknown): string {
   if (!content) return "";
 
   if (typeof content === "string") {

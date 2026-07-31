@@ -52,7 +52,7 @@ export function FlowImageDetailedView() {
     const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl!.children[index] = form.getValues() as any;
+      formEl!.children[index] = form.getValues();
     });
   }
 

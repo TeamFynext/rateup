@@ -104,7 +104,7 @@ const UserCell = ({ user }: { user?: { name?: string } }) => (
   </div>
 );
 
-const RequestBodyCell = ({ body }: { body: any }) => (
+const RequestBodyCell = ({ body }: { body }) => (
   <div className="flex items-center gap-2">
     <Popover>
       <PopoverTrigger

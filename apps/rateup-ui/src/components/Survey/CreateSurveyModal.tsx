@@ -33,9 +33,9 @@ interface CreateSurveyModalProps {
   open: boolean;
   close: () => void;
   surveyType: "web" | "whatsapp";
-  teamsData: any;
-  template?: any;
-  setTemplate?: any;
+  teamsData;
+  template?;
+  setTemplate?;
 }
 
 interface CreateSurveyFormValues {

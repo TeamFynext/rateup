@@ -13,7 +13,7 @@ enum Size {
 
 function useEyeDropper() {
   const supported = typeof window !== "undefined" && "EyeDropper" in window;
-  const open = () => new (window as any).EyeDropper().open();
+  const open = () => new window.EyeDropper().open();
   return { supported, open };
 }
 
@@ -22,7 +22,7 @@ interface CustomColorPickerProps {
   id?: string;
   className?: string;
   value: string;
-  onChange: any;
+  onChange;
   size?: string;
   elementToBeDisplayed?: React.ReactNode;
   withoutEyedropper?: boolean;
@@ -42,7 +42,7 @@ function CustomColorPicker({
   const [isFocused, setIsFocused] = useState(false);
 
   const handleBlur = useCallback(
-    (_e: unknown) => {
+    (_e) => {
       setIsFocused(false);
       if (!value?.length) {
         handleInputChange("#000000");

@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { useConfirm } from "@/context/confirm-provider";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";
 
-export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogData: any }>) {
+export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogData }>) {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
@@ -55,7 +55,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
   useEffect(() => {
     if (waSettings && catalogData) {
       const setting = waSettings.find((s) =>
-        catalogData.connectedWaPhoneIds?.some((c: any) => c.whatsappSettingsPhoneId === s.phoneId),
+        catalogData.connectedWaPhoneIds?.some((c) => c.whatsappSettingsPhoneId === s.phoneId),
       );
       setWabaId(setting?.wabaId ?? "");
     }

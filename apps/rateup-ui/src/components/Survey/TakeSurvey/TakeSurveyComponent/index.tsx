@@ -218,7 +218,7 @@ function TakeSurvey({
     setApDirection(-1);
   };
 
-  const handleNext = (response: any) => {
+  const handleNext = (response) => {
     const currentResponse_ = response ? response : currentResponse;
     const lastQuestion = getLastQuestion(survey);
     const isLastQuestion = selectedQ?.id === lastQuestion?.id;

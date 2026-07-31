@@ -126,7 +126,7 @@ function FlowEditorContent({
           onSettled: () => {
             qc.setQueryData(
               ["waAutomatedReply", { waAutomatedReplyId: waAutomationData.id }],
-              (oldData: any) => ({
+              (oldData) => ({
                 ...oldData,
                 matchData: {
                   ...oldData.matchData,
@@ -208,7 +208,7 @@ function FlowEditorContent({
   }, [historyManager, setNodes, setEdges, updateUndoRedoState]);
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node as any);
+    setSelectedNode(node);
     setIsEditorOpen(true);
   }, []);
 
@@ -278,7 +278,7 @@ function FlowEditorContent({
 
   // Update node data when edited
   const handleNodeDataChange = useCallback(
-    (nodeId: string, newData: any) => {
+    (nodeId: string, newData: unknown) => {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
@@ -356,7 +356,7 @@ function FlowEditorContent({
       }
 
       // Check if all nodes (except start) have incoming connections
-      const nodesWithIncomingEdges = new Set(allEdges.map((edge: any) => edge.target));
+      const nodesWithIncomingEdges = new Set(allEdges.map((edge) => edge.target));
 
       const nodesWithoutIncoming = allNodes.filter(
         (node: Node) =>
@@ -422,7 +422,7 @@ function FlowEditorContent({
 
           // Normalise saved edges so every arrow/marker uses the primary colour,
           // regardless of any per-edge colour baked into older flows.
-          const normalizedEdges = flow.edges.map((edge: any) => ({
+          const normalizedEdges = flow.edges.map((edge) => ({
             ...edge,
             type: "custom",
             style: defaultEdgeOptions.style,

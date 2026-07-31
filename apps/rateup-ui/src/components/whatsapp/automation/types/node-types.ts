@@ -122,7 +122,7 @@ export interface TemplateNodeData extends BaseNodeData {
     name?: string;
   };
   teamId?: string;
-  parameters?: any[];
+  parameters?: unknown[];
 }
 
 // Reaction Node
@@ -360,6 +360,91 @@ export interface NodeTypeMap {
   instagramStoryReplyNode: InstagramStoryReplyNodeData;
   instagramProductTemplateNode: InstagramProductTemplateNodeData;
   instagramIceBreakerNode: InstagramIceBreakerNodeData;
+}
+
+/**
+ * A structural view of every node's data. The canvas card, the phone preview
+ * and the validator each read fields from several node types at once, so they
+ * work against this rather than the discriminated `NodeData` union — every
+ * member of which satisfies it.
+ */
+export interface NodeFields {
+  label?: string;
+  body?: string;
+  text?: string;
+  caption?: string;
+  header?: string;
+  headerType?: string;
+  footer?: string;
+  type?: string;
+  link?: string;
+  filename?: string;
+  url?: string;
+  display_text?: string;
+  question?: string;
+  variableName?: string;
+  startMessage?: string;
+  endMessage?: string;
+  duration?: number;
+  unit?: "seconds" | "minutes" | "hours";
+  latitude?: number | string;
+  longitude?: number | string;
+  address?: string;
+  name?: string;
+  phone?: string;
+  phoneField?: string;
+  teamId?: string;
+  fbPageId?: string;
+  pageAccessToken?: string;
+  productRetailerId?: string;
+  productSetId?: string;
+  condition?: string;
+  options?: string[];
+  button?: string;
+  buttons?: Array<{
+    id?: string;
+    title?: string;
+    text?: string;
+    label?: string;
+    type?: string;
+    payload?: string;
+  }>;
+  sections?: Array<{
+    title?: string;
+    rows?: Array<{ id?: string; title?: string; text?: string; description?: string }>;
+    productItems?: string[];
+  }>;
+  quick_replies?: Array<{ id?: string; payload?: string; title?: string; text?: string }>;
+  iceBreakers?: Array<{ question?: string }>;
+  elements?: Array<{
+    id?: string;
+    buttons?: Array<{ id?: string; payload?: string; title?: string; type?: string }>;
+  }>;
+  story_mention?: boolean;
+  contacts?: Array<{
+    name?: { formatted_name?: string; first_name?: string };
+    phones?: Array<{ phone?: string }>;
+    emails?: Array<{ email?: string }>;
+    addresses?: Array<{ street?: string; city?: string }>;
+    urls?: Array<{ url?: string }>;
+  }>;
+  template?: { id?: string; name?: string };
+  flow?: { id?: string; name?: string };
+  ad?: { id?: string; name?: string };
+  ticket?: {
+    selectedBoardId?: string;
+    selectedBoardColumnId?: string;
+    selectedBoardName?: string;
+    selectedBoardColumnName?: string;
+  };
+  assign?: {
+    assignType?: string;
+    choice?: string;
+    assignIfOnline?: boolean;
+    teamName?: string;
+    roundRobin?: boolean;
+  };
+  ts?: number | string;
 }
 
 // Node type strings as a union type

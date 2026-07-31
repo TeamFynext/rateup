@@ -50,10 +50,10 @@ function Flow() {
 
   const flowQuestions = useMemo(() => {
     if (!flow?.json?.screens) return [];
-    return flow.json.screens.flatMap((screen: any) =>
+    return flow.json.screens.flatMap((screen) =>
       screen.layout.children
-        .filter((child: any) => child.type !== "Footer")
-        .map(({ id, label, metaType, name, "data-source": dataSource, header }: any) => ({
+        .filter((child) => child.type !== "Footer")
+        .map(({ id, label, metaType, name, "data-source": dataSource, header }: unknown) => ({
           id,
           label,
           metaType,
@@ -61,7 +61,7 @@ function Flow() {
           name,
           header,
         }))
-        .filter(({ name }: any) => name),
+        .filter(({ name }: unknown) => name),
     );
   }, [flow]);
 
@@ -93,8 +93,8 @@ function Flow() {
   }, [survey]);
 
   useEffect(() => {
-    if (tabView && Object.values(FlowTabEnum).includes(tabView as any)) {
-      setTab(tabView as any);
+    if (tabView && Object.values(FlowTabEnum).includes(tabView)) {
+      setTab(tabView);
     }
   }, [tabView]);
 
@@ -168,7 +168,7 @@ function Flow() {
                 >
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}
-                    aiResponseSummary={(survey as any)?.aiResponseSummary}
+                    aiResponseSummary={survey?.aiResponseSummary}
                     flowId={flow?.flowId}
                     version={flow?.version}
                     flowQuestions={flowQuestions}

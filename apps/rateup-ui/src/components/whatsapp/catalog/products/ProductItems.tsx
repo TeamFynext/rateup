@@ -31,6 +31,7 @@ const extraProps = [
 export interface CatalogProductRow {
   id: string;
   retailer_id?: string;
+  shopifyVariantId?: string;
   hotel_id?: string;
   hotel_room_id?: string;
   hotel_retailer_id?: string;
@@ -45,6 +46,8 @@ export interface CatalogProductRow {
     title?: string;
     name?: string;
     brand?: string;
+    description?: string;
+    condition?: string;
     availability?: string;
     currency?: string;
     price?: string;
@@ -120,8 +123,8 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {products.map((product: any) => {
-          const { productProps } = product;
+        {products.map((product) => {
+          const productProps = product.productProps ?? {};
           const itemId = product.id ?? product.retailer_id;
           const hasSalePrice =
             productProps.sale_price && productProps.sale_price !== productProps.price;
@@ -216,7 +219,7 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
                         <div className="flex flex-wrap gap-1">
                           {filledAttrs.map((pp) => (
                             <Badge key={pp.key} variant="secondary" className="text-xs font-normal">
-                              {pp.label}: {productProps[pp.key]}
+                              {pp.label}: {String(productProps[pp.key] ?? "")}
                             </Badge>
                           ))}
                         </div>

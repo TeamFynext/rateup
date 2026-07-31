@@ -24,7 +24,7 @@ const CatalogProducts = ({ catalogData }: { catalogData: WaCatalog }) => {
       id: "sync-catalog-products-meta",
     });
     syncFromMetaMut.mutate(data, {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast.success("Products synced from Meta", {
           id: "sync-catalog-products-meta",
         });

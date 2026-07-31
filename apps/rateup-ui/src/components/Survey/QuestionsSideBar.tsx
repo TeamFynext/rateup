@@ -41,8 +41,8 @@ interface QuestionsSideBarProps {
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   isWaSurvey?: boolean;
   survey?: Survey;
-  setSurveyThemeContextValue?: any;
-  setSelectedSurveyThemeTab?: any;
+  setSurveyThemeContextValue?;
+  setSelectedSurveyThemeTab?;
   checkForUnsavedChanges?: () => boolean;
   hasContactFeatureIssue?: () => boolean;
 }

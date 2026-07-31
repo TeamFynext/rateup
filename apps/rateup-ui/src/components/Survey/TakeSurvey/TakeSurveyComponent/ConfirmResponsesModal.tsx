@@ -259,7 +259,7 @@ function ConfirmResponsesModal({
                               if (!answers) return null;
                               return (
                                 <div className="flex flex-col gap-2">
-                                  {Object.values(answers).map((ad: any, index: number) => {
+                                  {Object.values(answers).map((ad, index: number) => {
                                     return (
                                       <span className="font-light" key={index}>
                                         {ad}
@@ -272,7 +272,7 @@ function ConfirmResponsesModal({
                               const results = Object.values(response?.response)[0];
                               return (
                                 <div className="flex flex-col gap-2">
-                                  {Object.entries(results).map(([q, res]: any) => {
+                                  {Object.entries(results).map(([q, res]: unknown) => {
                                     return (
                                       <span className="font-light" key={q}>
                                         {q}: {res?.value}

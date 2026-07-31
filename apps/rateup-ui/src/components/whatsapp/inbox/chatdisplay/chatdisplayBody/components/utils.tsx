@@ -163,7 +163,7 @@ export function getReactionMessage({
 }: {
   message: WaGetMessagesBody;
   allMessages: WaGetMessagesBody[];
-  selectedContact: any;
+  selectedContact;
 }) {
   const exchangeProcess = message?.messageBody?.exchangeProcess;
   const isInsta =

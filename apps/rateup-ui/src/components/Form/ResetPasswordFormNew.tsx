@@ -191,7 +191,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
               <form
                 onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => emailForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, (event) => emailForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
                 <FieldGroup className="gap-4">
@@ -228,7 +228,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
               <form
                 onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => pwdForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, (event) => pwdForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
                 <FieldGroup className="gap-4">

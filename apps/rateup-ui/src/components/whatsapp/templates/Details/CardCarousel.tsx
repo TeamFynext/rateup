@@ -60,7 +60,7 @@ const CardCarousel = ({
   productRetailerIds,
 }: {
   form: TemplateForm;
-  catalog: any;
+  catalog;
   productRetailerIds: string[];
 }) => {
   const uid = useId();
@@ -643,13 +643,7 @@ const CarouselButtonMenu = ({
   );
 };
 
-export const ProductCardCarouselPreview = ({
-  form,
-  catalog,
-}: {
-  form: TemplateForm;
-  catalog: any;
-}) => {
+export const ProductCardCarouselPreview = ({ form, catalog }: { form: TemplateForm; catalog }) => {
   const productCardData = useMemo(
     () =>
       catalog

@@ -210,7 +210,7 @@ export function ReferralMessageSettings({
   );
 }
 
-function getPlainText(value: any): string {
+function getPlainText(value: unknown): string {
   if (!value) return "";
   if (typeof value === "string") {
     const parsed = tryParseJson(value);
@@ -221,7 +221,7 @@ function getPlainText(value: any): string {
     return value;
   }
 
-  const nodeToText = (node: any): string => {
+  const nodeToText = (node: unknown): string => {
     if (!node) return "";
 
     if (node.type === "text") {
@@ -255,7 +255,7 @@ function getPlainText(value: any): string {
   return "";
 }
 
-function normalizeTemplateValue(value: any) {
+function normalizeTemplateValue(value: unknown) {
   if (typeof value !== "string") return value;
 
   const parsed = tryParseJson(value);
@@ -266,7 +266,7 @@ function normalizeTemplateValue(value: any) {
   return parsed;
 }
 
-function toEditorContent(value: any) {
+function toEditorContent(value: unknown) {
   if (!value) return "";
 
   if (Array.isArray(value)) {

@@ -21,13 +21,13 @@ function WelcomePage({
   questionsArr,
   isMobile,
 }: Readonly<{
-  surveyThemeData: any;
-  onStart: any;
-  largeScreen: any;
+  surveyThemeData;
+  onStart;
+  largeScreen;
   orgLogoSrc: string | null;
-  orgLogoStyles: any;
-  questionsArr: any;
-  pagesThemeData: any;
+  orgLogoStyles;
+  questionsArr;
+  pagesThemeData;
   isMobile: boolean;
 }>) {
   const defaultTitleSubtitleStartButtonTexts = {

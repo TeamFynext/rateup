@@ -18,7 +18,7 @@ interface EditThemeProps {
   questions: Array<Question>;
   /** Leaves the Edit Theme tab (used by the panel's Close button). */
   onClose: () => void;
-  setFunToRunBeforeSurveyIdPageHeaderTabsChange: any;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange;
 }
 
 /**

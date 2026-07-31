@@ -17,7 +17,7 @@ interface Props {
   sessionExpired: boolean;
   contact: ContactsData | null;
   opened: boolean;
-  onClose: any;
+  onClose;
 }
 
 function templateBodyText(templateComponent: Array<{ type?: string; text?: string }>) {

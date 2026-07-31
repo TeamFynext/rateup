@@ -276,7 +276,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                     multiple
                     value={field.value}
                     onChange={field.onChange}
-                    platform={platform as any}
+                    platform={platform}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>

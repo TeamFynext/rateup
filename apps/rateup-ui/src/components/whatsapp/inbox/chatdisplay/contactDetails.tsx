@@ -58,7 +58,7 @@ import { TicketType } from "@/utils/enums/ticket.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 interface WaInboxContactDetailsProps {
-  contact: any;
+  contact;
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;

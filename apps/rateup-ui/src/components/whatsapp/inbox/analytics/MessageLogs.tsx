@@ -69,7 +69,7 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
   const { mutate: exportLogs, isPending: isExporting } = useExportWaMessageLogs();
 
-  const handlePaginationChange = useCallback((updater: any) => {
+  const handlePaginationChange = useCallback((updater) => {
     setPagination((prev) => {
       const newPagination = typeof updater === "function" ? updater(prev) : updater;
       return newPagination;

@@ -86,7 +86,7 @@ export async function loadContactIdsForFilter(filterKey: string): Promise<string
   return (await db.get(STORE_FILTERS, filterKey)) || [];
 }
 
-export async function saveMessagesToIDB(key: string, messages: any[]) {
+export async function saveMessagesToIDB(key: string, messages: unknown[]) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);
@@ -96,7 +96,7 @@ export async function saveMessagesToIDB(key: string, messages: any[]) {
 
   const existingMap = new Map(existingEntries.map((e) => [e.message.id, e.message]));
 
-  const toUpdate: any[] = [];
+  const toUpdate: unknown[] = [];
   for (const m of messages) {
     const existing = existingMap.get(m.id);
     if (!existing || !isEqual(existing, m)) {

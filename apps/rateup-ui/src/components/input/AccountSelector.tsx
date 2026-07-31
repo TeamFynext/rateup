@@ -13,13 +13,13 @@ import { Skeleton } from "../ui/skeleton.tsx";
 import { getChannelOptions } from "./channelOptions.ts";
 
 interface AccountSelectorProps {
-  onChange?: any;
+  onChange?;
   usePhoneNumber?: boolean;
   withAllOption?: boolean;
   platform?: MessagePlatform | "all" | null;
   multiple?: boolean;
   label?: string;
-  value?: any;
+  value?;
   hideLabel?: boolean;
   optional?: boolean;
   className?: string;

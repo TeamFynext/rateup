@@ -25,7 +25,7 @@ export function CashierPage() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedPhone, setSelectedPhone] = useState("");
-  const data: any = useSessionContext();
+  const data = useSessionContext();
   // Fetch data
   const {
     data: customerData,

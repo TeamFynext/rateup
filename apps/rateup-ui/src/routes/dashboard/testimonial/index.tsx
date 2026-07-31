@@ -106,8 +106,8 @@ function Testimonials() {
               >
                 <CardGrid
                   items={filteredCollections}
-                  getKey={(c: any) => c.id}
-                  renderItem={(c: any) => <TestimonialCollectionCard collection={c} />}
+                  getKey={(c) => c.id}
+                  renderItem={(c) => <TestimonialCollectionCard collection={c} />}
                 />
               </ListPageContent>
             </TabsContent>

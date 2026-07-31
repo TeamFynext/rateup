@@ -68,7 +68,7 @@ const ShareSurvey = ({
   allowUnpublishedShare = false,
 }: {
   survey: Survey;
-  setActiveTab: (tab: any) => void;
+  setActiveTab: (tab) => void;
   allowUnpublishedShare?: boolean;
 }) => {
   const uid = useId();
@@ -127,7 +127,7 @@ const ShareSurvey = ({
   }, [surveyId, surveyTeamMapId, tag, shortUrlId, waSettings]);
 
   const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(surveyId, data),
+    mutationFn: (data) => updateSurvey(surveyId, data),
     onSuccess: (data) => {
       if (data?.data?.status === "failed") {
         setIsPublished(false);
@@ -153,7 +153,7 @@ const ShareSurvey = ({
   });
 
   const surveyStatusUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    mutationFn: (data) => updateSurvey(survey.id, data),
     onSuccess: () => {
       toast.success("Survey status Updated!", { id: "survey" });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });

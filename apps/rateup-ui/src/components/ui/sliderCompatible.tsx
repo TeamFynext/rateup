@@ -13,7 +13,7 @@ interface Props {
   onChange?: (value: number | number[]) => void; // Mantine-style
   onValueChange?: (value: number[]) => void; // Radix-style
   // pass-through any other props
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export default function SliderCompatible({
@@ -28,7 +28,7 @@ export default function SliderCompatible({
   ...rest
 }: Props) {
   // Ensure we always pass an array to the real Slider
-  const normalizeToArray = (v: unknown, fallback: number) => {
+  const normalizeToArray = (v, fallback: number) => {
     if (Array.isArray(v)) return v as number[];
     if (v == null) return [fallback];
     const n = Number(v);

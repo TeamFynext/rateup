@@ -187,9 +187,9 @@ function ConditionBlock({
           <Select
             value={selectedCondition}
             onValueChange={(value) => {
-              setSelectedCondition(value as any);
+              setSelectedCondition(value);
               setCurrentLogicJump({
-                condition: value as any,
+                condition: value,
                 action: selectedAction,
                 response: matchData,
               });
@@ -265,10 +265,10 @@ function ConditionBlock({
           <Select
             value={selectedAction}
             onValueChange={(value) => {
-              setSelectedAction(value as any);
+              setSelectedAction(value);
               setCurrentLogicJump({
                 condition: selectedCondition,
-                action: value as any,
+                action: value,
                 response: matchData,
               });
             }}

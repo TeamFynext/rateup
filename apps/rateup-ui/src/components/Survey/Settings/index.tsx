@@ -34,7 +34,7 @@ const defaultEnabledModules = [
 
 interface SurveySettingsProps {
   surveyId: string;
-  survey: any;
+  survey;
   enabledModules?: string[];
   setSelectedLanguage?: (lang: string) => void;
   flowName?: string;

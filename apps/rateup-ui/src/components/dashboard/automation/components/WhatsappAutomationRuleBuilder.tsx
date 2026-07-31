@@ -100,7 +100,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   const onSubmit = (data: CreateRuleInput) => {
     if (isEditMode) {
       updateMutation.mutate(
-        { id: ruleId, ...(data as any) },
+        { id: ruleId, ...data },
         {
           onSuccess: () => {
             navigate({
@@ -110,7 +110,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
         },
       );
     } else {
-      createMutation.mutate(data as any, {
+      createMutation.mutate(data, {
         onSuccess: (data) => {
           navigate({
             to: `/dashboard/automation/${data?.id}`,

@@ -45,10 +45,10 @@ const CreateContactModal = ({
 }: {
   contactClose: () => void;
   close: () => void;
-  importCSVContactMutation?: any;
+  importCSVContactMutation?;
   type?: ContactGroupType;
-  initialValues?: any;
-  createNewContactMutation?: any;
+  initialValues?;
+  createNewContactMutation?;
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [csvFileError, setCsvFileError] = useState("");

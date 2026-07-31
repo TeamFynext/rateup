@@ -12,21 +12,21 @@ interface Bg {
 }
 interface Logo {
   logo?: string;
-  styles?: any;
+  styles?;
 }
 interface Title {
   title: string;
-  styles?: any;
+  styles?;
   subtitleFontSize: number;
 }
 interface Subtitle {
   subtitle: string;
-  styles?: any;
+  styles?;
 }
 interface Button {
   label: string;
-  styles?: any;
-  position?: any;
+  styles?;
+  position?;
 }
 
 interface Input {

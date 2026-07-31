@@ -75,7 +75,7 @@ type HeadTextValues = {
   email: string;
 };
 
-const ContactExtraProps = ({ form }: { form: any }) => {
+const ContactExtraProps = ({ form }: { form }) => {
   const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const qtype = form.values.type;

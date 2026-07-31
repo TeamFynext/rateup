@@ -12,7 +12,7 @@ import type { Resolver } from "react-hook-form";
  */
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
 
-import type { TypedNode, NodeData } from "./node-types.ts";
+import type { NodeData, NodeFields, TypedNode } from "./node-types.ts";
 
 // Mirror of the CatalogMessages enum in node-editor.tsx. Duplicated here (not
 // imported) to avoid a circular dependency — this module is pulled in by the
@@ -29,61 +29,7 @@ export type NodeFieldErrors = Record<string, string>;
 const isBlank = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-/**
- * The fields the validator reads. Every node type contributes a few, so this is
- * a structural view of `NodeData` rather than the discriminated union — each
- * member of the union satisfies it.
- */
-export interface ValidatedNodeData {
-  label?: string;
-  body?: string;
-  header?: string;
-  headerType?: string;
-  type?: string;
-  link?: string;
-  filename?: string;
-  url?: string;
-  display_text?: string;
-  button?: string;
-  buttons?: Array<{ title?: string }>;
-  sections?: Array<{
-    title?: string;
-    rows?: Array<{ title?: string; description?: string }>;
-    /** Catalog sections hold retailer ids. */
-    productItems?: string[];
-  }>;
-  options?: string[];
-  condition?: string;
-  duration?: number;
-  variableName?: string;
-  question?: string;
-  latitude?: number | string;
-  longitude?: number | string;
-  phone?: string;
-  phoneField?: string;
-  teamId?: string;
-  fbPageId?: string;
-  pageAccessToken?: string;
-  productRetailerId?: string;
-  productSetId?: string;
-  template?: { id?: string };
-  flow?: { id?: string };
-  ad?: { id?: string };
-  ticket?: { selectedBoardColumnId?: string };
-  iceBreakers?: Array<{ question?: string }>;
-  contacts?: Array<{
-    name?: { formatted_name?: string; first_name?: string };
-    phones?: Array<{ phone?: string }>;
-    emails?: Array<{ email?: string }>;
-    addresses?: Array<{ street?: string; city?: string }>;
-    urls?: Array<{ url?: string }>;
-  }>;
-}
-
-export function getNodeFieldErrors(node: {
-  type: string;
-  data?: ValidatedNodeData;
-}): NodeFieldErrors {
+export function getNodeFieldErrors(node: { type: string; data?: NodeFields }): NodeFieldErrors {
   const errors: NodeFieldErrors = {};
   const data = node.data ?? {};
 
@@ -297,7 +243,7 @@ export function getNodeFieldErrors(node: {
 }
 
 /** True when the node has no validation errors. */
-export function isNodeValid(node: { type: string; data?: ValidatedNodeData }): boolean {
+export function isNodeValid(node: { type: string; data?: NodeFields }): boolean {
   return Object.keys(getNodeFieldErrors(node)).length === 0;
 }
 
