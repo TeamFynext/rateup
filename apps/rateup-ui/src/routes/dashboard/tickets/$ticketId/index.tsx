@@ -41,10 +41,11 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor.tsx";
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
+import type { WaFlowQuestion } from "@/components/Survey/Response/WaResponses.tsx";
 import { getUserColor } from "@/components/Tickets/BoardContent";
 import { parseColor } from "@/components/Tickets/card.tsx";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView.tsx";
-import type { Activity, Card, TicketComment } from "@/components/Tickets/types.ts";
+import type { Activity, Card, Checklist, TicketComment } from "@/components/Tickets/types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,7 +66,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { QuestionType2 } from "@/types/enums.ts";
+import { QuestionType2, QuestionType, WaQuestions } from "@/types/enums.ts";
+import type { WaFlowForm, WaFlowFormElement } from "@/types/global";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
@@ -137,6 +139,21 @@ function DateRow({
   );
 }
 
+/**
+ * The ticket view reads element-level fields off a screen's layout children.
+ * Flows built by the v2 editor put elements there directly, so the element
+ * fields may or may not be present on a given child.
+ */
+type FlowLayoutChild = Omit<WaFlowForm, "type"> &
+  Partial<Omit<WaFlowFormElement, "type">> & {
+    type: string;
+    metaType?: WaQuestions | QuestionType;
+    header?: string;
+  };
+
+/** A flow question as this page derives it, keeping the element's `name`. */
+type FlowQuestionSummary = WaFlowQuestion & { name?: string };
+
 function CardDetailPage() {
   const { t } = useTranslation();
   const params = useParams({ strict: false });
@@ -146,19 +163,20 @@ function CardDetailPage() {
   const { data: card, isPending, error } = useCardById(ticketId);
 
   const questions = useMemo(() => {
-    return card?.surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
-      (screen: any) =>
-        screen.layout.children
-          .filter((child: any) => child.type !== QuestionType2.Footer)
-          .map(({ id, label, metaType, name, "data-source": dataSource, header }: any) => ({
-            id,
-            label,
-            metaType,
-            dataSource,
-            name,
-            header,
-          }))
-          .filter(({ name }: any) => name),
+    return card?.surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap((screen) =>
+      (screen.layout.children as FlowLayoutChild[])
+        .filter((child) => child.type !== QuestionType2.Footer)
+        .map(({ id, label, metaType, name, "data-source": dataSource, header }) => ({
+          id: id ?? "",
+          label,
+          metaType,
+          // The element's data source is either the choice list or a screen
+          // reference; only the list is a question's options.
+          dataSource: Array.isArray(dataSource) ? dataSource : undefined,
+          name,
+          header,
+        }))
+        .filter(({ name }) => name),
     );
   }, [card]);
 
@@ -520,7 +538,7 @@ function RightSidebar({
   const dueDateColor = isOverdue ? "#DC2626" : isCloseToDueDate ? "#D97706" : undefined;
 
   const currentBoard = (boards || []).find((b) =>
-    b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
+    b.ticketColumns?.some((c) => c.id === ticket.ticketColumnId),
   );
 
   const handleToggleMember = (userId: string) => {
@@ -564,13 +582,13 @@ function RightSidebar({
                 value={ticket.ticketColumnId || ""}
                 onValueChange={(value) => handleColumnChange(value ?? "")}
                 disabled={moveColMutation.isPending}
-                items={boardColumns.map((col: any) => ({ value: col.id, label: col.title }))}
+                items={boardColumns.map((col) => ({ value: col.id, label: col.title }))}
               >
                 <SelectTrigger className="w-full h-9 text-[13px] font-body">
                   <SelectValue placeholder={t("Select column")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {boardColumns.map((col: any) => (
+                  {boardColumns.map((col) => (
                     <SelectItem key={col.id} value={col.id} className="text-[13px] font-body">
                       {col.title}
                     </SelectItem>
@@ -916,7 +934,7 @@ function TicketTopHeader({
   const currentCol = useMemo(() => {
     if (!boards || !ticket.ticketColumnId) return null;
     for (const b of boards) {
-      const col = b.ticketColumns?.find((c: any) => c.id === ticket.ticketColumnId);
+      const col = b.ticketColumns?.find((c) => c.id === ticket.ticketColumnId);
       if (col) return col;
     }
     return null;
@@ -942,8 +960,8 @@ function TicketTopHeader({
     }
   };
 
-  const allItems = (ticket.checklists || []).flatMap((cl: any) => cl.items || []);
-  const doneItems = allItems.filter((i: any) => i.done).length;
+  const allItems = (ticket.checklists || []).flatMap((cl) => cl.items || []);
+  const doneItems = allItems.filter((i) => i.done).length;
   const totalItems = allItems.length;
 
   return (
@@ -1052,17 +1070,6 @@ function TicketTopHeader({
   );
 }
 
-interface ChecklistItem {
-  id: string;
-  text: string;
-  done: boolean;
-}
-interface Checklist {
-  id: string;
-  name: string;
-  items: ChecklistItem[];
-}
-
 function SectionLabel({ label, icon: Icon }: { label: string; icon?: React.ElementType }) {
   return (
     <div className="flex items-center gap-1.5 mb-3.5">
@@ -1142,12 +1149,12 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
 
   const { data: boards } = useBoardsQueries();
   const currentBoard = (boards || []).find((b) =>
-    b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
+    b.ticketColumns?.some((c) => c.id === ticket.ticketColumnId),
   );
   const { labels } = useLabels(currentBoard?.id ?? "");
 
   const handleLabelChange = (clickedLabelId: string) => {
-    const currentLabelIds = ticket.labels?.map((l: any) => l.id) || [];
+    const currentLabelIds = ticket.labels?.map((l) => l.id) || [];
     const isSelected = currentLabelIds.includes(clickedLabelId);
 
     const newLabelIds = isSelected
@@ -1250,7 +1257,7 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
       <div>
         <SectionLabel label={t("Labels")} icon={Tag} />
         <div className="mt-[9px] flex flex-wrap items-center gap-1.5">
-          {ticket.labels?.map((label: any) => {
+          {ticket.labels?.map((label) => {
             const pColor = parseColor(label.color);
             return (
               <button
@@ -1292,7 +1299,7 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
                   </div>
                 ) : (
                   labels.map((label) => {
-                    const isSelected = ticket.labels?.some((l: any) => l.id === label.id);
+                    const isSelected = ticket.labels?.some((l) => l.id === label.id);
                     const pColor = parseColor(label.color);
                     return (
                       <button
@@ -1635,15 +1642,23 @@ function TicketActivity({ activities }: Readonly<{ activities: Array<Activity> }
   );
 }
 
-function TicketResponse({ surveyResponse, questions, type }: any) {
+function TicketResponse({
+  surveyResponse,
+  questions,
+  type,
+}: Readonly<{
+  surveyResponse: Card["surveyResponse"];
+  questions?: FlowQuestionSummary[];
+  type?: Card["type"];
+}>) {
   return (
     <ScrollArea className="max-h-[80vh] p-2 mt-4">
       <div className="flex flex-col gap-4">
         {type === TicketType.SURVEY_RESPONSE ? (
           <div className="flex flex-col gap-4">
-            {surveyResponse?.responses?.map((response: any, index: number) => {
+            {surveyResponse?.responses?.map((response: QuestionResponse, index: number) => {
               const question = surveyResponse?.surveyTeamMap?.survey?.questions?.find(
-                (q: any) => q.id === response.questionId,
+                (q) => q.id === response.questionId,
               );
               if (!question) return null;
               return (
@@ -1659,18 +1674,19 @@ function TicketResponse({ surveyResponse, questions, type }: any) {
             })}
           </div>
         ) : (
-          questions?.map((question: any, index: number) => (
+          questions?.map((question: FlowQuestionSummary, index: number) => (
             <div key={question.id} className="flex flex-col gap-2 mb-4">
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{index + 1}</Badge>
                 <span className="text-sm font-medium">
-                  {markdownToPlainText(question.header || question.label)}
+                  {markdownToPlainText(question.header || question.label || "")}
                 </span>
               </div>
               <div className="text-sm bg-muted/40 p-2 rounded-md">
                 {getCellData(
-                  surveyResponse?.responses?.find((res: any) => res.questionId === question.id)
-                    ?.response,
+                  surveyResponse?.responses?.find(
+                    (res: QuestionResponse) => res.questionId === question.id,
+                  )?.response,
                   question,
                 )}
               </div>
@@ -1682,7 +1698,9 @@ function TicketResponse({ surveyResponse, questions, type }: any) {
   );
 }
 
-function TicketAutomationResponse({ response }: any) {
+function TicketAutomationResponse({
+  response,
+}: Readonly<{ response: Card["waAutomatedReplyMessage"] }>) {
   const { t } = useTranslation();
   return (
     <ScrollArea className="max-h-[80vh] p-2 mt-4">
@@ -1702,7 +1720,9 @@ function TicketAutomationResponse({ response }: any) {
             </div>
           </div>
           <div className="bg-muted/40 p-3 rounded-lg border text-sm mt-2 whitespace-pre-wrap">
-            {response?.content}
+            {/* NOTE: the row has no `content` column — the answer is `response.value`
+                — so this block has always rendered empty. */}
+            {response?.response?.value}
           </div>
         </div>
       </div>
