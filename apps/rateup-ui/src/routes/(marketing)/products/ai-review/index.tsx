@@ -10,9 +10,11 @@ import ReviewAiHowItWorks from "@/components/products/ReviewWithAiComponents/sha
 // import ReviewPricing from "@/components/products/ReviewWithAiComponents/shared/ReviewPricing";
 import ReviewTestimonials from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
 import TicketFooter from "@/components/products/TicketLandingComponets/helpers/TicketFooter.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/ai-review/")({
   component: page,
+  head: () => buildPageHead("/products/ai-review"),
 });
 
 function page() {

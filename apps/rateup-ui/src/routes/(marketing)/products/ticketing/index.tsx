@@ -11,6 +11,7 @@ import TicketFeatureSection from "@/components/products/TicketLandingComponets/s
 import TicketHero from "@/components/products/TicketLandingComponets/shared/TicketHero.tsx";
 import UseCasesSection from "@/components/products/TicketLandingComponets/shared/UseCasesSection.tsx";
 import WhatsAppSolutionContainer from "@/components/products/TicketLandingComponets/shared/WhatsAppSolutionContainer.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 import { productsMarkdown } from "@/markdown/products";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/(marketing)/products/ticketing/")({
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
   component: page,
+  head: () => buildPageHead("/products/ticketing"),
 });
 
 function page() {

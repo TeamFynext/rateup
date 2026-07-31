@@ -184,6 +184,101 @@ const pageMetadata: Record<string, PageMetadata> = {
       canonical: "/products/whatsapp-survey",
     },
   },
+  "/products/ticketing": {
+    title: "WhatsApp Ticketing & Customer Support Software - RateUp",
+    description:
+      "Turn WhatsApp chats into trackable support tickets with RateUp. Assign, prioritise and resolve customer issues from one shared team inbox. Start free.",
+    openGraph: {
+      title: "WhatsApp Ticketing & Customer Support Software - RateUp",
+      description:
+        "Turn WhatsApp chats into trackable support tickets with RateUp. Assign, prioritise and resolve customer issues from one shared team inbox. Start free.",
+    },
+    alternates: {
+      canonical: "/products/ticketing",
+    },
+  },
+  "/products/testimonial-gateway": {
+    title: "Customer Testimonial Collection Software - RateUp",
+    description:
+      "Collect, manage and showcase authentic customer testimonials with RateUp. Build trust, convert more visitors and grow faster - no code required.",
+    openGraph: {
+      title: "Customer Testimonial Collection Software - RateUp",
+      description:
+        "Collect, manage and showcase authentic customer testimonials with RateUp. Build trust, convert more visitors and grow faster - no code required.",
+    },
+    alternates: {
+      canonical: "/products/testimonial-gateway",
+    },
+  },
+  "/products/ai-review": {
+    title: "AI Google Review Generation & Reputation Management - RateUp",
+    description:
+      "Turn happy customers into 5-star Google reviews with RateUp AI. Filter feedback intelligently, improve local SEO and manage your reputation in one place.",
+    openGraph: {
+      title: "AI Google Review Generation & Reputation Management - RateUp",
+      description:
+        "Turn happy customers into 5-star Google reviews with RateUp AI. Filter feedback intelligently, improve local SEO and manage your reputation in one place.",
+    },
+    alternates: {
+      canonical: "/products/ai-review",
+    },
+  },
+  "/products/ai-automation": {
+    title: "AI Chat Automation for WhatsApp & Instagram - RateUp",
+    description:
+      "Automate customer journeys with RateUp AI. Build no-code chat flows for WhatsApp and Instagram that qualify leads, answer FAQs and convert around the clock.",
+    openGraph: {
+      title: "AI Chat Automation for WhatsApp & Instagram - RateUp",
+      description:
+        "Automate customer journeys with RateUp AI. Build no-code chat flows for WhatsApp and Instagram that qualify leads, answer FAQs and convert around the clock.",
+    },
+    alternates: {
+      canonical: "/products/ai-automation",
+    },
+  },
+  // Deliberately targets "shared team inbox / collaboration" so it does not compete with
+  // /products/omnichannel-inbox, which targets the "omnichannel / multi-channel" terms.
+  "/products/inbox": {
+    title: "Shared Team Inbox for Customer Conversations - RateUp",
+    description:
+      "Go from conversation to resolution in minutes. RateUp's shared team inbox brings customer chats, assignments and replies together so your team replies faster.",
+    openGraph: {
+      title: "Shared Team Inbox for Customer Conversations - RateUp",
+      description:
+        "Go from conversation to resolution in minutes. RateUp's shared team inbox brings customer chats, assignments and replies together so your team replies faster.",
+    },
+    alternates: {
+      canonical: "/products/inbox",
+    },
+  },
+  // Targets "digital suggestion box / feedback register" - the QR feedback use case.
+  // /products/qr-studio covers the QR marketing-and-packaging terms instead.
+  "/products/qr": {
+    title: "Digital Suggestion Box & QR Feedback System - RateUp",
+    description:
+      "Replace the paper feedback register with a QR-powered digital suggestion box. Collect customer suggestions instantly and turn them into growth insights.",
+    openGraph: {
+      title: "Digital Suggestion Box & QR Feedback System - RateUp",
+      description:
+        "Replace the paper feedback register with a QR-powered digital suggestion box. Collect customer suggestions instantly and turn them into growth insights.",
+    },
+    alternates: {
+      canonical: "/products/qr",
+    },
+  },
+  "/products/qr-studio": {
+    title: "Smart QR Code Marketing & Packaging Platform - RateUp",
+    description:
+      "Transform marketing and packaging with RateUp's smart QR codes. Capture leads, drive sales, collect feedback and unlock insights from a single scan.",
+    openGraph: {
+      title: "Smart QR Code Marketing & Packaging Platform - RateUp",
+      description:
+        "Transform marketing and packaging with RateUp's smart QR codes. Capture leads, drive sales, collect feedback and unlock insights from a single scan.",
+    },
+    alternates: {
+      canonical: "/products/qr-studio",
+    },
+  },
   "/blog": {
     title: "Read Blogs on Customer Engagement, WhatsApp Automation and Marketing",
     description:

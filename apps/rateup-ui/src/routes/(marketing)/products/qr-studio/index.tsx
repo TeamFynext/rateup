@@ -11,9 +11,11 @@ import QrFeaturesGrid from "@/components/products/QrLandingCompoents/shared/QrFe
 import QrHeroSection from "@/components/products/QrLandingCompoents/shared/QrHeroSection.tsx";
 import QrUseCases from "@/components/products/QrLandingCompoents/shared/QrUseCases.tsx";
 import QrWorkFlow from "@/components/products/QrLandingCompoents/shared/QrWorkFlow.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/qr-studio/")({
   component: page,
+  head: () => buildPageHead("/products/qr-studio"),
 });
 
 function page() {
