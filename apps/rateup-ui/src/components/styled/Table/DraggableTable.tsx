@@ -1,5 +1,6 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { IconEdit, IconGripVertical, IconTrash } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import React from "react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -19,20 +20,27 @@ interface TableHeader {
   headerValue: string;
 }
 
-interface IDraggableTableProps {
+interface IDraggableTableProps<T extends Record<string, unknown>> {
   headers: TableHeader[];
-  items: Array<any>;
-  itemUniqueKey: string;
-  handleDragEnd: (values: unknown[]) => void;
+  items: T[];
+  itemUniqueKey: keyof T & string;
+  handleDragEnd: (values: T[]) => void;
   editEnabled?: boolean;
   deleteEnabled?: boolean;
-  handleEdit?: (item) => void;
-  handleDelete?: (item) => void;
+  handleEdit?: (item: T) => void;
+  handleDelete?: (item: T) => void;
   withRowBorder?: boolean;
   maxHeight?: string | number;
 }
 
-const DraggableTable = ({
+/**
+ * Rows hold free-form field data, so a cell value is `unknown`. Only primitives are
+ * renderable; anything else contributes nothing, as an object child would have thrown.
+ */
+const renderCell = (value: unknown): ReactNode =>
+  typeof value === "string" || typeof value === "number" ? value : null;
+
+const DraggableTable = <T extends Record<string, unknown>>({
   headers,
   items,
   itemUniqueKey,
@@ -42,7 +50,7 @@ const DraggableTable = ({
   handleEdit,
   handleDelete,
   maxHeight = 250,
-}: IDraggableTableProps) => {
+}: IDraggableTableProps<T>) => {
   if (!items?.length) return null;
 
   const headerKeys = headers.map((h) => h.headerKey);
@@ -71,9 +79,9 @@ const DraggableTable = ({
               <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                 {items.map((item, index) => (
                   <Draggable
-                    key={item[itemUniqueKey]}
+                    key={String(item[itemUniqueKey])}
                     index={index}
-                    draggableId={item[itemUniqueKey]}
+                    draggableId={String(item[itemUniqueKey])}
                   >
                     {(dragProvided) => (
                       <TableRow
@@ -92,7 +100,7 @@ const DraggableTable = ({
                         </TableCell>
 
                         {headerKeys.map((key, keyIndex) => (
-                          <TableCell key={keyIndex}>{item[key]}</TableCell>
+                          <TableCell key={keyIndex}>{renderCell(item[key])}</TableCell>
                         ))}
 
                         {(editEnabled || deleteEnabled) && (

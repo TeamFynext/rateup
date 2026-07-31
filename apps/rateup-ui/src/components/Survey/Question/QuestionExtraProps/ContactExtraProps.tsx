@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { QuestionType } from "@/types/enums.ts";
 import { getDefaultContactFeatureEnabled } from "@/utils/questions.ts";
 
+import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
+
 type CountryCode = string;
 
 const countryItems = getCountries().map((country) => ({
@@ -69,18 +71,21 @@ const CountrySelect = ({
   </Combobox>
 );
 
+/** The three sub-fields of a contact question, as stored under `features[language]`. */
+type ContactFeatures = Pick<QuestionFormFeatures, "name" | "phone" | "email">;
+
 type HeadTextValues = {
   name: string;
   phone: string;
   email: string;
 };
 
-const ContactExtraProps = ({ form }: { form }) => {
+const ContactExtraProps = ({ form }: { form: Required<QuestionExtraPropsForm> }) => {
   const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const qtype = form.values.type;
   const defaultEnabled = getDefaultContactFeatureEnabled(qtype);
-  const features = form.values.features?.[selectedLanguage] || {
+  const features: ContactFeatures = form.values.features?.[selectedLanguage] || {
     name: {
       isEnabled: defaultEnabled.name,
       headText: "",
@@ -149,7 +154,12 @@ const ContactExtraProps = ({ form }: { form }) => {
   const questionTitle = form?.values?.title?.[selectedLanguage];
   const isDisabled = questionTitle === "<p></p>";
 
-  const featureToggles = [
+  const featureToggles: Array<{
+    key: keyof HeadTextValues;
+    label: string;
+    enabled?: boolean;
+    show: boolean;
+  }> = [
     {
       key: "name",
       label: translations("Name"),
@@ -170,7 +180,10 @@ const ContactExtraProps = ({ form }: { form }) => {
     },
   ];
 
-  const featureFields: Array<{ key: keyof HeadTextValues; value: (typeof features)[string] }> = [
+  const featureFields: Array<{
+    key: keyof HeadTextValues;
+    value: ContactFeatures[keyof HeadTextValues];
+  }> = [
     { key: "name", value: features.name },
     { key: "phone", value: features.phone },
     { key: "email", value: features.email },

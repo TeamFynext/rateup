@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import DraggableTable from "../../../styled/Table/DraggableTable.tsx";
-import type { QuestionExtraPropsForm } from "./questionForm.ts";
+import type { QuestionExtraPropsForm, QuestionFormField } from "./questionForm.ts";
 
 type FieldFormValues = {
   fieldKey: string;
@@ -32,7 +32,7 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
 
   const [openedEditModal, setOpenedEditModal] = useState(false);
   const [displayText, setDisplayText] = useState("");
-  const [selectedField, setSelectedField] = useState<any>(null);
+  const [selectedField, setSelectedField] = useState<QuestionFormField | null>(null);
 
   const headers = [
     { headerKey: "fieldKey", headerValue: translations("Field Key") },
@@ -48,7 +48,7 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
     defaultValues: { fieldKey: "", placeholderText: "" },
   });
 
-  const handleDragEnd = (values: unknown[]) => {
+  const handleDragEnd = (values: QuestionFormField[]) => {
     form.setFieldValue?.("features", {
       ...form.values?.features,
       [selectedLanguage]: { ...features, fields: values },
@@ -56,7 +56,8 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
   };
 
   const addField = handleSubmit((values) => {
-    const existingFields: unknown[] = form.values?.features?.[selectedLanguage]?.fields ?? [];
+    const existingFields: QuestionFormField[] =
+      form.values?.features?.[selectedLanguage]?.fields ?? [];
     if (existingFields.find((f) => f.fieldKey === values.fieldKey)) return;
     form.setFieldValue?.("features", {
       ...form.values?.features,
@@ -79,13 +80,13 @@ const MultiTextInputExtraProps = ({ form }: { form: QuestionExtraPropsForm }) =>
     setOpenedEditModal(false);
   };
 
-  const handleEdit = (field) => {
-    setDisplayText(field?.placeholderText);
+  const handleEdit = (field: QuestionFormField) => {
+    setDisplayText(field?.placeholderText ?? "");
     setSelectedField(field);
     setOpenedEditModal(true);
   };
 
-  const handleDelete = (field) => {
+  const handleDelete = (field: QuestionFormField) => {
     form.setFieldValue?.("features", {
       ...form.values?.features,
       [selectedLanguage]: {

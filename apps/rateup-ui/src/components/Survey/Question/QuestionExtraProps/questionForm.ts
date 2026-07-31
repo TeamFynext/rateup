@@ -1,3 +1,4 @@
+import type { QuestionType } from "@/types/enums.ts";
 import type { TNC, Wop } from "@/types/global";
 
 import type { SmileyColorType, SmileyVariantStyle } from "./SmileyExtraProps.tsx";
@@ -56,6 +57,10 @@ export interface QuestionFormFeatures {
 }
 
 export interface QuestionFormValues {
+  /** The question's type, as `QuestionType` or `PageType`. */
+  type?: QuestionType;
+  /** Question heading, per language. */
+  title?: Record<string, string>;
   features?: Record<string, QuestionFormFeatures>;
   choices?: Record<string, Choice[]>;
   tnc?: Record<string, TNC>;

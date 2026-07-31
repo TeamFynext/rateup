@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
+import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
+
 type QuestionTitles = {
   nameQn: string;
   jobTitleQn: string;
@@ -18,10 +20,10 @@ type QuestionTitles = {
   photoQn: string;
 };
 
-const TestimonialExtraProps = ({ form }: { form }) => {
+const TestimonialExtraProps = ({ form }: { form: Required<QuestionExtraPropsForm> }) => {
   const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
-  const features = form.values.features?.[selectedLanguage] || {
+  const features: QuestionFormFeatures = form.values.features?.[selectedLanguage] || {
     rating: false,
     jobTitle: false,
     photo: false,
@@ -130,7 +132,7 @@ const TestimonialExtraProps = ({ form }: { form }) => {
   const toggles: Array<{
     featureKey: string;
     label: string;
-    value: boolean;
+    value?: boolean;
     titleKey?: keyof QuestionTitles;
     titleLabel?: string;
   }> = [
