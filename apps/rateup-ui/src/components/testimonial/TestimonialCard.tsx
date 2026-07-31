@@ -7,11 +7,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar.tsx"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { StarRating } from "@/components/ui/star-rating.tsx";
 import type { Testimonial } from "@/types/global";
+import type { TestimonialStyleType } from "@/types/global";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 interface TestimonialCardInterface {
   readonly testimonial: Omit<Testimonial, "teamId" | "survey">;
-  readonly currentStyle?;
+  readonly currentStyle?: TestimonialStyleType | null;
 }
 
 function TestimonialCard({ testimonial, currentStyle = null }: Readonly<TestimonialCardInterface>) {

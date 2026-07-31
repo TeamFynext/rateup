@@ -16,6 +16,7 @@ import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { WaConnectedCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -60,7 +61,7 @@ const CardCarousel = ({
   productRetailerIds,
 }: {
   form: TemplateForm;
-  catalog;
+  catalog: WaConnectedCatalog | undefined;
   productRetailerIds: string[];
 }) => {
   const uid = useId();
@@ -643,7 +644,13 @@ const CarouselButtonMenu = ({
   );
 };
 
-export const ProductCardCarouselPreview = ({ form, catalog }: { form: TemplateForm; catalog }) => {
+export const ProductCardCarouselPreview = ({
+  form,
+  catalog,
+}: {
+  form: TemplateForm;
+  catalog: WaConnectedCatalog | undefined;
+}) => {
   const productCardData = useMemo(
     () =>
       catalog

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import {
   Sidebar,
   SidebarContent,
@@ -101,7 +102,7 @@ const data = {
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  data?;
+  data?: IUserInfoApiResponse;
 }
 
 export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProps>) {

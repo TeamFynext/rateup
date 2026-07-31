@@ -19,7 +19,7 @@ import {
 
 interface ShareQRProps {
   url: string;
-  sx?;
+  sx?: React.CSSProperties;
   title: string;
   isPublished: boolean;
   id?: string;

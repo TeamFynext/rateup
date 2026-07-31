@@ -42,7 +42,21 @@ export async function getWaCatalogById(catalogId: string) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }
 
-export async function getWaConnectedCatalog(whatsappSettingsPhoneId: string) {
+/** A catalog with its synced products, as the "connected catalog" endpoint returns it. */
+export interface WaConnectedCatalog extends WaCatalog {
+  products?: Array<{
+    retailer_id?: string;
+    title?: string;
+    name?: string;
+    price?: string;
+    image_link?: string;
+    image?: Array<{ url?: string }>;
+  }>;
+}
+
+export async function getWaConnectedCatalog(
+  whatsappSettingsPhoneId: string,
+): Promise<WaConnectedCatalog> {
   return (await axiosClient.get(`${waCatalogUrl}/connected/${whatsappSettingsPhoneId}`)).data;
 }
 

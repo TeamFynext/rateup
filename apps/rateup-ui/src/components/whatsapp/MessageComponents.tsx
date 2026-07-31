@@ -68,8 +68,9 @@ export function SentMessageContainer({
 interface QuickReplyButtonProps {
   text: string;
   style?: React.CSSProperties;
-  onClick?;
-  type?;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  /** One of `WHATSAPP_BUTTON_TYPE`; decides the icon shown beside the label. */
+  type?: string;
 }
 export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButtonProps) {
   return (
@@ -86,7 +87,7 @@ export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButto
   );
 }
 
-const getIcon = (type: string) => {
+const getIcon = (type: string | undefined) => {
   switch (type) {
     case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
       return <IconPhone size={14} />;

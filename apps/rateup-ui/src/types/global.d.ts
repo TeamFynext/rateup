@@ -108,6 +108,8 @@ declare global {
   interface Window {
     gtag: (...args: unknown[]) => void;
     fbq: (...args: unknown[]) => void;
+    /** The EyeDropper API, in Chromium browsers only — feature-detected before use. */
+    EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
   }
   // The analytics snippets are read off `globalThis`, which only picks up
   // global `var` declarations — an `interface Window` member is not enough.

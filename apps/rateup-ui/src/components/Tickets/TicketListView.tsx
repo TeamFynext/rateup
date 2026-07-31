@@ -210,7 +210,7 @@ function ListRow({
   card: Card;
   col: ColumnType;
   isOverdue: boolean;
-  pConf;
+  pConf: (typeof PRIORITY_CONFIG)[string];
   customerName: string | null;
   channel: string | null;
   boardMembers: MemberData[];
