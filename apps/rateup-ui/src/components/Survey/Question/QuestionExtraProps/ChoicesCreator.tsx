@@ -44,6 +44,7 @@ import {
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { getNpsColor } from "../QuestionDetailedView.tsx";
+import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
 
 type ChoiceFormValues = {
   title: string;
@@ -53,7 +54,7 @@ type ChoiceFormValues = {
 };
 
 interface ChoicesCreatorProps {
-  form;
+  form: Required<QuestionExtraPropsForm>;
   qId: string;
   maxChoiceCount?: number;
   maxCharCount?: number;
@@ -83,7 +84,7 @@ export function ChoicesCreator({
 
   const { t: translations } = useTranslation();
   const choices = form.values.choices?.[selectedLanguage] || [];
-  const features = form.values.features?.[selectedLanguage] || {
+  const features: QuestionFormFeatures = form.values.features?.[selectedLanguage] || {
     other: {
       isEnabled: false,
       title: translations("Other"),
@@ -267,7 +268,7 @@ export function ChoicesCreator({
         {choices.map((choice: Choice, i: number) => (
           <Choice
             key={i}
-            choice={image ? choice?.value : choice}
+            choice={image && typeof choice?.value === "object" ? choice.value : choice}
             onDelete={() => handleRemoveChoice(choice)}
             form={form}
             index={i}
@@ -461,7 +462,8 @@ export function ChoicesCreator({
         </div>
       )}
 
-      {[QuestionType.MCQ, QuestionType.MSQ].includes(form.values.type) &&
+      {!!form.values.type &&
+        [QuestionType.MCQ, QuestionType.MSQ].includes(form.values.type) &&
         surveyType === SurveyType.Web && (
           <div className="mt-2 rounded-lg border bg-background">
             <Field orientation="horizontal" className="p-3">
@@ -545,12 +547,18 @@ class FileConverter {
   }
 }
 
+/**
+ * Either a stored choice or, for image choices, its inner `{ value, image }` payload — the list
+ * hands the row itself for text choices and the payload for image ones.
+ */
+type ChoiceLike = { value?: Choice["value"]; weightage?: NPSWeightage; image?: string };
+
 interface ChoiceProps {
-  choice;
+  choice: ChoiceLike;
   onDelete: () => void;
-  form;
+  form: Required<QuestionExtraPropsForm>;
   index: number;
-  image?;
+  image?: boolean;
   buttonRef?: React.RefObject<HTMLButtonElement | null>;
   maxCharCount?: number;
   surveyType?: SurveyType;
@@ -674,7 +682,7 @@ function Choice({
     setOpenedEditModal(true);
   };
 
-  const handleChangeWeightage = (value: string) => {
+  const handleChangeWeightage = (value: NPSWeightage | null) => {
     const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c: Choice) => {
       if (c.value === choice?.value) return { ...c, weightage: value };
       return c;

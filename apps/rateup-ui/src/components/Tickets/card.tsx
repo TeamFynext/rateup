@@ -128,8 +128,8 @@ function CardDisplay({
 }: {
   card: TCard;
   state: TCardState;
-  outerRef?: \RefObject<HTMLDivElement | null>;
-  innerRef?: \RefObject<HTMLDivElement | null>;
+  outerRef?: RefObject<HTMLDivElement | null>;
+  innerRef?: RefObject<HTMLDivElement | null>;
   onClick?: () => void;
   onDelete?: () => void;
 }) {

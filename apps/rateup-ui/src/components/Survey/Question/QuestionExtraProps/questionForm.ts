@@ -32,6 +32,8 @@ export interface QuestionFormFeatures {
   isRestricted?: boolean;
   questions?: string[];
   /** Smiley question appearance: variant, palette, per-face colours and emoji. */
+  /** MCQ/MSQ questions: the free-text "Other" option. */
+  other?: { isEnabled?: boolean; title?: string; placeholder?: string };
   /** Contact question: which sub-fields are on, and their prompts. */
   name?: { isEnabled?: boolean; headText?: string; defaultCountryCode?: string };
   phone?: { isEnabled?: boolean; headText?: string; defaultCountryCode?: string };

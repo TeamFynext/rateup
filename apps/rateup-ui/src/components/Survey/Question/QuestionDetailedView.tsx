@@ -447,7 +447,7 @@ export function QuestionDetailedView({
   );
 }
 
-export function getNpsColor(npstype: string) {
+export function getNpsColor(npstype: string | undefined) {
   switch (npstype) {
     case NPSWeightage.PROMOTER:
       return "green";
