@@ -1,4 +1,11 @@
-import { createRootRoute, HeadContent, Outlet, redirect, Scripts } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  redirect,
+  Scripts,
+} from "@tanstack/react-router";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,7 +31,17 @@ import Providers from "../components/providers.tsx";
 
 import appCss from "../globals.css?url";
 
-export const Route = createRootRoute({
+export interface RouterContext {
+  /**
+   * Exposed as an accessor rather than a QueryClient instance on purpose. The browser client is a
+   * singleton that logout swaps out via `resetBrowserQueryClient()`, and the server builds a fresh
+   * client per request — so a single captured instance would go stale after a logout and loaders
+   * would prefetch into a cache nothing renders from. Call it inside the loader instead.
+   */
+  getQueryClient: () => QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: ({ location }) => {
     // Check if the current path matches any redirect rule in REDIRECT_MAP
     const rule = REDIRECT_MAP[location.pathname];
