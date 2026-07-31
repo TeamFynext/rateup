@@ -8,6 +8,9 @@ const api = new GhostContentAPI({
   version: "v6.0",
 });
 
+/** Ghost's browse result: the posts, with pagination metadata attached to the array. */
+export type PostsPage = Post[] & { meta?: { pagination: { total: number } } };
+
 export interface Post {
   slug: string;
   id: string;
@@ -50,17 +53,7 @@ export interface Post {
     meta_description: string | null;
     url: string;
   }>;
-  tags: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    feature_image: string | null;
-    visibility: string;
-    meta_title: string | null;
-    meta_description: string | null;
-    url: string;
-  }>;
+  tags: Array<Tag>;
   primary_author: {
     id: string;
     name: string;
@@ -106,7 +99,7 @@ export async function getPosts(filter?: { tag?: string; author?: string }) {
     })
     .catch((err: unknown) => {
       console.error(err);
-    })) as Array<Post>;
+    })) as PostsPage;
 }
 
 export async function getSinglePost(postSlug: string) {

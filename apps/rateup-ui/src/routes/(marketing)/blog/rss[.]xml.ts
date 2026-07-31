@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import type { Post } from "@/lib/posts.ts";
 import { getPosts } from "@/lib/posts.ts";
 
 export const Route = createFileRoute("/(marketing)/blog/rss.xml")({
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/(marketing)/blog/rss.xml")({
   },
 });
 
-function generateRSSFeed(posts: unknown[], baseUrl: string) {
+function generateRSSFeed(posts: Post[], baseUrl: string) {
   const blogUrl = `${baseUrl}/blog`;
 
   const items = posts
