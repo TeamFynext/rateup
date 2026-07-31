@@ -3,9 +3,11 @@ import { axiosClient } from "@/backend/apiClient";
 /** A catalog product set ("collection"), as the sets endpoint returns it. */
 export interface WaProductSet {
   id?: string;
-  productSetId?: string;
+  productSetId: string;
+  catalogId?: string;
   name?: string;
-  productIds?: string[];
+  orgId?: string;
+  productIds: string[];
 }
 
 import { waCatalogUrl } from "./catalog.api";

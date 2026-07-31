@@ -118,7 +118,6 @@ import type {
   NodeType,
   NodeTypeMap,
   TypedNode,
-  WhatsappProductSet,
 } from "../types/node-types.ts";
 import { firstNodeError, nodeResolver } from "../types/node-validation.ts";
 import {
@@ -3126,7 +3125,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
 
   const productSetOptions = useMemo(
     () =>
-      productSets?.map((ps: WhatsappProductSet) => ({
+      productSets?.map((ps) => ({
         value: ps.productSetId,
         label: ps.name,
       })) || [],
@@ -3150,7 +3149,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
     }
 
     const selectedProductSet = productSets?.find(
-      (ps: WhatsappProductSet) => ps.productSetId === typedData.productSetId,
+      (ps) => ps.productSetId === typedData.productSetId,
     );
 
     if (!selectedProductSet) {
