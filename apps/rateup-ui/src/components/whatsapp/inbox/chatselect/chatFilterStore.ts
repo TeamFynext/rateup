@@ -69,16 +69,20 @@ export const useChatFilterStore = create<ChatFilterStore>()(
       // Open/All lists with nothing on screen to undo it, so drop it once. The
       // popover's write-only `previousFilterForTab` bucket goes with it.
       migrate: (persisted: unknown, version) => {
-        if (version >= 1 || !persisted) return persisted;
-        const { previousFilterForTab: _dropped, ...rest } = persisted;
+        if (version >= 1 || typeof persisted !== "object" || persisted === null) return persisted;
+        const stored = persisted as {
+          previousFilterForTab?: unknown;
+          filter?: ChatFilterStore["filter"];
+        };
+        const { previousFilterForTab: _dropped, ...rest } = stored;
         return {
           ...rest,
           filter: {
-            ...persisted.filter,
+            ...stored.filter,
             status: [],
             // The popover's "All" wrote the sentinel "all"; the sidebar's list has
             // no such row and reads an empty string as every channel.
-            phone: persisted.filter?.phone === "all" ? "" : persisted.filter?.phone,
+            phone: stored.filter?.phone === "all" ? "" : stored.filter?.phone,
           },
         };
       },

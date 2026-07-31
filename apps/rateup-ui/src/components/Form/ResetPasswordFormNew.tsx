@@ -35,7 +35,7 @@ type ResetPasswordValues = {
 
 const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false });
+  const searchParams = useSearch({ from: "/(auth)/login/reset-password/" });
   const token = searchParams.token;
   const rid = searchParams.rid;
   const [showPassword, setShowPassword] = useState(false);
@@ -191,7 +191,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
               <form
                 onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event) => emailForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, () => void emailForm.handleSubmit(onSubmit)()],
                 ])}
               >
                 <FieldGroup className="gap-4">
@@ -228,7 +228,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
               <form
                 onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event) => pwdForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, () => void pwdForm.handleSubmit(onSubmit)()],
                 ])}
               >
                 <FieldGroup className="gap-4">

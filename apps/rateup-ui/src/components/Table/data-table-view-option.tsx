@@ -1,4 +1,4 @@
-import type { Table } from "@tanstack/react-table";
+import type { Column, Table } from "@tanstack/react-table";
 import { Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -48,7 +48,7 @@ export function DataTableViewOptions<TData>({
   );
 }
 
-function getColumnLabel(column: unknown) {
+function getColumnLabel<TData, TValue>(column: Column<TData, TValue>) {
   const header = column.columnDef.header;
 
   if (typeof header === "string") {

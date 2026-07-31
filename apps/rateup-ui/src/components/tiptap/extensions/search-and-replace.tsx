@@ -1,4 +1,4 @@
-import { type Editor as CoreEditor, Extension, type Range } from "@tiptap/core";
+import { type CommandProps, type Editor as CoreEditor, Extension, type Range } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet, type EditorView } from "@tiptap/pm/view";
@@ -106,7 +106,11 @@ function processSearches(
   };
 }
 
-const replace = (replaceTerm: string, results: Range[], { state, dispatch }: unknown) => {
+const replace = (
+  replaceTerm: string,
+  results: Range[],
+  { state, dispatch }: Pick<CommandProps, "state" | "dispatch">,
+) => {
   const firstResult = results[0];
 
   if (!firstResult) {
@@ -151,7 +155,11 @@ const rebaseNextResult = (
   return [offset, results];
 };
 
-const replaceAll = (replaceTerm: string, results: Range[], { tr, dispatch }: { tr; dispatch }) => {
+const replaceAll = (
+  replaceTerm: string,
+  results: Range[],
+  { tr, dispatch }: Pick<CommandProps, "tr" | "dispatch">,
+) => {
   if (!results.length) {
     return;
   }
@@ -170,7 +178,7 @@ const replaceAll = (replaceTerm: string, results: Range[], { tr, dispatch }: { t
     }
   }
 
-  dispatch(tr);
+  dispatch?.(tr);
 };
 
 const selectNext = (editor: CoreEditor) => {

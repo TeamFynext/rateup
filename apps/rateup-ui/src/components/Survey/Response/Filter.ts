@@ -11,17 +11,24 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const responseType = columnId.split("_,_")?.[1] as QuestionType;
 
   let formatedResponse = "";
+  /** Answers are stored per question type: a string, a list of choices, or a keyed object. */
+  const asChoiceList = (value: unknown) =>
+    Array.isArray(value) ? (value as Array<{ value?: string }>) : [];
+  const asRecordValues = (value: unknown) =>
+    typeof value === "object" && value !== null ? Object.values(value) : [];
   if (columnId === "createdAt")
     formatedResponse = dayjs(row.getValue(columnId)).format("DD-MM-YYYY hh:mm A");
   else if ([QuestionType.EmailPhone, QuestionType.CustomNPS].includes(responseType)) {
-    formatedResponse = Object.values(cellValue).join(" , ");
+    formatedResponse = asRecordValues(cellValue).join(" , ");
   } else if ([QuestionType.Date].includes(responseType)) {
     formatedResponse = dayjs(cellValue as string).format("DD, MMM YYYY");
   } else if ([QuestionType.DDMS, QuestionType.MSQ].includes(responseType)) {
-    formatedResponse = cellValue.map((obj: { value?: string }) => obj.value).join(" , ");
+    formatedResponse = asChoiceList(cellValue)
+      .map((obj) => obj.value)
+      .join(" , ");
   } else if (typeof row.getValue(columnId) === "object") {
-    formatedResponse = Object.values(cellValue).join(" , ");
-  } else formatedResponse = cellValue;
+    formatedResponse = asRecordValues(cellValue).join(" , ");
+  } else formatedResponse = String(cellValue ?? "");
 
   let itemRank = rankItem(formatedResponse, value);
 

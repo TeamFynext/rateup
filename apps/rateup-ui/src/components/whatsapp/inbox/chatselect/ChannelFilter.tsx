@@ -23,7 +23,9 @@ export default function ChannelFilter({ className }: Readonly<{ className?: stri
       <AccountSelector
         label={translations("Channel")}
         value={filter?.phone || "all"}
-        onChange={(phone: string) => setFilter({ ...filter, phone: phone === "all" ? "" : phone })}
+        onChange={(phone) =>
+          setFilter({ ...filter, phone: !phone || phone === "all" ? "" : phone })
+        }
         usePhoneNumber
         withAllOption
         optional
