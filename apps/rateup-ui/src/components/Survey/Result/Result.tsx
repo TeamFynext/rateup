@@ -124,7 +124,10 @@ function EncryptionPasswordModal({
   const [encryptionpassword, setEncryptionPassword] = useState("");
 
   const onSubmitPassword = useCallback(async () => {
-    const { privateKey } = await decryptPrivateKey(encryptionKeys?.privateKey, encryptionpassword);
+    const { privateKey } = await decryptPrivateKey(
+      encryptionKeys?.privateKey ?? "",
+      encryptionpassword,
+    );
     if (privateKey) {
       close();
       pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);

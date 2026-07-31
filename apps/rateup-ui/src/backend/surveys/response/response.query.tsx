@@ -45,8 +45,8 @@ export const useAllResponses = (surveyId: string) => {
       if (passkey) {
         const { decryptedResponses } = await decryptResultResponse(
           response,
-          user?.encryptionKeys?.privateKey,
-          user?.encryptionKeys?.publicKey,
+          user?.encryptionKeys?.privateKey ?? "",
+          user?.encryptionKeys?.publicKey ?? "",
           passkey,
         );
         response = decryptedResponses;

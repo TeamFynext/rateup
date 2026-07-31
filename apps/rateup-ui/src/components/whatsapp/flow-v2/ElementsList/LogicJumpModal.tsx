@@ -119,13 +119,8 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
 
     try {
       const qType = question.metaType || question.type;
-      const conditions = getConditionsv2(qType as any);
-      return (conditions || [])
-        .map((c) => ({
-          label: c?.label || String(c?.value || c),
-          value: c?.value || c?.label || String(c),
-        }))
-        .filter((c) => c.value);
+      const conditions = getConditionsv2(qType);
+      return (conditions || []).map((c) => ({ label: String(c), value: c })).filter((c) => c.value);
     } catch (error) {
       console.error("Error getting conditions:", error);
       return [];

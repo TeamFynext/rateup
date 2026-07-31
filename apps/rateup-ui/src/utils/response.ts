@@ -403,12 +403,13 @@ export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions | Que
 
 export async function decryptResultResponse(
   responses: TeamWiseResponses[],
-  nonceWithEncryptedPrivateKey: any,
-  publicKey: any,
+  nonceWithEncryptedPrivateKey: string,
+  publicKey: string,
   passkey: string,
 ) {
   const decryptedResponses = responses;
   const { privateKey } = await decryptPrivateKey(nonceWithEncryptedPrivateKey, passkey);
+  if (!privateKey) return { decryptedResponses };
   for (let i = 0; i < responses.length; i++) {
     const teamResponses = responses[i]?.responses ?? [];
     for (let j = 0; j < teamResponses.length; j++) {

@@ -1,6 +1,7 @@
 async function initialize() {
   const sodiumModule = await import("libsodium-wrappers");
-  const sodium = (sodiumModule as any).default ?? sodiumModule;
+  // The CJS build exposes the library under `default`; the ESM one does not.
+  const sodium = "default" in sodiumModule ? sodiumModule.default : sodiumModule;
   await sodium.ready;
   return sodium;
 }
@@ -14,12 +15,12 @@ export const generateKeyPair = async () => {
 };
 
 // function to encrypt the survey response
-export const encryptResponse = async (response: Array<QuestionResponse>, publicKey: any) => {
+export const encryptResponse = async (response: Array<QuestionResponse>, publicKey: string) => {
   try {
-    publicKey = parsetoUint8Array(publicKey);
+    const publicKeyBytes = parsetoUint8Array(publicKey);
     const sodium = await initialize();
     const message = JSON.stringify(response);
-    const cipherText = sodium.crypto_box_seal(message, publicKey);
+    const cipherText = sodium.crypto_box_seal(message, publicKeyBytes);
     const encryptedResponse = stringifyUint8Array(cipherText);
     return { encryptedResponse };
   } catch (error) {
@@ -28,12 +29,21 @@ export const encryptResponse = async (response: Array<QuestionResponse>, publicK
 };
 
 // function to decrypt the survey response
-export const decryptResponse = async (cipherText: any, privateKey: Uint8Array, publicKey: any) => {
+export const decryptResponse = async (
+  cipherText: string,
+  privateKey: Uint8Array,
+  publicKey: string,
+) => {
   try {
     const sodium = await initialize();
-    publicKey = parsetoUint8Array(publicKey);
-    cipherText = parsetoUint8Array(cipherText);
-    const decrypted = sodium.crypto_box_seal_open(cipherText, publicKey, privateKey, "text");
+    const publicKeyBytes = parsetoUint8Array(publicKey);
+    const cipherTextBytes = parsetoUint8Array(cipherText);
+    const decrypted = sodium.crypto_box_seal_open(
+      cipherTextBytes,
+      publicKeyBytes,
+      privateKey,
+      "text",
+    );
     const decryptedResponse: QuestionResponse[] = JSON.parse(decrypted);
     return { decryptedResponse };
   } catch (error) {
@@ -65,20 +75,18 @@ export const encryptPrivateKey = async (privateKey: Uint8Array, passkey: Uint8Ar
 };
 
 // function to decrypt the private key
-export const decryptPrivateKey = async (nonceWithEncryptedPrivateKey: any, passkey: string) => {
+export const decryptPrivateKey = async (nonceWithEncryptedPrivateKey: string, passkey: string) => {
   try {
     const sodium = await initialize();
-    nonceWithEncryptedPrivateKey = parsetoUint8Array(nonceWithEncryptedPrivateKey);
+    const nonceWithKeyBytes = parsetoUint8Array(nonceWithEncryptedPrivateKey);
     if (
-      nonceWithEncryptedPrivateKey.length <
+      nonceWithKeyBytes.length <
       sodium.crypto_secretbox_NONCEBYTES + sodium.crypto_secretbox_MACBYTES
     ) {
       throw new Error("Nonce and encrypted message must be at least 48 bytes");
     }
-    const nonce = nonceWithEncryptedPrivateKey.slice(0, sodium.crypto_secretbox_NONCEBYTES);
-    const encryptedPrivateKey = nonceWithEncryptedPrivateKey.slice(
-      sodium.crypto_secretbox_NONCEBYTES,
-    );
+    const nonce = nonceWithKeyBytes.slice(0, sodium.crypto_secretbox_NONCEBYTES);
+    const encryptedPrivateKey = nonceWithKeyBytes.slice(sodium.crypto_secretbox_NONCEBYTES);
     const privateKey = sodium.crypto_secretbox_open_easy(
       encryptedPrivateKey,
       nonce,

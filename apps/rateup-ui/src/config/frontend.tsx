@@ -19,7 +19,7 @@ export const SuperTokensConfig = {
     // Passwordless.init(),
     Session.init(),
   ],
-  getRedirectionURL: async (context: any) => {
+  getRedirectionURL: async (context: { action: string }) => {
     if (context.action === "SUCCESS") {
       return "/dashboard";
     }

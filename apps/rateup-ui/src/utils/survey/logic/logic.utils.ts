@@ -1,4 +1,4 @@
-import type { QuestionType } from "@/types/enums.ts";
+import type { QuestionType, QuestionType2 } from "@/types/enums.ts";
 import {
   LDResponse,
   LogicAction,
@@ -212,7 +212,7 @@ export function getResponses2(question: {
   }
 }
 
-export function getConditions(qType: Q): Array<any> {
+export function getConditions(qType: Q): LogicCondition[] {
   switch (qType) {
     case Q.LD:
       return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
@@ -245,7 +245,9 @@ export function getConditions(qType: Q): Array<any> {
       return [LogicCondition.Submitted];
   }
 }
-export function getConditionsv2(qType: WaQuestions): Array<any> {
+export function getConditionsv2(
+  qType: WaQuestions | QuestionType | QuestionType2 | undefined,
+): LogicCondition[] {
   switch (qType) {
     case WaQuestions.LD:
     case WaQuestions.YN:
