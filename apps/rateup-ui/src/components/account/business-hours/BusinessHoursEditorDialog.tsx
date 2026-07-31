@@ -324,10 +324,22 @@ export function BusinessHoursEditorDialog({
                   <div className="mt-4 space-y-4">
                     {days.map((day, idx) => {
                       const daySchedule = field.value[day];
-                      const dayErrors =
-                        fieldState.error?.[day]?.timeSlots?.length > 0
-                          ? fieldState.error[day].timeSlots
-                          : null;
+                      // RHF nests the per-day errors under the field's own object shape.
+                      const scheduleErrors = fieldState.error as
+                        | Partial<
+                            Record<
+                              DayKey,
+                              {
+                                timeSlots?: Array<
+                                  Partial<Record<"openTime" | "closeTime", { message?: string }>>
+                                >;
+                              }
+                            >
+                          >
+                        | undefined;
+                      const dayErrors = scheduleErrors?.[day]?.timeSlots?.length
+                        ? scheduleErrors[day]?.timeSlots
+                        : null;
                       return (
                         <div key={day} className="space-y-3">
                           <div className="flex items-center justify-between">

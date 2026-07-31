@@ -922,7 +922,7 @@ export const useMessagesStore = create<MessagesStore>()(
 
         const existing = new Map(entry.messages.map((x) => [x.messageId ?? x.id, x]));
 
-        const changedOrNew: unknown[] = [];
+        const changedOrNew: WaGetMessagesBody[] = [];
 
         for (const msg of messages) {
           const id = msg.messageId ?? msg.id;
