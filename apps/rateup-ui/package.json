@@ -10,6 +10,7 @@
     "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
+    "check:layers": "node scripts/check-layers.mjs",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
