@@ -1,7 +1,7 @@
 import { axiosClient } from "@/backend/apiClient";
 
 import { LOYALTY_BASE } from "../base.ts";
-import type { LoyaltyRewardStatus } from "../reward.api";
+import type { LoyaltyRewardStatus, LoyaltyRewardValue } from "../reward.api";
 
 const base = `${LOYALTY_BASE}/accounts`;
 
@@ -19,7 +19,7 @@ export interface CustomerRedemption {
     description?: string | null;
     rewardType: "discount_fixed" | "discount_percentage" | "free_item";
     pointsCost: number;
-    rewardValue: any;
+    rewardValue: LoyaltyRewardValue;
   };
 }
 

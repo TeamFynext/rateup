@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createCatalogProductBatch,
   createShopifyProduct,
@@ -23,7 +25,7 @@ export const useWaCatalogProducts = (catalogId: string) => {
 export const useCreateBatchCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => createCatalogProductBatch(catalogId, data),
+    mutationFn: (data: RequestPayload) => createCatalogProductBatch(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
@@ -34,7 +36,8 @@ export const useCreateBatchCatalogProducts = (catalogId: string) => {
 export const useSyncCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => syncCatalogProducts(catalogId, data),
+    mutationFn: (data: { limit?: number; next?: string } | null) =>
+      syncCatalogProducts(catalogId, data ?? {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
@@ -55,7 +58,7 @@ export const useDeletCatalogProducts = (catalogId: string) => {
 export const useUpdateCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateCatalogProducts(catalogId, data),
+    mutationFn: (data: RequestPayload) => updateCatalogProducts(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
@@ -75,7 +78,7 @@ export const useShopifyAvailableProducts = (catalogId: string, enabled: boolean)
 export const useImportShopifyProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (items: any[]) => importShopifyProducts(catalogId, items),
+    mutationFn: (items: RequestPayload[]) => importShopifyProducts(catalogId, items),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
       qc.invalidateQueries({

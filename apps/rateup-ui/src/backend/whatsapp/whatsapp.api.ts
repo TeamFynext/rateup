@@ -1,4 +1,6 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { TemplateType, WaTemplateCategory, WaTemplateStatus } from "@/types/enums.ts";
+import type { WaTemplateFetchBody, WaTemplateFetchBodyComponent } from "@/types/global";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { WHATSAPP_URL } from ".";
@@ -16,7 +18,7 @@ export interface WaTemplate {
   };
   data: {
     name: string;
-    components: Array<any>;
+    components: Array<WaTemplateFetchBodyComponent>;
     id: string;
     status: WaTemplateStatus;
     language: string;
@@ -75,18 +77,18 @@ export const getWaTemplateById = async (id: string) => {
   return res.data;
 };
 
-export const createWaTemplate = async (templateData: any) => {
+export const createWaTemplate = async (templateData: RequestPayload) => {
   return axiosClient.post(`${TEMPLATES_URL}`, templateData, {
     timeout: 25000,
   });
 };
-export const saveTemplateAsDraft = async (templateData: any) => {
+export const saveTemplateAsDraft = async (templateData: RequestPayload) => {
   return axiosClient.post(`${TEMPLATES_URL}/save-as-draft`, templateData);
 };
 export const deleteWaTemplate = async (id: string) => {
   return axiosClient.delete(`${TEMPLATES_URL}/${id}`);
 };
-export const updateWaTemplate = async (id: string, templateData: any) => {
+export const updateWaTemplate = async (id: string, templateData: RequestPayload) => {
   return axiosClient.put(`${TEMPLATES_URL}/${id}`, templateData);
 };
 export const syncTemplates = async (input?: SyncTemplatesInput) => {
@@ -96,7 +98,7 @@ export const getUnregisteredTemplates = async () => {
   return (await axiosClient.get(`${TEMPLATES_URL}/unregistered`)).data;
 };
 export const registerTemplates = async (
-  dbTemplates: Array<{ data: any; acceptButton: string }>,
+  dbTemplates: Array<{ data: WaTemplateFetchBody; acceptButton: string }>,
 ) => {
   return axiosClient.post(`${TEMPLATES_URL}/register`, dbTemplates);
 };
@@ -125,7 +127,7 @@ export async function uploadTemplateMedia(file: File) {
 export async function sendWaTemplateToUser(
   templateId: string,
   phone: string,
-  parameterData: any,
+  parameterData: RequestPayload,
   teamId: string,
   whatsappSettingsPhoneId: string,
 ) {

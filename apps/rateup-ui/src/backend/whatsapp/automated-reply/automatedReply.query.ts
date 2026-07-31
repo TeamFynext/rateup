@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { shouldSkipLocalErrorToast } from "@/backend/apiClient";
-import type { RequestPayload } from "@/types/api.ts";
+import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 
 import {
   cloneWaAutomatedReply,
@@ -87,7 +87,8 @@ export const useCloneWaAutomatedReplyMutation = () => {
 
 export const useUpdateWaAutomatedReplyMutation = () => {
   return useMutation({
-    mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
+    mutationFn: ({ id, ...data }: { id: string } & RequestPayloadFields) =>
+      updateWaAutomatedReply(id, data),
     onError: (error) => {
       if (!shouldSkipLocalErrorToast(error)) {
         toast.error(error?.message ?? "Error Updating Automated Reply");
@@ -98,7 +99,8 @@ export const useUpdateWaAutomatedReplyMutation = () => {
 
 export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId: string) => {
   return useMutation({
-    mutationFn: ({ phone }: any) => initiateWaAutomatedReply(waAutomatedReplyId, phone),
+    mutationFn: ({ phone }: { phone: string }) =>
+      initiateWaAutomatedReply(waAutomatedReplyId, phone),
     onSuccess: (_res) => {
       toast.success("Automation initiated Successfully");
     },

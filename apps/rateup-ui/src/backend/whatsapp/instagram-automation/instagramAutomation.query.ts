@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
+
 import {
   createInstagramAutomation,
   deleteInstagramAutomation,
@@ -32,7 +34,7 @@ export const useInstagramAutomationById = (automationId: string) =>
 export const useCreateInstagramAutomationMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => createInstagramAutomation(data),
+    mutationFn: (data: RequestPayload) => createInstagramAutomation(data),
     onSuccess: (_response) => {
       qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
       toast.success("Instagram Automation Created Successfully");
@@ -59,7 +61,8 @@ export const useDeleteInstagramAutomationMutation = () => {
 
 export const useUpdateInstagramAutomationMutation = () => {
   return useMutation({
-    mutationFn: ({ id, ...data }: any) => updateInstagramAutomation(id, data),
+    mutationFn: ({ id, ...data }: { id: string } & RequestPayloadFields) =>
+      updateInstagramAutomation(id, data),
     onError: (error) => {
       toast.error(error?.message || "Error Updating Instagram Automation");
     },
@@ -68,7 +71,7 @@ export const useUpdateInstagramAutomationMutation = () => {
 
 export const useInitiateInstagramAutomationMutation = (automationId: string) => {
   return useMutation({
-    mutationFn: ({ igsId }: any) => initiateInstagramAutomation(automationId, igsId),
+    mutationFn: ({ igsId }: { igsId: string }) => initiateInstagramAutomation(automationId, igsId),
     onSuccess: (_res) => {
       toast.success("Instagram Automation initiated Successfully");
     },

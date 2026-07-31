@@ -15,7 +15,7 @@ export default function useTemplatesAvailableForTeam(teamId: string) {
   return templates.filter((template) => {
     const flowButton = template.data.components
       .find((c) => c.type === "BUTTONS")
-      ?.buttons.find((b: { type?: string }) => b.type === "FLOW");
+      ?.buttons?.find((b) => b.type === "FLOW");
     if (flowButton) {
       const flow = flows?.find((f) => f.flowId == flowButton["flow_id"]);
       if (!flow) {

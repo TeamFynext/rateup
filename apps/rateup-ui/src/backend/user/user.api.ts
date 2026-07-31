@@ -196,7 +196,7 @@ export interface AuditLogData {
   action: string;
   method: string;
   route: string;
-  body: any;
+  body: RequestPayload;
   createdAt: string;
   rawCreatedAt: Date;
 }

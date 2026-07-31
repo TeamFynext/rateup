@@ -2787,7 +2787,8 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
       adAccounts: Option[] = [],
       leadgenForms: Option[] = [],
       ads: Option[] = [],
-      formQuestions: Option[] = [];
+      // `SelectField` normalises bare strings, so the keys go through as-is.
+      formQuestions: string[] = [];
     if (metaAssets) {
       pages = metaAssets.pages.map((page) => ({
         label: page.name,

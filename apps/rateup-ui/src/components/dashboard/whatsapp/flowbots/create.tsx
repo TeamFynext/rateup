@@ -58,6 +58,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import type { RequestPayloadFields } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform } from "@/types/platform.ts";
 
@@ -288,7 +289,10 @@ type AutomatedReplyFormValues = {
   platform: AutomationPlatform | string;
   matchData: WaAutomatedReply["matchData"];
   whatsappSettingsPhoneId: string | null;
-} & Record<string, any>;
+  /** Present once an existing reply is loaded for editing. */
+  id?: string;
+  /** The editor also round-trips the reply's other columns untouched. */
+} & RequestPayloadFields;
 
 function getInitialValues(
   initialValues?: WaAutomatedReply,
@@ -404,25 +408,31 @@ export function AutomatedReplyForm({
 
     if (editMode) {
       if (isInstagram) {
-        updateInstagramMutation.mutate(data, {
-          onSuccess: () => {
-            qc.invalidateQueries({
-              queryKey: ["instagramAutomation", { automationId: waAutomatedReplyId }],
-            });
-            toast.success(t("Instagram Automation updated successfully"));
-            setSaveSuccess(true);
+        updateInstagramMutation.mutate(
+          { ...data, id: data.id ?? waAutomatedReplyId ?? "" },
+          {
+            onSuccess: () => {
+              qc.invalidateQueries({
+                queryKey: ["instagramAutomation", { automationId: waAutomatedReplyId }],
+              });
+              toast.success(t("Instagram Automation updated successfully"));
+              setSaveSuccess(true);
+            },
           },
-        });
+        );
       } else {
-        updateMutation.mutate(data, {
-          onSuccess: () => {
-            qc.invalidateQueries({
-              queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-            });
-            toast.success(t("Automated Reply updated successfully"));
-            setSaveSuccess(true);
+        updateMutation.mutate(
+          { ...data, id: data.id ?? waAutomatedReplyId ?? "" },
+          {
+            onSuccess: () => {
+              qc.invalidateQueries({
+                queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+              });
+              toast.success(t("Automated Reply updated successfully"));
+              setSaveSuccess(true);
+            },
           },
-        });
+        );
       }
       return;
     }

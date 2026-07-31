@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
+import type { CatalogSettings } from "./catalog.api";
 import {
   createCatalogAddressFlow,
   deleteWaCatalog,
@@ -65,7 +68,7 @@ export const useSyncConnectedCatalog = () => {
 export const useUpateCatalog = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateWaCatalog(catalogId, data),
+    mutationFn: (data: RequestPayload) => updateWaCatalog(catalogId, data),
     onSuccess: () => {
       toast.success("updated");
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
@@ -130,7 +133,7 @@ export const useCatalogSettings = (catalogId: string, pollingEnabled = false) =>
 export const useUpdateCatalogSettings = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateCatalogSettings(catalogId, data),
+    mutationFn: (data: Partial<CatalogSettings>) => updateCatalogSettings(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
       toast.success("Settings saved");
@@ -144,7 +147,7 @@ export const useUpdateCatalogSettings = (catalogId: string) => {
 export const useCreateAddressFlow = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ json, map }: { json?: any; map?: any } = {}) =>
+    mutationFn: ({ json, map }: { json?: RequestPayload; map?: RequestPayload } = {}) =>
       createCatalogAddressFlow(catalogId, json, map),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });

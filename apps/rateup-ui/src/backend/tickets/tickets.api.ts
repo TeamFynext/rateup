@@ -6,6 +6,7 @@ import type {
   Column,
   Label,
   MemberData,
+  TicketComment,
 } from "@/components/Tickets/types.ts";
 import type { RequestPayload } from "@/types/api.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
@@ -31,7 +32,7 @@ export async function getTickets() {
 
 export async function getTicket(id: string) {
   try {
-    const ticket: any = (await axiosClient.get(`${TICKET_URL}/${id}`)).data;
+    const ticket: ITicket = (await axiosClient.get(`${TICKET_URL}/${id}`)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -41,7 +42,7 @@ export async function getTicket(id: string) {
 
 export async function deleteTicket(id: string) {
   try {
-    const ticket: any = (await axiosClient.delete(`${TICKET_URL}/${id}`)).data;
+    const ticket: ITicket = (await axiosClient.delete(`${TICKET_URL}/${id}`)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -52,7 +53,7 @@ export async function deleteTicket(id: string) {
 // update ticket status
 export async function updateTicketStatus(ticketId: string, data: RequestPayload) {
   try {
-    const ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}/status`, data)).data;
+    const ticket: ITicket = (await axiosClient.put(`${TICKET_URL}/${ticketId}/status`, data)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -63,7 +64,7 @@ export async function updateTicketStatus(ticketId: string, data: RequestPayload)
 // update ticket - deadline, priority
 export async function updateTicket(ticketId: string, data: RequestPayload) {
   try {
-    const ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}`, data)).data;
+    const ticket: ITicket = (await axiosClient.put(`${TICKET_URL}/${ticketId}`, data)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -84,7 +85,8 @@ export async function createComment(data: {
 }) {
   const id = data.ticketId;
   try {
-    const comment: any = (await axiosClient.post(`${TICKET_URL}/${id}/comment`, data)).data;
+    const comment: TicketComment = (await axiosClient.post(`${TICKET_URL}/${id}/comment`, data))
+      .data;
     return comment;
   } catch (e) {
     console.error(e);

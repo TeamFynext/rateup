@@ -390,7 +390,7 @@ export const getEvalRunStatus = async (waSettingsId: string, jobId: string) => {
   return res.data as {
     status: "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
     progress?: { completed: number; total: number; current_stage: string };
-    result?: any;
+    result?: unknown;
     error?: { code: string; message: string };
   };
 };

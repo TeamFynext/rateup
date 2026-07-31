@@ -25,6 +25,12 @@ export type QueryFilter = Record<string, QueryParamValue>;
 /** Request body forwarded verbatim to axios. */
 export type RequestPayload = unknown;
 
+/**
+ * An object request body whose fields the caller supplies. Use when the
+ * request is spread from a form's values and only a key or two is fixed.
+ */
+export type RequestPayloadFields = Record<string, RequestPayload>;
+
 /** TanStack Table pagination state, as consumed by the paginated list endpoints. */
 export type PaginationState = {
   pageIndex: number;

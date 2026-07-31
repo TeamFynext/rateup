@@ -9,7 +9,7 @@ export interface ICreateContact {
   email?: string;
   teamId?: string;
   source?: string;
-  tags?: any;
+  tags?: string[];
   external_id?: string;
 }
 

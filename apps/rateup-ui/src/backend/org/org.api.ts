@@ -1,6 +1,24 @@
 import type { RequestPayload } from "@/types/api.ts";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
 
+/**
+ * The setup wizard's per-step completion flags. Mirrors the API's
+ * `onboardingChecklist` zod object; every step is optional.
+ */
+export interface OnboardingChecklist {
+  api?: boolean;
+  verify?: boolean;
+  payment?: boolean;
+  invite?: boolean;
+  auto?: boolean;
+  points?: boolean;
+  tiers?: boolean;
+  rewards?: boolean;
+  referral?: boolean;
+  cmds?: boolean;
+  loyaltyauto?: boolean;
+}
+
 import { axiosClient } from "../apiClient";
 
 export async function getTeamsMembersOfOrg() {
@@ -57,7 +75,7 @@ export interface IUpdateOrgDetails {
   waAssignedChatPermission: WaAssignedChatPermission;
   showLifecycle: boolean;
   onboardingChecklistCompleted: boolean;
-  onboardingChecklist: any;
+  onboardingChecklist: OnboardingChecklist;
   isConversionApiActive: boolean;
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>

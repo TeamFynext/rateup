@@ -1,6 +1,14 @@
 import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 import type { MetaLoginAssets, WaConfigType, WhatsappSettingsStatus } from "@/types/enums.ts";
 
+/** A question on a Meta leadgen form, as the Graph API returns it. */
+export interface LeadgenFormQuestion {
+  key: string;
+  label?: string;
+  type?: string;
+  id?: string;
+}
+
 import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
@@ -154,7 +162,7 @@ export const syncLeadgenFormQuestions = async (
     `${SettingsUrl}/sync/leadgen-form/${formId}?whatsappSettingsId=${waSettingsId}`,
     data,
   );
-  return res.data as { questions: any[] };
+  return res.data as { questions: LeadgenFormQuestion[] };
 };
 export const syncAdAccounts = async (waSettingsId: string) => {
   const res = await axiosClient.post(`${SettingsUrl}/sync/ad-accounts/${waSettingsId}`);
@@ -202,14 +210,14 @@ export interface MetaAssets {
     form_id: string;
     field_data: {
       name: string;
-      values: any[];
+      values: string[];
     }[];
   }[];
   leadgenForms: {
     pageId: string;
     id: string;
     name: string;
-    questions: any[];
+    questions: LeadgenFormQuestion[];
   }[];
 }
 export const getMetaAssets = async (waSettingsId: string) => {

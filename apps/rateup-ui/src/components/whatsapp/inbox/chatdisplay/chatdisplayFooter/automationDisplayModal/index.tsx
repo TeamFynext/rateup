@@ -33,7 +33,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
   const { t: translations } = useTranslation();
   function handleSendAutomatedReply() {
     initiate.mutate(
-      { phone: props?.contact?.phone },
+      { phone: props?.contact?.phone ?? "" },
       {
         onSuccess: () => {
           onClose();

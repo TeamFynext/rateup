@@ -1698,10 +1698,25 @@ export interface WaTemplateFetchBodyComponent {
     header_handle: string[];
     body_text?: [string[]];
   };
-  buttons?: {
-    type: WaButtonType.QUICK_REPLY;
-    text: string;
-  }[];
+  buttons?: WaTemplateFetchBodyButton[];
+}
+
+/**
+ * A button on a fetched template. Meta returns one loose object per button and
+ * which extras are set follows `type`, so the extras are optional here.
+ * (The previous declaration referenced a `WaButtonType` enum that does not
+ * exist; `skipLibCheck` hid that, and every read of `flow_id`/`url` had to go
+ * through `any`.)
+ */
+export interface WaTemplateFetchBodyButton {
+  type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER" | "FLOW" | "COPY_CODE" | "OTP";
+  text: string;
+  url?: string;
+  phone_number?: string;
+  flow_id?: string;
+  flow_action?: string;
+  navigate_screen?: string;
+  example?: string[] | string;
 }
 
 export enum WaTemplateSupportedParameters {

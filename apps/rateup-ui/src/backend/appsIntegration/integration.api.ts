@@ -15,14 +15,16 @@ export const getIntegrationByType = async (type: IntegratedApps) => {
   return response.data;
 };
 
-interface integrationSchemaProps {
+export interface integrationSchemaProps {
   id?: string;
-  credential: AmeliaCredential | petpoojaCredential;
+  /** Zapier creates with no credential — the server mints the API key. */
+  credential: AmeliaCredential | petpoojaCredential | Record<string, never>;
   name: string;
 }
 
 export interface updateIntegrationSchema {
-  credential: any;
+  /** The provider's credential blob; its shape differs per integration. */
+  credential: RequestPayload;
   updateKey?: boolean;
 }
 
