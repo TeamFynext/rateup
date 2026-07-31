@@ -9,6 +9,8 @@ import ResultComparison from "@/components/Survey/Result/ResultComparison.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow.tsx";
 import { FlowScreenSheet } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
+import { readEditorScreens } from "@/components/whatsapp/flow-v2/utils/flow-json.ts";
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import type { IEditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import FlowPageHeader, {
@@ -18,6 +20,7 @@ import FlowSettings from "@/components/whatsapp/flows/FlowSettings/index.tsx";
 import FlowShare from "@/components/whatsapp/flows/FlowShare/index.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { WaQuestions } from "@/types/enums.ts";
 
 import styles from "../../../../../../components/dashboard/whatsapp/flows/v2/FlowPage.module.css";
 
@@ -48,22 +51,23 @@ function Flow() {
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
   const { data: survey, isPending: isSurveyPending } = useSurvey(flow?.surveyId ?? "");
 
-  const flowQuestions = useMemo(() => {
-    if (!flow?.json?.screens) return [];
-    return flow.json.screens.flatMap((screen) =>
-      screen.layout.children
-        .filter((child) => child.type !== "Footer")
-        .map(({ id, label, metaType, name, "data-source": dataSource, header }: unknown) => ({
-          id,
-          label,
-          metaType,
-          dataSource,
-          name,
-          header,
-        }))
-        .filter(({ name }: unknown) => name),
-    );
-  }, [flow]);
+  const flowQuestions: FlowQuestionSummary[] = useMemo(
+    () =>
+      readEditorScreens(flow?.json).flatMap((screen) =>
+        screen.layout.children
+          .filter((child) => child.type !== WaQuestions.Footer)
+          .map(({ id, label, metaType, name, "data-source": dataSource, header }) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          }))
+          .filter(({ name }) => name),
+      ),
+    [flow],
+  );
 
   const { update } = useRouteParams();
 
@@ -93,8 +97,9 @@ function Flow() {
   }, [survey]);
 
   useEffect(() => {
-    if (tabView && Object.values(FlowTabEnum).includes(tabView)) {
-      setTab(tabView);
+    const known = Object.values(FlowTabEnum).find((value) => value === tabView);
+    if (known) {
+      setTab(known);
     }
   }, [tabView]);
 
@@ -168,7 +173,7 @@ function Flow() {
                 >
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}
-                    aiResponseSummary={survey?.aiResponseSummary}
+                    aiResponseSummary={survey?.aiResponseSummary ?? []}
                     flowId={flow?.flowId}
                     version={flow?.version}
                     flowQuestions={flowQuestions}
@@ -184,7 +189,7 @@ function Flow() {
                   surveyId={survey.id}
                   version={flow.version}
                   flowQuestions={flowQuestions}
-                  questions={flowQuestions}
+                  questions={[]}
                 />
               </TabsContent>
             </Tabs>

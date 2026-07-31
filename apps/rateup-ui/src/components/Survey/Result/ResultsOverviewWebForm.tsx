@@ -13,7 +13,7 @@ import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Cust
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
@@ -35,7 +35,7 @@ const ResultsOverviewWebForm = ({
   aiResponseSummary: ResponseSummary[];
   flowId?: string;
   version?: number;
-  flowQuestions: FormElement[];
+  flowQuestions: FlowQuestionSummary[];
   questions: Question[];
 }) => {
   const { filterTeams } = useContext(SurveyContext);

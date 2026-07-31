@@ -41,6 +41,19 @@ type GoogleReview = {
  */
 export type FlowElementType = QuestionType2 | WaQuestions | WaFlowFormElementType;
 
+/**
+ * A flow's questions as the analytics views consume them: the interactive elements of every
+ * screen, flattened and reduced to the fields those views read.
+ */
+export interface FlowQuestionSummary {
+  id?: string;
+  label?: string;
+  metaType?: FlowElementType;
+  dataSource?: Array<{ title: string; id: string }>;
+  name?: string;
+  header?: string;
+}
+
 export interface FormElement {
   id?: string;
   type?: FlowElementType;

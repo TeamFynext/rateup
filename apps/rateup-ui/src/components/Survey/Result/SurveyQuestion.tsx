@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { stringToColour } from "@/utils/essential/index.ts";
 import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 
@@ -44,7 +44,7 @@ interface SurveyQuestionProps {
   choiceWise: Array<[string, ChoiceWiseEntry]>;
   NPS: Array<[string, NpsEntry]>;
   version?: number;
-  flowQuestions?: FormElement[];
+  flowQuestions?: FlowQuestionSummary[];
   questions?: Question[];
   surveyId: string;
   defaultLanguage: string;
