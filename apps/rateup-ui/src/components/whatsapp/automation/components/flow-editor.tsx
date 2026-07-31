@@ -14,7 +14,7 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
-import type { Connection, NodeChange } from "@xyflow/react";
+import type { Connection, Edge, NodeChange, ReactFlowInstance } from "@xyflow/react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import type { WaAutomatedReply } from "@/types/global";
 
 import { validateNodeData } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
+import { asTypedNode, asTypedNodes } from "../types/node-types.ts";
 import { getLayoutedElements } from "../utils/auto-layout.ts";
 import { useDebouncedCallback, useHotkeys } from "../utils/flow-hooks.ts";
 import { HistoryManager } from "../utils/history.ts";
@@ -64,7 +65,7 @@ function FlowEditorContent({
     isLeadAutomation ? leadAutomationinitialNodes : initialNodes,
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [selectedNode, setSelectedNode] = useState<TypedNode | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
@@ -126,10 +127,10 @@ function FlowEditorContent({
           onSettled: () => {
             qc.setQueryData(
               ["waAutomatedReply", { waAutomatedReplyId: waAutomationData.id }],
-              (oldData) => ({
+              (oldData: WaAutomatedReply | undefined) => ({
                 ...oldData,
                 matchData: {
-                  ...oldData.matchData,
+                  ...oldData?.matchData,
                   json: flow,
                 },
               }),
@@ -208,7 +209,7 @@ function FlowEditorContent({
   }, [historyManager, setNodes, setEdges, updateUndoRedoState]);
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
+    setSelectedNode(asTypedNode(node));
     setIsEditorOpen(true);
   }, []);
 
@@ -278,7 +279,7 @@ function FlowEditorContent({
 
   // Update node data when edited
   const handleNodeDataChange = useCallback(
-    (nodeId: string, newData: unknown) => {
+    (nodeId: string, newData: Partial<TypedNode["data"]>) => {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
@@ -356,7 +357,7 @@ function FlowEditorContent({
       }
 
       // Check if all nodes (except start) have incoming connections
-      const nodesWithIncomingEdges = new Set(allEdges.map((edge) => edge.target));
+      const nodesWithIncomingEdges = new Set(allEdges.map((edge: Edge) => edge.target));
 
       const nodesWithoutIncoming = allNodes.filter(
         (node: Node) =>
@@ -376,7 +377,7 @@ function FlowEditorContent({
 
       // Validate required fields for all nodes
       for (const node of allNodes) {
-        const validationResult = validateNodeData(node as TypedNode);
+        const validationResult = validateNodeData(asTypedNode(node));
         if (!validationResult.valid) {
           if (!silent) toast.error(validationResult.message);
           return false;
@@ -524,7 +525,7 @@ function FlowEditorContent({
               label="Preview"
             >
               <FlowbotPreviewPlayground
-                nodes={nodes as unknown as TypedNode[]}
+                nodes={asTypedNodes(nodes)}
                 edges={edges}
                 platform={waAutomationData.platform === "instagram" ? "instagram" : "whatsapp"}
               />

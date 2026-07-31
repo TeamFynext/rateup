@@ -170,7 +170,7 @@ export default function ComponentSidebar({ platform }: Readonly<{ platform: stri
 
   // Function to handle drag start
   const onDragStart = useCallback(
-    (event: React.DragEvent, nodeType: string, nodeData: unknown) => {
+    (event: React.DragEvent, nodeType: string, nodeData: Record<string, unknown>) => {
       event.dataTransfer.setData("application/reactflow", nodeType);
       event.dataTransfer.setData(
         "application/nodeData",

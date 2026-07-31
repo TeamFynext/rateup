@@ -42,16 +42,32 @@ export async function getWaCatalogById(catalogId: string) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }
 
-/** A catalog with its synced products, as the "connected catalog" endpoint returns it. */
-export interface WaConnectedCatalog extends WaCatalog {
-  products?: Array<{
-    retailer_id?: string;
+/**
+ * A synced catalog product. Meta's product fields live in the `productProps` JSON column, and
+ * some screens read them flattened onto the row — both spellings are declared rather than
+ * silently changing which one a screen reads.
+ */
+export interface WaCatalogProduct {
+  productDbId?: string;
+  retailer_id?: string;
+  type?: string;
+  productProps?: {
     title?: string;
     name?: string;
     price?: string;
     image_link?: string;
     image?: Array<{ url?: string }>;
-  }>;
+  } | null;
+  title?: string;
+  name?: string;
+  price?: string;
+  image_link?: string;
+  image?: Array<{ url?: string }>;
+}
+
+/** A catalog with its synced products, as the "connected catalog" endpoint returns it. */
+export interface WaConnectedCatalog extends WaCatalog {
+  products?: WaCatalogProduct[];
 }
 
 export async function getWaConnectedCatalog(

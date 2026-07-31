@@ -30,12 +30,6 @@ interface ListRow {
   description?: string;
 }
 
-/** A catalog product row, as the catalog-products endpoint returns it. */
-interface CatalogProduct {
-  retailer_id: string;
-  productProps?: { title?: string };
-}
-
 /** A team member, as the automation assign-node options endpoint returns it. */
 interface AutomationUser {
   id: string;
@@ -3135,8 +3129,8 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
   const products = useMemo(
     () =>
       data
-        ? data.products.map((p: CatalogProduct) => ({
-            value: p.retailer_id,
+        ? (data.products ?? []).map((p) => ({
+            value: p.retailer_id ?? "",
             label: p?.productProps?.title,
           }))
         : [],
@@ -3778,9 +3772,9 @@ const InstagramProductTemplateNodeEditor: React.FC<
   const products = useMemo(
     () =>
       catalogData
-        ? catalogData.products.map((p: CatalogProduct) => ({
-            value: p.retailer_id,
-            label: p?.productProps?.title || p.retailer_id,
+        ? (catalogData.products ?? []).map((p) => ({
+            value: p.retailer_id ?? "",
+            label: p?.productProps?.title || p.retailer_id || "",
           }))
         : [],
     [catalogData],

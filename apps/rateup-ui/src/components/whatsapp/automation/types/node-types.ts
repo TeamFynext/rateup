@@ -490,6 +490,15 @@ export type TypedNode<T extends NodeType = NodeType> = Omit<Node, "data" | "type
   data: NodeTypeMap[T];
 };
 
+/**
+ * React Flow types every node's `data` as an open record, while the editor works against the
+ * discriminated `TypedNode`. The canvas only ever holds flowbot nodes, so this is the single
+ * place that states the correspondence.
+ */
+export const asTypedNode = (node: Node): TypedNode => node as unknown as TypedNode;
+
+export const asTypedNodes = (nodes: Node[]): TypedNode[] => nodes as unknown as TypedNode[];
+
 // Validation functions for node data
 export function validateNodeData(node: TypedNode): {
   valid: boolean;
