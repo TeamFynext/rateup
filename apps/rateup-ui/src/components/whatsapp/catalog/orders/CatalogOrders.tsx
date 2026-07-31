@@ -27,7 +27,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
     refetch,
     isRefetching,
   } = useWaCatalogOrders(catalogId, pagination);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<CatalogOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const data = useMemo(() => {
@@ -68,7 +68,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
           <Button
             variant="ghost"
             onClick={() => {
-              setSelectedOrder(info.getValue());
+              setSelectedOrder(info.row.original);
               setIsModalOpen(true);
             }}
           >
@@ -123,7 +123,13 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
   ];
 
   const { totalPrice, productItems } = useMemo(() => {
-    let productItems = [];
+    let productItems: Array<{
+      id: string;
+      retailerId: string;
+      quantity: number;
+      price: string;
+      total: string;
+    }> = [];
     let totalPrice = 0;
     if (selectedOrder) {
       productItems = selectedOrder.products.map((item: CatalogOrderProduct, idx: number) => ({

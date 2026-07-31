@@ -51,6 +51,10 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
     .object({
       name: z.string().trim().min(1, translations("Cannot be empty")),
       teamId: z.string().optional(),
+      icon: z.string().optional(),
+      contactType: z.array(z.string()).optional(),
+      /** Per-contact-type tag selections, keyed by contact type. */
+      tags: z.record(z.string(), z.unknown()).optional(),
     })
     .passthrough()
     .superRefine((values, ctx) => {
@@ -73,7 +77,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
         tags: {},
       };
 
-  const form = useForm<any>({
+  const form = useForm<z.infer<typeof groupFormSchema>>({
     resolver: zodResolver(groupFormSchema),
     defaultValues,
   });

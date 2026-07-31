@@ -5,8 +5,12 @@ import { axiosClient } from "../../apiClient";
 
 export interface ICreateContactGroup {
   name: string;
-  icon: string;
-  teamId: string;
+  icon?: string;
+  teamId?: string;
+  type?: ContactGroupType;
+  /** Per-contact-type tag selections, keyed by contact type. */
+  tags?: Record<string, unknown>;
+  contactType?: string[];
 }
 
 export interface _ICreateNewContact {

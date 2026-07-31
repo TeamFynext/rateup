@@ -3,6 +3,7 @@ import { Loader2, Package } from "lucide-react";
 import { useState } from "react";
 
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import type { CatalogOrder } from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,7 @@ export default function OrdersTable({
 }>) {
   const [page, setPage] = useState(0);
   const pageSize = 10;
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<CatalogOrder | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: connectedCatalog, isLoading: isLoadingCatalog } = useConnectedWaCatalog(phoneId);
