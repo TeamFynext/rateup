@@ -46,7 +46,7 @@ interface SubscriptionTableData {
   orgName: string;
   planId: string;
   planName: string;
-  features;
+  features: Subscription;
   createdAt: string;
   renewedAt: string;
   expiresAt: string;
@@ -151,9 +151,13 @@ function SubscriptionPage() {
         // Tickets/menu are no longer subscription-managed; hide them from the badges too.
         const HIDDEN_FEATURES = ["menu", "ticket"];
         const activeFeatures = features
-          ? Object.keys(features).filter(
-              (feature) => features[feature]?.active && !HIDDEN_FEATURES.includes(feature),
-            )
+          ? Object.entries(features)
+              .filter(
+                ([feature, value]) =>
+                  (value as { active?: boolean } | undefined)?.active &&
+                  !HIDDEN_FEATURES.includes(feature),
+              )
+              .map(([feature]) => feature)
           : [];
 
         return (
@@ -246,8 +250,8 @@ function SubscriptionPage() {
 
       return {
         id: subscription.orgId,
-        orgId: subscription.org.id,
-        orgName: subscription.org.name,
+        orgId: subscription.orgId,
+        orgName: subscription.org?.name ?? "",
         planId: subscription?.basePlan?.id || "",
         planName: subscription?.basePlan?.name || "Unknown",
         features: subscription,

@@ -854,6 +854,8 @@ declare global {
   }
   interface Subscription {
     orgId: string;
+    /** Included when the admin endpoints expand the owning org. */
+    org?: { id: string; name: string };
     features: SubscriptionFeatures;
     expiresAt: Date;
     renewedAt?: Date;

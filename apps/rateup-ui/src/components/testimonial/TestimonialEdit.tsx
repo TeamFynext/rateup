@@ -9,7 +9,7 @@ import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
-import type { Testimonial, TestimonialStyleType } from "@/types/global";
+import type { TestimonialStyleType } from "@/types/global";
 import { reorder } from "@/utils/questions.ts";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
@@ -54,7 +54,7 @@ const TestimonialEdit = ({
     );
     setFilters?.({ date: null, rating: null, length: null, surveys: [], teams: [] });
     updateCollection.mutate({
-      data: { testimonialIds: reorderedTestimonials.map((t: Testimonial) => t.id) },
+      data: { testimonialIds: reorderedTestimonials.map((t: CollectionTestimonial) => t.id) },
       collectionId,
     });
   };
