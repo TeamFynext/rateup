@@ -1,7 +1,9 @@
+import type { JSONContent } from "@tiptap/react";
+
 import { axiosClient } from "../apiClient";
 
 /** The join message: plain text, or the editor's document nodes. */
-export type ReferralMessageTemplate = string | unknown[] | { content: unknown[] };
+export type ReferralMessageTemplate = string | unknown[] | JSONContent;
 
 export interface LoyaltyProgram {
   id: string;

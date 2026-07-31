@@ -8,8 +8,8 @@ import { useImmer } from "use-immer";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 import { WaTemplateComponentType } from "@/types/enums.ts";
+import { WaTemplateSupportedParameters } from "@/types/enums.ts";
 import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
-import { WaTemplateSupportedParameters } from "@/types/global";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { validateInboxTemplateSending } from "@/utils/whatsapp/inbox.ts";
 

@@ -7,6 +7,7 @@ import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { WaTemplateStatus } from "@/types/enums.ts";
+import type { WaTemplateFetchBodyComponent } from "@/types/global";
 
 import { TeamSelector } from "../../../../../input/TeamSelector.tsx";
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
@@ -20,7 +21,7 @@ interface Props {
   onClose: () => void;
 }
 
-function templateBodyText(templateComponent: Array<{ type?: string; text?: string }>) {
+function templateBodyText(templateComponent: WaTemplateFetchBodyComponent[]) {
   const templateBody = templateComponent.filter((i) => i.type === "BODY");
   const text = templateBody[0]?.text || "";
 

@@ -178,11 +178,11 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
 
   const handleSave = () => {
     const updatedLogicJumps = {
-      ...(Object.fromEntries(
+      ...Object.fromEntries(
         Object.entries(dbFlow?.logicJumps ?? {}).filter(([k, _v]) => {
           return k !== selectedScreenId;
         }),
-      ) || {}),
+      ),
       [selectedScreenId]: [...logicJumps, ...componentLeventLogicJumps],
     };
 

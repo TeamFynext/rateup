@@ -391,6 +391,18 @@ export enum WaTemplateCategory {
  * Component names in an outgoing template payload. Meta accepts these lowercase, unlike the
  * uppercase names it uses when returning a template's definition.
  */
+/** The parameter kinds a template component accepts. */
+export enum WaTemplateSupportedParameters {
+  IMAGE = "image",
+  TEXT = "text",
+  DOCUMENT = "document",
+  VIDEO = "video",
+  LOCATION = "location",
+  PAYLOAD = "payload",
+  CURRENCY = "currency",
+  DATE_TIME = "date_time",
+}
+
 export enum WaTemplateComponentType {
   header = "header",
   body = "body",

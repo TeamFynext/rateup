@@ -12,6 +12,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType, WaFlowStatus } from "@/types/enums.ts";
+import type { WaFlowFormElement } from "@/types/global";
 import type { WaFlowJson, WaFlowMap, WaFlowScreen } from "@/types/global";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
@@ -116,12 +117,15 @@ function FlowPage() {
             questions
               ?.filter((data) => Object.values(QuestionType).includes(data.type as QuestionType))
               .forEach((newQ) => {
-                const newElement = {
+                // The legacy "seed a flow from a survey" path stores the survey question's own
+                // type and its per-language label on the element; the flow editor normalises
+                // both later, so they are written through as they are.
+                const newElement = Object.assign({} as WaFlowFormElement, {
                   type: newQ.type,
                   name: newQ.id,
                   id: newQ.id,
                   label: newQ.label,
-                };
+                });
                 const screenToBeEdited = getScreenObjById(draft.screens, id)!;
                 screenToBeEdited.layout.children
                   .find((se) => se.type === "Form")!

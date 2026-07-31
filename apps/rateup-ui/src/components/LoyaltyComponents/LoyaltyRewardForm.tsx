@@ -3,7 +3,7 @@ import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -45,7 +45,7 @@ interface LoyaltyRewardFormProps {
 
   // Data
   loyaltyTiers: LoyaltyTier[] | undefined;
-  loyaltyTemplates: WaTemplate[] | undefined;
+  loyaltyTemplates: WaTemplateListEntry[] | undefined;
 }
 
 /**

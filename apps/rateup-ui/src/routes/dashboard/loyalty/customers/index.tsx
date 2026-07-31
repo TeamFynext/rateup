@@ -36,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { WaInboxMessage } from "@/types/global";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/customers/")({
@@ -73,7 +74,7 @@ interface CustomerDetails {
     phone: string;
     source: string;
     orgId: string;
-    tags;
+    tags: string[] | null;
     consent: boolean;
     email: string;
     dob: string | null;
@@ -93,7 +94,7 @@ interface CustomerDetails {
     lifecycleId: string;
     closedAt: string | null;
     closedBy: string | null;
-    lastMessageBody;
+    lastMessageBody: WaInboxMessage | null;
     lastMessageWaCreatedAt: string;
     lastMessagePlatform: string;
     lastReceivedMetadata: unknown | null;
@@ -278,7 +279,7 @@ function CustomerPage() {
     },
   ];
 
-  const handleViewCustomer = (customer) => {
+  const handleViewCustomer = (customer: CustomerDetails) => {
     setSelectedCustomer(customer);
     setSelectedCustomerId(customer.id);
     setViewMode("details");

@@ -66,10 +66,21 @@ export interface WaTemplateDraftPayload {
 /**
  * Fetches whatsapp templates using orgId user belongs to.
  */
+/** A saved template row, as the templates list returns it. */
+export interface WaTemplateListEntry {
+  id: string;
+  createdAt: string;
+  templateType?: string;
+  whatsappSettingsPhoneId?: string | null;
+  WhatsappSettings?: { phoneDisplayName?: string | null };
+  _count?: { Campaign?: number };
+  data: WaTemplateFetchBody;
+}
+
 export const getWaTemplates = async (templatType?: string) => {
   const url = templatType ? `${TEMPLATES_URL}?templateType=${templatType}` : TEMPLATES_URL;
   const res = await axiosClient.get(url);
-  return res.data as WaTemplate[];
+  return res.data as WaTemplateListEntry[];
 };
 
 export const getWaTemplateById = async (id: string) => {

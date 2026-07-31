@@ -4,7 +4,7 @@ import type { UseFormReturn } from "react-hook-form";
 
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -42,7 +42,7 @@ interface RewardCardProps {
   readonly timeRestrictionsEnabled: boolean;
   readonly setTimeRestrictionsEnabled: (val: boolean) => void;
   readonly loyaltyTiers: LoyaltyTier[] | undefined;
-  readonly loyaltyTemplates: WaTemplate[] | undefined;
+  readonly loyaltyTemplates: WaTemplateListEntry[] | undefined;
 
   // Display Helpers
   readonly getRewardIcon: (type: string) => React.ReactNode;

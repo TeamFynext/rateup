@@ -2,7 +2,7 @@ import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
-import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   CouponValues,
@@ -38,7 +38,7 @@ interface RewardFormContainerProps {
 
   // Data
   loyaltyTiers: LoyaltyTier[] | undefined;
-  loyaltyTemplates: WaTemplate[] | undefined;
+  loyaltyTemplates: WaTemplateListEntry[] | undefined;
 }
 
 export function RewardFormContainer({

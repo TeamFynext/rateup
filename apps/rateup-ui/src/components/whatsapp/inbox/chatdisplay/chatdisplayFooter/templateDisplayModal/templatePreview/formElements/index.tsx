@@ -5,8 +5,8 @@ import type { Updater } from "use-immer";
 import type { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
 import { WaTemplateComponentType } from "@/types/enums.ts";
+import { WaTemplateSupportedParameters } from "@/types/enums.ts";
 import type { WaTemplateComponent, WaTemplateFetchBody, WaTemplateParameter } from "@/types/global";
-import { WaTemplateSupportedParameters } from "@/types/global";
 
 import WaTemplateFormComponents from "./components/index.tsx";
 

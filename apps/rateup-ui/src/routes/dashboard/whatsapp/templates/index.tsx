@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type { WaTemplateDraftPayload } from "@/backend/whatsapp/whatsapp.api";
 import {
   useDeleteWaTemplateMutation,
@@ -64,23 +65,7 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
-interface TemplateListEntry {
-  readonly id: string;
-  readonly createdAt: string;
-  readonly templateType?: string;
-  readonly whatsappSettingsPhoneId?: string | null;
-  readonly WhatsappSettings?: {
-    readonly phoneDisplayName?: string | null;
-  };
-  readonly _count?: {
-    readonly Campaign?: number;
-  };
-  readonly data?: {
-    readonly name?: string;
-    readonly category?: string;
-    readonly status?: string;
-  };
-}
+type TemplateListEntry = WaTemplateListEntry;
 
 /** A starter template offered in the "create from predefined" flow. */
 interface PredefinedTemplate {
@@ -93,7 +78,7 @@ interface PredefinedTemplate {
   format?: string;
   header?: string | null;
   footer?: string;
-  buttons?: unknown[];
+  buttons?: Array<{ text?: string }>;
   example?: string[];
   isBlank?: boolean;
 }
@@ -467,7 +452,7 @@ function Template() {
       const refetchResult = await refetch();
       const updatedTemplates = [...(refetchResult.data || [])];
 
-      updatedTemplates.sort((a: unknown, b: unknown) => {
+      updatedTemplates.sort((a, b) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
@@ -559,7 +544,7 @@ function Template() {
       return matchSearch && matchStatus && matchCategory && matchTemplateType && matchAccount;
     });
 
-    return sortData(filtered, sortOption) as TemplateListEntry[];
+    return sortData(filtered, sortOption);
   }, [templates, filters, sortOption, debouncedSearch, selectedAccountId]);
 
   const templateDeleteMutation = useDeleteWaTemplateMutation();

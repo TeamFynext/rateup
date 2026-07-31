@@ -33,6 +33,7 @@ import type {
   WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
+  WaTemplateSupportedParameters,
 } from "./enums.ts";
 
 type GoogleReview = {
@@ -1769,17 +1770,6 @@ export interface WaTemplateFetchBodyButton {
   flow_action?: string;
   navigate_screen?: string;
   example?: string[] | string;
-}
-
-export enum WaTemplateSupportedParameters {
-  IMAGE = "image",
-  TEXT = "text",
-  DOCUMENT = "document",
-  VIDEO = "video",
-  LOCATION = "location",
-  PAYLOAD = "payload",
-  CURRENCY = "currency",
-  DATE_TIME = "date_time",
 }
 
 interface WaTemplateLanguage {

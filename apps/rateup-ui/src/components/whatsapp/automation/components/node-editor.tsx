@@ -22,7 +22,7 @@ import { FormProvider, useForm as useRHForm, useFormContext } from "react-hook-f
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 
 /** A row inside a list-message section. */
 interface ListRow {
@@ -1808,7 +1808,7 @@ function isLeadgenNodeData(data: unknown): data is LeadgenNodeData {
 }
 
 const TemplateNodeEditor: React.FC<
-  NodeComponentProps<"templateNode"> & { templates?: WaTemplate[] }
+  NodeComponentProps<"templateNode"> & { templates?: WaTemplateListEntry[] }
 > = ({ nodeData, handleInputChange, templates }) => {
   const typedData = nodeData;
   const [parameterData, setParameterData] = useImmer<any>(typedData?.parameters || []);

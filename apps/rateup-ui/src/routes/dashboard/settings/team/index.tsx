@@ -138,12 +138,7 @@ function Team() {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
     refetch: refetchTeams,
-  } = useTeamsByUser() as {
-    isLoading: boolean;
-    error;
-    data: TeamsResponse;
-    refetch;
-  };
+  } = useTeamsByUser();
   const getDefaultColor = () => {
     if (!teamsData?.data) {
       // fallback random color
@@ -229,7 +224,7 @@ function Team() {
             <Button
               disabled={isLoadingTeamsUser}
               variant="outline"
-              onClick={refetchTeams}
+              onClick={() => void refetchTeams()}
               className="flex items-center justify-center gap-1"
             >
               <RefreshCcw />

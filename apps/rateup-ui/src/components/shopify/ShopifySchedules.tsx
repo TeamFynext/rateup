@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ShopifyProduct } from "@/backend/appsIntegration/shopify/shopify.api";
-import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -79,7 +79,7 @@ const ShopifySchedules = ({
 }: {
   shopifyProducts: ShopifyProduct[];
   shopifyInfo: ShopifyIntegration;
-  waTemplates: WaTemplate[];
+  waTemplates: WaTemplateListEntry[];
   teams: TeamData[];
 }) => {
   const schedules = shopifyInfo.credential.shopifySurveys.flatMap((s) => s.schedules);
