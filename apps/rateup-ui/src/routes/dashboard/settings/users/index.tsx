@@ -95,6 +95,16 @@ export const Route = createFileRoute("/dashboard/settings/users/")({
   component: UsersPage,
 });
 
+/** A team a user belongs to, as the org members endpoint returns it. */
+interface UserTeam {
+  id?: string;
+  /** Older rows carry the id under one of these two spellings instead. */
+  team_id?: string;
+  teamId?: string;
+  team_name?: string;
+  team_color?: string;
+}
+
 interface SelectedUser {
   id?: string;
   name?: string;
@@ -102,11 +112,21 @@ interface SelectedUser {
   phone?: string;
   gender?: string;
   role?: string;
-  teams?: unknown[];
+  teams?: UserTeam[];
   status?: string;
   profilePhoto?: string;
   isPaused?: boolean;
   lastActive?: string;
+}
+
+/** A team invitation that has not been accepted yet. */
+interface PendingInvitation {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  teams: UserTeam[];
 }
 
 interface TeamOption {
@@ -252,13 +272,15 @@ function UsersPage() {
     },
   });
 
-  const filteredMembers = data?.data?.members?.filter((member: SelectedUser) => {
-    const q = searchQuery.toLowerCase();
-    return member.name?.toLowerCase().includes(q) || member.email?.toLowerCase().includes(q);
-  });
+  const filteredMembers: SelectedUser[] | undefined = data?.data?.members?.filter(
+    (member: SelectedUser) => {
+      const q = searchQuery.toLowerCase();
+      return member.name?.toLowerCase().includes(q) || member.email?.toLowerCase().includes(q);
+    },
+  );
 
-  const filteredInvitations = data?.data?.invitations?.filter(
-    (invite: { name?: string; email?: string }) => {
+  const filteredInvitations: PendingInvitation[] | undefined = data?.data?.invitations?.filter(
+    (invite: PendingInvitation) => {
       const q = searchQuery.toLowerCase();
       return invite.name?.toLowerCase().includes(q) || invite.email?.toLowerCase().includes(q);
     },
@@ -580,7 +602,7 @@ function UsersPage() {
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <div className="relative mb-2">
                       <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                        <AvatarImage src={getFileUrlFromKey(member.profilePhoto)} />
+                        <AvatarImage src={getFileUrlFromKey(member.profilePhoto ?? "")} />
                         <AvatarFallback className="bg-primary text-white">
                           {member.name?.toUpperCase().slice(0, 2)}
                         </AvatarFallback>
@@ -608,19 +630,19 @@ function UsersPage() {
                           render={<div className="flex items-center gap-1 cursor-default" />}
                         >
                           <span className="line-clamp-1">
-                            {member?.teams.length === 0
+                            {member.teams?.length === 0
                               ? "Not in any team"
                               : member.teams
-                                  .slice(0, 2)
+                                  ?.slice(0, 2)
                                   .map((t) => t.team_name)
                                   .join(", ")}
-                            {member.teams.length > 2 ? "..." : ""}
+                            {(member.teams?.length ?? 0) > 2 ? "..." : ""}
                           </span>
                         </TooltipTrigger>
 
                         <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-52">
                           <div className="flex flex-col gap-1">
-                            {member.teams.map((t) => (
+                            {member.teams?.map((t) => (
                               <div key={t.id} className="flex items-center gap-2">
                                 <span
                                   className="w-2 h-2 rounded-full"
@@ -671,7 +693,7 @@ function UsersPage() {
                   <button
                     type="button"
                     className="absolute top-2 right-2 border rounded-sm p-1 hover:text-primary cursor-pointer"
-                    onClick={() => handleCopy(invite?.id)}
+                    onClick={() => handleCopy(invite?.id ?? "")}
                     aria-label={translations("Copy")}
                     title={copied ? translations("Copied") : translations("Copy")}
                   >
@@ -707,7 +729,7 @@ function UsersPage() {
                       className="w-full h-7 text-xs mt-1 border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleResendInvite(invite?.id);
+                        handleResendInvite(invite?.id ?? "");
                       }}
                       disabled={resendInviteMutation.isPending}
                     >
@@ -720,7 +742,7 @@ function UsersPage() {
                       className="w-full h-7 text-xs mt-1 border-red-300 text-red-700 hover:bg-red-50"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteInvite(invite?.id);
+                        handleDeleteInvite(invite?.id ?? "");
                       }}
                       disabled={deleteInviteMutation.isPending}
                     >
@@ -795,7 +817,7 @@ function EditMember({
     setSelectedTeamIds(
       (selectedUser.teams || [])
         .map((team) => team?.id || team?.team_id || team?.teamId)
-        .filter(Boolean),
+        .filter((id): id is string => !!id),
     );
   }, [selectedUser]);
 

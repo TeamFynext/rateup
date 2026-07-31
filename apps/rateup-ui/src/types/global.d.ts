@@ -1623,10 +1623,13 @@ export interface InstagramWebhookBody {
                   | "video"
                   | "audio"
                   | "file"
+                  | "sticker"
                   | "reel"
                   | "ig_reel"
                   | "share"
-                  | "story_mention";
+                  | "story_mention"
+                  // A view-once photo or video; the payload url is not retrievable.
+                  | "ephemeral";
                 payload: { url: string };
               },
             ];

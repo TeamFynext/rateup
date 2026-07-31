@@ -40,7 +40,7 @@ const WaInboxAttachments = ({
   };
 }) => {
   if (!messageContent.attachments.length) return null;
-  function getMediaComponent(attachment: unknown) {
+  function getMediaComponent(attachment: (typeof messageContent.attachments)[number]) {
     switch (attachment?.type) {
       case "audio":
         return <WaInboxAudio messageContent={attachment?.content} />;

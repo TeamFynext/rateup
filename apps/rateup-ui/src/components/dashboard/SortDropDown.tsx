@@ -59,7 +59,14 @@ export default SortDropdown;
 
 // utils/sorting.js
 
-export const sortData = (data: unknown[] = [], sortOption: string = "latest") => {
+/** The fields `sortData` orders on. A row carries its name directly or nested under `data`. */
+export interface SortableRow {
+  name?: string;
+  createdAt?: string | Date | null;
+  data?: { name?: string } | null;
+}
+
+export const sortData = <T extends SortableRow>(data: T[] = [], sortOption: string = "latest") => {
   return [...data].sort((a, b) => {
     const leftName = a.data?.name ?? a.name ?? "";
     const rightName = b.data?.name ?? b.name ?? "";
