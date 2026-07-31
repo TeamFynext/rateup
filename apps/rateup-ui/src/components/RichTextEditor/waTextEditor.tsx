@@ -289,8 +289,8 @@ function WaTextEditor({
   };
 
   useEffect(() => {
-    const handler = async (e: any) => {
-      const files: File[] = e.detail;
+    const handler = async (e: Event) => {
+      const files: File[] = (e as CustomEvent<File[]>).detail;
 
       for (const file of files) {
         try {

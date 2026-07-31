@@ -35,11 +35,20 @@ export const errorAt = (form: TemplateForm, p: string): string | undefined =>
  * Controlled `value`/`onChange` pair for components that take them directly (selectors,
  * the phone input) rather than spreading `register`.
  */
+/** Distinguishes a DOM change event from a bare value handed to `onChange`. */
+function isChangeEvent(value: unknown): value is { target?: { value?: unknown } } {
+  return typeof value === "object" && value !== null && "target" in value;
+}
+
 export const inputProps = (form: TemplateForm, p: string) => ({
   name: p,
   value: form.watch(path(p)) ?? "",
-  onChange: (event: any) =>
-    setValue(form, p, event?.target !== undefined ? event.target.value : event),
+  onChange: (event: { target?: { value?: unknown } } | unknown) =>
+    setValue(
+      form,
+      p,
+      isChangeEvent(event) && event.target !== undefined ? event.target.value : event,
+    ),
 });
 
 const readList = (form: TemplateForm, p: string): unknown[] => {

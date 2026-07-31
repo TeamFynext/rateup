@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 interface ActionIconCommonProps {
-  handleClick: (e: any) => void;
+  handleClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   label: string;
   children: JSX.Element;

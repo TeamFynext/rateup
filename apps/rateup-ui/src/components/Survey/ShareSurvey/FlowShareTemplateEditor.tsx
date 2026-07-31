@@ -38,16 +38,16 @@ function isEqual(ob1: object | undefined, ob2: object | undefined): boolean {
 interface SimpleForm<T> {
   values: T;
   setValues: (values: T) => void;
-  setFieldValue: (name: keyof T, value: any) => void;
+  setFieldValue: (name: keyof T, value: unknown) => void;
   setInitialValues: (values: T) => void;
   reset: () => void;
-  getInputProps: (name: keyof T) => { value: any; onChange: (e: any) => void };
+  getInputProps: (name: keyof T) => { value: string; onChange: (e: unknown) => void };
   errors: Partial<Record<keyof T, string>>;
 }
 
 function useSimpleForm<T extends object>(opts: {
   initialValues: T;
-  validate?: Partial<Record<keyof T, (value: any) => string | undefined | false>>;
+  validate?: Partial<Record<keyof T, (value: T[keyof T]) => string | undefined | false>>;
 }): SimpleForm<T> {
   const [values, setValues] = useState<T>(opts.initialValues);
   const initialRef = useRef<T>(opts.initialValues);
@@ -57,11 +57,11 @@ function useSimpleForm<T extends object>(opts: {
     initialRef.current = newInitial;
   };
 
-  const setFieldValue = (name: keyof T, value: any) => {
+  const setFieldValue = (name: keyof T, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }));
     const validator = opts.validate?.[name];
     if (validator) {
-      setErrors((prev) => ({ ...prev, [name]: validator(value) || undefined }));
+      setErrors((prev) => ({ ...prev, [name]: validator(value as T[keyof T]) || undefined }));
     }
   };
 
@@ -71,9 +71,15 @@ function useSimpleForm<T extends object>(opts: {
   };
 
   const getInputProps = (name: keyof T) => ({
-    value: (values[name] as any) ?? "",
-    onChange: (e: any) =>
-      setFieldValue(name, e && typeof e === "object" && "target" in e ? e.target.value : e),
+    // Every field this form drives is a text input.
+    value: typeof values[name] === "string" ? (values[name] as string) : "",
+    onChange: (e: unknown) =>
+      setFieldValue(
+        name,
+        e && typeof e === "object" && "target" in e
+          ? (e as { target: { value: unknown } }).target.value
+          : e,
+      ),
   });
 
   return { values, setValues, setFieldValue, setInitialValues, reset, getInputProps, errors };
@@ -459,17 +465,18 @@ function generateStartMessageInitialValues(dbFlow: DbFlow): WaFlowStartMessageCo
 }
 
 const templateFormValidation = {
-  header: (h: string) => h.length > 60 && exceed(60),
-  body: (b: string) => {
-    if (b.length === 0) {
+  // `header`/`footer` are optional on the template message.
+  header: (h: string | undefined) => (h?.length ?? 0) > 60 && exceed(60),
+  body: (b: string | undefined) => {
+    if (!b?.length) {
       return empty;
     } else if (b.length > 1024) {
       return exceed(1024);
     }
   },
-  footer: (f: string) => f.length > 60 && exceed(60),
-  cta: (c: string) => {
-    if (c.length === 0) {
+  footer: (f: string | undefined) => (f?.length ?? 0) > 60 && exceed(60),
+  cta: (c: string | undefined) => {
+    if (!c?.length) {
       return empty;
     } else if (c.length > 20) {
       return exceed(20);
