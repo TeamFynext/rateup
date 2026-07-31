@@ -108,6 +108,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   showTooltip?: boolean;
   tooltip?: React.ReactNode;
   shortcutKeys?: string;
+  /** Legacy attributes some call sites still pass instead of `variant`/`size`. */
+  "data-style"?: ButtonProps["variant"];
+  "data-size"?: ButtonProps["size"];
+  "data-appearence"?: string;
 }
 
 const buttonVariants = {
