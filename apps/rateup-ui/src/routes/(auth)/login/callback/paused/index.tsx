@@ -1,5 +1,5 @@
 import { IconLogout } from "@tabler/icons-react";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/(auth)/login/callback/paused/")({
 
 function PausedPage() {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false });
+  const searchParams = Route.useSearch();
   const pausedby = searchParams.pausedby;
   const isMobile = useMediaQuery("(max-width: 480px)");
 
@@ -47,7 +47,7 @@ function PausedPage() {
   );
 }
 
-function getPausedText(pausedby: string) {
+function getPausedText(pausedby: string | undefined) {
   switch (pausedby) {
     case "org":
       return (

@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import AuthForm from "@/components/Form/AuthForm.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/(auth)/signup/")({
 });
 
 function Signup() {
-  const searchParams = useSearch({ strict: false });
+  const searchParams = Route.useSearch();
   const auth = searchParams.auth;
   useCheckSession();
   return <AuthForm mode={AuthMode.SIGNUP} authType={auth} />;
