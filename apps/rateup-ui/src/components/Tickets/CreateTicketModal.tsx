@@ -21,7 +21,7 @@ import { Textarea } from "../ui/textarea.tsx";
 
 interface CreateTicketProps {
   createTicketOpened: boolean;
-  closeTicketModal: any;
+  closeTicketModal: () => void;
   type: string;
   surveyResponseId?: string;
   rid?: string;
@@ -133,21 +133,17 @@ const CreateTicketModal = ({
     if (!validate()) return;
     setSubmitting(true);
 
-    const payload: any = {
-      ...formData,
+    // The endpoint takes the form's fields, minus the ones left empty, with the
+    // single assignee sent as the `assignees` list.
+    const { deadline, labelIds, assigneeId, ...rest } = formData;
+    const payload = {
+      ...rest,
       title: formData.title.trim(),
       contactId,
+      ...(deadline ? { deadline } : {}),
+      ...(labelIds.length > 0 ? { labelIds } : {}),
+      ...(assigneeId ? { assignees: [{ assigneeId }] } : {}),
     };
-    if (!payload.deadline) {
-      delete payload.deadline;
-    }
-    if (!payload.labelIds || payload.labelIds.length === 0) {
-      delete payload.labelIds;
-    }
-    if (payload.assigneeId) {
-      payload.assignees = [{ assigneeId: payload.assigneeId }];
-    }
-    delete payload.assigneeId;
 
     createCard(payload, {
       onSuccess: () => {
@@ -176,7 +172,7 @@ const CreateTicketModal = ({
     closeTicketModal();
   }
 
-  const assignedMember = members.find((m: any) => m.id === formData.assigneeId);
+  const assignedMember = members.find((m) => m.id === formData.assigneeId);
 
   return (
     <Dialog open={createTicketOpened} onOpenChange={(val) => !val && cancel()}>
@@ -207,13 +203,13 @@ const CreateTicketModal = ({
               <Select
                 value={selectedBoardId}
                 onValueChange={(val) => setSelectedBoardId(val ?? "")}
-                items={boards?.map((b: any) => ({ value: b.id, label: b.title })) ?? []}
+                items={boards?.map((b) => ({ value: b.id, label: b.title })) ?? []}
               >
                 <SelectTrigger id="ticket-board" className="cursor-pointer h-9 w-full">
                   <SelectValue placeholder={t("Select a board")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {boards?.map((b: any) => (
+                  {boards?.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.title}
                     </SelectItem>
@@ -265,7 +261,7 @@ const CreateTicketModal = ({
                 {t("Assignee")}
               </FieldTitle>
               <div className="flex flex-wrap items-center gap-2">
-                {members.map((s: any) => {
+                {members.map((s) => {
                   const on = formData.assigneeId === s.id;
                   return (
                     <button
@@ -298,7 +294,7 @@ const CreateTicketModal = ({
                   {t("Labels")}
                 </FieldTitle>
                 <div className="flex flex-wrap gap-1.5">
-                  {labels.map((l: any) => {
+                  {labels.map((l) => {
                     const on = formData.labelIds.includes(l.id);
                     let tc = { bg: "#f3f4f6", textcolor: "#374151" };
                     try {
@@ -360,7 +356,19 @@ const CreateTicketModal = ({
   );
 };
 
-export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contactId }: any) => {
+export const CreateTicketCard = ({
+  opened,
+  close,
+  type,
+  hasTicketFeature,
+  contactId,
+}: Readonly<{
+  opened: boolean;
+  close: () => void;
+  type: string;
+  hasTicketFeature?: boolean;
+  contactId?: string;
+}>) => {
   return (
     <CreateTicketModal
       createTicketOpened={opened}

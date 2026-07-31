@@ -152,16 +152,22 @@ export const moveColumnToBoard = async (params: {
   return data;
 };
 
-export const createCard = async (card: {
+/** What the create-ticket form sends; empty fields are omitted, not nulled. */
+export interface CreateCardInput {
   title: string;
   description?: string;
   ticketColumnId: string;
-  type: TicketType;
+  type: TicketType | string;
   contactId?: string;
   surveyResponseId?: string;
   reviewId?: string;
   priority?: string;
-}): Promise<Card> => {
+  deadline?: string;
+  labelIds?: string[];
+  assignees?: Array<{ assigneeId: string }>;
+}
+
+export const createCard = async (card: CreateCardInput): Promise<Card> => {
   const { data } = await axiosClient.post("/tickets/cards/create", card);
   return data;
 };

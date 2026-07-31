@@ -1837,6 +1837,25 @@ export interface Campaign {
   dailySendLimit?: number | null;
   /** Participants enrolled, when the list endpoint includes the aggregate. */
   campaignParticipantsCount?: number;
+  /** Drip campaigns only: the ordered stages and their templates. */
+  dripStages?: CampaignDripStage[];
+  /** The flow a flow campaign sends, when its template carries a flow button. */
+  flowId?: string | null;
+  /** Template variables mapped to contact fields. */
+  dynamicTags?: string[];
+  /** Whether the send respects each contact's marketing consent. */
+  useUserConsent?: boolean;
+  /** Set by the survey share flow when the campaign targets one survey/team pair. */
+  surveyTeamMapId?: string;
+}
+
+/** One stage of a drip campaign. */
+export interface CampaignDripStage {
+  id?: string;
+  waTemplateId?: string;
+  delay?: number;
+  delayUnit?: "minutes" | "hours" | "days";
+  sendAtTime?: string;
 }
 
 // type for org websocket messages

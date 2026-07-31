@@ -46,6 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { CampaignType } from "@/types/enums.ts";
+import type { Campaign } from "@/types/global";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
@@ -53,7 +54,7 @@ import { TeamSelector } from "../input/TeamSelector.tsx";
 interface CreateCampaignProps {
   close: () => void;
   isEdit?: boolean;
-  campaign?: any;
+  campaign?: Campaign;
   dynamicVariables?: string[];
   campaignType: CampaignType;
 }
@@ -152,7 +153,7 @@ const CreateCampaignModal = ({
 
       if (campaign?.dripStages && campaign.dripStages.length > 0) {
         setDripStages(
-          campaign.dripStages.map((stage: any) => ({
+          campaign.dripStages.map((stage) => ({
             id: stage.id,
             templateId: stage.waTemplateId || "",
             delay: stage.delay || 1,
@@ -197,7 +198,11 @@ const CreateCampaignModal = ({
   }, []);
 
   const updateDripStage = useCallback(
-    (idx: number, field: "templateId" | "delay" | "delayUnit" | "sendAtTime", value: any) => {
+    (
+      idx: number,
+      field: "templateId" | "delay" | "delayUnit" | "sendAtTime",
+      value: string | number | null,
+    ) => {
       setDripStages((prev) =>
         prev.map((stage, i) => (i === idx ? { ...stage, [field]: value } : stage)),
       );
@@ -224,8 +229,7 @@ const CreateCampaignModal = ({
   const extractedDynamicVariables = useMemo(() => {
     if (!selectedTemplate) return [];
 
-    const bodyText =
-      selectedTemplate.data?.components?.find((c: any) => c.type === "BODY")?.text ?? "";
+    const bodyText = selectedTemplate.data?.components?.find((c) => c.type === "BODY")?.text ?? "";
 
     const matches = bodyText.match(/{{\d+}}/g) || [];
 
@@ -254,8 +258,8 @@ const CreateCampaignModal = ({
 
   const createCampaignMutation = useCreateCampaignMutation(teamId, campaignType);
   const updateCampaignMutation = useUpdateCampaignMutation(
-    campaign?.id,
-    campaign?.teamId,
+    campaign?.id ?? "",
+    campaign?.teamId ?? "",
     () => {},
     campaignType,
   );
@@ -321,22 +325,22 @@ const CreateCampaignModal = ({
         const flowId =
           templates
             ?.find((t) => t?.id === values?.waTemplateId)
-            ?.data?.components?.find((c: any) => c?.buttons)
-            ?.buttons?.find((b: any) => b?.type === "FLOW")?.flow_id ?? undefined;
+            ?.data?.components?.find((c) => c?.buttons)
+            ?.buttons?.find((b) => b?.type === "FLOW")?.flow_id ?? undefined;
 
         if (flowId) {
           values.flowId = flowId;
         }
       }
 
-      const submitData: any = { ...values };
+      const submitData: Record<string, unknown> = { ...values };
 
       // The API takes a positive int or null; the form holds it as a string.
       submitData.dailySendLimit = values.dailySendLimit ? Number(values.dailySendLimit) : null;
 
       if (values.type === CampaignType.DRIP) {
         submitData.dripStages = dripStages.map((stage) => {
-          const processedStage: any = { ...stage };
+          const processedStage: Partial<typeof stage> = { ...stage };
           if (stage.delayUnit === "minutes") {
             delete processedStage.sendAtTime;
           }
@@ -347,7 +351,7 @@ const CreateCampaignModal = ({
 
       if (isEdit) {
         updateCampaignMutation.mutate(
-          { data: submitData, campaignId: campaign?.id },
+          { data: submitData, campaignId: campaign?.id ?? "" },
           {
             onSuccess: () => {
               form.reset();
