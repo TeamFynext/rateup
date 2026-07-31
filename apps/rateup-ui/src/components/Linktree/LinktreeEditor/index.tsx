@@ -18,7 +18,7 @@ function LinktreeEdtior() {
     strict: false,
   });
   const shortUrlId = params?.shortUrlId as string;
-  const tab = searchParams.tab;
+  const tab = typeof searchParams.tab === "string" ? searchParams.tab : undefined;
 
   const defaultActiveTab = tab ? tab : "links";
   const { isPending, isError, data } = useGetLinktreeWithShortId(shortUrlId);

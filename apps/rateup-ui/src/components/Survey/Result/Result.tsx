@@ -84,7 +84,7 @@ const Result = ({
   return (
     <>
       {version === 1 ? (
-        <Responses survey={survey} defaultLanguage={defaultLanguage} questions={questions} />
+        <Responses survey={survey} defaultLanguage={defaultLanguage} questions={questions ?? []} />
       ) : (
         <WaResponses
           survey={survey}

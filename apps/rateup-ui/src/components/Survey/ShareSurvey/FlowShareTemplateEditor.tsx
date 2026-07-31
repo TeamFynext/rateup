@@ -41,7 +41,7 @@ interface SimpleForm<T> {
   setFieldValue: (name: keyof T, value: unknown) => void;
   setInitialValues: (values: T) => void;
   reset: () => void;
-  getInputProps: (name: keyof T) => { value: string; onChange: (e) => void };
+  getInputProps: (name: keyof T) => { value: string; onChange: (e: unknown) => void };
   errors: Partial<Record<keyof T, string>>;
 }
 
@@ -73,7 +73,7 @@ function useSimpleForm<T extends object>(opts: {
   const getInputProps = (name: keyof T) => ({
     // Every field this form drives is a text input.
     value: typeof values[name] === "string" ? (values[name] as string) : "",
-    onChange: (e) =>
+    onChange: (e: unknown) =>
       setFieldValue(
         name,
         e && typeof e === "object" && "target" in e
@@ -213,7 +213,12 @@ function FlowShareTemplateEditor({
 interface FlowStartMessageEditorProps {
   form: SimpleForm<WaFlowStartMessageConfig>;
   dbFlowId: string;
-  updateMutation;
+  updateMutation: UseMutationResult<
+    unknown,
+    Error,
+    { dbFlowId: string; data: Partial<Omit<DbFlow, "dbFlowId">> },
+    unknown
+  >;
   initialValues: WaFlowStartMessageConfig;
 }
 function FlowStartMessageEditor({

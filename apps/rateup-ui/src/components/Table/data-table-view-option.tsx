@@ -55,7 +55,8 @@ function getColumnLabel<TData, TValue>(column: Column<TData, TValue>) {
     return header;
   } else if (typeof column.columnDef.header === "function") {
     try {
-      const result = column.columnDef.header({});
+      // `createSortableHeader` needs the header context; the catch below covers it.
+      const result = (column.columnDef.header as (context: unknown) => unknown)({});
       if (typeof result === "string") return result;
     } catch {
       // header requires column context (e.g. createSortableHeader)

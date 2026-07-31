@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FieldPath } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -297,7 +298,7 @@ const CreateCampaignModal = ({
   ]);
 
   const handleNext = async () => {
-    const fieldsToValidate = isEdit ? ["name"] : ["teamId", "name"];
+    const fieldsToValidate: Array<FieldPath<FormValues>> = isEdit ? ["name"] : ["teamId", "name"];
 
     const isValid = await form.trigger(fieldsToValidate);
 
