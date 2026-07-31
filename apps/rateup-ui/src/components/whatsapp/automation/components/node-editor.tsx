@@ -2526,7 +2526,10 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
 }) => {
   const typedData = nodeData;
   const ticketError = useFieldError("ticket");
-  const [selectedBoard, setSelectedBoard] = useState({
+  const [selectedBoard, setSelectedBoard] = useState<{
+    selectedBoardId?: string;
+    selectedBoardColumnId?: string;
+  }>({
     selectedBoardId: typedData.ticket?.selectedBoardId,
     selectedBoardColumnId: typedData.ticket?.selectedBoardColumnId,
   });
@@ -2558,7 +2561,7 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
         onChange={(boardId, values) => {
           setSelectedBoard({
             selectedBoardId: boardId,
-            selectedBoardColumnId: values?.label,
+            selectedBoardColumnId: typeof values?.label === "string" ? values.label : undefined,
           });
         }}
       />
@@ -2603,7 +2606,7 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
     validate: {
       teamId: isNotEmpty("required"),
       assignedUserIds: (value, values) =>
-        values.choice === "manual" ? isNotEmpty("required")(value) : undefined,
+        values?.choice === "manual" ? isNotEmpty("required")(value) : undefined,
     },
     onValuesChange: async (values) => {
       const validationRes = await form.validate();

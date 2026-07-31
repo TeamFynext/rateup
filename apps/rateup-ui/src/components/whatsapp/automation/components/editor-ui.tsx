@@ -31,7 +31,32 @@ import { Switch as UiSwitch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 
-type Option = { value: string; label: any };
+type Option = { value: string; label: React.ReactNode };
+
+/**
+ * Props the Mantine originals accepted that these shims still take. Spacing is
+ * translated onto `style`; the rest are layout hints the shadcn primitives
+ * handle themselves and are accepted so call sites did not have to change.
+ */
+interface LegacySpacingProps {
+  p?: number | string;
+  m?: number | string;
+  mt?: number | string;
+  mb?: number | string;
+  mx?: number | string;
+  my?: number | string;
+  c?: string;
+  w?: number | string;
+  flex?: number | string;
+  size?: string;
+  style?: React.CSSProperties;
+  allowDeselect?: boolean;
+  searchable?: boolean;
+  nothingFoundMessage?: React.ReactNode;
+  maxValues?: number;
+  rightSection?: React.ReactNode;
+  rightSectionPointerEvents?: string;
+}
 
 /** Accepts Mantine-style `data` (string[] or {value,label}[]) and normalizes it. */
 function toOptions(data?: Array<string | Option> | null): Option[] {
@@ -47,7 +72,7 @@ export function Stack({
   className,
   ...rest
 }: Readonly<
-  { children?: React.ReactNode; gap?: string; className?: string } & Record<string, any>
+  { children?: React.ReactNode; gap?: string; className?: string } & LegacySpacingProps
 >) {
   // strip Mantine-only spacing props we don't forward to the DOM
   const { p, my, mt, mb, mx, style } = rest;
@@ -82,7 +107,7 @@ export function Group({
     grow?: boolean;
     gap?: string | number;
     className?: string;
-  } & Record<string, any>
+  } & LegacySpacingProps
 >) {
   const { mt, style } = rest;
   const gapClass = typeof gap === "number" ? undefined : (GAP[gap] ?? "gap-3");
@@ -136,7 +161,7 @@ export function Text({
     span?: boolean;
     truncate?: boolean | string;
     className?: string;
-  } & Record<string, any>
+  } & LegacySpacingProps
 >) {
   const { mt, mb, style } = rest;
   const Comp = span ? "span" : "p";
@@ -189,14 +214,15 @@ export function Button({
     leftSection?: React.ReactNode;
     loading?: boolean;
     className?: string;
-  } & Record<string, any>
+  } & LegacySpacingProps &
+    Omit<React.ComponentProps<"button">, "size" | "style">
 >) {
   const { mt, style, ...buttonProps } = rest;
   const sz = size === "xs" || size === "compact-xs" ? "xs" : size === "sm" ? "sm" : "default";
   return (
     <UiButton
-      variant={mapVariant(variant) as any}
-      size={sz as any}
+      variant={mapVariant(variant)}
+      size={sz}
       className={className}
       style={{ marginTop: mt ? 8 : undefined, ...style }}
       {...buttonProps}
@@ -221,14 +247,15 @@ export function ActionIcon({
     size?: string;
     loading?: boolean;
     className?: string;
-  } & Record<string, any>
+  } & LegacySpacingProps &
+    Omit<React.ComponentProps<"button">, "size" | "style">
 >) {
   const { mt, c, style, ...buttonProps } = rest;
   const sz = size === "sm" ? "icon-sm" : size === "xs" ? "icon-xs" : "icon-sm";
   return (
     <UiButton
       variant="ghost"
-      size={sz as any}
+      size={sz}
       className={cn((color === "red" || c === "red") && "text-destructive", className)}
       style={{ marginTop: mt ? 24 : undefined, ...style }}
       {...buttonProps}
@@ -363,7 +390,7 @@ function SelectField({
     error?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
-  } & Record<string, any>
+  } & LegacySpacingProps
 >) {
   const options = toOptions(data);
   return (
@@ -376,7 +403,7 @@ function SelectField({
       style={style}
     >
       <UiSelect
-        items={options as any}
+        items={options}
         value={value ?? null}
         onValueChange={(v: string | null) =>
           onChange?.(
@@ -501,13 +528,13 @@ export function ContainedMultiSelect({
     data?: Array<string | Option> | null;
     value?: string[];
     onChange?: (value: string[]) => void;
-  } & Record<string, any>
+  } & LegacySpacingProps
 >) {
   const options = toOptions(data).map((o) => ({ value: o.value, label: o.label }));
   return (
     <Field label={label} description={description}>
       <MultiSelect
-        options={options as any}
+        options={options}
         value={value ?? []}
         onValueChange={(v) => onChange?.(v)}
         placeholder={placeholder}
@@ -679,16 +706,38 @@ export function Image({
 }
 
 // ── Minimal @mantine/form replacement ───────────────────────────────────
-type Validator = (value: any, values?: any) => React.ReactNode | null | undefined;
+
+/** The field bindings `useForm` hands to an input. */
+interface GetInputProps<T> {
+  (
+    name: keyof T,
+    opts: { type: "checkbox" },
+  ): { checked: boolean; onChange: (e: { target?: { checked?: boolean } } | boolean) => void };
+  <K extends keyof T>(
+    name: K,
+    opts?: { type?: "input" },
+  ): { value: T[K]; error: React.ReactNode; onChange: (arg: unknown) => void };
+}
+
+/** Distinguishes a DOM change event from a bare value handed to `onChange`. */
+function isChangeEvent(arg: unknown): arg is { target?: { value?: unknown } } {
+  return typeof arg === "object" && arg !== null && "target" in arg;
+}
+
+type FormValue = unknown;
+type Validator = (
+  value: FormValue,
+  values?: Record<string, FormValue>,
+) => React.ReactNode | null | undefined;
 
 export function isNotEmpty(message: React.ReactNode = "Required"): Validator {
-  return (value: any, _values?: any) => {
+  return (value: FormValue) => {
     const empty = value == null || value === "" || (Array.isArray(value) && value.length === 0);
     return empty ? message : null;
   };
 }
 
-export function useForm<T extends Record<string, any>>(config: {
+export function useForm<T extends Record<string, FormValue>>(config: {
   initialValues: T;
   validate?: Partial<Record<keyof T, Validator>>;
   onValuesChange?: (values: T) => void;
@@ -711,7 +760,7 @@ export function useForm<T extends Record<string, any>>(config: {
   }, []);
 
   const setFieldValue = React.useCallback(
-    (name: keyof T, value: any) => {
+    (name: keyof T, value: FormValue) => {
       if (Object.is(valuesRef.current[name], value)) return;
       const next = { ...valuesRef.current, [name]: value };
       valuesRef.current = next;
@@ -728,21 +777,28 @@ export function useForm<T extends Record<string, any>>(config: {
     return { hasErrors: Object.keys(errs).length > 0, errors: errs };
   }, [runValidate]);
 
+  // Overloaded so a checkbox field gets `checked` and everything else gets the
+  // field's own value type; the implementation is one function, as with any
+  // overload set.
   const getInputProps = React.useCallback(
-    (name: keyof T, opts?: { type?: "checkbox" | "input" }) => {
+    ((name: keyof T, opts?: { type?: "checkbox" | "input" }) => {
       if (opts?.type === "checkbox") {
         return {
           checked: !!valuesRef.current[name],
-          onChange: (e: any) => setFieldValue(name, e?.target?.checked ?? e),
+          onChange: (e: { target?: { checked?: boolean } } | boolean) =>
+            setFieldValue(name, typeof e === "boolean" ? e : (e?.target?.checked ?? e)),
         };
       }
       return {
-        value: (valuesRef.current[name] ?? "") as any,
-        error: (errors as any)[name],
-        onChange: (arg: any) =>
-          setFieldValue(name, arg?.target?.value !== undefined ? arg.target.value : arg),
+        value: valuesRef.current[name] ?? "",
+        error: errors[name],
+        onChange: (arg: unknown) =>
+          setFieldValue(
+            name,
+            isChangeEvent(arg) && arg.target?.value !== undefined ? arg.target.value : arg,
+          ),
       };
-    },
+    }) as GetInputProps<T>,
     [errors, setFieldValue],
   );
 
