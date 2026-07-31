@@ -42,12 +42,12 @@ import { shopifyEventData } from "@/utils/constants.ts";
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
 import RuleOptions from "./RuleOptions.tsx";
-import type { CreateRuleInput, Platform } from "./schema.ts";
+import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
 import { getTriggerEventsForPlatform, INSTAGRAM_SCOPE_OPTIONS, PLATFORMS } from "./schema.ts";
 
 interface RuleBuilderFormProps {
-  form: UseFormReturn<CreateRuleInput>;
-  onSubmit: (data: CreateRuleInput) => void;
+  form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
+  onSubmit: (data: CreateRuleValues) => void;
   onCancel: () => void;
   isPending: boolean;
   buttonText: string;
@@ -482,7 +482,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
 /* ── Trigger panel ── */
 const TriggerPanel: React.FC<{
-  form: UseFormReturn<CreateRuleInput>;
+  form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
   filteredTriggerEvents: { label: string; value: string }[];
   isShopifyTrigger: boolean;
 }> = ({ form, filteredTriggerEvents, isShopifyTrigger }) => (
@@ -571,7 +571,7 @@ const TriggerPanel: React.FC<{
 
 /* ── Conditions panel ── */
 const ConditionsPanel: React.FC<{
-  form: UseFormReturn<CreateRuleInput>;
+  form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
   groupFields: Array<{ id: string }>;
   appendGroup: (group: CreateRuleInput["groups"][number]) => void;
   removeGroup: (idx: number) => void;

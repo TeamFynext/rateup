@@ -12,16 +12,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
-import type { CreateRuleInput } from "./schema.ts";
+import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
 import { createRuleSchema } from "./schema.ts";
 
 interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
-  initialPlatform?: string;
+  initialPlatform?: Platform;
   initialTriggerEvent?: string;
 }
 
-const defaultValues: Partial<CreateRuleInput> = {
+const defaultValues = {
   platform: "WHATSAPP",
   whatsappSettingsPhoneIds: [],
   name: "",
@@ -43,8 +43,9 @@ const defaultValues: Partial<CreateRuleInput> = {
     },
     instagramScope: "ALL",
     instagramPostIds: [],
+    shopifyProductIds: [],
   },
-};
+} satisfies Partial<CreateRuleValues>;
 
 const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps> = ({
   ruleId,
@@ -58,7 +59,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   const createMutation = useCreateRuleMutation();
   const updateMutation = useUpdateRuleMutation();
 
-  const form = useForm<CreateRuleInput>({
+  const form = useForm<CreateRuleInput, unknown, CreateRuleValues>({
     resolver: zodResolver(createRuleSchema),
     defaultValues: {
       ...defaultValues,
@@ -76,7 +77,7 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
     g.conditions.some((c) => c.field === "MESSAGE_BODY" && c.value),
   );
 
-  const savedPlatform = ruleData?.platform || "WHATSAPP";
+  const savedPlatform = ruleData?.platform ?? "WHATSAPP";
   const showShareTab = savedTriggerEvent === "MESSAGE_RECEIVED" && hasKeywords;
 
   useEffect(() => {
@@ -86,18 +87,16 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
         ...ruleData,
         whatsappSettingsPhoneIds: ruleData.whatsappSettingsPhoneIds || [],
         groups: ruleData.groups || [],
-        // The API models "no value" as `null`; the form schema (and `reset`'s
-        // deep-partial shape) models it as an absent value.
-        actions: (ruleData.actions || []).map((action) => ({
-          ...action,
-          value: action.value ?? undefined,
-        })),
+        // The API models "no value" as `null`; the form schema models it as an empty value.
+        actions: (ruleData.actions || []).map((action) =>
+          action.value === null ? { ...action, value: "" } : action,
+        ),
         options: ruleData.options || defaultValues.options,
       });
     }
   }, [ruleData, form]);
 
-  const onSubmit = (data: CreateRuleInput) => {
+  const onSubmit = (data: CreateRuleValues) => {
     if (isEditMode) {
       updateMutation.mutate(
         { id: ruleId, ...data },

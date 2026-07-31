@@ -274,8 +274,8 @@ function WaTextEditor({
     if (platform === MessagePlatform.WEBCHAT) return null;
     return (
       <AccountSelector
-        onChange={(phoneId: string) => {
-          updatePhoneId(phoneId);
+        onChange={(phoneId) => {
+          updatePhoneId(phoneId ?? "");
         }}
         value={whatsappSettingsPhoneId}
         // Shrinks with the row on a phone (the value is line-clamped, so it

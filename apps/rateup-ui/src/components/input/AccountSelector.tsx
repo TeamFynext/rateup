@@ -12,14 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Skeleton } from "../ui/skeleton.tsx";
 import { getChannelOptions } from "./channelOptions.ts";
 
-interface AccountSelectorProps {
-  onChange?;
+interface AccountSelectorBaseProps {
   usePhoneNumber?: boolean;
   withAllOption?: boolean;
-  platform?: MessagePlatform | "all" | null;
-  multiple?: boolean;
+  /** `MessagePlatform`, or one of its values as a plain string, or "all". */
+  platform?: MessagePlatform | `${MessagePlatform}` | "all" | null;
   label?: string;
-  value?;
   hideLabel?: boolean;
   optional?: boolean;
   className?: string;
@@ -28,16 +26,20 @@ interface AccountSelectorProps {
   disabled?: boolean;
 }
 
+/** Selecting several accounts hands back the list; selecting one hands back its id. */
+type AccountSelectorProps = AccountSelectorBaseProps &
+  (
+    | { multiple: true; value?: string[]; onChange?: (value: string[]) => void }
+    | { multiple?: false; value?: string; onChange?: (value: string | undefined) => void }
+  );
+
 export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   const uid = useId();
   const {
-    value,
-    onChange,
     label = "",
     usePhoneNumber = false,
     withAllOption = false,
     platform = MessagePlatform.WHATSAPP,
-    multiple = false,
     hideLabel = false,
     optional = false,
     className,
@@ -45,6 +47,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     showClearButton = true,
     disabled = false,
   } = props;
+  const { value, multiple = false } = props;
   const { data, isPending, isError } = useWaSettings();
 
   const { t: translations } = useTranslation();
@@ -68,7 +71,8 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     if (value) return;
     if (optional) return;
     if (defaultAccountOption?.value) {
-      onChange(defaultAccountOption.value);
+      if (props.multiple) props.onChange?.([defaultAccountOption.value]);
+      else props.onChange?.(defaultAccountOption.value);
     }
   }, [defaultAccountOption, value, optional]);
 
@@ -94,8 +98,8 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         <MultiSelect
           id={`${uid}-field`}
           options={accountOptions}
-          value={value ?? []}
-          onValueChange={onChange}
+          value={Array.isArray(value) ? value : []}
+          onValueChange={(next) => props.multiple && props.onChange?.(next)}
           placeholder={translations("Select Account")}
           emptyIndicator={translations("No account found!")}
           disabled={disabled}
@@ -116,7 +120,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
             variant="ghost"
             size="sm"
             className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => onChange(undefined)}
+            onClick={() => !props.multiple && props.onChange?.(undefined)}
           >
             <X className="h-3 w-3 mr-1" />
             {translations("Clear")}
@@ -124,9 +128,9 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         )}
       </div>
       <Select
-        value={value}
+        value={typeof value === "string" ? value : undefined}
         defaultValue={optional ? undefined : defaultAccountOption?.value}
-        onValueChange={onChange}
+        onValueChange={(next) => !props.multiple && props.onChange?.(next ?? undefined)}
         required={!optional}
         disabled={disabled}
         items={accountOptions}

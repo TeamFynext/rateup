@@ -90,7 +90,7 @@ const SendMessageModal = ({
             <FieldLabel htmlFor="message-account">Account</FieldLabel>
             <AccountSelector
               value={whatsappSettingsPhoneId}
-              onChange={(value: string) => setWhatsappSettingsPhoneId(value)}
+              onChange={(value) => setWhatsappSettingsPhoneId(value ?? "")}
               platform={platform as MessagePlatform}
             />
           </div>
