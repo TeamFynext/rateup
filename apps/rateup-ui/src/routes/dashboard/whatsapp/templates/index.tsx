@@ -621,7 +621,11 @@ function Template() {
         setFilters={setFilters}
         templateTypeOptions={templateTypeOptions}
       />
-      <AccountSelector value={selectedAccountId} onChange={setSelectedAccountId} withAllOption />
+      <AccountSelector
+        value={selectedAccountId}
+        onChange={(value) => setSelectedAccountId(value ?? "")}
+        withAllOption
+      />
       <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
 
       {data ? (
@@ -740,7 +744,7 @@ function Template() {
               <div className="flex flex-col gap-4 py-4">
                 <AccountSelector
                   value={createDraftAccountId}
-                  onChange={setCreateDraftAccountId}
+                  onChange={(value) => setCreateDraftAccountId(value ?? "")}
                   label={translations("WhatsApp Account")}
                   withAllOption={false}
                   optional={false}

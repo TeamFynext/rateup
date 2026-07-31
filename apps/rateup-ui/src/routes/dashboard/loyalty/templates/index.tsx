@@ -329,7 +329,7 @@ function LoyaltyTemplateListPage() {
               <>
                 <AccountSelector
                   value={selectedAccountId}
-                  onChange={setSelectedAccountId}
+                  onChange={(value) => setSelectedAccountId(value ?? "")}
                   label="WhatsApp Account"
                   withAllOption={false}
                   optional={false}

@@ -50,7 +50,10 @@ function ConversationalComponents() {
     <>
       <div className="mb-4 flex items-end gap-2 justify-between">
         <div className="max-w-xs flex-1">
-          <AccountSelector value={selectedPhoneId} onChange={setSelectedPhoneId} />
+          <AccountSelector
+            value={selectedPhoneId}
+            onChange={(value) => setSelectedPhoneId(value ?? "")}
+          />
         </div>
         {selectedPhoneId && (
           <Button variant="default" onClick={handleSync} disabled={syncMutation.isPending}>

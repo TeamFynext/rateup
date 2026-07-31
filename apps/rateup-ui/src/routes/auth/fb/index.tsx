@@ -19,8 +19,12 @@ function Page() {
 
 // This component is rendered inside Suspense and uses useSearchParams directly
 function FbLoginRedirectWithParams() {
+  // The callback's query string is read key-by-key; every value arrives as a string.
   const searchParams = useSearch({ strict: false });
-  return <FbLoginRedirect searchParams={searchParams} />;
+  const stringParams = Object.fromEntries(
+    Object.entries(searchParams).map(([key, value]) => [key, String(value ?? "")]),
+  );
+  return <FbLoginRedirect searchParams={stringParams} />;
 }
 
 // Accept searchParams as a prop
