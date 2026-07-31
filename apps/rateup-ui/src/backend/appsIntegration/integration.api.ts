@@ -115,7 +115,11 @@ export interface AppIntegration {
       [key: string]: unknown;
     }>;
     crm?: {
-      leadLifecycleMappings?: Record<string, string>;
+      leadLifecycleMappings?: Array<{
+        zohoLeadStatus: string;
+        lifecycleId?: string;
+        lifecycleName?: string;
+      }>;
       [key: string]: unknown;
     };
     bigin?: {
@@ -123,7 +127,7 @@ export interface AppIntegration {
       pipeline?: {
         selectedPipeline?: { id?: string | number; [key: string]: unknown };
         selectedSubPipeline?: { id?: string | number; [key: string]: unknown };
-        requiredFieldMappings?: Record<string, unknown>;
+        requiredFieldMappings?: Record<string, string>;
         lifecycleStageMappings?: Array<{
           lifecycleId: string;
           lifecycleName?: string;
