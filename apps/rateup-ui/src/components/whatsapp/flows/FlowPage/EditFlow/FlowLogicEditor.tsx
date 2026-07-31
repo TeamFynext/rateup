@@ -52,8 +52,16 @@ interface SelectOption {
 }
 
 /** Normalises the `string[] | {label,value}[]` shapes the logic utils return. */
-const toOptions = (data: unknown[]): SelectOption[] =>
+const toOptions = (data: Array<string | SelectOption>): SelectOption[] =>
   (data ?? []).map((d) => (typeof d === "string" ? { label: d, value: d } : d));
+
+/**
+ * Screen-level jumps navigate to a screen, so their `action` is that screen's id; a
+ * component-level block carries a `{ success, fail }` object instead.
+ */
+const isScreenLevelJump = (
+  item: FlowLogicJump | FlowLogicJumpComponentLevel,
+): item is FlowLogicJump => typeof item.action === "string";
 
 /** Labelled shadcn Select used throughout the logic editor. */
 function SelectField({
@@ -65,7 +73,7 @@ function SelectField({
   className,
 }: Readonly<{
   label?: string;
-  data: unknown[];
+  data: Array<string | SelectOption>;
   value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -154,7 +162,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
 
       // Split the data based on action type
       (dbFlow?.logicJumps?.[selectedScreenId] || []).forEach((item) => {
-        if (typeof item.action === "string") {
+        if (isScreenLevelJump(item)) {
           stringActions.push(item);
         } else if (typeof item.action === "object") {
           objectActions.push(item);
@@ -314,7 +322,7 @@ function AtomicConditionBlock({
               : getConditions(selectedQ.type as QuestionType)
           }
           value={selectedCondition}
-          onChange={setSelectedCondition}
+          onChange={(value) => setSelectedCondition(value as LogicCondition)}
         />
 
         {/* Match Data */}
@@ -416,9 +424,8 @@ function ConditionsActionMapBlock<T extends FlowLogicJump | FlowLogicJumpCompone
   const { t: translations } = useTranslation();
   useEffect(() => {
     updateLogicJumps((draft) => {
-      draft[index].action = isComponentLevel
-        ? { success: selectedActionSuccess, fail: selectedActionFail }
-        : selectedAction;
+      if (isComponentLevel) return;
+      draft[index].action = selectedAction;
     });
   }, [selectedAction, selectedActionSuccess, selectedActionFail, isComponentLevel]);
 
