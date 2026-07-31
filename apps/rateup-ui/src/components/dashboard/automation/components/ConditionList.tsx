@@ -1,5 +1,6 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import React from "react";
+import type { ControllerRenderProps, FieldArrayPath, FieldPath } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -29,13 +30,23 @@ interface ConditionListProps {
   allowedFields?: string[];
 }
 
+/**
+ * Condition rows are addressed by a runtime path (`groups.0.conditions.1.value`)
+ * that react-hook-form's `Path<CreateRuleInput>` cannot express literally.
+ */
+const fieldPath = (path: string) => path as FieldPath<CreateRuleInput>;
+
+/** Same, for the array paths `useFieldArray` accepts. */
+const arrayPath = (path: string) => path as FieldArrayPath<CreateRuleInput>;
+
 const ConditionValueInput = ({
   index,
   valueField,
   namePrefix,
 }: {
   index: number;
-  valueField: any;
+  /** The react-hook-form field bindings for this condition's value. */
+  valueField: ControllerRenderProps<CreateRuleInput, FieldPath<CreateRuleInput>>;
   namePrefix: string;
 }) => {
   const { control } = useFormContext<CreateRuleInput>();
@@ -46,14 +57,18 @@ const ConditionValueInput = ({
 
   const fieldType = useWatch({
     control,
-    name: `${namePrefix}.${index}.field` as any,
+    name: fieldPath(`${namePrefix}.${index}.field`),
   }) as ConditionField;
+
+  // A condition's value is always a single string; the field bindings carry the
+  // union of every value type on the form.
+  const value = typeof valueField.value === "string" ? valueField.value : "";
 
   if (fieldType === "CONTACT_GROUP") {
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value}
+        value={value}
         items={contactGroups?.map((g) => ({ value: g.id, label: g.name })) ?? []}
       >
         <SelectTrigger>
@@ -73,7 +88,7 @@ const ConditionValueInput = ({
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value}
+        value={value}
         items={
           labels?.map((l: { id: string; name: string }) => ({ value: l?.id, label: l?.name })) ?? []
         }
@@ -95,7 +110,7 @@ const ConditionValueInput = ({
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value}
+        value={value}
         items={lifecycles?.map((l: GetLabelsRes) => ({
           value: l?.id,
           label: `${l?.emoji ?? ""} ${l?.name ?? ""}`,
@@ -118,7 +133,7 @@ const ConditionValueInput = ({
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value}
+        value={value}
         items={businessHours?.map((opt) => ({ value: opt.id, label: opt.name })) ?? []}
       >
         <SelectTrigger>
@@ -139,7 +154,7 @@ const ConditionValueInput = ({
     return (
       <Select
         onValueChange={valueField.onChange}
-        value={valueField.value}
+        value={value}
         items={[
           { value: "true", label: "Enabled" },
           { value: "false", label: "Disabled" },
@@ -193,7 +208,7 @@ const ConditionValueInput = ({
         {valueField.value !== "*" && valueField.value !== "lead" && (
           <Input
             placeholder="Enter keyword"
-            value={valueField.value}
+            value={value}
             onChange={valueField.onChange}
             className="w-full bg-background"
           />
@@ -202,7 +217,16 @@ const ConditionValueInput = ({
     );
   }
 
-  return <Input placeholder="Value" {...valueField} />;
+  return (
+    <Input
+      placeholder="Value"
+      name={valueField.name}
+      value={value}
+      onChange={valueField.onChange}
+      onBlur={valueField.onBlur}
+      ref={valueField.ref}
+    />
+  );
 };
 
 const ConditionRow = ({
@@ -220,7 +244,7 @@ const ConditionRow = ({
 
   const fieldType = useWatch({
     control,
-    name: `${namePrefix}.${index}.field` as any,
+    name: fieldPath(`${namePrefix}.${index}.field`),
   });
 
   const availableOperators = React.useMemo(() => {
@@ -238,15 +262,15 @@ const ConditionRow = ({
     <div className="flex gap-3 items-center p-4 bg-white dark:bg-card rounded-lg border border-border">
       <Controller
         control={control}
-        name={`${namePrefix}.${index}.field` as any}
+        name={fieldPath(`${namePrefix}.${index}.field`)}
         render={({ field, fieldState }) => (
           <Field className="flex-1" data-invalid={fieldState.invalid}>
             <Select
               onValueChange={(val) => {
                 field.onChange(val);
-                setValue(`${namePrefix}.${index}.value` as any, "");
+                setValue(fieldPath(`${namePrefix}.${index}.value`), "");
                 if (val !== "MESSAGE_BODY" && val !== "CONTACT_EMAIL") {
-                  setValue(`${namePrefix}.${index}.operator` as any, "EQUALS");
+                  setValue(fieldPath(`${namePrefix}.${index}.operator`), "EQUALS");
                 }
               }}
               defaultValue={field.value as string}
@@ -279,7 +303,7 @@ const ConditionRow = ({
       {shouldShowOperator && (
         <Controller
           control={control}
-          name={`${namePrefix}.${index}.operator` as any}
+          name={fieldPath(`${namePrefix}.${index}.operator`)}
           render={({ field, fieldState }) => (
             <Field className="w-[140px]" data-invalid={fieldState.invalid}>
               <Select
@@ -308,7 +332,7 @@ const ConditionRow = ({
       <div className="flex-1">
         <Controller
           control={control}
-          name={`${namePrefix}.${index}.value` as any}
+          name={fieldPath(`${namePrefix}.${index}.value`)}
           render={({ field: valueField, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <div className="w-full">
@@ -350,17 +374,17 @@ const ConditionList: React.FC<ConditionListProps> = ({
   } = useFormContext<CreateRuleInput>();
   const { fields, append, remove } = useFieldArray({
     control,
-    name: name as any,
+    name: arrayPath(name),
   });
 
   // Helper to get nested error
-  const getError = (path: string) => {
-    const keys = path.split(".");
-    let result: any = errors;
-    for (const key of keys) {
-      result = result?.[key];
+  const getError = (path: string): { message?: string } | undefined => {
+    let result: unknown = errors;
+    for (const key of path.split(".")) {
+      if (typeof result !== "object" || result === null) return undefined;
+      result = (result as Record<string, unknown>)[key];
     }
-    return result;
+    return result as { message?: string } | undefined;
   };
 
   const listError = getError(name);
@@ -402,7 +426,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
           const defaultField =
             CONDITION_FIELDS.length > 0 ? CONDITION_FIELDS[0].value : "CONTACT_EMAIL";
           append({
-            field: defaultField as any,
+            field: defaultField,
             operator: "CONTAINS",
             value: "",
           });

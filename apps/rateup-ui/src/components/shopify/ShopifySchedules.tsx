@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { ShopifyProduct } from "@/backend/appsIntegration/shopify/shopify.api";
 import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
@@ -75,7 +76,7 @@ const ShopifySchedules = ({
   waTemplates,
   teams,
 }: {
-  shopifyProducts: any[];
+  shopifyProducts: ShopifyProduct[];
   shopifyInfo: ShopifyIntegration;
   waTemplates: WaTemplate[];
   teams: TeamData[];

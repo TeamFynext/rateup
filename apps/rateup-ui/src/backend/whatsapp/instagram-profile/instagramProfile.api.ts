@@ -84,6 +84,8 @@ interface InstagramStoryItem {
   id: string;
   media_type: "IMAGE" | "VIDEO";
   media_url?: string;
+  /** Stories rarely carry one, but the Graph API returns it when set. */
+  caption?: string;
   timestamp: string;
 }
 
