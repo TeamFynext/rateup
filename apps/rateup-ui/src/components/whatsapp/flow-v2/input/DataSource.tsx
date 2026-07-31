@@ -1,6 +1,6 @@
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useId, useEffect, useRef, useState } from "react";
-import type { FieldValues } from "react-hook-form";
+import type { FieldValues, Resolver } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
@@ -30,17 +30,30 @@ import { asList } from "./inputProps.ts";
 const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
 
 /** RHF resolver that always validates against the latest schema held in `schemaRef`. */
-function schemaRefResolver(schemaRef: React.RefObject<z.ZodTypeAny>) {
-  return (values: FieldValues) => {
+function schemaRefResolver<TValues extends FieldValues>(
+  schemaRef: React.RefObject<z.ZodTypeAny>,
+): Resolver<TValues> {
+  const resolve = (values: FieldValues) => {
     const result = schemaRef.current.safeParse(values);
     if (result.success) return { values: result.data, errors: {} };
     const errors: Record<string, { type: string; message: string }> = {};
     for (const issue of result.error.issues) {
-      const key = issue.path[0] as string;
+      const key = String(issue.path[0] ?? "");
       if (key && !errors[key]) errors[key] = { type: "validation", message: issue.message };
     }
     return { values: {}, errors };
   };
+  // The schema held in the ref is rebuilt on every render, so it is only known to produce
+  // the caller's form values by construction at the call site.
+  return resolve as Resolver<TValues>;
+}
+
+/** The add/edit choice form: a title, and the optional fields shown when not in title-only mode. */
+interface ChoiceFormValues {
+  title: string;
+  description?: string;
+  metadata?: string;
+  image?: string | null;
 }
 
 export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
@@ -87,7 +100,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
   const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
   schemaRef.current = choiceSchema;
 
-  const form = useForm<any>({
+  const form = useForm<ChoiceFormValues>({
     resolver: schemaRefResolver(schemaRef),
     defaultValues: props?.onlyTitle
       ? { title: "" }
@@ -354,7 +367,7 @@ function ChoiceRow({
   const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
   schemaRef.current = choiceSchema;
 
-  const form = useForm<any>({
+  const form = useForm<ChoiceFormValues>({
     resolver: schemaRefResolver(schemaRef),
     defaultValues: onlyTitle
       ? { title: "" }
