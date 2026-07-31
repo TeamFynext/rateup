@@ -1,6 +1,7 @@
 import { openDB } from "idb";
 import { isEqual } from "lodash";
 
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 
 import type { ContactWithUpdatedAt } from "./store.ts";
@@ -86,7 +87,7 @@ export async function loadContactIdsForFilter(filterKey: string): Promise<string
   return (await db.get(STORE_FILTERS, filterKey)) || [];
 }
 
-export async function saveMessagesToIDB(key: string, messages: unknown[]) {
+export async function saveMessagesToIDB(key: string, messages: WaGetMessagesBody[]) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);

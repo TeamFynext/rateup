@@ -22,7 +22,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
-import { getApiErrorData } from "@/utils/apiError.ts";
+import { asApiError, getApiErrorData } from "@/utils/apiError.ts";
 import RouteChangeHandler from "@/utils/routeHandler.tsx";
 
 function makeQueryClient() {
@@ -34,8 +34,8 @@ function makeQueryClient() {
         gcTime: 600 * 1000,
         retry: (failureCount, error: unknown) => {
           // Don't retry for certain error responses
-          const serverError = error?.response?.data;
-          if (error?.response?.status === 401 || serverError?.message === "Not authorized") {
+          const response = asApiError(error)?.response;
+          if (response?.status === 401 || getApiErrorData(error)?.message === "Not authorized") {
             return false;
           }
           return failureCount <= 2;

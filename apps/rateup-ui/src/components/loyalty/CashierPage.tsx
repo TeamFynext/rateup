@@ -32,7 +32,8 @@ export function CashierPage() {
     isLoading: isLoadingCustomer,
     error,
   } = useCustomerRewardsByPhone(selectedPhone);
-  const orgId = data?.accessTokenPayload?.orgId;
+  // `useSessionContext` only exposes the payload once the session has loaded.
+  const orgId = data.loading ? undefined : data.accessTokenPayload?.orgId;
 
   // Search
   const { data: searchResults, isLoading: isSearchLoading } = useSearchCustomers(debouncedSearch);
