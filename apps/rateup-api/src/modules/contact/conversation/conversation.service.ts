@@ -77,13 +77,23 @@ function resolveCloseReason(status: InboxStatus, actor: InboxActor): CloseReason
 
 /// Everything a status transition writes to `Conversation`, in one place, so
 /// that the transactional mirror and `setInboxStatus` cannot disagree.
+export interface ConversationStatusData {
+  status: InboxStatus;
+  closedAt: Date | null;
+  closedBy: string | null;
+  resolvedAt: Date | null;
+  closeReason: CloseReason | null;
+  closedByAutomation: boolean;
+  resolutionResult: ResolutionResult | null;
+}
+
 export function conversationStatusData(
   status: InboxStatus,
   actor: InboxActor,
   closeReason?: CloseReason,
   now: Date = new Date(),
   resolutionResult?: ResolutionResult | null,
-) {
+): ConversationStatusData {
   if (!isTerminalInboxStatus(status)) {
     // Reopening clears the previous close stamp (and any resolution result).
     return {
@@ -313,7 +323,11 @@ export async function updateConversationAssignees(
         });
       }
       for (const assignee of assigneesToUpdate) {
-        const teamId = assignees.find((as) => as.userId === assignee.userId).teamId;
+        const matched = assignees.find((as) => as.userId === assignee.userId);
+        if (!matched) {
+          throw new Error(`Assignee ${assignee.userId} not found in incoming assignees list`);
+        }
+        const teamId = matched.teamId;
         await tx.conversationAssignedUserTeamMap.update({
           where: {
             userId_conversationId: {
@@ -335,6 +349,11 @@ export async function updateConversationAssignees(
         });
       }
       for (const assignee of assigneesToAdd) {
+        // `teamId` is optional on the incoming schema but a required FK on the
+        // map row itself — a new assignment can't be created without one.
+        if (!assignee.teamId) {
+          throw new Error(`teamId is required to assign user ${assignee.userId}`);
+        }
         await tx.conversationAssignedUserTeamMap.create({
           data: {
             conversationId: conversationId,
@@ -511,12 +530,14 @@ export async function getConversationOverview(
     endDate = new Date(dateRange[1]);
   }
 
-  const res = await prisma.$queryRaw<{
-    totalConversations: number; // conversation created on range of given days
-    averageResponseTime: number;
-    averageResponseTimeByAgent: number;
-    resolutionRate: number; // resolved conversation rate on the range of given day by total conversation till the date
-  }>`
+  const res = await prisma.$queryRaw<
+    {
+      totalConversations: number; // conversation created on range of given days
+      averageResponseTime: number;
+      averageResponseTimeByAgent: number;
+      resolutionRate: number; // resolved conversation rate on the range of given day by total conversation till the date
+    }[]
+  >`
   WITH first_agent_message AS (
    SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
    FROM "WaMessage" wm
@@ -540,13 +561,15 @@ export async function getConversationOverview(
   JOIN "Contact" ct ON ct.id = c."contactId"
   LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
   WHERE ct."orgId" = ${orgId}::uuid;`;
-  return res
+  // The query has no GROUP BY, so it always returns exactly one aggregate row —
+  // the length check guards the theoretical empty-result case defensively.
+  return res.length
     ? res[0]
     : {
-        totalConversations: null,
-        averageResponseTime: null,
-        averageResponseTimeByAgent: null,
-        resolutionRate: null,
+        totalConversations: 0,
+        averageResponseTime: 0,
+        averageResponseTimeByAgent: 0,
+        resolutionRate: 0,
       };
 }
 
@@ -576,7 +599,7 @@ export async function getResolvedConversationWeeklyStats(orgId: string) {
 export async function getResolvedCountandTotalCountofDailyInLastNDays(
   orgId: string,
   days: number,
-  dateRange,
+  dateRange: string[],
 ) {
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
@@ -658,7 +681,11 @@ ORDER BY day;
   return result;
 }
 
-export async function getAvargeResponseTimeofTodyaInEveryHour(orgId: string, dateKey, dateRange) {
+export async function getAvargeResponseTimeofTodyaInEveryHour(
+  orgId: string,
+  dateKey: string,
+  dateRange: string[],
+) {
   const startDate = new Date(dateRange[0]);
   const endDate = new Date(dateRange[1]);
 
@@ -717,7 +744,7 @@ ORDER BY period;
   return result;
 }
 
-export async function getConversationOnAccountDistribution(orgId: string, dateRange) {
+export async function getConversationOnAccountDistribution(orgId: string, dateRange: string[]) {
   let startDate, endDate;
   if (dateRange.length) {
     startDate = new Date(dateRange[0]);
@@ -827,7 +854,7 @@ WHERE ct."orgId" = ${orgId}::uuid;
   return { ...rest, resolvedRateDifference };
 }
 
-export async function getStaffConverSationMetrics(orgId: string, dateRange) {
+export async function getStaffConverSationMetrics(orgId: string, dateRange: string[]) {
   const sevenDaysAgo = new Date();
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -1038,49 +1065,55 @@ AND u."deletedAt" IS NULL;
   return result;
 }
 
-export async function getStaffDetailedConversationAnalytics(orgId, userId, days) {
+export async function getStaffDetailedConversationAnalytics(
+  orgId: string,
+  userId: string,
+  days: number,
+) {
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
   const sevenDaysAgo = new Date();
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const result = await prisma.$queryRaw<{
-    userPerformance: {
-      name: string;
-      status: string;
-      email: string;
-      totalAssignedConversations: number;
-      totalClosedConversations: number;
-      totalMessagesHandled: number;
-      averageResponseTime: number;
-      messagesHandledRateByLastWeek: number;
-      responseTimeRateByLastWeek: number;
-      resolutionRateByLastWeek: number;
-      conversationsTransferred: number;
-      conversationsRecieved: number;
-    };
-    weeklyMessageStats: {
-      date: string;
-      messageCount: number;
-    }[];
-    recentConversations: {
-      id: string;
-      customer: {
+  const result = await prisma.$queryRaw<
+    {
+      userPerformance: {
         name: string;
-        phone: string;
+        status: string;
+        email: string;
+        totalAssignedConversations: number;
+        totalClosedConversations: number;
+        totalMessagesHandled: number;
+        averageResponseTime: number;
+        messagesHandledRateByLastWeek: number;
+        responseTimeRateByLastWeek: number;
+        resolutionRateByLastWeek: number;
+        conversationsTransferred: number;
+        conversationsRecieved: number;
       };
-      topic: string;
-      duration: number;
-      lastRespondedAt: string;
-      status: string;
-    }[];
-    metrics: {
-      resolutionRate: number;
-      firstResponseTime: string;
-      avgHandlingTime: number;
-    };
-  }>`
+      weeklyMessageStats: {
+        date: string;
+        messageCount: number;
+      }[];
+      recentConversations: {
+        id: string;
+        customer: {
+          name: string;
+          phone: string;
+        };
+        topic: string;
+        duration: number;
+        lastRespondedAt: string;
+        status: string;
+      }[];
+      metrics: {
+        resolutionRate: number;
+        firstResponseTime: string;
+        avgHandlingTime: number;
+      };
+    }[]
+  >`
 
   WITH valid_conversations AS (
   SELECT
@@ -1427,7 +1460,7 @@ SELECT
   return result[0];
 }
 
-export async function getTeamOverview(orgId: string, dateRange) {
+export async function getTeamOverview(orgId: string, dateRange: string[]) {
   const sevenDaysAgo = new Date();
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -1511,35 +1544,41 @@ LEFT JOIN "OrgMember" om
   return result;
 }
 
-export async function getTeamDetailedMetrics(teamId: string, orgId: string, days) {
+export async function getTeamDetailedMetrics(
+  teamId: string,
+  orgId: string,
+  days: number | undefined,
+) {
   const sinceDate = new Date();
-  sinceDate.setDate(sinceDate.getDate() - days);
+  sinceDate.setDate(sinceDate.getDate() - days!);
   const sevenDaysAgo = new Date();
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const result = await prisma.$queryRaw<{
-    teamId: string;
-    teamName: string | null;
-    teamColor: string | null;
-    averageResponseTime: number | null;
-    activeChats: number;
-    resolutionRate: number;
-    resolutionRateComparedToLastWeek: number;
-    averageResponseTimeComparedToLastWeek: number;
-    teamMembers: number;
-    teamMembersOnline: number;
-    members:
-      | {
-          userId: string;
-          name: string;
-          onlineStatus: string | null;
-          averageResponseTime: number | null;
-          staffActiveChats: number;
-          messagesHandled: number;
-        }[]
-      | null;
-  }>`
+  const result = await prisma.$queryRaw<
+    {
+      teamId: string;
+      teamName: string | null;
+      teamColor: string | null;
+      averageResponseTime: number | null;
+      activeChats: number;
+      resolutionRate: number;
+      resolutionRateComparedToLastWeek: number;
+      averageResponseTimeComparedToLastWeek: number;
+      teamMembers: number;
+      teamMembersOnline: number;
+      members:
+        | {
+            userId: string;
+            name: string;
+            onlineStatus: string | null;
+            averageResponseTime: number | null;
+            staffActiveChats: number;
+            messagesHandled: number;
+          }[]
+        | null;
+    }[]
+  >`
   WITH first_agent_message AS (
     SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
     FROM "WaMessage" wm

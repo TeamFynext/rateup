@@ -98,3 +98,5 @@ export const getRulesQuerySchema = z.object({
 export const getRulesByAutomationIdQuerySchema = z.object({
   automationId: z.string(),
 });
+
+export type RuleOptions = z.infer<typeof ruleOptionsSchema>;

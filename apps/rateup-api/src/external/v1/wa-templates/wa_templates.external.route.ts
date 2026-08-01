@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import type { MultipartFile } from "@fastify/multipart";
 import {
   getErrorLogsExternalController,
   getMessageStatusByIdExternalController,
@@ -18,7 +19,10 @@ import {
 import { sendTemplatesToContactsHandler } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
 import { sendWithFileSchema } from "./wa_templates.schema.js";
 
-async function onFile(part) {
+// @fastify/multipart's `attachFieldsToBody: "keyValues"` mode reads `part.value` back
+// off the part after `onFile` runs to decide what lands in `request.body` for that
+// field - a documented capability the `MultipartFile` type doesn't model.
+async function onFile(part: MultipartFile & { value?: unknown }) {
   const buff = await part.toBuffer();
   part.value = {
     filename: part.filename,

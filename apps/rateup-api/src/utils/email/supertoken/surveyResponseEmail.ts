@@ -1,6 +1,7 @@
 import { rateupLogo } from "../../constants/constants.js";
 
-export function createEmailBodySurveyResponse(invite_link: string, body: any, name: string) {
+/** `body` is a pre-rendered HTML fragment of the answers (see generateAnswerHtml). */
+export function createEmailBodySurveyResponse(invite_link: string, body: string, name: string) {
   return `
     <!DOCTYPE html>
     <html lang="en">

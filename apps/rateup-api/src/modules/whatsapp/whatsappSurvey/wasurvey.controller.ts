@@ -7,6 +7,7 @@ import {
   createListMessage,
   createReplyButtonsMessage,
   createTemplateMessage,
+  flowResponseStrings,
   getEventType,
   getMessageObject,
   getQuestionByIdFromSession,
@@ -34,6 +35,8 @@ import {
   sendTextMessage,
   setAiBotActiveStatus,
   updateSession,
+  type WaSession,
+  type WaSessionWithSurveyTeamMap,
 } from "./wasurvey.service.js";
 import {
   CampaignParticipantStatus,
@@ -62,7 +65,16 @@ import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
+  type OutgoingTemplateComponent,
+  type WaSendMessageBody,
 } from "../../../types/whatsapp.types.js";
+import type {
+  WaAccountUpdate,
+  WaTemplateCategoryChange,
+  WaTemplateSendComponent,
+  WaTemplateStatusChange,
+} from "../../../types/whatsapp.types.js";
+import { WaAutomationProgressStatus } from "../../../../generated/prisma/enums.js";
 import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
@@ -103,6 +115,14 @@ import { createJWT } from "../../../utils/jwt.js";
 import { getAIResponseForQuery, getChatbotDetails } from "../../chatbot/chatbot.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
 import { NodeTypeMap, TypedNode } from "./node-types.js";
+import type {
+  AutomationEdge,
+  AutomationGraph,
+  AutomationNode,
+  AutomationWithGraph,
+  TemplateComponent,
+  TemplateComponentParameter,
+} from "./node-types.js";
 import { logAutomationAction, findRecentAutomation } from "./automation-logger.utils.js";
 import { autoGenerateTicket } from "../../ticket/ticketCard/card.service.js";
 import {
@@ -201,14 +221,14 @@ export async function whatsappEventHandler(request: FastifyRequest, reply: Fasti
         log.warn("Unhandled event type: %s", eventType);
     }
   } catch (error) {
-    log.error("Error in whatsappEventHandler: %o", error);
+    log.error({ err: error }, "Error in whatsappEventHandler");
   }
 }
 
 // Utility: Wrap async functions to handle errors
 async function safeAsyncOperation<T>(
   operation: () => Promise<T>,
-  errorHandler: (error: any) => void,
+  errorHandler: (error: unknown) => void,
 ): Promise<T | void> {
   try {
     return await operation();
@@ -221,16 +241,21 @@ async function safeAsyncOperation<T>(
 async function handleCapturedEvent(body: WaMessageBody) {
   const promises = (body.entry || []).flatMap((entry) =>
     (entry.changes || []).flatMap((change) =>
-      (change.value?.statuses || []).map((status) =>
-        safeAsyncOperation(
-          () => handlePaymentConfirmation(status.recipient_id, status.payment?.reference_id),
-          (error) =>
-            log.error(
-              `Error handling payment confirmation for recipient_id ${status.recipient_id}: %o`,
-              error,
-            ),
+      ((change.value as WaReceiveMessageBody)?.statuses || [])
+        .filter(
+          (status): status is typeof status & { payment: { reference_id: string } } =>
+            !!status.payment?.reference_id,
+        )
+        .map((status) =>
+          safeAsyncOperation(
+            () => handlePaymentConfirmation(status.recipient_id, status.payment.reference_id),
+            (error) =>
+              log.error(
+                { err: error },
+                `Error handling payment confirmation for recipient_id ${status.recipient_id}`,
+              ),
+          ),
         ),
-      ),
     ),
   );
 
@@ -254,8 +279,7 @@ async function handleMessageEvent(body: WaMessageBody) {
       await safeAsyncOperation(
         () => whatsappMessageHandler(waSettings, body),
         (error) => {
-          log.error(error);
-          log.error("Error processing WhatsApp message for phone_id %s: %o", phoneId, error);
+          log.error({ err: error }, "Error processing WhatsApp message for phone_id %s", phoneId);
         },
       );
     }
@@ -299,7 +323,10 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               message.id,
             );
           } catch (error) {
-            log.error("Error processing SMB Message Echo for message_id %s: %o", message.id, error);
+            log.error(
+              { err: error },
+              `Error processing SMB Message Echo for message_id ${message.id}`,
+            );
           }
         }
       }
@@ -312,13 +339,11 @@ async function handleTemplateStatusChange(body: WaMessageBody) {
   const promises = (body.entry || []).flatMap((entry) =>
     (entry.changes || []).map((change) =>
       safeAsyncOperation(
-        () => templateStatusChangeHandler(change.value as any),
+        () => templateStatusChangeHandler(change.value as WaTemplateStatusChange),
         (error) =>
           log.error(
-            `Error handling template status change for template id ${JSON.stringify(
-              change.value,
-            )}: %o`,
-            error,
+            { err: error },
+            `Error handling template status change for template id ${JSON.stringify(change.value)}`,
           ),
       ),
     ),
@@ -331,13 +356,13 @@ async function handleTemplateCategoryChange(body: WaMessageBody) {
   const promises = (body.entry || []).flatMap((entry) =>
     (entry.changes || []).map((change) =>
       safeAsyncOperation(
-        () => templateCategoryChangeHandler(change.value as any),
+        () => templateCategoryChangeHandler(change.value as WaTemplateCategoryChange),
         (error) =>
           log.error(
+            { err: error },
             `Error handling template category change for template id ${JSON.stringify(
               change.value,
-            )}: %o`,
-            error,
+            )}`,
           ),
       ),
     ),
@@ -367,7 +392,10 @@ async function handleMessageStatusEvent(body: WaMessageBody, eventType: WaEvent)
             }
           },
           (error) =>
-            log.error(`Error handling message status update for status id ${status.id}: %o`, error),
+            log.error(
+              { err: error },
+              `Error handling message status update for status id ${status.id}`,
+            ),
         ),
       );
     }),
@@ -379,7 +407,7 @@ async function handleMessageStatusEvent(body: WaMessageBody, eventType: WaEvent)
 async function handleAccountUpdateEvent(body: WaMessageBody) {
   const wabaId = body.entry?.[0]?.id;
   const changes = body.entry?.[0]?.changes?.[0];
-  const value = (changes?.value as any) || {};
+  const value = (changes?.value as WaAccountUpdate | undefined) ?? {};
 
   log.info(`Handling Account Update Event for WABA ID: ${wabaId}`);
 
@@ -396,15 +424,7 @@ async function handleAccountUpdateEvent(body: WaMessageBody) {
   }
 }
 
-interface changeValue {
-  event: WaTemplateStatus;
-  message_template_id: number;
-  message_template_name: string;
-  message_template_language: string;
-  reason: string | null;
-}
-
-async function templateStatusChangeHandler(changeValue: changeValue) {
+async function templateStatusChangeHandler(changeValue: WaTemplateStatusChange) {
   const dbTemplate = await getTemplateWithHSMId(changeValue.message_template_id.toString());
   if (!dbTemplate) {
     log.error("Template not found in db");
@@ -421,14 +441,7 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
   }
 }
 
-interface TemplateCategoryChange {
-  message_template_id: number;
-  message_template_name: string;
-  message_template_language: string;
-  previous_category: string;
-  new_category: string;
-}
-async function templateCategoryChangeHandler(changeValue: TemplateCategoryChange) {
+async function templateCategoryChangeHandler(changeValue: WaTemplateCategoryChange) {
   const dbTemplate = await getTemplateWithHSMId(changeValue.message_template_id.toString());
   if (!dbTemplate || !changeValue.new_category) {
     log.error("Template not found in db");
@@ -460,7 +473,7 @@ async function handleRevokedMessage(
 
   const { orgId } = waSettings;
   const deletedMessage = await markWaMessageAsDeleted(originalMessageId, orgId);
-  if (!deletedMessage) return;
+  if (!deletedMessage || !deletedMessage.deletedAt) return;
 
   await sendViaWstoOrgHandler(
     orgId,
@@ -527,7 +540,15 @@ async function whatsappMessageHandler(
     (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
   if (type === WaMessageTypes.order) {
-    await handleWaOrderfromCatalog(completeMessageObject, messageObj, waSettings);
+    if (!messageObj) {
+      log.error("handleWaMessages did not return a message; skipping catalog order handling");
+      return;
+    }
+    await handleWaOrderfromCatalog(
+      completeMessageObject as WaReceiveMessageBody,
+      messageObj,
+      waSettings,
+    );
     return;
   }
 
@@ -542,11 +563,11 @@ async function whatsappMessageHandler(
           orgId,
           contactPhone: from,
           listReplyId,
-          whatsappSettingsPhoneId: waSettings.phoneId,
+          whatsappSettingsPhoneId: waSettings.phoneId ?? undefined,
         });
         if (handled) return;
       } catch (e) {
-        log.error("Error handling delivery list reply: %o", e);
+        log.error({ err: e }, "Error handling delivery list reply");
       }
     }
   }
@@ -623,7 +644,7 @@ async function whatsappMessageHandler(
         await setAiBotActiveStatus(from, orgId, false, "");
       }
     } catch (error) {
-      log.error(`Error handling AI bot interaction: ${error.message}`);
+      log.error({ err: error }, "Error handling AI bot interaction");
       await sendTextMessage(
         { phone: from, orgId },
         null,
@@ -638,7 +659,7 @@ async function whatsappMessageHandler(
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
     // ── Check if this is a catalog address flow response ──────────────────────
-    const addressData = parsedMessage.flowResponse;
+    const addressData = flowResponseStrings(parsedMessage.flowResponse);
     const flowToken = addressData?.flow_token as string | undefined;
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (flowToken && uuidRegex.test(flowToken)) {
@@ -649,14 +670,14 @@ async function whatsappMessageHandler(
           orderId: flowToken,
           addressData,
           contactPhone: from,
-          whatsappSettingsPhoneId: waSettings?.phoneId,
+          whatsappSettingsPhoneId: waSettings?.phoneId ?? undefined,
         });
         if (handled) {
           // Catalog address flow handled — skip regular flow handler
           return;
         }
       } catch (e) {
-        log.error("Error handling catalog address flow response: %o", e);
+        log.error({ err: e }, "Error handling catalog address flow response");
       }
     }
     await handleStaticFlowReply(orgId, waMessage);
@@ -671,7 +692,7 @@ async function whatsappMessageHandler(
     if (!validateSession(session)) {
       if (session) {
         await deleteSession(orgId, from);
-        session = undefined;
+        session = null;
       }
     }
 
@@ -690,7 +711,7 @@ export async function handleWaJoinRegistration({
   from: string;
   userName?: string;
   joinPayload: { source?: string; referralCode?: string };
-  sourceIdentifier: string;
+  sourceIdentifier: string | undefined;
 }) {
   const program = await getLoyaltyProgramByOrg(orgId);
   if (program?.status !== "active") {
@@ -730,7 +751,7 @@ export async function handleWaJoinRegistration({
   await createCustomerAccount(
     {
       phone: from,
-      name: userName,
+      name: userName ?? "",
       referCode: joinPayload.referralCode,
       source: joinPayload.source || "WHATSAPP",
       orgId: orgId,
@@ -743,15 +764,23 @@ export async function handleWaJoinRegistration({
 
 const pendingConfirmationMap = new Map<string, boolean>();
 async function handleAiWaChat(
-  chatbot,
+  chatbot: Awaited<ReturnType<typeof getChatbotDetails>>,
   message: string,
   orgId: string,
   phone: string,
-  chatbotId?: string,
+  chatbotId: string,
 ) {
   try {
+    if (!chatbot) {
+      log.error("handleAiWaChat called without a chatbot, phone: %s, orgId: %s", phone, orgId);
+      return;
+    }
     let query = "";
     const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+    if (!contact) {
+      log.error("Contact not found for phone: %s, orgId: %s", phone, orgId);
+      return;
+    }
     if (chatbot.enableAllWaChat && !contact.aiWaChat) {
       log.trace("Ai chat is disabled for phone: %s", phone);
       return;
@@ -793,7 +822,7 @@ async function handleAiWaChat(
         userId: contact.id,
         orgId,
         chatbotId,
-        customPrompt: chatbot?.waPrompt,
+        customPrompt: chatbot.waPrompt ?? undefined,
       },
       jwtToken,
     );
@@ -819,6 +848,10 @@ async function handleSubscriptionStatus(orgId: string, phone: string, message: s
   const consent = await handleContactConsent(orgId, phone, isSubscribe);
   if (!consent) return;
   const org = await getOrgById(orgId);
+  if (!org) {
+    log.error("Org not found for orgId: %s", orgId);
+    return;
+  }
   if (isSubscribe) {
     await sendTextMessage(
       { phone, orgId },
@@ -838,7 +871,15 @@ async function handleSubscriptionStatus(orgId: string, phone: string, message: s
   }
 }
 
-async function handleInputReply({ phone, orgId, parsedMessage }) {
+async function handleInputReply({
+  phone,
+  orgId,
+  parsedMessage,
+}: {
+  phone: string;
+  orgId: string;
+  parsedMessage: WaParsedMessage;
+}) {
   // Find the most recent automation progress for this phone/org in the last 4 hours
   const progress = await findRecentAutomation(phone, orgId, {
     timeWindow: 4 * 60 * 60 * 1000, // 4 hours
@@ -846,15 +887,13 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
   const automation = progress?.waAutomatedReply;
   if (automation) {
     const matchData = automation.matchData as {
-      json: { edges: any[]; nodes: any };
+      json: AutomationGraph;
     };
-    const nextEdge = matchData?.json?.edges?.find(
-      (edge: any) => edge.target === progress.currentNode,
-    );
+    const nextEdge = matchData?.json?.edges?.find((edge) => edge.target === progress.currentNode);
 
     if (!nextEdge) return false;
 
-    const nextNode = matchData?.json?.nodes?.find((node: any) => node.id === nextEdge.source);
+    const nextNode = matchData?.json?.nodes?.find((node) => node.id === nextEdge.source);
 
     if (!nextNode) return false;
 
@@ -868,12 +907,12 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
         orgId,
         response: {
           value: parsedMessage?.message,
-          variable: nextNode?.data?.variableName,
+          variable: String(nextNode?.data?.variableName ?? ""),
           action: "user_input",
         },
       });
 
-      await processNextNode(phone, automation, progress.currentNode, orgId, automation.id);
+      await processNextNode(phone, automation, progress.currentNode ?? "", orgId, automation.id);
       return true;
     }
   }
@@ -890,10 +929,14 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
  */
 export async function handleAutomatedReply(
   orgId: string,
-  waMessage: WaMessageBody,
-  parsedMessage: WaParsedMessage,
+  // Manual triggers (see initiateAutomatedReplyByIdHandler) have no real incoming
+  // WhatsApp webhook payload to supply, so these are nullable for that caller. The
+  // else-branch below (real webhook-driven messages) guards and narrows them back to
+  // non-null before using them.
+  waMessage: WaMessageBody | null,
+  parsedMessage: WaParsedMessage | null,
   phone: string,
-  message: string,
+  message: string | null,
   automatedReplyId?: string,
 ) {
   if (!automatedReplyId) {
@@ -915,6 +958,11 @@ export async function handleAutomatedReply(
         await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
       }
     } else {
+      if (!waMessage || !parsedMessage || !message) {
+        throw new Error(
+          "waMessage, parsedMessage, and message are required when no automatedReplyId is provided",
+        );
+      }
       const inputHandled = await handleInputReply({
         phone,
         orgId,
@@ -939,7 +987,7 @@ export async function handleAutomatedReply(
       await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     }
   } catch (error) {
-    log.error("Error handling automated reply: %o", error);
+    log.error({ err: error }, "Error handling automated reply");
   }
 }
 
@@ -955,10 +1003,10 @@ export async function handleButtonClickInteraction(
 
   const automation = recentInteraction?.waAutomatedReply as {
     id: string;
-    matchData: { json: { nodes: any[]; edges: any[] } };
+    matchData: { json: AutomationGraph };
     whatsappSettingsPhoneId: string;
   };
-  if (!automation) {
+  if (!automation || !recentInteraction) {
     log.warn(`No active automation found for button click from ${phone}`);
     return;
   }
@@ -966,7 +1014,7 @@ export async function handleButtonClickInteraction(
   // Log button click action using the utility function
   const automationLog = await logAutomationAction({
     phone,
-    nodeId: recentInteraction.currentNode,
+    nodeId: recentInteraction.currentNode ?? "",
     automationId: automation.id,
     orgId,
     response: {
@@ -978,7 +1026,7 @@ export async function handleButtonClickInteraction(
 
   // Find the next nodes based on the button clicked
   const nextNodes = automation?.matchData?.json?.edges.filter(
-    (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
+    (edge) => edge.sourceHandle === parsedMessage.buttonId,
   );
   if (nextNodes.length) {
     for (const node of nextNodes) {
@@ -1000,13 +1048,11 @@ export async function handleButtonClickInteraction(
  */
 async function startAutomationFlow(
   phone: string,
-  automation: any,
-  parsedMessage: WaParsedMessage,
+  automation: AutomationWithGraph,
+  parsedMessage: WaParsedMessage | null,
   orgId: string,
 ) {
-  const startNode = automation?.matchData?.json?.nodes?.find(
-    (node: any) => node.type === "startNode",
-  );
+  const startNode = automation?.matchData?.json?.nodes?.find((node) => node.type === "startNode");
 
   if (!startNode) {
     log.error(`No start node found in automation ${automation.id}`);
@@ -1037,10 +1083,10 @@ async function startAutomationFlow(
  */
 export async function processNextNode(
   userPhone: string,
-  automation: any,
+  automation: AutomationWithGraph,
   nodeId: string,
   orgId: string,
-  automationMessageId: string,
+  automationMessageId: string | undefined,
   lead?: MetaAsset["leads"][0],
 ) {
   try {
@@ -1049,21 +1095,22 @@ export async function processNextNode(
       return;
     }
 
-    // Find the current node
-    const node: TypedNode & {
-      data: {
-        template?: {
-          id: string;
-          name: string;
-        };
-        flow?: {
-          id: string;
-          name: string;
-        };
-        parameters?: any[];
-        teamId?: string;
-      };
-    } = automation.matchData?.json?.nodes.find((n: any) => n.id === nodeId);
+    // Find the current node. The stored node carries the union of every node
+    // kind's data; the switch below discriminates on `type`.
+    const node = automation.matchData?.json?.nodes.find((n) => n.id === nodeId) as
+      | (TypedNode & {
+          data: {
+            template?: { id: string; name: string };
+            flow?: { id: string; name: string };
+            parameters?: TemplateComponent[];
+            teamId?: string;
+          };
+        })
+      | undefined;
+    if (!node) {
+      log.error("Automation %s has no node %s", automation.id, nodeId);
+      return;
+    }
 
     if (!node) {
       log.error(`Node with ID ${nodeId} not found in automation flow`);
@@ -1073,9 +1120,7 @@ export async function processNextNode(
     // Skip processing for special nodes
     if (["endNode", "startNode", "leadgenNode"].includes(node?.type)) {
       // For start node, just move to the next node
-      const nextEdges = automation.matchData?.json?.edges.filter(
-        (edge: any) => edge.source === nodeId,
-      );
+      const nextEdges = automation.matchData?.json?.edges.filter((edge) => edge.source === nodeId);
 
       if (nextEdges) {
         for (const nextEdge of nextEdges) {
@@ -1100,7 +1145,12 @@ export async function processNextNode(
     // Process different node types
     switch (node.type) {
       case "flowNode":
-        await handleFlowNode(node, userPhone, orgId, automation?.whatsappSettingsPhoneId);
+        await handleFlowNode(
+          node,
+          userPhone,
+          orgId,
+          automation?.whatsappSettingsPhoneId ?? undefined,
+        );
         break;
       case "aibotNode":
         await handleAiBotNode(node, userPhone, orgId);
@@ -1111,9 +1161,13 @@ export async function processNextNode(
         if (lead) {
           parameters = node?.data?.parameters?.map((param) => {
             if (param.type === "body") {
-              const newParams = param?.parameters?.map((p) => {
-                if (typeof p?.text !== "string" && p?.text?.type === "leadgenform-question-key") {
-                  const fieldName = p?.text?.value;
+              const newParams = param?.parameters?.map((p: TemplateComponentParameter) => {
+                if (
+                  p?.text &&
+                  typeof p.text !== "string" &&
+                  p.text.type === "leadgenform-question-key"
+                ) {
+                  const fieldName = p.text.value;
                   p.text =
                     lead.field_data.find((field) => field.name === fieldName)?.values[0] ?? null;
                 }
@@ -1124,11 +1178,15 @@ export async function processNextNode(
             return param;
           });
         }
+        if (!node?.data?.template?.id) {
+          log.error("templateNode has no associated template id");
+          break;
+        }
         const subscription = await getSubscription(orgId);
         await verifyTemplateMessageLimit(subscription);
         await sendTemplateToUserCore(
           orgId,
-          node?.data?.template?.id,
+          node.data.template.id,
           userPhone,
           parameters ?? [],
           node?.data?.teamId,
@@ -1149,6 +1207,10 @@ export async function processNextNode(
         break;
 
       case "pauseNode": {
+        if (!automationMessageId) {
+          log.error("Cannot pause automation without an automationMessageId");
+          break;
+        }
         const pauseData = node.data as NodeTypeMap["pauseNode"];
         let ms = 0;
         const duration = pauseData.duration || 0;
@@ -1182,7 +1244,7 @@ export async function processNextNode(
         await prisma.waAutomatedReplyMessage.update({
           where: { id: automationMessageId },
           data: {
-            status: "paused" as any,
+            status: WaAutomationProgressStatus.paused,
           },
         });
 
@@ -1194,19 +1256,25 @@ export async function processNextNode(
 
       case "assignNode": {
         const assignData = node?.data as NodeTypeMap["assignNode"];
-        const { contact } = await getOrCreateContactByPhone(
+        const contactResult = await getOrCreateContactByPhone(
           userPhone,
           orgId,
           undefined,
           undefined,
           true,
         );
+        if (!contactResult) {
+          log.error("Could not get or create contact for assignNode, phone: %s", userPhone);
+          break;
+        }
+        const { contact } = contactResult;
         let assignedUserIds = assignData?.assign?.assignedUserIds || [];
         let teamId = assignData?.assign?.teamId || null;
         if (assignData?.assign?.assignType === "me") {
           const teams = await getTeamIdsByUserId(assignedUserIds?.[0]);
           teamId = teams?.[0] || null;
         } else if (
+          teamId &&
           assignData?.assign?.choice === "all" &&
           (assignData?.assign?.roundRobin || false)
         ) {
@@ -1222,6 +1290,7 @@ export async function processNextNode(
           const assigned = await assignChat(teamId, users, automation?.id);
           assignedUserIds = [assigned];
         } else if (
+          teamId &&
           assignData?.assign?.choice === "manual" &&
           (assignData?.assign?.roundRobin || false)
         ) {
@@ -1235,7 +1304,7 @@ export async function processNextNode(
           }
           const assigned = await assignChat(teamId, assignedUserIds, automation?.id);
           assignedUserIds = [assigned];
-        } else if (assignData?.assign?.choice === "all") {
+        } else if (teamId && assignData?.assign?.choice === "all") {
           const users = await getUserIdsByTeamId(teamId);
           assignedUserIds = users;
         }
@@ -1260,13 +1329,17 @@ export async function processNextNode(
       }
       default:
         // For text, buttons, and other message types
-        const waMessage: any = await convertNodeToWhatsAppMessage(node, userPhone);
+        const waMessage = await convertNodeToWhatsAppMessage(node, userPhone);
+        // convertNodeToWhatsAppMessage returns null for node kinds that send
+        // nothing themselves (e.g. pause/assign). WhatsAppMessage is the
+        // builder's own loose shape; sendMessage takes the concrete send bodies.
+        if (!waMessage) break;
         await sendMessage(
           orgId,
-          waMessage,
+          waMessage as unknown as WaSendMessageBody,
           undefined,
           undefined,
-          automation?.whatsappSettingsPhoneId,
+          automation?.whatsappSettingsPhoneId ?? undefined,
         );
         break;
     }
@@ -1284,9 +1357,7 @@ export async function processNextNode(
         requiresUserInput = false; // Chat finished → continue automation
       }
     }
-    const nextEdges = automation.matchData?.json?.edges.filter(
-      (edge: any) => edge.source === nodeId,
-    );
+    const nextEdges = automation.matchData?.json?.edges.filter((edge) => edge.source === nodeId);
 
     if (nextEdges) {
       for (const nextEdge of nextEdges) {
@@ -1313,7 +1384,7 @@ export async function processNextNode(
       });
     }
   } catch (error) {
-    log.error(`Error processing node ${nodeId}: ${error.message}`);
+    log.error({ err: error }, `Error processing node ${nodeId}`);
   }
 }
 
@@ -1325,10 +1396,10 @@ export async function processNextNode(
  * @param whatsappSettingsPhoneId WhatsApp settings phone ID
  */
 async function handleFlowNode(
-  node: any,
+  node: TypedNode & { data: { flow?: { id: string; name: string }; teamId?: string } },
   userPhone: string,
   orgId: string,
-  whatsappSettingsPhoneId: string,
+  whatsappSettingsPhoneId?: string,
 ) {
   try {
     const flowId = node?.data?.flow?.id;
@@ -1370,12 +1441,16 @@ async function handleFlowNode(
       whatsappSettingsPhoneId,
     });
   } catch (error) {
-    log.error(`Error handling flow node: ${error.message}`);
+    log.error({ err: error }, "Error handling flow node");
     throw error; // Let the caller handle this
   }
 }
 
-async function handleAiBotNode(node: any, userPhone: string, orgId: string) {
+async function handleAiBotNode(
+  node: TypedNode & { data: { chatbot?: { id: string; name: string }; body?: string } },
+  userPhone: string,
+  orgId: string,
+) {
   const data = node.data as NodeTypeMap["aibotNode"];
 
   const chatbotId = data.chatbot.id;
@@ -1390,7 +1465,7 @@ async function handleAiBotNode(node: any, userPhone: string, orgId: string) {
 async function _handleWaSurveySession(
   orgId: string,
   waMessage: WaMessageBody,
-  session: WaSessionWithRelations,
+  session: WaSessionWithSurveyTeamMap,
 ) {
   const parsedMessage = parseMessage(waMessage);
 
@@ -1410,7 +1485,7 @@ async function _handleWaSurveySession(
 async function handleSurveyConsentReply(
   orgId: string,
   parsedMessage: WaParsedMessage,
-  session: WaSessionWithRelations,
+  session: WaSessionWithSurveyTeamMap,
 ) {
   if (!session.templateId) {
     throw new Error("TemplateId not found in session");
@@ -1418,7 +1493,10 @@ async function handleSurveyConsentReply(
 
   const { message } = parsedMessage;
   const dbTemplate = await getDbTemplate(session.templateId);
-  if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
+  if (!dbTemplate) {
+    throw new Error(`Template not found for id: ${session.templateId}`);
+  }
+  if (message.toLocaleLowerCase() === (dbTemplate.acceptButton ?? "").toLocaleLowerCase()) {
     await handleUserConsentedToSurvey(orgId, parsedMessage, session);
   } else {
     await handleUserDidntConsentToSurvey(orgId, parsedMessage, session);
@@ -1428,7 +1506,7 @@ async function handleSurveyConsentReply(
 async function handleUserDidntConsentToSurvey(
   orgId: string,
   { from, message }: WaParsedMessage,
-  session: WaSessionWithRelations,
+  session: WaSession,
 ) {
   // Delete session if user doesn't consent
   log.trace("User did not consent to survey. \n reply => %s", message);
@@ -1438,8 +1516,8 @@ async function handleUserDidntConsentToSurvey(
 
 async function handleUserConsentedToSurvey(
   orgId: string,
-  { from }: any,
-  session: WaSessionWithRelations,
+  { from }: { from: string },
+  session: WaSessionWithSurveyTeamMap,
 ) {
   log.trace("User consented to survey");
 
@@ -1450,6 +1528,9 @@ async function handleUserConsentedToSurvey(
     .catch((e) => log.error(e)); // increment started survey count
 
   if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
+    if (!session.surveyTeamMap.survey.WaFlow) {
+      throw new Error(`WaFlow not found for survey: ${session.surveyTeamMap.survey.id}`);
+    }
     // if flow, send flow
     await sendFlow({
       orgId,
@@ -1570,6 +1651,9 @@ async function handleStartSurvey({
     if (orgId) {
       updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     }
+    if (!session.surveyTeamMap.survey.WaFlow) {
+      throw new Error(`WaFlow not found for survey: ${session.surveyTeamMap.survey.id}`);
+    }
     await sendFlow({
       dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
       orgId,
@@ -1592,7 +1676,7 @@ async function handleStartSurvey({
   }
 }
 
-async function sendFirstQuestion(session: WaSessionWithRelations) {
+async function sendFirstQuestion(session: WaSessionWithSurveyTeamMap) {
   const firstQuestion = session.surveyTeamMap.survey.questions[0] as unknown as Question;
   await sendQuestion(firstQuestion!, session);
 }
@@ -1613,7 +1697,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
     await handleTestimonialReply(waMessage, question, session);
   } else {
     const response = await parseResponse(waMessage, question, session);
-    log.trace("parsedResponse => %o", response);
+    log.trace({ response }, "parsedResponse");
     if (!isValidResponse(response, question, session.language)) {
       await sendTextMessage(session, "Invalid response. Please try again.", "");
       await sendQuestion(question, session);
@@ -1627,10 +1711,11 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
       type: question.type,
     };
     // Just to make sure we don't have any duplicate responses
+    const currentQuestionId = session.currentQuestionId;
     const currentResponses = (session.responses as unknown as Array<QuestionResponse>).filter(
-      (r) => r.questionId !== session.currentQuestionId,
+      (r) => r.questionId !== currentQuestionId,
     );
-    const updatedResponses = [...currentResponses, formattedResponse] as any;
+    const updatedResponses = [...currentResponses, formattedResponse];
 
     session = await updateSession(session.orgId, session.phone, {
       responses: updatedResponses,
@@ -1639,7 +1724,7 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
   }
 }
 
-async function handleLanguageSelection(session: WaSessionWithRelations) {
+async function handleLanguageSelection(session: WaSessionWithSurveyTeamMap) {
   if (session.surveyTeamMap.survey.languages.length > 10) {
     throw new Error("Too many languages");
   }
@@ -1653,7 +1738,7 @@ async function handleLanguageSelection(session: WaSessionWithRelations) {
   await sendMessage(session.orgId, message);
 }
 
-async function handleLanguageResponse(session: WaSessionWithRelations, message: string) {
+async function handleLanguageResponse(session: WaSessionWithSurveyTeamMap, message: string) {
   const survey = session.surveyTeamMap.survey;
 
   // if language is not valid, send error message
@@ -1732,7 +1817,13 @@ export async function sendCampaignToParticipants(
         },
       },
     });
+    if (!campaign) {
+      throw new Error(`Campaign not found for id: ${campaignId}`);
+    }
     const orgId = campaign.team.orgId;
+    if (!campaign.waTemplateId) {
+      throw new Error(`Campaign ${campaignId} has no associated waTemplateId`);
+    }
     const dbTemplate = await getDbTemplate(campaign.waTemplateId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${campaign.waTemplateId} not found`);
@@ -1744,6 +1835,9 @@ export async function sendCampaignToParticipants(
     let _sendToStatuses = sendToStatuses;
     if (participantId) {
       let _participant = campaign?.campaignParticipants.find((p) => p.id === participantId);
+      if (!_participant) {
+        throw new Error(`Participant not found for id: ${participantId}`);
+      }
       _campaignData.campaignParticipants = [_participant];
       _sendToStatuses = [_participant.status as CampaignParticipantStatus];
     }
@@ -1772,14 +1866,16 @@ export async function sendCampaignToParticipants(
     return false;
   }
 }
-export function convertComponentForSenting(dbTemplate) {
+export function convertComponentForSenting(dbTemplate: WaTemplateWithTypes) {
   const containsImage =
     dbTemplate.data.components.find((c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER)
       ?.format === "IMAGE";
 
-  const components = [];
-  const addHeaderComponent = (format, link, filename = null) => {
-    const newComponent = {
+  const components: OutgoingTemplateComponent[] = [];
+  const addHeaderComponent = (format: string, link: string, filename: string | null = null) => {
+    // The media key is the lowercased format ("image"/"video"/"document"),
+    // which is why the parameter shape is keyed dynamically.
+    const newComponent: OutgoingTemplateComponent = {
       type: WaTemplateComponentType.HEADER,
       parameters: [
         {
@@ -1821,8 +1917,8 @@ export function convertComponentForSenting(dbTemplate) {
 
   dbTemplate.data.components.forEach((item) => {
     if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-      item?.buttons.forEach((button, idx) => {
-        if (button.type === "URL" && button?.example?.length > 0) {
+      item?.buttons?.forEach((button, idx: number) => {
+        if (button.type === "URL" && (button.example?.length ?? 0) > 0) {
           components.push({
             type: "button",
             sub_type: "url",
@@ -1844,13 +1940,13 @@ export function convertComponentForSenting(dbTemplate) {
 
   return components;
 }
-export function updateButtonText(array, newText) {
+export function updateButtonText(array: OutgoingTemplateComponent[], newText: string) {
   return (
     array.map((item) => {
-      if (item.type === "button" && item.sub_type === "url" && item?.parameters?.length > 0) {
+      if (item.type === "button" && item.sub_type === "url" && (item.parameters?.length ?? 0) > 0) {
         return {
           ...item,
-          parameters: item.parameters.map((param) => {
+          parameters: item.parameters?.map((param) => {
             if (param.type === "text") {
               return {
                 ...param,
@@ -1887,8 +1983,8 @@ interface _campaign {
 async function _sendCampaignToParticipants(
   campaign: _campaign,
   sendToStatuses: CampaignParticipantStatus[],
-  components: any,
-  flowId: string,
+  components: OutgoingTemplateComponent[],
+  flowId: string | undefined,
   orgId: string,
   dbTemplate: WaTemplateWithTypes,
   contactTags: string[],
@@ -1946,8 +2042,17 @@ async function _sendCampaignToParticipants(
       participant.contact.phone,
   ).length;
 
+  // NOTE: `count.monthlyMessageLimit` was a legacy field on the whatsapp subscription
+  // feature; the current SubscriptionFeatures.whatsapp shape (see global.d.ts) only has
+  // `.conversation.count`, not a top-level `.count`. This lookup already resolves to
+  // `undefined` today and always falls back to 0 — see issues.txt.
   const monthlyMessageLimit =
-    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit ?? 0;
+    (
+      subscription.features as Record<
+        string,
+        { count?: { monthlyMessageLimit?: number } } | undefined
+      > | null
+    )?.[SubscriptionFeaturePathName.Whatsapp]?.count?.monthlyMessageLimit ?? 0;
 
   const annualLimit = monthlyMessageLimit * 12;
 
@@ -2002,9 +2107,14 @@ async function _sendCampaignToParticipants(
       continue;
     }
 
-    const defaultValue = dbTemplate?.data?.components?.find((data) => data.example?.body_text)
-      ?.example?.body_text?.[0];
-    if (defaultValue?.length > 0) {
+    // body_text is documented as a list of example sets; a flat list of strings is also
+    // accepted, so normalise to one set of values.
+    const storedExamples = dbTemplate?.data?.components?.find((data) => data.example?.body_text)
+      ?.example?.body_text;
+    const defaultValue: string[] = Array.isArray(storedExamples?.[0])
+      ? storedExamples[0]
+      : ((storedExamples as string[] | undefined) ?? []);
+    if (defaultValue.length > 0) {
       const parameters = contactTags?.map((tag, i) => {
         const textValue =
           tag === "name"
@@ -2026,6 +2136,9 @@ async function _sendCampaignToParticipants(
     const templateComponents = [...updatedComponent];
 
     if (flowId) {
+      if (!surveyTeamMap) {
+        throw new Error("SurveyTeamMap not found for flowId " + flowId);
+      }
       log.trace("Flow button identified. handling session...");
       const existingSession = await getSession(orgId, contact.phone);
       if (existingSession) {
@@ -2071,7 +2184,7 @@ async function _sendCampaignToParticipants(
     };
     const templateMessage = createTemplateMessage(contact.phone, templateQuery);
 
-    async function sendCampaignCallback(messageSentStatus: { status: boolean; message: any }) {
+    async function sendCampaignCallback(messageSentStatus: { status: boolean; message: string }) {
       log.trace("Template sent to participant %o", contact);
       updateCampaignParticipant(id, {
         status: messageSentStatus.status
@@ -2090,7 +2203,7 @@ async function _sendCampaignToParticipants(
     sendMessage(
       orgId,
       templateMessage,
-      null,
+      undefined,
       userId,
       undefined,
       undefined,
@@ -2113,7 +2226,16 @@ export function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const getStatusData = (info) => {
+/**
+ * Resolves the status to show for a campaign participant: the latest delivery
+ * status where there is one, otherwise the participant's own status.
+ */
+const getStatusData = (info: {
+  status?: string | null;
+  errorMessage?: string | null;
+  campaign?: { flowId?: string | null } | null;
+  WaMessageCampaginParticipantMap?: Parameters<typeof getLatestStatus>[0];
+}) => {
   let statusData: string = (
     getLatestStatus(info?.WaMessageCampaginParticipantMap) || ""
   ).toUpperCase();
@@ -2123,7 +2245,9 @@ const getStatusData = (info) => {
   if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED) {
     statusData = CampaignParticipantStatus.COMPLETED;
   } else if (!statusData || errorMessage) {
-    statusData = participantStatus;
+    // The participant may carry no status of its own; the caller treats an
+    // empty string as "unknown" (this was previously an undefined assignment).
+    statusData = participantStatus ?? "";
   }
-  return statusData ?? "";
+  return statusData;
 };

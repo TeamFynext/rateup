@@ -1,7 +1,9 @@
 import prisma from "../../../utils/prisma.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
-import { GraphqlClient, Session, DataType } from "@shopify/shopify-api";
+import { GraphqlClient, GraphQLClientResponse, Session, DataType } from "@shopify/shopify-api";
+import type { IncomingMessage, ServerResponse } from "http";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import isEmpty from "lodash/isEmpty.js";
 import { notificationQueue, shopifySurveyQueue } from "../../../utils/redisConnection.js";
 import crypto from "crypto";
@@ -46,6 +48,7 @@ import {
   OrderStatus,
   Org,
   PaymentStatus,
+  RateupPlan,
   SubscriptionStatus,
 } from "../../../../generated/prisma/client.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
@@ -59,11 +62,36 @@ import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_t
 import { awardPoints, getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { EarningRulesEngine } from "../../loyalty/earningRulesEngine.js";
-import { ShopifyBody } from "./shopify.types.js";
+import { ShopifyBody, shopifyErrorDetail } from "./shopify.types.js";
+import type {
+  ShopifyGraphqlEdge,
+  ShopifyGraphqlNode,
+  ShopifyDeliveryOptionsData,
+  ShopifyFulfillmentCreateData,
+  ShopifyFulfillmentOrdersData,
+  ShopifyRestResponse,
+  ShopifyDraftOrderPayload,
+  ShopifyNodesLookupData,
+  ShopifyOrderPayload,
+  ShopifyProductCreateData,
+  ShopifyProductsByTitleData,
+  ShopifyProductVariantsData,
+  ShopifyWebhookBody,
+} from "./shopify.types.js";
 
-export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
+export async function getShopifyAuthUrl(
+  rawRequest: IncomingMessage,
+  rawResponse: ServerResponse,
+  shop: string,
+) {
+  if (!shopify) throw new Error("Shopify integration is not configured");
+  // sanitizeShop(shop, true) throws on an invalid shop domain (throwOnInvalid),
+  // so a null return here only ever means "somehow returned without throwing" —
+  // still worth a real guard rather than a non-null assertion.
+  const sanitizedShop = shopify.utils.sanitizeShop(shop, true);
+  if (!sanitizedShop) throw new Error(`Invalid Shopify shop domain: ${shop}`);
   return await shopify.auth.begin({
-    shop: shopify.utils.sanitizeShop(shop, true),
+    shop: sanitizedShop,
     callbackPath: "/api/public/integrations/shopify/auth/callback",
     isOnline: false,
     rawRequest,
@@ -71,7 +99,8 @@ export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   });
 }
 
-export async function handleShopifyAuthCallback(request, reply) {
+export async function handleShopifyAuthCallback(request: FastifyRequest, reply: FastifyReply) {
+  if (!shopify) throw new Error("Shopify integration is not configured");
   return await shopify.auth.callback({
     rawRequest: request.raw,
     rawResponse: reply.raw,
@@ -103,7 +132,7 @@ export async function updateShopifyIntegrationByOrgId(orgId: string, data: Updat
   return await updateIntegrationByName(orgId, IntegratedApps.shopify, data);
 }
 
-export async function updateShopifyIntegrationByShop(shop, data: UpdateIntgrationInput) {
+export async function updateShopifyIntegrationByShop(shop: string, data: UpdateIntgrationInput) {
   return await prisma.integration.updateMany({
     where: {
       credential: {
@@ -116,6 +145,7 @@ export async function updateShopifyIntegrationByShop(shop, data: UpdateIntgratio
 }
 
 export async function registerShopifyWebhook(session: Session) {
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const response = await shopify.webhooks.register({
     session,
   });
@@ -146,7 +176,7 @@ export async function createScheduleOnShopifyEvent({
   webhookId?: string;
   scheduleFromDate: Date;
   // amount?: number;
-  body: any;
+  body: ShopifyWebhookBody;
 }) {
   log.info("Checking survey for shopify event %o", {
     event,
@@ -189,7 +219,10 @@ export async function createScheduleOnShopifyEvent({
     // }
   }
 
-  if (shopifySurvey.isProductSpecific && !productIds.includes(shopifySurvey.productId)) {
+  if (
+    shopifySurvey.isProductSpecific &&
+    (!shopifySurvey.productId || !productIds.includes(shopifySurvey.productId))
+  ) {
     log.trace(`Specified product is not in the list`);
     return;
   }
@@ -201,8 +234,8 @@ export async function createScheduleOnShopifyEvent({
   }
 
   const schedules = [...(shopifySurvey.schedules || [])];
-  let actionStatus = null;
-  let apiStatus = null;
+  let actionStatus: ShopifySchedules["actionStatus"] = null;
+  let apiStatus: ShopifySchedules["apiStatus"] = null;
 
   const scheduleId = crypto.randomUUID();
   const scheduledTime = getScheduleTime(shopifySurvey.timeDelay, scheduleFromDate);
@@ -290,14 +323,15 @@ export async function sendShopifySurveyCronAction() {
         ),
     );
 
-    let allCheckouts;
+    let allCheckouts: AbandonedCheckoutNode[] | undefined;
 
     if (callShopifyApi) {
       try {
+        if (!shopify) throw new Error("Shopify integration is not configured");
         const client = new shopify.clients.Graphql({ session });
         allCheckouts = await getAbandonedCheckouts(client);
       } catch (e) {
-        log.error("Error getting abandoned checkouts => %o", e);
+        log.error({ err: e }, "Error getting abandoned checkouts");
         continue;
       }
     }
@@ -315,7 +349,7 @@ export async function sendShopifySurveyCronAction() {
       for (const sch of newSchedules) {
         let tobeSent = false;
         const isCheckoutNotExist =
-          isAbandonedEvent && !allCheckouts.find((c) => c.id === sch.checkoutId);
+          isAbandonedEvent && !allCheckouts?.find((c) => c.id === sch.checkoutId);
         if (sch.status === "SCHEDULED" && new Date(sch.scheduledAt) <= fiveMinutesLater) {
           if (isCheckoutNotExist) {
             sch.status = "CHECKOUT DELETED";
@@ -333,7 +367,7 @@ export async function sendShopifySurveyCronAction() {
             ) {
               tobeSent = true;
               //add new schedule history and update
-              const newSchedule = {
+              const newSchedule: ScheduleObj = {
                 createdAt: new Date(),
                 scheduledAt: new Date(),
                 sentAt: null,
@@ -379,30 +413,36 @@ export async function sendShopifySurveyCronAction() {
 
             const res = await sendTemplateToUserCore(
               orgId,
-              waTemplateId,
+              waTemplateId ?? "",
               sch.phone,
               parameterData,
               teamId,
             );
-            sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
-            let messageSentAt = null;
-            if (res.status) {
-              const message = await prisma.waMessage.findFirst({
-                where: {
-                  messageId: res.message,
-                },
-              });
-              messageSentAt = message.waCreatedAt;
-            }
-            sch.sentAt = messageSentAt;
-            sch.history.forEach((h) => {
-              if (h.scheduledAt === sch.scheduledAt) {
-                h.status = sch.status;
-                h.sentAt = messageSentAt;
+            // sendTemplateToUserCore's declared return type is a union with the
+            // timeDelay-scheduled branch (which has no `.message`/boolean
+            // `.status`), but we never pass a timeDelay here so only the
+            // `message` shape can ever come back at runtime — narrow for TS.
+            if ("message" in res) {
+              sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
+              let messageSentAt: Date | null = null;
+              if (res.status) {
+                const message = await prisma.waMessage.findFirst({
+                  where: {
+                    messageId: res.message,
+                  },
+                });
+                messageSentAt = message?.waCreatedAt ?? null;
               }
-            });
+              sch.sentAt = messageSentAt;
+              sch.history.forEach((h) => {
+                if (h.scheduledAt === sch.scheduledAt) {
+                  h.status = sch.status;
+                  h.sentAt = messageSentAt;
+                }
+              });
+            }
           } catch (e) {
-            log.error("error sending template => %o", e);
+            log.error({ err: e }, "error sending template");
             continue;
           }
         }
@@ -417,13 +457,13 @@ export async function sendShopifySurveyCronAction() {
         },
       });
     } catch (e) {
-      log.error("error updating shopify integration for orgId => %s, error => %o", orgId, e);
+      log.error({ err: e, orgId }, "error updating shopify integration");
       continue;
     }
   }
 }
 
-export async function deleteWebhookById(webhookId, client) {
+export async function deleteWebhookById(webhookId: string, client: GraphqlClient) {
   await client.request(
     `mutation webhookSubscriptionDelete($id: ID!) {
       webhookSubscriptionDelete(id: $id) {
@@ -473,13 +513,13 @@ export async function processShopifySurveySchedule(jobData: {
     return;
   }
 
-  const scheduleIndex = survey.schedules.findIndex((s) => (s as any).scheduleId === scheduleId);
+  const scheduleIndex = survey.schedules.findIndex((s) => s.scheduleId === scheduleId);
   if (scheduleIndex === -1) {
     log.trace(`Schedule ${scheduleId} not found in survey ${event} `);
     return;
   }
 
-  const sch = survey.schedules[scheduleIndex] as any;
+  const sch = survey.schedules[scheduleIndex];
 
   if (sch.status !== "SCHEDULED") {
     log.info(`Schedule ${scheduleId} is already processed with status ${sch.status}.Skipping.`);
@@ -490,9 +530,9 @@ export async function processShopifySurveySchedule(jobData: {
     const subscription = await getSubscription(orgId);
     await verifyTemplateMessageLimit(subscription);
 
-    let parameterData = [];
+    let parameterData: { type: string; parameters: { type: string; text: string }[] }[] = [];
     if (survey.variableMapping && sch.body) {
-      const bodyParameters = [];
+      const bodyParameters: { type: string; text: string }[] = [];
       const sortedMappings = [...survey.variableMapping].sort(
         (a, b) => a.templateParamIndex - b.templateParamIndex,
       );
@@ -516,32 +556,38 @@ export async function processShopifySurveySchedule(jobData: {
 
     const res = await sendTemplateToUserCore(
       orgId,
-      survey.waTemplateId,
+      survey.waTemplateId ?? "",
       sch.phone,
       parameterData,
       survey.teamId,
     );
-    sch.status = res.status ? "SENT" : `FAILED: ${res.message} `;
-    let messageSentAt = null;
-    if (res.status) {
-      const message = await prisma.waMessage.findFirst({
-        where: { messageId: res.message },
-      });
-      messageSentAt = message?.waCreatedAt || new Date();
-    }
-    sch.sentAt = messageSentAt;
-    sch.history.forEach((h: any) => {
-      if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
-        h.status = sch.status;
-        h.sentAt = messageSentAt;
+    // See the identical note in sendShopifySurveyCronAction: we never pass a
+    // timeDelay here, so only the `message` shape of the union return can ever
+    // come back at runtime.
+    if ("message" in res) {
+      sch.status = res.status ? "SENT" : `FAILED: ${res.message} `;
+      let messageSentAt = new Date();
+      if (res.status) {
+        const message = await prisma.waMessage.findFirst({
+          where: { messageId: res.message },
+        });
+        messageSentAt = message?.waCreatedAt || new Date();
       }
-    });
+      sch.sentAt = messageSentAt;
+      sch.history.forEach((h) => {
+        if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
+          h.status = sch.status;
+          h.sentAt = messageSentAt;
+        }
+      });
+    }
 
     log.info(`Successfully processed schedule ${scheduleId}: status ${sch.status} `);
-  } catch (e: any) {
-    log.error({ e }, `Error sending template for schedule ${scheduleId}`);
-    sch.status = `FAILED: ${e.message} `;
-    sch.history.forEach((h: any) => {
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    log.error({ err: e }, `Error sending template for schedule ${scheduleId}`);
+    sch.status = `FAILED: ${errorMessage} `;
+    sch.history.forEach((h) => {
       if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
         h.status = sch.status;
       }
@@ -609,6 +655,12 @@ export async function sendWhatsAppTemplateToCustomer(
     const updatedComponent = updateButtonText(components, phone);
     const templateComponents = [...updatedComponent];
     if (flowId) {
+      // Re-checked here (already validated above) so the narrowing holds in
+      // this separate `if (flowId)` block too — TS can't otherwise correlate
+      // the two blocks since `surveyTeamMap` is a plain `let`.
+      if (!surveyTeamMap) {
+        throw new Error("SurveyTeamMap not found for flowId " + flowId);
+      }
       const existingSession = await getSession(orgId, phone);
 
       if (existingSession) {
@@ -669,7 +721,8 @@ export async function sendWhatsAppTemplateToCustomer(
   }
 }
 
-export async function deleteAllWebhooks(session) {
+export async function deleteAllWebhooks(session: Session) {
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({ session });
   const webhookslist = await getManagableWebhooks(client);
   await Promise.all(
@@ -679,7 +732,8 @@ export async function deleteAllWebhooks(session) {
   );
 }
 
-export async function registerWebhookByTopic(topic, session) {
+export async function registerWebhookByTopic(topic: string, session: Session) {
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({ session });
   await client.request(
     `mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
@@ -713,12 +767,24 @@ export async function registerWebhookByTopic(topic, session) {
   );
 }
 
-export async function getManagableWebhooks(client) {
-  const webhookslist = [];
+interface ManagableWebhookNode {
+  id: string;
+  topic: string;
+}
+
+interface WebhookSubscriptionsData {
+  webhookSubscriptions: {
+    edges: { node: ManagableWebhookNode; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}
+
+export async function getManagableWebhooks(client: GraphqlClient): Promise<ManagableWebhookNode[]> {
+  const webhookslist: ManagableWebhookNode[] = [];
   let hasNextPage = true;
-  let cursor = null;
+  let cursor: string | null = null;
   while (hasNextPage) {
-    const data = await client.request(
+    const response: GraphQLClientResponse<WebhookSubscriptionsData> = await client.request(
       `query getWebhooks($topics: [WebhookSubscriptionTopic!], $cursor: String){
   webhookSubscriptions(first: 50, after: $cursor, topics: $topics,) {
       edges {
@@ -741,16 +807,39 @@ export async function getManagableWebhooks(client) {
         },
       },
     );
-    hasNextPage = data.data.webhookSubscriptions.pageInfo.hasNextPage;
-    cursor = data.data.webhookSubscriptions.pageInfo.endCursor;
-    webhookslist.push(...data.data.webhookSubscriptions.edges.map((e) => e.node));
+    if (!response.data) throw new Error("Shopify webhookSubscriptions query returned no data");
+    hasNextPage = response.data.webhookSubscriptions.pageInfo.hasNextPage;
+    cursor = response.data.webhookSubscriptions.pageInfo.endCursor;
+    webhookslist.push(...response.data.webhookSubscriptions.edges.map((e) => e.node));
   }
   return webhookslist;
 }
 
-export async function handleSubscriptionUpdateFromShopify(shop, payload) {
+interface ShopifyAppSubscriptionWebhookPayload {
+  name?: string;
+  app_subscription?: {
+    name?: string;
+    admin_graphql_api_id?: string;
+    status?: shopifyRecurringChargeStatus;
+  };
+}
+
+interface ShopifyShopDetails {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
+export async function handleSubscriptionUpdateFromShopify(
+  shop: string,
+  payload: ShopifyAppSubscriptionWebhookPayload,
+) {
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const integration = await getShopifyIntegrationByShop(shop);
   const subscription = await getSubscription(integration.orgId);
+  if (!subscription) {
+    throw new Error(`No subscription found for orgId ${integration.orgId}`);
+  }
   let rateupPlan;
   if (payload?.app_subscription?.name === "FREE PLAN") {
     rateupPlan = await prisma.rateupPlan.findFirst({
@@ -770,7 +859,7 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
   }
 
   const currentPlanInRateup = subscription.basePlan.displayName;
-  const chargeId = payload.app_subscription?.admin_graphql_api_id;
+  const chargeId = payload.app_subscription?.admin_graphql_api_id ?? "";
 
   const client = new shopify.clients.Graphql({
     session: integration.credential.session,
@@ -779,14 +868,18 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
 
   let haltSubscription = false;
 
-  const data = await client.request(`query { shop { name, email, phone } } `);
-  const shopDetails = data.data.shop;
+  const shopResponse = await client.request<{ shop: ShopifyShopDetails }>(
+    `query { shop { name, email, phone } } `,
+  );
+  if (!shopResponse.data) throw new Error("Shopify shop query returned no data");
+  const shopDetails = shopResponse.data.shop;
 
   switch (payload.app_subscription?.status) {
     case shopifyRecurringChargeStatus.pending:
+      if (!rateupPlan) throw new Error("RateupPlan not found for pending Shopify subscription");
       await prisma.order.create({
         data: {
-          name: payload?.app_subscription?.name,
+          name: payload?.app_subscription?.name ?? "Unknown Shopify Plan",
           createdById: integration.org.ownerId,
           orgId: integration.orgId,
           subscriptionId: chargeId,
@@ -802,7 +895,15 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
       haltSubscription = true;
       break;
     case shopifyRecurringChargeStatus.active:
-      activateSubscriptionThroughShopify(
+      if (!recurringCharge) {
+        throw new Error(`Recurring charge ${chargeId} not found on Shopify`);
+      }
+      if (!rateupPlan) throw new Error("RateupPlan not found for active Shopify subscription");
+      // BUG (fixed): this call was missing `await` — the switch fell through to
+      // `break` immediately, so any error thrown while activating the
+      // subscription (DB writes, email send) became an unhandled promise
+      // rejection instead of surfacing to this function's caller.
+      await activateSubscriptionThroughShopify(
         recurringCharge,
         integration,
         chargeId,
@@ -846,9 +947,10 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
       });
       break;
     default:
+      if (!rateupPlan) throw new Error("RateupPlan not found for Shopify subscription update");
       await prisma.order.create({
         data: {
-          name: payload?.name,
+          name: payload?.name ?? "Unknown Shopify Plan",
           createdById: integration.org.ownerId,
           orgId: integration.orgId,
           subscriptionId: chargeId,
@@ -877,11 +979,11 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
 }
 
 async function activateSubscriptionThroughShopify(
-  recurringCharge,
-  integration,
-  chargeId,
-  rateupPlan,
-  shopDetails,
+  recurringCharge: ShopifyRecurringCharge,
+  integration: ShopifyIntegration & { org: Org },
+  chargeId: string,
+  rateupPlan: RateupPlan,
+  shopDetails: ShopifyShopDetails,
 ) {
   const data = {
     name: recurringCharge.name,
@@ -926,7 +1028,9 @@ async function activateSubscriptionThroughShopify(
     where: { orgId: integration?.orgId },
     data: {
       basePlanId: rateupPlan?.id,
-      features: rateupPlan.features,
+      // RateupPlan.features is nullable but Subscription.features is not; an empty blob
+      // migrates to the safe defaults (see migrateFeaturesToCurrentSchema).
+      features: rateupPlan.features ?? {},
       renewedAt: new Date(),
       expiresAt,
       subscriptionRef: chargeId,
@@ -951,12 +1055,16 @@ async function activateSubscriptionThroughShopify(
         id: integration.org.ownerId,
       },
     });
+    if (!user) throw new Error(`User not found for ownerId ${integration.org.ownerId}`);
 
     const msg = {
       to: user.email,
       subject: "Rateup Subscription Activated - Rateup.app",
       text: `Your subscription from shopify for the Rateup ${recurringCharge.name} has activated`,
-      html: createEmailBodySubscriptionActivated(rateupPlan?.displayName, expiresAt),
+      html: createEmailBodySubscriptionActivated(
+        rateupPlan.displayName ?? rateupPlan.name,
+        expiresAt,
+      ),
     };
     try {
       await notificationQueue.add("notification", {
@@ -969,10 +1077,21 @@ async function activateSubscriptionThroughShopify(
   }
 }
 
-export async function handleWebhook(webhook) {
+export interface ShopifyWebhookJobData {
+  topic: ShopifyEvents;
+  webhookId: string;
+  body: ShopifyWebhookBody;
+  shop: string;
+}
+
+export async function handleWebhook(webhook: ShopifyWebhookJobData) {
   switch (webhook.topic) {
     case ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE:
-      await handleSubscriptionUpdateFromShopify(webhook.shop, webhook.body);
+      // Narrowed by the topic this case matches.
+      await handleSubscriptionUpdateFromShopify(
+        webhook.shop,
+        webhook.body as unknown as ShopifyAppSubscriptionWebhookPayload,
+      );
       break;
     case ShopifyEvents.DRAFT_ORDERS_CREATE:
     case ShopifyEvents.ORDERS_CREATE:
@@ -989,12 +1108,35 @@ export async function handleWebhook(webhook) {
   }
 }
 
-export async function getRecurringCharge(chargeId, integration) {
+interface ShopifyRecurringCharge {
+  id: string;
+  name: string;
+  status: shopifyRecurringChargeStatus;
+  createdAt: string;
+  currentPeriodEnd: string | null;
+  lineItems: {
+    plan: {
+      pricingDetails: {
+        interval?: string;
+        price: { amount: string; currencyCode: string };
+      };
+    };
+  }[];
+}
+
+export async function getRecurringCharge(
+  chargeId: string,
+  // Only `credential.session` is read below — `org` was an over-tight
+  // requirement inherited from one particular caller
+  // (`getShopifyIntegrationByShop`); `getShopifyInfo`'s callers don't have it.
+  integration: ShopifyIntegration | null,
+): Promise<ShopifyRecurringCharge | null> {
   if (!integration) return null;
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: integration.credential.session,
   });
-  const appSubscriptions = await client.request(
+  const appSubscriptions = await client.request<{ node: ShopifyRecurringCharge | null }>(
     `query GetRecurringApplicationCharges($id: ID!) {
   node(id: $id) {
         ...on AppSubscription {
@@ -1021,11 +1163,29 @@ export async function getRecurringCharge(chargeId, integration) {
 } `,
     { variables: { id: chargeId } },
   );
-  return appSubscriptions.data.node;
+  return appSubscriptions.data?.node ?? null;
 }
 
-export async function handleShopifyOrderEvents(webhook) {
-  const { webhookId, body, shop, topic } = webhook;
+interface FulfillmentOrderShowData {
+  fulfillmentOrder: {
+    order: { customer: { phone: string | null } | null } | null;
+    lineItems: {
+      edges: { node: { lineItem: { product: { id: string } | null } } }[];
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  } | null;
+}
+
+export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
+  const { webhookId, shop, topic } = webhook;
+  // The queue's job payload carries every webhook topic's shape, so it is typed
+  // loosely (ShopifyWebhookBody) in transit and narrowed per topic here.
+  // FULFILLMENT_ORDERS_CANCELLED's body is a distinct
+  // `{ fulfillment_order: { id } }` shape (a REST fulfillment-order webhook),
+  // while every other topic handled here is the order-webhook shape described
+  // by `ShopifyBody` (the same assumption `manageLoyaltyTransactionsForOrder`
+  // below already makes about this value).
+  const body = webhook.body as ShopifyBody & { fulfillment_order?: { id: string } };
   log.info("Handling Shopify Order Event: %o", { shop, topic, webhookId });
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) {
@@ -1033,16 +1193,26 @@ export async function handleShopifyOrderEvents(webhook) {
     return;
   }
   let customerPhone;
-  const productIds = [];
+  const productIds: string[] = [];
   if (topic === ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED) {
-    const fulfillmentOrderGId = body.fulfillment_order.id;
+    if (!shopify) throw new Error("Shopify integration is not configured");
+    const fulfillmentOrderGId = body.fulfillment_order?.id;
+    if (!fulfillmentOrderGId) {
+      log.trace("No fulfillment_order.id found on FULFILLMENT_ORDERS_CANCELLED webhook body");
+      return;
+    }
     const client = new shopify.clients.Graphql({
       session: shopifyInfo.credential.session,
     });
-    let hasNextPage = false;
-    let cursor = null;
+    // BUG (fixed): this started `false`, so the pagination loop's body — the
+    // only place that fetches the order/customer/line-items and sets
+    // `customerPhone` for this topic — never ran, and every
+    // FULFILLMENT_ORDERS_CANCELLED webhook fell through to the "no phone
+    // found" early-return below without ever querying Shopify.
+    let hasNextPage = true;
+    let cursor: string | null = null;
     while (hasNextPage) {
-      const data = await client.request(
+      const data: GraphQLClientResponse<FulfillmentOrderShowData> = await client.request(
         `query FulfillmentOrderShow($id: ID!, $cursor: String) {
   fulfillmentOrder(id: $id) {
           order {
@@ -1069,12 +1239,27 @@ export async function handleShopifyOrderEvents(webhook) {
 } `,
         { variables: { id: fulfillmentOrderGId, cursor } },
       );
-      hasNextPage = data.data.fulfillmentOrder.pageInfo.hasNextPage;
-      cursor = data.data.fulfillmentOrder.pageInfo.endCursor;
+      if (!data.data) throw new Error("Shopify fulfillmentOrder query returned no data");
+      const fulfillmentOrder = data.data.fulfillmentOrder;
+      if (!fulfillmentOrder) break;
+      // BUG (fixed): `pageInfo` and the line-item edges are nested under
+      // `lineItems` in the query above (`lineItems { edges { ... } pageInfo {
+      // ... } }`), not directly under `fulfillmentOrder` — the old code read
+      // `fulfillmentOrder.pageInfo` (doesn't exist) and called `.map` directly
+      // on `fulfillmentOrder.lineItems` (a connection object, not an array).
+      // Both would throw the moment this loop actually ran.
+      hasNextPage = fulfillmentOrder.lineItems.pageInfo.hasNextPage;
+      cursor = fulfillmentOrder.lineItems.pageInfo.endCursor;
       productIds.push(
-        ...data.data.fulfillmentOrder.lineItems.map((item) => item.lineItem.product.id),
+        ...fulfillmentOrder.lineItems.edges
+          .map((edge) => edge.node.lineItem.product?.id)
+          .filter((id): id is string => !!id),
       );
-      customerPhone = data.data.fulfillmentOrder.order.cutsomer.phone;
+      // BUG (fixed): typo — `cutsomer` doesn't exist on the response (the
+      // query selects `customer`), so this always threw
+      // "Cannot read properties of undefined (reading 'phone')" once the loop
+      // body actually executed.
+      customerPhone = fulfillmentOrder.order?.customer?.phone ?? customerPhone;
     }
   } else {
     customerPhone =
@@ -1084,7 +1269,7 @@ export async function handleShopifyOrderEvents(webhook) {
       body?.shipping_address?.phone ||
       body?.phone;
     productIds.push(
-      ...body.line_items?.map((product) => `gid://shopify/Product/${product.product_id}`),
+      ...(body.line_items?.map((product) => `gid://shopify/Product/${product.product_id}`) ?? []),
     );
   }
   if (!customerPhone) {
@@ -1117,9 +1302,9 @@ export async function handleShopifyOrderEvents(webhook) {
 
 async function manageLoyaltyTransactionsForOrder(
   shopifyInfo: Integration & { credential: ShopifyCredential } & { org: Org },
-  customerPhone: any,
+  customerPhone: string | null | undefined,
   body: ShopifyBody,
-  topic: any,
+  topic: ShopifyEvents,
 ) {
   try {
     if (shopifyInfo?.orgId && customerPhone) {
@@ -1257,7 +1442,7 @@ async function manageLoyaltyTransactionsForOrder(
   }
 }
 
-export async function handleShopifyAppUnistalled(webhook) {
+export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
   const { shop } = webhook;
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) return;
@@ -1279,19 +1464,54 @@ export async function deleteShopifyIntegrationByShop(shop: string) {
   });
 }
 
-export async function getAbandonedCheckouts(client: GraphqlClient) {
-  const allCheckouts = [];
+interface AbandonedCheckoutNode {
+  id: string;
+  createdAt: string;
+  completedAt: string | null;
+  billingAddress: { phone: string | null } | null;
+  customer: { defaultAddress: { phone: string | null } | null } | null;
+}
+
+interface AbandonedCheckoutsData {
+  abandonedCheckouts: {
+    edges: { node: AbandonedCheckoutNode; cursor: string }[];
+    pageInfo: { endCursor: string | null; hasNextPage: boolean };
+  };
+}
+
+export async function getAbandonedCheckouts(
+  client: GraphqlClient,
+): Promise<AbandonedCheckoutNode[]> {
+  const allCheckouts: AbandonedCheckoutNode[] = [];
   let hasNextPage = true;
-  let cursor = null;
+  let cursor: string | null = null;
   while (hasNextPage) {
-    const data = await client.request(
+    // BUG (fixed): the query used to ask for `edges { nodes { ... } }` — but
+    // `nodes` (plural) is a field of the *connection*
+    // (AbandonedCheckoutConnection), not of an individual edge
+    // (AbandonedCheckoutEdge, which only has `node`, singular). Shopify's
+    // GraphQL API rejects that field entirely, so this always failed and the
+    // abandoned-checkout survey/recovery feature could never return a single
+    // checkout. Also added `billingAddress`/`customer.defaultAddress` phone
+    // fields, which `validateAndParseCheckoutPhone` needs to find a phone
+    // number — the query never selected them, so that lookup could never
+    // succeed even once the edges/node bug above was fixed.
+    const data: GraphQLClientResponse<AbandonedCheckoutsData> = await client.request(
       `query getAbandonedCheckouts($cursor: String) {
       abandonedCheckouts(first: 50, after: $cursor){
       edges {
-       nodes {
+       node {
          id
          createdAt
          completedAt
+         billingAddress {
+           phone
+         }
+         customer {
+           defaultAddress {
+             phone
+           }
+         }
        }
        cursor
       }
@@ -1303,9 +1523,12 @@ export async function getAbandonedCheckouts(client: GraphqlClient) {
   }`,
       { variables: { cursor } },
     );
+    if (!data.data) throw new Error("Shopify abandonedCheckouts query returned no data");
     hasNextPage = data.data.abandonedCheckouts.pageInfo.hasNextPage;
     cursor = data.data.abandonedCheckouts.pageInfo.endCursor;
-    allCheckouts.push(...data.data.abandonedCheckouts.nodes.filter((a) => !a.completedAt));
+    allCheckouts.push(
+      ...data.data.abandonedCheckouts.edges.map((e) => e.node).filter((a) => !a.completedAt),
+    );
   }
   return allCheckouts;
 }
@@ -1329,6 +1552,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
           return false;
         }
         const { waTemplateId, teamId } = abandonedCheckoutConfig;
+        if (!shopify) throw new Error("Shopify integration is not configured");
         const client = new shopify.clients.Graphql({
           session: credential.session,
         });
@@ -1361,7 +1585,12 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
             return false;
           }
           if (timeDelay) {
-            const scheduledTime = getScheduleTime(timeDelay, checkout.created_at);
+            // BUG (fixed): `checkout` is the GraphQL abandoned-checkout node
+            // (camelCase `createdAt`), not a REST order/checkout payload —
+            // `checkout.created_at` was always undefined, so `getScheduleTime`
+            // silently scheduled off `undefined` instead of the checkout's
+            // real creation time.
+            const scheduledTime = getScheduleTime(timeDelay, new Date(checkout.createdAt));
             const schedule = {
               status: "SCHEDULED",
               createdAt: new Date(),
@@ -1401,7 +1630,14 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         const subscription = await getSubscription(orgId);
         sentNowCheckoutList.map(async (checkout) => {
           await verifyTemplateMessageLimit(subscription);
-          const res = await sendTemplateToUserCore(orgId, waTemplateId, checkout.phone, [], teamId);
+          const res = await sendTemplateToUserCore(
+            orgId,
+            waTemplateId ?? "",
+            checkout.phone,
+            [],
+            teamId,
+          );
+          if (!("message" in res)) return;
 
           let messageSentAt = new Date();
           if (res.status) {
@@ -1410,7 +1646,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
                 messageId: res.message,
               },
             });
-            messageSentAt = message.waCreatedAt;
+            messageSentAt = message?.waCreatedAt ?? messageSentAt;
           }
           const schedule = {
             status: res.status ? "SENT" : `FAILED: ${res.message}`,
@@ -1418,15 +1654,9 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
             scheduledAt: messageSentAt,
             sentAt: res.status ? messageSentAt : null,
           };
-          let index;
-          const existingSchedule = schedules.find((s, i) => {
-            if (s.checkoutId === checkout.checkoutId) {
-              index = i;
-              return s;
-            }
-          });
-          if (existingSchedule) {
-            const history = existingSchedule.history ?? [];
+          const index = schedules.findIndex((s) => s.checkoutId === checkout.checkoutId);
+          if (index !== -1) {
+            const history = schedules[index].history ?? [];
             history.push(schedule);
             schedules[index] = {
               ...schedule,
@@ -1468,7 +1698,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
  */
 export async function resolveShopifyVariants(
   products: { retailerId: string; quantity: number; title?: string }[],
-  client: any,
+  client: GraphqlClient,
 ): Promise<Map<string, string>> {
   // retailerId → numeric Shopify variant id
   const variantMap = new Map<string, string>();
@@ -1483,7 +1713,7 @@ export async function resolveShopifyVariants(
   if (numericProducts.length > 0) {
     try {
       const ids = numericProducts.map((p) => `gid://shopify/ProductVariant/${p.retailerId}`);
-      const nodesData = await client.request(
+      const nodesData = await client.request<ShopifyNodesLookupData>(
         `query validateVariants($ids: [ID!]!) {
           nodes(ids: $ids) {
             id
@@ -1494,10 +1724,10 @@ export async function resolveShopifyVariants(
         }`,
         { variables: { ids } },
       );
-      const nodes: any[] = (nodesData.data as any)?.nodes ?? [];
+      const nodes = nodesData.data?.nodes ?? [];
       for (const product of numericProducts) {
         const gid = `gid://shopify/ProductVariant/${product.retailerId}`;
-        const node = nodes.find((n: any) => n?.id === gid);
+        const node = nodes.find((n) => n?.id === gid);
         if (node?.__typename === "ProductVariant") {
           // Still valid — use directly
           variantMap.set(product.retailerId, product.retailerId);
@@ -1511,7 +1741,7 @@ export async function resolveShopifyVariants(
         }
       }
     } catch (e) {
-      log.warn("Variant validation failed, using numeric IDs as-is => %o", e);
+      log.warn({ err: e }, "Variant validation failed, using numeric IDs as-is");
       // If validation itself fails, assume they're valid to avoid breaking the flow
       for (const p of numericProducts) {
         variantMap.set(p.retailerId, p.retailerId);
@@ -1525,7 +1755,7 @@ export async function resolveShopifyVariants(
     // Wrap each SKU in quotes to handle spaces and special characters
     const skuQuery = lookupSkus.map((sku) => `sku:"${sku}"`).join(" OR ");
     try {
-      const variantsData = await client.request(
+      const variantsData = await client.request<ShopifyProductVariantsData>(
         `query getVariantsBySkus($query: String!) {
           productVariants(first: 250, query: $query) {
             edges {
@@ -1538,14 +1768,16 @@ export async function resolveShopifyVariants(
         }`,
         { variables: { query: skuQuery } },
       );
-      const skuEdges = variantsData.data.productVariants.edges;
-      skuEdges.forEach((edge: any) => {
+      const skuEdges = variantsData.data?.productVariants?.edges ?? [];
+      skuEdges.forEach((edge) => {
         // GID format: gid://shopify/ProductVariant/12345678
-        const numericId = edge.node.id.split("/").pop();
-        variantMap.set(edge.node.sku, numericId);
+        const numericId = edge.node?.id?.split("/").pop();
+        const sku = edge.node?.sku;
+        if (!sku || !numericId) return;
+        variantMap.set(sku, numericId);
       });
     } catch (e) {
-      log.error("Error fetching Shopify variants by SKU => %o", e);
+      log.error({ err: e }, "Error fetching Shopify variants by SKU");
       return variantMap;
     }
   }
@@ -1555,7 +1787,7 @@ export async function resolveShopifyVariants(
   if (notFoundBySku.length > 0) {
     const titleQuery = notFoundBySku.map((p) => `title:"${p.title}"`).join(" OR ");
     try {
-      const productsData = await client.request(
+      const productsData = await client.request<ShopifyProductsByTitleData>(
         `query getProductsByTitle($query: String!) {
           products(first: 50, query: $query) {
             edges {
@@ -1572,10 +1804,10 @@ export async function resolveShopifyVariants(
         }`,
         { variables: { query: titleQuery } },
       );
-      const titleEdges = productsData.data.products.edges;
-      titleEdges.forEach((edge: any) => {
-        const shopifyTitle: string = edge.node.title?.toLowerCase().trim();
-        const numericId: string | undefined = edge.node.variants.edges[0]?.node?.id
+      const titleEdges = productsData.data?.products?.edges ?? [];
+      titleEdges.forEach((edge) => {
+        const shopifyTitle = edge.node?.title?.toLowerCase().trim() ?? "";
+        const numericId: string | undefined = edge.node?.variants?.edges?.[0]?.node?.id
           ?.split("/")
           .pop();
         if (!numericId) return;
@@ -1588,14 +1820,14 @@ export async function resolveShopifyVariants(
         if (matched) {
           log.trace(
             "Matched Shopify product '%s' via title fallback for retailerId '%s'",
-            edge.node.title,
+            edge.node?.title,
             matched.retailerId,
           );
           variantMap.set(matched.retailerId, numericId);
         }
       });
     } catch (e) {
-      log.warn("Title-based Shopify product lookup failed => %o", e);
+      log.warn({ err: e }, "Title-based Shopify product lookup failed");
     }
   }
 
@@ -1641,7 +1873,7 @@ export async function resolveShopifyVariants(
           }
         }
       } catch (e) {
-        log.warn("Broad Shopify product search failed => %o", e);
+        log.warn({ err: e }, "Broad Shopify product search failed");
       }
     }
   }
@@ -1660,6 +1892,7 @@ export async function createShopifyPendingOrder(
     return null;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -1683,12 +1916,13 @@ export async function createShopifyPendingOrder(
     return null;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const restClient = new shopify.clients.Rest({
     session: shopifyInfo.credential.session,
   });
 
   try {
-    const response: any = await restClient.post({
+    const response: ShopifyRestResponse = await restClient.post({
       path: "orders",
       type: DataType.JSON,
       data: {
@@ -1702,8 +1936,8 @@ export async function createShopifyPendingOrder(
       },
     });
     return response.body.order;
-  } catch (error: any) {
-    log.error("Failed to create pending order in Shopify => %o", error.response?.body || error);
+  } catch (error) {
+    log.error({ err: shopifyErrorDetail(error) }, "Failed to create pending order in Shopify");
     return null;
   }
 }
@@ -1736,6 +1970,7 @@ export async function createShopifyDraftOrderWithAddress(
     return null;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -1766,11 +2001,12 @@ export async function createShopifyDraftOrderWithAddress(
     return null;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const restClient = new shopify.clients.Rest({
     session: shopifyInfo.credential.session,
   });
 
-  const draftOrderPayload: any = {
+  const draftOrderPayload: ShopifyDraftOrderPayload = {
     draft_order: {
       line_items: lineItems,
       ...(shippingAddress && { shipping_address: shippingAddress }),
@@ -1786,20 +2022,20 @@ export async function createShopifyDraftOrderWithAddress(
   };
 
   try {
-    const response: any = await restClient.post({
+    const response: ShopifyRestResponse = await restClient.post({
       path: "draft_orders",
       type: DataType.JSON,
       data: draftOrderPayload,
     });
     log.info("Created Shopify draft order %s for orgId %s", response.body.draft_order?.id, orgId);
     return response.body.draft_order;
-  } catch (error: any) {
-    log.error("Failed to create Shopify draft order => %o", error.response?.body || error);
+  } catch (error) {
+    log.error({ err: shopifyErrorDetail(error) }, "Failed to create Shopify draft order");
     try {
       log.warn(
         "Draft order creation failed (likely missing write_draft_orders scope). Falling back to POST /orders...",
       );
-      const orderPayload: any = {
+      const orderPayload: ShopifyOrderPayload = {
         order: {
           line_items: lineItems,
           financial_status: "pending",
@@ -1816,7 +2052,7 @@ export async function createShopifyDraftOrderWithAddress(
           note: "Order from WhatsApp Catalog",
         },
       };
-      const fallbackResponse: any = await restClient.post({
+      const fallbackResponse: ShopifyRestResponse = await restClient.post({
         path: "orders",
         type: DataType.JSON,
         data: orderPayload,
@@ -1827,16 +2063,20 @@ export async function createShopifyDraftOrderWithAddress(
         orgId,
       );
       const orderData = fallbackResponse.body.order;
+      if (!orderData) {
+        log.error("Fallback Shopify order creation returned no order body");
+        return null;
+      }
       return {
         id: orderData.id,
         invoice_url:
           orderData.order_status_url ?? `https://${shopifyInfo.credential?.session?.shop}/account`,
         ...orderData,
       };
-    } catch (fallbackError: any) {
+    } catch (fallbackError) {
       log.error(
-        "Fallback Shopify order creation also failed => %o",
-        fallbackError.response?.body || fallbackError,
+        { err: shopifyErrorDetail(fallbackError) },
+        "Fallback Shopify order creation also failed",
       );
       return null;
     }
@@ -1850,13 +2090,14 @@ export async function captureShopifyOrderPayment(orgId: string, orderId: string,
     return false;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const restClient = new shopify.clients.Rest({
     session: shopifyInfo.credential.session,
   });
 
   try {
     // First try completing it as a draft order
-    const response: any = await restClient.put({
+    const response: ShopifyRestResponse = await restClient.put({
       path: `draft_orders/${orderId}/complete`,
       query: { payment_pending: "false" },
       type: DataType.JSON,
@@ -1864,14 +2105,14 @@ export async function captureShopifyOrderPayment(orgId: string, orderId: string,
     });
     log.info("Successfully completed Shopify Draft Order %s into a paid order", orderId);
     return response.body?.draft_order?.order_id || true;
-  } catch (draftError: any) {
+  } catch (draftError) {
     log.warn(
-      "Completing draft order failed (might be a direct order ID). Error: %o. Trying POST /orders/%s/transactions...",
-      draftError.response?.body || draftError,
+      { err: shopifyErrorDetail(draftError) },
+      "Completing draft order failed (might be a direct order ID). Trying POST /orders/%s/transactions...",
       orderId,
     );
     try {
-      const response: any = await restClient.post({
+      const response: ShopifyRestResponse = await restClient.post({
         path: `orders/${orderId}/transactions`,
         type: DataType.JSON,
         data: {
@@ -1885,11 +2126,11 @@ export async function captureShopifyOrderPayment(orgId: string, orderId: string,
       });
       log.info("Successfully captured payment for Shopify Order %s", orderId);
       return response.body.transaction;
-    } catch (error: any) {
+    } catch (error) {
       log.error(
-        "Failed to capture payment for Shopify Order %s => %o",
+        { err: shopifyErrorDetail(error) },
+        "Failed to capture payment for Shopify Order %s",
         orderId,
-        error.response?.body || error,
       );
       return false;
     }
@@ -1912,6 +2153,7 @@ export async function buildShopifyCartUrl(
     return null;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -1940,12 +2182,16 @@ export async function buildShopifyCartUrl(
 
   return `https://${shop}/cart/${cartParts.join(",")}`;
 }
-export async function createShopifyDraftOrder(orgId: string, products: any[]) {
+export async function createShopifyDraftOrder(
+  orgId: string,
+  products: { retailerId: string; quantity: number; title?: string }[],
+) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
     throw new Error("Shopify integration not active");
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -1955,7 +2201,7 @@ export async function createShopifyDraftOrder(orgId: string, products: any[]) {
 
   if (skus.length > 0) {
     const skuQuery = skus.map((sku) => `sku:${sku}`).join(" OR ");
-    const variantsData = await client.request(
+    const variantsData = await client.request<ShopifyProductVariantsData>(
       `query getVariantsBySkus($query: String!) {
           productVariants(first: 250, query: $query) {
             edges {
@@ -1969,8 +2215,11 @@ export async function createShopifyDraftOrder(orgId: string, products: any[]) {
       { variables: { query: skuQuery } },
     );
 
-    variantsData.data.productVariants.edges.forEach((edge: any) => {
-      variantMap.set(edge.node.sku, edge.node.id);
+    (variantsData.data?.productVariants?.edges ?? []).forEach((edge) => {
+      const sku = edge.node?.sku;
+      const id = edge.node?.id;
+      if (!sku || !id) return;
+      variantMap.set(sku, id);
     });
   }
 
@@ -2021,12 +2270,17 @@ export async function createShopifyDraftOrder(orgId: string, products: any[]) {
   return draftOrderData.data.draftOrderCreate.draftOrder;
 }
 
-function validateAndParseCheckoutPhone(checkout) {
-  const phoneNumber =
-    checkout.phone ||
-    checkout.customer.phone ||
-    checkout.customer.default_address.phone ||
-    checkout.billing_address.phone;
+function validateAndParseCheckoutPhone(checkout: AbandonedCheckoutNode) {
+  // BUG (fixed): this read `checkout.customer.phone` and
+  // `checkout.customer.default_address.phone` / `checkout.billing_address.phone`
+  // with no optional chaining, and none of those fields (nor a top-level
+  // `checkout.phone` — AbandonedCheckout has no such field) are ever present
+  // on the GraphQL abandoned-checkout node this function is actually called
+  // with. Every call threw ("Cannot read properties of undefined/null") the
+  // moment `checkout.customer` was ever null, aborting the whole
+  // `Promise.all` in `sendTemplateForShopifyAbandonedCheckouts` for every org
+  // being processed in that batch, not just the one with a missing phone.
+  const phoneNumber = checkout.customer?.defaultAddress?.phone || checkout.billingAddress?.phone;
   if (!phoneNumber) {
     log.trace("No Phone Number found");
     return false;
@@ -2061,6 +2315,7 @@ export async function createShopifyProduct(
     throw new Error("Shopify integration not active for this org");
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -2087,7 +2342,7 @@ export async function createShopifyProduct(
     }
   `;
 
-  const createVariables: Record<string, any> = {
+  const createVariables: Record<string, unknown> = {
     product: {
       title: data.title,
       descriptionHtml: data.description,
@@ -2105,12 +2360,12 @@ export async function createShopifyProduct(
     ];
   }
 
-  const createResponse = await client.request(createMutation, {
+  const createResponse = await client.request<ShopifyProductCreateData>(createMutation, {
     variables: createVariables,
   });
-  const createResult = (createResponse.data as any)?.productCreate;
+  const createResult = createResponse.data?.productCreate;
 
-  if (createResult?.userErrors?.length > 0) {
+  if (createResult?.userErrors?.length) {
     throw new Error(createResult.userErrors[0].message);
   }
 
@@ -2175,6 +2430,7 @@ export async function fetchShopifyShippingRates(
     return [];
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -2214,7 +2470,7 @@ export async function fetchShopifyShippingRates(
   };
 
   try {
-    const response: any = await client.request(
+    const response = await client.request<ShopifyDeliveryOptionsData>(
       `query getAvailableShippingRates($input: DraftOrderAvailableDeliveryOptionsInput!) {
         draftOrderAvailableDeliveryOptions(input: $input) {
           availableShippingRates {
@@ -2238,16 +2494,19 @@ export async function fetchShopifyShippingRates(
     );
 
     const rates = response.data?.draftOrderAvailableDeliveryOptions?.availableShippingRates ?? [];
-    return rates.map((r: any) => ({
-      id: r.handle,
-      name: r.title,
-      charge: parseFloat(r.price?.amount || "0"),
-      enabled: true,
-    }));
-  } catch (error: any) {
+    // A rate without a handle can't be selected later, so drop it.
+    return rates
+      .filter((r) => Boolean(r.handle))
+      .map((r) => ({
+        id: r.handle as string,
+        name: r.title ?? "Delivery",
+        charge: parseFloat(r.price?.amount || "0"),
+        enabled: true,
+      }));
+  } catch (error) {
     log.error(
-      "Failed to fetch available shipping rates from Shopify => %o",
-      error.response?.body || error,
+      { err: shopifyErrorDetail(error) },
+      "Failed to fetch available shipping rates from Shopify",
     );
     return [];
   }
@@ -2263,12 +2522,13 @@ export async function getOrderIdFromDraftOrder(
     throw new Error(`Shopify integration not active for organization: ${orgId}`);
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const restClient = new shopify.clients.Rest({
     session: shopifyInfo.credential.session,
   });
 
   try {
-    const response: any = await restClient.get({
+    const response: ShopifyRestResponse = await restClient.get({
       path: `draft_orders/${draftOrderId}`,
     });
     const orderId = response.body?.draft_order?.order_id;
@@ -2276,10 +2536,10 @@ export async function getOrderIdFromDraftOrder(
       throw new Error(`Draft order ${draftOrderId} has not been completed yet.`);
     }
     return String(orderId);
-  } catch (error: any) {
+  } catch (error) {
     log.error(
-      "Failed to fetch Shopify draft order to resolve order_id => %o",
-      error.response?.body || error,
+      { err: shopifyErrorDetail(error) },
+      "Failed to fetch Shopify draft order to resolve order_id",
     );
     return draftOrderId;
   }
@@ -2296,21 +2556,22 @@ export async function getShopifyProductImage(
     return null;
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const restClient = new shopify.clients.Rest({
     session: shopifyInfo.credential.session,
   });
 
   try {
-    const response: any = await restClient.get({
+    const response: ShopifyRestResponse = await restClient.get({
       path: `products/${productId}`,
     });
     console.log("🚀 ~ getShopifyProductImage ~ response:", response);
     return response.body?.product?.image?.src ?? null;
-  } catch (error: any) {
+  } catch (error) {
     log.error(
-      "Failed to fetch Shopify product image for product %s => %o",
+      { err: shopifyErrorDetail(error) },
+      "Failed to fetch Shopify product image for product %s",
       productId,
-      error.response?.body || error,
     );
     return null;
   }
@@ -2335,6 +2596,7 @@ export async function getFulfillmentOrders(orgId: string, waCatalogOrderId: stri
     throw new Error(`Shopify integration not active for organization: ${orgId}`);
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
@@ -2344,7 +2606,7 @@ export async function getFulfillmentOrders(orgId: string, waCatalogOrderId: stri
     : `gid://shopify/Order/${shopifyOrderId}`;
 
   try {
-    const response: any = await client.request(
+    const response = await client.request<ShopifyFulfillmentOrdersData>(
       `query getFulfillmentOrders($orderId: ID!) {
         order(id: $orderId) {
           id
@@ -2373,14 +2635,14 @@ export async function getFulfillmentOrders(orgId: string, waCatalogOrderId: stri
     );
 
     const nodes = response.data?.order?.fulfillmentOrders?.nodes ?? [];
-    nodes.forEach((node: any) => {
-      node.lineItems?.nodes?.forEach((item: any) => {
+    nodes.forEach((node) => {
+      node.lineItems?.nodes?.forEach((item) => {
         item.title = item.productTitle;
       });
     });
     return nodes;
-  } catch (error: any) {
-    log.error("Failed to fetch Shopify fulfillment orders => %o", error.response?.body || error);
+  } catch (error) {
+    log.error({ err: shopifyErrorDetail(error) }, "Failed to fetch Shopify fulfillment orders");
     throw error;
   }
 }
@@ -2409,12 +2671,13 @@ export async function createShopifyFulfillment(
     throw new Error(`Shopify integration not active for organization: ${orgId}`);
   }
 
+  if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
     session: shopifyInfo.credential.session,
   });
 
   try {
-    const response: any = await client.request(
+    const response = await client.request<ShopifyFulfillmentCreateData>(
       `mutation CreateFulfillment($fulfillment: FulfillmentInput!) {
         fulfillmentCreate(fulfillment: $fulfillment) {
           fulfillment {
@@ -2433,31 +2696,34 @@ export async function createShopifyFulfillment(
     );
 
     const result = response.data?.fulfillmentCreate;
-    if (result?.userErrors?.length > 0) {
+    if (result?.userErrors?.length) {
       throw new Error(result.userErrors[0].message);
     }
 
     return result?.fulfillment;
-  } catch (error: any) {
-    log.error("Failed to create Shopify fulfillment => %o", error.response?.body || error);
+  } catch (error) {
+    log.error({ err: shopifyErrorDetail(error) }, "Failed to create Shopify fulfillment");
     throw error;
   }
 }
 
-export function resolveShopifyPathValue(shopifyBody: any, path: string): string {
+export function resolveShopifyPathValue(
+  shopifyBody: ShopifyWebhookBody | null | undefined,
+  path: string,
+): string {
   if (!shopifyBody) return "";
 
   let resolvedValue = "";
 
   if (path === "items_fulfilled") {
     const items = (shopifyBody.line_items ?? [])
-      .filter((item: any) => item.fulfillment_status === "fulfilled")
-      .map((item: any) => `${item.title} (x${item.quantity})`);
+      .filter((item) => item.fulfillment_status === "fulfilled")
+      .map((item) => `${item.title} (x${item.quantity})`);
     resolvedValue = items.join(", ");
   } else if (path === "pending_items") {
     const items = (shopifyBody.line_items ?? [])
-      .filter((item: any) => item.fulfillment_status !== "fulfilled")
-      .map((item: any) => `${item.title} (x${item.quantity})`);
+      .filter((item) => item.fulfillment_status !== "fulfilled")
+      .map((item) => `${item.title} (x${item.quantity})`);
     resolvedValue = items.join(", ");
   } else if (path === "tracking_number") {
     resolvedValue = String(

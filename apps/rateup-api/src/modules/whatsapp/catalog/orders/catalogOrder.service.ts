@@ -1,8 +1,9 @@
 import prisma from "../../../../utils/prisma.js";
 import { OrderPaginateSchema } from "./catalogOrder.schema.js";
+import type { Prisma } from "../../../../../generated/prisma/client.js";
 
 export async function getWaCatalogOrders(catalogId: string, filter: OrderPaginateSchema) {
-  const where: any = {
+  const where: Prisma.WaCatalogOrderWhereInput = {
     catalogId,
   };
   if (filter.storeType) {

@@ -21,9 +21,12 @@ import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import {
   deleteResponseParamsSchema,
+  DeleteResponseParamsSchema,
   generateBodySchema,
+  GenerateBodyInput,
   generateXlsxSchema,
   getResponsesParamsSchema,
+  GetResponsesParams,
   responseFilterQuery,
   summarizeSchema,
 } from "./response.schema.js";
@@ -66,7 +69,7 @@ export async function responseRoutes(server: FastifyInstance) {
   );
 
   //generate response data
-  server.post(
+  server.post<{ Body: GenerateBodyInput }>(
     "/generate",
     {
       preHandler: [assertRootOrg],
@@ -78,7 +81,7 @@ export async function responseRoutes(server: FastifyInstance) {
   );
 
   //to reset survey responses & stats
-  server.delete(
+  server.delete<{ Params: GetResponsesParams }>(
     "/reset/:surveyId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -90,7 +93,7 @@ export async function responseRoutes(server: FastifyInstance) {
   );
 
   //to delete single response
-  server.delete(
+  server.delete<{ Params: DeleteResponseParamsSchema }>(
     "/:surveyTeamMapId/delete/:id",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -101,7 +104,7 @@ export async function responseRoutes(server: FastifyInstance) {
     deleteResponseHandler,
   );
 
-  server.post(
+  server.post<{ Params: { surveyId: string } }>(
     "/:surveyId/sync-response",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],

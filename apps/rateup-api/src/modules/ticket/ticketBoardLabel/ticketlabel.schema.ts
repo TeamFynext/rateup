@@ -15,7 +15,7 @@ export const updateLabelSchema = z.object({
 export type UpdateLabelSchema = z.infer<typeof updateLabelSchema>;
 
 export const deleteLabelsSchema = z.object({
-  labelIds: z.array(z.string().uuid()),
+  labelIds: z.array(z.uuid()),
 });
 
 export type DeleteLabelsSchema = z.infer<typeof deleteLabelsSchema>;

@@ -95,6 +95,8 @@ import {
   getContactsCountByInbox,
   getWaMessageLogs,
 } from "./wamessage.service.js";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import type { ByContactIdParams } from "../../../contact/contact.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -163,11 +165,11 @@ describe("generateChatFilterData", () => {
 
     const result = await generateChatFilterData("org-1");
 
-    expect(result[0]).toEqual({
+    expect(result![0]).toEqual({
       group: "Groups",
       items: [{ label: "VIPs", value: "contactGroups|-g1" }],
     });
-    expect(result[1]).toEqual({
+    expect(result![1]).toEqual({
       group: "Campaigns",
       items: [{ label: "Summer sale", value: "campaigns|-cam1" }],
     });
@@ -182,7 +184,7 @@ describe("generateChatFilterData", () => {
 
     const result = await generateChatFilterData("org-1");
 
-    expect(result[2]).toEqual({
+    expect(result![2]).toEqual({
       group: "city",
       items: [
         { label: "Berlin", value: "city|-Berlin" },
@@ -200,7 +202,7 @@ describe("generateChatFilterData", () => {
 
     const result = await generateChatFilterData("org-1");
 
-    expect(result[2].items).toHaveLength(1);
+    expect(result![2].items).toHaveLength(1);
   });
 
   test("returns null when the filter options cannot be built", async () => {
@@ -653,7 +655,12 @@ describe("getChatByContactId", () => {
     db.waMessage.findMany.mockResolvedValue([{ id: "m1" }]);
     const res = makeRes();
 
-    await getChatByContactId({ params: { contactId: "contact-1" } }, res);
+    await getChatByContactId(
+      { params: { contactId: "contact-1" } } as unknown as FastifyRequest<{
+        Params: ByContactIdParams;
+      }>,
+      res as unknown as FastifyReply,
+    );
 
     expect(db.waMessage.findMany).toHaveBeenCalledWith({
       where: { contactId: "contact-1", sourcePlatform: "WEBCHAT" },
@@ -666,7 +673,12 @@ describe("getChatByContactId", () => {
     db.waMessage.findMany.mockRejectedValue(new Error("db down"));
     const res = makeRes();
 
-    await getChatByContactId({ params: { contactId: "contact-1" } }, res);
+    await getChatByContactId(
+      { params: { contactId: "contact-1" } } as unknown as FastifyRequest<{
+        Params: ByContactIdParams;
+      }>,
+      res as unknown as FastifyReply,
+    );
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.payload).toEqual({ error: "Failed to retrieve chat" });

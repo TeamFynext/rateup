@@ -6,6 +6,13 @@ import { log } from "../../../utils/logger.js";
 import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
 import { WhatsappSettings } from "../../../../generated/prisma/client.js";
 
+// The raw (still-encrypted) request body WhatsApp Flow's endpoint sends us.
+interface EncryptedFlowRequestBody {
+  encrypted_flow_data: string;
+  encrypted_aes_key: string;
+  initial_vector: string;
+}
+
 export function generateKeyPairsForWaEncryption(passphrase: string): WaEncryptionKeys {
   const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
@@ -23,7 +30,11 @@ export function generateKeyPairsForWaEncryption(passphrase: string): WaEncryptio
   return { publicKey, privateKey, passphrase };
 }
 
-export const decryptRequest = (body, privatePem, passphrase) => {
+export const decryptRequest = (
+  body: EncryptedFlowRequestBody,
+  privatePem: string,
+  passphrase: string,
+) => {
   const { encrypted_aes_key, encrypted_flow_data, initial_vector } = body;
 
   const privateKey = crypto.createPrivateKey({ key: privatePem, passphrase });
@@ -73,7 +84,11 @@ export const decryptRequest = (body, privatePem, passphrase) => {
   };
 };
 
-export const encryptResponse = (response, aesKeyBuffer, initialVectorBuffer) => {
+export const encryptResponse = (
+  response: unknown,
+  aesKeyBuffer: Buffer,
+  initialVectorBuffer: Buffer,
+) => {
   // flip initial vector
   const flipped_iv = [];
   for (const pair of initialVectorBuffer.entries()) {
@@ -90,9 +105,9 @@ export const encryptResponse = (response, aesKeyBuffer, initialVectorBuffer) => 
 };
 
 export const FlowEndpointException = class FlowEndpointException extends Error {
-  statusCode: any;
+  statusCode: number;
 
-  constructor(statusCode, message) {
+  constructor(statusCode: number, message: string) {
     super(message);
 
     this.name = this.constructor.name;
@@ -102,6 +117,9 @@ export const FlowEndpointException = class FlowEndpointException extends Error {
 
 export async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
   const { phoneId, accessToken, orgId } = waSettings;
+  if (!phoneId) {
+    throw new Error(`WhatsApp settings for orgId ${orgId} has no phoneId`);
+  }
   const passphrase = crypto.randomBytes(16).toString("hex");
   log.trace("Passphrase generated");
 
@@ -119,27 +137,44 @@ export async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
 export async function handleFlowResponse(
   req: FastifyRequest<{
     Params: { orgId: string; dbFlowId: string };
+    Body: EncryptedFlowRequestBody;
   }>,
   res: FastifyReply,
 ) {
   log.trace("Received request to handle flow response \n%o\n%o", req.url, req.body);
   const { orgId } = req.params;
 
-  let { encryption: e, phoneId, accessToken } = await getWaSettings(orgId);
-  let encryption = e as unknown as WaEncryptionKeys;
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("No WhatsApp settings found for orgId " + orgId);
+  }
+  const { encryption: storedEncryption, phoneId, accessToken } = waSettings;
+  let encryption = storedEncryption;
   if (!encryption) {
     log.warn("Encryption keys not found for org: %s", orgId);
 
     if (!process.env.wa_flow_encryption) {
       throw new Error("WA_FLOW_ENCRYPTION is not set in .env file");
     }
+    if (!phoneId) {
+      throw new Error(`WhatsApp settings for orgId ${orgId} has no phoneId`);
+    }
 
-    const encryption: WaEncryptionKeys = JSON.parse(process.env.wa_flow_encryption);
+    // NOTE: this used to declare a shadowing `const encryption` here instead of
+    // reassigning the outer `let encryption` - the freshly-generated fallback
+    // keys were saved to the db but never actually used for this request, so
+    // the destructure below would have been reached with the original
+    // (still-null) value and crashed. Reassigning fixes that.
+    const freshEncryption: WaEncryptionKeys = JSON.parse(process.env.wa_flow_encryption);
+    encryption = freshEncryption;
 
-    await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
-    await updateWaSettings(orgId, phoneId, { encryption });
+    await setBusinessPublicKey(freshEncryption.publicKey, phoneId, accessToken);
+    await updateWaSettings(orgId, phoneId, { encryption: freshEncryption });
   }
-  const { privateKey, passphrase } = encryption as unknown as WaEncryptionKeys;
+  if (!encryption) {
+    throw new Error(`Failed to resolve encryption keys for orgId ${orgId}`);
+  }
+  const { privateKey, passphrase } = encryption;
 
   if (!isRequestSignatureValid(req)) {
     // Return status code 432 if request signature does not match.
@@ -182,15 +217,18 @@ export async function handleFlowResponse(
   try {
     log.trace(req.params.dbFlowId);
     const dbFlow = await getFlowFromDb(req.params.dbFlowId);
+    if (!dbFlow) {
+      throw new Error(`Flow not found in db for dbFlowId: ${req.params.dbFlowId}`);
+    }
     log.trace("👉 DB Flow:%o", { name: dbFlow.name, status: dbFlow.status });
 
     const screenResponse = await handleDecryptedFlowRequest(decryptedBody, dbFlow);
 
-    log.trace("👉 Response to Encrypt:%o", screenResponse);
+    log.trace({ screenResponse }, "👉 Response to Encrypt");
 
     res.send(encryptResponse(screenResponse, aesKeyBuffer, initialVectorBuffer));
   } catch (error) {
-    log.error("Error getting next screen: %o", error);
+    log.error({ err: error }, "Error getting next screen");
     return res.status(500).send();
   }
 }

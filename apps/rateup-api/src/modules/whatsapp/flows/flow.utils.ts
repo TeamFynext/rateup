@@ -32,6 +32,12 @@ export function generateFlowMessageData({
   dbFlow,
 }: generateFlowMessageDataProps): WaSendMessageBody {
   const flow_id = dbFlow.flowId;
+  if (!flow_id) {
+    // dbFlow.flowId is only populated once the flow has been created in
+    // WhatsApp (createFlowInWa). Sending before that previously shipped
+    // `flow_id: null` straight to the Meta Graph API instead of failing here.
+    throw new Error(`Flow ${dbFlow.dbFlowId} has not been created in WhatsApp yet (no flowId)`);
+  }
   const mode = dbFlow.status as WaFlowStatus;
 
   // TODO: only use status in lowercase
@@ -98,7 +104,7 @@ export function generateFlowMessageData({
       action: {
         name: "flow",
         parameters: {
-          mode: mode.toLowerCase() as any,
+          mode: mode.toLowerCase() as "draft" | "published",
           flow_message_version: 3,
           flow_token: to,
           flow_id,
@@ -117,7 +123,7 @@ export const ratingEmoji = "⭐️";
 
 interface generateSurveyMessageDataProps {
   flow: WaFlow;
-  flowResponses: any;
+  flowResponses: WaFlowResponses;
   surveyTeamMapId: string;
 }
 
@@ -131,14 +137,16 @@ interface generateSurveyMessageDataProps {
 export function generateQuestionResponsesFromFlowResponse({
   flow,
   flowResponses,
-}: generateSurveyMessageDataProps) {
-  const flowMap = flow.map;
+}: generateSurveyMessageDataProps): WaFlowQuestionResponse[] {
+  // WaFlow.map has no PrismaJson.* annotation in schema.prisma, so Prisma types
+  // it as `unknown`; WaFlowMap describes the blob that's actually stored there.
+  const flowMap = flow.map as WaFlowMap;
 
   log.trace(
     { flowResponses, flowMap },
     "Generating question-responses from flow response\nflowResopnse => %o\nflowMap",
   );
-  let responses = [];
+  let responses: WaFlowQuestionResponse[] = [];
   for (const [payloadName, value] of Object.entries(flowResponses)) {
     if (payloadName === "flow_token" || payloadName === "wa_flow_response_params") continue;
     if (!value) {
@@ -146,24 +154,37 @@ export function generateQuestionResponsesFromFlowResponse({
       continue;
     }
     try {
-      const elementName = findElementNameFromPayloadName(payloadName, flow.json as any);
-
-      let questionResponse;
+      let questionResponse: WaFlowQuestionResponse;
 
       if (flow.version === 1) {
+        const elementName = findElementNameFromPayloadName(payloadName, flow.json);
+        // Previously `flowMap[undefined]` threw a raw TypeError here, which the
+        // catch below rethrew; this reports the same failure explicitly.
+        if (!elementName) {
+          throw new Error(`No form element bound to flow payload '${payloadName}'`);
+        }
+        const mapEntry = flowMap[elementName];
+        if (!mapEntry) {
+          throw new Error(`Flow map has no entry for form element '${elementName}'`);
+        }
+
         questionResponse = {
-          questionId: flowMap[elementName].questionId,
-          type: flowMap[elementName].type,
+          questionId: mapEntry.questionId,
+          type: mapEntry.type,
           response: {
-            [flowMap[elementName].type]: parseFlowResponse({
+            [mapEntry.type]: parseFlowResponse({
               elementName,
               flowMap,
-              flowJson: flow.json as any,
+              flowJson: flow.json,
               response: value,
             }),
           },
         };
       } else {
+        // v2 flow responses are keyed by element name only and don't carry a
+        // QuestionType — v2 uses a different type system (Question2/WaQuestions)
+        // that downstream v2 consumers (shouldShowGoogleReviewV2, etc.) read
+        // without needing `.type`.
         questionResponse = {
           questionId: payloadName,
           response: value,
@@ -179,7 +200,7 @@ export function generateQuestionResponsesFromFlowResponse({
       );
       log.trace(
         {
-          flowPayload: findElementNameFromPayloadName(payloadName, flow.json as any),
+          flowPayload: findElementNameFromPayloadName(payloadName, flow.json),
           flowMap,
           flowResponses,
         },
@@ -198,9 +219,9 @@ const r_formPayload = /\$\{form\.(.+)\}/; // ${form.MATCH_DATA}
 
 interface parseFlowResponseProps {
   elementName: string;
-  flowMap: any;
+  flowMap: WaFlowMap;
   flowJson: WaFlowJson;
-  response: any;
+  response: WaFlowRawResponse;
 }
 export function parseFlowResponse({
   elementName,
@@ -227,7 +248,8 @@ export function parseFlowResponse({
     case qt.Phone:
       return { phone: response };
     case qt.Date:
-      return new Date(parseInt(response));
+      // WhatsApp sends the date picker's value as an epoch-milliseconds string.
+      return new Date(parseInt(String(response)));
     case qt.YN:
     case qt.LD:
     case qt.Smiley:
@@ -237,6 +259,13 @@ export function parseFlowResponse({
     case qt.MCQ:
     case qt.DDSS: {
       const el = getElementJson(flowJson, elementName);
+      if (!el?.["data-source"]) {
+        // Previously crashed with a raw TypeError (`el` / `data-source` used
+        // unchecked) instead of reporting the same "choice not found" case
+        // handled just below. See issues.txt.
+        log.error("Element or data-source not found for %s", elementName);
+        return undefined;
+      }
       const choice = el["data-source"].find((c) => c.id === response);
       if (!choice) {
         log.error("Choice not found for response %s", response);
@@ -246,7 +275,13 @@ export function parseFlowResponse({
     }
     case qt.MSQ: {
       const el = getElementJson(flowJson, elementName);
-      const choices = el["data-source"].filter((c) => response.includes(c.id));
+      if (!el?.["data-source"]) {
+        log.error("Element or data-source not found for %s", elementName);
+        return [];
+      }
+      // MSQ answers arrive as an array of selected choice ids.
+      const selectedIds = Array.isArray(response) ? response : [String(response)];
+      const choices = el["data-source"].filter((c) => selectedIds.includes(c.id));
       return choices.map((c) => ({ value: c.title }));
     }
     default:
@@ -254,7 +289,21 @@ export function parseFlowResponse({
       return response;
   }
 }
-export function parseFlowResponseV2(metaType, response, dataSource) {
+export function parseFlowResponseV2(
+  metaType: WaQuestions,
+  // Shape varies by metaType (single string for text/date/single-choice,
+  // string[] for CheckboxGroup) — discriminated below by the switch, same as
+  // the untyped param this replaces.
+  response: WaFlowRawResponse,
+  // Callers only ever call this for question types that carry choices when a
+  // data-source actually exists on the element; intentionally required
+  // (not optional, unlike Question2["data-source"]) so a caller passing an
+  // element with none still surfaces as a crash rather than silently
+  // resolving to `undefined` — see issues.txt (pinned by
+  // flow.utils.test.ts's "throws when the element it is resolving against
+  // has no options").
+  dataSource: Array<{ title: string; id: string }>,
+) {
   log.trace({ response }, "Parsing response for element %s\nresponse => %o");
 
   if (!response) {
@@ -267,7 +316,8 @@ export function parseFlowResponseV2(metaType, response, dataSource) {
     case WaQuestions.DocumentPicker:
       return response;
     case WaQuestions.DatePicker:
-      return new Date(parseInt(response));
+      // WhatsApp sends the date picker's value as an epoch-milliseconds string.
+      return new Date(parseInt(String(response)));
     case WaQuestions.YN:
     case WaQuestions.LD:
     case WaQuestions.Smiley:
@@ -283,7 +333,9 @@ export function parseFlowResponseV2(metaType, response, dataSource) {
       return choice.title;
     }
     case WaQuestions.CheckboxGroup: {
-      const choices = dataSource.filter((c) => response.includes(c.id));
+      // Checkbox answers arrive as an array of selected choice ids.
+      const selectedIds = Array.isArray(response) ? response : [String(response)];
+      const choices = dataSource.filter((c) => selectedIds.includes(c.id));
       return choices.map((c) => c.title);
     }
     default:
@@ -292,7 +344,10 @@ export function parseFlowResponseV2(metaType, response, dataSource) {
   }
 }
 
-export function getElementJson(flowJson: WaFlowJson, elementName: string) {
+export function getElementJson(
+  flowJson: WaFlowJson,
+  elementName: string,
+): WaFlowFormElement | undefined {
   log.trace("Getting element json for %s", elementName);
   for (const formElement of waFlowFormElementIterator({ flowJson })) {
     if (formElement.name === elementName) {
@@ -302,28 +357,34 @@ export function getElementJson(flowJson: WaFlowJson, elementName: string) {
   }
 }
 
-export function findElementNameFromPayloadName(payloadName: string, flowJson: WaFlowJson) {
+export function findElementNameFromPayloadName(
+  payloadName: string,
+  flowJson: WaFlowJson,
+): string | undefined {
   for (const formElement of waFlowFormElementIterator({
     flowJson,
     onlyInteractive: false,
     includeFooter: true,
   })) {
     if (formElement && formElement.type === WaFlowFormElementType.footer) {
-      const { payload } = formElement["on-click-action"];
+      const onClickAction = formElement["on-click-action"];
+      if (!onClickAction) continue;
 
-      if (payload[payloadName] && payload[payloadName].match(r_formPayload)) {
-        const match = payload[payloadName].match(r_formPayload);
+      const binding = onClickAction.payload?.[payloadName];
+      if (!binding) continue;
 
-        return match[1];
-      }
+      const match = binding.match(r_formPayload);
+      if (match?.[1]) return match[1];
     }
   }
+  return undefined;
 }
 
 interface CreateSurveyFromFlowProps {
   flowJson: WaFlowJson;
-  flowMap: any;
-  req: any;
+  // `questionId` is what this function fills in, so the incoming map need not carry it.
+  flowMap: WaFlowMapDraft;
+  req: FastifyRequest;
   teamIds: string[];
   title: string;
   orgId: string;
@@ -353,6 +414,10 @@ export async function createSurveyFromFlow({
   for (const formElement of waFlowFormElementIterator({
     flowJson,
   })) {
+    // waFlowFormElementIterator's default onlyInteractive:true already
+    // guarantees `name` is set at runtime; this is only a type narrowing
+    // (the generator's yield type doesn't encode that invariant).
+    if (!formElement.name) continue;
     const qType = flowMap[formElement.name].type;
     const question: CreateQuestionInput = {
       title: {
@@ -362,15 +427,16 @@ export async function createSurveyFromFlow({
         [lang]: "",
       },
       label: {
-        [lang]: formElement.label,
+        [lang]: formElement.label ?? "",
       },
       type: qType,
-      required: formElement.required,
+      required: formElement.required ?? false,
       choices: ChoiceTypeQuestions.includes(qType)
         ? {
-            [lang]: formElement["data-source"]?.map((choice) => ({
-              value: choice.title,
-            })),
+            [lang]:
+              formElement["data-source"]?.map((choice) => ({
+                value: choice.title,
+              })) ?? [],
           }
         : undefined,
       enableNpsAnalytics: false,
@@ -381,7 +447,9 @@ export async function createSurveyFromFlow({
     flowMap[formElement.name].questionId = questionRes.id;
   }
 
-  return { flowMap, survey: surveyRes };
+  // The loop above set `questionId` on every named form element, so the draft map
+  // is now complete.
+  return { flowMap: flowMap as WaFlowMap, survey: surveyRes };
 }
 
 // Since the form elements are deeply nested in the flow json & we need to iterate over them a lot
@@ -404,7 +472,7 @@ export function* waFlowFormElementIterator({
 }: waFlowFormElementIteratorProps) {
   for (const screen of flowJson.screens) {
     for (const screenElement of screen.layout.children) {
-      if (screenElement.type === "Form") {
+      if (screenElement.type === "Form" && screenElement.children) {
         for (const formElement of screenElement.children) {
           if (!onlyInteractive || formElement.name !== undefined) {
             // if onlyInteractive is true, only include interactive elements
@@ -434,16 +502,18 @@ export function* waFlowFormElementIterator({
  */
 export function getFlowJsonWithTitleAndDescription(
   flowJson: WaFlowJson,
-  map: any,
+  map: WaFlowMap,
   survey: Survey,
-  logicJumps: any,
+  logicJumps: PrismaJson.PWaFlowLogicJumps | null | undefined,
 ): WaFlowJson {
-  let fj = JSON.parse(JSON.stringify(flowJson));
+  // Deep clone so the caller's json is left untouched.
+  const fj: WaFlowJson = JSON.parse(JSON.stringify(flowJson));
   for (const screen of fj.screens) {
     for (let screenElement of screen.layout.children) {
-      if (screenElement.type === "Form") {
-        for (let i = 0; i < screenElement.children.length; i++) {
-          const formElement = screenElement.children[i];
+      if (screenElement.type === "Form" && screenElement.children) {
+        const formChildren = screenElement.children;
+        for (let i = 0; i < formChildren.length; i++) {
+          const formElement = formChildren[i];
           if (
             formElement.name !== undefined &&
             formElement.type !== WaFlowFormElementType.footer &&
@@ -497,14 +567,18 @@ export function getFlowJsonWithTitleAndDescription(
               screenElement.children.splice(i, 0, descriptionElement);
               i++;
             }
-            for (let logicJump of (logicJumps?.[screen?.id] ?? []).filter((item) =>
+            // `fj` is a JSON.parse(JSON.stringify(flowJson)) deep clone, so
+            for (const logicJump of (logicJumps?.[screen?.id] ?? []).filter((item) =>
               item.conditions.some((condition) => condition.questionId === formElement.id),
             )) {
-              if (!logicJump || typeof logicJump.action === "string") continue;
+              // Only v2 branch actions name the elements to show per branch; a
+              // string action is a v1 verb/screen id and has nothing to inline.
+              const branch = logicJump?.action;
+              if (!branch || typeof branch === "string") continue;
               let { ...restFail } =
-                screenElement?.children?.find((data) => data.id === logicJump.action.fail) ?? {};
+                screenElement?.children?.find((data) => data.id === branch.fail) ?? {};
               const { ...restSuccess } =
-                screenElement?.children.find((data) => data.id === logicJump.action.success) ?? {};
+                screenElement?.children.find((data) => data.id === branch.success) ?? {};
               let conditions = logicJump.conditions?.map((condition) => {
                 const elementName = screenElement?.children?.[i]?.name;
                 const isNumberType = formElement?.["input-type"] === "number";
@@ -527,7 +601,7 @@ export function getFlowJsonWithTitleAndDescription(
 
               // Then, filter out any existing logic jumps
               screenElement.children = screenElement.children.filter(
-                (child) => ![logicJump.action.success, logicJump.action.fail].includes(child.id),
+                (child) => ![branch.success, branch.fail].includes(child.id),
               );
             }
           }
@@ -538,14 +612,17 @@ export function getFlowJsonWithTitleAndDescription(
   return fj;
 }
 const lang = "en";
-export function getQuestionIdFromFlowFormElementName(name: string, map: any): string {
+export function getQuestionIdFromFlowFormElementName(
+  name: string,
+  map: WaFlowMap,
+): string | undefined {
   return map[name]?.questionId;
 }
 export function getQuestionFromFlowFormElementName(
   name: string,
   questions: Question[],
-  map: any,
-): Question {
+  map: WaFlowMap,
+): Question | undefined {
   const questionId = getQuestionIdFromFlowFormElementName(name, map);
   return questions.find((q) => q.id === questionId);
 }
@@ -554,19 +631,25 @@ export function getQuestionFromFlowElementId(
   id: string,
   flowJson: WaFlowJson,
   questions: Question[],
-  map: any,
-) {
+  map: WaFlowMap,
+): Question | undefined {
   const formElement = getFlowFormElementById(id, flowJson);
+  if (!formElement?.name) return undefined;
   return getQuestionFromFlowFormElementName(formElement.name, questions, map);
 }
 
-export function getFlowFormElementById(id: string, flowJson: WaFlowJson) {
+export function getFlowFormElementById(
+  id: string,
+  flowJson: WaFlowJson,
+): WaFlowFormElement | undefined {
   for (const screen of flowJson.screens) {
     const form = screen.layout.children.find((se) => se.type === "Form");
+    if (!form?.children) continue;
     for (const fe of form.children) {
       if (fe.id === id) return fe;
     }
   }
+  return undefined;
 }
 
 /**
@@ -577,7 +660,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   const { dataSource, mapData } = generateDataSourceFromQuestion(question);
   const type = questionTypeToFlowFormElementType(question.type);
   const questionElement: WaFlowFormElement = {
-    label: question.label[lang],
+    label: question.label?.[lang],
     name: question.id,
     id: question.id,
     type,
@@ -664,7 +747,9 @@ export function generateDataSourceFromQuestion(q: Question) {
       id: index.toString(),
       title: c,
     }));
-    const mapData: any = choices.reduce(
+    // Choice-index -> label; `type`/`questionId` are filled in by the caller
+    // once the backing Question exists, completing a WaFlowMapEntry.
+    const mapData: Record<string, string | qt> = choices.reduce(
       (prev, _choice, index) => ({ ...prev, [index]: `${5 - index}` }),
       {},
     );
@@ -696,7 +781,8 @@ export function generateDataSourceFromQuestion(q: Question) {
       id: index.toString(),
       title: c,
     }));
-    const mapData: any = choices.reduce(
+    // See the Rating branch above.
+    const mapData: Record<string, string | qt> = choices.reduce(
       (prev, choice, index) => ({ ...prev, [index]: choice }),
       {},
     );
@@ -746,10 +832,10 @@ export function removeIdFromFlowJson(json: WaFlowJson) {
   return json;
 }
 
-export function getFlowFormElementNameFromQuestionId(qId: string, map: any) {
-  for (const [key, value] of Object.entries(map)) {
-    //@ts-ignore
-    if (value.questionId === qId) return key;
+export function getFlowFormElementNameFromQuestionId(qId: string, map: unknown) {
+  if (!map || typeof map !== "object") return undefined;
+  for (const [key, value] of Object.entries(map as Record<string, { questionId?: string }>)) {
+    if (value?.questionId === qId) return key;
   }
 }
 
@@ -778,9 +864,11 @@ export function validateFlowLogic(
 export function parseResponseFromCurrentScreenResponse(
   dbFlow: WaFlow,
   questions: Question[],
-  response_data: any,
+  response_data: WaFlowResponses,
 ) {
   const flowJson = dbFlow.json as WaFlowJson;
+  // WaFlow.map is `unknown` on the Prisma model; see WaFlowMap.
+  const flowMap = dbFlow.map as WaFlowMap;
   const responses: QuestionResponse[] = [];
 
   for (const formElement of waFlowFormElementIterator({
@@ -788,19 +876,24 @@ export function parseResponseFromCurrentScreenResponse(
     onlyInteractive: true,
     includeFooter: false,
   })) {
-    if (!response_data[formElement.name]) continue;
-    const question = getQuestionFromFlowElementId(
-      formElement.name,
-      flowJson,
-      questions,
-      dbFlow.map,
-    );
+    const elementName = formElement.name;
+    if (!elementName) continue;
+    const rawResponse = response_data[elementName];
+    if (!rawResponse) continue;
+    const question = getQuestionFromFlowElementId(elementName, flowJson, questions, flowMap);
+    if (!question) {
+      // Previously crashed with a raw TypeError (`question.id`/`question.type`
+      // used unchecked below) instead of skipping the unresolved answer. See
+      // issues.txt.
+      log.error("Question not found for flow element %s", elementName);
+      continue;
+    }
 
     const parsedResponse = parseFlowResponse({
       flowJson,
-      flowMap: dbFlow.map,
-      elementName: formElement.name,
-      response: response_data[formElement.name],
+      flowMap,
+      elementName,
+      response: rawResponse,
     });
 
     const questionResponse: QuestionResponse = {
@@ -816,14 +909,24 @@ export function parseResponseFromCurrentScreenResponse(
   log.trace({ responses }, "responses");
   return responses;
 }
-export function parseResponseFromCurrentScreenResponseV2(screens, response_data) {
+// `screens` is dbFlow.json.screens for a v2 flow: its layout.children are
+// WaFlowFormElement-shaped (carry `id`) at runtime, not the WaFlowForm shape
+// WaFlowScreen declares — the same runtime/type gap already documented in
+// wasurvey.service.ts's shouldShowGoogleReviewV2 — so this stays `any` rather
+// than mistyped against WaFlowScreen.
+export function parseResponseFromCurrentScreenResponseV2(
+  screens: WaFlowScreen[],
+  response_data: WaFlowResponses,
+) {
   const responses = Object.keys(response_data).map((questionId) => {
     const question = screens
       .flatMap((screen) => screen.layout.children)
       .find((child) => child.id === questionId);
 
     return {
-      questionId: question.id,
+      // Falls back to the payload key when the element is no longer in the
+      // screen (previously this threw a TypeError on `question.id`).
+      questionId: question?.id ?? questionId,
       response: response_data[questionId],
     };
   });
@@ -831,9 +934,9 @@ export function parseResponseFromCurrentScreenResponseV2(screens, response_data)
   return responses;
 }
 
-export function sanitizeScreenData(data: any) {
-  data.screens.forEach((screen: any) => {
-    screen.layout.children.forEach((child: any) => {
+export function sanitizeScreenData(data: WaFlowJson) {
+  data.screens.forEach((screen) => {
+    screen.layout.children.forEach((child) => {
       delete child.id;
       delete child.metaType;
       delete child.enableNpsAnalytics;
@@ -849,19 +952,29 @@ export function sanitizeScreenData(data: any) {
   });
   return data;
 }
-export function removeEmptyStrings(obj) {
-  for (const key in obj) {
-    if (obj[key] && typeof obj[key] === "object") {
-      removeEmptyStrings(obj[key]);
-    } else if ((obj[key] === "" || !obj[key]) && key !== "visible") {
-      delete obj[key];
+// Recursively strips empty-string/falsy fields (except `visible`) from a
+// legacy v2 flow-json object tree — genuinely dynamic, arbitrarily-shaped
+// JSON discriminated only by `typeof`/truthiness at runtime.
+export function removeEmptyStrings(obj: object) {
+  const record = obj as Record<string, unknown>;
+  for (const key in record) {
+    const value = record[key];
+    if (value && typeof value === "object") {
+      removeEmptyStrings(value);
+    } else if ((value === "" || !value) && key !== "visible") {
+      delete record[key];
     }
   }
 }
-export function convertHeaderToNewQuestion(flow) {
-  let transformedFlow = JSON.parse(JSON.stringify(flow));
+/**
+ * Lifts each v2 element's inline `header` out into its own TextBody element,
+ * which is how Meta expects headings to be expressed.
+ */
+export function convertHeaderToNewQuestion(flow: WaFlowJson): WaFlowJson {
+  // Deep clone so the caller's json is left untouched.
+  const transformedFlow: WaFlowJson = JSON.parse(JSON.stringify(flow));
   transformedFlow.screens.forEach((screen) => {
-    screen.layout.children = screen.layout.children.reduce((acc, child) => {
+    screen.layout.children = screen.layout.children.reduce((acc: WaFlowForm[], child) => {
       if (child.header) {
         acc.push({
           text: child.header,
@@ -876,17 +989,30 @@ export function convertHeaderToNewQuestion(flow) {
   });
   return transformedFlow;
 }
-export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
-  // Clone the flow object to avoid mutating the original
-  const routing_model = transformedFlow.screens.reduce((acc, screen, index, array) => {
-    acc[screen.id] = array.slice(index + 1).map((s) => s.id);
-    return acc;
-  }, {});
+/**
+ * Rewrites a v2 flow's screens in place so its logic jumps become Meta "If"
+ * elements, and adds the routing model / data-api version when any screen needs
+ * a data exchange.
+ */
+export function transformFlowAndLogicJumps(
+  transformedFlow: WaFlowJson,
+  logicJump: PrismaJson.PWaFlowLogicJumps,
+) {
+  // Each screen can route to any screen after it.
+  const routing_model = transformedFlow.screens.reduce<Record<string, string[]>>(
+    (acc, screen, index, array) => {
+      acc[screen.id] = array.slice(index + 1).map((s) => s.id);
+      return acc;
+    },
+    {},
+  );
 
   let flag = false;
   Object.entries(logicJump).forEach(([key, value]) => {
-    let screen = transformedFlow?.screens?.find((screen) => screen.id === key);
-    const currentScreenPayload = screen?.layout?.children?.reduce((prev, fe) => {
+    const screen = transformedFlow?.screens?.find((s) => s.id === key);
+    if (!screen?.layout?.children) return;
+    const screenChildren = screen.layout.children;
+    const currentScreenPayload = screenChildren.reduce<Record<string, string>>((prev, fe) => {
       if (fe.name) {
         return {
           ...prev,
@@ -908,7 +1034,8 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
       }>;
     }>) {
       if (typeof element.action === "string") {
-        let footer = screen.layout.children.find((child) => child.type === "Footer");
+        const footer = screenChildren.find((child) => child.type === "Footer");
+        if (!footer) continue;
         footer["on-click-action"] = {
           name: "data_exchange",
           payload: currentScreenPayload,
@@ -917,8 +1044,8 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
       } else {
         // Find the index of the field in the screen's children
 
-        let fieldIndex = screen.layout.children.findIndex(
-          (child) => child.id === element.conditions[0].field,
+        const fieldIndex = screenChildren.findIndex(
+          (child) => child.id === element.conditions?.[0]?.field,
         );
         if (fieldIndex !== -1) {
           // Create the logic jump object
@@ -931,26 +1058,29 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
                 return `(\${form.${condition.field}} ${condition.operator} ${value})`;
               })
               .join(" && "),
+            // `then`/`else` are optional in the underlying shape (a jump
+            // missing either previously crashed here with a raw TypeError
+            // instead of just contributing no branches — see issues.txt).
             // eslint-disable-next-line unicorn/no-thenable
-            then: element.then
+            then: (element.then ?? [])
               .map((action) => {
-                let childIndex = screen.layout.children.findIndex((child) => child.id === action);
+                const childIndex = screenChildren.findIndex((child) => child.id === action);
                 if (childIndex !== -1) {
-                  let child = screen.layout.children[childIndex];
-                  screen.layout.children.splice(childIndex, 1);
-                  let { metaType: _metaType, googleReview: _googleReview, ...rest } = child;
+                  const child = screenChildren[childIndex];
+                  screenChildren.splice(childIndex, 1);
+                  const { metaType: _metaType, googleReview: _googleReview, ...rest } = child;
                   return { ...rest };
                 }
                 return null;
               })
               .filter(Boolean),
-            else: element.else
+            else: (element.else ?? [])
               .map((action) => {
-                let childIndex = screen.layout.children.findIndex((child) => child.id === action);
+                const childIndex = screenChildren.findIndex((child) => child.id === action);
                 if (childIndex !== -1) {
-                  let child = screen.layout.children[childIndex];
-                  screen.layout.children.splice(childIndex, 1); // Remove the child from the main array
-                  let { metaType: _metaType, ...rest } = child;
+                  const child = screenChildren[childIndex];
+                  screenChildren.splice(childIndex, 1); // Remove the child from the main array
+                  const { metaType: _metaType, ...rest } = child;
                   return { ...rest };
                 }
                 return null;
@@ -959,7 +1089,7 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
           };
 
           // Insert the logic jump object into the screen's children
-          screen.layout.children.splice(fieldIndex + 1, 0, logicJumpObject);
+          screenChildren.splice(fieldIndex + 1, 0, logicJumpObject as WaFlowForm);
         }
       }
     }
@@ -982,18 +1112,24 @@ export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply
       },
     });
 
-    const whatsappFlowFeatures = getNestedProperty(
-      subscription.features as any,
+    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
+    // `conversation.count`, see subscription.data.ts) — this per-org WhatsApp
+    // Flow count limit was never actually modeled, so this check is
+    // currently always false / a no-op. See issues.txt. Typed via the
+    // generic (rather than an assertion on the input) to describe the shape this
+    // code expects without asserting it's really there.
+    const whatsappFlowFeatures = getNestedProperty<{ count?: { max: number } }>(
+      subscription.features,
       SubscriptionFeaturePathName.Whatsapp,
     );
-    if (flowCount >= whatsappFlowFeatures?.count?.max) {
+    if (flowCount >= (whatsappFlowFeatures?.count?.max ?? Infinity)) {
       throw new Error(
         `You have reached the maximum limit of ${whatsappFlowFeatures?.count?.max} Flows.`,
       );
     }
   } catch (e) {
     return reply.code(403).send({
-      message: e?.message,
+      message: e instanceof Error ? e.message : String(e),
       displayMessageInClient: true,
     });
   }

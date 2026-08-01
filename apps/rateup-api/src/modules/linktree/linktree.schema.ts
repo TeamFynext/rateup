@@ -6,7 +6,12 @@ const linktreeBaseSchema = z.object({
   createdAt: z.date(),
   shortUrlId: z.string(),
   theme: z.any(),
-  links: z.any(),
+  links: z.array(
+    z.looseObject({
+      id: z.string().optional(),
+      noOfClicks: z.number().optional(),
+    }),
+  ),
   shareSettings: z.any(),
   isPublished: z.boolean(),
   visitorsCount: z.number(),
@@ -26,7 +31,14 @@ const updateLinktreeReqBody = z.object({
   shortUrlId: z.string(),
   name: z.string().optional(),
   theme: z.any().optional(),
-  links: z.any().optional(),
+  links: z
+    .array(
+      z.looseObject({
+        id: z.string().optional(),
+        noOfClicks: z.number().optional(),
+      }),
+    )
+    .optional(),
   shareSettings: z.any().optional(),
   isPublished: z.boolean().optional(),
 });
@@ -41,6 +53,10 @@ const updatePageVisitsOrLinkClicksReqBody = z.object({
 });
 
 type CreateLinktreeReqBody = z.infer<typeof createLinktreeReqBody>;
+type GetLinktreeWithShortIdParams = z.infer<typeof getLinktreeWithShortIdParams>;
+type UpdateLinktreeReqBody = z.infer<typeof updateLinktreeReqBody>;
+type UpdatePageVisitsOrLinkClicksReqParams = z.infer<typeof updatePageVisitsOrLinkClicksReqParams>;
+type UpdatePageVisitsOrLinkClicksReqBody = z.infer<typeof updatePageVisitsOrLinkClicksReqBody>;
 
 export {
   linktreeBaseSchema,
@@ -51,4 +67,8 @@ export {
   updatePageVisitsOrLinkClicksReqBody,
   updatePageVisitsOrLinkClicksReqParams,
   CreateLinktreeReqBody,
+  GetLinktreeWithShortIdParams,
+  UpdateLinktreeReqBody,
+  UpdatePageVisitsOrLinkClicksReqParams,
+  UpdatePageVisitsOrLinkClicksReqBody,
 };

@@ -53,6 +53,9 @@ export async function getAutomatedReplyById(id: string) {
       },
     },
   });
+  if (!automatedReply) {
+    throw new Error(`Automated reply ${id} not found`);
+  }
   const { WaAutomatedReplyCommands, ...rest } = automatedReply;
   return {
     ...rest,
@@ -66,7 +69,7 @@ export async function createAutomatedReply(data: CreateAutomatedReplySchema, org
     data: {
       orgId,
       name: data.name,
-      matchData: data?.matchData,
+      matchData: data.matchData as WaAutomatedReplyMatchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
       platform: data.platform
         ? data.platform === "instagram"
@@ -108,14 +111,29 @@ export async function cloneAutomatedReply(id: string, orgId: string, name?: stri
   return automatedReply;
 }
 
-export async function updateAutomatedReply(id: string, data: any, _orgId: string) {
+// Unlike createAutomatedReply, updates are genuinely partial (callers commonly rename or
+// re-platform an automation without resending matchData), so this intentionally doesn't
+// reuse CreateAutomatedReplySchema (whose name/matchData are required). matchData is
+// forwarded to Prisma's Json column as-is (its own generated update input types the field
+// `unknown`), so it's left untyped here rather than pinned to a shape this function never
+// inspects.
+export async function updateAutomatedReply(
+  id: string,
+  data: {
+    name?: string;
+    matchData?: unknown;
+    whatsappSettingsPhoneId?: string;
+    platform?: string;
+  },
+  _orgId: string,
+) {
   const updatedAutomatedReply = await prisma.waAutomatedReply.update({
     where: {
       id,
     },
     data: {
       name: data.name,
-      matchData: data?.matchData,
+      matchData: data?.matchData as WaAutomatedReplyMatchData | undefined,
       whatsappSettingsPhoneId: data?.whatsappSettingsPhoneId,
       platform: data.platform
         ? data.platform === "instagram"
@@ -136,7 +154,7 @@ export async function deleteAutomatedReply(id: string) {
   return automatedReply;
 }
 
-export async function getAutomatedRepliesByKeyWeords(orgId, keyword) {
+export async function getAutomatedRepliesByKeyWeords(orgId: string, keyword: string) {
   return await prisma.waAutomatedReply.findFirst({
     where: {
       orgId,
@@ -165,12 +183,12 @@ export async function getCommandByOrgIdAndCommand(orgId: string, command: string
   return selectAutomationByBusinessHours(AutomatedReplyCommands);
 }
 
-export async function verifyAutomationTriggerLimit(orgId) {
+export async function verifyAutomationTriggerLimit(orgId: string) {
   const [usageStats, subscription] = await Promise.all([
     getUsageStat(orgId),
     getSubscription(orgId),
   ]);
-  if (!subscription.features.whatsapp.active) {
+  if (!subscription || !subscription.features.whatsapp.active) {
     log.error("Whatsapp is inactive. Aborting automation check...");
     return false;
   }

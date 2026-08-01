@@ -1,4 +1,4 @@
-import { Prisma } from "../../../../generated/prisma/client.js";
+import { Prisma, RulePlatform } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
 
@@ -85,7 +85,7 @@ async function ensureMessageBodyUniqueness(
         where: {
           orgId,
           messageBody: value,
-          platform: platform as any,
+          platform: platform as RulePlatform,
           businessHourId: businessHourId ?? null,
         },
         select: {
@@ -179,7 +179,7 @@ async function reserveMessageBodyCommands(
   }> = [];
 
   // Extract businessHourId from rule options
-  const ruleOptions = rule.options as any;
+  const ruleOptions = rule.options;
   const businessHourId =
     ruleOptions?.businessHours?.enabled && ruleOptions.businessHours.businessHoursId
       ? ruleOptions.businessHours.businessHoursId
@@ -235,7 +235,7 @@ export async function createRule(data: CreateRuleInput & { orgId: string }) {
       whatsappSettingsPhoneIds: data.whatsappSettingsPhoneIds,
       isActive: data.isActive ?? true,
       operator: data.operator ?? "AND",
-      options: options || null,
+      options: options ?? Prisma.DbNull,
       org: {
         connect: { id: orgId },
       },

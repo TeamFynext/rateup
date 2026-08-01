@@ -1,10 +1,10 @@
-export function parseStringWithVariables(string) {
+export function parseStringWithVariables(input: string) {
   const regex = /{{(.*?)}}/g;
   let match;
-  const dynamicVariables = [];
+  const dynamicVariables: string[] = [];
 
   // Find all matches of dynamic variables in the string
-  while ((match = regex.exec(string)) !== null) {
+  while ((match = regex.exec(input)) !== null) {
     dynamicVariables.push(match[1]);
   }
 

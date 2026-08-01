@@ -48,4 +48,5 @@ export const loyaltyProgramResponseSchema = loyaltyProgramSchema.extend({
 export type LoyaltyProgramInput = z.infer<typeof loyaltyProgramSchema>;
 export type LoyaltyProgramUpdateInput = z.infer<typeof loyaltyProgramUpdateSchema>;
 export type ProgramIdParam = z.infer<typeof programIdParamSchema>;
+export type DeleteProgramQuery = z.infer<typeof deleteProgramQuerySchema>;
 export type LoyaltyProgramResponse = z.infer<typeof loyaltyProgramResponseSchema>;

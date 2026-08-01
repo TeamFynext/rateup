@@ -18,7 +18,7 @@ export const ShopifyOrderWebhookTopicEventMap = [
   },
 ];
 
-export function getScheduledTime(sendAfter) {
+export function getScheduledTime(sendAfter: ShopifySendAfter | undefined) {
   const currentTime = dayjs();
   let scheduledTime = dayjs();
   switch (sendAfter) {
@@ -44,15 +44,6 @@ export function getScheduledTime(sendAfter) {
   return scheduledTime.toDate();
 }
 
-export const shopifyRecurringChargeSubscriptionStatusMap = {
-  pending: SubscriptionStatus.pending,
-  active: SubscriptionStatus.active,
-  declined: SubscriptionStatus.none,
-  expired: SubscriptionStatus.expired,
-  frozen: SubscriptionStatus.halted,
-  cancelled: SubscriptionStatus.cancelled,
-};
-
 export enum shopifyRecurringChargeStatus {
   pending = "PENDING",
   active = "ACTIVE",
@@ -61,6 +52,27 @@ export enum shopifyRecurringChargeStatus {
   frozen = "FROZEN",
   cancelled = "CANCELLED",
 }
+
+// BUG (fixed): this map's keys used to be lowercase ("pending", "active", ...)
+// but the only value ever indexed into it — the GraphQL `AppSubscription.status`
+// field read from Shopify's Admin API in shopify.service.ts's
+// `activateSubscriptionThroughShopify` — is one of Shopify's real
+// AppSubscriptionStatus enum values, which are UPPERCASE ("ACTIVE", "PENDING",
+// etc, matching `shopifyRecurringChargeStatus` above). The lowercase keys meant
+// the lookup always missed and `subscriptionStatus` was silently `undefined` on
+// every Shopify-driven subscription activation. Keyed by the enum itself so the
+// keys are guaranteed to match what's actually looked up.
+export const shopifyRecurringChargeSubscriptionStatusMap: Record<
+  shopifyRecurringChargeStatus,
+  SubscriptionStatus
+> = {
+  [shopifyRecurringChargeStatus.pending]: SubscriptionStatus.pending,
+  [shopifyRecurringChargeStatus.active]: SubscriptionStatus.active,
+  [shopifyRecurringChargeStatus.declined]: SubscriptionStatus.none,
+  [shopifyRecurringChargeStatus.expired]: SubscriptionStatus.expired,
+  [shopifyRecurringChargeStatus.frozen]: SubscriptionStatus.halted,
+  [shopifyRecurringChargeStatus.cancelled]: SubscriptionStatus.cancelled,
+};
 // name should change according to whatsapp plan displaname. also in shopify app listing
 export const ShopifyPlanMap = {
   free: {

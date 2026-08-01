@@ -140,12 +140,15 @@ describe("getContactsByContactGroupId", () => {
     expect(await getContactsByContactGroupId("g1")).toEqual([{ id: "c1" }, { id: "c2" }]);
   });
 
-  // NOTE: an id that matches no group returns null and `.contacts` is read off it
-  // immediately. See issues.txt 18.25.
+  // Fixed: an id that matches no group used to return null and crash reading
+  // `.contacts` off it. Now throws a clear, descriptive error instead of a
+  // bare TypeError. See issues.txt 18.25.
   test("throws for a group id that does not exist", async () => {
     db.contactGroup.findUnique.mockResolvedValue(null);
 
-    await expect(getContactsByContactGroupId("nope")).rejects.toThrow(TypeError);
+    await expect(getContactsByContactGroupId("nope")).rejects.toThrow(
+      "Contact group nope not found",
+    );
   });
 });
 
@@ -200,15 +203,12 @@ describe("getContactsByContactGroupIdWithPagination", () => {
     expect(memberFilter().OR).toEqual([{ consent: { equals: false } }]);
   });
 
-  // NOTE: prisma's operator is `equals`; `equal` is not a filter it knows, so a
-  // createdAt filter is rejected outright. The same typo appears in the campaign
-  // participants filter (issues.txt 17.9). See issues.txt 18.26.
-  test("a createdAt filter is built with a misspelled prisma operator", async () => {
+  // Previously built `{ equal: "...", mode: "insensitive" }`, which prisma rejects
+  // outright — `equal` is not an operator and a DateTime column takes no text mode.
+  test("a createdAt filter compares against a real date", async () => {
     await getContactsByContactGroupIdWithPagination("g1", { createdAt: "2026-01-01" } as any);
 
-    expect(memberFilter().OR).toEqual([
-      { createdAt: { equal: "2026-01-01", mode: "insensitive" } },
-    ]);
+    expect(memberFilter().OR).toEqual([{ createdAt: { equals: new Date("2026-01-01") } }]);
   });
 
   // NOTE: the page is filtered with OR but the total is counted with AND, so the
@@ -242,10 +242,14 @@ describe("getContactsByContactGroupIdWithPagination", () => {
     });
   });
 
+  // Fixed: previously returned null and crashed reading `.contacts` off it
+  // with a bare TypeError; now throws a clear, descriptive error.
   test("throws for a group id that does not exist", async () => {
     db.contactGroup.findUnique.mockResolvedValue(null);
 
-    await expect(getContactsByContactGroupIdWithPagination("nope")).rejects.toThrow(TypeError);
+    await expect(getContactsByContactGroupIdWithPagination("nope")).rejects.toThrow(
+      "Contact group nope not found",
+    );
   });
 });
 

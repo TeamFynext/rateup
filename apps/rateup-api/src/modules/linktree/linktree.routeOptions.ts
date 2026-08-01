@@ -1,4 +1,3 @@
-import { RouteShorthandOptionsWithHandler } from "fastify";
 import { asyncErrHandler } from "../../utils/commonUtils.js";
 import {
   createLinktree,
@@ -10,7 +9,6 @@ import {
   updateLinktreeWithShortId,
   updatePageVisitsOrLinkClicks,
 } from "./linktree.controllers.js";
-import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
 import {
   createLinktreeReqBody,
   getLinktreesResponse,
@@ -21,7 +19,7 @@ import {
   updatePageVisitsOrLinkClicksReqParams,
 } from "./linktree.schema.js";
 
-const getLinktreesRouteOptions: RouteShorthandOptionsWithHandler = {
+const getLinktreesRouteOptions = {
   schema: {
     response: {
       "2xx": getLinktreesResponse,
@@ -30,7 +28,7 @@ const getLinktreesRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(getLinktrees),
 };
 
-const getLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+const getLinktreeWithShortIdRouteOptions = {
   schema: {
     params: getLinktreeWithShortIdParams,
     response: {
@@ -40,7 +38,7 @@ const getLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(getLinktreeWithShortId),
 };
 
-const createLinktreeRouteOptions: RouteShorthandOptionsWithHandler = {
+const createLinktreeRouteOptions = {
   schema: {
     body: createLinktreeReqBody,
     response: {
@@ -50,7 +48,7 @@ const createLinktreeRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(createLinktree),
 };
 
-const updateLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+const updateLinktreeWithShortIdRouteOptions = {
   schema: {
     body: updateLinktreeReqBody,
     response: {
@@ -60,23 +58,23 @@ const updateLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = 
   handler: asyncErrHandler(updateLinktreeWithShortId),
 };
 
-const deleteLinktreeByIdRouteOptions: RouteShorthandOptionsWithHandler = {
+const deleteLinktreeByIdRouteOptions = {
   schema: {},
   handler: asyncErrHandler(deleteLinktreeById),
 };
 
-const getLinkTypeDropdownOptionsRouteOptions: RouteShorthandOptionsWithHandler = {
+const getLinkTypeDropdownOptionsRouteOptions = {
   schema: {},
   handler: asyncErrHandler(getLinkTypeDropdownOptions),
 };
 
-const getPublicLinktreeWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler = {
+const getPublicLinktreeWithShortIdRouteOptions = {
   schema: {},
   config: { isPublic: true },
   handler: asyncErrHandler(getPublicLinktreeWithShortId),
 };
 
-const updatePageVisitsOrLinkClicksOptions: CustomRouteShortHandOptionsWithHandler = {
+const updatePageVisitsOrLinkClicksOptions = {
   schema: {
     body: updatePageVisitsOrLinkClicksReqBody,
     params: updatePageVisitsOrLinkClicksReqParams,

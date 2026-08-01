@@ -1,7 +1,8 @@
 import { integrationTriggerQueue } from "../../../../utils/redisConnection.js";
 import { ZohoTriggers } from "./zoho.service.js";
+import type { ZohoCredential } from "./zoho.types.js";
 
-function parseZohoName(name?: string) {
+function parseZohoName(name?: string | null) {
   const cleanName = (name || "").trim();
   if (!cleanName) {
     return {
@@ -23,7 +24,23 @@ function parseZohoName(name?: string) {
   };
 }
 
-export function buildZohoLeadPayload(contact: any) {
+/**
+ * The Rateup-side contact fields Zoho payloads are built from. Callers pass a
+ * `Contact` row or a lighter object assembled from a webhook — both satisfy this.
+ */
+export interface ZohoContactSource {
+  /** The Rateup contact id, carried through to the queue job. */
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  source?: string | null;
+  psid?: string | null;
+  igsId?: string | null;
+  leadStatus?: string | null;
+}
+
+export function buildZohoLeadPayload(contact: ZohoContactSource) {
   const parsedName = parseZohoName(contact.name);
 
   return {
@@ -39,7 +56,7 @@ export function buildZohoLeadPayload(contact: any) {
   };
 }
 
-export function buildZohoContactPayload(contact: any) {
+export function buildZohoContactPayload(contact: ZohoContactSource) {
   const parsedName = parseZohoName(contact.name);
 
   return {
@@ -54,7 +71,7 @@ export function buildZohoContactPayload(contact: any) {
   };
 }
 
-export async function addZohoContactToQueue(contact: any, orgId: string) {
+export async function addZohoContactToQueue(contact: ZohoContactSource, orgId: string) {
   const zohoContactPayload = buildZohoContactPayload(contact);
 
   await integrationTriggerQueue.add("zoho-contact-create", {
@@ -94,11 +111,13 @@ export function formatZohoDateTime(date: Date) {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${sign}${offsetHours}:${offsetMinutes}`;
 }
 
-export function isZohoTriggerEnabled(credential: any, trigger: string) {
-  const subscriptions = credential?.triggerSubscriptions || [];
+export function isZohoTriggerEnabled(
+  credential: Pick<ZohoCredential, "triggerSubscriptions"> | null | undefined,
+  trigger: string,
+) {
+  const subscriptions = credential?.triggerSubscriptions ?? [];
 
   return subscriptions.some(
-    (subscription: any) =>
-      subscription.subscribed_field === trigger && subscription.active === true,
+    (subscription) => subscription.subscribed_field === trigger && subscription.active === true,
   );
 }

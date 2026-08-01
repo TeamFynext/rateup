@@ -146,8 +146,8 @@ describe("the action-type predicates", () => {
   });
 
   test("an unknown action is neither", () => {
-    expect(isLReferralAction("Nonsense")).toBe(false);
-    expect(isPurchaseAction("Nonsense")).toBe(false);
+    expect(isLReferralAction("Nonsense" as unknown as LoyaltyActionType)).toBe(false);
+    expect(isPurchaseAction("Nonsense" as unknown as LoyaltyActionType)).toBe(false);
   });
 });
 

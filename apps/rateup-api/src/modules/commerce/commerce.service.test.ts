@@ -40,6 +40,10 @@ const db = prisma as unknown as {
 const ORG = "11111111-1111-4111-8111-111111111111";
 const CATALOG = "cat-1";
 
+/// `WaCatalogOrder.deliveryOption` is a nullable JSON column holding `{ charge }`;
+/// orders without a delivery charge store null.
+const NO_DELIVERY_OPTION: { charge: number } | null = null;
+
 /// A line item in the shape catalog.service.ts writes onto WaCatalogOrder.products.
 function item(over: Record<string, unknown> = {}) {
   return { retailerId: "sku-1", quantity: 1, price: 100, currency: "INR", title: "Mug", ...over };
@@ -391,7 +395,7 @@ describe("the order filter", () => {
 describe("getCommerceOverview", () => {
   const order = (over: Record<string, unknown> = {}) => ({
     products: [item({ price: 100, quantity: 1 })],
-    deliveryOption: null,
+    deliveryOption: NO_DELIVERY_OPTION,
     paymentStatus: "PAID",
     ...over,
   });
@@ -589,7 +593,7 @@ describe("getCommerceTimeseries", () => {
   const at = (day: number, price = 100, hour = 12) => ({
     createdAt: localDay(day, hour),
     products: [item({ price, quantity: 1 })],
-    deliveryOption: null,
+    deliveryOption: NO_DELIVERY_OPTION,
   });
 
   test("returns nothing when there are no orders and no window", async () => {
@@ -940,7 +944,7 @@ describe("getAllCommerceOrders", () => {
         id: "o1",
         catalogId: CATALOG,
         products: [item({ price: 100, quantity: 2 })],
-        deliveryOption: null,
+        deliveryOption: NO_DELIVERY_OPTION,
         contact: { id: "c1", name: "Ann", phone: "919000000001" },
       },
     ]);

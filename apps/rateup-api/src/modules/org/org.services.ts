@@ -315,9 +315,9 @@ export async function updateOrgDetails(
     where: { id: orgId },
     select: { onboarding: true, onboardingChecklist: true },
   });
-  const existingOnboarding = (existingOrg?.onboarding as Record<string, any>) ?? {};
+  const existingOnboarding = (existingOrg?.onboarding as Record<string, unknown>) ?? {};
   const existingOnboardingChecklist =
-    (existingOrg?.onboardingChecklist as Record<string, any>) ?? {};
+    (existingOrg?.onboardingChecklist as Record<string, unknown>) ?? {};
   const org = await prisma.org.update({
     where: { id: orgId },
     data: {
@@ -414,7 +414,7 @@ export async function deleteOrg(orgId: string): Promise<string> {
 
     const memberList = members.map((m) => m.userId);
     // Start a transaction
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async (prisma): Promise<null> => {
       await prisma.order.updateMany({
         where: { orgId: orgId },
         data: {
@@ -480,6 +480,10 @@ export async function getOrgStats(orgId: string) {
       },
     },
   });
+
+  if (!org) {
+    throw new Error(`Organization with ID ${orgId} not found.`);
+  }
 
   const teamIds = org.teams.map((t) => t.id);
 
@@ -671,7 +675,7 @@ export async function getOrgStats(orgId: string) {
   return stats;
 }
 
-export async function pauseOrg(id, data: PauseOrgInput) {
+export async function pauseOrg(id: string, data: PauseOrgInput) {
   return await prisma.org.update({
     where: {
       id,
@@ -683,7 +687,7 @@ export async function pauseOrg(id, data: PauseOrgInput) {
 export async function completeOrgDetails(
   userId: string,
   data: {
-    onboarding?: Record<string, any>;
+    onboarding?: Record<string, unknown>;
     onboardingCompleted?: boolean;
   },
 ) {
@@ -696,7 +700,7 @@ export async function completeOrgDetails(
     if (!org) {
       throw new Error("Organization not found for this user");
     }
-    const existingOnboarding = (org.onboarding as Record<string, any>) || {};
+    const existingOnboarding = (org.onboarding as Record<string, unknown>) || {};
 
     const mergedOnboarding = {
       ...existingOnboarding,
@@ -747,7 +751,7 @@ export async function getOrgNameAndUserPhone(userId: string) {
   };
 }
 
-export async function getOnboardingChecklist(orgId) {
+export async function getOnboardingChecklist(orgId: string) {
   const org = await prisma.org.findUnique({
     where: { id: orgId },
     select: {
@@ -764,15 +768,24 @@ export async function getOnboardingChecklist(orgId) {
 
 const DAY = 24 * 60 * 60 * 1000;
 
+interface SendDeletionMailToOrgOwnerInput {
+  ownerEmail: string;
+  ownerName: string | null;
+  orgName: string;
+  orgId: string;
+  delayInDays?: number;
+}
+
 export async function sendDeletionMailToOrgOwner({
   ownerEmail,
   ownerName,
   orgName,
   orgId,
   delayInDays,
-}) {
+}: SendDeletionMailToOrgOwnerInput) {
   try {
     const days = delayInDays || 7;
+    const displayName = ownerName ?? "there";
 
     const triggeredAt = new Date();
 
@@ -781,13 +794,13 @@ export async function sendDeletionMailToOrgOwner({
 
     const html = createInactivityWarningTemplate({
       orgName,
-      ownerName,
+      ownerName: displayName,
       deadlineDate: deadline,
     });
 
     const internalHtml = createOrgDeletionReminderTemplate({
       orgName,
-      ownerName,
+      ownerName: displayName,
       triggeredDate: triggeredAt,
       orgId,
     });
@@ -798,7 +811,7 @@ export async function sendDeletionMailToOrgOwner({
         to: ownerEmail,
         subject: `Action Required: ${orgName} scheduled for deletion`,
         html,
-        text: `Hi ${ownerName}, your organization "${orgName}" will be deleted if no activity is detected before ${deadline.toDateString()}.`,
+        text: `Hi ${displayName}, your organization "${orgName}" will be deleted if no activity is detected before ${deadline.toDateString()}.`,
       },
     });
 

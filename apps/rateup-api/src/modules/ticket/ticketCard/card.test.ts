@@ -97,6 +97,9 @@ beforeEach(() => {
     title: "T",
     ticketId: "TKT-1",
     ticketColumnId: OWN_COLUMN,
+    // The create always runs with `include: { labels: ... }`, so the row carries
+    // the join rows that createCard flattens into a plain label list.
+    labels: [],
   });
   db.ticketCard.findFirst.mockResolvedValue(null);
   db.ticketCard.findMany.mockResolvedValue([]);
@@ -332,7 +335,11 @@ describe("updateCard", () => {
   });
 
   test("the read side returns the linked contact's phone and consent", async () => {
-    db.ticketCard.findUnique.mockResolvedValueOnce({ id: CARD, waAutomatedReplyMessageId: null });
+    db.ticketCard.findUnique.mockResolvedValueOnce({
+      id: CARD,
+      waAutomatedReplyMessageId: null,
+      labels: [],
+    });
 
     await getCardById(CARD);
 

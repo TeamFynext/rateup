@@ -20,18 +20,23 @@ import {
   waCampaignEnqueue,
   waMessageQueue,
 } from "../../utils/redisConnection.js";
-import { Prisma } from "../../../generated/prisma/client.js";
+import { Campaign, CampaignDripStage, Prisma } from "../../../generated/prisma/client.js";
 
 export interface WaMessageStats {
   read?: boolean;
   sent?: boolean;
   delivered?: boolean;
-  [key: string]: any;
+  /** Each status also carries the ISO timestamp it happened at; see getLatestStatus. */
+  [status: string]: string | boolean | null | undefined;
 }
 
-export function getLatestStatus(participant = []) {
-  let latestStatus = null;
-  let latestTimestamp = null;
+export interface CampaignParticipantMessageMapping {
+  waMessage?: { stats?: WaMessageStats | null } | null;
+}
+
+export function getLatestStatus(participant: CampaignParticipantMessageMapping[] = []) {
+  let latestStatus: string | null = null;
+  let latestTimestamp: dayjs.Dayjs | null = null;
 
   participant?.forEach((mapping) => {
     Object.entries(mapping?.waMessage?.stats ?? {}).forEach(([status, timestamp]) => {
@@ -216,21 +221,30 @@ export async function getCampaignById(campaignId: string) {
   //   },
   // };
 
-  const campaign = await prisma.$queryRaw`
-      SELECT 
-        c.*, 
-        wt."data" as "templateData", 
-        t."name" as "teamName", 
+  const campaign = await prisma.$queryRaw<
+    Array<
+      Campaign & {
+        templateData: Prisma.JsonValue;
+        teamName: string | null;
+        flowVersion: number | null;
+        dripStages: CampaignDripStage[];
+      }
+    >
+  >`
+      SELECT
+        c.*,
+        wt."data" as "templateData",
+        t."name" as "teamName",
         wf."version" as "flowVersion",
         (
           SELECT COALESCE(json_agg(cds), '[]'::json)
           FROM "CampaignDripStage" cds
           WHERE cds."campaignId" = c.id
         ) as "dripStages"
-      FROM "Campaign" c 
-      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" 
+      FROM "Campaign" c
+      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
       LEFT JOIN "Team" t ON t.id = c."teamId"
-      LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid 
+      LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid
       WHERE c.id = ${campaignId}::uuid`;
   return campaign[0];
 }
@@ -287,8 +301,14 @@ export async function createCampaign(data: CreateCampaignInput) {
         flowId: data.flowId,
       },
     });
+    if (!flow) {
+      throw new Error(`WaFlow with flowId ${data.flowId} not found.`);
+    }
     flowId = flow.dbFlowId;
   }
+  // dynamicTags entries can be null per the input schema, but the DB column is a
+  // non-nullable String[] — drop null entries rather than writing them.
+  const dynamicTags = data.dynamicTags?.filter((tag): tag is string => tag !== null) ?? [];
   const campaign = await prisma.campaign.create({
     data: {
       name: data.name,
@@ -296,7 +316,7 @@ export async function createCampaign(data: CreateCampaignInput) {
       teamId: data.teamId,
       waTemplateId: data.waTemplateId ?? undefined,
       flowId: flowId,
-      dynamicTags: data.dynamicTags ?? [],
+      dynamicTags,
     },
   });
   await prisma.campaignDripStage.createMany({
@@ -318,7 +338,18 @@ export async function createCampaign(data: CreateCampaignInput) {
 }
 
 export async function updateCampaign(campaignId: string, data: UpdateCampaignInput) {
-  const { dripStages, startedAt, ...rest } = data;
+  // `whatsappSettingsPhoneId` is accepted by UpdateCampaignInput but has no matching
+  // column on the Campaign model (see campaign.schema.ts) — it is never persisted.
+  // `dynamicTags`/`scheduledStatuses` need their null variants coerced below since the
+  // DB columns are non-nullable String[] arrays.
+  const {
+    dripStages,
+    startedAt,
+    whatsappSettingsPhoneId: _whatsappSettingsPhoneId,
+    dynamicTags,
+    scheduledStatuses,
+    ...rest
+  } = data;
 
   if (startedAt) {
     const existingCampaign = await prisma.campaign.findUnique({
@@ -339,12 +370,25 @@ export async function updateCampaign(campaignId: string, data: UpdateCampaignInp
     }
   }
 
-  // Update the campaign basic info
+  // Update the campaign basic info. Typed explicitly as the unchecked variant so the
+  // `waTemplateId` scalar FK (rather than a nested `waTemplate: {...}` relation write)
+  // resolves unambiguously against Prisma's generated update-input union.
+  const updateData: Prisma.CampaignUncheckedUpdateInput = {
+    ...rest,
+    // dynamicTags entries can be null per the input schema, but the DB column is a
+    // non-nullable String[] — drop null entries rather than writing them.
+    ...(dynamicTags !== undefined
+      ? { dynamicTags: dynamicTags.filter((tag): tag is string => tag !== null) }
+      : {}),
+    // scheduledStatuses is nullable in the input schema (meaning "clear it"), but the
+    // DB column is a non-nullable String[] — null means "set to empty", not "no-op".
+    ...(scheduledStatuses !== undefined ? { scheduledStatuses: scheduledStatuses ?? [] } : {}),
+  };
   const updatedCampaign = await prisma.campaign.update({
     where: {
       id: campaignId,
     },
-    data: rest,
+    data: updateData,
   });
 
   // Handle drip steps if provided
@@ -492,9 +536,25 @@ export async function sendCampaignCronAction() {
   log.info(`sent ${campaignsToBeSent.length} campaings. At ${currentTime}`);
 }
 
+// `responses` and `questions` are raw dynamic JSON blobs from the query below (survey
+// answers / question definitions, whose shape varies per question type) — kept as `any`
+// intentionally, matching the same pattern used for dynamic legacy JSON accumulators
+// elsewhere in the codebase (see TS_STRICT_MIGRATION_PROGRESS.md).
+interface CampaignSurveyResponseRow {
+  id: string;
+  createdAt: Date;
+  tag: string | null;
+  phone: string | null;
+  language: string;
+  teamId: string;
+  responses: QuestionResponse[];
+  /** `Survey.questions` — always the v1 shape on this join. */
+  questions: Question[];
+}
+
 export const getResponseByCampaignById = async (id: string) => {
-  const responses: any[] = await prisma.$queryRaw`
-  SELECT sr.id, sr."createdAt", 
+  const responses = await prisma.$queryRaw<CampaignSurveyResponseRow[]>`
+  SELECT sr.id, sr."createdAt",
     sr.responses,
     sr.language, sr.tag, sr."surveyTeamMapId",sr.language, s.questions,c."teamId",co.phone
   FROM "SurveyResponse" sr
@@ -508,11 +568,16 @@ export const getResponseByCampaignById = async (id: string) => {
   const responsesWithTitles = responses.map(
     ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
       // Create a mapping of questionId to title for easier lookup
-      const questionMap = questions.reduce((map, { id, title, description, label }) => {
-        map[id] =
-          Object.values(title)?.[0] || Object.values(description)?.[0] || Object.values(label)?.[0];
-        return map;
-      }, {});
+      const questionMap = questions.reduce<Record<string, unknown>>(
+        (map, { id, title, description, label }) => {
+          map[id] =
+            Object.values(title ?? {})?.[0] ||
+            Object.values(description ?? {})?.[0] ||
+            Object.values(label ?? {})?.[0];
+          return map;
+        },
+        {},
+      );
       // Map over each response to replace questionId with the corresponding title
       const updatedResponses = responses.map(({ questionId, response = {}, ...rest }) => ({
         ...rest,
@@ -545,11 +610,20 @@ export const getResponseExcelByCampaignById = async (
   const pageSize = 10000; // Number of records per batch
   let page = 0;
   let hasMoreRecords = true;
-  let campaignParticipants = [];
+  let campaignParticipants: Array<{
+    createdAt: Date;
+    contact: { name: string; phone: string };
+    status: CampaignParticipantStatus;
+    sentAt: Date;
+    campaign: { name: string };
+  }> = [];
   const campaign = await prisma.campaign.findUnique({
     where: { id },
     select: { name: true },
   });
+  if (!campaign) {
+    throw new Error(`Campaign with ID ${id} not found.`);
+  }
 
   while (hasMoreRecords) {
     let batch: Array<{
@@ -618,7 +692,7 @@ export const getResponseExcelByCampaignById = async (
           },
           status: row.status,
           sentAt: row.sentAt,
-          campaign: { name: campaign?.name },
+          campaign: { name: campaign.name },
         })),
       ];
       page++;
@@ -670,7 +744,7 @@ export const getResponseExcelByCampaignById = async (
     format,
   });
 
-  return { title: campaign?.name, data: buffer };
+  return { title: campaign.name, data: buffer };
 };
 
 // Jobs released within this window of each other belong to the same batch.
@@ -691,12 +765,14 @@ export interface CampaignScheduleInfo {
  * dispatcher gives each participant job a `delay`, so a job's release time is
  * `timestamp + delay`; the earliest such time is the next batch.
  */
+const EMPTY_CAMPAIGN_SCHEDULE_INFO: CampaignScheduleInfo = {
+  scheduledCount: 0,
+  nextBatchAt: null,
+  nextBatchCount: 0,
+};
+
 export async function getCampaignScheduleInfo(campaignId: string): Promise<CampaignScheduleInfo> {
-  const empty: CampaignScheduleInfo = {
-    scheduledCount: 0,
-    nextBatchAt: null,
-    nextBatchCount: 0,
-  };
+  const empty: CampaignScheduleInfo = EMPTY_CAMPAIGN_SCHEDULE_INFO;
 
   try {
     // Delayed jobs are named after their campaign by `enqueueCampaignMessages`.
@@ -754,9 +830,7 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
         countDelivered: 0,
         countPending: 0,
         countCompleted: 0,
-        scheduledCount: 0,
-        nextBatchAt: null,
-        nextBatchCount: 0,
+        ...EMPTY_CAMPAIGN_SCHEDULE_INFO,
       };
     }
     const [tc, schedule] = await Promise.all([
@@ -858,7 +932,7 @@ export function getFlowIdFromTemplateComponents(
 ): string | undefined {
   const flowId = components
     .find((c) => c.type.toLocaleLowerCase() === WaTemplateComponentType.BUTTONS)
-    ?.buttons.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
+    ?.buttons?.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
     ?.flow_id?.toString();
 
   return flowId;
@@ -878,7 +952,7 @@ export async function doesCampaignIdExistInMessageQueue(campaignId: string) {
   });
   return !!exists;
 }
-export const updateCampaignMessageQueueRetryCount = (campaignId) => {
+export const updateCampaignMessageQueueRetryCount = (campaignId: string) => {
   return prisma.campaignMessageQueue.updateMany({
     where: {
       campaignParticipant: {

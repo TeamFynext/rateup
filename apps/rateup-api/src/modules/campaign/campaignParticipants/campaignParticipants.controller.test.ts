@@ -95,7 +95,12 @@ describe("adding participants", () => {
   });
 
   test("adds from every source at once on the combined endpoint", async () => {
-    const body = { contactIds: ["c-1"], groupIds: ["g-1"], campaignIds: [], status: [] };
+    const body: {
+      contactIds: string[];
+      groupIds: string[];
+      campaignIds: string[];
+      status: string[];
+    } = { contactIds: ["c-1"], groupIds: ["g-1"], campaignIds: [], status: [] };
 
     await createCampaignParticipantsHandler(request({ body }), reply());
 

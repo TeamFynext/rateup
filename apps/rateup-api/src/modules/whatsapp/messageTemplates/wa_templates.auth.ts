@@ -24,7 +24,18 @@ export async function verifyMessageMonthlyLimitRestriction(
   // }
 }
 
-export async function verifyTemplateMessageLimit(subscription) {
+/** The (currently disabled) limit check below only ever reads these three fields.
+ *  Typed structurally rather than against a concrete model because both
+ *  `getSubscription()` variants feed this — the app-level select in
+ *  `subscription.service.ts` and the raw Prisma row in `campaign.auth.ts` — and an org
+ *  with no subscription row passes `null`. */
+type MessageLimitSubscription = {
+  orgId: string;
+  features: unknown;
+  isAnnualMessageLimit: boolean;
+} | null;
+
+export async function verifyTemplateMessageLimit(subscription: MessageLimitSubscription) {
   // TODO: re-check
   // const usage = await getUsageStat(subscription.orgId);
   // if (

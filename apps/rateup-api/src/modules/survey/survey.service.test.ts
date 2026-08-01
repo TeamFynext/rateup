@@ -387,11 +387,12 @@ describe("getSurveyById", () => {
 });
 
 describe("getPublicSurveyById", () => {
+  const questions: Question[] = [];
   const surveyTeamMap = {
     id: "map-1",
     teamId: "team-1",
     surveyId: "s1",
-    survey: { id: "s1", orgId: "org-1", questions: [], title: "T" },
+    survey: { id: "s1", orgId: "org-1", questions, title: "T" },
     team: { reviewPageLinks: { Google: "g.link" } },
   };
 
@@ -1217,7 +1218,7 @@ describe("survey variables", () => {
       typeof vi.fn
     >;
 
-    await updateSurveyVariables("s1", [{ id: "q1" }, { id: "q2" }]);
+    await updateSurveyVariables("s1", [{ id: "q1" }, { id: "q2" }] as unknown as Question[]);
 
     expect(db.surveyVariables.deleteMany).toHaveBeenCalledWith({
       where: { type: SurveyVariableType.DEFAULT, surveyId: "s1" },
@@ -1283,6 +1284,9 @@ describe("getSurveyResponseCountForGraph", () => {
     db.$queryRaw.mockResolvedValue([{ date: firstHour, responses: 4 }]);
 
     const res = await getSurveyResponseCountForGraph("org-1", "UTC", "hourly");
+    if (!res) {
+      throw new Error("expected res to be populated for the hourly period");
+    }
 
     expect(res).toHaveLength(24);
     expect(res[0]).toEqual({ date: firstHour, responses: 4 });
@@ -1294,6 +1298,9 @@ describe("getSurveyResponseCountForGraph", () => {
     db.$queryRaw.mockResolvedValue([{ date: today, responses: 7 }]);
 
     const res = await getSurveyResponseCountForGraph("org-1", "UTC", "daily");
+    if (!res) {
+      throw new Error("expected res to be populated for the daily period");
+    }
 
     expect(res).toHaveLength(30);
     expect(res[29]).toEqual({ date: today, responses: 7 });
@@ -1303,6 +1310,9 @@ describe("getSurveyResponseCountForGraph", () => {
     db.$queryRaw.mockResolvedValue([{ date: 0, responses: 2 }]);
 
     const res = await getSurveyResponseCountForGraph("org-1", "UTC", "weekly");
+    if (!res) {
+      throw new Error("expected res to be populated for the weekly period");
+    }
 
     expect(res).toHaveLength(53);
     expect(res[52]).toEqual({ date: 0, responses: 2 });

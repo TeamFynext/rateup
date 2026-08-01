@@ -111,7 +111,12 @@ const callMetaApiMock = callMetaApi as unknown as Mock;
 const getWaSettingsMock = getWaSettings as unknown as Mock;
 const axiosGetMock = (axios as unknown as { get: Mock }).get;
 
-const MESSAGE = { id: "msg-1", messageId: "wamid-1", stats: { sent: "" }, deletedAt: null };
+const MESSAGE: {
+  id: string;
+  messageId: string;
+  stats: { sent: string };
+  deletedAt: Date | null;
+} = { id: "msg-1", messageId: "wamid-1", stats: { sent: "" }, deletedAt: null };
 const WA_CREATED_AT = "2026-07-27T09:00:00Z";
 
 beforeEach(() => {
@@ -509,7 +514,7 @@ describe("sendMediaMessages", () => {
       PlatformType.WHATSAPP,
       "",
       "",
-      null,
+      undefined,
     );
 
     expect(builder as unknown as Mock).toHaveBeenCalled();
@@ -519,8 +524,8 @@ describe("sendMediaMessages", () => {
   test("captions only the last attachment so the text appears once", async () => {
     await sendMediaMessages(
       [
-        { type: "image", url: "https://f/1" },
-        { type: "image", url: "https://f/2" },
+        { type: "image", url: "https://f/1", name: "f1" },
+        { type: "image", url: "https://f/2", name: "f2" },
       ],
       "15550001",
       "org-1",
@@ -528,7 +533,7 @@ describe("sendMediaMessages", () => {
       PlatformType.WHATSAPP,
       "look at these",
       "",
-      null,
+      undefined,
     );
 
     const imageBuilder = createReplyImageMessage as unknown as Mock;
@@ -538,26 +543,37 @@ describe("sendMediaMessages", () => {
   });
 
   test("sends nothing for an empty attachment list", async () => {
-    await sendMediaMessages([], "15550001", "org-1", "user-1", PlatformType.WHATSAPP, "", "", null);
-
-    expect(sendMessageMock).not.toHaveBeenCalled();
-  });
-
-  // NOTE: an unrecognised media type leaves messageBody undefined but still sends.
-  test("still calls send for a media type it cannot build", async () => {
     await sendMediaMessages(
-      [{ type: "sticker" as any, url: "https://f/1" }],
+      [],
       "15550001",
       "org-1",
       "user-1",
       PlatformType.WHATSAPP,
       "",
       "",
-      null,
+      undefined,
     );
 
-    expect(sendMessageMock).toHaveBeenCalledTimes(1);
-    expect(sendMessageMock.mock.calls[0][1]).toBeUndefined();
+    expect(sendMessageMock).not.toHaveBeenCalled();
+  });
+
+  // An unrecognised media type used to leave messageBody undefined and still call
+  // send() with it (see issues.txt). Fixed to skip the item and log instead of
+  // forwarding an undefined message body to the WhatsApp send path.
+  test("skips a media type it cannot build instead of sending an empty message", async () => {
+    await sendMediaMessages(
+      [{ type: "sticker" as any, url: "https://f/1", name: "f" }],
+      "15550001",
+      "org-1",
+      "user-1",
+      PlatformType.WHATSAPP,
+      "",
+      "",
+      undefined,
+    );
+
+    expect(sendMessageMock).not.toHaveBeenCalled();
+    expect(log.error).toHaveBeenCalled();
   });
 });
 

@@ -10,6 +10,10 @@ declare module "fastify" {
   }
 }
 
+if (!process.env.KAFKA_URL) {
+  throw new Error("KAFKA_URL environment variable is required but not set");
+}
+
 const kafka = new Kafka({ brokers: [process.env.KAFKA_URL] });
 export const producer: Producer = kafka.producer({
   createPartitioner: Partitioners.DefaultPartitioner,

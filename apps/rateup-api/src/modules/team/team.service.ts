@@ -29,9 +29,10 @@ export async function createTeam(input: CreateTeamInput) {
     throw new Error("Invalid team name.");
   }
 
-  if (input.code.length < 2) {
+  if (!input.code || input.code.length < 2) {
     throw new Error("Invalid team code.");
   }
+  const code = input.code;
 
   const existingTeamCode = await prisma.team.findFirst({
     where: {
@@ -64,7 +65,7 @@ export async function createTeam(input: CreateTeamInput) {
         const team = await prisma.team.create({
           data: {
             name: input.name,
-            code: input.code.trim(),
+            code: code.trim(),
             orgId: input.orgId,
             color: input.color,
           },
@@ -114,7 +115,7 @@ export async function createTeam(input: CreateTeamInput) {
   }
 }
 
-export function getTeamsByOrgId(input: GetTeamsByOrgInput, page?) {
+export function getTeamsByOrgId(input: GetTeamsByOrgInput, page?: number) {
   return prisma.team.findMany({
     where: {
       orgId: input.orgId,
@@ -220,14 +221,18 @@ export async function inviteTeamMember(input: InviteMemberInput) {
             },
           },
         });
+        if (!invitedPerson) {
+          throw new Error("Inviting org member not found.");
+        }
         const msg = {
           to: email,
           subject: `${invitedPerson.user.name} add you to the Team ${teamMember.team.name} - RateUp.app`,
           text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
-          html: getEmailBodyTemplate("GeneralTemplate", {
-            body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
-            buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
-          }),
+          html:
+            getEmailBodyTemplate("GeneralTemplate", {
+              body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
+              buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
+            }) ?? "",
         };
         try {
           await notificationQueue.add("notification", {
@@ -416,6 +421,9 @@ export async function completeInvite(token: string) {
       let id = signUpResult.user.id;
       let email = updatedInvitation.email;
       let recipeName = getUserRecipeName(signUpResult.user.loginMethods[0].recipeId);
+      if (!recipeName) {
+        throw new Error(`Unsupported auth recipe: ${signUpResult.user.loginMethods[0].recipeId}`);
+      }
       const user = await createUser({ id, email, recipeName });
 
       if (!user) {
@@ -635,6 +643,11 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
       },
     },
   });
+
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
   return {
     teamId: team.id,
     teamName: team.name,
@@ -751,10 +764,10 @@ export async function editTeam(
   _request: FastifyRequest,
   _reply: FastifyReply,
 ) {
-  if (name?.length < 3) {
+  if (name !== undefined && name.length < 3) {
     throw new Error("Invalid team name.");
   }
-  if (code?.length < 2) {
+  if (code !== undefined && code.length < 2) {
     throw new Error("Invalid team code.");
   }
   try {
@@ -800,7 +813,7 @@ export async function getTeamById(teamId: string) {
   return team;
 }
 
-export async function deleteTeamMember(teamId, userId, orgId) {
+export async function deleteTeamMember(teamId: string, userId: string, orgId: string) {
   const org = await prisma.org.findUnique({
     where: {
       id: orgId,
@@ -809,6 +822,9 @@ export async function deleteTeamMember(teamId, userId, orgId) {
       ownerId: true,
     },
   });
+  if (!org) {
+    throw new Error("Organization not found");
+  }
   if (org.ownerId === userId) {
     throw Error("You can't remove Owner from team");
   }
@@ -820,7 +836,7 @@ export async function deleteTeamMember(teamId, userId, orgId) {
   });
 }
 
-export async function addMemberToTeams(teamIds, userId) {
+export async function addMemberToTeams(teamIds: string[], userId: string) {
   await prisma.teamMember.createMany({
     data: teamIds.map((teamId) => ({
       teamId,
@@ -830,7 +846,11 @@ export async function addMemberToTeams(teamIds, userId) {
   });
 }
 
-export async function addMembersToTeamsMail(email, teamName, user) {
+export async function addMembersToTeamsMail(
+  email: string,
+  teamName: string,
+  user: { id: string; orgId: string },
+) {
   const invitedPerson = await prisma.orgMember.findFirst({
     where: {
       userId: user.id,
@@ -849,17 +869,21 @@ export async function addMembersToTeamsMail(email, teamName, user) {
       },
     },
   });
+  if (!invitedPerson) {
+    throw new Error("Inviting org member not found.");
+  }
   const msg = {
     to: email,
     subject: `You have been added to the team ${teamName} - RateUp.app`,
     text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
-    html: getEmailBodyTemplate("GeneralTemplate", {
-      body: `
+    html:
+      getEmailBodyTemplate("GeneralTemplate", {
+        body: `
       <p>You have been added to manage a Team in RateUp by ${invitedPerson.org.name}</p>
       Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details
       `,
-      buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
-    }),
+        buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
+      }) ?? "",
   };
   try {
     await notificationQueue.add("notification", {

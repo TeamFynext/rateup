@@ -162,7 +162,15 @@ export function createEmailBodySubscriptionActivated(
       `;
 }
 
-export function createEmailBodyTrialSubscriptionActivated(plan, expiresAt: string, userName) {
+export function createEmailBodyTrialSubscriptionActivated(
+  plan: {
+    trialDays: number;
+    displayName: string | null;
+    paymentPlan?: { amount: number; period: string } | null;
+  },
+  expiresAt: string,
+  userName: string,
+) {
   return `
       <!DOCTYPE html>
 <html lang="en">

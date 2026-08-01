@@ -44,9 +44,10 @@ export async function getLoggedUserInfoHandler(request: FastifyRequest, reply: F
     }
   } catch (e) {
     log.error(e);
-    if (e?.message === "Session does not exist anymore" || e?.message?.includes("Session")) {
+    const message = e instanceof Error ? e.message : undefined;
+    if (message === "Session does not exist anymore" || message?.includes("Session")) {
       return reply.code(401).send({
-        message: e.message,
+        message,
       });
     }
     return reply.code(500).send({
@@ -84,7 +85,12 @@ export async function createGoogleUserHandler(
   } else {
     // userInfo = await PasswordLess.getUserById({ userId }); //STT
     userInfo = await supertokens.getUser(userId);
-    userInfo.emails[0] = request?.body?.email;
+    if (!userInfo) {
+      throw new Error("SuperTokens user not found");
+    }
+    if (request?.body?.email) {
+      userInfo.emails[0] = request.body.email;
+    }
     userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
   }
   const body = request.body;
@@ -125,9 +131,9 @@ export async function createGoogleUserHandler(
       integrationsSelected: payload.integrationsSelected,
       referralCode: body.referralCode,
     });
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    let message = e.message;
+    let message = e instanceof Error ? e.message : "Unknown error";
 
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       message = "User already exists. Please logout and Login again.";
@@ -156,7 +162,12 @@ export async function createAppleUserHandler(
   } else {
     // userInfo = await PasswordLess.getUserById({ userId }); //STT
     userInfo = await supertokens.getUser(userId);
-    userInfo.emails[0] = request?.body?.email;
+    if (!userInfo) {
+      throw new Error("SuperTokens user not found");
+    }
+    if (request?.body?.email) {
+      userInfo.emails[0] = request.body.email;
+    }
     userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
   }
   const body = request.body;
@@ -197,9 +208,9 @@ export async function createAppleUserHandler(
       integrationsSelected: payload.integrationsSelected,
       referralCode: body.referralCode,
     });
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    let message = e.message;
+    let message = e instanceof Error ? e.message : "Unknown error";
 
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       message = "User already exists. Please logout and Login again.";
@@ -293,9 +304,11 @@ export async function updateProfileHandler(
 
   try {
     user = await updateUserProfile(body, request, reply);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
     return;
   }
 
@@ -314,9 +327,11 @@ export async function updateProfileByIdHandler(
 
   try {
     user = await updateUserProfileById({ ...body, userId: request.params.id });
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
     return;
   }
 
@@ -332,9 +347,11 @@ export async function updateUserPrefLanguageHandler(
   try {
     const user = await updateUserPrefLanguage(request.body, request, reply);
     reply.code(200).send({ success: true, data: user });
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -349,9 +366,11 @@ export async function updateProfilePhotoHandler(
 
   try {
     _user = await updateUserProfilePhoto(body, request, reply);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
     return;
   }
 
@@ -385,9 +404,11 @@ export async function updateUserActiveStatusHandler(
     }
 
     await updateUserActiveStatus(request.params.userId);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
     return;
   }
 
@@ -403,8 +424,10 @@ export async function checkEmailExistHandler(
   try {
     const user = await checkEmailExist(request.body.email);
     return reply.code(200).send({ success: !!user });
-  } catch (e: any) {
-    return reply.code(500).send({ success: false, message: e.message });
+  } catch (e) {
+    return reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -463,6 +486,9 @@ export async function updateUserAvailabilityStatusHandler(
 ) {
   try {
     const { userId, orgId } = request.user;
+    if (!userId) {
+      return reply.code(401).send({ message: "Not authorized" });
+    }
     const { presenceMode, status } = request.body;
     const res = await updateUserAvailablityStatus(userId, orgId, status, presenceMode);
     reply.code(200).send(res);
@@ -489,7 +515,7 @@ export async function auditLogHandler(
     const logs = await auditLog(orgId, Number(page), Number(limit), sortBy, sortOrder);
     reply.send(logs);
   } catch (error) {
-    log.error("Error fetching audit logs: %o", error);
+    log.error({ err: error }, "Error fetching audit logs");
     reply.code(500).send({ message: "Failed to fetch audit logs" });
   }
 }

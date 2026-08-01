@@ -14,9 +14,9 @@ import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import {
   ByTemplateIdParamsSchema,
   CreateWaTemplateInput,
+  CreateWaTemplateFormattedInput,
   RegisterTemplatesInDbBodySchema,
   TemplateTypeParamsSchema,
-  WaTemplateFormatted,
   WaUserSendTemplateBodySchema,
 } from "./wa_templates.schema.js";
 import {
@@ -36,6 +36,7 @@ import {
   updateTemplate,
   updateTemplateInDb,
   uploadFileToWaTemplate,
+  type templateData,
 } from "./wa_templates.service.js";
 import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
@@ -51,7 +52,11 @@ import {
 import { wait } from "../whatsappSurvey/wasurvey.controller.js";
 import { createWaMessageSchedule } from "../wa_message_scheduler.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
-import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types.js";
+import {
+  WHATSAPP_BUTTON_TYPE,
+  type OutgoingTemplateComponent,
+  type WaTemplateComponent,
+} from "../../../types/whatsapp.types.js";
 import { isEmptyString } from "../../../utils/commonUtils.js";
 import { getConnectedWaCatalog } from "../catalog/catalog.service.js";
 import dayjs from "dayjs";
@@ -60,6 +65,12 @@ import {
   ErrorLogsQuery,
   SendTemplateToContacts,
 } from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
+
+function getErrorResponseData(e: unknown): unknown {
+  return e && typeof e === "object" && "response" in e
+    ? (e as { response?: { data?: unknown } }).response?.data
+    : undefined;
+}
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -78,8 +89,12 @@ export async function getTemplateByIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { orgId } = await getOrgIdAndRole({ id: request.userId });
-  const templates = await getTemplateByIdAndOrgId(request.params.templateId, orgId);
+  const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+  if (!orgAndRole) {
+    reply.code(403).send({ message: "User is not a member of any org" });
+    return;
+  }
+  const templates = await getTemplateByIdAndOrgId(request.params.templateId, orgAndRole.orgId);
   reply.code(200).send(templates);
 }
 
@@ -151,7 +166,7 @@ export async function createTemplateHandler(
 
     reply.code(200).send("template created");
   } catch (e) {
-    log.error("Error creating template \n%o", e?.response?.data);
+    log.error({ err: e, data: getErrorResponseData(e) }, "Error creating template");
     let errorMessage = "Error creating template";
     if (e instanceof GraphApiError) {
       errorMessage = getGraphApiErrorMessage(e);
@@ -167,17 +182,30 @@ export async function saveTemplateAsDraftHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole) {
+      reply.code(403).send({ message: "User is not a member of any org" });
+      return;
+    }
+    const { orgId } = orgAndRole;
     const { defaultValues, templateType, whatsappSettingsPhoneId, ...templateData } = request.body;
-    let formattedTemplate: any = generateTemplate({
-      ...templateData,
-      whatsappSettingsPhoneId,
-    });
+    let formattedTemplate: CreateWaTemplateFormattedInput & { status?: WaTemplateStatus } =
+      generateTemplate({
+        ...templateData,
+        whatsappSettingsPhoneId,
+      });
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
       const template = await getDbTemplate(request.body.id);
+      if (!template) {
+        reply.code(404).send({ message: "Template not found" });
+        return;
+      }
       template.data.name = request.body.name ?? template.data.name;
-      template.data.components = formattedTemplate.components ?? [];
+      // generateTemplate emits the lowercase create-payload component names; the stored
+      // row uses the uppercase read-back names. Same components, different casing.
+      template.data.components = (formattedTemplate.components ??
+        []) as unknown as WaTemplateComponent[];
       template.data.status = WaTemplateStatus.DRAFT;
       template.data.language = formattedTemplate.language ?? "en";
       await updateTemplateInDb(
@@ -200,7 +228,7 @@ export async function saveTemplateAsDraftHandler(
     }
     reply.code(200);
   } catch (e) {
-    log.error("Error saving template as Draft\n%o", e?.response?.data);
+    log.error({ err: e, data: getErrorResponseData(e) }, "Error saving template as Draft");
     if (e instanceof GraphApiError) {
       handleWhatsappError(e, request, reply);
     } else {
@@ -217,14 +245,18 @@ export async function updateTemplateHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole) {
+      reply.code(403).send({ message: "User is not a member of any org" });
+      return;
+    }
     const template = await getDbTemplate(request.params.templateId);
 
     if (!template) {
       reply.status(404);
       log.trace("Template not found");
       return;
-    } else if (template.orgId !== orgId) {
+    } else if (template.orgId !== orgAndRole.orgId) {
       log.trace(
         "User %s tried to update template %s from another org",
         request.userId,
@@ -240,7 +272,7 @@ export async function updateTemplateHandler(
       reply.status(400).send("You can only edit an active template once in 24 hours.");
     }
   } catch (e) {
-    log.error("Error updating template \n%o", e?.response?.data);
+    log.error({ err: e, data: getErrorResponseData(e) }, "Error updating template");
     if (e instanceof GraphApiError) {
       handleWhatsappError(e, request, reply);
     } else {
@@ -257,13 +289,18 @@ export async function deleteTemplateHandler(
 ) {
   const { templateId } = request.params;
   try {
-    const { data: template, orgId } = await getDbTemplate(templateId);
-    const { orgId: userOrg } = await getOrgIdAndRole({ id: request.userId });
-    if (userOrg !== orgId) {
+    const dbTemplate = await getDbTemplate(templateId);
+    if (!dbTemplate) {
+      reply.code(404);
+      return;
+    }
+    const { data: template, orgId } = dbTemplate;
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole || orgAndRole.orgId !== orgId) {
       reply.code(403);
       return;
     }
-    const { id, name } = template as WaTemplateFormatted;
+    const { id, name } = template;
     if (id) {
       await deleteTemplate(orgId, id, name);
     }
@@ -282,13 +319,13 @@ export async function syncTemplatesHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { orgId, role } = await getOrgIdAndRole({ id: request.userId });
+  const orgAndRole = await getOrgIdAndRole({ id: request.userId });
 
-  if (role !== Role.SUPER_ADMIN && role !== Role.ADMIN) {
+  if (!orgAndRole || (orgAndRole.role !== Role.SUPER_ADMIN && orgAndRole.role !== Role.ADMIN)) {
     reply.code(403);
     return;
   }
-  const result = await syncTemplates(orgId, request.body.whatsappSettingsPhoneIds);
+  const result = await syncTemplates(orgAndRole.orgId, request.body.whatsappSettingsPhoneIds);
   if (result.success) {
     reply.code(200).send(result);
   } else {
@@ -301,11 +338,15 @@ export async function getUnregisteredTemplatesHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const unregisteredTemplates = await getUnregisteredTemplates(orgId);
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole) {
+      reply.code(403).send({ message: "User is not a member of any org" });
+      return;
+    }
+    const unregisteredTemplates = await getUnregisteredTemplates(orgAndRole.orgId);
     reply.code(200).send(unregisteredTemplates);
   } catch (e) {
-    log.error("Error getting unregistered templates \n%o", e);
+    log.error({ err: e }, "Error getting unregistered templates");
     reply.code(500);
   }
 }
@@ -317,11 +358,15 @@ export async function registerTemplatesInDbHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    await registerTemplatesInDb(request.body, orgId);
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole) {
+      reply.code(403).send({ message: "User is not a member of any org" });
+      return;
+    }
+    await registerTemplatesInDb(request.body, orgAndRole.orgId);
     reply.code(200);
   } catch (e) {
-    log.error("Error registering templates \n%o", e);
+    log.error({ err: e }, "Error registering templates");
     reply.code(500);
   }
 }
@@ -329,19 +374,33 @@ export async function registerTemplatesInDbHandler(
 export async function uploadHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const data = await request.file();
+    if (!data) {
+      return reply.code(400).send({ message: "No file uploaded" });
+    }
     const validation = validateFile({ data });
     if (!validation.valid) {
       data.file.resume();
       return reply.code(400).send({ message: validation.message });
     }
-    const size: number = data.fields?.size?.["value"] || 0;
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(data, size, orgId);
+    const sizeField = data.fields.size;
+    const size: number =
+      (sizeField && !Array.isArray(sizeField) && sizeField.type === "field"
+        ? Number(sizeField.value)
+        : 0) || 0;
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole) {
+      return reply.code(403).send({ message: "User is not a member of any org" });
+    }
+    const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
+      data,
+      size,
+      orgAndRole.orgId,
+    );
     if (fileHandle === "error") return reply.code(400).send("image upload failed");
     return reply.code(200).send({ id: fileHandle, uploadSessionId });
   } catch (e) {
-    const error = typeof e?.message === "string" ? e?.message : e?.response?.data;
-    log.error("Error uploading image to whatsapp templates \n%o", error);
+    const error = e instanceof Error ? e.message : getErrorResponseData(e);
+    log.error({ err: e }, "Error uploading image to whatsapp templates");
 
     reply.code(500).send(error);
   }
@@ -351,7 +410,7 @@ export async function sendTemplateToUserCore(
   orgId: string,
   templateId: string,
   phoneNumber: string,
-  parameterData: any[],
+  parameterData: OutgoingTemplateComponent[],
   teamId?: string,
   userId?: string,
   timeDelay?: number,
@@ -360,25 +419,39 @@ export async function sendTemplateToUserCore(
   buttonVariable?: string,
   quickReplyPayload?: string[],
   externalApi: boolean = false,
-): Promise<{ status: boolean; message: string; id?: string }> {
-  let dbTemplate = null;
+): Promise<
+  // The timeDelay branch returns the raw createWaMessageSchedule() row (its own
+  // `status`/`id` fields, not this boolean/message shape) — callers that pass
+  // timeDelay already special-case that (see wa_templates.external.controller.ts).
+  | { status: boolean; message: string; id?: string }
+  | Awaited<ReturnType<typeof createWaMessageSchedule>>
+> {
+  let dbTemplateResult: templateData | null;
   const phone = parsePhoneforWa(phoneNumber);
   if (isTemplateName) {
-    dbTemplate = await getTemplateByNameAndOrgId(templateId, orgId);
-    if (!dbTemplate) {
+    dbTemplateResult = await getTemplateByNameAndOrgId(templateId, orgId);
+    if (!dbTemplateResult) {
       log.error("Template not found with name %s", templateId);
       return { status: false, message: "Template not found with name" };
     }
   } else {
-    dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+    dbTemplateResult = await getTemplateByIdAndOrgId(templateId, orgId);
+    if (!dbTemplateResult) {
+      log.error("Template not found with id %s", templateId);
+      return { status: false, message: "Template not found with id" };
+    }
   }
+  // Captured as a `const` (rather than reused as the outer `let`) so the type stays
+  // narrowed to non-null inside processComponents() below — a closure over a `let`
+  // does not retain narrowing even after an early-return null check.
+  const dbTemplate: templateData = dbTemplateResult;
 
   const { data, defaultValues, whatsappSettingsPhoneId } = dbTemplate;
   const components = [...parameterData]; // Clone parameter data
   log.trace("parameterData => %o", parameterData);
 
   const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
-  let surveyTeamMapId = null;
+  let surveyTeamMapId: string | undefined = undefined;
   if (containsFlowButton) {
     components.push({
       type: "button",
@@ -425,7 +498,11 @@ export async function sendTemplateToUserCore(
   const format = headerComponent?.format;
 
   // Function to push a new HEADER component
-  const addHeaderComponent = (format, link, filename = null) => {
+  const addHeaderComponent = (
+    format: WaTemplateSupportedFormats,
+    link: string,
+    filename: string | null = null,
+  ) => {
     const newComponent = {
       type: WaTemplateComponentType.HEADER,
       parameters: [
@@ -433,7 +510,7 @@ export async function sendTemplateToUserCore(
           type: format.toLowerCase(),
           [format.toLowerCase()]: {
             link,
-            ...(filename && { filename }),
+            ...(filename ? { filename } : {}),
           },
         },
       ],
@@ -476,11 +553,11 @@ export async function sendTemplateToUserCore(
         }
         break;
       case WaTemplateSupportedFormats.PRODUCT:
-        const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId);
-        if (!catalog || catalog.catalogId !== defaultValues.catalog.catalogId) {
+        const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!);
+        if (!catalog || catalog.catalogId !== defaultValues?.catalog?.catalogId) {
           log.error(
             "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
-            defaultValues.catalog.catalogId,
+            defaultValues?.catalog?.catalogId,
             whatsappSettingsPhoneId,
           );
           throw Error("The selected catalog not linked to the selected whatsapp account");
@@ -491,7 +568,7 @@ export async function sendTemplateToUserCore(
             {
               type: WaTemplateSupportedFormats.PRODUCT.toLocaleUpperCase(),
               [WaTemplateSupportedFormats.PRODUCT.toLocaleLowerCase()]: {
-                product_retailer_id: defaultValues?.catalog.spm.product_retailer_id,
+                product_retailer_id: defaultValues?.catalog?.spm?.product_retailer_id,
                 catalog_id: catalog.catalogId,
               },
             },
@@ -508,8 +585,8 @@ export async function sendTemplateToUserCore(
     for await (const item of dbTemplate.data.components) {
       if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
         let quickReplyIdx = 0;
-        for await (const [idx, button] of item.buttons.entries()) {
-          if (button?.type === "URL" && button?.example?.length > 0) {
+        for await (const [idx, button] of item.buttons?.entries() ?? []) {
+          if (button?.type === "URL" && (button.example?.length ?? 0) > 0) {
             if (button?.example?.[0]?.startsWith(":")) {
               let shortUrlId = button?.example[0].slice(1);
               if (shortUrlId?.startsWith("error")) continue;
@@ -517,6 +594,7 @@ export async function sendTemplateToUserCore(
               const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
                 where: { shortUrlId },
               });
+              if (!surveyTeamMapData) continue;
 
               const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
                 where: {
@@ -580,7 +658,7 @@ export async function sendTemplateToUserCore(
               parameters: [
                 {
                   type: "coupon_code",
-                  coupon_code: button.example[0],
+                  coupon_code: button.example?.[0],
                 },
               ],
             });
@@ -739,7 +817,10 @@ export async function sendTemplateToUserCore(
               ],
             });
           } else if (button.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-            if (quickReplyPayload?.length > quickReplyIdx && quickReplyPayload?.[quickReplyIdx]) {
+            if (
+              (quickReplyPayload?.length ?? 0) > quickReplyIdx &&
+              quickReplyPayload?.[quickReplyIdx]
+            ) {
               components.push({
                 type: "button",
                 sub_type: button.type,
@@ -761,11 +842,11 @@ export async function sendTemplateToUserCore(
           (c) => c?.type.toLowerCase() === WaTemplateComponentType.HEADER,
         )?.format;
         if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
-          const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId);
-          if (!catalog || catalog.catalogId !== defaultValues.catalog.catalogId) {
+          const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!);
+          if (!catalog || catalog.catalogId !== defaultValues?.catalog?.catalogId) {
             log.error(
               "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
-              defaultValues.catalog.catalogId,
+              defaultValues?.catalog?.catalogId,
               whatsappSettingsPhoneId,
             );
             throw Error("The selected catalog not linked to the selected whatsapp account");
@@ -775,12 +856,13 @@ export async function sendTemplateToUserCore(
               const cardInComponents = components.find(
                 (c) => c.type === WaTemplateComponentType.CAROUSEL,
               )?.cards?.[index];
-              const cardDefaultValues = defaultValues?.productCarousel.find(
+              const cardDefaultValues = defaultValues?.productCarousel?.find(
                 (c) => c.cardIndex === index,
               );
               let cardComponents = cardInComponents ? [...cardInComponents.components] : [];
               for (const comp of card.components) {
                 if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
+                  if (!comp.format) continue;
                   if (!cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER)) {
                     const productId = cardDefaultValues?.product_retailer_id;
                     cardComponents.push({
@@ -806,6 +888,7 @@ export async function sendTemplateToUserCore(
                         const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
                           where: { shortUrlId },
                         });
+                        if (!surveyTeamMapData) continue;
 
                         const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
                           where: {
@@ -842,7 +925,7 @@ export async function sendTemplateToUserCore(
                         type: "button",
                         sub_type: "url",
                         index: idx,
-                        ...(button?.example[0]
+                        ...(button?.example?.[0]
                           ? {
                               parameters: [
                                 {
@@ -873,14 +956,18 @@ export async function sendTemplateToUserCore(
               const cardInComponents = components.find(
                 (c) => c.type === WaTemplateComponentType.CAROUSEL,
               )?.cards?.[index];
-              const cardDefaultValues = defaultValues?.mediaCarousel.find(
+              const cardDefaultValues = defaultValues?.mediaCarousel?.find(
                 (c) => c.cardIndex === index,
               );
               let cardComponents = cardInComponents ? [...cardInComponents.components] : [];
               for (const comp of card.components) {
                 if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
-                  if (!cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER)) {
-                    const fileKey = cardDefaultValues?.headerLink;
+                  if (!comp.format) continue;
+                  if (
+                    !cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER) &&
+                    cardDefaultValues?.headerLink
+                  ) {
+                    const fileKey = cardDefaultValues.headerLink;
                     cardComponents.push({
                       type: WaTemplateComponentType.HEADER,
                       parameters: [
@@ -894,8 +981,13 @@ export async function sendTemplateToUserCore(
                     });
                   }
                 } else if (comp.type.toLowerCase() === WaTemplateComponentType.BODY) {
-                  const defaultValue = comp.example?.body_text[0];
-                  if (defaultValue?.length > 0) {
+                  // body_text is documented as a list of example sets; a flat list of
+                  // strings is also accepted, so normalise to one set of values.
+                  const storedExamples = comp.example?.body_text;
+                  const defaultValue: string[] = Array.isArray(storedExamples?.[0])
+                    ? storedExamples[0]
+                    : ((storedExamples as string[] | undefined) ?? []);
+                  if (defaultValue.length > 0) {
                     const cardBodyIndex = cardComponents.findIndex(
                       (component) => component.type === "body",
                     );
@@ -903,13 +995,13 @@ export async function sendTemplateToUserCore(
                       let params = cardComponents[cardBodyIndex]?.parameters;
                       if (params) {
                         params.forEach((data, i) => {
-                          if (!data?.text || !data?.text?.trim()) {
+                          if (typeof data?.text !== "string" || !data.text.trim()) {
                             data.text = defaultValue?.[i];
                           }
                         });
-                        if (params.length < defaultValue?.length) {
+                        if (params.length < defaultValue.length) {
                           const remainingValues = defaultValue.slice(params.length);
-                          remainingValues.forEach((value) => {
+                          remainingValues.forEach((value: string) => {
                             params.push({
                               type: "text",
                               text: value,
@@ -918,13 +1010,13 @@ export async function sendTemplateToUserCore(
                         }
                         cardComponents[cardBodyIndex] = {
                           type: "body",
-                          parameterers: params,
+                          parameters: params,
                         };
                       }
                     } else {
                       cardComponents.push({
                         type: "body",
-                        parameters: defaultValue.map((data: string) => ({
+                        parameters: defaultValue.map((data) => ({
                           type: "text",
                           text: data,
                         })),
@@ -943,6 +1035,7 @@ export async function sendTemplateToUserCore(
                         const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
                           where: { shortUrlId },
                         });
+                        if (!surveyTeamMapData) continue;
 
                         const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
                           where: {
@@ -979,7 +1072,7 @@ export async function sendTemplateToUserCore(
                         type: "button",
                         sub_type: "url",
                         index: idx,
-                        ...(button?.example[0]
+                        ...(button?.example?.[0]
                           ? {
                               parameters: [
                                 {
@@ -1014,7 +1107,7 @@ export async function sendTemplateToUserCore(
                 card_index: index,
                 components: cardComponents,
               };
-            }),
+            }) ?? [],
           );
           components.push({
             type: "carousel",
@@ -1035,22 +1128,27 @@ export async function sendTemplateToUserCore(
     },
     components: components,
   };
-  const defaultValue = dbTemplate?.data?.components?.find((data) => data.example?.body_text)
-    ?.example?.body_text?.[0];
+  // body_text is documented as a list of example sets; a flat list of strings is also
+  // accepted, so normalise to one set of values.
+  const storedExamples = dbTemplate?.data?.components?.find((data) => data.example?.body_text)
+    ?.example?.body_text;
+  const defaultValue: string[] = Array.isArray(storedExamples?.[0])
+    ? storedExamples[0]
+    : ((storedExamples as string[] | undefined) ?? []);
 
-  if (defaultValue?.length > 0) {
+  if (defaultValue.length > 0) {
     let params = templateQuery?.components.find(
       (component) => component.type === "body",
     )?.parameters;
     if (params) {
       params.forEach((data, i) => {
-        if (!data?.text || !data?.text?.trim()) {
+        if (typeof data?.text !== "string" || !data.text.trim()) {
           data.text = defaultValue?.[i];
         }
       });
-      if (params.length < defaultValue?.length) {
+      if (params.length < defaultValue.length) {
         const remainingValues = defaultValue.slice(params.length);
-        remainingValues.forEach((value) => {
+        remainingValues.forEach((value: string) => {
           params.push({
             type: "text",
             text: value,
@@ -1060,7 +1158,7 @@ export async function sendTemplateToUserCore(
     } else {
       templateQuery.components.push({
         type: "body",
-        parameters: defaultValue.map((data: string) => ({
+        parameters: defaultValue.map((data) => ({
           type: "text",
           text: data,
         })),
@@ -1093,9 +1191,9 @@ export async function sendTemplateToUserCore(
     res = await sendMessage(
       orgId,
       templateMessage,
-      null,
+      undefined,
       userId,
-      whatsappSettingsPhoneId,
+      whatsappSettingsPhoneId ?? undefined,
       undefined,
       dbTemplate.data?.category,
       teamId,
@@ -1124,7 +1222,7 @@ export async function sendTemplateToUserHandler(
     const orgId = request.user.orgId;
     const userId = request.userId;
 
-    await sendTemplateToUserCore(
+    const result = await sendTemplateToUserCore(
       orgId,
       templateId,
       phone,
@@ -1136,13 +1234,22 @@ export async function sendTemplateToUserHandler(
       undefined,
     );
 
+    // `sendTemplateToUserCore` reports a failed send by returning `{ status: false }`
+    // rather than throwing, so the catch below never sees it — check explicitly, or a
+    // failed send would answer 200.
+    if (result && "status" in result && result.status === false) {
+      log.error({ result }, "Failed to send template to user");
+      reply.code(400).send(result.message ?? "Failed to send template to user");
+      return;
+    }
+
     reply.code(200).send("Template sent to user successfully");
   } catch (error) {
-    log.error("Error sending template to user \n%o", error);
+    log.error({ err: error }, "Error sending template to user");
     if (error instanceof Error) {
       reply.code(400).send(error?.message);
     } else {
-      reply.code(500).send(error?.message ?? "Error sending template to contacts");
+      reply.code(500).send("Error sending template to contacts");
     }
   }
 }
@@ -1171,6 +1278,7 @@ export async function sendTemplatesToContactsHandler(
     });
 
     for (const contact of contacts) {
+      if (!contact.phone) continue;
       await sendTemplateToPhone({
         orgId,
         phone: contact.phone,
@@ -1181,12 +1289,20 @@ export async function sendTemplatesToContactsHandler(
       });
     }
   } catch (error) {
-    log.error("Error sending template to contacts \n%o", error);
+    log.error({ err: error }, "Error sending template to contacts");
     res.code(500).send(error);
   }
 }
 
-const getLatestStatus = (statusObj) => {
+const getLatestStatus = (statusObjInput: unknown) => {
+  // WaMessage.stats is a free-form Json? column (see prisma schema default value) —
+  // no generated type describes its shape, so it's read via a documented cast.
+  const statusObj = statusObjInput as {
+    read?: unknown;
+    delivered?: unknown;
+    failed?: unknown;
+    sent?: unknown;
+  } | null;
   if (statusObj?.read) return "read";
   if (statusObj?.delivered) return "delivered";
   if (statusObj?.failed) return "failed";
@@ -1219,7 +1335,7 @@ export async function getMessageStatusByIdHandler(
 
     reply.code(200).send(response);
   } catch (error) {
-    log.error("Error getting message status by id \n%o", error);
+    log.error({ err: error }, "Error getting message status by id");
     reply.code(500).send(error);
   }
 }
@@ -1248,7 +1364,7 @@ export async function getErrorLogsHandler(
     });
     return reply.code(200).send(data);
   } catch (error) {
-    log.error("Error getting error logs \n%o", error);
+    log.error({ err: error }, "Error getting error logs");
     reply.code(500).send({ message: "Error getting error logs" });
   }
 }

@@ -55,7 +55,7 @@ export async function zapierAuthenticationHandler(
       return;
     }
     const authHeader = request.headers.authorization;
-    if (!authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       log.error("No bearer token found in headers\n%o", request.headers);
       reply.code(400).send({
         message: "Invalid request",
@@ -96,10 +96,10 @@ export async function zapierAuthenticationHandler(
     }
 
     const user = { orgId, role: Role.SUPER_ADMIN };
-    (request as any).user! = user;
+    request.user = user;
     if (request.url.includes("/auth")) reply.send({ user: user });
   } catch (e) {
-    log.error("Error checking session\n%o", e);
+    log.error({ err: e }, "Error checking session");
     reply.code(401).send({ message: "Not authorized" });
   }
 }
@@ -186,7 +186,7 @@ export async function unsubscribeTriggerHandler(
   reply: FastifyReply,
 ) {
   try {
-    log.info("zapier trigger subscription removal received with body => %o", request.body);
+    log.info({ body: request.body }, "zapier trigger subscription removal received with body");
     const { orgId } = request.query;
     const integration = (await getIntegrationByName(
       orgId,
@@ -224,7 +224,7 @@ export async function updateContactLabelsByIdHandler(
     return reply.code(201).send({
       contactId: contact.id,
       lifecycleId: request.body?.lifecycleId,
-      lifecycleName: contact.Lifecycle.name,
+      lifecycleName: contact.Lifecycle?.name ?? null,
     });
   } catch (error) {
     log.error(error);
@@ -305,6 +305,7 @@ export async function deleteContactHandler(
     if (contactId) {
       await deleteContactById(contactId);
     } else {
+      if (!phone) throw new Error("Either contactId or phone must be provided");
       await deleteContactByPhoneNumberAndOrgId(orgId, phone);
     }
     reply.send({ contactId });
@@ -409,7 +410,7 @@ export async function addContactToGroupHandler(
 ) {
   try {
     const { orgId } = request.query;
-    await addNewContactsToGroup(request.body.groupId, request.body.contacts as any, orgId);
+    await addNewContactsToGroup(request.body.groupId, request.body.contacts, orgId);
     reply.send({ success: true });
   } catch (e) {
     log.error(e);
@@ -428,6 +429,7 @@ export async function inviteMemberHandler(
     const { orgId } = request.query;
     const { invitedByEmail, ...rest } = request.body;
     const invitedBy = await getUserIdByEmailAndOrgId(invitedByEmail, orgId);
+    if (!invitedBy) throw new Error(`No org member found for email ${invitedByEmail}`);
     await inviteTeamMember({
       orgId,
       type: InviteType.TEAM,

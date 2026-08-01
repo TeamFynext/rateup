@@ -4,9 +4,14 @@
  */
 
 import prisma from "../../utils/prisma.js";
+import type { LoyaltyReward } from "../../../generated/prisma/client.js";
 import {
   RedemptionValidationResult,
   LoyaltyRedemptionRules,
+  TimeRestrictions,
+  QuantityRestrictions,
+  SpendRequirements,
+  TierRestrictions,
   LoyaltyRedemptionContext,
   DayOfWeek,
 } from "../../types/loyalty.js";
@@ -52,7 +57,7 @@ export class RedemptionValidator {
 
     // Check if reward type is 'assigned' and if it is assigned to the customer
     if (reward.rewardType === "assigned") {
-      const assignment = await (prisma as any).customerReward.findUnique({
+      const assignment = await prisma.customerReward.findUnique({
         where: {
           rewardId_accountId: {
             rewardId: reward.id,
@@ -141,7 +146,7 @@ export class RedemptionValidator {
    * Validate time restrictions
    */
   private async validateTimeRestrictions(
-    restrictions: any,
+    restrictions: TimeRestrictions,
     _customerId: string,
     _rewardId: string,
   ): Promise<string[]> {
@@ -191,7 +196,7 @@ export class RedemptionValidator {
    * Validate quantity restrictions
    */
   private async validateQuantityRestrictions(
-    restrictions: any,
+    restrictions: QuantityRestrictions,
     customerId: string,
     rewardId: string,
   ): Promise<string[]> {
@@ -330,7 +335,10 @@ export class RedemptionValidator {
   /**
    * Validate spend requirements
    */
-  private validateSpendRequirements(requirements: any, purchaseAmount: number): string | null {
+  private validateSpendRequirements(
+    requirements: SpendRequirements,
+    purchaseAmount: number,
+  ): string | null {
     if (requirements.minimum_spend && purchaseAmount < requirements.minimum_spend) {
       return `Minimum spend of ${requirements.minimum_spend} required`;
     }
@@ -341,7 +349,7 @@ export class RedemptionValidator {
    * Validate tier restrictions
    */
   private validateTierRestrictions(
-    restrictions: any,
+    restrictions: TierRestrictions,
     customerTierId: string | null,
   ): string | null {
     if (restrictions.allowed_tiers && restrictions.allowed_tiers.length > 0 && customerTierId) {
@@ -355,7 +363,9 @@ export class RedemptionValidator {
   /**
    * Validate stock availability
    */
-  private validateStock(reward: any): string | null {
+  private validateStock(
+    reward: Pick<LoyaltyReward, "stockQuantity" | "stockRedeemed">,
+  ): string | null {
     if (reward.stockQuantity !== null && reward.stockRedeemed >= reward.stockQuantity) {
       return "This reward is out of stock";
     }

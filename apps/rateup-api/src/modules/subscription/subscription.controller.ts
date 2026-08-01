@@ -14,7 +14,7 @@ import dayjs from "dayjs";
 import { updateUsageStatsLastReset } from "../stats/stats.service.js";
 import { log } from "../../utils/logger.js";
 
-export async function getUserSubscriptionHandler(req, res) {
+export async function getUserSubscriptionHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId } = req.user;
   const subscription = await getSubscription(orgId);
   if (!subscription) {
@@ -24,13 +24,16 @@ export async function getUserSubscriptionHandler(req, res) {
   }
   return res.send(subscription);
 }
-export async function getSubscriptionHandler(req, res) {
+export async function getSubscriptionHandler(
+  req: FastifyRequest<{ Params: ByOrgIdParams }>,
+  res: FastifyReply,
+) {
   const { orgId } = req.params;
   const subscription = await getSubscription(orgId);
   res.send(subscription);
 }
 
-export async function getAllSubscriptionsHandler(req, res) {
+export async function getAllSubscriptionsHandler(_req: FastifyRequest, res: FastifyReply) {
   const subscriptions = await getAllSubscriptions();
   return res.send(subscriptions);
 }
@@ -47,6 +50,9 @@ export async function updateSubscriptionHandler(
   //case: on changing to new plan
   if (updatedData?.basePlanId) {
     const rateupPlan = await getRateuplanById(updatedData?.basePlanId);
+    if (!rateupPlan) {
+      return res.code(404).send({ message: "Plan not found" });
+    }
     if (rateupPlan.paymentPlanId)
       return res.code(403).send({ message: "You cannot change to Razorpay plans manually" });
     else if (rateupPlan.name === "RATEUP TRIAL")
@@ -78,7 +84,7 @@ export async function deleteSubscriptionsHandler(
 export async function getMessageStatsHandler(
   req: FastifyRequest<{
     Params: ByOrgIdParams;
-    QueryString: { dateRange?: string };
+    Querystring: { dateRange?: string };
   }>,
   res: FastifyReply,
 ) {

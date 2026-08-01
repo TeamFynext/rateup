@@ -1,5 +1,3 @@
-import { RouteShorthandOptionsWithHandler } from "fastify";
-import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
 import { asyncErrHandler } from "../../utils/commonUtils.js";
 import {
   createGenerateQrRecord,
@@ -18,7 +16,7 @@ import {
   updateGenerateQrRecordReqBody,
 } from "./generateQr.schema.js";
 
-const createGenerateQrRecordRouteOptions: RouteShorthandOptionsWithHandler = {
+const createGenerateQrRecordRouteOptions = {
   schema: {
     body: createGenerateQrRecordReqBody,
     response: {
@@ -28,13 +26,13 @@ const createGenerateQrRecordRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(createGenerateQrRecord),
 };
 
-const getPublicGenerateQrRecordWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler = {
+const getPublicGenerateQrRecordWithShortIdRouteOptions = {
   schema: {},
   config: { isPublic: true },
   handler: asyncErrHandler(getPublicGenerateQrRecordWithShortId),
 };
 
-const getGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+const getGenerateQrRecordWithShortIdRouteOptions = {
   schema: {
     params: getGenerateQrRecordWithShortIdParams,
     response: {
@@ -44,7 +42,7 @@ const getGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandl
   handler: asyncErrHandler(getGenerateQrRecordWithShortId),
 };
 
-const getAllGenerateQrRecordsRouteOptions: RouteShorthandOptionsWithHandler = {
+const getAllGenerateQrRecordsRouteOptions = {
   schema: {
     response: {
       "2xx": getAllGenerateQrRecordsResponse,
@@ -53,7 +51,7 @@ const getAllGenerateQrRecordsRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(getGenerateQrRecords),
 };
 
-const updateGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+const updateGenerateQrRecordWithShortIdRouteOptions = {
   schema: {
     body: updateGenerateQrRecordReqBody,
     response: {
@@ -63,14 +61,14 @@ const updateGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHa
   handler: asyncErrHandler(updateGenerateQrRecordWithShortId),
 };
 
-const deleteGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+const deleteGenerateQrRecordWithShortIdRouteOptions = {
   schema: {
     params: getGenerateQrRecordWithShortIdParams,
   },
   handler: asyncErrHandler(deleteGenerateQrRecordWithShortId),
 };
 
-const incrementGenerateQrNoOfScansRouteOptions: CustomRouteShortHandOptionsWithHandler = {
+const incrementGenerateQrNoOfScansRouteOptions = {
   schema: {
     params: getGenerateQrRecordWithShortIdParams,
   },

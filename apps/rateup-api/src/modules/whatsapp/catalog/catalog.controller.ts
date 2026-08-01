@@ -180,9 +180,9 @@ export async function createAddressFlowHandler(
     const { orgId, userId } = req.user;
     const { catalogId } = req.params;
     const { json, map } = req.body;
-    await createAddressFlow(orgId, userId, catalogId, req, json, map);
+    await createAddressFlow(orgId, userId!, catalogId, req, json, map);
     res.status(200).send();
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(400).send(error instanceof Error ? error.message : String(error));
   }
 }

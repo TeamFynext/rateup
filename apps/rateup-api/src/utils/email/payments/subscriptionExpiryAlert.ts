@@ -4,6 +4,11 @@ import { formatDateT1 } from "../../date.js";
 import { sendAWSEmail } from "../sendAWSEmail.js";
 import { billingPage, rateupLogo, statsPage } from "../../constants/constants.js";
 import { log } from "../../logger.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
+
+type SubscriptionWithOwnerAndPlan = Prisma.SubscriptionGetPayload<{
+  include: { org: { select: { owner: true } }; basePlan: true };
+}>;
 
 export async function subscriptionExpiryAlert() {
   try {
@@ -57,7 +62,7 @@ export async function subscriptionExpiryAlert() {
   }
 }
 
-async function reminderBeforeThirtyDays(subscriptions) {
+async function reminderBeforeThirtyDays(subscriptions: SubscriptionWithOwnerAndPlan[]) {
   if (!subscriptions.length) return;
 
   for (const subscription of subscriptions) {
@@ -77,7 +82,7 @@ async function reminderBeforeThirtyDays(subscriptions) {
   }
 }
 
-async function reminderBeforeFifteenDays(subscriptions) {
+async function reminderBeforeFifteenDays(subscriptions: SubscriptionWithOwnerAndPlan[]) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
     log.info(
@@ -96,7 +101,7 @@ async function reminderBeforeFifteenDays(subscriptions) {
   }
 }
 
-async function reminderBeforeSevenDays(subscriptions) {
+async function reminderBeforeSevenDays(subscriptions: SubscriptionWithOwnerAndPlan[]) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
     log.info(
@@ -115,7 +120,7 @@ async function reminderBeforeSevenDays(subscriptions) {
   }
 }
 
-async function reminderBeforeThreeDays(subscriptions) {
+async function reminderBeforeThreeDays(subscriptions: SubscriptionWithOwnerAndPlan[]) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
     log.info(
@@ -134,7 +139,7 @@ async function reminderBeforeThreeDays(subscriptions) {
   }
 }
 
-async function reminderBeforeOneDay(subscriptions) {
+async function reminderBeforeOneDay(subscriptions: SubscriptionWithOwnerAndPlan[]) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
     log.info(
@@ -153,7 +158,7 @@ async function reminderBeforeOneDay(subscriptions) {
   }
 }
 
-async function reminderOnExpiry(subscriptions) {
+async function reminderOnExpiry(subscriptions: SubscriptionWithOwnerAndPlan[]) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
     log.info(
@@ -164,7 +169,7 @@ async function reminderOnExpiry(subscriptions) {
   }
 }
 
-export async function sendSubscriptionExpiryAlertEmail(subscription) {
+export async function sendSubscriptionExpiryAlertEmail(subscription: SubscriptionWithOwnerAndPlan) {
   const expiryBody = subscriptionExpiredReminderBody(subscription);
   const title = `Your Rateup Subscription has Expired`;
   const msg = {
@@ -176,39 +181,43 @@ export async function sendSubscriptionExpiryAlertEmail(subscription) {
   sendAWSEmail(msg);
 }
 
-function subscriptionExpiryfriendlyReminderBody(subscription) {
+function subscriptionExpiryfriendlyReminderBody(subscription: SubscriptionWithOwnerAndPlan) {
   return `<tr>
                 <td>
                     <p class="email-body">
-                     This is a friendly reminder that your subscription to RateUp ${subscription.basePlan.displayName}
+                     This is a friendly reminder that your subscription to RateUp ${subscription.basePlan?.displayName}
                      will expire on ${formatDateT1(subscription.expiresAt)}.
                 </p>
              </td>
            </tr>`;
 }
 
-function subscriptionExpiryTomorrowReminderBody(subscription) {
+function subscriptionExpiryTomorrowReminderBody(subscription: SubscriptionWithOwnerAndPlan) {
   return `<tr>
     <td>
         <p class="email-body">
-         This is a gentle reminder that your subscription to RateUp ${subscription.basePlan.displayName}
+         This is a gentle reminder that your subscription to RateUp ${subscription.basePlan?.displayName}
          will expire on tomorrow.
     </p>
  </td>
 </tr>`;
 }
 
-function subscriptionExpiredReminderBody(subscription) {
+function subscriptionExpiredReminderBody(subscription: SubscriptionWithOwnerAndPlan) {
   return `<tr>
     <td>
     <p class="email-body">
-         Your subscription to RateUp ${subscription.basePlan.displayName} has expired. 
+         Your subscription to RateUp ${subscription.basePlan?.displayName} has expired.
     </p>
  </td>
 </tr>`;
 }
 
-function beforeExpiryTemplate(subscription, expiryBody, title) {
+function beforeExpiryTemplate(
+  subscription: SubscriptionWithOwnerAndPlan,
+  expiryBody: string,
+  title: string,
+) {
   return `
     <!DOCTYPE html>
     <html lang="en">

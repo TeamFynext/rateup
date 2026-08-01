@@ -1,6 +1,13 @@
 import prisma from "../../utils/prisma.js";
+import type { StoredShareSettings } from "./utils.js";
 
-const getShareSettings = async (resourceName, id, req) => {
+// Both services are handed the Fastify request but only read the session org —
+// typing that structurally keeps route handlers and unit tests assignable.
+interface WithUser {
+  user?: { orgId?: string };
+}
+
+const getShareSettings = async (resourceName: string | undefined, id: string, req: WithUser) => {
   let shareSettings;
 
   switch (resourceName) {
@@ -19,7 +26,7 @@ const getShareSettings = async (resourceName, id, req) => {
       shareSettings = await prisma.generateQr.findFirst({
         where: {
           id,
-          ownerOrgId: req.user.orgId,
+          ownerOrgId: req.user!.orgId,
         },
       });
     }
@@ -27,7 +34,12 @@ const getShareSettings = async (resourceName, id, req) => {
   return shareSettings;
 };
 
-const saveShareSettings = async (resourceName, id, settingsObj, req) => {
+const saveShareSettings = async (
+  resourceName: string | undefined,
+  id: string,
+  settingsObj: StoredShareSettings,
+  req: WithUser,
+) => {
   let updatedSettings;
 
   switch (resourceName) {
@@ -49,7 +61,7 @@ const saveShareSettings = async (resourceName, id, settingsObj, req) => {
       updatedSettings = await prisma.generateQr.update({
         where: {
           id,
-          ownerOrgId: req.user.orgId,
+          ownerOrgId: req.user!.orgId,
         },
         data: {
           shareSettings: settingsObj,

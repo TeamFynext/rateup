@@ -88,6 +88,9 @@ const USER = "33333333-3333-3333-3333-333333333333";
 const SHORT = "Bc7Fh9Km";
 const ID = "44444444-4444-4444-4444-444444444444";
 
+/** `Linktree.additionalData` / `.shareSettings` are nullable Json columns. */
+const NULL_JSON: Prisma.JsonValue = null;
+
 function links() {
   return [
     { id: "l-1", label: "Menu", url: "https://x.test/menu", noOfClicks: 3 },
@@ -105,9 +108,9 @@ function row(over: Record<string, unknown> = {}) {
     shortUrlId: SHORT,
     theme: { colour: "blue" },
     links: links(),
-    additionalData: null,
+    additionalData: NULL_JSON,
     visitorsCount: 12,
-    shareSettings: null,
+    shareSettings: NULL_JSON,
     isPublished: true,
     ...over,
   };
@@ -439,12 +442,15 @@ describe("generateAndGetOptionsFromDB", () => {
     ).resolves.toEqual([]);
   });
 
-  test("an org that resolves to nothing throws rather than answering empty", async () => {
+  test("an org that resolves to nothing throws a clear not-found error rather than crashing", async () => {
+    // NOTE: previously the service destructured `data.members` off a null
+    // findFirst result and crashed with a bare TypeError. It now guards the
+    // lookup and throws a descriptive error instead.
     db.org.findFirst.mockResolvedValueOnce(null);
 
     await expect(
       generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } })),
-    ).rejects.toBeInstanceOf(TypeError);
+    ).rejects.toThrow(`Org not found for id: ${ORG}`);
   });
 });
 
@@ -575,14 +581,15 @@ describe("updatePageVisitOrLinkClickInDB — link clicks", () => {
     await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1"))).resolves.toBeNull();
   });
 
-  test("an unknown short id throws a TypeError from destructuring null", async () => {
-    // NOTE: findFirst returns null and the service destructures { links } off
-    // it immediately. This is reachable from an unauthenticated request.
+  test("an unknown short id resolves to null rather than crashing", async () => {
+    // NOTE: findFirst returns null; the service previously destructured
+    // { links } off it immediately and crashed with a bare TypeError. It now
+    // guards the lookup and resolves null (treated as "not found" by the
+    // caller), matching the other not-found branches below. This is
+    // reachable from an unauthenticated request.
     db.linktree.findFirst.mockResolvedValueOnce(null);
 
-    await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1", "nope"))).rejects.toBeInstanceOf(
-      TypeError,
-    );
+    await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1", "nope"))).resolves.toBeNull();
   });
 
   test("a links value that is a string throws rather than being rejected", async () => {
@@ -614,21 +621,22 @@ describe("controllers", () => {
     expect(answer(rep)).toEqual({ code: 201, body: row() });
   });
 
-  test("a short id collision on create loses the request and throws", async () => {
-    // NOTE: shortIdUniqueConstraintErrHandler retries as
-    // `shortIdUniqueConstraintErrHandler(functionToBeHandled)` — dropping the
-    // ...args it was given — so the retry calls the service with no request.
-    // See issues.txt 3.x; linktree is one of its callers.
+  test("a short id collision on create retries with the original request and succeeds", async () => {
+    // NOTE: shortIdUniqueConstraintErrHandler's retry calls
+    // `functionToBeHandled()` with none of the original ...args — previously
+    // the service function itself was passed as functionToBeHandled with req
+    // as a spread arg, so the retry lost the request and crashed with a
+    // TypeError. The controller now wraps the service call in a closure that
+    // captures req directly, so the retry succeeds instead of losing it.
     db.linktree.create.mockRejectedValueOnce(
       new FakeKnownError("P2002", { target: ["shortUrlId"] }),
     );
     const rep = reply();
 
-    await expect(createLinktree(req({ body: { name: "Our links" } }), rep)).rejects.toBeInstanceOf(
-      TypeError,
-    );
-    expect(db.linktree.create).toHaveBeenCalledTimes(1);
-    expect(rep.send).not.toHaveBeenCalled();
+    await createLinktree(req({ body: { name: "Our links" } }), rep);
+
+    expect(db.linktree.create).toHaveBeenCalledTimes(2);
+    expect(answer(rep)).toEqual({ code: 201, body: row() });
   });
 
   test("the listing answers 200 with the array", async () => {
@@ -756,20 +764,25 @@ describe("controllers", () => {
     });
   });
 
-  test("an unknown short id escapes the controller rather than answering", async () => {
+  test("an unknown short id answers 400 rather than crashing the controller", async () => {
+    // NOTE: previously the service crashed with a bare TypeError instead of
+    // resolving; the controller now gets a clean null back and answers the
+    // same "not found" 400 it uses for an unmatched linkId.
     db.linktree.findFirst.mockResolvedValueOnce(null);
     const rep = reply();
 
-    await expect(
-      updatePageVisitsOrLinkClicks(
-        req({
-          params: { shortUrlId: "nope" },
-          body: { resourceToBeUpdated: "link-click", linkId: "l-1" },
-        }),
-        rep,
-      ),
-    ).rejects.toBeInstanceOf(TypeError);
-    expect(rep.send).not.toHaveBeenCalled();
+    await updatePageVisitsOrLinkClicks(
+      req({
+        params: { shortUrlId: "nope" },
+        body: { resourceToBeUpdated: "link-click", linkId: "l-1" },
+      }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({
+      code: 400,
+      body: { success: false, message: "Link with given linkId not found." },
+    });
   });
 });
 
@@ -946,15 +959,19 @@ describe("schemas", () => {
     ).toEqual({ shortUrlId: SHORT });
   });
 
-  test("theme, links and shareSettings are unvalidated JSON", () => {
+  // `links` is now shaped (an array of link objects); theme and shareSettings remain
+  // unvalidated JSON blobs.
+  test("links must be an array while theme and shareSettings stay unvalidated JSON", () => {
+    expect(
+      updateLinktreeReqBody.safeParse({ shortUrlId: SHORT, links: "not an array" }).success,
+    ).toBe(false);
+
     const parsed = updateLinktreeReqBody.parse({
       shortUrlId: SHORT,
       theme: "not an object",
-      links: "not an array",
       shareSettings: 42,
     });
 
-    expect(parsed.links).toBe("not an array");
     expect(parsed.theme).toBe("not an object");
   });
 
@@ -964,8 +981,8 @@ describe("schemas", () => {
       links: [{ id: "l-1", url: "javascript:alert(1)", noOfClicks: 99999 }],
     });
 
-    expect(parsed.links[0].url).toBe("javascript:alert(1)");
-    expect(parsed.links[0].noOfClicks).toBe(99999);
+    expect(parsed.links?.[0].url).toBe("javascript:alert(1)");
+    expect(parsed.links?.[0].noOfClicks).toBe(99999);
   });
 
   test("the counter body is bounded to the two resources", () => {

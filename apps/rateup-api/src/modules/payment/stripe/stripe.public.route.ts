@@ -13,7 +13,7 @@ export async function stripePublicRoutes(server: FastifyInstance) {
         try {
           done(null, JSON.parse(body.toString()));
         } catch (err) {
-          done(err, null);
+          done(err instanceof Error ? err : new Error(String(err)), null);
         }
       }
     },

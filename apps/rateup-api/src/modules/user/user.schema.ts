@@ -23,7 +23,7 @@ const createUserSignupSchema = z.object({
   email: z.email(),
   name: z.string().min(1),
   orgName: z.string().min(1),
-  phone: z.string(),
+  phone: z.string().optional(),
   phoneNumber: z.string().optional(),
   recipeName: z.enum(UserRecipes),
   planId: z.string().optional(),

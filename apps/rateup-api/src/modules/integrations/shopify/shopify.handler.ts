@@ -9,8 +9,8 @@ async function draftOrderCreateHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -28,8 +28,8 @@ export async function orderCreateHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -47,8 +47,8 @@ export async function appUninstalledHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -66,8 +66,8 @@ export async function orderCancelledHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -85,8 +85,8 @@ export async function orderFulFilledHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -104,8 +104,8 @@ export async function orderPaidHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -122,8 +122,8 @@ export async function orderPartiallyFulfilledHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -140,8 +140,8 @@ export async function fulfillmentOrderCancelledHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
@@ -159,8 +159,8 @@ export async function customersDataRequestHandler(
   shop: string,
   _webhookRequestBody: string,
   _webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
 }
@@ -170,8 +170,8 @@ export async function customersRedactHandler(
   shop: string,
   _webhookRequestBody: string,
   _webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
 }
@@ -180,8 +180,8 @@ export async function shopRedactRequestHandler(
   shop: string,
   _webhookRequestBody: string,
   _webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
 }
@@ -191,8 +191,8 @@ export async function appSubscriptionUpdateHandler(
   shop: string,
   webhookRequestBody: string,
   webhookId: string,
-  _apiVersion: string,
-  _context?: any,
+  _apiVersion?: string,
+  _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);

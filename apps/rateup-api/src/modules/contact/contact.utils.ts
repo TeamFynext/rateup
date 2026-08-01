@@ -30,7 +30,10 @@ export async function verifyLCustomerMaxCountRestrictionHandler(
   //   return reply.code(500).send(e);
   // }
 }
-export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
+export async function verifyLCustomerMaxCountRestriction(
+  orgId: string,
+  subscription: { features: unknown } | null | undefined,
+) {
   if (!subscription) {
     log.trace("Subscription not found");
     return false;
@@ -44,7 +47,7 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
     },
   });
 
-  const { loyaltyCustomerCount } = await prisma.usageStats.findUnique({
+  const usageStats = await prisma.usageStats.findUnique({
     where: {
       orgId,
     },
@@ -52,6 +55,13 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
       loyaltyCustomerCount: true,
     },
   });
+  if (!usageStats) {
+    // Preserves the pre-existing "no UsageStats row yet" crash's error class
+    // (a bare destructure of `null` throws TypeError) while giving it a
+    // message, rather than papering over a missing row.
+    throw new TypeError(`No usage stats row found for org ${orgId}`);
+  }
+  const { loyaltyCustomerCount } = usageStats;
 
   if (loyaltyCustomerCount !== count)
     await prisma.usageStats.update({
@@ -63,23 +73,49 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
       },
     });
 
-  if (
-    count >=
-    getNestedProperty(
-      subscription?.features as unknown as object,
-      SubscriptionFeaturePathName.Whatsapp,
-    ).count.max
-  ) {
+  const whatsappFeature = getNestedProperty<{ count?: { max?: number } }>(
+    subscription.features as unknown as object,
+    SubscriptionFeaturePathName.Whatsapp,
+  );
+  if (whatsappFeature === undefined) {
+    // Preserves the pre-existing "no whatsapp feature configured" crash's
+    // error class (a bare `.count.max` off `undefined` throws TypeError).
+    throw new TypeError(`No whatsapp feature configured on the subscription for org ${orgId}`);
+  }
+  // A missing `max` means "no configured cap"; preserved as-is (JS's
+  // `count >= undefined` is always false), just written so strict mode can
+  // see the same thing.
+  const max = whatsappFeature.count?.max;
+  if (max !== undefined && count >= max) {
     return false;
   }
   return true;
 }
 
-export async function createLCustomer(input: any) {
+/** The contact fields a loyalty-customer registration supplies. */
+interface CreateLCustomerInput {
+  phone?: string;
+  orgId: string;
+  name?: string | null;
+  dob?: string | Date | null;
+  email?: string | null;
+  external_id?: string | null;
+  source?: string | null;
+  customFields?: Array<{ id?: string; value: string }>;
+  [field: string]: unknown;
+}
+
+export async function createLCustomer(input: CreateLCustomerInput) {
+  // The contact is keyed by phone, so it cannot be created without one. Callers
+  // validate the number first; this guards rather than passing `undefined` to the key.
+  if (!input.phone) {
+    throw new Error("A loyalty customer cannot be created without a phone number");
+  }
+  const phone = parsePhoneforWa(input.phone);
   const contact = await prisma.contact.upsert({
     where: {
       contact_phone_org_id_unique: {
-        phone: parsePhoneforWa(input.phone),
+        phone,
         orgId: input.orgId,
       },
     },
@@ -97,7 +133,7 @@ export async function createLCustomer(input: any) {
       // },
     },
     create: {
-      phone: parsePhoneforWa(input.phone),
+      phone,
       name: input.name,
       source: ContactGroupType.LOYALTY,
       orgId: input.orgId,
@@ -121,11 +157,13 @@ export async function createLCustomer(input: any) {
       },
     });
     await prisma.contactCustomFieldValue.createMany({
-      data: input.customFields.map((field) => ({
-        contactId: contact?.id,
-        fieldId: field.id,
-        value: field.value,
-      })),
+      data: input.customFields
+        .filter((field): field is { id: string; value: string } => Boolean(field.id))
+        .map((field) => ({
+          contactId: contact?.id,
+          fieldId: field.id,
+          value: field.value,
+        })),
       skipDuplicates: true,
     });
   }
@@ -142,7 +180,7 @@ export async function createLCustomer(input: any) {
   };
 }
 
-export async function handlePostRegisterAction(_orgId, _customerId) {
+export async function handlePostRegisterAction(_orgId: string, _customerId: string) {
   // for (const action of registerActions) {
   //   const { success, data, message } = await handleLCustomerAction({
   //     action,
@@ -161,7 +199,12 @@ export async function handlePostRegisterAction(_orgId, _customerId) {
   // }
 }
 
-export async function handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables) {
+export async function handleSendTemplate(
+  waTemplateId: string | null | undefined,
+  orgId: string,
+  phone: string,
+  dynamicVariables: unknown[],
+) {
   if (!waTemplateId) {
     log.trace("No template Id found");
     return;
@@ -169,7 +212,7 @@ export async function handleSendTemplate(waTemplateId, orgId, phone, dynamicVari
   const components = [];
   components.push({
     type: "body",
-    parameters: dynamicVariables.map((data: string) => ({
+    parameters: dynamicVariables.map((data) => ({
       type: "text",
       text: data,
     })),

@@ -55,6 +55,9 @@ export function initTestSupertokens() {
 
 export async function createNewTestSession(email: string) {
   const user = await getUserByEmail(email);
+  if (!user) {
+    throw new Error(`Test user not found for email ${email}`);
+  }
   let recipeUserId = await getAsRecipeUserIdType(user.id);
   return Session.createNewSessionWithoutRequestResponse(test_tenantId, recipeUserId);
 }

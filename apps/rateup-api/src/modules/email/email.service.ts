@@ -14,7 +14,7 @@ export async function sendEmailService(emailParams: SendEmailInput) {
   await sendAWSEmail(msg);
 }
 
-export async function storeOtp(otp, userId, surveyId = undefined) {
+export async function storeOtp(otp: string, userId: string, surveyId?: string) {
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
   const expiryTime = Date.now() + 10 * 60 * 1000;
   await prisma.otpStore.upsert({
@@ -35,7 +35,7 @@ export async function storeOtp(otp, userId, surveyId = undefined) {
   });
 }
 
-export async function validateOtp(otp, userId, surveyId = undefined) {
+export async function validateOtp(otp: string, userId: string, surveyId?: string) {
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
   const storedOtp = await prisma.otpStore.findUnique({
     where: {

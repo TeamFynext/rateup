@@ -210,7 +210,8 @@ describe("sendOTPEmailHandler", () => {
   // undefined, so null is how a real request reaches this.
   test("500s on a null data, leaving a stored code behind", async () => {
     const rep = reply();
-    const body = { ...otpBody(), data: null };
+    const missingData: ReturnType<typeof otpBody>["data"] | null = null;
+    const body = { ...otpBody(), data: missingData };
 
     await sendOTPEmailHandler({ body } as never, rep);
 

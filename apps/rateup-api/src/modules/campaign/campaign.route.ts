@@ -19,6 +19,7 @@ import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth
 import { verifyCampaignMaxLimit } from "./campaign.util.js";
 import {
   byCampaignIdParamsSchema,
+  CreateCampaignInput,
   createCampaignInputSchema,
   getCampaignsQuerySchema,
   updateCampaignInputSchema,
@@ -36,7 +37,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     prefix: ":campaignId/participants",
   });
 
-  server.post(
+  server.post<{ Body: CreateCampaignInput }>(
     "/",
     {
       preHandler: verifyCampaignMaxLimit,

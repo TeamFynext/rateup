@@ -15,7 +15,7 @@ export async function getIpFromToken(token: string) {
       token,
     },
   });
-  return (tokenized.data as any).ip as string;
+  return (tokenized!.data as { ip?: string }).ip as string;
 }
 
 export async function deleteAllExpiredTokens() {

@@ -301,7 +301,9 @@ model WhatsappSettings {
   pageAccessToken          String? //Facebook Page access token
   igUserName               String?
   igDisplayName            String?
+  /// [PInstagramIceBreakers]
   instagramIceBreakers     Json?
+  /// [PInstagramPersistentMenu]
   instagramPersistentMenu  Json?
   conversationalAutomation Json?
   phoneDisplayName         String?
@@ -319,6 +321,7 @@ model WhatsappSettings {
   catalog                 CatalogPhoneIdMap?
   assets                  String[]              @default([]) //enum.ts MetaLoginAssets (assets selected on login)
   conversionsApiDatasetId String?
+  /// [PMetaConversionSettings]
   conversionData          Json?
   paymentMethod           String                @default("NATIVE") // NATIVE, SHOPIFY_LINK
   metaBusinessAgent       MetaBusinessAgent?
@@ -350,6 +353,7 @@ model MetaBusinessAgent {
   settingsSyncedAt        DateTime?
 
   // agent_config/business_info, cached locally
+  /// [PMetaAgentBusinessInfo]
   businessInfo         Json?
   businessInfoSyncedAt DateTime?
 
@@ -383,6 +387,7 @@ model MetaAgentFaq {
   metaId   String?
   question String
   answer   String
+  /// [PMetaAgentFaqMetadata]
   metadata Json?
 
   createdAt DateTime @default(now())
@@ -456,6 +461,7 @@ model MetaAgentConnectorTool {
   metaId            String?
   name              String
   description       String
+  /// [PMetaAgentRequestDefinition]
   requestDefinition Json
   userAuthRequired  Boolean @default(false)
 
@@ -474,6 +480,7 @@ model Rule {
   isActive                 Boolean      @default(true)
   triggerEvent             TriggerEvent
   whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+  /// [PWaRuleOptions]
   options                  Json? // Stores sendOncePerDay and businessHours configuration
 
   groups  RuleConditionGroup[]
@@ -579,6 +586,7 @@ model WaLogs {
   phone     String?
   org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String   @db.Uuid
+  /// [PWaGraphApiErrorDetail]
   logs      Json[]
 }
 
@@ -782,10 +790,8 @@ model SurveyResponse {
   tag                String?          @default("")
 
   ip                   String?
-  location             Json? // { 
-  //                      coordinates: {latitude: number, longitude: number},
-  //                      city: string, state: string, country: string
-  //                    }
+  /// [PResponseLocation]
+  location             Json?
   deviceData           Json?
   Contact              Contact?              @relation(fields: [contactId], references: [id])
   contactId            String?               @db.Uuid
@@ -845,6 +851,7 @@ model Contact {
   contactGroups                ContactGroupMap[]
   campaignParticipants         CampaignParticipant[]
   tags                         Json?
+  /// [PContactIntegrationIds]
   integrationIds               Json?
   WaMessage                    WaMessage[]
   consent                      Boolean                   @default(true)
@@ -1185,6 +1192,7 @@ model WaTemplate {
   /// [PWaTemplateDefaultValues]
   defaultValues           Json? // default values for images and other fields
   templateType            TemplateType          @default(GENERAL_NOTIFICATION)
+  /// [PWaTemplateConfig]
   config                  Json?
   org                     Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                   String                @db.Uuid
@@ -1249,6 +1257,7 @@ model NLP_Cache {
 model Subscription {
   org                  Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                String      @unique @db.Uuid
+  /// [PSubscriptionFeatures]
   features             Json
   renewedAt            DateTime?
   expiresAt            DateTime
@@ -1333,6 +1342,7 @@ model RateupPlan {
   yearlyPaymentPlanId  String?         @unique @db.Uuid
   Subscription         Subscription[]
   description          String[]        @default([])
+  /// [PSubscriptionFeatures]
   features             Json?
   createdAt            DateTime        @default(now())
   stripeProduct        StripeProducts? @relation(fields: [stripeId], references: [id])
@@ -1425,7 +1435,9 @@ model WaFlow {
   // whether the flow has changes present in our db that are not saved in whatsapp
   pendingSave Boolean @default(true)
 
+  /// [PWaFlowMap]
   map        Json
+  /// [PWaFlowLogicJumps]
   logicJumps Json @default("{}")
 
   /// [PWaFlowTemplateMessage]
@@ -1615,6 +1627,7 @@ model TicketCard {
   createdAt                 DateTime                 @default(now())
   ticketColumnId            String                   @db.Uuid
   ticketColumn              TicketColumn             @relation(fields: [ticketColumnId], references: [id], onDelete: Cascade)
+  /// [PTicketChecklists]
   checklists                Json?
   attachments               String[]                 @default([])
   reviewId                  String?                  @db.Uuid
@@ -1660,6 +1673,7 @@ model Linktree {
   ownerOrgId     String   @db.Uuid
   shortUrlId     String   @unique
   theme          Json?
+  /// [PLinktreeLinks]
   links          Json?
   additionalData Json?
   visitorsCount  Int      @default(0)
@@ -1699,6 +1713,7 @@ model WaMessage {
   conversationId                  String?                           @db.Uuid
   Conversation                    Conversation?                     @relation(fields: [conversationId], references: [id])
   waMessageOrgTeamMaps            WaMessageOrgTeamMap[]
+  /// [PWaGraphApiErrorDetail]
   logs                            Json?
   /// Source of the message (e.g., api, inbox, campaign, automation)
   sourceMessage                   String?
@@ -1736,6 +1751,7 @@ model WaAutomatedReply {
   id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                    String
   createdAt               DateTime @default(now())
+  /// [PWaAutomatedReplyMatchData]
   matchData               Json
   orgId                   String?  @db.Uuid
   org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1867,6 +1883,7 @@ model Integration {
 
 model WaMessageSchedule {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// [PWaScheduledMessageBody]
   messageBody     Json
   phone           String
   status          String         @default("SCHEDULED") // enums.ts: WaMessageScheduleStatus
@@ -2053,6 +2070,7 @@ model LoyaltyReward {
   pointsCost  Int
   rewardType  String // 'point', 'coupon', 'assigned'
   /// [LoyaltyRewardValue]
+  /// [PLoyaltyRewardValue]
   rewardValue Json // Type-specific value data (e.g. { type: 'discount_fixed', amount: 10, ... })
 
   // Stock Management (optional)
@@ -2216,6 +2234,7 @@ model LoyaltyRedemption {
   // Usage tracking
   expiresAt   DateTime?
   usedAt      DateTime?
+  /// [PLoyaltyUsedContext]
   usedContext Json?     @default("{}") // POS details when used
 
   // Rule validation snapshot (at creation time)
@@ -2258,6 +2277,7 @@ model ApprovalRequest {
   // Request details
   points      Int? // For point adjustments (positive or negative)
   reason      String @db.Text
+  /// [PApprovalRequestData]
   requestData Json   @default("{}") // Type-specific additional data
 
   // Who requested
@@ -2394,6 +2414,7 @@ model LoyaltyWaCommand {
   waTemplate              WaTemplate?       @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   requestMessage          String?
   createdAt               DateTime          @default(now())
+  /// [PRichTextContent]
   content                 Json?
   responseType            String            @default("Template") // enum WaAutomatedReplyResponseType
   WhatsappSettings        WhatsappSettings? @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
@@ -2421,6 +2442,7 @@ model LoyaltyApiSettings {
   phoneKey  String
   amountKey String
   actionId  String? @unique @db.Uuid
+  rewardId  String? @unique @db.Uuid
   rules     Json
   priority  Int
   active    Boolean @default(true)
@@ -2460,6 +2482,7 @@ model WhatsappCatalog {
 
   storeType             String? @default("standard")
   paymentMethod         String?
+  /// [PWaCatalogPaymentConfig]
   standardPaymentConfig Json?
   standardPaymentMethod String?
   collectAddress        Boolean @default(false)
@@ -2470,6 +2493,7 @@ model WhatsappCatalog {
   addressFlowDbId       String?
   addressFlowStatus     String? @default("idle")
   addressFlowFields     Json?
+  /// [PWaCatalogDeliveryOptions]
   deliveryOptions       Json?
 
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
@@ -2511,6 +2535,7 @@ model WaCatalogProduct {
   hotel_ratailer_id String?
   productMetaId     String?
   shopifyVariantId  String?
+  /// [PWaCatalogProductProps]
   productProps      Json?
   hotelProps        Json?
   hotelRoomProps    Json?
@@ -2524,6 +2549,7 @@ model WaCatalogOrder {
   id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   catalogId     String
   catalog       WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  /// [PWaCatalogOrderProduct]
   products      Json[]
   contactId     String          @db.Uuid
   contact       Contact         @relation(fields: [contactId], references: [id], onDelete: NoAction)
@@ -2537,7 +2563,9 @@ model WaCatalogOrder {
   shopifyInvoiceUrl   String?
 
   storeType       String?
+  /// [PWaCatalogShippingAddress]
   shippingAddress Json?
+  /// [PWaCatalogDeliveryOption]
   deliveryOption  Json?
   orderStage      String? @default("PENDING_ADDRESS")
 
@@ -2615,6 +2643,7 @@ model BusinessHour {
   channels    String[]
   description String?
 
+  /// [PBusinessHourSchedule]
   schedule Json // <---- stores 7 days + timeslots
 
   createdAt                DateTime                   @default(now())

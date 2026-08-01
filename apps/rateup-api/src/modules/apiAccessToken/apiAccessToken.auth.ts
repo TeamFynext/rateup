@@ -8,15 +8,18 @@ import { Role } from "../../../generated/prisma/client.js";
 /**
  * Verifies that the api-access-key is valid & sets orgId on the request.user object.
  */
-export const verifyApiAccessTokenHook = async (
-  request: FastifyRequest<{
-    Params: ByOrgIdParams;
-    Querystring: ByOrgIdParams;
-  }>,
-  reply: FastifyReply,
-) => {
+/** Narrows an untyped `params`/`query` bag to "might carry an orgId". Used instead of a
+ *  concrete route generic because this hook is mounted on routes with unrelated shapes
+ *  (e.g. `/contact/:contactId`, which declares no querystring at all). */
+function mayCarryOrgId(value: unknown): value is Partial<ByOrgIdParams> {
+  return typeof value === "object" && value !== null;
+}
+
+export const verifyApiAccessTokenHook = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const orgId = request.params.orgId ? request.params.orgId : request.query?.orgId;
+    const params = mayCarryOrgId(request.params) ? request.params : {};
+    const query = mayCarryOrgId(request.query) ? request.query : {};
+    const orgId = params.orgId ? params.orgId : query.orgId;
     if (!orgId) {
       log.warn("No orgId found in request\n%s\n%o", request.url, request.headers);
       reply.code(404).send({ message: "Not found" });
@@ -41,7 +44,7 @@ export const verifyApiAccessTokenHook = async (
     }
 
     const authHeader = request.headers.authorization;
-    if (!authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       log.error("No bearer token found in headers\n%o", request.headers);
       reply.code(400).send({
         message: "Invalid request",
@@ -68,10 +71,9 @@ export const verifyApiAccessTokenHook = async (
     }
 
     // since most of the *.service.ts functions fetches user from request object
-    const user = { orgId, role: Role.SUPER_ADMIN };
-    (request as any).user! = user;
+    request.user = { orgId, role: Role.SUPER_ADMIN };
   } catch (err) {
-    log.error("Error checking session\n%o", err);
+    log.error({ err }, "Error checking session");
     reply.code(401).send({ message: "Not authorized" });
   }
 };

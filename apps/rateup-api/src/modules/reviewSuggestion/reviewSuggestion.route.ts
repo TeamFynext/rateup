@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createReviewSuggestionsSchema,
   byReviewSuggestionIdSchema,
+  updateReviewSuggestionSchema,
 } from "./reviewSuggestion.schema.js";
 import {
   createReviewSuggestionsHandler,
@@ -14,11 +15,15 @@ import {
 } from "./reviewSuggestion.controller.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
-import { bySurveyTeamMapIdParamsSchema, byTeamIdParamsSchema } from "../team/team.schema.js";
+import {
+  bySurveyTeamMapIdParamsSchema,
+  byTeamIdParamsSchema,
+  ByTeamIdParams,
+} from "../team/team.schema.js";
 
 export async function reviewSuggestionRoutes(server: FastifyInstance) {
   server.setErrorHandler(errorHandler);
-  server.get(
+  server.get<{ Params: ByTeamIdParams }>(
     "/:teamId",
     {
       preHandler: [checkSession, verifyTeamAccess],
@@ -37,7 +42,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     },
     getReviewsBySurveyTeamMapIdHandler,
   );
-  server.get(
+  server.get<{ Params: ByTeamIdParams }>(
     "/:teamId/count",
     {
       preHandler: [checkSession, verifyTeamAccess],
@@ -47,7 +52,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     },
     getReviewsSuggestionCountByTeamIdHandler,
   );
-  server.post(
+  server.post<{ Params: ByTeamIdParams; Body: createReviewSuggestionsSchema }>(
     "/:teamId",
     {
       preHandler: [checkSession, verifyTeamAccess],
@@ -58,7 +63,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     },
     createReviewSuggestionsHandler,
   );
-  server.put(
+  server.put<{ Params: byReviewSuggestionIdSchema; Body: updateReviewSuggestionSchema }>(
     "/:reviewSuggestionId",
     {
       preHandler: [checkSession],

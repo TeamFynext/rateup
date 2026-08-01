@@ -4,7 +4,7 @@ import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function createMsg({ name, email, message, address }: CreateContactMessageInput) {
-  if (address?.length > 0) {
+  if ((address?.length ?? 0) > 0) {
     return "Error";
   }
 

@@ -1,3 +1,7 @@
+import type { WhatsappSettings } from "../../../../generated/prisma/client.js";
+
+/** The Facebook handlers only need the page identity off the settings row. */
+type FacebookPageSettings = Pick<WhatsappSettings, "orgId" | "fbPageId" | "pageAccessToken">;
 import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByPageId } from "../settings/wa_settings.service.js";
 import { log } from "../../../utils/logger.js";
@@ -27,7 +31,7 @@ export async function getFacebookUserDetailsFromMeta(userId: string, pageId: str
       id: string;
     };
   } catch (error) {
-    log.error(`Error getting Facebook user details: %o`, error);
+    log.error({ err: error }, "Error getting Facebook user details");
     throw error;
   }
 }
@@ -90,8 +94,12 @@ export async function handleFacebookWebhook(data: FacebookWebhookBody) {
   }
 }
 
-export async function handleFacebookMessages(data: FacebookWebhookBody, waSettings: any) {
+export async function handleFacebookMessages(
+  data: FacebookWebhookBody,
+  waSettings: FacebookPageSettings,
+) {
   const { orgId, fbPageId } = waSettings;
+  const sourceIdentifier = fbPageId ?? undefined;
 
   const messaging = data.entry[0].messaging[0];
 
@@ -115,7 +123,7 @@ export async function handleFacebookMessages(data: FacebookWebhookBody, waSettin
       sender.id,
       orgId,
       PlatformType.FACEBOOK,
-      fbPageId,
+      sourceIdentifier,
       undefined,
       message?.mid,
     );
@@ -147,7 +155,7 @@ export async function handleFacebookMessageDelivered(data: FacebookWebhookBody) 
         },
       });
     } catch (error) {
-      log.error(`[Facebook] Error updating delivery status for ${mid}: %o`, error);
+      log.error({ err: error }, `[Facebook] Error updating delivery status for ${mid}`);
     }
   }
 }
@@ -201,7 +209,7 @@ export async function handleFacebookMessageRead(data: FacebookWebhookBody) {
           },
           data: {
             stats: {
-              ...(message.stats as Record<string, any>),
+              ...(message.stats as Record<string, unknown>),
               read: readTime.toISOString(),
             },
           },
@@ -211,12 +219,16 @@ export async function handleFacebookMessageRead(data: FacebookWebhookBody) {
 
     log.trace(`[Facebook] Updated ${messages.length} messages as read`);
   } catch (error) {
-    log.error(`[Facebook] Error handling read receipt: %o`, error);
+    log.error({ err: error }, "[Facebook] Error handling read receipt");
   }
 }
 
-export async function handleFacebookPostback(data: FacebookWebhookBody, waSettings: any) {
+export async function handleFacebookPostback(
+  data: FacebookWebhookBody,
+  waSettings: FacebookPageSettings,
+) {
   const { orgId, fbPageId } = waSettings;
+  const sourceIdentifier = fbPageId ?? undefined;
   const messaging = data.entry[0].messaging[0];
   const { sender, postback, timestamp } = messaging;
 
@@ -248,12 +260,16 @@ export async function handleFacebookPostback(data: FacebookWebhookBody, waSettin
       `postback_${timestamp}`,
     );
   } catch (error) {
-    log.error(`[Facebook] Error handling postback from user ${sender.id}: %o`, error);
+    log.error({ err: error }, `[Facebook] Error handling postback from user ${sender.id}`);
   }
 }
 
-export async function handleFacebookQuickReply(data: FacebookWebhookBody, waSettings: any) {
+export async function handleFacebookQuickReply(
+  data: FacebookWebhookBody,
+  waSettings: FacebookPageSettings,
+) {
   const { orgId, fbPageId } = waSettings;
+  const sourceIdentifier = fbPageId ?? undefined;
   const messaging = data.entry[0].messaging[0];
   const { sender, message, timestamp } = messaging;
 
@@ -288,6 +304,6 @@ export async function handleFacebookQuickReply(data: FacebookWebhookBody, waSett
       message.mid,
     );
   } catch (error) {
-    log.error(`[Facebook] Error handling quick_reply from user ${sender.id}: %o`, error);
+    log.error({ err: error }, `[Facebook] Error handling quick_reply from user ${sender.id}`);
   }
 }

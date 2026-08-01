@@ -91,19 +91,23 @@ beforeEach(() => {
 
 describe("the handlers' access check", () => {
   // NOTE: checkSession sets request.user = { userId, role, orgId, email }
-  // (checkSession.ts:22) — there is no `id`. Every handler in this file reads
-  // user.id, so the value handed to the membership check is always undefined.
-  test("passes undefined as the user id to isBoardMember", async () => {
-    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "a-real-member" });
+  // (checkSession.ts:22) — there is no `id`. Every handler in this file used to
+  // read user.id, so the value handed to the membership check was always
+  // undefined, and the 403 never actually filtered by the real caller. Fixed to
+  // read user.userId, the property the session actually sets.
+  test("passes the session's real userId to isBoardMember", async () => {
+    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: OUTSIDER });
 
     await getLabelsHandler({ params: { ticketBoardId: BOARD }, user: session() } as never, reply());
 
-    expect(db.teamMember.findFirst.mock.calls[0][0].where.userId).toBeUndefined();
+    expect(db.teamMember.findFirst.mock.calls[0][0].where.userId).toBe(OUTSIDER);
   });
 
   // NOTE: Prisma drops undefined keys rather than matching NULL
   // (strictUndefinedChecks is not enabled), so the filter collapses to "any
-  // member of any of this board's teams" — which any populated board has.
+  // member of any of this board's teams" — which any populated board has. Still
+  // true of isBoardMember itself; the fix above stops the handlers from ever
+  // calling it with undefined.
   test("the membership query degrades to any member of the board", async () => {
     db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "someone-else" });
 
@@ -114,78 +118,81 @@ describe("the handlers' access check", () => {
     });
   });
 
-  // NOTE: this is the bypass. The caller belongs to no team on this board; the
-  // board has one member who is somebody else; the 403 does not fire.
-  test("lets a non-member read another board's labels", async () => {
-    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "a-real-member" });
-    db.ticketBoardLabel.findMany.mockResolvedValueOnce([{ id: LABEL, name: "Bug" }]);
-    const rep = reply();
+  // A mocked teamMember.findFirst that actually discriminates by the userId it's
+  // asked about, so these tests can prove a genuine outsider gets refused (a mock
+  // that just resolves truthy unconditionally can't tell the two cases apart).
+  function findFirstMemberExcept(nonMemberUserId: string) {
+    return ({ where }: { where: { userId: string } }) =>
+      Promise.resolve(
+        where.userId === nonMemberUserId ? null : { id: "tm-1", userId: "a-real-member" },
+      );
+  }
 
-    await getLabelsHandler({ params: { ticketBoardId: BOARD }, user: session() } as never, rep);
+  test("refuses a non-member reading another board's labels", async () => {
+    db.teamMember.findFirst.mockImplementationOnce(findFirstMemberExcept(OUTSIDER));
 
-    expect(rep.send).toHaveBeenCalledWith([{ id: LABEL, name: "Bug" }]);
+    await expect(
+      getLabelsHandler({ params: { ticketBoardId: BOARD }, user: session() } as never, reply()),
+    ).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  test("lets a non-member create a label on another board", async () => {
-    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "a-real-member" });
-    const rep = reply();
+  test("refuses a non-member creating a label on another board", async () => {
+    db.teamMember.findFirst.mockImplementationOnce(findFirstMemberExcept(OUTSIDER));
 
-    await createLabelHandler(
-      {
-        params: { ticketBoardId: BOARD },
-        body: { name: "Bug", color: "#f00" },
-        user: session(),
-      } as never,
-      rep,
-    );
-
-    expect(db.ticketBoardLabel.create).toHaveBeenCalledOnce();
-    expect(answer(rep).code).toBe(201);
+    await expect(
+      createLabelHandler(
+        {
+          params: { ticketBoardId: BOARD },
+          body: { name: "Bug", color: "#f00" },
+          user: session(),
+        } as never,
+        reply(),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(db.ticketBoardLabel.create).not.toHaveBeenCalled();
   });
 
-  test("lets a non-member bulk delete another board's labels", async () => {
-    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "a-real-member" });
-    const rep = reply();
+  test("refuses a non-member bulk deleting another board's labels", async () => {
+    db.teamMember.findFirst.mockImplementationOnce(findFirstMemberExcept(OUTSIDER));
 
-    await deleteLabelsHandler(
-      { params: { ticketBoardId: BOARD }, body: { labelIds: [LABEL] }, user: session() } as never,
-      rep,
-    );
-
-    expect(db.ticketBoardLabel.deleteMany).toHaveBeenCalledOnce();
-    expect(answer(rep).code).toBe(204);
+    await expect(
+      deleteLabelsHandler(
+        { params: { ticketBoardId: BOARD }, body: { labelIds: [LABEL] }, user: session() } as never,
+        reply(),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(db.ticketBoardLabel.deleteMany).not.toHaveBeenCalled();
   });
 
-  test("the same undefined reaches the by-id check", async () => {
+  test("passes the session's real userId to the by-id check", async () => {
     db.ticketBoardLabel.findUnique.mockResolvedValueOnce({
       id: LABEL,
       ticketBoardId: BOARD,
       ticketBoard: { teams: [{ teamId: VICTIM_TEAM }] },
     });
-    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "a-real-member" });
-    const rep = reply();
+    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: OUTSIDER });
 
-    await deleteLabelHandler({ params: { id: LABEL }, user: session() } as never, rep);
+    await deleteLabelHandler({ params: { id: LABEL }, user: session() } as never, reply());
 
-    expect(db.teamMember.findFirst.mock.calls[0][0].where.userId).toBeUndefined();
+    expect(db.teamMember.findFirst.mock.calls[0][0].where.userId).toBe(OUTSIDER);
     expect(db.ticketBoardLabel.delete).toHaveBeenCalledWith({ where: { id: LABEL } });
   });
 
-  test("lets a non-member rename another board's label", async () => {
+  test("refuses a non-member renaming another board's label", async () => {
     db.ticketBoardLabel.findUnique.mockResolvedValue({
       id: LABEL,
       ticketBoardId: BOARD,
       ticketBoard: { teams: [{ teamId: VICTIM_TEAM }] },
     });
-    db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1", userId: "a-real-member" });
-    const rep = reply();
+    db.teamMember.findFirst.mockImplementationOnce(findFirstMemberExcept(OUTSIDER));
 
-    await updateLabelHandler(
-      { params: { id: LABEL }, body: { name: "Renamed" }, user: session() } as never,
-      rep,
-    );
-
-    expect(db.ticketBoardLabel.update).toHaveBeenCalledOnce();
+    await expect(
+      updateLabelHandler(
+        { params: { id: LABEL }, body: { name: "Renamed" }, user: session() } as never,
+        reply(),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(db.ticketBoardLabel.update).not.toHaveBeenCalled();
   });
 
   // NOTE: the check only holds where it was never going to matter — a board
@@ -202,8 +209,8 @@ describe("the handlers' access check", () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  // NOTE: the sibling board module reads request.userId, which the session does
-  // set — so the same helper is called correctly there and incorrectly here.
+  // The sibling board module reads request.userId, which the session does set —
+  // this module's handlers now do the same (see the fix above).
   test("the correct property yields a real membership filter", async () => {
     db.teamMember.findFirst.mockResolvedValueOnce({ id: "tm-1" });
 

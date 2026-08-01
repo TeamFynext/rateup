@@ -296,7 +296,7 @@ describe("createUserSignup - failures", () => {
     db.$transaction.mockRejectedValue(failure);
 
     await expect(createUserSignup(signupInput())).rejects.toThrow("unique constraint");
-    expect(log.error).toHaveBeenCalledWith("create user transaction failed %o", failure);
+    expect(log.error).toHaveBeenCalledWith({ err: failure }, "create user transaction failed");
   });
 
   test("does not touch survey cloning or HubSpot when the transaction fails", async () => {

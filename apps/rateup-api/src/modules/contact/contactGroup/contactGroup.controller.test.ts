@@ -401,8 +401,17 @@ describe("addExistingContactsToMultipleGroupsHandler", () => {
 // ===========================================================================
 
 describe("addNewContactsfromCSVToGroupHandler", () => {
+  // Real @fastify/multipart non-file parts always carry `type: "field"`
+  // alongside `.value` — the handler now discriminates on it, so fixtures
+  // need to match the real shape rather than a bare `{ value }`.
   function upload(fields: Record<string, unknown> = {}, mimetype = "text/csv") {
-    return { mimetype, fields };
+    const wrapped = Object.fromEntries(
+      Object.entries(fields).map(([key, field]) => [
+        key,
+        { type: "field", ...(field as Record<string, unknown>) },
+      ]),
+    );
+    return { mimetype, fields: wrapped };
   }
 
   test("refuses a file type that is not a spreadsheet", async () => {

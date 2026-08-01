@@ -26,8 +26,8 @@ export async function dispatchLoyaltyNotification(
     lifetimePoints?: number;
     // Reward Override Context
     rewardId?: string;
-    rewardWaTemplateId?: string;
-    [key: string]: any;
+    rewardWaTemplateId?: string | null;
+    [key: string]: unknown;
   },
 ) {
   try {
@@ -124,7 +124,7 @@ export async function dispatchLoyaltyNotification(
     await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
   } catch (error) {
     console.log("🚀 ~ dispatchLoyaltyNotification ~ error:", error);
-    log.error(`[LoyaltyWaDispatcher] Error dispatching ${commandKey}: %o`, error);
+    log.error({ error }, `[LoyaltyWaDispatcher] Error dispatching ${commandKey}`);
     // Don't throw, silence error to avoid blocking transaction
   }
 }

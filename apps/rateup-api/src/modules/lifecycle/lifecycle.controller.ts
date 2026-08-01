@@ -14,6 +14,13 @@ import {
   updateLifecycle,
 } from "./lifecycle.service.js";
 
+// Matches any thrown value carrying a Prisma-style `code`, deliberately duck-typed rather
+// than narrowed via `instanceof PrismaClientKnownRequestError` — the original code checked
+// `e.code` structurally, and callers/tests supply plain objects annotated with a `code`.
+function hasErrorCode(e: unknown, code: string): e is { code: string } {
+  return typeof e === "object" && e !== null && "code" in e && e.code === code;
+}
+
 export async function getLifecyclesHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
@@ -50,7 +57,7 @@ export async function createLifecycleHandler(
     const res = await createLifecycle(orgId, request.body);
     reply.code(200).send(res);
   } catch (e) {
-    if (e.code === "P2002") {
+    if (hasErrorCode(e, "P2002")) {
       return reply.code(409).send({ message: "Lifecycle already exists" });
     }
     log.error(e);
@@ -70,7 +77,7 @@ export async function updateLifecycleHandler(
     const res = await updateLifecycle(id, request.body);
     reply.code(200).send(res);
   } catch (e) {
-    if (e.code === "P2002") {
+    if (hasErrorCode(e, "P2002")) {
       return reply.code(409).send({ message: "Lifecycle already exists" });
     }
     log.error(e);

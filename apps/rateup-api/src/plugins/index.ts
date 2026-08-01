@@ -17,7 +17,7 @@ export async function registerPlugins(server: FastifyInstance) {
 
   await server.register(plugin);
 
-  server.setErrorHandler(errorHandler() as any);
+  server.setErrorHandler(errorHandler());
 
   server.addHook("onSend", async (request, reply, payload) => {
     const location = reply.getHeader("location");
@@ -30,12 +30,16 @@ export async function registerPlugins(server: FastifyInstance) {
   });
 
   // CORS
+  const allowedOrigins: (string | RegExp)[] = [
+    process.env.ELECTION_APP_URL,
+    process.env.FRONTEND_URL,
+  ].filter((origin): origin is string => origin !== undefined);
+  allowedOrigins.push(
+    ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url)),
+  );
+
   await server.register(cors, {
-    origin: [
-      process.env.ELECTION_APP_URL,
-      process.env.FRONTEND_URL,
-      ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url)),
-    ],
+    origin: allowedOrigins,
     allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,

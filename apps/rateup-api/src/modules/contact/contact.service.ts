@@ -1,4 +1,4 @@
-import { ContactGroupType } from "../../../generated/prisma/client.js";
+import { Contact, ContactGroupType, Prisma } from "../../../generated/prisma/client.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import {
@@ -46,6 +46,7 @@ import {
   transitionInboxStat,
   incrementInboxStat,
   decrementInboxStat,
+  type StatsField,
 } from "../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { updateZohoLeadQueue, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
 import {
@@ -53,6 +54,20 @@ import {
   buildZohoContactPayload,
   buildZohoLeadPayload,
 } from "../integrations/external/zoho/zoho.utils.js";
+
+// A `ContactCore.customFields` entry's `id` is declared optional in the input
+// schema, but the DB column it's written to (`ContactCustomFieldValue.fieldId`)
+// is a required FK to an already-created `ContactCustomField`. Guard once here
+// instead of casting away the `undefined` at every call site.
+function toContactCustomFieldValueInput(
+  field: { id?: string; value: string },
+  contactId: string,
+): { contactId: string; fieldId: string; value: string } {
+  if (!field.id) {
+    throw new Error("Custom field id is required to set a custom field value");
+  }
+  return { contactId, fieldId: field.id, value: field.value };
+}
 
 export async function createContact(contact: ContactCore & { orgId: string }, userId?: string) {
   if (!contact.phone) {
@@ -64,7 +79,7 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
   const user = await prisma.contact.create({
     data: {
       ...rest,
-      lifecycleId: lifecycleId.length ? lifecycleId : undefined,
+      lifecycleId: lifecycleId?.length ? lifecycleId : undefined,
     },
   });
   if (labels && labels.length > 0) {
@@ -78,11 +93,7 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
   }
   if (customFields?.length) {
     await prisma.contactCustomFieldValue.createMany({
-      data: customFields.map((field) => ({
-        contactId: user.id,
-        fieldId: field.id,
-        value: field.value,
-      })),
+      data: customFields.map((field) => toContactCustomFieldValueInput(field, user.id)),
       skipDuplicates: true,
     });
   }
@@ -192,11 +203,7 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
   });
   if (customFields?.length) {
     await prisma.contactCustomFieldValue.createMany({
-      data: customFields.map((field) => ({
-        contactId: user.id,
-        fieldId: field.id,
-        value: field.value,
-      })),
+      data: customFields.map((field) => toContactCustomFieldValueInput(field, user.id)),
       skipDuplicates: true,
     });
   }
@@ -206,20 +213,23 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
 export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
   const chatbot = await getChatbotDetails(orgId);
   const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
+  // These keys come in on the input DTO but are not Contact columns — they are persisted
+  // separately below, so they are blanked out of the create payload.
+  const omitted: undefined = undefined;
   const contactsData = contacts.map((contact) => ({
     ...contact,
     orgId,
     aiWaChat,
-    customFields: undefined,
-    labels: undefined,
-    contactGroupIds: undefined,
-    assignedUserIds: undefined,
+    customFields: omitted,
+    labels: omitted,
+    contactGroupIds: omitted,
+    assignedUserIds: omitted,
     lifecycleId: contact.lifecycleId?.length ? contact.lifecycleId : undefined,
   }));
 
   // Batch size for DB operations
   const BATCH_SIZE = 1000;
-  let createdContacts: any[] = [];
+  let createdContacts: Contact[] = [];
   for (let i = 0; i < contactsData.length; i += BATCH_SIZE) {
     const batch = contactsData.slice(i, i + BATCH_SIZE);
     const batchCreated = await prisma.contact.createManyAndReturn({
@@ -228,6 +238,7 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
     });
     batchCreated.forEach(async (contact) => {
       const inputData = contacts.find((c) => contact.phone === c.phone);
+      if (!inputData) return;
       if (inputData.labels && inputData.labels.length > 0) {
         await prisma.contactLabelMap.createMany({
           data: inputData.labels.map((labelId) => ({
@@ -282,15 +293,14 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
     }
 
     // Prepare custom field values
-    const customFieldValues = contacts
-      .filter((contact) => contact.customFields?.length)
-      .flatMap((contact) =>
-        contact.customFields.map((field) => ({
-          contactId: createdContacts.find((c) => c.phone === contact.phone)?.id || "",
-          fieldId: field.id,
-          value: field.value,
-        })),
-      );
+    const customFieldValues = contacts.flatMap((contact) =>
+      (contact.customFields ?? []).map((field) =>
+        toContactCustomFieldValueInput(
+          field,
+          createdContacts.find((c) => c.phone === contact.phone)?.id || "",
+        ),
+      ),
+    );
 
     // Batch create custom field values
     for (let i = 0; i < customFieldValues.length; i += BATCH_SIZE) {
@@ -384,7 +394,7 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     sort: "createdAt",
     desc: "asc",
   };
-  let filterData = [];
+  let filterData: Prisma.ContactWhereInput[] = [];
   if (filter) {
     const params = new URLSearchParams(filter);
     for (const [key, value] of params.entries()) {
@@ -396,7 +406,7 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
           filterData.push({
             [key]: {
               contains: value,
-              mode: "insensitive",
+              mode: "insensitive" as const,
             },
           });
           break;
@@ -472,17 +482,19 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     );
   }
   // Define the search condition
-  let groupTypeCondition =
-    query.type === ContactGroupType.LOYALTY
+  let groupTypeCondition: Prisma.ContactWhereInput =
+    query?.type === ContactGroupType.LOYALTY
       ? {
+          // Contact -> CustomerLoyaltyAccount is a list relation (`loyaltyAccounts`);
+          // "is a loyalty member" is therefore `some`, not `isNot: null`.
           AND: {
-            loyaltyCustomer: {
-              isNot: null,
+            loyaltyAccounts: {
+              some: {},
             },
           },
         }
       : {};
-  const searchCondition: any =
+  const searchCondition: Prisma.ContactWhereInput =
     filterData?.length > 0
       ? {
           orgId,
@@ -579,7 +591,7 @@ export async function deleteContactById(contactId: string) {
     { [ZapierTriggers.CONTACT_DELETED]: user },
     user.orgId,
   );
-  const integrationIds = user.integrationIds as any;
+  const integrationIds = user.integrationIds;
   await integrationTriggerQueue.add("zoho-contact-delete", {
     integrationName: "zoho",
     triggerKey: ZohoTriggers.CONTACT_DELETE,
@@ -605,7 +617,12 @@ export async function updateContactById(
   contactId: string,
   contact: updateContactSchema,
   userId?: string,
-  existing?: any,
+  // Only the four fields the inbox-stat transitions below read are required; callers pass
+  // a full Contact row, but a lighter snapshot is enough.
+  existing?: Pick<
+    Contact,
+    "id" | "orgId" | "waMessageAssignStatus" | "blockedOnWhatsApp" | "lastReceivedMessageTimeStamp"
+  > | null,
   actor?: InboxActor,
 ) {
   // Use provided existing contact if available, otherwise fetch
@@ -616,6 +633,9 @@ export async function updateContactById(
         id: contactId,
       },
     }));
+  if (!contactRecord) {
+    throw new Error(`Contact ${contactId} not found`);
+  }
   if (contact.labels && contact.labels.length > 0) {
     await prisma.contactLabelMap.deleteMany({
       where: {
@@ -637,11 +657,7 @@ export async function updateContactById(
       },
     });
     await prisma.contactCustomFieldValue.createMany({
-      data: contact.customFields.map((field) => ({
-        contactId,
-        fieldId: field.id,
-        value: field.value,
-      })),
+      data: contact.customFields.map((field) => toContactCustomFieldValueInput(field, contactId)),
       skipDuplicates: true,
     });
   }
@@ -767,10 +783,11 @@ export async function updateContactById(
     });
   }
   if (contact.contactGroupIds) {
+    const contactGroupIds = contact.contactGroupIds;
     const removedGroups = updatedContact.contactGroups.filter(
-      (g) => !contact.contactGroupIds.includes(g.contactGroupId),
+      (g) => !contactGroupIds.includes(g.contactGroupId),
     );
-    const newGroupIds = contact.contactGroupIds.filter(
+    const newGroupIds = contactGroupIds.filter(
       (contactGroupId) =>
         !updatedContact.contactGroups.some((c) => c.contactGroupId === contactGroupId),
     );
@@ -792,10 +809,11 @@ export async function updateContactById(
   }
 
   if (contact.assignedUserIds) {
+    const assignedUserIds = contact.assignedUserIds;
     const removedAssignees = updatedContact.waInboxAssign.filter(
-      (g) => !contact.assignedUserIds.includes(g.assignedUserId),
+      (g) => !assignedUserIds.includes(g.assignedUserId),
     );
-    const newAssignees = contact.assignedUserIds.filter(
+    const newAssignees = assignedUserIds.filter(
       (assignedUserId) =>
         !updatedContact.waInboxAssign.some((c) => c.assignedUserId === assignedUserId),
     );
@@ -942,7 +960,7 @@ export async function updateContactById(
         waMessageAssignStatus: markingSpam
           ? WaMessageAssignStatus.SPAM
           : updatedContact.waMessageAssignStatus,
-        messageId: contact.messageId,
+        messageId: contact.messageId ?? crypto.randomUUID(),
       });
     }
     // The conversation was already mirrored inside the transaction above.
@@ -966,6 +984,11 @@ export async function updateContactLabelsById(contactId: string, lifecycleId: st
       },
     },
   });
+  // `lifecycleId` is an FK, so a successful update guarantees a matching
+  // `Lifecycle` row — guarded rather than asserted, in case that ever changes.
+  if (!contact.Lifecycle) {
+    throw new Error(`Lifecycle not found for id ${lifecycleId}`);
+  }
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_LIFECYCLE_UPDATED,
     {
@@ -1342,7 +1365,7 @@ export async function deleteManyContacts(contactIds: Array<string>) {
   }
   return res;
 }
-function normalizePhone(phone) {
+function normalizePhone(phone: string): string {
   if (!phone) return "";
 
   // Already a string like "9198771234"
@@ -1360,6 +1383,12 @@ function normalizePhone(phone) {
 
   return phone.toString().trim();
 }
+
+// Rows read off the uploaded spreadsheet: standard `name`/`phone` columns plus
+// whatever dynamic custom-field columns the caller's `tags` pointed at.
+type CsvContactRow = Record<string, unknown> & { name?: unknown; phone?: unknown };
+// After `processContact` validates a row, `name`/`phone` are confirmed strings.
+type ValidatedCsvContactRow = Record<string, unknown> & { name: string; phone: string };
 
 // Column order assumed when the uploaded file has no header row.
 function noHeaderColumnOrder(tags: string[]) {
@@ -1385,24 +1414,34 @@ export async function importCSVContacts(
   const { mimetype } = fileBody;
   const buffer = await fileBody.toBuffer();
 
-  const contacts = [];
-  const errorContact = [];
+  const contacts: ValidatedCsvContactRow[] = [];
+  const errorContact: { name: string; phone: string }[] = [];
 
-  const processContact = (contact) => {
-    let rawPhone = normalizePhone(contact.phone);
+  const processContact = (contact: CsvContactRow) => {
+    const phoneValue = contact.phone;
+    const nameValue = contact.name;
+    const rawPhone = normalizePhone(
+      typeof phoneValue === "string" ? phoneValue : String(phoneValue ?? ""),
+    );
 
-    const formattedPhone = rawPhone?.startsWith("+")
-      ? rawPhone?.replace(/\s+/g, "")
-      : `+${rawPhone?.replace(/\s+/g, "")}`;
+    const formattedPhone = rawPhone.startsWith("+")
+      ? rawPhone.replace(/\s+/g, "")
+      : `+${rawPhone.replace(/\s+/g, "")}`;
 
-    if (!contact?.phone || !isValidPhoneNumber(formattedPhone) || !contact?.name) {
+    if (
+      !phoneValue ||
+      typeof nameValue !== "string" ||
+      !nameValue ||
+      !isValidPhoneNumber(formattedPhone)
+    ) {
       errorContact.push({
-        name: contact?.name || "name is missing/invalid",
-        phone: contact?.phone ? `${contact?.phone}: Invalid phone number` : "phone is missing",
+        name: typeof nameValue === "string" && nameValue ? nameValue : "name is missing/invalid",
+        phone: phoneValue ? `${phoneValue}: Invalid phone number` : "phone is missing",
       });
     } else {
-      contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
-      contacts.push(contact);
+      const phoneDigits = formattedPhone.slice(1); // Remove the '+' for storage
+      contact.phone = phoneDigits;
+      contacts.push({ ...contact, name: nameValue, phone: phoneDigits });
     }
   };
 
@@ -1437,21 +1476,21 @@ export async function importCSVContacts(
 }
 
 export async function createContactsFromCsv(
-  contacts,
-  orgId,
-  cTags,
+  contacts: ValidatedCsvContactRow[],
+  orgId: string,
+  cTags: string[],
   updateExisting = false,
-  contactGroupId,
+  contactGroupId?: string,
 ) {
   const customFields = await getCustomFields(orgId);
   const data = contacts?.map(({ name, phone, ...obj }) => {
-    const customFieldsRes = [];
+    const customFieldsRes: { id: string; value: string }[] = [];
     if (customFields?.length > 0) {
       for (const field of customFields) {
         if (cTags.includes(field.slug) && obj?.[field?.slug]) {
           customFieldsRes.push({
             id: field.id,
-            value: obj?.[field.slug],
+            value: String(obj[field.slug]),
           });
         }
       }
@@ -1504,6 +1543,10 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
     const batch = contacts.slice(i, i + BATCH_SIZE);
 
     for (const contact of batch) {
+      if (!contact.phone) {
+        log.warn("Skipping contact update: missing phone number for %s", contact.name);
+        continue;
+      }
       const { customFields, ...contactData } = contact;
 
       const updatedContact = await prisma.contact.upsert({
@@ -1531,11 +1574,9 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
           },
         });
         await prisma.contactCustomFieldValue.createMany({
-          data: customFields.map((field) => ({
-            contactId: updatedContact.id,
-            fieldId: field.id,
-            value: field.value,
-          })),
+          data: customFields.map((field) =>
+            toContactCustomFieldValueInput(field, updatedContact.id),
+          ),
           skipDuplicates: true,
         });
       }
@@ -1629,6 +1670,9 @@ export const handleContactConsent = async (orgId: string, phone: string, consent
       orgId,
     },
   });
+  if (!contact_consent) {
+    throw new Error(`Contact not found for phone ${phone}`);
+  }
   if (contact_consent.consent === consent) return false;
   await prisma.contact.update({
     where: {
@@ -1685,7 +1729,7 @@ export async function deleteCustomField(orgId: string, fieldId: string) {
   return field;
 }
 
-export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
+export async function updateLifecycleStageofContacts(lifecycleId: string, contactIds: string[]) {
   await prisma.contact.updateMany({
     where: {
       id: {
@@ -1852,7 +1896,7 @@ export async function bulkUpdateWaMessageAssignStatus(
 
   const orgId = contacts[0].orgId;
   const newField = mapStatusToField(waMessageAssignStatus);
-  const transitions: Record<string, number> = {};
+  const transitions: Partial<Record<StatsField, number>> = {};
 
   for (const c of contacts) {
     if (
@@ -1862,14 +1906,13 @@ export async function bulkUpdateWaMessageAssignStatus(
     ) {
       const oldField = mapStatusToField(c.waMessageAssignStatus);
       if (oldField && newField) {
-        if (!transitions[oldField]) transitions[oldField] = 0;
-        transitions[oldField]++;
+        transitions[oldField] = (transitions[oldField] ?? 0) + 1;
       }
     }
   }
 
-  for (const [oldField, count] of Object.entries(transitions)) {
-    await transitionInboxStat(orgId, oldField as any, newField, count);
+  for (const [oldField, count] of Object.entries(transitions) as Array<[StatsField, number]>) {
+    await transitionInboxStat(orgId, oldField, newField, count);
   }
 
   //  Execute triggers in parallel
@@ -1942,7 +1985,7 @@ export async function bulkUpdateWaMessageAssignStatus(
           contactId: contact.id,
           // The thread records the event that was asked for, not its storage form.
           waMessageAssignStatus: markingSpam ? WaMessageAssignStatus.SPAM : waMessageAssignStatus,
-          messageId,
+          messageId: messageId ?? crypto.randomUUID(),
         });
       }
 

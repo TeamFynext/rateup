@@ -1,6 +1,6 @@
 import jwt from "supertokens-node/recipe/jwt/index.js";
 
-export async function createJWT(payload: any) {
+export async function createJWT(payload: Record<string, unknown>) {
   let jwtResponse = await jwt.createJWT({
     ...payload,
     source: "microservice",

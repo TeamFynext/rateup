@@ -32,10 +32,12 @@ import {
   InviteCompleteInput,
   InviteMemberInput,
   SetTeamChannelsInput,
+  SetTeamFeaturesInput,
   tagQuerySchema,
 } from "./team.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../../utils/logger.js";
+import { errorMessage } from "../../utils/commonUtils.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -52,12 +54,12 @@ export async function createTeamHandler(
 
   try {
     team = await createTeam(body);
-    if ((request.body?.features as any)?.length && team?.team?.id) {
-      await setTeamFeatures(team.team.id, request.body as any);
+    if (request.body?.features?.length && team?.team?.id) {
+      await setTeamFeatures(team.team.id, { features: request.body.features });
     }
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
@@ -131,9 +133,9 @@ export async function inviteMemberHandler(
     reply.code(201).send(invite);
 
     //TODO Auth
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
   }
 }
 
@@ -146,8 +148,8 @@ export async function resendInviteMemberHandler(
   try {
     await resendInviteTeamMember(request.params.id);
     return reply.code(200).send("invite resended");
-  } catch (e: any) {
-    return reply.code(500).send({ success: false, message: e.message });
+  } catch (e) {
+    return reply.code(500).send({ success: false, message: errorMessage(e) });
   }
 }
 export async function completeInviteHandler(
@@ -271,9 +273,9 @@ export async function editTeamHandler(
     } else {
       team = await editTeam(body, id, request, reply);
     }
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
@@ -309,9 +311,19 @@ export async function addMembertoTeamsHandler(
 ) {
   try {
     const user = request.user;
+    if (!user.id) {
+      reply.code(401).send({ message: "Missing user" });
+      return;
+    }
     const res = await addMemberToTeams(request.body.teamIds, request.params.id);
     const team = await getTeamById(request.body.teamIds[0]);
-    await addMembersToTeamsMail(request.body.userEmail, team.name, user);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+    await addMembersToTeamsMail(request.body.userEmail, team.name, {
+      id: user.id,
+      orgId: user.orgId,
+    });
     reply.send(res);
   } catch (e) {
     log.error(e);
@@ -352,12 +364,12 @@ export async function getTeamFeaturesHandler(
 export async function setTeamFeaturesHandler(
   request: FastifyRequest<{
     Params: { teamId: string };
-    Body: { features: string[] };
+    Body: SetTeamFeaturesInput;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const features = await setTeamFeatures(request.params.teamId, request.body as any);
+    const features = await setTeamFeatures(request.params.teamId, request.body);
     reply.send({ features });
   } catch {
     reply.code(500).send({ message: "Internal server error" });
@@ -370,8 +382,8 @@ export async function getTeamChannelsHandler(
 ) {
   try {
     reply.send(await getTeamChannels(request.params.teamId));
-  } catch (e: any) {
-    log.error("Failed to get team channels\n%o", e);
+  } catch (e) {
+    log.error({ err: e }, "Failed to get team channels");
     reply.code(500).send({ message: "Internal server error" });
   }
 }
@@ -385,8 +397,8 @@ export async function setTeamChannelsHandler(
 ) {
   try {
     reply.send(await setTeamChannels(request.params.teamId, request.body));
-  } catch (e: any) {
-    log.error("Failed to set team channels\n%o", e);
+  } catch (e) {
+    log.error({ err: e }, "Failed to set team channels");
     reply.code(500).send({ message: "Internal server error" });
   }
 }

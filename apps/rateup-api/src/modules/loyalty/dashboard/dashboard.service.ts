@@ -239,15 +239,28 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
     };
   });
 
+  // Rows of the two monthly-rollup queries; counts come back as bigint/string from
+  // Postgres, so both are read through Number().
+  interface MemberGrowthRow {
+    month: string | Date;
+    total_members?: number | bigint | string | null;
+    active_members?: number | bigint | string | null;
+  }
+  interface PointsActivityRow {
+    month: string | Date;
+    issued?: number | bigint | string | null;
+    redeemed?: number | bigint | string | null;
+  }
+
   // Process monthly member growth
-  const memberGrowth = (rawMemberGrowth as any[]).map((row: any) => ({
+  const memberGrowth = (rawMemberGrowth as MemberGrowthRow[]).map((row) => ({
     month: MONTH_LABELS[new Date(row.month).getMonth()],
     members: Number(row.total_members || 0),
     active: Number(row.active_members || 0),
   }));
 
   // Process monthly points activity
-  const pointsActivity = (rawPointsActivity as any[]).map((row: any) => ({
+  const pointsActivity = (rawPointsActivity as PointsActivityRow[]).map((row) => ({
     month: MONTH_LABELS[new Date(row.month).getMonth()],
     issued: Number(row.issued || 0),
     redeemed: Number(row.redeemed || 0),

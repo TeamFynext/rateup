@@ -18,6 +18,7 @@ import {
 } from "./shopify.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import shopify from "./shopify.config.js";
+import { HttpResponseError, type GraphQLClientResponse } from "@shopify/shopify-api";
 
 import webhookHandlers, {
   defaultWebhookHandlers,
@@ -31,12 +32,15 @@ import {
   updateIntegrationByName,
 } from "../integrations.service.js";
 import { IntegratedApps } from "../../../types/enums.js";
+import { errorMessage } from "../../../utils/commonUtils.js";
 
 export async function getShopifyAuthHandler(
   request: FastifyRequest<{ Querystring: { shop: string } }>,
   reply: FastifyReply,
 ) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
+    if (!shopify.config.scopes) throw new Error("Shopify scopes are not configured");
     const { shop } = request.query;
     if (!shop) return reply.code(404).send("Shop is missing");
     const shopifyInfo = await getShopifyIntegrationByShop(shop);
@@ -51,7 +55,7 @@ export async function getShopifyAuthHandler(
     }
   } catch (e) {
     console.error(e);
-    if (e.response && e.response.code === 401)
+    if (e instanceof HttpResponseError && e.response.code === 401)
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
     else {
       reply.redirect(`${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`);
@@ -66,6 +70,8 @@ export async function getShopifyAuthCallbackHandler(
   try {
     const callbackResponse = await handleShopifyAuthCallback(request, reply);
     const session = callbackResponse.session;
+    // A freshly connected shop has no surveys configured yet.
+    const shopifySurveys: ShopifySurvey[] = [];
     const data = {
       name: IntegratedApps.shopify,
       credential: {
@@ -78,7 +84,7 @@ export async function getShopifyAuthCallbackHandler(
           scope: session.scope,
         },
         isWebhookRegistered: false,
-        shopifySurveys: [],
+        shopifySurveys,
       },
     };
     const integrationbyshop = await getShopifyIntegrationByShop(session.shop);
@@ -122,6 +128,7 @@ export async function updateShopifyIntegrationByShopHandler(
 
 export async function registerWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
     const { orgId } = request.user;
     const shopifyInfo = await getShopifyInfo(orgId);
     shopify.webhooks.addHandlers({
@@ -159,13 +166,15 @@ export async function deleteWebhookByTopicHandler(
   reply: FastifyReply,
 ) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const { topic } = request.body;
     const session = shopifyInfo.credential?.session;
     const client = new shopify.clients.Graphql({ session });
     const data = await getManagableWebhooks(client);
-    const webhookId = data.find((webhook) => webhook.topic === topic).id;
-    const webhook = await deleteWebhookById(webhookId, client);
+    const matchedWebhook = data.find((webhook) => webhook.topic === topic);
+    if (!matchedWebhook) throw new Error(`No registered webhook found for topic ${topic}`);
+    const webhook = await deleteWebhookById(matchedWebhook.id, client);
     reply.code(200).send(webhook);
   } catch (e) {
     console.error(e);
@@ -195,11 +204,16 @@ export async function deleteAllWebhookHandler(request: FastifyRequest, reply: Fa
 
 export async function shopifyWebhooksHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
+    // `shopify` is a module-level import (not a local const), so TS narrowing
+    // from the guard above doesn't persist inside the nested `.every()`
+    // closure below — bind to a local const first.
+    const shopifyClient = shopify;
     const allTopics = Object.keys(webhookHandlers);
-    if (!allTopics.every((topic) => shopify.webhooks.getTopicsAdded().includes(topic)))
-      shopify.webhooks.addHandlers(webhookHandlers);
+    if (!allTopics.every((topic) => shopifyClient.webhooks.getTopicsAdded().includes(topic)))
+      shopifyClient.webhooks.addHandlers(webhookHandlers);
     log.info("Processing webhook");
-    await shopify.webhooks.process({
+    await shopifyClient.webhooks.process({
       rawBody: request.rawBody as string, // is a string
       rawRequest: request.raw,
       rawResponse: reply.raw,
@@ -211,6 +225,7 @@ export async function shopifyWebhooksHandler(request: FastifyRequest, reply: Fas
 
 export async function getRegisteredWebhooksHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const session = shopifyInfo.credential.session;
     const client = new shopify.clients.Graphql({ session });
@@ -223,16 +238,29 @@ export async function getRegisteredWebhooksHandler(request: FastifyRequest, repl
   }
 }
 
+interface ShopifyProductNode {
+  id: string;
+  title: string;
+}
+
+interface ShopifyProductsData {
+  products: {
+    edges: { node: ShopifyProductNode; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}
+
 export async function getProductsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const session = shopifyInfo.credential.session;
     const client = new shopify.clients.Graphql({ session });
     let hasNextPage = true;
-    let cursor = null;
-    const products = [];
+    let cursor: string | null = null;
+    const products: ShopifyProductNode[] = [];
     while (hasNextPage) {
-      const data = await client.request(
+      const data: GraphQLClientResponse<ShopifyProductsData> = await client.request(
         `query getProducts($cursor: String) {
           products(first: 50, after: $cursor) {
             edges {
@@ -250,9 +278,10 @@ export async function getProductsHandler(request: FastifyRequest, reply: Fastify
         }`,
         { variables: { cursor } },
       );
+      if (!data.data) throw new Error("Shopify products query returned no data");
       hasNextPage = data.data.products.pageInfo.hasNextPage;
       cursor = data.data.products.pageInfo.endCursor;
-      products.push(...data.data.products.edges?.map((product) => product?.node));
+      products.push(...data.data.products.edges.map((edge) => edge.node));
     }
 
     reply.code(200).send(products);
@@ -267,13 +296,16 @@ export async function deleteIntegrationByShopHandler(
   reply: FastifyReply,
 ) {
   try {
+    if (!shopify) throw new Error("Shopify integration is not configured");
     const integration = await getShopifyIntegrationByShop(request.params.shop);
     try {
       const client = new shopify.clients.Graphql({
         session: integration.credential.session,
       });
-      const data = await client.request(`query { shop { name }}`);
-      if (data.data.shop) {
+      const data = await client.request<{ shop: { name: string } | null }>(
+        `query { shop { name }}`,
+      );
+      if (data.data?.shop) {
         return reply.code(403).send("App is still installed on Shop");
       }
     } catch {
@@ -282,7 +314,7 @@ export async function deleteIntegrationByShopHandler(
     const res = await deleteShopifyIntegrationByShop(request.params.shop);
     reply.code(200).send(res);
   } catch (e) {
-    log.error("error deleting integration %o", e);
+    log.error({ err: e }, "error deleting integration");
     reply.code(500).send(e);
   }
 }
@@ -302,13 +334,13 @@ export async function getFulfillmentOrdersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const { id } = request.params;
     const fulfillmentOrders = await getFulfillmentOrders(orgId, id);
     reply.code(200).send(fulfillmentOrders);
-  } catch (e: any) {
-    log.error("Error fetching fulfillment orders: %o", e);
-    reply.code(500).send({ error: e.message || "Failed to fetch fulfillment orders" });
+  } catch (e) {
+    log.error({ err: e }, "Error fetching fulfillment orders");
+    reply.code(500).send({ error: errorMessage(e) || "Failed to fetch fulfillment orders" });
   }
 }
 
@@ -333,11 +365,11 @@ export async function createFulfillmentHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const fulfillment = await createShopifyFulfillment(orgId, request.body);
     reply.code(200).send(fulfillment);
-  } catch (e: any) {
-    log.error("Error creating Shopify fulfillment: %o", e);
-    reply.code(500).send({ error: e.message || "Failed to create fulfillment" });
+  } catch (e) {
+    log.error({ err: e }, "Error creating Shopify fulfillment");
+    reply.code(500).send({ error: errorMessage(e) || "Failed to create fulfillment" });
   }
 }

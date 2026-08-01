@@ -15,6 +15,16 @@ import {
 } from "./tier.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
+// deleteLoyaltyTier throws plain Errors annotated with an extra `code` (and, for
+// TIER_HAS_CUSTOMERS, a `customerCount`) field rather than dedicated Error subclasses —
+// this guard narrows an unknown catch value to that shape without a cast.
+function hasErrorCode(
+  e: unknown,
+  code: string,
+): e is Error & { code: string; customerCount?: number } {
+  return e instanceof Error && "code" in e && e.code === code;
+}
+
 export async function createLoyaltyTierHandler(
   request: FastifyRequest<{ Body: LoyaltyTierInput }>,
   reply: FastifyReply,
@@ -28,7 +38,7 @@ export async function createLoyaltyTierHandler(
     reply.code(201).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -43,7 +53,7 @@ export async function getLoyaltyTiersHandler(request: FastifyRequest, reply: Fas
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -59,7 +69,7 @@ export async function getLoyaltyTierByIdHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -75,10 +85,10 @@ export async function updateLoyaltyTierHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    if (e.code === "P2002") {
+    if (typeof e === "object" && e !== null && "code" in e && e.code === "P2002") {
       return reply.code(400).send({ error: "Tier with this priority name already exists" });
     }
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -100,7 +110,7 @@ export async function deleteLoyaltyTierHandler(
   } catch (e) {
     log.error(e);
 
-    if (e?.code === "TIER_HAS_CUSTOMERS") {
+    if (hasErrorCode(e, "TIER_HAS_CUSTOMERS")) {
       return reply.code(409).send({
         error: e.message,
         code: e.code,
@@ -109,13 +119,13 @@ export async function deleteLoyaltyTierHandler(
       });
     }
 
-    if (e?.code === "TIER_DOWNGRADE_TARGET_NOT_FOUND") {
+    if (hasErrorCode(e, "TIER_DOWNGRADE_TARGET_NOT_FOUND")) {
       return reply.code(400).send({
         error: e.message,
         code: e.code,
       });
     }
 
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }

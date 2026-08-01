@@ -1,4 +1,5 @@
 import { produce } from "immer";
+import type { SurveyThemeJson } from "./utils.js";
 
 const background = {
   desktopBg: {
@@ -55,7 +56,7 @@ export const defaultTheme = {
   },
 };
 
-export const defaultThemeOld = {
+export const defaultThemeOld: SurveyThemeJson = {
   welcomeTheme: {
     bg: {
       ...background,
@@ -103,7 +104,7 @@ export const defaultThemeOld = {
 
 export const defaultWebSurveyPagesTheme = produce(defaultThemeOld, (draft) => {
   delete draft.surveyTheme;
-  draft.welcomeTheme["useSurveyTheme"] = true;
-  draft.languageTheme["useSurveyTheme"] = true;
-  draft.thankyouTheme["useSurveyTheme"] = true;
+  draft.welcomeTheme!["useSurveyTheme"] = true;
+  draft.languageTheme!["useSurveyTheme"] = true;
+  draft.thankyouTheme!["useSurveyTheme"] = true;
 });

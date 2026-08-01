@@ -8,14 +8,22 @@ import ffmpeg from "fluent-ffmpeg";
 import path from "node:path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { validateFile } from "../../utils/upload/validate.js";
+import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 export async function uploadController(req: FastifyRequest, reply: FastifyReply) {
   const data = await req.file();
-  const metadata = data?.fields?.metadata
-    ? JSON.parse(data?.fields?.metadata?.["value"])
-    : { allowAll: false };
+  if (!data) {
+    return reply.code(400).send({ message: "No file uploaded." });
+  }
+  const metadataField = data.fields.metadata;
+  const metadataValue =
+    metadataField && !Array.isArray(metadataField) && "value" in metadataField
+      ? metadataField.value
+      : undefined;
+  const metadata =
+    metadataValue !== undefined ? JSON.parse(String(metadataValue)) : { allowAll: false };
   const validation = validateFile({
     data,
     allowAll: metadata?.allowAll || false,
@@ -27,14 +35,13 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
   const { filename, file } = data;
   const uniqueFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9-.]/g, "")}`;
 
-  let params;
-  params = {
+  let params: PutObjectCommandInput = {
     Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Key: uniqueFilename,
     Body: file,
     ContentType: data.mimetype,
   };
-  let tempRawPath, tempOutputPath;
+  let tempRawPath: string | undefined, tempOutputPath: string | undefined;
   if (
     data.mimetype === "audio/mp4" ||
     data.mimetype === "audio/mpeg" ||
@@ -50,7 +57,7 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
     await pumpToFile(file, tempRawPath);
 
     let finalBuffer: Buffer;
-    let mimetype;
+    let mimetype: string;
     if (data.mimetype === "audio/ogg") {
       await convertToWhatsAppCompatibleOGG(tempRawPath, tempOutputPath);
       mimetype = "audio/ogg";
@@ -78,7 +85,12 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
   } catch (err) {
     reply.code(500).send(err);
   } finally {
-    if (["audio/mp4", "audio/ogg"].includes(params.ContentType)) {
+    if (
+      tempRawPath &&
+      tempOutputPath &&
+      params.ContentType &&
+      ["audio/mp4", "audio/ogg"].includes(params.ContentType)
+    ) {
       fs.unlinkSync(tempRawPath);
       fs.unlinkSync(tempOutputPath);
     }
@@ -100,19 +112,19 @@ function convertToM4A(input: string, output: string): Promise<void> {
       .audioCodec("aac")
       .audioBitrate("64k")
       .outputOptions("-movflags +faststart")
-      .on("end", resolve)
+      .on("end", () => resolve())
       .on("error", reject)
       .save(output);
   });
 }
 
-function convertToWhatsAppCompatibleOGG(inputPath, outputPath) {
+function convertToWhatsAppCompatibleOGG(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .audioCodec("libopus")
       .audioBitrate("64k")
       .format("ogg")
-      .on("end", resolve)
+      .on("end", () => resolve())
       .on("error", reject)
       .save(outputPath);
   });
@@ -120,6 +132,9 @@ function convertToWhatsAppCompatibleOGG(inputPath, outputPath) {
 
 export async function uploadWithThumbnailsController(req: FastifyRequest, reply: FastifyReply) {
   const data = await req.file();
+  if (!data) {
+    return reply.code(400).send({ message: "No file uploaded." });
+  }
   const validation = validateFile({ data });
   if (!validation.valid) {
     data.file.resume();
@@ -130,7 +145,7 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
   const thumbnailFilename = "thumb300x200-" + uniqueFilename;
 
   const buffer = await data.toBuffer();
-  const params = {
+  const params: PutObjectCommandInput = {
     Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Key: uniqueFilename,
     Body: buffer,
@@ -145,7 +160,7 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
     .webp()
     .toBuffer();
 
-  const paramsThumb = {
+  const paramsThumb: PutObjectCommandInput = {
     Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Key: thumbnailFilename,
     Body: resizedImage,

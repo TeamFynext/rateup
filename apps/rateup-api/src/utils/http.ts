@@ -25,3 +25,17 @@ export function getCookieValue(cookieName: string, cookie: string) {
   }
   return undefined;
 }
+
+/**
+ * An Error that carries the HTTP status a handler should reply with, replacing the
+ * `const error: any = new Error(); error.statusCode = ...` pattern.
+ */
+export class HttpError extends Error {
+  readonly statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = "HttpError";
+    this.statusCode = statusCode;
+  }
+}

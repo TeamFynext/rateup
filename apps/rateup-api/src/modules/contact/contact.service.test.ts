@@ -238,12 +238,12 @@ describe("createContact", () => {
     expect(db.contact.create).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. `lifecycleId` is optional on contactCoreSchema,
-  // but createContact reads `lifecycleId.length` unguarded, so every create that
-  // omits it throws before any row is written. See issues.txt 18.1.
-  test("throws on a contact that omits lifecycleId", async () => {
-    await expect(createContact({ ...base, lifecycleId: undefined })).rejects.toThrow(TypeError);
-    expect(db.contact.create).not.toHaveBeenCalled();
+  // `lifecycleId` is optional on contactCoreSchema; omitting it is treated the
+  // same as an explicit empty string — no lifecycle assigned, create proceeds.
+  test("treats an omitted lifecycleId as no lifecycle", async () => {
+    await createContact({ ...base, lifecycleId: undefined });
+
+    expect(db.contact.create.mock.calls[0][0].data.lifecycleId).toBeUndefined();
   });
 
   test("treats an empty lifecycleId as no lifecycle", async () => {
@@ -670,7 +670,10 @@ describe("getContactsByOrgId", () => {
   test("the LOYALTY type restricts to contacts that have a loyalty account", async () => {
     await getContactsByOrgId(ORG, { type: "LOYALTY" } as any);
 
-    expect(where().AND).toEqual({ loyaltyCustomer: { isNot: null } });
+    // Contact -> CustomerLoyaltyAccount is a list relation, so membership is `some`.
+    // It used to filter on a `loyaltyCustomer` relation that does not exist on Contact,
+    // which Prisma rejects at runtime.
+    expect(where().AND).toEqual({ loyaltyAccounts: { some: {} } });
   });
 
   test("pagination skips whole pages of the requested size", async () => {
@@ -729,11 +732,11 @@ describe("getContactsByOrgId", () => {
     expect(db.contact.findMany.mock.calls[0][0].orderBy[0]).toEqual({ createdAt: "desc" });
   });
 
-  // NOTE: the `query ?? {...}` default covers the destructuring but `query.type`
-  // is read directly a few lines later, so calling this with no query at all
-  // throws. See issues.txt 18.9.
-  test("throws when called with no query object", async () => {
-    await expect(getContactsByOrgId(ORG)).rejects.toThrow(TypeError);
+  // `query.type` is read with optional chaining, matching the `query ?? {...}`
+  // default used for the rest of the destructuring — calling with no query at
+  // all is a normal "no filters" request.
+  test("does not throw when called with no query object", async () => {
+    await expect(getContactsByOrgId(ORG)).resolves.toEqual({ users: [], totalCount: 0 });
   });
 });
 
@@ -812,7 +815,13 @@ describe("deleteManyContacts", () => {
 // ===========================================================================
 
 describe("updateContactById", () => {
-  const existing = {
+  const existing: {
+    id: string;
+    orgId: string;
+    waMessageAssignStatus: WaMessageAssignStatus;
+    blockedOnWhatsApp: boolean;
+    lastReceivedMessageTimeStamp: Date | null;
+  } = {
     id: "c1",
     orgId: ORG,
     waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
@@ -821,7 +830,19 @@ describe("updateContactById", () => {
   };
 
   function updated(overrides: Record<string, unknown> = {}) {
-    return {
+    const base: {
+      id: string;
+      orgId: string;
+      name: string;
+      phone: string;
+      waMessageAssignStatus: WaMessageAssignStatus;
+      blockedOnWhatsApp: boolean;
+      lastReceivedMessageTimeStamp: Date | null;
+      lifecycleId: string | null;
+      integrationIds: string[] | null;
+      waInboxAssign: unknown[];
+      contactGroups: unknown[];
+    } = {
       id: "c1",
       orgId: ORG,
       name: "Ann",
@@ -833,8 +854,8 @@ describe("updateContactById", () => {
       integrationIds: null,
       waInboxAssign: [],
       contactGroups: [],
-      ...overrides,
     };
+    return { ...base, ...overrides };
   }
 
   test("reuses a caller-supplied snapshot instead of re-reading the contact", async () => {
@@ -856,10 +877,13 @@ describe("updateContactById", () => {
 
   // NOTE: an id that matches nothing produces `undefined` here and the very next
   // line reads `.waMessageAssignStatus` off it. See issues.txt 18.10.
-  test("throws when the contact does not exist", async () => {
+  test("throws a named error when the contact does not exist", async () => {
     db.contact.findUnique.mockResolvedValue(null);
 
-    await expect(updateContactById("nope", { name: "Ann" } as any)).rejects.toThrow(TypeError);
+    // Previously fell through to a bare TypeError on the first property read.
+    await expect(updateContactById("nope", { name: "Ann" } as any)).rejects.toThrow(
+      "Contact nope not found",
+    );
   });
 
   test("replaces the label set rather than appending to it", async () => {
@@ -1575,12 +1599,12 @@ describe("handleContactConsent", () => {
     expect(db.contact.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: an unknown phone yields null and the next line reads `.consent` off it.
-  // See issues.txt 18.15.
-  test("throws for a phone number that is not in the org", async () => {
+  test("throws a descriptive error for a phone number that is not in the org", async () => {
     db.contact.findFirst.mockResolvedValue(null);
 
-    await expect(handleContactConsent(ORG, "9190001", true)).rejects.toThrow(TypeError);
+    await expect(handleContactConsent(ORG, "9190001", true)).rejects.toThrow(
+      "Contact not found for phone 9190001",
+    );
   });
 });
 

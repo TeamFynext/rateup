@@ -118,6 +118,7 @@ import webhookHandlers, {
 import { getScheduledTime, ShopifyPlanMap } from "./shopify.util.js";
 import { ShopifySendAfter } from "../../../types/enums.js";
 import { shopifyRoutes } from "./shopify.route.js";
+import type { Session } from "@shopify/shopify-api";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -278,7 +279,7 @@ describe("registerWebhookByTopic", () => {
       request = client.request;
     };
 
-    await registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP });
+    await registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session);
 
     const vars = client.request.mock.calls[0][1].variables;
     expect(vars.topic).toBe("ORDERS_CREATE");
@@ -294,7 +295,7 @@ describe("registerWebhookByTopic", () => {
       request = client.request;
     };
 
-    await registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP });
+    await registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session);
 
     const url = client.request.mock.calls[0][1].variables.webhookSubscription.callbackUrl;
     expect(url.endsWith(" ")).toBe(true);
@@ -307,51 +308,67 @@ describe("registerWebhookByTopic", () => {
 // ===========================================================================
 
 describe("getAbandonedCheckouts", () => {
-  // NOTE: the query asks for `edges { nodes { ... } }` and the code then reads
-  // `abandonedCheckouts.nodes` — a field the query never selects. Spreading
-  // undefined throws, so this cannot return a list whatever Shopify answers.
-  test("reads a field the query does not select", async () => {
+  // NOTE (fixed): the query used to ask for `edges { nodes { ... } } ` — but
+  // `nodes` (plural) only exists on the connection, not on an individual
+  // edge (which only has `node`). Shopify rejects that field, so this used to
+  // throw for every call. It's now `edges { node { ... } }`, matching how the
+  // code reads the response.
+  test("reads back a well-formed edges/node response without throwing", async () => {
     const client: any = {
       request: vi.fn(async () => ({
         data: {
           abandonedCheckouts: {
-            edges: [{ nodes: { id: "gid://shopify/AbandonedCheckout/1" }, cursor: "c" }],
+            edges: [
+              {
+                node: {
+                  id: "gid://shopify/AbandonedCheckout/1",
+                  createdAt: new Date().toISOString(),
+                  completedAt: null,
+                  billingAddress: null,
+                  customer: null,
+                },
+                cursor: "c",
+              },
+            ],
             pageInfo: { hasNextPage: false, endCursor: null },
           },
         },
       })),
     };
 
-    await expect(getAbandonedCheckouts(client)).rejects.toThrow(TypeError);
+    await expect(getAbandonedCheckouts(client)).resolves.toEqual([
+      expect.objectContaining({ id: "gid://shopify/AbandonedCheckout/1" }),
+    ]);
   });
 
-  test("the query text asks for nodes inside edges", async () => {
+  test("the query text asks for node (singular) inside edges", async () => {
     const client: any = {
-      request: vi.fn(async () => ({ data: { abandonedCheckouts: { nodes: [] } } })),
+      request: vi.fn(async () => ({ data: { abandonedCheckouts: { edges: [], pageInfo: {} } } })),
     };
 
     await getAbandonedCheckouts(client).catch(() => {});
 
     const query = client.request.mock.calls[0][0];
     expect(query).toContain("edges {");
-    expect(query).toContain("nodes {");
-    expect(query).not.toContain("node {");
+    expect(query).toContain("node {");
+    expect(query).not.toContain("nodes {");
   });
 
-  // NOTE: the projection is id/createdAt/completedAt only — no phone, no
-  // customer, no billing address. validateAndParseCheckoutPhone reads
-  // checkout.customer.phone, which could not be present even if the shape were
-  // right.
-  test("selects no phone or customer field for the sender to use", async () => {
+  // NOTE (fixed): the projection used to be id/createdAt/completedAt only —
+  // no phone, no customer, no billing address — even though
+  // validateAndParseCheckoutPhone needs `customer.defaultAddress.phone` /
+  // `billingAddress.phone` to find a phone number to message. Now selected.
+  test("selects phone fields the sender needs to find a customer phone number", async () => {
     const client: any = {
-      request: vi.fn(async () => ({ data: { abandonedCheckouts: { nodes: [] } } })),
+      request: vi.fn(async () => ({ data: { abandonedCheckouts: { edges: [], pageInfo: {} } } })),
     };
 
     await getAbandonedCheckouts(client).catch(() => {});
 
     const query = client.request.mock.calls[0][0];
-    expect(query).not.toContain("phone");
-    expect(query).not.toContain("customer");
+    expect(query).toContain("phone");
+    expect(query).toContain("customer");
+    expect(query).toContain("billingAddress");
   });
 });
 

@@ -41,7 +41,7 @@ export async function cardRoutes(server: FastifyInstance) {
   );
 
   // Get all cards for a column
-  server.get(
+  server.get<{ Params: { ticketColumnId: string } }>(
     "/column/:columnId",
     {
       preHandler: [verifyColumnAccess],

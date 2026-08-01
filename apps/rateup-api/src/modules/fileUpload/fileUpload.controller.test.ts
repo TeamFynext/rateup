@@ -203,11 +203,16 @@ describe("uploadController — what it accepts", () => {
   });
 
   // NOTE: req.file() resolves to undefined when the request carries no file part.
-  // `data?.fields` is guarded but `validateFile` then reads data.mimetype off
-  // undefined via optional chaining and returns invalid — at which point
-  // `data.file.resume()` throws on the unguarded access. See issues.txt 24.5.
-  test("throws when the request carries no file at all", async () => {
-    await expect(uploadController(request(undefined), reply())).rejects.toThrow(TypeError);
+  // The handler previously read `data.mimetype`/`data.file` off that undefined
+  // value with no guard and crashed with an unhandled TypeError. It now checks
+  // for a missing file up front and answers a clean 400 instead.
+  test("answers 400 rather than crashing when the request carries no file at all", async () => {
+    const rep = reply();
+
+    await uploadController(request(undefined), rep);
+
+    expect(answer(rep)).toEqual({ code: 400, body: { message: "No file uploaded." } });
+    expect(s3.uploadFile).not.toHaveBeenCalled();
   });
 
   test("strips everything but letters, digits, dots and dashes from the key", async () => {

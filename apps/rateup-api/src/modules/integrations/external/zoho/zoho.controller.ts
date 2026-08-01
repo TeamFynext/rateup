@@ -21,12 +21,19 @@ import axios from "axios";
 import { getZohoRecordById, registerZohoWebhook, unsubscribeZohoWebhook } from "./zoho.client.js";
 import { generateRandomAlphaId } from "../../../../utils/misc/random.utils.js";
 import { ZohoProduct } from "./zoho.client.js";
+import {
+  getZohoCredential,
+  zohoErrorDetail,
+  type ZohoCredential,
+  type ZohoRecord,
+  type ZohoWebhookPayload,
+} from "./zoho.types.js";
 
-interface ZohoAuthBody {
+export interface ZohoAuthBody {
   code: string;
 }
 
-interface ZohoAuthQuery {
+export interface ZohoAuthQuery {
   orgId: string;
 }
 
@@ -94,7 +101,7 @@ export async function zohoAuthenticationHandler(
     // Calculate expiry time
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
-    const credential: any = {
+    const credential: ZohoCredential = {
       access_token,
       refresh_token,
       api_domain,
@@ -160,8 +167,8 @@ export async function zohoAuthenticationHandler(
       }
 
       credential.isWebhookRegistered = true;
-    } catch (err: any) {
-      log.error("Failed to register Zoho webhook => %o", err?.response?.data || err);
+    } catch (err) {
+      log.error({ err: zohoErrorDetail(err) }, "Failed to register Zoho webhook");
       credential.isWebhookRegistered = false;
     }
 
@@ -189,8 +196,8 @@ export async function zohoAuthenticationHandler(
       success: true,
       message: "Zoho connected successfully",
     });
-  } catch (error: any) {
-    log.error("Zoho authentication error => %o", error?.response?.data || error);
+  } catch (error) {
+    log.error({ err: zohoErrorDetail(error) }, "Zoho authentication error");
 
     return reply.code(500).send({
       success: false,
@@ -222,7 +229,7 @@ export async function syncZohoContactsHandler(
       message: `${product} contact sync completed`,
     });
   } catch (error) {
-    log.error("Zoho sync controller error => %o", error);
+    log.error({ err: error }, "Zoho sync controller error");
 
     return reply.code(500).send({
       success: false,
@@ -249,7 +256,7 @@ export async function syncZohoLeadsHandler(request: FastifyRequest, reply: Fasti
       message: "Zoho leads sync completed",
     });
   } catch (error) {
-    log.error("Zoho sync controller error => %o", error);
+    log.error({ err: error }, "Zoho sync controller error");
 
     return reply.code(500).send({
       success: false,
@@ -284,7 +291,7 @@ export async function getZohoContactsHandler(
       contacts,
     });
   } catch (error) {
-    log.error("Get Zoho contacts error => %o", error);
+    log.error({ err: error }, "Get Zoho contacts error");
 
     return reply.code(500).send({
       success: false,
@@ -318,7 +325,7 @@ export async function getZohoUsersHandler(
       users,
     });
   } catch (error) {
-    log.error("Get Zoho users error => %o", error);
+    log.error({ err: error }, "Get Zoho users error");
 
     return reply.code(500).send({
       success: false,
@@ -352,7 +359,7 @@ export async function getZohoLeadsHandler(
       leads,
     });
   } catch (error) {
-    log.error("Get Zoho leads error => %o", error);
+    log.error({ err: error }, "Get Zoho leads error");
 
     return reply.code(500).send({
       success: false,
@@ -381,7 +388,7 @@ export async function getZohoPipelinesHandler(
     const pipelines = await fetchZohoPipelineMeta(orgId, product);
     return reply.send(pipelines);
   } catch (error) {
-    log.error("Get Zoho pipelines error => %o", error);
+    log.error({ err: error }, "Get Zoho pipelines error");
 
     return reply.code(500).send({
       success: false,
@@ -396,7 +403,7 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
       product: ZohoProduct;
     };
 
-    const payload = request.body as any;
+    const payload = request.body as ZohoWebhookPayload;
 
     log.info("Received Zoho webhook for product=%s", product);
 
@@ -415,12 +422,12 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
         error: "Integration not found",
       });
     }
+    if (!integration.orgId) {
+      throw new Error(`Zoho integration ${integration.id} has no orgId set`);
+    }
+    const orgId = integration.orgId;
 
-    const credential = integration.credential as {
-      zohoWebhookSecret?: string;
-      access_token: string;
-      api_domain: string;
-    };
+    const credential = getZohoCredential(integration);
 
     if (credential.zohoWebhookSecret !== payload.token) {
       return reply.code(401).send({
@@ -439,7 +446,7 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
       });
     }
 
-    let record: any = null;
+    let record: ZohoRecord | null = null;
 
     if (product === "crm") {
       switch (payload.module) {
@@ -455,10 +462,10 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
           record = response.data?.[0];
           // sync local contact
           await syncContactFromZohoRecord({
-            orgId: integration.orgId,
+            orgId,
             product: "crm",
             module: "Leads",
-            zohoRecord: record,
+            zohoRecord: record ?? {},
             credential,
           });
 
@@ -477,10 +484,10 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
           record = response.data?.[0];
           // sync local contact
           await syncContactFromZohoRecord({
-            orgId: integration.orgId,
+            orgId,
             product: "crm",
             module: "Contacts",
-            zohoRecord: record,
+            zohoRecord: record ?? {},
             credential,
           });
 
@@ -506,10 +513,10 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
           record = response.data?.[0];
           // sync local contact
           await syncContactFromZohoRecord({
-            orgId: integration.orgId,
+            orgId,
             product: "bigin",
             module: "Contacts",
-            zohoRecord: record,
+            zohoRecord: record ?? {},
             credential,
           });
 
@@ -529,10 +536,10 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
           record = response.data?.[0];
           // sync lifecycle/contact
           await syncContactFromZohoRecord({
-            orgId: integration.orgId,
+            orgId,
             product: "bigin",
             module: "Deals",
-            zohoRecord: record,
+            zohoRecord: record ?? {},
             credential,
           });
 
@@ -548,7 +555,7 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
       success: true,
     });
   } catch (error) {
-    log.error("Error handling Zoho webhook => %o", error);
+    log.error({ err: error }, "Error handling Zoho webhook");
 
     return reply.code(500).send({
       success: false,
@@ -582,7 +589,7 @@ export const disconnectZohoIntegrationHandler = async (
         error: "Zoho integration not found",
       });
     }
-    const credential: any = integration.credential;
+    const credential = getZohoCredential(integration);
     const accessToken = credential.access_token;
     const apiDomain = credential.api_domain;
 
@@ -598,7 +605,7 @@ export const disconnectZohoIntegrationHandler = async (
 
         log.info("CRM webhook unsubscribed successfully for orgId=%s", orgId);
       } catch (err) {
-        log.error("Failed to unsubscribe CRM webhook => %o", err);
+        log.error({ err }, "Failed to unsubscribe CRM webhook");
       }
     }
 
@@ -614,7 +621,7 @@ export const disconnectZohoIntegrationHandler = async (
 
         log.info("Bigin webhook unsubscribed successfully for orgId=%s", orgId);
       } catch (err) {
-        log.error("Failed to unsubscribe Bigin webhook => %o", err);
+        log.error({ err }, "Failed to unsubscribe Bigin webhook");
       }
     }
 
@@ -628,7 +635,7 @@ export const disconnectZohoIntegrationHandler = async (
 
       log.info("Zoho token revoked successfully for orgId=%s", orgId);
     } catch (err) {
-      log.error("Failed to revoke Zoho token => %o", err);
+      log.error({ err }, "Failed to revoke Zoho token");
     }
 
     log.info("Zoho integration disconnected successfully for orgId=%s", orgId);
@@ -638,7 +645,7 @@ export const disconnectZohoIntegrationHandler = async (
       message: "Zoho disconnected successfully",
     });
   } catch (error) {
-    log.error("Error disconnecting Zoho integration => %o", error);
+    log.error({ err: error }, "Error disconnecting Zoho integration");
 
     return reply.code(500).send({
       success: false,

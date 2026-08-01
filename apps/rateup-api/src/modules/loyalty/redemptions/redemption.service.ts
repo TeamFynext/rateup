@@ -1,3 +1,4 @@
+import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { validateRedemption, generateRedemptionCode } from "../redemptionValidator.js";
 import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.schema.js";
@@ -49,7 +50,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
   // TYPE 1: POINT REWARDS - Add points instantly and mark as used
   if (reward.rewardType === "point") {
-    const pointsToAdd = (reward.rewardValue as any)?.points || 0;
+    const pointsToAdd = Number((reward.rewardValue as { points?: number })?.points) || 0;
 
     // Deduct redemption cost
     const transaction = await prisma.loyaltyTransaction.create({
@@ -232,7 +233,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   let shortCode = generateRewardShortCode();
   let unique = false;
   while (!unique) {
-    const exists = await (prisma as any).customerReward.findUnique({
+    const exists = await prisma.customerReward.findUnique({
       where: { shortCode },
     });
     if (exists) {
@@ -434,7 +435,7 @@ export async function applyRedemption(data: ApplyRedemptionInput) {
       status: "USED",
       usedAt: new Date(),
       usedContext: {
-        ...(redemption.usedContext as object),
+        ...redemption.usedContext,
         appliedBy: data.appliedBy,
         applyNotes: data.notes,
         appliedAt: new Date().toISOString(),
@@ -465,9 +466,9 @@ export async function applyRedemption(data: ApplyRedemptionInput) {
   // For coupon redemptions, just update stock (no CustomerReward involved)
   // For regular rewards, update the CustomerReward status to REDEEMED
   if (redemption.reward.rewardType !== "coupon") {
-    const shortCode = (redemption.usedContext as any)?.shortCode;
+    const shortCode = redemption.usedContext?.shortCode;
     if (shortCode) {
-      await (prisma as any).customerReward.update({
+      await prisma.customerReward.update({
         where: { shortCode },
         data: {
           status: "REDEEMED",
@@ -520,7 +521,7 @@ export async function getTransactions(
     limit?: number;
   },
 ) {
-  const where: any = { programId };
+  const where: Prisma.LoyaltyTransactionWhereInput = { programId };
 
   if (filters.fromDate || filters.toDate) {
     where.createdAt = {};
@@ -599,7 +600,7 @@ export async function getTransactionsForExport(
     maxPoints?: number;
   },
 ) {
-  const where: any = { programId };
+  const where: Prisma.LoyaltyTransactionWhereInput = { programId };
 
   if (filters.fromDate || filters.toDate) {
     where.createdAt = {};

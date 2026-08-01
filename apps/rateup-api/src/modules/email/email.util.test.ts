@@ -123,15 +123,14 @@ describe("getEmailBodyTemplate", () => {
     expect(getEmailBodyTemplate("SURVEYEMAILOTPQUESTION", { otp: "1" })).toBeUndefined();
   });
 
-  // NOTE: the general branch reads through `data?.`, the OTP branch hands `data`
-  // to a template that dereferences `.otp` directly — so the two purposes
-  // disagree about whether a missing payload is survivable.
+  // Both branches now read through `data?.`; a missing payload renders the template
+  // with empty values rather than throwing out of the send.
   test("the general branch tolerates a missing payload", () => {
     expect(() => getEmailBodyTemplate("GeneralTemplate", undefined)).not.toThrow();
   });
 
-  test("the OTP branch throws on a missing payload", () => {
-    expect(() => getEmailBodyTemplate("SurveyEmailOTPQuestion", undefined)).toThrow(TypeError);
+  test("the OTP branch tolerates a missing payload too", () => {
+    expect(() => getEmailBodyTemplate("SurveyEmailOTPQuestion", undefined)).not.toThrow();
   });
 });
 
@@ -227,7 +226,8 @@ describe("createEmailBodyOTPGeneration", () => {
     expect(html).toContain("To continue undefined,");
   });
 
-  test("throws when the payload is absent", () => {
-    expect(() => createEmailBodyOTPGeneration(undefined)).toThrow(TypeError);
+  // Previously dereferenced `.otp` on the payload directly and threw a TypeError.
+  test("renders with empty values when the payload is absent", () => {
+    expect(() => createEmailBodyOTPGeneration(undefined)).not.toThrow();
   });
 });

@@ -1,5 +1,5 @@
 import { Job } from "bullmq";
-import { Role } from "../../../generated/prisma/client.js";
+import { Prisma, Role } from "../../../generated/prisma/client.js";
 import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
@@ -36,7 +36,7 @@ export async function updateNotificationSettings(
   orgId: string,
   data: NotificationSettingSchema,
 ) {
-  const { id } = await prisma.orgMember.findUnique({
+  const orgMember = await prisma.orgMember.findUnique({
     where: {
       userId_orgId: {
         userId,
@@ -47,6 +47,10 @@ export async function updateNotificationSettings(
       id: true,
     },
   });
+  if (!orgMember) {
+    throw new Error(`No org member found for userId=${userId}, orgId=${orgId}`);
+  }
+  const { id } = orgMember;
   await prisma.notificationSetting.upsert({
     where: {
       orgMemberId: id,
@@ -59,7 +63,7 @@ export async function updateNotificationSettings(
   });
 }
 
-export async function getNotificationSettings(userId, orgId) {
+export async function getNotificationSettings(userId: string, orgId: string) {
   return await prisma.notificationSetting.findFirst({
     where: {
       orgMember: {
@@ -70,7 +74,13 @@ export async function getNotificationSettings(userId, orgId) {
   });
 }
 
-export async function createNotification(userId, orgId, source, subSource, data) {
+export async function createNotification(
+  userId: string,
+  orgId: string,
+  source: string,
+  subSource: string,
+  data: Prisma.InputJsonValue,
+) {
   await prisma.notification.create({
     data: {
       orgMember: {
@@ -119,7 +129,7 @@ export async function deleteNotificationById(notificationId: string) {
   });
 }
 
-export async function deleteAllNotificationsByUser(userId, orgId) {
+export async function deleteAllNotificationsByUser(userId: string, orgId: string) {
   await prisma.notification.deleteMany({
     where: {
       orgMember: {
@@ -135,14 +145,14 @@ interface SystemNotificationData {
   orgId: string;
   source: string;
   subSource: string;
-  data: Record<string, any>;
+  data: Prisma.InputJsonValue;
 }
 
 interface PushNotificationData {
   expoTokens: string[];
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export interface NotificationJobData {

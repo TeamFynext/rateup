@@ -457,7 +457,8 @@ describe("isZohoTriggerEnabled", () => {
   test("requires active to be exactly true", () => {
     expect(
       isZohoTriggerEnabled(
-        { triggerSubscriptions: [{ subscribed_field: "x", active: "true" }] },
+        // A truthy non-boolean, cast in deliberately — the point of the test.
+        { triggerSubscriptions: [{ subscribed_field: "x", active: "true" as unknown as boolean }] },
         "x",
       ),
     ).toBe(false);

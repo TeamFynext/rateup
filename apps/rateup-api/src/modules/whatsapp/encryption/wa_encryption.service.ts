@@ -1,6 +1,5 @@
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
-import qs from "querystring";
 
 /**
  * Set Business Public Key
@@ -11,9 +10,9 @@ export async function setBusinessPublicKey(
   accessToken: string,
 ) {
   log.trace("Setting business public key: %s", businessPublicKey);
-  const data = qs.stringify({
+  const data = new URLSearchParams({
     business_public_key: businessPublicKey,
-  });
+  }).toString();
   try {
     await callMetaApi(
       `/${phoneId}/whatsapp_business_encryption`,

@@ -1,13 +1,26 @@
 import { FastifyRequest } from "fastify";
 import prisma from "../../utils/prisma.js";
 import { getShortUrlId } from "../../utils/commonUtils.js";
-import { CreateLinktreeReqBody } from "./linktree.schema.js";
+import {
+  CreateLinktreeReqBody,
+  GetLinktreeWithShortIdParams,
+  UpdateLinktreeReqBody,
+  UpdatePageVisitsOrLinkClicksReqBody,
+  UpdatePageVisitsOrLinkClicksReqParams,
+} from "./linktree.schema.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 
 async function createLinktreeInDB(req: FastifyRequest<{ Body: CreateLinktreeReqBody }>) {
   const {
     body: { name },
     user: { orgId, userId },
   } = req;
+
+  // userId is absent for API-access-token-authenticated requests (see
+  // global.d.ts's FastifyRequest.user), but createdById is a required column.
+  if (!userId) {
+    throw new Error("Cannot create a linktree without an authenticated user id.");
+  }
 
   const newShortUrlId = getShortUrlId();
 
@@ -38,7 +51,9 @@ async function getAllLinktreesFromDB(req: FastifyRequest) {
   return allLinktreesArray;
 }
 
-async function getLinktreeWithShortIdFromDB(req) {
+async function getLinktreeWithShortIdFromDB(
+  req: FastifyRequest<{ Params: GetLinktreeWithShortIdParams }>,
+) {
   const { shortUrlId } = req.params;
   const {
     user: { orgId },
@@ -52,7 +67,9 @@ async function getLinktreeWithShortIdFromDB(req) {
   return linktree;
 }
 
-async function getPublicLinktreeWithShortIdFromDB(req) {
+async function getPublicLinktreeWithShortIdFromDB(
+  req: FastifyRequest<{ Params: GetLinktreeWithShortIdParams }>,
+) {
   const { shortUrlId } = req.params;
   const linktree = await prisma.linktree.findFirst({
     where: {
@@ -69,7 +86,7 @@ async function getPublicLinktreeWithShortIdFromDB(req) {
   return linktree;
 }
 
-async function updateLinktreeWithShortIdInDB(req) {
+async function updateLinktreeWithShortIdInDB(req: FastifyRequest<{ Body: UpdateLinktreeReqBody }>) {
   const {
     body: { shortUrlId, ...rest },
   } = req;
@@ -88,7 +105,7 @@ async function updateLinktreeWithShortIdInDB(req) {
   return updatedLinktree;
 }
 
-async function deleteLinktreeInDB(req) {
+async function deleteLinktreeInDB(req: FastifyRequest<{ Params: { id: string } }>) {
   const {
     user: { orgId },
   } = req;
@@ -101,6 +118,42 @@ async function deleteLinktreeInDB(req) {
   return deletedLinktree;
 }
 
+const linkTypeDropdownOrgInclude = {
+  members: {
+    include: {
+      user: {
+        include: {
+          surveys: {
+            include: {
+              teams: {
+                include: {
+                  team: {
+                    select: {
+                      name: true,
+                      tags: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.OrgInclude;
+
+type SurveyForLinkTypeDropdown = Prisma.OrgGetPayload<{
+  include: typeof linkTypeDropdownOrgInclude;
+}>["members"][number]["user"]["surveys"][number];
+
+interface LinkTypeDropdownOption {
+  id: string;
+  title: string;
+  teams: SurveyForLinkTypeDropdown["teams"];
+  type: string;
+}
+
 async function generateAndGetOptionsFromDB(req: FastifyRequest<{ Params: { linkType: string } }>) {
   const {
     params: { linkType },
@@ -111,40 +164,21 @@ async function generateAndGetOptionsFromDB(req: FastifyRequest<{ Params: { linkT
     where: {
       id: requestedUserOrgId,
     },
-    include: {
-      members: {
-        include: {
-          user: {
-            include: {
-              surveys: {
-                include: {
-                  teams: {
-                    include: {
-                      team: {
-                        select: {
-                          name: true,
-                          tags: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    include: linkTypeDropdownOrgInclude,
   });
+
+  if (!data) {
+    throw new Error(`Org not found for id: ${requestedUserOrgId}`);
+  }
 
   const arrayOfArrayOfSurveysCreatedByUser = data.members.map(({ user }) => {
     return user.surveys;
   });
 
   // resultArr is survey title and type, SurveyTeamMap table's shortUrlId and team name,
-  const resultArr = [];
+  const resultArr: LinkTypeDropdownOption[] = [];
   arrayOfArrayOfSurveysCreatedByUser.forEach((surveysCreatedByUsrArr) => {
-    let linkTypeInDB;
+    let linkTypeInDB: string | undefined;
     if (linkType === "web-survey") linkTypeInDB = "web";
     else if (linkType === "whatsapp-survey") linkTypeInDB = "waFlow";
 
@@ -157,7 +191,12 @@ async function generateAndGetOptionsFromDB(req: FastifyRequest<{ Params: { linkT
   return resultArr;
 }
 
-async function updatePageVisitOrLinkClickInDB(req) {
+async function updatePageVisitOrLinkClickInDB(
+  req: FastifyRequest<{
+    Params: UpdatePageVisitsOrLinkClicksReqParams;
+    Body: UpdatePageVisitsOrLinkClicksReqBody;
+  }>,
+) {
   const {
     params: { shortUrlId },
     body: { resourceToBeUpdated, linkId },
@@ -178,7 +217,7 @@ async function updatePageVisitOrLinkClickInDB(req) {
       message: "Updated visitor count successfully",
     };
   } else if (resourceToBeUpdated === "link-click") {
-    const { links }: { links: any } = await prisma.linktree.findFirst({
+    const linktreeRecord = await prisma.linktree.findFirst({
       where: {
         shortUrlId,
       },
@@ -186,9 +225,15 @@ async function updatePageVisitOrLinkClickInDB(req) {
         links: true,
       },
     });
+    if (!linktreeRecord) {
+      return null;
+    }
+    // The editor writes extra presentation fields per link; LinktreeLink names only what
+    // the server touches (see the index signature) and carries the rest through.
+    const links = linktreeRecord.links;
     if (links && links.length && links.find((linkObj) => linkObj.id === linkId)) {
-      const newLinks = links.map((linkObj, _index) => {
-        const { noOfClicks = 0 } = linkObj;
+      const newLinks = links.map((linkObj) => {
+        const noOfClicks = Number(linkObj.noOfClicks ?? 0);
         if (linkObj.id === linkId) {
           return {
             ...linkObj,

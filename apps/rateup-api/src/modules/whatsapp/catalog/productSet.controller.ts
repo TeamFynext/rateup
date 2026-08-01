@@ -38,7 +38,7 @@ export async function syncProductSetsHandler(
       return reply.code(404).send({ error: "WhatsApp settings not found" });
     }
 
-    const { accessToken } = getWaSettingsWithAccessTokenDecrypted(waSettings as any);
+    const { accessToken } = getWaSettingsWithAccessTokenDecrypted(waSettings);
 
     // Sync product sets
     const productSets = await syncProductSetsForCatalog(catalogId, orgId, accessToken);

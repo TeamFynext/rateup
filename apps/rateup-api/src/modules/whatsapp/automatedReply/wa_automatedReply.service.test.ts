@@ -29,7 +29,10 @@ vi.mock("../../../utils/logger.js", () => ({
 import prisma from "../../../utils/prisma.js";
 import { getUsageStat } from "../../stats/stats.service.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
-import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils.js";
+import {
+  type automationProps,
+  selectAutomationByBusinessHours,
+} from "./wa_automatedReply.utils.js";
 import { log } from "../../../utils/logger.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
@@ -151,12 +154,15 @@ describe("getAutomatedReplyById", () => {
     expect(result.businessHourId).toBeUndefined();
   });
 
-  // NOTE: the result is destructured with no null check, so an id that matches nothing
-  // throws a TypeError instead of returning null.
-  test("throws rather than reporting nothing for an unknown id", async () => {
+  // Previously this destructured the result with no null check, throwing a bare
+  // TypeError for an unknown id instead of a clear message. It now throws a descriptive
+  // Error before the destructure.
+  test("throws a clear error rather than reporting nothing for an unknown id", async () => {
     db.waAutomatedReply.findUnique.mockResolvedValue(null);
 
-    await expect(getAutomatedReplyById("missing")).rejects.toThrow(TypeError);
+    await expect(getAutomatedReplyById("missing")).rejects.toThrow(
+      "Automated reply missing not found",
+    );
   });
 });
 
@@ -345,7 +351,11 @@ describe("getAutomatedRepliesByKeyWeords", () => {
 
 describe("getCommandByOrgIdAndCommand", () => {
   test("looks the command up in the org and picks by business hours", async () => {
-    const commands = [{ command: "hello", waAutomatedReplyId: "auto-1", businessHour: null }];
+    const commands: {
+      command: string;
+      waAutomatedReplyId: string;
+      businessHour: automationProps["businessHour"];
+    }[] = [{ command: "hello", waAutomatedReplyId: "auto-1", businessHour: null }];
     db.waAutomatedReplyCommands.findMany.mockResolvedValue(commands);
 
     const result = await getCommandByOrgIdAndCommand("org-1", "hello");
@@ -385,9 +395,12 @@ describe("verifyAutomationTriggerLimit", () => {
     await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(true);
   });
 
-  test("throws when the org has no subscription to read the flag from", async () => {
+  // Previously this crashed with a TypeError reading `.features` off a null subscription;
+  // it's now treated the same as an inactive WhatsApp feature and blocks cleanly instead.
+  test("blocks rather than throwing when the org has no subscription to read the flag from", async () => {
     getSubscriptionMock.mockResolvedValue(null);
 
-    await expect(verifyAutomationTriggerLimit("org-1")).rejects.toThrow(TypeError);
+    await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(false);
+    expect(log.error).toHaveBeenCalled();
   });
 });

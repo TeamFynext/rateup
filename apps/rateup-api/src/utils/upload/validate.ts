@@ -1,4 +1,12 @@
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
+
+/// Multipart non-file fields (`type: "field"`) carry a `.value`; file parts and
+/// `undefined` don't. Only the first entry is used for repeated field names,
+/// matching the pre-existing behaviour of the CSV import handlers.
+export function getMultipartFieldValue(field: Multipart | Multipart[] | undefined): unknown {
+  const part = Array.isArray(field) ? field[0] : field;
+  return part?.type === "field" ? part.value : undefined;
+}
 
 const mimeTypeMaxSizes: Record<string, number> = {
   // Audio
@@ -47,7 +55,11 @@ export function validateFile({
   if (data?.file?.truncated) {
     return { valid: false, message: "File size exceeds server limit." };
   }
-  const size: number = data.fields.size?.["value"] || 0;
+  const sizeField = Array.isArray(data.fields.size) ? data.fields.size[0] : data.fields.size;
+  // Read `.value` structurally rather than gating on `type === "field"`: this is a size
+  // *limit* check, and any part shape missing that discriminant would otherwise fall back
+  // to 0 — silently meaning "unlimited" and letting oversized uploads through.
+  const size: number = Number(sizeField && "value" in sizeField ? sizeField.value : 0) || 0;
   if (size > maxSize) {
     return {
       valid: false,

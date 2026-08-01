@@ -34,6 +34,7 @@ import {
   shouldShowGoogleReview,
   shouldShowGoogleReviewV2,
   updateSession,
+  type WaSessionWithSurveyTeamMap,
 } from "../whatsappSurvey/wasurvey.service.js";
 import { validateLogic, validateLogicV2 } from "../../question/question.utils.js";
 import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
@@ -62,6 +63,9 @@ dayjs.extend(timezone);
  */
 export async function getFlowsFromWa(orgId: string) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
 
   const res = await callMetaApi(`/${waSettings.wabaId}/flows`, "GET", waSettings.accessToken);
 
@@ -78,6 +82,9 @@ export async function getFlowsFromWa(orgId: string) {
  */
 export async function getFlowFromWa(orgId: string, flowId: string) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
   //query: fields=id,name,categories,preview,status,validation_errors,json_version,data_api_version,data_channel_uri,whatsapp_business_account,application
 
   const res = await callMetaApi(`/${flowId}`, "GET", waSettings.accessToken);
@@ -89,26 +96,38 @@ export async function getFlowFromWa(orgId: string, flowId: string) {
 
 export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
 
   const res = await callMetaApi(`/${waFlowId}?fields=preview`, "GET", waSettings.accessToken);
 
   return res.data.preview as WaFlowPreview;
 }
 
+// NOTE: dead code — nothing in the codebase calls this today (getFlowPreview,
+// below, does the same job properly). Kept null-safe rather than throwing on
+// a missing flow, matching the rest of this file's "report nothing" style.
 export async function getFlowPreviewFromDb(dbFlowId: string) {
   const flow = await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
     },
   });
-  return flow.preview;
+  return flow?.preview;
 }
 
 export async function getFlowPreview(orgId: string, dbFlowId: string) {
   const flow = await getFlowFromDb(dbFlowId);
-  if (flow?.preview?.expires_at && new Date(flow.preview.expires_at) > new Date()) {
+  if (!flow) {
+    throw new Error(`Flow not found: ${dbFlowId}`);
+  }
+  if (flow.preview?.expires_at && new Date(flow.preview.expires_at) > new Date()) {
     return flow.preview;
   } else {
+    if (!flow.flowId) {
+      throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
+    }
     const preview = await getFlowPreviewFromWa(orgId, flow.flowId);
     await prisma.waFlow.update({
       where: {
@@ -194,13 +213,20 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
       survey: true,
     },
   });
+  if (!flow) {
+    throw new Error(`Flow not found: ${dbFlowId}`);
+  }
+  if (!flow.flowId) {
+    throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
+  }
   let jsonWithTitle;
   if (flow.version === 2) {
     const screenIds = flow.json.screens.flatMap((screen) =>
       screen.layout.children
         .filter((child) => child.type !== "Footer")
         .map(({ name }) => ({ id: name, screenId: screen.id }))
-        .filter(({ id }) => id),
+        // Non-interactive elements have no name and so bind to nothing.
+        .filter((entry): entry is { id: string; screenId: string } => Boolean(entry.id)),
     );
 
     const footer = flow.json.screens?.[flow.json.screens.length - 1]?.layout.children.find(
@@ -210,7 +236,7 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
     if (footer) {
       footer["on-click-action"] = {
         name: "complete",
-        payload: screenIds.reduce((acc, data) => {
+        payload: screenIds.reduce<Record<string, string>>((acc, data) => {
           acc[data.id] = `\${screen.${data.screenId}.form.${data.id}}`;
           return acc;
         }, {}),
@@ -315,7 +341,12 @@ export async function updateFlowIdAndStatusInDb(
   });
 }
 
-export async function cloneFlow(previousFlow: any, flowId: string, userId: string, teamId: string) {
+export async function cloneFlow(
+  previousFlow: WaFlow,
+  flowId: string,
+  userId: string,
+  teamId: string,
+) {
   const surveyId = previousFlow.surveyId;
   const survey = await prisma.survey.findUnique({
     where: {
@@ -358,11 +389,13 @@ export async function cloneFlow(previousFlow: any, flowId: string, userId: strin
     }
   });
   const title = `${survey.title} Copy ${maxCopyNumber + 1}`;
+  // A freshly cloned survey has never been edited, so it starts with no `updatedAt`.
+  const updatedAt: Date | null = null;
   const clonedSurvey = {
     ...surveyWithoutId,
     createdBy: userId,
     createdAt: new Date(),
-    updatedAt: null,
+    updatedAt,
     title: title,
     isPublished: false,
     teams: {
@@ -397,11 +430,20 @@ export async function cloneFlow(previousFlow: any, flowId: string, userId: strin
   return newClonedSurvey;
 }
 
+interface WaFlowAsset {
+  name: string;
+  asset_type: string;
+  download_url: string;
+}
+
 export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
   const assets = await getFlowAssets(orgId, waFlowId);
-  const jsonAssetLink = assets.find((asset) => asset.asset_type === "FLOW_JSON").download_url;
+  const jsonAsset = assets.find((asset) => asset.asset_type === "FLOW_JSON");
+  if (!jsonAsset) {
+    throw new Error(`FLOW_JSON asset not found for waFlowId: ${waFlowId}`);
+  }
 
-  const res = await axios.get(jsonAssetLink);
+  const res = await axios.get(jsonAsset.download_url);
   const json = injectIdToFlowJson(res.data);
   return json;
 }
@@ -412,8 +454,11 @@ export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
  * @param waFlowId Flow id generated by Meta
  * @returns
  */
-export async function getFlowAssets(orgId: string, waFlowId: string) {
+export async function getFlowAssets(orgId: string, waFlowId: string): Promise<WaFlowAsset[]> {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
   // TODO: handle pagination
 
   const res = await callMetaApi(`/${waFlowId}/assets`, "GET", waSettings.accessToken);
@@ -438,11 +483,20 @@ export async function sendFlow({
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
     const dbFlow = await getFlowFromDb(dbFlowId);
+    if (!dbFlow) {
+      throw new Error(`Flow not found: ${dbFlowId}`);
+    }
     const messageData = generateFlowMessageData({
       to: phone,
       dbFlow,
     });
-    await sendMessage(orgId, { ...messageData, to: phone }, null, userId, whatsappSettingsPhoneId);
+    await sendMessage(
+      orgId,
+      { ...messageData, to: phone },
+      undefined,
+      userId,
+      whatsappSettingsPhoneId,
+    );
     return true;
   } catch (e) {
     log.error(e);
@@ -454,7 +508,7 @@ interface CreateFlowCopyInDbArgs {
   orgId: string;
   flowId: string;
   json: WaFlowJson;
-  flowMap: any;
+  flowMap: WaFlowMap;
   surveyId: string;
   status: string;
   name: string;
@@ -508,7 +562,11 @@ export async function createFlowInWa(
   orgId: string,
   createFlowInput: { name: string; categories: string[] },
 ) {
-  const { wabaId, accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { wabaId, accessToken } = waSettings;
 
   const { data } = await callMetaApi(`/${wabaId}/flows`, "POST", accessToken, createFlowInput);
   return data as { id: string };
@@ -522,7 +580,11 @@ export async function cloneFlowInWa(
     clone_flow_id: string;
   },
 ) {
-  const { wabaId, accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { wabaId, accessToken } = waSettings;
 
   const { data } = await callMetaApi(`/${wabaId}/flows`, "POST", accessToken, createFlowInput);
   return data as { id: string };
@@ -563,7 +625,11 @@ export async function updateFlowMetaDataInWa(
   flowId: string,
   updatedData: { name?: string; categories?: string[]; endpoint_uri?: string },
 ) {
-  const { accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { accessToken } = waSettings;
   const { data } = await callMetaApi(`/${flowId}`, "POST", accessToken, updatedData);
   return data as { id: string };
 }
@@ -578,7 +644,11 @@ export async function updateFlowMetaDataInWa(
  * @param json
  */
 export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: WaFlowJson) {
-  const { accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { accessToken } = waSettings;
   json = removeIdFromFlowJson(json);
 
   // converting to file
@@ -604,12 +674,16 @@ export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: 
     );
     log.trace("Updated flow json in wa %s", waFlowId);
   } catch (e) {
-    log.trace("Failed to update flow json in wa %o", e);
+    log.trace({ e }, "Failed to update flow json in wa");
   }
 }
 
 export async function deleteFlowInWa(orgId: string, waFlowId: string) {
-  const { accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { accessToken } = waSettings;
   const res = await callMetaApi(`/${waFlowId}`, "DELETE", accessToken);
   return res.data;
 }
@@ -623,13 +697,21 @@ export async function deleteFlowInDb(dbFlowId: string) {
 }
 
 export async function deprecateFlowInWa(orgId: string, waFlowId: string) {
-  const { accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { accessToken } = waSettings;
   const res = await callMetaApi(`/${waFlowId}/deprecate`, "POST", accessToken);
   return res.data;
 }
 
 export async function publishFlowInWa(orgId: string, waFlowId: string) {
-  const { accessToken } = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+  }
+  const { accessToken } = waSettings;
   const res = await callMetaApi(`/${waFlowId}/publish`, "POST", accessToken);
   return res.data;
 }
@@ -641,8 +723,40 @@ export async function getFlowBySurveyId(surveyId: string) {
   });
 }
 
+/**
+ * Logic jumps only apply to choice/scale questions, whose parsed answers are a
+ * Choice, Choice[], string or number. parseFlowResponse can also yield shapes
+ * that can't participate in a comparison (undefined for an unresolved choice, a
+ * Date for date pickers, `{ email }`/`{ phone }` for contact fields, or raw
+ * media-picker arrays) — those evaluate the jump to false.
+ */
+function isComparableLogicResponse(value: unknown): value is Choice | Choice[] | string | number {
+  if (typeof value === "string" || typeof value === "number") return true;
+  const isChoice = (v: unknown): v is Choice => typeof v === "object" && v !== null && "value" in v;
+  return Array.isArray(value) ? value.every(isChoice) : isChoice(value);
+}
+
+// The raw (already-decrypted) request body WhatsApp Flow's endpoint sends us.
+// `data` holds the current screen's form field values keyed by flow element
+// name (WaFlowResponses) — which elements exist depends on the flow's own json
+// schema — alongside a few fixed control keys the code discriminates on.
+interface DecryptedFlowRequestBody {
+  version: string;
+  screen: string;
+  action: string;
+  flow_token: string;
+  data?: {
+    error?: unknown;
+    component_action?: string;
+    date?: string;
+  } & WaFlowResponses;
+}
+
 // TODO: move to controller.ts
-export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) => {
+export const handleDecryptedFlowRequest = async (
+  decryptedBody: DecryptedFlowRequestBody,
+  dbFlow: WaFlow,
+) => {
   const { screen, data, version, action, flow_token } = decryptedBody;
   try {
     log.trace("action: %s", action);
@@ -681,12 +795,15 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
     const questions = survey.questions as unknown as Question[];
 
     if (action === "data_exchange") {
+      if (!session) {
+        throw new Error(`Session not found for flow_token: ${flow_token}`);
+      }
       // save responses
       log.trace("Received data exchange request");
       let versionCheck = dbFlow.version === 1;
       const currentScreenResponses = versionCheck
-        ? parseResponseFromCurrentScreenResponse(dbFlow, questions, data)
-        : parseResponseFromCurrentScreenResponseV2(dbFlow.json.screens, data);
+        ? parseResponseFromCurrentScreenResponse(dbFlow, questions, data ?? {})
+        : parseResponseFromCurrentScreenResponseV2(dbFlow.json.screens, data ?? {});
       let noSlot = {
         version,
         screen,
@@ -694,17 +811,27 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
           available_slots: [{ id: "1", title: "no slot" }],
         },
       };
-      if (data.component_action === "update_date") {
+      if (data?.component_action === "update_date") {
         if (!data?.date) return noSlot;
 
-        let question = questions.find((data) => data.type === QuestionType.Date);
-        const integration: any = await getIntegrationByName(session.orgId, question?.waAppName);
-        if (integration?.length <= 0) return noSlot;
+        const question = questions.find((data) => data.type === QuestionType.Date);
+        if (!question?.waAppName) return noSlot;
+
+        // getIntegrationByName returns a single Integration (findUnique), not a
+        // list — this branch previously read `.length`/`[0]` as if it were an
+        // array, so it never detected a missing integration and always called
+        // getWaAmeliaTimeSlot with undefined credentials. Fixed to treat it as
+        // the single record it actually is. See issues.txt.
+        const integration = (await getIntegrationByName(
+          session.orgId,
+          question.waAppName,
+        )) as unknown as AmeliaIntegration | null;
+        if (!integration) return noSlot;
 
         const response = await getWaAmeliaTimeSlot({
-          url: integration?.[0]?.credential?.baseUrl,
-          acessToken: integration?.[0]?.credential?.apiKey,
-          serviceId: integration?.[0]?.credential?.serviceId,
+          url: integration.credential.baseUrl,
+          acessToken: integration.credential.apiKey,
+          serviceId: integration.credential.serviceId,
           method: "get",
           startDateTime: dayjs(Number(data?.date)).tz("Asia/Kolkata").format("YYYY-MM-DD"),
         });
@@ -722,9 +849,17 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
         };
       }
       log.trace("Current screen responses: %o", currentScreenResponses);
-      session = await updateSession(session.orgId, session.phone, {
+      // Bound to its own `const` (rather than narrowing the reassigned `let
+      // session`) — TypeScript doesn't retain updateSession's more specific
+      // return type through a `let` reassignment once the variable's
+      // declared type is a broader union, so reusing `session` here would
+      // lose the non-null `surveyTeamMap` narrowing below.
+      const currentSession = await updateSession(session.orgId, session.phone, {
         responses: [...session.responses, ...currentScreenResponses],
       });
+      if (!currentSession.surveyTeamMap) {
+        throw new Error(`Session ${currentSession.id} has no surveyTeamMap`);
+      }
       // handle the request based on the current screen
       let nextScreen = null;
       const currentIndex = json.screens.findIndex((s) => s.id === screen);
@@ -732,7 +867,7 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
 
       if (Object.keys(dbFlow.logicJumps[screen] || {}).length > 0) {
         log.trace("Logic jumps found for screen: %s \n %o", screen, dbFlow.logicJumps[screen]);
-        const logicJumps = dbFlow.logicJumps[screen] as unknown as FlowLogicJump[];
+        const logicJumps: FlowLogicJump[] = dbFlow.logicJumps[screen];
         for (const logicJump of logicJumps) {
           let logicPassed = logicJump.conditions.every((condition) => {
             if (versionCheck) {
@@ -741,18 +876,29 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
                 dbFlow.map,
               );
               const question = questions.find((q) => q.id === condition.questionId);
-              log.trace("raw response: %o", data[flowElementName]);
-              if (!data[flowElementName]) {
+              if (!flowElementName) {
+                log.error("Flow element name not found for questionId %s", condition.questionId);
+                return false;
+              }
+              const rawResponse = data?.[flowElementName];
+              log.trace({ rawResponse }, "raw response");
+              if (!rawResponse) {
                 // TODO: add logicCondition for skipped questions
+                return false;
+              }
+              if (!question) {
+                log.error("Question not found for questionId %s", condition.questionId);
                 return false;
               }
               const response = parseFlowResponse({
                 flowJson: json,
-                flowMap: dbFlow.map,
+                // WaFlow.map is `unknown` on the Prisma model; see WaFlowMap.
+                flowMap: dbFlow.map as WaFlowMap,
                 elementName: flowElementName,
-                response: data[flowElementName],
+                response: rawResponse,
               });
               log.trace("parsed response: %s", response);
+              if (!isComparableLogicResponse(response)) return false;
               return validateLogic(
                 question,
                 response,
@@ -761,18 +907,44 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
                 condition.response,
               );
             } else {
-              let question: any = currentScreen.layout.children.find(
+              const question = currentScreen.layout.children.find(
                 (data) => data.name === condition.questionId,
               );
               if (!question || currentScreenResponses.length === 0) {
                 return false;
               }
-              let response = parseFlowResponseV2(
-                question?.metaType,
-                currentScreenResponses.find((screen) => screen.questionId === condition.questionId)
-                  .response,
-                question?.["data-source"],
+              const currentResponse = currentScreenResponses.find(
+                (screen) => screen.questionId === condition.questionId,
               );
+              if (!currentResponse) {
+                log.error(
+                  "No current-screen response found for questionId %s",
+                  condition.questionId,
+                );
+                return false;
+              }
+              const dataSource = question["data-source"];
+              if (!question.metaType || !dataSource) {
+                log.error(
+                  "Flow element %s has no metaType/data-source to resolve its answer against",
+                  condition.questionId,
+                );
+                return false;
+              }
+              // v2 screens yield WaFlowV2QuestionResponse, whose `response` is
+              // the raw answer rather than a QuestionType-keyed object.
+              const rawAnswer = currentResponse.response;
+              if (
+                rawAnswer === undefined ||
+                (typeof rawAnswer === "object" && !Array.isArray(rawAnswer))
+              ) {
+                log.error("Unexpected v1-shaped answer for flow element %s", condition.questionId);
+                return false;
+              }
+              const response = parseFlowResponseV2(question.metaType, rawAnswer, dataSource);
+              // parseFlowResponseV2 yields undefined for an unresolved choice
+              // and a Date for date pickers, neither of which is comparable.
+              if (response === undefined || response instanceof Date) return false;
               return validateLogicV2(question, response, condition.condition, condition.response);
             }
           });
@@ -783,7 +955,7 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
               nextScreen = json.screens[currentIndex + 1]?.id;
             } else if (logicJump.action === LogicAction.EndSurvey) {
               return await handleFlowEnd({
-                session,
+                session: currentSession,
                 decryptedBody,
               });
             } else {
@@ -799,7 +971,7 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
       } else if (currentIndex === json.screens.length - 1) {
         log.trace("End of survey");
         return await handleFlowEnd({
-          session,
+          session: currentSession,
           decryptedBody,
         });
       } else {
@@ -815,7 +987,7 @@ export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) 
     }
   } catch (error) {
     // TODO: handle error
-    log.error("Error in handling flow request: %o", error);
+    log.error({ err: error }, "Error in handling flow request");
     throw new Error(
       "Unhandled endpoint request. Make sure you handle the request action & screen logged above.",
     );
@@ -826,7 +998,10 @@ interface Slot {
   title: string;
 }
 
-function transformSlots(date: string, response): Slot[] {
+function transformSlots(
+  date: string,
+  response: Awaited<ReturnType<typeof getWaAmeliaTimeSlot>>,
+): Slot[] {
   const slots = response?.data?.slots?.[date];
   if (!slots) {
     return [{ id: "1", title: "no slot" }];
@@ -838,8 +1013,8 @@ function transformSlots(date: string, response): Slot[] {
   }));
 }
 interface handleFlowEndProps {
-  session: WaSessionWithRelations;
-  decryptedBody: any;
+  session: WaSessionWithSurveyTeamMap;
+  decryptedBody: DecryptedFlowRequestBody;
 }
 async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
   log.trace("Ending Flow");
@@ -847,22 +1022,29 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
   const uniqueResponses = removeDuplicateResponses(session.responses);
   session.responses = uniqueResponses;
   await saveResponses(session);
-  let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
+  const waFlow = session.surveyTeamMap.survey.WaFlow;
+  const versionCheck = waFlow?.version === 1;
 
-  const sendGRLink = versionCheck
-    ? shouldShowGoogleReview({
-        questions: session.surveyTeamMap.survey.questions,
-        responses: uniqueResponses,
-      })
-    : shouldShowGoogleReviewV2({
-        screens: session.surveyTeamMap.survey.WaFlow.json.screens,
-        responses: uniqueResponses,
-      });
+  let sendGRLink: boolean;
+  if (versionCheck) {
+    sendGRLink = shouldShowGoogleReview({
+      questions: session.surveyTeamMap.survey.questions,
+      responses: uniqueResponses,
+    });
+  } else {
+    if (!waFlow) {
+      throw new Error(`WaFlow not found for survey: ${session.surveyTeamMap.survey.id}`);
+    }
+    sendGRLink = shouldShowGoogleReviewV2({
+      screens: waFlow.json.screens,
+      responses: uniqueResponses,
+    });
+  }
 
   if (sendGRLink) {
     sendGReviewLink({
       phone: session.phone,
-      surveyTeamMapId: session.surveyTeamMapId,
+      surveyTeamMapId: session.surveyTeamMap.id,
       orgId: session.orgId,
     })
       .then()
@@ -886,35 +1068,50 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
 export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
   log.trace("handling flow reply");
   const { from, flowResponse } = parseMessage(waMessage);
+  if (!flowResponse) {
+    log.trace("Flow reply carried no response payload. Ignoring...");
+    return;
+  }
   if (flowResponse["responses_saved"]) {
     log.trace("Flow response already saved. Ignoring...");
     return;
   }
 
-  let session = await getSession(orgId, from);
+  const session = await getSession(orgId, from);
   if (!session) {
     log.error("Session not found for %s", from);
     return;
   }
-  const dbFlowId = session?.surveyTeamMap?.survey?.WaFlow?.dbFlowId;
+  if (!session.surveyTeamMap?.survey?.WaFlow) {
+    log.error("WaFlow not found for session %s", session.id);
+    return;
+  }
+  const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
   const flow = await getFlowFromDb(dbFlowId);
+  if (!flow) {
+    log.error("Flow not found: %s", dbFlowId);
+    return;
+  }
 
   const questionResponses = generateQuestionResponsesFromFlowResponse({
     flow,
     flowResponses: flowResponse,
-    surveyTeamMapId: session.surveyTeamMapId,
+    surveyTeamMapId: session.surveyTeamMap.id,
   });
 
   const uniqueResponses = removeDuplicateResponses(questionResponses);
-  session.responses = uniqueResponses;
+  // Both flow versions persist into the same QuestionResponse[] column; v2
+  // entries legitimately omit `type` (see WaFlowV2QuestionResponse).
+  session.responses = uniqueResponses as QuestionResponse[];
   await saveResponses(session);
 
-  let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
+  const versionCheck = session.surveyTeamMap.survey.WaFlow.version === 1;
 
   const sendGRLink = versionCheck
     ? shouldShowGoogleReview({
         questions: session.surveyTeamMap.survey.questions,
-        responses: uniqueResponses,
+        // v1 answers always carry `type`; narrow away the v2 variant.
+        responses: uniqueResponses.filter((r): r is QuestionResponse => "type" in r),
       })
     : shouldShowGoogleReviewV2({
         screens: session.surveyTeamMap.survey.WaFlow.json.screens,
@@ -924,7 +1121,7 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   if (sendGRLink) {
     await sendGReviewLink({
       phone: session.phone,
-      surveyTeamMapId: session.surveyTeamMapId,
+      surveyTeamMapId: session.surveyTeamMap.id,
       orgId: session.orgId,
     });
   }
@@ -933,20 +1130,21 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   const progress = await findRecentAutomation(session.phone, orgId);
   const automation = progress?.waAutomatedReply;
   if (automation) {
-    const matchData = automation.matchData as {
-      json: { edges: any[]; nodes: any };
-    };
-    const nextEdge = matchData?.json?.edges?.find(
-      (edge: any) => edge.target === progress.currentNode,
-    );
+    if (!progress.currentNode) {
+      log.error("Automation progress for phone %s has no currentNode", session.phone);
+      return;
+    }
+    const matchData = automation.matchData;
+    const nextEdge = matchData?.json?.edges?.find((edge) => edge.target === progress.currentNode);
 
     if (!nextEdge) return;
 
-    const nextNode = matchData?.json?.nodes?.find((node: any) => node.id === nextEdge.source);
+    const nextNode = matchData?.json?.nodes?.find((node) => node.id === nextEdge.source);
 
     if (!nextNode) return;
 
-    if (nextNode.type === "flowNode" && nextNode.data?.flow?.id === dbFlowId) {
+    const nextNodeFlowId = (nextNode.data?.flow as { id?: string } | undefined)?.id;
+    if (nextNode.type === "flowNode" && nextNodeFlowId === dbFlowId) {
       // Log flow submission using the utility function
       const automationLog = await logFlowCompletion({
         phone: session.phone,
@@ -970,14 +1168,18 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   await deleteSession(session.orgId, session.phone);
 }
 
-export function removeDuplicateResponses(responses: QuestionResponse[]) {
+export function removeDuplicateResponses<T extends { questionId: string }>(responses: T[]): T[] {
   const qIds = responses.map((r) => r.questionId);
 
   const uniqueQIds = [...new Set(qIds)];
 
   const reversedRes = responses.reverse();
 
-  return uniqueQIds.map((qId) => reversedRes.find((r) => r.questionId === qId));
+  // Every id in uniqueQIds came from responses itself, so `.find` always
+  // matches here — the filter only exists to prove that to the type system.
+  return uniqueQIds
+    .map((qId) => reversedRes.find((r) => r.questionId === qId))
+    .filter((r): r is T => r !== undefined);
 }
 
 interface sendGReviewLinkProps {

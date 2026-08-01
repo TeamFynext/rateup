@@ -1,4 +1,4 @@
-import { WhatsappSettings } from "../../../../generated/prisma/client.js";
+import { Prisma, WhatsappSettings } from "../../../../generated/prisma/client.js";
 import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryption.utils.js";
 import prisma from "../../../utils/prisma.js";
 import { getPhoneDetails } from "../auth/wa_auth.service.js";
@@ -14,21 +14,59 @@ import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
 
-export async function createWaSettings(orgId: string, data: Partial<WhatsappSettings>) {
+/**
+ * Reads the AES key used to encrypt WhatsApp access tokens at rest from the environment.
+ * Throws instead of letting `Buffer.from(undefined, "hex")` fail with an opaque error.
+ */
+/**
+ * Same DbNull translation as `encryption`, for the nullable Instagram profile JSON columns.
+ * `undefined` means "leave untouched"; only an explicit `null` clears the column.
+ */
+function jsonOrDbNull<T>(value: T | null | undefined): T | typeof Prisma.DbNull | undefined {
+  if (value === null) return Prisma.DbNull;
+  return value;
+}
+
+function getEncryptionKey(): Buffer {
+  const key = process.env.wa_access_token_encryption_key;
+  if (!key) {
+    throw new Error("wa_access_token_encryption_key is not configured");
+  }
+  return Buffer.from(key, "hex");
+}
+
+export async function createWaSettings(
+  orgId: string,
+  data: Partial<Omit<WhatsappSettings, "id" | "orgId" | "accessToken_iv">> &
+    Pick<WhatsappSettings, "accessToken" | "appId" | "type">,
+) {
   const accessToken = data.accessToken;
+  if (!accessToken) {
+    throw new Error("accessToken is required to create WhatsApp settings");
+  }
+  // Prisma's JSON-typed update/create input distinguishes "SQL NULL" (Prisma.DbNull) from a
+  // literal JSON null (Prisma.JsonNull); a bare `null` is rejected by the generated types for
+  // custom-typed (PrismaJson) JSON columns like `encryption`, so it has to be translated here.
+  const encryption: Prisma.WhatsappSettingsUncheckedCreateInput["encryption"] =
+    data.encryption === null ? Prisma.DbNull : data.encryption;
+  const instagramIceBreakers = jsonOrDbNull(data.instagramIceBreakers);
+  const instagramPersistentMenu = jsonOrDbNull(data.instagramPersistentMenu);
+  const conversionData = jsonOrDbNull(data.conversionData);
+
   if (data.phoneId) {
     if (!data.phone) {
       const { display_phone_number } = await getPhoneDetails(data.phoneId, accessToken);
       data.phone = display_phone_number?.replace(/\s+/g, "");
     }
-    const encryptedToken = aes_encrypt(
-      accessToken,
-      Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
-    );
+    const encryptedToken = aes_encrypt(accessToken, getEncryptionKey());
     return await prisma.whatsappSettings.create({
       data: {
-        orgId: orgId,
-        ...(data as any),
+        orgId,
+        ...data,
+        encryption,
+        instagramIceBreakers,
+        instagramPersistentMenu,
+        conversionData,
         accessToken: encryptedToken.encryptedData,
         accessToken_iv: encryptedToken.iv,
       },
@@ -37,7 +75,12 @@ export async function createWaSettings(orgId: string, data: Partial<WhatsappSett
     return await prisma.whatsappSettings.create({
       data: {
         orgId,
-        ...(data as any),
+        ...data,
+        encryption,
+        instagramIceBreakers,
+        instagramPersistentMenu,
+        conversionData,
+        accessToken,
       },
     });
   }
@@ -169,11 +212,14 @@ export function getWaSettingsWithAccessTokenDecrypted(
 ): Omit<WhatsappSettings, "accessToken_iv"> {
   const { accessToken_iv, accessToken, ...data } = waSettings;
 
-  const decryptedToken = aes_decrypt(
-    accessToken,
-    Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
-    accessToken_iv,
-  );
+  // `accessToken_iv` is a nullable column; a row with none can't be decrypted, and letting
+  // `Buffer.from` throw its own TypeError on a non-string keeps the crash the same shape it
+  // already had for these rows, rather than silently proceeding with a bad key.
+  if (typeof accessToken_iv !== "string") {
+    throw new TypeError("The first argument must be of type string");
+  }
+
+  const decryptedToken = aes_decrypt(accessToken, getEncryptionKey(), accessToken_iv);
 
   return {
     ...data,
@@ -186,12 +232,17 @@ export async function updateWaSettings(
   phoneId: string,
   data: Partial<Omit<WhatsappSettings, "accessToken_iv" | "id" | "orgId">>,
 ) {
-  const dataToBeUpdated: Partial<WhatsappSettings> = data;
+  const dataToBeUpdated: Prisma.WhatsappSettingsUncheckedUpdateInput = {
+    ...data,
+    // See the comment in createWaSettings: a bare `null` isn't valid for this custom-typed
+    // JSON column in Prisma's update input, it has to be the DbNull sentinel.
+    encryption: data.encryption === null ? Prisma.DbNull : data.encryption,
+    instagramIceBreakers: jsonOrDbNull(data.instagramIceBreakers),
+    instagramPersistentMenu: jsonOrDbNull(data.instagramPersistentMenu),
+    conversionData: jsonOrDbNull(data.conversionData),
+  };
   if (data.accessToken) {
-    const encryptedToken = aes_encrypt(
-      data.accessToken,
-      Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
-    );
+    const encryptedToken = aes_encrypt(data.accessToken, getEncryptionKey());
     dataToBeUpdated.accessToken = encryptedToken.encryptedData;
     dataToBeUpdated.accessToken_iv = encryptedToken.iv;
   }
@@ -206,16 +257,48 @@ export async function updateWaSettings(
   });
 }
 
+/**
+ * The `encryption` sub-schema in `wa_settings.schema.ts` accepts each key independently
+ * (so a request can be validated field-by-field), but the stored `WaEncryptionKeys` shape
+ * needs all three together to be usable for WhatsApp Flow message encryption. This checks
+ * that a value that's about to be persisted is actually complete, rather than writing a
+ * half-populated object that would silently break the next flow send.
+ */
+function isCompleteEncryptionKeys(value: object): value is WaEncryptionKeys {
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.publicKey === "string" &&
+    typeof v.privateKey === "string" &&
+    typeof v.passphrase === "string"
+  );
+}
+
 export async function updateWaSettingsById(
   whatsappSettingsId: string,
   data: updateWaSettingsInput,
 ) {
+  let encryption: Prisma.WhatsappSettingsUncheckedUpdateInput["encryption"];
+  if (data.encryption === null) {
+    encryption = Prisma.DbNull;
+  } else if (data.encryption !== undefined) {
+    if (!isCompleteEncryptionKeys(data.encryption)) {
+      throw new Error(
+        "encryption keys must include publicKey, privateKey, and passphrase together",
+      );
+    }
+    encryption = data.encryption;
+  }
+
   return await prisma.whatsappSettings.update({
     where: {
       id: whatsappSettingsId,
     },
     data: {
-      ...(data as any),
+      ...data,
+      encryption,
+      instagramIceBreakers: jsonOrDbNull(data.instagramIceBreakers),
+      instagramPersistentMenu: jsonOrDbNull(data.instagramPersistentMenu),
+      conversionData: jsonOrDbNull(data.conversionData),
     },
   });
 }
@@ -233,6 +316,9 @@ export async function upsertWaSettings(
 
   if (existingSettings) {
     if (data.fbPageId?.length) {
+      if (!data.pageAccessToken) {
+        throw new Error("pageAccessToken is required to connect a Facebook page");
+      }
       await subscribePageToApp(data.fbPageId, data.pageAccessToken, [
         "messages",
         "message_reads",
@@ -262,10 +348,17 @@ export async function upsertWaSettings(
     }
     return await updateWaSettings(orgId, phoneId, data);
   } else {
+    // Only a genuine "first connection" reaches this branch, and unlike an update, creating a
+    // WhatsApp channel from scratch always needs its own access token and Meta app id.
+    if (!data.accessToken || !data.appId) {
+      throw new Error("accessToken and appId are required to create a new WhatsApp channel");
+    }
     return await createWaSettings(orgId, {
       ...data,
+      accessToken: data.accessToken,
+      appId: data.appId,
       type: WaConfigType.Manual,
-    } as any);
+    });
   }
 }
 
@@ -325,35 +418,65 @@ export async function getWaLogs(orgId: string, query: PaginationQuery) {
   return { totalCount, logs };
 }
 
-export async function getFbPagesFromWa(settingsId) {
-  const { accessToken } = await getWaSettingsById(settingsId);
-  if (!accessToken) {
+/** These four cover the handful of Graph API fields the onboarding sync flow reads or writes
+ * back — the calls themselves ask Meta for exactly these fields, nothing more. */
+export interface MetaGraphPage {
+  id: string;
+  name: string;
+  access_token: string;
+  instagram_business_account?: { id: string };
+}
+export interface MetaGraphAd {
+  id: string;
+  name?: string;
+}
+export interface MetaGraphAdAccount {
+  id: string;
+  name?: string;
+  ads?: MetaGraphAd[];
+}
+export interface MetaGraphDataset {
+  id: string;
+  name?: string;
+}
+
+export async function getFbPagesFromWa(settingsId: string): Promise<MetaGraphPage[]> {
+  const settings = await getWaSettingsById(settingsId);
+  if (!settings?.accessToken) {
     throw new Error("accesstoken not found");
   }
+  const { accessToken } = settings;
   const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`;
   const res = await callMetaApi(url, "GET");
   log.info("Pages fetched from meta:%o", res?.data);
   return res.data?.data;
 }
 
-export async function getAdsFromWa(whatsappSettingsId, adAccountId) {
-  const { accessToken } = await getWaSettingsById(whatsappSettingsId);
-  if (!accessToken) {
+export async function getAdsFromWa(
+  whatsappSettingsId: string,
+  adAccountId: string,
+): Promise<MetaGraphAd[]> {
+  const settings = await getWaSettingsById(whatsappSettingsId);
+  if (!settings?.accessToken) {
     throw new Error("accesstoken not found");
   }
+  const { accessToken } = settings;
   const url = `/${adAccountId}/ads?fields=id,name&access_token=${accessToken}`;
   const res = await callMetaApi(url, "GET");
   return res.data?.data;
 }
 
-export async function getAdAccountsFromWa(whatsappSettingsId) {
-  const { accessToken } = await getWaSettingsById(whatsappSettingsId);
-  if (!accessToken) {
+export async function getAdAccountsFromWa(
+  whatsappSettingsId: string,
+): Promise<MetaGraphAdAccount[]> {
+  const settings = await getWaSettingsById(whatsappSettingsId);
+  if (!settings?.accessToken) {
     throw new Error("accesstoken not found");
   }
+  const { accessToken } = settings;
   const url = `/me/adaccounts?fields=id,name&access_token=${accessToken}`;
   const res = await callMetaApi(url, "GET");
-  const adAccounts = [...(res.data?.data || [])];
+  const adAccounts: MetaGraphAdAccount[] = [...(res.data?.data || [])];
   for (const acc of adAccounts) {
     const ads = await callMetaApi(
       `/${acc?.id}/ads?fields=id,name&access_token=${accessToken}`,
@@ -364,13 +487,16 @@ export async function getAdAccountsFromWa(whatsappSettingsId) {
   return adAccounts;
 }
 
-export async function getMetaDatasetsFromWa(whatsappSettingsId) {
-  const { accessToken } = await getWaSettingsById(whatsappSettingsId);
-  if (!accessToken) {
+export async function getMetaDatasetsFromWa(
+  whatsappSettingsId: string,
+): Promise<MetaGraphDataset[]> {
+  const settings = await getWaSettingsById(whatsappSettingsId);
+  if (!settings?.accessToken) {
     throw new Error("accesstoken not found");
   }
+  const { accessToken } = settings;
 
-  let datasets = [];
+  let datasets: MetaGraphDataset[] = [];
 
   try {
     const businessesUrl = `/me/businesses?fields=id,name&access_token=${accessToken}`;
@@ -421,25 +547,46 @@ export async function getMetaDatasetsFromWa(whatsappSettingsId) {
   return uniqueDatasets;
 }
 
-export async function getLeadgenFormsFromWa(fbPageId, pageAccessToken) {
+export interface MetaGraphLeadgenForm {
+  id: string;
+  name: string;
+  questions?: unknown[];
+}
+
+export async function getLeadgenFormsFromWa(
+  fbPageId: string,
+  pageAccessToken: string,
+): Promise<MetaGraphLeadgenForm[]> {
   const url = `/${fbPageId}/leadgen_forms?fields=id,name,questions&access_token=${pageAccessToken}`;
   const res = await callMetaApi(url, "GET");
   return res.data.data;
 }
 
-export async function subscribeFieldtoPage(fbPageId, pageAccessToken, fields) {
+export async function subscribeFieldtoPage(
+  fbPageId: string,
+  pageAccessToken: string,
+  fields: string[],
+) {
   const url = `/${fbPageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`;
   const res = await callMetaApi(url, "POST");
   return res.data;
 }
 
-export async function getLeadgenFormQuestionsFromWa(fbPageId, leadgenFormId, pageAccessToken) {
+export async function getLeadgenFormQuestionsFromWa(
+  fbPageId: string,
+  leadgenFormId: string,
+  pageAccessToken: string,
+): Promise<Array<Record<string, unknown>>> {
   const url = `/${fbPageId}/${leadgenFormId}?fields=questions&access_token=${pageAccessToken}`;
   const res = await callMetaApi(url, "GET");
   return res.data?.data;
 }
 
-export async function syncMetaAssetstoDb(key, data, whatsappSettingsId) {
+export async function syncMetaAssetstoDb(
+  key: "pages" | "adAccounts" | "leads" | "leadgenForms",
+  data: Prisma.InputJsonValue[],
+  whatsappSettingsId: string,
+) {
   await prisma.metaAssets.upsert({
     where: {
       whatsappSettingsId,
@@ -468,10 +615,11 @@ export interface MetaAsset {
   }[];
   adAccounts: {
     id: string;
-    name: string;
-    ads: {
+    // Meta omits the name on accounts/ads the token cannot read.
+    name?: string;
+    ads?: {
       id: string;
-      name: string;
+      name?: string;
     }[];
   }[];
   leads: {
@@ -481,14 +629,15 @@ export interface MetaAsset {
     form_id: string;
     field_data: {
       name: string;
-      values: any[];
+      values: string[];
     }[];
   }[];
   leadgenForms: {
     pageId: string;
     id: string;
     name: string;
-    questions: any[];
+    /** Meta's form question descriptors; stored verbatim, never read field-by-field. */
+    questions: Array<Record<string, unknown>>;
   }[];
 }
 

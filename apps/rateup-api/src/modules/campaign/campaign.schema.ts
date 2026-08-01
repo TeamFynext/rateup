@@ -50,7 +50,7 @@ const updateCampaignInputSchema = z.object({
   startedAt: z.coerce.date().optional(),
   campaignSentAt: z.date().optional().nullable(),
   scheduledStatuses: z.array(z.enum(CampaignParticipantStatus)).optional().nullable(),
-  errorMessage: z.string().optional(),
+  errorMessage: z.string().optional().nullable(),
   dynamicTags: z.array(z.string().nullable()).optional(),
   useUserConsent: z.boolean().optional(),
   whatsappSettingsPhoneId: z.string().optional(),

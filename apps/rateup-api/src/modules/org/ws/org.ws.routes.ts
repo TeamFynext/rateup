@@ -18,7 +18,10 @@ export async function orgWsRoutes(server: FastifyInstance) {
     orgWsAuthCheckHandler,
   );
 
-  server.get(
+  server.get<{
+    Params: { afterAuthId: string };
+    Querystring: { role?: string; accessToken?: string };
+  }>(
     "/:afterAuthId",
     {
       preHandler: checkSession,

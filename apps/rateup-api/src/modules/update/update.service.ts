@@ -22,13 +22,19 @@ export async function updateUsageStatsTemplateMessageCount() {
         .startOf("day")
         .diff(dayjs(subscription.renewedAt ?? subscription.createdAt).startOf("day"), "day") % 30;
     const lastMonthlyCycleStart = dayjs().subtract(monthlyDifference, "day").toDate();
-    const res = await prisma.$queryRaw`SELECT 
+    const res = await prisma.$queryRaw<
+      {
+        templateMessagesCount: number;
+        annualTemplateMessageCount: number;
+        monthlyTemplateMessageCount: number;
+      }[]
+    >`SELECT
           COUNT(wm."createdAt")::INTEGER AS "templateMessagesCount",
           COUNT(wm."createdAt") FILTER (
           WHERE wm."createdAt"::DATE >= ${lastAnnualCycleStart})::INTEGER AS "annualTemplateMessageCount",
           COUNT(wm."createdAt") FILTER (
           WHERE wm."createdAt"::DATE >= ${lastMonthlyCycleStart})::INTEGER AS "monthlyTemplateMessageCount"
-          FROM "WaMessage" wm 
+          FROM "WaMessage" wm
       JOIN "Contact" c ON wm."contactId" = c.id
       WHERE (wm."messageBody"::jsonb)->>'exchangeProcess' = 'send'
       AND (wm."messageBody"::jsonb)->'send'->>'type' = 'template' AND c."orgId"=${subscription.orgId}::uuid;`;
@@ -50,13 +56,13 @@ export async function updateUsageStatsTemplateMessageCount() {
   }
 }
 export async function updateSubscriptionAutomation() {
-  const subscriptions: any = await prisma.subscription.findMany();
+  const subscriptions = await prisma.subscription.findMany();
 
   for await (const subscription of subscriptions) {
-    const features = {
-      ...subscription?.features,
+    const features: LegacySubscriptionFeatures = {
+      ...subscription.features,
       whatsapp: {
-        ...subscription?.features?.whatsapp,
+        ...subscription.features?.whatsapp,
         automation: { count: { max: 10 }, active: true },
       },
     };
@@ -139,7 +145,11 @@ export async function updatePlanFeatures() {
   const subscriptions = await prisma.subscription.findMany();
   const rateupplans = await prisma.rateupPlan.findMany();
 
-  function getNewFeatures(features) {
+  // `features` here is the *pre-migration* legacy shape (whatsapp.template /
+  // whatsapp.automation still nested, before `migrateFeaturesToCurrentSchema`
+  // flattened whatsapp down to just `conversation`), so it is read through an open
+  // record rather than the current `SubscriptionFeatures` type it predates.
+  function getNewFeatures(features: LegacySubscriptionFeatures) {
     return {
       ...features,
       webSurvey: {
@@ -151,14 +161,14 @@ export async function updatePlanFeatures() {
       whatsapp: {
         ...features.whatsapp,
         template: {
-          ...features.whatsapp.template,
+          ...features.whatsapp?.template,
           carouselTemplate: {
             active: false,
             count: { max: 1 },
           },
         },
         automation: {
-          ...features.whatsapp.automation,
+          ...features.whatsapp?.automation,
           leadAdAutomation: {
             active: false,
             count: {
@@ -235,7 +245,9 @@ const MIGRATION_CONVERSATION_MAX = 1_000_000;
 // the whatsapp sub-features flow/survey/campaign/template/automation). WhatsApp is
 // rebuilt around `conversation`, pooled at MIGRATION_CONVERSATION_MAX. Missing keys
 // fall back to safe defaults so a partially-shaped record still migrates cleanly.
-export function migrateFeaturesToCurrentSchema(features: any): SubscriptionFeatures {
+export function migrateFeaturesToCurrentSchema(
+  features: LegacySubscriptionFeatures | null | undefined,
+): SubscriptionFeatures {
   const f = features ?? {};
   return {
     team: {
@@ -455,7 +467,7 @@ export async function syncTeamFeaturesFromSubscription(orgId?: string) {
     const activeFeatures = (Object.keys(subscriptionGates) as TeamFeature[]).filter((feature) => {
       const gate = subscriptionGates[feature];
       if (!gate) return true; // no gate → always enabled
-      const gated = getNestedProperty(subFeatures, gate);
+      const gated = getNestedProperty<subscriptionActiveField>(subFeatures, gate);
       return Boolean(gated?.active);
     });
 
@@ -504,8 +516,20 @@ export async function syncTeamFeaturesFromSubscription(orgId?: string) {
   return results;
 }
 
+/** One row of the inbox recount query; every column is cast to INTEGER in SQL. */
+interface InboxStatsRow {
+  unassigned_count: number;
+  assigned_count: number;
+  closed_count: number;
+  spam_count: number;
+  resolved_count: number;
+  unresolved_count: number;
+  blocked_count: number;
+  total_count: number;
+}
+
 export async function recalculateInboxStats(orgId: string) {
-  const stats: any[] = await prisma.$queryRaw`WITH message_flags AS (
+  const stats = await prisma.$queryRaw<InboxStatsRow[]>`WITH message_flags AS (
     SELECT
       c.id AS contact_id,
       c."waMessageAssignStatus",
@@ -687,14 +711,17 @@ export async function reconcileInboxStatus(apply: boolean) {
  * BullMQ backfill worker (see update.backfill.queue.ts) so both scan for the exact
  * same rows.
  */
-export const backfillMissingConversationWhere = {
+export const backfillMissingConversationWhere: Prisma.ContactWhereInput = {
   // Has at least one message that was never threaded.
   WaMessage: { some: { conversationId: null } },
   // Has no conversation at all — a contact the live code already threads is left alone.
   Conversations: { none: {} },
   // Is actually in the inbox (has sent us something), not an outbound-only recipient.
   lastReceivedMessageTimeStamp: { not: null },
-} satisfies Prisma.ContactWhereInput;
+};
+
+/** An orphan message: written before conversations existed, so never threaded. */
+const unthreadedMessageWhere: Prisma.WaMessageWhereInput = { conversationId: null };
 
 /** The exact shape `backfillOneContact` needs — one source of truth for the select. */
 export const backfillContactSelect = {
@@ -702,7 +729,7 @@ export const backfillContactSelect = {
   orgId: true,
   waMessageAssignStatus: true,
   WaMessage: {
-    where: { conversationId: null },
+    where: unthreadedMessageWhere,
     select: {
       id: true,
       createdAt: true,
@@ -790,6 +817,9 @@ export async function backfillOneContact(
     });
 
     if (assignees.length) {
+      // `WaInboxAssign` has no record of who performed the assignment, so the actor
+      // is unrecoverable on both the column and the history entry.
+      const unknownActor: string | null = null;
       await tx.conversationAssignedUserTeamMap.createMany({
         data: assignees.map((a) => ({
           conversationId: conversation.id,
@@ -797,9 +827,11 @@ export async function backfillOneContact(
           teamId: a.teamId,
           // Non-null or the staff/team analytics `lastAssignedAt <= ...` guards drop the row.
           lastAssignedAt: firstAt,
-          lastAssignedBy: null,
+          lastAssignedBy: unknownActor,
           isAssignedByAutomation: false,
-          actionHistory: [{ action: "assigned", date: firstAt, by: null, source: "backfill" }],
+          actionHistory: [
+            { action: "assigned", date: firstAt, by: unknownActor, source: "backfill" },
+          ],
         })),
         skipDuplicates: true,
       });

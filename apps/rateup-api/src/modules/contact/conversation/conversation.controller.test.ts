@@ -187,16 +187,18 @@ describe("getAverageConversationResponseTimeHandler", () => {
     ]);
   });
 
-  // NOTE: the range is required by the query this backs, but the handler happily
-  // forwards an empty one, which becomes two Invalid Dates.
-  // See issues.txt 18.38.
+  // NOTE: the range is still required by the query this backs, but the handler
+  // happily forwards an empty one, which becomes two Invalid Dates.
+  // See issues.txt 18.38. (`dateKey` itself now defaults to `""` rather than
+  // `undefined` — a type-safety fix, not a behaviour change: `"" !== "today"`
+  // and `"" !== "yesterday"` match `undefined`'s comparisons exactly.)
   test("forwards an empty range rather than refusing the request", async () => {
     (getAvargeResponseTimeofTodyaInEveryHour as Mock).mockResolvedValue([]);
     const rep = reply();
 
     await getAverageConversationResponseTimeHandler(request({ query: {} }), rep);
 
-    expect(getAvargeResponseTimeofTodyaInEveryHour).toHaveBeenCalledWith(ORG, undefined, []);
+    expect(getAvargeResponseTimeofTodyaInEveryHour).toHaveBeenCalledWith(ORG, "", []);
     expect(rep.status).not.toHaveBeenCalled();
   });
 
@@ -290,10 +292,10 @@ describe("getStaffDetailedConversationAnalyticsHandler", () => {
     expect(getStaffDetailedConversationAnalytics).toHaveBeenCalledWith(ORG, "u1", 30);
   });
 
-  // NOTE: the route declares no querystring schema, so nothing supplies or
-  // coerces `days`; the service then builds an Invalid Date from it.
-  // See issues.txt 18.40.
-  test("forwards an undefined day count rather than defaulting it", async () => {
+  // Fixed: an omitted `days` used to be forwarded as `undefined`, which the
+  // service turned into an Invalid Date. The handler now defaults it to a
+  // 30-day window instead. See issues.txt 18.40.
+  test("defaults an undefined day count to a 30-day window", async () => {
     (getStaffDetailedConversationAnalytics as Mock).mockResolvedValue({});
 
     await getStaffDetailedConversationAnalyticsHandler(
@@ -301,7 +303,7 @@ describe("getStaffDetailedConversationAnalyticsHandler", () => {
       reply(),
     );
 
-    expect(getStaffDetailedConversationAnalytics).toHaveBeenCalledWith(ORG, "u1", undefined);
+    expect(getStaffDetailedConversationAnalytics).toHaveBeenCalledWith(ORG, "u1", 30);
   });
 
   test("reports a failure as a 500", async () => {
@@ -355,12 +357,15 @@ describe("getTeamDetailedMetricsHandler", () => {
     expect(getTeamDetailedMetrics).toHaveBeenCalledWith("t-other-org", ORG, 30);
   });
 
-  test("forwards an undefined day count rather than defaulting it", async () => {
+  // Fixed: an omitted `days` used to be forwarded as `undefined`, which the
+  // service turned into an Invalid Date. The handler now defaults it to a
+  // 30-day window instead.
+  test("defaults an undefined day count to a 30-day window", async () => {
     (getTeamDetailedMetrics as Mock).mockResolvedValue({});
 
     await getTeamDetailedMetricsHandler(request({ params: { teamId: "t1" }, query: {} }), reply());
 
-    expect(getTeamDetailedMetrics).toHaveBeenCalledWith("t1", ORG, undefined);
+    expect(getTeamDetailedMetrics).toHaveBeenCalledWith("t1", ORG, 30);
   });
 
   test("reports a failure as a 500", async () => {

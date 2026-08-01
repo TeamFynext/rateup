@@ -319,7 +319,7 @@ describe("getTemplateInMessageFormat", () => {
       header: "https://cdn/i.jpg",
     });
 
-    expect(result.template.components[0]).toEqual({
+    expect(result.template.components![0]).toEqual({
       type: "header",
       format: "image",
       parameters: [{ type: "image", image: { link: "https://cdn/i.jpg" } }],
@@ -332,7 +332,7 @@ describe("getTemplateInMessageFormat", () => {
       null,
     );
 
-    expect(result.template.components[0]).toEqual({
+    expect(result.template.components![0]).toEqual({
       type: "header",
       format: "text",
       text: "Order update",

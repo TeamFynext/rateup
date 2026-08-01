@@ -87,7 +87,7 @@ export async function deleteReviewSuggestionHandler(
   reply.send(reviews);
 }
 
-export function errorHandler(error, request: FastifyRequest, reply: FastifyReply) {
+export function errorHandler(error: unknown, request: FastifyRequest, reply: FastifyReply) {
   log.error(error);
   reply.status(500).send({ message: "Something went wrong" });
 }

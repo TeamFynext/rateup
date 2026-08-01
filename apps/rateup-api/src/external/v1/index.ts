@@ -8,6 +8,7 @@ import { externalWaTemplateRoutes } from "./wa-templates/wa_templates.external.r
 import { externalLoyaltyRoutes } from "./loyalty/loyalty.external.route.js";
 import { verifyApiAccessTokenHook } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
 import z, { ZodObject } from "zod";
+import { Role } from "../../../generated/prisma/client.js";
 
 export async function externalV1Routes(server: FastifyInstance) {
   const OrgIdParamsSchema = z.object({
@@ -35,15 +36,18 @@ export async function externalV1Routes(server: FastifyInstance) {
       return;
     }
 
-    (request as any).orgId = orgId;
+    request.orgId = orgId;
 
-    if ((request as any).user) {
-      (request as any).user.orgId = orgId;
+    if (request.user) {
+      request.user.orgId = orgId;
     } else {
-      (request as any).user = { orgId };
+      // Seeded so anything reading `request.user.orgId` before the token hook runs sees
+      // the path org; verifyApiAccessTokenHook replaces this object wholesale (with the
+      // role) a line below.
+      request.user = { orgId, role: Role.SUPER_ADMIN };
     }
 
-    await verifyApiAccessTokenHook(request as any, reply);
+    await verifyApiAccessTokenHook(request, reply);
   });
 
   server.register(externalSurveyRoutes, { prefix: "/surveys" });

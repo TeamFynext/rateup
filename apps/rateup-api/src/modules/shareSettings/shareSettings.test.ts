@@ -185,7 +185,7 @@ describe("getSettings", () => {
 
     const res = await getSettings(req(), {} as never);
 
-    expect(res.logoFile).toBe("https://cdn.test.example/abc.png");
+    expect(res!.logoFile).toBe("https://cdn.test.example/abc.png");
   });
 
   test("leaves a null logo alone", async () => {
@@ -193,7 +193,7 @@ describe("getSettings", () => {
 
     const res = await getSettings(req(), {} as never);
 
-    expect(res.logoFile).toBeNull();
+    expect(res!.logoFile).toBeNull();
   });
 
   test("returns null when nothing has been configured", async () => {
@@ -291,7 +291,7 @@ describe("updateSettings", () => {
 
     const res = await updateSettings(req({ body: settings({ logoFile: filePart }) }), {} as never);
 
-    expect(res.logoFile).toBe("https://cdn.test.example/null");
+    expect(res!.logoFile).toBe("https://cdn.test.example/null");
   });
 
   // NOTE: that stored "null" is truthy, so the next update treats it as a real

@@ -4,6 +4,7 @@
  */
 
 import prisma from "../../utils/prisma.js";
+import type { LoyaltyTier } from "../../../generated/prisma/client.js";
 import {
   EarningContext,
   PointsCalculationResult,
@@ -64,11 +65,12 @@ export class EarningRulesEngine {
 
       // Check time ranges
       if (rule.allowedTimeRanges) {
-        const timeRanges = rule.allowedTimeRanges as any;
-        if (timeRanges.time_ranges && Array.isArray(timeRanges.time_ranges)) {
-          const inRange = timeRanges.time_ranges.some(
-            (r: { start: string; end: string }) => currentTime >= r.start && currentTime <= r.end,
-          );
+        // Rules are written as a bare array; older rows wrap it under `time_ranges`.
+        // Only the wrapped form used to be read, so array-shaped rules skipped the check.
+        const stored = rule.allowedTimeRanges;
+        const timeRanges = Array.isArray(stored) ? stored : (stored.time_ranges ?? []);
+        if (timeRanges.length > 0) {
+          const inRange = timeRanges.some((r) => currentTime >= r.start && currentTime <= r.end);
           if (!inRange) continue;
         }
       }
@@ -257,7 +259,7 @@ export class EarningRulesEngine {
   async checkAndUpgradeTier(
     customerId: string,
     totalSpend: number,
-  ): Promise<{ upgraded: boolean; newTier?: any }> {
+  ): Promise<{ upgraded: boolean; newTier?: LoyaltyTier }> {
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
       include: {

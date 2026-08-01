@@ -16,6 +16,7 @@ export async function verifyTeamAdminAccess(
 
   if (!userId) {
     reply.code(403).send({ message: "Unauthorised" });
+    return;
   }
 
   const hasAccess = await hasAccessOfTeamAdmin(teamId, userId);
@@ -32,14 +33,17 @@ export async function verifyTeamAdminAccess(
  */
 export async function verifyTeamAccess(
   request: FastifyRequest<{
-    Params?: { teamId?: string };
-    Body?: { teamId?: string };
+    // Routes that use this hook carry all sorts of params/body shapes; only the
+    // optional `teamId` is read here, so the rest is left open.
+    Params?: { teamId?: string } & Record<string, unknown>;
+    Body?: { teamId?: string } & Record<string, unknown>;
   }>,
   reply: FastifyReply,
 ) {
-  const teamId = request.params.teamId || request.body.teamId;
+  const teamId = request.params?.teamId || request.body?.teamId;
   if (!teamId) {
     reply.code(400).send({ message: "No teamId found in params or body" });
+    return;
   }
   const hasAccess = await hasAccessToTeam(teamId, request.userId);
   if (!hasAccess) {

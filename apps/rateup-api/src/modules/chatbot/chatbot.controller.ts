@@ -121,8 +121,12 @@ export async function publicChatbotMessageHandler(
 ) {
   try {
     const { query, chatbotId, userId } = request.body;
-    const { orgId } = await getChatbotDetailsByShortUrlId(chatbotId);
-    const res = await getPublicAIResponseForQuery({ query, orgId, userId });
+    const chatbot = await getChatbotDetailsByShortUrlId(chatbotId);
+    if (!chatbot) {
+      reply.code(404).send({ message: "Chatbot not found" });
+      return;
+    }
+    const res = await getPublicAIResponseForQuery({ query, orgId: chatbot.orgId, userId });
     reply.code(200).send({ message: res });
   } catch (e) {
     console.log(e);
@@ -205,8 +209,12 @@ export async function getChatbotPublicPageStatusHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { publicPageStatus } = await getChatbotDetailsByShortUrlId(request.params.chatbotId);
-    reply.code(200).send({ publicPageStatus });
+    const chatbot = await getChatbotDetailsByShortUrlId(request.params.chatbotId);
+    if (!chatbot) {
+      reply.code(404).send({ message: "Chatbot not found" });
+      return;
+    }
+    reply.code(200).send({ publicPageStatus: chatbot.publicPageStatus });
   } catch (error) {
     console.error(error);
     reply.code(500).send({ message: "something went wrong" });
@@ -292,6 +300,10 @@ export async function getChatHitoryByOrgHandler(
 ) {
   try {
     const axiosAIClient = await getAxiosAIClient(request);
+    if (!axiosAIClient) {
+      reply.code(500).send({ message: "Unable to initialize AI client" });
+      return;
+    }
     const { chatbotId } = request.params;
     const res = await getChatBotHistory(axiosAIClient, chatbotId);
     reply.code(200).send(res);

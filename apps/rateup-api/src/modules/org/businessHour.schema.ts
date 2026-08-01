@@ -1,11 +1,33 @@
 import { z } from "zod";
 
+/** One day's opening hours. */
+const dayScheduleSchema = z.object({
+  isOpen: z.boolean(),
+  timeSlots: z.array(
+    z.object({
+      openTime: z.string(),
+      closeTime: z.string(),
+    }),
+  ),
+});
+
+/** Opening hours for every weekday. */
+const scheduleSchema = z.object({
+  monday: dayScheduleSchema,
+  tuesday: dayScheduleSchema,
+  wednesday: dayScheduleSchema,
+  thursday: dayScheduleSchema,
+  friday: dayScheduleSchema,
+  saturday: dayScheduleSchema,
+  sunday: dayScheduleSchema,
+});
+
 const businessHourCore = {
   name: z.string().min(1),
   timezone: z.string().min(1),
   channels: z.array(z.string()),
   description: z.string().optional(),
-  schedule: z.record(z.string(), z.any()), // JSON object for schedule
+  schedule: scheduleSchema,
 };
 
 const createBusinessHourSchema = z.object({

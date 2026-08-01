@@ -8,12 +8,15 @@ export async function getUsageStatHandler(request: FastifyRequest, reply: Fastif
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();
 
-    const { orgId } = await getOrgIdAndRole({ id: userId });
+    const user = await getOrgIdAndRole({ id: userId });
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-    const stat = await getUsageStat(orgId);
+    const stat = await getUsageStat(user.orgId);
     reply.code(200).send(stat);
   } catch (e) {
     console.error(e);
-    reply.code(500).send({ message: e.message });
+    reply.code(500).send({ message: e instanceof Error ? e.message : "Unknown error" });
   }
 }

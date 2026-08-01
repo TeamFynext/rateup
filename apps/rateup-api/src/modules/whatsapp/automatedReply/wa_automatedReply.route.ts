@@ -32,6 +32,11 @@ import {
   getRulesByAutomationIdQuerySchema,
 } from "./wa_rule.schema.js";
 import { byWaAutomatedReplyIdParams, cloneAutomatedReplyBody } from "./wa_automatedReply.schema.js";
+import type {
+  ByWaAutomatedReplyIdParams,
+  CreateAutomatedReplySchema,
+  InitiateAutomatedReplyBody,
+} from "./wa_automatedReply.schema.js";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.addHook("preHandler", checkSession);
@@ -42,7 +47,7 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.addHook("preHandler", requireFeature(TeamFeature.automation));
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
   fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
-  fastify.post(
+  fastify.post<{ Body: CreateAutomatedReplySchema }>(
     "/",
     {
       preHandler: verifyAutomationLimit,
@@ -62,7 +67,7 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.get("/:waAutomatedReplyId", getAutomatedRepliesByIdHandler);
   fastify.put("/:waAutomatedReplyId", updateAutomatedReplyHandler);
   fastify.delete("/:waAutomatedReplyId", deleteAutomatedReplyHandler);
-  fastify.post(
+  fastify.post<{ Params: ByWaAutomatedReplyIdParams; Body: InitiateAutomatedReplyBody }>(
     "/initiate/:waAutomatedReplyId",
     {
       preHandler: verifyAutomationTriggerLimitHandler,

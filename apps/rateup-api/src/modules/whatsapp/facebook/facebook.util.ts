@@ -35,7 +35,7 @@ export function getFacebookWebhookEvent(
 
     return null;
   } catch (error) {
-    log.error("Error determining Facebook event type: %o", error);
+    log.error({ err: error }, "Error determining Facebook event type");
     return null;
   }
 }

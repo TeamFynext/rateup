@@ -248,7 +248,7 @@ async function migrateTags() {
     for (const contact of contacts) {
       if (!contact.tags) continue;
 
-      const tags = contact.tags as Record<string, any>;
+      const tags = contact.tags as Record<string, unknown>;
 
       for (const [key, val] of Object.entries(tags)) {
         const fieldKey = key.toLowerCase().replace(/\s+/g, "_");
@@ -268,7 +268,8 @@ async function migrateTags() {
           data: {
             contactId: contact.id,
             fieldId: field.id, // reference UUID
-            value: val,
+            // `tags` is a free-form Json blob; the value column is text.
+            value: typeof val === "string" ? val : JSON.stringify(val),
           },
         });
       }

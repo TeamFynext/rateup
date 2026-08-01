@@ -5,14 +5,17 @@ import {
 } from "./support-user.controller.js";
 import { getChatByContactId } from "../inbox/message/wamessage.service.js";
 import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
-import { byContactIdSchema } from "../../contact/contact.schema.js";
+import { type ByContactIdParams, byContactIdSchema } from "../../contact/contact.schema.js";
+import type { ByOrgIdParams } from "../../org/org.schema.js";
 
 export async function supportUserWebhookRoutes(server: FastifyInstance) {
   // TODO: implement challanges for webhook
   // server.get("/", webhookSubscribeHandler);
   server.post("/", { preHandler: verifyApiAccessTokenHook }, supportUserWebhookEventHandler);
 
-  server.get(
+  // `verifyApiAccessTokenHook` resolves the org from `?orgId=` when the path has no
+  // `:orgId`, so the querystring is part of this route's contract.
+  server.get<{ Params: ByContactIdParams; Querystring: Partial<ByOrgIdParams> }>(
     "/contact/:contactId",
     {
       preHandler: verifyApiAccessTokenHook,

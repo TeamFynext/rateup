@@ -34,12 +34,16 @@ import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import {
   byOrgIdParams,
+  ByOrgIdParams,
   createOrgRequestSchema,
   createOrgResponseSchema,
+  IdParamInput,
   idParamRequestSchema,
+  PauseOrgInput,
   pauseOrgSchema,
   updateLogoSchema,
   updateOrgDetailsSchema,
+  UpdateRoleInput,
   updateRoleSchema,
 } from "./org.schema.js";
 export async function orgRoutes(server: FastifyInstance) {
@@ -66,7 +70,7 @@ export async function orgRoutes(server: FastifyInstance) {
     getAllOrgsHandler,
   );
 
-  server.get(
+  server.get<{ Params: { orgId: string } }>(
     "/:orgId",
     {
       schema: {
@@ -77,7 +81,7 @@ export async function orgRoutes(server: FastifyInstance) {
     getOrgStatsHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: { orgId: string } }>(
     "/:orgId",
     {
       schema: {
@@ -88,7 +92,7 @@ export async function orgRoutes(server: FastifyInstance) {
     deleteOrgHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: { orgId: string } }>(
     "/admin/:orgId",
     {
       schema: {
@@ -130,7 +134,7 @@ export async function orgRoutes(server: FastifyInstance) {
     updateOrgDetailsHandler,
   );
 
-  server.put(
+  server.put<{ Body: UpdateRoleInput; Params: IdParamInput }>(
     "/members/change-role/:id",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
@@ -142,7 +146,7 @@ export async function orgRoutes(server: FastifyInstance) {
     updateRoleController,
   );
 
-  server.put(
+  server.put<{ Body: PauseOrgInput; Params: IdParamInput }>(
     "/pause/:id",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
@@ -205,7 +209,7 @@ export async function orgRoutes(server: FastifyInstance) {
 
   server.get("/checklist", getOnboardingChecklistHandler);
 
-  server.post(
+  server.post<{ Params: ByOrgIdParams }>(
     "/org-deletion-warning-mail/:orgId",
     {
       schema: {
