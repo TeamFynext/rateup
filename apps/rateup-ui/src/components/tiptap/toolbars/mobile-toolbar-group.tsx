@@ -1,5 +1,3 @@
-"use client";
-
 import { IconChevronDown } from "@tabler/icons-react";
 import React, { useState } from "react";
 

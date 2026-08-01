@@ -1,5 +1,3 @@
-"use client";
-
 import { IconBold } from "@tabler/icons-react";
 import React from "react";
 

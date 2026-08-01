@@ -1,5 +1,3 @@
-"use client";
-
 import { IconArrowBackUp } from "@tabler/icons-react";
 import React from "react";
 

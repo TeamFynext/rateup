@@ -1,5 +1,3 @@
-"use client";
-
 import { IconPhoto } from "@tabler/icons-react";
 import React from "react";
 

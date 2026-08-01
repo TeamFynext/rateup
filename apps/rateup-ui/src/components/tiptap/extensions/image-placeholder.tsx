@@ -1,4 +1,3 @@
-"use client";
 import { IconLink, IconLoader2, IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
 import {
   type CommandProps,

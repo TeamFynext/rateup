@@ -1,5 +1,3 @@
-"use client";
-
 import { IconStrikethrough } from "@tabler/icons-react";
 import React from "react";
 

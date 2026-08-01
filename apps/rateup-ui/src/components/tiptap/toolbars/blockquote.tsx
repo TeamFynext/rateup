@@ -1,5 +1,3 @@
-"use client";
-
 import { IconQuote } from "@tabler/icons-react";
 import React from "react";
 

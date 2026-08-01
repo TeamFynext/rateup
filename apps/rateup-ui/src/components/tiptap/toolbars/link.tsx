@@ -1,5 +1,3 @@
-"use client";
-
 import { IconTrash, IconX } from "@tabler/icons-react";
 import React, { type SubmitEvent } from "react";
 

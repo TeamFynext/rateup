@@ -1,4 +1,3 @@
-"use client";
 import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import type { Extension } from "@tiptap/core";
 import type { ColorOptions } from "@tiptap/extension-color";

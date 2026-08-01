@@ -1,5 +1,3 @@
-"use client";
-
 import { IconItalic } from "@tabler/icons-react";
 import React from "react";
 

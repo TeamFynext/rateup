@@ -1,4 +1,3 @@
-"use client";
 /* oxlint-disable */
 // @ts-nocheck
 import { IconArrowLeft, IconArrowRight, IconRepeat, IconX } from "@tabler/icons-react";

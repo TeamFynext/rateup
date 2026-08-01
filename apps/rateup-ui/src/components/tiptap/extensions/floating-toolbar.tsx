@@ -1,5 +1,3 @@
-"use client";
-
 import { type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { useEffect } from "react";

@@ -1,5 +1,3 @@
-"use client";
-
 import { IconList } from "@tabler/icons-react";
 import React from "react";
 
