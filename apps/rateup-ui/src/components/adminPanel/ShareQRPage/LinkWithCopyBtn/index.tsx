@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -41,7 +41,7 @@ function LinkWithCopyBtn({ link, label }: Readonly<LinkWithCopyBtnProps>) {
           size="icon"
           aria-label={copied ? translations("Copied url") : translations("Copy url")}
         >
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copied ? <IconCheck className="w-4 h-4" /> : <IconCopy className="w-4 h-4" />}
         </Button>
       </div>
     </div>

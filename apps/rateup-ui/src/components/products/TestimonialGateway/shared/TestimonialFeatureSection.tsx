@@ -1,4 +1,4 @@
-import { Camera, CheckCircle, Heart, MessageSquare, Star } from "lucide-react";
+import { IconCamera, IconCircleCheck, IconHeart, IconMessage, IconStar } from "@tabler/icons-react";
 import { motion } from "motion/react";
 
 import { Card } from "@/components/ui/card.tsx";
@@ -15,7 +15,7 @@ const TestimonialTemplate: React.FC<{
           <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 space-y-3">
             <div className="flex items-center space-x-1 text-yellow-400">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={16} fill="currentColor" />
+                <IconStar key={i} size={16} fill="currentColor" />
               ))}
             </div>
             <p className="text-sm italic">
@@ -45,7 +45,7 @@ const TestimonialTemplate: React.FC<{
         return (
           <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow-lg relative space-y-3">
             <div className="absolute -top-2 -left-2 bg-purple-500 text-white p-1 rounded-full">
-              <MessageSquare size={14} />
+              <IconMessage size={14} />
             </div>
             <p className="text-sm">
               "The simplicity of giving feedback made it so easy for me to share my experience."
@@ -53,7 +53,7 @@ const TestimonialTemplate: React.FC<{
             <div className="flex justify-between items-center">
               <p className="text-xs font-medium">Michael T.</p>
               <div className="flex items-center text-xs text-green-600">
-                <CheckCircle size={12} className="mr-1" />
+                <IconCircleCheck size={12} className="mr-1" />
                 Verified
               </div>
             </div>
@@ -72,7 +72,7 @@ const TestimonialTemplate: React.FC<{
                   <p className="text-xs opacity-80">@mariathomas</p>
                 </div>
               </div>
-              <Heart size={16} fill="white" />
+              <IconHeart size={16} fill="white" />
             </div>
             <p className="text-sm">
               "This product completely transformed how we collect customer feedback!"
@@ -89,7 +89,7 @@ const TestimonialTemplate: React.FC<{
                   <div className="ml-1 w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-amber-500 border-b-[8px] border-b-transparent"></div>
                 </div>
               </div>
-              <Camera className="text-gray-400 opacity-20" size={40} />
+              <IconCamera className="text-gray-400 opacity-20" size={40} />
             </div>
             <p className="text-sm font-medium">Video Testimonial</p>
             <p className="text-xs text-muted-foreground">Robert Johnson, CTO</p>

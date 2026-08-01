@@ -1,6 +1,5 @@
-import type { SurveyTheme } from "@/components/Survey/SurveyTheme/surveyTheme.types";
-
 import { axiosClient } from "../apiClient";
+import type { SurveyTheme } from "./surveyTheme.types";
 
 const THEME_API_PATH = "/surveyTheme";
 

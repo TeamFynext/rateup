@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { completeInvite } from "@/backend/team/team.api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,7 +45,7 @@ function Invite() {
   const updateInviteMutation = useMutation({
     mutationFn: () => acceptInvite(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }); // update team list on add
+      queryClient.invalidateQueries({ queryKey: teamKeys.details() }); // update team list on add
       toast.success(translations("Invite Accepted successfully."), {
         id: "load-data",
       });

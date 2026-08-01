@@ -1,8 +1,7 @@
-"use client";
+import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import type { Extension } from "@tiptap/core";
 import type { ColorOptions } from "@tiptap/extension-color";
 import type { HighlightOptions } from "@tiptap/extension-highlight";
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
 
 /* eslint-disable */
 // @ts-nocheck
@@ -74,7 +73,7 @@ const ColorHighlightButton = ({
       </div>
       <span>{name}</span>
     </div>
-    {isActive && <CheckIcon className="h-4 w-4" />}
+    {isActive && <IconCheck className="h-4 w-4" />}
   </button>
 );
 
@@ -180,7 +179,7 @@ export const ColorHighlightToolbar = () => {
             }
           >
             <span className="text-md">A</span>
-            <ChevronDownIcon className="ml-2 h-4 w-4" />
+            <IconChevronDown className="ml-2 h-4 w-4" />
           </TooltipTrigger>
           <TooltipContent>Text Color & Highlight</TooltipContent>
         </Tooltip>

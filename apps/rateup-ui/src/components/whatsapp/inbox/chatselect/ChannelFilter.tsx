@@ -2,8 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { cn } from "@/lib/utils.ts";
-
-import { useChatFilterStore } from "./chatFilterStore.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 
 /**
  * Channel scope for the inbox list — WhatsApp number, Instagram account or

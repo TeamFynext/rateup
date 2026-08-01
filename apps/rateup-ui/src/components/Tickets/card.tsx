@@ -10,18 +10,18 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import {
+  IconCalendar,
+  IconCalendarClock,
+  IconDots,
+  IconMessageCircle,
+  IconPaperclip,
+  IconSquareCheck,
+  IconTrash,
+  IconUser,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {
-  Calendar,
-  CalendarClock,
-  CheckSquare,
-  MessageCircle,
-  MoreHorizontal,
-  Paperclip,
-  Trash2,
-  User,
-} from "lucide-react";
 import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -221,7 +221,7 @@ function CardDisplay({
                   />
                 }
               >
-                <MoreHorizontal size={16} strokeWidth={2} />
+                <IconDots size={16} strokeWidth={2} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
@@ -231,7 +231,7 @@ function CardDisplay({
                     if (onDelete) onDelete();
                   }}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <IconTrash className="h-4 w-4 mr-2" />
                   {t("Delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -312,7 +312,7 @@ function CardDisplay({
 
           {card.attachments && card.attachments.length > 0 && (
             <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
-              <Paperclip size={12} className="text-muted-foreground" strokeWidth={2} />
+              <IconPaperclip size={12} className="text-muted-foreground" strokeWidth={2} />
               {card.attachments.length}
             </span>
           )}
@@ -320,7 +320,7 @@ function CardDisplay({
             <span
               className={`inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium ${doneCount === totalCount ? "text-green-600" : "text-muted-foreground"}`}
             >
-              <CheckSquare
+              <IconSquareCheck
                 size={12}
                 strokeWidth={2}
                 className={doneCount === totalCount ? "text-green-600" : "text-gray-400"}
@@ -329,7 +329,7 @@ function CardDisplay({
             </span>
           )}
           <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
-            <MessageCircle size={12} className="text-muted-foreground" strokeWidth={2} />
+            <IconMessageCircle size={12} className="text-muted-foreground" strokeWidth={2} />
             {card.ticketComments?.length || 0}
           </span>
         </div>
@@ -345,7 +345,7 @@ function CardDisplay({
                 className={`inline-flex items-center gap-1 font-body text-[11.5px] font-medium ${isOverdue ? "text-red-600" : isCloseToDueDate ? "text-amber-600" : "text-muted-foreground"}`}
               >
                 {hasDueDate ? (
-                  <CalendarClock
+                  <IconCalendarClock
                     size={12}
                     strokeWidth={2}
                     className={
@@ -357,7 +357,7 @@ function CardDisplay({
                     }
                   />
                 ) : (
-                  <Calendar size={12} strokeWidth={2} className="text-gray-400" />
+                  <IconCalendar size={12} strokeWidth={2} className="text-gray-400" />
                 )}
                 {dateFormatted}
               </span>
@@ -390,7 +390,7 @@ function CardDisplay({
               </div>
             ) : (
               <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-dashed border-border flex items-center justify-center">
-                <User size={11} className="text-muted-foreground" />
+                <IconUser size={11} className="text-muted-foreground" />
               </div>
             )}
           </div>

@@ -1,4 +1,4 @@
-import { ArrowUp } from "lucide-react";
+import { IconArrowUp } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 const ScrollToTop = () => {
@@ -43,7 +43,7 @@ const ScrollToTop = () => {
        text-white p-2 rounded-md
        shadow-xl transform hover:scale-105  transition-all duration-500 ease-in-out"
     >
-      <ArrowUp size={26} />
+      <IconArrowUp size={26} />
     </button>
   );
 };

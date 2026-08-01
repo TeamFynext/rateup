@@ -8,13 +8,10 @@ import {
 import { useAnimate } from "motion/react";
 import { useEffect, useState } from "react";
 
-import {
-  generateGradient,
-  SmileyColorType,
-  SmileyVariantStyle,
-} from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
+import { generateGradient } from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";
 import { SmileyResponse } from "@/types/enums.ts";
 import type { StoredResponse } from "@/utils/response.ts";
 import { asAnswerText } from "@/utils/response.ts";

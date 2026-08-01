@@ -1,7 +1,6 @@
-import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
+import { IconCheck, IconChevronLeft, IconStar } from "@tabler/icons-react";
 import { Image as NextImage } from "@unpic/react";
 import dayjs from "dayjs";
-import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -11,12 +10,12 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
+import { SmileyVariantStyle } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 import type { StoredResponse } from "@/utils/response.ts";
 import { asAnswer } from "@/utils/response.ts";
 
-import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
 import { getDefaultSmileySrc } from "./SmileyRating/SmileyRatingStyling.tsx";
 
@@ -24,7 +23,7 @@ function ReadOnlyRating({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
-        <Star
+        <IconStar
           key={i}
           className={cn(
             "size-4",

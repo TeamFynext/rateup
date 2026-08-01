@@ -1,4 +1,4 @@
-import { CircleCheck, Users } from "lucide-react";
+import { IconCircleCheck, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -63,7 +63,7 @@ const LabelContactModal = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 text-muted-foreground">
-          <Users className="w-5 h-5" />{" "}
+          <IconUsers className="w-5 h-5" />{" "}
           <span>
             {contactIds.length} {t("contacts selected")}
           </span>
@@ -82,7 +82,7 @@ const LabelContactModal = ({
             {t("Cancel")}
           </Button>
           <Button onClick={handleApplyLabels}>
-            {assign.isPending ? <Spinner /> : <CircleCheck />}
+            {assign.isPending ? <Spinner /> : <IconCircleCheck />}
             {t("Apply")}
           </Button>
         </DialogFooter>

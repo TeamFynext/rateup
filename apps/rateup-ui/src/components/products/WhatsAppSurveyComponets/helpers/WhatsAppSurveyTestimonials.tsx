@@ -1,4 +1,4 @@
-import { UserCircle2 } from "lucide-react";
+import { IconUserCircle } from "@tabler/icons-react";
 
 const testimonials = [
   {
@@ -34,7 +34,7 @@ export default function WhatsAppSurveyTestimonials() {
             >
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                  <UserCircle2 className="w-8 h-8 text-[#075E54]" />
+                  <IconUserCircle className="w-8 h-8 text-[#075E54]" />
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">{t.author}</p>

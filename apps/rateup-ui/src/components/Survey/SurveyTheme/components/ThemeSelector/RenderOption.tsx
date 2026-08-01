@@ -1,5 +1,4 @@
-import { IconPencil, IconTrash } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconLoader2, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import type { MouseEvent } from "react";
 
@@ -72,7 +71,7 @@ function RenderOption({
             disabled
             onClick={(e) => e.stopPropagation()}
           >
-            <Loader2 className="size-3 animate-spin" />
+            <IconLoader2 className="size-3 animate-spin" />
           </Button>
         )}
         {isSurveyThemeActive && (

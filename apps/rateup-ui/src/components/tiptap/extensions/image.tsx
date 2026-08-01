@@ -1,19 +1,18 @@
-"use client";
+import {
+  IconAlignCenter,
+  IconAlignLeft,
+  IconAlignRight,
+  IconDotsVertical,
+  IconEdit,
+  IconLoader2,
+  IconMaximize,
+  IconPhoto,
+  IconTrash,
+} from "@tabler/icons-react";
 // @ts-nocheck
 /* eslint-disable */
 import Image from "@tiptap/extension-image";
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  Maximize,
-  MoreVertical,
-  Trash,
-  Edit,
-  ImageIcon,
-  Loader2,
-} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -297,7 +296,7 @@ function TiptapImage(props: NodeViewProps) {
               variant="ghost"
               onClick={() => updateAttributes({ align: "left" })}
             >
-              <AlignLeft className="size-4" />
+              <IconAlignLeft className="size-4" />
             </Button>
             <Button
               size="icon"
@@ -305,7 +304,7 @@ function TiptapImage(props: NodeViewProps) {
               variant="ghost"
               onClick={() => updateAttributes({ align: "center" })}
             >
-              <AlignCenter className="size-4" />
+              <IconAlignCenter className="size-4" />
             </Button>
             <Button
               size="icon"
@@ -313,22 +312,22 @@ function TiptapImage(props: NodeViewProps) {
               variant="ghost"
               onClick={() => updateAttributes({ align: "right" })}
             >
-              <AlignRight className="size-4" />
+              <IconAlignRight className="size-4" />
             </Button>
             <Separator orientation="vertical" className="h-[20px]" />
             <DropdownMenu open={openedMore} onOpenChange={setOpenedMore}>
               <DropdownMenuTrigger
                 render={<Button size="icon" className="size-7" variant="ghost" />}
               >
-                <MoreVertical className="size-4" />
+                <IconDotsVertical className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" alignOffset={-90} className="mt-1 text-sm">
                 <DropdownMenuItem onClick={() => setEditingCaption(true)}>
-                  <Edit className="mr-2 size-4" /> Edit Caption
+                  <IconEdit className="mr-2 size-4" /> Edit Caption
                 </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
-                    <ImageIcon className="mr-2 size-4" /> Replace Image
+                    <IconPhoto className="mr-2 size-4" /> Replace Image
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="p-2 w-fit min-w-52">
                     <div className="space-y-4">
@@ -348,12 +347,12 @@ function TiptapImage(props: NodeViewProps) {
                         >
                           {uploading ? (
                             <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <IconLoader2 className="h-4 w-4 animate-spin" />
                               <span>Uploading...</span>
                             </>
                           ) : (
                             <>
-                              <ImageIcon className="h-4 w-4" />
+                              <IconPhoto className="h-4 w-4" />
                               <span>Choose Image</span>
                             </>
                           )}
@@ -405,14 +404,14 @@ function TiptapImage(props: NodeViewProps) {
                     }
                   }}
                 >
-                  <Maximize className="mr-2 size-4" /> Full Width
+                  <IconMaximize className="mr-2 size-4" /> Full Width
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={deleteNode}
                 >
-                  <Trash className="mr-2 size-4" /> Delete Image
+                  <IconTrash className="mr-2 size-4" /> Delete Image
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

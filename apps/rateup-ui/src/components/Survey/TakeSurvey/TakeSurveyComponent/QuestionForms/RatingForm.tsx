@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { IconStar } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
 
@@ -49,7 +49,7 @@ export function RatingForm() {
             onMouseLeave={() => setHoveredValue(-1)}
             className="flex items-center justify-center"
           >
-            <Star
+            <IconStar
               className={cn(
                 "size-[50px] transition-colors",
                 filled ? "fill-current" : "text-muted-foreground",

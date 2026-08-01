@@ -1,5 +1,5 @@
+import { IconPlus, IconUsers } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -109,7 +109,7 @@ function Page() {
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Survey")}
             </Button>
             <InfoButton docUrl={`${docsPath}/surveys`} />
@@ -224,7 +224,7 @@ function SurveysPageFilter({
         <SelectTrigger className="min-w-42">
           <div className="flex items-center gap-2 truncate">
             <div className="flex size-7 items-center justify-center rounded-md bg-muted">
-              <Users className="size-4 text-muted-foreground" />
+              <IconUsers className="size-4 text-muted-foreground" />
             </div>
             <SelectValue placeholder={t("Team")} />
           </div>

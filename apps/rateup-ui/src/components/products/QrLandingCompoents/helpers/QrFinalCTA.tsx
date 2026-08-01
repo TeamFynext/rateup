@@ -1,5 +1,5 @@
+import { IconPhoneCall } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { PhoneCall } from "lucide-react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -35,7 +35,7 @@ const QrFinalCTA = () => {
             variant="outline"
             className="border-white bg-white/10 hover:bg-white/20 text-white text-base font-medium px-6 py-4 rounded-xl flex items-center gap-2 backdrop-blur-sm transition"
           >
-            <PhoneCall size={18} />
+            <IconPhoneCall size={18} />
             <span>Or call us directly: +91 80755 45008</span>
           </Button>
         </div>

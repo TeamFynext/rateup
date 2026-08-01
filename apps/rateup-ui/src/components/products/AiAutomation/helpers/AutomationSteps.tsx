@@ -1,4 +1,4 @@
-import { Bot, Rocket, Workflow } from "lucide-react";
+import { IconRobot, IconRocket, IconSitemap } from "@tabler/icons-react";
 
 const Surveysteps = [
   {
@@ -6,21 +6,21 @@ const Surveysteps = [
     title: "Design Your Flow",
     description:
       "Use our visual drag-and-drop builder to map out your customer journey. Define triggers, actions, and decision points with ease.",
-    icon: <Workflow size={36} />,
+    icon: <IconSitemap size={36} />,
   },
   {
     number: 2,
     title: "Integrate Smart AI Agents",
     description:
       "Drag and drop pre-built or custom AI agents into your flow. Train them with your business data and set their specific tasks.",
-    icon: <Bot size={36} />,
+    icon: <IconRobot size={36} />,
   },
   {
     number: 3,
     title: "Deploy & Optimize",
     description:
       "Go live across your chosen channels (WhatsApp, Web, etc.). Monitor performance, gather insights, and continuously optimize your AI-driven automations.",
-    icon: <Rocket size={36} />,
+    icon: <IconRocket size={36} />,
   },
 ];
 

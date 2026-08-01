@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 
 /** An uploaded image slot, holding both the object URL and the pending file. */
 interface LinktreeThemeImage {
@@ -7,24 +7,6 @@ interface LinktreeThemeImage {
 }
 
 /** The linktree theme document this reducer edits (an immer draft). */
-export interface LinktreeTheme {
-  background: {
-    styles: CSSProperties;
-    desktopBgImgUrl: string | null;
-    desktopBgImgFile?: File | null;
-    mobileBgImgUrl: string | null;
-    mobileBgImgFile?: File | null;
-  };
-  logo: {
-    styles: CSSProperties;
-    logoUrl?: string | null;
-    logoFile?: File | null;
-  };
-  title: { styles: CSSProperties; text: string };
-  subtitle: { styles: CSSProperties; text: string };
-  linkListItem: { styles: CSSProperties };
-}
-
 export type LinktreeThemeAction = {
   type: string;
   payload?: unknown;

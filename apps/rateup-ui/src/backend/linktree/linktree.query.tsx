@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { linktreeKeys } from "@/backend/campaign/campaign.keys";
 import type { RequestPayload } from "@/types/api.ts";
 
 import {
@@ -16,7 +17,7 @@ import {
 // get all linktrees
 function useLinktrees() {
   return useQuery({
-    queryKey: ["linktrees"],
+    queryKey: linktreeKeys.all(),
     queryFn: getLinktrees,
   });
 }
@@ -37,7 +38,7 @@ function useCreateLinktreeMutation() {
       toast.success("Created linktree successfully.", {
         id: "CreateLinktree",
       });
-      queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+      queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Unable to create linktree, please try again later", {
@@ -57,7 +58,7 @@ function useUpdateLinktreeMutation(shortUrlId: string) {
       toast.success("Updated linktree successfully.", {
         id: "UpdateLinktree",
       });
-      queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+      queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
       queryClient.invalidateQueries({ queryKey: ["linktree", shortUrlId] });
     },
     onError: (error) => {
@@ -78,7 +79,7 @@ function useDeleteLinktreeMutation(id: string) {
       toast.success("Deleted linktree successfully.", {
         id: "deleteLinktree",
       });
-      queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+      queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "unable to delete linktree, please try again later", {

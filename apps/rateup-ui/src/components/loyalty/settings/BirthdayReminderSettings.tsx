@@ -1,4 +1,4 @@
-import { Cake, Info, Loader2, Save } from "lucide-react";
+import { IconCake, IconDeviceFloppy, IconInfoCircle, IconLoader2 } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -49,7 +49,7 @@ export function BirthdayReminderSettings({
     if (isLoadingRewards) {
       return (
         <div className="flex items-center justify-center p-2">
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <IconLoader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         </div>
       );
     }
@@ -71,7 +71,7 @@ export function BirthdayReminderSettings({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Cake className="w-4 h-4 text-primary" />
+          <IconCake className="w-4 h-4 text-primary" />
           {t("Birthday Reminders")}
         </CardTitle>
       </CardHeader>
@@ -166,7 +166,7 @@ export function BirthdayReminderSettings({
 
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <Cake className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <IconCake className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -181,7 +181,7 @@ export function BirthdayReminderSettings({
 
             <div className="border-t pt-3">
               <div className="flex items-start gap-2">
-                <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <IconInfoCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="text-xs text-muted-foreground">
                   <p className="font-medium mb-1">{t("How it works:")}</p>
                   <ul className="space-y-1 list-disc list-inside">
@@ -196,9 +196,9 @@ export function BirthdayReminderSettings({
             {isModified && (
               <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 )}
                 {t("Save Settings")}
               </Button>

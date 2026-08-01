@@ -1,19 +1,18 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
 import {
-  ChevronDown,
-  CheckCircle,
-  Clock,
-  Download,
-  Plus,
-  RefreshCw,
-  Search,
-  X,
-} from "lucide-react";
+  IconBrandWhatsapp,
+  IconChevronDown,
+  IconCircleCheck,
+  IconClock,
+  IconDownload,
+  IconPlus,
+  IconRefresh,
+  IconSearch,
+  IconX,
+} from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useChatContactCountStore, useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
@@ -30,12 +29,13 @@ import {
 } from "@/components/ui/select.tsx";
 import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ChatFilter } from "@/store/chat-filter.store.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useChatContactCountStore, useContactsStore } from "@/store/inbox.store.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
-import type { ChatFilter } from "./chatFilterStore.ts";
-import { useChatFilterStore } from "./chatFilterStore.ts";
 import InboxTabStrip from "./InboxTabStrip.tsx";
 
 // Inbox tab → the sidebar rail's count for that tab. Blocked is absent on
@@ -120,7 +120,7 @@ const ChatselectPanelHeader = ({
       {showSearchBar && (
         <div className="absolute inset-0 z-50 flex items-center px-3 animate-in fade-in duration-200 bg-background">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 transform text-muted-foreground" />
+            <IconSearch className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 transform text-muted-foreground" />
             <Input
               placeholder="Search contact..."
               className="h-8 w-full pl-8 pr-8 text-xs placeholder:text-sm"
@@ -137,7 +137,7 @@ const ChatselectPanelHeader = ({
                 setFilter({ ...filter, searchTerm: "" });
               }}
             >
-              <X className="w-3 h-3" />
+              <IconX className="w-3 h-3" />
             </Button>
           </div>
         </div>
@@ -161,7 +161,7 @@ const ChatselectPanelHeader = ({
                   className="flex items-center justify-center border-0 bg-transparent p-0 outline-none"
                   onClick={() => setShowSearchBar(true)}
                 >
-                  <Search className="size-4 cursor-pointer" />
+                  <IconSearch className="size-4 cursor-pointer" />
                 </button>
               }
               content={<p>Search</p>}
@@ -177,7 +177,7 @@ const ChatselectPanelHeader = ({
                     setSelectedChats([]);
                   }}
                 >
-                  <CheckCircle
+                  <IconCircleCheck
                     className={cn("size-4 cursor-pointer", isSelectionMode && "text-primary")}
                   />
                 </button>
@@ -194,7 +194,7 @@ const ChatselectPanelHeader = ({
                       <button className="flex items-center justify-center border-0 bg-transparent p-0 outline-none" />
                     }
                   >
-                    <Download className="size-4 cursor-pointer" />
+                    <IconDownload className="size-4 cursor-pointer" />
                   </PopoverTrigger>
                 }
                 content={<p>Download Chats</p>}
@@ -211,7 +211,7 @@ const ChatselectPanelHeader = ({
                   className="flex items-center justify-center border-0 bg-transparent p-0 outline-none"
                   onClick={() => refetchFilteredContacts()}
                 >
-                  <RefreshCw
+                  <IconRefresh
                     className={cn(
                       "size-4 cursor-pointer",
                       isRefetchingFilteredContacts && "animate-spin",
@@ -230,7 +230,7 @@ const ChatselectPanelHeader = ({
                       <button className="flex h-7.5 cursor-pointer items-center gap-1.25 rounded-lg border-0 px-2.75 text-xs font-bold text-white outline-none bg-primary" />
                     }
                   >
-                    <Plus className="size-3.5" />
+                    <IconPlus className="size-3.5" />
                     {translations("New")}
                   </DialogTrigger>
                 }
@@ -287,7 +287,7 @@ const ChatselectPanelHeader = ({
             selectTriggerClassName="h-auto w-auto gap-1 border-0 bg-transparent px-0 text-xs! shadow-none hover:bg-transparent text-muted-foreground focus:ring-0 focus:ring-offset-0"
             customSelectTrigger={
               <div className="flex items-center gap-1">
-                {translations("Newest")} <ChevronDown className="size-3.25" />
+                {translations("Newest")} <IconChevronDown className="size-3.25" />
               </div>
             }
           />
@@ -320,7 +320,7 @@ const SortMenu = ({
       items={data}
     >
       <SelectTrigger className={selectTriggerClassName}>
-        <SelectValue placeholder={customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />} />
+        <SelectValue placeholder={customSelectTrigger ?? <IconClock className="w-3 h-3 mr-1" />} />
       </SelectTrigger>
       <SelectContent>
         {data.map((g, _index) => (

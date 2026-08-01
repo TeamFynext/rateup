@@ -9,9 +9,11 @@ import AiFeaturesSection from "@/components/products/AiAutomation/shared/AiFeatu
 import AiHeroPage from "@/components/products/AiAutomation/shared/AiHeroPage.tsx";
 import AutomationBenefitsSection from "@/components/products/AiAutomation/shared/AutomationBenefitsSection.tsx";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/ai-automation/")({
   component: page,
+  head: () => buildPageHead("/products/ai-automation"),
 });
 
 function page() {

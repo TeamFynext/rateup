@@ -1,4 +1,4 @@
-import { FileText, RefreshCw, Trash2, Upload } from "lucide-react";
+import { IconFileText, IconRefresh, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useRef } from "react";
 
 import {
@@ -30,7 +30,10 @@ export function FilesPanel({ waSettingsId }: { waSettingsId: string }) {
             disabled={sync.isPending}
             onClick={() => sync.mutate()}
           >
-            <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+            <IconRefresh
+              data-icon="inline-start"
+              className={sync.isPending ? "animate-spin" : ""}
+            />
             Sync
           </Button>
           <input
@@ -45,7 +48,7 @@ export function FilesPanel({ waSettingsId }: { waSettingsId: string }) {
             }}
           />
           <Button size="sm" disabled={upload.isPending} onClick={() => inputRef.current?.click()}>
-            <Upload data-icon="inline-start" />
+            <IconUpload data-icon="inline-start" />
             Upload
           </Button>
         </div>
@@ -67,7 +70,7 @@ export function FilesPanel({ waSettingsId }: { waSettingsId: string }) {
           {files?.map((file) => (
             <div key={file.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
-                <FileText className="shrink-0 text-muted-foreground" />
+                <IconFileText className="shrink-0 text-muted-foreground" />
                 <span className="truncate text-sm">{file.fileName}</span>
               </div>
               <Button
@@ -77,7 +80,7 @@ export function FilesPanel({ waSettingsId }: { waSettingsId: string }) {
                 disabled={deleteFile.isPending}
                 onClick={() => deleteFile.mutate(file.id)}
               >
-                <Trash2 className="text-destructive" />
+                <IconTrash className="text-destructive" />
               </Button>
             </div>
           ))}

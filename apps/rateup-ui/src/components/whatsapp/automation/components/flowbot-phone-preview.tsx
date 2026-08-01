@@ -1,5 +1,11 @@
+import {
+  IconArrowBackUp,
+  IconCopy,
+  IconExternalLink,
+  IconFileText,
+  IconPhone,
+} from "@tabler/icons-react";
 import type { Edge } from "@xyflow/react";
-import { Copy, ExternalLink, FileText, Phone, Reply } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -84,13 +90,13 @@ function getPauseDelayMs(node: TypedNode): number {
 function templateButtonIcon(type: string) {
   switch (type) {
     case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
-      return <ExternalLink className="size-3.5" />;
+      return <IconExternalLink className="size-3.5" />;
     case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
-      return <Phone className="size-3.5" />;
+      return <IconPhone className="size-3.5" />;
     case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
-      return <Copy className="size-3.5" />;
+      return <IconCopy className="size-3.5" />;
     default:
-      return <Reply className="size-3.5 -scale-x-100" />;
+      return <IconArrowBackUp className="size-3.5 -scale-x-100" />;
   }
 }
 
@@ -499,7 +505,7 @@ export function FlowbotPreviewPlayground({
               {media?.kind === "document" && (
                 <div className="flex items-center gap-2 px-3 pt-2">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                    <FileText className="size-4" />
+                    <IconFileText className="size-4" />
                   </div>
                   <span className="truncate text-[11px] text-foreground">
                     {media.filename || t("Document")}
@@ -538,7 +544,7 @@ export function FlowbotPreviewPlayground({
                               isSelected && "bg-muted/60 text-muted-foreground",
                             )}
                           >
-                            <Reply className="size-3.5 -scale-x-100" />
+                            <IconArrowBackUp className="size-3.5 -scale-x-100" />
                             {opt.label || t("Button")}
                           </button>
                         );
@@ -554,7 +560,7 @@ export function FlowbotPreviewPlayground({
                     rel="noreferrer"
                     className="text-wa-green flex w-full items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium transition-colors hover:bg-muted/40"
                   >
-                    <ExternalLink className="size-3.5" />
+                    <IconExternalLink className="size-3.5" />
                     {ctaButton.label || t("Open link")}
                   </a>
                 </div>

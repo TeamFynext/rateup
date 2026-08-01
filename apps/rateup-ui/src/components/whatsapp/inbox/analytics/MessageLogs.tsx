@@ -1,17 +1,17 @@
+import {
+  IconCircleCheck,
+  IconCircleX,
+  IconClock,
+  IconDownload,
+  IconLoader2,
+  IconMessageCircle,
+  IconSearch,
+  IconSend,
+  IconSpeakerphone,
+  IconX,
+} from "@tabler/icons-react";
 import type { ColumnDef, PaginationState, Updater } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  CheckCircle2,
-  Clock,
-  Download,
-  Loader2,
-  Megaphone,
-  MessageCircle,
-  Search,
-  Send,
-  X,
-  XCircle,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -93,21 +93,21 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
     if (formatted === "Inbox") {
       return {
         className: "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
-        icon: <MessageCircle className="w-3 h-3 mr-1" />,
+        icon: <IconMessageCircle className="w-3 h-3 mr-1" />,
       };
     }
 
     if (formatted === "Campaign") {
       return {
         className: "bg-orange-50 dark:bg-transparent text-orange-700 border-orange-200",
-        icon: <Megaphone className="w-3 h-3 mr-1" />,
+        icon: <IconSpeakerphone className="w-3 h-3 mr-1" />,
       };
     }
 
     if (formatted === "Template") {
       return {
         className: "bg-purple-50 dark:bg-transparent text-purple-700 border-purple-200",
-        icon: <Megaphone className="w-3 h-3 mr-1" />,
+        icon: <IconSpeakerphone className="w-3 h-3 mr-1" />,
       };
     }
 
@@ -123,34 +123,34 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
     if (s === "delivered") {
       return {
         className: "bg-green-50 dark:bg-transparent text-green-700 border-green-200",
-        icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
+        icon: <IconCircleCheck className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "sent") {
       return {
         className: "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
-        icon: <Send className="w-3 h-3 mr-1" />,
+        icon: <IconSend className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "read") {
       return {
         className: "bg-indigo-50 dark:bg-transparent text-indigo-700 border-indigo-200",
-        icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
+        icon: <IconCircleCheck className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "failed") {
       return {
         className: "bg-red-50 dark:bg-transparent text-red-700 border-red-200",
-        icon: <XCircle className="w-3 h-3 mr-1" />,
+        icon: <IconCircleX className="w-3 h-3 mr-1" />,
       };
     }
 
     return {
       className: "bg-gray-50 dark:bg-transparent text-gray-600 border-gray-200",
-      icon: <Clock className="w-3 h-3 mr-1" />,
+      icon: <IconClock className="w-3 h-3 mr-1" />,
     };
   }
 
@@ -311,7 +311,7 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
       <div className="p-3 border shadow-xs rounded-xl mb-4 bg-white dark:bg-transparent">
         <div className="flex items-center gap-2">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t("Search phone or message")}
               value={search}
@@ -325,7 +325,7 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
                 onClick={() => setSearch("")}
               >
-                <X className="w-3.5 h-3.5" />
+                <IconX className="w-3.5 h-3.5" />
               </Button>
             )}
           </div>
@@ -389,9 +389,9 @@ function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
             disabled={isExporting}
           >
             {isExporting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Download className="w-4 h-4 mr-2" />
+              <IconDownload className="w-4 h-4 mr-2" />
             )}
             {isExporting ? t("Exporting...") : t("Export")}
           </Button>

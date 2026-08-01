@@ -12,23 +12,10 @@ import {
 } from "@/components/ui/select";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
+import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";
 
 import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
 import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
-
-export enum SmileyVariantStyle {
-  Default = "Default",
-  Filled = "Filled",
-  FilledOnHover = "FilledOnHover",
-  Emojis = "Emojis",
-  Custom = "Custom",
-}
-
-export enum SmileyColorType {
-  Default = "Default",
-  Individual = "Individual",
-  Gradient = "Gradient",
-}
 
 function ColorInput({
   label,

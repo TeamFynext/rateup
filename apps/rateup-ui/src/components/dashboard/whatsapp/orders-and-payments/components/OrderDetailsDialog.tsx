@@ -1,6 +1,13 @@
+import {
+  IconExternalLink,
+  IconLoader2,
+  IconMapPin,
+  IconPackage,
+  IconShoppingBag,
+  IconTruck,
+} from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
-import { ExternalLink, Loader2, MapPin, Package, ShoppingBag, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -330,7 +337,7 @@ export default function OrderDetailsDialog({
         {address && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <MapPin className="h-4 w-4 text-primary" />
+              <IconMapPin className="h-4 w-4 text-primary" />
               <p className="text-sm font-semibold">Shipping Address</p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-0.5">
@@ -352,7 +359,7 @@ export default function OrderDetailsDialog({
         {delivery && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Truck className="h-4 w-4 text-primary" />
+              <IconTruck className="h-4 w-4 text-primary" />
               <p className="text-sm font-semibold">Delivery Partner</p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3 text-sm flex items-center justify-between">
@@ -373,7 +380,7 @@ export default function OrderDetailsDialog({
           <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <ShoppingBag className="h-4 w-4 text-primary" />
+                <IconShoppingBag className="h-4 w-4 text-primary" />
                 <p className="text-sm font-semibold">Shopify Order</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-1">
@@ -392,7 +399,7 @@ export default function OrderDetailsDialog({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
                   >
-                    Open Checkout Link <ExternalLink className="h-3 w-3" />
+                    Open Checkout Link <IconExternalLink className="h-3 w-3" />
                   </a>
                 )}
               </div>
@@ -402,17 +409,17 @@ export default function OrderDetailsDialog({
               <div className="space-y-4 border-t pt-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-primary" />
+                    <IconPackage className="h-4 w-4 text-primary" />
                     <span className="text-sm font-semibold">Shopify Fulfillment</span>
                     {loadingFulfillments && (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                      <IconLoader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                     )}
                   </div>
                 </div>
 
                 {loadingFulfillments ? (
                   <div className="rounded-lg border p-4 bg-muted/10 flex items-center justify-center text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <IconLoader2 className="h-4 w-4 animate-spin mr-2" />
                     Loading fulfillment status from Shopify...
                   </div>
                 ) : fulfillmentOrders.length === 0 ? (
@@ -597,7 +604,7 @@ export default function OrderDetailsDialog({
                                 >
                                   {submittingFulfillment ? (
                                     <>
-                                      <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                                      <IconLoader2 className="h-3 w-3 animate-spin mr-1.5" />
                                       Fulfilling...
                                     </>
                                   ) : (

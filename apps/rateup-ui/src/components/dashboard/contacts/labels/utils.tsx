@@ -1,5 +1,5 @@
+import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Edit2, MoreHorizontal, Trash2 } from "lucide-react";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
@@ -47,15 +47,15 @@ const ActionsCell = ({
   <DropdownMenu>
     <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
       <span className="sr-only">Open menu</span>
-      <MoreHorizontal className="h-4 w-4" />
+      <IconDots className="h-4 w-4" />
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
       <DropdownMenuItem onClick={() => onEdit(label)}>
-        <Edit2 className="mr-2 h-4 w-4" />
+        <IconPencil className="mr-2 h-4 w-4" />
         Edit
       </DropdownMenuItem>
       <DropdownMenuItem onClick={() => onDelete(label)} className="text-red-600">
-        <Trash2 className="mr-2 h-4 w-4" />
+        <IconTrash className="mr-2 h-4 w-4" />
         Delete
       </DropdownMenuItem>
     </DropdownMenuContent>

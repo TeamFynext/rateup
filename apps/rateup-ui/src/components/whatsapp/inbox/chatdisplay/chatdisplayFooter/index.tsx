@@ -1,19 +1,19 @@
-import { IconExclamationCircle } from "@tabler/icons-react";
+import {
+  IconBan,
+  IconBolt,
+  IconExclamationCircle,
+  IconMessage,
+  IconNote,
+  IconSend,
+  IconShieldExclamation,
+  IconTypography,
+  IconUserCheck,
+  IconUserPlus,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { EditorContent } from "@tiptap/react";
 import dayjs from "dayjs";
-import {
-  Ban,
-  MessageSquare,
-  Send,
-  ShieldAlert,
-  StickyNote,
-  TypeOutline,
-  UserCheck,
-  UserPlus,
-  Zap,
-} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -30,11 +30,7 @@ import {
   useSetContactSpam,
   useUnBlockWhatsAppUser,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
 import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
 import {
@@ -64,6 +60,8 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
@@ -410,7 +408,7 @@ export default function WaInboxChatDisplayFooter({
               (!media.length && !body.media?.length && !isTextValid)
             }
           >
-            <Send className="w-4 h-4" />
+            <IconSend className="w-4 h-4" />
           </Button>
         }
         content={<span>{translations("Send")}</span>}
@@ -431,7 +429,7 @@ export default function WaInboxChatDisplayFooter({
               (!media.length && !body.media?.length && !isTextValid)
             }
           >
-            <Send className="w-4 h-4" />
+            <IconSend className="w-4 h-4" />
           </Button>
         }
         content={<span>{translations("Send")}</span>}
@@ -467,7 +465,7 @@ export default function WaInboxChatDisplayFooter({
                 value="message"
                 className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-white sm:text-sm"
               >
-                <MessageSquare className="mr-1.5 size-3.5" />
+                <IconMessage className="mr-1.5 size-3.5" />
                 Message
               </TabsTrigger>
 
@@ -475,7 +473,7 @@ export default function WaInboxChatDisplayFooter({
                 value="private"
                 className="flex items-center px-2 text-xs data-[state=active]:bg-amber-600 data-[state=active]:text-white sm:text-sm"
               >
-                <StickyNote className="mr-1.5 size-3.5" />
+                <IconNote className="mr-1.5 size-3.5" />
                 <span className="sm:hidden">Note</span>
                 <span className="hidden sm:inline">Private Note</span>
               </TabsTrigger>
@@ -491,7 +489,7 @@ export default function WaInboxChatDisplayFooter({
                       className="size-7 p-0"
                       onClick={() => setQuickRepliesOpen((prev) => !prev)}
                     >
-                      <Zap className="size-4 text-cyan-600" />
+                      <IconBolt className="size-4 text-cyan-600" />
                     </Button>
                   }
                   content={<p>Quick Replies</p>}
@@ -574,7 +572,7 @@ export default function WaInboxChatDisplayFooter({
                             className="h-8 w-8 p-0"
                             title="Format Message"
                           >
-                            <TypeOutline className="h-5 w-5" />
+                            <IconTypography className="h-5 w-5" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-full">
@@ -712,7 +710,7 @@ export const WaInboxAssignUserFooter = ({
               },
             ],
           }));
-          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+          qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         },
         onError: () => {
           messagesStore.removeMessage(`${rowKey}_all`, id);
@@ -735,7 +733,7 @@ export const WaInboxAssignUserFooter = ({
       // `flex!` because Alert's base `grid` would otherwise win the display cascade.
       className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40"
     >
-      <UserPlus className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <IconUserPlus className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         {isClosed ? (
           <>
@@ -759,7 +757,7 @@ export const WaInboxAssignUserFooter = ({
         disabled={assignMut.isPending}
         onClick={handleAssignToMe}
       >
-        <UserCheck className="size-3.5" />
+        <IconUserCheck className="size-3.5" />
         <span className="text-xs font-bold">{t("Assign to me")}</span>
       </Button>
 
@@ -798,7 +796,7 @@ export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithU
     // Same banner shape as the assign footer, so the three footer states read as
     // one family rather than a black bar next to a redesigned one.
     <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
-      <Ban className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <IconBan className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         This contact has been blocked by you.
       </AlertTitle>
@@ -837,7 +835,7 @@ export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpda
 
   return (
     <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
-      <ShieldAlert className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <IconShieldExclamation className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         This contact is marked as spam.
       </AlertTitle>

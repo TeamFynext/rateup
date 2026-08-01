@@ -1,6 +1,6 @@
+import { IconExternalLink, IconShoppingBag } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { ExternalLink, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type {
@@ -118,7 +118,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline text-sm flex items-center gap-1"
           >
-            Checkout Link <ExternalLink className="w-3 h-3" />
+            Checkout Link <IconExternalLink className="w-3 h-3" />
           </a>
         );
       },
@@ -192,7 +192,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
         <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5" />
+              <IconShoppingBag className="w-5 h-5" />
               Order Details
             </DialogTitle>
           </DialogHeader>

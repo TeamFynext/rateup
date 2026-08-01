@@ -1,5 +1,4 @@
-import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
-import { Send } from "lucide-react";
+import { IconBrandInstagram, IconBrandWhatsapp, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -118,7 +117,7 @@ const SendMessageModal = ({
               }
             }}
           >
-            <Send className="w-4 h-4 mr-2" />
+            <IconSend className="w-4 h-4 mr-2" />
             Send Message
           </Button>
         </DialogFooter>

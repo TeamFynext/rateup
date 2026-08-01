@@ -1,5 +1,4 @@
-import { IconSend } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconLoader2, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -55,7 +54,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
         </DialogHeader>
         {isLoading && (
           <div className="flex items-center justify-center p-6">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <IconLoader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
         {error && (
@@ -99,7 +98,9 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
                 disabled={!selectedAutomationId || initiate.isPending}
                 onClick={handleSendAutomatedReply}
               >
-                {initiate.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                {initiate.isPending ? (
+                  <IconLoader2 className="h-4 w-4 animate-spin mr-1.5" />
+                ) : null}
                 <span>{translations("Send")}</span>
                 {!initiate.isPending && <IconSend className="ml-1.5 h-4 w-4" />}
               </Button>

@@ -1,23 +1,23 @@
-import dayjs from "dayjs";
 import {
-  Camera,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  Link2,
-  MessageCircle,
-  MessagesSquare,
-  Pencil,
-  Phone,
-  Plus,
-  ShieldAlert,
-  ShieldOff,
-  Shuffle,
-  Ticket,
-  User,
-  X,
-} from "lucide-react";
+  IconArrowsShuffle,
+  IconCamera,
+  IconCheck,
+  IconChevronDown,
+  IconChevronRight,
+  IconChevronUp,
+  IconLink,
+  IconMessageCircle,
+  IconMessages,
+  IconPencil,
+  IconPhone,
+  IconPlus,
+  IconShieldExclamation,
+  IconShieldOff,
+  IconTicket,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -33,8 +33,6 @@ import {
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -42,6 +40,8 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
@@ -67,26 +67,26 @@ const RESULT_LABELS: Record<ResolutionResult, string> = {
 
 // Channel brand colours are consumed as inline `style` values (avatar chips), so
 // they stay as literal hex rather than Tailwind utilities.
-const CHANNELS: Record<string, { label: string; color: string; icon: typeof MessageCircle }> = {
+const CHANNELS: Record<string, { label: string; color: string; icon: typeof IconMessageCircle }> = {
   [MessagePlatform.WHATSAPP]: {
     label: "WhatsApp",
     color: "#25d366",
-    icon: MessageCircle,
+    icon: IconMessageCircle,
   },
   [MessagePlatform.INSTAGRAM]: {
     label: "Instagram",
     color: "#dd2a7b",
-    icon: Camera,
+    icon: IconCamera,
   },
   [MessagePlatform.FACEBOOK]: {
     label: "Messenger",
     color: "#0084ff",
-    icon: MessagesSquare,
+    icon: IconMessages,
   },
   [MessagePlatform.WEBCHAT]: {
     label: "Webchat",
     color: "#1c518e",
-    icon: MessagesSquare,
+    icon: IconMessages,
   },
 };
 
@@ -317,7 +317,7 @@ export default function TicketPanel({
       {/* ---- Header ---- */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4.5">
         <div className="flex items-center gap-2 min-w-0">
-          <Ticket className="size-4 shrink-0 text-primary" />
+          <IconTicket className="size-4 shrink-0 text-primary" />
           <span className="text-[13px] font-extrabold truncate text-foreground">
             {t("Ticket")} {contact?.ticketNumber ? `#${contact.ticketNumber}` : "—"}
           </span>
@@ -332,7 +332,7 @@ export default function TicketPanel({
               copied ? "text-green-600" : "text-muted-foreground",
             )}
           >
-            {copied ? <Check className="size-3.75" /> : <Link2 className="size-3.75" />}
+            {copied ? <IconCheck className="size-3.75" /> : <IconLink className="size-3.75" />}
             {copied && <span className="text-[10px] font-bold">{t("Copied")}</span>}
           </button>
           <button
@@ -341,7 +341,7 @@ export default function TicketPanel({
             onClick={() => setIsOpen(false)}
             className="flex cursor-pointer"
           >
-            <ChevronRight className="size-4 text-muted-foreground" />
+            <IconChevronRight className="size-4 text-muted-foreground" />
           </button>
         </div>
       </div>
@@ -356,7 +356,11 @@ export default function TicketPanel({
             className="inline-flex items-center gap-1 text-[11px] font-bold cursor-pointer text-primary"
           >
             {assignExpanded ? t("Done") : t("Change")}
-            {assignExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+            {assignExpanded ? (
+              <IconChevronUp className="size-3" />
+            ) : (
+              <IconChevronDown className="size-3" />
+            )}
           </button>
         }
       >
@@ -377,7 +381,7 @@ export default function TicketPanel({
           ) : (
             <>
               <span className="size-8 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-border">
-                <User className="size-3.75 text-muted-foreground" />
+                <IconUser className="size-3.75 text-muted-foreground" />
               </span>
               <div className="flex-1 min-w-0 text-[13px] font-semibold text-muted-foreground">
                 {t("Unassigned")}
@@ -391,7 +395,7 @@ export default function TicketPanel({
             {/* The real multi-assignee flow — team + agent picking lives inside. */}
             <AssignUser contactId={contact?.id} variant="outline" />
             <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted">
-              <Shuffle className="size-3.25 shrink-0 text-muted-foreground" />
+              <IconArrowsShuffle className="size-3.25 shrink-0 text-muted-foreground" />
               <span className="text-[11px] leading-snug text-muted-foreground">
                 {t("Assign this ticket to a team or to individual agents.")}
               </span>
@@ -419,7 +423,7 @@ export default function TicketPanel({
               }}
               className="cursor-pointer"
             >
-              <Pencil className="size-3.25 text-muted-foreground" />
+              <IconPencil className="size-3.25 text-muted-foreground" />
             </button>
           )
         }
@@ -523,7 +527,7 @@ export default function TicketPanel({
                 onClick={() => handleToggleLabel(label.id)}
                 className="cursor-pointer shrink-0"
               >
-                <X className="size-2.75" />
+                <IconX className="size-2.75" />
               </button>
             </span>
           ))}
@@ -532,7 +536,7 @@ export default function TicketPanel({
             onClick={() => setLabelPickerOpen((v) => !v)}
             className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer border border-dashed border-border text-muted-foreground"
           >
-            <Plus className="size-2.75" />
+            <IconPlus className="size-2.75" />
             {t("Add")}
           </button>
         </div>
@@ -554,7 +558,7 @@ export default function TicketPanel({
                       checked ? "bg-primary border-primary" : "border-border",
                     )}
                   >
-                    {checked && <Check className="size-2.75 text-primary-foreground" />}
+                    {checked && <IconCheck className="size-2.75 text-primary-foreground" />}
                   </span>
                   <span
                     className="size-2.25 rounded-full shrink-0"
@@ -595,7 +599,7 @@ export default function TicketPanel({
             </div>
           ) : (
             <div className="flex items-start gap-2.5">
-              <User className="size-3.75 mt-px shrink-0 text-muted-foreground" />
+              <IconUser className="size-3.75 mt-px shrink-0 text-muted-foreground" />
               <div className="flex-1 min-w-0">
                 <div className="text-[11px] text-muted-foreground">{t("Name")}</div>
                 <div className="text-[13px] font-semibold truncate text-foreground">
@@ -611,14 +615,14 @@ export default function TicketPanel({
                 }}
                 className="mt-0.5 cursor-pointer shrink-0"
               >
-                <Pencil className="size-3.25 text-muted-foreground" />
+                <IconPencil className="size-3.25 text-muted-foreground" />
               </button>
             </div>
           )}
 
           {contact?.phone && (
             <div className="flex items-start gap-2.5">
-              <Phone className="size-3.75 mt-px shrink-0 text-muted-foreground" />
+              <IconPhone className="size-3.75 mt-px shrink-0 text-muted-foreground" />
               <div className="min-w-0">
                 <div className="text-[11px] text-muted-foreground">{t("Phone")}</div>
                 <div className="text-[13px] font-semibold truncate text-foreground">
@@ -684,9 +688,9 @@ export default function TicketPanel({
           variant={contact?.isSpam ? "outline" : "destructive"}
         >
           {contact?.isSpam ? (
-            <ShieldOff className="size-3.75" />
+            <IconShieldOff className="size-3.75" />
           ) : (
-            <ShieldAlert className="size-3.75" />
+            <IconShieldExclamation className="size-3.75" />
           )}
           {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
         </Button>

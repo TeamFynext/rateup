@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import type {
   LoyaltyRewardInput,
   LoyaltyRewardStatus,
@@ -19,7 +21,7 @@ import {
  */
 export const useLoyaltyRewards = () =>
   useQuery({
-    queryKey: ["loyalty-rewards"],
+    queryKey: loyaltyKeys.rewards(),
     queryFn: getLoyaltyRewards,
   });
 
@@ -29,7 +31,7 @@ export const useLoyaltyRewards = () =>
 export const useLoyaltyRewardById = (rewardId: string) =>
   useQuery({
     enabled: !!rewardId,
-    queryKey: ["loyalty-reward", rewardId],
+    queryKey: loyaltyKeys.reward(rewardId),
     queryFn: () => getLoyaltyRewardById(rewardId),
   });
 
@@ -43,7 +45,7 @@ export const useCreateLoyaltyRewardMutation = (onSuccess?: () => void, onError?:
     mutationFn: (rewardData: LoyaltyRewardInput) => createLoyaltyReward(rewardData),
     onSuccess: () => {
       toast.success("Loyalty reward created successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.rewards() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -68,8 +70,8 @@ export const useUpdateLoyaltyRewardMutation = (
     onSuccess: (updatedReward) => {
       queryClient.setQueryData(["loyalty-reward", rewardId], updatedReward);
       toast.success("Loyalty reward updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-reward", rewardId] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.rewards() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.reward(rewardId) });
       onSuccess?.();
     },
     onError: (error) => {
@@ -91,7 +93,7 @@ export const useDeleteLoyaltyRewardMutation = (onSuccess?: () => void, onError?:
       toast.success("Loyalty reward deleted successfully", {
         id: "loyalty-reward-delete",
       });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.rewards() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -117,9 +119,9 @@ export const useToggleLoyaltyRewardStatusMutation = (
       updateLoyaltyReward(rewardId, { status }),
     onSuccess: (_, variables) => {
       toast.success("Reward status updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.rewards() });
       queryClient.invalidateQueries({
-        queryKey: ["loyalty-reward", variables.rewardId],
+        queryKey: loyaltyKeys.reward(variables.rewardId),
       });
       onSuccess?.();
     },

@@ -1,6 +1,6 @@
+import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { Calendar, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -129,7 +129,10 @@ export function TicketListView({
               transform: sortBy === id && sortDir === "asc" ? "rotate(180deg)" : "none",
             }}
           >
-            <ChevronDown size={11} className={sortBy === id ? "text-primary" : "text-gray-300"} />
+            <IconChevronDown
+              size={11}
+              className={sortBy === id ? "text-primary" : "text-gray-300"}
+            />
           </span>
         )}
       </span>
@@ -352,7 +355,7 @@ function ListRow({
               padding: isOverdue ? "2px 8px" : "0",
             }}
           >
-            <Calendar
+            <IconCalendar
               size={12}
               strokeWidth={2}
               className={isOverdue ? "text-red-600" : "text-muted-foreground"}

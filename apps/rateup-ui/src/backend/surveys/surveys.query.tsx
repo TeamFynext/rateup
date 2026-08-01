@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import type { RequestPayload } from "@/types/api.ts";
 
 import { getTeamSurveys } from "../team/team.api";
@@ -46,7 +48,7 @@ import {
 
 export const useSurvey = (surveyId: string) => {
   return useQuery({
-    queryKey: ["survey", surveyId],
+    queryKey: surveyKeys.detail(surveyId),
     enabled: !!surveyId,
     queryFn: () => getSurvey(surveyId),
     refetchOnWindowFocus: "always",
@@ -57,7 +59,7 @@ export const useSurvey = (surveyId: string) => {
 export const useLandingPage = (LandingpageId: string) =>
   useQuery({
     enabled: !!LandingpageId,
-    queryKey: ["survey", LandingpageId],
+    queryKey: surveyKeys.detail(LandingpageId),
     queryFn: () => getLandingpage(LandingpageId),
   });
 
@@ -74,7 +76,7 @@ export const useSurveysBylandingId = (landingId: string) =>
 export const useWhatsappSurveys = (enabled: boolean) => {
   return useQuery({
     enabled: enabled,
-    queryKey: ["whatsappsurveys"],
+    queryKey: surveyKeys.whatsapp(),
     queryFn: getWhatsappSurveys,
   });
 };
@@ -90,7 +92,7 @@ export const usePublicSurvey = (surveyId: string) => {
 export const usePhoneFromSurveyTeamMapId = (surveyTeamMapId: string) =>
   useQuery({
     enabled: !!surveyTeamMapId,
-    queryKey: ["waSettings"],
+    queryKey: whatsappKeys.settings(),
     queryFn: () => getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId),
   });
 
@@ -104,14 +106,14 @@ export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
 // export const useSurveys = (teamIsSelected) =>
 //   useQuery({
 //     enabled: !teamIsSelected,
-//     queryKey: ["surveys"],
+//     queryKey: surveyKeys.all(),
 //     queryFn: getSurveys,
 //   });
 // --------------survey landing pages----------
 export const useSurveysLanding = (_teamIsSelected?: boolean) =>
   useQuery({
     enabled: true,
-    queryKey: ["surveysLanding"],
+    queryKey: surveyKeys.landing(),
     queryFn: getSurveyLandings,
   });
 
@@ -126,14 +128,14 @@ export const useSurveysLanding = (_teamIsSelected?: boolean) =>
 
 export const useSurveyTemplates = (surveyType: string) => {
   return useQuery({
-    queryKey: ["survey-templates", surveyType],
+    queryKey: surveyKeys.templates(surveyType),
     queryFn: () => getSurveyTemplates(surveyType),
   });
 };
 
 export const useSurveys = (enabled: boolean = true) => {
   return useQuery({
-    queryKey: ["surveys"],
+    queryKey: surveyKeys.all(),
     queryFn: getSurveys,
     enabled,
   });
@@ -142,14 +144,14 @@ export const useSurveys = (enabled: boolean = true) => {
 export const useSurveysWithQuestions = (specificTeamIsSelected: boolean) => {
   return useQuery({
     enabled: !specificTeamIsSelected,
-    queryKey: ["surveyswithquestions"],
+    queryKey: surveyKeys.withQuestions(),
     queryFn: getSurveyWithQuestions,
   });
 };
 
 export const useSurveysSummary = () => {
   return useQuery({
-    queryKey: ["surveysSummary"],
+    queryKey: surveyKeys.summary(),
     queryFn: getActiveSurveysSummary,
   });
 };
@@ -164,7 +166,7 @@ export const useAllSurveysSummary = () => {
 export const useSurveysByTeam = (teamId: string, specificTeamIsSelected: boolean) =>
   useQuery({
     enabled: specificTeamIsSelected,
-    queryKey: ["surveys", teamId],
+    queryKey: surveyKeys.byTeam(teamId),
     queryFn: async () => (await getTeamSurveys(teamId)).data as Array<Survey>,
   });
 
@@ -176,8 +178,8 @@ export const useCreateSurveyMutation = () => {
       toast.success("Survey Created...!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.whatsapp() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message, {
@@ -208,8 +210,8 @@ export const useCreateSurveyLandingPageMutation = ({
       toast.success("Survey Landing Page created Created...!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.landing() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
       close();
       setIsCreating(false);
       resetForm();
@@ -243,8 +245,8 @@ export const useUpdateSurveyLandingPageMutation = ({
       toast.success("Survey Landing Page Updated...!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.landing() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
       close();
       setIsCreating(false);
       resetForm();
@@ -272,8 +274,8 @@ export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
       toast.success("Survey Copy created!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["surveys", selectedTeamId] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.byTeam(selectedTeamId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
       close();
     },
     onError: (error) => {
@@ -293,7 +295,7 @@ export function useUpdateSurveyPwdMutation(surveyId: string) {
       toast.success("Sucessfully updated Password Protection ", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
     onError: (error) => {
       console.error("Error Password Protection:", error.message);
@@ -341,16 +343,16 @@ export function useEditSurveyMutation(id: string) {
       toast.success("Survey Updated Successfully!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      queryClient.invalidateQueries({ queryKey: ["survey", id] });
-      queryClient.invalidateQueries({ queryKey: ["questions", id] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(id) });
     },
     onError: (error) => {
       console.error("Error Survey Update:", error.message);
       toast.error(error?.message, {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["survey"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.root() });
     },
   });
 }
@@ -382,7 +384,7 @@ export function useUpdateVisitedMutation(surveyId: string) {
   return useMutation({
     mutationFn: (id: string) => updateSurveyVisited(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 }
@@ -392,7 +394,7 @@ export function useUpdateStartedMutation(surveyId: string) {
   return useMutation({
     mutationFn: (id: string) => updateSurveyStarted(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 }
@@ -402,7 +404,7 @@ export function useUpdateCompletedMutation(surveyId: string) {
   return useMutation({
     mutationFn: (id: string) => updateSurveyCompleted(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 }
@@ -412,7 +414,7 @@ export function useUpdateReviewLinkStatsOnSurveyMutation(surveyId: string) {
   return useMutation({
     mutationFn: (id: string) => updateReviewLinkStatsOnSurvey(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 }
@@ -422,7 +424,7 @@ export const useDeleteSurveyMutation = () => {
   return useMutation({
     mutationFn: (surveyId: string) => deleteSurvey(surveyId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
     },
   });
 };
@@ -434,7 +436,7 @@ export function useUpdateSurveyMutation() {
       updateSurvey(surveyId, data),
     onSuccess: () => {
       toast.success("Survey Updated Successfully!");
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
     },
   });
   return surveyUpdateMutation;
@@ -443,7 +445,7 @@ export function useUpdateSurveyMutation() {
 export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
   return useQuery({
     enabled: !!surveyTeamMapId,
-    queryKey: ["surveyStats", surveyTeamMapId],
+    queryKey: surveyKeys.stats(surveyTeamMapId),
     queryFn: () => getSurveyStatsBySurveyTeamMapId(surveyTeamMapId),
   });
 };
@@ -458,7 +460,7 @@ export const useGetSurveyStats = (surveyId: string) => {
 
 export const useGetSurveyVariables = (surveyId: string, isPublic?: boolean) => {
   return useQuery({
-    queryKey: ["surveyVariables", surveyId],
+    queryKey: surveyKeys.variables(surveyId),
     queryFn: () => getSurveyVariables(surveyId, isPublic),
     enabled: !!surveyId,
   });
@@ -470,7 +472,7 @@ export const useCreateSurveyVariableMutation = (surveyId: string) => {
     mutationFn: createSurveyVariable,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
       toast.success("Variable created successfully");
     },
@@ -486,7 +488,7 @@ export const useUpdateSurveyVariableMutation = (surveyId: string) => {
     mutationFn: updateSurveyVariable,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
       toast.success("Variable updated successfully");
     },
@@ -502,7 +504,7 @@ export const useDeleteSurveyVariableMutation = (surveyId: string) => {
     mutationFn: deleteSurveyVariable,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
       toast.success("Variable deleted successfully");
     },
@@ -540,8 +542,8 @@ export const useSurveyUpdateMutation = (surveyId: string) => {
       toast.success("Data updated Successfully", {
         id: surveyId,
       });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey-templates", "web"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.templates("web") });
     },
     onError: (error) => {
       toast.error(error?.message || "Something went wrong, Please try again later.", {

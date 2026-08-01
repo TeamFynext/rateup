@@ -11,9 +11,11 @@ import InboxHero from "@/components/products/Inbox/shared/InboxHero.tsx";
 import InboxWorks from "@/components/products/Inbox/shared/InboxWorks.tsx";
 import ClientLogos from "@/components/products/LandingPage/helpers/ClientLogos.tsx";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/inbox/")({
   component: page,
+  head: () => buildPageHead("/products/inbox"),
 });
 
 function page() {

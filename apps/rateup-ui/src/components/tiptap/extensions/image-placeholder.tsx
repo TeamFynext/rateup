@@ -1,4 +1,4 @@
-"use client";
+import { IconLink, IconLoader2, IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
 import {
   type CommandProps,
   Node,
@@ -7,7 +7,6 @@ import {
   ReactNodeViewRenderer,
   mergeAttributes,
 } from "@tiptap/react";
-import { ImageIcon, Link, Upload, Loader2, X } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 
 /* eslint-disable */
@@ -163,7 +162,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
             )}
           >
             <div className="rounded-full bg-background p-4 shadow-sm transition-colors group-hover:bg-accent">
-              <ImageIcon className="h-6 w-6" aria-hidden="true" />
+              <IconPhoto className="h-6 w-6" aria-hidden="true" />
             </div>
             <div className="text-center">
               <p className="text-sm font-medium">Click to upload or drag and drop</p>
@@ -175,18 +174,18 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Add Image</h3>
               <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)}>
-                <X className="h-4 w-4" />
+                <IconX className="h-4 w-4" />
               </Button>
             </div>
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="upload">
-                  <Upload className="mr-2 h-4 w-4" />
+                  <IconUpload className="mr-2 h-4 w-4" />
                   Upload
                 </TabsTrigger>
                 <TabsTrigger value="url">
-                  <Link className="mr-2 h-4 w-4" />
+                  <IconLink className="mr-2 h-4 w-4" />
                   URL
                 </TabsTrigger>
               </TabsList>
@@ -222,7 +221,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
                             Remove
                           </Button>
                           <Button disabled={uploading}>
-                            {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {uploading && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Upload
                           </Button>
                         </div>
@@ -242,7 +241,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
                         htmlFor="image-upload"
                         className="flex cursor-pointer flex-col items-center gap-4"
                       >
-                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <IconUpload className="h-8 w-8 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">Click to upload or drag and drop</p>
                           <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF</p>

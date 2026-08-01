@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/select.tsx";
 
 import { linkTypeOptions } from "../../constants.tsx";
-import type { LinktreeLink } from "../LinkCard.tsx";
 import CustomLinkInputs from "./CustomLinkInputs.tsx";
 import SurveyTypeDropdowns from "./SurveyTypeDropdowns.tsx";
 

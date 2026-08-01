@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, UserPlus } from "lucide-react";
+import { IconCircleCheck, IconUserPlus } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -184,7 +184,7 @@ const CreateOrEditContactModal = ({
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
               <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-blue-600 flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-white" />
+                <IconUserPlus className="w-4 h-4 text-white" />
               </div>
             )}
             {initialValues ? t("Edit Contact") : t("Add Contact")}
@@ -263,7 +263,7 @@ const CreateOrEditContactModal = ({
             editContactMutation.isPending ? (
               <Spinner />
             ) : (
-              <CheckCircle2 className="w-4 h-4 mr-2" />
+              <IconCircleCheck className="w-4 h-4 mr-2" />
             )}
             <span className="text-sm font-normal">{t("Save")}</span>
           </Button>

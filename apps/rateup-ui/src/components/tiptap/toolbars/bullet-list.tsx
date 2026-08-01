@@ -1,6 +1,4 @@
-"use client";
-
-import { List } from "lucide-react";
+import { IconList } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +33,7 @@ const BulletListToolbar = React.forwardRef<HTMLButtonElement, React.ComponentPro
             />
           }
         >
-          {children ?? <List className="h-4 w-4" />}
+          {children ?? <IconList className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Bullet list</span>

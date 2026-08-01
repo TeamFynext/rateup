@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -63,7 +63,7 @@ function SaveButton({
         disabled={isSaving}
         onClick={handleSaveTheme}
       >
-        {isSaving && <Loader2 className="mr-1 size-3 animate-spin" />}
+        {isSaving && <IconLoader2 className="mr-1 size-3 animate-spin" />}
         {isThemeObjBeingEditedDefaultTheme
           ? translations("Apply")
           : selectedPageTab === ThemeTabEnum.SURVEY

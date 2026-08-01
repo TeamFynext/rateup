@@ -1,6 +1,4 @@
-"use client";
-
-import { TextQuote } from "lucide-react";
+import { IconQuote } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +32,7 @@ const BlockquoteToolbar = React.forwardRef<HTMLButtonElement, React.ComponentPro
             />
           }
         >
-          {children ?? <TextQuote className="h-4 w-4" />}
+          {children ?? <IconQuote className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Blockquote</span>

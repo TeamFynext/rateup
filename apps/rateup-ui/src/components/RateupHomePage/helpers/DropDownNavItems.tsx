@@ -1,5 +1,5 @@
+import { IconDeviceDesktop, IconInbox, IconMessageCircle } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { Inbox, MessageCircle, Monitor } from "lucide-react";
 import * as React from "react";
 
 import {
@@ -19,19 +19,19 @@ const components: {
   description: string;
 }[] = [
   {
-    icon: <MessageCircle className="size-6 text-rateup-graytext" />,
+    icon: <IconMessageCircle className="size-6 text-rateup-graytext" />,
     title: "Whatsapp Loyalty",
     to: "/products/whatsapp-loyalty",
     description: "Engage where your customers are most active.",
   },
   {
-    icon: <Monitor className="size-6 text-rateup-graytext" />,
+    icon: <IconDeviceDesktop className="size-6 text-rateup-graytext" />,
     title: "Whatsapp Feedback",
     to: "/products/whatsapp-feedback",
     description: "Collect and analyze customer insights easily.",
   },
   {
-    icon: <Inbox className="size-6 text-rateup-graytext" />,
+    icon: <IconInbox className="size-6 text-rateup-graytext" />,
     title: "Omnichannel Inbox",
     to: "/products/omnichannel-inbox",
     description: "All your customer messages flow into one unified workspace.",

@@ -1,17 +1,17 @@
-import { IconRefresh } from "@tabler/icons-react";
 import {
-  ArrowRight,
-  CheckCircle,
-  ChevronDown,
-  Filter,
-  Loader2,
-  Play,
-  PlusIcon,
-  Save,
-  Settings,
-  Trash2Icon,
-  Zap,
-} from "lucide-react";
+  IconArrowRight,
+  IconBolt,
+  IconChevronDown,
+  IconCircleCheck,
+  IconDeviceFloppy,
+  IconFilter,
+  IconLoader2,
+  IconPlayerPlay,
+  IconPlus,
+  IconRefresh,
+  IconSettings,
+  IconTrash,
+} from "@tabler/icons-react";
 import React, { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider, useFieldArray, useWatch } from "react-hook-form";
@@ -56,10 +56,10 @@ interface RuleBuilderFormProps {
 type Section = "trigger" | "conditions" | "actions" | "options";
 
 const SECTION_META: Record<Section, { icon: React.ElementType; label: string; color: string }> = {
-  trigger: { icon: Zap, label: "When", color: "text-amber-500" },
-  conditions: { icon: Filter, label: "If", color: "text-violet-500" },
-  actions: { icon: Play, label: "Then", color: "text-emerald-500" },
-  options: { icon: Settings, label: "Options", color: "text-sky-500" },
+  trigger: { icon: IconBolt, label: "When", color: "text-amber-500" },
+  conditions: { icon: IconFilter, label: "If", color: "text-violet-500" },
+  actions: { icon: IconPlayerPlay, label: "Then", color: "text-emerald-500" },
+  options: { icon: IconSettings, label: "Options", color: "text-sky-500" },
 };
 
 const platformColor: Record<Platform, { pill: string; activePill: string; glow: string }> = {
@@ -298,7 +298,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
               s === "options";
             return (
               <React.Fragment key={s}>
-                {i > 0 && <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
+                {i > 0 && (
+                  <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                )}
                 <button
                   type="button"
                   onClick={() => toggleSection(s)}
@@ -313,7 +315,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 >
                   <Icon className={cn("w-3.5 h-3.5", isActive ? "text-background" : meta.color)} />
                   {meta.label}
-                  {isDone && !isActive && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+                  {isDone && !isActive && <IconCircleCheck className="w-3 h-3 text-emerald-500" />}
                 </button>
               </React.Fragment>
             );
@@ -388,7 +390,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                       </Badge>
                     )}
                   </div>
-                  <ChevronDown
+                  <IconChevronDown
                     className={cn(
                       "w-4 h-4 text-muted-foreground transition-transform",
                       isOpen && "rotate-180",
@@ -469,7 +471,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending} className="h-9 min-w-32">
-                <Save className="w-4 h-4 mr-2" />
+                <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 {buttonText}
               </Button>
             </div>
@@ -760,7 +762,7 @@ const ConditionsPanel: React.FC<{
                   }}
                   className="text-muted-foreground hover:text-red-500"
                 >
-                  <Trash2Icon className="w-4 h-4" />
+                  <IconTrash className="w-4 h-4" />
                 </Button>
               </div>
             ))}
@@ -774,7 +776,7 @@ const ConditionsPanel: React.FC<{
                   if (!productData.length) loadShopifyProducts();
                 }}
               >
-                <PlusIcon className="w-4 h-4 mr-2" />
+                <IconPlus className="w-4 h-4 mr-2" />
                 Add product
               </Button>
               <Button
@@ -786,7 +788,7 @@ const ConditionsPanel: React.FC<{
                 title="Refresh products"
               >
                 {loadingProducts ? (
-                  <Loader2 className="animate-spin h-4 w-4" />
+                  <IconLoader2 className="animate-spin h-4 w-4" />
                 ) : (
                   <IconRefresh size={18} />
                 )}
@@ -812,7 +814,7 @@ const ConditionsPanel: React.FC<{
               disabled={triggerEvent === "MESSAGE_RECEIVED" && groupFields.length === 1}
               className="h-7 text-muted-foreground hover:text-red-500"
             >
-              <Trash2Icon className="w-3.5 h-3.5" />
+              <IconTrash className="w-3.5 h-3.5" />
             </Button>
           </div>
           <ConditionList
@@ -842,7 +844,7 @@ const ConditionsPanel: React.FC<{
           });
         }}
       >
-        <PlusIcon className="w-4 h-4 mr-2" />
+        <IconPlus className="w-4 h-4 mr-2" />
         Add condition block
       </Button>
     )}

@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -143,7 +143,7 @@ export function InstagramConfigModal({
                     />
                   }
                 >
-                  <RefreshCw
+                  <IconRefresh
                     className={`h-4 w-4 ${syncfbpageMut.isPending ? "animate-spin" : ""}`}
                   />
                   {translations("Sync FB pages")}

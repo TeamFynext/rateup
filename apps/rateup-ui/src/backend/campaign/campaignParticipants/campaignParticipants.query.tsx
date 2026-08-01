@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
 import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 
 import {
@@ -23,7 +24,7 @@ export const useAddContactParticipantMutation = (campaignId: string) => {
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       toast.success(translations("Added participants successfully."));
     },
@@ -43,7 +44,7 @@ export const useAddGroupParticipantMutation = (campaignId: string) => {
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       toast.success(translations("Added group participants successfully."));
     },
@@ -97,7 +98,7 @@ export const useAddCampaignParticipants = (
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       toast.success(translations("Campaign particiants added successfully."));
       onSuccess();
@@ -122,7 +123,7 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
     },
     onError(error) {
@@ -144,7 +145,7 @@ export const useRemoveMulitpleGroupParticipants = (campaignId: string, onSucess:
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       onSucess();
     },

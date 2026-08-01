@@ -1,5 +1,13 @@
+import {
+  IconChartBar,
+  IconFileText,
+  IconMessage,
+  IconPalette,
+  IconSettings,
+  IconShare2,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useParams, useSearch } from "@tanstack/react-router";
-import { BarChart3, FileText, MessageSquare, Palette, Settings, Share2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -45,13 +53,13 @@ export enum TabEnum {
 const RESULT_TABS: TabEnum[] = [TabEnum.Responses, TabEnum.Analytics, TabEnum.TeamAnalytics];
 
 const HEADER_TABS: SurveyHeaderTab<TabEnum>[] = [
-  { value: TabEnum.Edit, label: "Questions", icon: FileText },
-  { value: TabEnum.Theme, label: "Edit Theme", icon: Palette },
-  { value: TabEnum.Settings, label: "Settings", icon: Settings },
-  { value: TabEnum.Share, label: "Share", icon: Share2 },
-  { value: TabEnum.Responses, label: "Responses", icon: MessageSquare },
-  { value: TabEnum.Analytics, label: "Analytics", icon: BarChart3 },
-  { value: TabEnum.TeamAnalytics, label: "Team Analytics", icon: Users },
+  { value: TabEnum.Edit, label: "Questions", icon: IconFileText },
+  { value: TabEnum.Theme, label: "Edit Theme", icon: IconPalette },
+  { value: TabEnum.Settings, label: "Settings", icon: IconSettings },
+  { value: TabEnum.Share, label: "Share", icon: IconShare2 },
+  { value: TabEnum.Responses, label: "Responses", icon: IconMessage },
+  { value: TabEnum.Analytics, label: "Analytics", icon: IconChartBar },
+  { value: TabEnum.TeamAnalytics, label: "Team Analytics", icon: IconUsers },
 ];
 
 export default function SurveyID() {

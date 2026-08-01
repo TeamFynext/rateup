@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import type { CatalogProductRow } from "@/backend/whatsapp/catalog/products/products.api.ts";
 import {
   useDeletCatalogProducts,
   useWaCatalogProducts,
@@ -26,40 +27,6 @@ const extraProps = [
   { key: "gender", label: "Gender" },
   { key: "age_group", label: "Age Group" },
 ];
-
-/** A catalog product row as the product table renders it. */
-export interface CatalogProductRow {
-  id: string;
-  retailer_id?: string;
-  shopifyVariantId?: string;
-  hotel_id?: string;
-  hotel_room_id?: string;
-  hotel_retailer_id?: string;
-  currency?: string;
-  price?: number;
-  base_price?: number;
-  sale_price?: number;
-  image?: string;
-  image_link?: string;
-  url?: string;
-  productProps?: {
-    title?: string;
-    name?: string;
-    brand?: string;
-    description?: string;
-    condition?: string;
-    availability?: string;
-    currency?: string;
-    price?: string;
-    base_price?: string;
-    sale_price?: string;
-    image?: Array<{ url: string; tag: string[] }>;
-    image_link?: string;
-    url?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
 
 const ProductItems = ({ catalogId }: { catalogId: string }) => {
   const deleteProducts = useDeletCatalogProducts(catalogId);

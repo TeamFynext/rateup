@@ -1,11 +1,10 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 const BulkAssignUser = ({
@@ -199,7 +199,7 @@ const BulkAssignUser = ({
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "assign" && (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <IconLoader2 className="w-4 h-4 animate-spin" />
           )}
           {t("Assign Chats")}
         </Button>
@@ -219,7 +219,7 @@ const BulkAssignUser = ({
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "self" && (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <IconLoader2 className="w-4 h-4 animate-spin" />
           )}
           {t("Assign To Me")}
         </Button>

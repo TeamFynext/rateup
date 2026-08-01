@@ -1,7 +1,7 @@
+import { IconSpeakerphone } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import dayjs from "dayjs";
-import { Megaphone } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -166,7 +166,7 @@ export default function WhatsNewButton() {
             />
           }
         >
-          <Megaphone className="size-5" strokeWidth={1.8} />
+          <IconSpeakerphone className="size-5" strokeWidth={1.8} />
         </PopoverTrigger>
 
         {unreadCount > 0 && (
@@ -182,7 +182,7 @@ export default function WhatsNewButton() {
       <PopoverContent side="right" align="end" sideOffset={8} className="w-80 gap-0 p-0">
         <PopoverHeader className="flex-row items-center justify-between gap-2 border-b border-border p-3">
           <div className="flex min-w-0 items-center gap-1.5">
-            <Megaphone className="size-4 shrink-0 text-primary" strokeWidth={1.75} />
+            <IconSpeakerphone className="size-4 shrink-0 text-primary" strokeWidth={1.75} />
             <PopoverTitle className="truncate text-sm font-semibold text-foreground">
               {translations("What's new")}
             </PopoverTitle>

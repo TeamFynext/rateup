@@ -1,5 +1,4 @@
-import { IconFolderCode } from "@tabler/icons-react";
-import { AlertCircle, ArrowUpDown, Search } from "lucide-react";
+import { IconAlertCircle, IconArrowsSort, IconFolderCode, IconSearch } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -51,7 +50,7 @@ export function ListPageSearchInput({
 }: Readonly<ListPageSearchInputProps>) {
   return (
     <div className={cn("relative max-w-sm", className)}>
-      <Search className="absolute left-3 top-1/2 w-4 -translate-y-1/2 text-muted-foreground" />
+      <IconSearch className="absolute left-3 top-1/2 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         placeholder={placeholder}
         value={value ?? ""}
@@ -94,7 +93,7 @@ export function ListPageSortDropdown({
           />
         }
       >
-        <ArrowUpDown className="h-3.5 w-3.5" />
+        <IconArrowsSort className="h-3.5 w-3.5" />
         {currentLabel}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44 p-1.5">
@@ -185,7 +184,7 @@ export function ListPageError({ onRetry }: Readonly<ListPageErrorProps>) {
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <AlertCircle className="size-5" />
+          <IconAlertCircle className="size-5" />
         </EmptyMedia>
         <EmptyTitle>Something went wrong</EmptyTitle>
         <EmptyDescription>We could not load this list. Please try again.</EmptyDescription>

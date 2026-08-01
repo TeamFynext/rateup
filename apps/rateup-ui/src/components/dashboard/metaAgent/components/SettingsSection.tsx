@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import type { AgentSettings } from "@/backend/metaAgent/metaAgent.api";
@@ -53,7 +53,7 @@ export function SettingsSection({ waSettingsId }: { waSettingsId: string }) {
           <p className="text-xs text-muted-foreground">{formatSyncedAt(data?.settingsSyncedAt)}</p>
         </div>
         <Button variant="outline" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
-          <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+          <IconRefresh data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
           Sync from Meta
         </Button>
       </CardHeader>

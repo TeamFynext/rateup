@@ -1,15 +1,15 @@
 import {
-  Banknote,
-  Building2,
-  CreditCard,
-  ExternalLink,
-  HandHelping,
-  Landmark,
-  Loader2,
-  Save,
-  ShoppingBag,
-  Smartphone,
-} from "lucide-react";
+  IconBuilding,
+  IconBuildingBank,
+  IconCash,
+  IconCreditCard,
+  IconDeviceFloppy,
+  IconDeviceMobile,
+  IconExternalLink,
+  IconHeartHandshake,
+  IconLoader2,
+  IconShoppingBag,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -43,7 +43,7 @@ interface PaymentMethodOption {
 const SHOPIFY_METHODS: PaymentMethodOption[] = [
   {
     id: "shopify_checkout",
-    icon: ExternalLink,
+    icon: IconExternalLink,
     iconBg: "bg-green-100 dark:bg-green-950",
     iconColor: "text-green-600",
     label: "Shopify Checkout URL",
@@ -65,7 +65,7 @@ const SHOPIFY_METHODS: PaymentMethodOption[] = [
   },
   {
     id: "shopify_native",
-    icon: Smartphone,
+    icon: IconDeviceMobile,
     iconBg: "bg-indigo-100 dark:bg-indigo-950",
     iconColor: "text-indigo-600",
     label: "WhatsApp Native Payment",
@@ -88,7 +88,7 @@ const SHOPIFY_METHODS: PaymentMethodOption[] = [
 const STANDARD_METHODS: PaymentMethodOption[] = [
   {
     id: "manual",
-    icon: HandHelping,
+    icon: IconHeartHandshake,
     iconBg: "bg-slate-100 dark:bg-slate-900",
     iconColor: "text-slate-600",
     label: "Manual",
@@ -101,7 +101,7 @@ const STANDARD_METHODS: PaymentMethodOption[] = [
   },
   {
     id: "upi",
-    icon: CreditCard,
+    icon: IconCreditCard,
     iconBg: "bg-violet-100 dark:bg-violet-950",
     iconColor: "text-violet-600",
     label: "UPI Payment Link",
@@ -124,7 +124,7 @@ const STANDARD_METHODS: PaymentMethodOption[] = [
   },
   {
     id: "cod",
-    icon: Banknote,
+    icon: IconCash,
     iconBg: "bg-amber-100 dark:bg-amber-950",
     iconColor: "text-amber-600",
     label: "Cash on Delivery",
@@ -143,7 +143,7 @@ const STANDARD_METHODS: PaymentMethodOption[] = [
   },
   {
     id: "bank",
-    icon: Landmark,
+    icon: IconBuildingBank,
     iconBg: "bg-blue-100 dark:bg-blue-950",
     iconColor: "text-blue-600",
     label: "Bank Transfer",
@@ -176,7 +176,7 @@ const STANDARD_METHODS: PaymentMethodOption[] = [
   },
   {
     id: "native",
-    icon: Smartphone,
+    icon: IconDeviceMobile,
     iconBg: "bg-indigo-100 dark:bg-indigo-950",
     iconColor: "text-indigo-600",
     label: "WhatsApp Native Payment",
@@ -263,14 +263,14 @@ export default function PaymentTab({
   const STORE_TYPES = [
     {
       key: "standard" as const,
-      Icon: Building2,
+      Icon: IconBuilding,
       tile: "bg-primary/10 text-primary",
       label: "Standard",
       sub: "No Shopify required",
     },
     {
       key: "shopify" as const,
-      Icon: ShoppingBag,
+      Icon: IconShoppingBag,
       tile: "bg-emerald-500/10 text-emerald-600",
       label: "Shopify Store",
       sub: "Connected to Shopify",
@@ -425,9 +425,9 @@ export default function PaymentTab({
 
       <Button onClick={handleSave} disabled={isSaving || !catalogId} className="w-fit">
         {isSaving ? (
-          <Loader2 data-icon="inline-start" className="animate-spin" />
+          <IconLoader2 data-icon="inline-start" className="animate-spin" />
         ) : (
-          <Save data-icon="inline-start" />
+          <IconDeviceFloppy data-icon="inline-start" />
         )}
         Save Settings
       </Button>

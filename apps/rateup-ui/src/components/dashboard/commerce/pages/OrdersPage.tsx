@@ -1,16 +1,16 @@
-import dayjs from "dayjs";
 import {
-  Banknote,
-  Check,
-  ChevronDown,
-  Clock,
-  CreditCard,
-  Loader2,
-  MessageCircle,
-  Package,
-  Search,
-  Smartphone,
-} from "lucide-react";
+  IconCash,
+  IconCheck,
+  IconChevronDown,
+  IconClock,
+  IconCreditCard,
+  IconDeviceMobile,
+  IconLoader2,
+  IconMessageCircle,
+  IconPackage,
+  IconSearch,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
 import type { CommerceOrder, SpreadsheetFormat } from "@/backend/commerce/commerce.api";
@@ -60,15 +60,15 @@ const PAGE_SIZE = 10;
 
 function payMeta(method?: string | null) {
   const m = (method ?? "").toLowerCase();
-  if (m.includes("upi")) return { icon: Smartphone, label: "UPI", cls: "text-foreground" };
+  if (m.includes("upi")) return { icon: IconDeviceMobile, label: "UPI", cls: "text-foreground" };
   if (m.includes("cod") || m.includes("cash"))
-    return { icon: Banknote, label: "COD", cls: "text-foreground" };
+    return { icon: IconCash, label: "COD", cls: "text-foreground" };
   if (m.includes("whatsapp"))
-    return { icon: MessageCircle, label: "WhatsApp Pay", cls: "text-emerald-600" };
+    return { icon: IconMessageCircle, label: "WhatsApp Pay", cls: "text-emerald-600" };
   if (m.includes("razor") || m.includes("card"))
-    return { icon: CreditCard, label: method!, cls: "text-foreground" };
-  if (!method) return { icon: Clock, label: "Pending", cls: "text-amber-600" };
-  return { icon: CreditCard, label: method, cls: "text-foreground" };
+    return { icon: IconCreditCard, label: method!, cls: "text-foreground" };
+  if (!method) return { icon: IconClock, label: "Pending", cls: "text-amber-600" };
+  return { icon: IconCreditCard, label: method, cls: "text-foreground" };
 }
 
 export function OrdersPage() {
@@ -116,7 +116,7 @@ export function OrdersPage() {
       actions={
         <>
           <div className="relative hidden min-w-[200px] sm:block">
-            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <IconSearch className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -176,11 +176,11 @@ export function OrdersPage() {
 
             {isLoading ? (
               <div className="flex justify-center py-14">
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                <IconLoader2 className="size-6 animate-spin text-muted-foreground" />
               </div>
             ) : rows.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-14 text-center">
-                <Package className="size-7 text-muted-foreground" />
+                <IconPackage className="size-7 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   No orders match the current filters.
                 </p>
@@ -239,7 +239,7 @@ export function OrdersPage() {
                         >
                           <span className="size-1.5 rounded-full bg-current" />
                           {stageMeta.label}
-                          <ChevronDown className="size-3" />
+                          <IconChevronDown className="size-3" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-40">
                           <DropdownMenuGroup>
@@ -254,7 +254,7 @@ export function OrdersPage() {
                                 >
                                   <span className={cn("size-2 rounded-full", st.dot)} />
                                   <span className="flex-1">{st.label}</span>
-                                  {isCurrent && <Check className="size-3.5 text-primary" />}
+                                  {isCurrent && <IconCheck className="size-3.5 text-primary" />}
                                 </DropdownMenuItem>
                               );
                             })}

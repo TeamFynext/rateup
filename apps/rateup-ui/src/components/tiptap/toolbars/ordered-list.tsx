@@ -1,6 +1,4 @@
-"use client";
-
-import { ListOrdered } from "lucide-react";
+import { IconListNumbers } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +32,7 @@ const OrderedListToolbar = React.forwardRef<HTMLButtonElement, React.ComponentPr
             />
           }
         >
-          {children ?? <ListOrdered className="h-4 w-4" />}
+          {children ?? <IconListNumbers className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Ordered list</span>

@@ -2,11 +2,11 @@ import { produce } from "immer";
 import { useCallback, useEffect } from "react";
 import type { CSSProperties } from "react";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
+import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 import { usePageVisitsOrLinkClicksUpdateMutation } from "@/backend/linktree/linktree.query";
-import type { LinktreeLink } from "@/components/Linktree/LinktreeEditor/LinksEditor/components/LinkCard.tsx";
 import UnsplashCreditText from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText/index.tsx";
 import { initialState as defaultTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/constants.ts";
-import type { LinktreeTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/ThemeReducer.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { imagesPath } from "@/utils/constants.ts";
 

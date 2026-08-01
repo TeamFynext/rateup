@@ -1,5 +1,5 @@
+import { IconStar } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import { Star } from "lucide-react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -318,7 +318,7 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
                                     onMouseLeave={() => setHoveredRating(-1)}
                                     className="flex items-center justify-center p-0.5 disabled:cursor-not-allowed"
                                   >
-                                    <Star
+                                    <IconStar
                                       className={cn(
                                         "size-6",
                                         submissionTicket

@@ -1,10 +1,8 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconBan, IconBrandWhatsapp, IconClock } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { Ban, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
@@ -18,6 +16,7 @@ import {
   MessageHeader,
 } from "@/components/ui/message.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import type {
   IgReceiveMessageBody,
@@ -151,7 +150,7 @@ export const DeletedMessage = () => {
   const { t: translations } = useTranslation();
   return (
     <span className="flex items-center gap-1.5 text-sm text-muted-foreground italic">
-      <Ban className="size-3.5 shrink-0" />
+      <IconBan className="size-3.5 shrink-0" />
       {translations("This message was deleted")}
     </span>
   );
@@ -261,7 +260,7 @@ export const TempMessageBody = ({
         </Bubble>
         <MessageFooter className="gap-1.5">
           <span>{formatToCustomTime(timestamp)}</span>
-          <Clock className="size-3" />
+          <IconClock className="size-3" />
         </MessageFooter>
       </MessageContent>
     </Message>

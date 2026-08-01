@@ -1,4 +1,10 @@
-import { Globe, MessageCircle, Percent, Play, Users } from "lucide-react";
+import {
+  IconGlobe,
+  IconMessageCircle,
+  IconPercentage,
+  IconPlayerPlay,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useContext, useMemo } from "react";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
@@ -53,25 +59,25 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
       title: "Total Responses",
       value: responseCount ?? 0,
       badge: null as string | null,
-      icon: <MessageCircle className="text-[#2B82DE]" size={24} />,
+      icon: <IconMessageCircle className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Started",
       value: started ?? "NA",
       badge: null,
-      icon: <Play className="text-[#2B82DE]" size={24} />,
+      icon: <IconPlayerPlay className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Total Visits",
       value: visited ?? "NA",
       badge: null,
-      icon: <Users className="text-[#2B82DE]" size={24} />,
+      icon: <IconUsers className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Google Review Redirects",
       value: reviewLinkVisited ?? "NA",
       badge: null,
-      icon: <Globe className="text-[#2B82DE]" size={24} />,
+      icon: <IconGlobe className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Response Rate",
@@ -84,7 +90,7 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
           {responseRateStatus}
         </span>
       ),
-      icon: <Percent className="text-[#2B82DE]" size={24} />,
+      icon: <IconPercentage className="text-[#2B82DE]" size={24} />,
     },
   ];
 

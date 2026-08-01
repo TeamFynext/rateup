@@ -1,5 +1,12 @@
+import {
+  IconCircleCheck,
+  IconClock,
+  IconHelpCircle,
+  IconHome,
+  IconMail,
+  IconSend,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, Clock, HelpCircle, Home, Mail, Send } from "lucide-react";
 import { useState } from "react";
 
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
@@ -41,12 +48,12 @@ function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
         <div className="space-y-3">
           <div className="flex justify-center py-2">
             <div className="relative w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center">
-              <Mail className="w-8 h-8 text-primary" strokeWidth={1.5} />
+              <IconMail className="w-8 h-8 text-primary" strokeWidth={1.5} />
 
               {emailSent && (
                 <div className="absolute -top-1 -right-1 animate-in zoom-in duration-300">
                   <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                    <CheckCircle2 className="w-3 h-3 text-white" />
+                    <IconCircleCheck className="w-3 h-3 text-white" />
                   </div>
                 </div>
               )}
@@ -60,7 +67,7 @@ function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
           </div>
 
           <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <Clock className="w-3.5 h-3.5" />
+            <IconClock className="w-3.5 h-3.5" />
             <span>Link expires in 24 hours</span>
           </div>
 
@@ -72,7 +79,7 @@ function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
               variant="outline"
               className="w-full h-10 border-2 border-gray-300 hover:border-primary hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white text-sm"
             >
-              <Send className="w-4 h-4 mr-2" />
+              <IconSend className="w-4 h-4 mr-2" />
               {countdown > 0 ? `Resend in ${countdown}s` : "Resend verification email"}
             </Button>
 
@@ -85,14 +92,14 @@ function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
               variant="outline"
               className="w-full h-10 border-2 border-gray-300 hover:border-primary hover:bg-blue-50 text-sm"
             >
-              <Home className="w-4 h-4 mr-2" />
+              <IconHome className="w-4 h-4 mr-2" />
               Back to Sign In
             </Button>
           </div>
 
           <div className="bg-blue-50 rounded-lg p-3 mt-3">
             <div className="flex items-start gap-2.5">
-              <HelpCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+              <IconHelpCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
               <div className="flex-1">
                 <p className="text-xs text-gray-700 leading-relaxed">
                   Didn't receive the email? Check your spam folder or wait a few minutes for

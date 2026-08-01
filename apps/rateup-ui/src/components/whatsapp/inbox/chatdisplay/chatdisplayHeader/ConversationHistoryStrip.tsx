@@ -1,11 +1,11 @@
+import { IconArrowRight, IconChevronDown, IconChevronUp, IconHistory } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { ArrowRight, ChevronDown, ChevronUp, History } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { ContactConversation } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
 import { useConversationsByContact } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { getSoucePlatformIconAndColor } from "../../util.tsx";
@@ -75,7 +75,7 @@ export default function ConversationHistoryStrip({
   if (siblings.length === 0) return null;
 
   const lastDate = formatCreated(siblings[0]?.createdAt);
-  const Chevron = open ? ChevronUp : ChevronDown;
+  const Chevron = open ? IconChevronUp : IconChevronDown;
 
   return (
     <div className="shrink-0 border-b border-border bg-amber-50 dark:bg-amber-950/40">
@@ -85,7 +85,7 @@ export default function ConversationHistoryStrip({
         aria-expanded={open}
         className="flex w-full items-center gap-2.5 px-5 py-2 text-left"
       >
-        <History className="size-3.5 shrink-0 text-amber-700 dark:text-amber-500" />
+        <IconHistory className="size-3.5 shrink-0 text-amber-700 dark:text-amber-500" />
         <span className="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-500">
           {siblings.length} previous conversation{siblings.length === 1 ? "" : "s"}
         </span>
@@ -149,7 +149,7 @@ export default function ConversationHistoryStrip({
                 <span className="shrink-0 text-[11px] text-muted-foreground">
                   {formatCreated(sibling.createdAt)}
                 </span>
-                <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
+                <IconArrowRight className="size-3 shrink-0 text-muted-foreground" />
               </button>
             );
           })}

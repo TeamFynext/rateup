@@ -1,5 +1,5 @@
+import { IconArrowLeft, type TablerIcon } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import InfoButton from "@/components/Button/InfoButton.tsx";
@@ -10,7 +10,7 @@ import { docsPath } from "@/utils/constants.ts";
 export interface SurveyHeaderTab<T extends string> {
   value: T;
   label: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
 }
 
 interface SurveyPageHeaderProps<T extends string> {
@@ -38,7 +38,7 @@ export default function SurveyPageHeader<T extends string>({
           onClick={() => navigate({ to: "/dashboard/surveys" })}
           className="gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-3 text-[13px] font-semibold text-primary hover:bg-primary/20"
         >
-          <ArrowLeft className="size-3.5" />
+          <IconArrowLeft className="size-3.5" />
           {translations("Back")}
         </Button>
         <h1 className="truncate font-nunito text-[22px] font-extrabold tracking-tight text-foreground">

@@ -1,5 +1,5 @@
+import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { ArrowRight } from "lucide-react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -36,7 +36,7 @@ const ReviewAiHero = () => {
                   className="border-[#009987] text-[#009987] cursor-pointer  hover:bg-[#e6f7ff] group"
                 >
                   Learn More
-                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </BookDemoModal>
             </div>

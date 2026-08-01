@@ -1,6 +1,11 @@
-"use client";
-
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Check, ChevronDown } from "lucide-react";
+import {
+  IconAlignCenter,
+  IconAlignJustified,
+  IconAlignLeft,
+  IconAlignRight,
+  IconCheck,
+  IconChevronDown,
+} from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -46,22 +51,22 @@ export const AlignmentTooolbar = () => {
     {
       name: "Left Align",
       value: "left",
-      icon: <AlignLeft className="h-4 w-4" />,
+      icon: <IconAlignLeft className="h-4 w-4" />,
     },
     {
       name: "Center Align",
       value: "center",
-      icon: <AlignCenter className="h-4 w-4" />,
+      icon: <IconAlignCenter className="h-4 w-4" />,
     },
     {
       name: "Right Align",
       value: "right",
-      icon: <AlignRight className="h-4 w-4" />,
+      icon: <IconAlignRight className="h-4 w-4" />,
     },
     {
       name: "Justify Align",
       value: "justify",
-      icon: <AlignJustify className="h-4 w-4" />,
+      icon: <IconAlignJustified className="h-4 w-4" />,
     },
   ];
 
@@ -101,7 +106,7 @@ export const AlignmentTooolbar = () => {
         >
           <span className="mr-2">{alignmentOptions[findIndex(currentTextAlign())]?.icon}</span>
           {alignmentOptions[findIndex(currentTextAlign())]?.name}
-          <ChevronDown className="ml-2 h-4 w-4" />
+          <IconChevronDown className="ml-2 h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent>Text Alignment</TooltipContent>
       </Tooltip>
@@ -117,7 +122,7 @@ export const AlignmentTooolbar = () => {
               <span className="mr-2">{option.icon}</span>
               {option.name}
 
-              {option.value === currentTextAlign() && <Check className="ml-auto h-4 w-4" />}
+              {option.value === currentTextAlign() && <IconCheck className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>

@@ -4,13 +4,13 @@ import {
   IconBrandWhatsapp,
   IconCheck,
   IconLayoutGrid,
+  IconLoader2,
   IconSearch,
   IconTemplate,
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,7 @@ import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import {
   useCreateInstagramAutomationMutation,
   useUpdateInstagramAutomationMutation,
@@ -414,7 +415,7 @@ export function AutomatedReplyForm({
           {
             onSuccess: () => {
               qc.invalidateQueries({
-                queryKey: ["instagramAutomation", { automationId: waAutomatedReplyId }],
+                queryKey: automationKeys.instagramAutomation({ automationId: waAutomatedReplyId }),
               });
               toast.success(t("Instagram Automation updated successfully"));
               setSaveSuccess(true);
@@ -427,7 +428,7 @@ export function AutomatedReplyForm({
           {
             onSuccess: () => {
               qc.invalidateQueries({
-                queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+                queryKey: automationKeys.waAutomatedReply({ waAutomatedReplyId }),
               });
               toast.success(t("Automated Reply updated successfully"));
               setSaveSuccess(true);
@@ -617,7 +618,7 @@ export function AutomatedReplyForm({
 
           {/* Right: Save with proper spinner */}
           <Button type="submit" disabled={isSaving} className="min-w-30">
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
             {!isSaving && saveSuccess && editMode && <IconCheck size={16} className="mr-2" />}
             {submitLabel}
           </Button>

@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { IconX } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -93,7 +93,7 @@ function TestimonialCard({ testimonial, currentStyle = null }: Readonly<Testimon
               onClick={() => setOpened(false)}
               className="text-muted-foreground hover:text-foreground"
             >
-              <X className="w-4 h-4" />
+              <IconX className="w-4 h-4" />
             </button>
           </DialogHeader>
 

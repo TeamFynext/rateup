@@ -1,7 +1,6 @@
+import { IconLoader2, IconTypography } from "@tabler/icons-react";
 import type { Content, JSONContent } from "@tiptap/react";
 import { EditorContent } from "@tiptap/react";
-import { Loader2 } from "lucide-react";
-import { TypeOutline } from "lucide-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
@@ -153,7 +152,7 @@ export function ReferralMessageSettings({
                                 className="h-8 w-8 p-0"
                                 title="Format"
                               >
-                                <TypeOutline className="h-5 w-5" />
+                                <IconTypography className="h-5 w-5" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-full">
@@ -198,7 +197,7 @@ export function ReferralMessageSettings({
           <Button size="sm" className="w-[50%] mt-2" type="submit" disabled={isPending || disabled}>
             {isPending ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 {t("Saving")}
               </>
             ) : (

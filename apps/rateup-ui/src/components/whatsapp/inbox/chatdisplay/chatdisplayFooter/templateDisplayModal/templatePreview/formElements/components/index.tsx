@@ -1,6 +1,5 @@
-import { IconPhoto, IconRefresh } from "@tabler/icons-react";
+import { IconLoader2, IconPhoto, IconRefresh } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -520,7 +519,7 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
             }
           >
             {syncformQuestionsMut.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
               <IconRefresh size={16} />
             )}

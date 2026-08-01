@@ -1,4 +1,4 @@
-import { Package, ShoppingCart } from "lucide-react";
+import { IconPackage, IconShoppingCart } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -49,11 +49,11 @@ const WaInboxOrder = ({
             bubble's own foreground so they stay legible on any bubble variant. */}
         <div className="flex items-center gap-3 rounded-lg bg-green-600/10 p-3 dark:bg-green-500/15">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-green-600/20 dark:bg-green-500/25">
-            <ShoppingCart className="h-6 w-6 text-green-700 dark:text-green-500" />
+            <IconShoppingCart className="h-6 w-6 text-green-700 dark:text-green-500" />
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium">
-              <ShoppingCart className="mr-1 inline h-3.5 w-3.5" />
+              <IconShoppingCart className="mr-1 inline h-3.5 w-3.5" />
               {totalQty} {totalQty === 1 ? translations("item") : translations("items")}
             </span>
             <span className="text-xs opacity-70">
@@ -89,7 +89,7 @@ const WaInboxOrder = ({
               {items.map((item) => (
                 <div key={item.product_retailer_id} className="flex items-center gap-3">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <Package className="h-8 w-8 text-muted-foreground" />
+                    <IconPackage className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">#{item.product_retailer_id}</p>

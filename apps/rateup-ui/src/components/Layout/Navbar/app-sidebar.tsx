@@ -1,5 +1,5 @@
+import { IconAlertTriangle, IconChevronRight, IconExternalLink } from "@tabler/icons-react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,7 +8,6 @@ import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
@@ -44,10 +43,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import DocsButton from "./docs-button.tsx";
@@ -244,10 +244,10 @@ function NavItemContent({
   showDescription?: boolean;
 }>) {
   const chevron = showRotatingChevron ? (
-    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+    <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
   ) : null;
   const activeChevron =
-    !showRotatingChevron && isActive ? <ChevronRight className="ml-auto" /> : null;
+    !showRotatingChevron && isActive ? <IconChevronRight className="ml-auto" /> : null;
 
   return (
     <>
@@ -901,12 +901,12 @@ export default function AppSidebar({
           {isSubscriptionExpired && (
             <SidebarFooter className="flex-col gap-2 group-data-[collapsible=icon]:hidden">
               <Alert variant="destructive" className="px-3 py-2">
-                <TriangleAlert className="size-4" />
+                <IconAlertTriangle className="size-4" />
                 <AlertTitle className="text-xs">Subscription expired</AlertTitle>
                 <AlertDescription className="text-xs">
                   Please renew from{" "}
                   <Link to="/dashboard/settings/billing" className="flex gap-1">
-                    Billing <ExternalLink className="size-3.5" />
+                    Billing <IconExternalLink className="size-3.5" />
                   </Link>
                 </AlertDescription>
               </Alert>

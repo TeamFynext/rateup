@@ -1,7 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  IconArrowRight,
+  IconDots,
+  IconHome,
+  IconMessageCircle,
+  IconMinus,
+  IconMoodSmile,
+  IconSend,
+} from "@tabler/icons-react";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import { ArrowRight, Home, MessageCircle, Minus, MoreHorizontal, Send, Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -278,7 +286,7 @@ export default function SupportWidget({
                 className="h-7 w-7 text-muted-foreground hover:bg-muted transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                <Minus className="h-4 w-4" />
+                <IconMinus className="h-4 w-4" />
               </Button>
             </div>
 
@@ -306,7 +314,7 @@ export default function SupportWidget({
                               </FieldLabel>
                               <InputGroup>
                                 <InputGroupAddon>
-                                  <Smile />
+                                  <IconMoodSmile />
                                 </InputGroupAddon>
                                 <InputGroupInput
                                   {...field}
@@ -354,7 +362,7 @@ export default function SupportWidget({
                               </FieldLabel>
                               <InputGroup>
                                 <InputGroupAddon>
-                                  <MoreHorizontal />
+                                  <IconDots />
                                 </InputGroupAddon>
                                 <InputGroupInput
                                   {...field}
@@ -375,7 +383,7 @@ export default function SupportWidget({
                             className="h-8 min-w-[70px] rounded-full bg-blue-600 px-4 py-1 text-xs text-white shadow transition-transform duration-200 hover:scale-105 hover:bg-blue-700"
                             size="sm"
                           >
-                            Next <ArrowRight data-icon="inline-end" />
+                            Next <IconArrowRight data-icon="inline-end" />
                           </Button>
                         </div>
                       </FieldGroup>
@@ -427,7 +435,7 @@ export default function SupportWidget({
                           onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                         />
                         <Button size="sm">
-                          <Send className="h-3 w-3" />
+                          <IconSend className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -439,7 +447,7 @@ export default function SupportWidget({
                 <div className="px-4 py-6 space-y-6 flex flex-col items-center justify-center animate-fade-in h-full">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="bg-green-500 rounded-full p-2">
-                      <MessageCircle className="h-5 w-5 text-white" />
+                      <IconMessageCircle className="h-5 w-5 text-white" />
                     </div>
                     <span className="font-semibold text-foreground text-base">
                       Reach us on WhatsApp!
@@ -454,12 +462,12 @@ export default function SupportWidget({
                     className="w-full h-10 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center gap-2 shadow text-base transition-transform duration-200 hover:scale-105"
                     size="lg"
                   >
-                    Open WhatsApp <Send className="h-4 w-4" />
+                    Open WhatsApp <IconSend className="h-4 w-4" />
                   </Button>
                   <div className="mt-6 text-xs text-muted-foreground flex items-center gap-1">
                     We run on Rateup{" "}
                     <span className="inline-block">
-                      <Home className="h-3 w-3" />
+                      <IconHome className="h-3 w-3" />
                     </span>
                   </div>
                 </div>
@@ -469,13 +477,13 @@ export default function SupportWidget({
                   value="contact"
                   className="transition-colors duration-200 data-[state=active]:bg-[#1c518e] data-[state=active]:text-white"
                 >
-                  <MessageCircle className="h-4 w-4" /> Chat
+                  <IconMessageCircle className="h-4 w-4" /> Chat
                 </TabsTrigger>
                 <TabsTrigger
                   value="whatsapp"
                   className="transition-colors duration-200 data-[state=active]:bg-[#1c518e] data-[state=active]:text-white"
                 >
-                  <Send className="h-4 w-4" /> Whatsapp
+                  <IconSend className="h-4 w-4" /> Whatsapp
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -488,7 +496,7 @@ export default function SupportWidget({
             className="bg-linear-to-br from-[#66D7FF] to-[#2D74E0] hover:from-[#00bbff] hover:to-[#005de9] text-white rounded-full shadow-2xl w-16 h-16 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-105 animate-bounce-in border-2 border-background"
             aria-label="Open chat"
           >
-            <MessageCircle className="h-8 w-8" />
+            <IconMessageCircle className="h-8 w-8" />
           </button>
         </div>
       )}

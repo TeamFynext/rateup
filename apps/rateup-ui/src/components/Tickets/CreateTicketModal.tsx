@@ -1,4 +1,4 @@
-import { LayoutDashboard } from "lucide-react";
+import { IconLayoutDashboard } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -180,7 +180,7 @@ const CreateTicketModal = ({
         <DialogHeader>
           <div className="flex items-center gap-2 p-5 pb-0">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
-              <LayoutDashboard className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+              <IconLayoutDashboard className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
             </div>
             <DialogTitle className="font-bold text-base">{t("Create Ticket")}</DialogTitle>
           </div>

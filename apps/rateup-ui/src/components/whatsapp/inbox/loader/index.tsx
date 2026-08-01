@@ -1,5 +1,4 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconBrandWhatsapp, IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,7 +35,7 @@ export default function WhatsAppInboxLoader({ isLoading }: { isLoading: boolean 
         <IconBrandWhatsapp color="#0B846D" size={40} />
         <Progress value={progress} className="w-[300px] mt-2 h-0.5" />
         <div className="flex items-center gap-2 mt-1">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+          <IconLoader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
           <p className="text-xs text-muted-foreground">{translations("Loading chats...")}</p>
         </div>
       </div>

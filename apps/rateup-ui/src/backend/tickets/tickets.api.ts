@@ -7,7 +7,7 @@ import type {
   Label,
   MemberData,
   TicketComment,
-} from "@/components/Tickets/types.ts";
+} from "@/backend/tickets/tickets.types.ts";
 import type { RequestPayload } from "@/types/api.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 

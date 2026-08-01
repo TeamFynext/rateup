@@ -1,6 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  IconArrowLeft,
+  IconEye,
+  IconEyeOff,
+  IconLock,
+  IconMail,
+  IconShield,
+} from "@tabler/icons-react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -172,9 +179,9 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
               {isEmailPage ? (
-                <Mail className="w-6 h-6 text-primary" />
+                <IconMail className="w-6 h-6 text-primary" />
               ) : (
-                <Lock className="w-6 h-6 text-primary" />
+                <IconLock className="w-6 h-6 text-primary" />
               )}
             </div>
             <div className="text-2xl font-normal">
@@ -240,7 +247,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                         <FieldLabel htmlFor="password">{translations("New Password")}</FieldLabel>
                         <InputGroup>
                           <InputGroupAddon>
-                            <Lock />
+                            <IconLock />
                           </InputGroupAddon>
                           <InputGroupInput
                             {...field}
@@ -264,7 +271,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                               }
                               onClick={() => setShowPassword(!showPassword)}
                             >
-                              {showPassword ? <EyeOff /> : <Eye />}
+                              {showPassword ? <IconEyeOff /> : <IconEye />}
                             </InputGroupButton>
                           </InputGroupAddon>
                         </InputGroup>
@@ -284,7 +291,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                         </FieldLabel>
                         <InputGroup>
                           <InputGroupAddon>
-                            <Shield />
+                            <IconShield />
                           </InputGroupAddon>
                           <InputGroupInput
                             {...field}
@@ -303,7 +310,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                               }
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
-                              {showConfirmPassword ? <EyeOff /> : <Eye />}
+                              {showConfirmPassword ? <IconEyeOff /> : <IconEye />}
                             </InputGroupButton>
                           </InputGroupAddon>
                         </InputGroup>
@@ -350,7 +357,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
               to={"/login"}
               className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-primary/20 hover:text-primary"
             >
-              <ArrowLeft strokeWidth={1} />
+              <IconArrowLeft strokeWidth={1} />
               {translations("Back to Sign In")}
             </Link>
           </div>
@@ -358,7 +365,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
       ) : (
         <Card className="border-none shadow-lg p-6 max-w-md w-full flex flex-col items-center text-center gap-6">
           <div className="w-18 h-18 bg-primary/10 rounded-full flex items-center justify-center">
-            <Mail className="w-10 h-10 text-primary" />
+            <IconMail className="w-10 h-10 text-primary" />
           </div>
 
           <div className="flex flex-col gap-4">
@@ -375,7 +382,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
             to="/login"
             className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
           >
-            <ArrowLeft strokeWidth={1.5} className="w-4 h-4" />
+            <IconArrowLeft strokeWidth={1.5} className="w-4 h-4" />
             {translations("Back to Sign In")}
           </Link>
         </Card>

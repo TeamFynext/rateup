@@ -1,5 +1,5 @@
+import { IconLogout, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { LogOut, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -186,7 +186,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
             onClick={handleDisconnect}
             disabled={disconnect.isPending || !wabaId}
           >
-            <LogOut data-icon="inline-start" />
+            <IconLogout data-icon="inline-start" />
             Disconnect WhatsApp Business Account
           </Button>
         </CardContent>
@@ -251,7 +251,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
             onClick={handleDelete}
             disabled={deleteCatalog.isPending}
           >
-            <Trash2 data-icon="inline-start" />
+            <IconTrash data-icon="inline-start" />
             Delete Catalog
           </Button>
         </CardContent>

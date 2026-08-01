@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconFolder } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Folder } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -213,7 +213,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                   <AvatarImage src={getFileUrlFromKey(iconValue)} alt={nameValue} />
                 </Avatar>
               ) : (
-                <Folder />
+                <IconFolder />
               )}
               <div className="flex flex-col gap-4">
                 <input

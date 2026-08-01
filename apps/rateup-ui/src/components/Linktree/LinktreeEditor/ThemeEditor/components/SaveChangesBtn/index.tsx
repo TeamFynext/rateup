@@ -3,6 +3,7 @@ import { produce } from "immer";
 import { isEqual } from "lodash";
 import { useCallback, useState } from "react";
 
+import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -10,7 +11,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { useLinktreeObj } from "../../../LinktreeContext/LinktreeContext.tsx";
 import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts";
 import { useThemeDispatch, useThemeObj } from "../../ThemeContext/ThemeContext.tsx";
-import type { LinktreeTheme } from "../../ThemeContext/ThemeReducer.tsx";
 import { uploadFile } from "./uploadFile.tsx";
 
 import styles from "./SaveChangesBtn.module.css";

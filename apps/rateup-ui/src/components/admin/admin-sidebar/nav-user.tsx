@@ -1,5 +1,5 @@
+import { IconLogout, IconSelector } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -45,7 +45,7 @@ export function NavUser({
               <span className="truncate font-medium">{user?.userName}</span>
               <span className="truncate text-xs">{user?.email}</span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4" />
+            <IconSelector className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -74,7 +74,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link to="/logout" />}>
-                <LogOut />
+                <IconLogout />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuGroup>

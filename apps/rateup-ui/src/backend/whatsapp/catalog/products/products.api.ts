@@ -1,6 +1,39 @@
 import { axiosClient } from "@/backend/apiClient";
-import type { CatalogProductRow } from "@/components/whatsapp/catalog/products/ProductItems.tsx";
 import type { RequestPayload } from "@/types/api.ts";
+
+/** A catalog product row as the catalog products endpoint returns it. */
+export interface CatalogProductRow {
+  id: string;
+  retailer_id?: string;
+  shopifyVariantId?: string;
+  hotel_id?: string;
+  hotel_room_id?: string;
+  hotel_retailer_id?: string;
+  currency?: string;
+  price?: number;
+  base_price?: number;
+  sale_price?: number;
+  image?: string;
+  image_link?: string;
+  url?: string;
+  productProps?: {
+    title?: string;
+    name?: string;
+    brand?: string;
+    description?: string;
+    condition?: string;
+    availability?: string;
+    currency?: string;
+    price?: string;
+    base_price?: string;
+    sale_price?: string;
+    image?: Array<{ url: string; tag: string[] }>;
+    image_link?: string;
+    url?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
 
 /** A Shopify product that is not in the catalog yet, as the import list returns it. */
 export interface ShopifyAvailableProduct {

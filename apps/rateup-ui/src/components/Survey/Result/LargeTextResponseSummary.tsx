@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, Sparkles } from "lucide-react";
+import { IconArrowLeft, IconInfoCircle, IconSparkles } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -90,7 +90,7 @@ const LargeTextResponseSummary = ({
             className="size-8"
             onClick={() => setSummaryTab(ResponseSummaryType.All)}
           >
-            <ArrowLeft className="size-4" />
+            <IconArrowLeft className="size-4" />
           </Button>
           <span className="font-bold text-muted-foreground">{translations("Back")}</span>
         </div>
@@ -124,7 +124,7 @@ const LargeTextResponseSummary = ({
                               getResponseSummary(selectedQuestion?.id ?? "", team.value)
                             }
                           >
-                            <Sparkles
+                            <IconSparkles
                               className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
                             />
                             {translations("Generate")}
@@ -137,7 +137,9 @@ const LargeTextResponseSummary = ({
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger
-                        render={<Info className="size-4 text-muted-foreground cursor-help" />}
+                        render={
+                          <IconInfoCircle className="size-4 text-muted-foreground cursor-help" />
+                        }
                       />
                       <TooltipContent className="max-w-64">
                         {translations(
@@ -200,7 +202,7 @@ const LargeTextResponseSummary = ({
                                 size="sm"
                                 onClick={() => getResponseSummary(question.id ?? "")}
                               >
-                                <Sparkles
+                                <IconSparkles
                                   className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
                                 />
                                 {translations("Generate")}
@@ -211,7 +213,9 @@ const LargeTextResponseSummary = ({
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger
-                            render={<Info className="size-4 text-muted-foreground cursor-help" />}
+                            render={
+                              <IconInfoCircle className="size-4 text-muted-foreground cursor-help" />
+                            }
                           />
                           <TooltipContent className="max-w-64">
                             {translations(

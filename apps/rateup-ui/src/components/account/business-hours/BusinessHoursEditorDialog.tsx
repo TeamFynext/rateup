@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -118,7 +118,7 @@ function TimeSlotRow({
             onClick={() => removeTimeSlot(day, slotIndex)}
             className="p-1 h-8 w-8"
           >
-            <Trash2 className="w-3 h-3 text-red-500" />
+            <IconTrash className="w-3 h-3 text-red-500" />
           </Button>
         )}
       </div>
@@ -373,7 +373,7 @@ export function BusinessHoursEditorDialog({
                                 onClick={() => addTimeSlot(day)}
                                 className="gap-1"
                               >
-                                <Plus className="w-3 h-3" />
+                                <IconPlus className="w-3 h-3" />
                               </Button>
                             )}
                           </div>

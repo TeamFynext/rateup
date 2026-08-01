@@ -1,4 +1,4 @@
-import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
+import { IconDotsVertical, IconEye, IconPencil, IconTrash, IconUsers } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -101,7 +101,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
           />
         }
       >
-        <MoreVertical className="h-4 w-4" />
+        <IconDotsVertical className="h-4 w-4" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
@@ -111,7 +111,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
             onView(campaign);
           }}
         >
-          <Eye className="mr-2 h-4 w-4" />
+          <IconEye className="mr-2 h-4 w-4" />
           {t("View Details")}
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -120,7 +120,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
             onEdit(campaign);
           }}
         >
-          <Edit2 className="mr-2 h-4 w-4" />
+          <IconPencil className="mr-2 h-4 w-4" />
           {t("Edit")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -131,7 +131,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
             handleDelete();
           }}
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <IconTrash className="mr-2 h-4 w-4" />
           {t("Delete")}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -150,7 +150,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
       content={
         <div className="flex">
           <div className="flex min-w-0 flex-1 items-center gap-1.5 pr-3 text-sm text-slate-600 dark:text-slate-400">
-            <Users className="h-3.5 w-3.5 shrink-0" />
+            <IconUsers className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{campaign.teamName}</span>
           </div>
           <Separator orientation="vertical" className="mx-1 h-auto" />

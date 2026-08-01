@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { shouldSkipLocalErrorToast } from "@/backend/apiClient";
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 
 import {
@@ -38,7 +39,7 @@ export const useAllWaAutomatedReplies = () =>
 
 export const useWaAutomatedReplyById = (waAutomatedReplyId: string) =>
   useQuery({
-    queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+    queryKey: automationKeys.waAutomatedReply({ waAutomatedReplyId }),
     queryFn: () => getWaAutomatedRepliesById(waAutomatedReplyId),
     enabled: !!waAutomatedReplyId,
   });

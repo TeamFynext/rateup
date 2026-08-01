@@ -1,25 +1,26 @@
+import {
+  IconCalendar,
+  IconClock,
+  IconCrown,
+  IconMail,
+  IconPhone,
+  IconPlus,
+  IconShield,
+  IconTrash,
+  IconUser,
+  IconUserPlus,
+  IconUsers,
+  IconUserX,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {
-  Calendar,
-  Clock,
-  Crown,
-  Mail,
-  Phone,
-  Plus,
-  Shield,
-  Trash2,
-  User,
-  UserPlus,
-  Users,
-  UserX,
-} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import {
   useAddUsertoTeams,
@@ -217,7 +218,7 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
         {selectedTeam?.createdAt && (
           <div className="pt-4 border-t border-border">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
+              <IconCalendar className="w-4 h-4" />
               <span>
                 {translations("Created on")} {dayjs(selectedTeam.createdAt).format("MMM D, YYYY")}
               </span>
@@ -250,20 +251,20 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
     switch (role) {
       case UserRole.SUPADM:
         return {
-          icon: Crown,
+          icon: IconCrown,
           className: "bg-secondary text-secondary-foreground border-border",
         };
 
       case UserRole.ADM:
         return {
-          icon: Shield,
+          icon: IconShield,
           className: "bg-accent text-accent-foreground border-border",
         };
 
       case UserRole.MEMBER:
       default:
         return {
-          icon: User,
+          icon: IconUser,
           className: "bg-muted text-foreground border-border",
         };
     }
@@ -274,9 +275,9 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
       { teamId: selectedTeam, userId: userid },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
-          queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
-          queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+          queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
+          queryClient.invalidateQueries({ queryKey: teamKeys.notMembers() });
+          queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
         },
       },
     );
@@ -344,7 +345,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
                   })
                 }
               >
-                <Plus className="w-3 h-3 mr-1" />
+                <IconPlus className="w-3 h-3 mr-1" />
                 {translations("Add")}
               </Button>
             </div>
@@ -411,21 +412,21 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
             </div>
             {member?.role !== UserRole.SUPADM && (
               <Button variant="destructive" onClick={() => setMemberToDelete(member)}>
-                <UserX />
+                <IconUserX />
               </Button>
             )}
           </div>
 
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className="w-4 h-4" />
+              <IconMail className="w-4 h-4" />
               <span className="truncate">{member.email}</span>
             </div>
 
             {/* Phone only if exists */}
             {member?.phone && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="w-4 h-4" />
+                <IconPhone className="w-4 h-4" />
                 <span>{member.phone}</span>
               </div>
             )}
@@ -433,7 +434,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
             {/* Joined date formatted with dayjs */}
             {member?.createdAt && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="w-4 h-4" />
+                <IconCalendar className="w-4 h-4" />
                 <span>
                   {translations("Joined")} {dayjs(member.createdAt).format("MMM D, YYYY")}
                 </span>
@@ -455,7 +456,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
   } else {
     membersGridContent = (
       <div className="col-span-full text-center py-12 text-muted-foreground">
-        <Users className="w-12 h-12 mx-auto opacity-30" />
+        <IconUsers className="w-12 h-12 mx-auto opacity-30" />
         <p>{translations("No members in this team yet")}</p>
       </div>
     );
@@ -474,7 +475,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
 
         <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
           <DialogTrigger render={<Button />}>
-            <UserPlus className="w-4 h-4 mr-2" />
+            <IconUserPlus className="w-4 h-4 mr-2" />
             {translations("Add Member")}
           </DialogTrigger>
 
@@ -619,7 +620,7 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
                   className="bg-primary min-w-full sm:min-w-18"
                   disabled={editTeamMutation.isPending}
                 >
-                  {editTeamMutation.isPending ? <Clock /> : translations("Save")}
+                  {editTeamMutation.isPending ? <IconClock /> : translations("Save")}
                 </Button>
               </div>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -631,7 +632,7 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
       {/* DELETE SECTION */}
       <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
         <div className="flex items-start gap-3">
-          <Trash2 className="h-5 w-5 shrink-0 text-destructive" />
+          <IconTrash className="h-5 w-5 shrink-0 text-destructive" />
           <div className="flex flex-col gap-2 items-start">
             <div>
               <h4 className="text-sm font-medium text-destructive">
@@ -657,7 +658,7 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
         <DialogContent className="max-w-sm border-destructive/20">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
-              <Trash2 className="h-5 w-5 text-destructive" />
+              <IconTrash className="h-5 w-5 text-destructive" />
               {translations("Confirm Deletion")}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">

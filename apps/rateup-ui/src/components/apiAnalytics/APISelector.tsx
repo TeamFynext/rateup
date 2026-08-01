@@ -1,4 +1,4 @@
-import { Globe, MessageCircle } from "lucide-react";
+import { IconGlobe, IconMessageCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
@@ -12,13 +12,13 @@ interface ApiSelectorProps {
 export function ApiSelector({ value, onChange, className }: ApiSelectorProps) {
   const { t } = useTranslation("apianalytics");
   const apiOptions = [
-    { value: "external", label: t("External"), icon: Globe },
-    { value: "whatsapp", label: t("Campaign & Inbox"), icon: MessageCircle },
-    { value: "all", label: t("All"), icon: MessageCircle },
+    { value: "external", label: t("External"), icon: IconGlobe },
+    { value: "whatsapp", label: t("Campaign & Inbox"), icon: IconMessageCircle },
+    { value: "all", label: t("All"), icon: IconMessageCircle },
   ];
 
   const selectedOption = apiOptions.find((opt) => opt.value === value);
-  const Icon = selectedOption?.icon || Globe;
+  const Icon = selectedOption?.icon || IconGlobe;
 
   return (
     <Select value={value} onValueChange={(value) => onChange?.(value ?? "")} items={apiOptions}>

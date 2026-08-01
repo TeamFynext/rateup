@@ -1,5 +1,4 @@
-import { IconDownload } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 import type { JSX } from "react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -70,7 +69,11 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
           aria-label="Download Audio"
           disabled={isPending}
         >
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <IconDownload size={16} />}
+          {isPending ? (
+            <IconLoader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <IconDownload size={16} />
+          )}
         </Button>
       )}
     </div>

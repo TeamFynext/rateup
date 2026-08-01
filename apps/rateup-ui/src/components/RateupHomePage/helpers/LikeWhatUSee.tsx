@@ -1,5 +1,4 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { Calendar, X } from "lucide-react";
+import { IconBrandWhatsapp, IconCalendar, IconX } from "@tabler/icons-react";
 
 import { imagesPath } from "@/components/HomePage/constants";
 import { RateupStar } from "@/components/integrations/logos";
@@ -27,7 +26,7 @@ export default function LikeWhatUSee({
           onClick={() => onOpenChange(false)}
           className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition-all duration-200 hover:bg-slate-200/80 hover:text-slate-850"
         >
-          <X className="h-4 w-4" />
+          <IconX className="h-4 w-4" />
         </button>
 
         <div className="px-8 pb-7 pt-10">
@@ -55,7 +54,7 @@ export default function LikeWhatUSee({
               onClick={() => onBookDemo?.()}
               className="h-12 w-full rounded-xl bg-gradient-to-r from-[#2c6fd6] to-[#1e5bb8] font-bold text-white shadow-[0_4px_12px_rgba(44,111,214,0.25)] transition-all duration-200 hover:from-[#1e5bb8] hover:to-[#174895] hover:shadow-[0_6px_16px_rgba(44,111,214,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
             >
-              <Calendar data-icon="inline-start" className="h-5 w-5" /> Book a Demo
+              <IconCalendar data-icon="inline-start" className="h-5 w-5" /> Book a Demo
             </Button>
 
             <Button

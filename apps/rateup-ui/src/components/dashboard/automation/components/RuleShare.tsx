@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { IconCopy } from "@tabler/icons-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -111,7 +111,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
                     toast.success("Link copied to clipboard");
                   }}
                 >
-                  <Copy className="h-4 w-4" />
+                  <IconCopy className="h-4 w-4" />
                 </Button>
               </div>
             </div>

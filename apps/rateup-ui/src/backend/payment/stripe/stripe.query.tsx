@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { RequestPayload } from "@/types/api.ts";
 
 import {
@@ -109,15 +110,15 @@ export function useCancelStripeSubscriptionMutation() {
   return useMutation({
     mutationFn: () => cancelStripeSubscription(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.success("Rateup Subscription cancelled. Enjoy services till expiry date.", {
         id: "load-data",
       });
     },
     onError: (error) => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.error(error?.message || "Error cancelling Rateup Subscription", {
         id: "load-data",
       });

@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Zap } from "lucide-react";
+import { IconArrowLeft, IconArrowRight, IconBolt } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import type { ComponentType } from "react";
 
@@ -42,7 +42,7 @@ function OnboardingStep4({
           transition={{ type: "spring", duration: 0.6 }}
           className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-linear-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30 mb-3 mx-auto"
         >
-          <Zap className="w-6 h-6 text-white" />
+          <IconBolt className="w-6 h-6 text-white" />
         </motion.div>
         <h2 className="text-gray-900 mb-1.5">Connect Your Channels</h2>
         <p className="text-gray-600">
@@ -105,7 +105,7 @@ function OnboardingStep4({
 
         <div className="bg-linear-to-r from-green-100 to-emerald-100 border border-green-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm">
           <div className="text-center">
-            <Zap className="w-4 h-4 text-green-600 mx-auto mb-2" />
+            <IconBolt className="w-4 h-4 text-green-600 mx-auto mb-2" />
             <p className="text-green-700">No worries if you skip this step!</p>
             <p className="text-gray-700 mt-1">
               You can connect these accounts anytime from your dashboard settings
@@ -119,7 +119,7 @@ function OnboardingStep4({
           onClick={handleBack}
           className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <IconArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
@@ -129,7 +129,7 @@ function OnboardingStep4({
             className={`flex items-center px-6 py-2 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading ? <Loader /> : "Continue"}
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <IconArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>

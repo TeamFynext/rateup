@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Clock, Link2 } from "lucide-react";
+import { IconBell, IconChartBar, IconClock, IconLink } from "@tabler/icons-react";
 
 export default function WhatsAppSurveyAdvantage() {
   return (
@@ -12,28 +12,28 @@ export default function WhatsAppSurveyAdvantage() {
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Card 1 */}
           <div className="bg-blue-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 flex flex-col items-center text-center">
-            <BarChart3 className="text-[#009987] w-10 h-10 mb-4" />
+            <IconChartBar className="text-[#009987] w-10 h-10 mb-4" />
             <p className="text-3xl font-bold text-[#009987]">35%</p>
             <p className="text-gray-700 mt-2">Increase in Feedback Response Rates</p>
           </div>
 
           {/* Card 2 */}
           <div className="bg-blue-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 flex flex-col items-center text-center">
-            <Clock className="text-[#009987] w-10 h-10 mb-4" />
+            <IconClock className="text-[#009987] w-10 h-10 mb-4" />
             <p className="text-3xl font-bold text-[#009987]">24/7</p>
             <p className="text-gray-700 mt-2">Automated Feedback Collection & Analysis</p>
           </div>
 
           {/* Card 3 */}
           <div className="bg-blue-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 flex flex-col items-center text-center">
-            <Bell className="text-[#009987] w-10 h-10 mb-4" />
+            <IconBell className="text-[#009987] w-10 h-10 mb-4" />
             <p className="text-lg font-semibold text-gray-800">Real-Time Alerts</p>
             <p className="text-gray-700">for Urgent Issues</p>
           </div>
 
           {/* Card 4 */}
           <div className="bg-blue-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 flex flex-col items-center text-center">
-            <Link2 className="text-[#009987] w-10 h-10 mb-4" />
+            <IconLink className="text-[#009987] w-10 h-10 mb-4" />
             <p className="text-lg font-semibold text-gray-800">Seamless Integration</p>
             <p className="text-gray-700">CRM/Billing Systems</p>
           </div>

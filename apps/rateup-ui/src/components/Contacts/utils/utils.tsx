@@ -1,18 +1,18 @@
-import { IconBrandInstagram } from "@tabler/icons-react";
+import {
+  IconArrowsSort,
+  IconBan,
+  IconBolt,
+  IconBrandInstagram,
+  IconCircleCheck,
+  IconCircleX,
+  IconGift,
+  IconGlobe,
+  IconMessage,
+  IconUpload,
+  IconUserPlus,
+} from "@tabler/icons-react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  ArrowUpDown,
-  Ban,
-  CircleCheck,
-  CircleX,
-  Gift,
-  Globe,
-  MessageSquare,
-  Upload,
-  UserPlus,
-  Zap,
-} from "lucide-react";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
@@ -56,7 +56,7 @@ const HeaderWithSort = ({ column, title }: { column: Column<ContactsData>; title
     <div className="flex gap-2 items-center">
       <span>{title}</span>
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        <ArrowUpDown className="h-4 w-4" />
+        <IconArrowsSort className="h-4 w-4" />
       </Button>
     </div>
   );
@@ -84,7 +84,7 @@ const contactDetailsColumn: ColumnDef<ContactsData>[] = [
 export const getSourceBadge = (source: string | undefined) => {
   const config = {
     whatsapp: {
-      icon: MessageSquare,
+      icon: IconMessage,
       label: "WhatsApp",
       className: "bg-green-100 text-green-700",
     },
@@ -94,22 +94,22 @@ export const getSourceBadge = (source: string | undefined) => {
       className: "bg-pink-100 text-pink-700",
     },
     WEBCHAT: {
-      icon: Globe,
+      icon: IconGlobe,
       label: "Web Chat",
       className: "bg-blue-100 text-blue-700",
     },
     MANUAL: {
-      icon: UserPlus,
+      icon: IconUserPlus,
       label: "Manual",
       className: "bg-gray-100 text-gray-700",
     },
     "CSV IMPORT": {
-      icon: Upload,
+      icon: IconUpload,
       label: "Imported",
       className: "bg-gray-100 text-gray-700",
     },
     loyalty_program: {
-      icon: Gift,
+      icon: IconGift,
       label: "Loyalty Customer",
       className: "bg-orange-100 text-orange-700",
     },
@@ -145,12 +145,12 @@ export const contactColumn = (
       cell: (info) =>
         !info.getValue() ? (
           <Badge variant="secondary" className="bg-green-100 text-green-700">
-            <Zap />
+            <IconBolt />
             Active
           </Badge>
         ) : (
           <Badge variant="secondary" className="bg-red-100 text-red-700">
-            <Ban />
+            <IconBan />
             Blocked
           </Badge>
         ),
@@ -234,12 +234,12 @@ export const contactColumn = (
       cell: (info) =>
         info.getValue() ? (
           <Badge variant="secondary" className="bg-green-100 text-green-700">
-            <CircleCheck />
+            <IconCircleCheck />
             Granted
           </Badge>
         ) : (
           <Badge variant="secondary" className="bg-red-100 text-red-700">
-            <CircleX />
+            <IconCircleX />
             Denied
           </Badge>
         ),
@@ -290,5 +290,3 @@ export const contactColumn = (
     },
   ];
 };
-
-export const CONTACT_SORT = { id: "createdAt", desc: true };

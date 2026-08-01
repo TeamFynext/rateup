@@ -1,4 +1,11 @@
-import { Ban, Check, MoreVertical, RotateCcw, ShieldAlert, ShieldOff } from "lucide-react";
+import {
+  IconBan,
+  IconCheck,
+  IconDotsVertical,
+  IconRotate,
+  IconShieldExclamation,
+  IconShieldOff,
+} from "@tabler/icons-react";
 
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import {
@@ -10,11 +17,6 @@ import {
   useReopenConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -27,6 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
@@ -252,13 +256,13 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     <DropdownMenuGroup>
       {!isSpam && (
         <DropdownMenuItem onClick={() => handleSpam(true)} disabled={spamMutation.isPending}>
-          <ShieldAlert className="size-4 text-muted-foreground" />
+          <IconShieldExclamation className="size-4 text-muted-foreground" />
           Mark contact as spam
         </DropdownMenuItem>
       )}
       {canBlock && (
         <DropdownMenuItem onClick={handleBlock} className="text-destructive">
-          <Ban className="size-4 text-destructive" />
+          <IconBan className="size-4 text-destructive" />
           Block contact
         </DropdownMenuItem>
       )}
@@ -273,7 +277,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             <Button variant="ghost" size="icon" className="size-8" aria-label="More actions" />
           }
         >
-          <MoreVertical className="size-4 text-muted-foreground" />
+          <IconDotsVertical className="size-4 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">{contactActions}</DropdownMenuContent>
       </DropdownMenu>
@@ -291,7 +295,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           disabled={spamMutation.isPending}
           onClick={() => handleSpam(false)}
         >
-          <ShieldOff className="size-3.5" />
+          <IconShieldOff className="size-3.5" />
           <span className="text-xs font-bold">Not spam</span>
         </Button>
         {overflow}
@@ -309,7 +313,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           disabled={reopenMutation.isPending}
           onClick={handleReopen}
         >
-          <RotateCcw className="size-3.5" />
+          <IconRotate className="size-3.5" />
           <span className="text-xs font-bold">Reopen</span>
         </Button>
         {overflow}
@@ -329,7 +333,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             />
           }
         >
-          <Check className="size-3.5" />
+          <IconCheck className="size-3.5" />
           <span className="text-xs font-bold">Close</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">

@@ -1,3 +1,15 @@
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconBold,
+  IconClearFormatting,
+  IconItalic,
+  IconLink,
+  IconList,
+  IconListNumbers,
+  IconStrikethrough,
+  IconUnlink,
+} from "@tabler/icons-react";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -6,18 +18,6 @@ import { CharacterCount } from "@tiptap/extensions";
 import type { Editor } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import {
-  BoldIcon,
-  ItalicIcon,
-  Link2Icon,
-  Link2OffIcon,
-  ListIcon,
-  ListOrderedIcon,
-  RedoIcon,
-  RemoveFormattingIcon,
-  StrikethroughIcon,
-  UndoIcon,
-} from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Markdown } from "tiptap-markdown";
@@ -75,27 +75,27 @@ function Toolbar({ editor }: Readonly<{ editor: Editor }>) {
         active={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()}
       >
-        <BoldIcon />
+        <IconBold />
       </ToolbarButton>
       <ToolbarButton
         label="Italic"
         active={editor.isActive("italic")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
       >
-        <ItalicIcon />
+        <IconItalic />
       </ToolbarButton>
       <ToolbarButton
         label="Strikethrough"
         active={editor.isActive("strike")}
         onClick={() => editor.chain().focus().toggleStrike().run()}
       >
-        <StrikethroughIcon />
+        <IconStrikethrough />
       </ToolbarButton>
       <ToolbarButton
         label="Clear formatting"
         onClick={() => editor.chain().focus().unsetAllMarks().run()}
       >
-        <RemoveFormattingIcon />
+        <IconClearFormatting />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="h-5" />
@@ -105,27 +105,27 @@ function Toolbar({ editor }: Readonly<{ editor: Editor }>) {
         active={editor.isActive("bulletList")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       >
-        <ListIcon />
+        <IconList />
       </ToolbarButton>
       <ToolbarButton
         label="Ordered list"
         active={editor.isActive("orderedList")}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       >
-        <ListOrderedIcon />
+        <IconListNumbers />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="h-5" />
 
       <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
-        <Link2Icon />
+        <IconLink />
       </ToolbarButton>
       <ToolbarButton
         label="Unlink"
         disabled={!editor.isActive("link")}
         onClick={() => editor.chain().focus().unsetLink().run()}
       >
-        <Link2OffIcon />
+        <IconUnlink />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="h-5" />
@@ -135,14 +135,14 @@ function Toolbar({ editor }: Readonly<{ editor: Editor }>) {
         disabled={!editor.can().undo()}
         onClick={() => editor.chain().focus().undo().run()}
       >
-        <UndoIcon />
+        <IconArrowBackUp />
       </ToolbarButton>
       <ToolbarButton
         label="Redo"
         disabled={!editor.can().redo()}
         onClick={() => editor.chain().focus().redo().run()}
       >
-        <RedoIcon />
+        <IconArrowForwardUp />
       </ToolbarButton>
     </div>
   );

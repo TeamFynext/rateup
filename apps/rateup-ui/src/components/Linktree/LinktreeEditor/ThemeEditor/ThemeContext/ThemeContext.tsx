@@ -2,9 +2,11 @@ import { createContext, useContext, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useImmerReducer } from "use-immer";
 
+import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
+
 import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 import { initialState } from "./constants.ts";
-import type { LinktreeTheme, LinktreeThemeAction } from "./ThemeReducer.tsx";
+import type { LinktreeThemeAction } from "./ThemeReducer.tsx";
 import themeReducer from "./ThemeReducer.tsx";
 
 // Only read inside `ThemeObjProvider`; the defaults stand in for

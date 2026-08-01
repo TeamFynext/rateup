@@ -1,5 +1,5 @@
+import { IconCalendar, IconChevronDown, IconFilter } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { CalendarIcon, ChevronDown, Filter } from "lucide-react";
 import { Activity } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -75,11 +75,11 @@ const DateRangeSelector = ({
       <Activity mode={value.key === "custom-range" ? "visible" : "hidden"}>
         <Popover>
           <PopoverTrigger render={<Button id="date-picker" variant="outline" className="group" />}>
-            <CalendarIcon className="size-3.5" />
+            <IconCalendar className="size-3.5" />
             <span className="group-hover:text-blue-600 text-xs">
               {formatDate(value.range[0])} - {formatDate(value.range[1])}
             </span>
-            <ChevronDown />
+            <IconChevronDown />
           </PopoverTrigger>
           <PopoverContent align="start" side="bottom" className="w-full">
             <Calendar
@@ -113,7 +113,7 @@ export function DateSelector({ days, setDays }: { days: number; setDays: (days: 
   return (
     <div className="flex items-center gap-1 flex-col sm:flex-row">
       <div className="flex items-center gap-1 ">
-        <Filter className="w-4 h-4" />
+        <IconFilter className="w-4 h-4" />
         <span>{t("Filter by")}:</span>
       </div>
       <Select

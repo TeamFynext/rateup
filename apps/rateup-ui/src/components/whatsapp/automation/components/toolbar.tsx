@@ -1,14 +1,14 @@
 import {
-  ArrowDown,
-  ArrowRight,
-  CheckCheck,
-  Loader2,
-  Redo2,
-  Save,
-  Settings,
-  Sparkles,
-  Undo2,
-} from "lucide-react";
+  IconArrowBackUp,
+  IconArrowDown,
+  IconArrowForwardUp,
+  IconArrowRight,
+  IconChecks,
+  IconDeviceFloppy,
+  IconLoader2,
+  IconSettings,
+  IconSparkles,
+} from "@tabler/icons-react";
 import type { ComponentType } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -100,17 +100,27 @@ export default function Toolbar({
             />
           }
         >
-          {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+          {isPending ? <IconLoader2 className="animate-spin" /> : <IconDeviceFloppy />}
         </TooltipTrigger>
         <TooltipContent>{saveDisabled ? "All changes saved" : "Save"}</TooltipContent>
       </Tooltip>
 
-      <ToolButton icon={CheckCheck} label="Validate flow" onClick={() => validateFlow(false)} />
+      <ToolButton icon={IconChecks} label="Validate flow" onClick={() => validateFlow(false)} />
 
       <Divider />
 
-      <ToolButton icon={Undo2} label="Undo (Ctrl+Z)" onClick={onUndo} disabled={!canUndo} />
-      <ToolButton icon={Redo2} label="Redo (Ctrl+Y)" onClick={onRedo} disabled={!canRedo} />
+      <ToolButton
+        icon={IconArrowBackUp}
+        label="Undo (Ctrl+Z)"
+        onClick={onUndo}
+        disabled={!canUndo}
+      />
+      <ToolButton
+        icon={IconArrowForwardUp}
+        label="Redo (Ctrl+Y)"
+        onClick={onRedo}
+        disabled={!canRedo}
+      />
 
       <Divider />
 
@@ -122,17 +132,17 @@ export default function Toolbar({
               <TooltipTrigger render={<Button type="button" variant="ghost" size="icon-sm" />} />
             }
           >
-            <Sparkles />
+            <IconSparkles />
           </DropdownMenuTrigger>
           <TooltipContent>Auto layout</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="center">
           <DropdownMenuItem onClick={() => onAutoLayout("TB")}>
-            <ArrowDown className="mr-2 h-4 w-4" />
+            <IconArrowDown className="mr-2 h-4 w-4" />
             Vertical
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onAutoLayout("LR")}>
-            <ArrowRight className="mr-2 h-4 w-4" />
+            <IconArrowRight className="mr-2 h-4 w-4" />
             Horizontal
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -141,7 +151,7 @@ export default function Toolbar({
       <Divider />
 
       <ToolButton
-        icon={Settings}
+        icon={IconSettings}
         label="Settings"
         onClick={() => {
           refetch?.();

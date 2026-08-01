@@ -1,5 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
+import { zohoKeys } from "@/backend/whatsapp/automation.keys";
+
 import {
   getZohoContacts,
   getZohoLeads,
@@ -12,7 +14,7 @@ import {
 
 export function useZohoContacts(orgId?: string, product: "crm" | "bigin" = "crm") {
   return useQuery({
-    queryKey: ["zoho-contacts", orgId, product],
+    queryKey: zohoKeys.contacts(orgId, product),
 
     queryFn: () => getZohoContacts(orgId!, product),
 
@@ -28,7 +30,7 @@ export function useSyncZohoContactsMutation(product: "crm" | "bigin" = "crm") {
 
 export function useZohoLeads(orgId?: string) {
   return useQuery({
-    queryKey: ["zoho-leads", orgId],
+    queryKey: zohoKeys.leads(orgId),
 
     queryFn: () => getZohoLeads(orgId!),
 
@@ -38,7 +40,7 @@ export function useZohoLeads(orgId?: string) {
 
 export function useZohoUsers(orgId?: string, product: "crm" | "bigin" = "crm") {
   return useQuery({
-    queryKey: ["zoho-users", orgId, product],
+    queryKey: zohoKeys.users(orgId, product),
     queryFn: () => getZohoUsers(orgId!, product),
     enabled: !!orgId,
   });
@@ -46,7 +48,7 @@ export function useZohoUsers(orgId?: string, product: "crm" | "bigin" = "crm") {
 
 export function useZohoPipelines(product: string) {
   return useQuery({
-    queryKey: ["zoho-pipelines", product],
+    queryKey: zohoKeys.pipelines(product),
     queryFn: () => getZohoPipelines(product),
   });
 }

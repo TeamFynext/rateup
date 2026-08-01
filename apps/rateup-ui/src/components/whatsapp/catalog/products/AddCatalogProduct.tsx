@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
@@ -768,7 +768,7 @@ const AddCatalogProduct = ({
           Cancel
         </Button>
         <Button onClick={form.handleSubmit(handleSave)} disabled={isSaving}>
-          {isSaving && <Loader2 data-icon="inline-start" className="animate-spin" />}
+          {isSaving && <IconLoader2 data-icon="inline-start" className="animate-spin" />}
           {addToShopify ? "Add to Shopify" : productData ? "Save changes" : "Add product"}
         </Button>
       </DialogFooter>

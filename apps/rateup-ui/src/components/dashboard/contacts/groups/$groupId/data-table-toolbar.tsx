@@ -1,5 +1,5 @@
+import { IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { Plus, Search, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -70,7 +70,7 @@ export function DataTableToolbar<TData, TValue>({
                   onClick={handleRemoveMembers}
                   className="gap-2 h-8 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <IconTrash className="w-3.5 h-3.5" />
                   <span className="text-sm">Remove ({selectedMembers.length})</span>
                 </Button>
                 {removeContactsMutation.isPending && <Spinner />}
@@ -90,11 +90,11 @@ export function DataTableToolbar<TData, TValue>({
               onClick={() => setIsOpenedAddModal(true)}
               className="gap-2 h-8 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-md"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <IconPlus className="w-3.5 h-3.5" />
               <span className="text-sm">Add Members</span>
             </Button>
             <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search by name or phone..."
@@ -109,7 +109,7 @@ export function DataTableToolbar<TData, TValue>({
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
                   onClick={() => setFilter({ searchTerm: "" })}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <IconX className="w-3.5 h-3.5" />
                 </Button>
               )}
             </div>

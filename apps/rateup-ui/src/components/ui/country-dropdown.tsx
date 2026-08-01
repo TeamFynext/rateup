@@ -1,7 +1,7 @@
+// assets
+import { IconCheck, IconGlobe } from "@tabler/icons-react";
 // data
 import { countries } from "country-data-list";
-// assets
-import { CheckIcon, Globe } from "lucide-react";
 import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
@@ -116,7 +116,7 @@ const CountryDropdownComponent = (
             )}
           </div>
         ) : (
-          <span>{slim === false ? placeholder : <Globe size={20} />}</span>
+          <span>{slim === false ? placeholder : <IconGlobe size={20} />}</span>
         )}
       </ComboboxTrigger>
       <ComboboxContent className="p-0">
@@ -143,7 +143,7 @@ const CountryDropdownComponent = (
                       {item.label}
                     </span>
                   </div>
-                  <CheckIcon
+                  <IconCheck
                     className={cn(
                       "ml-auto h-4 w-4 shrink-0",
                       item.value === selectedCountry?.alpha3 ? "opacity-100" : "opacity-0",

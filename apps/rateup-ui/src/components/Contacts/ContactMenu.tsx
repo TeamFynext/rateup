@@ -1,4 +1,4 @@
-import { Edit, EllipsisVertical, Eye, Send, Trash } from "lucide-react";
+import { IconDotsVertical, IconEdit, IconEye, IconSend, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -50,7 +50,7 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" />}>
-        <EllipsisVertical />
+        <IconDotsVertical />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem
@@ -58,21 +58,21 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
             setViewDetails(true);
           }}
         >
-          <Eye className="w-4 h-4 mr-2" />
+          <IconEye className="w-4 h-4 mr-2" />
           {translations("View Details")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setOpenedEditModal(true)}>
-          <Edit className="w-4 h-4 mr-2" />
+          <IconEdit className="w-4 h-4 mr-2" />
           {translations("Edit")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setIsSendMessageOpen(true)}>
-          <Send className="w-4 h-4 mr-2" />
+          <IconSend className="w-4 h-4 mr-2" />
           {translations("Send Message")}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={openDeleteModal} className="text-red-500">
-          <Trash className="text-red-500 w-4 h-4 mr-2" />
+          <IconTrash className="text-red-500 w-4 h-4 mr-2" />
           {translations("Delete contact")}
         </DropdownMenuItem>
       </DropdownMenuContent>

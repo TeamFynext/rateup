@@ -1,4 +1,4 @@
-import { Calendar } from "lucide-react";
+import { IconCalendar } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText/index.tsx";
@@ -47,7 +47,7 @@ export function ActionCard({
 }: Readonly<ActionCardProps>) {
   const footerContent = createdAt ? (
     <div className="ml-auto flex min-w-0 max-w-[60%] items-center gap-1 text-muted-foreground">
-      <Calendar className="size-4 shrink-0" />
+      <IconCalendar className="size-4 shrink-0" />
       <div className="min-w-0 overflow-hidden">
         <CreatedSinceText createdAt={createdAt} />
       </div>

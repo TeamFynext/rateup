@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Download, Info, User } from "lucide-react";
+import { IconDownload, IconInfoCircle, IconUser } from "@tabler/icons-react";
 import { Activity, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -252,7 +252,7 @@ const CreateContactModal = ({
           {sourceValue == importMethod.CSV && !initialValues && (
             <div className="flex flex-col gap-4">
               <blockquote className="mx-6 flex items-start gap-2 rounded-md border-l-4 border-l-rateup-blue bg-accent p-3 text-sm">
-                <Info className="mt-0.5 size-5 shrink-0 text-primary" />
+                <IconInfoCircle className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div className="flex flex-col gap-2">
                   <span>
                     {translations(
@@ -266,7 +266,7 @@ const CreateContactModal = ({
                     rel="noreferrer"
                     className="flex w-fit items-center gap-1 rounded-sm text-primary underline underline-offset-2"
                   >
-                    <Download className="size-4" />
+                    <IconDownload className="size-4" />
                     {translations("Download Demo Csv File")}
                   </a>
                 </div>
@@ -418,7 +418,7 @@ export const UserSelector = (props: UserSelectorProps) => {
     >
       <SelectTrigger className={`${className}`}>
         <div>
-          <User className="size-4 text-muted-foreground" />
+          <IconUser className="size-4 text-muted-foreground" />
         </div>
         <span className="text-sm ">
           <SelectValue placeholder="Select staff" />

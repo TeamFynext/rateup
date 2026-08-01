@@ -1,4 +1,4 @@
-import { ArrowUpCircle, Loader2, Save, Send } from "lucide-react";
+import { IconArrowUpCircle, IconDeviceFloppy, IconLoader2, IconSend } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -38,7 +38,7 @@ export function TierUpdateSettings({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <ArrowUpCircle className="w-4 h-4 text-primary" />
+          <IconArrowUpCircle className="w-4 h-4 text-primary" />
           {t("Tier Updates")}
         </CardTitle>
       </CardHeader>
@@ -91,7 +91,7 @@ export function TierUpdateSettings({
 
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <Send className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <IconSend className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -105,9 +105,9 @@ export function TierUpdateSettings({
             {isModified && (
               <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 )}
                 {t("Save Settings")}
               </Button>

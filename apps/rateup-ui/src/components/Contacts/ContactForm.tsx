@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from "lucide-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
@@ -297,7 +297,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
                     }
                   >
                     {String(field.value ?? "") || "Select date"}
-                    <ChevronDownIcon />
+                    <IconChevronDown />
                   </PopoverTrigger>
                   <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                     <Calendar

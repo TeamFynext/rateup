@@ -1,7 +1,7 @@
 import { useSearch } from "@tanstack/react-router";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import type { LinktreeLink } from "@/components/Linktree/LinktreeEditor/LinksEditor/components/LinkCard.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils";
 

@@ -1,4 +1,4 @@
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import React, { useMemo } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
@@ -491,7 +491,7 @@ const ActionList: React.FC = () => {
             title="Delete Action"
             className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 h-10 w-10"
           >
-            <Trash2Icon className="w-4 h-4" />
+            <IconTrash className="w-4 h-4" />
           </Button>
         </div>
       ))}
@@ -502,7 +502,7 @@ const ActionList: React.FC = () => {
         className="w-full border-2 border-dashed border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-900/30"
         onClick={() => append({ type: "TRIGGER_CHATBOT", value: "" })}
       >
-        <PlusIcon className="w-4 h-4 mr-2" /> Add action
+        <IconPlus className="w-4 h-4 mr-2" /> Add action
       </Button>
 
       {errors.actions?.root?.message && (

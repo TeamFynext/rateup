@@ -8,9 +8,11 @@ import QrItsAsEasy from "@/components/products/Qr/helpers/QrItsAsEasy.tsx";
 import QrNewFooter from "@/components/products/Qr/helpers/QrNewFooter.tsx";
 import SuggestionBox from "@/components/products/Qr/helpers/QrSuggestion.tsx";
 import QrWhyIsStillStuck from "@/components/products/Qr/helpers/QrWhyIsStillStuck.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/qr/")({
   component: page,
+  head: () => buildPageHead("/products/qr"),
 });
 
 function page() {

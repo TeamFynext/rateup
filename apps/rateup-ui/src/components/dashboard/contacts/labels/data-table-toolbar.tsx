@@ -1,5 +1,5 @@
+import { IconPlus, IconSearch, IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { Plus, Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -19,7 +19,7 @@ export function DataTableToolbar<TData>({
     <div className="flex items-center justify-between mb-4">
       <div className="flex flex-1 items-center space-x-2">
         <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <IconSearch className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search labels..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -34,12 +34,12 @@ export function DataTableToolbar<TData>({
             className="h-8 px-2 lg:px-3"
           >
             Reset
-            <X className="ml-2 h-4 w-4" />
+            <IconX className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>
       <Button onClick={onCreateClick}>
-        <Plus className="w-4 h-4 mr-2" />
+        <IconPlus className="w-4 h-4 mr-2" />
         Create Label
       </Button>
     </div>

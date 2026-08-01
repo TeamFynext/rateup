@@ -1,15 +1,15 @@
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  AlertCircle,
-  Archive,
-  AtSign,
-  BadgeCheck,
-  CheckCircle,
-  Circle,
-  ShieldAlert,
-  Star,
-  UserPlus,
-} from "lucide-react";
+  IconAlertCircle,
+  IconArchive,
+  IconAt,
+  IconCircle,
+  IconCircleCheck,
+  IconRosetteDiscountCheck,
+  IconShieldExclamation,
+  IconStar,
+  IconUserPlus,
+} from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -20,11 +20,7 @@ import {
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -32,6 +28,8 @@ import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
@@ -185,7 +183,7 @@ export default function WaInboxChatSelectCard({
               assignedUsers: [{ id: user.userId, name: user?.userName, teamId: user.teams?.[0] }],
             }));
           }
-          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+          qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         },
         onError: () => {
           messagesStore.removeMessage(`${rowKey}_all`, messageId);
@@ -274,13 +272,15 @@ export default function WaInboxChatSelectCard({
                 !contact?.isFavorite && "opacity-0 group-hover:opacity-60",
               )}
             >
-              <Star
+              <IconStar
                 className="size-3 text-amber-500"
                 fill={contact?.isFavorite ? "currentColor" : "none"}
               />
             </button>
             <span className="truncate text-sm font-bold">{displayName}</span>
-            {contact?.isIgVerifiedUser && <BadgeCheck className="size-3 shrink-0 text-primary" />}
+            {contact?.isIgVerifiedUser && (
+              <IconRosetteDiscountCheck className="size-3 shrink-0 text-primary" />
+            )}
           </span>
           <span className="shrink-0 text-[11px] text-muted-foreground">
             {lastMessage && formatToRelativeTime(lastMessage?.waCreatedAt, true)}
@@ -330,7 +330,7 @@ export default function WaInboxChatSelectCard({
               in the Spam tab the row IS the contact, not one of their tickets. */}
           {contact?.isSpam && (
             <span className={cn(STATUS_PILL_BASE, "bg-red-500/10 text-red-600 dark:text-red-500")}>
-              <ShieldAlert className="size-2.75" />
+              <IconShieldExclamation className="size-2.75" />
               {translations("Spam")}
             </span>
           )}
@@ -361,7 +361,7 @@ export default function WaInboxChatSelectCard({
 
           {(contact?.mentionCount ?? 0) > 0 && (
             <span className="inline-flex items-center gap-0.75 text-[10px] font-extrabold text-primary">
-              <AtSign className="size-2.75" />
+              <IconAt className="size-2.75" />
               {translations("Mention")}
               {(contact.mentionCount ?? 0) > 1 ? ` ${contact.mentionCount}` : ""}
             </span>
@@ -434,7 +434,7 @@ export default function WaInboxChatSelectCard({
                 disabled={assignMut.isPending}
                 className="flex size-5.5 cursor-pointer items-center justify-center rounded-full border-0 p-0 outline-none bg-primary/10"
               >
-                <UserPlus className="size-3 text-primary" />
+                <IconUserPlus className="size-3 text-primary" />
               </button>
             }
             content={<span>{translations("Assign to me")}</span>}
@@ -449,22 +449,22 @@ export function getContactClosedIcon(status: string) {
   switch (status) {
     case WaMessageAssignStatus.CLOSED:
       return {
-        icon: Archive,
+        icon: IconArchive,
         color: "text-blue-500 dark:text-blue-600",
       };
     case WaMessageAssignStatus.RESOLVED:
       return {
-        icon: CheckCircle,
+        icon: IconCircleCheck,
         color: "text-green-500 dark:text-green-600",
       };
     case WaMessageAssignStatus.UNRESOLVED:
       return {
-        icon: Circle,
+        icon: IconCircle,
         color: "text-orange-500 dark:text-orange-600",
       };
     case WaMessageAssignStatus.SPAM:
       return {
-        icon: AlertCircle,
+        icon: IconAlertCircle,
         color: "text-red-500 dark:text-red-600",
       };
   }

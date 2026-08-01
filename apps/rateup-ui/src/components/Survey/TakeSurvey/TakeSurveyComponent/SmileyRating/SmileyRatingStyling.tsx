@@ -12,11 +12,8 @@ import {
 } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 
-import {
-  SmileyColorType,
-  SmileyVariantStyle,
-} from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { cn } from "@/lib/utils";
+import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";
 
 /**
  * Smiley colours are stored as palette *names* ("yellow", "blue", …) and used to

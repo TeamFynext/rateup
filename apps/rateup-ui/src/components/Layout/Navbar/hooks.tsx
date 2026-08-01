@@ -1,6 +1,7 @@
 import {
   IconActivity,
   IconAddressBook,
+  IconAt,
   IconAward,
   IconBolt,
   IconBrandFacebook,
@@ -27,12 +28,15 @@ import {
   IconMessage,
   IconQrcode,
   IconReportAnalytics,
-  // IconRobotFace,
   IconSend,
   IconSettings,
   IconShield,
+  IconShieldExclamation,
   IconShoppingCart,
   IconSitemap,
+  IconSparkles,
+  IconStack2,
+  IconStar,
   IconTag,
   IconTemplate,
   IconTerminal2,
@@ -44,17 +48,16 @@ import {
   IconWaveSine,
   IconWebhook,
 } from "@tabler/icons-react";
-import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
-import type { ChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
-import type { ChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
 import type { User } from "@/context/UserContext.tsx";
+import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
+import type { ChatContactCountStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
@@ -159,7 +162,7 @@ export function useNavMain({
                 {
                   title: t("New"),
                   url: "/dashboard/inbox?tab=new",
-                  icon: Sparkles,
+                  icon: IconSparkles,
                   count: sectionCounts?.newCount || 0,
                   variant: "inbox-tab",
                 },
@@ -173,35 +176,35 @@ export function useNavMain({
                 {
                   title: t("All"),
                   url: "/dashboard/inbox?tab=all",
-                  icon: Layers,
+                  icon: IconStack2,
                   count: sectionCounts?.allCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("Mine"),
                   url: "/dashboard/inbox?tab=mine",
-                  icon: UserCheck,
+                  icon: IconUserCheck,
                   count: sectionCounts?.mineCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("@Mentions"),
                   url: "/dashboard/inbox?tab=mentions",
-                  icon: AtSign,
+                  icon: IconAt,
                   count: sectionCounts?.mentionsCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("Favourites"),
                   url: "/dashboard/inbox?tab=favourites",
-                  icon: Star,
+                  icon: IconStar,
                   count: sectionCounts?.favouriteCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("Spam"),
                   url: "/dashboard/inbox?tab=spam",
-                  icon: ShieldAlert,
+                  icon: IconShieldExclamation,
                   count: sectionCounts?.spamCount || 0,
                   variant: "inbox-tab",
                 },

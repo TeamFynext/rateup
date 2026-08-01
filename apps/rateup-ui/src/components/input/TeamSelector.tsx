@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { IconUsers } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -76,7 +76,7 @@ export function TeamSelector({
     <Select value={value} onValueChange={(next) => onChange?.(next ?? "")} items={teamOptions}>
       <SelectTrigger className={`${className || ""}`}>
         <div>
-          <Users className="size-4 text-muted-foreground" />
+          <IconUsers className="size-4 text-muted-foreground" />
         </div>
         <SelectValue placeholder="Team" />
       </SelectTrigger>

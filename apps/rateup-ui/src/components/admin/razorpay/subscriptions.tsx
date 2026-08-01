@@ -1,5 +1,12 @@
+import {
+  IconCalendar,
+  IconCreditCard,
+  IconCurrencyDollar,
+  IconPackage,
+  IconPlayerPlay,
+  IconSquare,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Calendar, CreditCard, DollarSign, Package, Play, Square } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { usePaymentSubcription } from "@/backend/payment/payment.query";
@@ -42,7 +49,7 @@ const RazorpaySubscriptions = () => {
       header: createSortableHeader("Plan Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <IconPackage className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("planName")}</span>
         </div>
       ),
@@ -53,7 +60,7 @@ const RazorpaySubscriptions = () => {
       header: createSortableHeader("Amount"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <IconCurrencyDollar className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
@@ -77,9 +84,9 @@ const RazorpaySubscriptions = () => {
         const getStatusIcon = () => {
           switch (status.toLowerCase()) {
             case "active":
-              return <Play className="h-3 w-3" />;
+              return <IconPlayerPlay className="h-3 w-3" />;
             case "completed":
-              return <Square className="h-3 w-3" />;
+              return <IconSquare className="h-3 w-3" />;
             default:
               return null;
           }
@@ -112,7 +119,7 @@ const RazorpaySubscriptions = () => {
       header: createSortableHeader("Created At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -155,7 +162,7 @@ const RazorpaySubscriptions = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-blue-600" />
+              <IconCreditCard className="h-4 w-4 text-blue-600" />
               <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
                 {translations("List of Subscriptions from Razorpay DB")}
               </CardTitle>

@@ -1,5 +1,5 @@
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
 import type { Content } from "@tiptap/react";
-import { Plus, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -59,7 +59,7 @@ const WaQuickReplySettings = () => {
             className="text-muted-foreground hover:text-foreground h-7 w-7 p-0"
             size="icon"
           >
-            <RefreshCcw
+            <IconRefresh
               className={`w-3.5 h-3.5 ${isLoading || isRefetching ? "animate-spin" : ""}`}
             />
           </Button>
@@ -72,7 +72,7 @@ const WaQuickReplySettings = () => {
             setOpened(true);
           }}
         >
-          <Plus className="w-4 h-4" />
+          <IconPlus className="w-4 h-4" />
           <span className="text-sm">{t("Add Quick Reply")}</span>
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
+import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
 /**

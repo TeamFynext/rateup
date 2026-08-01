@@ -1,4 +1,10 @@
-import { CheckCircle2, FileText, Layers, XCircle, Zap } from "lucide-react";
+import {
+  IconBolt,
+  IconCircleCheck,
+  IconCircleX,
+  IconFileText,
+  IconStack2,
+} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
@@ -31,7 +37,7 @@ function TemplateOverview({
     <Card>
       <CardHeader className="py-0">
         <CardTitle className="text-base flex items-center gap-2">
-          <FileText className="w-4 h-4 text-primary" />
+          <IconFileText className="w-4 h-4 text-primary" />
           {t("WhatsApp Template Analytics")}
         </CardTitle>
       </CardHeader>
@@ -57,7 +63,7 @@ function TemplateOverview({
                     className={`p-3 rounded-lg border ${color.bg} dark:bg-transparent`}
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <Layers className={`w-4 h-4 ${color.icon}`} />
+                      <IconStack2 className={`w-4 h-4 ${color.icon}`} />
                       <p className="text-xs text-muted-foreground">{category.category}</p>
                     </div>
                     <p className="text-xl mb-1">{category.count}</p>
@@ -83,7 +89,7 @@ function TemplateOverview({
                       <div className="flex-1">
                         <div className="flex items-start gap-3">
                           <div className="w-10 h-10 bg-blue-50 dark:bg-transparent border rounded-lg flex items-center justify-center shrink-0">
-                            <FileText className="w-5 h-5 text-primary" />
+                            <IconFileText className="w-5 h-5 text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
@@ -111,7 +117,7 @@ function TemplateOverview({
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground mb-1">{t("Success Rate")}</p>
                           <div className="flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-green-600" />
+                            <IconCircleCheck className="w-3 h-3 text-green-600" />
                             <p className="text-sm text-green-600">
                               {template?.successPercentage?.toFixed(1)}%
                             </p>
@@ -120,7 +126,7 @@ function TemplateOverview({
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground mb-1">{t("Failure Rate")}</p>
                           <div className="flex items-center gap-1">
-                            <XCircle className="w-3 h-3 text-red-600" />
+                            <IconCircleX className="w-3 h-3 text-red-600" />
                             <p className="text-sm text-red-600">
                               {template?.failurePercentage?.toFixed(1)}%
                             </p>
@@ -129,7 +135,7 @@ function TemplateOverview({
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground mb-1">{t("Avg Response")}</p>
                           <div className="flex items-center gap-1">
-                            <Zap className="w-3 h-3 text-purple-600" />
+                            <IconBolt className="w-3 h-3 text-purple-600" />
                             <p className="text-sm">
                               {template?.avgDeliveryTimeSeconds
                                 ? `${template?.avgDeliveryTimeSeconds?.toFixed(1)}s`

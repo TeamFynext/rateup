@@ -1,4 +1,4 @@
-import { ChevronsUpDown } from "lucide-react";
+import { IconSelector } from "@tabler/icons-react";
 import * as React from "react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
@@ -105,7 +105,7 @@ const CountrySelect = ({
         }
       >
         <FlagComponent country={selectedCountry} countryName={selectedCountry} />
-        <ChevronsUpDown
+        <IconSelector
           className={cn("-mr-2 size-4 opacity-50", disabled ? "hidden" : "opacity-100")}
         />
       </ComboboxTrigger>

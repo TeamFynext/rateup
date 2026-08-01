@@ -1,4 +1,4 @@
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import React from "react";
 import type { ControllerRenderProps, FieldArrayPath, FieldPath } from "react-hook-form";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
@@ -356,7 +356,7 @@ const ConditionRow = ({
         title="Delete Condition"
         className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 h-10 w-10"
       >
-        <Trash2Icon className="w-4 h-4" />
+        <IconTrash className="w-4 h-4" />
       </Button>
     </div>
   );
@@ -432,7 +432,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
           });
         }}
       >
-        <PlusIcon className="w-4 h-4 mr-2" /> Add condition
+        <IconPlus className="w-4 h-4 mr-2" /> Add condition
       </Button>
 
       {listError?.message && (

@@ -1,5 +1,5 @@
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +28,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
       <div className="flex justify-between gap-2">
         <div className="flex items-center gap-2 flex-1">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search by field name..."
               className="pl-10 placeholder:text-sm bg-gray-100 border-none"
@@ -42,7 +42,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
             size="sm"
             onClick={() => setIsOpenedAddModal(true)}
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <IconPlus className="w-4 h-4 mr-2" />
             <span className="font-medium text-sm">{t("Add Custom Field")}</span>
           </Button>
         </div>

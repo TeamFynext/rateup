@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconTypography } from "@tabler/icons-react";
 import { EditorContent } from "@tiptap/react";
-import { TypeOutline } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -233,7 +233,7 @@ const CreateOrEditQuickReply = ({
                                   className="h-8 w-8 p-0"
                                   title="Format"
                                 >
-                                  <TypeOutline className="h-5 w-5" />
+                                  <IconTypography className="h-5 w-5" />
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-full">

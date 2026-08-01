@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
 import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
 
@@ -19,14 +20,14 @@ import {
 
 export const useCampaignData = (type: string) => {
   return useQuery({
-    queryKey: ["campaigns", type],
+    queryKey: campaignKeys.byType(type),
     queryFn: () => getCampaigns(type),
   });
 };
 
 export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
   return useQuery({
-    queryKey: ["campaignsbyTeam", teamId],
+    queryKey: campaignKeys.byTeam(teamId),
     queryFn: () => getCampaignsByTeam(teamId),
     enabled: enabled,
   });
@@ -37,8 +38,8 @@ export const useCreateCampaignMutation = (teamId: string, type: string) => {
   return useMutation({
     mutationFn: createCampaign,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
-      queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byType(type) });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
       toast.success("Campaign created successfully", {
         id: "campaign-create",
       });
@@ -79,8 +80,8 @@ export const useUpdateCampaignMutation = (
     mutationFn: updateCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
-      queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byType(type) });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
       toast.success("Campaign updated successfully", {
         id: "campaign-update",
       });
@@ -100,8 +101,8 @@ export const useDeleteCampaignMutation = (teamId: string, type: string) => {
   return useMutation({
     mutationFn: deleteCampaign,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byType(type) });
       toast.success("Campaign deleted successfully.", {
         id: "campaign-delete",
       });
@@ -150,7 +151,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         dailySendLimit,
       ),
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
+      queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
       queryClient.invalidateQueries({
         queryKey: ["campaignStats", campaignId],
@@ -182,8 +183,8 @@ export const useCampaignResponseDownloadById = () => {
   return useMutation({
     mutationFn: campaignResponseDownloadById,
     onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      // queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
+      // queryClient.invalidateQueries({ queryKey: campaignKeys.all() });
       toast.success("Delivery report generated successfully.", {
         id: "delivery-report",
       });

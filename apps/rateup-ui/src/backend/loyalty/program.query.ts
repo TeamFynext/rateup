@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import type { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.api";
 import {
   createLoyaltyProgram,
@@ -15,7 +17,7 @@ import {
  */
 export const useLoyaltyProgram = () =>
   useQuery({
-    queryKey: ["loyalty-program"],
+    queryKey: loyaltyKeys.program(),
     queryFn: getLoyaltyProgram,
   });
 
@@ -29,7 +31,7 @@ export const useCreateLoyaltyProgramMutation = (onSuccess?: () => void, onError?
     mutationFn: (programData: LoyaltyProgramInput) => createLoyaltyProgram(programData),
     onSuccess: () => {
       toast.success("Loyalty program created successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -54,7 +56,7 @@ export const useUpdateLoyaltyProgramMutation = (
       updateLoyaltyProgram(programId, programData),
     onSuccess: () => {
       toast.success("Loyalty program updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -77,7 +79,7 @@ export const useDeleteLoyaltyProgramMutation = (onSuccess?: () => void, onError?
       toast.success("Loyalty program deleted successfully", {
         id: "loyalty-program-delete",
       });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -104,7 +106,7 @@ export const useResetLoyaltyProgramPointsMutation = (
       toast.success("Loyalty points reset successfully", {
         id: "loyalty-points-reset",
       });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
       onSuccess?.();
     },
     onError: (error) => {

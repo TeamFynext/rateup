@@ -1,10 +1,43 @@
-import type { LinktreeLink } from "@/components/Linktree/LinktreeEditor/LinksEditor/components/LinkCard.tsx";
-import type { LinktreeTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/ThemeReducer.tsx";
+import type { CSSProperties } from "react";
+
 import type { RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../apiClient";
 
 const url = "/linktrees";
+
+/** A single link row on a linktree page, as the endpoint stores and returns it. */
+export interface LinktreeLink {
+  id: string;
+  linkType?: string;
+  linkDisplayName?: string;
+  linkUrl?: string;
+  noOfClicks?: number;
+  [key: string]: unknown;
+}
+
+/**
+ * The persisted theme for a linktree page. The optional `*File` fields are the editor's
+ * pre-upload staging slots — they are never returned by the API, only carried locally on
+ * the way into an update, which is why they are part of the same shape.
+ */
+export interface LinktreeTheme {
+  background: {
+    styles: CSSProperties;
+    desktopBgImgUrl: string | null;
+    desktopBgImgFile?: File | null;
+    mobileBgImgUrl: string | null;
+    mobileBgImgFile?: File | null;
+  };
+  logo: {
+    styles: CSSProperties;
+    logoUrl?: string | null;
+    logoFile?: File | null;
+  };
+  title: { styles: CSSProperties; text: string };
+  subtitle: { styles: CSSProperties; text: string };
+  linkListItem: { styles: CSSProperties };
+}
 
 async function getLinktrees() {
   const res = await axiosClient.get(url);

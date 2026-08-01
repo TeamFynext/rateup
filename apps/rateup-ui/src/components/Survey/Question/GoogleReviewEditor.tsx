@@ -1,5 +1,5 @@
+import { IconStar } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import { Star } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -243,7 +243,7 @@ const GoogleReviewEditor = ({
                                     onMouseLeave={() => setHoveredRating(-1)}
                                     className="flex items-center justify-center p-0.5"
                                   >
-                                    <Star
+                                    <IconStar
                                       className={cn(
                                         "size-6",
                                         filled

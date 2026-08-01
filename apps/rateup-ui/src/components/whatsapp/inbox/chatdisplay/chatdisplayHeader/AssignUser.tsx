@@ -1,17 +1,18 @@
+import {
+  IconCheck,
+  IconChevronDown,
+  IconChevronRight,
+  IconChevronUp,
+  IconCircleDashed,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEqual } from "lodash";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  CircleDashed,
-  UserRoundCheck,
-  Users,
-} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -19,10 +20,7 @@ import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
@@ -35,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
@@ -219,7 +218,7 @@ const AssignUser = ({
         { contactId, assignees, messageId: id },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+            queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
             messagesStore.addMessage(`${rowKey}_all`, newMessage);
             messagesStore.addMessage(`${rowKey}_internal`, newMessage);
             updateContactById(contactId, (contact) => ({
@@ -241,12 +240,12 @@ const AssignUser = ({
             );
 
             await queryClient.refetchQueries({
-              queryKey: ["assignedInboxUser", contactId],
+              queryKey: whatsappKeys.assignedInboxUserByContact(contactId),
               exact: true,
             });
 
             await queryClient.refetchQueries({
-              queryKey: ["teamsDataUserQuery"],
+              queryKey: teamKeys.byUser(),
             });
           },
         },
@@ -350,11 +349,13 @@ const AssignUser = ({
             trigger={
               !assignedStaff.length ? (
                 <div className="flex items-center gap-1">
-                  <UserRoundCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
+                  <IconUserCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
                   <span className={`${isDefault ? "" : "text-primary"} pr-2`}>Assign</span>
                 </div>
               ) : (
-                <ChevronDown className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`} />
+                <IconChevronDown
+                  className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`}
+                />
               )
             }
             side="bottom"
@@ -392,18 +393,18 @@ const AssignUser = ({
                 className="gap-2 items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <IconUsers className="w-4 h-4 text-muted-foreground" />
                   <div className="text-sm">{team.name}</div>
                 </div>
                 <div className="flex items-center gap-1">
                   {partiallySelected && !allSelected && (
-                    <CircleDashed className="w-4 h-4 text-green-600" />
+                    <IconCircleDashed className="w-4 h-4 text-green-600" />
                   )}
-                  {allSelected && <Check className="w-4 h-4 text-green-600" />}
+                  {allSelected && <IconCheck className="w-4 h-4 text-green-600" />}
                   {openTeams.includes(team.id) ? (
-                    <ChevronUp className="w-3 h-3" />
+                    <IconChevronUp className="w-3 h-3" />
                   ) : (
-                    <ChevronRight className="w-3 h-3" />
+                    <IconChevronRight className="w-3 h-3" />
                   )}
                 </div>
               </DropdownMenuItem>
@@ -479,7 +480,7 @@ const AssignUser = ({
                                 side="right"
                               />
                             )}
-                            {isSelected && <Check className="w-4 h-4 text-green-600" />}
+                            {isSelected && <IconCheck className="w-4 h-4 text-green-600" />}
                           </div>
                         </div>
                       </DropdownMenuItem>

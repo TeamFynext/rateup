@@ -1,4 +1,4 @@
-import { Shuffle, X } from "lucide-react";
+import { IconArrowsShuffle, IconX } from "@tabler/icons-react";
 import { useState, type KeyboardEvent } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
@@ -57,7 +57,7 @@ const GenerateTags = ({
                     className="rounded-full hover:opacity-75"
                     aria-label={`Remove ${tag}`}
                   >
-                    <X className="size-3" />
+                    <IconX className="size-3" />
                   </button>
                 )}
               </Badge>
@@ -84,7 +84,7 @@ const GenerateTags = ({
                 />
               }
             >
-              <Shuffle />
+              <IconArrowsShuffle />
             </TooltipTrigger>
             <TooltipContent>{translations("generate random tag")}</TooltipContent>
           </Tooltip>

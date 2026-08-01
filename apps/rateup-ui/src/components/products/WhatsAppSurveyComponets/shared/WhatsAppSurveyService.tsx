@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight } from "@tabler/icons-react";
 
 import { features } from "../WhatsAppSurveyConstants.tsx";
 
@@ -32,7 +32,7 @@ export default function WhatsAppSurveyService() {
                 className="text-[#009987] font-semibold inline-flex items-center mt-4 group"
               >
                 Learn More
-                <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <IconArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
           </div>

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -113,7 +114,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
       toast.success(translations("Deleted Survey Successfully!"), {
         id: "delete-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
     },
     onError: (error) => {
       // console.error("Error deleting Survey:", error.message);

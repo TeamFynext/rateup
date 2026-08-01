@@ -1,7 +1,6 @@
-import { IconTicket } from "@tabler/icons-react";
+import { IconChevronDown, IconEye, IconTicket, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { ChevronDown, Eye, Ticket, Trash2 } from "lucide-react";
 import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -285,7 +284,7 @@ function BadgeorTextorPreview({
           disabled={response === "" || !response}
           className="flex gap-4 items-center"
         >
-          <Eye className="size-4" />
+          <IconEye className="size-4" />
           {translations("Preview")}
         </Button>
         <Dialog
@@ -350,7 +349,7 @@ function BadgeorTextorPreview({
                 {translations("Profile Picture:")}{" "}
               </span>
               <Button className="w-fit" onClick={open} size="sm" variant="outline">
-                <Eye className="mr-1.5 size-3.5" />
+                <IconEye className="mr-1.5 size-3.5" />
                 {translations("Preview")}
               </Button>
             </div>
@@ -394,7 +393,7 @@ function BadgeorTextorPreview({
           size="sm"
           className="h-7 px-2"
         >
-          <Eye className="mr-1 size-3.5" />
+          <IconEye className="mr-1 size-3.5" />
           {translations("Preview")}
         </Button>
       </div>
@@ -444,7 +443,7 @@ export function ActionMenu({
           }
         >
           {translations("Select Action")}
-          <ChevronDown className="ml-2 h-4 w-4" />
+          <IconChevronDown className="ml-2 h-4 w-4" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">
@@ -461,7 +460,7 @@ export function ActionMenu({
                 }
               }}
             >
-              <Ticket className="size-4" />
+              <IconTicket className="size-4" />
               {ticketExist ? translations("View Ticket") : translations("Create Ticket")}
             </DropdownMenuItem>
           )}
@@ -473,7 +472,7 @@ export function ActionMenu({
               open?.();
             }}
           >
-            <Trash2 className="size-4" />
+            <IconTrash className="size-4" />
             {translations("Delete Response")}
           </DropdownMenuItem>
         </DropdownMenuContent>

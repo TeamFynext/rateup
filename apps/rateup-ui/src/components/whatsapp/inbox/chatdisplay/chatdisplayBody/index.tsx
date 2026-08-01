@@ -1,14 +1,11 @@
+import { IconLock } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { Lock } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { FC } from "react";
 
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -19,11 +16,14 @@ import {
   useMessageScrollerVisibility,
 } from "@/components/ui/message-scroller.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { getMessagesFromIDB } from "@/store/inbox.idb.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
-import { useChatFilterStore } from "../../chatselect/chatFilterStore.ts";
 import WhatsAppInboxLoader from "../../loader/index.tsx";
 import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
 import { useTemperoryMessageStore } from "../chatdisplayFooter/index.tsx";
@@ -171,7 +171,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
             {isNotesView && !visibleMessages.length && (
               <MessageScrollerItem messageId="wa-inbox-notes-empty">
                 <div className="flex flex-col items-center gap-1.5 py-10 text-center">
-                  <Lock className="size-5 text-amber-600 dark:text-amber-500" />
+                  <IconLock className="size-5 text-amber-600 dark:text-amber-500" />
                   <p className="text-sm font-medium text-foreground">No internal notes yet</p>
                   <p className="max-w-xs text-xs text-muted-foreground">
                     Notes stay with the ticket and are never sent to the customer.

@@ -1,4 +1,4 @@
-import { Clock, Info, Loader2, Save } from "lucide-react";
+import { IconClock, IconDeviceFloppy, IconInfoCircle, IconLoader2 } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -40,7 +40,7 @@ export function PointsReminderSettings({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="w-4 h-4 text-primary" />
+          <IconClock className="w-4 h-4 text-primary" />
           {t("Points Reminder")}
         </CardTitle>
       </CardHeader>
@@ -129,7 +129,7 @@ export function PointsReminderSettings({
 
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <IconInfoCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -144,9 +144,9 @@ export function PointsReminderSettings({
             {isModified && (
               <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 )}
                 {t("Save Settings")}
               </Button>

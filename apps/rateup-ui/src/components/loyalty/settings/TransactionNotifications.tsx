@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { IconBell } from "@tabler/icons-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -52,7 +52,7 @@ export function TransactionNotifications({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Bell className="w-4 h-4 text-primary" />
+          <IconBell className="w-4 h-4 text-primary" />
           {t("Transaction Notifications")}
         </CardTitle>
       </CardHeader>
