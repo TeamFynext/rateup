@@ -2734,8 +2734,12 @@ model Conversation {
   /// Star flag is per-ticket (per-conversation), not per-contact, so one contact's
   /// tickets can be starred independently.
   isFavorite             Boolean                           @default(false)
-  /// Ticket identity for the "Inbox Tickets" UI. `number` is the human-facing #code.
-  number                 Int                               @unique @default(autoincrement())
+  /// Ticket identity for the "Inbox Tickets" UI. `number` is the human-facing #code,
+  /// sequential *per org* (each org starts at 1). Never set it from application code:
+  /// the `conversation_assign_number` BEFORE INSERT trigger allocates it from
+  /// `ConversationNumberCounter`. The `0` default is the "unset" sentinel the trigger
+  /// looks for so Prisma can omit the column on create.
+  number                 Int                               @default(0)
   subject                String?
   description            String?
   /// Resolution quality set when the conversation is closed with a result.
@@ -2750,7 +2754,18 @@ model Conversation {
   @@index([orgId, status])
   @@index([orgId, createdAt])
   @@index([orgId, lastMessageAt(sort: Desc)])
+  @@unique([orgId, number], name: "conversation_org_id_number_unique")
   @@index([orgId, isFavorite])
+}
+
+/// Per-org allocator for `Conversation.number`. One row per org; the
+/// `conversation_assign_number` trigger bumps `lastNumber` inside the inserting
+/// transaction, so concurrent inserts serialize on the counter row instead of
+/// racing a `max(number) + 1` read. Conversations with a null `orgId` share the
+/// nil-uuid bucket.
+model ConversationNumberCounter {
+  orgId      String @id @db.Uuid
+  lastNumber Int    @default(0)
 }
 
 /// Indexable signal for the inbox "@Mentions" filter. One row per (mention, mentioned user).
