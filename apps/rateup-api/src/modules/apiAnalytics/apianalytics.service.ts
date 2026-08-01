@@ -33,12 +33,14 @@ interface TemplateCategoryOverview {
 
 interface TemplatePerformanceStat {
   templateName: string;
+  templateCategory: string;
   totalSent: number;
   deliveredCount: number;
   failedCount: number;
   successPercentage: number;
   failurePercentage: number;
   avgDeliveryTimeSeconds: number | null;
+  lastUsed: string | null;
 }
 
 interface TeamPerformanceStat {
@@ -52,10 +54,10 @@ interface TeamPerformanceStat {
 }
 
 export async function getWaMessageOverviewByTeamAndOrg(
-  teamId: string,
+  teamId: string | undefined,
   orgId: string,
-  dateRange,
-  apiType,
+  dateRange: string[] | null | undefined,
+  apiType: string | undefined,
 ): Promise<WaMessageOverview> {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -88,15 +90,15 @@ export async function getWaMessageOverviewByTeamAndOrg(
     apiTypeFilter = Prisma.sql`AND motm."externalApi" = false`;
   }
 
+  interface DeliveryStatsRow {
+    total_messages: number;
+    delivered_messages: number;
+    failed_messages: number;
+    avg_delivery_time_seconds: number | null;
+  }
+
   const query = async (start: Date, end: Date) =>
-    prisma.$queryRaw<
-      {
-        total_messages: number;
-        delivered_messages: number;
-        failed_messages: number;
-        avg_delivery_time_seconds: number | null;
-      }[]
-    >`
+    prisma.$queryRaw<DeliveryStatsRow[]>`
       SELECT
         COUNT(*)::INT AS total_messages,
 
@@ -134,7 +136,7 @@ export async function getWaMessageOverviewByTeamAndOrg(
     query(prevStart, prevEnd),
   ]);
 
-  const emptyRow = {
+  const emptyRow: DeliveryStatsRow = {
     total_messages: 0,
     delivered_messages: 0,
     failed_messages: 0,
@@ -174,8 +176,8 @@ export async function getDeliveredFailedTrend(
   orgId: string,
   teamId: string,
   granularity: "day" | "hour",
-  dateRange,
-  apiType,
+  dateRange: string[] | null | undefined,
+  apiType: string,
 ): Promise<MessageDeliveryTrendPoint[]> {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -253,8 +255,8 @@ export async function getDeliveredFailedTrend(
 export async function getDeliveredFailedWeekTrend(
   orgId: string,
   teamId: string,
-  dateRange,
-  apiType,
+  dateRange: string[] | null | undefined,
+  apiType: string,
 ): Promise<MessageDeliveryTrendPoint[]> {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -329,8 +331,8 @@ export async function getDeliveredFailedWeekTrend(
 export async function getTemplateCategoryOverview(
   orgId: string,
   teamId: string, // "all" | uuid
-  dateRange,
-  apiType,
+  dateRange: string[] | null | undefined,
+  apiType: string,
 ): Promise<TemplateCategoryOverview> {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -405,8 +407,8 @@ export async function getTemplateCategoryOverview(
 export async function getTemplatePerformanceStats(
   orgId: string,
   teamId: string, // "all" | uuid
-  dateRange,
-  apiType,
+  dateRange: string[] | null | undefined,
+  apiType: string,
 ): Promise<TemplatePerformanceStat[]> {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -512,8 +514,8 @@ export async function getTemplatePerformanceStats(
 
 export async function getTeamPerformanceStats(
   orgId: string,
-  dateRange,
-  apiType,
+  dateRange: string[] | null | undefined,
+  apiType: string,
 ): Promise<TeamPerformanceStat[]> {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -592,7 +594,10 @@ export async function getTeamPerformanceStats(
   });
 }
 
-const percentChange = (curr: number | null, prev: number | null) => {
+function percentChange(curr: number, prev: number | null): number;
+function percentChange(curr: number | null, prev: number | null): number | null;
+function percentChange(curr: number | null, prev: number | null): number | null {
+  if (curr === null) return null;
   if (!prev || prev === 0) return curr ? 100 : 0;
-  return Number((((curr! - prev) / prev) * 100).toFixed(2));
-};
+  return Number((((curr - prev) / prev) * 100).toFixed(2));
+}

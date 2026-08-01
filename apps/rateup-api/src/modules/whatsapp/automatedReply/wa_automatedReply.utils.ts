@@ -6,6 +6,8 @@ import {
   WaTemplateComponentType,
 } from "../../../types/enums.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
+import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js";
+import type { AutomationWithGraph } from "../whatsappSurvey/node-types.js";
 import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
@@ -35,7 +37,10 @@ import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
-import { startInstagramAutomationFlow } from "./instagram_automation.service.js";
+import {
+  startInstagramAutomationFlow,
+  type InstagramAutomation,
+} from "./instagram_automation.service.js";
 import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import {
@@ -63,42 +68,14 @@ export interface automationProps {
     timezone: string;
     channels: string[];
     description: string | null;
-    schedule: {
-      friday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-      monday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-      sunday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-      tuesday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-      saturday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-      thursday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-      wednesday: {
-        isOpen: boolean;
-        timeSlots: [{ openTime: string; closeTime: string }];
-      };
-    } | null;
+    // See BusinessHourSchedule in global.d.ts — this is the stored shape.
+    schedule: BusinessHourSchedule | null;
     updatedAt: Date;
   } | null;
   id: string;
   name: string;
   createdAt: Date;
-  matchData: any;
+  matchData: WaAutomatedReplyMatchData;
   matchType: string;
   orgId: string | null;
   whatsappSettingsPhoneId: string | null;
@@ -107,7 +84,7 @@ export interface automationProps {
   sendOnceIn24Hours: boolean;
 }
 // Helper to check substring match while preserving optional case sensitivity
-export function includesWholePhrase(text, phrase, caseSensitive = false) {
+export function includesWholePhrase(text: string, phrase: string, caseSensitive = false) {
   const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
   const flags = caseSensitive ? "" : "i";
 
@@ -124,7 +101,10 @@ export async function validateAutomationMatchCondition(
   phone?: string,
 ): Promise<boolean> {
   const { matchType, matchData, commands } = automation;
-  if (automation.sendOnceIn24Hours) {
+  // findRecentAutomation requires a real phone/orgId to scope its lookup -
+  // without both, there's nothing to dedupe against, so skip the check
+  // rather than passing undefined through to the query.
+  if (automation.sendOnceIn24Hours && phone && orgId) {
     const recentActivity = await findRecentAutomation(phone, orgId, {
       timeWindow: 24 * 60 * 60 * 1000, // 24 hours
     });
@@ -146,8 +126,15 @@ export async function validateAutomationMatchCondition(
   ) {
     let comparator: "some" | "every";
 
-    if (WaAutomatedReplyMatchType.ContainsAllOf === matchType) comparator = "every";
-    if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType) comparator = "some";
+    if (WaAutomatedReplyMatchType.ContainsAllOf === matchType) {
+      comparator = "every";
+    } else if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType) {
+      comparator = "some";
+    } else {
+      // Unreachable: the outer `else if` above already restricted matchType
+      // to one of these two values before entering this branch.
+      throw new Error(`WaAutomation not implemented for: ${matchType}`);
+    }
 
     const caseSensitive = !!matchData.caseSensitive;
     messageMatches = commands[comparator]((keyword) =>
@@ -186,6 +173,10 @@ export function generateOrderReferenceId() {
   return referenceId;
 }
 
+interface WaPaymentCredentialEntry {
+  configuration_name: string;
+}
+
 export async function sendPaymentInitTemplate(
   orgId: string,
   phoneNo: string,
@@ -194,7 +185,7 @@ export async function sendPaymentInitTemplate(
     language: {
       code: string;
     };
-    components: any[];
+    components: WaMetaTemplateComponent[];
   },
   template: templateData,
 ) {
@@ -207,7 +198,13 @@ export async function sendPaymentInitTemplate(
     },
   });
 
+  if (!config) throw new Error("Config not found");
   if (!config.credential) throw new Error("Config not found");
+  // `credential` is a Json column; for the "waPayment" integration it's
+  // always an array of Razorpay configuration entries (see
+  // integrations.service.ts / integrations.schema.ts's waPaymentCreateSchema),
+  // which the Json type itself doesn't model.
+  const credential = config.credential as unknown as WaPaymentCredentialEntry[];
   const t = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -217,12 +214,12 @@ export async function sendPaymentInitTemplate(
       type: "order_details",
       body: {
         text: template.data.components?.find(
-          (data: any) => data.type === WaTemplateComponentType.BODY,
+          (data) => data.type.toString().toLowerCase() === WaTemplateComponentType.BODY,
         )?.text,
       },
       footer: {
         text: template.data.components?.find(
-          (data: any) => data.type === WaTemplateComponentType.FOOTER,
+          (data) => data.type.toString().toLowerCase() === WaTemplateComponentType.FOOTER,
         )?.text,
       },
       action: {
@@ -235,7 +232,7 @@ export async function sendPaymentInitTemplate(
               type: "payment_gateway",
               payment_gateway: {
                 type: "razorpay",
-                configuration_name: config.credential?.[0].configuration_name,
+                configuration_name: credential?.[0]?.configuration_name,
                 razorpay: {
                   receipt: "wa payment",
                 },
@@ -298,18 +295,23 @@ export async function verifyAutomationLimit(request: FastifyRequest, reply: Fast
       },
     });
 
-    const whatsappAutomationFeature = getNestedProperty(
-      subscription.features as any,
+    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
+    // `conversation.count`, see global.d.ts) - same gap as flow.utils.ts's
+    // whatsappFlowFeatures. Typed via the generic (rather than `as any` on
+    // the input) to describe the shape this code expects without asserting
+    // it's really there.
+    const whatsappAutomationFeature = getNestedProperty<{ count?: { max: number } }>(
+      subscription.features,
       SubscriptionFeaturePathName.Whatsapp,
     );
-    if (automatedReplyCount >= whatsappAutomationFeature?.count?.max) {
+    if (automatedReplyCount >= (whatsappAutomationFeature?.count?.max ?? Infinity)) {
       throw new Error(
         `You have reached the maximum limit of ${whatsappAutomationFeature?.count?.max} automated replies.`,
       );
     }
   } catch (e) {
     return reply.code(403).send({
-      message: e?.message,
+      message: e instanceof Error ? e.message : "Unknown error",
       displayMessageInClient: true,
     });
   }
@@ -319,7 +321,7 @@ export async function verifyAutomationLimit(request: FastifyRequest, reply: Fast
  * Validates contact-based filter conditions
  */
 async function validateContactFilters(
-  contactFilters: any,
+  contactFilters: WaAutomationContactFilters | null | undefined,
   orgId: string,
   phone: string,
 ): Promise<boolean> {
@@ -337,20 +339,20 @@ async function validateContactFilters(
   }
 
   // Check if contact is in required groups
-  if (contactFilters.inGroups?.length > 0) {
+  const requiredGroups = contactFilters.inGroups;
+  if (requiredGroups?.length) {
     const contactGroups = contact?.contactGroups?.map((g) => g.contactGroupId) || [];
-    const requiredGroups = contactFilters.inGroups;
-    const hasRequiredGroup = requiredGroups.some((group) => contactGroups.includes(group));
-    return hasRequiredGroup;
+    return requiredGroups.some((group) => contactGroups.includes(group));
   }
 
   // Check if contact has values for required fields
-  if (contactFilters.requiredFieldsWithAnyValue?.length > 0) {
+  const requiredFields = contactFilters.requiredFieldsWithAnyValue;
+  if (requiredFields?.length) {
     const customFieldsMap = new Map(
       contact.customFields?.map((cf) => [cf.fieldId, cf.value]) || [],
     );
 
-    for (const fieldSlug of contactFilters.requiredFieldsWithAnyValue) {
+    for (const fieldSlug of requiredFields) {
       const fieldValue = customFieldsMap.get(fieldSlug);
 
       // Check custom fields first
@@ -418,9 +420,9 @@ export function validateTimeWindow(businessHour: automationProps["businessHour"]
  * @param automations Array of automations with businessHour property
  * @returns Selected automation or undefined if none match
  */
-export function selectAutomationByBusinessHours<T extends { businessHour: any }>(
-  automations: T[],
-): T | undefined {
+export function selectAutomationByBusinessHours<
+  T extends { businessHour: automationProps["businessHour"] },
+>(automations: T[]): T | undefined {
   let selectedAutomation: T | undefined;
 
   // First priority: Look for automations with business hours that are currently valid
@@ -481,7 +483,8 @@ export interface RuleWithConditions {
   actions: Array<{
     id: string;
     type: string;
-    value: any;
+    /** Action-specific payload; the executor switches on `type` to read it. */
+    value: unknown;
   }>;
 }
 
@@ -636,7 +639,9 @@ export async function validateRuleConditions(
         where: { id: rule.options.businessHours.businessHoursId },
       });
       if (businessHour) {
-        const isWithinBusinessHours = validateTimeWindow(businessHour as any);
+        const isWithinBusinessHours = validateTimeWindow(
+          businessHour as automationProps["businessHour"],
+        );
         if (!isWithinBusinessHours) return false;
       }
     }
@@ -669,22 +674,28 @@ export async function validateRuleConditions(
  * @param context Context data needed for validation and action execution
  * @returns The matched rule with executed actions, or undefined if no match
  */
+/**
+ * Everything a rule's conditions and actions can read about the event that
+ * triggered them. Which fields are populated depends on the trigger.
+ */
+export interface RuleExecutionContext {
+  orgId: string;
+  platform?: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL";
+  phoneNumberId?: string;
+  message?: string;
+  phone?: string | null;
+  waMessage?: WaMessageBody;
+  contactId?: string;
+  buttonPayload?: string;
+  shopifyEvent?: ShopifyEvents;
+  shopifyProductIds?: string[];
+  shopifyBody?: ShopifyBody;
+  instagramMediaId?: string;
+}
+
 export async function checkAndExecuteRuleByTriggerEvent(
   triggerEvent: TriggerEvent,
-  context: {
-    orgId: string;
-    platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL";
-    phoneNumberId?: string;
-    message?: string;
-    phone?: string;
-    waMessage?: WaMessageBody;
-    contactId?: string;
-    buttonPayload?: string;
-    shopifyEvent?: ShopifyEvents;
-    shopifyProductIds?: string[];
-    shopifyBody?: ShopifyBody;
-    instagramMediaId?: string;
-  },
+  context: RuleExecutionContext & { platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL" },
 ): Promise<
   | {
       rule: RuleWithConditions;
@@ -885,13 +896,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
  */
 async function executeRuleActions(
   rule: RuleWithConditions,
-  context: {
-    orgId: string;
-    phone?: string;
-    message?: string;
-    waMessage?: WaMessageBody;
-    phoneNumberId?: string;
-  },
+  context: RuleExecutionContext,
 ): Promise<Array<{ actionId: string; success: boolean; error?: string }>> {
   const results = [];
   const platform = rule.platform ?? "WHATSAPP";
@@ -903,7 +908,10 @@ async function executeRuleActions(
 
       switch (action.type) {
         case "CLOSE_TICKET":
-          success = await executeCloseTicketAction(action.value, actionContext);
+          success = await executeCloseTicketAction(
+            action.value as WaMessageAssignStatus,
+            actionContext,
+          );
           break;
 
         case "ATTACH_LABEL":
@@ -957,11 +965,11 @@ async function executeRuleActions(
 
       log.trace(`Action ${action.type} executed with result: ${success}`);
     } catch (error) {
-      log.error(`Error executing action ${action.id} (${action.type}): %o`, error);
+      log.error({ err: error }, `Error executing action ${action.id} (${action.type})`);
       results.push({
         actionId: action.id,
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -972,7 +980,7 @@ async function executeRuleActions(
 // Action executor functions
 async function executeCloseTicketAction(
   status: WaMessageAssignStatus,
-  context: any,
+  context: RuleExecutionContext,
 ): Promise<boolean> {
   if (!context.orgId || !context.phone) return false;
 
@@ -1012,9 +1020,12 @@ export function generateInternalMessageId() {
   );
 }
 
-async function executeAttachLabelAction(labelId: string, context: any): Promise<boolean> {
+async function executeAttachLabelAction(
+  labelId: string,
+  context: RuleExecutionContext,
+): Promise<boolean> {
   if (!context.orgId || !context.phone || !labelId) return false;
-  const contactId = await prisma.contact.findFirst({
+  const contact = await prisma.contact.findFirst({
     where: {
       orgId: context.orgId,
       phone: context.phone,
@@ -1023,16 +1034,20 @@ async function executeAttachLabelAction(labelId: string, context: any): Promise<
       id: true,
     },
   });
+  // NOTE: previously proceeded to the upsert even when no contact matched,
+  // writing `contactId: undefined` into a required unique-key field instead
+  // of skipping. Guarding here is the fix.
+  if (!contact) return false;
 
   await prisma.contactLabelMap.upsert({
     where: {
       contactId_labelId: {
-        contactId: contactId?.id,
+        contactId: contact.id,
         labelId: labelId,
       },
     },
     create: {
-      contactId: contactId?.id,
+      contactId: contact.id,
       labelId: labelId,
     },
     update: {},
@@ -1041,7 +1056,10 @@ async function executeAttachLabelAction(labelId: string, context: any): Promise<
   return true;
 }
 
-async function executeAssignUserAction(userId: string, context: any): Promise<boolean> {
+async function executeAssignUserAction(
+  userId: string,
+  context: RuleExecutionContext,
+): Promise<boolean> {
   if (!context.phone || !userId || !context.orgId) return false;
 
   const contact = await getOrCreateContactByPhone(context.phone, context.orgId);
@@ -1062,7 +1080,10 @@ async function executeAssignUserAction(userId: string, context: any): Promise<bo
   return true;
 }
 
-async function executeAssignTeamAction(teamId: string, context: any): Promise<boolean> {
+async function executeAssignTeamAction(
+  teamId: string,
+  context: RuleExecutionContext,
+): Promise<boolean> {
   if (!context.phone || !teamId || !context.orgId) return false;
 
   const contact = await getOrCreateContactByPhone(context.phone, context.orgId);
@@ -1071,7 +1092,9 @@ async function executeAssignTeamAction(teamId: string, context: any): Promise<bo
   const users = await getUserIdsByTeamId(teamId);
   if (users.length === 0) return false;
 
-  const assigned = await assignChat(teamId, users, null);
+  // Not tied to a chatbot automation flow (this is a manual rule action), so
+  // there's no real automationId to scope the round-robin pointer by.
+  const assigned = await assignChat(teamId, users, "rule-engine");
 
   await assignWaMessageToUser(
     {
@@ -1089,7 +1112,7 @@ async function executeAssignLifecycleAction(
   lifecycleId: string,
   context: {
     orgId: string;
-    phone?: string;
+    phone?: string | null;
     message?: string;
   },
 ): Promise<boolean> {
@@ -1167,7 +1190,10 @@ async function executeAssignLifecycleAction(
   return true;
 }
 
-async function executeSendMessageAction(messageText: string, context: any): Promise<boolean> {
+async function executeSendMessageAction(
+  messageText: string,
+  context: RuleExecutionContext,
+): Promise<boolean> {
   if (!context.phone || !messageText || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
@@ -1189,7 +1215,7 @@ async function executeSendWebSurveyAction(
   surveyTeamMapId: string,
   context: {
     orgId: string;
-    phone?: string;
+    phone?: string | null;
     phoneNumberId?: string;
     platform?: string;
   },
@@ -1246,7 +1272,7 @@ async function executeSendTemplateAction(
         variableMapping?: { templateParamIndex: number; shopifyPath: string }[];
         useProductImageAsHeader?: boolean;
       },
-  context: any,
+  context: RuleExecutionContext,
 ): Promise<boolean> {
   const { templateId, variableMapping, useProductImageAsHeader } =
     typeof templateValue === "string"
@@ -1339,7 +1365,7 @@ function buildTemplateParameterData(
     phone?: string | null;
     customFields?: Array<{ fieldId: string; value: string | null }>;
   } | null,
-): any[] {
+): OutgoingTemplateComponent[] {
   if (!variableMapping.length) return [];
 
   const sortedMappings = [...variableMapping].sort(
@@ -1348,7 +1374,7 @@ function buildTemplateParameterData(
   const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
   if (maxIndex < 0) return [];
 
-  const bodyParameters: any[] = [];
+  const bodyParameters: Array<{ type: string; text: string }> = [];
   for (let i = 0; i <= maxIndex; i++) {
     const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
     const text = mapping ? resolveVariablePath(mapping.shopifyPath, shopifyBody, contactData) : "";
@@ -1359,7 +1385,10 @@ function buildTemplateParameterData(
   return [{ type: "body", parameters: bodyParameters }];
 }
 
-async function executeSendFlowAction(flowId: string, context: any): Promise<boolean> {
+async function executeSendFlowAction(
+  flowId: string,
+  context: RuleExecutionContext,
+): Promise<boolean> {
   if (!context.phone || !flowId || !context.orgId) return false;
 
   await sendFlow({
@@ -1383,13 +1412,11 @@ async function executeSendFlowAction(flowId: string, context: any): Promise<bool
  */
 async function startAutomationFlow(
   phone: string,
-  automation: any,
+  automation: AutomationWithGraph,
   parsedMessage: { message: string; from: string },
   orgId: string,
 ) {
-  const startNode = automation?.matchData?.json?.nodes?.find(
-    (node: any) => node.type === "startNode",
-  );
+  const startNode = automation?.matchData?.json?.nodes?.find((node) => node.type === "startNode");
 
   if (!startNode) {
     log.error(`No start node found in automation ${automation.id}`);
@@ -1413,15 +1440,24 @@ async function startAutomationFlow(
   await processNextNode(phone, automation, startNode.id, orgId, automationLog?.id);
 }
 
-async function executeTriggerChatbotAction(chatbotId: string, context: any): Promise<boolean> {
+async function executeTriggerChatbotAction(
+  chatbotId: string,
+  context: RuleExecutionContext,
+): Promise<boolean> {
   if (!context.phone || !chatbotId || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     const automation = await getInstagramAutomatedReplyById(chatbotId);
     if (automation) {
+      if (!context.phoneNumberId) {
+        log.error("No Instagram business account id in context for chatbot %s", chatbotId);
+        return false;
+      }
       await startInstagramAutomationFlow(
         context.phone,
-        automation as any,
+        // The stored matchData is typed loosely on the Prisma model; this reader
+        // knows the row is an Instagram automation graph.
+        automation as unknown as InstagramAutomation,
         context.orgId,
         context.phoneNumberId,
       );
@@ -1453,7 +1489,7 @@ async function executeTriggerChatbotAction(chatbotId: string, context: any): Pro
 async function executeExternalApiAction(
   endpoint: string,
   context: {
-    phone?: string;
+    phone?: string | null;
     message?: string;
     buttonPayload?: string;
   },
@@ -1507,7 +1543,7 @@ async function executeExternalApiAction(
       );
 
       if (attempt === 2) {
-        log.error(`External API failed after retry for ${parsedUrl.toString()}: %o`, error);
+        log.error({ err: error }, `External API failed after retry for ${parsedUrl.toString()}`);
 
         return false;
       }

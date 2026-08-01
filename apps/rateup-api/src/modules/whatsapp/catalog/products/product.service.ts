@@ -5,28 +5,77 @@ import { callMetaApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
 import { getShopifyInfo } from "../../../integrations/shopify/shopify.service.js";
 import shopify from "../../../integrations/shopify/shopify.config.js";
+import { Prisma } from "../../../../../generated/prisma/client.js";
+import type { GraphQLClientResponse } from "@shopify/shopify-api";
 import {
   catalogHotel,
   catalogHotelRoom,
+  CatalogHotelInput,
+  CatalogHotelRoomInput,
   CatalogItemQueryFilter,
   catalogItemSchema,
   catalogProductCore,
+  CatalogProductCoreInput,
   CatalogProductIdsSchema,
   catalogProductResponseSchema,
   CatalogProductTypes,
   CatalogResponseInput,
 } from "./product.schema.js";
 
+/**
+ * Item as accepted by `createCatalogProductsBatch`. `shopifyVariantId` isn't
+ * part of any of the wire schemas — it's a service-level tag added when
+ * importing Shopify-sourced items (see `importSelectedShopifyProducts`) so
+ * the stored row can be traced back to its Shopify variant.
+ */
+type CatalogBatchItem =
+  | (CatalogProductCoreInput & { shopifyVariantId?: string })
+  | (CatalogHotelInput & { shopifyVariantId?: string })
+  | (CatalogHotelRoomInput & { shopifyVariantId?: string });
+
+/** Same as `CatalogBatchItem`, but every field is optional (an update need not touch every field). */
+type CatalogBatchUpdateItem =
+  | (Partial<CatalogProductCoreInput> & { shopifyVariantId?: string })
+  | (Partial<CatalogHotelInput> & { shopifyVariantId?: string })
+  | (Partial<CatalogHotelRoomInput> & { shopifyVariantId?: string });
+
+/**
+ * The Meta Graph API "batch item" payload built from a `CatalogBatchItem`.
+ * `id`/`hotel_id`/`hotel_retailer_id`/`hotel_room_id` are the only fields read
+ * back out of it (to derive the Prisma row's identifying columns); the
+ * remaining, per-vertical fields are already fully validated by the zod
+ * schema upstream and are only ever forwarded to Meta or stashed in a Prisma
+ * `Json` column, so a catch-all index signature is the accurate type for them.
+ */
+type CatalogBatchPayload = {
+  id?: string;
+  hotel_id?: string;
+  hotel_retailer_id?: string;
+  hotel_room_id?: string;
+} & Record<string, unknown>;
+
+/** Intermediate row shape built by `updateCatalogProducts` before it is split into per-vertical Prisma updates. */
+type CatalogUpdateProductRow = {
+  type: catalogItemSchema["type"];
+  retailer_id?: string;
+  hotel_id?: string;
+  hotel_retailer_id?: string;
+  hotel_room_id?: string;
+  currency?: string;
+  image_link?: string;
+  additional_image_link?: string[];
+} & Record<string, unknown>;
+
 export async function createCatalogProductsBatch(
-  orgId,
+  orgId: string,
   type: catalogItemSchema["type"],
-  dataList,
-  catalogId,
+  dataList: CatalogBatchItem[],
+  catalogId: string,
 ) {
-  let requests = [];
-  const newProducts = [];
+  const requests: SendProductRequestProps[] = [];
+  const newProducts: Prisma.WaCatalogProductCreateManyInput[] = [];
   for (const data of dataList) {
-    let input;
+    let input: CatalogBatchPayload | undefined;
     const shopifyVariantId: string | undefined = data.shopifyVariantId ?? undefined;
     if (type === "PRODUCT_ITEM") {
       const {
@@ -37,7 +86,7 @@ export async function createCatalogProductsBatch(
         retailer_id,
         shopifyVariantId: _svid, // strip from Meta payload
         ...rest
-      } = data as catalogItemSchema["PRODUCT_ITEM"] & {
+      } = data as CatalogProductCoreInput & {
         shopifyVariantId?: string;
       };
       input = {
@@ -45,13 +94,13 @@ export async function createCatalogProductsBatch(
         id: retailer_id,
         price: `${parseFloat(String(price)).toFixed(2)} ${currencyCode}`,
         sale_price: `${sale_price} ${currencyCode}`,
-        internal_label: internal_label.map((label) => `'${label}'`),
+        internal_label: (internal_label ?? []).map((label) => `'${label}'`),
       };
     }
     if (type === "HOTEL") {
       const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } =
-        data as catalogItemSchema["HOTEL"];
-      let tagInputs = {};
+        data as CatalogHotelInput;
+      const tagInputs: Record<string, string | number> = {};
       tags.map((tag, index) => {
         tagInputs[`custom_label_${index}`] = tag;
       });
@@ -66,25 +115,36 @@ export async function createCatalogProductsBatch(
       };
     }
     if (type === "HOTEL_ROOM") {
-      const { base_price, currencyCode, ...rest } = data as catalogItemSchema["HOTEL_ROOM"];
+      const { base_price, currencyCode, ...rest } = data as CatalogHotelRoomInput;
       input = {
         ...rest,
         base_price: `${base_price} ${currencyCode}`,
       };
     }
+    // `type` may in principle be any CatalogProductTypes member (FLIGHT,
+    // DESTINATION, HOME_LISTING, VEHICLE), none of which are handled above —
+    // previously `input` silently stayed `undefined` and the code below threw
+    // a confusing "Cannot destructure property 'id' of undefined". Fail with
+    // a clear message instead. See issues.txt.
+    if (!input) {
+      throw new Error(`Unsupported catalog product type: ${type}`);
+    }
     requests.push({ method: "CREATE", data: input });
     const { id, hotel_id, hotel_retailer_id, hotel_room_id, ...rest } = input;
     const props = {
       currency: data.currencyCode,
-      image_link: data.image.length ? data.image[0].url : undefined,
-      additional_image_link: data.image.length ? data.image.map((image) => image.url) : undefined,
+      image_link: data.image?.length ? data.image[0].url : undefined,
+      additional_image_link: data.image?.length ? data.image.map((image) => image.url) : undefined,
       ...rest,
     };
     newProducts.push({
       type,
       retailer_id: id ?? undefined,
       hotel_id,
-      hotel_retailer_id,
+      // DB column is `hotel_ratailer_id` (a pre-existing typo baked into the
+      // Prisma schema); the DTO/API field is correctly spelled
+      // `hotel_retailer_id`. See issues.txt — BUG (fixed).
+      hotel_ratailer_id: hotel_retailer_id,
       hotel_room_id,
       shopifyVariantId: shopifyVariantId ?? undefined,
       ...(type === "PRODUCT_ITEM"
@@ -113,16 +173,29 @@ export async function createCatalogProductsBatch(
 
 interface SendProductRequestProps {
   method: "CREATE" | "UPDATE" | "DELETE";
-  data: any;
+  // Payload sent to Meta's catalog items_batch endpoint. Its shape is fully
+  // discriminated by `method`/the batch's `item_type` at each call site and
+  // only ever forwarded to Meta as JSON, so a dynamic bag is the accurate
+  // type here rather than a fixed interface.
+  data: Record<string, unknown>;
 }
-export async function sendProducts(orgId, requests: SendProductRequestProps[], type, catalogId) {
-  const { accessToken } = await getWaSettings(orgId);
+export async function sendProducts(
+  orgId: string,
+  requests: SendProductRequestProps[],
+  type: catalogItemSchema["type"],
+  catalogId: string,
+) {
+  const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`No WhatsApp settings found for org ${orgId}`);
+  }
+  const { accessToken } = waSettings;
   const data = {
     access_token: accessToken,
     item_type: type,
     requests,
   };
-  const res = await callMetaApi(`/${catalogId}/items_batch`, "POST", null, data, null, {
+  const res = await callMetaApi(`/${catalogId}/items_batch`, "POST", null, data, undefined, {
     "Content-Type": "application/json",
   });
 
@@ -141,14 +214,14 @@ export async function syncCatalogProducts(
   if (!waSettings || !catalogInfo) return;
   const { accessToken } = waSettings;
   const url = `/${catalogId}/products`;
-  let filter = {
+  const filter: { limit: number; after?: string } = {
     limit: 50,
   };
   if (limit) {
-    filter["limit"] = limit;
+    filter.limit = limit;
   }
   if (next) {
-    filter["after"] = next;
+    filter.after = next;
   }
 
   const fields = Array.from(
@@ -297,7 +370,7 @@ export async function syncCatalogProducts(
   };
 }
 
-export async function getCatalogProducts(catalogId, _query = null) {
+export async function getCatalogProducts(catalogId: string, _query: unknown = null) {
   return await prisma.waCatalogProduct.findMany({
     where: {
       catalogId,
@@ -310,7 +383,11 @@ export async function deleteCatalogProducts(
   catalogId: string,
   productIds: CatalogProductIdsSchema["productIds"],
 ) {
-  const { vertical } = await getWaCatalog(catalogId);
+  const catalogInfo = await getWaCatalog(catalogId);
+  if (!catalogInfo) {
+    throw new Error(`Catalog not found for id ${catalogId}`);
+  }
+  const { vertical } = catalogInfo;
 
   const requests = productIds.map((id) => {
     let obj = {
@@ -332,7 +409,11 @@ export async function deleteCatalogProducts(
     return obj;
   });
 
-  await sendProducts(orgId, requests, getCatalogProdutType(vertical), catalogId);
+  const catalogProductType = getCatalogProdutType(vertical);
+  if (!catalogProductType) {
+    throw new Error(`Unsupported catalog vertical: ${vertical}`);
+  }
+  await sendProducts(orgId, requests, catalogProductType, catalogId);
   let whereCondition;
   if (vertical === "commerce") {
     whereCondition = {
@@ -360,15 +441,20 @@ export async function deleteCatalogProducts(
     });
 }
 
-export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
-  let requests = [];
-  const newProducts = [];
+export async function updateCatalogProducts(
+  orgId: string,
+  catalogId: string,
+  dataList: CatalogBatchUpdateItem[],
+  type: catalogItemSchema["type"],
+) {
+  const requests: SendProductRequestProps[] = [];
+  const newProducts: CatalogUpdateProductRow[] = [];
   for (const data of dataList) {
-    let input;
+    let input: CatalogBatchPayload | undefined;
 
     if (type === "PRODUCT_ITEM") {
       const { price, currencyCode, internal_label, sale_price, retailer_id, ...rest } =
-        data as Partial<catalogItemSchema["PRODUCT_ITEM"]>;
+        data as Partial<CatalogProductCoreInput>;
       input = {
         ...rest,
         id: retailer_id,
@@ -378,14 +464,17 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
       };
     }
     if (type === "HOTEL") {
-      const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } = data as Partial<
-        catalogItemSchema["HOTEL"]
-      >;
-      let tagInputs = {};
-      tags.map((tag, index) => {
+      const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } =
+        data as Partial<CatalogHotelInput>;
+      const tagInputs: Record<string, string | number> = {};
+      // `tags`/`numbertags` are optional under Partial (an update need not
+      // touch them); previously this threw "Cannot read properties of
+      // undefined (reading 'map')" whenever an update omitted them. See
+      // issues.txt — BUG (fixed).
+      (tags ?? []).map((tag, index) => {
         tagInputs[`custom_label_${index}`] = tag;
       });
-      numbertags.map((tag, index) => {
+      (numbertags ?? []).map((tag, index) => {
         tagInputs[`custom_number_${index}`] = tag;
       });
       input = {
@@ -396,30 +485,42 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
       };
     }
     if (type === "HOTEL_ROOM") {
-      const { base_price, currencyCode, ...rest } = data as Partial<
-        catalogItemSchema["HOTEL_ROOM"]
-      >;
+      const { base_price, currencyCode, ...rest } = data as Partial<CatalogHotelRoomInput>;
       input = {
         ...rest,
         base_price: `${base_price} ${currencyCode}`,
       };
     }
+    if (!input) {
+      throw new Error(`Unsupported catalog product type: ${type}`);
+    }
     requests.push({ method: "UPDATE", data: input });
-    const { id, ...rest } = input;
-    const obj = {
+    const { id, hotel_id, hotel_retailer_id, hotel_room_id, ...rest } = input;
+    const obj: CatalogUpdateProductRow = {
       type,
       retailer_id: id ?? undefined,
+      hotel_id,
+      hotel_retailer_id,
+      hotel_room_id,
       currency: data.currencyCode,
-      image_link: data.image.length ? data.image[0].url : undefined,
-      additional_image_link: data.image.length ? data.image.map((image) => image.url) : undefined,
+      image_link: data.image?.length ? data.image[0].url : undefined,
+      additional_image_link: data.image?.length ? data.image.map((image) => image.url) : undefined,
       ...rest,
     };
     newProducts.push(obj);
   }
   await sendProducts(orgId, requests, type, catalogId);
   for (const product of newProducts) {
-    const { retailer_id, type, hotel_id, hotel_ratailer_id, hotel_room_id, ...rest } = product;
+    const { retailer_id, type, hotel_id, hotel_retailer_id, hotel_room_id, ...rest } = product;
     if (type === CatalogProductTypes.PRODUCT_ITEM) {
+      // An update payload is a Partial — `retailer_id` (Meta's `id`) could in
+      // principle be omitted. It's the only way to locate the row, so fail
+      // clearly rather than sending `undefined` into the compound unique
+      // filter below (which Prisma would reject with a much less clear
+      // error). See issues.txt.
+      if (!retailer_id) {
+        throw new Error("Cannot update a PRODUCT_ITEM catalog product without a retailer_id");
+      }
       await prisma.waCatalogProduct.update({
         where: {
           catalog_retailer_id_unique: {
@@ -432,6 +533,9 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
         },
       });
     } else if (type === CatalogProductTypes.HOTEL) {
+      if (!hotel_id) {
+        throw new Error("Cannot update a HOTEL catalog product without a hotel_id");
+      }
       await prisma.waCatalogProduct.update({
         where: {
           catalog_hotel_id_unique: {
@@ -444,11 +548,23 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
         },
       });
     } else if (type === CatalogProductTypes.HOTEL_ROOM) {
+      if (!hotel_retailer_id || !hotel_room_id) {
+        throw new Error(
+          "Cannot update a HOTEL_ROOM catalog product without hotel_retailer_id and hotel_room_id",
+        );
+      }
       await prisma.waCatalogProduct.update({
         where: {
           catalog_hotel_room_id_unique: {
             catalogId,
-            hotel_ratailer_id,
+            // DB column is `hotel_ratailer_id` (pre-existing typo in the
+            // Prisma schema); `hotel_retailer_id` above is the correctly
+            // spelled DTO field. Previously this destructured a
+            // `hotel_ratailer_id` variable that never matched any key on
+            // `product`, so it was always `undefined` here — the compound
+            // unique filter could never match a HOTEL_ROOM row. See
+            // issues.txt — BUG (fixed).
+            hotel_ratailer_id: hotel_retailer_id,
             hotel_room_id,
           },
         },
@@ -460,7 +576,7 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
   }
 }
 
-function getCatalogProdutType(vertical) {
+function getCatalogProdutType(vertical: string) {
   switch (vertical) {
     case "commerce":
       return CatalogProductTypes.PRODUCT_ITEM;
@@ -471,6 +587,38 @@ function getCatalogProdutType(vertical) {
   }
 }
 
+interface ShopifyProductVariantNode {
+  id: string;
+  sku?: string;
+  price: string;
+  compareAtPrice?: string | null;
+  availableForSale: boolean;
+  inventoryQuantity?: number;
+  title: string;
+}
+
+interface ShopifyProductNode {
+  id: string;
+  title: string;
+  description: string;
+  vendor: string;
+  handle: string;
+  onlineStoreUrl?: string | null;
+  images: { edges: { node: { url: string } }[] };
+  variants: { edges: { node: ShopifyProductVariantNode }[] };
+}
+
+interface ShopifyProductsPageData {
+  products: {
+    edges: { node: ShopifyProductNode }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}
+
+interface ShopifyShopCurrencyData {
+  shop: { currencyCode?: string };
+}
+
 // Fetches all Shopify products, maps them to catalogProductCore format,
 // and filters out any variants already imported into this catalog.
 export async function getShopifyProductsForCatalog(orgId: string, catalogId: string) {
@@ -478,21 +626,23 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
   if (!shopifyInfo?.credential?.session) {
     throw new Error("No Shopify integration found for this org");
   }
+  if (!shopify) throw new Error("Shopify integration is not configured");
 
   const session = shopifyInfo.credential.session;
   const client = new shopify.clients.Graphql({ session });
 
-  const shopData = await client.request(`{ shop { currencyCode } }`);
-  const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
+  const shopData: GraphQLClientResponse<ShopifyShopCurrencyData> =
+    await client.request(`{ shop { currencyCode } }`);
+  const currencyCode: string = shopData.data?.shop?.currencyCode ?? "USD";
   const shopDomain: string = session.shop;
 
   // Paginate through all Shopify products
   let hasNextPage = true;
   let cursor: string | null = null;
-  const allProducts: any[] = [];
+  const allProducts: ShopifyProductNode[] = [];
 
   while (hasNextPage) {
-    const data: any = await client.request(
+    const data: GraphQLClientResponse<ShopifyProductsPageData> = await client.request(
       `query getFullProducts($cursor: String) {
         products(first: 50, after: $cursor) {
           edges {
@@ -529,6 +679,7 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
       }`,
       { variables: { cursor } },
     );
+    if (!data.data) throw new Error("Shopify products query returned no data");
     hasNextPage = data.data.products.pageInfo.hasNextPage;
     cursor = data.data.products.pageInfo.endCursor;
     allProducts.push(...data.data.products.edges.map((e) => e.node));
@@ -542,7 +693,7 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
   const existingIds = new Set(existing.map((p) => p.retailer_id).filter(Boolean));
 
   // Map each unimported variant to a catalogProductCore item
-  const catalogItems: any[] = [];
+  const catalogItems: CatalogProductCoreInput[] = [];
   for (const product of allProducts) {
     const images = (product.images?.edges ?? []).map((e) => ({
       url: e.node.url,
@@ -594,21 +745,23 @@ export async function syncShopifyProductsToCatalog(
   if (!shopifyInfo?.credential?.session) {
     throw new Error("No Shopify integration found for this org");
   }
+  if (!shopify) throw new Error("Shopify integration is not configured");
 
   const session = shopifyInfo.credential.session;
   const client = new shopify.clients.Graphql({ session });
 
-  const shopData = await client.request(`{ shop { currencyCode } }`);
-  const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
+  const shopData: GraphQLClientResponse<ShopifyShopCurrencyData> =
+    await client.request(`{ shop { currencyCode } }`);
+  const currencyCode: string = shopData.data?.shop?.currencyCode ?? "USD";
   const shopDomain: string = session.shop;
 
   // Paginate through all Shopify products
   let hasNextPage = true;
   let cursor: string | null = null;
-  const allProducts: any[] = [];
+  const allProducts: ShopifyProductNode[] = [];
 
   while (hasNextPage) {
-    const data: any = await client.request(
+    const data: GraphQLClientResponse<ShopifyProductsPageData> = await client.request(
       `query getFullProducts($cursor: String) {
         products(first: 50, after: $cursor) {
           edges {
@@ -640,13 +793,17 @@ export async function syncShopifyProductsToCatalog(
       }`,
       { variables: { cursor } },
     );
+    if (!data.data) throw new Error("Shopify products query returned no data");
     hasNextPage = data.data.products.pageInfo.hasNextPage;
     cursor = data.data.products.pageInfo.endCursor;
     allProducts.push(...data.data.products.edges.map((e) => e.node));
   }
 
   // Build a map: numericVariantId → { variant, product }
-  const variantMap = new Map<string, { variant: any; product: any }>();
+  const variantMap = new Map<
+    string,
+    { variant: ShopifyProductVariantNode; product: ShopifyProductNode }
+  >();
   for (const product of allProducts) {
     for (const variantEdge of product.variants?.edges ?? []) {
       const v = variantEdge.node;
@@ -664,7 +821,7 @@ export async function syncShopifyProductsToCatalog(
     },
   });
 
-  const toUpdate: any[] = [];
+  const toUpdate: CatalogBatchUpdateItem[] = [];
   let unchanged = 0;
   let notFound = 0;
 
@@ -676,7 +833,7 @@ export async function syncShopifyProductsToCatalog(
     }
 
     const { variant: v, product } = match;
-    const images = (product.images?.edges ?? []).map((e: any) => ({
+    const images = (product.images?.edges ?? []).map((e) => ({
       url: e.node.url,
     }));
     if (images.length === 0) continue;
@@ -693,7 +850,7 @@ export async function syncShopifyProductsToCatalog(
     const newBrand: string = product.vendor || product.title;
 
     // Compare against stored productProps (prices stored as "10.00 USD")
-    const props: any = dbProd.productProps ?? {};
+    const props: Partial<CatalogProductCore> = dbProd.productProps ?? {};
     const currentPrice = parseFloat(String(props.price ?? "0").split(" ")[0]);
     const currentSalePrice = parseFloat(String(props.sale_price ?? "0").split(" ")[0]);
 
@@ -712,12 +869,10 @@ export async function syncShopifyProductsToCatalog(
     }
 
     // Preserve user-managed internal_label (stored with quotes — strip before passing)
-    const rawLabels: string[] = (props.internal_label ?? []).map((l: string) =>
-      l.replace(/^'|'$/g, ""),
-    );
+    const rawLabels: string[] = (props.internal_label ?? []).map((l) => l.replace(/^'|'$/g, ""));
 
     toUpdate.push({
-      retailer_id: dbProd.retailer_id,
+      retailer_id: dbProd.retailer_id ?? undefined,
       title: newTitle,
       description: newDescription,
       condition: props.condition ?? "new",
@@ -749,7 +904,7 @@ export async function syncShopifyProductsToCatalog(
 export async function importSelectedShopifyProducts(
   orgId: string,
   catalogId: string,
-  items: any[],
+  items: CatalogProductCoreInput[],
 ) {
   if (items.length === 0) return { imported: 0 };
 

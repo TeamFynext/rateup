@@ -118,11 +118,11 @@ describe("createCatalogProductsBatchHandler", () => {
     const items = [{ retailer_id: "sku-1" }];
 
     await createCatalogProductsBatchHandler(
-      makeRequest({ body: { type: "product", product: items } }),
+      makeRequest({ body: { type: "PRODUCT_ITEM", PRODUCT_ITEM: items } }),
       reply,
     );
 
-    expect(m.createBatch).toHaveBeenCalledWith("org-1", "product", items, "cat-1");
+    expect(m.createBatch).toHaveBeenCalledWith("org-1", "PRODUCT_ITEM", items, "cat-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -130,11 +130,11 @@ describe("createCatalogProductsBatchHandler", () => {
     const rooms = [{ retailer_id: "room-1" }];
 
     await createCatalogProductsBatchHandler(
-      makeRequest({ body: { type: "hotel", hotel: rooms, product: [] } }),
+      makeRequest({ body: { type: "HOTEL", HOTEL: rooms, PRODUCT_ITEM: [] } }),
       makeReply(),
     );
 
-    expect(m.createBatch).toHaveBeenCalledWith("org-1", "hotel", rooms, "cat-1");
+    expect(m.createBatch).toHaveBeenCalledWith("org-1", "HOTEL", rooms, "cat-1");
   });
 
   test("returns 404 without creating anything for an unknown catalog", async () => {
@@ -142,7 +142,7 @@ describe("createCatalogProductsBatchHandler", () => {
     const reply = makeReply();
 
     await createCatalogProductsBatchHandler(
-      makeRequest({ body: { type: "product", product: [] } }),
+      makeRequest({ body: { type: "PRODUCT_ITEM", PRODUCT_ITEM: [] } }),
       reply,
     );
 
@@ -157,11 +157,14 @@ describe("createCatalogProductsBatchHandler", () => {
     m.getCatalog.mockResolvedValue({ catalogId: "cat-victim", orgId: "org-victim" });
 
     await createCatalogProductsBatchHandler(
-      makeRequest({ params: { catalogId: "cat-victim" }, body: { type: "product", product: [] } }),
+      makeRequest({
+        params: { catalogId: "cat-victim" },
+        body: { type: "PRODUCT_ITEM", PRODUCT_ITEM: [] },
+      }),
       makeReply(),
     );
 
-    expect(m.createBatch).toHaveBeenCalledWith("org-1", "product", [], "cat-victim");
+    expect(m.createBatch).toHaveBeenCalledWith("org-1", "PRODUCT_ITEM", [], "cat-victim");
   });
 
   test("returns 500 when the batch fails", async () => {
@@ -169,7 +172,7 @@ describe("createCatalogProductsBatchHandler", () => {
     const reply = makeReply();
 
     await createCatalogProductsBatchHandler(
-      makeRequest({ body: { type: "product", product: [] } }),
+      makeRequest({ body: { type: "PRODUCT_ITEM", PRODUCT_ITEM: [] } }),
       reply,
     );
 
@@ -265,11 +268,11 @@ describe("updateCatalogProductsHandler", () => {
     const reply = makeReply();
 
     await updateCatalogProductsHandler(
-      makeRequest({ body: { type: "product", product: items } }),
+      makeRequest({ body: { type: "PRODUCT_ITEM", PRODUCT_ITEM: items } }),
       reply,
     );
 
-    expect(m.update).toHaveBeenCalledWith("org-1", "cat-1", items, "product");
+    expect(m.update).toHaveBeenCalledWith("org-1", "cat-1", items, "PRODUCT_ITEM");
     expect(reply.payload).toEqual({ updated: 1 });
   });
 
@@ -277,7 +280,7 @@ describe("updateCatalogProductsHandler", () => {
     m.update.mockRejectedValue(new Error("meta down"));
     const reply = makeReply();
 
-    await updateCatalogProductsHandler(makeRequest({ body: { type: "product" } }), reply);
+    await updateCatalogProductsHandler(makeRequest({ body: { type: "PRODUCT_ITEM" } }), reply);
 
     expect(reply.code).toHaveBeenCalledWith(500);
   });

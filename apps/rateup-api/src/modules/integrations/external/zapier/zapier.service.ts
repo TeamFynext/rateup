@@ -18,7 +18,11 @@ export enum ZapierTriggers {
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
 }
 
-export async function getSampleDataForTrigger(triggerKey: ZapierTriggers, orgId, page?) {
+export async function getSampleDataForTrigger(
+  triggerKey: ZapierTriggers,
+  orgId: string,
+  page?: number,
+) {
   let data = [];
   switch (triggerKey) {
     case ZapierTriggers.CONTACT_CREATE:
@@ -154,7 +158,7 @@ export async function getSampleDataForTrigger(triggerKey: ZapierTriggers, orgId,
       data = contactLifecyles.map((l) => ({
         contactId: l.id,
         lifecycleId: l.lifecycleId,
-        lifecycleName: l.Lifecycle.name,
+        lifecycleName: l.Lifecycle?.name ?? null,
       }));
       break;
     case ZapierTriggers.NEW_MESSAGE:
@@ -190,7 +194,7 @@ export async function getSampleDataForTrigger(triggerKey: ZapierTriggers, orgId,
         },
       });
       data = messages.map((m) => ({
-        from: m.contact.phone,
+        from: m.contact?.phone ?? null,
         messageBody: m.messageBody.receive,
         platform: m.sourcePlatform,
         source: m.sourceIdentifier,
@@ -396,11 +400,14 @@ export async function getSampleDataForTrigger(triggerKey: ZapierTriggers, orgId,
   return data;
 }
 
-export async function addZapierTriggerToQueue(name: ZapierTriggers, data, orgId) {
+// `data` genuinely varies by trigger (contact rows, message rows, ticket
+// rows, ...) — this just forwards it into the BullMQ job payload, it's never
+// inspected here, so `unknown` is accurate rather than a cop-out.
+export async function addZapierTriggerToQueue(name: ZapierTriggers, data: unknown, orgId: string) {
   await zapierTriggerQueue.add(name, { data, orgId });
 }
 
-export async function deleteContactByPhoneNumberAndOrgId(orgId, phone) {
+export async function deleteContactByPhoneNumberAndOrgId(orgId: string, phone: string) {
   const contact = await prisma.contact.delete({
     where: {
       contact_phone_org_id_unique: {
@@ -417,7 +424,7 @@ export async function deleteContactByPhoneNumberAndOrgId(orgId, phone) {
   return contact;
 }
 
-export async function getTicketBoardsByTeamId(teamId, page?) {
+export async function getTicketBoardsByTeamId(teamId: string, page?: number) {
   const boards = await prisma.ticketBoard.findMany({
     where: {
       teams: {
@@ -440,7 +447,7 @@ export async function getTicketBoardsByTeamId(teamId, page?) {
   return boards.map((b) => ({ id: b.id, name: b.title }));
 }
 
-export async function getTicketColumnsByBoardId(boardId: string, page?) {
+export async function getTicketColumnsByBoardId(boardId: string, page?: number) {
   const columns = await prisma.ticketColumn.findMany({
     where: {
       ticketBoardId: boardId,
@@ -459,7 +466,7 @@ export async function getTicketColumnsByBoardId(boardId: string, page?) {
   return columns.map((c) => ({ id: c.id, name: c.title }));
 }
 
-export async function getLifecyclesByOrgId(orgId) {
+export async function getLifecyclesByOrgId(orgId: string) {
   return await prisma.lifecycle.findMany({
     where: {
       orgId,
@@ -471,7 +478,7 @@ export async function getLifecyclesByOrgId(orgId) {
   });
 }
 
-export async function getContactsByPhoneNumberAndOrgId(phone, orgId) {
+export async function getContactsByPhoneNumberAndOrgId(phone: string, orgId: string) {
   return await prisma.contact.findMany({
     where: {
       phone: {
@@ -482,7 +489,7 @@ export async function getContactsByPhoneNumberAndOrgId(phone, orgId) {
   });
 }
 
-export async function getUserIdByEmailAndOrgId(email, orgId) {
+export async function getUserIdByEmailAndOrgId(email: string, orgId: string) {
   return await prisma.orgMember.findFirst({
     where: {
       user: {

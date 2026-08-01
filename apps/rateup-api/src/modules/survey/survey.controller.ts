@@ -63,6 +63,7 @@ import { log } from "../../utils/logger.js";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema.js";
 import { getIp } from "../../utils/http.js";
 import { getSurveyResponseByIp } from "../response/response.service.js";
+import { errorMessage } from "../../utils/commonUtils.js";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -159,9 +160,9 @@ export async function fetchGoogleUrlBySurveyIdHandler(
 ) {
   try {
     return await getGoogleUrlBySurveyTeamMapId(request.params.surveyTeamMapId);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 }
@@ -183,9 +184,9 @@ export async function cloneSurveyHandler(
       reply.code(400).send({ success: false, message: survey });
       return;
     }
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
@@ -406,8 +407,8 @@ export async function updateSurveyByIdHandler(
         const flow = await getFlowBySurveyId(request.params.id);
         const { orgId } = request.user;
         log.trace("Publishing flow");
-        await publishFlowInWa(orgId, flow.flowId);
-        await updateFlowInDb(orgId, flow.dbFlowId, {
+        await publishFlowInWa(orgId, flow!.flowId!);
+        await updateFlowInDb(orgId, flow!.dbFlowId, {
           status: WaFlowStatus.PUBLISHED,
         });
       }
@@ -416,7 +417,7 @@ export async function updateSurveyByIdHandler(
     reply.code(200).send(response);
   } catch (e) {
     console.log(e);
-    reply.code(500).send({ status: "failed", message: e.message });
+    reply.code(500).send({ status: "failed", message: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -459,7 +460,7 @@ export async function verifySurveyPasswordHandler(
       reply.code(200).send({ status: "success", data: verifyPassword });
     }
   } catch (e) {
-    reply.code(500).send({ status: "error", message: e?.message });
+    reply.code(500).send({ status: "error", message: e instanceof Error ? e.message : undefined });
   }
 }
 
@@ -577,7 +578,9 @@ export async function createSurveyVariableHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({
+      error: (e instanceof Error ? e.message : undefined) || "Something Went Wrong! Try again.",
+    });
   }
 }
 
@@ -591,7 +594,9 @@ export async function getSurveyVariablesHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({
+      error: (e instanceof Error ? e.message : undefined) || "Something Went Wrong! Try again.",
+    });
   }
 }
 
@@ -608,7 +613,9 @@ export async function updateSurveyVariableHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({
+      error: (e instanceof Error ? e.message : undefined) || "Something Went Wrong! Try again.",
+    });
   }
 }
 
@@ -625,7 +632,9 @@ export async function deleteSurveyVariableHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({
+      error: (e instanceof Error ? e.message : undefined) || "Something Went Wrong! Try again.",
+    });
   }
 }
 

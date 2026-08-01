@@ -80,6 +80,9 @@ const OTHER_ORG = "22222222-2222-2222-2222-222222222222";
 const USER = "33333333-3333-3333-3333-333333333333";
 const SHORT = "Bc7Fh9Km";
 
+/** `GenerateQr.shareSettings` is a nullable Json column. */
+const NULL_JSON: Prisma.JsonValue = null;
+
 function row(over: Record<string, unknown> = {}) {
   return {
     id: "qr-1",
@@ -88,7 +91,7 @@ function row(over: Record<string, unknown> = {}) {
     createdById: USER,
     ownerOrgId: ORG,
     shortUrlId: SHORT,
-    shareSettings: null,
+    shareSettings: NULL_JSON,
     link: "https://rateup.app/s/abc",
     noOfScans: 0,
     ...over,
@@ -373,32 +376,35 @@ describe("controllers", () => {
     expect(answer(rep)).toEqual({ code: 201, body: row() });
   });
 
-  test("a short id collision on create loses the request and throws", async () => {
-    // NOTE: shortIdUniqueConstraintErrHandler retries as
-    // `shortIdUniqueConstraintErrHandler(functionToBeHandled)` — without the
-    // ...args it was given — so the retry calls the service with no request.
-    // See issues.txt 3.x; this module is one of its callers.
+  test("a short id collision on create retries with the original request and succeeds", async () => {
+    // NOTE: shortIdUniqueConstraintErrHandler's retry calls
+    // `functionToBeHandled()` with none of the original ...args — previously
+    // the service function itself was passed as functionToBeHandled with req
+    // as a spread arg, so the retry lost the request and crashed with a
+    // TypeError. The controller now wraps the service call in a closure that
+    // captures req directly, so the retry succeeds instead of losing it.
     db.generateQr.create.mockRejectedValueOnce(
       new FakeKnownError("P2002", { target: ["shortUrlId"] }),
     );
     const rep = reply();
 
-    await expect(
-      createGenerateQrRecord(req({ body: { name: "T", link: "https://x.test" } }), rep),
-    ).rejects.toBeInstanceOf(TypeError);
+    await createGenerateQrRecord(req({ body: { name: "T", link: "https://x.test" } }), rep);
 
-    expect(db.generateQr.create).toHaveBeenCalledTimes(1);
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(db.generateQr.create).toHaveBeenCalledTimes(2);
+    expect(answer(rep)).toEqual({ code: 201, body: row() });
   });
 
-  test("a unique-constraint error carrying no meta is replaced by a TypeError", async () => {
-    // NOTE: the guard reads err.meta.target before checking that meta exists.
-    db.generateQr.create.mockRejectedValueOnce(new FakeKnownError("P2002"));
+  test("a unique-constraint error carrying no meta is rethrown untouched", async () => {
+    // The guard reads err.meta?.target, so a P2002 with no meta is simply not a
+    // shortUrlId collision: it is not retried and reaches the caller unchanged.
+    const err = new FakeKnownError("P2002");
+    db.generateQr.create.mockRejectedValueOnce(err);
     const rep = reply();
 
     await expect(
       createGenerateQrRecord(req({ body: { name: "T", link: "https://x.test" } }), rep),
-    ).rejects.toBeInstanceOf(TypeError);
+    ).rejects.toBe(err);
+    expect(db.generateQr.create).toHaveBeenCalledTimes(1);
   });
 
   test("an unrelated write failure is rethrown untouched", async () => {

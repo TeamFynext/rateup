@@ -175,7 +175,7 @@ describe("reading a flow - who is allowed to see it", () => {
 
     const flow = await getFlowFromDb(DB_FLOW_ID);
 
-    expect(flow.orgId).toBe(ORG_B);
+    expect(flow!.orgId).toBe(ORG_B);
     expect(db.waFlow.findFirst.mock.calls[0][0]).toEqual({ where: { dbFlowId: DB_FLOW_ID } });
   });
 
@@ -306,7 +306,7 @@ describe("updateFlowJsonInWa", () => {
     await updateFlowJsonInWa(ORG_A, "wa-flow-1", { screens: [] } as any);
 
     const [url, , config] = axiosMock.post.mock.calls[0];
-    expect(url).toBe("https://graph.facebook.com/v21.0/wa-flow-1/assets");
+    expect(url).toBe("https://graph.facebook.com/v25.0/wa-flow-1/assets");
     expect(config.headers.Authorization).toBe("Bearer token-abc");
   });
 
@@ -515,14 +515,14 @@ describe("getFlowPreview", () => {
     await expect(getFlowPreview(ORG_A, DB_FLOW_ID)).resolves.toEqual({ url: "fresh" });
   });
 
-  // NOTE: pins current behaviour. getFlowPreviewFromDb reads `flow.preview` with no
-  // null check, so an id that matches nothing raises a TypeError rather than
-  // reporting nothing. Nothing calls it today — it is dead alongside getFlowPreview,
-  // which does the same job properly. See issues.txt 11.11.
-  test("throws rather than reporting nothing for a flow id that matches nothing", async () => {
+  // getFlowPreviewFromDb is dead code (nothing calls it today — getFlowPreview
+  // does the same job properly), but it used to read `flow.preview` with no
+  // null check, so an id that matches nothing raised a TypeError instead of
+  // reporting nothing. Fixed to resolve `undefined` instead. See issues.txt.
+  test("reports nothing for a flow id that matches nothing", async () => {
     db.waFlow.findFirst.mockResolvedValue(null);
 
-    await expect(getFlowPreviewFromDb("nope")).rejects.toThrow(TypeError);
+    await expect(getFlowPreviewFromDb("nope")).resolves.toBeUndefined();
   });
 });
 

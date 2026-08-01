@@ -8,6 +8,7 @@ import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_template
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
 import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import {
+  WaTemplateCategory,
   WaTemplateComponentType,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
@@ -22,7 +23,15 @@ import { SendTemplateHeaderComponent } from "../../../external/v1/wa-templates/w
  * fetches templates from WhatsApp Business API
  * @returns
  */
-export async function fetchTemplates(orgId: string, whatsappSettingsPhoneId?: string) {
+/** Reads the API error payload off a thrown axios-style error, if present. */
+function getErrorResponse(e: unknown): unknown {
+  return e && typeof e === "object" && "response" in e ? (e as { response?: unknown }).response : e;
+}
+
+export async function fetchTemplates(
+  orgId: string,
+  whatsappSettingsPhoneId?: string,
+): Promise<WaMetaTemplate[]> {
   try {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     if (!waSettings) {
@@ -37,8 +46,8 @@ export async function fetchTemplates(orgId: string, whatsappSettingsPhoneId?: st
     );
     log.trace(" Templates fetched from whatsapp: %o", res.data.data.length);
     return res.data.data;
-  } catch (e: any) {
-    log.error("Error getting templates \n%o", e.response);
+  } catch (e) {
+    log.error({ err: getErrorResponse(e) }, "Error getting templates \n%o");
     return [];
   }
 }
@@ -50,6 +59,9 @@ export async function fetchTemplate(
 ) {
   try {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+    if (!waSettings) {
+      throw new Error("No WhatsApp settings found for orgId " + orgId);
+    }
     log.trace("fetching template %s", templateName);
     const {
       data: { data: templates },
@@ -60,7 +72,7 @@ export async function fetchTemplate(
     );
     return templates[0];
   } catch (e) {
-    log.error("Error fetching template %s \n%o", templateName, e);
+    log.error({ err: e, templateName }, "Error fetching template");
   }
 }
 
@@ -100,30 +112,25 @@ export async function getTemplatesByOrgIdAndTemplateType(
       },
     },
   });
-  return templates as WaTemplateWithTypes[];
+  // This query selects a summary subset of WaTemplate's columns (no orgId,
+  // acceptButton, defaultValues, etc.), so it doesn't fit WaTemplateWithTypes -
+  // just return what Prisma actually infers for this select.
+  return templates;
 }
 
 export interface templateData {
   id: string;
   createdAt: Date;
   data: {
+    id?: string;
     components: WaTemplateComponent[];
     name: string;
     language: string;
+    status?: WaTemplateStatus;
+    category?: WaTemplateCategory;
   };
   acceptButton: string | null;
-  defaultValues: {
-    image: {
-      link: string;
-    };
-    document: {
-      link: string;
-      filename: string;
-    };
-    video: {
-      link: string;
-    };
-  } | null;
+  defaultValues: WaTemplateDefaultValues | null;
   orgId: string;
   templateType: $Enums.TemplateType;
   config: {
@@ -153,7 +160,7 @@ export async function getTemplateByNameAndOrgId(name: string, orgId: string) {
       },
     },
   });
-  return template;
+  return template as templateData | null;
 }
 export async function getDbTemplate(templateId: string) {
   try {
@@ -163,8 +170,8 @@ export async function getDbTemplate(templateId: string) {
       },
     });
     return res as unknown as WaTemplateWithTypes;
-  } catch (e: any) {
-    log.error("Error getting template from db \n%o", e);
+  } catch (e) {
+    log.error({ err: e }, "Error getting template from db \n%o");
     return null;
   }
 }
@@ -180,8 +187,8 @@ export async function getTemplateWithHSMId(hsmId: string) {
       },
     });
     return res as unknown as WaTemplateWithTypes;
-  } catch (e: any) {
-    log.error("Error getting template from db \n%o", e);
+  } catch (e) {
+    log.error({ err: e }, "Error getting template from db \n%o");
     return null;
   }
 }
@@ -193,7 +200,7 @@ export async function getTemplateWithHSMId(hsmId: string) {
  */
 export async function createTemplate(
   orgId: string,
-  template: any,
+  template: WaMetaTemplate,
   whatsappSettingsPhoneId?: string,
 ) {
   const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
@@ -225,17 +232,17 @@ export async function createTemplate(
  * @returns
  */
 export async function saveTemplate(
-  template: any,
+  template: WaMetaTemplate,
   orgId: string,
   defaultValues: WaTemplateDefaultValues = {},
   templateType?: TemplateType,
-  config?: any,
+  config?: WaTemplateConfig,
   whatsappSettingsPhoneId?: string,
 ) {
   try {
     const res = await prisma.waTemplate.create({
       data: {
-        data: template,
+        data: template as WaTemplateWithTypes["data"],
         acceptButton: "",
         orgId: orgId,
         defaultValues,
@@ -246,7 +253,7 @@ export async function saveTemplate(
     });
     log.trace("Template saved to db %o", res);
     return res;
-  } catch (e: any) {
+  } catch (e) {
     log.error("Error saving template");
     console.log(e);
   }
@@ -263,6 +270,9 @@ export async function deleteTemplate(orgId: string, templateId: string, template
   log.trace("Sending Delete req %o", { templateId, templateName });
   try {
     const waSettings = await getWaSettings(orgId);
+    if (!waSettings) {
+      throw new Error("No WhatsApp settings found for orgId " + orgId);
+    }
     const res = await callMetaApi(
       `/${waSettings.wabaId}/message_templates?hsm_id=${templateId}&name=${templateName}`,
       "DELETE",
@@ -270,8 +280,8 @@ export async function deleteTemplate(orgId: string, templateId: string, template
     );
     log.trace("Template deleted from whatsapp %o", res.data);
     return true;
-  } catch (e: any) {
-    log.error("Error deleting template \n%o\n%o", e, e.response?.data);
+  } catch (e) {
+    log.error({ err: getErrorResponse(e) }, "Error deleting template");
     return false;
   }
 }
@@ -289,7 +299,7 @@ export async function deleteTemplateFromDb(templateId: string) {
       },
     });
     return res;
-  } catch (e: any) {
+  } catch (e) {
     log.error("Error deleting template from db");
     console.log(e);
   }
@@ -297,10 +307,10 @@ export async function deleteTemplateFromDb(templateId: string) {
 
 export async function updateTemplateInDb(
   templateId: string,
-  template: any,
+  template: WaMetaTemplate,
   defaultValues?: WaTemplateDefaultValues,
   templateType?: TemplateType,
-  config?: any,
+  config?: WaTemplateConfig,
   whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId, data: template });
@@ -310,7 +320,7 @@ export async function updateTemplateInDb(
         id: templateId,
       },
       data: {
-        data: template,
+        data: template as WaTemplateWithTypes["data"],
         defaultValues: defaultValues ? defaultValues : undefined,
         templateType,
         config,
@@ -318,8 +328,8 @@ export async function updateTemplateInDb(
       },
     });
     return res;
-  } catch (e: any) {
-    log.error("Error updating template in db \n%o", e);
+  } catch (e) {
+    log.error({ err: e }, "Error updating template in db \n%o");
   }
 }
 
@@ -331,13 +341,16 @@ export async function updateTemplateInDb(
 export async function editTemplate(
   orgId: string,
   hsm_id: string,
-  components: Array<any>,
+  components: Array<WaMetaTemplateComponent>,
   category: string,
   whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId: hsm_id, components });
   try {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+    if (!waSettings) {
+      throw new Error("No WhatsApp settings found for orgId " + orgId);
+    }
     const res = await callMetaApi(`/${hsm_id}`, "POST", waSettings.accessToken, {
       category,
       components,
@@ -353,10 +366,8 @@ export async function editTemplate(
       );
       return false;
     }
-  } catch (e: any) {
-    console.log(e?.response?.data);
-
-    log.error("Error updating template in whatsapp \n%o", e);
+  } catch (e) {
+    log.error({ err: getErrorResponse(e) }, "Error updating template in whatsapp");
     return false;
   }
 }
@@ -370,6 +381,9 @@ export async function updateTemplate(templateId: string, data: CreateWaTemplateI
   switch (data.templateType) {
     case TemplateType.GENERAL_NOTIFICATION:
     case TemplateType.LOYALTY:
+      if (!template) {
+        throw new Error(`Template not found for id ${templateId}`);
+      }
       res = await editTemplate(
         template.orgId,
         template.data.id,
@@ -437,9 +451,9 @@ export async function updateTemplate(templateId: string, data: CreateWaTemplateI
 /**
  * Helper function to determine template type from WhatsApp template
  */
-function inferTemplateType(template: any): TemplateType {
+function inferTemplateType(template: WaMetaTemplate): TemplateType {
   // Check if it's a carousel template
-  const hasCarousel = template.components?.some((c: any) => c.type?.toLowerCase() === "carousel");
+  const hasCarousel = template.components?.some((c) => c.type?.toLowerCase() === "carousel");
   if (hasCarousel) {
     return TemplateType.CAROUSEL;
   }
@@ -456,11 +470,11 @@ function inferTemplateType(template: any): TemplateType {
 /**
  * Helper function to extract default values from template components
  */
-function extractDefaultValues(template: any): WaTemplateDefaultValues {
+function extractDefaultValues(template: WaMetaTemplate): WaTemplateDefaultValues {
   const defaultValues: WaTemplateDefaultValues = {};
 
   const headerComponent = template.components?.find(
-    (c: any) => c.type?.toLowerCase() === WaTemplateComponentType.HEADER,
+    (c) => c.type?.toLowerCase() === WaTemplateComponentType.HEADER,
   );
 
   if (headerComponent) {
@@ -564,8 +578,8 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
 
     log.trace("Templates synced");
     return { success: true, created, updated };
-  } catch (e: any) {
-    log.error("Error syncing templates \n%o", e);
+  } catch (e) {
+    log.error({ err: e }, "Error syncing templates \n%o");
     return { success: false, created: 0, updated: 0 };
   }
 }
@@ -573,22 +587,28 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
 export async function getUnregisteredTemplates(orgId: string) {
   const waTemplates = await fetchTemplates(orgId);
   const dbTemplates = await getTemplatesByOrgId(orgId);
-  const registeredTemplateIds = dbTemplates.map((dt: any) => dt.data.id);
+  const registeredTemplateIds = dbTemplates.map((dt) => dt.data.id);
+  // A Meta template always carries an id; the type allows its absence because
+  // the same shape doubles as the create payload.
   const unregisteredTemplates = waTemplates.filter(
-    (wt: any) =>
-      !registeredTemplateIds.includes(wt.id) && // Filtering out already registered templates
-      wt.components.find((c) => c.type.toLowerCase() === "buttons")?.buttons.length === 2, // Selecting templates with only 2 buttons. Filtering out the rest since it cant be used as template message.
+    (wt) =>
+      !registeredTemplateIds.includes(wt.id ?? "") && // Filtering out already registered templates
+      wt.components?.find((c) => c.type.toString().toLowerCase() === "buttons")?.buttons?.length ===
+        2, // Selecting templates with only 2 buttons. Filtering out the rest since it cant be used as template message.
   );
   return unregisteredTemplates;
 }
 
-export async function registerTemplatesInDb(dbTemplates: Array<any>, orgId: string) {
+export async function registerTemplatesInDb(
+  dbTemplates: Array<{ data: WaMetaTemplate; acceptButton?: string | null }>,
+  orgId: string,
+) {
   await prisma.waTemplate.createMany({
-    data: dbTemplates.map((dt: any) => {
+    data: dbTemplates.map((dt) => {
       return {
         orgId: orgId,
         acceptButton: dt.acceptButton,
-        data: dt.data,
+        data: dt.data as WaTemplateWithTypes["data"],
       };
     }),
   });
@@ -596,6 +616,9 @@ export async function registerTemplatesInDb(dbTemplates: Array<any>, orgId: stri
 
 export async function uploadFileToWaTemplate(file: MultipartFile, size: number, orgId: string) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("No WhatsApp settings found for orgId " + orgId);
+  }
   const { accessToken, appId } = waSettings;
 
   if (!accessToken || !appId) {
@@ -646,7 +669,7 @@ interface SendTemplateToPhoneProps {
   dbTemplate: templateData;
   phone: string;
   teamId: string | undefined;
-  header: SendTemplateHeaderComponent;
+  header: SendTemplateHeaderComponent | undefined;
   userId: string;
 }
 export async function sendTemplateToPhone({
@@ -730,7 +753,7 @@ export async function sendTemplateToPhone({
             {
               type: "image",
               image: {
-                link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+                link: getFileUrlFromKey(defaultValues.image.link),
               },
             },
           ],
@@ -753,7 +776,7 @@ export async function sendTemplateToPhone({
   await sendMessage(
     orgId,
     templateMessage,
-    null,
+    undefined,
     userId,
     undefined,
     undefined,
@@ -766,7 +789,7 @@ export async function sendTemplateToPhone({
   log.trace("Template send to user successfully");
 }
 
-export async function getTemplateByTemplateType(templateType, orgId) {
+export async function getTemplateByTemplateType(templateType: TemplateType, orgId: string) {
   return await prisma.waTemplate.findMany({
     where: {
       templateType,

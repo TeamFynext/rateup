@@ -6,7 +6,7 @@ export async function getUnsplashImageList({
   limit = 25,
 }: getUnsplashImageQueryString) {
   const url =
-    query?.length > 0
+    (query?.length ?? 0) > 0
       ? `/search/photos?page=${page}&per_page=${limit}&query=${query}`
       : `/photos?page=${page}&per_page=${limit}`;
   const response = await fetch(

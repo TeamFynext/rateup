@@ -6,7 +6,7 @@ import { SubscriptionFeaturePathName } from "../types/enums.js";
 import dayjs from "dayjs";
 import { FreePlanSubscriptionFeatures } from "../modules/subscription/subscription.data.js";
 import { getNestedProperty } from "./misc/obj.utils.js";
-import { ContactGroupType, Role } from "../../generated/prisma/client.js";
+import { Role } from "../../generated/prisma/client.js";
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {
@@ -130,7 +130,8 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
       }
 
       const missingFeatures = featurePathNames.filter(
-        (feature) => !getNestedProperty(subscription.features, feature).active,
+        (feature) =>
+          !getNestedProperty<subscriptionActiveField>(subscription.features, feature)?.active,
       );
       if (missingFeatures.length > 0) {
         log.error(
@@ -154,7 +155,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
   };
 }
 
-export function assertRootOrg(request: FastifyRequest, reply: FastifyReply, done) {
+export function assertRootOrg(request: FastifyRequest, reply: FastifyReply, done: () => void) {
   if (!request.user.orgId || request.user.orgId !== process.env.ROOT_ORG) {
     reply.code(403).send({ message: "Not authorized" });
   }
@@ -194,7 +195,8 @@ export function getVerifySubscriptionForPublicHandler(
         return;
       }
       const missingFeatures = featurePathNames.filter(
-        (feature) => !getNestedProperty(subscription.features, feature).active,
+        (feature) =>
+          !getNestedProperty<subscriptionActiveField>(subscription.features, feature)?.active,
       );
       if (missingFeatures.length > 0) {
         log.error(
@@ -214,7 +216,10 @@ export function getVerifySubscriptionForPublicHandler(
   };
 }
 
-export async function verifySubscription(orgId, featurePathNames) {
+export async function verifySubscription(
+  orgId: string,
+  featurePathNames: Array<SubscriptionFeaturePathName>,
+) {
   const subscription = await getSubscription(orgId);
 
   if (!subscription) {
@@ -226,7 +231,8 @@ export async function verifySubscription(orgId, featurePathNames) {
     return false;
   }
   const missingFeatures = featurePathNames.filter(
-    (feature) => !getNestedProperty(subscription.features, feature).active,
+    (feature) =>
+      !getNestedProperty<subscriptionActiveField>(subscription.features, feature)?.active,
   );
   if (missingFeatures.length > 0) {
     log.error({ missingFeatures, orgId }, "Subscription missing features");

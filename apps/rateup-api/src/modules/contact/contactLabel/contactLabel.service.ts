@@ -1,5 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import { CreateContactLabelSchema, UpdateContactLabelSchema } from "./contactLabel.schema.js";
+import type { Prisma } from "../../../../generated/prisma/client.js";
 
 export async function createContactLabel(
   orgId: string,
@@ -122,12 +123,14 @@ export async function assignLabelsToContact(contactId: string, labelIds: string[
 }
 
 export async function getContactsWithLabels(orgId: string, labelIds?: string[]) {
-  const whereCondition: any = {
+  const whereCondition: Prisma.ContactWhereInput = {
     orgId,
   };
 
   if (labelIds && labelIds.length > 0) {
-    whereCondition.contactLabels = {
+    // The Contact -> label join relation is `ContactLabelMap`; there is no
+    // `contactLabels` field, and prisma rejects unknown arguments outright.
+    whereCondition.ContactLabelMap = {
       some: {
         labelId: {
           in: labelIds,

@@ -9,6 +9,10 @@ export async function saveWebhookHandler(
   const { orgId } = req.user;
   const { url, events, verifyToken } = req.body;
 
+  if (!verifyToken) {
+    return rep.code(400).send({ message: "verifyToken is required" });
+  }
+
   const verified = await verifyWebhookUrl(url, verifyToken);
   if (!verified) {
     return rep.code(400).send({ message: "Webhook URL challenge verification failed" });

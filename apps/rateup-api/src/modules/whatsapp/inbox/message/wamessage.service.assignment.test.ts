@@ -372,7 +372,7 @@ describe("assignWaMessageToUser - which ticket it lands on", () => {
       "org-1",
       WaMessageAssignStatus.ASSIGNED,
     );
-    expect(result.conversation.id).toBe("conv-new");
+    expect(result.conversation!.id).toBe("conv-new");
   });
 
   test("opens a ticket when the contact has never had one", async () => {
@@ -486,7 +486,7 @@ describe("reopenConversation", () => {
     const result = await reopenConversation("org-1", "user-1", "contact-1", "conv-live");
 
     expect(openConversationMock).not.toHaveBeenCalled();
-    expect(result.conversation.id).toBe("conv-live");
+    expect(result.conversation!.id).toBe("conv-live");
   });
 
   test("uses the contact's latest ticket when none is named", async () => {

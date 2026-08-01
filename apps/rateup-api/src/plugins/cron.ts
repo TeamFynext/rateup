@@ -1,4 +1,12 @@
-import fastifyCron from "fastify-cron";
+import { FastifyInstance } from "fastify";
+// `fastify-cron` is a CommonJS package; under this project's `moduleResolution: nodenext`,
+// its default ESM import resolves to the whole `module.exports` object (matching real
+// Node interop — verified at runtime), with the actual plugin function one level deeper
+// at `.default`. Fastify's plugin loader (avvio) already unwraps this automatically, so
+// accessing `.default` explicitly here just makes that existing runtime behavior visible
+// to the type checker, without changing it.
+import fastifyCronModule from "fastify-cron";
+import type { Config as CronConfig } from "fastify-cron";
 import { log } from "../utils/logger.js";
 import { resetAnnualCounts, resetMonthlyCounts } from "../modules/stats/stats.service.js";
 import { endSurveyCronAction, publishSurveyCronAction } from "../modules/survey/survey.service.js";
@@ -26,118 +34,113 @@ function safeRun(name: string, fn: () => Promise<unknown>) {
   });
 }
 
-export async function registerCronJobs(
-  server,
-  // : FastifyInstance
-) {
-  await server.register(fastifyCron, {
-    jobs: [
-      {
-        name: "publishSurveys",
-        cronTime: "0/15 * * * *",
-        onTick: async () => {
-          server.log.info("Running every 15min JOB --> Survey Publish Updations");
-          await Promise.all([
-            safeRun("publishSurveyCronAction", publishSurveyCronAction),
-            safeRun("endSurveyCronAction", endSurveyCronAction),
-            safeRun("sendCampaignCronAction", sendCampaignCronAction),
-            safeRun("sendSchedulesWaMessages", sendSchedulesWaMessages),
-            safeRun("sendShopifySurveyCronAction", sendShopifySurveyCronAction),
-          ]);
-        },
-        start: true,
+export async function registerCronJobs(server: FastifyInstance) {
+  const jobs: CronConfig["jobs"] = [
+    {
+      name: "publishSurveys",
+      cronTime: "0/15 * * * *",
+      onTick: async () => {
+        server.log.info("Running every 15min JOB --> Survey Publish Updations");
+        await Promise.all([
+          safeRun("publishSurveyCronAction", publishSurveyCronAction),
+          safeRun("endSurveyCronAction", endSurveyCronAction),
+          safeRun("sendCampaignCronAction", sendCampaignCronAction),
+          safeRun("sendSchedulesWaMessages", sendSchedulesWaMessages),
+          safeRun("sendShopifySurveyCronAction", sendShopifySurveyCronAction),
+        ]);
       },
-      {
-        name: "dripCampaigns",
-        cronTime: "*/4 * * * *",
-        onTick: async () => {
-          server.log.info("Running every 4min JOB --> Drip Campaign Processing");
-          await safeRun("processDripCampaigns", processDripCampaigns);
-        },
-        start: true,
-        timeZone: "Etc/UTC",
+      start: true,
+    },
+    {
+      name: "dripCampaigns",
+      cronTime: "*/4 * * * *",
+      onTick: async () => {
+        server.log.info("Running every 4min JOB --> Drip Campaign Processing");
+        await safeRun("processDripCampaigns", processDripCampaigns);
       },
-      {
-        name: "hourlyJobs",
-        cronTime: "0 * * * *",
-        onTick: async () => {
-          server.log.info("Running hourly Jobs");
-          await safeRun(
-            "sendTemplateForShopifyAbandonedCheckouts",
-            sendTemplateForShopifyAbandonedCheckouts,
-          );
-        },
-        start: true,
+      start: true,
+      timeZone: "Etc/UTC",
+    },
+    {
+      name: "hourlyJobs",
+      cronTime: "0 * * * *",
+      onTick: async () => {
+        server.log.info("Running hourly Jobs");
+        await safeRun(
+          "sendTemplateForShopifyAbandonedCheckouts",
+          sendTemplateForShopifyAbandonedCheckouts,
+        );
       },
-      {
-        name: "zohoRefresh",
-        cronTime: "*/45 * * * *",
-        onTick: async () => {
-          server.log.info(
-            "Running every 45min JOB --> Zoho token refresh and webhook registration",
-          );
-          await safeRun("refreshZohoTokensAndWebhooks", refreshZohoTokensAndWebhooks);
-        },
-        start: true,
-        timeZone: "Etc/UTC",
+      start: true,
+    },
+    {
+      name: "zohoRefresh",
+      cronTime: "*/45 * * * *",
+      onTick: async () => {
+        server.log.info("Running every 45min JOB --> Zoho token refresh and webhook registration");
+        await safeRun("refreshZohoTokensAndWebhooks", refreshZohoTokensAndWebhooks);
       },
-      {
-        name: "midnightStatsReset",
-        cronTime: "30 0 * * *",
-        onTick: async () => {
-          server.log.info("Running Every Day 12.30 AM --> Stats Reset");
-          await safeRun("resetMonthlyCounts", resetMonthlyCounts);
-          await safeRun("resetAnnualCounts", resetAnnualCounts);
-        },
-        start: true,
+      start: true,
+      timeZone: "Etc/UTC",
+    },
+    {
+      name: "midnightStatsReset",
+      cronTime: "30 0 * * *",
+      onTick: async () => {
+        server.log.info("Running Every Day 12.30 AM --> Stats Reset");
+        await safeRun("resetMonthlyCounts", resetMonthlyCounts);
+        await safeRun("resetAnnualCounts", resetAnnualCounts);
       },
-      {
-        name: "loyaltyBirthdayCheck",
-        cronTime: "0 0 * * *", // Every day at 12:00 AM
-        onTick: async () => {
-          server.log.info("Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers");
-          await safeRun("checkBirthdayEventTriggers", checkBirthdayEventTriggers);
-        },
-        start: true,
+      start: true,
+    },
+    {
+      name: "loyaltyBirthdayCheck",
+      cronTime: "0 0 * * *", // Every day at 12:00 AM
+      onTick: async () => {
+        server.log.info("Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers");
+        await safeRun("checkBirthdayEventTriggers", checkBirthdayEventTriggers);
       },
-      {
-        name: "loyaltyInactivityCheck",
-        cronTime: "0 2 * * *", // Every day at 2:00 AM
-        onTick: async () => {
-          server.log.info("Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers");
-          await safeRun("checkInactivityEventTriggers", checkInactivityEventTriggers);
-        },
-        start: true,
+      start: true,
+    },
+    {
+      name: "loyaltyInactivityCheck",
+      cronTime: "0 2 * * *", // Every day at 2:00 AM
+      onTick: async () => {
+        server.log.info("Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers");
+        await safeRun("checkInactivityEventTriggers", checkInactivityEventTriggers);
       },
-      {
-        name: "loyaltyPointsExpiration",
-        cronTime: "0 1 * * *", // Every day at 1:00 AM
-        onTick: async () => {
-          server.log.info("Running Daily at 1:00 AM --> Loyalty Points Expiration");
-          await safeRun("checkPointsExpiration", checkPointsExpiration);
-        },
-        start: true,
+      start: true,
+    },
+    {
+      name: "loyaltyPointsExpiration",
+      cronTime: "0 1 * * *", // Every day at 1:00 AM
+      onTick: async () => {
+        server.log.info("Running Daily at 1:00 AM --> Loyalty Points Expiration");
+        await safeRun("checkPointsExpiration", checkPointsExpiration);
       },
-      {
-        name: "loyaltyPointsExpiryAlerts",
-        cronTime: "0 3 * * *", // Every day at 3:00 AM
-        onTick: async () => {
-          server.log.info(
-            "Running Daily at 3:00 AM --> Loyalty Points Expiry Alerts (14 days before expiry)",
-          );
-          await safeRun("checkPointsExpiryAlerts", checkPointsExpiryAlerts);
-        },
-        start: true,
+      start: true,
+    },
+    {
+      name: "loyaltyPointsExpiryAlerts",
+      cronTime: "0 3 * * *", // Every day at 3:00 AM
+      onTick: async () => {
+        server.log.info(
+          "Running Daily at 3:00 AM --> Loyalty Points Expiry Alerts (14 days before expiry)",
+        );
+        await safeRun("checkPointsExpiryAlerts", checkPointsExpiryAlerts);
       },
-      {
-        name: "inboxAutomation",
-        cronTime: "0 * * * *", // Every hour
-        onTick: async () => {
-          server.log.info("Running Inbox Auto-Close Automation Job");
-          await safeRun("runInboxAutomationCron", runInboxAutomationCron);
-        },
-        start: true,
+      start: true,
+    },
+    {
+      name: "inboxAutomation",
+      cronTime: "0 * * * *", // Every hour
+      onTick: async () => {
+        server.log.info("Running Inbox Auto-Close Automation Job");
+        await safeRun("runInboxAutomationCron", runInboxAutomationCron);
       },
-    ],
-  });
+      start: true,
+    },
+  ];
+
+  await server.register(fastifyCronModule.default, { jobs });
 }

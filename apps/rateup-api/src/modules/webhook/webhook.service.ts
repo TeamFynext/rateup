@@ -27,7 +27,7 @@ export async function verifyWebhookUrl(url: string, verifyToken: string): Promis
     const text = await res.text();
     return text.trim() === verifyToken;
   } catch (err) {
-    log.warn("Webhook URL verification failed for %s: %o", url, err);
+    log.warn({ url, err }, "Webhook URL verification failed");
     return false;
   }
 }

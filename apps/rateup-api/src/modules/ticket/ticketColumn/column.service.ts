@@ -48,7 +48,7 @@ export async function getColumns(ticketBoardId: string) {
     ...col,
     ticketCards: col.ticketCards.map((card) => ({
       ...card,
-      labels: (card as any).labels?.map((l: any) => l.label) || [],
+      labels: card.labels.map((l) => l.label),
     })),
   }));
 }
@@ -65,13 +65,14 @@ export async function getColumnById(id: string) {
     },
   });
 
-  if (column) {
-    column.ticketCards = column.ticketCards.map((card) => ({
+  if (!column) return column;
+  return {
+    ...column,
+    ticketCards: column.ticketCards.map((card) => ({
       ...card,
-      labels: (card as any).labels?.map((l: any) => l.label) || [],
-    })) as any;
-  }
-  return column;
+      labels: card.labels.map((l) => l.label),
+    })),
+  };
 }
 
 export async function updateColumn(id: string, data: ColumnUpdateInput) {

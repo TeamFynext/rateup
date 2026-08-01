@@ -191,7 +191,7 @@ function sent(rep: any, index = 0) {
 
 /** The template query handed to the most recent createTemplateMessage call. */
 function templateQuery() {
-  return m.createTemplateMessage.mock.calls.at(-1)[1];
+  return m.createTemplateMessage.mock.calls.at(-1)![1];
 }
 
 beforeEach(() => {
@@ -483,13 +483,15 @@ describe("deleteTemplateHandler", () => {
     expect(m.deleteTemplateFromDb).not.toHaveBeenCalled();
   });
 
-  test("answers 500 for a template that does not exist", async () => {
+  test("answers 404 for a template that does not exist", async () => {
     m.getDbTemplate.mockResolvedValue(null);
     const rep = reply();
 
     await deleteTemplateHandler(request({ params: { templateId: TEMPLATE_ID } }), rep);
 
-    expect(rep.code).toHaveBeenCalledWith(500);
+    // Now guarded explicitly, so a missing template is a 404 rather than a 500 derived
+    // from crashing on the null result.
+    expect(rep.code).toHaveBeenCalledWith(404);
   });
 
   // NOTE: pins current behaviour. deleteTemplate resolves false when Meta refused
@@ -693,16 +695,16 @@ describe("sendTemplateToUserCore - what it sends", () => {
     expect(templateQuery().components).toEqual([]);
   });
 
-  // NOTE: pins current behaviour. getTemplateByIdAndOrgId returns null for an id
-  // the org does not own, and the result is destructured on the next line with no
-  // guard — so an unknown or another org's template id gives a TypeError. The
-  // by-name branch two lines above DOES check. See issues.txt 14.5.
-  test("throws for a template id the caller's org does not own", async () => {
+  // The by-id branch now guards the null result the same way the by-name branch always
+  // did, so an unknown or another org's template id reports a failure instead of
+  // crashing with a TypeError (was issues.txt 14.5).
+  test("reports a failure for a template id the caller's org does not own", async () => {
     m.getTemplateByIdAndOrgId.mockResolvedValue(null);
 
-    await expect(sendTemplateToUserCore(ORG_A, TEMPLATE_ID, "15550001", [])).rejects.toThrow(
-      TypeError,
-    );
+    await expect(sendTemplateToUserCore(ORG_A, TEMPLATE_ID, "15550001", [])).resolves.toEqual({
+      status: false,
+      message: "Template not found with id",
+    });
   });
 });
 

@@ -41,7 +41,7 @@ export async function getUserFeatures(userId: string, orgId: string): Promise<Se
  */
 export async function attachUserFeatures(request: FastifyRequest, _reply: FastifyReply) {
   const { userId, orgId } = request.user;
-  request.features = await getUserFeatures(userId, orgId);
+  request.features = await getUserFeatures(userId!, orgId);
   request.can = (feature: TeamFeature) => request.features.has(feature);
 }
 
@@ -63,12 +63,12 @@ export function requireFeature(feature: TeamFeature) {
 
     if (!request.features) {
       const { userId, orgId } = request.user;
-      request.features = await getUserFeatures(userId, orgId);
+      request.features = await getUserFeatures(userId!, orgId);
       request.can = (f: TeamFeature) => request.features.has(f);
     }
 
     if (!request.features.has(requiredFeature)) {
-      const fallbackEmpty = (request.routeOptions.config as any)?.fallbackEmptyArray;
+      const fallbackEmpty = request.routeOptions.config?.fallbackEmptyArray;
 
       if (fallbackEmpty) {
         return reply.code(200).send([]);

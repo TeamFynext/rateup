@@ -20,9 +20,13 @@ import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   chatbotMessageSchema,
   dataLoadSchema,
+  dataSourceUploadInput,
   deleteContentSchema,
+  deleteContentInput,
   deleteManyContentSchema,
+  deleteManyContentInput,
   updateChatbotSchema,
+  updateChatbotInput,
 } from "./chatbot.schema.js";
 
 import { requireFeature, TeamFeature } from "../../utils/permissions.js";
@@ -36,7 +40,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     },
     throwFileSizeLimit: true,
   });
-  server.post(
+  server.post<{ Body: dataSourceUploadInput }>(
     "/embed-doc",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -70,7 +74,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
 
   server.get("/", {}, getUploadedSourceHandler);
 
-  server.delete(
+  server.delete<{ Body: deleteContentInput }>(
     "/delete-source",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -81,7 +85,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     deleteEmbeddedSourceHandler,
   );
 
-  server.delete(
+  server.delete<{ Body: deleteManyContentInput }>(
     "/delete-many-sources",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -102,7 +106,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     createChatbotHanlder,
   );
 
-  server.put(
+  server.put<{ Params: { chatbotId: string }; Body: updateChatbotInput }>(
     "/chatbot/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -112,14 +116,14 @@ export async function chatbotRoutes(server: FastifyInstance) {
     },
     updateChatbotDetailsHanlder,
   );
-  server.get(
+  server.get<{ Params: { chatbotId: string } }>(
     "/chatbot/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     getChatbotDetailsHandler,
   );
-  server.get(
+  server.get<{ Params: { chatbotId: string } }>(
     "/chathistory/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
@@ -135,7 +139,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     getAllChatbotsByOrgHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: { chatbotId: string } }>(
     "/chatbot/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],

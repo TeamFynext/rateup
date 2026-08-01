@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { AxiosError } from "axios";
 import {
   cloneFlow,
   cloneFlowInWa,
@@ -66,7 +67,7 @@ export async function getFlowsHandler(
     const flows = await getFlowsFromWa(orgId);
     res.send(flows);
   } else if (req.query.source === "db") {
-    const flows = await getFlowsFromDb(orgId, userId);
+    const flows = await getFlowsFromDb(orgId, userId!);
     res.send(flows);
   }
 }
@@ -93,16 +94,20 @@ export async function getFlowMetricsHandler(
   try {
     const { waFlowId } = req.params;
     const { orgId } = req.user;
-    const { accessToken } = await getWaSettings(orgId);
+    const waSettings = await getWaSettings(orgId);
+    if (!waSettings) {
+      throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+    }
     const response = await callMetaApi(
       `/${waFlowId}?fields=metric.name(ENDPOINT_REQUEST_COUNT).granularity(LIFETIME)`,
       "GET",
-      accessToken,
+      waSettings.accessToken,
     );
     res.send(response?.data);
   } catch (error) {
     log.error("error while getting flow metrics");
-    return res.status(500).send(error?.response);
+    const response = error instanceof AxiosError ? error.response : undefined;
+    return res.status(500).send(response);
   }
 }
 export async function getUnsyncedFlowsHandler(req: FastifyRequest, _res: FastifyReply) {
@@ -196,7 +201,7 @@ export async function createFlowHandler(
         ({
           version: "7.2",
           screens: [],
-        } as WaFlowJson),
+        } satisfies WaFlowJson),
       flowMap: req.body.map ?? {},
       surveyId: survey.id,
       status: WaFlowStatus.DRAFT,
@@ -224,13 +229,16 @@ export async function updateFlowHandler(
 
   log.trace("updating flow %o", req.body);
   const previousFlow = await getFlowFromDb(dbFlowId);
+  if (!previousFlow) {
+    throw new Error(`Flow not found: ${dbFlowId}`);
+  }
   const updatedFlow = await updateFlowInDb(orgId, dbFlowId, {
     ...req.body,
     pendingSave: true,
   });
-  const updatedWaAppIntegration = updatedFlow?.survey?.questions?.some(
-    (qs: any) => qs.type === QuestionType.Date && qs?.onSelectAction && qs?.waAppName,
-  );
+  const updatedWaAppIntegration = (
+    updatedFlow?.survey?.questions as unknown as Question[] | undefined
+  )?.some((qs) => qs.type === QuestionType.Date && qs?.onSelectAction && qs?.waAppName);
 
   // add data_channel_uri if logic jumps are updated
   if (
@@ -241,6 +249,14 @@ export async function updateFlowHandler(
     log.trace("updating data_channel_uri in wa %s", updatedFlow.flowId);
 
     const domain = process.env.API_URL;
+    if (!domain) {
+      throw new Error("API_URL environment variable is not set");
+    }
+    if (!updatedFlow.flowId) {
+      throw new Error(
+        `Flow ${updatedFlow.dbFlowId} has not been created in WhatsApp yet (missing flowId)`,
+      );
+    }
     const server_url = domain.startsWith("https") ? domain : `https://${domain}`;
     const endpoint_uri = `${server_url}/api/wa/endpoint/${orgId}/${updatedFlow.dbFlowId}`;
 
@@ -266,7 +282,7 @@ export async function saveFlowJsonToWhatsappHandler(
     res.status(200).send();
   } catch (error) {
     log.error({ err: error }, "Error saving flow json to whatsapp");
-    res.status(500).send(error.message);
+    res.status(500).send(error instanceof Error ? error.message : "Unknown error");
   }
 }
 
@@ -282,8 +298,16 @@ export async function updateFlowMetaDataHandler(
     const { dbFlowId } = req.params;
     const previousFlow = await getFlowFromDb(dbFlowId);
     await updateFlowInDb(orgId, dbFlowId, req.body);
-    const { accessToken } = await getWaSettings(orgId);
-    const { data } = await callMetaApi(`/${previousFlow?.flowId}`, "POST", accessToken, req.body);
+    const waSettings = await getWaSettings(orgId);
+    if (!waSettings) {
+      throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+    }
+    const { data } = await callMetaApi(
+      `/${previousFlow?.flowId}`,
+      "POST",
+      waSettings.accessToken,
+      req.body,
+    );
     if (!data?.success) {
       log.error({ err: data }, "Flow Not updated in whatsapp");
       throw new Error("Flow Not updated in whatsapp");
@@ -304,6 +328,12 @@ export async function cloneAndDeprecateFlowHandler(
     const { orgId } = req.user;
     const { dbFlowId } = req.params;
     const previousFlow = await getFlowFromDb(dbFlowId);
+    if (!previousFlow) {
+      throw new Error(`Flow not found: ${dbFlowId}`);
+    }
+    if (!previousFlow.flowId) {
+      throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
+    }
     const { categories } = await getFlowFromWa(orgId, previousFlow.flowId);
     //flowid of new cloned flow
     const { id: flowId } = await cloneFlowInWa(orgId, {
@@ -316,7 +346,7 @@ export async function cloneAndDeprecateFlowHandler(
     await updateFlowIdAndStatusInDb(dbFlowId, flowId, previousFlow.surveyId);
     res.status(204).send();
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send(error instanceof Error ? error.message : "Unknown error");
   }
 }
 
@@ -332,6 +362,12 @@ export async function cloneFlowHandler(
     const { orgId, userId } = req.user;
     const { dbFlowId } = req.params;
     const previousFlow = await getFlowFromDb(dbFlowId);
+    if (!previousFlow) {
+      throw new Error(`Flow not found: ${dbFlowId}`);
+    }
+    if (!previousFlow.flowId) {
+      throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
+    }
     const { categories } = await getFlowFromWa(orgId, previousFlow.flowId);
     const uniqueSuffix = Date.now();
     const { id: flowId } = await cloneFlowInWa(orgId, {
@@ -339,13 +375,13 @@ export async function cloneFlowHandler(
       categories,
       clone_flow_id: previousFlow.flowId,
     });
-    let waFlow = await cloneFlow(previousFlow, flowId, userId, teamId);
+    let waFlow = await cloneFlow(previousFlow, flowId, userId!, teamId);
     if (typeof waFlow === "string") {
       return res.status(400).send({ message: waFlow });
     }
     return res.status(201).send();
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send(error instanceof Error ? error.message : "Unknown error");
   }
 }
 export async function getFlowPreviewHandler(
@@ -371,6 +407,9 @@ export async function deleteFlowHandler(
   const { dbFlowId } = req.params;
 
   const flow = await getFlowFromDb(dbFlowId);
+  if (!flow) {
+    throw new Error(`Flow not found: ${dbFlowId}`);
+  }
   if (flow.status === WaFlowStatus.PUBLISHED) {
     throw new Error("Cannot delete a published flow. Deprecate it instead.");
   }
@@ -404,11 +443,17 @@ export async function deprecateFlowHandler(
   const { dbFlowId } = req.params;
 
   const flow = await getFlowFromDb(dbFlowId);
+  if (!flow) {
+    throw new Error(`Flow not found: ${dbFlowId}`);
+  }
   if (flow.status === WaFlowStatus.DRAFT) {
     throw new Error("Cannot deprecate a draft flow. Delete it instead.");
   }
 
   try {
+    if (!flow.flowId) {
+      throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
+    }
     await deprecateFlowInWa(orgId, flow.flowId);
   } catch (error) {
     log.error("Error deprecating flow in wa %s", error);
@@ -434,6 +479,12 @@ export async function publishFlowHandler(
   const { dbFlowId } = req.params;
 
   const flow = await getFlowFromDb(dbFlowId);
+  if (!flow) {
+    throw new Error(`Flow not found: ${dbFlowId}`);
+  }
+  if (!flow.flowId) {
+    throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
+  }
 
   await publishFlowInWa(orgId, flow.flowId);
   await updateFlowInDb(orgId, dbFlowId, { status: WaFlowStatus.PUBLISHED });
@@ -463,18 +514,21 @@ export async function sendFlowHandler(
     const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
     const surveyTeamMapId = dbFlow?.survey?.teams?.find((t) => t.teamId === teamId)?.id;
     const session = await getSession(orgId, phone);
-    if (!validateSession(session) || session.surveyTeamMapId !== surveyTeamMapId) {
+    if (!session || !validateSession(session) || session.surveyTeamMapId !== surveyTeamMapId) {
       await deleteSession(orgId, phone);
+      if (!surveyTeamMapId) {
+        throw new Error(`No survey team mapping found for team ${teamId} on flow ${flowId}`);
+      }
       await createSession({
         phone,
         orgId,
-        surveyTeamMapId: surveyTeamMapId,
+        surveyTeamMapId,
         language: dbFlow?.survey?.languages[0],
       });
     }
     await sendFlow(serviceParam);
     reply.status(201).send();
   } catch (error) {
-    reply.status(500).send(error.message);
+    reply.status(500).send(error instanceof Error ? error.message : "Unknown error");
   }
 }

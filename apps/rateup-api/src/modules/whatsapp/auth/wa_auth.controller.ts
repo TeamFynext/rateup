@@ -88,13 +88,17 @@ export async function registerBusinessClientHandler(
         assets,
       });
     } else {
+      const appId = process.env.wa_app_id;
+      if (!appId) {
+        throw new Error("wa_app_id environment variable is not configured");
+      }
       await createWaSettings(orgId, {
         wabaId: waba_id,
         phone: phone?.display_phone_number?.replace(/ /g, ""),
         phoneId: phone?.id,
         accessToken,
         type: WaConfigType.Automated,
-        appId: process.env.wa_app_id,
+        appId,
         encryption: keys,
         assets,
       });
@@ -141,11 +145,15 @@ export async function getUserAccessTokenHanlder(
     const res = await callMetaApi(url, "GET");
     log.info("Pages fetched from meta by user access token:%o", res?.data);
     const metaAssets = await getMetaAssets(waSettingsId);
+    const metaPages: { id: string; name: string; access_token: string }[] = res.data?.data ?? [];
     const data =
       !metaAssets || !metaAssets?.pages.length
-        ? res.data?.data.map((page) => ({ ...page, subscribedFields: [] }))
+        ? metaPages.map((page) => {
+            const subscribedFields: string[] = [];
+            return { ...page, subscribedFields };
+          })
         : metaAssets.pages.map((page) => {
-            const pageData = res.data?.data?.find((p) => p.id === page.id);
+            const pageData = metaPages.find((p) => p.id === page.id);
             if (pageData) {
               page.pageAccessTokenByUser = pageData.access_token;
             }

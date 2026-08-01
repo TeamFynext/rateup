@@ -9,13 +9,13 @@ const cardCore = {
   ticketColumnId: z.uuid(),
   order: z.number().optional(),
   type: z.enum(TicketType).optional(),
-  contactId: z.string().uuid().optional(),
+  contactId: z.uuid().optional(),
   surveyResponseId: z.string().optional(),
   reviewId: z.string().optional(),
   priority: z.enum(TicketPriority).optional(),
-  labelIds: z.array(z.string().uuid()).optional().nullable(),
+  labelIds: z.array(z.uuid()).optional().nullable(),
   deadline: z.coerce.date().optional().nullable(),
-  assignees: z.array(z.object({ assigneeId: z.string().uuid() })).optional(),
+  assignees: z.array(z.object({ assigneeId: z.uuid() })).optional(),
 };
 
 // Schema for creating a card
@@ -36,11 +36,28 @@ const updateCardRequestSchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
   assignedToIds: z.array(z.uuid()).optional(),
   priority: z.enum(TicketPriority).optional().nullable(),
-  labelIds: z.array(z.string().uuid()).optional().nullable(),
+  labelIds: z.array(z.uuid()).optional().nullable(),
   deadline: z.coerce.date().optional().nullable(),
   description: z.string().optional(),
-  contactId: z.string().uuid().optional().nullable(),
-  checklists: z.any().optional().nullable(),
+  contactId: z.uuid().optional().nullable(),
+  checklists: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        items: z
+          .array(
+            z.object({
+              id: z.string(),
+              text: z.string().optional(),
+              isCompleted: z.boolean().optional(),
+            }),
+          )
+          .optional(),
+      }),
+    )
+    .optional()
+    .nullable(),
   attachments: z.array(z.string()).optional(),
 });
 

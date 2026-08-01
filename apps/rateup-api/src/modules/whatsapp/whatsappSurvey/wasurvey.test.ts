@@ -12,6 +12,7 @@ some suffix text`;
     const res = parseStartMessage(startMessage);
 
     expect(res).not.toBeNull();
+    if (!res) throw new Error("expected parseStartMessage to return a non-null result");
     expect(res.surveyName).toEqual(surveyName);
     expect(res.teamCode).toEqual(teamCode);
   });
@@ -32,6 +33,7 @@ some suffix text`;
     const res = parseStartMessage(startMessage);
 
     expect(res).not.toBeNull();
+    if (!res) throw new Error("expected parseStartMessage to return a non-null result");
     expect(res.surveyName).toEqual(surveyName);
     expect(res.teamCode).toEqual(teamCode);
   });

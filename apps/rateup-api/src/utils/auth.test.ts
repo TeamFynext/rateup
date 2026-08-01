@@ -26,6 +26,7 @@ vi.mock("../../generated/prisma/client.js", () => ({
 import prisma from "./prisma.js";
 import { getSubscription } from "../modules/subscription/subscription.service.js";
 import { log } from "./logger.js";
+import { SubscriptionFeaturePathName } from "../types/enums.js";
 import {
   assertRootOrg,
   getVerifySubscriptionForPublicHandler,
@@ -252,9 +253,12 @@ describe("getVerifySubscriptionHandler", () => {
 
     await getVerifySubscriptionHandler(["whatsapp"] as any)(makeRequest(), reply);
 
-    // The missing path makes the lookup throw, which the catch turns into a 403.
+    // A feature path absent from the plan is now reported as a missing feature rather
+    // than crashing the lookup and falling through to the catch's generic message.
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.payload).toEqual({ message: "Error while verifying subscription" });
+    expect(reply.payload).toEqual({
+      message: "This feature is not included in your subscription",
+    });
   });
 
   test.each([["POST"], ["PUT"]])(
@@ -368,20 +372,26 @@ describe("getVerifySubscriptionForPublicHandler", () => {
 
 describe("verifySubscription", () => {
   test("hands back the subscription when everything checks out", async () => {
-    await expect(verifySubscription("org-1", ["whatsapp"])).resolves.toMatchObject({ id: "sub-1" });
+    await expect(
+      verifySubscription("org-1", [SubscriptionFeaturePathName.Whatsapp]),
+    ).resolves.toMatchObject({ id: "sub-1" });
   });
 
   test("reports false for an org with no subscription", async () => {
     getSubscriptionMock.mockResolvedValue(null);
 
-    await expect(verifySubscription("org-1", ["whatsapp"])).resolves.toBe(false);
+    await expect(verifySubscription("org-1", [SubscriptionFeaturePathName.Whatsapp])).resolves.toBe(
+      false,
+    );
   });
 
   // Unlike the request handlers, this one gates every use on expiry, not just writes.
   test("reports false once the subscription has expired", async () => {
     getSubscriptionMock.mockResolvedValue(subscription({ expiresAt: new Date("2020-01-01") }));
 
-    await expect(verifySubscription("org-1", ["whatsapp"])).resolves.toBe(false);
+    await expect(verifySubscription("org-1", [SubscriptionFeaturePathName.Whatsapp])).resolves.toBe(
+      false,
+    );
   });
 
   test("reports false when a requested feature is switched off", async () => {
@@ -389,7 +399,9 @@ describe("verifySubscription", () => {
       subscription({ features: { whatsapp: { active: false } } }),
     );
 
-    await expect(verifySubscription("org-1", ["whatsapp"])).resolves.toBe(false);
+    await expect(verifySubscription("org-1", [SubscriptionFeaturePathName.Whatsapp])).resolves.toBe(
+      false,
+    );
   });
 
   test("requires every named feature, not just one", async () => {
@@ -397,7 +409,12 @@ describe("verifySubscription", () => {
       subscription({ features: { whatsapp: { active: true }, team: { active: false } } }),
     );
 
-    await expect(verifySubscription("org-1", ["whatsapp", "team"])).resolves.toBe(false);
+    await expect(
+      verifySubscription("org-1", [
+        SubscriptionFeaturePathName.Whatsapp,
+        SubscriptionFeaturePathName.Team,
+      ]),
+    ).resolves.toBe(false);
   });
 });
 

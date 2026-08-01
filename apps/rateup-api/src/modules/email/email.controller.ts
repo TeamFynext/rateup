@@ -13,8 +13,9 @@ export async function sendEmailHandler(
     const res = await sendEmailService(request.body);
     reply.code(200).send(res);
   } catch (e) {
-    log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    const message = e instanceof Error ? e.message : "Something Went Wrong! Try again.";
+    log.error({ err: e }, message);
+    reply.code(500).send({ error: message });
   }
 }
 
@@ -30,8 +31,9 @@ export async function sendOTPEmailHandler(
     const res = await sendEmailService(request.body);
     reply.code(200).send(res);
   } catch (e) {
-    log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    const message = e instanceof Error ? e.message : "Something Went Wrong! Try again.";
+    log.error({ err: e }, message);
+    reply.code(500).send({ error: message });
   }
 }
 
@@ -44,7 +46,8 @@ export async function validateOTPHandler(
     const isValid = await validateOtp(otp, userId, surveyId);
     reply.code(200).send({ isValid });
   } catch (e) {
-    log.error(e);
-    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
+    const message = e instanceof Error ? e.message : "Something Went Wrong! Try again.";
+    log.error({ err: e }, message);
+    reply.code(500).send({ error: message });
   }
 }

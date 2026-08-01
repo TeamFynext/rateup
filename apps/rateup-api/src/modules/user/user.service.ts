@@ -24,6 +24,7 @@ import dayjs from "dayjs";
 import { createHubSpotCompany, createHubSpotContact } from "../../utils/hubspot.js";
 import prisma from "../../utils/prisma.js";
 import { UserPresenceMode } from "../../../generated/prisma/enums.js";
+import { Org, Team, TeamMember, User } from "../../../generated/prisma/client.js";
 
 async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
@@ -58,7 +59,10 @@ export async function createUserSignup({
   log.info("Creating user....");
   try {
     // Start a transaction
-    let team, teamMember, newUser, org;
+    let team: Team | undefined;
+    let teamMember: TeamMember | undefined;
+    let newUser: User | undefined;
+    let org: Org | undefined;
     const result = await prisma.$transaction(async (prisma) => {
       newUser = await prisma.user.create({
         data: {
@@ -117,8 +121,12 @@ export async function createUserSignup({
       });
       // Create the free-plan subscription. (Loyalty is no longer a subscription
       // feature, so signup no longer injects any loyalty-based feature overrides.)
-      await createFreePlanSubscription(org.id, prisma as any, planId);
+      await createFreePlanSubscription(org.id, prisma, planId);
     });
+
+    if (!newUser || !org || !team || !teamMember) {
+      throw new Error("User signup transaction did not complete as expected");
+    }
 
     if (team.id && teamMember.userId) {
       //create an initial default survey
@@ -145,7 +153,7 @@ export async function createUserSignup({
       try {
         await updateReferral(referralCode, "signup");
       } catch (err) {
-        log.error("Failed to increment referral signup_count: %o", err);
+        log.error({ err }, "Failed to increment referral signup_count");
       }
     }
 
@@ -167,7 +175,7 @@ export async function createUserSignup({
     return result;
   } catch (error) {
     // Rollback the transaction
-    log.error("create user transaction failed %o", error);
+    log.error({ err: error }, "create user transaction failed");
     throw error;
   } finally {
     await prisma.$disconnect();
@@ -318,6 +326,10 @@ export async function getLoggedUserProfile(request: FastifyRequest, reply: Fasti
   });
   //let passwordlessLogin = await PasswordLess.getUserById({ userId });
   //STT  update above code
+
+  if (!profile) {
+    throw Error("User not found in Rateup");
+  }
 
   let passwordlessLogin = null;
 
@@ -498,7 +510,7 @@ export async function deleteUser(userId: string) {
       where: { id: userId },
     });
   } catch (error) {
-    log.error("delete user transaction failed in db %o", error);
+    log.error({ err: error }, "delete user transaction failed in db");
   }
   await supertokens.deleteUser(userId);
 }
@@ -520,24 +532,26 @@ export async function getAllUsers() {
   const usersData = await Promise.all(
     users.map(async (user) => {
       const orgRole = await getOrgIdAndRole({ id: user?.id });
-      let orgData = await prisma.org.findUnique({
-        where: { id: orgRole.orgId },
-        select: {
-          logo: true,
-          name: true,
-          address: true,
-          phone: true,
-          isPaused: true,
-        },
-      });
+      let orgData = orgRole
+        ? await prisma.org.findUnique({
+            where: { id: orgRole.orgId },
+            select: {
+              logo: true,
+              name: true,
+              address: true,
+              phone: true,
+              isPaused: true,
+            },
+          })
+        : null;
       return {
         userId: user?.id,
         userName: user?.name,
-        role: orgRole.role,
+        role: orgRole?.role,
         email: user.email,
         phone: user.phone,
         profilePhoto: user?.profilePhoto,
-        orgId: orgRole.orgId,
+        orgId: orgRole?.orgId,
         orgName: orgData?.name,
         orgLogo: orgData?.logo,
         orgPhone: orgData?.phone,
@@ -575,7 +589,7 @@ export async function updateUserRecipe() {
   }
 }
 
-export async function pauseUser(id, data: PauseUserInput) {
+export async function pauseUser(id: string, data: PauseUserInput) {
   return await prisma.user.update({
     where: {
       id,
@@ -584,7 +598,7 @@ export async function pauseUser(id, data: PauseUserInput) {
   });
 }
 
-export function getUserRecipeName(recipeId) {
+export function getUserRecipeName(recipeId: string): UserRecipes | undefined {
   switch (recipeId) {
     case "thirdparty":
       return UserRecipes.ThirdPartyGoogle;
@@ -595,7 +609,7 @@ export function getUserRecipeName(recipeId) {
   }
 }
 
-export async function updateLastLoggedInTime(userId, date) {
+export async function updateLastLoggedInTime(userId: string, date: Date | string | null) {
   await prisma.user.update({
     where: {
       id: userId,

@@ -1,6 +1,6 @@
 import { rateupLogo } from "../constants/constants.js";
 
-export const createMessageTemplate = ({ body }) => {
+export const createMessageTemplate = ({ body }: { body: string }) => {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 7);
   const endDate = new Date();

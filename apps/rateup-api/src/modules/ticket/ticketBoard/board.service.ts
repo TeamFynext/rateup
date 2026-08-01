@@ -109,16 +109,17 @@ export async function getBoardById(id: string) {
     },
   });
 
-  if (board) {
-    board.ticketColumns = board.ticketColumns.map((col) => ({
+  if (!board) return board;
+  return {
+    ...board,
+    ticketColumns: board.ticketColumns.map((col) => ({
       ...col,
       ticketCards: col.ticketCards.map((card) => ({
         ...card,
-        labels: (card as any).labels?.map((l: any) => l.label) || [],
-      })) as any,
-    })) as any;
-  }
-  return board;
+        labels: card.labels.map((l) => l.label),
+      })),
+    })),
+  };
 }
 
 export async function updateBoard(id: string, data: UpdateBoardRequestSchema) {

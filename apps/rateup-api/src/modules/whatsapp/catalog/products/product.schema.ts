@@ -4,7 +4,17 @@ export const catalogProductCore = z.object({
   retailer_id: z.string(),
   title: z.string().max(100),
   description: z.string().max(5000, "Give short text describing product"),
-  condition: z.enum(["new", "refurbished", "used"]),
+  // Meta accepts the full condition vocabulary; see CatalogProductCore in global.d.ts.
+  condition: z.enum([
+    "new",
+    "refurbished",
+    "used",
+    "used_like_new",
+    "used_good",
+    "used_fair",
+    "cpo",
+    "open_box_new",
+  ]),
   image: z
     .array(
       z.object({
@@ -70,7 +80,7 @@ export const catalogHotel = z.object({
 
 export const catalogProductResponseCoreSchema = z.object({
   id: z.string(),
-  image_url: z.string().url(),
+  image_url: z.url(),
   name: z.string(),
   price: z.string(),
   retailer_id: z.string(),
@@ -99,14 +109,14 @@ export const catalogProductResponseCoreSchema = z.object({
     .default("in stock"),
   brand: z.string(),
   sale_price: z.string(),
-  url: z.string().url(),
+  url: z.url(),
   visibility: z.enum(["staging", "published"]).default("published"),
   description: z.string().max(5000),
 });
 
 export const catalogProductResponseSchema = catalogProductResponseCoreSchema.extend({
   custom_data: z.record(z.string(), z.string()).optional(),
-  additional_image_urls: z.array(z.string().url()).optional(),
+  additional_image_urls: z.array(z.url()).optional(),
   additional_variant_attributes: z.record(z.string(), z.string()).optional(),
   age_group: z
     .enum(["adult", "all ages", "infant", "kids", "newborn", "teen", "toddler"])
@@ -139,7 +149,7 @@ export const catalogProductResponseSchema = catalogProductResponseCoreSchema.ext
   manufacturer_part_number: z.string().optional(),
   marked_for_product_launch: z.enum(["default", "marked", "not_marked"]).optional(),
   material: z.string().max(200).optional(),
-  mobile_link: z.string().url().optional(),
+  mobile_link: z.url().optional(),
   ordering_index: z.number().int().optional(),
   origin_country: z.string().optional(),
   pattern: z.string().optional(),
@@ -214,6 +224,13 @@ export type catalogItemBatchSchema = z.infer<typeof catalogItemBatch>;
 export type CatalogItemQueryFilter = z.infer<typeof catalogItemQueryFilter>;
 export type CatalogResponseInput = z.infer<typeof catalogProductResponseSchema>;
 export type CatalogProductIdsSchema = z.infer<typeof catalogProductIdsSchema>;
+
+// Inferred directly from the per-vertical schemas (rather than via
+// `catalogItemSchema["PRODUCT_ITEM" | "HOTEL" | "HOTEL_ROOM"]`, which are
+// `.optional()` on the wrapper object and so always include `| undefined`).
+export type CatalogProductCoreInput = z.infer<typeof catalogProductCore>;
+export type CatalogHotelInput = z.infer<typeof catalogHotel>;
+export type CatalogHotelRoomInput = z.infer<typeof catalogHotelRoom>;
 
 // Auto-exported after fastify-zod migration
 export { catalogItemCore, catalogItemBatch, catalogItemQueryFilter, catalogProductIdsSchema };

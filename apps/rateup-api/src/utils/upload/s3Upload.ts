@@ -1,15 +1,24 @@
-import { S3Client, DeleteObjectsCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  type DeleteObjectsCommandInput,
+  type PutObjectCommandInput,
+} from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
-export const s3 = new S3Client({
-  region: process.env.AWS_S3_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
-  },
-});
+export const s3 =
+  process.env.AWS_S3_ACCESS_KEY_ID && process.env.AWS_S3_SECRET_KEY
+    ? new S3Client({
+        region: process.env.AWS_S3_REGION,
+        credentials: {
+          accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+        },
+      })
+    : new S3Client({ region: process.env.AWS_S3_REGION });
 
-export async function uploadFile(params) {
+export async function uploadFile(params: PutObjectCommandInput) {
   try {
     const parallelUploads3 = new Upload({
       client: s3,
@@ -34,7 +43,7 @@ export async function uploadFile(params) {
   }
 }
 
-export async function deleteFile(params) {
+export async function deleteFile(params: DeleteObjectsCommandInput) {
   const command = new DeleteObjectsCommand(params);
   try {
     const response = await s3.send(command);
@@ -54,7 +63,7 @@ export const getAWSObject = async (key: string) => {
     const response = await s3.send(command);
     // The Body object also has 'transformToByteArray' and 'transformToWebStream' methods.
     const str = await response.Body;
-    console.log(str.transformToString());
+    if (str) console.log(str.transformToString());
     return str;
   } catch (err) {
     console.error(err);

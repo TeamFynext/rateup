@@ -218,7 +218,7 @@ describe("reading a channel", () => {
   test("hands back the decrypted token and drops the initialisation vector", async () => {
     const result = await getWaSettings(ORG_A);
 
-    expect(result.accessToken).toBe("plain-token");
+    expect(result!.accessToken).toBe("plain-token");
     expect(result).not.toHaveProperty("accessToken_iv");
   });
 
@@ -292,7 +292,7 @@ describe("reading a channel", () => {
 
     const result = await getWaSettingsById(SETTINGS_ID);
 
-    expect(result.orgId).toBe(ORG_B);
+    expect(result!.orgId).toBe(ORG_B);
     expect(db.whatsappSettings.findUnique.mock.calls[0][0]).toEqual({
       where: { id: SETTINGS_ID },
     });
@@ -599,21 +599,22 @@ describe("reading Meta assets for onboarding", () => {
     await expect(getFbPagesFromWa(SETTINGS_ID)).rejects.toThrow("accesstoken not found");
   });
 
-  // NOTE: pins current behaviour. All four of these destructure getWaSettingsById's
-  // result before checking it, and that function returns null for an id that
-  // matches nothing. So an unknown — or another org's, since nothing is scoped —
-  // settings id gives a bare TypeError rather than the "accesstoken not found"
-  // error two lines below. The handlers catch it and answer a generic 500.
-  // See issues.txt 13.7.
+  // Fixed as part of the TS strict-mode migration (see issues.txt 13.7): all four of
+  // these used to destructure getWaSettingsById's result before checking it, and that
+  // function returns null for an id that matches nothing. An unknown — or another
+  // org's, since nothing is scoped — settings id gave a bare TypeError rather than the
+  // "accesstoken not found" error two lines above, and the handlers caught it and
+  // answered a generic 500. Both null-shaped inputs (missing row, row with no
+  // accessToken) now fail the same explicit way.
   test.each([
     ["the page list", () => getFbPagesFromWa(SETTINGS_ID)],
     ["the ad list", () => getAdsFromWa(SETTINGS_ID, "act-1")],
     ["the ad-account list", () => getAdAccountsFromWa(SETTINGS_ID)],
     ["the dataset list", () => getMetaDatasetsFromWa(SETTINGS_ID)],
-  ])("throws a bare type error from %s for a channel that does not exist", async (_l, read) => {
+  ])("throws the same clear error from %s for a channel that does not exist", async (_l, read) => {
     db.whatsappSettings.findUnique.mockResolvedValue(null);
 
-    await expect(read()).rejects.toThrow(TypeError);
+    await expect(read()).rejects.toThrow("accesstoken not found");
   });
 
   // NOTE: pins current behaviour, and this is the worst of the logging cases. The

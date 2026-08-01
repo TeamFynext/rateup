@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { WaTemplateComponentType, WaButtonType, WaTemplateCategory } from "../../../types/enums.js";
+import {
+  WaTemplateComponentType,
+  WaButtonType,
+  WaTemplateCategory,
+  WaTemplateSupportedFormats,
+} from "../../../types/enums.js";
 import { TemplateType } from "../../../../generated/prisma/client.js";
 
 const waTemplateInput = {
@@ -30,7 +35,7 @@ const waTemplateInput = {
           z.string().trim().min(1).max(2000).optional(),
         ]),
         flow_id: z.string().optional(),
-        flow_action: z.string().optional(),
+        flow_action: z.enum(["navigate", "data_exchange"]).optional(),
         navigate_screen: z.string().optional(),
         otp_type: z.literal("copy_code").optional(),
       }),
@@ -169,24 +174,58 @@ const waTemplateFormattedInput = {
     z.union([
       z.object({
         type: z.literal(WaTemplateComponentType.BODY),
-        text: z.string().max(1024),
+        // Absent on AUTHENTICATION templates, whose body Meta supplies.
+        text: z.string().max(1024).optional(),
+        /** Meta's sample values for the body's {{n}} placeholders. */
+        /**
+         * Meta's documented shape is a list of example sets (`string[][]`), but this repo
+         * has always sent one flat set; both are accepted so neither side is a lie.
+         */
+        example: z
+          .object({
+            body_text: z.union([z.array(z.string()), z.array(z.array(z.string()))]).optional(),
+          })
+          .optional(),
+        add_security_recommendation: z.boolean().optional(),
       }),
       z.object({
         type: z.literal(WaTemplateComponentType.HEADER),
-        format: z.any(),
-        text: z.string().max(60),
+        format: z.enum(WaTemplateSupportedFormats),
+        // Only a TEXT header carries text; media headers carry a sample handle instead.
+        text: z.string().max(60).optional(),
+        example: z
+          .object({
+            header_text: z.array(z.string()).optional(),
+            header_handle: z.array(z.string()).optional(),
+          })
+          .optional(),
       }),
       z.object({
         type: z.literal(WaTemplateComponentType.FOOTER),
-        text: z.string().max(60),
+        // AUTHENTICATION footers carry only the code expiry, no text.
+        text: z.string().max(60).optional(),
+        code_expiration_minutes: z.number().optional(),
+      }),
+      z.object({
+        type: z.literal(WaTemplateComponentType.CAROUSEL),
+        // Each card carries its own component list; the shapes match this union.
+        cards: z.array(z.looseObject({ components: z.array(z.looseObject({})) })),
       }),
       z.object({
         type: z.literal(WaTemplateComponentType.BUTTONS),
         buttons: z.array(
-          z.object({
-            // only for quick reply buttons
-            type: z.literal(WaButtonType.QUICK_REPLY),
-            text: z.string().max(25),
+          // Loose: Meta's button vocabulary is wider than the fields named here.
+          z.looseObject({
+            // The create payload carries the button type as sent, which is wider than
+            // WaButtonType for flow/url/phone buttons.
+            type: z.string().min(1),
+            text: z.string().max(25).optional(),
+            phone_number: z.string().optional(),
+            url: z.string().optional(),
+            example: z.union([z.string(), z.array(z.string())]).optional(),
+            flow_id: z.string().optional(),
+            flow_action: z.enum(["navigate", "data_exchange"]).optional(),
+            navigate_screen: z.string().optional(),
           }),
         ),
       }),

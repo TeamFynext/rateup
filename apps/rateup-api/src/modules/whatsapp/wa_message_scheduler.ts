@@ -14,10 +14,14 @@ import { updateMonthlyStat } from "../stats/stats.service.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
 import { getFlowIdFromTemplateComponents } from "./messageTemplates/wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds } from "./flows/flow.service.js";
+import type { sendPaymentInitTemplate } from "./automatedReply/wa_automatedReply.utils.js";
 
 interface WaMessageScheduleProps {
   phone: string;
-  messageBody: WaSendMessageBody;
+  // sendPaymentInitTemplate() builds a payment order-details message with a shape
+  // WaSendMessageBody doesn't model (its interactive.action type is flow-specific) —
+  // this is stored as opaque JSON below, so both real shapes are accepted here.
+  messageBody: WaSendMessageBody | Awaited<ReturnType<typeof sendPaymentInitTemplate>>;
   orgId: string;
   waTemplateId?: string;
   surveyTeamMapId?: string;
@@ -43,7 +47,7 @@ export async function createWaMessageSchedule({
       scheduledAt: getScheduleTime(timeDelay, new Date()),
       orgId,
       waTemplateId,
-      messageBody: messageBody as any,
+      messageBody,
       surveyTeamMapId,
       source,
       teamId: teamID,
@@ -90,13 +94,14 @@ export async function sendSchedulesWaMessages() {
 
     await Promise.all(
       schedules.map(async (schedule) => {
-        const containsFlowButton = !!getFlowIdFromTemplateComponents(
-          (schedule.waTemplate.data as any).components,
-        );
+        if (!schedule.waTemplate) {
+          log.error("Schedule %s has no linked waTemplate, skipping", schedule.id);
+          return;
+        }
+        const templateComponents = schedule.waTemplate.data.components ?? [];
+        const containsFlowButton = !!getFlowIdFromTemplateComponents(templateComponents);
         if (containsFlowButton) {
-          const flowId = getFlowIdFromTemplateComponents(
-            (schedule.waTemplate.data as any).components,
-          );
+          const flowId = getFlowIdFromTemplateComponents(templateComponents);
           if (!flowId) {
             log.error("Flow id not found in template\n Template => %o", schedule.waTemplate.data);
             throw new Error("Flow id not found in template");
@@ -150,7 +155,7 @@ export async function sendSchedulesWaMessages() {
       }),
     );
   } catch (e) {
-    log.error("error in wamessageschedule %o", e);
+    log.error({ err: e }, "error in wamessageschedule");
   }
 }
 

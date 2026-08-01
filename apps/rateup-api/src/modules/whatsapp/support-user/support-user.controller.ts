@@ -8,8 +8,8 @@ import { ExtCreateContactSchema } from "../../../external/v1/contact-groups/cont
 
 export async function supportUserWebhookEventHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    log.trace(`recieved support user webhook => %o`, request.body);
-    if ((request.body as any).object !== "support_user") {
+    log.trace({ body: request.body }, "recieved support user webhook");
+    if ((request.body as { object?: string } | undefined)?.object !== "support_user") {
       return reply.code(200).send();
     }
     reply.code(200).send();
@@ -30,12 +30,12 @@ export async function getOrCreateContactHandler(request: FastifyRequest, reply: 
     source: PlatformType.WEBCHAT,
     ...rest,
   };
-  const { contact } = await getOrCreateContactByPhone(
-    phone,
+  const { contact } = (await getOrCreateContactByPhone(
+    phone!,
     request.user.orgId,
     body,
     PlatformType.WEBCHAT,
     true,
-  );
+  ))!;
   reply.code(200).send(contact?.id);
 }

@@ -72,7 +72,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     deleteIntegrationByNameHandler,
   );
 
-  server.post(
+  server.post<{ Body: { code: string } }>(
     "/google/auth-token",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],

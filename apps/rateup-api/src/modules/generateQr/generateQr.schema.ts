@@ -32,6 +32,10 @@ type CreateGenerateQrRecordReqBody = z.infer<typeof createGenerateQrRecordReqBod
 
 export type updateGenerateQrRecordReqBodyType = z.infer<typeof updateGenerateQrRecordReqBody>;
 
+export type GetGenerateQrRecordWithShortIdParams = z.infer<
+  typeof getGenerateQrRecordWithShortIdParams
+>;
+
 export {
   generateQrBaseSchema,
   getGenerateQrRecordWithShortIdParams,

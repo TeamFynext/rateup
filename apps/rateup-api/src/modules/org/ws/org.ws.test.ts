@@ -295,7 +295,7 @@ describe("checkMobileId", () => {
   // the identity on a request that has already been refused.
   test("the 401 branch does not return", async () => {
     (getSessionWithoutRequestResponse as unknown as Mock).mockResolvedValueOnce({
-      getUserId: () => undefined,
+      getUserId: (): string | undefined => undefined,
       getAccessTokenPayload: () => ({ role: "ADMIN", orgId: OWN_ORG, email: "a@b.test" }),
     });
     const request: any = { query: { accessToken: "t" }, headers: {} };

@@ -17,14 +17,14 @@ export const checkSession = async (request: FastifyRequest, reply: FastifyReply)
       reply.code(401).send({ message: "Not authorized" });
     }
     // TODO: verify the below works as expected
-    (request as any).userId = userId;
+    request.userId = userId;
     const { role, orgId, email } = session.getAccessTokenPayload();
     const user = { userId, role, orgId, email };
-    (request as any).user = user;
+    request.user = user;
     // Log audit info
     await auditLogHook(request, reply);
   } catch (err) {
-    log.error("Error checking session\n%o", err);
+    log.error({ err }, "Error checking session");
     reply.code(401).send({ message: "Not authorized" });
   }
 };

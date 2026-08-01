@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
 import { FreePlanSubscriptionFeatures, getFreeSubscriptionFeatures } from "./subscription.data.js";
 import { updateSubscriptionInput } from "./subscription.schema.js";
-import { PaymentPlanType } from "../../../generated/prisma/client.js";
+import { PaymentPlanType, Prisma } from "../../../generated/prisma/client.js";
 import { createStats } from "../stats/stats.service.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
@@ -10,7 +10,7 @@ import merge from "lodash/merge.js";
 
 export async function createFreePlanSubscription(
   orgId: string,
-  pClient = prisma,
+  pClient: typeof prisma | Prisma.TransactionClient = prisma,
   planId?: string,
   overrides?: Partial<SubscriptionFeatures>,
 ) {
@@ -55,17 +55,20 @@ export async function createFreePlanSubscription(
           displayName: "FREE PLAN",
           planType: PaymentPlanType.BASE,
           description: freePlanDescription,
-          features: FreePlanSubscriptionFeatures as any,
+          features: FreePlanSubscriptionFeatures,
         },
       });
     }
 
     rateupPlan = rateupFreePlan;
   }
-  let finalFeatures;
+  let finalFeatures: LegacySubscriptionFeatures;
   if (planId && rateupPlan) {
-    // Paid/custom plan
-    finalFeatures = overrides ? merge({}, rateupPlan.features, overrides) : rateupPlan.features;
+    // Paid/custom plan. RateupPlan.features is nullable; an empty blob migrates to the
+    // safe defaults rather than nulling out the subscription's required column.
+    finalFeatures = overrides
+      ? merge({}, rateupPlan.features ?? {}, overrides)
+      : (rateupPlan.features ?? {});
   } else {
     //Free plan
     finalFeatures = getFreeSubscriptionFeatures(overrides);
@@ -185,12 +188,19 @@ export async function hasFeature(orgId: string, featurePath: SubscriptionFeature
       orgId: orgId,
     },
   });
-  if (!subscription || typeof subscription.features !== "object") return false;
-  console.log(getNestedProperty(subscription.features, featurePath));
-  return getNestedProperty(subscription.features, featurePath).active;
+  if (
+    !subscription ||
+    subscription.features === null ||
+    typeof subscription.features !== "object"
+  ) {
+    return false;
+  }
+  const feature = getNestedProperty<{ active?: boolean }>(subscription.features, featurePath);
+  console.log(feature);
+  return feature?.active ?? false;
 }
 
-export async function getMessageStatsByOrgId(orgId, filter) {
+export async function getMessageStatsByOrgId(orgId: string, filter: { dateRange?: string }) {
   const { dateRange } = filter;
   const filterArray = [
     `c."orgId" = $1::uuid AND (wm."messageBody"::jsonb)->>'exchangeProcess' = 'send'
@@ -212,6 +222,6 @@ export async function getMessageStatsByOrgId(orgId, filter) {
   const query = `SELECT COUNT(wm."waCreatedAt")::INTEGER FROM "WaMessage" wm
    JOIN "Contact" c ON wm."contactId" = c.id
    WHERE ${filterArray.join(" AND ")};`;
-  const res = await prisma.$queryRawUnsafe(query, ...params);
+  const res = await prisma.$queryRawUnsafe<{ count: number }[]>(query, ...params);
   return res[0];
 }

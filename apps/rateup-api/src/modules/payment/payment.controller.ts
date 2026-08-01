@@ -11,6 +11,8 @@ import {
   getAllPaymentPlans,
   getAllPaymentSubscriptions,
   getAllRateupPaymentPlans,
+  RazorpayPaymentWebhookData,
+  RazorpaySubscriptionChargedPayload,
   syncPaymentPlans,
   updateOrder,
   updatePaymentPlan,
@@ -55,15 +57,24 @@ export async function createCheckoutSessionHandler(
   }
 }
 
-export async function verificationHandler(request: FastifyRequest, reply: FastifyReply) {
-  interface KnownProperties {
-    event?: string;
-    payload?: any;
-  }
+interface RazorpayWebhookBody {
+  event?: string;
+  payload?: RazorpaySubscriptionChargedPayload & {
+    payment?: { entity?: RazorpayPaymentWebhookData };
+  };
+}
 
+export async function verificationHandler(
+  request: FastifyRequest<{ Body: RazorpayWebhookBody }>,
+  reply: FastifyReply,
+) {
   const webhookSignature = request.headers["x-razorpay-signature"] as string;
   const webhookBody = request.body;
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    throw new Error("RAZORPAY_WEBHOOK_SECRET is not configured");
+  }
 
   // Verify the webhook signature
   const isValidSignature = validateWebhookSignature(
@@ -81,12 +92,15 @@ export async function verificationHandler(request: FastifyRequest, reply: Fastif
     console.log("signature validated....");
   }
 
-  let data: KnownProperties = webhookBody;
+  const data = webhookBody;
 
   if (data?.event === "payment.captured" || data?.event === "payment.failed") {
     console.log(data?.event);
+    if (!data.payload?.payment?.entity) {
+      return reply.code(400).send("Missing payload.payment.entity");
+    }
     try {
-      const paymentPlans = await verifyPayment(data?.payload?.payment?.entity, data?.event);
+      const paymentPlans = await verifyPayment(data.payload.payment.entity, data.event);
       return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);
@@ -96,8 +110,11 @@ export async function verificationHandler(request: FastifyRequest, reply: Fastif
 
   if (data?.event === "subscription.charged") {
     console.log(".....................subscription.charged");
+    if (!data.payload) {
+      return reply.code(400).send("Missing payload");
+    }
     try {
-      const paymentPlans = await updateSubscription(data?.payload);
+      const paymentPlans = await updateSubscription(data.payload);
       return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);
@@ -106,8 +123,11 @@ export async function verificationHandler(request: FastifyRequest, reply: Fastif
   }
 
   if (data?.event === "subscription.activated") {
+    if (!data.payload) {
+      return reply.code(400).send("Missing payload");
+    }
     try {
-      const paymentPlans = await activateSubscription(data?.payload);
+      const paymentPlans = await activateSubscription(data.payload);
       return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);

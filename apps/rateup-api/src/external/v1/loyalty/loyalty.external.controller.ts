@@ -43,7 +43,7 @@ export async function registerLoyaltyCustomerExternalController(
     reply.code(201).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -78,7 +78,7 @@ export async function getCustomerLoyaltyPointsExternalController(
     });
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -96,7 +96,7 @@ export async function getAllLoyaltyCustomersExternalController(
     reply.code(200).send(customers);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -114,7 +114,7 @@ export async function getAvailableRewardsExternalController(
     reply.code(200).send(rewards);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -132,10 +132,10 @@ export async function redeemRewardExternalController(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    if (e.code === "P2002") {
+    if (typeof e === "object" && e !== null && "code" in e && e.code === "P2002") {
       return reply.code(400).send({ error: "Reward already redeemed" });
     }
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -148,7 +148,7 @@ export async function redeemCouponExternalController(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -180,7 +180,7 @@ export async function awardLoyaltyPointsExternalController(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -201,9 +201,9 @@ export async function assignRewardExternalController(
     });
   } catch (e) {
     log.error(e);
-    if (e.message === "Reward is already assigned to this customer") {
+    if (e instanceof Error && e.message === "Reward is already assigned to this customer") {
       return reply.code(400).send({ error: e.message });
     }
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }

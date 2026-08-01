@@ -159,12 +159,13 @@ describe("getWaMessageOverviewByTeamAndOrg - the numbers it reports", () => {
     expect(result.totalMessagesChange).toBe(0);
   });
 
-  // NOTE: pins current behaviour. percentChange treats a null current value as
-  // zero — `(null - prev) / prev` is `-prev / prev` — so a period in which nothing
-  // was delivered, and which therefore has no average delivery time to report,
-  // shows up as a 100% improvement rather than "no data".
-  // See issues.txt 15.5.
-  test("reports a period with no deliveries as a hundred percent improvement", async () => {
+  // Fixed as part of the strict-mode migration (was issues.txt 15.5): percentChange
+  // used a `curr!` non-null assertion, so a null current value fell through to
+  // `(null - prev) / prev` — JS coerces `null` to `0`, reporting a period with no
+  // deliveries as a 100% *improvement* instead of "no data". percentChange now
+  // returns null for a null current value, matching avgDeliveryTimeChange's
+  // nullable type.
+  test("reports a period with no deliveries as having no change to report", async () => {
     queryRawMock
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: null }])
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: 8 }]);
@@ -172,7 +173,7 @@ describe("getWaMessageOverviewByTeamAndOrg - the numbers it reports", () => {
     const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.avgDeliveryTimeSeconds).toBeNull();
-    expect(result.avgDeliveryTimeChange).toBe(-100);
+    expect(result.avgDeliveryTimeChange).toBeNull();
   });
 
   // NOTE: pins current behaviour. The average is passed through exactly as Postgres

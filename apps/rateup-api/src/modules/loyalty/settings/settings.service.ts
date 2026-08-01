@@ -1,7 +1,9 @@
 import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
+import type { CustomerLoyaltyAccount } from "../../../../generated/prisma/client.js";
 import {
   LoyaltyTemplateInput,
+  UpdateLoyaltyTemplateInput,
   EventTriggerInput,
   UpdateEventTriggerInput,
 } from "./settings.schema.js";
@@ -49,7 +51,7 @@ export async function getLoyaltyWaCommand(id: string) {
   });
 }
 
-export async function getLoyaltyWaCommandByType(type, orgId) {
+export async function getLoyaltyWaCommandByType(type: LoyaltyTemplateTypes, orgId: string) {
   return await prisma.loyaltyWaCommand.findFirst({
     where: {
       type,
@@ -58,20 +60,23 @@ export async function getLoyaltyWaCommandByType(type, orgId) {
   });
 }
 
-export async function updateLoyaltyWaCommand(id, data) {
+export async function updateLoyaltyWaCommand(id: string, data: UpdateLoyaltyTemplateInput) {
+  // `actionId` is accepted on the input schema but `LoyaltyWaCommand` has no such column
+  // (only `LoyaltyApiSettings` does, for a different feature) — drop it rather than pass
+  // it through to Prisma, which would reject it as an unknown field at runtime.
+  const { actionId: _actionId, ...rest } = data;
   return await prisma.loyaltyWaCommand.update({
     where: {
       id,
     },
     data: {
-      ...data,
+      ...rest,
       waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
-      actionId: data.actionId?.length ? data.actionId : undefined,
     },
   });
 }
 
-export async function getLoyaltyWaCommandByRequestMessage(orgId, requestMessage) {
+export async function getLoyaltyWaCommandByRequestMessage(orgId: string, requestMessage: string) {
   return await prisma.loyaltyWaCommand.findFirst({
     where: {
       orgId,
@@ -89,10 +94,10 @@ export async function getLoyaltyWaCommandByRequestMessage(orgId, requestMessage)
 }
 
 export async function handleLoyaltyWaCommand(
-  phone,
-  name,
+  phone: string,
+  name: string,
   loyaltyWaCommand: LoyaltyWaCommand,
-  orgId,
+  orgId: string,
 ) {
   switch (loyaltyWaCommand.type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
@@ -119,14 +124,18 @@ export async function handleLoyaltyWaCommand(
   }
 }
 
-export async function getAllLoyaltyWaCommands(orgId) {
+export async function getAllLoyaltyWaCommands(orgId: string) {
   return await prisma.loyaltyWaCommand.findMany({
     where: {
       orgId,
     },
   });
 }
-async function handleIssuedRewardsCommand(phone, orgId, _loyaltyWaCommand) {
+async function handleIssuedRewardsCommand(
+  phone: string,
+  orgId: string,
+  _loyaltyWaCommand: LoyaltyWaCommand,
+) {
   const customer = await getLCustomerByPhone(phone, orgId);
 
   if (!customer || customer.status !== "active") {
@@ -173,7 +182,7 @@ async function handleIssuedRewardsCommand(phone, orgId, _loyaltyWaCommand) {
   await sendMessage(orgId, listMessage);
 }
 
-async function handleReferralCommand(phone, loyaltyWaCommand) {
+async function handleReferralCommand(phone: string, loyaltyWaCommand: LoyaltyWaCommand) {
   const { orgId, responseType, waTemplateId, content, whatsappSettingsPhoneId } = loyaltyWaCommand;
 
   const customer = await getLCustomerByPhone(phone, orgId);
@@ -207,7 +216,7 @@ async function handleReferralCommand(phone, loyaltyWaCommand) {
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
     const dynamicVariables = [referralCode, joinLink ?? referralCode];
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessage({ phone, orgId }, null, message);
+    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(message));
   } else {
     const linkText = joinLink ? `\n\nShare your referral link: ${joinLink}` : "";
     await sendTextMessage(
@@ -259,7 +268,7 @@ export async function handleLoyaltyRedeemInteraction(
 
 async function handleRewardSelection(
   buttonId: string,
-  getActiveCustomer: () => Promise<any>,
+  getActiveCustomer: () => Promise<CustomerLoyaltyAccount | null>,
   orgId: string,
   phone: string,
 ): Promise<void> {
@@ -271,7 +280,7 @@ async function handleRewardSelection(
     where: { id: rewardId },
   });
 
-  if (reward?.programId !== customer.programId) {
+  if (!reward || reward.programId !== customer.programId) {
     await sendTextMessage({ phone, orgId }, null, "Selected reward is invalid.");
     return;
   }
@@ -303,7 +312,7 @@ async function handleRewardSelection(
 
 async function handleRewardConfirmation(
   buttonId: string,
-  getActiveCustomer: () => Promise<any>,
+  getActiveCustomer: () => Promise<CustomerLoyaltyAccount | null>,
   sendLoyaltyText: (text: string) => Promise<void>,
 ): Promise<void> {
   const rewardId = buttonId.slice(REWARD_CONFIRM_PREFIX.length);
@@ -313,22 +322,30 @@ async function handleRewardConfirmation(
   try {
     const validation = await validateRedemption(customer.id, rewardId, {});
     if (!validation.valid) {
-      await sendLoyaltyText(validation.message || "Unable to redeem reward right now.");
+      await sendLoyaltyText(
+        validation.violations.join(", ") || "Unable to redeem reward right now.",
+      );
       return;
     }
     const result = await assignRewardToCustomer(customer.id, rewardId, "WhatsApp redeem flow");
     if (result.id) {
-      await handleDeduction(result?.reward, customer, result.reward?.programId);
+      await handleDeduction(result.reward, customer, result.reward.programId);
     }
 
     const codeText = result?.shortCode ? `\nRedemption code: ${result.shortCode}` : "";
 
     await sendLoyaltyText(`${"Reward redeemed successfully."}${codeText}`);
   } catch (error) {
-    await sendLoyaltyText(error?.message || "Unable to redeem reward right now.");
+    await sendLoyaltyText(
+      error instanceof Error ? error.message : "Unable to redeem reward right now.",
+    );
   }
 }
-async function handleDeduction(reward, customer, programId) {
+async function handleDeduction(
+  reward: Awaited<ReturnType<typeof assignRewardToCustomer>>["reward"],
+  customer: { id: string; currentPoints: number },
+  programId: string,
+) {
   // Deduct redemption cost
   await prisma.loyaltyTransaction.create({
     data: {
@@ -357,7 +374,10 @@ async function handleDeduction(reward, customer, programId) {
     },
   });
 }
-export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
+export async function handleLoyaltyPointsCommand(
+  phone: string,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
   const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   const customer = await getLCustomerByPhone(phone, orgId);
   if (!customer || customer.status !== "active") {
@@ -375,10 +395,19 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
     return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
   else if (responseType === WaAutomatedReplyResponseType.Text) {
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessage({ phone, orgId }, null, message);
+    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(message));
   }
 }
-export async function handleLoyaltyFeedback(phone, action) {
+export async function handleLoyaltyFeedback(
+  phone: string,
+  action: {
+    waTemplateId: string;
+    orgId: string;
+    startDate: Date | string;
+    endDate: Date | string;
+    rewardId?: string | null;
+  },
+) {
   const { waTemplateId, orgId } = action;
   if (dayjs().isBefore(dayjs(action.startDate)) || dayjs().isAfter(dayjs(action.endDate))) {
     return { success: false, message: "Action Not available on this date" };
@@ -436,17 +465,27 @@ export async function handleLoyaltyFeedback(phone, action) {
   await handleSendTemplate(waTemplateId, orgId, phone, []);
 }
 
-export function replacedContentByDynamicVariable(content, dynamicVariables) {
-  let contentArray = Array.isArray(content?.content) ? content.content : content;
+/**
+ * `content` is the loyaltyWaCommand's raw `Json?` column: a rich-text document that is
+ * either the document node itself (`{ content: [...] }`) or already the node array.
+ */
+export function replacedContentByDynamicVariable(
+  content: string | RichTextNode | RichTextNode[] | null | undefined,
+  dynamicVariables: (string | number)[],
+): RichTextNode[] {
+  const contentArray: RichTextNode[] = Array.isArray(content)
+    ? content
+    : typeof content === "string"
+      ? []
+      : (content?.content ?? []);
   const contentCopy = [...contentArray];
   for (const para of contentCopy) {
     const contents = para.content;
     if (contents) {
       for (const content of contents) {
         if (content.text) {
-          content.text = content.text.replace(
-            /\{\{(\d+)\}\}/g,
-            (_, index) => dynamicVariables[index - 1] ?? `{{${index}}}`,
+          content.text = content.text.replace(/\{\{(\d+)\}\}/g, (_: string, index: string) =>
+            String(dynamicVariables[Number(index) - 1] ?? `{{${index}}}`),
           );
         }
       }
@@ -455,7 +494,29 @@ export function replacedContentByDynamicVariable(content, dynamicVariables) {
   return contentCopy;
 }
 
-export async function deleteLoyaltyWaCommandById(id) {
+/**
+ * WhatsApp text messages carry a plain string, but loyalty command bodies are stored as
+ * rich-text documents. Flatten to text (one line per top-level block) before sending —
+ * passing the node array straight through rendered as "[object Object]".
+ */
+export function richTextToPlainText(
+  content: string | RichTextNode | RichTextNode[] | null | undefined,
+): string {
+  // Older rows store the body as a plain string rather than a rich-text document.
+  if (typeof content === "string") return content;
+  const nodes = Array.isArray(content) ? content : (content?.content ?? []);
+  return nodes
+    .map((node) => collectText(node))
+    .filter((line) => line.length > 0)
+    .join("\n");
+}
+
+function collectText(node: RichTextNode): string {
+  if (typeof node.text === "string") return node.text;
+  return (node.content ?? []).map((child) => collectText(child)).join("");
+}
+
+export async function deleteLoyaltyWaCommandById(id: string) {
   return await prisma.loyaltyWaCommand.delete({
     where: {
       id,
@@ -478,7 +539,7 @@ export async function handleCustomerRemovalFromLoyalty(
   if (responseType === WaAutomatedReplyResponseType.Template) {
     await handleSendTemplate(waTemplateId, orgId, phone, []);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    await sendTextMessage({ phone, orgId }, null, content);
+    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(content));
   }
 }
 

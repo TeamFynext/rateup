@@ -28,6 +28,7 @@ import {
   getRulesByAutomationId,
   updateRule,
 } from "./wa_rule.service.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -43,7 +44,12 @@ const db = prisma as unknown as {
 };
 const tx = db.__tx;
 
-const CREATED_RULE = { id: "rule-1", name: "Greeting", groups: [], actions: [] };
+const CREATED_RULE: {
+  id: string;
+  name: string;
+  groups: unknown[];
+  actions: unknown[];
+} = { id: "rule-1", name: "Greeting", groups: [], actions: [] };
 
 /** A rule payload with one MESSAGE_BODY keyword condition. */
 function ruleInput(overrides: Record<string, unknown> = {}) {
@@ -109,11 +115,12 @@ describe("createRule - what gets stored", () => {
   test("defaults an unspecified rule to an active WhatsApp AND rule", async () => {
     await createRule(ruleInput({ platform: undefined, isActive: undefined, operator: undefined }));
 
+    // A JSON column takes the DbNull sentinel, not a bare `null`, which prisma rejects.
     expect(tx.rule.create.mock.calls[0][0].data).toMatchObject({
       platform: "WHATSAPP",
       isActive: true,
       operator: "AND",
-      options: null,
+      options: Prisma.DbNull,
     });
   });
 
@@ -266,7 +273,14 @@ describe("createRule - keyword uniqueness", () => {
 });
 
 describe("updateRule", () => {
-  const existing = {
+  const existing: {
+    orgId: string;
+    platform: string;
+    triggerEvent: string;
+    isActive: boolean;
+    groups: { conditions: { field: string; value: string }[] }[];
+    options: Record<string, unknown> | null;
+  } = {
     orgId: "org-1",
     platform: "WHATSAPP",
     triggerEvent: "MESSAGE_RECEIVED",

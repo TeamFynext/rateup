@@ -7,24 +7,23 @@ export async function handleWaReceivedImages(
   messageBody: WaInboxMessageBody,
   orgId: string,
 ): Promise<WaInboxMessageBody> {
+  const incomingImageId = (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.image?.id;
   if (
     messageBody?.exchangeProcess === "receive" &&
-    (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.type === "image"
+    (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.type === "image" &&
+    incomingImageId
   ) {
-    const uniqueImageId = await downloadAndUpload(
-      orgId,
-      (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.image?.id,
-    );
+    const uniqueImageId = await downloadAndUpload(orgId, incomingImageId);
     return {
       ...messageBody,
       receive: {
-        ...messageBody.receive,
+        ...(messageBody.receive as WaReceiveMessageBody),
         messages: [
           {
             ...(messageBody.receive as WaReceiveMessageBody).messages[0],
             image: {
               ...(messageBody.receive as WaReceiveMessageBody).messages[0].image,
-              link: uniqueImageId,
+              link: uniqueImageId ?? undefined,
             },
           },
         ],
@@ -101,14 +100,43 @@ function toTitle(raw?: string | null): string | null {
  * back to its caption and then to a plain type label, since "Photo" says more
  * than an empty title.
  */
+/**
+ * A received message as any of the three platforms delivers it. Field shapes differ
+ * between them (`text` is a string on Meta's messenger platforms, an object on
+ * WhatsApp), so the readers below narrow per field.
+ */
+interface InboundMessageEnvelope {
+  messages?: InboundMessage[];
+  message?: InboundMessage;
+}
+
+interface InboundMessage {
+  type?: string;
+  text?: string | { body?: string };
+  interactive?: {
+    button_reply?: { title?: string };
+    list_reply?: { title?: string };
+    nfm_reply?: { name?: string };
+  };
+  image?: { caption?: string };
+  video?: { caption?: string };
+  document?: { caption?: string; filename?: string };
+  audio?: { caption?: string };
+  button?: { text?: string };
+  location?: { name?: string; address?: string };
+  order?: { text?: string };
+  attachments?: Array<{ type?: string }>;
+  [field: string]: unknown;
+}
+
 export function deriveConversationSubject(messageBody: WaInboxMessageBody): string | null {
   if (messageBody?.exchangeProcess !== "receive") return null;
-  const receive: any = messageBody?.receive;
+  const receive = messageBody?.receive as InboundMessageEnvelope | undefined;
   if (!receive) return null;
 
   // WhatsApp nests the message in `messages[]`; Instagram and Facebook deliver a
   // single `message` on the messaging event itself.
-  const message: any = (receive as WaReceiveMessageBody)?.messages?.[0] ?? receive.message;
+  const message = receive.messages?.[0] ?? receive.message;
   if (!message) return null;
 
   const interactive = message.interactive;
@@ -130,7 +158,7 @@ export function deriveConversationSubject(messageBody: WaInboxMessageBody): stri
   if (title) return title;
   // Instagram/Facebook name the media kind on the attachment instead of the message.
   const type = message.type ?? message.attachments?.[0]?.type;
-  return MESSAGE_TYPE_LABEL[type] ?? null;
+  return (type ? MESSAGE_TYPE_LABEL[type] : undefined) ?? null;
 }
 
 export function extractMentions(text: string): string[] {

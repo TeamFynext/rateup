@@ -11,7 +11,7 @@ beforeAll(() => {
 });
 beforeAll(async () => await fastifyInstance.ready());
 beforeAll(initTestSupertokens);
-let testUsers = []; //Array<userId>
+let testUsers: string[] = []; //Array<userId>
 
 // or delete all *@test.com?
 afterAll(async () => {

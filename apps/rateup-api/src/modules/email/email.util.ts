@@ -2,16 +2,20 @@ import { createEmailBodyOTPGeneration } from "./emailTemplates/emailTemplateOTPG
 import { rateupLogo } from "../../utils/constants/constants.js";
 import crypto from "node:crypto";
 
-export function getEmailBodyTemplate(purpose, data) {
+/** `data`'s shape varies by `purpose`; each template reads only the keys it needs. */
+export function getEmailBodyTemplate(
+  purpose: string | undefined,
+  data: EmailTemplateData | undefined,
+): string | undefined {
   switch (purpose) {
     case "SurveyEmailOTPQuestion":
       return createEmailBodyOTPGeneration(data);
     case "GeneralTemplate":
-      return createGeneralEmailBodyTemaple(data?.body, data?.buttonLink, data?.title);
+      return createGeneralEmailBodyTemaple(data?.body ?? "", data?.buttonLink ?? "", data?.title);
   }
 }
 
-export function generateOTP(length) {
+export function generateOTP(length: number) {
   const max = Math.pow(10, length) - 1;
   const randomNumber = crypto.randomInt(0, max + 1);
   return String(randomNumber).padStart(length, "0");

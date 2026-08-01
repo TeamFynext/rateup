@@ -236,7 +236,10 @@ describe("createCampaignParticipants", () => {
   });
 
   test("gives every participant a row for every drip stage", async () => {
-    db.campaignParticipant.findMany.mockResolvedValue([{ id: "p-1" }, { id: "p-2" }]);
+    db.campaignParticipant.findMany.mockResolvedValue([
+      { id: "p-1", status: "PENDING" },
+      { id: "p-2", status: "PENDING" },
+    ]);
     db.campaignDripStage.findMany.mockResolvedValue([{ id: "s-1" }, { id: "s-2" }]);
 
     await createCampaignParticipants(CAMPAIGN_ID, {
@@ -250,7 +253,7 @@ describe("createCampaignParticipants", () => {
   });
 
   test("skips the drip mapping for a campaign with no stages", async () => {
-    db.campaignParticipant.findMany.mockResolvedValue([{ id: "p-1" }]);
+    db.campaignParticipant.findMany.mockResolvedValue([{ id: "p-1", status: "PENDING" }]);
 
     await createCampaignParticipants(CAMPAIGN_ID, { contactIds: [], groupIds: [] } as any);
 
@@ -271,7 +274,13 @@ describe("createCampaignParticipants", () => {
 });
 
 describe("getCampaignParticipantsByCampaignIdPaginated", () => {
-  const PARTICIPANT = {
+  const PARTICIPANT: {
+    id: string;
+    status: string;
+    sentAt: Date | null;
+    createdAt: Date;
+    contact: { name: string; phone: string; consent: boolean };
+  } = {
     id: "p-1",
     status: "PENDING",
     sentAt: null,
@@ -355,13 +364,13 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     expect(db.campaignParticipant.findMany.mock.calls[0][0].orderBy).toEqual({ sentAt: "desc" });
   });
 
-  // NOTE: pins current behaviour, and it means these three filters have never
-  // worked. The clause built for createdAt, status and sentAt is
+  // NOTE: previously the clause built for createdAt, status and sentAt used
   // `{ [key]: { equal: value, mode: "insensitive" } }` — Prisma's operator is
-  // `equals`, not `equal`, and `mode` is only valid on string fields. Prisma
-  // rejects unknown arguments, so filtering a participant list by status raises a
-  // validation error rather than filtering. See issues.txt 17.9.
-  test("builds a filter Prisma has no operator for", async () => {
+  // `equals`, not `equal`, so this filter never actually worked (Prisma rejects
+  // unknown arguments, raising a validation error rather than filtering). Fixed to
+  // use `equals`, and `mode` (string-only) is no longer applied to the createdAt /
+  // sentAt DateTime fields. See issues.txt 17.9.
+  test("builds a status filter using Prisma's equals operator", async () => {
     await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
       page: 0,
       limit: 50,
@@ -369,7 +378,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     } as any);
 
     expect(db.campaignParticipant.findMany.mock.calls[0][0].where.OR).toContainEqual({
-      status: { equal: "SENT", mode: "insensitive" },
+      status: { equals: "SENT", mode: "insensitive" },
     });
   });
 
@@ -415,24 +424,27 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     expect(result.participants[0].dripStageId).toBeNull();
   });
 
-  // NOTE: pins current behaviour. The status is read as
-  // `CampaignParticipantDripStage?.[0].status` — the optional chain guards the
-  // property being absent, but not the array being EMPTY. Selecting a drip stage
-  // that a participant has no row for gives `undefined.status` and a TypeError,
-  // which takes the whole page listing down rather than that one participant.
-  // See issues.txt 17.9.
-  test("throws when a selected drip stage has no row for a participant", async () => {
+  // NOTE: previously the status was read as `CampaignParticipantDripStage?.[0].status`
+  // — the optional chain guarded the property being absent, but not the array being
+  // EMPTY. Selecting a drip stage that a participant has no row for gave
+  // `undefined.status` and a TypeError, taking the whole page listing down rather
+  // than that one participant. Fixed to fall back to the participant's own fields
+  // when it has no row for the selected drip stage. See issues.txt 17.9.
+  test("falls back to the participant's own fields when it has no row for the selected drip stage", async () => {
     db.campaignParticipant.findMany.mockResolvedValue([
       { ...PARTICIPANT, CampaignParticipantDripStage: [] },
     ]);
 
-    await expect(
-      getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
-        page: 0,
-        limit: 50,
-        selectedDripStage: "s-1",
-      } as any),
-    ).rejects.toThrow(TypeError);
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+      page: 0,
+      limit: 50,
+      selectedDripStage: "s-1",
+    } as any);
+
+    expect(result.participants[0].status).toBe(PARTICIPANT.status);
+    expect(result.participants[0].dripStageId).toBeNull();
+    expect(result.participants[0].sentAt).toBe(PARTICIPANT.sentAt);
+    expect(result.participants[0].createdAt).toBe(PARTICIPANT.createdAt);
   });
 });
 
@@ -498,18 +510,19 @@ describe("addWaMessageCampaignParticipantMap", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The message lookup is optional-chained but the
-  // create is not guarded, so a message id that matches nothing produces a link row
-  // pointing at no message — and the participant's delivery status can never be
-  // resolved from it afterwards. See issues.txt 17.9.
-  test("creates a link to nothing when the message cannot be found", async () => {
+  // NOTE: previously the message lookup was optional-chained but the create was not
+  // guarded, so a message id that matches nothing produced a link row pointing at no
+  // message — and the participant's delivery status could never be resolved from it
+  // afterwards. Fixed to throw a clear error instead of writing a dangling link.
+  // See issues.txt 17.9.
+  test("throws instead of creating a link to nothing when the message cannot be found", async () => {
     db.waMessage.findFirst.mockResolvedValue(null);
 
-    await addWaMessageCampaignParticipantMap("p-1", "wamid-unknown");
+    await expect(addWaMessageCampaignParticipantMap("p-1", "wamid-unknown")).rejects.toThrow(
+      "WaMessage with messageId wamid-unknown not found.",
+    );
 
-    expect(
-      db.waMessageCampaginParticipantMap.create.mock.calls[0][0].data.waMessageId,
-    ).toBeUndefined();
+    expect(db.waMessageCampaginParticipantMap.create).not.toHaveBeenCalled();
   });
 
   // NOTE: the message is looked up by its WhatsApp id alone, across every org.

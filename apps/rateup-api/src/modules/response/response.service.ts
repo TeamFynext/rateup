@@ -20,12 +20,13 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
   WaQuestions,
+  WaFlowFormElementType,
   YNResponse,
 } from "../../types/enums.js";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service.js";
 import { google } from "googleapis";
-import { write } from "hucre";
+import { write, type CellValue } from "hucre";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
@@ -61,8 +62,20 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 import { ContactGroupType } from "../contact/contactGroup/contactGroup.schema.js";
 
+/**
+ * One row handed to google-spreadsheet's addRow/addRows, keyed by column header.
+ * The library writes each value into a cell, so only cell-shaped scalars belong here.
+ */
+type SheetRow = Record<string, string | number | boolean | Date>;
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+// QuestionResponse["response"] only declares keys for QuestionTypes that store an answer
+// under their own type (some, like PCQ/MCQGrid, don't), so this is a dynamic lookup.
+function getAnswerValue(response: QuestionResponse["response"], type: QuestionType): unknown {
+  return (response as Record<string, unknown>)[type];
+}
 
 export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
@@ -101,7 +114,7 @@ export async function getAllResponses(
       : {};
 
   let whereCondtion =
-    teamIds?.length > 0
+    teamIds && teamIds.length > 0
       ? {
           surveyId: surveyId,
           teamId: {
@@ -176,9 +189,9 @@ export async function getAllResponses(
     return {
       ...rest,
       responses:
-        contactIds?.length > 0
+        contactIds && contactIds.length > 0
           ? responses
-              .filter((data) => contactIds.includes(data.contactId))
+              .filter((data) => data.contactId != null && contactIds.includes(data.contactId))
               .map(({ surveyTeamMap, ...restD }) => ({
                 ...restD,
                 teamName: surveyTeamMap.team.name,
@@ -193,9 +206,21 @@ export async function getAllResponses(
   });
   return responseData;
 }
+interface ResponseBySurveyRawRow {
+  id: string;
+  createdAt: Date;
+  responses: QuestionResponse[];
+  language: string;
+  tag: string | null;
+  surveyTeamMapId: string;
+  teamId: string;
+  questions: Question[];
+  phone: string | null;
+}
+
 export const getResponseBySurveyById = async (id: string) => {
-  const responses: any[] = await prisma.$queryRaw`
-  SELECT sr.id, sr."createdAt", 
+  const responses = await prisma.$queryRaw<ResponseBySurveyRawRow[]>`
+  SELECT sr.id, sr."createdAt",
       sr.responses,
       sr.language, sr.tag, sr."surveyTeamMapId", sr.language, s.questions, stm."teamId", co.phone
   FROM "SurveyResponse" sr
@@ -208,11 +233,16 @@ export const getResponseBySurveyById = async (id: string) => {
   const responsesWithTitles = responses.map(
     ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
       // Create a mapping of questionId to title for easier lookup
-      const questionMap = questions.reduce((map, { id, title, description, label }) => {
-        map[id] =
-          Object.values(title)?.[0] || Object.values(description)?.[0] || Object.values(label)?.[0];
-        return map;
-      }, {});
+      const questionMap = questions.reduce<Record<string, string | undefined>>(
+        (map, { id, title, description, label }) => {
+          map[id] =
+            Object.values(title)?.[0] ||
+            Object.values(description)?.[0] ||
+            Object.values(label ?? {})?.[0];
+          return map;
+        },
+        {},
+      );
       // Map over each response to replace questionId with the corresponding title
       const updatedResponses = responses.map(({ questionId, response = {}, ...rest }) => ({
         ...rest,
@@ -250,11 +280,11 @@ export const getSurveyList = async (orgId: string) => {
 };
 
 export async function downloadExcelResponse(
-  surveyId,
-  allResponses,
-  questions,
-  defaultLanguage,
-  visibleColumn = [],
+  surveyId: string,
+  allResponses: Awaited<ReturnType<typeof getAllResponses>>,
+  questions: Question[],
+  defaultLanguage: string,
+  visibleColumn: string[] = [],
   tz = "Asia/Calcutta",
   format: "xlsx" | "ods" = "xlsx",
 ) {
@@ -290,17 +320,18 @@ export async function downloadExcelResponse(
 
       if (question.type === QuestionType.Contact) {
         columnLabels = Object.entries(question.features?.[defaultLanguage] ?? {})
-          .filter(([, value]: any) => value?.isEnabled)
+          .filter(([, value]) => (value as QuestionFeatureToggle | undefined)?.isEnabled)
           .map(([key]) => `${getContent(qsTitle)}: ${key}`);
       } else if (question.type === QuestionType.MCQGrid) {
         columnLabels =
           question.features?.[defaultLanguage]?.questions?.map(
-            (q) => `${getContent(qsTitle)}: ${q}`,
+            (q: string) => `${getContent(qsTitle)}: ${q}`,
           ) ?? [];
       } else if (question.type === QuestionType.MultiTextInput) {
         columnLabels =
           question.features?.[defaultLanguage]?.fields?.map(
-            (field) => `${getContent(question.title[defaultLanguage])}: ${field?.fieldKey}`,
+            (field: { fieldKey?: string }) =>
+              `${getContent(question.title[defaultLanguage])}: ${field?.fieldKey}`,
           ) ?? [];
       } else if (question.type === QuestionType.Testimonial) {
         columnLabels = [
@@ -321,36 +352,42 @@ export async function downloadExcelResponse(
     const responseTag = "Tags";
     let whatsappRespondentNumber = "Respondent's Mobile Number";
     const teamNameColumn = "Team Name";
+    // `columnEntries` mixes real questions with virtual string columns (Date, Team Name, etc.)
+    const columnEntries: (Question | string)[] = [...filteredSecondArray];
     if (visibleColumn.includes("Created At")) {
       headerArray.unshift(createdAt);
-      filteredSecondArray.unshift(createdAt);
+      columnEntries.unshift(createdAt);
     }
     // Add team name column before tags
     headerArray.push(teamNameColumn);
-    filteredSecondArray.push(teamNameColumn);
+    columnEntries.push(teamNameColumn);
 
     if (platform === "WHATSAPP" && visibleColumn.includes(whatsappRespondentNumber)) {
       headerArray.push(whatsappRespondentNumber);
-      filteredSecondArray.push(whatsappRespondentNumber);
+      columnEntries.push(whatsappRespondentNumber);
     }
     if (visibleColumn.includes(responseTag)) {
       headerArray.push(responseTag);
-      filteredSecondArray.push(responseTag);
+      columnEntries.push(responseTag);
     }
 
-    const bodyArray = [];
-    filteredSecondArray.forEach((question) => {
-      const questionId = question.id;
-      let tempArray = [];
+    const bodyArray: CellValue[][] = [];
+    columnEntries.forEach((question) => {
+      const questionId = typeof question === "string" ? undefined : question.id;
+      let tempArray: unknown[] = [];
       responses.forEach((response, answerIndex) => {
         bodyArray.push([]);
 
         const responsesArr = response.responses;
         const responseObj = responsesArr.find((answerObj) => answerObj.questionId === questionId);
-        let responseValue;
+        // Cell value shape varies per QuestionType (string, number, object, array); the
+        // switch/typeof checks below already do the real runtime type discrimination.
+        let responseValue: unknown;
         let flag = true;
-        if (responseObj) {
-          responseValue = responseObj.response[question.type];
+        if (responseObj && typeof question !== "string") {
+          // QuestionResponse["response"] only declares keys for types that store an answer;
+          // some QuestionTypes (PCQ, MCQGrid, etc.) aren't listed, so this is a dynamic lookup.
+          responseValue = (responseObj.response as Record<string, unknown>)[question.type];
           const responseType = responseObj.type;
           switch (responseType) {
             case QuestionType.Photo:
@@ -359,11 +396,13 @@ export async function downloadExcelResponse(
               break;
             }
             case QuestionType.Date: {
-              responseValue = dayjs(responseValue).tz(tz).format("DD-MM-YYYY hh:mm A");
+              responseValue = dayjs(responseValue as string | number | Date)
+                .tz(tz)
+                .format("DD-MM-YYYY hh:mm A");
               break;
             }
             case QuestionType.PCQ: {
-              responseValue = responseValue?.value?.value;
+              responseValue = answerField(answerField(responseValue, "value"), "value");
               break;
             }
             case QuestionType.TnC: {
@@ -372,7 +411,7 @@ export async function downloadExcelResponse(
             }
             case QuestionType.PhotoPicker:
             case QuestionType.DocumentPicker: {
-              responseValue = getFileUrlFromKey(responseValue?.toString());
+              responseValue = getFileUrlFromKey(toCell(responseValue));
               break;
             }
           }
@@ -391,13 +430,13 @@ export async function downloadExcelResponse(
               Object.entries(question.features?.[defaultLanguage] || {}).forEach(
                 ([key, feature]) => {
                   if ((feature as { isEnabled?: boolean })?.isEnabled) {
-                    bodyArray[answerIndex].push(responseValue[key] ?? "");
+                    bodyArray[answerIndex].push(toCell(answerField(responseValue, key)));
                   }
                 },
               );
             } else if (typeof responseValue === "string" || typeof responseValue === "number") {
               // If responseValue is a single value, push it
-              bodyArray[answerIndex].push(responseValue);
+              bodyArray[answerIndex].push(String(responseValue));
             } else {
               bodyArray[answerIndex].push("");
             }
@@ -407,9 +446,11 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            question?.features?.[defaultLanguage]?.questions?.map((q) =>
-              responseValue?.[q]
-                ? bodyArray[answerIndex].push(responseValue?.[q]?.value)
+            question?.features?.[defaultLanguage]?.questions?.map((q: string) =>
+              answerField(responseValue, q)
+                ? bodyArray[answerIndex].push(
+                    toCell(answerField(answerField(responseValue, q), "value")),
+                  )
                 : bodyArray[answerIndex].push(""),
             );
             flag = false;
@@ -418,9 +459,11 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            question?.features?.[defaultLanguage]?.fields?.map((field) =>
-              responseValue?.[field?.fieldKey]
-                ? bodyArray[answerIndex].push(responseValue?.[field?.fieldKey])
+            question?.features?.[defaultLanguage]?.fields?.map((field: { fieldKey?: string }) =>
+              answerField(responseValue, field?.fieldKey ?? "")
+                ? bodyArray[answerIndex].push(
+                    toCell(answerField(responseValue, field?.fieldKey ?? "")),
+                  )
                 : bodyArray[answerIndex].push(""),
             );
             flag = false;
@@ -429,17 +472,18 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            bodyArray[answerIndex].push(responseValue?.name ?? "");
-            bodyArray[answerIndex].push(responseValue?.testimonial ?? "");
+            bodyArray[answerIndex].push(toCell(answerField(responseValue, "name")));
+            bodyArray[answerIndex].push(toCell(answerField(responseValue, "testimonial")));
             if (question?.features?.[defaultLanguage]) {
               Object.entries(question?.features?.[defaultLanguage])
                 .filter(([_key, value]) => value)
                 .forEach(([key, _value]) => {
-                  if (responseValue?.[key]) {
+                  const subAnswer = answerField(responseValue, key);
+                  if (subAnswer) {
                     bodyArray[answerIndex].push(
                       key === "photo"
-                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
-                        : responseValue?.[key],
+                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${toCell(subAnswer)}`
+                        : toCell(subAnswer),
                     );
                   } else {
                     bodyArray[answerIndex].push("");
@@ -453,18 +497,17 @@ export async function downloadExcelResponse(
                 ? responseValue
                     ?.map(
                       (res) =>
-                        res?.value ||
-                        `${question?.features?.[defaultLanguage]?.other?.title}:${res?.other}`,
+                        answerField(res, "value") ||
+                        `${question?.features?.[defaultLanguage]?.other?.title}:${toCell(answerField(res, "other"))}`,
                     )
                     .join(", ")
                 : responseType == QuestionType.MCQ
-                  ? responseValue?.value ||
-                    `${question?.features?.[defaultLanguage]?.other?.title}:${responseValue?.other}`
-                  : responseValue?.value;
+                  ? answerField(responseValue, "value") ||
+                    `${question?.features?.[defaultLanguage]?.other?.title}:${toCell(answerField(responseValue, "other"))}`
+                  : answerField(responseValue, "value");
             } else if (typeof responseValue === "object") {
-              responseValue = responseValue?.value
-                ? Object.values(responseValue?.value || {}).join(", ")
-                : Object.values(responseValue || {}).join(", ");
+              const nested = answerField(responseValue, "value");
+              responseValue = nested ? toCell(nested) : toCell(responseValue);
             }
           }
         } else if (question === createdAt) {
@@ -481,23 +524,24 @@ export async function downloadExcelResponse(
             if (!headerArray.includes(tagColumnName)) {
               if (index === 0) {
                 headerArray.pop();
-                filteredSecondArray.pop();
+                columnEntries.pop();
               }
               headerArray.push(tagColumnName);
-              filteredSecondArray.push(tagColumnName);
+              columnEntries.push(tagColumnName);
             }
             bodyArray[answerIndex].push(tag.trim());
           });
-        } else {
+        } else if (typeof question !== "string") {
           if (question.type === QuestionType.MCQGrid) {
-            question?.features?.[defaultLanguage]?.questions?.map((_q) =>
+            question?.features?.[defaultLanguage]?.questions?.map((_q: string) =>
               bodyArray[answerIndex].push(""),
             );
             flag = false;
           } else if (question.type === QuestionType.Contact) {
             Object.entries(question.features?.[defaultLanguage] || {}).forEach(
-              ([_key, feature]: any) => {
-                if (feature?.isEnabled) bodyArray[answerIndex].push("");
+              ([_key, feature]) => {
+                if ((feature as QuestionFeatureToggle | undefined)?.isEnabled)
+                  bodyArray[answerIndex].push("");
               },
             );
             flag = false;
@@ -505,13 +549,13 @@ export async function downloadExcelResponse(
             bodyArray[answerIndex].push("", "");
             const features = question.features?.[defaultLanguage];
             if (features) {
-              Object.values(features ?? {}).forEach((key: any) => {
+              Object.values(features ?? {}).forEach((key) => {
                 if (key) bodyArray[answerIndex].push("");
               });
               flag = false;
             }
           } else if (question.type === QuestionType.MultiTextInput) {
-            question?.features?.[defaultLanguage]?.fields?.forEach((_field) =>
+            question?.features?.[defaultLanguage]?.fields?.forEach((_field: unknown) =>
               bodyArray[answerIndex].push(""),
             );
             flag = false;
@@ -519,7 +563,7 @@ export async function downloadExcelResponse(
           responseValue = "";
         }
         if (flag) {
-          bodyArray[answerIndex].push(responseValue);
+          bodyArray[answerIndex].push(toCell(responseValue));
         }
       });
     });
@@ -547,10 +591,12 @@ export async function downloadExcelResponse(
   }
 }
 
+type V2ExcelQuestion = Partial<WaFlowFormElement> & { header?: string; metaType?: WaQuestions };
+
 export async function downloadExcelResponseV2(
-  allResponses,
-  questions,
-  visibleColumn = [],
+  allResponses: Awaited<ReturnType<typeof getAllResponses>>,
+  questions: V2ExcelQuestion[],
+  visibleColumn: string[] = [],
   tz = "Asia/Calcutta",
   format: "xlsx" | "ods" = "xlsx",
 ) {
@@ -581,7 +627,7 @@ export async function downloadExcelResponseV2(
     }
 
     // Split tags into multiple columns if necessary
-    const tagColumns: any[] = [];
+    const tagColumns: string[] = [];
     if (visibleColumn.includes(responseTag)) {
       const maxTags = Math.max(
         ...responses.map((response) => (response.tag || "").split(",").filter(Boolean).length),
@@ -595,7 +641,7 @@ export async function downloadExcelResponseV2(
     }
 
     const bodyArray = responses.map((response) => {
-      const row = [];
+      const row: CellValue[] = [];
 
       filteredQuestions.forEach((question) => {
         const questionId = question.id;
@@ -687,7 +733,7 @@ export async function createResponse(
   input: CreateResponseInput,
   shouldRaiseTicket = false,
   checkUniqueDevice = false,
-  ip = null,
+  ip: string | null = null,
   columnId?: string,
 ) {
   if (checkUniqueDevice) {
@@ -717,10 +763,12 @@ export async function createResponse(
         },
       },
     });
-    const contact = await prisma.contact.findFirst({
-      where: { phone: phone, orgId: surveyTeamMap.team.orgId },
-      select: { id: true },
-    });
+    const contact = surveyTeamMap
+      ? await prisma.contact.findFirst({
+          where: { phone: phone, orgId: surveyTeamMap.team.orgId },
+          select: { id: true },
+        })
+      : null;
     if (!contact)
       log.error({
         message: "no contact found",
@@ -794,20 +842,26 @@ interface Location {
   state: string;
   country: string;
 }
-export async function updateResponse(responseId: string, data: { ip: string; location: Location }) {
+export async function updateResponse(
+  responseId: string,
+  data: { ip?: string | null; location?: Location },
+) {
   const response = await prisma.surveyResponse.update({
     where: {
       id: responseId,
     },
     data: {
       ip: data.ip,
-      location: data.location as any,
+      location: data.location,
     },
   });
   return response;
 }
 
-export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
+export async function sendEmailOnResponseCreation(
+  id: string,
+  surveyResponse: Awaited<ReturnType<typeof createResponse>>,
+) {
   const response = await prisma.surveyTeamMap.findFirst({
     where: { id },
     include: {
@@ -826,7 +880,8 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
       },
     },
   });
-  const { survey, team } = response ?? {};
+  if (!response) return "response";
+  const { survey, team } = response;
 
   if (
     survey?.enableNotificationEmail &&
@@ -877,7 +932,7 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
 }
 
 export const generateResponse = async (body: GenerateBodyInput) => {
-  let data: any = [];
+  let data: Prisma.SurveyResponseCreateManyInput[] = [];
   const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
     where: {
       id: body.surveyTeamMapId,
@@ -893,6 +948,8 @@ export const generateResponse = async (body: GenerateBodyInput) => {
     },
   });
 
+  if (!surveyTeamMap) throw new Error("Survey Not Found");
+
   for (let index = 0; index < body.batchSize; index++) {
     data.push(generateResponseData(surveyTeamMap.id, surveyTeamMap.survey));
   }
@@ -904,7 +961,7 @@ export const generateResponse = async (body: GenerateBodyInput) => {
 };
 
 // Improved syncResponseToGoogleSheet for better performance with large datasets
-export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
+export async function syncResponseToGoogleSheet(surveyId: string, orgId: string) {
   const { GoogleSpreadsheet } = await import("google-spreadsheet");
   const survey = await prisma.survey.findUnique({
     where: { id: surveyId },
@@ -917,6 +974,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       type: true,
     },
   });
+  if (!survey) throw new Error(`Could not find survey with id ${surveyId}`);
   const authClient = await initializeAuthClient();
   const tokenFromIntgration = (await getIntegrationByName(
     orgId,
@@ -927,7 +985,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const isDocExist = survey?.spreadSheetId
     ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
     : false;
-  let doc = isDocExist ? new GoogleSpreadsheet(survey.spreadSheetId, authClient) : null;
+  let doc =
+    isDocExist && survey.spreadSheetId
+      ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
+      : null;
   if (!doc) {
     const driveFolderId = await getDriveFolderId(orgId, authClient, drive, tokenFromIntgration);
     const existingFiles = await drive.files.list({
@@ -935,8 +996,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       fields: "nextPageToken, files(id, name)",
       spaces: "drive",
     });
-    if (existingFiles.data.files.length) {
-      doc = new GoogleSpreadsheet(existingFiles.data.files[0].id, authClient);
+    const existingFile = existingFiles.data.files?.[0];
+    if (existingFile?.id) {
+      doc = new GoogleSpreadsheet(existingFile.id, authClient);
     } else {
       doc = await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
         title: survey.title,
@@ -946,7 +1008,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         fileId: fileId,
         fields: "parents",
       });
-      const previousParents = file.data.parents.join(",");
+      const previousParents = (file.data.parents ?? []).join(",");
       await drive.files.update({
         fileId: fileId,
         removeParents: previousParents,
@@ -960,9 +1022,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
 
   const BATCH_SIZE = 8000; // Tune this based on memory and Google API limits
   let flow = await getFlowBySurveyId(surveyId);
-  const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
-    screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
-  ) as any[];
+  const filteredSecondArray = flow?.json?.screens?.flatMap(
+    (screen) => screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
+    // The sheet's leading/trailing columns (created-at, respondent, tag, team) are pushed in
+    // below as plain header strings rather than flow elements.
+  ) as Array<WaFlowForm | string>;
   const checkVersion = flow ? flow.version === 1 : true;
 
   if (checkVersion) {
@@ -971,13 +1035,13 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     // Precompute question titles for each language
     const languageQuestionTitles: Record<string, string[]> = {};
     for (const lang of languages) {
-      let questionTitles = [];
+      let questionTitles: string[] = [];
       questions.map((q: Question, index: number) => {
         if ([QuestionType.InfoMessage, ...Object.values(PageType)].includes(q.type)) return false;
         let qsTitle = q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
         const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
         if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(q.type))
-          Object.entries(q.features?.[lang]).map(([key, value]) =>
+          Object.entries(q.features?.[lang] ?? {}).map(([key, value]) =>
             typeof value === "object" &&
             value !== null &&
             "isEnabled" in value &&
@@ -988,14 +1052,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         else if (q.type === QuestionType.Testimonial) {
           questionTitles.push((qstnTitle + ":name").trim());
           questionTitles.push((qstnTitle + ":testimonial").trim());
-          Object.entries(q.features?.[lang]).map(([key, value]) =>
+          Object.entries(q.features?.[lang] ?? {}).map(([key, value]) =>
             value ? questionTitles.push((qstnTitle + ":" + key).trim()) : null,
           );
         } else if (q.type === QuestionType.MCQGrid) {
-          const subQs = q.features?.[lang]?.questions;
-          subQs.map((qstn) => questionTitles.push((qstnTitle + ":" + qstn).trim()));
+          const subQs: string[] | undefined = q.features?.[lang]?.questions;
+          subQs?.map((qstn) => questionTitles.push((qstnTitle + ":" + qstn).trim()));
         } else if (q.type === QuestionType.MultiTextInput) {
-          const fields = q.features?.[lang]?.fields;
+          const fields: { fieldKey?: string }[] | undefined = q.features?.[lang]?.fields;
           fields?.map((field) => questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()));
         } else questionTitles.push(qstnTitle);
       });
@@ -1058,7 +1122,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         // Prepare rows for this batch
         const responseForSheet = [];
         for (const response of responses) {
-          const resObj: Record<string, any> = {
+          const resObj: SheetRow = {
             Team: response.surveyTeamMap.team.name,
             "Created At": dayjs(response.createdAt).format("DD-MM-YYYY HH:mm"),
           };
@@ -1069,32 +1133,32 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
             const qstnTitle = i + 1 + "_" + getContent(qsTitle)?.trim();
             const res = response.responses.find((r) => r.questionId === q.id);
             if (res) {
+              const answerValue = getAnswerValue(res.response, res.type);
               if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(q.type))
-                Object.entries(res.response[res.type]).map(
-                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+                Object.entries(answerValue as Record<string, unknown>).map(
+                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
                 );
               else if (q.type === QuestionType.Testimonial)
-                Object.entries(res.response[res.type]).map(
+                Object.entries(answerValue as Record<string, unknown>).map(
                   ([key, value]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] =
                       key == "photo"
                         ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                        : value),
+                        : toCell(value)),
                 );
               else if (q.type === QuestionType.MCQGrid)
-                Object.entries(res.response[res.type]).map(
-                  ([key, value]: [string, Choice]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+                Object.entries(answerValue as Record<string, Choice>).map(
+                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
                 );
               else if (q.type === QuestionType.MultiTextInput)
-                Object.entries(res.response[res.type]).map(
-                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+                Object.entries(answerValue as Record<string, unknown>).map(
+                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
                 );
-              else resObj[qstnTitle] = getFormattedResponse(res.response[res.type], q, lang);
+              else resObj[qstnTitle] = getFormattedResponse(answerValue, q, lang);
             }
           }
-          resObj["Respondent's Mobile Number"] = response?.Contact?.phone;
-          resObj["Tag"] = response?.tag;
+          resObj["Respondent's Mobile Number"] = toCell(response?.Contact?.phone);
+          resObj["Tag"] = toCell(response?.tag);
           responseForSheet.push(resObj);
         }
         // Add batch of rows
@@ -1110,7 +1174,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       where: { surveyTeamMap: { surveyId } },
     });
     const headerArray = filteredSecondArray.map((question) =>
-      markdownToPlainText(question?.header || question?.label || ""),
+      typeof question === "string"
+        ? question
+        : markdownToPlainText(question?.header || question?.label || ""),
     );
     const createdAt = "Created At";
     const responseTag = "Tag";
@@ -1164,13 +1230,16 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       for (const response of responses) {
         const row: string[] = [];
         filteredSecondArray.forEach((question) => {
-          const questionId = question.id;
-          const responseObj: any = response.responses.find(
+          const questionId = typeof question === "string" ? undefined : question.id;
+          const responseObj = response.responses.find(
             (answerObj: { questionId: string }) => answerObj.questionId === questionId,
           );
           let responseValue: string;
           if (responseObj) {
-            responseValue = getCellData(responseObj.response, question);
+            responseValue = getCellData(
+              responseObj.response,
+              question as { type?: QuestionType; metaType?: WaQuestions },
+            );
           } else if (question === createdAt) {
             const createdAtFormatted = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
             responseValue = createdAtFormatted;
@@ -1204,7 +1273,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   return survey;
 }
 
-export async function getDriveFolderId(orgId: string, authClient, drive, token) {
+export async function getDriveFolderId(
+  orgId: string,
+  authClient: Awaited<ReturnType<typeof initializeAuthClient>>,
+  drive: ReturnType<typeof google.drive>,
+  token: GoogleSheetIntegration,
+) {
   let { driveFolderId } = token?.credential || {};
 
   const isFolderExist = driveFolderId ? await checkFileExistInDrive(driveFolderId, drive) : null;
@@ -1219,7 +1293,7 @@ export async function getDriveFolderId(orgId: string, authClient, drive, token) 
       fields: "nextPageToken, files(id, name)",
       spaces: "drive",
     });
-    if (folderList.data.files.length) {
+    if (folderList.data.files?.length) {
       driveFolderId = folderList.data.files[0].id;
     } else {
       const file = await drive.files.create({
@@ -1232,16 +1306,21 @@ export async function getDriveFolderId(orgId: string, authClient, drive, token) 
       credential: { ...token?.credential, driveFolderId },
     });
   }
+  if (!driveFolderId) throw new Error("Could not resolve a Google Drive folder id");
   return driveFolderId;
 }
 
-async function checkFileExistInDrive(fileId, drive) {
+async function checkFileExistInDrive(fileId: string, drive: ReturnType<typeof google.drive>) {
   try {
     await drive.files.get({ fileId });
     return true;
   } catch (e) {
     console.log(e);
-    if (e?.response?.statusText == "Not Found") return false;
+    const statusText =
+      e && typeof e === "object" && "response" in e
+        ? (e.response as { statusText?: string } | undefined)?.statusText
+        : undefined;
+    if (statusText === "Not Found") return false;
   }
 }
 interface IsheetResponse {
@@ -1249,17 +1328,14 @@ interface IsheetResponse {
   responses: QuestionResponse[];
   language: string;
   createdAt: Date;
-  respondent: string;
-  tag: string;
+  respondent?: string | null | false;
+  tag?: string | null;
 }
 export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
   try {
     const { GoogleSpreadsheet } = await import("google-spreadsheet");
     const { respondent, tag, ...response } = responseData;
-    const {
-      survey: { spreadSheetId, questions, id: surveyId },
-      team,
-    } = await prisma.surveyTeamMap.findUnique({
+    const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
       where: {
         id: response.surveyTeamMapId,
       },
@@ -1279,6 +1355,11 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
         },
       },
     });
+    if (!surveyTeamMap) return;
+    const {
+      survey: { spreadSheetId, questions, id: surveyId },
+      team,
+    } = surveyTeamMap;
     if (spreadSheetId) {
       const authClient = await initializeAuthClient();
       const token = (await getIntegrationByName(
@@ -1289,7 +1370,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
       await doc.loadInfo();
       let sheet = await doc.sheetsByTitle[response.language];
-      const resObj = {
+      const resObj: SheetRow = {
         Team: team.name,
         team: team.name, // for old synced response
       };
@@ -1309,37 +1390,35 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
               return q;
             }
           });
+          if (!qstn) return;
           let qsTitle =
             qstn?.title[response.language] ||
             qstn?.description[response.language] ||
             qstn?.label?.[response.language] ||
             "";
           let qstnTitle = QIndex + "_" + getContent(qsTitle).trim();
+          const answerValue = getAnswerValue(res.response, res.type);
           if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(qstn.type))
-            Object.entries(res.response[res.type]).map(
-              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+            Object.entries(answerValue as Record<string, unknown>).map(
+              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
             );
           else if (qstn.type === QuestionType.Testimonial)
-            Object.entries(res.response[res.type]).map(
+            Object.entries(answerValue as Record<string, unknown>).map(
               ([key, value]) =>
                 (resObj[(qstnTitle + ":" + key).trim()] =
-                  key == "photo" ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}` : value),
+                  key == "photo"
+                    ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                    : toCell(value)),
             );
           else if (qstn.type === QuestionType.MCQGrid)
-            Object.entries(res.response[res.type]).map(
-              ([key, value]: [string, Choice]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+            Object.entries(answerValue as Record<string, Choice>).map(
+              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
             );
           else if (qstn.type === QuestionType.MultiTextInput)
-            Object.entries(res.response[res.type]).map(
-              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+            Object.entries(answerValue as Record<string, unknown>).map(
+              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = toCell(value)),
             );
-          else
-            resObj[qstnTitle] = getFormattedResponse(
-              res.response[res.type],
-              qstn,
-              response.language,
-            );
+          else resObj[qstnTitle] = getFormattedResponse(answerValue, qstn, response.language);
         } else {
           const questionId = res.questionId;
           let question = filteredSecondArray.find(
@@ -1351,16 +1430,19 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
           );
           let responseValue: string;
           if (responseObj) {
-            responseValue = getCellData(responseObj.response, question);
+            responseValue = getCellData(
+              responseObj.response,
+              question as { type?: QuestionType; metaType?: WaQuestions },
+            );
           } else {
             responseValue = "";
           }
           resObj[qstnTitle] = responseValue;
         }
       });
-      resObj["Respondent's Mobile Number"] = respondent;
-      resObj["Tag"] = tag;
-      resObj["tag"] = tag; // for old synced response
+      resObj["Respondent's Mobile Number"] = toCell(respondent);
+      resObj["Tag"] = toCell(tag);
+      resObj["tag"] = toCell(tag); // for old synced response
       await sheet.addRow(resObj);
     }
     return spreadSheetId;
@@ -1370,52 +1452,71 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
   }
 }
 
-export function getFormattedResponse(response, qstn, language) {
+/** Coerces one exported answer (or sub-answer) to the string a spreadsheet cell holds. */
+function toCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.map(toCell).join(", ");
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>)
+      .map(toCell)
+      .join(", ");
+  }
+  return String(value);
+}
+
+/** Reads one key off an answer that is stored as a keyed sub-answer map. */
+function answerField(value: unknown, key: string): unknown {
+  return value !== null && typeof value === "object"
+    ? (value as Record<string, unknown>)[key]
+    : undefined;
+}
+
+// `response` shape varies per QuestionType (string, {value}, array, boolean); the switch
+// on qstn.type below is the real runtime type discrimination, so each branch narrows for
+// itself rather than the parameter claiming one shape.
+export function getFormattedResponse(response: unknown, qstn: Question, language: string) {
+  const choice = response as { value?: string; other?: string } | undefined;
+  const choices = response as Array<{ value?: string; other?: string }> | undefined;
+  const otherTitle = qstn?.features?.[language]?.other?.title;
   let formattedResponse = "";
   switch (qstn?.type) {
     case QuestionType.MCQ:
-      formattedResponse =
-        response?.value?.trim() ||
-        `${qstn?.features?.[language]?.other?.title}: ${response?.other?.trim()}`;
+      formattedResponse = choice?.value?.trim() || `${otherTitle}: ${choice?.other?.trim()}`;
       break;
     case QuestionType.CustomNPS:
     case QuestionType.DDSS:
-      formattedResponse = response.value.trim();
+      formattedResponse = choice?.value?.trim() ?? "";
       break;
     case QuestionType.DDMS:
     case QuestionType.MSQ:
-      formattedResponse = response
-        .map(
-          (item) =>
-            item?.value?.trim() ||
-            `${qstn?.features?.[language]?.other?.title}: ${item?.other?.trim()}`,
-        )
+      formattedResponse = (choices ?? [])
+        .map((item) => item?.value?.trim() || `${otherTitle}: ${item?.other?.trim()}`)
         .join(", ");
       break;
     case QuestionType.Date:
-      formattedResponse = dayjs(response).format("DD, MMM YYYY");
+      formattedResponse = dayjs(response as string | number | Date).format("DD, MMM YYYY");
       break;
     case QuestionType.Photo:
     case QuestionType.File:
-      formattedResponse = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${response}`;
+      formattedResponse = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${toCell(response)}`;
       break;
     case QuestionType.PCQ:
-      formattedResponse = response.value.value;
+      formattedResponse = toCell(answerField(answerField(response, "value"), "value"));
       break;
     case QuestionType.TnC:
       formattedResponse = response == true ? "accepted" : "Not accepted";
       break;
     case QuestionType.EmailOtp:
-      formattedResponse = `verified email Id: ${response?.email}`;
+      formattedResponse = `verified email Id: ${toCell(answerField(response, "email"))}`;
       break;
     default:
-      formattedResponse = response;
+      formattedResponse = toCell(response);
   }
   return formattedResponse;
 }
 
 export async function getAIResponseSummaryBySurveyId(surveyId: string, _questionId: string) {
-  const { aiResponseSummary } = await prisma.survey.findUnique({
+  const survey = await prisma.survey.findUnique({
     where: {
       id: surveyId,
     },
@@ -1423,10 +1524,10 @@ export async function getAIResponseSummaryBySurveyId(surveyId: string, _question
       aiResponseSummary: true,
     },
   });
-  return aiResponseSummary as unknown as ResponseSummary[];
+  return survey?.aiResponseSummary as unknown as ResponseSummary[];
 }
 
-export async function updateSummaryOnSurvey(surveyId, updatedSummary) {
+export async function updateSummaryOnSurvey(surveyId: string, updatedSummary: ResponseSummary[]) {
   await prisma.survey.update({
     where: {
       id: surveyId,
@@ -1440,8 +1541,8 @@ export async function updateSummaryOnSurvey(surveyId, updatedSummary) {
 export async function getResponseSummary(
   surveyId: string,
   request: FastifyRequest,
-  allowedTokens,
-  usedTokens,
+  allowedTokens: { completionTokens: number; promptTokens: number },
+  usedTokens: { aiCompletionTokensCount: number; aiPromptTokensCount: number } | null,
   type: ResponseSummaryType,
   questionId: string,
   teamId?: string,
@@ -1450,7 +1551,7 @@ export async function getResponseSummary(
 
   const aiResponseSummary = await getAIResponseSummaryBySurveyId(surveyId, questionId);
 
-  let questionIndex = null;
+  let questionIndex: number | null = null;
   const responseSummary = aiResponseSummary.find((q, index) => {
     if (q.questionId === questionId) {
       questionIndex = index;
@@ -1494,7 +1595,7 @@ export async function getResponseSummary(
 
   if (!responsesNotSummarised.length) return;
   const responseTexts = responsesNotSummarised.map((r) =>
-    r.response.type ? r.response.response[r.response.type] : r.response.response,
+    r.response.type ? getAnswerValue(r.response.response, r.response.type) : r.response.response,
   );
   if (existingSummary && !deletedResponses.length) responseTexts.push(existingSummary.summary);
   const res = await getTextSummaryByAI(responseTexts, request, allowedTokens, usedTokens);
@@ -1509,13 +1610,14 @@ export async function getResponseSummary(
       },
     };
   } else if (type === ResponseSummaryType.Team) {
+    if (!teamId) throw new Error("TeamId not found");
     let updatedTeamSummary = responseSummary?.team ?? [];
     if (existingSummary) {
       const teamSummaryIndex = updatedTeamSummary.findIndex((t) => t.teamId === teamId);
       updatedTeamSummary[teamSummaryIndex].summary = res.summary;
       updatedTeamSummary[teamSummaryIndex].responseIds = responseIds;
     } else {
-      updatedTeamSummary.push({ teamId, responseIds, summary: res?.summary });
+      updatedTeamSummary.push({ teamId, responseIds, summary: res.summary });
     }
     updateData = {
       ...responseSummary,
@@ -1532,6 +1634,7 @@ export async function getResponseSummary(
     } else {
       updatedSummary[questionIndex] = {
         ...updateData,
+        questionId,
       };
     }
     await Promise.all([
@@ -1554,7 +1657,7 @@ export async function getResponseSummary(
   return true;
 }
 
-export async function exportContactResponseToContacts(surveyId, orgId) {
+export async function exportContactResponseToContacts(surveyId: string, orgId: string) {
   const allResponse = await getAllResponses(surveyId);
   const surveyTitle = allResponse[0].survey.title;
   const contactResponses = allResponse.map((r) => ({
@@ -1575,13 +1678,16 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       const teamId = team.team.id;
       const contacts = team.responses
         .map((res) => (res as unknown as QuestionResponse).response[QuestionType.Contact])
-        .filter((c) => c.phone)
-        .map((c) => ({
-          ...c,
-          phone: c.phone.slice(1),
-          source: `survey_import: ${surveyTitle}`,
-          email: undefined,
-        }));
+        .filter((c): c is { name?: string; phone: string; email?: string } => Boolean(c?.phone))
+        .map((c) => {
+          const email: string | undefined = undefined;
+          return {
+            ...c,
+            phone: c.phone.slice(1),
+            source: `survey_import: ${surveyTitle}`,
+            email,
+          };
+        });
       if (!contacts.length) return;
       let contactGroup = await getContactGroupByNameAndTeam(groupName, teamId);
       if (!contactGroup)
@@ -1593,34 +1699,38 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
         });
       // Ensure each contact has required fields: name, source
       const contactsWithRequired = contacts.map((c) => ({
+        ...c,
         name: c.name || "Unknown",
         source: c.source || "imported",
-        ...c,
       }));
       await addNewContactsToGroup(contactGroup.id, contactsWithRequired, orgId);
     }),
   );
 }
 
-export async function sendResponseToWebhook(responseObj, orgId) {
+export async function sendResponseToWebhook(
+  responseObj: Awaited<ReturnType<typeof createResponse>>,
+  orgId: string,
+) {
   if (!hasFeature(orgId, SubscriptionFeaturePathName.Webhook)) {
     return;
   }
   const endpoint = responseObj.surveyTeamMap.survey.responseWebhookEndpoint;
   if (!endpoint) return;
-  const questionMap = responseObj.surveyTeamMap.survey.questions.reduce(
+  const questionMap = responseObj.surveyTeamMap.survey.questions.reduce<Record<string, string>>(
     (map, { id, title, description, label }) => {
       map[id] =
         title[responseObj?.language] ||
         description[responseObj?.language] ||
-        label[responseObj?.language];
+        label?.[responseObj?.language] ||
+        "";
       return map;
     },
     {},
   );
-  const responses = responseObj.responses.map(({ questionId, response = {}, type }) => ({
+  const responses = responseObj.responses.map(({ questionId, response, type }) => ({
     type,
-    response: response[type],
+    response: getAnswerValue(response, type),
     title: questionMap[questionId],
   }));
   const payload = {
@@ -1635,7 +1745,7 @@ export async function sendResponseToWebhook(responseObj, orgId) {
   await sendWebhook(endpoint, payload, orgId);
 }
 
-export function markdownToPlainText(markdown) {
+export function markdownToPlainText(markdown: string) {
   return markdown
     .replace(/[#_*~>]/g, "")
     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
@@ -1643,21 +1753,33 @@ export function markdownToPlainText(markdown) {
     .replace(/`{1,3}.*?`{1,3}/g, "");
 }
 
-const getCellData = (response, question) => {
+// Called with heterogeneous question shapes (web Question, WaFlow Question2, flow form
+// elements) across different export paths, so the shape here is intentionally permissive.
+const getCellData = (
+  response: unknown,
+  question: {
+    type?: QuestionType | WaQuestions | WaFlowFormElementType;
+    metaType?: WaQuestions;
+    "data-source"?: Array<{ id: string; title: string }>;
+  },
+): string => {
+  const answer = toCell(response);
+  // The scale maps are keyed by the 1..5 option number the flow sends back.
+  const scaleKey = Number(answer);
   switch (question?.type || question?.metaType) {
     case WaQuestions.LD:
-      return LDResponseMap[response] || "";
+      return LDResponseMap[scaleKey] || "";
     case WaQuestions.YN:
-      return YNResponseMap[response] || "";
+      return YNResponseMap[scaleKey] || "";
     case WaQuestions.Smiley:
-      return SmileyResponseMap[response] || "";
+      return SmileyResponseMap[scaleKey] || "";
     case WaQuestions.Rating:
-      return RatingScaleMap[response] || "";
+      return RatingScaleMap[scaleKey] || "";
     case WaQuestions.Opinion:
-      return response || "";
+      return answer || "";
     case WaQuestions.RadioButtonsGroup:
     case WaQuestions.Dropdown:
-      return question["data-source"]?.find((data) => data.id === response)?.title || "";
+      return question["data-source"]?.find((data) => data.id === answer)?.title || "";
     case WaQuestions.CheckboxGroup:
     case WaQuestions.ChipsSelector:
       return (
@@ -1669,15 +1791,15 @@ const getCellData = (response, question) => {
       );
     case WaQuestions.DocumentPicker:
     case WaQuestions.PhotoPicker:
-      return response && `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`;
+      return response ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${answer}` : "";
     case WaQuestions.DatePicker:
-      return response ? dayjs(response).format("DD-MM-YYYY") : "";
+      return response ? dayjs(response as string | number | Date).format("DD-MM-YYYY") : "";
     default:
-      return response.toString() || "";
+      return answer;
   }
 };
 
-export async function getSurveyResponseCount(surveyId, teamIds) {
+export async function getSurveyResponseCount(surveyId: string, teamIds: string[]) {
   const teamWiseCount = (await prisma.$queryRaw`SELECT st.id,t.code as "teamCode", 
   COUNT(sr.id)::INTEGER
   FROM "SurveyTeamMap" st
@@ -1692,6 +1814,20 @@ export async function getSurveyResponseCount(surveyId, teamIds) {
     all: teamWiseCount.reduce((total, teamMap) => (total += teamMap.count), 0),
     teamWiseCount,
   };
+}
+
+interface SurveyResponseRawRow {
+  count: number;
+  id: string;
+  contactId: string | null;
+  language: string;
+  tag: string | null;
+  responses: QuestionResponse[];
+  createdAt: Date;
+  encryptedResponses: string | null;
+  platform: string;
+  surveyTeamMapId: string;
+  phone: string | null;
 }
 
 export async function getSurveyResponseBySurveyId(
@@ -1783,7 +1919,7 @@ export async function getSurveyResponseBySurveyId(
       filterQuery += ` AND sr."createdAt" >= '${startDate}' AND sr."createdAt" <= '${endDate}'`;
     }
 
-    let query = [];
+    let query: string[] = [];
     Object.entries(responseFilters).forEach(([questionId, search]) => {
       const rawSearch = (search || "").trim();
       const isDateSearch = /^\d{4}-\d{2}-\d{2}$/.test(rawSearch);
@@ -1837,15 +1973,16 @@ export async function getSurveyResponseBySurveyId(
     }
   }
 
-  const responses =
-    await prisma.$queryRaw`SELECT COUNT(*) OVER()::INTEGER , sr.id, sr."contactId", sr."language",
+  const responses = await prisma.$queryRaw<
+    SurveyResponseRawRow[]
+  >`SELECT COUNT(*) OVER()::INTEGER , sr.id, sr."contactId", sr."language",
   sr."tag", sr."responses", sr."createdAt",sr."encryptedResponses",sr."platform", sr."surveyTeamMapId", c."phone" FROM "SurveyResponse" sr
   LEFT JOIN "Contact" c on c.id = sr."contactId"
   LEFT JOIN "SurveyTeamMap" st on st.id = sr."surveyTeamMapId"
   LEFT JOIN "Survey" s ON s.id = st."surveyId"
-  WHERE st."surveyId" = ${surveyId}::uuid AND st."teamId" = ANY(${teamIds}::uuid[]) 
-  ${filterQuery?.length ? Prisma.raw(filterQuery) : Prisma.empty} 
-  ORDER BY sr."createdAt" ${desc === "true" ? Prisma.sql`DESC` : Prisma.sql`ASC`} 
+  WHERE st."surveyId" = ${surveyId}::uuid AND st."teamId" = ANY(${teamIds}::uuid[])
+  ${filterQuery?.length ? Prisma.raw(filterQuery) : Prisma.empty}
+  ORDER BY sr."createdAt" ${desc === "true" ? Prisma.sql`DESC` : Prisma.sql`ASC`}
   LIMIT ${pagination.take} OFFSET ${pagination.skip}
   ;`;
 
@@ -1853,12 +1990,12 @@ export async function getSurveyResponseBySurveyId(
 }
 
 export async function getResponseAnalyticsForGraph(
-  surveyId,
-  teamIds,
-  teamMapIds = [],
+  surveyId: string,
+  teamIds: string[],
+  teamMapIds: string[] = [],
   dateRange = "",
 ) {
-  let where = {
+  let where: Prisma.SurveyResponseWhereInput = {
     surveyTeamMap: {
       surveyId,
       teamId: {
@@ -1867,12 +2004,13 @@ export async function getResponseAnalyticsForGraph(
     },
   };
   if (teamMapIds.length)
-    where.surveyTeamMap["id"] = {
-      in: teamMapIds,
+    where.surveyTeamMap = {
+      ...(where.surveyTeamMap as Prisma.SurveyTeamMapWhereInput),
+      id: { in: teamMapIds },
     };
   if (dateRange?.length) {
     const [startDate, endDate] = dateRange?.split(",") || [];
-    where["createdAt"] = {
+    where.createdAt = {
       gte: dayjs(startDate).startOf("day").toISOString(),
       lte: dayjs(endDate).endOf("day").toISOString(),
     };
@@ -1905,38 +2043,38 @@ export async function getResponseAnalyticsForGraph(
   const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
   const questions = version
     ? surveyInfo.survey.questions.filter((q) => barGraphQuestions.includes(q.type))
-    : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
+    : ((surveyInfo.survey.WaFlow?.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
-          (child) =>
-            barGraphQuestions2.includes((child as any).metaType as WaQuestions) && child.name,
+          (child) => barGraphQuestions2.includes(child.metaType as WaQuestions) && child.name,
         ),
-      ) as unknown as Question2[]);
+      ) ?? []) as unknown as Question2[]);
 
   const npsQuestionIds = version
     ? questions
-        .filter(
-          (q) => npsQuestionTypes.includes(q.type as QuestionType) && (q as any).enableNpsAnalytics,
-        )
-        .map((q) => (q as any).id)
+        .filter((q) => npsQuestionTypes.includes(q.type as QuestionType) && q.enableNpsAnalytics)
+        .map((q) => q.id)
     : questions
+        // This branch only ever holds v2 (Question2) entries, which are the
+        // ones carrying `metaType`.
         .filter(
           (q) =>
-            npsQuestionTypes2.includes((q as any).metaType as WaQuestions) &&
-            (q as any).enableNpsAnalytics,
+            "metaType" in q &&
+            npsQuestionTypes2.includes(q.metaType as WaQuestions) &&
+            q.enableNpsAnalytics,
         )
-        .map((q) => (q as any)?.id);
+        .map((q) => q?.id);
   const barGraphQuestionIds = questions.map((q) => q.id);
 
   // Initialize result object
-  const result = {
+  const result: { nps: Record<string, NpsResult>; choiceWise: Record<string, ChoiceWiseResult> } = {
     nps: {},
     choiceWise: {},
   };
 
   // Set up counters for each question
-  const counters = {};
+  const counters: Record<string, AnalyticsCounter> = {};
   barGraphQuestionIds.forEach((qId) => {
-    const question = questions.find((q) => (q as any).id === qId);
+    const question = questions.find((q) => q.id === qId);
     if (!question) return;
 
     counters[qId] = {
@@ -1976,7 +2114,7 @@ export async function getResponseAnalyticsForGraph(
         const questionId = r.questionId;
         if (!barGraphQuestionIds.includes(questionId) || !counters[questionId]) continue;
 
-        const question = questions.find((q) => (q as any).id === questionId);
+        const question = questions.find((q) => q.id === questionId);
         if (!question) continue;
 
         processResponse(
@@ -1998,7 +2136,9 @@ export async function getResponseAnalyticsForGraph(
     if (!counters[qId]) return;
 
     const counter = counters[qId];
-    const question = questions.find((q) => (q as any).id === qId);
+    const question = questions.find((q) => q.id === qId);
+    // qId came from questions itself, so this only proves it to the type system.
+    if (!question) return;
 
     if (npsQuestionIds.includes(qId)) {
       const total = counter.promoters + counter.passives + counter.detractors;
@@ -2028,7 +2168,99 @@ export async function getResponseAnalyticsForGraph(
 }
 
 // Helper functions
-function initializeChoiceCounter(question, version) {
+/**
+ * The subset of a question the analytics pipeline below reads. That pipeline
+ * handles both web surveys (Question/QuestionType) and WhatsApp Flow v2
+ * (Question2/WaQuestions), so the fields of both shapes appear here and callers
+ * pass whichever they have.
+ */
+interface AnalyticsQuestion {
+  id?: string;
+  type?: QuestionType;
+  metaType?: WaQuestions;
+  features?: Record<string, QuestionFeatures>;
+  choices?: Record<string, Choice[]>;
+  "data-source"?: Array<{ id: string; title: string }>;
+}
+
+/**
+ * A stored choice. Most rows keep a plain label in `value`, but legacy rows
+ * keep an object carrying the label under `title` — every reader below handles
+ * both.
+ */
+interface StoredChoice {
+  value: string | { title?: string };
+}
+
+/** One choice's running tally. */
+interface ChoiceTally {
+  count: number;
+  choice: unknown;
+}
+
+/**
+ * Choice tallies for a question: a single map for an ordinary choice question,
+ * or one map per sub-question for an MCQGrid.
+ */
+type ChoiceWiseCounter =
+  | Map<number | string, ChoiceTally>
+  | Record<number, Record<string, Map<number, ChoiceTally>>>;
+
+/** One question's finished NPS/CSAT block in the analytics payload. */
+interface NpsResult {
+  csatScore: number;
+  npsData: {
+    npsScore: number | null;
+    passives: number;
+    detractors: number;
+    promoters: number;
+    total: number;
+  };
+  responseCount: number;
+}
+
+/** One question's finished choice breakdown; `subData` is only set for grids. */
+interface ChoiceWiseResult {
+  data: ChoiceTally[];
+  subData?: Record<string, ChoiceTally[]>;
+  responseCount?: number;
+}
+
+/** Running tallies kept per question while streaming responses. */
+interface AnalyticsCounter {
+  promoters: number;
+  detractors: number;
+  passives: number;
+  csat: number;
+  total: number;
+  choiceWise: ChoiceWiseCounter;
+}
+
+/** True when a stored answer is a Choice object rather than a scalar. */
+function isChoice(value: unknown): value is Choice {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && "value" in value;
+}
+
+/**
+ * A stored answer's value. Which member applies depends on the question type,
+ * which the switches in processResponse dispatch on.
+ */
+type AnalyticsValue =
+  | QuestionResponse["response"][keyof QuestionResponse["response"]]
+  // MCQGrid answers are keyed by sub-question label rather than by question
+  // type, so they have no entry in QuestionResponse["response"].
+  | Record<string, Choice>;
+
+/** True when a stored answer is an MCQGrid's sub-question -> choice map. */
+function isGridValue(value: unknown): value is Record<string, Choice> {
+  return (
+    typeof value === "object" && value !== null && !Array.isArray(value) && !("value" in value)
+  );
+}
+
+// This analytics pipeline handles both web (Question/QuestionType) and WhatsApp Flow
+// (Question2/WaQuestions) survey shapes; ChoiceWiseCounter's union mirrors that duality.
+function initializeChoiceCounter(question: AnalyticsQuestion, version: boolean): ChoiceWiseCounter {
   if (version) {
     const type = question.type;
     if (type === QuestionType.MCQGrid) {
@@ -2039,29 +2271,32 @@ function initializeChoiceCounter(question, version) {
           }
         )?.questions || [];
       const choices = question.choices
-        ? (Object.values(question.choices ?? [])[0] as any[])?.map((c) =>
-            typeof c.value === "object" ? c.value.title : c.value,
+        ? ((Object.values(question.choices ?? [])[0] ?? []) as StoredChoice[]).map((c) =>
+            typeof c.value === "object" ? c.value?.title : c.value,
           )
         : getChoicesForNpsQuestions(type);
 
-      return subQuestions.reduce((acc, subQ, idx) => {
-        acc[idx] = {
-          [subQ]: new Map(
-            choices.map((choice, index) => [
-              index,
-              {
-                count: 0,
-                choice,
-              },
-            ]),
-          ),
-        };
-        return acc;
-      }, {});
+      return subQuestions.reduce(
+        (acc: Record<number, Record<string, Map<number, ChoiceTally>>>, subQ, idx) => {
+          acc[idx] = {
+            [subQ]: new Map(
+              choices.map((choice, index) => [
+                index,
+                {
+                  count: 0,
+                  choice,
+                },
+              ]),
+            ),
+          };
+          return acc;
+        },
+        {},
+      );
     } else {
       const choices = question.choices
-        ? (Object.values(question.choices)[0] as any[])?.map((c) =>
-            typeof c.value === "object" ? c.value.title : c.value,
+        ? ((Object.values(question.choices)[0] ?? []) as StoredChoice[]).map((c) =>
+            typeof c.value === "object" ? c.value?.title : c.value,
           )
         : getChoicesForNpsQuestions(question.type);
 
@@ -2076,7 +2311,7 @@ function initializeChoiceCounter(question, version) {
       );
     }
   } else {
-    const choices = question["data-source"];
+    const choices = question["data-source"] ?? [];
     return new Map(
       choices.map((choice) => [
         choice.id,
@@ -2089,9 +2324,22 @@ function initializeChoiceCounter(question, version) {
   }
 }
 
-function processResponse(r, language, question, counter, version, isNpsQuestion) {
+function processResponse(
+  r: QuestionResponse,
+  language: string,
+  question: AnalyticsQuestion,
+  counter: AnalyticsCounter,
+  version: boolean,
+  isNpsQuestion: boolean,
+) {
   const type = version ? r.type : question.metaType;
-  const value = r.response[r.type] || r.response;
+  // v1 answers are keyed by question type; v2 answers hold the raw value.
+  const responsesByType = r.response as Partial<Record<QuestionType, AnalyticsValue>>;
+  const value: AnalyticsValue = responsesByType[r.type] ?? (r.response as AnalyticsValue);
+  // Scale answers (Rating/Opinion) are stored as numbers on some rows and as
+  // numeric strings on others, so compare numerically rather than by type.
+  const numericValue = Number(value);
+  const stringValue = typeof value === "string" ? value : String(value);
 
   counter.total++;
 
@@ -2100,24 +2348,26 @@ function processResponse(r, language, question, counter, version, isNpsQuestion)
     if (version) {
       switch (type) {
         case QuestionType.Rating:
-          if (value >= 4) {
+          if (numericValue >= 4) {
             counter.promoters++;
             counter.csat++;
-          } else if (value == 3) counter.passives++;
+          } else if (numericValue === 3) counter.passives++;
           else counter.detractors++;
           break;
         case QuestionType.Opinion:
-          if (value >= 9) {
+          if (numericValue >= 9) {
             counter.promoters++;
             counter.csat++;
-          } else if (value >= 7) counter.passives++;
+          } else if (numericValue >= 7) counter.passives++;
           else counter.detractors++;
           break;
         case QuestionType.Smiley:
-          if ([SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(value)) {
+          if (
+            [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(stringValue as SmileyResponse)
+          ) {
             counter.promoters++;
             counter.csat++;
-          } else if (value === SmileyResponse.Neutral) counter.passives++;
+          } else if (stringValue === SmileyResponse.Neutral) counter.passives++;
           else counter.detractors++;
           break;
         case QuestionType.LD:
@@ -2127,51 +2377,51 @@ function processResponse(r, language, question, counter, version, isNpsQuestion)
           } else counter.detractors++;
           break;
         case QuestionType.YN:
-          if (value === YNResponse.Yes) {
+          if (stringValue === YNResponse.Yes) {
             counter.promoters++;
             counter.csat++;
           } else counter.detractors++;
           break;
         case QuestionType.CustomNPS:
-          if (value?.weightage == NPSWeightage.PROMOTER) {
+          if (isChoice(value) && value.weightage === NPSWeightage.PROMOTER) {
             counter.csat++;
             counter.promoters++;
           }
-          if (value?.weightage == NPSWeightage.PASSIVE) counter.passives++;
-          if (value?.weightage == NPSWeightage.DETRACTOR) counter.detractors++;
+          if (isChoice(value) && value.weightage === NPSWeightage.PASSIVE) counter.passives++;
+          if (isChoice(value) && value.weightage === NPSWeightage.DETRACTOR) counter.detractors++;
           break;
       }
     } else {
       switch (type) {
         case WaQuestions.Rating:
-          if (Number(value) >= 4) {
+          if (numericValue >= 4) {
             counter.promoters++;
             counter.csat++;
-          } else if (Number(value) == 3) counter.passives++;
+          } else if (numericValue === 3) counter.passives++;
           else counter.detractors++;
           break;
         case WaQuestions.Opinion:
-          if (Number(value) >= 9) {
+          if (numericValue >= 9) {
             counter.promoters++;
             counter.csat++;
-          } else if (Number(value) >= 7) counter.passives++;
+          } else if (numericValue >= 7) counter.passives++;
           else counter.detractors++;
           break;
         case WaQuestions.Smiley:
-          if (["4", "5"].includes(value)) {
+          if (["4", "5"].includes(stringValue)) {
             counter.promoters++;
             counter.csat++;
-          } else if (value === "3") counter.passives++;
+          } else if (stringValue === "3") counter.passives++;
           else counter.detractors++;
           break;
         case WaQuestions.LD:
-          if (value === "1") {
+          if (stringValue === "1") {
             counter.promoters++;
             counter.csat++;
           } else counter.detractors++;
           break;
         case WaQuestions.YN:
-          if (value === "1") {
+          if (stringValue === "1") {
             counter.promoters++;
             counter.csat++;
           } else counter.detractors++;
@@ -2183,17 +2433,19 @@ function processResponse(r, language, question, counter, version, isNpsQuestion)
   // Count choice-wise selections
   if (version) {
     if (type !== QuestionType.MCQGrid) {
-      const resp = Array.isArray(value)
-        ? value.map((v) => v.value)
-        : typeof value === "object"
+      const resp: unknown[] = Array.isArray(value)
+        ? value.map((v) => (isChoice(v) ? v.value : v))
+        : isChoice(value)
           ? [value.value]
           : [value];
 
       resp.forEach((res) => {
         if (!res) return;
         const choiceIndex = getChoiceIndex(question, language, res.toString(), type);
-        if (choiceIndex !== -1 && counter.choiceWise.has(choiceIndex)) {
-          const mapValue = counter.choiceWise.get(choiceIndex);
+        // Non-MCQGrid questions always get the single-Map counter shape.
+        if (!(counter.choiceWise instanceof Map)) return;
+        const mapValue = counter.choiceWise.get(choiceIndex);
+        if (choiceIndex !== -1 && mapValue) {
           counter.choiceWise.set(choiceIndex, {
             ...mapValue,
             count: mapValue.count + 1,
@@ -2207,15 +2459,18 @@ function processResponse(r, language, question, counter, version, isNpsQuestion)
             questions?: string[];
           }
         )?.questions || [];
+      // An MCQGrid's counter is keyed by sub-question, not a single Map.
+      if (!isGridValue(value) || counter.choiceWise instanceof Map) return;
+      const gridCounter = counter.choiceWise;
       subQuestions.forEach((subQ, index) => {
-        if (!value || !value[subQ]) return;
-        const resp = value[subQ].value;
+        const resp = value[subQ]?.value;
         if (!resp) return;
 
         const choiceIndex = getChoiceIndex(question, language, resp, type);
-        if (choiceIndex !== -1 && counter.choiceWise[index]?.[subQ]?.has(choiceIndex)) {
-          const mapValue = counter.choiceWise[index][subQ].get(choiceIndex);
-          counter.choiceWise[index][subQ].set(choiceIndex, {
+        const subCounter = gridCounter[index]?.[subQ];
+        const mapValue = subCounter?.get(choiceIndex);
+        if (choiceIndex !== -1 && subCounter && mapValue) {
+          subCounter.set(choiceIndex, {
             ...mapValue,
             count: mapValue.count + 1,
           });
@@ -2223,12 +2478,15 @@ function processResponse(r, language, question, counter, version, isNpsQuestion)
       });
     }
   } else {
-    const resp = Array.isArray(value) ? value : [value];
+    const resp: unknown[] = Array.isArray(value) ? value : [value];
+    // v2 (flow) questions always get the single-Map counter shape.
+    if (!(counter.choiceWise instanceof Map)) return;
+    const choiceCounter = counter.choiceWise;
     resp.forEach((res) => {
-      if (!res || !counter.choiceWise.has(res)) return;
-
-      const mapValue = counter.choiceWise.get(res);
-      counter.choiceWise.set(res, {
+      if (!res) return;
+      const mapValue = choiceCounter.get(res as string | number);
+      if (!mapValue) return;
+      choiceCounter.set(res as string | number, {
         ...mapValue,
         count: mapValue.count + 1,
       });
@@ -2236,39 +2494,48 @@ function processResponse(r, language, question, counter, version, isNpsQuestion)
   }
 }
 
-function getChoiceIndex(question, language, resp, type) {
+function getChoiceIndex(
+  question: AnalyticsQuestion,
+  language: string,
+  resp: unknown,
+  type: QuestionType | WaQuestions | undefined,
+) {
   const choices = question.choices
-    ? question.choices[language]?.map((c) =>
-        typeof c.value === "object" ? c.value.title : c.value,
+    ? (question.choices[language] as StoredChoice[] | undefined)?.map((c) =>
+        typeof c.value === "object" ? c.value?.title : c.value,
       )
     : getChoicesForNpsQuestions(type);
 
-  return choices?.findIndex((c) => c === resp) ?? -1;
+  return choices?.findIndex((c: unknown) => c === resp) ?? -1;
 }
 
-function finalizeChoiceWiseData(choiceWise, question, version) {
-  if (version && question.type === QuestionType.MCQGrid) {
-    const subData = Object.keys(choiceWise).reduce((acc, idx) => {
-      const obj = choiceWise[idx];
-      const key = Object.keys(obj)[0];
-      acc[key] = Array.from(obj[key].values());
+function finalizeChoiceWiseData(
+  choiceWise: ChoiceWiseCounter,
+  question: AnalyticsQuestion,
+  version: boolean,
+): ChoiceWiseResult {
+  // A grid question counts per row; every other type counts into a flat Map.
+  if (version && question.type === QuestionType.MCQGrid && !(choiceWise instanceof Map)) {
+    const subData = Object.keys(choiceWise).reduce((acc: Record<string, ChoiceTally[]>, idx) => {
+      const row = choiceWise[Number(idx)];
+      const key = Object.keys(row)[0];
+      if (key === undefined) return acc;
+      acc[key] = Array.from(row[key].values());
       return acc;
     }, {});
 
-    return {
-      data: [],
-      subData,
-    };
-  } else {
-    return {
-      data: Array.from(choiceWise.values()),
-      subData: undefined,
-    };
+    return { data: [], subData };
   }
+
+  return {
+    data: choiceWise instanceof Map ? Array.from(choiceWise.values()) : [],
+    subData: undefined,
+  };
 }
 
-function getChoicesForNpsQuestions(type) {
-  let choices = [];
+// Types with no fixed choice set (including WhatsApp Flow types) yield [].
+function getChoicesForNpsQuestions(type: QuestionType | WaQuestions | undefined) {
+  let choices: string[] = [];
   switch (type) {
     case QuestionType.YN:
       choices = Object.values(YNResponse);
@@ -2289,7 +2556,7 @@ function getChoicesForNpsQuestions(type) {
   return choices;
 }
 
-export async function getResponseCountForCamparison(surveyId, teamIds) {
+export async function getResponseCountForCamparison(surveyId: string, teamIds: string[]) {
   const teamRes = await prisma.surveyTeamMap.findMany({
     where: {
       surveyId,
@@ -2318,24 +2585,32 @@ export async function getResponseCountForCamparison(surveyId, teamIds) {
     },
   });
   const version1 = !teamRes[0].survey.WaFlow || teamRes[0].survey.WaFlow.version === 1;
-  const questions = version1
+  // The dual web-survey (Question) / WhatsApp-flow (Question2) shape is handled dynamically
+  // via `version1` throughout this function, matching the pattern used elsewhere in this file.
+  const questions: Array<Question | WaFlowForm> = version1
     ? teamRes[0].survey.questions.filter((q) => npsQuestionTypes.includes(q.type))
-    : teamRes[0].survey.WaFlow.json.screens.flatMap((screen) =>
+    : (teamRes[0].survey.WaFlow?.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
-          (child) =>
-            npsQuestionTypes2.includes((child as any).metaType as WaQuestions) && child.name,
+          (child) => npsQuestionTypes2.includes(child.metaType as WaQuestions) && child.name,
         ),
-      );
+      ) ?? []);
 
-  const data = questions.map((q) => ({
-    questionId: q.id,
-    type: version1 ? q.type : q.metaType,
-    responseObj: getResponseObjectByQuestionType(
-      version1 ? q.type : QuestionType2[q.metaType],
-      version1,
-    ),
-    data: [],
-  }));
+  const data = questions.map((q) => {
+    // v1 entries are Survey questions (carrying `type`); v2 entries are flow
+    // layout children (carrying `metaType`).
+    const metaType = "metaType" in q ? q.metaType : undefined;
+    return {
+      questionId: q.id,
+      type: (version1 ? q.type : metaType) as QuestionType | WaQuestions | undefined,
+      responseObj: getResponseObjectByQuestionType(
+        version1
+          ? (q.type as QuestionType)
+          : (QuestionType2 as Record<string, QuestionType2 | undefined>)[metaType as string],
+        version1,
+      ),
+      data: [] as unknown[],
+    };
+  });
   for (const t of teamRes) {
     const batchSize = 1000;
     let skip = 0;
@@ -2364,12 +2639,16 @@ export async function getResponseCountForCamparison(surveyId, teamIds) {
             return d;
           }
         });
-        if (questionIndex === -1) return;
-        const resp = version1 ? r.response[r.type] : r.response;
-        let currentResponseObj = { ...data[questionIndex].responseObj };
-        if (q.type === QuestionType.CustomNPS)
-          currentResponseObj[resp.weightage] = currentResponseObj[resp.weightage] + 1;
-        else currentResponseObj[resp.toString()] = currentResponseObj[resp.toString()] + 1;
+        if (questionIndex === -1 || !q) return;
+        const resp = version1 ? getAnswerValue(r.response, r.type) : r.response;
+        let currentResponseObj: Record<string, number> = { ...data[questionIndex].responseObj };
+        if (q.type === QuestionType.CustomNPS) {
+          const weightage = toCell(answerField(resp, "weightage"));
+          currentResponseObj[weightage] = currentResponseObj[weightage] + 1;
+        } else {
+          const key = toCell(resp);
+          currentResponseObj[key] = currentResponseObj[key] + 1;
+        }
         data[questionIndex].responseObj = currentResponseObj;
       });
       skip += batchSize;
@@ -2377,7 +2656,7 @@ export async function getResponseCountForCamparison(surveyId, teamIds) {
     data.forEach((d) => {
       const resObj = version1
         ? { ...d.responseObj }
-        : getFlowVersion2MappedObj(d.responseObj, d.type);
+        : getFlowVersion2MappedObj(d.responseObj ?? {}, d.type);
       d.data = [...d.data, { teamCode: t.team.code, mapId: t.id, ...resObj }];
       d.responseObj = getResponseObjectByQuestionType(d.type, version1);
     });
@@ -2385,7 +2664,10 @@ export async function getResponseCountForCamparison(surveyId, teamIds) {
   return data.map((d) => ({ questionId: d.questionId, data: d.data }));
 }
 
-function getFlowVersion2MappedObj(responseObj, type) {
+function getFlowVersion2MappedObj(
+  responseObj: Record<string, number>,
+  type: QuestionType | QuestionType2 | WaQuestions | undefined,
+): Record<string, number> {
   switch (type) {
     case WaQuestions.LD:
       return {
@@ -2409,7 +2691,10 @@ function getFlowVersion2MappedObj(responseObj, type) {
       return responseObj;
   }
 }
-export function getResponseObjectByQuestionType(questionType, version) {
+export function getResponseObjectByQuestionType(
+  questionType: QuestionType | QuestionType2 | WaQuestions | undefined,
+  version: boolean,
+): Record<string, number> | null {
   switch (questionType) {
     case QuestionType.Rating: {
       return {
@@ -2487,14 +2772,14 @@ export function getResponseObjectByQuestionType(questionType, version) {
   }
 }
 
-const smileyMap = {
+const smileyMap: Record<string, number> = {
   "Very Sad": 0,
   Sad: 2,
   Neutral: 5,
   Happy: 8,
   "Very Happy": 10,
 };
-const smileyMap2 = {
+const smileyMap2: Record<number, number> = {
   1: 0,
   2: 2,
   3: 5,
@@ -2502,7 +2787,7 @@ const smileyMap2 = {
   5: 10,
 };
 
-const likeDislikeAndYNMap = {
+const likeDislikeAndYNMap: Record<number, number> = {
   1: 10,
   2: 0,
 };
@@ -2565,12 +2850,11 @@ export async function happyIndexResponsesBySurveyId(
   const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
   const questions = version
     ? surveyInfo.survey.questions.filter((q) => barGraphQuestions.includes(q.type))
-    : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
+    : ((surveyInfo.survey.WaFlow?.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
-          (child) =>
-            barGraphQuestions2.includes((child as any).metaType as WaQuestions) && child.name,
+          (child) => barGraphQuestions2.includes(child.metaType as WaQuestions) && child.name,
         ),
-      ) as unknown as Question2[]);
+      ) ?? []) as unknown as Question2[]);
 
   responses.forEach((resp) => {
     resp.responses.forEach((r) => {
@@ -2580,7 +2864,7 @@ export async function happyIndexResponsesBySurveyId(
 
       const questionType =
         "metaType" in matchedQuestion && matchedQuestion.metaType
-          ? QuestionType[matchedQuestion.metaType]
+          ? (QuestionType as Record<string, QuestionType>)[matchedQuestion.metaType]
           : matchedQuestion.type;
 
       if (questionType === QuestionType.Opinion) {
@@ -2600,7 +2884,7 @@ export async function happyIndexResponsesBySurveyId(
       if (questionType === QuestionType.Smiley) {
         if (version) {
           const val = r.response[QuestionType.Smiley];
-          score = smileyMap[val] ?? null;
+          score = (val !== undefined ? smileyMap[val] : undefined) ?? null;
         } else {
           const val = Number(r.response);
           score = smileyMap2[val] ?? null;
@@ -2686,7 +2970,7 @@ export async function happyIndexResponsesBySurveyId(
   };
 }
 
-export async function getSurveyResponseByIp(surveyTeamMapId, ip) {
+export async function getSurveyResponseByIp(surveyTeamMapId: string, ip: string) {
   return await prisma.surveyResponse.findFirst({
     where: {
       surveyTeamMapId,

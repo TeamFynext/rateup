@@ -22,7 +22,7 @@ export async function createHubSpotContact(_data: hubSpotContact, _hubSpotCompan
   try {
     if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
   } catch (e) {
-    log.error("error creating hubspot contact %o", e);
+    log.error({ err: e }, "error creating hubspot contact");
   }
 }
 
@@ -42,7 +42,7 @@ export async function createHubSpotCompany(data: hubSpotCompany) {
     ).data;
     return res?.id;
   } catch (e) {
-    log.error("error creating hubspot company %o", e);
+    log.error({ err: e }, "error creating hubspot company");
   }
 }
 
@@ -54,6 +54,6 @@ export async function getHubSpotCompanyByOwnerEmail(owner_email: string) {
     ).data;
     return res?.id;
   } catch (e) {
-    log.error("error getting hubspot company %o", e);
+    log.error({ err: e }, "error getting hubspot company");
   }
 }

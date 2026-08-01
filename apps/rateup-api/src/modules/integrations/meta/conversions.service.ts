@@ -2,8 +2,18 @@ import { callMetaApi } from "../../whatsapp/wa_axios.js";
 import crypto from "crypto";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { Role } from "../../../../generated/prisma/client.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
 import { notificationQueue } from "../../../utils/redisConnection.js";
+
+/** Meta nests the useful text under `response.data.error.message`; fall back to the Error. */
+function metaConversionErrorMessage(error: unknown): string {
+  const nested = (
+    error as { response?: { data?: { error?: { message?: string } } } } | null | undefined
+  )?.response?.data?.error?.message;
+  if (nested) return nested;
+  return error instanceof Error ? error.message : "Unknown error";
+}
 
 function hashData(data: string): string {
   if (!data) return "";
@@ -14,10 +24,10 @@ function hashData(data: string): string {
 export async function triggerConversionsApiForContact(
   contact: {
     id: string;
-    name?: string;
-    phone?: string;
-    email?: string;
-    source?: string;
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    source?: string | null;
     orgId: string;
   },
   lifecycleId: string,
@@ -53,10 +63,10 @@ export async function triggerConversionsApiForContact(
       return;
     }
 
-    const eventName = (waSettings.conversionData as any)?.event_name || "Purchase";
-    const currency = (waSettings.conversionData as any)?.currency || "USD";
+    const eventName = waSettings.conversionData?.event_name || "Purchase";
+    const currency = waSettings.conversionData?.currency || "USD";
 
-    const customData: any = {
+    const customData: MetaConversionCustomData = {
       lifecycle_stage: "Won",
     };
 
@@ -83,14 +93,14 @@ export async function triggerConversionsApiForContact(
     const res = await callMetaApi(`/${datasetId}/events`, "POST", waSettings.accessToken, payload);
     log.info(`Meta Conversions API event sent successfully`);
     return res.data;
-  } catch (error: any) {
-    log.error(error, "Failed to send Meta Conversions API event");
+  } catch (error) {
+    log.error({ err: error }, "Failed to send Meta Conversions API event");
 
     try {
       const admins = await prisma.orgMember.findMany({
         where: {
           orgId: contact.orgId,
-          role: { in: ["ADMIN" as any, "SUPER_ADMIN" as any] },
+          role: { in: [Role.ADMIN, Role.SUPER_ADMIN] },
         },
         select: { userId: true },
       });
@@ -105,7 +115,7 @@ export async function triggerConversionsApiForContact(
             data: {
               contactId: contact.id,
               contactName: contact.name,
-              error: error?.response?.data?.error?.message || error?.message || "Unknown error",
+              error: metaConversionErrorMessage(error),
             },
           },
         });

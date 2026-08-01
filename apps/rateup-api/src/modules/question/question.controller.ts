@@ -170,7 +170,7 @@ export async function importAllowedEmailIdsHandler(
       reply.code(404).send({ error: "Question not found" });
     } else {
       const file = await request.file();
-      const allowedEmails = (await getAllowedEmailsFromFile(file)) as Array<string>;
+      const allowedEmails = (await getAllowedEmailsFromFile(file!)) as Array<string>;
       if (allowedEmails) {
         for (const lang of languages) {
           const existingEmails = question.features?.[lang]?.allowedEmails || [];
@@ -192,6 +192,8 @@ export async function importAllowedEmailIdsHandler(
     }
   } catch (e) {
     console.error(e);
-    reply.code(500).send({ error: e?.message || "Something went wrong" });
+    reply
+      .code(500)
+      .send({ error: (e instanceof Error ? e.message : undefined) || "Something went wrong" });
   }
 }

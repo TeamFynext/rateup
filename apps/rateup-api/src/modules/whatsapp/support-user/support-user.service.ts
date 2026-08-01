@@ -28,7 +28,13 @@ export async function handleSupportUserWebhook(data: WaMessageBody) {
   }
 }
 
-export async function handleSupportUserMessages(data, contact) {
+type SupportUserChangeValue = WaMessageBody["entry"][number]["changes"][number]["value"];
+type SupportUserContact = NonNullable<Awaited<ReturnType<typeof getContactById>>>;
+
+export async function handleSupportUserMessages(
+  data: SupportUserChangeValue,
+  contact: SupportUserContact,
+) {
   const { orgId, other } = contact;
-  await handleWaMessages("receive", data, other, orgId, PlatformType.WEBCHAT, undefined);
+  await handleWaMessages("receive", data, other!, orgId, PlatformType.WEBCHAT, undefined);
 }

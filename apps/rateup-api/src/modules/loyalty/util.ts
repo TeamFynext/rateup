@@ -1,10 +1,11 @@
+import type { FastifyReply, FastifyRequest } from "fastify";
 import { getLoyaltyProgramByOrg } from "./program/program.service.js";
 
 /**
  * Fastify preHandler to require a loyalty program for the current org.
  * Attaches the program to request.loyaltyProgram if found, else sends 404.
  */
-export async function requireLoyaltyProgram(request, reply) {
+export async function requireLoyaltyProgram(request: FastifyRequest, reply: FastifyReply) {
   const orgId = request.user?.orgId;
   if (!orgId) {
     return reply.code(400).send({ error: "Missing orgId in user context" });
@@ -21,10 +22,10 @@ export enum LoyaltyActionType {
   CustomerRegistration = "Customer Registration",
   FeedBack = "FeedBack",
 }
-export const isLReferralAction = (actionType) =>
+export const isLReferralAction = (actionType: LoyaltyActionType) =>
   [LoyaltyActionType.ReferralPurchase].includes(actionType);
 
-export const isPurchaseAction = (actionType) =>
+export const isPurchaseAction = (actionType: LoyaltyActionType) =>
   [LoyaltyActionType.ReferralPurchase, LoyaltyActionType.DirectPurchase].includes(actionType);
 
 export const parsePhoneforWa = (phone: string) => (phone?.startsWith("+") ? phone.slice(1) : phone);

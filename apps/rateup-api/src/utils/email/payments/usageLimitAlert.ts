@@ -2,7 +2,7 @@ import { billingPage, rateupLogo, statsPage } from "../../constants/constants.js
 import prisma from "../../prisma.js";
 import { sendAWSEmail } from "../sendAWSEmail.js";
 //Send limit reached alert (only 1 mail in a week)
-export async function sendUsageLimitMailAlert(orgId) {
+export async function sendUsageLimitMailAlert(orgId: string) {
   const subscription = await prisma.subscription.findUnique({
     where: { orgId },
     include: {
@@ -16,7 +16,8 @@ export async function sendUsageLimitMailAlert(orgId) {
 
   if (
     !subscription ||
-    subscription?.lastLimitAlertSentAt >= new Date(new Date().setDate(new Date().getDate() - 7))
+    (subscription.lastLimitAlertSentAt &&
+      subscription.lastLimitAlertSentAt >= new Date(new Date().setDate(new Date().getDate() - 7)))
   ) {
     // Alert already sent within the last week or subscription does not exist
     return { message: "No action needed" };

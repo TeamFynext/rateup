@@ -34,7 +34,7 @@ vi.mock("../../utils/commonUtils.js", () => ({ getShortUrlId: vi.fn(() => "SHORT
 vi.mock("../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
 vi.mock("./chatbot.controller.js", () => ({ getAxiosAIClient: vi.fn() }));
 
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import prisma from "../../utils/prisma.js";
 import { getSubscription } from "../subscription/subscription.service.js";
 import { getAxiosAIClient } from "./chatbot.controller.js";
@@ -145,15 +145,16 @@ describe("getAIResponseForQuery", () => {
     expect(db.usageStats.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The allowance is read as
-  // `subscription.features.ai.count` with no guard, so an org with no
-  // subscription row — or a plan that does not describe an `ai` feature — throws
-  // before the query is sent. The handler turns that into a generic 500.
-  // See issues.txt 21.1.
+  // Previously the allowance was read as `subscription.features.ai.count` with no guard,
+  // so an org with no subscription row threw a bare TypeError before the query was sent.
+  // Fixed to throw a clear, descriptive error while getting typed for the strict-mode
+  // migration; the handler still turns it into a generic 500 either way.
   test("throws for an org with no subscription", async () => {
     (getSubscription as Mock).mockResolvedValue(null);
 
-    await expect(getAIResponseForQuery(input, JWT)).rejects.toThrow(TypeError);
+    await expect(getAIResponseForQuery(input, JWT)).rejects.toThrow(
+      /No subscription found for org/,
+    );
   });
 
   test("throws for a plan that describes no AI feature", async () => {
@@ -319,7 +320,7 @@ describe("the proxied chatbot-service calls", () => {
   });
 
   test("a bulk delete uses its own endpoint", async () => {
-    await deleteManyEmbeddedSource([{ contentSource: "s" }], JWT);
+    await deleteManyEmbeddedSource([{ contentSource: "s", contentType: "TEXT" }], JWT);
 
     expect(http.delete.mock.calls[0][0]).toContain("/delete-many-sources");
   });
@@ -342,41 +343,45 @@ describe("the proxied chatbot-service calls", () => {
 });
 
 describe("getTextSummaryByAI", () => {
+  const allowedTokens = { completionTokens: 100, promptTokens: 50 };
+  const usedTokens = { aiCompletionTokensCount: 5, aiPromptTokensCount: 2 };
+
   test("posts the texts and the allowance to the summarize endpoint", async () => {
     const client = { post: vi.fn().mockResolvedValue({ data: { summary: "s" } }) };
     (getAxiosAIClient as Mock).mockResolvedValue(client);
 
-    const res = await getTextSummaryByAI(["a", "b"], {} as any, 100, 5);
+    const res = await getTextSummaryByAI(["a", "b"], {} as any, allowedTokens, usedTokens);
 
     expect(client.post).toHaveBeenCalledWith("/chatbot/summarize", {
       texts: ["a", "b"],
-      allowedTokens: 100,
-      usedTokens: 5,
+      allowedTokens,
+      usedTokens,
     });
     expect(res).toEqual({ summary: "s" });
   });
 
-  // NOTE: pins current behaviour. The catch throws a template STRING rather than
-  // an Error, so the stack is lost and any caller doing `err.message` or
-  // `instanceof Error` gets nothing. See issues.txt 21.6.
-  test("throws a string, not an Error, when the AI service fails", async () => {
+  // Previously this threw a template STRING rather than an Error, so the stack was lost
+  // and any caller doing `err.message` or `instanceof Error` got nothing. Fixed to throw
+  // a real Error while getting typed for the strict-mode migration.
+  test("throws an Error with a clear message when the AI service fails", async () => {
     const client = {
       post: vi.fn().mockRejectedValue({ response: { data: "quota exceeded" } }),
     };
     (getAxiosAIClient as Mock).mockResolvedValue(client);
 
-    await expect(getTextSummaryByAI(["a"], {} as any, 100, 5)).rejects.toBe(
+    await expect(getTextSummaryByAI(["a"], {} as any, allowedTokens, usedTokens)).rejects.toThrow(
       "Error in getting text summary, quota exceeded",
     );
   });
 
-  // NOTE: getAxiosAIClient swallows its own failure and returns undefined, so the
-  // very next line reads `.post` off it. See issues.txt 21.6.
-  test("fails with a property read when the client could not be built", async () => {
+  // Previously getAxiosAIClient's swallowed failure (resolves undefined) fell through to
+  // a bare `.post` property read, crashing with a cryptic TypeError. Fixed to guard and
+  // throw a clear error while getting typed for the strict-mode migration.
+  test("throws a clear error when the AI client could not be built", async () => {
     (getAxiosAIClient as Mock).mockResolvedValue(undefined);
 
-    await expect(getTextSummaryByAI(["a"], {} as any, 100, 5)).rejects.toMatch(
-      /Cannot read properties of undefined/,
+    await expect(getTextSummaryByAI(["a"], {} as any, allowedTokens, usedTokens)).rejects.toThrow(
+      /Unable to initialize AI client/,
     );
   });
 });
@@ -536,7 +541,7 @@ describe("deleteChatbotFromDatabase", () => {
 
 describe("getChatBotHistory", () => {
   function client(history: unknown[]) {
-    return { get: vi.fn().mockResolvedValue({ data: history }) };
+    return { get: vi.fn().mockResolvedValue({ data: history }) } as unknown as AxiosInstance;
   }
 
   test("asks the AI service for one chatbot's history", async () => {
@@ -552,7 +557,7 @@ describe("getChatBotHistory", () => {
 
     await getChatBotHistory(c);
 
-    expect(c.get.mock.calls[0][1]).toEqual({ params: {} });
+    expect((c.get as Mock).mock.calls[0][1]).toEqual({ params: {} });
   });
 
   test("attaches a staff user when the id matches one", async () => {

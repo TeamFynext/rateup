@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import prisma from "../../../utils/prisma.js";
+import { Role } from "../../../../generated/prisma/client.js";
 
 export async function getWhatsappSurveyVerifySubscriptionHandler(
   request: FastifyRequest<{
@@ -9,7 +10,9 @@ export async function getWhatsappSurveyVerifySubscriptionHandler(
   }>,
   reply: FastifyReply,
 ) {
-  request.user = { orgId: request.params.orgId } as any;
+  // Public flow routes are org-scoped by path, not by session; the subscription gate
+  // below reads only `orgId`, so the role is filled with the least-privileged one.
+  request.user = { orgId: request.params.orgId, role: Role.MEMBER };
   await getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp])(request, reply);
 }
 
@@ -33,6 +36,23 @@ export async function assertWithinConversationLimit(orgId: string) {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// `Subscription.features` is an untyped Json column, so the WhatsApp conversation
+// cap is read out of it defensively; anything missing/malformed reads as "no cap".
+function readWhatsappConversationMax(features: unknown): number | undefined {
+  if (!isRecord(features)) return undefined;
+  const whatsapp = features[SubscriptionFeaturePathName.Whatsapp];
+  if (!isRecord(whatsapp)) return undefined;
+  const conversation = whatsapp.conversation;
+  if (!isRecord(conversation)) return undefined;
+  const count = conversation.count;
+  if (!isRecord(count)) return undefined;
+  return typeof count.max === "number" ? count.max : undefined;
+}
+
 // Returns true when the org is still WITHIN its conversation allowance.
 // Monthly plans cap at `conversation.count.max` per month; annual (pooled) plans
 // cap at `max * 12` across the year. Both branches now measure conversations.
@@ -49,9 +69,18 @@ export async function checkConversationLimitExceeded(orgId: string) {
     },
   });
 
-  return !(subscription?.isAnnualMessageLimit
-    ? usage.annualConversationsCount >=
-      subscription.features?.[SubscriptionFeaturePathName.Whatsapp]?.conversation?.count?.max * 12
-    : usage?.monthlyConversationsCount >=
-      subscription.features?.[SubscriptionFeaturePathName.Whatsapp]?.conversation?.count?.max);
+  // No usage row or no subscription to compare against - nothing to enforce, so treat
+  // the org as within its limit rather than crashing on the missing data.
+  if (!usage || !subscription) {
+    return true;
+  }
+
+  const max = readWhatsappConversationMax(subscription.features);
+  if (max === undefined) {
+    return true;
+  }
+
+  return !(subscription.isAnnualMessageLimit
+    ? usage.annualConversationsCount >= max * 12
+    : usage.monthlyConversationsCount >= max);
 }

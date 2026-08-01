@@ -118,13 +118,15 @@ describe("getIgUserDetailsFromMeta", () => {
     expect(token).toBeUndefined();
   });
 
-  // NOTE: pins current behaviour. The settings lookup is destructured with no null
-  // check — unlike getFacebookUserDetailsFromMeta, which refuses with a named
-  // error. An unconnected account gives a bare TypeError. See issues.txt 12.7.
-  test("throws a bare type error when the account is not connected to any org", async () => {
+  // Fixed during the TS strict-mode migration: the settings lookup used to be
+  // destructured with no null check, throwing a bare TypeError. It now refuses
+  // with a named error, matching getFacebookUserDetailsFromMeta.
+  test("throws a named error when the account is not connected to any org", async () => {
     getSettingsByIbaIdMock.mockResolvedValue(null);
 
-    await expect(getIgUserDetailsFromMeta(IGS_ID, IBA_ID)).rejects.toThrow(TypeError);
+    await expect(getIgUserDetailsFromMeta(IGS_ID, IBA_ID)).rejects.toThrow(
+      `No Instagram settings found for ibaId ${IBA_ID}`,
+    );
   });
 });
 
@@ -266,12 +268,15 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
     expect(handleWaMessagesMock.mock.calls.map((c) => c[7])).not.toContain("mid-2");
   });
 
-  // NOTE: same root cause, with a worse outcome. The read receipt is classified
+  // NOTE: same root cause (issues.txt 12.1) — the read receipt is classified
   // first and handled correctly; the message is classified second but
   // handleInstagramMessages then reads messaging[0] — the read receipt — whose
-  // `message` is undefined, so destructuring `mid` off it throws. The throw is
-  // outside any try/catch and unwinds the whole webhook. See issues.txt 12.1.
-  test("throws on the second event when the first was a different kind", async () => {
+  // `message` is undefined. Fixed during the TS strict-mode migration:
+  // handleInstagramMessages now guards the possibly-undefined `message` and
+  // skips instead of throwing a bare TypeError, so the webhook no longer
+  // unwinds — but the underlying "always reads messaging[0]" bug (12.1) is
+  // untouched, so the second event is still never actually processed.
+  test("skips the second event when the first was a different kind, instead of throwing", async () => {
     await expect(
       handleInstagramWebhook(
         webhook(
@@ -279,7 +284,12 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
           messaging({ message: { mid: "mid-1", text: "hi" } }),
         ),
       ),
-    ).rejects.toThrow(TypeError);
+    ).resolves.toBeUndefined();
+    // The read receipt (correctly messaging[0]) is processed as a read receipt;
+    // the message event re-reads messaging[0] too (bug 12.1) and finds no
+    // `message`, so it is skipped rather than stored.
+    expect(updateByMessageIdMock.mock.calls[0][0]).toBe("mid-0");
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
   });
 
   // NOTE: pins current behaviour. There is no per-entry guard, so a database

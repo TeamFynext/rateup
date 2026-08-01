@@ -2,6 +2,9 @@ import "dotenv/config";
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
 import { NotificationJobData } from "../modules/notification/notification.service.js";
+if (!process.env.REDIS_URL) {
+  throw new Error("REDIS_URL environment variable must be set");
+}
 const redisURL = new URL(process.env.REDIS_URL);
 const connection = new IORedis.default({
   family: 0,
@@ -12,7 +15,7 @@ const connection = new IORedis.default({
   maxRetriesPerRequest: null,
 });
 export const waCampaignEnqueue = new Queue("waCampaignEnqueue", { connection });
-export const getCampaignCount = (campaignId) => {
+export const getCampaignCount = (campaignId: string) => {
   return connection.scard(`campaign:${campaignId}:jobs`);
 };
 export const waCampaignDequeue = new Queue("waCampaignDequeue", { connection });

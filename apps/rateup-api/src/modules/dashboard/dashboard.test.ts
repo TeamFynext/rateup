@@ -63,8 +63,20 @@ function answer(rep: any) {
   return { code: rep.code.mock.calls[0]?.[0], body: rep.send.mock.calls[0]?.[0] };
 }
 
+interface MemberFixture {
+  id: string;
+  name: string;
+  email: string;
+  profilePhoto: string | null;
+  role: string;
+  status: string;
+  lastLoggedInAt: string;
+  assignedTicketsCount: number;
+  assignedChatsCount: number;
+}
+
 function member(over: Record<string, unknown> = {}) {
-  return {
+  const base: MemberFixture = {
     id: USER,
     name: "Ann",
     email: "ann@example.test",
@@ -74,8 +86,8 @@ function member(over: Record<string, unknown> = {}) {
     lastLoggedInAt: "2026-03-01T00:00:00.000Z",
     assignedTicketsCount: 3,
     assignedChatsCount: 5,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 beforeEach(() => {

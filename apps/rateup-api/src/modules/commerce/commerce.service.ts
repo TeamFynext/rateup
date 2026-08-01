@@ -125,6 +125,14 @@ const orderSelect = {
   contact: { select: { id: true, name: true, phone: true } },
 } satisfies Prisma.WaCatalogOrderSelect;
 
+interface CommerceChannel {
+  catalogId: string;
+  phoneId: string | null;
+  name: string;
+  phoneNumber: string | null;
+  storeType: string;
+}
+
 /** Channels available to the org — powers the dashboard's channel dropdown. */
 export async function getCommerceChannels(orgId: string) {
   const catalogs = await prisma.whatsappCatalog.findMany({
@@ -142,7 +150,7 @@ export async function getCommerceChannels(orgId: string) {
     },
   });
 
-  return catalogs.flatMap((catalog) => {
+  return catalogs.flatMap((catalog): CommerceChannel[] => {
     if (catalog.connectedWaPhoneIds.length === 0) {
       return [
         {

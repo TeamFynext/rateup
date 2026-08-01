@@ -13,7 +13,7 @@ import { NotificationIdParamSchema, NotificationSettingSchema } from "./notifica
 export async function getNotificationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
-    const res = await getNotifications(userId, orgId);
+    const res = await getNotifications(userId!, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -24,7 +24,7 @@ export async function getNotificationsHandler(request: FastifyRequest, reply: Fa
 export async function getNotificationsCountHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
-    const res = await getNotificationsCount(userId, orgId);
+    const res = await getNotificationsCount(userId!, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -38,7 +38,7 @@ export async function updateNotificationSettingHandler(
 ) {
   try {
     const { userId, orgId } = request.user;
-    const res = await updateNotificationSettings(userId, orgId, request.body);
+    const res = await updateNotificationSettings(userId!, orgId, request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -49,7 +49,7 @@ export async function updateNotificationSettingHandler(
 export async function getNotificationSettingHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
-    const res = await getNotificationSettings(userId, orgId);
+    const res = await getNotificationSettings(userId!, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -74,7 +74,7 @@ export async function deleteNotificationByIdHandler(
 export async function deleteAllNotificationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
-    const res = await deleteAllNotificationsByUser(userId, orgId);
+    const res = await deleteAllNotificationsByUser(userId!, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

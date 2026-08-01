@@ -15,7 +15,7 @@ const teamCore = {
   orgId: z.string(),
   userId: z.string(),
   color: z.string().optional(),
-  features: z.array(z.string()).optional(),
+  features: z.array(teamFeatureEnum).optional(),
 };
 
 const createTeamRequestSchema = z.object({

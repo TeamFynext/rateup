@@ -233,18 +233,15 @@ describe("getContactsWithLabels", () => {
     expect(db.contact.findMany.mock.calls[0][0].where).toEqual({ orgId: ORG });
   });
 
-  // NOTE: pins current behaviour. On Contact the label relation is named
-  // `ContactLabelMap` (see prisma/schema.prisma and the filter in
-  // getContactsByOrgId); `contactLabels` is the relation on *ContactLabel*.
-  // Prisma rejects the unknown field, so filtering this endpoint by label has
-  // never worked. See issues.txt 18.34.
-  test("filters on a relation name that Contact does not have", async () => {
+  // On Contact the label relation is named `ContactLabelMap` (`contactLabels` is the
+  // relation on *ContactLabel*). It used to filter on the latter, which prisma rejects
+  // outright, so filtering this endpoint by label never worked.
+  test("filters on the Contact side of the label join", async () => {
     await getContactsWithLabels(ORG, ["l1"]);
 
     const where = db.contact.findMany.mock.calls[0][0].where;
-    expect(where).toHaveProperty("contactLabels");
-    expect(where).not.toHaveProperty("ContactLabelMap");
-    expect(where.contactLabels).toEqual({ some: { labelId: { in: ["l1"] } } });
+    expect(where).not.toHaveProperty("contactLabels");
+    expect(where.ContactLabelMap).toEqual({ some: { labelId: { in: ["l1"] } } });
   });
 
   test("returns each contact with its labels expanded", async () => {

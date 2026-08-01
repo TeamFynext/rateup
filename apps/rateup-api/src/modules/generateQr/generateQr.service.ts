@@ -1,5 +1,9 @@
 import { FastifyRequest } from "fastify";
-import { CreateGenerateQrRecordReqBody } from "./generateQr.schema.js";
+import {
+  CreateGenerateQrRecordReqBody,
+  GetGenerateQrRecordWithShortIdParams,
+  updateGenerateQrRecordReqBodyType,
+} from "./generateQr.schema.js";
 import { getShortUrlId } from "../../utils/commonUtils.js";
 import prisma from "../../utils/prisma.js";
 
@@ -10,6 +14,12 @@ async function createGenerateQrRecordInDB(
     body: { name, link },
     user: { orgId, userId },
   } = req;
+
+  // userId is absent for API-access-token-authenticated requests (see
+  // global.d.ts's FastifyRequest.user), but createdById is a required column.
+  if (!userId) {
+    throw new Error("Cannot create a generateQr record without an authenticated user id.");
+  }
 
   const newShortUrlId = getShortUrlId();
 
@@ -26,7 +36,9 @@ async function createGenerateQrRecordInDB(
   return newGenerateQrRecord;
 }
 
-async function getGenerateQrRecordWithShortIdFromDB(req) {
+async function getGenerateQrRecordWithShortIdFromDB(
+  req: FastifyRequest<{ Params: GetGenerateQrRecordWithShortIdParams }>,
+) {
   const { shortUrlId } = req.params;
   const {
     user: { orgId },
@@ -40,7 +52,9 @@ async function getGenerateQrRecordWithShortIdFromDB(req) {
   return generateQrRecord;
 }
 
-async function getPublicGenerateQrRecordWithShortIdFromDB(req) {
+async function getPublicGenerateQrRecordWithShortIdFromDB(
+  req: FastifyRequest<{ Params: GetGenerateQrRecordWithShortIdParams }>,
+) {
   const { shortUrlId } = req.params;
   const generateQrRecord = await prisma.generateQr.findFirst({
     where: {
@@ -70,7 +84,9 @@ async function getAllGenerateQrRecordsFromDB(req: FastifyRequest) {
   return allGenerateQrRecordsArray;
 }
 
-async function updateGenerateQrRecordWithShortIdInDB(req) {
+async function updateGenerateQrRecordWithShortIdInDB(
+  req: FastifyRequest<{ Body: updateGenerateQrRecordReqBodyType }>,
+) {
   const {
     body: { shortUrlId, ...rest },
   } = req;
@@ -89,7 +105,9 @@ async function updateGenerateQrRecordWithShortIdInDB(req) {
   return updatedGenerateQrRecord;
 }
 
-async function deleteGenerateQrRecordInDB(req) {
+async function deleteGenerateQrRecordInDB(
+  req: FastifyRequest<{ Params: GetGenerateQrRecordWithShortIdParams }>,
+) {
   const {
     user: { orgId },
   } = req;
@@ -102,7 +120,9 @@ async function deleteGenerateQrRecordInDB(req) {
   return deletedGenerateQrRecord;
 }
 
-async function incrementNoOfScansInDB(req) {
+async function incrementNoOfScansInDB(
+  req: FastifyRequest<{ Params: GetGenerateQrRecordWithShortIdParams }>,
+) {
   await prisma.generateQr.update({
     where: {
       shortUrlId: req.params.shortUrlId,

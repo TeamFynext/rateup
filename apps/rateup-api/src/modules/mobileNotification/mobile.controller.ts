@@ -13,6 +13,10 @@ export async function addExpoToken(
     reply.status(400).send({ error: "Missing expoToken" });
     return;
   }
+  if (!userId) {
+    reply.status(401).send({ error: "Missing user" });
+    return;
+  }
   const response = await addToken(expoToken, userId, orgId);
   return response;
 }
@@ -33,6 +37,10 @@ export async function deleteToken(
 ) {
   const { userId } = request.user;
   const { expoToken } = request.body;
+  if (!userId) {
+    reply.status(401).send({ error: "Missing user" });
+    return;
+  }
   try {
     const token = await deleteTokenByUserId(userId, expoToken);
     reply.status(200).send({ ok: "Token deleted", token: token });

@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-export const formatDateT1 = (date) => {
+export const formatDateT1 = (date: string | number | Date) => {
   const dateString = new Date(date);
 
   return dateString.toLocaleDateString("en-US", {
@@ -10,7 +10,7 @@ export const formatDateT1 = (date) => {
   });
 }; // Output:  February 27, 2024
 
-export const formatDateT2 = (dateString) => {
+export const formatDateT2 = (dateString: string | number | Date) => {
   const date = new Date(dateString);
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",

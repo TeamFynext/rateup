@@ -64,7 +64,7 @@ export async function getWaShareMessageFromSTMIdHandler(
   )?.team.code;
   let phone = res.org.WhatsappSettings?.[0]?.phone;
   // remove + and spaces
-  phone = phone.replace("+", "").replace(/\s/g, "");
+  phone = phone!.replace("+", "").replace(/\s/g, "");
 
   let message = "";
   message = res.startMessageConfig?.prefix;

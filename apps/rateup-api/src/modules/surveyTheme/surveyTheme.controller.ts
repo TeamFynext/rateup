@@ -1,4 +1,4 @@
-import { FastifyReply, FastifyRequest } from "fastify";
+import { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import {
   createAndApplyThemeToSurvey,
@@ -7,6 +7,9 @@ import {
   getSurveyThemeById,
   renameThemeInDB,
   updateSurveyThemeActiveSurveyThemeInDB,
+  type RenameThemeRequest,
+  type ThemeIdParams,
+  type UpdateActiveThemeRequest,
 } from "./surveyTheme.service.js";
 
 export async function getSurveyThemeByIdHandler(
@@ -14,7 +17,7 @@ export async function getSurveyThemeByIdHandler(
   reply: FastifyReply,
 ) {
   const { webSurveyThemeId } = request.params;
-  const { theme } = await getSurveyThemeById(webSurveyThemeId);
+  const { theme } = (await getSurveyThemeById(webSurveyThemeId))!;
   reply.code(200).send(theme);
 }
 
@@ -23,7 +26,7 @@ export async function getAllThemesOfUserOrg(request: FastifyRequest, reply: Fast
   if (themes) {
     themes = themes.map((themeObj) => {
       const tempThemeObj = { ...themeObj };
-      delete tempThemeObj.survey;
+      delete (tempThemeObj as Partial<typeof tempThemeObj>).survey;
       if (themeObj.survey.length) {
         return {
           ...tempThemeObj,
@@ -40,7 +43,13 @@ export async function getAllThemesOfUserOrg(request: FastifyRequest, reply: Fast
   reply.code(200).send(themes);
 }
 
-export async function updateSurveyThemeHandler(request: FastifyRequest, reply: FastifyReply) {
+export async function updateSurveyThemeHandler(
+  request: FastifyRequest<{
+    Params: UpdateActiveThemeRequest["params"];
+    Body: UpdateActiveThemeRequest["body"];
+  }>,
+  reply: FastifyReply,
+) {
   const surveyTheme = await updateSurveyThemeActiveSurveyThemeInDB(request);
   reply.send(surveyTheme);
 }
@@ -59,7 +68,9 @@ export async function createNewTheme(
     reply.code(201).send(newThemeObj);
   } catch (err) {
     console.log(err);
-    if (err.code === "P2002") {
+    // Intentionally broad: any error-like object carrying a P2002 "code" is
+    // reported as a duplicate name.
+    if (typeof err === "object" && err !== null && "code" in err && err.code === "P2002") {
       reply.code(400).send({
         success: false,
         message: "A theme with the same name already exists.",
@@ -70,7 +81,10 @@ export async function createNewTheme(
   }
 }
 
-export async function renameTheme(request: FastifyRequest, reply: FastifyReply) {
+export async function renameTheme(
+  request: FastifyRequest<{ Params: ThemeIdParams; Body: RenameThemeRequest["body"] }>,
+  reply: FastifyReply,
+) {
   if (!request.body["name"]) {
     reply.code(400).send({
       success: false,
@@ -82,7 +96,10 @@ export async function renameTheme(request: FastifyRequest, reply: FastifyReply) 
   reply.code(200).send(updatedTheme);
 }
 
-export async function deleteTheme(request: FastifyRequest, reply: FastifyReply) {
+export async function deleteTheme(
+  request: FastifyRequest<{ Params: ThemeIdParams }>,
+  reply: FastifyReply,
+) {
   await deleteThemeInDB(request);
   reply.code(200).send({
     success: true,
@@ -106,7 +123,7 @@ export async function updateAllWebSurveyThemesJson(request: FastifyRequest, repl
   }
 }
 
-export function errorHandler(error: any, request: FastifyRequest, reply: FastifyReply) {
+export function errorHandler(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
   log.error(error);
   reply.status(500).send({ message: "Something went wrong" });
 }

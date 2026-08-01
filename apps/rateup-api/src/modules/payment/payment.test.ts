@@ -368,18 +368,24 @@ describe("getSessionStatusHandler", () => {
     expect(rep.send.mock.calls[0][0].customer_email).toContain("@");
   });
 
-  // NOTE: customer_details is dereferenced without a guard, so a session that
-  // has none throws out of the handler.
-  test("a session with no customer details throws", async () => {
+  // Previously customer_details was dereferenced without a guard, so a session that has
+  // none threw out of the handler. Fixed to fall back to a null customer_email while
+  // getting typed for the strict-mode migration.
+  test("a session with no customer details returns a null customer_email", async () => {
     stripeStub.checkout.sessions.retrieve.mockResolvedValueOnce({
       status: "open",
       payment_status: "unpaid",
       customer_details: null,
     });
+    const rep = reply();
 
-    await expect(
-      getSessionStatusHandler({ query: { session_id: "cs_test_1" } } as never, reply()),
-    ).rejects.toThrow(TypeError);
+    await getSessionStatusHandler({ query: { session_id: "cs_test_1" } } as never, rep);
+
+    expect(rep.send.mock.calls[0][0]).toEqual({
+      status: "open",
+      payment_status: "unpaid",
+      customer_email: null,
+    });
   });
 });
 

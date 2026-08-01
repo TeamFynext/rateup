@@ -9,7 +9,7 @@ import {
 } from "./referrals.controller.js";
 
 export async function referralRoutes(server: FastifyInstance) {
-  server.post(
+  server.post<{ Body: { name: string; email: string } }>(
     "/",
     {
       preHandler: [checkSession, assertRootOrg],
@@ -25,7 +25,7 @@ export async function referralRoutes(server: FastifyInstance) {
     getAllReferralsHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: { id: string } }>(
     "/:id",
     {
       preHandler: [checkSession, assertRootOrg],

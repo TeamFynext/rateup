@@ -22,6 +22,7 @@ import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail.js";
 import { log } from "./utils/logger.js";
 import { getUserInfo } from "./utils/supertoken/supertoken.js";
 import { jsonSchemaTransform } from "fastify-type-provider-zod";
+import { errorMessage } from "./utils/commonUtils.js";
 
 // Environment configuration
 export const appConfig = {
@@ -141,26 +142,31 @@ export const SuperTokensConfig: TypeInput = {
               const email = emails[0];
 
               if (name && orgName) {
+                const recipeName = getUserRecipeName(loginMethods[0].recipeId);
+                if (!recipeName) {
+                  throw new Error(`Unsupported auth recipe: ${loginMethods[0].recipeId}`);
+                }
+
                 await createUserSignup({
                   id,
                   email,
                   name,
                   orgName,
-                  phoneNumber,
-                  recipeName: getUserRecipeName(loginMethods[0].recipeId),
-                  planId,
-                  location,
-                  website,
-                  industry,
+                  phoneNumber: phoneNumber ?? undefined,
+                  recipeName,
+                  planId: planId ?? undefined,
+                  location: location ?? undefined,
+                  website: website ?? undefined,
+                  industry: industry ?? undefined,
                   goals: Array.isArray(goals) ? goals : goals ? [goals] : [],
                   integrationsSelected: Array.isArray(integrationsSelected)
                     ? integrationsSelected
                     : integrationsSelected
                       ? [integrationsSelected]
                       : [],
-                  phone: phoneNumber,
-                  teamSize,
-                  referralCode,
+                  phone: phoneNumber ?? undefined,
+                  teamSize: teamSize ?? undefined,
+                  referralCode: referralCode ?? undefined,
                 });
               }
             }
@@ -269,8 +275,8 @@ export const SuperTokensConfig: TypeInput = {
               const body = await input.options.req.getJSONBody();
               input.userContext.clientType = body.clientType;
               return await originalImplementation.signInUpPOST!(input);
-            } catch (err: any) {
-              if (err.message === "Cannot sign up as email already exists") {
+            } catch (err) {
+              if (errorMessage(err) === "Cannot sign up as email already exists") {
                 // this error was thrown from our function override above.
                 // so we send a useful message to the user
                 return {
@@ -288,7 +294,10 @@ export const SuperTokensConfig: TypeInput = {
 
     Passwordless.init({
       smsDelivery: {
-        service: new SupertokensService(appConfig.supertokens.smsApiKey),
+        // SUPERTOKEN_SMS_API_KEY is unset in development and in the test env,
+        // where this module is imported but no SMS is ever sent — the value is
+        // passed through as-is, as it always has been.
+        service: new SupertokensService(appConfig.supertokens.smsApiKey!),
       },
       contactMethod: "PHONE",
       flowType: "USER_INPUT_CODE",
@@ -329,7 +338,7 @@ export const SuperTokensConfig: TypeInput = {
           ...originalImplementation,
           sendEmail: async function (input) {
             const dbUser = await getUserByEmail(input.user.email);
-            const username = dbUser.name || "there";
+            const username = dbUser?.name || "there";
             sendVerifyMail(input.emailVerifyLink, input.user.email, username);
           },
         }),

@@ -48,6 +48,7 @@ vi.mock("./contact.utils.js", () => ({
 vi.mock("../loyalty/settings/settings.service.js", () => ({
   getLoyaltyWaCommandByType: vi.fn(),
   replacedContentByDynamicVariable: vi.fn((content: string) => `rendered:${content}`),
+  richTextToPlainText: vi.fn((content: unknown) => String(content)),
 }));
 
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendTextMessage: vi.fn() }));
@@ -459,8 +460,17 @@ describe("deleteManyContactsHandler", () => {
 // ===========================================================================
 
 describe("importCSVContactsHandler", () => {
+  // Real @fastify/multipart non-file parts always carry `type: "field"`
+  // alongside `.value` — the handler now discriminates on it, so fixtures
+  // need to match the real shape rather than a bare `{ value }`.
   function upload(fields: Record<string, unknown> = {}, mimetype = "text/csv") {
-    return { mimetype, fields };
+    const wrapped = Object.fromEntries(
+      Object.entries(fields).map(([key, field]) => [
+        key,
+        { type: "field", ...(field as Record<string, unknown>) },
+      ]),
+    );
+    return { mimetype, fields: wrapped };
   }
 
   test("refuses a file type that is not a spreadsheet", async () => {
@@ -545,18 +555,19 @@ describe("importCSVContactsHandler", () => {
     });
   });
 
-  // NOTE: an empty spreadsheet makes importCSVContacts return undefined, and the
-  // handler reads `.status` off it straight away. The user is told
-  // "Cannot read properties of undefined" instead of "the file was empty".
-  // See issues.txt 18.19.
-  test("reports an empty spreadsheet as an internal error", async () => {
+  // Fixed: an empty spreadsheet makes importCSVContacts return undefined; the
+  // handler now checks for that before reading `.status` and answers with a
+  // clear 400 instead of crashing into a 500. See issues.txt 18.19.
+  test("reports an empty spreadsheet as a validation error", async () => {
     (importCSVContacts as Mock).mockResolvedValue(undefined);
     const rep = reply();
 
     await importCSVContactsHandler(request({ file: vi.fn().mockResolvedValue(upload()) }), rep);
 
-    expect(answer(rep).code).toBe(500);
-    expect(answer(rep).body.error).toMatch(/Cannot read properties of undefined/);
+    expect(answer(rep)).toEqual({
+      code: 400,
+      body: { error: "No contacts found in the uploaded file." },
+    });
   });
 });
 
@@ -595,7 +606,7 @@ describe("custom field handlers", () => {
   });
 
   test("reports a duplicate field slug as a 409", async () => {
-    (addCustomField as Mock).mockRejectedValue(Object.assign(new Error("dup"), { code: "P2002" }));
+    (addCustomField as Mock).mockRejectedValue(new FakePrismaKnownError("P2002"));
     const rep = reply();
 
     await addCustomFieldHandler(request({ body: {} }), rep);
@@ -626,9 +637,7 @@ describe("custom field handlers", () => {
   });
 
   test("reports a duplicate on update as a 409", async () => {
-    (updateCustomField as Mock).mockRejectedValue(
-      Object.assign(new Error("dup"), { code: "P2002" }),
-    );
+    (updateCustomField as Mock).mockRejectedValue(new FakePrismaKnownError("P2002"));
     const rep = reply();
 
     await updateCustomFieldHandler(request({ params: { fieldId: "f1" } }), rep);

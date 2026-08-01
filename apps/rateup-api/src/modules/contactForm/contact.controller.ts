@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateContactMessageInput } from "./contact.schema.js";
 import { createMsg } from "./contact.service.js";
+import { errorMessage } from "../../utils/commonUtils.js";
 
 export async function createContactMsgHandler(
   request: FastifyRequest<{
@@ -13,9 +14,9 @@ export async function createContactMsgHandler(
 
   try {
     contactMsg = await createMsg(body);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 

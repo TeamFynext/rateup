@@ -12,44 +12,50 @@ import {
 } from "../../../modules/campaign/campaignParticipants/campaignParticipants.controller.js";
 
 export async function createCampaignExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof createCampaignHandler>[0],
   reply: FastifyReply,
 ) {
-  return createCampaignHandler(request as any, reply);
+  return createCampaignHandler(request, reply);
 }
 
-export async function getCampaignsExternalController(request: FastifyRequest, reply: FastifyReply) {
-  return getCampaignsHandler(request as any, reply);
+export async function getCampaignsExternalController(
+  request: Parameters<typeof getCampaignsHandler>[0],
+  reply: FastifyReply,
+) {
+  return getCampaignsHandler(request, reply);
 }
 
 export async function getCampaignResponsesExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getResponseByCampaignByIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return getResponseByCampaignByIdHandler(request as any, reply);
+  return getResponseByCampaignByIdHandler(request, reply);
 }
 
 export async function deleteCampaignByIdExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof deleteCampaignByIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return deleteCampaignByIdHandler(request as any, reply);
+  return deleteCampaignByIdHandler(request, reply);
 }
 
-export async function sendCampaignExternalController(request: FastifyRequest, reply: FastifyReply) {
-  return sendCampaignHandler(request as any, reply);
+export async function sendCampaignExternalController(
+  request: Parameters<typeof sendCampaignHandler>[0],
+  reply: FastifyReply,
+) {
+  return sendCampaignHandler(request, reply);
 }
 
 export async function createCampaignParticipantsFromContactsExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof createCampaignParticipantsFromContactsHandler>[0],
   reply: FastifyReply,
 ) {
-  return createCampaignParticipantsFromContactsHandler(request as any, reply);
+  return createCampaignParticipantsFromContactsHandler(request, reply);
 }
 
 export async function getCampaignParticipantsByCampaignIdExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getCampaignParticipantsByCampaignIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return getCampaignParticipantsByCampaignIdHandler(request as any, reply);
+  return getCampaignParticipantsByCampaignIdHandler(request, reply);
 }

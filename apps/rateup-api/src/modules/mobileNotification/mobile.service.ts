@@ -1,7 +1,7 @@
 import prisma from "../../utils/prisma.js";
 import axios from "axios";
 
-export async function addToken(expoToken: any, userId: string, orgId: string) {
+export async function addToken(expoToken: string, userId: string, orgId: string) {
   if (!expoToken || !userId || !orgId) {
     throw new Error("Missing expoToken or userId or orgId");
   }
@@ -63,7 +63,12 @@ export async function deleteTokenByUserId(userId: string, expoToken: string) {
 
 const expoPushUrl = process.env.EXPO_PUSH_URL;
 
-export async function sendPushNotification(expoPushTokens, title, body, data = {}) {
+export async function sendPushNotification(
+  expoPushTokens: string[],
+  title: string,
+  body: string,
+  data: Record<string, unknown> = {},
+) {
   if (!Array.isArray(expoPushTokens) || expoPushTokens.length === 0) {
     console.error("No Expo push tokens provided");
     return;
@@ -76,6 +81,11 @@ export async function sendPushNotification(expoPushTokens, title, body, data = {
 
   if (validTokens.length === 0) {
     console.error("No valid Expo tokens");
+    return;
+  }
+
+  if (!expoPushUrl) {
+    console.error("EXPO_PUSH_URL environment variable is not set; skipping push notification");
     return;
   }
 

@@ -4,9 +4,10 @@
  * Completely isolated from WhatsApp automation to prevent cross-platform interference
  */
 
+import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { PlatformType, WaAutomationProgressStatus } from "../../../../generated/prisma/enums.js";
 
 /**
  * Get all Instagram automated replies for an organization
@@ -23,7 +24,10 @@ export async function getInstagramAutomatedRepliesByOrgId(orgId: string) {
       },
     });
   } catch (error) {
-    log.error(`[Instagram Automation] Error fetching automations for orgId ${orgId}: %o`, error);
+    log.error(
+      { err: error },
+      `[Instagram Automation] Error fetching automations for orgId ${orgId}`,
+    );
     throw error;
   }
 }
@@ -40,7 +44,7 @@ export async function getInstagramAutomatedReplyById(id: string) {
       },
     });
   } catch (error) {
-    log.error(`[Instagram Automation] Error fetching automation ${id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error fetching automation ${id}`);
     throw error;
   }
 }
@@ -51,7 +55,7 @@ export async function getInstagramAutomatedReplyById(id: string) {
 export async function createInstagramAutomatedReply(data: {
   orgId: string;
   name: string;
-  matchData: any;
+  matchData: WaAutomatedReplyMatchData;
   whatsappSettingsPhoneId?: string;
   sendOnceIn24Hours?: boolean;
   isActive?: boolean;
@@ -72,8 +76,8 @@ export async function createInstagramAutomatedReply(data: {
     return automation;
   } catch (error) {
     log.error(
-      `[Instagram Automation] Error creating automation for orgId ${data.orgId}: %o`,
-      error,
+      { err: error },
+      `[Instagram Automation] Error creating automation for orgId ${data.orgId}`,
     );
     throw error;
   }
@@ -86,13 +90,17 @@ export async function updateInstagramAutomatedReply(
   id: string,
   data: {
     name?: string;
-    matchData?: any;
+    matchData?: WaAutomatedReplyMatchData;
     whatsappSettingsPhoneId?: string;
     sendOnceIn24Hours?: boolean;
     isActive?: boolean;
   },
 ) {
   try {
+    // NOTE: sendOnceIn24Hours/isActive (isEnabled) have no backing columns on
+    // WaAutomatedReply - same gap as createInstagramAutomatedReply below, which already
+    // drops them on create. Dropping them here too keeps create/update consistent; the
+    // toggle is accepted by the API but not yet persisted anywhere.
     const automation = await prisma.waAutomatedReply.update({
       where: {
         id,
@@ -102,8 +110,6 @@ export async function updateInstagramAutomatedReply(
         name: data.name,
         matchData: data.matchData,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-        sendOnceIn24Hours: data.sendOnceIn24Hours,
-        isEnabled: data.isActive,
       },
     });
 
@@ -111,7 +117,7 @@ export async function updateInstagramAutomatedReply(
 
     return automation;
   } catch (error) {
-    log.error(`[Instagram Automation] Error updating automation ${id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error updating automation ${id}`);
     throw error;
   }
 }
@@ -138,7 +144,7 @@ export async function deleteInstagramAutomatedReply(id: string) {
 
     return { success: true };
   } catch (error) {
-    log.error(`[Instagram Automation] Error deleting automation ${id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error deleting automation ${id}`);
     throw error;
   }
 }
@@ -173,8 +179,8 @@ export async function findRecentInstagramAutomation(
     });
   } catch (error) {
     log.error(
-      `[Instagram Automation] Error finding recent automation for igsId ${igsId}: %o`,
-      error,
+      { err: error },
+      `[Instagram Automation] Error finding recent automation for igsId ${igsId}`,
     );
     return null;
   }
@@ -188,19 +194,19 @@ export async function logInstagramAutomationAction(params: {
   nodeId: string;
   automationId: string;
   orgId: string;
-  response?: any;
+  response?: Prisma.InputJsonValue;
 }) {
   try {
     // Log to console instead of database as waAutomatedReplyActionLog table doesn't exist
     log.info(
-      `[Instagram Automation] Action logged - Node: ${params.nodeId}, Automation: ${params.automationId}, Response: %o`,
-      params.response,
+      { response: params.response },
+      `[Instagram Automation] Action logged - Node: ${params.nodeId}, Automation: ${params.automationId}`,
     );
     return { nodeId: params.nodeId, response: params.response };
   } catch (error) {
     log.error(
-      `[Instagram Automation] Error logging action for automation ${params.automationId}: %o`,
-      error,
+      { err: error },
+      `[Instagram Automation] Error logging action for automation ${params.automationId}`,
     );
     return null;
   }
@@ -214,7 +220,7 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
   automationId: string;
   orgId: string;
   currentNode: string;
-  status?: string;
+  status?: WaAutomationProgressStatus;
 }) {
   try {
     // Check if automation message already exists
@@ -226,14 +232,14 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
       },
     });
 
-    const statusValue = params.status || "inProgress";
+    const statusValue = params.status || WaAutomationProgressStatus.inProgress;
 
     if (existing) {
       return await prisma.waAutomatedReplyMessage.update({
         where: { id: existing.id },
         data: {
           currentNode: params.currentNode,
-          status: statusValue as any,
+          status: statusValue,
         },
       });
     } else {
@@ -243,12 +249,12 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
           waAutomatedReplyId: params.automationId,
           orgId: params.orgId,
           currentNode: params.currentNode,
-          status: statusValue as any,
+          status: statusValue,
         },
       });
     }
   } catch (error) {
-    log.error(`[Instagram Automation] Error creating/updating automation message: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error creating/updating automation message`);
     throw error;
   }
 }
@@ -275,7 +281,7 @@ export async function wasInstagramAutomationSentRecently(
 
     return !!recentMessage;
   } catch (error) {
-    log.error(`[Instagram Automation] Error checking recent automation: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error checking recent automation`);
     return false;
   }
 }

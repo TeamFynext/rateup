@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js";
 import {
   getErrorLogsHandler,
   getMessageStatusByIdHandler,
@@ -52,7 +53,7 @@ export async function sendTemplateByNameToPhoneExternalController(
       return rep.code(400).send("Invalid phone number.");
     }
     let phoneNumber = phone.number.replace("+", "");
-    let header: any = [];
+    const header: OutgoingTemplateComponent[] = [];
     for (let { filename, link, type } of parameterData || []) {
       header.push({
         type: WaTemplateComponentType.HEADER,
@@ -67,7 +68,7 @@ export async function sendTemplateByNameToPhoneExternalController(
         ],
       });
     }
-    if (body_variables?.length > 0) {
+    if (body_variables && body_variables.length > 0) {
       header.push({
         type: WaTemplateComponentType.BODY,
         parameters: body_variables.map((variable) => {
@@ -96,11 +97,11 @@ export async function sendTemplateByNameToPhoneExternalController(
       .code(200)
       .send(timeDelay ? { status: response.status, scheduleId: response?.id } : response);
   } catch (error) {
-    log.error("Error sending template to contacts \n%o", error);
+    log.error({ err: error }, "Error sending template to contacts");
     if (error instanceof Error) {
-      rep.code(400).send(error?.message);
+      rep.code(400).send(error.message);
     } else {
-      rep.code(500).send(error?.message ?? "Error sending template to contacts");
+      rep.code(500).send("Error sending template to contacts");
     }
   }
 }
@@ -147,7 +148,7 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
 
     const userId = req.user.userId;
     let phoneNumber = phone.number.replace("+", "");
-    let header: any = [];
+    const header: OutgoingTemplateComponent[] = [];
     const type = headerType ? headerType?.toLowerCase() : "";
     if (type || file) {
       const result = templateFileUploadSchema.safeParse({
@@ -232,22 +233,25 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       .code(200)
       .send(timeDelay ? { status: response.status, scheduleId: response?.id } : response);
   } catch (error) {
-    log.error("Error sending template to contacts \n%o", error);
+    log.error({ err: error }, "Error sending template to contacts");
     if (error instanceof Error) {
-      rep.code(400).send(error?.message);
+      rep.code(400).send(error.message);
     } else {
-      rep.code(500).send(error?.message ?? "Error sending template to contacts");
+      rep.code(500).send("Error sending template to contacts");
     }
   }
 }
 
-export async function getErrorLogsExternalController(request: FastifyRequest, reply: FastifyReply) {
-  return getErrorLogsHandler(request as any, reply);
+export async function getErrorLogsExternalController(
+  request: Parameters<typeof getErrorLogsHandler>[0],
+  reply: FastifyReply,
+) {
+  return getErrorLogsHandler(request, reply);
 }
 
 export async function getMessageStatusByIdExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getMessageStatusByIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return getMessageStatusByIdHandler(request as any, reply);
+  return getMessageStatusByIdHandler(request, reply);
 }

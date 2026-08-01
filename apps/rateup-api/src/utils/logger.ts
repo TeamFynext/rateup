@@ -24,7 +24,10 @@ const isDevelopment = process.env.NODE_ENV === "development";
 // if NO_LOG is set to true, disable logging
 // if NODE_ENV is set to development, use pretty logging
 // else use default logging
-let logOptionsValue: any;
+/** Fastify's `logger` option: `false` to disable, `true` for defaults, or a pino config. */
+type FastifyLoggerOption = boolean | typeof devLog;
+
+let logOptionsValue: FastifyLoggerOption;
 if (NO_LOG === "true") {
   logOptionsValue = false;
 } else if (isDevelopment) {
@@ -32,7 +35,7 @@ if (NO_LOG === "true") {
 } else {
   logOptionsValue = true;
 }
-export const logOptions: any = logOptionsValue;
+export const logOptions: FastifyLoggerOption = logOptionsValue;
 export const log = pino({
   enabled: NO_LOG !== "true",
   // available levels: fatal, error, warn, info, debug, trace

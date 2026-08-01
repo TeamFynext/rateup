@@ -5,7 +5,7 @@ import {
   QuestionType,
   WaQuestions,
 } from "../../types/enums.js";
-import { QuestionType as Q } from "../../types/enums.js";
+import { QuestionType as Q, QuestionType2 } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import {
@@ -34,20 +34,24 @@ export function parseLogicAction(
     }
 
     let flag = false;
-    for (const logic of logicJumps) {
-      let iterator: "map" | "some" | "every";
-      let comparator: (value: string) => boolean;
+    // A question with no logic jumps configured simply falls through to NextQ below —
+    // `logicJumps` (`question.logic`) is optional, so guard rather than crash on `for...of`.
+    for (const logic of logicJumps ?? []) {
+      let iterator: "some" | "every" = "some";
+      let comparator: (value: string) => boolean = () => false;
 
       if (ChoiceTypeQuestions.includes(type)) {
+        if (!question.choices) {
+          throw new Error(`Question ${question.id} is missing choices for logic evaluation`);
+        }
+        const choices = question.choices[language];
         let userResponseIndices: string[];
         if (Array.isArray(userResponse)) {
           userResponseIndices = userResponse.map((choice) =>
-            getChoiceIndex(choice, question.choices[language]).toString(),
+            getChoiceIndex(choice, choices).toString(),
           );
         } else {
-          userResponseIndices = [
-            getChoiceIndex(userResponse as Choice, question.choices[language]).toString(),
-          ];
+          userResponseIndices = [getChoiceIndex(userResponse as Choice, choices).toString()];
         }
         switch (logic.condition) {
           case LogicCondition.IncludesAllOf:
@@ -81,9 +85,21 @@ export function parseLogicAction(
           case LogicCondition.NotEquals:
           case LogicCondition.Equals:
             if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
-              flag = logic.response[iterator as string](comparator);
+              if (!Array.isArray(logic.response)) {
+                throw new Error("Logic response should be an array for MSQ/DDMS questions");
+              }
+              flag =
+                iterator === "every"
+                  ? logic.response.every(comparator)
+                  : logic.response.some(comparator);
             } else {
-              flag = [logic.response][iterator as string](comparator);
+              const singleResponse = Array.isArray(logic.response)
+                ? logic.response.join(",")
+                : logic.response;
+              flag =
+                iterator === "every"
+                  ? [singleResponse].every(comparator)
+                  : [singleResponse].some(comparator);
             }
             break;
 
@@ -91,7 +107,10 @@ export function parseLogicAction(
           case LogicCondition.IncludesAnyOf:
           case LogicCondition.IncludesNoneOf:
             if (Array.isArray(logic.response)) {
-              flag = logic.response[iterator as string](comparator);
+              flag =
+                iterator === "every"
+                  ? logic.response.every(comparator)
+                  : logic.response.some(comparator);
             } else {
               throw new Error("Logic response should be an array");
             }
@@ -152,19 +171,21 @@ export function validateLogic(
     }
 
     let flag = false;
-    let iterator: "map" | "some" | "every";
-    let comparator: (value: string) => boolean;
+    let iterator: "some" | "every" = "some";
+    let comparator: (value: string) => boolean = () => false;
 
     if (ChoiceTypeQuestions.includes(type)) {
+      if (!question.choices) {
+        throw new Error(`Question ${question.id} is missing choices for logic evaluation`);
+      }
+      const choices = question.choices[language];
       let userResponseIndices: string[];
       if (Array.isArray(userResponse)) {
         userResponseIndices = userResponse.map((choice) =>
-          getChoiceIndex(choice, question.choices[language]).toString(),
+          getChoiceIndex(choice, choices).toString(),
         );
       } else {
-        userResponseIndices = [
-          getChoiceIndex(userResponse as Choice, question.choices[language]).toString(),
-        ];
+        userResponseIndices = [getChoiceIndex(userResponse as Choice, choices).toString()];
       }
       switch (condition) {
         case LogicCondition.IncludesAllOf:
@@ -198,9 +219,21 @@ export function validateLogic(
         case LogicCondition.NotEquals:
         case LogicCondition.Equals:
           if (type === QuestionType.MSQ || type === QuestionType.DDMS) {
-            flag = conditionResponse[iterator as string](comparator);
+            if (!Array.isArray(conditionResponse)) {
+              throw new Error("Logic response should be an array for MSQ/DDMS questions");
+            }
+            flag =
+              iterator === "every"
+                ? conditionResponse.every(comparator)
+                : conditionResponse.some(comparator);
           } else {
-            flag = [conditionResponse][iterator as string](comparator);
+            const singleResponse = Array.isArray(conditionResponse)
+              ? conditionResponse.join(",")
+              : conditionResponse;
+            flag =
+              iterator === "every"
+                ? [singleResponse].every(comparator)
+                : [singleResponse].some(comparator);
           }
           break;
 
@@ -208,7 +241,10 @@ export function validateLogic(
         case LogicCondition.IncludesAnyOf:
         case LogicCondition.IncludesNoneOf:
           if (Array.isArray(conditionResponse)) {
-            flag = conditionResponse[iterator as string](comparator);
+            flag =
+              iterator === "every"
+                ? conditionResponse.every(comparator)
+                : conditionResponse.some(comparator);
           } else {
             throw new Error("Logic response should be an array");
           }
@@ -244,8 +280,19 @@ export function validateLogic(
   }
 }
 export function validateLogicV2(
-  question,
-  userResponse: Choice | string | Choice[] | number,
+  // Callers pass either a Question2 or the equivalent v2 flow layout child
+  // (WaFlowForm); only these three fields are read.
+  question: {
+    id?: string;
+    // v2 layout children carry the Meta component type (WaQuestions); a
+    // Question2 carries QuestionType2. ChoiceTypeQuestionsV2 lists WaQuestions.
+    type?: WaQuestions | QuestionType2 | string;
+    "data-source"?: Array<{ id: string; title: string }>;
+  },
+  // Unlike validateLogic's web-survey Choice objects, WhatsApp-flow (V2) responses
+  // resolved by parseFlowResponseV2 are always plain strings (or arrays of strings) —
+  // dataSource entries are matched by their string `title`, never a Choice object.
+  userResponse: string | string[] | number,
   condition: LogicCondition,
   conditionResponse: string | string[],
 ): boolean {
@@ -262,18 +309,22 @@ export function validateLogicV2(
     }
 
     let flag = false;
-    let iterator: "map" | "some" | "every";
-    let comparator: (value: string) => boolean;
+    let iterator: "some" | "every" = "some";
+    let comparator: (value: string) => boolean = () => false;
 
-    if (ChoiceTypeQuestionsV2.includes(type)) {
+    if (ChoiceTypeQuestionsV2.includes(type as WaQuestions)) {
+      if (!question["data-source"]) {
+        throw new Error(`Question ${question.id} is missing data-source for logic evaluation`);
+      }
+      const dataSource = question["data-source"];
       let userResponseIndices: string[];
       if (Array.isArray(userResponse)) {
         userResponseIndices = userResponse.map((choice) =>
-          (question?.["data-source"].findIndex((q) => q.title === choice) + 1)?.toString(),
+          (dataSource.findIndex((q) => q.title === choice) + 1)?.toString(),
         );
       } else {
         userResponseIndices = [
-          (question?.["data-source"].findIndex((q) => q.title === userResponse) + 1)?.toString(),
+          (dataSource.findIndex((q) => q.title === userResponse) + 1)?.toString(),
         ];
       }
       switch (condition) {
@@ -308,9 +359,21 @@ export function validateLogicV2(
         case LogicCondition.NotEquals:
         case LogicCondition.Equals:
           if (type === WaQuestions.CheckboxGroup) {
-            flag = conditionResponse[iterator as string](comparator);
+            if (!Array.isArray(conditionResponse)) {
+              throw new Error("Logic response should be an array for CheckboxGroup questions");
+            }
+            flag =
+              iterator === "every"
+                ? conditionResponse.every(comparator)
+                : conditionResponse.some(comparator);
           } else {
-            flag = [conditionResponse][iterator as string](comparator);
+            const singleResponse = Array.isArray(conditionResponse)
+              ? conditionResponse.join(",")
+              : conditionResponse;
+            flag =
+              iterator === "every"
+                ? [singleResponse].every(comparator)
+                : [singleResponse].some(comparator);
           }
           break;
 
@@ -318,7 +381,10 @@ export function validateLogicV2(
         case LogicCondition.IncludesAnyOf:
         case LogicCondition.IncludesNoneOf:
           if (Array.isArray(conditionResponse)) {
-            flag = conditionResponse[iterator as string](comparator);
+            flag =
+              iterator === "every"
+                ? conditionResponse.every(comparator)
+                : conditionResponse.some(comparator);
           } else {
             throw new Error("Logic response should be an array");
           }
@@ -355,9 +421,23 @@ export function validateLogicV2(
 
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-export function getTitleAndDescriptionObjs(languages, type) {
-  const title = {};
-  const description = {};
+// Page-type "questions" (Welcome/Language/ThankYou/GoogleReview/Custom) are stored in the
+// same `questions` array as real Question objects, using PageType values in the `type`
+// slot instead of QuestionType (an existing convention elsewhere in this file, which
+// already casts `PageType.X as unknown as QuestionType` at every comparison site) — plus
+// a few extra display-only fields real questions don't have.
+type PageTypeQuestion = Question & {
+  enableNpsAnalytics: boolean;
+  titleText?: string;
+  startButtonText?: string;
+};
+
+export function getTitleAndDescriptionObjs(
+  languages: string[],
+  type: PageType,
+): { title: Record<string, string>; description: Record<string, string> } {
+  const title: Record<string, string> = {};
+  const description: Record<string, string> = {};
   languages.forEach((language) => {
     if (type !== PageType.Custom) {
       title[language] = `${type} Page`;
@@ -373,12 +453,12 @@ export function getTitleAndDescriptionObjs(languages, type) {
   };
 }
 
-export function getPageQuestions(languages) {
-  const questionsArr = [];
+export function getPageQuestions(languages: string[]): PageTypeQuestion[] {
+  const questionsArr: PageTypeQuestion[] = [];
   if (languages.length > 1) {
     questionsArr.push({
       id: "language-page",
-      type: PageType.Language,
+      type: PageType.Language as unknown as QuestionType,
       required: true,
       enableNpsAnalytics: false,
       ...getTitleAndDescriptionObjs(languages, PageType.Language),
@@ -389,10 +469,14 @@ export function getPageQuestions(languages) {
   return questionsArr;
 }
 
-export function getPageTypeQuestionObj(languages, type, additionalData = {}) {
+export function getPageTypeQuestionObj(
+  languages: string[],
+  type: PageType,
+  additionalData: { titleText?: string; startButtonText?: string } = {},
+): PageTypeQuestion {
   return {
     id: `${type}-page`,
-    type,
+    type: type as unknown as QuestionType,
     required: true,
     enableNpsAnalytics: false,
     ...getTitleAndDescriptionObjs(languages, type),
@@ -401,13 +485,16 @@ export function getPageTypeQuestionObj(languages, type, additionalData = {}) {
 }
 
 // This function also adds title, description to other page type questions if they are not present.
-export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(questionsArr, languagesArr) {
-  let questionsArrCopy = cloneDeep(questionsArr);
-  if (languagesArr?.length) {
+export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
+  questionsArr: Question[],
+  languagesArr: string[] | undefined,
+): Promise<Question[]> {
+  let questionsArrCopy: Question[] = cloneDeep(questionsArr);
+  if (languagesArr && languagesArr.length) {
     const languagePageObj = questionsArrCopy.find(
       (question) => question.type === (PageType.Language as unknown as QuestionType),
     );
-    if (languagesArr?.length > 1) {
+    if (languagesArr.length > 1) {
       if (!languagePageObj) {
         const [newLanguagePageObj] = getPageQuestions(languagesArr);
         if (questionsArrCopy[0]?.type === (PageType.Welcome as unknown as QuestionType)) {
@@ -416,7 +503,7 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(questionsAr
           questionsArrCopy.splice(0, 0, newLanguagePageObj);
         }
       }
-    } else if (languagesArr?.length === 1) {
+    } else if (languagesArr.length === 1) {
       const newQuestionsArr = questionsArrCopy.filter((question) => {
         return question.type !== (PageType.Language as unknown as QuestionType);
       });
@@ -427,9 +514,9 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(questionsAr
   // adds title, description for page type questions when they are not present for a language.
   const resultArr = questionsArrCopy.map((questionObj) => {
     const questionType = questionObj.type;
-    if (Object.values(PageType).includes(questionType)) {
+    if (Object.values(PageType).includes(questionType as unknown as PageType)) {
       languagesArr?.forEach((language) => {
-        if (questionType !== PageType.Custom) {
+        if (questionType !== (PageType.Custom as unknown as QuestionType)) {
           questionObj.title[language] = `${questionType} Page`;
           questionObj.description[language] = `This is the ${questionType} page of the survey`;
         } else {
@@ -445,8 +532,11 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(questionsAr
 }
 
 // GR => GoogleReview
-export async function getQuestionsArrUpdatedGRTypeQuestion(questionsArr, surveyId) {
-  const questionsArrCopy = cloneDeep(questionsArr);
+export async function getQuestionsArrUpdatedGRTypeQuestion(
+  questionsArr: Question[],
+  surveyId: string,
+): Promise<Question[]> {
+  const questionsArrCopy: Question[] = cloneDeep(questionsArr);
   const googleReviewPageObjIndex = questionsArrCopy.findIndex((question) => {
     return question.type === (PageType.GoogleReview as unknown as QuestionType);
   });
@@ -456,6 +546,10 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(questionsArr, surveyI
       id: surveyId,
     },
   });
+
+  if (!survey) {
+    throw new Error(`Could not find survey with id ${surveyId}`);
+  }
 
   let hasGoogleReview = questionsArrCopy?.some(
     (item) => item.reviewPageOptions !== null && item.reviewPageOptions !== undefined,
@@ -475,8 +569,8 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(questionsArr, surveyI
 }
 
 // To add welcome page, thankyou page when a new survey is created.
-export const getInitialSurveyQuestions = (languages) => {
-  const arr = [];
+export const getInitialSurveyQuestions = (languages: string[]): PageTypeQuestion[] => {
+  const arr: PageTypeQuestion[] = [];
   arr.push(
     getPageTypeQuestionObj(languages, PageType.Welcome, {
       titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,

@@ -9,9 +9,11 @@ import {
 import {
   WaMessageBody,
   WaMessageEchoBody,
+  OutgoingTemplatePayload,
   WaMessageTypes,
   WaReceiveMessageBody,
   WaSendMessageBody,
+  WaWebhookChangeValue,
 } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
 import { QuestionType as Q } from "../../../types/enums.js";
@@ -24,8 +26,12 @@ import {
 import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload.js";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
-import { Contact, TemplateType, WaSession } from "../../../../generated/prisma/client.js";
-import { sendMessage } from "./wasurvey.service.js";
+import {
+  Contact,
+  TemplateType,
+  WaSession as PrismaWaSession,
+} from "../../../../generated/prisma/client.js";
+import { sendMessage, WaSession } from "./wasurvey.service.js";
 import { captureShopifyOrderPayment } from "../../integrations/shopify/shopify.service.js";
 import prisma from "../../../utils/prisma.js";
 import {
@@ -80,7 +86,7 @@ export function getEventType(data: WaMessageBody) {
         ?.status as WaEvent;
     }
   }
-  if ((data as any).object === "page") {
+  if (data.object === "page") {
     if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.LEADGEN) {
       return WaEvent.LEADGEN;
     } else if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.Message) {
@@ -386,13 +392,18 @@ export async function convertNodeToWhatsAppMessage(
       log.trace({ catalogNodeData: typedData }, "Processing catalog node");
 
       if (typedData.type === CatalogMessages.Catalog) {
-        const parameters: any = {};
+        const parameters: WaCatalogActionParameters = {};
         if (typedData.thumbnailProductId?.length) {
           parameters.thumbnail_product_retailer_id = typedData.thumbnailProductId;
         }
 
         const settings = await getWaSettingsByPhone(recipient);
-        const waSettings = await getWaSettingsByPhoneId(settings?.phoneId);
+        // settings?.phoneId can be null/undefined (e.g. recipient not found); previously this
+        // called getWaSettingsByPhoneId(undefined), which Prisma treats as "no filter" and could
+        // return an arbitrary org's WhatsApp settings. Guard explicitly instead.
+        const waSettings = settings?.phoneId
+          ? await getWaSettingsByPhoneId(settings.phoneId)
+          : null;
 
         if (waSettings?.paymentMethod === "SHOPIFY_LINK") {
           // TODO: Fetch variant ID from catalog/product ID if needed, or assume productRetailerId is the variant ID
@@ -618,17 +629,17 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
 
     if (order.shopifyDraftOrderId) {
       try {
-        const productsTotal = (order.products as any[]).reduce(
+        const productsTotal = order.products.reduce(
           (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 1),
           0,
         );
-        const deliveryCharge = Number((order.deliveryOption as any)?.charge || 0);
+        const deliveryCharge = Number(order.deliveryOption?.charge || 0);
         const orderTotal = productsTotal + deliveryCharge;
 
         // We multiply by 100 because captureShopifyOrderPayment divides by 100
         await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId, orderTotal * 100);
       } catch (e) {
-        log.error("Failed to capture Shopify payment => %o", e);
+        log.error({ err: e }, "Failed to capture Shopify payment");
       }
     }
   }
@@ -639,7 +650,7 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
       templateType: TemplateType.PAYMENT_CONFIRMATION,
     },
   });
-  const templateMessage: any = {
+  const templateMessage: WaSendMessageBody = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: phoneNo,
@@ -648,8 +659,9 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
       type: "order_status",
       body: {
         text:
-          confirmation?.data?.components?.find((data: any) => data.type === "body")?.text ||
-          "Awesome! 🎉🎉",
+          confirmation?.data?.components?.find(
+            (component) => component.type.toLowerCase() === "body",
+          )?.text || "Awesome! 🎉🎉",
       },
       action: {
         name: "review_order",
@@ -662,6 +674,10 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
       },
     },
   };
+  if (!orgId) {
+    log.error({ refrenceId }, "No orgId found for payment confirmation");
+    throw new Error("No orgId found for payment confirmation");
+  }
   await sendMessage(orgId, templateMessage);
 };
 export function getMessageObject(data: WaMessageBody) {
@@ -681,9 +697,9 @@ export interface WaParsedMessage {
   userName: string;
   timestamp: string;
   message: string;
-  flowResponse: any;
+  flowResponse: WaFlowResponses | undefined;
   type: string;
-  completeMessageObject: any;
+  completeMessageObject: WaWebhookChangeValue;
   buttonId: string;
   buttonPayload: string;
 }
@@ -694,7 +710,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
   const { message, completeMessageObject } = getMessageObject(data);
   const userName = getUserName(data);
   const { from, timestamp, type } = message;
-  let subtype = type as any;
+  let subtype: string = type;
 
   let flowResponse;
   let body = "";
@@ -702,6 +718,10 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
   let buttonPayload = "";
   switch (message.type) {
     case WaMessageTypes.interactive:
+      if (!message.interactive) {
+        log.error({ message }, "Interactive message received without an interactive field");
+        break;
+      }
       if (message.interactive.type === "nfm_reply") {
         flowResponse = JSON.parse(message.interactive.nfm_reply["response_json"]);
         subtype = message.interactive.type;
@@ -717,10 +737,18 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
       body = message.image.id;
       break;
     case WaMessageTypes.button:
-      body = message.button.text;
-      buttonPayload = message.button.payload;
+      if (!message.button) {
+        log.error({ message }, "Button message received without a button field");
+        break;
+      }
+      body = message.button.text ?? "";
+      buttonPayload = message.button.payload ?? "";
       break;
     case WaMessageTypes.order:
+      if (!message.order) {
+        log.error({ message }, "Order message received without an order field");
+        break;
+      }
       body = message.order.text;
       break;
   }
@@ -773,8 +801,8 @@ export function createReplyImageMessage(
 export function createReplyButtonsMessage(
   to: string,
   questionHeader: string,
-  questionDescription: string | object,
-  choices: any[],
+  questionDescription: string | RichTextDoc | RichTextNode[],
+  choices: WaMessageChoice[],
   withImage = false,
 ): WaSendMessageBody {
   return {
@@ -812,8 +840,8 @@ export function createReplyButtonsMessage(
                     id: index.toString(),
                   }
                 : {
-                    title: choice?.value,
-                    id: choice?.id?.toString(),
+                    title: choice.value,
+                    id: choice.id?.toString() ?? index.toString(),
                   },
             type: "reply",
           })),
@@ -822,9 +850,54 @@ export function createReplyButtonsMessage(
   };
 }
 
-export function parseToWhatsAppFormat(editorContent) {
+/**
+ * Narrows a flow response to the plain-text fields an address form returns.
+ * Non-text answers (numbers, multi-selects) are stringified; absent ones dropped.
+ */
+export function flowResponseStrings(
+  responses: WaFlowResponses | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(responses ?? {})) {
+    if (value === null || value === undefined) continue;
+    out[key] = Array.isArray(value) ? value.join(", ") : String(value);
+  }
+  return out;
+}
+
+/**
+ * A selectable option on an interactive message. A bare string is titled by itself and
+ * gets its list index as the id; the object form carries its own id.
+ */
+export type WaMessageChoice = string | { value: string; id?: string | number };
+
+// Minimal shape of the TipTap/ProseMirror-style rich-text JSON produced by the survey/flow
+// editors. Callers pass either a plain string (used as-is) or one of these two shapes; the
+// exact node/mark vocabulary is genuinely open-ended editor content, not a fixed API contract,
+// so `type` fields stay as `string` rather than a closed union.
+interface RichTextMark {
+  type: string;
+}
+interface RichTextNode {
+  type: string;
+  text?: string;
+  marks?: RichTextMark[];
+  content?: RichTextNode[];
+  attrs?: { label?: string; id?: string | number };
+}
+interface RichTextDoc {
+  content: RichTextNode[];
+}
+
+export function parseToWhatsAppFormat(
+  editorContent: string | RichTextDoc | RichTextNode[] | null | undefined,
+): string {
   if (!editorContent) return "";
-  function formatText(text, type = "*") {
+  // A plain string (as several callers pass, e.g. NodeTypeMap's `body`/`footer` fields) needs
+  // no rich-text parsing. Previously this fell through to the array/object branches below and
+  // crashed with "editorContent.map is not a function" whenever a plain string reached here.
+  if (typeof editorContent === "string") return editorContent;
+  function formatText(text: string, type = "*") {
     let trimmedEnd = text.trimEnd();
     let trimmedStart = text.trimStart();
     let trimmed = text.trim();
@@ -833,13 +906,13 @@ export function parseToWhatsAppFormat(editorContent) {
     let trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
     return `${leadingSpaces}${type}${trimmed}${type}${trailingSpaces}`;
   }
-  const parseNode = (node) => {
+  const parseNode = (node: RichTextNode): string | undefined => {
     if (!node) return "";
     switch (node.type) {
       case "paragraph":
         return node?.content?.map(parseNode).join("");
-      case "text":
-        let text = node.text;
+      case "text": {
+        let text = node.text ?? "";
         if (node.marks) {
           node.marks.forEach((mark) => {
             switch (mark.type) {
@@ -861,16 +934,19 @@ export function parseToWhatsAppFormat(editorContent) {
           });
         }
         return text;
+      }
       case "bulletList":
-        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
+        return (node.content ?? []).map((item) => `* ${parseNode(item)}`).join("\n");
       case "orderedList":
-        return node.content.map((item, index) => `${index + 1}. ${parseNode(item)}`).join("\n");
+        return (node.content ?? [])
+          .map((item, index) => `${index + 1}. ${parseNode(item)}`)
+          .join("\n");
       case "blockquote":
-        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
+        return (node.content ?? []).map((item) => `> ${parseNode(item)}`).join("\n");
       case "codeBlock":
-        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
+        return `\`\`\`${(node.content ?? []).map(parseNode).join("")}\`\`\``;
       case "listItem":
-        return node.content.map(parseNode).join("");
+        return (node.content ?? []).map(parseNode).join("");
       case "mention":
         return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
       default:
@@ -878,9 +954,8 @@ export function parseToWhatsAppFormat(editorContent) {
     }
   };
 
-  return editorContent?.content
-    ? editorContent.content.map(parseNode).join("\n")
-    : editorContent.map(parseNode).join("\n");
+  const nodes = Array.isArray(editorContent) ? editorContent : editorContent.content;
+  return nodes.map(parseNode).join("\n");
 }
 
 interface createCTAButtonMessageParams {
@@ -936,7 +1011,7 @@ export function createCTAButtonMessage({
 
 export function createTextMessage(
   to: string,
-  title: string,
+  title: string | null,
   description = "",
   platform: PlatformType = PlatformType.WHATSAPP,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
@@ -966,7 +1041,10 @@ export function createTextMessage(
   };
 }
 
-export function createTemplateMessage(to: string, template: any): WaSendMessageBody {
+export function createTemplateMessage(
+  to: string,
+  template: OutgoingTemplatePayload,
+): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -979,9 +1057,9 @@ export function createTemplateMessage(to: string, template: any): WaSendMessageB
 export function createListMessage(
   to: string,
   questionTitle: string,
-  questionDescription: string | object,
+  questionDescription: string | RichTextDoc | RichTextNode[],
   buttonTitle: string,
-  choices: any,
+  choices: WaMessageChoice[],
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -1015,8 +1093,8 @@ export function createListMessage(
                     id: index.toString(),
                   }
                 : {
-                    title: choice?.value,
-                    id: choice?.id?.toString(),
+                    title: choice.value,
+                    id: choice.id?.toString() ?? index.toString(),
                   },
             ),
           },
@@ -1103,14 +1181,14 @@ export function createNativePaymentMessage(
             }),
           },
         },
-      } as any,
+      },
     },
-  } as any;
+  };
 }
 
 export function createNativeListMessage(
   to: string,
-  header: string,
+  header: string | null,
   body: string,
   sections: WaSectionsType,
   buttonTitle: string = "View Options",
@@ -1147,11 +1225,11 @@ export function createNativeListMessage(
 }
 
 export function createReactionMessage(
-  to,
-  to_wa_id,
-  emoji,
-  reaction,
-  platform,
+  to: string,
+  to_wa_id: string,
+  emoji: string | undefined,
+  reaction: string | undefined,
+  platform: PlatformType,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   //do the instagram type
 
@@ -1173,17 +1251,17 @@ export function createReactionMessage(
     type: "reaction",
     reaction: {
       message_id: to_wa_id,
-      emoji,
+      emoji: emoji ?? "",
     },
   };
 }
 
 export function createDocumentMessage(
-  to,
-  link,
-  filename,
-  caption,
-  platform,
+  to: string,
+  link: string,
+  filename: string | undefined,
+  caption: string | undefined,
+  platform: PlatformType,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK) {
     return {
@@ -1217,10 +1295,10 @@ export function createDocumentMessage(
 }
 
 export function createVideoMessage(
-  to,
-  link,
-  platform,
-  caption,
+  to: string,
+  link: string,
+  platform: PlatformType,
+  caption: string | undefined,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM) {
     return {
@@ -1269,9 +1347,9 @@ export function createVideoMessage(
 }
 
 export function createAudioMessage(
-  to,
-  link,
-  platform,
+  to: string,
+  link: string,
+  platform: PlatformType,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM) {
     return {
@@ -1319,7 +1397,7 @@ export function createAudioMessage(
 }
 
 export function createContactMessage(
-  to,
+  to: string,
   contactsData: (Partial<Contact> & { org: { name: string } })[],
 ): WaSendMessageBody {
   return {
@@ -1330,13 +1408,13 @@ export function createContactMessage(
       birthday: contact.dob ? dayjs(contact.dob).format("YYYY-MM-DD") : undefined,
       emails: contact?.email ? [{ email: contact.email }] : undefined,
       name: {
-        formatted_name: contact.name ?? contact.whatsappUserName ?? contact.phone,
-        first_name: contact.name ?? contact.whatsappUserName ?? contact.phone,
+        formatted_name: contact.name ?? contact.whatsappUserName ?? contact.phone ?? "",
+        first_name: contact.name ?? contact.whatsappUserName ?? contact.phone ?? "",
       },
       org: {
         company: contact.org.name,
       },
-      phones: [{ phone: contact.phone, wa_id: contact.phone, type: "Mobile" }],
+      phones: [{ phone: contact.phone ?? "", wa_id: contact.phone ?? "", type: "Mobile" }],
     })),
   };
 }
@@ -1355,7 +1433,7 @@ export function createLocationMessage(
 }
 
 export async function generateMessageDataFromQuestion(
-  session: WaSessionWithRelations,
+  session: WaSession,
   question: Question,
 ): Promise<WaSendMessageBody> {
   const to = session.phone;
@@ -1451,11 +1529,15 @@ export async function generateMessageDataFromQuestion(
   log.error("Invalid question type");
   throw new Error("Invalid question type");
 }
-export function isValidResponse(response: any, question: Question, lang: string): boolean {
+/**
+ * Checks a parsed answer against the question that asked for it. `response` is whatever
+ * `parseResponse` produced for this question type, so each branch narrows for itself.
+ */
+export function isValidResponse(response: unknown, question: Question, lang: string): boolean {
   if (!response) return false;
   switch (question.type) {
     case Q.LD:
-      return Object.values(LDResponse).includes(response);
+      return Object.values(LDResponse).includes(response as LDResponse);
     case Q.MCQ:
     case Q.WaButtons:
     case Q.CustomNPS:
@@ -1463,31 +1545,36 @@ export function isValidResponse(response: any, question: Question, lang: string)
         log.fatal({ question }, "No choices found for question");
         throw new Error("No choices found for question");
       }
-      return question.choices[lang]?.includes(response);
+      return !!question.choices[lang]?.includes(response as Choice);
     case Q.MSQ:
       if (!Array.isArray(response)) return false;
+      if (!question.choices) {
+        log.fatal({ question }, "No choices found for question");
+        throw new Error("No choices found for question");
+      }
       for (const choice of response) {
         if (!question.choices[lang]?.includes(choice)) return false;
       }
+      return true;
     case Q.YN:
-      return Object.values(YNResponse).includes(response);
+      return Object.values(YNResponse).includes(response as YNResponse);
     case Q.Rating:
-      return response >= 1 && response <= 5;
+      return Number(response) >= 1 && Number(response) <= 5;
     case Q.Opinion:
-      return response >= 1 && response <= 10;
+      return Number(response) >= 1 && Number(response) <= 10;
     case Q.Number:
-      return !isNaN(response);
+      return !isNaN(Number(response));
     case Q.Phone:
-      return /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/.test(response);
+      return /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/.test(String(response));
     case Q.WaList:
       // Must be an object with title & optional description
-      return !!response.title;
+      return !!(response as { title?: string }).title;
     case Q.Photo:
       return typeof response === "string" && response.length > 0; // Key of the uploaded file
     case Q.Email:
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(response?.email);
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String((response as { email?: string }).email));
     case Q.Smiley:
-      return Object.values(SmileyResponse).includes(response);
+      return Object.values(SmileyResponse).includes(response as SmileyResponse);
     default:
       return true;
   }
@@ -1496,7 +1583,7 @@ export function isValidResponse(response: any, question: Question, lang: string)
 export async function parseResponse(
   waMessage: WaMessageBody,
   question: Question,
-  session: WaSessionWithRelations,
+  session: WaSession,
 ) {
   let message = parseMessage(waMessage).message;
   try {
@@ -1510,27 +1597,46 @@ export async function parseResponse(
         return message;
       case Q.Email:
         return { email: message };
-      case Q.Smiley:
-        return (waMessage.entry[0].changes[0].value as WaReceiveMessageBody).messages[0].interactive
-          .list_reply.id;
-      case Q.Rating:
-        return Number.parseInt(
-          (waMessage.entry[0].changes[0].value as WaReceiveMessageBody).messages[0].interactive
-            .list_reply.id,
-        );
+      case Q.Smiley: {
+        const interactive = (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)
+          .messages[0].interactive;
+        if (!interactive) throw new Error("No interactive response found for smiley question");
+        return interactive.list_reply.id;
+      }
+      case Q.Rating: {
+        const interactive = (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)
+          .messages[0].interactive;
+        if (!interactive) throw new Error("No interactive response found for rating question");
+        return Number.parseInt(interactive.list_reply.id);
+      }
       case Q.Date:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {
           return "";
         }
         return dayjs(message, "DD/MM/YYYY").toDate();
-      case Q.MSQ:
+      case Q.MSQ: {
+        if (!question.choices) {
+          log.fatal({ question }, "No choices found for question");
+          throw new Error("No choices found for question");
+        }
+        const choices = question.choices;
         const selectedChoices = message.split(" ").map((i) => Number(i));
-        return selectedChoices.map((index) => question.choices![session.language][index - 1]);
+        return selectedChoices.map((index) => choices[session.language][index - 1]);
+      }
       case Q.MCQ:
-      case Q.CustomNPS:
+      case Q.CustomNPS: {
+        if (!question.choices) {
+          log.fatal({ question }, "No choices found for question");
+          throw new Error("No choices found for question");
+        }
         const index = Number(message);
-        return question.choices![session.language][index - 1];
+        return question.choices[session.language][index - 1];
+      }
       case Q.WaButtons: {
+        if (!question.choices) {
+          log.fatal({ question }, "No choices found for question");
+          throw new Error("No choices found for question");
+        }
         const choice = question.choices[session.language].find((c) => c.value === message);
         if (!choice) {
           log.error({ message, question }, "Couldn't find choice for message");
@@ -1548,6 +1654,9 @@ export async function parseResponse(
       case Q.WaList: {
         try {
           const { message } = getMessageObject(waMessage);
+          if (!message.interactive) {
+            throw new Error("No interactive response found for WaList question");
+          }
           const { ...response } = message.interactive["list_reply"];
           return response;
         } catch (error) {
@@ -1557,7 +1666,7 @@ export async function parseResponse(
       }
       case Q.Photo: {
         const { message } = getMessageObject(waMessage);
-        const uniqueFilename = await downloadAndUpload(session?.orgId, message.image.id);
+        const uniqueFilename = await downloadAndUpload(session.orgId, message.image.id);
         if (!(message.type === "image")) {
           return undefined;
         }
@@ -1577,6 +1686,7 @@ export async function parseResponse(
 /* Downloads image from whatsapp & uploads it to s3 */
 export async function downloadAndUpload(orgId: string, imageId: string) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) throw new Error(`WhatsApp settings not found for org: ${orgId}`);
   const res = await callMetaApi(`/${imageId}`, "GET", waSettings.accessToken);
   log.trace(`got image link => %o`, res.data);
   const { url: imageUrl, mime_type } = res.data;
@@ -1598,10 +1708,13 @@ export async function downloadAndUpload(orgId: string, imageId: string) {
   const obj = await uploadFile(s3Params);
   log.trace("uploaded image to s3 key => %s", uniqueFilename);
 
-  return obj["Key"] ? obj["Key"] : null;
+  return obj?.Key ? obj.Key : null;
 }
 
-export function getQuestionByIdFromSession(session: WaSessionWithRelations, questionId: string) {
+export function getQuestionByIdFromSession(session: WaSession, questionId: string) {
+  if (!session.surveyTeamMap) {
+    throw new Error("Session has no associated surveyTeamMap");
+  }
   const question = (session.surveyTeamMap.survey.questions as unknown as Question[]).find(
     (q) => q.id === questionId,
   );
@@ -1613,7 +1726,7 @@ export function getQuestionByIdFromSession(session: WaSessionWithRelations, ques
 }
 
 // Returns false if session is older than 1 day
-export function validateSession(session: WaSession) {
+export function validateSession(session: PrismaWaSession | null | undefined) {
   if (!session) return false;
   return !(dayjs().diff(dayjs(session.createdAt), "day") >= 1);
 }
@@ -1636,8 +1749,10 @@ export function parseStartMessage(text: string) {
   return null;
 }
 
-export function mapStatuses(addStatuses) {
-  const statusMap = {
+export function mapStatuses(
+  addStatuses: CampaignParticipantAddStatus[] | undefined,
+): CampaignParticipantStatus[] {
+  const statusMap: Record<CampaignParticipantAddStatus, CampaignParticipantStatus[]> = {
     [CampaignParticipantAddStatus.COMPLETED]: [CampaignParticipantStatus.COMPLETED],
     [CampaignParticipantAddStatus.NOTCOMPLETED]: [
       CampaignParticipantStatus.SENT,
@@ -1650,9 +1765,9 @@ export function mapStatuses(addStatuses) {
     [CampaignParticipantAddStatus.FAILED]: [CampaignParticipantStatus.FAILED],
   };
 
-  const result = new Set();
+  const result = new Set<CampaignParticipantStatus>();
 
-  addStatuses.forEach((status) => {
+  (addStatuses ?? []).forEach((status) => {
     const mappedStatuses = statusMap[status];
     if (mappedStatuses) {
       mappedStatuses.forEach((s) => result.add(s));
@@ -1666,7 +1781,7 @@ export enum WA_SUBSCRIBE_STATUS {
   STOP = "stop",
 }
 
-function getHashForMembers(memberIds) {
+function getHashForMembers(memberIds: string[]) {
   return crypto.createHash("SHA-256").update(memberIds.join(",")).digest("hex");
 }
 

@@ -27,7 +27,7 @@ export async function getConversationsByContactIdHandler(
   request: FastifyRequest<{
     Params: ContactConversationsParamsSchema;
   }>,
-  reply,
+  reply: FastifyReply,
 ) {
   try {
     const { contactId } = request.params;
@@ -44,7 +44,7 @@ export async function updateConversationHandler(
     Params: ConversationParamsSchema;
     Body: UpdateConversationSchema;
   }>,
-  reply,
+  reply: FastifyReply,
 ) {
   try {
     const { conversationId } = request.params;
@@ -82,9 +82,12 @@ export async function getResolvedConversationStatsHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
+    // `days` is optional on the querystring; previously an omitted value was
+    // passed straight through to `Date#setDate`, producing an `Invalid Date`
+    // rather than a sensible default window.
     const response = await getResolvedCountandTotalCountofDailyInLastNDays(
       request.user.orgId,
-      request.query.days,
+      request.query.days ?? 30,
       dateRange,
     );
     reply.send(response);
@@ -102,7 +105,7 @@ export async function getAverageConversationResponseTimeHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const dateKey = request.query.dateKey;
+    const dateKey = request.query.dateKey ?? "";
     const res = await getAvargeResponseTimeofTodyaInEveryHour(
       request.user.orgId,
       dateKey,
@@ -110,7 +113,7 @@ export async function getAverageConversationResponseTimeHandler(
     );
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching average conversation response time stats:%o", e);
+    log.error({ err: e }, "Error fetching average conversation response time stats:");
     reply.status(500).send({
       error: "An error occurred while fetching the average conversation response time stats.",
     });
@@ -126,7 +129,7 @@ export async function getConversationOnAccountDistributionHandler(
     const res = await getConversationOnAccountDistribution(request.user.orgId, dateRange);
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching conversation on account distribution stats: %o", e);
+    log.error({ err: e }, "Error fetching conversation on account distribution stats:");
     reply.status(500).send({
       error: "An error occurred while fetching the conversation on account distribution stats.",
     });
@@ -141,7 +144,7 @@ export async function getOverAllQuickStatsOfConversationsHandler(
     const res = await getOverAllQuickStatsOfConversations(request.user.orgId);
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching overall quick stats of conversations:%o", e);
+    log.error({ err: e }, "Error fetching overall quick stats of conversations:");
     reply.status(500).send({
       error: "An error occurred while fetching the overall quick stats of conversations.",
     });
@@ -157,7 +160,7 @@ export async function getStaffConverSationMetricsHandler(
     const res = await getStaffConverSationMetrics(request.user.orgId, dateRange);
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching staff conversation metrics:%o", e);
+    log.error({ err: e }, "Error fetching staff conversation metrics:");
     reply.status(500).send({
       error: "An error occurred while fetching the staff conversation metrics.",
     });
@@ -175,11 +178,11 @@ export async function getStaffDetailedConversationAnalyticsHandler(
     const res = await getStaffDetailedConversationAnalytics(
       request.user.orgId,
       request.params.staffId,
-      request.query.days,
+      request.query.days ?? 30,
     );
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching staff detailed analytics :%o", e);
+    log.error({ err: e }, "Error fetching staff detailed analytics :");
     reply.status(500).send({
       error: "An error occurred while fetching the staff detailed analytics.",
     });
@@ -195,7 +198,7 @@ export async function getTeamOverviewHandler(
     const res = await getTeamOverview(request.user.orgId, dateRange);
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching team overview :%o", e);
+    log.error({ err: e }, "Error fetching team overview :");
     reply.status(500).send({
       error: "An error occurred while fetching the team overview.",
     });
@@ -213,11 +216,11 @@ export async function getTeamDetailedMetricsHandler(
     const res = await getTeamDetailedMetrics(
       request.params.teamId,
       request.user.orgId,
-      request.query.days,
+      request.query.days ?? 30,
     );
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching team metrics :%o", e);
+    log.error({ err: e }, "Error fetching team metrics :");
     reply.status(500).send({
       error: "An error occurred while fetching the team metrics.",
     });

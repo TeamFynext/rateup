@@ -36,6 +36,11 @@ import {
   sendProducts,
   updateCatalogProducts,
 } from "./product.service.js";
+import {
+  CatalogHotelInput,
+  CatalogProductCoreInput,
+  CatalogProductTypes,
+} from "./product.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -53,13 +58,19 @@ const ORG_ID = "org-1";
 const CATALOG_ID = "cat-1";
 
 /** A product item as the client sends it, before Meta formatting. */
-function productItem(overrides: Record<string, unknown> = {}) {
+type ProductItemInput = CatalogProductCoreInput & { shopifyVariantId?: string };
+function productItem(overrides: Partial<ProductItemInput> = {}): ProductItemInput {
   return {
     retailer_id: "sku-1",
     title: "Running shoe",
+    description: "A comfortable running shoe.",
+    condition: "new",
+    link: "https://example.com/products/sku-1",
     price: 99.5,
-    sale_price: 89,
+    sale_price: "89",
     currencyCode: "INR",
+    availability: "in stock",
+    brand: "Acme",
     internal_label: ["summer"],
     image: [{ url: "https://img/1.png" }],
     ...overrides,
@@ -86,7 +97,7 @@ describe("sendProducts", () => {
   test("posts the batch to the catalog's items_batch endpoint", async () => {
     const requests = [{ method: "CREATE" as const, data: { id: "sku-1" } }];
 
-    await sendProducts(ORG_ID, requests, "PRODUCT_ITEM", CATALOG_ID);
+    await sendProducts(ORG_ID, requests, CatalogProductTypes.PRODUCT_ITEM, CATALOG_ID);
 
     const [url, method, token, body, , headers] = callMetaApiMock.mock.calls[0];
     expect(url).toBe(`/${CATALOG_ID}/items_batch`);
@@ -101,13 +112,15 @@ describe("sendProducts", () => {
   });
 
   test("returns Meta's response body", async () => {
-    await expect(sendProducts(ORG_ID, [], "PRODUCT_ITEM", CATALOG_ID)).resolves.toEqual({
+    await expect(
+      sendProducts(ORG_ID, [], CatalogProductTypes.PRODUCT_ITEM, CATALOG_ID),
+    ).resolves.toEqual({
       handles: ["h1"],
     });
   });
 
   test("uses the org's own access token", async () => {
-    await sendProducts(ORG_ID, [], "PRODUCT_ITEM", CATALOG_ID);
+    await sendProducts(ORG_ID, [], CatalogProductTypes.PRODUCT_ITEM, CATALOG_ID);
 
     expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_ID);
   });
@@ -233,15 +246,20 @@ describe("createCatalogProductsBatch - product items", () => {
 });
 
 describe("createCatalogProductsBatch - hotels", () => {
-  const hotel = (overrides: Record<string, unknown> = {}) => ({
+  const hotel = (overrides: Partial<CatalogHotelInput> = {}): CatalogHotelInput => ({
     hotel_id: "hotel-1",
     name: "Grand",
+    latitude: "12.34",
+    longitude: "56.78",
+    url: "https://example.com/hotels/hotel-1",
+    address: { city: "Metropolis" },
     base_price: 5000,
-    sale_price: 4500,
+    sale_price: "4500",
     currencyCode: "INR",
     tags: ["beach"],
     numbertags: [3],
-    image: [{ url: "https://img/h.png" }],
+    description: "A grand hotel by the beach.",
+    image: [{ url: "https://img/h.png", tag: [] }],
     ...overrides,
   });
 
@@ -290,6 +308,9 @@ describe("createCatalogProductsBatch - hotels", () => {
       "HOTEL_ROOM" as any,
       [
         {
+          name: "Grand - Room 1",
+          url: "https://example.com/hotels/hotel-1/rooms/room-1",
+          description: "A room with a view.",
           hotel_retailer_id: "hotel-1",
           hotel_room_id: "room-1",
           base_price: 2000,
@@ -386,7 +407,12 @@ describe("deleteCatalogProducts", () => {
 
 describe("updateCatalogProducts", () => {
   test("sends an UPDATE request per item", async () => {
-    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM");
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem()],
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
 
     expect(metaRequests()[0].method).toBe("UPDATE");
   });
@@ -394,7 +420,12 @@ describe("updateCatalogProducts", () => {
   // NOTE: create formats the price with parseFloat(...).toFixed(2) but update does
   // not, so the same product sends "99.50 INR" on create and "99.5 INR" on update.
   test("sends an unformatted price, unlike create", async () => {
-    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem({ price: 99.5 })], "PRODUCT_ITEM");
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem({ price: 99.5 })],
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
 
     expect(metaRequests()[0].data.price).toBe("99.5 INR");
   });
@@ -404,7 +435,7 @@ describe("updateCatalogProducts", () => {
       ORG_ID,
       CATALOG_ID,
       [productItem({ internal_label: ["sale"] })],
-      "PRODUCT_ITEM",
+      CatalogProductTypes.PRODUCT_ITEM,
     );
 
     expect(metaRequests()[0].data.internal_label).toEqual(["'sale'"]);
@@ -415,14 +446,19 @@ describe("updateCatalogProducts", () => {
       ORG_ID,
       CATALOG_ID,
       [productItem({ internal_label: undefined })],
-      "PRODUCT_ITEM",
+      CatalogProductTypes.PRODUCT_ITEM,
     );
 
     expect(metaRequests()[0].data.internal_label).toBeUndefined();
   });
 
   test("updates the local row by catalog and retailer id together", async () => {
-    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM");
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem()],
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
 
     expect(db.update.mock.calls[0][0].where).toEqual({
       catalog_retailer_id_unique: { catalogId: CATALOG_ID, retailer_id: "sku-1" },
@@ -430,7 +466,12 @@ describe("updateCatalogProducts", () => {
   });
 
   test("writes the item's fields into productProps", async () => {
-    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM");
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem()],
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
 
     expect(db.update.mock.calls[0][0].data.productProps).toMatchObject({
       title: "Running shoe",
@@ -444,7 +485,7 @@ describe("updateCatalogProducts", () => {
       ORG_ID,
       CATALOG_ID,
       [productItem(), productItem({ retailer_id: "sku-2" })],
-      "PRODUCT_ITEM",
+      CatalogProductTypes.PRODUCT_ITEM,
     );
 
     expect(db.update).toHaveBeenCalledTimes(2);
@@ -454,7 +495,7 @@ describe("updateCatalogProducts", () => {
     callMetaApiMock.mockRejectedValue(new Error("meta rejected"));
 
     await expect(
-      updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM"),
+      updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], CatalogProductTypes.PRODUCT_ITEM),
     ).rejects.toThrow("meta rejected");
     expect(db.update).not.toHaveBeenCalled();
   });

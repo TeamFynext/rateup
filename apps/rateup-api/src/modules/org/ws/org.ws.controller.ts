@@ -16,7 +16,13 @@ const publisher = baseRedis.duplicate();
 export const WS_CHANNEL = "ws:messages";
 
 // Store active connections in memory for direct socket access
-const activeConnections = new Map<string, Map<string, WebSocket>>();
+/**
+ * A live browser socket, tagged with the role of the user who opened it so broadcasts can
+ * be filtered to (say) admins only.
+ */
+type RoleTaggedSocket = WebSocket & { role?: string };
+
+const activeConnections = new Map<string, Map<string, RoleTaggedSocket>>();
 
 // Helper to generate job key
 function getJobKey(userId: string, orgId: string) {
@@ -56,7 +62,9 @@ async function scheduleOfflineStatus(userId: string, orgId: string) {
       { userId, orgId },
       { delay: OFFLINE_DELAY_MS, removeOnComplete: true },
     );
-    await baseRedis.set(jobKey, job.id, "EX", JOB_KEY_EXPIRE_SEC);
+    if (job.id) {
+      await baseRedis.set(jobKey, job.id, "EX", JOB_KEY_EXPIRE_SEC);
+    }
   } catch (err) {
     log.error("Error scheduling offline status: %s", err);
   }
@@ -70,7 +78,7 @@ subscriber.on("message", (channel, message) => {
     const connections = activeConnections.get(orgId);
     if (!connections) return;
     for (const client of connections.values()) {
-      if (client.readyState === 1 && (!roleFilter || (client as any).role === roleFilter)) {
+      if (client.readyState === 1 && (!roleFilter || client.role === roleFilter)) {
         client.send(JSON.stringify(data));
       }
     }
@@ -82,7 +90,7 @@ subscriber.on("message", (channel, message) => {
 subscriber.subscribe(WS_CHANNEL);
 
 export async function handleWebSocketConnection(
-  connection: WebSocket,
+  connection: RoleTaggedSocket,
   request: FastifyRequest<{
     Params: { afterAuthId: string };
     Querystring: { role?: string; accessToken?: string };
@@ -100,11 +108,11 @@ export async function handleWebSocketConnection(
   }
 
   if (!activeConnections.has(orgId)) {
-    activeConnections.set(orgId, new Map<string, WebSocket>());
+    activeConnections.set(orgId, new Map<string, RoleTaggedSocket>());
   }
 
   // Store role alongside connection
-  (connection as any).role = role;
+  connection.role = role;
   activeConnections.get(orgId)!.set(browserId, connection);
 
   connection.on("message", (msg) => {
@@ -146,14 +154,18 @@ export const checkMobileId = async (
   request: FastifyRequest<{ Querystring: { accessToken?: string } }>,
   reply: FastifyReply,
 ) => {
+  if (!request.query.accessToken) {
+    log.error("No accessToken found in query\n%o", request.headers);
+    return reply.code(401).send({ message: "Not authorized" });
+  }
   const session = await getSessionWithoutRequestResponse(request.query.accessToken);
   const userId = session.getUserId();
   if (!userId) {
     log.error("No userId found in session\n%o", request.headers);
     reply.code(401).send({ message: "Not authorized" });
   }
-  (request as any).userId = userId;
+  request.userId = userId;
   const { role, orgId, email } = session.getAccessTokenPayload();
   const user = { userId, role, orgId, email };
-  (request as any).user = user;
+  request.user = user;
 };
