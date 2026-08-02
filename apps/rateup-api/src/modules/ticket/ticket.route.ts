@@ -22,11 +22,13 @@ export async function ticketRoutes(server: FastifyInstance) {
   server.register(cardRoutes, {
     prefix: "cards",
   });
+  // The access check here was a comment, and the path id was ignored anyway — the
+  // handler takes its target from body.ticketCardId, so a path-based preHandler
+  // could not have covered it. The check lives in createComment, which resolves the
+  // board from the body's card id. See issues.txt 30.1.
   server.post(
     "/:id/comment",
     {
-      // preHandler: [verifyTicketAccess],
-
       schema: {
         body: createCommentRequestSchema,
       },

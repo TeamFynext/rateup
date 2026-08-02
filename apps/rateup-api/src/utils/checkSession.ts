@@ -15,6 +15,9 @@ export const checkSession = async (request: FastifyRequest, reply: FastifyReply)
     if (!userId) {
       log.error("No userId found in session\n%o", request.headers);
       reply.code(401).send({ message: "Not authorized" });
+      // Stop here: this used to reply and keep going, populating request.user and
+      // letting the route handler run on an unauthenticated request.
+      return;
     }
     // TODO: verify the below works as expected
     request.userId = userId;

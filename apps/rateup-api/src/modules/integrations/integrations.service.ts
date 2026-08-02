@@ -71,10 +71,6 @@ export const getIntegrationByName = async (orgId: string, name: string) => {
   return data;
 };
 
-export async function getAllIntegrations() {
-  return await prisma.integration.findMany();
-}
-
 export function getWaPaymentConfigurations(
   orgId: string,
   noDbSave: true,
@@ -92,7 +88,7 @@ export async function getWaPaymentConfigurations(
 ) {
   // If a specific WA account is requested, use it. Otherwise fall back to the first account.
   const waSettings = whatsappSettingsId
-    ? await getWaSettingsById(whatsappSettingsId)
+    ? await getWaSettingsById(whatsappSettingsId, orgId)
     : await getWaSettings(orgId);
 
   if (!waSettings) {
@@ -352,7 +348,22 @@ export const updateIntegrationByName = async (
     data.credential.accessToken = hash;
     apikey = key;
   }
-  const { ...rest } = data;
+  // `const { ...rest } = data` was a COPY, not a destructure: nothing was stripped,
+  // so two fields the caller controls went into the Prisma update.
+  //  - `orgId` was an accepted body field, so a PUT could re-parent the caller's own
+  //    integration row — credential and all — into another organisation, which is
+  //    how a planted connection would work. It is gone from the schema, so it can no
+  //    longer arrive at all (issues.txt 26.4).
+  //  - `updateKey` is a control flag, not a column, and Prisma rejects unknown
+  //    arguments — so the documented way to rotate a leaked Zapier key always 500'd
+  //    (issues.txt 26.5).
+  // `orgId` is stripped here as well as being gone from the schema: the schema stops
+  // it arriving over HTTP, this stops any internal caller passing one.
+  const {
+    updateKey: _ignoredUpdateKey,
+    orgId: _ignoredOrgId,
+    ...rest
+  } = data as UpdateIntgrationInput & { orgId?: string };
   const integration = await prisma.integration.update({
     where: {
       orgid_integration_name_unique: {
@@ -552,22 +563,37 @@ export async function sendWaTemplateOnPetpoojaOrder(
   });
 }
 
+/**
+ * Removes one Zapier trigger subscription and tells the subscriber it is gone.
+ *
+ * The outbound DELETE used to go to `data.hookUrl` — a URL taken straight from the
+ * request body, before anything was read from the database. That is an SSRF
+ * primitive: an authenticated caller chose any address and the server issued a
+ * DELETE to it from inside the network, cloud metadata and internal admin
+ * endpoints included. The call now goes only to a hookUrl this org actually
+ * subscribed, looked up first. See issues.txt 26.6.
+ */
 export async function deleteZapierTriggerHooks(
   data: ZapierIntegration["credential"]["triggerSubscriptions"][0],
   orgId: string,
 ) {
-  if (data.active) {
-    await axios.delete(data.hookUrl);
-  }
   const integration = (await getIntegrationByName(
     orgId,
     IntegratedApps.zapier,
   )) as unknown as ZapierIntegration;
+  const subscriptions = integration?.credential?.triggerSubscriptions ?? [];
+  const stored = subscriptions.find((t) => t.hookUrl === data.hookUrl);
+  if (!stored) {
+    log.warn("No zapier trigger subscription matching the requested hook for org %s", orgId);
+    return;
+  }
+
+  if (stored.active) {
+    await axios.delete(stored.hookUrl);
+  }
   const credential = {
     ...integration.credential,
-    triggerSubscriptions: integration.credential.triggerSubscriptions.filter(
-      (t) => t.hookUrl !== data.hookUrl,
-    ),
+    triggerSubscriptions: subscriptions.filter((t) => t.hookUrl !== stored.hookUrl),
   } as ZapierIntegration["credential"];
   await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
 }

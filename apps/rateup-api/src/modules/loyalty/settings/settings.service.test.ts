@@ -13,6 +13,7 @@ vi.mock("../../../utils/prisma.js", () => ({
     loyaltyEventTrigger: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock("../accounts/account.service.js", () => ({
 }));
 vi.mock("../rewards/reward.service.js", () => ({ getActiveLoyaltyRewards: vi.fn() }));
 vi.mock("../redemptionValidator.js", () => ({ validateRedemption: vi.fn() }));
+vi.mock("../redemptions/redemption.service.js", () => ({ redeemReward: vi.fn() }));
 vi.mock("../../../../generated/prisma/client.js", () => ({}));
 
 import prisma from "../../../utils/prisma.js";
@@ -57,6 +59,7 @@ import {
 } from "../accounts/account.service.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import { validateRedemption } from "../redemptionValidator.js";
+import { redeemReward } from "../redemptions/redemption.service.js";
 import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../../types/enums.js";
 import {
   createEventTrigger,
@@ -142,6 +145,11 @@ beforeEach(() => {
     shortCode: "SHORT123",
     reward: { id: "rwd-1", name: "Free coffee", pointsCost: 100, programId: PROGRAM },
   });
+  (redeemReward as Mock).mockResolvedValue({
+    message: "Reward assigned successfully. Short code: SHORT123",
+    shortCode: "SHORT123",
+    redemptionCode: "RU-ABC123",
+  });
   db.loyaltyReward.findUnique.mockResolvedValue({
     id: "rwd-1",
     name: "Free coffee",
@@ -201,20 +209,24 @@ describe("the WhatsApp command CRUD", () => {
     expect(db.loyaltyWaCommand.findMany.mock.calls[0][0]).toEqual({ where: { orgId: ORG } });
   });
 
-  // NOTE: fetch-by-id, update and delete take the command id alone. The list and
-  // the by-type lookup are org-scoped; these three are not.
+  // Fetch-by-id, update and delete used to take the command id alone, while the
+  // list and the by-type lookup beside them were org-scoped — so the reads that
+  // enumerate were guarded and the ones that fetch and write were not.
   // See issues.txt 20.33.
-  test("fetch, update and delete are keyed on the id alone", async () => {
-    await getLoyaltyWaCommand("cmd-other-org");
-    await updateLoyaltyWaCommand("cmd-other-org", { content: "x" });
-    await deleteLoyaltyWaCommandById("cmd-other-org");
+  test("fetch, update and delete are all scoped to the org", async () => {
+    await getLoyaltyWaCommand("cmd-other-org", ORG);
+    await updateLoyaltyWaCommand("cmd-other-org", { content: "x" }, ORG);
+    await deleteLoyaltyWaCommandById("cmd-other-org", ORG);
 
-    expect(db.loyaltyWaCommand.findUnique.mock.calls[0][0]).toEqual({
-      where: { id: "cmd-other-org" },
+    expect(db.loyaltyWaCommand.findFirst.mock.calls[0][0]).toEqual({
+      where: { id: "cmd-other-org", orgId: ORG },
     });
-    expect(db.loyaltyWaCommand.update.mock.calls[0][0].where).toEqual({ id: "cmd-other-org" });
+    expect(db.loyaltyWaCommand.update.mock.calls[0][0].where).toEqual({
+      id: "cmd-other-org",
+      orgId: ORG,
+    });
     expect(db.loyaltyWaCommand.delete.mock.calls[0][0]).toEqual({
-      where: { id: "cmd-other-org" },
+      where: { id: "cmd-other-org", orgId: ORG },
     });
   });
 
@@ -223,7 +235,7 @@ describe("the WhatsApp command CRUD", () => {
   // now dropped before reaching Prisma rather than being written and rejected at
   // runtime as an unknown field.
   test("an update blanks out empty ids and drops the unsupported actionId field", async () => {
-    await updateLoyaltyWaCommand("cmd-1", { waTemplateId: "", actionId: "", content: "x" });
+    await updateLoyaltyWaCommand("cmd-1", { waTemplateId: "", actionId: "", content: "x" }, ORG);
 
     const data = db.loyaltyWaCommand.update.mock.calls[0][0].data;
     expect(data).toMatchObject({
@@ -275,7 +287,7 @@ describe("handleLoyaltyWaCommand", () => {
       ORG,
     );
 
-    expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "inactive" });
+    expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "inactive" }, PROGRAM);
   });
 
   test("an unrecognised command type does nothing at all", async () => {
@@ -356,7 +368,7 @@ describe("handleCustomerRemovalFromLoyalty", () => {
   test("deactivates with the lower-case status the schema uses", async () => {
     await handleCustomerRemovalFromLoyalty(PHONE, command() as any);
 
-    expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "inactive" });
+    expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "inactive" }, PROGRAM);
   });
 
   test("confirms the removal by template when configured that way", async () => {
@@ -461,33 +473,32 @@ describe("handleLoyaltyRedeemInteraction", () => {
 describe("handleLoyaltyRedeemInteraction — confirming", () => {
   const confirm = { buttonId: "loyalty_reward_confirm:rwd-1" };
 
-  test("assigns the reward and reports the short code", async () => {
+  test("redeems through redeemReward and reports the short code", async () => {
     await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
 
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1", "WhatsApp redeem flow");
+    expect(redeemReward).toHaveBeenCalledWith(PROGRAM, {
+      customerId: "acct-1",
+      rewardId: "rwd-1",
+      notes: "WhatsApp redeem flow",
+    });
     expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toContain("SHORT123");
   });
 
-  test("deducts the reward's cost from the balance", async () => {
+  test("does not deduct anything itself", async () => {
     await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
 
-    expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
-      where: { id: "acct-1" },
-      data: { currentPoints: { decrement: 100 } },
-    });
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
   });
 
-  test("passes the assignment's error text back to the customer", async () => {
-    (assignRewardToCustomer as Mock).mockRejectedValue(
-      new Error("Reward is already assigned to this customer"),
-    );
+  test("passes the redemption's error text back to the customer", async () => {
+    (redeemReward as Mock).mockRejectedValue(new Error("Insufficient points. Required: 100"));
 
     await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
 
     expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toBe(
-      "Reward is already assigned to this customer",
+      "Insufficient points. Required: 100",
     );
-    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
   // Fixed: validateRedemption returns `{ valid, violations, reward, customer }` — there
@@ -506,41 +517,29 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
     expect(assignRewardToCustomer).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour, and this is the sharpest defect in the file.
-  // The WhatsApp flow is a FOURTH redemption path that bypasses redeemReward
-  // entirely: it writes no LoyaltyRedemption row at all. Every quantity rule the
-  // validator enforces — one_time_use, max_redemptions_per_customer/day/week/
-  // month and the cooldown — is evaluated by COUNTING LoyaltyRedemption rows, so
-  // none of them can ever be tripped by a redemption made this way. It also
-  // never touches stockRedeemed. See issues.txt 20.34.
-  test("records no redemption row, so no quantity rule can ever count it", async () => {
+  // The sharpest defect in this file. The WhatsApp flow was a FOURTH redemption
+  // path — and the one customers actually reach — that bypassed redeemReward
+  // entirely: it called assignRewardToCustomer and a local handleDeduction, and
+  // wrote no LoyaltyRedemption row at all. Every quantity rule the validator
+  // enforces — one_time_use, max_redemptions_per_customer, _per_day, _per_week,
+  // _per_month and the cooldown — is evaluated by COUNTING those rows, so none of
+  // them could ever be tripped by a redemption made this way: a "once per
+  // customer" reward could be taken repeatedly. It never touched stockRedeemed
+  // either, so an inventory-limited reward was unlimited here. Its deduction was
+  // untransacted, wrote balanceAfter from a pre-deduction read, and hard-coded
+  // `redemptionType: "point"` whatever the reward actually was.
+  //
+  // All of that is redeemReward's job, and this path does not reimplement any of
+  // it any more. See issues.txt 20.34.
+  test("goes through the one redemption path, so the rules can count it", async () => {
     await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
 
-    expect(db.loyaltyTransaction.create).toHaveBeenCalled();
-    expect(db.customerLoyaltyAccount.update).toHaveBeenCalled();
-    // ...but nothing a rule could count, and no stock movement.
+    expect(redeemReward).toHaveBeenCalledTimes(1);
+    // Nothing written here directly — no ledger row, no balance move, no
+    // reward lookup of its own.
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
     expect(db.loyaltyReward.findUnique).not.toHaveBeenCalled();
-  });
-
-  // NOTE: the ledger row is written from the balance read before the deduction,
-  // and its metadata hard-codes `redemptionType: "point"` whatever the reward is.
-  // See issues.txt 20.15.
-  test("writes the ledger row from a pre-deduction read and mislabels the type", async () => {
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
-
-    expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
-      points: -100,
-      balanceAfter: 400,
-      metadata: expect.objectContaining({ redemptionType: "point" }),
-    });
-  });
-
-  test("writes the ledger row before moving the balance, untransacted", async () => {
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
-
-    expect(db.loyaltyTransaction.create.mock.invocationCallOrder[0]).toBeLessThan(
-      db.customerLoyaltyAccount.update.mock.invocationCallOrder[0],
-    );
   });
 });
 
@@ -575,22 +574,28 @@ describe("replacedContentByDynamicVariable", () => {
     expect(res).toEqual([{ type: "hr" }]);
   });
 
-  // NOTE: pins current behaviour. `[...contentArray]` is a SHALLOW copy, so the
-  // nested nodes are shared with the caller's object and `content.text = ...`
-  // rewrites the original in place. A command row read once and rendered for two
-  // customers has its placeholders destroyed by the first render, and the second
-  // customer receives the first customer's name and balance.
+  // `[...contentArray]` was a SHALLOW copy, so the nested nodes were shared with
+  // the caller's object and `content.text = …` rewrote the original in place. A
+  // command row read once and rendered for two customers had its placeholders
+  // destroyed by the first render, and the second customer received the FIRST
+  // customer's name and balance — there was nothing left to substitute by then.
   // See issues.txt 20.35.
-  test("mutates the caller's document instead of copying it", () => {
+  test("leaves the caller's document untouched", () => {
     const original = doc();
 
     replacedContentByDynamicVariable(original, ["Ann", 500]);
 
-    expect(original[0].content[0].text).toBe("Hi Ann, you have 500 points");
+    expect(original[0].content[0].text).toBe("Hi {{1}}, you have {{2}} points");
+  });
 
-    // Rendering the same object again cannot substitute anything.
+  test("renders the same document twice without the first render spoiling it", () => {
+    const original = doc();
+
+    const first: any = replacedContentByDynamicVariable(original, ["Ann", 500]);
     const second: any = replacedContentByDynamicVariable(original, ["Bob", 10]);
-    expect(second[0].content[0].text).toBe("Hi Ann, you have 500 points");
+
+    expect(first[0].content[0].text).toBe("Hi Ann, you have 500 points");
+    expect(second[0].content[0].text).toBe("Hi Bob, you have 10 points");
   });
 });
 
@@ -600,37 +605,54 @@ describe("replacedContentByDynamicVariable", () => {
 
 describe("the event-trigger CRUD", () => {
   test("a new trigger defaults to enabled", async () => {
-    await createEventTrigger({ programId: PROGRAM, eventType: "BIRTHDAY" } as any);
+    await createEventTrigger({ eventType: "BIRTHDAY" } as any, PROGRAM);
 
     expect(db.loyaltyEventTrigger.create.mock.calls[0][0].data.enabled).toBe(true);
   });
 
   test("an explicit disabled flag is honoured", async () => {
-    await createEventTrigger({
-      programId: PROGRAM,
-      eventType: "BIRTHDAY",
-      enabled: false,
-    } as any);
+    await createEventTrigger(
+      {
+        eventType: "BIRTHDAY",
+        enabled: false,
+      } as any,
+      PROGRAM,
+    );
 
     expect(db.loyaltyEventTrigger.create.mock.calls[0][0].data.enabled).toBe(false);
   });
 
-  // NOTE: the programId is taken straight from the caller and written unchecked,
-  // so a trigger can be attached to another org's program. See issues.txt 20.33.
-  test("writes whatever programId it is given", async () => {
-    await createEventTrigger({ programId: "prog-other-org", eventType: "BIRTHDAY" } as any);
+  // The programId used to come from the request BODY and be written unchecked, so
+  // a trigger could be attached to another org's program — and it would then fire
+  // on that org's customers, sending whatever template it named. It is the
+  // caller's own program now, resolved from their session by the handler and
+  // passed as a separate argument so the body cannot reach it.
+  // See issues.txt 20.33.
+  test("writes the caller's program, not one named in the input", async () => {
+    await createEventTrigger(
+      { programId: "prog-other-org", eventType: "BIRTHDAY" } as any,
+      PROGRAM,
+    );
 
-    expect(db.loyaltyEventTrigger.create.mock.calls[0][0].data.programId).toBe("prog-other-org");
+    expect(db.loyaltyEventTrigger.create.mock.calls[0][0].data.programId).toBe(PROGRAM);
   });
 
-  test("fetch, update and delete are keyed on the trigger id alone", async () => {
-    await getEventTrigger("trg-1");
-    await updateEventTrigger("trg-1", { enabled: false } as any);
-    await deleteEventTrigger("trg-1");
+  test("fetch, update and delete are all scoped to the program", async () => {
+    await getEventTrigger("trg-1", PROGRAM);
+    await updateEventTrigger("trg-1", { enabled: false } as any, PROGRAM);
+    await deleteEventTrigger("trg-1", PROGRAM);
 
-    expect(db.loyaltyEventTrigger.findUnique.mock.calls[0][0].where).toEqual({ id: "trg-1" });
-    expect(db.loyaltyEventTrigger.update.mock.calls[0][0].where).toEqual({ id: "trg-1" });
-    expect(db.loyaltyEventTrigger.delete).toHaveBeenCalledWith({ where: { id: "trg-1" } });
+    expect(db.loyaltyEventTrigger.findFirst.mock.calls[0][0].where).toEqual({
+      id: "trg-1",
+      programId: PROGRAM,
+    });
+    expect(db.loyaltyEventTrigger.update.mock.calls[0][0].where).toEqual({
+      id: "trg-1",
+      programId: PROGRAM,
+    });
+    expect(db.loyaltyEventTrigger.delete).toHaveBeenCalledWith({
+      where: { id: "trg-1", programId: PROGRAM },
+    });
   });
 
   test("listing a program's triggers filters on that program", async () => {
@@ -641,15 +663,20 @@ describe("the event-trigger CRUD", () => {
     });
   });
 
-  // NOTE: pins current behaviour. `programId` is optional and, when omitted, the
-  // where clause becomes `undefined` — which prisma reads as "no filter". The
-  // call then returns EVERY org's event triggers, each with its program
-  // included. The controller passes `request.query.programId` straight through
-  // and that query parameter is optional. See issues.txt 20.33.
-  test("returns every org's triggers when no program is supplied", async () => {
-    await getAllEventTriggers();
+  // `programId` used to be OPTIONAL, and when it was omitted the where clause
+  // became `undefined` — which prisma reads as "no filter at all". The call then
+  // returned EVERY org's event triggers, each with its `program` relation
+  // included: other orgs' programme ids, names and WhatsApp settings ids, in one
+  // request. The controller passed `request.query.programId` straight through and
+  // that query parameter is optional, so the enumeration needed no more than
+  // leaving it off. It is a required argument now, and TypeScript refuses the
+  // no-argument call this test used to make. See issues.txt 20.33.
+  test("cannot be asked for more than one program's triggers", async () => {
+    await getAllEventTriggers(PROGRAM);
 
-    expect(db.loyaltyEventTrigger.findMany.mock.calls[0][0].where).toBeUndefined();
+    expect(db.loyaltyEventTrigger.findMany.mock.calls[0][0].where).toEqual({
+      programId: PROGRAM,
+    });
     expect(db.loyaltyEventTrigger.findMany.mock.calls[0][0].include).toHaveProperty("program");
   });
 });

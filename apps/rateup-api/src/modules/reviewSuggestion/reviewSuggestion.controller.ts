@@ -62,6 +62,26 @@ export async function createReviewSuggestionsHandler(
   reply.send(reviews);
 }
 
+/**
+ * The refusal shared by the two by-id writers.
+ *
+ * The update's refusal used to be `reply.code(403); return;` — reply.code sets
+ * the status and returns the reply for chaining, it does not send, and Fastify
+ * treats an async handler that resolves undefined without a sent reply as a
+ * promise to answer later. So the denial held the connection open until
+ * something timed it out, which to the caller is indistinguishable from the
+ * server hanging. See issues.txt 36.3.
+ */
+function refuse(reply: FastifyReply, access: "not-found" | "forbidden") {
+  if (access === "not-found") {
+    // Was a throw out of hasAccessToReview into the module's error handler,
+    // which answered a fixed 500 for an id that simply does not exist.
+    // See issues.txt 36.4.
+    return reply.code(404).send({ message: "Review suggestion not found" });
+  }
+  return reply.code(403).send({ message: "You don't have access to this review suggestion" });
+}
+
 export async function updateReviewSuggestionHandler(
   request: FastifyRequest<{
     Params: byReviewSuggestionIdSchema;
@@ -70,10 +90,9 @@ export async function updateReviewSuggestionHandler(
   reply: FastifyReply,
 ) {
   const { reviewSuggestionId } = request.params;
-  if (!(await hasAccessToReview(request.userId, reviewSuggestionId))) {
-    reply.code(403);
-    return;
-  }
+  const access = await hasAccessToReview(request.userId, reviewSuggestionId);
+  if (access !== "allowed") return refuse(reply, access);
+
   const updatedReview = await updateReviewSuggestion(reviewSuggestionId, request.body);
   reply.send(updatedReview);
 }
@@ -83,6 +102,15 @@ export async function deleteReviewSuggestionHandler(
   reply: FastifyReply,
 ) {
   const { reviewSuggestionId } = request.params;
+  // The route carried NO preHandler at all — not even checkSession — so
+  // `DELETE /api/reviewSuggestion/:id` was reachable by anyone on the internet
+  // and a uuid was the entire authorisation. The public read hands those uuids
+  // to unauthenticated respondents, which closed the loop. checkSession is on
+  // the route now, and this is the same ownership check the update performs.
+  // See issues.txt 36.1.
+  const access = await hasAccessToReview(request.userId, reviewSuggestionId);
+  if (access !== "allowed") return refuse(reply, access);
+
   const reviews = await deleteReviewSuggestion(reviewSuggestionId);
   reply.send(reviews);
 }

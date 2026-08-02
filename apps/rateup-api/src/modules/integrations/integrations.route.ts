@@ -8,7 +8,6 @@ import {
   deleteWaPaymentConfigurationHandler,
   deleteZapierTriggerHookHandler,
   getAllIntegrationsByOrgHandler,
-  getAllIntegrationsHandler,
   getGoogleAuthUrlForSheetHandler,
   getIntegrationByNameHandler,
   getRegenerateWaPaymentConfigOauthHandler,
@@ -22,6 +21,11 @@ import {
   integrationSchema,
   updateIntgrationSchema,
   waPaymentCreateSchema,
+  deleteZapierHookSchema,
+  type DeleteZapierHookInput,
+  type IntegrationSchema,
+  type ByNameParams,
+  type UpdateIntgrationInput,
 } from "./integrations.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { shopifyRoutes } from "./shopify/shopify.route.js";
@@ -32,7 +36,12 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.register(shopifyRoutes, { prefix: "/shopify" });
 
   server.get("/", {}, getAllIntegrationsByOrgHandler);
-  server.get("/all", {}, getAllIntegrationsHandler);
+  // GET /all used to answer `prisma.integration.findMany()` — every organisation's
+  // integration row, credential column included — to any authenticated user of any
+  // org: Google refresh tokens, Shopify Admin API session tokens, Zoho tokens and
+  // webhook secrets, and every org's Zapier key hash. Removed rather than gated;
+  // nothing in the product needs a platform-wide credential dump.
+  // See issues.txt 26.2.
   server.get(
     "/:name",
     {
@@ -43,18 +52,23 @@ export async function integrationsRoutes(server: FastifyInstance) {
     getIntegrationByNameHandler,
   );
   server.get("/statuses", {}, getIntegrationStatusesHandler);
-  server.post(
+  // Role-gated like the Google OAuth route below it: both write credentials, and
+  // the gate on one was bypassable by posting the same row through the other.
+  // See issues.txt 26.17.
+  server.post<{ Body: IntegrationSchema }>(
     "/",
     {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         body: integrationSchema,
       },
     },
     createIntegrationHandler,
   );
-  server.put(
+  server.put<{ Params: ByNameParams; Body: UpdateIntgrationInput }>(
     "/:name",
     {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         params: byNameSchema,
         body: updateIntgrationSchema,
@@ -119,5 +133,16 @@ export async function integrationsRoutes(server: FastifyInstance) {
     },
     deleteWaPaymentConfigurationHandler,
   );
-  server.delete("/zapier-hook", deleteZapierTriggerHookHandler);
+  // The body was cast `as any` by the handler and used to choose the URL the server
+  // called out to; it is validated here and the URL is now resolved from the org's
+  // own stored subscriptions. See issues.txt 26.6.
+  server.delete<{ Body: DeleteZapierHookInput }>(
+    "/zapier-hook",
+    {
+      schema: {
+        body: deleteZapierHookSchema,
+      },
+    },
+    deleteZapierTriggerHookHandler,
+  );
 }

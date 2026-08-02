@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    loyaltyReward: { findUnique: vi.fn() },
+    loyaltyReward: { findFirst: vi.fn() },
     customerLoyaltyAccount: { findUnique: vi.fn() },
     customerReward: { findUnique: vi.fn() },
-    loyaltyRedemption: { findFirst: vi.fn(), count: vi.fn() },
+    loyaltyRedemption: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn() },
   },
 }));
 
@@ -24,6 +24,7 @@ const db = prisma as unknown as {
 
 const CUSTOMER = "cust-1";
 const REWARD = "rwd-1";
+const PROGRAM = "prog-1";
 
 interface RewardFixture {
   id: string;
@@ -49,14 +50,21 @@ function reward(over: Record<string, unknown> = {}) {
 }
 
 function customer(over: Record<string, unknown> = {}) {
-  return { id: CUSTOMER, currentPoints: 500, currentTierId: "tier-gold", ...over };
+  return {
+    id: CUSTOMER,
+    programId: PROGRAM,
+    currentPoints: 500,
+    currentTierId: "tier-gold",
+    ...over,
+  };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  db.loyaltyReward.findUnique.mockResolvedValue(reward());
+  db.loyaltyReward.findFirst.mockResolvedValue(reward());
   db.customerLoyaltyAccount.findUnique.mockResolvedValue(customer());
   db.customerReward.findUnique.mockResolvedValue(null);
+  db.loyaltyRedemption.findUnique.mockResolvedValue(null);
   db.loyaltyRedemption.findFirst.mockResolvedValue(null);
   db.loyaltyRedemption.count.mockResolvedValue(0);
 });
@@ -71,7 +79,7 @@ afterEach(() => {
 
 describe("validateRedemption — subjects", () => {
   test("refuses a reward that does not exist", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(null);
+    db.loyaltyReward.findFirst.mockResolvedValue(null);
 
     expect(await validateRedemption(CUSTOMER, "nope", {} as any)).toEqual({
       valid: false,
@@ -96,14 +104,36 @@ describe("validateRedemption — subjects", () => {
     expect(res.violations).toEqual([]);
   });
 
-  // NOTE: pins current behaviour. Both lookups are by id alone — nothing checks
-  // that the reward and the account belong to the same loyalty program, let alone
-  // the same org. See issues.txt 20.1.
-  test("never checks that the reward and the account share a program", async () => {
+  // Both lookups used to be by id alone, with nothing checking that the reward and
+  // the account belonged to the same loyalty program, let alone the same org. This
+  // is the one function whose whole job is to decide whether a redemption is
+  // allowed, and "do these two things belong together" was the precondition it
+  // never established. See issues.txt 20.1 and 20.20.
+  test("looks the reward up through the account's program", async () => {
     await validateRedemption(CUSTOMER, REWARD, {} as any);
 
-    expect(db.loyaltyReward.findUnique.mock.calls[0][0]).toEqual({ where: { id: REWARD } });
+    expect(db.loyaltyReward.findFirst.mock.calls[0][0]).toEqual({
+      where: { id: REWARD, programId: PROGRAM },
+    });
     expect(db.customerLoyaltyAccount.findUnique.mock.calls[0][0].where).toEqual({ id: CUSTOMER });
+  });
+
+  test("a reward in another program is simply not found", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(null);
+
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toEqual([
+      "Reward not found",
+    ]);
+  });
+
+  // The account is resolved first, so a request naming an account that does not
+  // exist never reaches the reward lookup at all.
+  test("resolves the account before the reward", async () => {
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
+
+    await validateRedemption("nope", REWARD, {} as any);
+
+    expect(db.loyaltyReward.findFirst).not.toHaveBeenCalled();
   });
 });
 
@@ -128,7 +158,7 @@ describe("validateRedemption — points balance", () => {
   });
 
   test("an assigned reward costs no points", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(reward({ rewardType: "assigned" }));
+    db.loyaltyReward.findFirst.mockResolvedValue(reward({ rewardType: "assigned" }));
     db.customerReward.findUnique.mockResolvedValue({ id: "assignment-1" });
     db.customerLoyaltyAccount.findUnique.mockResolvedValue(customer({ currentPoints: 0 }));
 
@@ -136,7 +166,7 @@ describe("validateRedemption — points balance", () => {
   });
 
   test("an assigned reward must actually be assigned to that customer", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(reward({ rewardType: "assigned" }));
+    db.loyaltyReward.findFirst.mockResolvedValue(reward({ rewardType: "assigned" }));
     db.customerReward.findUnique.mockResolvedValue(null);
 
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
@@ -145,7 +175,7 @@ describe("validateRedemption — points balance", () => {
   });
 
   test("the assignment lookup keys on the reward and account together", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(reward({ rewardType: "assigned" }));
+    db.loyaltyReward.findFirst.mockResolvedValue(reward({ rewardType: "assigned" }));
 
     await validateRedemption(CUSTOMER, REWARD, {} as any);
 
@@ -161,13 +191,13 @@ describe("validateRedemption — points balance", () => {
 
 describe("validateRedemption — time restrictions", () => {
   function withTime(restrictions: Record<string, unknown>) {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({ redemptionRules: { time_restrictions: { enabled: true, ...restrictions } } }),
     );
   }
 
   test("does nothing at all when the block is not enabled", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({
         redemptionRules: {
           time_restrictions: { enabled: false, valid_until: "1999-01-01T00:00:00.000Z" },
@@ -208,8 +238,8 @@ describe("validateRedemption — time restrictions", () => {
 
   test("refuses a day that is not in the allowed list", async () => {
     vi.useFakeTimers();
-    // A Thursday in every timezone this could plausibly run in.
-    vi.setSystemTime(new Date(2026, 0, 15, 12));
+    // Thursday 15 January 2026, in UTC — which is the only clock this file reads.
+    vi.setSystemTime(new Date("2026-01-15T12:00:00.000Z"));
     withTime({ allowed_days: [DayOfWeek.MONDAY, DayOfWeek.TUESDAY] });
 
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
@@ -219,7 +249,7 @@ describe("validateRedemption — time restrictions", () => {
 
   test("allows a day that is in the allowed list", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 12)); // Thursday
+    vi.setSystemTime(new Date("2026-01-15T12:00:00.000Z")); // Thursday, UTC
     withTime({ allowed_days: [DayOfWeek.THURSDAY] });
 
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
@@ -227,7 +257,7 @@ describe("validateRedemption — time restrictions", () => {
 
   test("refuses a time outside every allowed range", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 22, 30));
+    vi.setSystemTime(new Date("2026-01-15T22:30:00.000Z"));
     withTime({ allowed_time_ranges: [{ start: "09:00", end: "17:00" }] });
 
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
@@ -237,7 +267,7 @@ describe("validateRedemption — time restrictions", () => {
 
   test("allows a time inside one of the ranges", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 12, 30));
+    vi.setSystemTime(new Date("2026-01-15T12:30:00.000Z"));
     withTime({
       allowed_time_ranges: [
         { start: "09:00", end: "11:00" },
@@ -248,18 +278,21 @@ describe("validateRedemption — time restrictions", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  // NOTE: pins current behaviour. Days and time ranges are read off the SERVER's
-  // clock (`getDay()`, `toTimeString()`) while blackout dates are compared
-  // against the UTC date (`toISOString().split("T")[0]`). The same reward can
-  // therefore be simultaneously inside its allowed day and inside a blackout —
-  // and the whole restriction set shifts if the API moves region.
+  // Days and time ranges used to be read off the SERVER's clock — `getDay()` and
+  // `toTimeString()` — while blackout dates in the same function were compared
+  // against the UTC date. Near midnight the two halves actively disagreed: a
+  // reward could be inside its allowed local day and inside its UTC blackout at
+  // the same time, and the whole restriction set shifted if the API moved region.
+  // All three read UTC now. It is not the right timezone — that is the merchant's,
+  // and nothing in the codebase carries one — but it is a consistent one.
   // See issues.txt 20.2.
-  test("blackout dates are matched in UTC while days and hours are matched locally", async () => {
+  test("blackout dates are matched on the same UTC clock as days and hours", async () => {
     vi.useFakeTimers();
-    const now = new Date(2026, 0, 15, 23, 30);
-    vi.setSystemTime(now);
-    const utcDate = now.toISOString().split("T")[0];
-    withTime({ blackout_dates: [utcDate] });
+    // 23:30 UTC on the 15th. Under the old split this same instant was the 16th
+    // for the blackout check in any timezone east of UTC, and the 15th for the day
+    // and hour checks.
+    vi.setSystemTime(new Date("2026-01-15T23:30:00.000Z"));
+    withTime({ blackout_dates: ["2026-01-15"] });
 
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
       "Not available on this date",
@@ -268,7 +301,7 @@ describe("validateRedemption — time restrictions", () => {
 
   test("a date that is not blacked out passes", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 12));
+    vi.setSystemTime(new Date("2026-01-15T12:00:00.000Z"));
     withTime({ blackout_dates: ["2020-01-01"] });
 
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
@@ -276,7 +309,7 @@ describe("validateRedemption — time restrictions", () => {
 
   test("collects every time violation rather than stopping at the first", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 22, 30)); // Thursday, out of hours
+    vi.setSystemTime(new Date("2026-01-15T22:30:00.000Z")); // Thursday, out of hours
     withTime({
       valid_until: "2020-01-01T00:00:00.000Z",
       allowed_days: [DayOfWeek.MONDAY],
@@ -293,7 +326,7 @@ describe("validateRedemption — time restrictions", () => {
 
 describe("validateRedemption — quantity restrictions", () => {
   function withQuantity(restrictions: Record<string, unknown>) {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({ redemptionRules: { quantity_restrictions: restrictions } }),
     );
   }
@@ -343,15 +376,15 @@ describe("validateRedemption — quantity restrictions", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  test("the daily limit counts from local midnight", async () => {
+  test("the daily limit counts from UTC midnight", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 14, 30));
+    vi.setSystemTime(new Date("2026-01-15T14:30:00.000Z"));
     withQuantity({ max_redemptions_per_day: 1 });
 
     await validateRedemption(CUSTOMER, REWARD, {} as any);
 
     const since = db.loyaltyRedemption.count.mock.calls[0][0].where.createdAt.gte;
-    expect(since).toEqual(new Date(2026, 0, 15, 0, 0, 0, 0));
+    expect(since).toEqual(new Date("2026-01-15T00:00:00.000Z"));
   });
 
   test("refuses once the daily limit is reached", async () => {
@@ -363,35 +396,34 @@ describe("validateRedemption — quantity restrictions", () => {
     );
   });
 
-  // NOTE: the day limit is a calendar day (since local midnight) but the week and
-  // month limits are rolling windows measured back from *now*. Three limits on
-  // the same reward therefore use two different notions of a period, and neither
-  // week nor month ever resets on a boundary the customer can predict.
-  // See issues.txt 20.3.
-  test("the weekly limit is a rolling seven days, not a calendar week", async () => {
+  // The day limit counted from local midnight (a calendar day), the week limit
+  // counted back seven days from now (rolling), and the month limit used
+  // `setMonth(getMonth() - 1)` — rolling, and subject to JS's month-length
+  // roll-forward, so on the 31st of a month 31 March became 3 March and the
+  // "monthly" window silently became 28 days. Three limits on one reward therefore
+  // applied three different notions of a period, and neither the week nor the
+  // month ever reset on a boundary a customer could predict. All three are
+  // calendar windows in UTC now. See issues.txt 20.3.
+  test("the weekly limit is a calendar week, not a rolling seven days", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 0, 15, 14, 30));
+    vi.setSystemTime(new Date("2026-01-15T14:30:00.000Z")); // Thursday
     withQuantity({ max_redemptions_per_week: 1 });
 
     await validateRedemption(CUSTOMER, REWARD, {} as any);
 
     const since = db.loyaltyRedemption.count.mock.calls[0][0].where.createdAt.gte;
-    expect(since).toEqual(new Date(2026, 0, 8, 14, 30));
+    expect(since).toEqual(new Date("2026-01-11T00:00:00.000Z")); // the Sunday
   });
 
-  // NOTE: `setMonth(getMonth() - 1)` on a day that the previous month does not
-  // have rolls forward instead of clamping — 31 March becomes 3 March, so the
-  // "monthly" window is 28 days rather than 31. See issues.txt 20.3.
-  test("the monthly window collapses when today is the 31st", async () => {
+  test("the monthly window is a calendar month, on the 31st like any other day", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 2, 31, 12, 0));
+    vi.setSystemTime(new Date("2026-03-31T12:00:00.000Z"));
     withQuantity({ max_redemptions_per_month: 1 });
 
     await validateRedemption(CUSTOMER, REWARD, {} as any);
 
     const since = db.loyaltyRedemption.count.mock.calls[0][0].where.createdAt.gte;
-    expect(since.getMonth()).toBe(2); // March, not February
-    expect(since.getDate()).toBe(3);
+    expect(since).toEqual(new Date("2026-03-01T00:00:00.000Z"));
   });
 
   test("reports every quantity limit that is breached at once", async () => {
@@ -413,7 +445,7 @@ describe("validateRedemption — quantity restrictions", () => {
 
 describe("validateRedemption — cooldown", () => {
   function withCooldown(cooldown: Record<string, unknown>) {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({ redemptionRules: { cooldown: { enabled: true, ...cooldown } } }),
     );
   }
@@ -456,15 +488,24 @@ describe("validateRedemption — cooldown", () => {
     expect(db.loyaltyRedemption.findFirst.mock.calls[0][0].orderBy).toEqual({ createdAt: "desc" });
   });
 
-  // NOTE: pins current behaviour. `period_hours` is read with a non-null
-  // assertion; when the block is enabled without one, every comparison against
-  // undefined is false and the cooldown silently does not apply.
+  // `period_hours` used to be read with a non-null assertion over a value the
+  // rules JSON need not contain, and every comparison against undefined is false,
+  // so `hoursSince < undefined` never fired: the rule looked active in the admin
+  // UI and enforced nothing. A cooldown that cannot be evaluated is a
+  // configuration error, and the safe reading of one is to refuse.
   // See issues.txt 20.4.
-  test("a cooldown enabled without a period silently does nothing", async () => {
+  test("a cooldown enabled without a period is a configuration error, not a pass", async () => {
     withCooldown({});
-    db.loyaltyRedemption.findFirst.mockResolvedValue({ createdAt: new Date() });
 
-    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
+      "This reward's cooldown is not configured correctly",
+    );
+  });
+
+  test("a cooldown of zero hours is refused the same way", async () => {
+    withCooldown({ period_hours: 0 });
+
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(false);
   });
 });
 
@@ -474,7 +515,7 @@ describe("validateRedemption — cooldown", () => {
 
 describe("validateRedemption — spend requirements", () => {
   function withSpend(minimum: number) {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({
         redemptionRules: { spend_requirements: { enabled: true, minimum_spend: minimum } },
       }),
@@ -497,28 +538,33 @@ describe("validateRedemption — spend requirements", () => {
     ).toBe(true);
   });
 
-  // NOTE: pins current behaviour. The check is guarded by
-  // `rules.spend_requirements?.enabled && context.purchase_amount`, so a caller
-  // that simply omits the purchase amount — or sends 0 — skips the minimum-spend
-  // rule entirely rather than failing it. See issues.txt 20.5.
-  test("omitting the purchase amount skips the minimum-spend rule", async () => {
+  // The check used to be guarded by
+  // `rules.spend_requirements?.enabled && context.purchase_amount`, which let the
+  // CALLER decide whether the rule applied: omitting the amount, or sending 0,
+  // skipped it entirely rather than failing it. redeemReward builds its context as
+  // `{ locationId }` and never sets purchase_amount at all, so the minimum-spend
+  // rule was not enforced on any redemption made through the only path that
+  // exists. See issues.txt 20.5.
+  test("omitting the purchase amount fails the minimum-spend rule", async () => {
     withSpend(500);
 
-    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
+      "Minimum spend of 500 required",
+    );
   });
 
-  test("a zero purchase amount also skips it", async () => {
+  test("a zero purchase amount fails it too", async () => {
     withSpend(500);
 
     expect((await validateRedemption(CUSTOMER, REWARD, { purchase_amount: 0 } as any)).valid).toBe(
-      true,
+      false,
     );
   });
 });
 
 describe("validateRedemption — tier restrictions", () => {
   function withTiers(allowed: string[]) {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({ redemptionRules: { tier_restrictions: { enabled: true, allowed_tiers: allowed } } }),
     );
   }
@@ -537,16 +583,19 @@ describe("validateRedemption — tier restrictions", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  // NOTE: pins current behaviour. The guard is
-  // `allowed_tiers.length > 0 && customerTierId`, so a customer with NO tier
-  // falls straight through and is granted a tier-exclusive reward. New accounts
-  // are exactly this case — see issues.txt 20.11, where the entry-tier lookup
-  // leaves currentTierId null. See issues.txt 20.6.
-  test("a customer with no tier bypasses the tier restriction entirely", async () => {
+  // The guard used to end `&& customerTierId`, so a customer with NO tier fell
+  // straight through and was granted every tier-exclusive reward, including the
+  // top one. That was not an edge case: new accounts were created untiered
+  // whenever the entry-tier lookup missed, which it did for every single-tier
+  // program (issues.txt 20.11). A null tier is not in any list, so it does not
+  // match one. See issues.txt 20.6.
+  test("a customer with no tier does not satisfy a tier restriction", async () => {
     withTiers(["tier-platinum"]);
     db.customerLoyaltyAccount.findUnique.mockResolvedValue(customer({ currentTierId: null }));
 
-    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
+      "Your tier does not have access to this reward",
+    );
   });
 
   test("an empty allowed list restricts nobody", async () => {
@@ -558,7 +607,7 @@ describe("validateRedemption — tier restrictions", () => {
 
 describe("validateRedemption — stock", () => {
   test("refuses a reward that has sold out", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({
         stockQuantity: 10,
         stockRedeemed: 10,
@@ -572,7 +621,7 @@ describe("validateRedemption — stock", () => {
   });
 
   test("allows a reward with stock left", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({
         stockQuantity: 10,
         stockRedeemed: 9,
@@ -584,7 +633,7 @@ describe("validateRedemption — stock", () => {
   });
 
   test("an unlimited reward never runs out", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({
         stockQuantity: null,
         stockRedeemed: 999,
@@ -595,28 +644,35 @@ describe("validateRedemption — stock", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  // NOTE: pins current behaviour. The stock check runs only when the rules JSON
-  // opts in with `inventory.enabled`. A reward that carries a real stockQuantity
-  // but no inventory block oversells without limit — and the redemption service
-  // increments stockRedeemed for it regardless. See issues.txt 20.7.
-  test("a sold-out reward is allowed when the inventory block is not enabled", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(
+  // The stock check used to run only when the rules JSON opted in with
+  // `inventory.enabled`, while stockQuantity and stockRedeemed live on the reward
+  // row and are set from the reward form — so the two halves of one feature were
+  // gated by different switches. A reward carrying a real quantity but no
+  // inventory block oversold without limit, while the redemption service still
+  // incremented stockRedeemed past it and nothing acted on the number.
+  // See issues.txt 20.7.
+  test("a sold-out reward is refused whether or not an inventory block is present", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(
       reward({ stockQuantity: 10, stockRedeemed: 10, redemptionRules: {} }),
     );
 
-    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toContain(
+      "This reward is out of stock",
+    );
   });
 });
 
 describe("validateRedemption — the rules column itself", () => {
-  // NOTE: `redemptionRules` is nullable on LoyaltyReward and is read as
+  // `redemptionRules` is nullable on LoyaltyReward and used to be read as
   // `reward.redemptionRules as LoyaltyRedemptionRules` with no fallback, so the
-  // first `rules.time_restrictions` access throws. The redemption service guards
-  // the same column with `?.` — the two files disagree. See issues.txt 20.8.
-  test("throws for a reward whose rules column is null", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(reward({ redemptionRules: null }));
+  // first `rules.time_restrictions` access threw a TypeError — while the
+  // redemption service guarded the very same column with `?.`. Two files
+  // disagreeing about one nullable column is the kind of thing that changes
+  // behaviour on a data migration. See issues.txt 20.8.
+  test("a reward whose rules column is null simply has no rules", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(reward({ redemptionRules: null }));
 
-    await expect(validateRedemption(CUSTOMER, REWARD, {} as any)).rejects.toThrow(TypeError);
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 });
 
@@ -625,40 +681,47 @@ describe("validateRedemption — the rules column itself", () => {
 // ===========================================================================
 
 describe("generateRedemptionCode", () => {
-  test("is prefixed and upper-cased", () => {
-    expect(generateRedemptionCode()).toMatch(/^RU-[0-9A-Z]*$/);
+  // A redemption code is a bearer token for a discount. It used to be
+  // `"RU-" + Math.random().toString(36).substring(2, 8).toUpperCase()`:
+  // non-cryptographic, never compared against the table, and length-dependent on
+  // the value it happened to draw — `(0.5).toString(36)` is "0.i", so the code
+  // became "RU-I", and a draw of exactly 0 yielded a bare "RU-".
+  // See issues.txt 20.9.
+  test("is a fixed-length code from the unambiguous alphabet", async () => {
+    expect(await generateRedemptionCode()).toMatch(/^RU-[A-HJ-NP-Z2-9]{10}$/);
   });
 
-  // NOTE: pins current behaviour. A redemption code is a bearer token for a
-  // discount, but it is drawn from Math.random (not a CSPRNG) and never checked
-  // for uniqueness against the table — unlike the reward short code, which loops
-  // until it finds a free one. See issues.txt 20.9.
-  test("is drawn from Math.random with no uniqueness check", () => {
+  test("does not repeat itself, and does not depend on Math.random", async () => {
     const spy = vi.spyOn(Math, "random").mockReturnValue(0.123456789);
 
-    expect(generateRedemptionCode()).toBe(generateRedemptionCode());
-    expect(db.loyaltyRedemption.findFirst).not.toHaveBeenCalled();
+    const codes = new Set(await Promise.all(Array.from({ length: 50 }, generateRedemptionCode)));
+    expect(codes.size).toBe(50);
 
     spy.mockRestore();
   });
 
-  // NOTE: `Math.random().toString(36).substring(2, 8)` assumes the string always
-  // has eight characters. When the random value is short the code is shorter
-  // than the intended six — in the extreme, empty. See issues.txt 20.9.
-  test("produces a shorter code when the random value is short", () => {
-    const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+  test("checks each candidate against the table before handing it out", async () => {
+    await generateRedemptionCode();
 
-    // (0.5).toString(36) is "0.i" — substring(2, 8) is a single character.
-    expect(generateRedemptionCode()).toBe("RU-I");
-
-    spy.mockRestore();
+    expect(db.loyaltyRedemption.findUnique.mock.calls[0][0].where.redemptionCode).toMatch(/^RU-/);
   });
 
-  test("produces an empty suffix when the random value is exactly zero", () => {
-    const spy = vi.spyOn(Math, "random").mockReturnValue(0);
+  test("redraws when the code it picked is already taken", async () => {
+    db.loyaltyRedemption.findUnique
+      .mockResolvedValueOnce({ id: "taken" })
+      .mockResolvedValueOnce(null);
 
-    expect(generateRedemptionCode()).toBe("RU-");
+    const code = await generateRedemptionCode();
 
-    spy.mockRestore();
+    expect(db.loyaltyRedemption.findUnique).toHaveBeenCalledTimes(2);
+    expect(db.loyaltyRedemption.findUnique.mock.calls[1][0].where.redemptionCode).toBe(code);
+  });
+
+  test("gives up rather than looping forever", async () => {
+    db.loyaltyRedemption.findUnique.mockResolvedValue({ id: "taken" });
+
+    await expect(generateRedemptionCode()).rejects.toThrow(
+      "Could not generate a unique redemption code",
+    );
   });
 });

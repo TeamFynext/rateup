@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 // tiers, rewards and earning rules — share one prisma stub.
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    loyaltyProgram: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    loyaltyProgram: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
     loyaltyTier: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -28,7 +34,11 @@ vi.mock("../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     loyaltyRedemption: { count: vi.fn() },
+    loyaltyTransaction: { createMany: vi.fn() },
     customerLoyaltyAccount: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
+    // resetProgramPoints writes its reversing ledger rows and its wipe in one
+    // transaction now. See issues.txt 20.30.
+    $transaction: vi.fn(),
   },
 }));
 
@@ -69,7 +79,9 @@ const db = prisma as unknown as {
   loyaltyReward: Record<string, Mock>;
   loyaltyEarningRule: Record<string, Mock>;
   loyaltyRedemption: Record<string, Mock>;
+  loyaltyTransaction: Record<string, Mock>;
   customerLoyaltyAccount: Record<string, Mock>;
+  $transaction: Mock;
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
@@ -127,16 +139,19 @@ describe("getLoyaltyProgramByOrg", () => {
     });
   });
 
-  // NOTE: pins current behaviour. Rewards are written with the LoyaltyRewardStatus
-  // enum, whose active value is "ACTIVE" — getActiveLoyaltyRewards filters on
-  // exactly that. This include filters on lower-case "active", which no reward
-  // ever has, so `program.rewards` comes back empty for every org.
-  // See issues.txt 20.29.
-  test("includes rewards under a status value no reward is ever written with", async () => {
+  // Rewards are written with the LoyaltyRewardStatus enum, whose active value is
+  // "ACTIVE", and getActiveLoyaltyRewards filters on exactly that. This include
+  // used to filter on lower-case "active", which no reward ever has — so
+  // `program.rewards` came back EMPTY for every org, always, and every caller
+  // reading the relation saw nothing with no way to tell that from a program with
+  // no rewards. The earningRules include on the next line uses the lower-case
+  // value the earning-rule schema actually writes, so only one of the two was
+  // wrong, which is why it went unnoticed. See issues.txt 20.29.
+  test("includes rewards under the status value rewards are actually written with", async () => {
     await getLoyaltyProgramByOrg(ORG);
 
     expect(db.loyaltyProgram.findUnique.mock.calls[0][0].include.rewards.where).toEqual({
-      status: "active",
+      status: "ACTIVE",
     });
   });
 
@@ -151,7 +166,7 @@ describe("getLoyaltyProgramByOrg", () => {
 
 describe("updateLoyaltyProgram / deleteLoyaltyProgram", () => {
   test("an update is keyed on the program id", async () => {
-    await updateLoyaltyProgram(PROGRAM, { name: "New name" } as any);
+    await updateLoyaltyProgram(PROGRAM, { name: "New name" } as any, ORG);
 
     expect(db.loyaltyProgram.update.mock.calls[0][0]).toMatchObject({
       where: { id: PROGRAM },
@@ -162,15 +177,17 @@ describe("updateLoyaltyProgram / deleteLoyaltyProgram", () => {
   test("refuses to delete a program that still has customers", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(42);
 
-    await expect(deleteLoyaltyProgram(PROGRAM)).rejects.toThrow(
+    await expect(deleteLoyaltyProgram(PROGRAM, ORG)).rejects.toThrow(
       "Cannot delete program with existing customers. Archive it instead.",
     );
   });
 
   test("deletes an empty program", async () => {
-    await deleteLoyaltyProgram(PROGRAM);
+    await deleteLoyaltyProgram(PROGRAM, ORG);
 
-    expect(db.loyaltyProgram.delete).toHaveBeenCalledWith({ where: { id: PROGRAM } });
+    expect(db.loyaltyProgram.delete).toHaveBeenCalledWith({
+      where: { id: PROGRAM, orgId: ORG },
+    });
   });
 
   // NOTE: `force` overrides the guard entirely — a program with customers is
@@ -180,17 +197,25 @@ describe("updateLoyaltyProgram / deleteLoyaltyProgram", () => {
   test("force deletes a program together with all its customers", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(42);
 
-    await deleteLoyaltyProgram(PROGRAM, true);
+    await deleteLoyaltyProgram(PROGRAM, ORG, true);
 
-    expect(db.loyaltyProgram.delete).toHaveBeenCalledWith({ where: { id: PROGRAM } });
+    expect(db.loyaltyProgram.delete).toHaveBeenCalledWith({
+      where: { id: PROGRAM, orgId: ORG },
+    });
   });
 });
 
 describe("resetProgramPoints", () => {
+  beforeEach(() => {
+    db.loyaltyProgram.findFirst.mockResolvedValue({ id: PROGRAM });
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([]);
+    db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(db));
+  });
+
   test("zeroes every balance and sends everyone back to the entry tier", async () => {
     db.loyaltyTier.findFirst.mockResolvedValue({ id: "tier-entry" });
 
-    await resetProgramPoints(PROGRAM);
+    await resetProgramPoints(PROGRAM, ORG);
 
     expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalledWith({
       where: { programId: PROGRAM },
@@ -204,7 +229,7 @@ describe("resetProgramPoints", () => {
   });
 
   test("picks the entry tier by lowest threshold", async () => {
-    await resetProgramPoints(PROGRAM);
+    await resetProgramPoints(PROGRAM, ORG);
 
     expect(db.loyaltyTier.findFirst.mock.calls[0][0]).toEqual({
       where: { programId: PROGRAM },
@@ -212,21 +237,70 @@ describe("resetProgramPoints", () => {
     });
   });
 
-  // NOTE: this wipes every customer's balance and lifetime total in one
-  // statement, writes no LoyaltyTransaction rows to explain the change, and
-  // notifies nobody. The ledger and the balances disagree from that moment on.
-  // See issues.txt 20.30.
-  test("writes no ledger entry for the points it destroys", async () => {
-    await resetProgramPoints(PROGRAM);
+  // It used to wipe every customer's balance and lifetime total in one statement,
+  // write no LoyaltyTransaction rows to explain the change, record no actor and
+  // notify nobody — so the ledger and the balances disagreed from that moment on
+  // and replaying it could not account for the missing points at all. For a points
+  // programme with real liability attached, "reset everyone to zero" is exactly the
+  // operation that needs a trail. See issues.txt 20.30.
+  test("writes a reversing ledger entry for every balance it destroys", async () => {
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([
+      { id: "acct-1", currentPoints: 500 },
+      { id: "acct-2", currentPoints: 40 },
+    ]);
 
-    expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalledTimes(1);
-    expect(db.customerLoyaltyAccount.findMany).not.toHaveBeenCalled();
+    await resetProgramPoints(PROGRAM, ORG, "user-1");
+
+    expect(db.loyaltyTransaction.createMany.mock.calls[0][0].data).toEqual([
+      expect.objectContaining({ accountId: "acct-1", points: -500, balanceAfter: 0 }),
+      expect.objectContaining({ accountId: "acct-2", points: -40, balanceAfter: 0 }),
+    ]);
+  });
+
+  test("records who ran it on every row", async () => {
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1", currentPoints: 500 }]);
+
+    await resetProgramPoints(PROGRAM, ORG, "user-1");
+
+    expect(db.loyaltyTransaction.createMany.mock.calls[0][0].data[0].metadata).toEqual({
+      resetBy: "user-1",
+      pointsBefore: 500,
+    });
+  });
+
+  test("writes no ledger row for an account that already held nothing", async () => {
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1", currentPoints: 0 }]);
+
+    await resetProgramPoints(PROGRAM, ORG);
+
+    expect(db.loyaltyTransaction.createMany).not.toHaveBeenCalled();
+    expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalled();
+  });
+
+  // The reversal and the wipe are one transaction, so a partial reset cannot leave
+  // some balances zeroed and unexplained. See issues.txt 20.30.
+  test("reverses and wipes in a single transaction", async () => {
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1", currentPoints: 500 }]);
+
+    await resetProgramPoints(PROGRAM, ORG);
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  // It used to take the program id from the path with no org check at all.
+  test("refuses a program belonging to another org", async () => {
+    db.loyaltyProgram.findFirst.mockResolvedValue(null);
+
+    await expect(resetProgramPoints("prog-other", ORG)).rejects.toThrow(
+      "Loyalty program not found",
+    );
+    expect(db.customerLoyaltyAccount.updateMany).not.toHaveBeenCalled();
   });
 
   test("leaves customers untiered when the program has no tiers", async () => {
     db.loyaltyTier.findFirst.mockResolvedValue(null);
 
-    await resetProgramPoints(PROGRAM);
+    await resetProgramPoints(PROGRAM, ORG);
 
     expect(db.customerLoyaltyAccount.updateMany.mock.calls[0][0].data.currentTierId).toBeNull();
   });
@@ -467,13 +541,14 @@ describe("earning rules", () => {
     ]);
   });
 
-  // NOTE: pins current behaviour. This helper sorts ASCENDING by priority, while
-  // the engine that actually prices purchases sorts DESCENDING and takes the
-  // first match. Anything built on this list sees the rules in the opposite
-  // order to the one that decides the points. See issues.txt 20.31.
-  test("the active list orders by priority ascending, opposite to the engine", async () => {
+  // This helper used to sort ASCENDING by priority while the engine that actually
+  // prices purchases sorts DESCENDING and takes the first match — so anything
+  // built on this list (a preview, an admin list, a future simulator) saw the
+  // rules in the opposite order to the one that decides the points, and the rule
+  // shown first was the one that would apply last. See issues.txt 20.31.
+  test("the active list orders by priority the same way the engine does", async () => {
     await getActiveLoyaltyEarningRules(PROGRAM);
 
-    expect(db.loyaltyEarningRule.findMany.mock.calls[0][0].orderBy).toEqual({ priority: "asc" });
+    expect(db.loyaltyEarningRule.findMany.mock.calls[0][0].orderBy).toEqual({ priority: "desc" });
   });
 });

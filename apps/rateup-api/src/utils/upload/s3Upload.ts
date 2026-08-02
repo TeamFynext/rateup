@@ -18,39 +18,33 @@ export const s3 =
       })
     : new S3Client({ region: process.env.AWS_S3_REGION });
 
+/**
+ * Both helpers used to be written not to throw — uploadFile caught, logged and
+ * RESOLVED to undefined; deleteFile caught and resolved WITH the error object — so
+ * every caller's own try/catch was dead code and a failure was reported to the
+ * client as a success. A failed upload answered 200 with `fileUrl: undefined`, and
+ * that key was then saved into a survey or a message as a broken reference.
+ * Both propagate now. See issues.txt 24.3.
+ */
 export async function uploadFile(params: PutObjectCommandInput) {
-  try {
-    const parallelUploads3 = new Upload({
-      client: s3,
-      params: params,
+  const parallelUploads3 = new Upload({
+    client: s3,
+    params: params,
 
-      tags: [
-        /*...*/
-      ], // optional tags
-      queueSize: 4, // optional concurrency configuration
-      partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
-      leavePartsOnError: false, // optional manually handle dropped parts
-    });
+    tags: [
+      /*...*/
+    ], // optional tags
+    queueSize: 4, // optional concurrency configuration
+    partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
+    leavePartsOnError: false, // optional manually handle dropped parts
+  });
 
-    parallelUploads3.on("httpUploadProgress", (progress) => {
-      console.log(progress);
-    });
-
-    const dataObj = await parallelUploads3.done();
-    return dataObj;
-  } catch (e) {
-    console.log(e);
-  }
+  return await parallelUploads3.done();
 }
 
 export async function deleteFile(params: DeleteObjectsCommandInput) {
   const command = new DeleteObjectsCommand(params);
-  try {
-    const response = await s3.send(command);
-    return response;
-  } catch (err) {
-    return err;
-  }
+  return await s3.send(command);
 }
 
 export const getAWSObject = async (key: string) => {

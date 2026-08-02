@@ -28,12 +28,20 @@ import {
   updateRateUpPlanSchema,
   updateRateUpPlanInput,
   UpdatePlanInput,
+  orderIdParamsSchema,
+  updateOrderStatusSchema,
+  type OrderIdParamsInput,
+  type UpdateOrderStatusInput,
 } from "./payment.schema.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
-  server.post("/sync-plans", syncPaymentPlansHandler);
+  // The only administrative route in this file without assertRootOrg, next to
+  // eight that have it. syncPaymentPlans reconciles the platform's plan catalogue
+  // with Razorpay — a platform-wide operation with no per-org meaning, hitting
+  // Razorpay's API on every call. See issues.txt 40.5.
+  server.post("/sync-plans", { preHandler: [assertRootOrg] }, syncPaymentPlansHandler);
 
   server.get(
     "/plans",
@@ -129,5 +137,18 @@ export async function paymentRoutes(server: FastifyInstance) {
     deletePaymentPlanHandler,
   );
 
-  server.put("/order/:orderId", updateSubscriptionOrderHandler);
+  // Was `server.put("/order/:orderId", handler)` — two arguments, so no role
+  // check and no body schema, on the route that decides what an organisation is
+  // entitled to. See issues.txt 40.1.
+  server.put<{ Params: OrderIdParamsInput; Body: UpdateOrderStatusInput }>(
+    "/order/:orderId",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: orderIdParamsSchema,
+        body: updateOrderStatusSchema,
+      },
+    },
+    updateSubscriptionOrderHandler,
+  );
 }

@@ -14,18 +14,31 @@ const getGenerateQrRecordWithShortIdParams = z.object({
   shortUrlId: z.string(),
 });
 
+// link is the address a scanner's browser is sent to, and it was a bare
+// z.string() on both writers — so the API accepted `javascript:alert(1)`,
+// `data:text/html,...` and the empty string, and served them from an
+// unauthenticated endpoint to whoever scanned the code. See issues.txt 44.1.
+const targetLink = z
+  .url()
+  .max(2048)
+  .refine((value) => value.startsWith("http://") || value.startsWith("https://"), {
+    error: "link must be an http or https URL",
+  });
+
 const createGenerateQrRecordReqBody = z.object({
-  name: z.string(),
-  link: z.string(),
+  name: z.string().min(1).max(200),
+  link: targetLink,
 });
 
 const getAllGenerateQrRecordsResponse = z.array(generateQrBaseSchema);
 
 const updateGenerateQrRecordReqBody = z.object({
   shortUrlId: z.string(),
-  name: z.string().optional(),
+  name: z.string().min(1).max(200).optional(),
   shareSettings: z.any().optional(),
-  link: z.string().optional(),
+  // Repointing a printed code is the point of a dynamic QR; accepting an
+  // unparseable value for it is not. See issues.txt 44.1.
+  link: targetLink.optional(),
 });
 
 type CreateGenerateQrRecordReqBody = z.infer<typeof createGenerateQrRecordReqBody>;

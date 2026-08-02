@@ -176,6 +176,11 @@ export enum WaTemplateStatus {
   REJECTED = "REJECTED",
   DRAFT = "DRAFT",
   PENDING_DELETION = "PENDING_DELETION",
+  // Set by syncTemplates on a template Meta no longer has. Marked rather than
+  // deleted, because campaigns can point at the row. See issues.txt 14.6.
+  // Stored inside WaTemplate.data (a Json column), not a Prisma enum — no
+  // migration.
+  DELETED = "DELETED",
 }
 export enum WaFlowStatus {
   PUBLISHED = "PUBLISHED",
@@ -477,8 +482,11 @@ export enum FacebookEvent {
   MESSAGE = "MESSAGE",
   MESSAGE_DELIVERED = "MESSAGE_DELIVERED",
   MESSAGE_READ = "MESSAGE_READ",
+  MESSAGE_REACTION = "MESSAGE_REACTION",
   POSTBACK = "POSTBACK",
   QUICK_REPLY = "QUICK_REPLY",
+  // Declared but never returned by getFacebookWebhookEvent — opt-ins are not currently
+  // subscribed to on the Meta app. Add a branch there if that changes.
   OPT_IN = "OPT_IN",
 }
 

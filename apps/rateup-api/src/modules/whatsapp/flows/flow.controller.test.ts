@@ -14,7 +14,7 @@ vi.mock("./flow.service.js", () => ({
   getFlowPreview: vi.fn(),
   getFlowsFromDb: vi.fn(),
   getFlowsFromWa: vi.fn(),
-  getFlowWithSurveyTeamMapIds: vi.fn(),
+  getFlowWithSurveyTeamMapIdsWithDbFlowId: vi.fn(),
   getUnsyncedFlows: vi.fn(),
   publishFlowInWa: vi.fn(),
   sendFlow: vi.fn(),
@@ -58,7 +58,7 @@ import {
   getFlowJsonFromWa,
   getFlowsFromDb,
   getFlowsFromWa,
-  getFlowWithSurveyTeamMapIds,
+  getFlowWithSurveyTeamMapIdsWithDbFlowId,
   publishFlowInWa,
   sendFlow,
   syncLocalFlowToWhatsapp,
@@ -112,7 +112,7 @@ const m = {
   getFlowJsonFromWa: getFlowJsonFromWa as unknown as Mock,
   getFlowsFromDb: getFlowsFromDb as unknown as Mock,
   getFlowsFromWa: getFlowsFromWa as unknown as Mock,
-  getFlowWithSurveyTeamMapIds: getFlowWithSurveyTeamMapIds as unknown as Mock,
+  getFlowWithSurveyTeamMapIds: getFlowWithSurveyTeamMapIdsWithDbFlowId as unknown as Mock,
   getGraphApiErrorMessage: getGraphApiErrorMessage as unknown as Mock,
   getSession: getSession as unknown as Mock,
   getWaSettings: getWaSettings as unknown as Mock,
@@ -127,7 +127,6 @@ const m = {
 };
 
 const ORG_A = "org-a";
-const ORG_B = "org-b";
 const DB_FLOW_ID = "dbflow-1";
 
 /** A stored flow row of the shape the handlers read. */
@@ -224,15 +223,17 @@ describe("getFlowsHandler", () => {
     expect(rep.send).toHaveBeenCalledWith([{ dbFlowId: DB_FLOW_ID }]);
   });
 
-  // NOTE: pins current behaviour. Neither branch matches, so the handler resolves
-  // without ever touching the reply. Unreachable through the route today because
-  // the querystring schema is an enum defaulting to "wa". See issues.txt 11.13.
-  test("answers nothing at all for a source it does not recognise", async () => {
+  // Neither branch used to match, so the handler resolved without touching the
+  // reply and fastify sent a bare 200 the client could not tell from a real
+  // answer. Unreachable through the route today (the querystring schema is an
+  // enum defaulting to "wa"), but no longer silent. See issues.txt 11.13.
+  test("refuses a source it does not recognise", async () => {
     const rep = reply();
 
     await getFlowsHandler(request({ query: { source: "somewhere-else" } }), rep);
 
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(rep.send.mock.calls[0][0].message).toContain("somewhere-else");
   });
 });
 
@@ -245,17 +246,24 @@ describe("getFlowHandler", () => {
     expect(rep.send).toHaveBeenCalledWith(flowRow());
   });
 
-  // NOTE: pins current behaviour. getFlowFromDb takes no org and the handler never
-  // compares the result's orgId to req.user.orgId, so any authenticated user can
-  // read any flow — including its full json, map and logic jumps — given its id.
-  // See issues.txt 11.1.
-  test("returns a flow belonging to another org", async () => {
-    m.getFlowFromDb.mockResolvedValue(flowRow({ orgId: ORG_B }));
+  // getFlowFromDb used to take no org and the handler never compared the result's
+  // orgId to req.user.orgId, so any authenticated user could read any flow —
+  // full json, map and logic jumps — given its id. See issues.txt 11.1.
+  test("looks the flow up scoped to the caller's org", async () => {
+    await getFlowHandler(request({ params: { waFlowId: DB_FLOW_ID } }), reply());
+
+    expect(m.getFlowFromDb).toHaveBeenCalledWith(DB_FLOW_ID, ORG_A);
+  });
+
+  // 404 rather than 403: a flow owned by another org is indistinguishable from
+  // one that never existed, so this cannot be used to probe for flow ids.
+  test("answers 404 for a flow belonging to another org", async () => {
+    m.getFlowFromDb.mockResolvedValue(null);
     const rep = reply();
 
     await getFlowHandler(request({ params: { waFlowId: DB_FLOW_ID } }), rep);
 
-    expect(rep.send.mock.calls[0][0].orgId).toBe(ORG_B);
+    expect(rep.status).toHaveBeenCalledWith(404);
   });
 });
 
@@ -327,35 +335,41 @@ describe("updateFlowHandler", () => {
     expect(m.updateFlowMetaDataInWa).toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The org is handed to updateFlowInDb, which
-  // ignores it (see flow.service.test.ts), and nothing here checks that the flow
-  // being edited belongs to req.user.orgId. See issues.txt 11.1.
-  test("edits a flow belonging to another org", async () => {
-    m.getFlowFromDb.mockResolvedValue(flowRow({ orgId: ORG_B }));
+  // The org was handed to updateFlowInDb, which ignored it, and nothing here
+  // checked that the flow being edited belonged to req.user.orgId.
+  // See issues.txt 11.1.
+  test("refuses to edit a flow belonging to another org", async () => {
+    m.getFlowFromDb.mockResolvedValue(null);
     const rep = reply();
 
     await updateFlowHandler(request({ body: { name: "Renamed by a stranger" } }), rep);
 
-    expect(m.updateFlowInDb).toHaveBeenCalled();
-    expect(rep.status).toHaveBeenCalledWith(201);
+    expect(m.getFlowFromDb).toHaveBeenCalledWith(DB_FLOW_ID, ORG_A);
+    expect(m.updateFlowInDb).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: pins current behaviour. The handler has no try/catch at all, unlike its
-  // neighbours in the same file, so a service failure escapes to Fastify's default
-  // error handler instead of becoming a controlled reply. Same family as
-  // issues.txt 3.5. See issues.txt 11.4.
-  test("lets a save failure propagate", async () => {
+  // The handler had no try/catch at all, unlike its neighbours in the same file,
+  // so a service failure escaped to fastify's default error handler instead of
+  // becoming a controlled reply. Same family as issues.txt 3.5.
+  // See issues.txt 11.4.
+  test("answers 500 with the reason when the save fails", async () => {
     m.updateFlowInDb.mockRejectedValue(new Error("db down"));
+    const rep = reply();
 
-    await expect(updateFlowHandler(request({ body: {} }), reply())).rejects.toThrow("db down");
+    await updateFlowHandler(request({ body: {} }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(500);
+    expect(rep.send.mock.calls[0][0]).toEqual({ message: "db down" });
   });
 
-  test("throws a descriptive error rather than a raw TypeError for a flow that does not exist", async () => {
+  test("answers 404 for a flow that does not exist", async () => {
     m.getFlowFromDb.mockResolvedValue(null);
+    const rep = reply();
 
-    await expect(updateFlowHandler(request({ body: {} }), reply())).rejects.toThrow(
-      "Flow not found",
-    );
+    await updateFlowHandler(request({ body: {} }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(404);
   });
 });
 
@@ -391,30 +405,38 @@ describe("updateFlowMetaDataHandler", () => {
     expect(rep.status).toHaveBeenCalledWith(204);
   });
 
-  // NOTE: pins current behaviour. Our copy is written first, so when Meta refuses,
-  // the local row already carries the new name while WhatsApp still has the old
-  // one — and the 500 gives the caller no way to tell which half took.
-  // See issues.txt 11.14.
-  test("has already renamed our copy when Meta refuses the rename", async () => {
+  // Our copy used to be written first, so a Meta refusal left the local row
+  // carrying the new name while WhatsApp still had the old one, with nothing to
+  // tell the caller which half took. Meta goes first now. See issues.txt 11.14.
+  test("leaves our copy alone when Meta refuses the rename", async () => {
     m.callMetaApi.mockResolvedValue({ data: { success: false } });
     const rep = reply();
 
     await updateFlowMetaDataHandler(request({ body: { name: "Renamed" } }), rep);
 
-    expect(m.updateFlowInDb).toHaveBeenCalled();
+    expect(m.updateFlowInDb).not.toHaveBeenCalled();
     expect(rep.status).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour. `res.status(500).send(error)` hands Fastify an
-  // Error, whose own properties are non-enumerable, so the client receives {}.
-  // See issues.txt 11.14.
-  test("sends the failure as a body that carries no information", async () => {
+  // `res.status(500).send(error)` handed fastify an Error, whose own properties
+  // are non-enumerable, so the client received {}. See issues.txt 11.14.
+  test("sends the reason for the failure, not an empty body", async () => {
     m.callMetaApi.mockResolvedValue({ data: { success: false } });
     const rep = reply();
 
     await updateFlowMetaDataHandler(request({ body: {} }), rep);
 
-    expect(JSON.stringify(rep.send.mock.calls[0][0])).toBe("{}");
+    expect(rep.send.mock.calls[0][0]).toEqual({ message: "Flow Not updated in whatsapp" });
+  });
+
+  test("answers 404 for a flow belonging to another org", async () => {
+    m.getFlowFromDb.mockResolvedValue(null);
+    const rep = reply();
+
+    await updateFlowMetaDataHandler(request({ body: { name: "Renamed" } }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.callMetaApi).not.toHaveBeenCalled();
   });
 });
 
@@ -439,16 +461,30 @@ describe("cloneFlowHandler", () => {
     expect(rep.send).toHaveBeenCalledWith({ message: "Survey not found to duplicate" });
   });
 
-  // NOTE: pins current behaviour. The Meta clone happens before anything checks
-  // that the local survey can be duplicated, so the 400 path leaves a flow behind
-  // in the org's WhatsApp account with nothing pointing at it. Same shape as
+  // The Meta clone happens before anything checks that the local survey can be
+  // duplicated, so the 400 path used to leave a flow behind in the org's WhatsApp
+  // account with nothing pointing at it. It is now rolled back. Same shape as
   // issues.txt 9.6. See issues.txt 11.14.
-  test("has already created the Meta clone when the local clone is refused", async () => {
+  test("removes the Meta clone again when the local clone is refused", async () => {
     m.cloneFlow.mockResolvedValue("Survey not found to duplicate");
 
     await cloneFlowHandler(request({ body: { teamId: "team-1" } }), reply());
 
     expect(m.cloneFlowInWa).toHaveBeenCalled();
+    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-2");
+  });
+
+  // The rollback is best-effort: the caller is already being told why the clone
+  // failed, and an orphan is better than replacing that with a cleanup error.
+  test("still reports the original refusal when the rollback itself fails", async () => {
+    m.cloneFlow.mockResolvedValue("Survey not found to duplicate");
+    m.deleteFlowInWa.mockRejectedValue(new Error("graph is down"));
+    const rep = reply();
+
+    await cloneFlowHandler(request({ body: { teamId: "team-1" } }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(rep.send).toHaveBeenCalledWith({ message: "Survey not found to duplicate" });
   });
 });
 
@@ -469,7 +505,7 @@ describe("deleteFlowHandler", () => {
 
     await deleteFlowHandler(request(), reply());
 
-    expect(m.deleteFlowInDb).toHaveBeenCalledWith(DB_FLOW_ID);
+    expect(m.deleteFlowInDb).toHaveBeenCalledWith(DB_FLOW_ID, ORG_A);
   });
 
   test("still deletes locally when Meta refuses to delete its copy", async () => {
@@ -490,28 +526,34 @@ describe("deleteFlowHandler", () => {
     expect(m.deleteFlowInWa).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The refusal is a bare `throw` outside any
-  // try/catch, so the caller gets Fastify's default 500 rather than a 409 or 400
-  // carrying the explanation. Same family as issues.txt 3.5. See issues.txt 11.4.
-  test("throws rather than refusing politely for a published flow", async () => {
+  // The refusal used to be a bare `throw` outside any try/catch, so the caller
+  // got fastify's default 500 rather than a status carrying the explanation.
+  // Same family as issues.txt 3.5. See issues.txt 11.4.
+  test("refuses a published flow with a 409 and the reason", async () => {
     m.getFlowFromDb.mockResolvedValue(flowRow({ status: WaFlowStatus.PUBLISHED }));
-
-    await expect(deleteFlowHandler(request(), reply())).rejects.toThrow(
-      "Cannot delete a published flow. Deprecate it instead.",
-    );
-  });
-
-  // NOTE: pins current behaviour. Nothing compares flow.orgId to req.user.orgId,
-  // so a draft flow belonging to another org is deleted on request — along with
-  // its survey and every response attached to it. See issues.txt 11.1.
-  test("deletes a flow belonging to another org", async () => {
-    m.getFlowFromDb.mockResolvedValue(flowRow({ orgId: ORG_B }));
     const rep = reply();
 
     await deleteFlowHandler(request(), rep);
 
-    expect(m.deleteSurveyById).toHaveBeenCalledWith("survey-1");
-    expect(rep.status).toHaveBeenCalledWith(204);
+    expect(rep.status).toHaveBeenCalledWith(409);
+    expect(rep.send.mock.calls[0][0].message).toBe(
+      "Cannot delete a published flow. Deprecate it instead.",
+    );
+    expect(m.deleteSurveyById).not.toHaveBeenCalled();
+  });
+
+  // Nothing used to compare flow.orgId to req.user.orgId, so a draft flow
+  // belonging to another org was deleted on request — along with its survey and
+  // every response ever collected through it. See issues.txt 11.1.
+  test("answers 404 for a flow belonging to another org, deleting nothing", async () => {
+    m.getFlowFromDb.mockResolvedValue(null);
+    const rep = reply();
+
+    await deleteFlowHandler(request(), rep);
+
+    expect(m.getFlowFromDb).toHaveBeenCalledWith(DB_FLOW_ID, ORG_A);
+    expect(m.deleteSurveyById).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(404);
   });
 });
 
@@ -525,8 +567,14 @@ describe("deprecateFlowHandler", () => {
     expect(m.deleteSurveyById).toHaveBeenCalledWith("survey-1");
   });
 
-  test("throws rather than refusing politely for a draft flow", async () => {
-    await expect(deprecateFlowHandler(request(), reply())).rejects.toThrow(
+  // See the note in deleteFlowHandler. issues.txt 11.4.
+  test("refuses a draft flow with a 409 and the reason", async () => {
+    const rep = reply();
+
+    await deprecateFlowHandler(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(409);
+    expect(rep.send.mock.calls[0][0].message).toBe(
       "Cannot deprecate a draft flow. Delete it instead.",
     );
   });
@@ -540,18 +588,16 @@ describe("deprecateFlowHandler", () => {
     expect(m.deleteSurveyById).toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The handler never touches the reply, so Fastify
-  // falls back to sending an empty 200 rather than the 204 its sibling
-  // deleteFlowHandler sends for the same kind of work. See issues.txt 11.13.
-  test("sends no status of its own", async () => {
+  // The handler never touched the reply, so fastify fell back to an empty 200
+  // rather than the 204 its sibling deleteFlowHandler sends for the same kind of
+  // work. See issues.txt 11.13.
+  test("answers 204, as deleteFlowHandler does", async () => {
     m.getFlowFromDb.mockResolvedValue(flowRow({ status: WaFlowStatus.PUBLISHED }));
     const rep = reply();
 
     await deprecateFlowHandler(request(), rep);
 
-    expect(rep.status).not.toHaveBeenCalled();
-    expect(rep.code).not.toHaveBeenCalled();
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(204);
   });
 });
 
@@ -572,23 +618,25 @@ describe("publishFlowHandler", () => {
     expect(m.updateFlowInDb).not.toHaveBeenCalled();
   });
 
-  // NOTE: same as deprecateFlowHandler above. See issues.txt 11.13.
-  test("sends no status of its own", async () => {
+  // Same as deprecateFlowHandler above. See issues.txt 11.13.
+  test("answers 204", async () => {
     const rep = reply();
 
     await publishFlowHandler(request(), rep);
 
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(204);
   });
 
-  // NOTE: pins current behaviour. Another org's flow is published on request, and
-  // updateFlowInDb then flips its survey to isPublished. See issues.txt 11.1.
-  test("publishes a flow belonging to another org", async () => {
-    m.getFlowFromDb.mockResolvedValue(flowRow({ orgId: ORG_B }));
+  // Another org's flow used to be published on request, and updateFlowInDb then
+  // flipped its survey to isPublished. See issues.txt 11.1.
+  test("answers 404 for a flow belonging to another org, publishing nothing", async () => {
+    m.getFlowFromDb.mockResolvedValue(null);
+    const rep = reply();
 
-    await publishFlowHandler(request(), reply());
+    await publishFlowHandler(request(), rep);
 
-    expect(m.publishFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1");
+    expect(m.publishFlowInWa).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(404);
   });
 });
 
@@ -652,53 +700,53 @@ describe("sendFlowHandler", () => {
     expect(rep.status).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour. sendFlow catches its own failures and returns
-  // false (see flow.service.ts:446-449); the handler discards that boolean and
-  // answers 201 regardless. The user is told the flow went out when it did not.
-  // Same family as issues.txt 3.1. See issues.txt 11.4.
-  test("answers 201 even when the flow was never sent", async () => {
+  // sendFlow catches its own failures and reports false; the handler used to
+  // discard that boolean and answer 201 regardless, telling the user the flow
+  // went out when WhatsApp had rejected it. Same family as issues.txt 3.1.
+  // See issues.txt 11.4.
+  test("reports a failure rather than 201 when the flow was never sent", async () => {
     m.sendFlow.mockResolvedValue(false);
     const rep = reply();
 
     await sendFlowHandler(sendRequest(), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(201);
-    expect(rep.status).not.toHaveBeenCalledWith(500);
+    expect(rep.status).toHaveBeenCalledWith(502);
+    expect(rep.status).not.toHaveBeenCalledWith(201);
   });
 
-  // NOTE: pins current behaviour. The session is set up from body.flowId (the Meta
-  // flow id) while the flow actually sent comes from params.dbFlowId. Nothing
-  // checks the two name the same flow, so a mismatched pair opens a session against
-  // one survey and sends a different flow. See issues.txt 11.15.
-  test("takes the session's flow and the sent flow from two different identifiers", async () => {
+  // The session used to be set up from body.flowId (the Meta flow id) while the
+  // flow actually sent came from params.dbFlowId, with nothing checking the two
+  // named the same flow — a mismatched pair opened a session against one survey
+  // and sent a different flow, landing the answers on the wrong survey.
+  // See issues.txt 11.15.
+  test("takes the session and the sent flow from the same identifier", async () => {
     await sendFlowHandler(sendRequest({ flowId: "wa-flow-for-a-different-survey" }), reply());
 
-    expect(m.getFlowWithSurveyTeamMapIds).toHaveBeenCalledWith(
-      ORG_A,
-      "wa-flow-for-a-different-survey",
-    );
+    expect(m.getFlowWithSurveyTeamMapIds).toHaveBeenCalledWith(DB_FLOW_ID, ORG_A);
     expect(m.sendFlow.mock.calls[0][0].dbFlowId).toBe(DB_FLOW_ID);
   });
 
-  // NOTE: pins current behaviour. updateMonthlyStat is called without await, so a
-  // failure counting the message becomes an unhandled promise rejection instead of
-  // a failed request. Same family as issues.txt 3.9. See issues.txt 11.15.
-  test("counts the message without waiting for the count to be recorded", async () => {
-    // A stat call that never settles on its own. If the handler awaited it, this
-    // test would hang rather than reach its assertions.
-    let releaseStat: () => void;
-    m.updateMonthlyStat.mockReturnValue(
-      new Promise<void>((resolve) => {
-        releaseStat = resolve;
-      }),
-    );
+  test("answers 404 for a flow belonging to another org", async () => {
+    m.getFlowWithSurveyTeamMapIds.mockResolvedValue(null);
     const rep = reply();
 
     await sendFlowHandler(sendRequest(), rep);
 
-    expect(m.updateMonthlyStat).toHaveBeenCalled();
-    expect(rep.status).toHaveBeenCalledWith(201);
-    releaseStat!();
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.sendFlow).not.toHaveBeenCalled();
+  });
+
+  // updateMonthlyStat was called without await, so a failure counting the message
+  // became an unhandled promise rejection instead of a failed request. Same
+  // family as issues.txt 3.9. See issues.txt 11.15.
+  test("waits for the message to be counted", async () => {
+    m.updateMonthlyStat.mockRejectedValue(new Error("stats store is down"));
+    const rep = reply();
+
+    await sendFlowHandler(sendRequest(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(500);
+    expect(m.sendFlow).not.toHaveBeenCalled();
   });
 });
 
@@ -740,30 +788,37 @@ describe("createFlowHandler", () => {
     expect(rep.send).toHaveBeenCalledWith("Flow name already taken");
   });
 
-  // NOTE: pins current behaviour. Any non-Graph failure is flattened to the string
-  // "Creating flow Error" and answered as a 400, so a database outage is reported
-  // to the user as a bad request with nothing to act on. See issues.txt 11.14.
-  test("reports a database failure as a bad request with a generic message", async () => {
+  // Any non-Graph failure used to be flattened to the string "Creating flow
+  // Error" and answered as a 400, so a database outage reached the user as a bad
+  // request with nothing to act on. See issues.txt 11.14.
+  test("reports a database failure as our own, with the reason", async () => {
     m.createFlowCopyInDb.mockRejectedValue(new Error("connection terminated"));
     const rep = reply();
 
     await createFlowHandler(request({ body }), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(400);
-    expect(rep.send).toHaveBeenCalledWith("Creating flow Error");
+    expect(rep.status).toHaveBeenCalledWith(500);
+    expect(rep.send).toHaveBeenCalledWith("connection terminated");
   });
 
-  // NOTE: pins current behaviour. The Meta flow is created first and nothing rolls
-  // it back, so every failure after that point leaves a flow in the org's WhatsApp
-  // account that nothing in our database points at. Same shape as issues.txt 9.6.
-  // See issues.txt 11.14.
-  test("leaves the Meta flow behind when the local half fails", async () => {
+  // The Meta flow is created first, so every failure after that point used to
+  // leave a flow in the org's WhatsApp account that nothing in our database
+  // pointed at. Same shape as issues.txt 9.6. See issues.txt 11.14.
+  test("removes the Meta flow again when the local half fails", async () => {
     m.createSurvey.mockRejectedValue(new Error("survey limit reached"));
 
     await createFlowHandler(request({ body }), reply());
 
-    expect(m.createFlowInWa).toHaveBeenCalled();
     expect(m.createFlowCopyInDb).not.toHaveBeenCalled();
+    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1");
+  });
+
+  test("has nothing to roll back when Meta refuses to create the flow", async () => {
+    m.createFlowInWa.mockRejectedValue(new GraphApiError("boom" as any));
+
+    await createFlowHandler(request({ body }), reply());
+
+    expect(m.deleteFlowInWa).not.toHaveBeenCalled();
   });
 });
 
@@ -777,6 +832,17 @@ describe("importFlowsHandler", () => {
 
     expect(m.getFlowFromWa).toHaveBeenCalledTimes(2);
     expect(m.createFlowCopyInDb).toHaveBeenCalledTimes(2);
+  });
+
+  // Used to leave the reply untouched, so fastify sent a bare 200.
+  // See issues.txt 11.13.
+  test("answers 201 once the flows are imported", async () => {
+    m.getFlowJsonFromWa.mockResolvedValue({ screens: [] });
+    const rep = reply();
+
+    await importFlowsHandler(request({ body }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(201);
   });
 
   // NOTE: pins current behaviour, and the source already says so — "TODO: convert

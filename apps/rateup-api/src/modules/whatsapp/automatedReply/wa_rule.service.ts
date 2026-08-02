@@ -283,10 +283,10 @@ export async function createRule(data: CreateRuleInput & { orgId: string }) {
   });
 }
 
-// Get all Rules (optionally by orgId)
-export async function getAllRules(orgId?: string) {
+// Get all Rules for an org. orgId is required so the filter can never be dropped.
+export async function getAllRules(orgId: string) {
   return prisma.rule.findMany({
-    where: orgId ? { orgId } : undefined,
+    where: { orgId },
     include: {
       groups: {
         include: { conditions: true },
@@ -296,10 +296,11 @@ export async function getAllRules(orgId?: string) {
   });
 }
 
-// Get Rule by ID
-export async function getRuleById(id: string) {
-  return prisma.rule.findUnique({
-    where: { id },
+// Get Rule by ID, scoped to the caller's org so another org's rule is
+// indistinguishable from one that never existed.
+export async function getRuleById(id: string, orgId: string) {
+  return prisma.rule.findFirst({
+    where: { id, orgId },
     include: {
       groups: {
         include: { conditions: true },

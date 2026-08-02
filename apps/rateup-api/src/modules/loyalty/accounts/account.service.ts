@@ -15,6 +15,23 @@ import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 
+/**
+ * Resolves a referral code within a program, ignoring case.
+ *
+ * The lookup used to be an exact, case-sensitive match on a code the customer
+ * types in by hand — and trackReferral minted codes that were not upper-cased
+ * while signup minted codes that were, so a customer entering their own code in
+ * caps was simply not found and the referrer earned nothing. See issues.txt 20.40.
+ */
+export async function findAccountByReferralCode(programId: string, referralCode: string) {
+  return await prisma.customerLoyaltyAccount.findFirst({
+    where: {
+      programId,
+      referralCode: { equals: referralCode, mode: "insensitive" },
+    },
+  });
+}
+
 export async function createCustomerAccount(
   data: CustomerLoyaltyAccountInput,
   programId: string,
@@ -97,10 +114,21 @@ export async function createCustomerAccount(
   const program = await prisma.loyaltyProgram.findUnique({
     where: { id: programId },
   });
+  // The entry tier is the one with the LOWEST threshold — the tier a customer
+  // holding nothing is already in — which is how resetProgramPoints picks it too.
+  //
+  // It used to be `where: { programId, priority: 1 }`, and createLoyaltyTier
+  // numbers a program's first tier 0. So a single-tier program never matched, and
+  // every new account was created with `currentTierId: null`, which then opened
+  // the tier bypass in issues.txt 20.6. A program with two or more tiers enrolled
+  // new customers into the SECOND tier created rather than the first.
+  // See issues.txt 20.11.
   const tier = await prisma.loyaltyTier.findFirst({
     where: {
       programId: programId,
-      priority: 1,
+    },
+    orderBy: {
+      threshold: "asc",
     },
     select: {
       id: true,
@@ -125,19 +153,22 @@ export async function createCustomerAccount(
   let referrerAccount: { id: string; currentPoints: number } | null = null;
 
   if (data.referCode) {
-    const referredBy = await prisma.customerLoyaltyAccount.findUnique({
-      where: {
-        referralCode: data.referCode,
-        programId,
-      },
-    });
+    const referredBy = await findAccountByReferralCode(programId, data.referCode);
     if (referredBy) {
       referredById = referredBy.id;
       referrerAccount = referredBy;
 
-      // Award referral bonus to referrer (points path)
+      // Award referral bonus to referrer (points path).
+      //
+      // balanceAfter comes from the UPDATE's returned row. It used to be computed
+      // as `referredBy.currentPoints + referralBonus` from the row read moments
+      // earlier, so any other write landing on that account in between — another
+      // referral, a purchase, a redemption — left the ledger recording a balance
+      // the account never held. balanceAfter is the column you replay to check a
+      // balance is right; derived from a stale read it cannot do that job.
+      // See issues.txt 20.15.
       if (referralBonusType === "points" && referralBonus > 0) {
-        await prisma.customerLoyaltyAccount.update({
+        const updatedReferrer = await prisma.customerLoyaltyAccount.update({
           where: { id: referredBy.id },
           data: {
             currentPoints: { increment: referralBonus },
@@ -151,7 +182,7 @@ export async function createCustomerAccount(
             transactionType: "earn",
             source: "referral",
             points: referralBonus,
-            balanceAfter: referredBy.currentPoints + referralBonus,
+            balanceAfter: updatedReferrer.currentPoints,
             metadata: { refereeContactId: contactId },
           },
         });
@@ -160,14 +191,26 @@ export async function createCustomerAccount(
     }
   }
 
-  // Create account (referee bonus points are included in initial balance)
+  // The signup bonus is credited HERE, in the opening balance, alongside the
+  // referee bonus.
+  //
+  // It used to be left out of both currentPoints and lifetimePoints while the
+  // block below still wrote a LoyaltyTransaction for it, dispatched a
+  // POINTS_ISSUED notification for the same amount, and sent a "you are now
+  // registered" message — so every customer signing up under a program with a
+  // signup bonus was TOLD they had received it, saw it in their transaction
+  // history, and had a balance of zero. The ledger and the balance disagreed from
+  // the very first row, and support had nothing to reconcile against. The referee
+  // bonus was credited correctly, which is what made this an omission rather than
+  // a design. See issues.txt 20.14.
+  const openingPoints = refereeBonusPoints + signupBonus;
   const account = await prisma.customerLoyaltyAccount.create({
     data: {
       programId,
       contactId: contactId,
       referralCode,
-      currentPoints: refereeBonusPoints,
-      lifetimePoints: refereeBonusPoints,
+      currentPoints: openingPoints,
+      lifetimePoints: openingPoints,
       referredById,
       currentTierId,
     },
@@ -198,7 +241,7 @@ export async function createCustomerAccount(
           transactionType: "earn",
           source: "referral",
           points: refereeBonusPoints,
-          balanceAfter: signupBonus + refereeBonusPoints,
+          balanceAfter: openingPoints,
           metadata: { referrerAccountId: referredById },
         },
       });
@@ -214,7 +257,9 @@ export async function createCustomerAccount(
         transactionType: "earn",
         source: "signup_bonus",
         points: signupBonus,
-        balanceAfter: signupBonus,
+        // The account's balance after this row, not the bonus in isolation — a
+        // referee who also gets a signup bonus holds both.
+        balanceAfter: openingPoints,
       },
     });
     if (account && sourceIdentifier) {
@@ -243,7 +288,7 @@ You are now registered in our Loyalty Program.
       customerPhone: phone,
       customerName: contact?.name || "Customer",
       points: signupBonus,
-      balanceAfter: signupBonus,
+      balanceAfter: openingPoints,
       reason: "Signup Bonus",
       referralCode, // passing just in case
     });
@@ -319,9 +364,20 @@ export async function getCustomerAccountsForExport(programId: string) {
   });
 }
 
-export async function getCustomerAccountById(customerId: string) {
-  return await prisma.customerLoyaltyAccount.findUnique({
-    where: { id: customerId },
+/**
+ * A customer account, within the caller's program.
+ *
+ * The program used to be absent entirely: this took the path id and handed it
+ * straight to prisma, and getCustomerAccountByIdHandler never resolved the
+ * caller's program either. An account id was therefore enough for a user of any
+ * org to read another org's customer — points, tier, transaction history,
+ * redemptions and referrals, all of which this function includes. Every other read
+ * in the module resolves the program from the session first, which is what made
+ * this one stand out. See issues.txt 20.18.
+ */
+export async function getCustomerAccountById(customerId: string, programId: string) {
+  return await prisma.customerLoyaltyAccount.findFirst({
+    where: { id: customerId, programId },
     include: {
       currentTier: true,
       transactions: {
@@ -414,12 +470,21 @@ export async function getCustomerAccountByPhone(
   });
 }
 
+/**
+ * Updates a customer account, within the caller's program.
+ *
+ * Same gap as getCustomerAccountById, with a write on the end of it: an account id
+ * was enough to suspend or close another org's customer. The program is part of
+ * the where clause, so prisma raises P2025 rather than updating a row the caller
+ * cannot see. See issues.txt 20.18.
+ */
 export async function updateCustomerAccount(
   customerId: string,
   data: CustomerLoyaltyAccountUpdateInput,
+  programId: string,
 ) {
   return await prisma.customerLoyaltyAccount.update({
-    where: { id: customerId },
+    where: { id: customerId, programId },
     data,
   });
 }
@@ -462,61 +527,80 @@ export async function awardPoints(
     throw new Error("Customer account not found. Create account first.");
   }
 
-  // Calculate points using earning rules engine
-  const { points, rule: appliedRule } = await calculatePointsForPurchase(
-    programId,
-    customer.id,
-    purchaseAmount,
-    {
-      purchase_amount: purchaseAmount,
-      location_id: context.locationId,
-      categories: context.productCategories,
-      product_skus: context.productSkus,
-      payment_method: context.paymentMethod,
-      channel:
-        context.channel === "online" ||
-        context.channel === "in_store" ||
-        context.channel === "mobile_app"
-          ? context.channel
-          : undefined,
-      orderId: context.orderId,
-      notes: context.notes,
-    },
-  );
-
-  // Update customer points and total spend
-  const updatedCustomer = await prisma.customerLoyaltyAccount.update({
-    where: { id: customer.id },
-    data: {
-      currentPoints: {
-        increment: points,
-      },
-      lifetimePoints: {
-        increment: points,
-      },
-      totalSpend: {
-        increment: purchaseAmount,
-      },
-    },
-  });
-
-  // Create transaction
-  const transaction = await prisma.loyaltyTransaction.create({
-    data: {
-      accountId: customer.id,
+  // Pricing the purchase, moving the balance, writing the ledger row and counting
+  // the rule's use are ONE transaction.
+  //
+  // They used to be four independent writes with nothing around them, and the
+  // engine's usage counter was incremented before any of the others. A failure
+  // between the balance write and the ledger write left points credited with no
+  // entry explaining them, which is precisely the state that makes a loyalty
+  // ledger unauditable — and a failure after the counter left a promotion's
+  // remaining uses spent on a purchase that never earned anything.
+  // The approvals sub-module has always done this correctly; it is the model
+  // copied here. See issues.txt 20.17.
+  const { points, updatedCustomer, transaction } = await prisma.$transaction(async (tx) => {
+    const calculated = await calculatePointsForPurchase(
       programId,
-      transactionType: "earn",
-      source: "purchase",
-      points,
-      balanceAfter: updatedCustomer.currentPoints,
-      metadata: {
-        purchaseAmount,
+      customer.id,
+      purchaseAmount,
+      {
+        purchase_amount: purchaseAmount,
+        location_id: context.locationId,
+        categories: context.productCategories,
+        product_skus: context.productSkus,
+        payment_method: context.paymentMethod,
+        channel:
+          context.channel === "online" ||
+          context.channel === "in_store" ||
+          context.channel === "mobile_app"
+            ? context.channel
+            : undefined,
         orderId: context.orderId,
-        appliedRuleId: appliedRule?.id,
-        appliedRuleName: appliedRule?.name,
-        ...context,
+        notes: context.notes,
       },
-    },
+      tx,
+    );
+
+    // Update customer points and total spend
+    const account = await tx.customerLoyaltyAccount.update({
+      where: { id: customer.id },
+      data: {
+        currentPoints: {
+          increment: calculated.points,
+        },
+        lifetimePoints: {
+          increment: calculated.points,
+        },
+        totalSpend: {
+          increment: purchaseAmount,
+        },
+      },
+    });
+
+    // Create transaction
+    const ledgerRow = await tx.loyaltyTransaction.create({
+      data: {
+        accountId: customer.id,
+        programId,
+        transactionType: "earn",
+        source: "purchase",
+        points: calculated.points,
+        balanceAfter: account.currentPoints,
+        metadata: {
+          purchaseAmount,
+          orderId: context.orderId,
+          appliedRuleId: calculated.rule?.id,
+          appliedRuleName: calculated.rule?.name,
+          ...context,
+        },
+      },
+    });
+
+    return {
+      points: calculated.points,
+      updatedCustomer: account,
+      transaction: ledgerRow,
+    };
   });
 
   // Check for tier upgrade
@@ -588,9 +672,12 @@ export async function assignRewardToCustomer(
     throw new Error("Customer account not found");
   }
 
-  // Check if reward exists
-  const reward = await prisma.loyaltyReward.findUnique({
-    where: { id: rewardId },
+  // The reward is looked up WITHIN the customer's program. Both used to be fetched
+  // independently by id and their programs never compared, so a reward id and an
+  // account id from different programs were enough to assign a reward across the
+  // tenant boundary. See issues.txt 20.18.
+  const reward = await prisma.loyaltyReward.findFirst({
+    where: { id: rewardId, programId: customer.programId },
   });
 
   if (!reward) {
@@ -652,7 +739,16 @@ export async function assignRewardToCustomer(
   return assignment;
 }
 
-export async function getRewardByShortCode(shortCode: string, orgId?: string) {
+/**
+ * Resolves a reward assignment by its short code, within an org.
+ *
+ * `orgId` is REQUIRED. It used to be optional, guarded with `if (orgId && …)`, so
+ * any caller that simply omitted it skipped the ownership check altogether. The
+ * two short-code handlers did pass the session org, so it was never exploited
+ * through HTTP — it was a loaded footgun for the next caller, and the next caller
+ * is the one who would not know to look. See issues.txt 20.18.
+ */
+export async function getRewardByShortCode(shortCode: string, orgId: string) {
   const reward = await prisma.customerReward.findUnique({
     where: { shortCode },
     include: {
@@ -670,26 +766,35 @@ export async function getRewardByShortCode(shortCode: string, orgId?: string) {
     throw new Error("Reward not found");
   }
 
-  if (orgId && reward.account.program.orgId !== orgId) {
+  if (reward.account.program.orgId !== orgId) {
     throw new Error("Reward not found");
   }
 
   return reward;
 }
 
-export async function markRewardAsRedeemed(shortCode: string, orgId?: string) {
+export async function markRewardAsRedeemed(shortCode: string, orgId: string) {
   const reward = await getRewardByShortCode(shortCode, orgId);
 
   if (reward.status === "REDEEMED") {
     throw new Error("Reward is already redeemed");
   }
 
-  const updated = await prisma.customerReward.update({
-    where: { id: reward.id },
-    data: {
-      status: "REDEEMED",
-    },
-  });
-
-  return updated;
+  // `status: { not: "REDEEMED" }` is part of the write's own condition, not only
+  // of the read above it. Two cashiers scanning the same short code at the same
+  // moment both used to pass the check and both mark it redeemed, so a reward
+  // could be handed over twice. See issues.txt 20.17.
+  try {
+    return await prisma.customerReward.update({
+      where: { id: reward.id, status: { not: "REDEEMED" } },
+      data: {
+        status: "REDEEMED",
+      },
+    });
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2025") {
+      throw new Error("Reward is already redeemed");
+    }
+    throw error;
+  }
 }

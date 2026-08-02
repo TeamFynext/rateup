@@ -14,12 +14,26 @@ import {
   returnAppropriateTimeStamp,
 } from "./wamessage.utils.js";
 
-// wamessage.utils.ts calls dayjs().utc() but never extends the plugin itself; in the
-// running app some other module happens to have done it first. Do it here so the unit
-// under test behaves the way it does in production.
-dayjs.extend(utc);
-
+// No dayjs.extend here on purpose: wamessage.utils.ts registers utc itself now. This
+// file used to have to do it, which hid the fact that the module threw
+// "utc is not a function" when loaded on its own.
 type Mock = ReturnType<typeof vi.fn>;
+
+// dayjs is a singleton and this module imports others that also extend it, so a passing
+// timestamp test does not prove the module registers the plugin itself. Assert the
+// registration directly, so removing it fails here rather than in production the first
+// time a leaner entrypoint (a worker, a script) loads this module alone.
+describe("dayjs plugin registration", () => {
+  test("registers the utc plugin itself rather than relying on another module", async () => {
+    const source = await import("node:fs/promises").then((fs) =>
+      fs.readFile("src/modules/whatsapp/inbox/message/wamessage.utils.ts", "utf8"),
+    );
+
+    expect(source).toContain(".utc()");
+    expect(source).toContain('import utc from "dayjs/plugin/utc.js"');
+    expect(source).toContain("dayjs.extend(utc)");
+  });
+});
 
 const downloadAndUploadMock = downloadAndUpload as unknown as Mock;
 
@@ -117,21 +131,24 @@ describe("returnAppropriateTimeStamp", () => {
   });
 });
 
-// NOTE: this is meant to be the WhatsApp 24-hour session window, but dayjs normalises
-// the "D" unit to "date", which its diff() does not handle, so the comparison falls
-// through to raw MILLISECONDS. Every timestamp more than 1ms old counts as expired.
-// The unit should be "day" (or "d"). Pinned as-is; the function is currently unused.
+// The WhatsApp 24-hour session window. The unit is "day": "D" normalises to "date",
+// which dayjs's diff() has no case for, so the comparison used to fall through to raw
+// milliseconds and anything older than 1ms read as expired.
 describe("isSessionExpired", () => {
   test("reports a conversation from over a day ago as expired", () => {
     expect(isSessionExpired(dayjs().subtract(25, "hour").toDate())).toBe(true);
   });
 
-  test("also reports a conversation from well inside the window as expired", () => {
-    expect(isSessionExpired(dayjs().subtract(23, "hour").toDate())).toBe(true);
+  test("reports a conversation from well inside the window as still open", () => {
+    expect(isSessionExpired(dayjs().subtract(23, "hour").toDate())).toBe(false);
   });
 
-  test("reports a conversation from milliseconds ago as expired", () => {
-    expect(isSessionExpired(new Date(Date.now() - 5))).toBe(true);
+  test("reports a conversation from milliseconds ago as still open", () => {
+    expect(isSessionExpired(new Date(Date.now() - 5))).toBe(false);
+  });
+
+  test("treats exactly 24 hours as expired", () => {
+    expect(isSessionExpired(dayjs().subtract(24, "hour").toDate())).toBe(true);
   });
 
   test("reports a future timestamp as not expired", () => {

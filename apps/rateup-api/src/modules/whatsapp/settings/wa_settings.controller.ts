@@ -55,6 +55,23 @@ function asJson<T>(value: T[]): Prisma.InputJsonValue[] {
   return JSON.parse(JSON.stringify(value));
 }
 
+/**
+ * Loads a channel and confirms it belongs to the caller's org, answering 404 when
+ * it does not. Returns null once the reply has been sent, so callers do
+ * `if (!settings) return;`.
+ *
+ * The equivalent of resolveInstagramSettings in instagram_profile.controller.ts.
+ * See issues.txt 13.1.
+ */
+async function requireOwnedChannel(whatsappSettingsId: string, orgId: string, reply: FastifyReply) {
+  const settings = await getWaSettingsById(whatsappSettingsId, orgId);
+  if (!settings) {
+    reply.code(404).send({ message: "WhatsApp settings not found" });
+    return null;
+  }
+  return settings;
+}
+
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
   res: FastifyReply,
@@ -76,6 +93,22 @@ export async function createWaSettingsHandler(
   return res.status(200).send(waSettings);
 }
 
+/**
+ * The channels the caller can reach, with every secret removed.
+ *
+ * This used to strip `encryption` and nothing else, so the response carried the
+ * PLAINTEXT WhatsApp Business system token and the plaintext Facebook page token
+ * for every channel — to the browser of every agent, since the route has only
+ * checkSession. That system token sends messages as the org, reads its entire
+ * message history and manages its templates and phone numbers.
+ * See issues.txt 13.2.
+ *
+ * FRONTEND CHECKED (rateup-ui): nothing reads `accessToken` off this response —
+ * the manual-configuration form only ever collects a new one. `pageAccessToken`
+ * WAS read back and resent on upsert, which is why upsertWaSettings and
+ * updateWaSettingsByIdHandler now fall back to the stored token when the client
+ * sends none for an unchanged page.
+ */
 export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId, userId, role } = req.user;
   const waSettings = await getAccessibleWaSettings(orgId, userId!, role);
@@ -83,9 +116,15 @@ export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyRepl
     return res.status(200).send([]);
   }
   const response = waSettings?.map((data) => {
-    // The flow key pair is redacted before the settings leave the API.
-    const encryption: undefined = undefined;
-    return { ...data, encryption };
+    const {
+      // The flow key pair, the WhatsApp system token and the Facebook page token
+      // are all redacted before the settings leave the API.
+      encryption: _encryption,
+      accessToken: _accessToken,
+      pageAccessToken: _pageAccessToken,
+      ...safe
+    } = data;
+    return { ...safe, encryption: undefined };
   });
   return res.status(200).send(response);
 }
@@ -144,9 +183,11 @@ export async function subscribePageToApp(
   pageAccessToken: string,
   fields: string[],
 ) {
+  // Token as the accessToken argument, not in the URL. See issues.txt 13.3.
   await callMetaApi(
-    `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`,
+    `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}`,
     "POST",
+    pageAccessToken,
   );
 }
 
@@ -158,31 +199,55 @@ export async function updateWaSettingsByIdHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
+    // SUPER_ADMIN, matching create / update / upsert / delete. This path writes the
+    // same row and more — it can repoint a channel's Facebook page — and checked no
+    // role at all, so any authenticated user of the org could rewrite a channel.
+    // See issues.txt 13.2.
+    const org = await getOrgIdAndRole({ id: request.userId });
+    if (!org || org.role !== Role.SUPER_ADMIN) {
+      return reply.status(403).send({
+        statusCode: 403,
+        message: "You are not authorized to perform this action",
+      });
+    }
     const { whatsappSettingsId } = request.params;
-    const settings = await getWaSettingsById(whatsappSettingsId);
-    // Same shape as the null check everywhere else — this just gives the "channel
-    // doesn't exist" case a message instead of a bare property-access crash, both of
-    // which land on the catch block below and answer 500 either way.
+    const settings = await getWaSettingsById(whatsappSettingsId, orgId);
+    // 404, not the 500 this used to fall through to: a channel belonging to
+    // another org is indistinguishable from one that never existed.
+    // See issues.txt 13.1 and 13.7.
     if (!settings) {
-      throw new Error("WhatsApp settings not found");
+      return reply.code(404).send({ message: "WhatsApp settings not found" });
     }
     if (request.body.fbPageId?.length && settings.fbPageId !== request.body.fbPageId) {
-      if (!request.body.pageAccessToken) {
-        throw new Error("pageAccessToken is required to connect a Facebook page");
+      // Falls back to the stored token: the dashboard no longer receives
+      // pageAccessToken in the channel list (13.2), so it cannot send one back for
+      // a page it did not just pick.
+      const pageAccessToken = request.body.pageAccessToken ?? settings.pageAccessToken;
+      if (!pageAccessToken) {
+        return reply
+          .code(400)
+          .send({ message: "pageAccessToken is required to connect a Facebook page" });
       }
-      await subscribePageToApp(request.body.fbPageId, request.body.pageAccessToken, [
+      request.body.pageAccessToken = pageAccessToken;
+      await subscribePageToApp(request.body.fbPageId, pageAccessToken, [
         "messages",
         "message_reads",
         "message_reactions",
       ]);
-      const igData = await callMetaApi(
-        `/${request.body.ibaId}?fields=username&access_token=${settings.accessToken}`,
-        "GET",
-      );
-      request.body.igUserName = igData.data.username;
+      // Tokens as the accessToken argument, not in the URL. See issues.txt 13.3.
+      if (request.body.ibaId) {
+        const igData = await callMetaApi(
+          `/${request.body.ibaId}?fields=username`,
+          "GET",
+          settings.accessToken,
+        );
+        request.body.igUserName = igData.data.username;
+      }
       const fbData = await callMetaApi(
-        `/${request.body.fbPageId}?fields=name&access_token=${settings.accessToken}`,
+        `/${request.body.fbPageId}?fields=name`,
         "GET",
+        settings.accessToken,
       );
       request.body.fbUserName = fbData.data.name;
     }
@@ -194,7 +259,7 @@ export async function updateWaSettingsByIdHandler(
       request.body.igDisplayName = null;
       request.body.fbUserName = null;
     }
-    await updateWaSettingsById(whatsappSettingsId, request.body);
+    await updateWaSettingsById(whatsappSettingsId, orgId, request.body);
     reply.code(200).send();
   } catch (e) {
     log.error({ err: e }, "Error while updating WhatsApp settings by id");
@@ -226,7 +291,6 @@ export async function getContactTagHandler(request: FastifyRequest, reply: Fasti
     const data = await getContactTag(orgId);
     reply.code(200).send(data ?? { contactTags: [] });
   } catch (error) {
-    console.log("🚀 ~ getContactTagHandler ~ error:", error);
     log.error({ err: error }, "Error while getting contact tags");
     reply.code(500).send({ message: "Something went wrong" });
   }
@@ -269,8 +333,12 @@ export async function syncFbPagesHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { whatsappSettingsId } = request.params;
-    const pages = await getFbPagesFromWa(whatsappSettingsId);
+    // Scoped: these ran against the VICTIM org's access token, reading its pages,
+    // ad accounts, ads, lead forms and pixels and spending its rate limit.
+    // See issues.txt 13.1.
+    const pages = await getFbPagesFromWa(whatsappSettingsId, orgId);
     if (!pages || !pages?.length) return reply.code(404).send("No fb pages found");
     const data = pages.map((page) => {
       const subscribedFields: string[] = [];
@@ -292,11 +360,23 @@ export async function syncLeadgenFormsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { fbPageId, pageAccessToken } = request.body;
+    const { orgId } = request.user;
+    const { whatsappSettingsId } = request.params;
+    const { fbPageId } = request.body;
+    const settings = await requireOwnedChannel(whatsappSettingsId, orgId, reply);
+    if (!settings) return;
+
+    // The page token comes from the stored channel, not from the request body.
+    // It used to be taken from the body, which is how it round-tripped through
+    // the browser in the first place. See issues.txt 13.2.
+    const pageAccessToken = settings.pageAccessToken ?? request.body.pageAccessToken;
+    if (!pageAccessToken) {
+      return reply.code(400).send({ message: "This channel has no Facebook page connected" });
+    }
 
     const forms = await getLeadgenFormsFromWa(fbPageId, pageAccessToken);
     const data = forms.map((form) => ({ ...form, pageId: fbPageId }));
-    await syncMetaAssetstoDb("leadgenForms", asJson(data), request.params.whatsappSettingsId);
+    await syncMetaAssetstoDb("leadgenForms", asJson(data), whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
     log.error({ err: error }, "Error while getting leadgen forms");
@@ -313,11 +393,25 @@ export async function syncLeadgenFormQuestionsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { formId } = request.params;
     const { whatsappSettingsId } = request.query;
-    const { fbPageId, pageAccessToken } = request.body;
+    const { fbPageId } = request.body;
+    const settings = await requireOwnedChannel(whatsappSettingsId, orgId, reply);
+    if (!settings) return;
+
+    const pageAccessToken = settings.pageAccessToken ?? request.body.pageAccessToken;
+    if (!pageAccessToken) {
+      return reply.code(400).send({ message: "This channel has no Facebook page connected" });
+    }
+
     const data = await getLeadgenFormQuestionsFromWa(fbPageId, formId, pageAccessToken);
-    const assets = await getMetaAssets(whatsappSettingsId);
+    const assets = await getMetaAssets(whatsappSettingsId, orgId);
+    // A channel that has never been synced has no assets at all — that used to be
+    // a 500 rather than a message. See issues.txt 13.10.
+    if (!assets?.leadgenForms) {
+      return reply.code(409).send({ message: "Sync this channel's lead forms first" });
+    }
     const newLeadgenForms = assets.leadgenForms.map((form) => {
       if (form.id === formId) {
         form["questions"] = data;
@@ -337,8 +431,9 @@ export async function syncAdAccountsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { whatsappSettingsId } = request.params;
-    const data = await getAdAccountsFromWa(whatsappSettingsId);
+    const data = await getAdAccountsFromWa(whatsappSettingsId, orgId);
     await syncMetaAssetstoDb("adAccounts", asJson(data), whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
@@ -355,10 +450,15 @@ export async function syncAdsByAdAccountHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { whatsappSettingsId } = request.query;
     const { adAccountId } = request.params;
-    const data = await getAdsFromWa(whatsappSettingsId, adAccountId);
-    const assets = await getMetaAssets(whatsappSettingsId);
+    const data = await getAdsFromWa(whatsappSettingsId, adAccountId, orgId);
+    const assets = await getMetaAssets(whatsappSettingsId, orgId);
+    // See issues.txt 13.10.
+    if (!assets?.adAccounts) {
+      return reply.code(409).send({ message: "Sync this channel's ad accounts first" });
+    }
     const newAdaccounts = assets.adAccounts.map((acc) => {
       if (acc.id === adAccountId) {
         acc["ads"] = data;
@@ -381,14 +481,27 @@ export async function subscribeFieldstoPageHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { fields, fbPageId, pageAccessToken } = request.body;
+    const { orgId } = request.user;
+    const { fields, fbPageId } = request.body;
     const { whatsappSettingsId } = request.params;
     if (!fields || fields.length === 0) {
-      throw new Error("fields is required to subscribe a page");
+      return reply.code(400).send({ message: "fields is required to subscribe a page" });
     }
+    const settings = await requireOwnedChannel(whatsappSettingsId, orgId, reply);
+    if (!settings) return;
+
+    const pageAccessToken = settings.pageAccessToken ?? request.body.pageAccessToken;
+    if (!pageAccessToken) {
+      return reply.code(400).send({ message: "This channel has no Facebook page connected" });
+    }
+
     const data = await subscribeFieldtoPage(fbPageId, pageAccessToken, fields);
     if (data.success) {
-      const assets = await getMetaAssets(whatsappSettingsId);
+      const assets = await getMetaAssets(whatsappSettingsId, orgId);
+      // See issues.txt 13.10.
+      if (!assets?.pages) {
+        return reply.code(409).send({ message: "Sync this channel's pages first" });
+      }
 
       const newPages = [...assets.pages];
       const index = newPages.findIndex((i) => i.id === fbPageId);
@@ -416,8 +529,16 @@ export async function getMetaAssetsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { whatsappSettingsId } = request.params;
-    const data = await getMetaAssets(whatsappSettingsId);
+    // This is the endpoint that leaked credentials: the stored blob holds
+    // pages[].access_token, and it was returned verbatim for any channel id.
+    // getMetaAssets is org-scoped now and reports null for a channel the caller
+    // does not own. See issues.txt 13.1.
+    const data = await getMetaAssets(whatsappSettingsId, orgId);
+    if (!data) {
+      return reply.code(404).send({ message: "WhatsApp settings not found" });
+    }
     reply.code(200).send(data);
   } catch (error) {
     log.error({ err: error }, "Error while getting meta assets");
@@ -511,8 +632,9 @@ export async function getMetaDatasetsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { whatsappSettingsId } = request.params;
-    const data = await getMetaDatasetsFromWa(whatsappSettingsId);
+    const data = await getMetaDatasetsFromWa(whatsappSettingsId, orgId);
     reply.code(200).send(data);
   } catch (error) {
     log.error({ err: error }, "Error while getting meta datasets");

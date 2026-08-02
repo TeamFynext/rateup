@@ -2,10 +2,8 @@ import { Survey, WaFlow } from "../../../../generated/prisma/client.js";
 import { WaSendMessageBody } from "../../../types/whatsapp.types.js";
 import {
   LDResponse,
-  LogicCondition,
   QuestionType as qt,
   SmileyResponse,
-  SubscriptionFeaturePathName,
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
@@ -20,8 +18,8 @@ import { log } from "../../../utils/logger.js";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { FastifyReply, FastifyRequest } from "fastify";
+import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
 import prisma from "../../../utils/prisma.js";
-import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 
 interface generateFlowMessageDataProps {
   to: string;
@@ -47,7 +45,10 @@ export function generateFlowMessageData({
 
   let message: Partial<WaSendMessageBody["interactive"]> = {};
 
-  let { body, header, cta, footer, headerImage } = dbFlow.templateMessage;
+  // Defaulted before destructuring: the comment below says rows predating
+  // templateMessage exist, but such a row raised a TypeError here before it
+  // could ever reach those defaults. See issues.txt 11.8.
+  let { body, header, cta, footer, headerImage } = dbFlow.templateMessage ?? {};
 
   // setting defaults for old waFlow
   if (!body) {
@@ -285,8 +286,12 @@ export function parseFlowResponse({
       return choices.map((c) => ({ value: c.title }));
     }
     default:
+      // Reports "no answer" rather than handing back Meta's raw payload, which
+      // the caller then stored verbatim as the survey answer. The caller skips
+      // an unresolved answer instead of recording one it cannot read.
+      // See issues.txt 11.11.
       log.error(`Unhandled question type ${qType}`);
-      return response;
+      return undefined;
   }
 }
 export function parseFlowResponseV2(
@@ -800,9 +805,12 @@ export function generateDataSourceFromQuestion(q: Question) {
  * These ids must be removed before sending the flowJson to whatsapp
  */
 export function injectIdToFlowJson(json: WaFlowJson) {
+  // Works on a copy: this returns a json and so reads as though it built a new
+  // one. See issues.txt 11.10.
+  const copy: WaFlowJson = JSON.parse(JSON.stringify(json));
   const ids = [];
   for (const element of waFlowFormElementIterator({
-    flowJson: json,
+    flowJson: copy,
     includeFooter: true,
     onlyInteractive: false,
   })) {
@@ -813,15 +821,19 @@ export function injectIdToFlowJson(json: WaFlowJson) {
       ids.push(element.id);
     }
   }
-  return json;
+  return copy;
 }
 
 /**
  * Removes auto-generated (by us for internal use) ids from flowJson
  */
 export function removeIdFromFlowJson(json: WaFlowJson) {
+  // Works on a copy. updateFlowJsonInWa calls this on the json it was handed;
+  // stripping in place took the ids off whatever the caller still held.
+  // See issues.txt 11.10.
+  const copy: WaFlowJson = JSON.parse(JSON.stringify(json));
   for (const element of waFlowFormElementIterator({
-    flowJson: json,
+    flowJson: copy,
     includeFooter: true,
     onlyInteractive: false,
   })) {
@@ -829,7 +841,7 @@ export function removeIdFromFlowJson(json: WaFlowJson) {
       delete element.id;
     }
   }
-  return json;
+  return copy;
 }
 
 export function getFlowFormElementNameFromQuestionId(qId: string, map: unknown) {
@@ -839,27 +851,13 @@ export function getFlowFormElementNameFromQuestionId(qId: string, map: unknown) 
   }
 }
 
-export function validateFlowLogic(
-  userResponse: string | number,
-  condition: LogicCondition,
-  response: string,
-): boolean {
-  try {
-    switch (condition) {
-      case LogicCondition.Equals:
-        return userResponse === response;
-      case LogicCondition.NotEquals:
-        return userResponse !== response;
-      case LogicCondition.IncludesAnyOf:
-
-      default:
-        return false;
-    }
-  } catch (error) {
-    log.info(`Failed to validate logic: ${error}`);
-    return false;
-  }
-}
+// validateFlowLogic used to live here. It answered false for four of the six
+// LogicConditions (IncludesAnyOf fell through to `default`, and IncludesNoneOf,
+// IncludesAllOf and Submitted had no case at all) while reading like a working
+// logic evaluator, and nothing called it. Deleted rather than completed: the
+// flow paths use validateLogic / validateLogicV2 in question.utils.ts, which
+// handle all six, and a third copy would only have to be kept in step with
+// those two. See issues.txt 11.6.
 
 export function parseResponseFromCurrentScreenResponse(
   dbFlow: WaFlow,
@@ -895,6 +893,12 @@ export function parseResponseFromCurrentScreenResponse(
       elementName,
       response: rawResponse,
     });
+    if (parsedResponse === undefined) {
+      // An unhandled question type or a choice that resolved to nothing. Skipped
+      // rather than stored as an empty answer. See issues.txt 11.11.
+      log.error("Could not parse the answer for flow element %s", elementName);
+      continue;
+    }
 
     const questionResponse: QuestionResponse = {
       questionId: question.id,
@@ -934,37 +938,78 @@ export function parseResponseFromCurrentScreenResponseV2(
   return responses;
 }
 
+/**
+ * Strips our internal-only fields off every element of a screen before the json
+ * is uploaded to Meta.
+ *
+ * Walks nested children too. It used to stop at screen.layout.children, so
+ * anything inside a Form kept its id, metaType, enableNpsAnalytics and
+ * googleReview. That reached nothing today — only the v2 path calls this, and
+ * v2 elements sit directly under layout.children — but it was silently wrong
+ * for the v1 shape. See issues.txt 11.12.
+ *
+ * NOTE: waFlowFormElementIterator is NOT reused here (as the issue suggested):
+ * it yields only elements *inside* a Form, so it would skip the top-level
+ * children this function exists to clean.
+ */
 export function sanitizeScreenData(data: WaFlowJson) {
   data.screens.forEach((screen) => {
-    screen.layout.children.forEach((child) => {
-      delete child.id;
-      delete child.metaType;
-      delete child.enableNpsAnalytics;
-      delete child.googleReview;
-      if (child.url) {
-        child["on-click-action"] = {
-          name: "open_url",
-          url: child.url,
-        };
-        delete child.url;
-      }
-    });
+    sanitizeScreenChildren(screen.layout.children);
   });
   return data;
 }
-// Recursively strips empty-string/falsy fields (except `visible`) from a
-// legacy v2 flow-json object tree — genuinely dynamic, arbitrarily-shaped
-// JSON discriminated only by `typeof`/truthiness at runtime.
+
+function sanitizeScreenChildren(children: WaFlowForm[] | undefined) {
+  children?.forEach((child) => {
+    delete child.id;
+    delete child.metaType;
+    delete child.enableNpsAnalytics;
+    delete child.googleReview;
+    if (child.url) {
+      child["on-click-action"] = {
+        name: "open_url",
+        url: child.url,
+      };
+      delete child.url;
+    }
+    sanitizeScreenChildren(child.children);
+  });
+}
+// Recursively strips empty fields from a v2 flow-json object tree — genuinely
+// dynamic, arbitrarily-shaped JSON discriminated only by `typeof` at runtime.
+//
+// "Empty" means null, undefined or "". It deliberately does NOT mean falsy: the
+// old `!value` test deleted `required: false`, `markdown: false` and
+// `min-chars: 0`, so any setting a user turned off never reached WhatsApp. This
+// is the last thing that touches the json before it is uploaded, which is why
+// `visible` was already spared by name — the exception is no longer needed now
+// that `false` survives on its own. See issues.txt 11.5.
 export function removeEmptyStrings(obj: object) {
+  if (Array.isArray(obj)) {
+    // Arrays are filtered, not `delete`d into: deleting an index leaves a hole,
+    // and JSON.stringify — which updateFlowJsonInWa does next — renders a hole
+    // as null, so ["a", "", "b"] reached Meta as ["a", null, "b"].
+    const kept = obj.filter((entry) => !isEmptyFlowJsonValue(entry));
+    for (const entry of kept) {
+      if (entry && typeof entry === "object") removeEmptyStrings(entry);
+    }
+    obj.length = 0;
+    obj.push(...kept);
+    return;
+  }
   const record = obj as Record<string, unknown>;
   for (const key in record) {
     const value = record[key];
     if (value && typeof value === "object") {
       removeEmptyStrings(value);
-    } else if ((value === "" || !value) && key !== "visible") {
+    } else if (isEmptyFlowJsonValue(value)) {
       delete record[key];
     }
   }
+}
+
+function isEmptyFlowJsonValue(value: unknown) {
+  return value === null || value === undefined || value === "";
 }
 /**
  * Lifts each v2 element's inline `header` out into its own TextBody element,
@@ -1100,37 +1145,15 @@ export function transformFlowAndLogicJumps(
   }
 }
 
+/**
+ * See issues.txt 11.7 and 17.2: this gate, the templates gate, the campaigns gate
+ * and the automated-replies gate were four copies of the same code carrying the
+ * same two defects. enforceWhatsappCountLimit is the one copy; its header records
+ * what they were.
+ */
 export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    let orgId = request.user.orgId;
-    const subscription = request.subscription;
-    if (!subscription) throw new Error("Subscription not found");
-
-    const flowCount = await prisma.waFlow.count({
-      where: {
-        orgId: orgId,
-      },
-    });
-
-    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
-    // `conversation.count`, see subscription.data.ts) — this per-org WhatsApp
-    // Flow count limit was never actually modeled, so this check is
-    // currently always false / a no-op. See issues.txt. Typed via the
-    // generic (rather than an assertion on the input) to describe the shape this
-    // code expects without asserting it's really there.
-    const whatsappFlowFeatures = getNestedProperty<{ count?: { max: number } }>(
-      subscription.features,
-      SubscriptionFeaturePathName.Whatsapp,
-    );
-    if (flowCount >= (whatsappFlowFeatures?.count?.max ?? Infinity)) {
-      throw new Error(
-        `You have reached the maximum limit of ${whatsappFlowFeatures?.count?.max} Flows.`,
-      );
-    }
-  } catch (e) {
-    return reply.code(403).send({
-      message: e instanceof Error ? e.message : String(e),
-      displayMessageInClient: true,
-    });
-  }
+  return await enforceWhatsappCountLimit(request, reply, {
+    label: "Flows",
+    count: (orgId) => prisma.waFlow.count({ where: { orgId } }),
+  });
 }

@@ -98,33 +98,49 @@ export async function dispatchLoyaltyNotification(
     } else {
       templateId = payload.rewardWaTemplateId || null;
     }
-    const params: string[] = [];
+    // The parameter array is built by POSITION, with an empty string standing in
+    // for anything missing.
+    //
+    // It used to push each value only when it was present, so a missing one
+    // shifted every later placeholder up a slot: a customer with no stored name
+    // received a template where {{1}} rendered the points and {{2}} the balance,
+    // silently one place out — and a template is a fixed document, so there is no
+    // way for it to notice. See issues.txt 20.32.
+    const text = (value: string | number | undefined) =>
+      value === undefined || value === null ? "" : String(value);
 
-    // Common: Name is usually first.
-    if (payload.customerName) params.push(payload.customerName);
+    const params: string[] = [text(payload.customerName)];
 
     if (
       commandKey === LoyaltyEventType.POINTS_ISSUED ||
       commandKey === LoyaltyEventType.POINTS_ADJUSTED
     ) {
-      if (payload.points !== undefined) params.push(payload.points.toString());
-      if (payload.balanceAfter !== undefined) params.push(payload.balanceAfter.toString());
+      params.push(text(payload.points), text(payload.balanceAfter));
     } else if (
       commandKey === LoyaltyEventType.REWARD_ISSUED ||
       commandKey === LoyaltyEventType.REWARD_REDEEMED
     ) {
-      if (payload.rewardName) params.push(payload.rewardName);
-      if (payload.redemptionCode) params.push(payload.redemptionCode);
-      if (payload.points !== undefined) params.push(Math.abs(payload.points).toString()); // Cost
+      params.push(
+        text(payload.rewardName),
+        text(payload.redemptionCode),
+        // Cost
+        text(payload.points === undefined ? undefined : Math.abs(payload.points)),
+      );
     } else if (commandKey === LoyaltyEventType.TIER_UPGRADED) {
-      if (payload.newTier) params.push(payload.newTier);
+      params.push(text(payload.newTier));
     }
 
     log.trace(`[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`);
     await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
   } catch (error) {
-    console.log("🚀 ~ dispatchLoyaltyNotification ~ error:", error);
-    log.error({ error }, `[LoyaltyWaDispatcher] Error dispatching ${commandKey}`);
-    // Don't throw, silence error to avoid blocking transaction
+    // Deliberately swallowed: a notification must never roll back the points or
+    // the redemption it is announcing. The cost is that a template which is wrong
+    // for EVERY customer fails invisibly forever, so the failure is logged at
+    // error level with the event and the org on it — that is the signal an
+    // operator has. See issues.txt 20.32.
+    log.error(
+      { err: error, commandKey, orgId },
+      `[LoyaltyWaDispatcher] Error dispatching ${commandKey}`,
+    );
   }
 }

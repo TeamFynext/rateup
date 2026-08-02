@@ -9,8 +9,14 @@ import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 
+/**
+ * The messenger_profile endpoint is `/me/messenger_profile` — it resolves to
+ * whichever account the token belongs to, so there is no id to pass. This took
+ * an `ibaId` first parameter that it never used, which read as though the call
+ * were scoped by id when it is scoped by which token you hold. Dropped.
+ * See issues.txt 12.18.
+ */
 async function callInstagramMessengerProfileApi(
-  ibaId: string,
   pageAccessToken: string,
   method: "GET" | "POST" | "DELETE",
   data?: Record<string, unknown>,
@@ -38,8 +44,11 @@ export async function sendInstagramPrivateReply(
   commentId: string,
   text: string,
   ibaId: string,
+  orgId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -122,16 +131,16 @@ export async function sendInstagramTextMessage(
 export async function sendInstagramImage(
   igsId: string,
   imageUrl: string,
+  // orgId and ibaId are REQUIRED, as they are on every sibling. They used to be
+  // optional and the limit check was conditional on `if (orgId)`, so a caller
+  // that simply omitted the org skipped the gate. See issues.txt 12.10.
+  orgId: string,
+  ibaId: string,
   caption?: string,
-  orgId?: string,
-  ibaId?: string,
-): Promise<unknown> {
+): Promise<{ image: unknown; caption?: { sent: boolean; error?: unknown } }> {
   try {
     // Outbound — gate on the conversation limit (inbound is never blocked).
-    if (orgId) await assertWithinConversationLimit(orgId);
-    if (!ibaId) {
-      throw new Error(`No Instagram business account id provided for igsId ${igsId}`);
-    }
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -160,17 +169,27 @@ export async function sendInstagramImage(
 
     log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
 
-    // If caption is provided, send it as a separate text message
-    if (caption) {
-      if (!orgId) {
-        throw new Error(
-          `No organization id provided for Instagram image caption to igsId ${igsId}`,
-        );
-      }
-      await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
+    if (!caption) {
+      return { image: response.data };
     }
 
-    return response.data;
+    // The caption goes as its own message: Instagram's send API takes either
+    // `text` or `attachment` on a message, not both, so there is no captioned
+    // image to attach it to. What DID need fixing is the reporting — the caption
+    // send used to sit inside the outer try, so a caption failure was reported as
+    // "Error sending image" and rethrown, telling the caller a half-succeeded
+    // send failed outright. A retry then sent the image twice.
+    // See issues.txt 12.11.
+    try {
+      await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
+      return { image: response.data, caption: { sent: true } };
+    } catch (captionError) {
+      log.error(
+        { err: captionError },
+        `[Instagram Messaging] Image delivered to ${igsId} but its caption failed`,
+      );
+      return { image: response.data, caption: { sent: false, error: captionError } };
+    }
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending image to ${igsId}`);
     throw error;
@@ -197,6 +216,8 @@ export async function sendInstagramGenericTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -260,6 +281,8 @@ export async function sendInstagramQuickReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -308,6 +331,8 @@ export async function sendInstagramProductTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -355,6 +380,8 @@ export async function sendInstagramStoryReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -420,23 +447,22 @@ export async function setInstagramIceBreakers(
       })),
     };
 
-    const response = await callInstagramMessengerProfileApi(
-      ibaId,
-      pageAccessToken,
-      "POST",
-      payload,
-    );
+    const response = await callInstagramMessengerProfileApi(pageAccessToken, "POST", payload);
 
-    const settings = await getWaSettingsByIbaId(ibaId);
-    if (settings) {
-      await updateWaSettingsById(settings.id, {
-        instagramIceBreakers: iceBreakers,
-      });
-    }
+    // waSettings above is the same row; it used to be looked up a second time
+    // here for no reason. See issues.txt 12.19.
+    await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+      instagramIceBreakers: iceBreakers,
+    });
 
     log.info(`[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`);
 
-    return response.data;
+    // `response`, not `response.data`: callInstagramMessengerProfileApi already
+    // returns response.data, so unwrapping again resolved to undefined and the
+    // sync endpoint answered { success: true, data: undefined }.
+    // setInstagramPersistentMenu, which does the same job, was already correct.
+    // See issues.txt 12.12.
+    return response;
   } catch (error) {
     log.error(
       { err: error },
@@ -463,22 +489,48 @@ export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "GET",
-    undefined,
-    {
-      fields: "ice_breakers",
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "GET", undefined, {
+    fields: "ice_breakers",
+  });
 
-  const iceBreakers = response?.ice_breakers ?? [];
-  await updateWaSettingsById(waSettings.id, {
+  const iceBreakers = unwrapMessengerProfileField<{ question: string; payload: string }>(
+    response,
+    "ice_breakers",
+  );
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramIceBreakers: iceBreakers,
   });
 
-  return response;
+  // Both branches return the same shape. They used to differ — { ice_breakers }
+  // when cached, Meta's raw envelope when not — which normalizeIceBreakers in the
+  // controller papered over, which is why the empty-cache bug went unnoticed.
+  // See issues.txt 12.12.
+  return { ice_breakers: iceBreakers };
+}
+
+/**
+ * Meta's messenger_profile GET nests the requested fields one level down, under
+ * `data`, as `{ data: [ { ice_breakers: [...] } ] }`. Reading the field off the
+ * top level found nothing, so `[]` was cached on the very first read and every
+ * later call took the cached branch and reported no ice breakers at all.
+ *
+ * Both shapes are accepted: the documented envelope, and a bare top-level field
+ * in case Meta answers that way. See issues.txt 12.12.
+ */
+function unwrapMessengerProfileField<T>(response: unknown, field: string): T[] {
+  const body = response as
+    | { data?: Array<Record<string, unknown>> | Record<string, unknown>; [k: string]: unknown }
+    | null
+    | undefined;
+  if (!body) return [];
+
+  const topLevel = body[field];
+  if (Array.isArray(topLevel)) return topLevel as T[];
+
+  const data = body.data;
+  const first = Array.isArray(data) ? data[0] : data;
+  const nested = (first as Record<string, unknown> | undefined)?.[field];
+  return Array.isArray(nested) ? (nested as T[]) : [];
 }
 
 export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
@@ -492,10 +544,10 @@ export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "DELETE", {
     fields: ["ice_breakers"],
   });
-  await updateWaSettingsById(waSettings.id, {
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramIceBreakers: [],
   });
   return response;
@@ -524,11 +576,11 @@ export async function setInstagramPersistentMenu(
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "POST", {
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "POST", {
     persistent_menu: menus,
   });
 
-  await updateWaSettingsById(waSettings.id, {
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramPersistentMenu: menus,
   });
 
@@ -552,22 +604,20 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "GET",
-    undefined,
-    {
-      fields: "persistent_menu",
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "GET", undefined, {
+    fields: "persistent_menu",
+  });
 
-  const persistentMenu = response?.persistent_menu ?? [];
-  await updateWaSettingsById(waSettings.id, {
+  // Same nesting as the ice breakers above. See issues.txt 12.12.
+  const persistentMenu = unwrapMessengerProfileField<InstagramPersistentMenuEntry>(
+    response,
+    "persistent_menu",
+  );
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramPersistentMenu: persistentMenu,
   });
 
-  return response;
+  return { persistent_menu: persistentMenu };
 }
 
 export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string) {
@@ -581,10 +631,10 @@ export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "DELETE", {
     fields: ["persistent_menu"],
   });
-  await updateWaSettingsById(waSettings.id, {
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramPersistentMenu: [],
   });
   return response;
@@ -600,6 +650,8 @@ export async function sendInstagramVideo(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -644,6 +696,8 @@ export async function sendInstagramFile(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {

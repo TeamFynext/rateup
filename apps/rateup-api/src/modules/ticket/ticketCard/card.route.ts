@@ -20,16 +20,22 @@ import {
 } from "./card.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { verifyColumnAccess } from "../ticketColumn/column.auth.js";
-import { verifyCardAccess } from "./card.auth.js";
+import {
+  verifyCardAccess,
+  verifyCardsReorderAccess,
+  verifyColumnAccessFromBody,
+} from "./card.auth.js";
 
 export async function cardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   // Tickets are a free feature — no subscription gate.
 
-  // Create card
+  // Create card. The target column comes from the body, so the access check has to
+  // resolve it from there — this route used to have none at all. issues.txt 29.1.
   server.post(
     "/create",
     {
+      preHandler: [verifyColumnAccessFromBody],
       schema: {
         body: createCardRequestSchema,
         // response: {
@@ -40,9 +46,11 @@ export async function cardRoutes(server: FastifyInstance) {
     createCardHandler,
   );
 
-  // Get all cards for a column
+  // Get all cards for a column. The path used to bind ":columnId" while the params
+  // schema, the handler and verifyColumnAccess all expect "ticketColumnId", so every
+  // request to it failed validation before reaching any of them. See issues.txt 29.4.
   server.get<{ Params: { ticketColumnId: string } }>(
-    "/column/:columnId",
+    "/column/:ticketColumnId",
     {
       preHandler: [verifyColumnAccess],
       schema: {
@@ -100,10 +108,12 @@ export async function cardRoutes(server: FastifyInstance) {
     moveCardHandler,
   );
 
-  // Reorder cards (bulk update of card orders)
+  // Reorder cards (bulk update of card orders). Targets come from the body.
+  // See issues.txt 29.1.
   server.put(
     "/reorder",
     {
+      preHandler: [verifyCardsReorderAccess],
       schema: {
         body: reorderCardRequestSchema,
       },

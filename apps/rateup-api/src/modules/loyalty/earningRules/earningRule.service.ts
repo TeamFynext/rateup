@@ -43,7 +43,12 @@ export async function getActiveLoyaltyEarningRules(programId: string) {
         },
       ],
     },
-    orderBy: { priority: "asc" },
+    // Descending, matching the engine. This helper used to order ascending while
+    // earningRulesEngine orders `{ priority: "desc" }` and takes the first match —
+    // so anything built on it (a preview, an admin list, a future simulator) saw
+    // the rules in the opposite order to the one that decides the points, and the
+    // rule shown first was the one that would apply last. See issues.txt 20.31.
+    orderBy: { priority: "desc" },
   });
 }
 

@@ -48,5 +48,10 @@ export type ExportOrdersInput = z.infer<typeof exportOrdersSchema>;
 export const exportOverviewSchema = commerceFilterSchema.extend({
   format: spreadsheetExportFormatSchema.default("xlsx"),
   interval: z.enum(["day", "week", "month"]).default("day"),
+  // The top-products limit, so the sheet matches the widget. The handler used to
+  // hard-code 20 while the on-screen widget defaults to 5 — which contradicted
+  // this file's own comment above. Same bounds as the widget's own schema.
+  // See issues.txt 19.11.
+  limit: z.coerce.number().min(1).max(50).default(5),
 });
 export type ExportOverviewInput = z.infer<typeof exportOverviewSchema>;

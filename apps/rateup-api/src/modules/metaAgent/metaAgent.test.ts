@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.wa_access_token_encryption_key = "00".repeat(32);
+  process.env.waclient_secret = "meta-app-secret";
 });
 
 vi.mock("../../utils/prisma.js", () => ({
@@ -52,6 +53,12 @@ vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
   webhookSubscribeHandler: vi.fn(),
 }));
+vi.mock("fastify-raw-body", () => ({ default: vi.fn() }));
+vi.mock("../../utils/checkRoleHandler.js", () => ({
+  // Tagged with the roles it was built for so route registration can assert
+  // which gate each route carries.
+  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
+}));
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -59,8 +66,10 @@ import { log } from "../../utils/logger.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { webhookSubscribeHandler } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import { callMetaAgentApi, MetaAgentApiError } from "./metaAgent.client.js";
+import crypto from "node:crypto";
 import {
   deleteFaq,
+  getAgentRecord,
   getOrCreateAgentRecord,
   removeAllowlistEntry,
   updateFaq,
@@ -203,38 +212,61 @@ describe("the org scoping", () => {
 // A read that writes
 // ===========================================================================
 
-describe("getOrCreateAgentRecord", () => {
-  // NOTE: the GET route's handler is getOrCreateAgentRecord, so opening the
-  // agent page inserts a MetaBusinessAgent row when none exists.
-  test("the read endpoint creates a row when none exists", async () => {
+describe("the agent record read", () => {
+  // The GET route used to be handled by getOrCreateAgentRecord, so merely
+  // opening the agent page for a channel that had never been onboarded inserted
+  // a row — and, with no unique constraint and no transaction behind the
+  // read-then-create, two concurrent page loads both inserted.
+  // See issues.txt 43.3.
+  test("the read endpoint no longer creates a row", async () => {
     db.metaBusinessAgent.findFirst.mockResolvedValueOnce(null);
+    const rep = reply();
 
     await getMetaBusinessAgentHandler(
       { user: { orgId: ORG }, params: { whatsappSettingsId: SETTINGS } } as never,
-      reply(),
+      rep,
     );
+
+    expect(db.metaBusinessAgent.create).not.toHaveBeenCalled();
+    // wrap() sends `data ?? {}`, so a channel with no agent reads as empty.
+    expect(answer(rep)).toEqual({ code: 200, body: {} });
+  });
+
+  test("an existing row is returned as it stands", async () => {
+    const rep = reply();
+
+    await getMetaBusinessAgentHandler(
+      { user: { orgId: ORG }, params: { whatsappSettingsId: SETTINGS } } as never,
+      rep,
+    );
+
+    expect(answer(rep).body).toEqual({ id: AGENT, orgId: ORG });
+  });
+
+  test("the read is scoped on the org and the channel", async () => {
+    await getAgentRecord(ORG, SETTINGS);
+
+    expect(db.metaBusinessAgent.findFirst).toHaveBeenCalledWith({
+      where: { orgId: ORG, whatsappSettingsId: SETTINGS },
+    });
+  });
+
+  // The row is still created by the two explicit POSTs — the eligibility check
+  // and onboarding — which is where it belongs.
+  test("the create-if-missing helper survives for the onboarding path", async () => {
+    db.metaBusinessAgent.findFirst.mockResolvedValueOnce(null);
+
+    await getOrCreateAgentRecord(ORG, SETTINGS);
 
     expect(db.metaBusinessAgent.create).toHaveBeenCalledWith({
       data: { orgId: ORG, whatsappSettingsId: SETTINGS },
     });
   });
 
-  test("an existing row is returned without a write", async () => {
+  test("and returns an existing row without a write", async () => {
     await getOrCreateAgentRecord(ORG, SETTINGS);
 
     expect(db.metaBusinessAgent.create).not.toHaveBeenCalled();
-  });
-
-  // NOTE: MetaBusinessAgent has no unique constraint enforced here — the
-  // read-then-create is not transactional, so two concurrent page loads both
-  // find nothing and both insert.
-  test("concurrent reads both create", async () => {
-    db.metaBusinessAgent.findFirst.mockResolvedValue(null);
-
-    await getOrCreateAgentRecord(ORG, SETTINGS);
-    await getOrCreateAgentRecord(ORG, SETTINGS);
-
-    expect(db.metaBusinessAgent.create).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -319,71 +351,125 @@ describe("metaAgentWebhookEventHandler", () => {
     ],
   };
 
-  // NOTE: no signature header is read and no secret is consulted. Every other
-  // webhook in the codebase verifies — Shopify through its library, Stripe and
-  // Razorpay by signature, Zoho by a shared token.
-  test("accepts a payload with no signature of any kind", async () => {
+  // Meta signs each delivery with an HMAC-SHA256 over the exact bytes it sent,
+  // keyed on the app secret. Build the request the way Meta would.
+  function signed(payload: unknown, secret = "meta-app-secret") {
+    const rawBody = JSON.stringify(payload);
+    const digest = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+    return {
+      body: payload,
+      rawBody,
+      headers: { "x-hub-signature-256": `sha256=${digest}` },
+      ip: "203.0.113.9",
+    } as never;
+  }
+
+  // Nothing used to read a signature header or consult a secret, so the
+  // endpoint was an unauthenticated write into the application log: anyone
+  // could POST arbitrary JSON and have it recorded verbatim at info level, as
+  // often as they liked. See issues.txt 43.1.
+  test("refuses a payload with no signature of any kind", async () => {
     const rep = reply();
 
-    await metaAgentWebhookEventHandler({ body, headers: {} } as never, rep);
+    await metaAgentWebhookEventHandler(
+      { body, rawBody: JSON.stringify(body), headers: {}, ip: "203.0.113.9" } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 401, body: { message: "Invalid signature" } });
+    expect(log.info).not.toHaveBeenCalled();
+  });
+
+  test("refuses a signature computed with the wrong secret", async () => {
+    const rep = reply();
+
+    await metaAgentWebhookEventHandler(signed(body, "not-the-app-secret"), rep);
+
+    expect(answer(rep).code).toBe(401);
+  });
+
+  test("refuses a signature that does not match the body it arrived with", async () => {
+    const request = signed(body) as any;
+    request.rawBody = JSON.stringify({ entry: [{ changes: [{ field: "tampered" }] }] });
+    const rep = reply();
+
+    await metaAgentWebhookEventHandler(request, rep);
+
+    expect(answer(rep).code).toBe(401);
+  });
+
+  test("refuses a delivery whose raw body never reached the handler", async () => {
+    const request = signed(body) as any;
+    delete request.rawBody;
+    const rep = reply();
+
+    await metaAgentWebhookEventHandler(request, rep);
+
+    expect(answer(rep).code).toBe(401);
+  });
+
+  test("accepts a correctly signed delivery", async () => {
+    const rep = reply();
+
+    await metaAgentWebhookEventHandler(signed(body), rep);
 
     expect(answer(rep)).toEqual({ code: 200, body: "EVENT_RECEIVED" });
   });
 
-  // NOTE: the file's own comment describes this as the entry point for
-  // thread-control and agent-event notifications. The handler only logs them.
+  // STILL OPEN (issues.txt 43.1): the file's own comment describes this as the
+  // entry point for thread-control and agent-event notifications, and a
+  // verified event is still only logged. A thread-control hand-back is the
+  // signal that this app should resume answering the customer, and nothing
+  // observes it.
   test("does nothing with the event beyond logging it", async () => {
-    await metaAgentWebhookEventHandler({ body, headers: {} } as never, reply());
+    await metaAgentWebhookEventHandler(signed(body), reply());
 
     expect(db.metaBusinessAgent.update).not.toHaveBeenCalled();
-    expect(log.info).toHaveBeenCalledTimes(2);
+    expect(log.info).toHaveBeenCalledTimes(1);
   });
 
-  test("writes the whole caller-supplied body into the log", async () => {
-    await metaAgentWebhookEventHandler(
-      { body: { entry: [], marker: "attacker-controlled" }, headers: {} } as never,
-      reply(),
-    );
+  // The whole body used to be logged at info by an unauthenticated caller. It
+  // is verified now, and recorded at debug rather than info.
+  test("the full body is no longer written at info level", async () => {
+    await metaAgentWebhookEventHandler(signed({ entry: [], marker: "caller-controlled" }), reply());
 
-    expect(JSON.stringify((log.info as unknown as Mock).mock.calls[0])).toContain(
-      "attacker-controlled",
+    expect(JSON.stringify((log.info as unknown as Mock).mock.calls)).not.toContain(
+      "caller-controlled",
+    );
+    expect(JSON.stringify((log.debug as unknown as Mock).mock.calls)).toContain(
+      "caller-controlled",
     );
   });
 
   test("logs one line per change notification", async () => {
     await metaAgentWebhookEventHandler(
-      {
-        body: { entry: [{ changes: [{ field: "a" }, { field: "b" }] }] },
-        headers: {},
-      } as never,
+      signed({ entry: [{ changes: [{ field: "a" }, { field: "b" }] }] }),
       reply(),
     );
 
-    expect(log.info).toHaveBeenCalledTimes(3);
+    expect(log.info).toHaveBeenCalledTimes(2);
   });
 
   test("tolerates a body with no entries", async () => {
     const rep = reply();
 
-    await metaAgentWebhookEventHandler({ body: {}, headers: {} } as never, rep);
+    await metaAgentWebhookEventHandler(signed({}), rep);
 
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: the catch answers 200 as well, so Meta is told the event was handled
-  // whatever happened.
+  // Still 200 once the delivery is authentic: nothing acts on the event, so
+  // there is nothing a Meta retry would fix.
   test("answers 200 even when handling throws", async () => {
+    const request = signed({ entry: null }) as any;
+    Object.defineProperty(request, "body", {
+      get() {
+        throw new Error("x");
+      },
+    });
     const rep = reply();
 
-    await metaAgentWebhookEventHandler(
-      {
-        body: { entry: [{ changes: null }] },
-        get headers() {
-          throw new Error("x");
-        },
-      } as never,
-      rep,
-    );
+    await metaAgentWebhookEventHandler(request, rep);
 
     expect(answer(rep)).toEqual({ code: 200, body: "EVENT_RECEIVED" });
   });
@@ -391,17 +477,20 @@ describe("metaAgentWebhookEventHandler", () => {
   test("the webhook tree reuses the WhatsApp subscribe handler for the challenge", async () => {
     const routes: any[] = [];
     const srv: any = {
+      register: vi.fn(),
       get: vi.fn((url, handler) => routes.push({ method: "GET", url, handler })),
-      post: vi.fn((url, handler) => routes.push({ method: "POST", url, handler })),
+      post: vi.fn((url, opts, handler) => routes.push({ method: "POST", url, opts, handler })),
       addHook: vi.fn(),
     };
 
     await metaAgentWebhookRoutes(srv);
 
-    expect(routes).toEqual([
-      { method: "GET", url: "/", handler: webhookSubscribeHandler },
-      { method: "POST", url: "/", handler: metaAgentWebhookEventHandler },
-    ]);
+    expect(routes[0]).toEqual({ method: "GET", url: "/", handler: webhookSubscribeHandler });
+    expect(routes[1].handler).toBe(metaAgentWebhookEventHandler);
+    // The raw body is what the signature is computed over, so the POST has to
+    // ask for it.
+    expect(routes[1].opts.config.rawBody).toBe(true);
+    expect(srv.register).toHaveBeenCalledOnce();
     expect(srv.addHook).not.toHaveBeenCalled();
   });
 });
@@ -411,23 +500,48 @@ describe("metaAgentWebhookEventHandler", () => {
 // ===========================================================================
 
 describe("the error handler", () => {
-  test("relays Meta's status and detail to the caller", async () => {
+  // Meta's status used to become this API's own, so a 429 from Meta read as a
+  // RateUp rate limit and a client's retry logic reacted to the wrong service.
+  // The text is still relayed — an operator wants to read what Meta objected to
+  // — and Meta's own status is named separately. See issues.txt 43.5.
+  async function failWith(status: number, detail = "Agent not onboarded") {
     db.metaAgentFaq.findMany.mockRejectedValueOnce(
-      Object.assign(
-        new MetaAgentApiError({ status: 403, data: { detail: "Agent not onboarded" } } as never),
-      ),
+      new MetaAgentApiError({ status, data: { detail } } as never),
     );
     const rep = reply();
-
     await listFaqsHandler(
       { user: { orgId: ORG }, params: { whatsappSettingsId: SETTINGS } } as never,
       rep,
     );
+    return answer(rep);
+  }
 
-    expect(answer(rep)).toEqual({
-      code: 403,
-      body: { message: "Agent not onboarded", detail: "Agent not onboarded" },
+  test("an upstream refusal is a 502 here, not a 403", async () => {
+    expect(await failWith(403)).toEqual({
+      code: 502,
+      body: {
+        message: "Agent not onboarded",
+        detail: "Agent not onboarded",
+        upstreamStatus: 403,
+      },
     });
+  });
+
+  test("Meta's throttle is not relayed as ours", async () => {
+    expect((await failWith(429, "Rate limited")).code).toBe(502);
+  });
+
+  test("a rejected payload stays a 400", async () => {
+    expect((await failWith(400, "base_url is invalid")).code).toBe(400);
+    expect((await failWith(422, "unprocessable")).code).toBe(400);
+  });
+
+  test("a not-found stays a 404", async () => {
+    expect((await failWith(404, "no such agent")).code).toBe(404);
+  });
+
+  test("a Meta error with no status is a 502", async () => {
+    expect((await failWith(undefined as never, "unknown")).code).toBe(502);
   });
 
   test("anything else answers a fixed 500", async () => {
@@ -459,17 +573,31 @@ describe("the error handler", () => {
 // ===========================================================================
 
 describe("the connector schema", () => {
-  // NOTE: base_url is the address Meta will call on the business's behalf, and
-  // it is a bare z.string() — no URL parse, no scheme requirement.
-  test("accepts a base_url that is not a URL", () => {
-    const parsed = connectorBodySchema.safeParse({
-      name: "n",
-      description: "d",
-      base_url: "not a url",
-      auth_type: "NONE",
-    });
+  // base_url is the address Meta calls on the business's behalf, and it was a
+  // bare z.string() — so an unparseable value was accepted here and rejected by
+  // Meta later, surfacing as a Meta API error at connector-creation time rather
+  // than as a 400 naming the field. See issues.txt 43.4.
+  const connector = (base_url: string) => ({
+    name: "n",
+    description: "d",
+    base_url,
+    auth_type: "NONE" as const,
+  });
 
-    expect(parsed.success).toBe(true);
+  test("refuses a base_url that is not a URL", () => {
+    expect(connectorBodySchema.safeParse(connector("not a url")).success).toBe(false);
+    expect(connectorBodySchema.safeParse(connector("")).success).toBe(false);
+  });
+
+  test("requires https", () => {
+    expect(connectorBodySchema.safeParse(connector("http://x.test")).success).toBe(false);
+    expect(connectorBodySchema.safeParse(connector("https://x.test/v1")).success).toBe(true);
+  });
+
+  test("bounds the length", () => {
+    expect(
+      connectorBodySchema.safeParse(connector(`https://x.test/${"a".repeat(2100)}`)).success,
+    ).toBe(false);
   });
 
   test("constrains the auth type to the three Meta supports", () => {
@@ -521,24 +649,59 @@ describe("metaAgentRoutes", () => {
     }
   });
 
-  // NOTE: no role check and no subscription gate anywhere — any member can
-  // configure the agent and register connector credentials.
-  test("no route carries a role or feature requirement", async () => {
+  // The tree carried checkSession and nothing else, so the lowest-privileged
+  // member could register the credentials the agent uses to call the business's
+  // own back-end systems. See issues.txt 43.2.
+  test("the credential routes require an admin", async () => {
     const { routes } = await collect();
 
-    for (const r of routes) {
+    const credentialRoutes = routes.filter((r) => /upsert(ApiKey|OAuth|Certificate)/i.test(r.url));
+    expect(credentialRoutes.length).toBe(3);
+    for (const r of credentialRoutes) {
+      expect((r.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+      expect(r.opts.schema.body).toBeDefined();
+    }
+  });
+
+  test("so do the connector and tool writes that surround them", async () => {
+    const { routes } = await collect();
+
+    const gated = routes
+      .filter((r) => r.opts.preHandler)
+      .map((r) => `${r.method} ${r.url.replace("/:whatsappSettingsId", "")}`);
+
+    expect(gated).toEqual([
+      "POST /connectors",
+      "DELETE /connectors/:id",
+      "POST /connectors/:id/upsertApiKey",
+      "POST /connectors/:id/upsertOAuth",
+      "POST /connectors/:id/upsertCertificate",
+      "POST /connectors/:connectorId/tools",
+      "DELETE /connectors/:connectorId/tools/:toolId",
+      "POST /connectors/:connectorId/tools/:toolId/run",
+    ]);
+  });
+
+  // The reads stay open to any member — what is gated is registering
+  // credentials and calling out with them.
+  test("the connector reads are still member-accessible", async () => {
+    const { routes } = await collect();
+
+    for (const url of ["/connectors", "/connectors/:id/logs", "/connectors/:connectorId/tools"]) {
+      const r = routes.find((x) => x.method === "GET" && x.url.endsWith(url));
       expect(r.opts.preHandler).toBeUndefined();
     }
   });
 
-  test("the credential routes are ordinary member-accessible writes", async () => {
+  // STILL OPEN (issues.txt 43.2): the knowledge, skills and settings writes
+  // that shape what the agent tells customers are still ungated.
+  test("no subscription or feature gate anywhere", async () => {
     const { routes } = await collect();
 
-    const credentialRoutes = routes.filter((r) => /upsert(ApiKey|OAuth|Certificate)/i.test(r.url));
-    expect(credentialRoutes.length).toBeGreaterThan(0);
-    for (const r of credentialRoutes) {
+    const knowledge = routes.filter((r) => r.url.includes("/knowledge/"));
+    expect(knowledge.length).toBeGreaterThan(0);
+    for (const r of knowledge) {
       expect(r.opts.preHandler).toBeUndefined();
-      expect(r.opts.schema.body).toBeDefined();
     }
   });
 });

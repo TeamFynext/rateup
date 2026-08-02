@@ -191,7 +191,7 @@ describe("getRuleByIdHandler", () => {
 
     await getRuleByIdHandler(makeRequest({ params: { id: "rule-1" } }), reply);
 
-    expect(svc.getRuleById).toHaveBeenCalledWith("rule-1");
+    expect(svc.getRuleById).toHaveBeenCalledWith("rule-1", "org-1");
     expect(reply.payload).toBe(RULE);
   });
 
@@ -205,16 +205,20 @@ describe("getRuleByIdHandler", () => {
     expect(reply.payload).toEqual({ error: "Rule not found" });
   });
 
-  // NOTE: the lookup is by id alone, so a rule belonging to another org is returned
-  // rather than refused — nothing here compares it to the caller's org.
-  test("returns a rule that belongs to another org", async () => {
-    svc.getRuleById.mockResolvedValue({ id: "rule-victim", orgId: "org-victim" });
+  // The lookup is scoped to the caller's org, so another org's rule comes back null
+  // and is answered 404 — indistinguishable from one that never existed.
+  test("refuses a rule that belongs to another org", async () => {
+    svc.getRuleById.mockResolvedValue(null);
     const reply = makeReply();
 
-    await getRuleByIdHandler(makeRequest({ params: { id: "rule-victim" } }), reply);
+    await getRuleByIdHandler(
+      makeRequest({ params: { id: "rule-victim" }, user: { orgId: "org-attacker" } }),
+      reply,
+    );
 
-    expect(reply.payload).toMatchObject({ orgId: "org-victim" });
-    expect(reply.status).not.toHaveBeenCalledWith(404);
+    expect(svc.getRuleById).toHaveBeenCalledWith("rule-victim", "org-attacker");
+    expect(reply.status).toHaveBeenCalledWith(404);
+    expect(reply.payload).toEqual({ error: "Rule not found" });
   });
 
   test("returns 500 when the lookup throws", async () => {

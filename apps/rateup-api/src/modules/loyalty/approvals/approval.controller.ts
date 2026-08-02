@@ -73,7 +73,16 @@ export async function getApprovalRequestByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getApprovalRequestById(request.params.approvalId);
+    // Every mutation below resolves its subject through the caller's own program.
+    // Only the LIST used to be scoped, so an approval id was enough for a reviewer
+    // in any org to approve another org's points adjustment — which mints points
+    // into that org's programme. See issues.txt 20.26.
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+
+    const result = await getApprovalRequestById(request.params.approvalId, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error getting approval request:");
@@ -96,6 +105,11 @@ export async function approveApprovalRequestHandler(
   reply: FastifyReply,
 ) {
   try {
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+
     const data: ApproveRequestInput = {
       approvalId: request.params.approvalId,
       reviewerId: request.body.reviewerId,
@@ -103,7 +117,7 @@ export async function approveApprovalRequestHandler(
       notes: request.body.notes,
     };
 
-    const result = await approveApprovalRequest(data);
+    const result = await approveApprovalRequest(data, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error approving request:");
@@ -123,6 +137,11 @@ export async function rejectApprovalRequestHandler(
   reply: FastifyReply,
 ) {
   try {
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+
     const data: RejectRequestInput = {
       approvalId: request.params.approvalId,
       reviewerId: request.body.reviewerId,
@@ -130,7 +149,7 @@ export async function rejectApprovalRequestHandler(
       reason: request.body.reason,
     };
 
-    const result = await rejectApprovalRequest(data);
+    const result = await rejectApprovalRequest(data, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error rejecting request:");
@@ -150,12 +169,22 @@ export async function cancelApprovalRequestHandler(
   reply: FastifyReply,
 ) {
   try {
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+
     const data: CancelRequestInput = {
       approvalId: request.params.approvalId,
+      // Who cancelled it, and it is recorded. Cancel used to write no reviewer at
+      // all while reject wrote both, so a cancelled request could not be
+      // attributed to anyone. See issues.txt 20.25.
+      reviewerId: request.body.reviewerId,
+      reviewerName: request.body.reviewerName,
       reason: request.body.reason,
     };
 
-    const result = await cancelApprovalRequest(data);
+    const result = await cancelApprovalRequest(data, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error cancelling request:");

@@ -1200,7 +1200,7 @@ export async function assignWaMessageToUser(
       },
     });
 
-    const updatedContact = await updateContactById(data.contactId, {
+    const updatedContact = await updateContactById(data.contactId, orgId, {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
     });
     // Assigning a contact whose last conversation is already closed starts a fresh
@@ -1293,7 +1293,7 @@ export async function reopenConversation(
   messageId?: string,
 ) {
   const conversation = conversationId
-    ? await getConversationById(conversationId)
+    ? await getConversationById(conversationId, orgId)
     : await getLastCreatedConversationForContact(contactId);
 
   const assignmentHistory = conversation
@@ -1828,6 +1828,15 @@ export async function updateWaMessageByMessageId(
   data: Prisma.WaMessageUncheckedUpdateInput,
   id?: string,
 ) {
+  // Neither key may be empty. Prisma DROPS an undefined filter rather than
+  // matching null, so `{ messageId: undefined }` became an unfiltered query over
+  // the whole table and the update landed on whichever row came back first — any
+  // org's. The guard lives here rather than in each caller because every caller
+  // is exposed to the same behaviour. See issues.txt 12.8.
+  if (!id && !messageId) {
+    log.warn("updateWaMessageByMessageId called with no id and no messageId; refusing");
+    return null;
+  }
   const whereClause = id ? { id } : { messageId };
 
   const message = await prisma.waMessage.findFirst({

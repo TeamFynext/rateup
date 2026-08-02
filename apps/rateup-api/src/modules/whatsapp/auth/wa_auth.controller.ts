@@ -121,8 +121,8 @@ export async function deRegisterBusinessClientHandler(
   rep: FastifyReply,
 ) {
   try {
-    // TODO
     await deleteWaSettings(req.user.orgId, req.params.phoneId);
+    rep.status(200).send({ message: "Business client deregistered successfully" });
   } catch (e) {
     log.error(e);
     rep.status(500).send({ message: "Internal server error" });
@@ -141,10 +141,20 @@ export async function getUserAccessTokenHanlder(
       code,
       encodeURIComponent(`${process.env.FRONTEND_URL}/${process.env.wa_user_redirect_uri}`),
     );
-    const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`;
-    const res = await callMetaApi(url, "GET");
-    log.info("Pages fetched from meta by user access token:%o", res?.data);
-    const metaAssets = await getMetaAssets(waSettingsId);
+    // Token as the accessToken argument, not in the URL, and only the page ids
+    // logged, at trace. This response carries `access_token` for every page and
+    // was logged in full at info — the same leak as issues.txt 13.3, in a second
+    // file. Found while scoping getMetaAssets.
+    const res = await callMetaApi(
+      `/me/accounts?fields=id,name,access_token,instagram_business_account`,
+      "GET",
+      userAccessToken,
+    );
+    log.trace(
+      { pages: (res?.data?.data as Array<{ id: string }> | undefined)?.map((page) => page.id) },
+      "Pages fetched from meta by user access token",
+    );
+    const metaAssets = await getMetaAssets(waSettingsId, req.user.orgId);
     const metaPages: { id: string; name: string; access_token: string }[] = res.data?.data ?? [];
     const data =
       !metaAssets || !metaAssets?.pages.length

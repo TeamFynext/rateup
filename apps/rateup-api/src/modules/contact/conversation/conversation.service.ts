@@ -218,7 +218,22 @@ export async function setInboxStatus(
   return result;
 }
 
-export async function updateConversation(conversationId: string, data: UpdateConversationSchema) {
+/**
+ * A conversation belongs to a contact, and a contact to an org, so every scope
+ * here goes through `contact: { orgId }` — exactly as getConversationsByContactId
+ * further down already did, with its own comment explaining why it scopes through
+ * Contact rather than the denormalised Conversation.orgId.
+ *
+ * Without it, `PUT /conversations/:conversationId` let an authenticated user of
+ * any org rewrite any ticket's status, subject, description, close stamp and
+ * resolution result. Reopening another org's closed ticket put it back in their
+ * agents' Open tab. See issues.txt 18.35.
+ */
+export async function updateConversation(
+  conversationId: string,
+  orgId: string,
+  data: UpdateConversationSchema,
+) {
   // A bare `status` write here would leave the close stamps as they were — a
   // closed ticket carrying a live status, which is exactly what put closed
   // tickets back in the Open tab. Any status change is expanded through the same
@@ -228,6 +243,7 @@ export async function updateConversation(conversationId: string, data: UpdateCon
   return await prisma.conversation.update({
     where: {
       id: conversationId,
+      contact: { orgId },
     },
     data: status
       ? { ...conversationStatusData(status, resolveInboxActor(rest.closedBy)), ...rest }
@@ -260,18 +276,20 @@ export async function setConversationSubjectIfBlank(conversationId: string, subj
   return true;
 }
 
-export async function getConversationById(conversationId: string) {
-  return await prisma.conversation.findUnique({
+export async function getConversationById(conversationId: string, orgId: string) {
+  return await prisma.conversation.findFirst({
     where: {
       id: conversationId,
+      contact: { orgId },
     },
   });
 }
 
-export async function deleteConversation(conversationId: string) {
+export async function deleteConversation(conversationId: string, orgId: string) {
   return await prisma.conversation.delete({
     where: {
       id: conversationId,
+      contact: { orgId },
     },
   });
 }
@@ -546,9 +564,9 @@ export async function getConversationOverview(
   )
   SELECT 
    (COUNT(*) FILTER (WHERE c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())))::INTEGER AS "totalConversations",
-   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
+   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW()))
    AS "averageResponseTime",
-   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
+   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW()))
    AS "averageResponseTimeByAgent",
    CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) = 0 THEN 0
         ELSE ( 
@@ -686,8 +704,14 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
   dateKey: string,
   dateRange: string[],
 ) {
-  const startDate = new Date(dateRange[0]);
-  const endDate = new Date(dateRange[1]);
+  // Guarded, as the three sibling analytics functions in this file already are.
+  // The controller defaults a missing dateRange to `[]`, and reading `[0]`/`[1]`
+  // off that produced two Invalid Dates which were then bound as positional
+  // parameters to $queryRawUnsafe — a 500 for a call the querystring schema says
+  // is valid, since dateRange is optional. See issues.txt 18.38.
+  const hasRange = dateRange?.length === 2;
+  const startDate = hasRange ? new Date(dateRange[0]) : new Date(0);
+  const endDate = hasRange ? new Date(dateRange[1]) : new Date();
 
   const groupByHour = dateKey === "today" || dateKey === "yesterday";
   const periodColumn = groupByHour
@@ -843,13 +867,16 @@ WHERE ct."orgId" = ${orgId}::uuid;
   const thisWeekResolvedRate = totalConversation
     ? Math.round(((resolvedThisWeek / totalConversation) * 100 + Number.EPSILON) * 100) / 100
     : 0;
-  const lastWeekResolvedRate = totalConversation
-    ? Math.round(
-        ((resolvedLastWeek / (totalConversation - conversationCreatedToday)) * 100 +
-          Number.EPSILON) *
-          100,
-      ) / 100
-    : 0;
+  // The denominator is guarded, not just `totalConversation`. A young org whose
+  // every conversation was created today divided by zero; the result was
+  // +/-Infinity, which JSON.stringify writes as null, so the dashboard's trend
+  // arrow was blank rather than zero with no error anywhere.
+  // See issues.txt 18.39.
+  const lastWeekTotal = totalConversation - conversationCreatedToday;
+  const lastWeekResolvedRate =
+    lastWeekTotal > 0
+      ? Math.round(((resolvedLastWeek / lastWeekTotal) * 100 + Number.EPSILON) * 100) / 100
+      : 0;
   const resolvedRateDifference = thisWeekResolvedRate - lastWeekResolvedRate;
   return { ...rest, resolvedRateDifference };
 }
@@ -1602,8 +1629,14 @@ export async function getTeamDetailedMetrics(
 
   SELECT
     ${teamId}::uuid AS "teamId",
-    (SELECT "name" FROM "Team" WHERE id = ${teamId}::uuid) AS "teamName",
-    (SELECT "color" FROM "Team" WHERE id = ${teamId}::uuid) AS "teamColor",
+    -- The metrics themselves are properly scoped (team_convos joins Contact on
+    -- the caller's orgId), but these three header columns are separate scalar
+    -- subqueries and carried no org condition — so passing another org's team id
+    -- returned zeroed metrics, correctly, alongside that team's real name and
+    -- colour. Low value on its own; it confirms a team id is valid, which is the
+    -- first step of enumerating one. See issues.txt 18.41.
+    (SELECT "name" FROM "Team" WHERE id = ${teamId}::uuid AND "orgId" = ${orgId}::uuid) AS "teamName",
+    (SELECT "color" FROM "Team" WHERE id = ${teamId}::uuid AND "orgId" = ${orgId}::uuid) AS "teamColor",
     AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt IS NOT NULL) AS "averageResponseTime",
     COUNT(*) FILTER (WHERE tc."status"::text = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "activeChats",
     CASE WHEN COUNT(*) = 0 THEN 0

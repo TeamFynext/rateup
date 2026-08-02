@@ -88,10 +88,12 @@ describe("getConversationsByContactIdHandler", () => {
 });
 
 describe("updateConversationHandler", () => {
-  // NOTE: the conversation id comes from the path and the caller's org is never
-  // brought into the call, so any authenticated user can rewrite any
-  // conversation's status, subject or close stamp. See issues.txt 18.35.
-  test("updates the conversation named in the path without any org check", async () => {
+  // The conversation id came from the path and the caller's org was never brought
+  // into the call — `request.user` was not touched — so any authenticated user
+  // could rewrite any ticket's status, subject, description, close stamp and
+  // resolution result. Reopening another org's closed ticket put it back in their
+  // agents' Open tab. See issues.txt 18.35.
+  test("updates the conversation within the caller's org", async () => {
     (updateConversation as Mock).mockResolvedValue({ id: "conv-1" });
     const rep = reply();
 
@@ -100,7 +102,7 @@ describe("updateConversationHandler", () => {
       rep,
     );
 
-    expect(updateConversation).toHaveBeenCalledWith("conv-1", { subject: "Refund" });
+    expect(updateConversation).toHaveBeenCalledWith("conv-1", ORG, { subject: "Refund" });
     expect(rep.send).toHaveBeenCalledWith({ id: "conv-1" });
   });
 

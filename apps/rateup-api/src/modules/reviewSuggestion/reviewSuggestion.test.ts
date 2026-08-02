@@ -21,6 +21,9 @@ vi.mock("../../utils/auth.js", () => ({ hasAccessToTeam: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../team/team.auth.js", () => ({ verifyTeamAccess: vi.fn() }));
 vi.mock("../survey/survey.service.js", () => ({ getGoogleUrlBySurveyTeamMapId: vi.fn() }));
+vi.mock("../../utils/rateLimit.js", () => ({
+  rateLimit: vi.fn((opts) => Object.assign(vi.fn(), { opts })),
+}));
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
@@ -28,6 +31,7 @@ import { hasAccessToTeam } from "../../utils/auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
 import { getGoogleUrlBySurveyTeamMapId } from "../survey/survey.service.js";
+import { rateLimit } from "../../utils/rateLimit.js";
 import {
   createReviewSuggestions,
   deleteReviewSuggestion,
@@ -51,6 +55,7 @@ import { reviewSuggestionRoutes } from "./reviewSuggestion.route.js";
 import {
   byReviewSuggestionIdSchema,
   createReviewSuggestionsSchema,
+  publicReviewsQuerySchema,
   updateReviewSuggestionSchema,
 } from "./reviewSuggestion.schema.js";
 
@@ -143,30 +148,38 @@ describe("reviewSuggestionRoutes", () => {
     expect(put.opts.preHandler).toEqual([checkSession]);
   });
 
-  // NOTE: every other write in the file carries at least checkSession. The
-  // delete carries no preHandler key at all.
-  test("the delete route carries no preHandler of any kind", async () => {
+  // The delete carried no preHandler key at all — not even checkSession — while
+  // every other write in the file carried at least one. See issues.txt 36.1.
+  test("the delete route carries the session check", async () => {
     const { srv, routes } = fakeServer();
 
     await reviewSuggestionRoutes(srv);
 
     const del = routes.find((r) => r.method === "DELETE");
-    expect(del.opts.preHandler).toBeUndefined();
-    expect(Object.keys(del.opts)).toEqual(["schema"]);
+    expect(del.opts.preHandler).toEqual([checkSession]);
   });
 
-  test("the public read is unguarded, as its path says", async () => {
+  // Still unauthenticated — respondents read this at the end of a survey — but
+  // metered now, because a survey mapping id is in the survey's own public URL
+  // and the ids this returns are what made 36.1 straightforward.
+  // See issues.txt 36.5.
+  test("the public read stays session-free but is rate limited", async () => {
     const { srv, routes } = fakeServer();
 
     await reviewSuggestionRoutes(srv);
 
     const pub = routes.find((r) => r.url === "/public/:surveyTeamMapId");
-    expect(pub.opts.preHandler).toBeUndefined();
+    expect(pub.opts.preHandler).toBeDefined();
+    expect(pub.opts.preHandler).not.toBe(checkSession);
+    expect(rateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "reviewSuggestionPublic" }),
+    );
+    expect(pub.opts.schema.querystring).toBe(publicReviewsQuerySchema);
   });
 
-  // NOTE: the create route validates its body; the update route does not, even
-  // though updateReviewSuggestionSchema exists for exactly that.
-  test("only the create route declares a body schema", async () => {
+  // The create route validated its body; the update route did not, even though
+  // updateReviewSuggestionSchema existed for exactly that. See issues.txt 36.2.
+  test("both writers declare a body schema", async () => {
     const { srv, routes } = fakeServer();
 
     await reviewSuggestionRoutes(srv);
@@ -174,7 +187,7 @@ describe("reviewSuggestionRoutes", () => {
     const post = routes.find((r) => r.method === "POST");
     const put = routes.find((r) => r.method === "PUT");
     expect(post.opts.schema.body).toBe(createReviewSuggestionsSchema);
-    expect(put.opts.schema.body).toBeUndefined();
+    expect(put.opts.schema.body).toBe(updateReviewSuggestionSchema);
   });
 
   test("installs the module's own error handler", async () => {
@@ -206,63 +219,78 @@ describe("deleteReviewSuggestion", () => {
     expect(db.reviewSuggestion.delete).toHaveBeenCalledWith({ where: { id: VICTIM_REVIEW } });
   });
 
-  // NOTE: the handler resolves nothing about the caller — there is no session
-  // to read, because the route never establishes one.
-  test("the handler reads neither a user nor a team", async () => {
-    const request: any = {
-      params: { reviewSuggestionId: VICTIM_REVIEW },
-      get user() {
-        throw new Error("request.user was read");
-      },
-      get userId() {
-        throw new Error("request.userId was read");
-      },
-    };
+  // The handler resolved nothing about the caller, because the route never
+  // established a session. It now runs the same ownership check the update does:
+  // the review is resolved to its team and the caller must belong to it.
+  // See issues.txt 36.1.
+  test("resolves the review's team and refuses a caller outside it", async () => {
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
+      id: VICTIM_REVIEW,
+      teamId: VICTIM_TEAM,
+    });
+    (hasAccessToTeam as unknown as Mock).mockResolvedValueOnce(false);
+    const rep = reply();
 
-    await expect(deleteReviewSuggestionHandler(request, reply())).resolves.toBeUndefined();
-    expect(db.reviewSuggestion.delete).toHaveBeenCalledOnce();
+    await deleteReviewSuggestionHandler(
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
+      rep,
+    );
+
+    expect(hasAccessToTeam).toHaveBeenCalledWith(VICTIM_TEAM, USER);
+    expect(db.reviewSuggestion.delete).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(403);
   });
 
-  test("nothing looks the review up before deleting it", async () => {
+  test("looks the review up before deleting it", async () => {
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
+      id: VICTIM_REVIEW,
+      teamId: OWN_TEAM,
+    });
+
     await deleteReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW } } as never,
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
       reply(),
     );
 
-    expect(db.reviewSuggestion.findUnique).not.toHaveBeenCalled();
-    expect(hasAccessToTeam).not.toHaveBeenCalled();
+    expect(db.reviewSuggestion.findUnique).toHaveBeenCalledOnce();
+    expect(db.reviewSuggestion.delete).toHaveBeenCalledOnce();
   });
 
-  test("sends the deleted row back to the caller", async () => {
+  test("sends the deleted row back to a caller who owns it", async () => {
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
+      id: VICTIM_REVIEW,
+      teamId: OWN_TEAM,
+    });
     db.reviewSuggestion.delete.mockResolvedValueOnce({
       id: VICTIM_REVIEW,
-      teamId: VICTIM_TEAM,
+      teamId: OWN_TEAM,
       review: "Great service",
       language: "English",
     });
     const rep = reply();
 
     await deleteReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW } } as never,
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
       rep,
     );
 
-    expect(rep.send.mock.calls[0][0].teamId).toBe(VICTIM_TEAM);
+    expect(rep.send.mock.calls[0][0].teamId).toBe(OWN_TEAM);
   });
 
-  // NOTE: a missing row raises P2025, which the module error handler turns into
-  // a 500 — so a probe cannot be told apart from a server failure.
-  test("a missing row escapes to the error handler", async () => {
-    db.reviewSuggestion.delete.mockRejectedValueOnce(
-      Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
+  // A missing row used to reach prisma.delete and raise P2025, which the module
+  // error handler turned into a 500 — so a probe could not be told apart from a
+  // server failure. The access check answers 404 before the delete is reached.
+  // See issues.txt 36.4.
+  test("a missing row answers 404 and never reaches the delete", async () => {
+    const rep = reply();
+
+    await deleteReviewSuggestionHandler(
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
+      rep,
     );
 
-    await expect(
-      deleteReviewSuggestionHandler(
-        { params: { reviewSuggestionId: VICTIM_REVIEW } } as never,
-        reply(),
-      ),
-    ).rejects.toMatchObject({ code: "P2025" });
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Review suggestion not found" } });
+    expect(db.reviewSuggestion.delete).not.toHaveBeenCalled();
   });
 
   test("the id must at least be a uuid", () => {
@@ -289,29 +317,33 @@ describe("updateReviewSuggestion", () => {
     });
   });
 
-  // NOTE: the route declares no body schema, so `data` is whatever was posted,
-  // and it is handed to Prisma unchanged. ReviewSuggestion carries a teamId
-  // (prisma/schema.prisma:1205).
-  test("forwards a teamId in the body into the update", async () => {
+  // The service did `data: data` with the request body verbatim, against a model
+  // of `{ id, teamId, review, language }` — so a PUT carrying another team's id
+  // moved the suggestion into it, AFTER the in-handler check had passed against
+  // the row's ORIGINAL teamId. A one-request transfer. See issues.txt 36.2.
+  test("a teamId in the body does not reach the update", async () => {
     await updateReviewSuggestion(VICTIM_REVIEW, {
       review: "x",
       language: "English",
       teamId: OWN_TEAM,
     } as never);
 
-    expect(db.reviewSuggestion.update.mock.calls[0][0].data.teamId).toBe(OWN_TEAM);
+    expect(db.reviewSuggestion.update.mock.calls[0][0].data).toEqual({
+      review: "x",
+      language: "English",
+    });
   });
 
-  test("the handler passes the request body straight through", async () => {
+  test("the handler writes only the two fields the schema declares", async () => {
     db.reviewSuggestion.findUnique.mockResolvedValueOnce({
       id: VICTIM_REVIEW,
-      teamId: VICTIM_TEAM,
+      teamId: OWN_TEAM,
     });
 
     await updateReviewSuggestionHandler(
       {
         params: { reviewSuggestionId: VICTIM_REVIEW },
-        body: { review: "x", teamId: OWN_TEAM },
+        body: { review: "x", language: "English", teamId: VICTIM_TEAM },
         userId: USER,
       } as never,
       reply(),
@@ -319,13 +351,13 @@ describe("updateReviewSuggestion", () => {
 
     expect(db.reviewSuggestion.update.mock.calls[0][0].data).toEqual({
       review: "x",
-      teamId: OWN_TEAM,
+      language: "English",
     });
   });
 
-  // NOTE: the schema that describes this body exists and is not attached to the
-  // route.
-  test("the unused update schema would have bounded the body", () => {
+  // The schema that describes this body existed all along; it is attached to the
+  // route now, so an extra field is stripped before the handler sees it.
+  test("the update schema strips anything but review and language", () => {
     expect(
       updateReviewSuggestionSchema.safeParse({ review: "x", language: "English", teamId: OWN_TEAM })
         .success,
@@ -349,7 +381,12 @@ describe("updateReviewSuggestion", () => {
     expect(hasAccessToTeam).toHaveBeenCalledWith(VICTIM_TEAM, USER);
   });
 
-  test("a caller outside the team is refused before the write", async () => {
+  // The refusal used to be `reply.code(403); return;` — reply.code sets the
+  // status and returns the reply for chaining, it does not send — and Fastify
+  // treats an async handler that resolves undefined without a sent reply as a
+  // promise to answer later, so the denial held the connection open until
+  // something timed it out. See issues.txt 36.3.
+  test("a caller outside the team is refused, with a completed reply", async () => {
     db.reviewSuggestion.findUnique.mockResolvedValueOnce({
       id: VICTIM_REVIEW,
       teamId: VICTIM_TEAM,
@@ -363,26 +400,10 @@ describe("updateReviewSuggestion", () => {
     );
 
     expect(db.reviewSuggestion.update).not.toHaveBeenCalled();
-  });
-
-  // NOTE: the refusal sets a status code and never calls send, and the handler
-  // returns undefined — so nothing completes the reply.
-  test("the refusal sets a status but sends no body", async () => {
-    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
-      id: VICTIM_REVIEW,
-      teamId: VICTIM_TEAM,
+    expect(answer(rep)).toEqual({
+      code: 403,
+      body: { message: "You don't have access to this review suggestion" },
     });
-    (hasAccessToTeam as unknown as Mock).mockResolvedValueOnce(false);
-    const rep = reply();
-
-    const returned = await updateReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, body: {}, userId: USER } as never,
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(rep.send).not.toHaveBeenCalled();
-    expect(returned).toBeUndefined();
   });
 
   test("the success path does send", async () => {
@@ -404,17 +425,32 @@ describe("updateReviewSuggestion", () => {
     expect(rep.send).toHaveBeenCalledOnce();
   });
 
-  // NOTE: hasAccessToReview throws rather than returning false for an id that
-  // resolves to nothing, and the handler does not catch it.
-  test("an unknown review throws instead of answering 404", async () => {
-    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).rejects.toThrow("Review not found");
+  // hasAccessToReview threw "Review not found" rather than returning for an id
+  // that resolves to nothing, and the handler did not catch it — so an unknown
+  // id reached the module's error handler and answered a fixed 500. The helper
+  // reports the three outcomes as values now. See issues.txt 36.4.
+  test("an unknown review answers 404", async () => {
+    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("not-found");
 
-    await expect(
-      updateReviewSuggestionHandler(
-        { params: { reviewSuggestionId: VICTIM_REVIEW }, body: {}, userId: USER } as never,
-        reply(),
-      ),
-    ).rejects.toThrow("Review not found");
+    const rep = reply();
+    await updateReviewSuggestionHandler(
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, body: {}, userId: USER } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Review suggestion not found" } });
+  });
+
+  test("the three outcomes are distinguishable without an exception", async () => {
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({ id: VICTIM_REVIEW, teamId: OWN_TEAM });
+    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("allowed");
+
+    db.reviewSuggestion.findUnique.mockResolvedValueOnce({
+      id: VICTIM_REVIEW,
+      teamId: VICTIM_TEAM,
+    });
+    (hasAccessToTeam as unknown as Mock).mockResolvedValueOnce(false);
+    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("forbidden");
   });
 });
 
@@ -538,14 +574,31 @@ describe("createReviewSuggestions", () => {
     ).toBe(true);
   });
 
-  // NOTE: no upper bound on how many reviews one request may create.
-  test("the create schema puts no ceiling on the number of reviews", () => {
+  // One authenticated request could insert an unbounded number of rows — five
+  // thousand entries at a kilobyte each is a five megabyte body and five
+  // thousand inserts in one statement. See issues.txt 36.6.
+  test("the create schema caps how many reviews one request may create", () => {
     expect(
       createReviewSuggestionsSchema.safeParse({
         reviews: Array.from({ length: 5000 }, () => "x"),
         language: "en",
       }).success,
+    ).toBe(false);
+    expect(
+      createReviewSuggestionsSchema.safeParse({
+        reviews: Array.from({ length: 200 }, () => "x"),
+        language: "en",
+      }).success,
     ).toBe(true);
+  });
+
+  // STILL OPEN (issues.txt 36.5): the language filter is bounded in shape now
+  // but is not checked against the languages the team actually has, so a typo in
+  // the survey renderer still shows the respondent nothing with no error.
+  test("the public query schema bounds the language without knowing the team's", () => {
+    expect(publicReviewsQuerySchema.safeParse({}).success).toBe(true);
+    expect(publicReviewsQuerySchema.safeParse({ language: "e" }).success).toBe(false);
+    expect(publicReviewsQuerySchema.safeParse({ language: "not-a-language" }).success).toBe(true);
   });
 
   test("language is any string of two or more characters", () => {

@@ -106,16 +106,17 @@ describe("createContactLabelHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // NOTE: only P2002 is handled inside the prisma branch; any other prisma error
-  // falls off the end of the handler having sent nothing, which fastify turns
-  // into an empty 200 success. See issues.txt 18.17.
-  test("answers a non-duplicate prisma error with nothing at all", async () => {
+  // Only P2002 was handled inside the prisma branch; any other prisma error fell
+  // off the end of the handler having sent nothing, which fastify turns into an
+  // empty 200 — so a foreign-key violation read as success. Same shape as
+  // issues.txt 3.2. See issues.txt 18.17.
+  test("answers a non-duplicate prisma error with a 500", async () => {
     (createContactLabel as Mock).mockRejectedValue(new FakePrismaKnownError("P2003"));
     const rep = reply();
 
     await createContactLabelHandler(request({ body: { name: "VIP" } }), rep);
 
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 });
 
@@ -194,13 +195,14 @@ describe("updateContactLabelHandler", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Label not found" } });
   });
 
-  test("answers any other prisma error with nothing at all", async () => {
+  // See issues.txt 18.17.
+  test("answers any other prisma error with a 500", async () => {
     (updateContactLabel as Mock).mockRejectedValue(new FakePrismaKnownError("P2003"));
     const rep = reply();
 
     await updateContactLabelHandler(request({ params: { labelId: "l1" } }), rep);
 
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 });
 

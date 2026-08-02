@@ -37,6 +37,22 @@ import {
 } from "./zapier.schema.js";
 
 export async function zapierRoutes(server: FastifyInstance) {
+  /**
+   * zapierAuthenticationHandler is written as a preHandler — it bcrypt-compares the
+   * Bearer key against the named org's stored hash, assigns `request.user`, and
+   * replies only for the /auth probe — but it was registered as the HANDLER of
+   * POST /auth and nowhere else. Every other route in this tree therefore ran
+   * unauthenticated while taking its organisation from the query string: contacts,
+   * messaging, ticket creation and team invitations against any org on the
+   * platform, chosen by whoever called. It is the hook it was always meant to be.
+   * See issues.txt 26.1.
+   *
+   * The handlers still read `request.query.orgId`; that is now safe, because the
+   * hook only lets the request through when the caller's key matches THAT org's
+   * stored hash, and it sets request.user to the same org.
+   */
+  server.addHook("preHandler", zapierAuthenticationHandler);
+
   //auth
   server.post("/auth", zapierAuthenticationHandler);
   //subscriptions for trigger

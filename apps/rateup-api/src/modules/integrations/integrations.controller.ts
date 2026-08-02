@@ -4,7 +4,6 @@ import {
   deleteIntegrationByName,
   deleteWaPaymentConfiguration,
   deleteZapierTriggerHooks,
-  getAllIntegrations,
   getAllIntegrationsByOrgId,
   getGoogleAuthUrl,
   getIntegrationByName,
@@ -20,6 +19,7 @@ import { log } from "../../utils/logger.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   ByNameParams,
+  DeleteZapierHookInput,
   IntegrationSchema,
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
@@ -74,15 +74,9 @@ export const getIntegrationByNameHandler = async (
   }
 };
 
-export async function getAllIntegrationsHandler(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const integrations = await getAllIntegrations();
-    reply.code(200).send(integrations);
-  } catch (e) {
-    log.error({ err: e }, "Error fetching all integrations");
-    reply.code(500).send(e);
-  }
-}
+// getAllIntegrationsHandler used to live here, behind GET /all: it answered every
+// organisation's integration row, credential column and all, to any authenticated
+// user. Removed with its route and its service function. See issues.txt 26.2.
 
 export const getWaPaymentConfigurationsHandler = async (
   request: FastifyRequest<{ Querystring: { whatsappSettingsId?: string } }>,
@@ -138,7 +132,13 @@ export const createWaPaymentConfigurationsHandler = async (
   try {
     const { orgId } = request.user;
     const data = await createWaPaymentConfigurations(orgId, request.body);
-    reply.code(data ? 201 : 400).send(!data && "Error in creating whatsapp payment");
+    // The success body used to be `!data`, i.e. the boolean `false`, which a client
+    // cannot tell from a failure flag. See issues.txt 26.16.
+    if (!data) {
+      reply.code(400).send({ message: "Error in creating whatsapp payment" });
+      return;
+    }
+    reply.code(201).send({ message: "Payment configuration created" });
   } catch (error) {
     log.error("Error creating whatsapp payment");
     return reply.code(500).send(error);
@@ -246,7 +246,9 @@ export async function createGoogleSheetAuthToken(
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: tokens.expiry_date,
-        scopes: tokens.scope ? tokens.scope.split(",") : [],
+        // Google returns the granted scopes space-delimited, not comma-delimited, so
+        // this used to store one element holding the whole string. issues.txt 26.15.
+        scopes: tokens.scope ? tokens.scope.split(" ") : [],
         userEmail: email,
         driveFolderId,
       },
@@ -293,8 +295,14 @@ export async function petPoojaWebhookHandler(request: FastifyRequest, reply: Fas
   }
 }
 
-export async function deleteZapierTriggerHookHandler(request: FastifyRequest, reply: FastifyReply) {
+export async function deleteZapierTriggerHookHandler(
+  request: FastifyRequest<{ Body: DeleteZapierHookInput }>,
+  reply: FastifyReply,
+) {
   try {
+    // The body is validated by the route now, and the service resolves the URL from
+    // the org's own stored subscriptions rather than calling whatever arrived here.
+    // See issues.txt 26.6.
     const res = await deleteZapierTriggerHooks(
       request.body as Parameters<typeof deleteZapierTriggerHooks>[0],
       request.user.orgId,

@@ -108,6 +108,7 @@ import { getLoyaltyDashboardStatsHandler } from "./dashboard/dashboard.controlle
 type Mock = ReturnType<typeof vi.fn>;
 
 const ORG = "11111111-1111-4111-8111-111111111111";
+const USER = "user-1";
 const PROGRAM = "prog-1";
 
 function reply() {
@@ -116,7 +117,7 @@ function reply() {
 }
 
 function request(over: Record<string, unknown> = {}): any {
-  return { user: { orgId: ORG }, params: {}, query: {}, body: {}, ...over };
+  return { user: { orgId: ORG, id: USER }, params: {}, query: {}, body: {}, ...over };
 }
 
 function answer(rep: any) {
@@ -190,22 +191,24 @@ describe("the program controller", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: an org with no program gets an empty ARRAY where every other response
-  // from this endpoint is an object. Clients must handle both shapes.
-  // See issues.txt 20.39.
-  test("answers with an empty array when the org has no program", async () => {
+  // An org with no program used to get an empty ARRAY where every other response
+  // from this endpoint is an object, so every client had to handle two shapes from
+  // one route to tell "no program" from "a program". See issues.txt 20.39.
+  test("answers 404 when the org has no program", async () => {
     (getLoyaltyProgramByOrg as Mock).mockResolvedValue(null);
     const rep = reply();
 
     await getLoyaltyProgramHandler(request(), rep);
 
-    expect(answer(rep)).toEqual({ code: 200, body: [] });
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Loyalty program not found" } });
   });
 
-  // NOTE: the program id comes from the path and the session org is never
-  // consulted — an org can rewrite another org's program settings, including its
-  // signup and referral bonuses. See issues.txt 20.18.
-  test("updates whichever program id the path names", async () => {
+  // The program id comes from the path and the session org used to never be
+  // consulted at all, so one org could rewrite another's program settings —
+  // including its signup and referral bonuses, which decide what points get
+  // minted. The org is part of the where clause now. Same family as
+  // issues.txt 20.18.
+  test("carries the caller's org into the update", async () => {
     (updateLoyaltyProgram as Mock).mockResolvedValue({ id: "prog-other" });
 
     await updateLoyaltyProgramHandler(
@@ -213,8 +216,7 @@ describe("the program controller", () => {
       reply(),
     );
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(updateLoyaltyProgram).toHaveBeenCalledWith("prog-other", { signupBonus: 99999 });
+    expect(updateLoyaltyProgram).toHaveBeenCalledWith("prog-other", { signupBonus: 99999 }, ORG);
   });
 
   test("deletes without force by default", async () => {
@@ -222,7 +224,7 @@ describe("the program controller", () => {
 
     await deleteLoyaltyProgramHandler(request({ params: { programId: PROGRAM }, query: {} }), rep);
 
-    expect(deleteLoyaltyProgram).toHaveBeenCalledWith(PROGRAM, undefined);
+    expect(deleteLoyaltyProgram).toHaveBeenCalledWith(PROGRAM, ORG, undefined);
     expect(answer(rep).code).toBe(204);
   });
 
@@ -235,7 +237,7 @@ describe("the program controller", () => {
       reply(),
     );
 
-    expect(deleteLoyaltyProgram).toHaveBeenCalledWith(PROGRAM, true);
+    expect(deleteLoyaltyProgram).toHaveBeenCalledWith(PROGRAM, ORG, true);
   });
 
   test("reports a refused delete as a 500 with the reason", async () => {
@@ -249,14 +251,16 @@ describe("the program controller", () => {
     expect(answer(rep).code).toBe(500);
   });
 
-  // NOTE: resetting every balance in a program is a plain path-id call with no
-  // org check, no confirmation and no body. See issues.txt 20.30.
-  test("resets a program's points on a bare path id", async () => {
+  // Resetting every balance in a program used to be a plain path-id call with no
+  // org check and no record of who ran it. The caller's org scopes it and their
+  // user id is stamped on every reversing ledger row it writes.
+  // See issues.txt 20.30.
+  test("resets a program's points within the caller's org, recording the actor", async () => {
     const rep = reply();
 
     await resetProgramPointsHandler(request({ params: { programId: "prog-other" } }), rep);
 
-    expect(resetProgramPoints).toHaveBeenCalledWith("prog-other");
+    expect(resetProgramPoints).toHaveBeenCalledWith("prog-other", ORG, USER);
     expect(answer(rep)).toEqual({ code: 200, body: { message: "Points reset successfully" } });
   });
 });
@@ -545,15 +549,16 @@ describe("the dashboard controller", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { programExists: true } });
   });
 
-  // NOTE: this is the only handler in the module that logs with console.log
-  // rather than the shared logger, and it answers with a bare string instead of
-  // the { error } object every other endpoint returns. See issues.txt 20.39.
-  test("answers a failure as a bare string, not an error object", async () => {
+  // This was the only handler in the module that logged with console.log rather
+  // than the shared logger — so the dashboard's failures never reached the
+  // structured logs at all — and answered with a bare string where every other
+  // endpoint sends `{ error }`. See issues.txt 20.39.
+  test("answers a failure with an error object, like every other endpoint", async () => {
     (getLoyaltyDashboardStats as Mock).mockRejectedValue(new Error("boom"));
     const rep = reply();
 
     await getLoyaltyDashboardStatsHandler(request(), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: "Internal Server Error" });
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "boom" } });
   });
 });

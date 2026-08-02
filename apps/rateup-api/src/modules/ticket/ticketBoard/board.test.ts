@@ -86,45 +86,58 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("createBoard", () => {
-  test("creates the board and its team links in one call", async () => {
+  beforeEach(() => {
+    // By default the caller belongs to their own team and to no other.
+    db.teamMember.findMany.mockResolvedValue([{ teamId: OWN_TEAM }]);
+  });
+
+  test("creates the board, its team links and its first column in one call", async () => {
     await createBoard({ title: "Support", description: "d", teamIds: [OWN_TEAM], userId: USER });
 
     expect(db.ticketBoard.create.mock.calls[0][0].data).toEqual({
       title: "Support",
       description: "d",
       teams: { createMany: { skipDuplicates: true, data: [{ teamId: OWN_TEAM }] } },
+      ticketColumns: { create: { title: "To Do", order: 0 } },
     });
   });
 
-  // NOTE: the signature takes a userId and the body never uses it. TicketBoard
-  // has no creator column (prisma/schema.prisma:1539-1552) and no orgId either,
-  // so there is no record of who made a board or which tenant it belongs to.
-  test("discards the userId it is given", async () => {
+  // NOTE: STILL OPEN. The signature takes a userId and only uses it for the team
+  // check — TicketBoard has no creator column and no orgId, so there is still no
+  // record of who made a board or which tenant it belongs to. Adding one is a
+  // schema change. See issues.txt 28.5.
+  test("records no creator on the row", async () => {
     await createBoard({ title: "Support", teamIds: [OWN_TEAM], userId: USER });
 
     expect(JSON.stringify(db.ticketBoard.create.mock.calls[0][0])).not.toContain(USER);
   });
 
-  // NOTE: the route's team check is commented out (board.route.ts:26) and the
-  // service does not look at the teams either — any uuid is accepted and linked.
-  test("attaches whatever team ids it is handed, unchecked", async () => {
-    await createBoard({ title: "x", teamIds: [VICTIM_TEAM, OWN_TEAM], userId: USER });
+  // The route's team check was commented out and the service did not look the ids
+  // up either, so any uuid was accepted and linked. See issues.txt 28.2.
+  test("refuses a team the caller does not belong to", async () => {
+    await expect(
+      createBoard({ title: "x", teamIds: [VICTIM_TEAM, OWN_TEAM], userId: USER }),
+    ).rejects.toThrow(/only attach teams you belong to/);
 
-    expect(db.ticketBoard.create.mock.calls[0][0].data.teams.createMany.data).toEqual([
-      { teamId: VICTIM_TEAM },
-      { teamId: OWN_TEAM },
-    ]);
-    expect(db.teamMember.findMany).not.toHaveBeenCalled();
-    expect(db.teamMember.findFirst).not.toHaveBeenCalled();
+    expect(db.ticketBoard.create).not.toHaveBeenCalled();
   });
 
-  test("the create handler never checks the caller against the teams", async () => {
+  test("checks the ids against the caller's own memberships", async () => {
+    await createBoard({ title: "x", teamIds: [OWN_TEAM], userId: USER });
+
+    expect(db.teamMember.findMany.mock.calls[0][0].where).toEqual({
+      userId: USER,
+      teamId: { in: [OWN_TEAM] },
+    });
+  });
+
+  test("the create handler answers 403 for a foreign team", async () => {
     const rep = reply();
 
     await createBoardHandler(request({ body: { title: "x", teamIds: [VICTIM_TEAM] } }), rep);
 
-    expect(answer(rep).code).toBe(201);
-    expect(db.teamMember.findFirst).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(403);
+    expect(db.ticketBoard.create).not.toHaveBeenCalled();
   });
 
   test("accepts an empty team list, making an unreachable board", async () => {
@@ -135,21 +148,24 @@ describe("createBoard", () => {
     expect(db.ticketBoard.create.mock.calls[0][0].data.teams.createMany.data).toEqual([]);
   });
 
-  test("seeds a To Do column on the new board", async () => {
+  // The column used to be a second, separate write in the handler, so a failure
+  // there left a committed board with no columns while the caller was told the
+  // creation had failed. See issues.txt 28.4.
+  test("seeds the To Do column as part of the board write, not after it", async () => {
     await createBoardHandler(request({ body: { title: "x", teamIds: [OWN_TEAM] } }), reply());
 
-    expect(createColumn).toHaveBeenCalledWith({ title: "To Do", ticketBoardId: BOARD, order: 0 });
+    expect(createColumn).not.toHaveBeenCalled();
+    expect(db.ticketBoard.create.mock.calls[0][0].data.ticketColumns).toEqual({
+      create: { title: "To Do", order: 0 },
+    });
   });
 
-  // NOTE: the two writes are not in a transaction, so a column failure leaves
-  // the board behind and reports a 500 the caller reads as "nothing happened".
-  test("leaves the board behind when the column fails", async () => {
-    (createColumn as unknown as Mock).mockRejectedValueOnce(new Error("db down"));
+  test("a failed write leaves no board behind", async () => {
+    db.ticketBoard.create.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
     await createBoardHandler(request({ body: { title: "x", teamIds: [OWN_TEAM] } }), rep);
 
-    expect(db.ticketBoard.create).toHaveBeenCalledOnce();
     expect(answer(rep)).toEqual({ code: 500, body: { message: "Error creating board" } });
   });
 });
@@ -356,50 +372,66 @@ describe("the board access check", () => {
 
 describe("updateBoard", () => {
   test("selects the board by id", async () => {
-    await updateBoard(BOARD, { title: "Renamed" });
+    await updateBoard(BOARD, { title: "Renamed" }, USER);
 
     expect(db.ticketBoard.update.mock.calls[0][0].where).toEqual({ id: BOARD });
   });
 
-  // NOTE: the teams block replaces the whole set — deleteMany with no filter is
-  // scoped to this board's rows by the nested update, then the new list is
-  // written. So teamIds is a full replace, not a merge.
+  // The teams block replaces the whole set — deleteMany with no filter is scoped to
+  // this board's rows by the nested update, then the new list is written.
   test("replaces the team set wholesale when teamIds is given", async () => {
-    await updateBoard(BOARD, { teamIds: [VICTIM_TEAM] });
+    db.teamMember.findMany.mockResolvedValueOnce([{ teamId: OWN_TEAM }]);
+
+    await updateBoard(BOARD, { teamIds: [OWN_TEAM] }, USER);
 
     expect(db.ticketBoard.update.mock.calls[0][0].data.teams).toEqual({
       deleteMany: {},
-      createMany: { skipDuplicates: true, data: [{ teamId: VICTIM_TEAM }] },
+      createMany: { skipDuplicates: true, data: [{ teamId: OWN_TEAM }] },
     });
   });
 
-  // NOTE: nothing checks the incoming team ids against the caller, so a member
-  // of a board can attach any other team to it — and keep their own in the
-  // list to retain access.
-  test("attaches an arbitrary team alongside the caller's own", async () => {
-    await updateBoard(BOARD, { teamIds: [OWN_TEAM, VICTIM_TEAM] });
+  // Nothing used to check the incoming team ids against the caller, so a member of
+  // a board could attach any other team to it — keeping their own in the list to
+  // retain access — and read everything on the board from then on.
+  // See issues.txt 28.2.
+  test("refuses to attach an arbitrary team alongside the caller's own", async () => {
+    db.teamMember.findMany.mockResolvedValueOnce([{ teamId: OWN_TEAM }]);
 
-    expect(db.ticketBoard.update.mock.calls[0][0].data.teams.createMany.data).toEqual([
-      { teamId: OWN_TEAM },
-      { teamId: VICTIM_TEAM },
-    ]);
-    expect(db.teamMember.findFirst).not.toHaveBeenCalled();
+    await expect(updateBoard(BOARD, { teamIds: [OWN_TEAM, VICTIM_TEAM] }, USER)).rejects.toThrow(
+      /only attach teams you belong to/,
+    );
+    expect(db.ticketBoard.update).not.toHaveBeenCalled();
   });
 
-  test("an empty teamIds array detaches every team", async () => {
-    await updateBoard(BOARD, { teamIds: [] });
+  // An empty list used to detach every team, leaving a board nothing can list.
+  // See issues.txt 28.3.
+  test("refuses an update that would leave the board with no teams", async () => {
+    await expect(updateBoard(BOARD, { teamIds: [] }, USER)).rejects.toThrow(
+      /only attach teams you belong to/,
+    );
+    expect(db.ticketBoard.update).not.toHaveBeenCalled();
+  });
 
-    expect(db.ticketBoard.update.mock.calls[0][0].data.teams.createMany.data).toEqual([]);
+  test("the handler answers 403 for both refusals", async () => {
+    const rep = reply();
+
+    await updateBoardHandler(request({ params: { id: BOARD }, body: { teamIds: [] } }), rep);
+
+    expect(answer(rep)).toEqual({
+      code: 403,
+      body: { message: "A board must keep at least one team" },
+    });
   });
 
   test("leaves the teams alone when teamIds is absent", async () => {
-    await updateBoard(BOARD, { title: "Renamed" });
+    await updateBoard(BOARD, { title: "Renamed" }, USER);
 
     expect(db.ticketBoard.update.mock.calls[0][0].data.teams).toBeUndefined();
+    expect(db.teamMember.findMany).not.toHaveBeenCalled();
   });
 
   test("replaces the notification recipients the same way", async () => {
-    await updateBoard(BOARD, { assignedToIds: [USER] });
+    await updateBoard(BOARD, { assignedToIds: [USER] }, USER);
 
     expect(db.ticketBoard.update.mock.calls[0][0].data.notificationRecipients).toEqual({
       deleteMany: {},
@@ -411,7 +443,9 @@ describe("updateBoard", () => {
   // while description, teamIds and assignedToIds are guarded — the two styles
   // only agree because Prisma drops undefined.
   test("passes absent fields through as undefined", async () => {
-    await updateBoard(BOARD, { teamIds: [OWN_TEAM] });
+    db.teamMember.findMany.mockResolvedValueOnce([{ teamId: OWN_TEAM }]);
+
+    await updateBoard(BOARD, { teamIds: [OWN_TEAM] }, USER);
 
     const data = db.ticketBoard.update.mock.calls[0][0].data;
     expect(data.title).toBeUndefined();
@@ -427,10 +461,10 @@ describe("updateBoard", () => {
     expect(updateBoardRequestSchema.safeParse({ teamIds: ["not-a-uuid"] }).success).toBe(false);
   });
 
-  // NOTE: prisma.update either resolves with a row or throws P2025 — it never
-  // resolves null, so this branch cannot run and a missing board would 500.
-  // In practice verifyBoardAccess 403s first, so it is unreachable twice over.
-  test("the 404 branch cannot be reached", async () => {
+  // The `if (!updatedBoard)` 404 that used to sit in the handler could never run:
+  // prisma.update resolves a row or throws P2025. verifyBoardAccess 403s first for a
+  // board the caller cannot see, which is the right outcome. See issues.txt 28.7.
+  test("answers 200 for an update that succeeds", async () => {
     const rep = reply();
 
     await updateBoardHandler(request({ params: { id: BOARD }, body: { title: "x" } }), rep);
@@ -523,9 +557,9 @@ describe("getBoardTeamMembersById", () => {
     expect(db.$queryRaw.mock.calls[0][0].join("?")).toContain("SELECT DISTINCT");
   });
 
-  // NOTE: $queryRaw resolves with an array, which is always truthy — so an
-  // empty result is a 200 with [], and the 404 branch is dead.
-  test("answers 200 with an empty list rather than 404", async () => {
+  // $queryRaw resolves with an array, which is always truthy, so the 404 branch that
+  // used to sit beside this could never run either. See issues.txt 28.7.
+  test("answers 200 with an empty list", async () => {
     const rep = reply();
 
     await getBoardTeamMembersHandler(request({ params: { id: BOARD } }), rep);
@@ -553,15 +587,15 @@ function fakeServer() {
 }
 
 describe("boardRoutes", () => {
-  // NOTE: the parent ticketRoutes already adds checkSession (ticket.route.ts:12)
-  // and this subtree adds it again, so the session is resolved twice per board
-  // request — and checkSession's auditLogHook runs twice with it.
-  test("adds a second checkSession on top of the parent's", async () => {
+  // The parent ticketRoutes already adds checkSession, and this subtree used to add
+  // it again — so every board request resolved the session twice and wrote two audit
+  // entries for one action. See issues.txt 28.7.
+  test("does not add a second checkSession on top of the parent's", async () => {
     const { srv, hooks } = fakeServer();
 
     await boardRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([]);
   });
 
   test("guards every by-id route with the board access check", async () => {

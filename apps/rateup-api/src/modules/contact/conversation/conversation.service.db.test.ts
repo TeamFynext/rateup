@@ -336,7 +336,7 @@ describe("setInboxStatus", () => {
 
 describe("updateConversation", () => {
   test("a status change is expanded into the whole transition, not written bare", async () => {
-    await updateConversation("conv-1", { status: WaMessageAssignStatus.CLOSED } as any);
+    await updateConversation("conv-1", ORG, { status: WaMessageAssignStatus.CLOSED } as any);
 
     const data = db.conversation.update.mock.calls[0][0].data;
     expect(data.status).toBe(WaMessageAssignStatus.CLOSED);
@@ -345,7 +345,7 @@ describe("updateConversation", () => {
   });
 
   test("reopening clears the previous close stamp", async () => {
-    await updateConversation("conv-1", { status: WaMessageAssignStatus.ASSIGNED } as any);
+    await updateConversation("conv-1", ORG, { status: WaMessageAssignStatus.ASSIGNED } as any);
 
     expect(db.conversation.update.mock.calls[0][0].data).toMatchObject({
       closedAt: null,
@@ -358,7 +358,7 @@ describe("updateConversation", () => {
   test("fields the caller passed explicitly win over the derived ones", async () => {
     const closedAt = new Date("2020-01-01T00:00:00.000Z");
 
-    await updateConversation("conv-1", {
+    await updateConversation("conv-1", ORG, {
       status: WaMessageAssignStatus.CLOSED,
       closedAt,
     } as any);
@@ -367,7 +367,7 @@ describe("updateConversation", () => {
   });
 
   test("attributes the close to a caller-supplied user id", async () => {
-    await updateConversation("conv-1", {
+    await updateConversation("conv-1", ORG, {
       status: WaMessageAssignStatus.CLOSED,
       closedBy: USER,
     } as any);
@@ -376,7 +376,7 @@ describe("updateConversation", () => {
   });
 
   test("a body with no status is written through untouched", async () => {
-    await updateConversation("conv-1", { subject: "Refund" } as any);
+    await updateConversation("conv-1", ORG, { subject: "Refund" } as any);
 
     expect(db.conversation.update.mock.calls[0][0].data).toEqual({ subject: "Refund" });
   });
@@ -409,18 +409,25 @@ describe("setConversationSubjectIfBlank", () => {
 });
 
 describe("getConversationById / deleteConversation", () => {
-  // NOTE: neither is org-scoped; the id comes straight off the request.
-  // See issues.txt 18.35.
-  test("a read is keyed on the conversation id alone", async () => {
-    await getConversationById("conv-1");
+  // Neither was org-scoped and the id came straight off the request. A
+  // conversation belongs to a contact and a contact to an org, which is how
+  // getConversationsByContactId in the same file already scoped — with a comment
+  // explaining why it goes through Contact rather than the denormalised
+  // Conversation.orgId. See issues.txt 18.35.
+  test("a read is scoped through the contact's org", async () => {
+    await getConversationById("conv-1", ORG);
 
-    expect(db.conversation.findUnique).toHaveBeenCalledWith({ where: { id: "conv-1" } });
+    expect(db.conversation.findFirst).toHaveBeenCalledWith({
+      where: { id: "conv-1", contact: { orgId: ORG } },
+    });
   });
 
-  test("a delete is keyed on the conversation id alone", async () => {
-    await deleteConversation("conv-1");
+  test("a delete is scoped through the contact's org", async () => {
+    await deleteConversation("conv-1", ORG);
 
-    expect(db.conversation.delete).toHaveBeenCalledWith({ where: { id: "conv-1" } });
+    expect(db.conversation.delete).toHaveBeenCalledWith({
+      where: { id: "conv-1", contact: { orgId: ORG } },
+    });
   });
 });
 
@@ -725,15 +732,18 @@ describe("getAvargeResponseTimeofTodyaInEveryHour", () => {
     expect(end).toEqual(new Date("2026-01-02"));
   });
 
-  // NOTE: the controller defaults a missing dateRange to [], and this function
-  // reads [0] and [1] off it unconditionally. Postgres is then handed two
-  // Invalid Dates. See issues.txt 18.38.
-  test("binds Invalid Dates when the caller supplied no range", async () => {
+  // The controller defaults a missing dateRange to `[]`, and this function read
+  // `[0]` and `[1]` off it unconditionally — so postgres was handed two Invalid
+  // Dates and answered 500, for a call the querystring schema says is valid
+  // (dateRange is optional). Its three sibling analytics functions all guard with
+  // `if (dateRange.length)`; this one now does too. See issues.txt 18.38.
+  test("binds a usable window when the caller supplied no range", async () => {
     await getAvargeResponseTimeofTodyaInEveryHour(ORG, "today", []);
 
     const [, , start, end] = db.$queryRawUnsafe.mock.calls[0];
-    expect(Number.isNaN(start.getTime())).toBe(true);
-    expect(Number.isNaN(end.getTime())).toBe(true);
+    expect(Number.isNaN(start.getTime())).toBe(false);
+    expect(Number.isNaN(end.getTime())).toBe(false);
+    expect(start.getTime()).toBeLessThan(end.getTime());
   });
 });
 
@@ -799,15 +809,17 @@ describe("getOverAllQuickStatsOfConversations", () => {
     expect((await getOverAllQuickStatsOfConversations(ORG)).resolvedRateDifference).toBe(0);
   });
 
-  // NOTE: an org whose every conversation was created today divides by zero, and
-  // the resulting Infinity serialises to null in the JSON response.
+  // An org whose every conversation was created today divided by zero, and the
+  // resulting -Infinity serialises to null in the JSON response — so the
+  // dashboard's trend arrow was blank rather than zero, with no error anywhere.
+  // The guard above it only checked `totalConversation`, not the difference.
   // See issues.txt 18.39.
-  test("yields -Infinity when every conversation was created today", async () => {
+  test("reports a zero difference when every conversation was created today", async () => {
     db.$queryRaw.mockResolvedValue([
       { ...row, totalConversation: 2, conversationCreatedToday: 2, resolvedThisWeek: 0 },
     ]);
 
-    expect((await getOverAllQuickStatsOfConversations(ORG)).resolvedRateDifference).toBe(-Infinity);
+    expect((await getOverAllQuickStatsOfConversations(ORG)).resolvedRateDifference).toBe(0);
   });
 });
 

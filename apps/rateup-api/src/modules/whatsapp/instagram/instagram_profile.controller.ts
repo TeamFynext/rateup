@@ -1,7 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
 import { log } from "../../../utils/logger.js";
-import { getWaSettingsById, updateWaSettingsById } from "../settings/wa_settings.service.js";
+import {
+  getWaSettingsByIbaId,
+  getWaSettingsById,
+  updateWaSettingsById,
+} from "../settings/wa_settings.service.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
@@ -39,11 +43,52 @@ function normalizePersistentMenu(data: unknown): InstagramPersistentMenuEntry[] 
   return [];
 }
 
+/**
+ * Raised when the channel exists and belongs to the caller but has no Instagram
+ * account attached. A distinct type so the handlers can answer 409 with the
+ * message rather than folding a setup step the user simply has not done into a
+ * generic 500. See issues.txt 12.14.
+ */
+class InstagramNotConnectedError extends Error {
+  constructor() {
+    super("Instagram account is not connected for this channel");
+    this.name = "InstagramNotConnectedError";
+  }
+}
+
+/** Turns a caught error into the reply it deserves; 500 unless it is the above. */
+function replyForError(reply: FastifyReply, error: unknown, fallbackMessage: string) {
+  if (error instanceof InstagramNotConnectedError) {
+    return reply.code(409).send({ success: false, message: error.message });
+  }
+  return reply.code(500).send({ success: false, message: fallbackMessage });
+}
+
+/** Instagram allows one persistent menu per locale, each with up to 3 actions. */
+function validatePersistentMenu(
+  menus: Array<{ locale: string; call_to_actions: Array<{ title: string }> }>,
+): string | null {
+  if (menus.length === 0) return null;
+  if (!menus.some((menu) => menu.locale === "default")) {
+    return "A persistent menu must include an entry with locale 'default'";
+  }
+  const locales = menus.map((menu) => menu.locale);
+  if (new Set(locales).size !== locales.length) {
+    return "A persistent menu may only have one entry per locale";
+  }
+  for (const menu of menus) {
+    if (menu.call_to_actions.length > 3) {
+      return "Instagram supports up to 3 menu items per locale";
+    }
+  }
+  return null;
+}
+
 async function resolveInstagramSettings(
   whatsappSettingsId: string,
   orgId: string,
 ): Promise<InstagramWaSettings | null> {
-  const settings = await getWaSettingsById(whatsappSettingsId);
+  const settings = await getWaSettingsById(whatsappSettingsId, orgId);
 
   if (!settings || settings.orgId !== orgId) {
     return null;
@@ -51,10 +96,25 @@ async function resolveInstagramSettings(
 
   const { ibaId } = settings;
   if (!ibaId) {
-    throw new Error("Instagram account is not connected for this channel");
+    throw new InstagramNotConnectedError();
   }
 
   return { ...settings, ibaId };
+}
+
+/**
+ * The org-scoped counterpart for the routes that are keyed on a raw Instagram
+ * business account id rather than a channel id.
+ *
+ * getWaSettingsByIbaId is not org-scoped, so handing it a path parameter let any
+ * logged-in user read another org's account. See issues.txt 12.15.
+ */
+async function resolveInstagramSettingsByIbaId(ibaId: string, orgId: string) {
+  const settings = await getWaSettingsByIbaId(ibaId);
+  if (!settings || settings.orgId !== orgId) {
+    return null;
+  }
+  return settings;
 }
 
 export async function getInstagramProfileHandler(
@@ -89,10 +149,7 @@ export async function getInstagramProfileHandler(
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error fetching profile settings");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to fetch Instagram profile settings",
-    });
+    return replyForError(reply, error, "Failed to fetch Instagram profile settings");
   }
 }
 
@@ -124,28 +181,44 @@ export async function setInstagramIceBreakersHandler(
       });
     }
 
-    await updateWaSettingsById(settings.id, {
+    // Meta first. Writing our copy first meant a Meta refusal answered 500 with
+    // the UI already showing the new ice breakers while Instagram still served
+    // the old ones, and nothing reconciled the two. Same shape as issues.txt
+    // 11.14. See issues.txt 12.13.
+    //
+    // setInstagramIceBreakers writes our copy itself, so the local write below
+    // only runs when Meta was not contacted at all.
+    if (request.body.syncWithMeta) {
+      const metaResult = await setInstagramIceBreakers(
+        request.body.iceBreakers,
+        orgId,
+        settings.ibaId,
+      );
+      return reply.code(200).send({
+        success: true,
+        data: {
+          saved: request.body.iceBreakers,
+          meta: { syncedWithMeta: true, result: metaResult },
+        },
+      });
+    }
+
+    await updateWaSettingsById(settings.id, orgId, {
       instagramIceBreakers: request.body.iceBreakers,
     });
 
-    let metaResult: unknown = { saved: true };
-    if (request.body.syncWithMeta) {
-      metaResult = await setInstagramIceBreakers(request.body.iceBreakers, orgId, settings.ibaId);
-    }
-
+    // `meta` used to read `{ saved: true }` here, which looks like a Meta result
+    // for a request that never contacted Meta. See issues.txt 12.14.
     return reply.code(200).send({
       success: true,
       data: {
         saved: request.body.iceBreakers,
-        meta: metaResult,
+        meta: { syncedWithMeta: false },
       },
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error setting ice breakers");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to set Instagram ice breakers",
-    });
+    return replyForError(reply, error, "Failed to set Instagram ice breakers");
   }
 }
 
@@ -164,19 +237,15 @@ export async function deleteInstagramIceBreakersHandler(
       });
     }
 
-    await updateWaSettingsById(settings.id, {
-      instagramIceBreakers: [],
-    });
-
+    // deleteInstagramIceBreakers clears our copy itself once Meta accepts, so
+    // this no longer clears it up front — Meta refusing used to leave the UI
+    // empty while Instagram still served the old list. See issues.txt 12.13.
     const data = await deleteInstagramIceBreakers(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error deleting ice breakers");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to delete Instagram ice breakers",
-    });
+    return replyForError(reply, error, "Failed to delete Instagram ice breakers");
   }
 }
 
@@ -209,32 +278,44 @@ export async function setInstagramPersistentMenuHandler(
       });
     }
 
-    await updateWaSettingsById(settings.id, {
-      instagramPersistentMenu: request.body.persistentMenu,
-    });
+    // The menu was stored at any size and any shape, while its ice-breaker
+    // sibling enforced Instagram's limit. See issues.txt 12.14.
+    const menuError = validatePersistentMenu(request.body.persistentMenu);
+    if (menuError) {
+      return reply.code(400).send({ success: false, message: menuError });
+    }
 
-    let metaResult: unknown = { saved: true };
+    // Meta first — see the note in setInstagramIceBreakersHandler.
+    // See issues.txt 12.13.
     if (request.body.syncWithMeta) {
-      metaResult = await setInstagramPersistentMenu(
+      const metaResult = await setInstagramPersistentMenu(
         request.body.persistentMenu,
         orgId,
         settings.ibaId,
       );
+      return reply.code(200).send({
+        success: true,
+        data: {
+          saved: request.body.persistentMenu,
+          meta: { syncedWithMeta: true, result: metaResult },
+        },
+      });
     }
+
+    await updateWaSettingsById(settings.id, orgId, {
+      instagramPersistentMenu: request.body.persistentMenu,
+    });
 
     return reply.code(200).send({
       success: true,
       data: {
         saved: request.body.persistentMenu,
-        meta: metaResult,
+        meta: { syncedWithMeta: false },
       },
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error setting persistent menu");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to set Instagram persistent menu",
-    });
+    return replyForError(reply, error, "Failed to set Instagram persistent menu");
   }
 }
 
@@ -253,19 +334,13 @@ export async function deleteInstagramPersistentMenuHandler(
       });
     }
 
-    await updateWaSettingsById(settings.id, {
-      instagramPersistentMenu: [],
-    });
-
+    // See the note in deleteInstagramIceBreakersHandler. issues.txt 12.13.
     const data = await deleteInstagramPersistentMenu(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error deleting persistent menu");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to delete Instagram persistent menu",
-    });
+    return replyForError(reply, error, "Failed to delete Instagram persistent menu");
   }
 }
 
@@ -289,10 +364,7 @@ export async function syncInstagramIceBreakersHandler(
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error syncing ice breakers");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to sync Instagram ice breakers to Meta",
-    });
+    return replyForError(reply, error, "Failed to sync Instagram ice breakers to Meta");
   }
 }
 
@@ -316,18 +388,32 @@ export async function syncInstagramPersistentMenuHandler(
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error syncing persistent menu");
-    return reply.code(500).send({
-      success: false,
-      message: "Failed to sync Instagram persistent menu to Meta",
-    });
+    return replyForError(reply, error, "Failed to sync Instagram persistent menu to Meta");
   }
 }
 
+/**
+ * These two used to hand the path ibaId straight to the service, which looked the
+ * account's page token up by id alone — no ownership check, unlike the seven
+ * handlers above. The route is authenticated but was not scoped, so any logged-in
+ * user who knew another org's Instagram business account id got that account's
+ * last 50 posts and its live stories, fetched with the victim's own page token.
+ * Same IDOR family as issues 1.1, 11.1 and 8.1. See issues.txt 12.15.
+ *
+ * 404, not 403: an account another org owns is indistinguishable from one that
+ * does not exist, so this cannot be used to probe for account ids.
+ */
 export async function getInstagramMediaHandler(
   request: FastifyRequest<{ Params: { ibaId: string } }>,
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
+    const settings = await resolveInstagramSettingsByIbaId(request.params.ibaId, orgId);
+    if (!settings) {
+      return reply.code(404).send({ success: false, message: "Instagram settings not found" });
+    }
+
     const data = await getInstagramMediaPosts(request.params.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {
@@ -341,6 +427,12 @@ export async function getInstagramStoriesHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
+    const settings = await resolveInstagramSettingsByIbaId(request.params.ibaId, orgId);
+    if (!settings) {
+      return reply.code(404).send({ success: false, message: "Instagram settings not found" });
+    }
+
     const data = await getInstagramStories(request.params.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {

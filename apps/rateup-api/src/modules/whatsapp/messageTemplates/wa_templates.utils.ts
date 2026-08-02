@@ -1,6 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
-  SubscriptionFeaturePathName,
   WaTemplateCategory,
   WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
@@ -15,7 +14,7 @@ import {
 import { parseStringWithVariables } from "../../../utils/template.js";
 import { CreateWaTemplateFormattedInput, CreateWaTemplateInput } from "./wa_templates.schema.js";
 import { getTemplateByIdAndOrgId } from "./wa_templates.service.js";
-import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
+import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
 import prisma from "../../../utils/prisma.js";
 
 export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplateFormattedInput {
@@ -75,7 +74,10 @@ export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplate
         });
       }
 
-      if (card.buttons.length > 0) {
+      // Optional-chained like every other card field. A carousel card saved
+      // without a buttons array used to throw here instead of producing a
+      // button-less card. See issues.txt 14.8.
+      if (card.buttons?.length) {
         cardComponents.push({
           type: WaTemplateComponentType.BUTTONS,
           buttons: card.buttons,
@@ -298,7 +300,11 @@ export async function getTemplateQuery(
                 }
                 return {
                   type: component?.type.toLowerCase(),
-                  paramteters: [
+                  // `parameters`, not `paramteters` — the link this branch had just
+                  // resolved was never actually sent. Latent (nothing calls
+                  // getTemplateQuery today; sendTemplateToUserCore builds its own
+                  // components) but wrong. See issues.txt 14.9.
+                  parameters: [
                     {
                       type: component?.format.toLowerCase(),
                       [component?.format.toLowerCase()]: {
@@ -317,54 +323,21 @@ export async function getTemplateQuery(
   return commonQuery;
 }
 
+// Defined in src/utils/waTemplateComponents.ts and re-exported here, so the copy
+// that lived in campaign.service.ts and the one that lived here are one function.
+// See issues.txt 17.8.
+export { getFlowIdFromTemplateComponents } from "../../../utils/waTemplateComponents.js";
+
 /**
- * Returns flow_id if the templateComponents contains a flow button
- * @param components
- * @returns
+ * See issues.txt 14.7 and 17.2 — one of four copies of the same gate, now sharing
+ * enforceWhatsappCountLimit.
  */
-export function getFlowIdFromTemplateComponents(
-  components: WaTemplateComponent[],
-): string | undefined {
-  const flowId = components
-    .find((c) => c.type.toLocaleLowerCase() === WaTemplateComponentType.BUTTONS)
-    ?.buttons?.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
-    ?.flow_id?.toString();
-
-  return flowId;
-}
-
 export async function verifyTemplateSubscriptionLimit(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  try {
-    let orgId = request.user.orgId;
-    const subscription = request.subscription;
-    if (!subscription) throw new Error("Subscription not found");
-
-    const templateCount = await prisma.waTemplate.count({
-      where: {
-        orgId: orgId,
-      },
-    });
-
-    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
-    // `conversation.count`, see global.d.ts) - same gap as wa_automatedReply.utils.ts's
-    // whatsappAutomationFeature. Typed via the generic (rather than `as any` on the
-    // input) to describe the shape this code expects without asserting it's really there.
-    const whatsappTemplateFeature = getNestedProperty<{ count?: { max: number } }>(
-      subscription.features,
-      SubscriptionFeaturePathName.Whatsapp,
-    );
-    if (templateCount >= (whatsappTemplateFeature?.count?.max ?? Infinity)) {
-      throw new Error(
-        `You have reached the maximum limit of ${whatsappTemplateFeature?.count?.max} templates.`,
-      );
-    }
-  } catch (e) {
-    return reply.code(403).send({
-      message: e instanceof Error ? e.message : String(e),
-      displayMessageInClient: true,
-    });
-  }
+  return await enforceWhatsappCountLimit(request, reply, {
+    label: "templates",
+    count: (orgId) => prisma.waTemplate.count({ where: { orgId } }),
+  });
 }

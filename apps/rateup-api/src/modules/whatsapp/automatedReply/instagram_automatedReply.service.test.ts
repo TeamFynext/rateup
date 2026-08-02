@@ -15,6 +15,9 @@ vi.mock("../../../utils/prisma.js", () => ({
       update: vi.fn(),
       deleteMany: vi.fn(),
     },
+    // deleteInstagramAutomatedReply runs its two deletes in one transaction; the mock
+    // hands the callback the same client so the per-model assertions still apply.
+    $transaction: vi.fn(),
   },
   excludeFields: vi.fn(),
 }));
@@ -54,6 +57,7 @@ const db = prisma as unknown as {
     update: Mock;
     deleteMany: Mock;
   };
+  $transaction: Mock;
 };
 
 const AUTOMATION = { id: "ig-auto-1", orgId: "org-1", name: "Comment reply" };
@@ -70,6 +74,7 @@ beforeEach(() => {
   db.waAutomatedReplyMessage.create.mockResolvedValue(TRACKING);
   db.waAutomatedReplyMessage.update.mockResolvedValue(TRACKING);
   db.waAutomatedReplyMessage.deleteMany.mockResolvedValue({ count: 0 });
+  db.$transaction.mockImplementation(async (cb: (client: unknown) => Promise<unknown>) => cb(db));
 });
 
 describe("getInstagramAutomatedRepliesByOrgId", () => {
@@ -142,9 +147,9 @@ describe("createInstagramAutomatedReply", () => {
     });
   });
 
-  // NOTE: both are accepted by the signature but neither reaches the create call, so
-  // an automation created with them silently loses them.
-  test("drops sendOnceIn24Hours and isActive on creation", async () => {
+  // Both now have backing columns and are persisted on create. `isActive` is the name
+  // the API uses; `isEnabled` is the column.
+  test("stores sendOnceIn24Hours and isActive on creation", async () => {
     await createInstagramAutomatedReply({
       orgId: "org-1",
       name: "A",
@@ -154,8 +159,16 @@ describe("createInstagramAutomatedReply", () => {
     });
 
     const data = db.waAutomatedReply.create.mock.calls[0][0].data;
-    expect(data).not.toHaveProperty("sendOnceIn24Hours");
-    expect(data).not.toHaveProperty("isEnabled");
+    expect(data.sendOnceIn24Hours).toBe(true);
+    expect(data.isEnabled).toBe(false);
+  });
+
+  test("leaves both undefined when unspecified, so the column defaults apply", async () => {
+    await createInstagramAutomatedReply({ orgId: "org-1", name: "A", matchData: {} });
+
+    const data = db.waAutomatedReply.create.mock.calls[0][0].data;
+    expect(data.sendOnceIn24Hours).toBeUndefined();
+    expect(data.isEnabled).toBeUndefined();
   });
 
   test("logs and rethrows when creation fails", async () => {
@@ -178,21 +191,16 @@ describe("updateInstagramAutomatedReply", () => {
     });
   });
 
-  // NOTE: WaAutomatedReply has no isEnabled/sendOnceIn24Hours columns, so - like
-  // creation - the update call drops both rather than sending Prisma an update payload
-  // with fields it doesn't recognize.
-  test("drops isActive on update, same as creation", async () => {
+  test("stores isActive on update, same as creation", async () => {
     await updateInstagramAutomatedReply("ig-auto-1", { isActive: false });
 
-    const data = db.waAutomatedReply.update.mock.calls[0][0].data;
-    expect(data).not.toHaveProperty("isEnabled");
+    expect(db.waAutomatedReply.update.mock.calls[0][0].data.isEnabled).toBe(false);
   });
 
-  test("drops sendOnceIn24Hours on update, same as creation", async () => {
+  test("stores sendOnceIn24Hours on update, same as creation", async () => {
     await updateInstagramAutomatedReply("ig-auto-1", { sendOnceIn24Hours: true });
 
-    const data = db.waAutomatedReply.update.mock.calls[0][0].data;
-    expect(data).not.toHaveProperty("sendOnceIn24Hours");
+    expect(db.waAutomatedReply.update.mock.calls[0][0].data.sendOnceIn24Hours).toBe(true);
   });
 
   test("leaves unmentioned fields undefined so Prisma skips them", async () => {
@@ -240,13 +248,19 @@ describe("deleteInstagramAutomatedReply", () => {
     await expect(deleteInstagramAutomatedReply("ig-auto-1")).resolves.toEqual({ success: true });
   });
 
-  // NOTE: the two deletes are not in a transaction, so a failure on the second leaves
-  // the automation in place with its tracking rows already gone.
-  test("has already removed the tracking rows when the automation delete fails", async () => {
+  // Both deletes run in one transaction, as deleteRule does, so a failure on the second
+  // takes the tracking-row delete down with it rather than leaving the automation alive
+  // with its history gone.
+  test("runs both deletes in a single transaction", async () => {
+    await deleteInstagramAutomatedReply("ig-auto-1");
+
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  test("propagates a failure on the automation delete so the transaction rolls back", async () => {
     db.waAutomatedReply.delete.mockRejectedValue(new Error("fk violation"));
 
     await expect(deleteInstagramAutomatedReply("ig-auto-1")).rejects.toThrow("fk violation");
-    expect(db.waAutomatedReplyMessage.deleteMany).toHaveBeenCalled();
   });
 });
 

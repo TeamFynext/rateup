@@ -96,8 +96,9 @@ describe("zohoRoutes", () => {
     return { srv, routes, hooks };
   }
 
-  // NOTE: unlike the zapier sibling, zoho attaches checkSession per route —
-  // to seven of its nine routes.
+  // zoho attaches checkSession per route. The unsubscribe route used to be the one
+  // operator route without it, so an unauthenticated request could kill any org's
+  // CRM sync by naming its id in the path. See issues.txt 26.7.
   test("guards every operator route with checkSession", async () => {
     const { srv, routes } = server();
 
@@ -112,31 +113,18 @@ describe("zohoRoutes", () => {
       "/users",
       "/pipelines",
       "/leads/sync",
+      "/unsubscribe/:orgId",
     ]);
   });
 
-  // NOTE: the webhook being open is expected — it verifies a shared secret.
-  // The unsubscribe route beside it verifies nothing and takes the org from
-  // the path.
-  test("leaves the webhook and the unsubscribe route unguarded", async () => {
+  // The webhook is the only open route now, and it verifies a per-org shared secret.
+  test("leaves only the webhook unguarded", async () => {
     const { srv, routes } = server();
 
     await zohoRoutes(srv);
 
     const open = routes.filter((r) => !r.opts?.preHandler);
-    expect(open.map((r) => `${r.method} ${r.url}`)).toEqual([
-      "POST /webhooks/:product",
-      "POST /unsubscribe/:orgId",
-    ]);
-  });
-
-  test("neither open route declares a schema", async () => {
-    const { srv, routes } = server();
-
-    await zohoRoutes(srv);
-
-    const unsub = routes.find((r) => r.url === "/unsubscribe/:orgId");
-    expect(unsub.opts).toBe(disconnectZohoIntegrationHandler);
+    expect(open.map((r) => `${r.method} ${r.url}`)).toEqual(["POST /webhooks/:product"]);
   });
 });
 
@@ -153,22 +141,30 @@ describe("disconnectZohoIntegrationHandler", () => {
     biginWebhook: { channelId: "chan-bigin" },
   };
 
-  // NOTE: the org comes from the path and nothing else. No session, no secret,
-  // no signature.
-  test("acts on whatever org the path names", async () => {
+  // The org used to come from the path and nothing else — no session, no secret, no
+  // signature — so anyone could disconnect anyone. It comes from the session now,
+  // and the path parameter is ignored. See issues.txt 26.7.
+  test("acts on the caller's own org, not the one the path names", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
     const rep = reply();
 
-    await disconnectZohoIntegrationHandler({ params: { orgId: VICTIM_ORG } } as never, rep);
+    await disconnectZohoIntegrationHandler(
+      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      rep,
+    );
 
-    expect(getIntegrationByName).toHaveBeenCalledWith(VICTIM_ORG, "zoho");
+    expect(getIntegrationByName).toHaveBeenCalledWith(ORG, "zoho");
+    expect(getIntegrationByName).not.toHaveBeenCalledWith(VICTIM_ORG, "zoho");
     expect(answer(rep).code).toBe(200);
   });
 
   test("unsubscribes both webhooks and revokes the refresh token", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
 
-    await disconnectZohoIntegrationHandler({ params: { orgId: VICTIM_ORG } } as never, reply());
+    await disconnectZohoIntegrationHandler(
+      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      reply(),
+    );
 
     expect(unsubscribeZohoWebhook).toHaveBeenCalledTimes(2);
     expect(axios.post).toHaveBeenCalledWith(
@@ -186,7 +182,10 @@ describe("disconnectZohoIntegrationHandler", () => {
     (axios.post as unknown as Mock).mockRejectedValueOnce(new Error("revoke failed"));
     const rep = reply();
 
-    await disconnectZohoIntegrationHandler({ params: { orgId: VICTIM_ORG } } as never, rep);
+    await disconnectZohoIntegrationHandler(
+      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      rep,
+    );
 
     expect(answer(rep)).toEqual({
       code: 200,
@@ -197,7 +196,10 @@ describe("disconnectZohoIntegrationHandler", () => {
   test("leaves the integration row in place", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
 
-    await disconnectZohoIntegrationHandler({ params: { orgId: VICTIM_ORG } } as never, reply());
+    await disconnectZohoIntegrationHandler(
+      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      reply(),
+    );
 
     // Nothing deletes or deactivates the row; only the remote side is torn down.
     const svc = await import("../../integrations.service.js");
@@ -207,7 +209,10 @@ describe("disconnectZohoIntegrationHandler", () => {
   test("404s an org with no zoho integration", async () => {
     const rep = reply();
 
-    await disconnectZohoIntegrationHandler({ params: { orgId: VICTIM_ORG } } as never, rep);
+    await disconnectZohoIntegrationHandler(
+      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      rep,
+    );
 
     expect(answer(rep).code).toBe(404);
   });

@@ -9,6 +9,7 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import { callMetaApi } from "../wa_axios.js";
+import { log } from "../../../utils/logger.js";
 import {
   debug_token,
   getAccessTokenFromCode,
@@ -167,24 +168,54 @@ describe("webhook subscription", () => {
 describe("registerPhoneNumber", () => {
   test("registers the number for WhatsApp with a verification pin", async () => {
     callMetaApiMock.mockResolvedValue({ data: { success: true } });
+    // Pinned to the default rather than whatever the ambient env holds, so setting
+    // WA_REGISTRATION_PIN in a .env cannot quietly change what this asserts.
+    const previous = process.env.WA_REGISTRATION_PIN;
+    delete process.env.WA_REGISTRATION_PIN;
 
-    const result = await registerPhoneNumber("phone-1", "token-1");
+    try {
+      const result = await registerPhoneNumber("phone-1", "token-1");
 
-    const { url, method, token, body } = lastCall();
-    expect(url).toBe("/phone-1/register");
-    expect(method).toBe("POST");
-    expect(token).toBe("token-1");
-    expect(body).toEqual({ messaging_product: "whatsapp", pin: "123456" });
-    expect(result).toEqual({ success: true });
+      const { url, method, token, body } = lastCall();
+      expect(url).toBe("/phone-1/register");
+      expect(method).toBe("POST");
+      expect(token).toBe("token-1");
+      expect(body).toEqual({ messaging_product: "whatsapp", pin: "123456" });
+      expect(result).toEqual({ success: true });
+    } finally {
+      if (previous !== undefined) process.env.WA_REGISTRATION_PIN = previous;
+    }
   });
 
-  // NOTE: the pin is a hard-coded constant (flagged TODO in the source), so every
-  // number this app registers shares the same two-step verification pin.
-  test("uses the same pin for every number", async () => {
-    await registerPhoneNumber("phone-1", "token-1");
-    await registerPhoneNumber("phone-2", "token-2");
+  // The pin comes from WA_REGISTRATION_PIN. The weak "123456" default is kept on
+  // purpose — numbers already registered hold whatever pin they were registered with
+  // until it is changed through Meta's API, so failing hard here would break
+  // registration without improving any existing number. It warns instead.
+  test("uses WA_REGISTRATION_PIN when one is set", async () => {
+    const previous = process.env.WA_REGISTRATION_PIN;
+    process.env.WA_REGISTRATION_PIN = "908172";
+    try {
+      await registerPhoneNumber("phone-1", "token-1");
 
-    expect(callMetaApiMock.mock.calls[0][3].pin).toBe(callMetaApiMock.mock.calls[1][3].pin);
+      expect(lastCall().body).toEqual({ messaging_product: "whatsapp", pin: "908172" });
+      expect(log.warn).not.toHaveBeenCalled();
+    } finally {
+      if (previous === undefined) delete process.env.WA_REGISTRATION_PIN;
+      else process.env.WA_REGISTRATION_PIN = previous;
+    }
+  });
+
+  test("warns when falling back to the shared default pin", async () => {
+    const previous = process.env.WA_REGISTRATION_PIN;
+    delete process.env.WA_REGISTRATION_PIN;
+    try {
+      await registerPhoneNumber("phone-1", "token-1");
+
+      expect(lastCall().body.pin).toBe("123456");
+      expect(log.warn).toHaveBeenCalled();
+    } finally {
+      if (previous !== undefined) process.env.WA_REGISTRATION_PIN = previous;
+    }
   });
 });
 

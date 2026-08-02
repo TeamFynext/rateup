@@ -25,13 +25,67 @@ import {
   SearchQueryInput,
 } from "./account.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
+import { toCsv } from "../../../utils/spreadsheet.js";
 
+/**
+ * The public, unauthenticated enrolment endpoint (POST /api/public/loyalty/accounts).
+ *
+ * This one HAS to take the org from the body: there is no session to take it from,
+ * and the org id is not a secret — it appears in other public payloads. So anyone
+ * who knows an org's UUID can create Contact rows in it (source "loyalty_program",
+ * which then appear in its inbox and contact list), create loyalty accounts, and
+ * supply a `referCode` that credits the referrer the program's referral bonus on
+ * every call. That last one is a points-minting loop, and referral codes are
+ * guessable to begin with (issues.txt 20.9), so an attacker does not need to know
+ * one in advance.
+ *
+ * What is fixed here is the amplification: the route is rate limited per IP, so
+ * the loop is no longer free. What is NOT fixed is the root cause — this endpoint
+ * should derive its org from a signed link token rather than from the body, and
+ * that is a design change spanning the enrolment link the customer follows.
+ * Recorded as outstanding in issues.txt 20.13 rather than papered over.
+ *
+ * Kept as its own exported handler so the authenticated route cannot accidentally
+ * inherit the body-org behaviour again.
+ */
+export async function createPublicCustomerAccountHandler(
+  request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.body.orgId;
+    if (!orgId) {
+      return reply.code(400).send({ error: "orgId is required" });
+    }
+    const program = await getLoyaltyProgramByOrg(orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    if (program.status !== "active") {
+      return reply.code(400).send({ error: "Loyalty program is not active" });
+    }
+    const result = await createCustomerAccount(request.body, program.id, orgId);
+    reply.code(201).send(result);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
+
+/**
+ * Enrols a customer, for a caller who has a session.
+ *
+ * The org comes from the SESSION and the body's `orgId` is ignored. It used to be
+ * `request.body.orgId || request.user.orgId` — the body winning — so any org could
+ * enrol customers into any other org's loyalty program by changing one field.
+ * See issues.txt 20.13.
+ */
 export async function createCustomerAccountHandler(
   request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
   reply: FastifyReply,
 ) {
   try {
-    const orgId = request.body.orgId || request.user.orgId;
+    const orgId = request.user?.orgId;
     if (!orgId) {
       return reply.code(400).send({ error: "orgId is required" });
     }
@@ -68,12 +122,24 @@ export async function getCustomerAccountsHandler(
   }
 }
 
+/**
+ * This handler used to pass the path id straight to prisma without resolving the
+ * caller's program at all — the only read in the module that did not. An account
+ * id was enough for a user of any org to read another org's customer.
+ *
+ * A customer in another org answers 404, the same as one that does not exist,
+ * which is how the rest of the codebase answers this question. See issues.txt 20.18.
+ */
 export async function getCustomerAccountByIdHandler(
   request: FastifyRequest<{ Params: CustomerIdParam }>,
   reply: FastifyReply,
 ) {
   try {
-    const result = await getCustomerAccountById(request.params.customerId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    const result = await getCustomerAccountById(request.params.customerId, program.id);
     if (!result) {
       return reply.code(404).send({ error: "Customer account not found" });
     }
@@ -163,13 +229,27 @@ export async function getCustomerAccountByPhoneHandler(
       return false;
     });
 
-    // Further filter by tier eligibility
+    // Further filter by tier eligibility.
+    //
+    // Matched on the tier's ID, with its NAME accepted as a fallback. The
+    // redemption validator gates on `currentTierId`, and this list used to gate on
+    // `currentTier.name` — two different columns holding two different kinds of
+    // value, so a reward could be listed as available here and then refused at
+    // redemption, or the reverse, depending on whether the operator had populated
+    // `availableForTiers` with names or the rules JSON with ids. Renaming a tier
+    // silently changed which rewards appeared.
+    //
+    // Ids are the answer, and the name fallback is here because existing rows hold
+    // names: dropping it would hide every reward an operator has already
+    // configured. Both readers accept an id now, which is what makes them agree.
+    // See issues.txt 20.23.
     const eligibleRewards = availableRewards.filter((reward) => {
-      // Check if reward is restricted to specific tiers
       if (reward.availableForTiers && reward.availableForTiers.length > 0) {
-        if (!account.currentTier || !reward.availableForTiers.includes(account.currentTier.name)) {
-          return false;
-        }
+        if (!account.currentTier) return false;
+        const allowed =
+          reward.availableForTiers.includes(account.currentTier.id) ||
+          reward.availableForTiers.includes(account.currentTier.name);
+        if (!allowed) return false;
       }
       return true;
     });
@@ -207,10 +287,19 @@ export async function updateCustomerAccountHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateCustomerAccount(request.params.customerId, request.body);
+    // The same gap as the read above, with a write on the end of it: an account id
+    // was enough to suspend or close another org's customer. See issues.txt 20.18.
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    const result = await updateCustomerAccount(request.params.customerId, request.body, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
+    if (typeof e === "object" && e !== null && "code" in e && e.code === "P2025") {
+      return reply.code(404).send({ error: "Customer account not found" });
+    }
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
@@ -317,7 +406,15 @@ export async function exportCustomerAccountsHandler(
         ]);
       });
 
-      const csv = rows.map((row) => row.join(",")).join("\n");
+      // Quoted, and formula-leading cells neutralised. This used to be a bare
+      // `rows.map((row) => row.join(","))`: a customer whose name contained a
+      // comma shifted every later column on their row, so tier, points and
+      // referral code all landed in the wrong field with nothing to signal it, and
+      // a name beginning `=` became a live formula when an operator opened the
+      // file in Excel. The names come from the loyalty signup form, which is
+      // reachable without a session (issues.txt 20.13) — so the attacker chooses
+      // the cell contents. See issues.txt 20.24.
+      const csv = toCsv(rows);
 
       reply.header("Content-Type", "text/csv");
       reply.header(
@@ -343,6 +440,7 @@ export async function assignRewardToCustomerHandler(
       request.body.rewardId,
       request.body.notes,
     );
+
     reply.code(201).send({
       message: "Reward assigned successfully",
       assignment: result,
@@ -361,7 +459,14 @@ export async function getRewardByShortCodeHandler(
   reply: FastifyReply,
 ) {
   try {
+    // orgId is required by getRewardByShortCode now. It used to be optional and
+    // guarded with `if (orgId && …)`, so a caller that omitted it skipped the
+    // ownership check entirely — refused up front rather than silently widened.
+    // See issues.txt 20.18.
     const orgId = request.user?.orgId;
+    if (!orgId) {
+      return reply.code(400).send({ error: "orgId is required" });
+    }
     const result = await getRewardByShortCode(request.params.shortCode, orgId);
     reply.send(result);
   } catch (e) {
@@ -375,6 +480,9 @@ export async function redeemRewardByShortCodeHandler(
 ) {
   try {
     const orgId = request.user?.orgId;
+    if (!orgId) {
+      return reply.code(400).send({ error: "orgId is required" });
+    }
     const result = await markRewardAsRedeemed(request.params.shortCode, orgId);
     reply.send(result);
   } catch (e) {
