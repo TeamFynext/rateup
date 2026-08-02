@@ -1,5 +1,7 @@
 import prisma from "../../utils/prisma.js";
 import axios from "axios";
+import { log } from "../../utils/logger.js";
+import { isExpoPushToken } from "./mobile.schema.js";
 
 export async function addToken(expoToken: string, userId: string, orgId: string) {
   if (!expoToken || !userId || !orgId) {
@@ -48,6 +50,23 @@ export async function getTokensByOrgId(orgId: string): Promise<string[]> {
   return tokens.map((token) => token.expoToken);
 }
 
+// The listing route used getTokensByOrgId, which is the org-wide read the
+// server-side senders need — so `GET /api/mobilenotification` handed every
+// device address in the organisation to any member who asked. An Expo push
+// token is a send credential and a durable device identifier, and no client
+// needs another device's. See issues.txt 42.1.
+export async function getTokensByUserId(userId: string, orgId: string): Promise<string[]> {
+  if (!userId || !orgId) {
+    throw new Error("Missing userId or orgId");
+  }
+
+  const tokens = await prisma.expoPushToken.findMany({
+    where: { userId, orgId },
+    select: { expoToken: true },
+  });
+  return tokens.map((token) => token.expoToken);
+}
+
 export async function deleteTokenByUserId(userId: string, expoToken: string) {
   if (!userId || !expoToken) {
     throw new Error("Missing userId or ExpoToken");
@@ -63,6 +82,17 @@ export async function deleteTokenByUserId(userId: string, expoToken: string) {
 
 const expoPushUrl = process.env.EXPO_PUSH_URL;
 
+// Expo caps a push request at 100 messages. The whole org's token list used to
+// go in one request, so an organisation past that size had its notifications
+// rejected wholesale — silently, by the swallow below. See issues.txt 42.2.
+const EXPO_BATCH_SIZE = 100;
+
+interface ExpoTicket {
+  status?: string;
+  message?: string;
+  details?: { error?: string };
+}
+
 export async function sendPushNotification(
   expoPushTokens: string[],
   title: string,
@@ -70,38 +100,66 @@ export async function sendPushNotification(
   data: Record<string, unknown> = {},
 ) {
   if (!Array.isArray(expoPushTokens) || expoPushTokens.length === 0) {
-    console.error("No Expo push tokens provided");
+    log.warn("No Expo push tokens provided");
     return;
   }
 
-  // Filter invalid tokens
-  const validTokens = expoPushTokens.filter(
-    (token) => typeof token === "string" && token.startsWith("ExponentPushToken"),
-  );
+  // The same predicate the route schema enforces, rather than a looser
+  // startsWith. See issues.txt 42.4.
+  const validTokens = expoPushTokens.filter(isExpoPushToken);
 
   if (validTokens.length === 0) {
-    console.error("No valid Expo tokens");
+    log.warn("No valid Expo tokens");
     return;
   }
 
   if (!expoPushUrl) {
-    console.error("EXPO_PUSH_URL environment variable is not set; skipping push notification");
+    // Left as a refusal rather than a throw: this is configuration, and it is
+    // the same for every call, so failing every queued notification job would
+    // only fill the retry queue. It is loud in the log instead.
+    log.error("EXPO_PUSH_URL environment variable is not set; skipping push notification");
     return;
   }
 
-  const messages = validTokens.map((token) => ({
-    to: token,
-    sound: "default",
-    title,
-    body,
-    data,
-  }));
+  const stale: string[] = [];
 
-  try {
-    await axios.post(expoPushUrl, messages, {
+  for (let i = 0; i < validTokens.length; i += EXPO_BATCH_SIZE) {
+    const batch = validTokens.slice(i, i + EXPO_BATCH_SIZE);
+    const messages = batch.map((token) => ({
+      to: token,
+      sound: "default",
+      title,
+      body,
+      data,
+    }));
+
+    // No try/catch: a transport failure used to be swallowed with a
+    // console.error, so no caller could tell a delivered push from an
+    // undelivered one. The only caller is a BullMQ processor, which is where a
+    // retry belongs.
+    const response = await axios.post<{ data?: ExpoTicket[] }>(expoPushUrl, messages, {
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Error sending push notifications:", error);
+
+    // Expo reports per-message failures in the body of a 200, which nothing
+    // read — so DeviceNotRegistered, the way a stale token is meant to be
+    // pruned, was never seen and dead tokens were pushed to forever.
+    const tickets = Array.isArray(response.data?.data) ? response.data.data : [];
+    tickets.forEach((ticket, index) => {
+      if (ticket?.status !== "error") return;
+      const token = batch[index];
+      if (ticket.details?.error === "DeviceNotRegistered") {
+        stale.push(token);
+      } else {
+        log.error({ token, message: ticket.message, details: ticket.details }, "Expo push failed");
+      }
+    });
+  }
+
+  if (stale.length > 0) {
+    const removed = await prisma.expoPushToken.deleteMany({
+      where: { expoToken: { in: stale } },
+    });
+    log.warn({ count: removed.count }, "Removed Expo tokens reported as unregistered");
   }
 }

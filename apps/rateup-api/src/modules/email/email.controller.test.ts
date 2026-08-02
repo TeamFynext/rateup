@@ -76,42 +76,40 @@ describe("sendEmailHandler", () => {
     expect(answer(rep).body).toBeUndefined();
   });
 
-  // NOTE: the whole request body — recipient address included — is written to
-  // stdout with console.log rather than the project's logger, so it bypasses
-  // both level filtering and redaction.
-  test("prints the entire request body to stdout", async () => {
+  // The whole request body — recipient address included — used to be written to
+  // stdout with console.log rather than the project's logger, bypassing both level
+  // filtering and redaction, on the most abused route in the module.
+  // See issues.txt 25.11.
+  test("prints nothing to stdout", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     await sendEmailHandler({ body } as never, reply());
 
-    expect(spy).toHaveBeenCalledWith(body);
+    expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 
   test("hands the request body to the service untouched", async () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
-
     await sendEmailHandler({ body } as never, reply());
 
     expect(service.send).toHaveBeenCalledWith(body);
-    spy.mockRestore();
   });
 
-  // NOTE: nothing in the handler consults request.session or an org — recipient
-  // and content are whatever the unauthenticated caller supplied.
+  // NOTE: STILL OPEN. Nothing in the handler consults a session or an org —
+  // recipient and content are whatever the unauthenticated caller supplied. The
+  // route is rate limited per IP now, and the templates escape what they are
+  // given, but the endpoint still sends caller-composed mail from the verified
+  // sender to any address. See issues.txt 25.1.
   test("delivers to any address the caller names", async () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     const rep = reply();
 
     await sendEmailHandler({ body: { ...body, toEmail: "victim@elsewhere.test" } } as never, rep);
 
     expect(service.send.mock.calls[0][0].toEmail).toBe("victim@elsewhere.test");
     expect(answer(rep).code).toBe(200);
-    spy.mockRestore();
   });
 
   test("logs the failure and answers 500", async () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     service.send.mockRejectedValueOnce(new Error("transport down"));
     const rep = reply();
 
@@ -119,12 +117,12 @@ describe("sendEmailHandler", () => {
 
     expect(answer(rep).code).toBe(500);
     expect(log.error).toHaveBeenCalled();
-    spy.mockRestore();
   });
 
-  // NOTE: the raw message goes back to the caller on a public route.
-  test("returns the raw error message to the caller", async () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+  // The raw message used to go back to the caller on a route with no
+  // authentication, naming the model, the field and the constraint of a Prisma
+  // failure. See issues.txt 25.8.
+  test("keeps the underlying error out of the response", async () => {
     service.send.mockRejectedValueOnce(
       new Error(`Invalid \`prisma.otpStore.upsert()\` invocation on OtpStore.userId`),
     );
@@ -132,19 +130,17 @@ describe("sendEmailHandler", () => {
 
     await sendEmailHandler({ body } as never, rep);
 
-    expect(answer(rep).body.error).toContain("prisma.otpStore.upsert()");
-    spy.mockRestore();
+    expect(answer(rep).body).toEqual({ error: "Something Went Wrong! Try again." });
+    expect(JSON.stringify(answer(rep).body)).not.toContain("prisma");
   });
 
-  test("falls back to a fixed message when the throw has none", async () => {
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+  test("answers the same fixed message when the throw has none", async () => {
     service.send.mockRejectedValueOnce({});
     const rep = reply();
 
     await sendEmailHandler({ body } as never, rep);
 
     expect(answer(rep).body).toEqual({ error: "Something Went Wrong! Try again." });
-    spy.mockRestore();
   });
 });
 
@@ -188,13 +184,23 @@ describe("sendOTPEmailHandler", () => {
     expect(order).toEqual(["store", "send"]);
   });
 
-  test("writes the code into the request body's data before sending", async () => {
+  // The code used to be injected by assigning onto `request.body.data`; the
+  // template payload is built and passed separately now. See issues.txt 25.10.
+  test("passes the code to the service without mutating the request body", async () => {
     const body = otpBody();
 
     await sendOTPEmailHandler({ body } as never, reply());
 
-    expect(body.data).toHaveProperty("otp", service.store.mock.calls[0][0]);
-    expect(service.send).toHaveBeenCalledWith(body);
+    expect(body.data).not.toHaveProperty("otp");
+    expect(service.send.mock.calls[0][1]).toMatchObject({ otp: service.store.mock.calls[0][0] });
+  });
+
+  test("keeps the rest of the caller's payload alongside the code", async () => {
+    const body = { ...otpBody(), data: { surveyName: "Feedback" } };
+
+    await sendOTPEmailHandler({ body } as never, reply());
+
+    expect(service.send.mock.calls[0][1]).toMatchObject({ surveyName: "Feedback" });
   });
 
   test("overwrites an otp the caller tried to choose", async () => {
@@ -202,13 +208,14 @@ describe("sendOTPEmailHandler", () => {
 
     await sendOTPEmailHandler({ body } as never, reply());
 
-    expect(body.data.otp).not.toBe("000000");
+    expect(service.send.mock.calls[0][1].otp).not.toBe("000000");
   });
 
-  // NOTE: `data: z.any()` accepts null, and `data.otp = otp` then throws — but
-  // only after the code has already been written to the database. JSON has no
-  // undefined, so null is how a real request reaches this.
-  test("500s on a null data, leaving a stored code behind", async () => {
+  // `data: z.any()` accepts null, and `data.otp = otp` used to throw on it — after
+  // the code had already been written to the database, so the request 500'd with a
+  // row left behind. JSON has no undefined, so null is how a real request reaches
+  // this. See issues.txt 25.10.
+  test("survives a null data rather than 500ing after the code is stored", async () => {
     const rep = reply();
     const missingData: ReturnType<typeof otpBody>["data"] | null = null;
     const body = { ...otpBody(), data: missingData };
@@ -216,13 +223,16 @@ describe("sendOTPEmailHandler", () => {
     await sendOTPEmailHandler({ body } as never, rep);
 
     expect(service.store).toHaveBeenCalledOnce();
-    expect(service.send).not.toHaveBeenCalled();
-    expect(answer(rep).code).toBe(500);
+    expect(service.send).toHaveBeenCalledOnce();
+    expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: toEmail and userId are independent fields with nothing tying them
-  // together — the handler will mint a code for one identity and post it to an
-  // address chosen by the caller.
+  // NOTE: STILL OPEN. toEmail and userId are independent fields with nothing tying
+  // them together, so the handler mints a code for one identity and posts it to an
+  // address the caller chose. Binding them means either deriving the address from
+  // the userId server-side or refusing a mismatch, and both depend on what the
+  // survey frontend actually sends as `userId` — left for an explicit decision.
+  // See issues.txt 25.2.
   test("sends the code for one userId to an unrelated address", async () => {
     const body = { ...otpBody(), userId: "victim-user", toEmail: "attacker@evil.test" };
 
@@ -240,8 +250,9 @@ describe("sendOTPEmailHandler", () => {
     expect(req.session.getUserId).not.toHaveBeenCalled();
   });
 
-  // NOTE: purpose comes from the body too, so a caller can store a code and
-  // have the message rendered by a template that never mentions it.
+  // NOTE: purpose comes from the body too, so a caller can store a code and have
+  // the message rendered by a template that never mentions it. It is at least a
+  // template that EXISTS now — an unknown purpose is a 400 (issues.txt 25.9).
   test("stores a code even when the purpose renders no code", async () => {
     const rep = reply();
     const body = { ...otpBody(), purpose: "GeneralTemplate" };
@@ -262,7 +273,9 @@ describe("sendOTPEmailHandler", () => {
     expect(new Set(codes).size).toBeGreaterThan(1);
   });
 
-  test("nothing limits how many codes one caller may request", async () => {
+  // NOTE: nothing limits it at the HANDLER; the route carries a 15/hour per-IP
+  // limit (issues.txt 25.4).
+  test("nothing in the handler limits how many codes one caller may request", async () => {
     for (let i = 0; i < 20; i++) {
       await sendOTPEmailHandler({ body: otpBody() } as never, reply());
     }
@@ -279,7 +292,7 @@ describe("sendOTPEmailHandler", () => {
 
     expect(service.send).not.toHaveBeenCalled();
     expect(answer(rep).code).toBe(500);
-    expect(answer(rep).body.error).toContain("unique constraint failed");
+    expect(answer(rep).body).toEqual({ error: "Something Went Wrong! Try again." });
   });
 
   test("passes an absent surveyId through as undefined", async () => {
@@ -321,9 +334,10 @@ describe("validateOTPHandler", () => {
     expect(service.validate).toHaveBeenCalledWith("123456", "user-1", "survey-1");
   });
 
-  // NOTE: the verdict is returned to the caller and stored nowhere. Nothing
-  // else in the codebase reads OtpStore, so no later request can tell whether
-  // this check ever happened.
+  // NOTE: STILL OPEN. The verdict is returned to the caller and stored nowhere, so
+  // no later request — the one that writes the "verified email Id" answer, for
+  // instance — can tell whether this check ever happened. Recording it needs a
+  // column on OtpStore and a reader in the response path. See issues.txt 25.3.
   test("records nothing about the outcome", async () => {
     const rep = reply();
 
@@ -333,7 +347,9 @@ describe("validateOTPHandler", () => {
     expect(service.store).not.toHaveBeenCalled();
   });
 
-  test("nothing limits how many guesses one caller may make", async () => {
+  // NOTE: nothing limits it at the HANDLER; the route carries a 30/hour per-IP
+  // limit, which bounds but does not close 25.4.
+  test("nothing in the handler limits how many guesses one caller may make", async () => {
     service.validate.mockResolvedValue(false);
 
     for (let i = 0; i < 50; i++) {
@@ -352,7 +368,7 @@ describe("validateOTPHandler", () => {
 
     await validateOTPHandler({ body } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: { error: "db down" } });
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something Went Wrong! Try again." } });
     expect(log.error).toHaveBeenCalled();
   });
 });
@@ -385,19 +401,20 @@ describe("emailPublicRoutes", () => {
     expect(srv.register).not.toHaveBeenCalled();
   });
 
-  // NOTE: registered at /api/email in registerRoutes.ts:113 with no session
-  // check, no preHandler, no rate limit and no hook of any kind.
-  test("adds no authentication, hook or rate limit", async () => {
+  // NOTE: registered at /api/email with no session check — all three routes are
+  // still open to the internet (issues.txt 25.1). What they do carry now is a
+  // per-IP limit each.
+  test("rate limits every route, and still authenticates none of them", async () => {
     const { srv, posts } = server();
 
     await emailPublicRoutes(srv);
 
     expect(srv.addHook).not.toHaveBeenCalled();
     for (const p of posts) {
-      expect(p.opts.preHandler).toBeUndefined();
+      expect(p.opts.preHandler).toBeTypeOf("function");
       expect(p.opts.onRequest).toBeUndefined();
       expect(p.opts.config).toBeUndefined();
-      expect(Object.keys(p.opts)).toEqual(["schema"]);
+      expect(Object.keys(p.opts).sort()).toEqual(["preHandler", "schema"]);
     }
   });
 
@@ -477,16 +494,17 @@ describe("the body schemas", () => {
     expect(parsed.success).toBe(true);
   });
 
-  test("accepts any string as the purpose", () => {
-    const parsed = sendEmailSchema.safeParse({
-      toEmail: "a@b.test",
-      subject: "s",
-      purpose: "whatever",
-      text: "t",
-      data: {},
-    });
+  // `purpose` was an unconstrained z.string() matched case-sensitively against two
+  // literals, so a typo produced a delivered, bodyless email. See issues.txt 25.9.
+  test("accepts only a purpose that has a template", () => {
+    const base = { toEmail: "a@b.test", subject: "s", text: "t", data: {} };
 
-    expect(parsed.success).toBe(true);
+    expect(sendEmailSchema.safeParse({ ...base, purpose: "whatever" }).success).toBe(false);
+    expect(sendEmailSchema.safeParse({ ...base, purpose: "generaltemplate" }).success).toBe(false);
+    expect(sendEmailSchema.safeParse({ ...base, purpose: "GeneralTemplate" }).success).toBe(true);
+    expect(sendEmailSchema.safeParse({ ...base, purpose: "SurveyEmailOTPQuestion" }).success).toBe(
+      true,
+    );
   });
 
   test("requires a userId to mint or check a code", () => {

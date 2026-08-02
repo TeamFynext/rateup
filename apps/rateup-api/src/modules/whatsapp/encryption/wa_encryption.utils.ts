@@ -216,7 +216,7 @@ export async function handleFlowResponse(
 
   try {
     log.trace(req.params.dbFlowId);
-    const dbFlow = await getFlowFromDb(req.params.dbFlowId);
+    const dbFlow = await getFlowFromDb(req.params.dbFlowId, orgId);
     if (!dbFlow) {
       throw new Error(`Flow not found in db for dbFlowId: ${req.params.dbFlowId}`);
     }

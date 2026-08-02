@@ -1,3 +1,14 @@
+import { escapeHtml } from "../html.js";
+
+/**
+ * The notification the RateUp team receives for a contact-form submission.
+ *
+ * All three fields come from an unauthenticated visitor and used to be
+ * interpolated raw, so the visitor chose the markup that rendered in the team's
+ * inbox: working links to anywhere, remote images that report when the mail is
+ * opened, or content styled to impersonate the rest of the message. Same defect as
+ * the BookDemo mailer, issues.txt 16.1/16.2. See issues.txt 22.3.
+ */
 export function emailBodyContactForm(name: string, email: string, message: string) {
   const body = `
     <html>
@@ -35,9 +46,9 @@ export function emailBodyContactForm(name: string, email: string, message: strin
         <p>Hello,</p>
         <p>You have received a new message in Rateup website contact form :</p>
         <ul>
-          <li><strong>Name:</strong> ${name}</li>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Message:</strong> ${message}</li>
+          <li><strong>Name:</strong> ${escapeHtml(name)}</li>
+          <li><strong>Email:</strong> ${escapeHtml(email)}</li>
+          <li><strong>Message:</strong> ${escapeHtml(message)}</li>
         </ul>
         <p>Please respond to this inquiry as soon as possible.</p>
         <p>Best regards,</p>

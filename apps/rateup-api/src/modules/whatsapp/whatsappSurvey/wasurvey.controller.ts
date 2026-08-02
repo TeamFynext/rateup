@@ -47,7 +47,6 @@ import {
   WaTemplateComponentType,
   SubscriptionFeaturePathName,
   WaTemplateSupportedFormats,
-  CampaignStatus,
   WhatsappSettingsStatus,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
@@ -102,15 +101,14 @@ import {
   handleContactConsent,
 } from "../../contact/contact.service.js";
 import { getOrgById } from "../../org/org.services.js";
-import { checkConversationLimitExceeded } from "./wasurvey.auth.js";
+import { checkConversationLimitAvailable } from "./wasurvey.auth.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
-import { getLatestStatus, updateCampaign } from "../../campaign/campaign.service.js";
+import { getLatestStatus } from "../../campaign/campaign.service.js";
 import {
   getLoyaltyWaCommandByRequestMessage,
   handleLoyaltyRedeemInteraction,
   handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service.js";
-import { getSubscription, getUsageStats } from "../../campaign/campaign.auth.js";
 import { createJWT } from "../../../utils/jwt.js";
 import { getAIResponseForQuery, getChatbotDetails } from "../../chatbot/chatbot.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
@@ -140,7 +138,6 @@ import {
 } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
-import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth.js";
 import { createCustomerAccount } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { notificationQueue, pausedAutomationQueue } from "../../../utils/redisConnection.js";
@@ -436,7 +433,7 @@ async function templateStatusChangeHandler(changeValue: WaTemplateStatusChange) 
       return false;
     }
     waTemplate.status = changeValue.event;
-    await updateTemplateInDb(dbTemplate.id, waTemplate);
+    await updateTemplateInDb(dbTemplate.id, dbTemplate.orgId, waTemplate);
     return true;
   }
 }
@@ -449,7 +446,7 @@ async function templateCategoryChangeHandler(changeValue: WaTemplateCategoryChan
   } else {
     const waTemplate = dbTemplate.data;
     waTemplate.category = changeValue.new_category;
-    await updateTemplateInDb(dbTemplate.id, waTemplate);
+    await updateTemplateInDb(dbTemplate.id, dbTemplate.orgId, waTemplate);
     return true;
   }
 }
@@ -949,7 +946,7 @@ export async function handleAutomatedReply(
 
   try {
     if (automatedReplyId) {
-      const automation = await getAutomatedReplyById(automatedReplyId);
+      const automation = await getAutomatedReplyById(automatedReplyId, orgId);
       if (automation) {
         if (phoneNumberId) {
           automation.whatsappSettingsPhoneId = phoneNumberId;
@@ -1182,8 +1179,8 @@ export async function processNextNode(
           log.error("templateNode has no associated template id");
           break;
         }
-        const subscription = await getSubscription(orgId);
-        await verifyTemplateMessageLimit(subscription);
+        // See issues.txt 14.1(a) — the conversation limit inside sendMessage is
+        // what enforces the plan now.
         await sendTemplateToUserCore(
           orgId,
           node.data.template.id,
@@ -1413,7 +1410,7 @@ async function handleFlowNode(
     await deleteSession(orgId, userPhone);
 
     // Get flow data
-    const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(flowId);
+    const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(flowId, orgId);
 
     if (!dbFlow) {
       throw new Error(`Flow with ID ${flowId} not found`);
@@ -1492,7 +1489,7 @@ async function handleSurveyConsentReply(
   }
 
   const { message } = parsedMessage;
-  const dbTemplate = await getDbTemplate(session.templateId);
+  const dbTemplate = await getDbTemplate(session.templateId, session.orgId);
   if (!dbTemplate) {
     throw new Error(`Template not found for id: ${session.templateId}`);
   }
@@ -1630,7 +1627,7 @@ async function handleStartSurvey({
     tag,
   });
   if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
-    const msgLimit = await checkConversationLimitExceeded(orgId);
+    const msgLimit = await checkConversationLimitAvailable(orgId);
     if (!msgLimit) {
       log.error({ orgId }, "You have reached the maximum monthly limit of messages.");
       return;
@@ -1824,7 +1821,7 @@ export async function sendCampaignToParticipants(
     if (!campaign.waTemplateId) {
       throw new Error(`Campaign ${campaignId} has no associated waTemplateId`);
     }
-    const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+    const dbTemplate = await getDbTemplate(campaign.waTemplateId, orgId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${campaign.waTemplateId} not found`);
     }
@@ -2022,70 +2019,21 @@ async function _sendCampaignToParticipants(
     log.trace("No flow button identified in template");
   }
 
-  const [usage, subscription] = await Promise.all([getUsageStats(orgId), getSubscription(orgId)]);
-
-  if (!usage || !subscription) {
-    let errorMessage = "Usage stats or subscription not found";
-    await updateCampaign(campaign.id, {
-      status: CampaignStatus.INACTIVE,
-      errorMessage: errorMessage,
-    });
-    log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
-    return;
-  }
-
-  const newMessagesCount = campaign.campaignParticipants.filter(
-    (participant) =>
-      (individualParticipantId ||
-        sendToStatuses.includes(getStatusData(participant) as CampaignParticipantStatus)) &&
-      (participant.contact.consent || !campaign.useUserConsent) &&
-      participant.contact.phone,
-  ).length;
-
-  // NOTE: `count.monthlyMessageLimit` was a legacy field on the whatsapp subscription
-  // feature; the current SubscriptionFeatures.whatsapp shape (see global.d.ts) only has
-  // `.conversation.count`, not a top-level `.count`. This lookup already resolves to
-  // `undefined` today and always falls back to 0 — see issues.txt.
-  const monthlyMessageLimit =
-    (
-      subscription.features as Record<
-        string,
-        { count?: { monthlyMessageLimit?: number } } | undefined
-      > | null
-    )?.[SubscriptionFeaturePathName.Whatsapp]?.count?.monthlyMessageLimit ?? 0;
-
-  const annualLimit = monthlyMessageLimit * 12;
-
-  if (
-    subscription?.isAnnualMessageLimit &&
-    (usage.annualTemplateMessageCount ?? 0) + newMessagesCount > annualLimit
-  ) {
-    let errorMessage =
-      usage.annualTemplateMessageCount >= annualLimit
-        ? "You have reached the maximum annual limit of messages."
-        : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
-            annualLimit - usage.annualTemplateMessageCount
-          } to proceed.`;
-    await updateCampaign(campaign?.id, {
-      status: CampaignStatus.INACTIVE,
-      errorMessage: errorMessage,
-    });
-    log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
-    return;
-  } else if ((usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount > monthlyMessageLimit) {
-    let errorMessage =
-      usage.monthlyTemplateMessageCount >= monthlyMessageLimit
-        ? "You have reached the maximum monthly limit of messages."
-        : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
-            monthlyMessageLimit - usage.monthlyTemplateMessageCount
-          } to proceed.`;
-    await updateCampaign(campaign.id, {
-      status: CampaignStatus.INACTIVE,
-      errorMessage: errorMessage,
-    });
-    log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
-    return;
-  }
+  // The monthly/annual MESSAGE limit that stood here is gone.
+  //
+  // It read `subscription.features.whatsapp.count.monthlyMessageLimit`, a legacy
+  // field the current SubscriptionFeatures shape does not carry — so it resolved to
+  // undefined and fell back to 0, which made `used + newMessages > 0` true for
+  // every send with a participant in it. Read literally, this branch marked every
+  // campaign INACTIVE with "You have reached the maximum monthly limit of
+  // messages." It is the same dead meter deleted in issues.txt 14.1(a) and 17.1,
+  // and the product owner's ruling settled it: "we dont have the message limit
+  // anymore, we have conversation limit".
+  //
+  // The live meter is untouched and still covers this path twice over:
+  // sendCampaign checks checkConversationLimitAvailable before it gets here, and
+  // sendMessage calls assertWithinConversationLimit per recipient.
+  // See issues.txt 17.10.
 
   for (const participant of campaign.campaignParticipants) {
     const { contact, id } = participant;

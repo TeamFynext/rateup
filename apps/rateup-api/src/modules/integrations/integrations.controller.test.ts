@@ -39,7 +39,6 @@ import {
   deleteIntegrationByNameHandler,
   deleteZapierTriggerHookHandler,
   getAllIntegrationsByOrgHandler,
-  getAllIntegrationsHandler,
   getIntegrationStatusesHandler,
   petPoojaWebhookHandler,
   updateIntegrationByNameHandler,
@@ -92,57 +91,15 @@ beforeEach(() => {
 // GET /all — the cross-org listing
 // ===========================================================================
 
-describe("getAllIntegrationsHandler", () => {
-  // NOTE: the org-scoped listing right beside it reads request.user.orgId.
-  // This one takes no identity at all.
-  test("never consults the caller's org", async () => {
-    const req: any = { user: { orgId: ORG } };
+describe("the integration listings", () => {
+  // getAllIntegrationsHandler used to live here, behind GET /all: it consulted no
+  // org at all and answered every organisation's integration row — credential
+  // column unredacted — to any authenticated user of any org. Handler, route and
+  // service function are all gone. See issues.txt 26.2.
+  test("the module exports no cross-org listing handler", async () => {
+    const controller = await import("./integrations.controller.js");
 
-    await getAllIntegrationsHandler(req, reply());
-
-    expect(svc.getAllIntegrations).toHaveBeenCalledWith();
-    expect(svc.getAllIntegrationsByOrgId).not.toHaveBeenCalled();
-  });
-
-  test("answers 200 with every row it was given", async () => {
-    const rows = [
-      { id: "a", orgId: ORG, name: "googlesheet", credential: { refreshToken: "1//secret" } },
-      { id: "b", orgId: OTHER_ORG, name: "zapier", credential: { accessToken: "$2b$10$hash" } },
-    ];
-    svc.getAllIntegrations.mockResolvedValueOnce(rows);
-    const rep = reply();
-
-    await getAllIntegrationsHandler({ user: { orgId: ORG } } as never, rep);
-
-    expect(answer(rep)).toEqual({ code: 200, body: rows });
-  });
-
-  // NOTE: no select, no redaction anywhere between Prisma and the wire.
-  test("passes other orgs' credentials through to the response", async () => {
-    svc.getAllIntegrations.mockResolvedValueOnce([
-      {
-        id: "b",
-        orgId: OTHER_ORG,
-        name: "shopify",
-        credential: { session: { accessToken: "shpat_x" } },
-      },
-    ]);
-    const rep = reply();
-
-    await getAllIntegrationsHandler({ user: { orgId: ORG } } as never, rep);
-
-    expect(answer(rep).body[0].credential.session.accessToken).toBe("shpat_x");
-  });
-
-  test("sends the bare error object on failure", async () => {
-    svc.getAllIntegrations.mockRejectedValueOnce(new Error("db down"));
-    const rep = reply();
-
-    await getAllIntegrationsHandler({ user: { orgId: ORG } } as never, rep);
-
-    expect(answer(rep).code).toBe(500);
-    // An Error has no enumerable own properties, so this serialises to {}.
-    expect(JSON.stringify(answer(rep).body)).toBe("{}");
+    expect(controller).not.toHaveProperty("getAllIntegrationsHandler");
   });
 
   test("the org-scoped listing does use the session org", async () => {
@@ -220,23 +177,26 @@ describe("the write handlers", () => {
     expect(svc.removeSurveySpreadSheetSheetId).not.toHaveBeenCalled();
   });
 
-  // NOTE: reply.code(data ? 201 : 400).send(!data && "...") — on the success
-  // path `!data` is false, so the 201 body is the boolean false.
-  test("a successful payment-config create answers 201 with the body false", async () => {
+  // The success body used to be `!data`, i.e. the boolean `false`, which a client
+  // cannot tell from a failure flag. See issues.txt 26.16.
+  test("a successful payment-config create answers 201 with a message", async () => {
     const rep = reply();
 
     await createWaPaymentConfigurationsHandler({ user: { orgId: ORG }, body: {} } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 201, body: false });
+    expect(answer(rep)).toEqual({ code: 201, body: { message: "Payment configuration created" } });
   });
 
-  test("a refused payment-config create answers 400 with a string", async () => {
+  test("a refused payment-config create answers 400 with a message", async () => {
     svc.createWaPaymentConfigurations.mockResolvedValueOnce(false);
     const rep = reply();
 
     await createWaPaymentConfigurationsHandler({ user: { orgId: ORG }, body: {} } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 400, body: "Error in creating whatsapp payment" });
+    expect(answer(rep)).toEqual({
+      code: 400,
+      body: { message: "Error in creating whatsapp payment" },
+    });
   });
 });
 
@@ -260,18 +220,18 @@ describe("createGoogleSheetAuthToken", () => {
     expect(answer(rep).code).toBe(201);
   });
 
-  // NOTE: Google returns the granted scopes space-delimited. Splitting on a
-  // comma yields one element holding the entire string, so any later check of
-  // scopes[] sees a single scope that matches nothing.
-  test("splits the granted scopes on a comma, not a space", async () => {
+  // Google returns the granted scopes SPACE-delimited; splitting on a comma stored
+  // one element holding the entire string, so any later scope check matched nothing.
+  // See issues.txt 26.15.
+  test("splits the granted scopes on a space", async () => {
     await createGoogleSheetAuthToken(
       { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
       reply(),
     );
 
     const scopes = svc.createIntegration.mock.calls[0][0].credential.scopes;
-    expect(scopes).toHaveLength(1);
-    expect(scopes[0]).toContain("drive.file https://");
+    expect(scopes.length).toBeGreaterThan(1);
+    expect(scopes.every((scope: string) => !scope.includes(" "))).toBe(true);
   });
 
   test("stores the refresh token in the clear", async () => {
@@ -485,50 +445,43 @@ describe("route registration", () => {
     expect(hooks[0].fn).toBe(checkSession);
   });
 
-  // NOTE: /all sits in the same tree as the org-scoped listing and carries no
-  // extra gate — checkSession establishes who you are, nothing establishes
-  // that you may read other organisations.
-  test("/all carries no role check", async () => {
+  // The cross-org listing this tree used to expose. See issues.txt 26.2.
+  test("no longer registers a cross-org listing route", async () => {
     const { srv, routes } = server();
 
     await integrationsRoutes(srv);
 
-    const all = routes.find((r) => r.url === "/all");
-    expect(all.method).toBe("GET");
-    expect(all.opts).toEqual({});
+    expect(routes.find((r) => r.url === "/all")).toBeUndefined();
   });
 
-  test("only the google OAuth route is role-gated", async () => {
+  // The role check on the Google OAuth route was bypassable by construction: any
+  // member could POST the same credential-bearing row through the generic create
+  // route beside it. Every credential-writing route carries the gate now.
+  // See issues.txt 26.17.
+  test("role-gates every credential-writing route, not just the OAuth one", async () => {
     const { srv, routes } = server();
 
     await integrationsRoutes(srv);
 
     const gated = routes.filter((r) => r.opts?.preHandler);
-    expect(gated.map((r) => r.url)).toEqual(["/google/auth-token"]);
-    expect((gated[0].opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+    expect(gated.map((r) => r.url).sort()).toEqual(["/", "/:name", "/google/auth-token"]);
+    for (const route of gated) {
+      expect((route.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+    }
   });
 
-  test("the create route is not role-gated even though it writes credentials", async () => {
-    const { srv, routes } = server();
-
-    await integrationsRoutes(srv);
-
-    const create = routes.find((r) => r.method === "POST" && r.url === "/");
-    expect(create.opts.preHandler).toBeUndefined();
-  });
-
-  // NOTE: every other route in the file declares a params or body schema.
-  test("the zapier-hook route declares no schema at all", async () => {
+  // The body used to be cast `as any` by the handler and its hookUrl chose the
+  // address the server called out to; every other route in the file declares a
+  // schema. See issues.txt 26.6.
+  test("the zapier-hook route declares a body schema", async () => {
     const { srv, routes } = server();
 
     await integrationsRoutes(srv);
 
     const hook = routes.find((r) => r.url === "/zapier-hook");
     expect(hook.method).toBe("DELETE");
-    // registered as delete(url, handler) — no options object at all, so the
-    // second argument is the handler and there is nowhere a schema could go.
-    expect(hook.opts).toBe(deleteZapierTriggerHookHandler);
-    expect(hook.handler).toBeUndefined();
+    expect(hook.opts.schema.body).toBeDefined();
+    expect(hook.handler).toBe(deleteZapierTriggerHookHandler);
   });
 
   test("the public tree registers the petpooja webhook with no hook or schema", async () => {

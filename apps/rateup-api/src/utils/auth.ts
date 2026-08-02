@@ -4,7 +4,6 @@ import { log } from "./logger.js";
 import { getSubscription } from "../modules/subscription/subscription.service.js";
 import { SubscriptionFeaturePathName } from "../types/enums.js";
 import dayjs from "dayjs";
-import { FreePlanSubscriptionFeatures } from "../modules/subscription/subscription.data.js";
 import { getNestedProperty } from "./misc/obj.utils.js";
 import { Role } from "../../generated/prisma/client.js";
 
@@ -36,6 +35,9 @@ export async function hasAccessToSurvey(surveyId: string, userId: string) {
         return true;
       }
     }
+    // Explicit: the deny path used to fall off the end and return undefined, so a
+    // caller comparing `=== false` would have granted access.
+    return false;
   } catch (e) {
     console.log(e);
     return false;
@@ -90,33 +92,30 @@ export function verifyRole(request: FastifyRequest, role: Role): boolean {
   }
 }
 
+// Reads are still allowed once a subscription lapses; anything that changes data is not.
+const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function isWrite(method: string) {
+  return WRITE_METHODS.has(method);
+}
+
 export function getVerifySubscriptionHandler(featurePathNames: Array<SubscriptionFeaturePathName>) {
   return async function verifySubscription(request: FastifyRequest, reply: FastifyReply) {
     try {
       const subscription = await getSubscription(request.user.orgId);
 
       if (!subscription) {
-        // TODO: allowing access for now, but this should throw unauthorized error
-        // Giving unrestricted access to all features for now
-        log.trace("No subscription found\nrequest.user => %o", request.user);
-        log.trace(
-          "Creating subscription with unlimited access\nrequest.user => %o\n%o",
-          request.user,
-          FreePlanSubscriptionFeatures,
-        );
-        request.subscription = (await prisma.subscription.create({
-          data: {
-            features: FreePlanSubscriptionFeatures,
-            orgId: request.user.orgId,
-            expiresAt: dayjs().add(100, "year").toDate(),
-          },
-        })) as unknown as Subscription;
+        // Refuse, matching getVerifySubscriptionForPublicHandler. This used to create a
+        // free-plan subscription expiring in 100 years, which handed unlimited access to
+        // any org that reached an authenticated route without a Subscription row.
+        log.error({ user: request.user }, "No subscription found\nrequest.user => %o");
+        reply.code(403).send({
+          message: "No active subscription",
+          displayMessageInClient: true,
+        });
         return;
       }
-      if (
-        dayjs(subscription.expiresAt).isBefore(dayjs()) &&
-        ["POST", "PUT"].includes(request.method)
-      ) {
+      if (dayjs(subscription.expiresAt).isBefore(dayjs()) && isWrite(request.method)) {
         log.error(
           { subscription, user: request.user },
 
@@ -155,9 +154,19 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
   };
 }
 
+// The predicate behind assertRootOrg, exported so handlers that need a
+// platform-operator escape hatch inside their own body (rather than as a route
+// gate) can ask the same question. See issues.txt 41.2.
+export function isRootOrg(request: FastifyRequest): boolean {
+  return Boolean(request.user?.orgId) && request.user.orgId === process.env.ROOT_ORG;
+}
+
 export function assertRootOrg(request: FastifyRequest, reply: FastifyReply, done: () => void) {
-  if (!request.user.orgId || request.user.orgId !== process.env.ROOT_ORG) {
+  if (!isRootOrg(request)) {
     reply.code(403).send({ message: "Not authorized" });
+    // Return rather than falling through to done(), which would have carried a
+    // refused request on through the handler chain.
+    return;
   }
   done();
 }
@@ -180,10 +189,7 @@ export function getVerifySubscriptionForPublicHandler(
         });
         return;
       }
-      if (
-        dayjs(subscription.expiresAt).isBefore(dayjs()) &&
-        ["POST", "PUT"].includes(request.method)
-      ) {
+      if (dayjs(subscription.expiresAt).isBefore(dayjs()) && isWrite(request.method)) {
         log.error(
           { subscription, orgId: request.body.orgId },
           "Subscription expired\n%o\nrequest.body => %o",

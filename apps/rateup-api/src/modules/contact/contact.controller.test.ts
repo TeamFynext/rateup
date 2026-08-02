@@ -83,6 +83,7 @@ import {
 import { createLCustomer, handleSendTemplate } from "./contact.utils.js";
 import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { ContactNotFoundError } from "./contact.errors.js";
 import {
   addCustomFieldHandler,
   bulkUpdateWaMessageAssignStatusHandler,
@@ -244,30 +245,38 @@ describe("createContactHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // NOTE: pins current behaviour. Only P2002 is answered; any other prisma error
-  // code falls off the end of the handler having sent nothing, and fastify turns
-  // that into an empty 200 success. See issues.txt 18.17.
-  test("answers a non-duplicate prisma error with nothing at all", async () => {
+  // Only P2002 was answered; any other prisma error code fell off the end of the
+  // handler having sent nothing, and fastify's async wrapper turns that into an
+  // empty 200 — so a foreign-key violation read as success. Same shape as
+  // issues.txt 3.2. See issues.txt 18.17.
+  test("answers a non-duplicate prisma error with a 500", async () => {
     (createContact as Mock).mockRejectedValue(new FakePrismaKnownError("P2003"));
     const rep = reply();
 
     await createContactHandler(request({ body }), rep);
 
-    expect(rep.code).not.toHaveBeenCalled();
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // NOTE: the 201 is sent before the welcome message is attempted, so a failure
-  // there tries to reply a second time on an already-sent reply.
-  // See issues.txt 18.18.
-  test("replies twice when the loyalty welcome message fails", async () => {
+  // The 201 is sent before the welcome message is attempted — deliberately, so the
+  // user does not wait on Meta. A failure after that point used to reply a SECOND
+  // time on an already-sent reply, which fastify rejects as
+  // FST_ERR_REP_ALREADY_SENT; the client kept its 201 and never learned the
+  // welcome message had failed either way. The catch checks `reply.sent` now, so
+  // the failure is logged and nothing is sent twice. See issues.txt 18.18.
+  test("does not reply a second time when the loyalty welcome message fails", async () => {
     (createLCustomer as Mock).mockResolvedValue({ id: "c1", name: "Ann", phone: "919876543210" });
     (getLoyaltyWaCommandByType as Mock).mockRejectedValue(new Error("meta down"));
     const rep = reply();
+    rep.sent = false;
+    rep.send.mockImplementation(() => {
+      rep.sent = true;
+      return rep;
+    });
 
     await createContactHandler(request({ body: { ...body, source: "LOYALTY" } }), rep);
 
-    expect(rep.code.mock.calls.map((c: any[]) => c[0])).toEqual([201, 500]);
+    expect(rep.code.mock.calls.map((c: any[]) => c[0])).toEqual([201]);
   });
 });
 
@@ -341,37 +350,50 @@ describe("getAllContactsHandler", () => {
 });
 
 describe("getContactByIdHandler", () => {
-  // NOTE: the caller's org never reaches the lookup — only the path id does.
-  // See issues.txt 18.5.
-  test("fetches by the path id alone, without the caller's org", async () => {
+  // The caller's org never reached the lookup — only the path id did — so a
+  // contact id was enough to read a full customer record. See issues.txt 18.5.
+  test("fetches within the caller's org", async () => {
     (getContactById as Mock).mockResolvedValue({ id: "c1" });
     const rep = reply();
 
     await getContactByIdHandler(request({ params: { contactId: "c1" } }), rep);
 
-    expect(getContactById).toHaveBeenCalledWith("c1");
+    expect(getContactById).toHaveBeenCalledWith("c1", ORG);
     expect(answer(rep)).toEqual({ code: 200, body: { id: "c1" } });
   });
 
-  test("answers 200 with null for a contact that does not exist", async () => {
+  // A contact another org owns reports as absent, and absent is a 404 — the two
+  // are indistinguishable from outside, which is the point.
+  test("answers 404 for a contact that does not exist", async () => {
     (getContactById as Mock).mockResolvedValue(null);
     const rep = reply();
 
     await getContactByIdHandler(request({ params: { contactId: "nope" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 200, body: null });
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact not found" } });
   });
 });
 
 describe("deleteContactByIdHandler", () => {
-  test("deletes by the path id alone", async () => {
+  test("deletes within the caller's org", async () => {
     (deleteContactById as Mock).mockResolvedValue({ id: "c1" });
     const rep = reply();
 
     await deleteContactByIdHandler(request({ params: { contactId: "c1" } }), rep);
 
-    expect(deleteContactById).toHaveBeenCalledWith("c1");
+    expect(deleteContactById).toHaveBeenCalledWith("c1", ORG);
     expect(answer(rep).code).toBe(200);
+  });
+
+  // The service uses an extended `where`, so Prisma raises P2025 rather than
+  // deleting when the contact is not the caller's. See issues.txt 18.5.
+  test("answers 404 when the delete matched no contact of the caller's", async () => {
+    (deleteContactById as Mock).mockRejectedValue(new FakePrismaKnownError("P2025"));
+    const rep = reply();
+
+    await deleteContactByIdHandler(request({ params: { contactId: "c1" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact not found" } });
   });
 
   test("reports a failed delete as a 500", async () => {
@@ -394,7 +416,7 @@ describe("updateContactByIdHandler", () => {
       rep,
     );
 
-    expect(updateContactById).toHaveBeenCalledWith("c1", { name: "Ann" }, USER);
+    expect(updateContactById).toHaveBeenCalledWith("c1", ORG, { name: "Ann" }, USER);
     expect(answer(rep)).toEqual({ code: 200, body: { id: "c1" } });
   });
 
@@ -407,13 +429,16 @@ describe("updateContactByIdHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { error: "Contact already exist" } });
   });
 
-  test("answers a missing-row prisma error with nothing at all", async () => {
+  // A P2025 fell off the end of the handler having sent nothing, so fastify
+  // answered an empty 200 — and on this endpoint P2025 is exactly "the contact is
+  // not yours". See issues.txt 18.17.
+  test("answers a missing-row prisma error with a 404", async () => {
     (updateContactById as Mock).mockRejectedValue(new FakePrismaKnownError("P2025"));
     const rep = reply();
 
     await updateContactByIdHandler(request({ params: { contactId: "c1" } }), rep);
 
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact not found" } });
   });
 });
 
@@ -427,7 +452,7 @@ describe("updateContactLabelsByIdHandler", () => {
       rep,
     );
 
-    expect(updateContactLabelsById).toHaveBeenCalledWith("c1", "lc-1");
+    expect(updateContactLabelsById).toHaveBeenCalledWith("c1", ORG, "lc-1");
     expect(answer(rep).code).toBe(200);
   });
 
@@ -439,7 +464,7 @@ describe("updateContactLabelsByIdHandler", () => {
       reply(),
     );
 
-    expect(updateContactLabelsById).toHaveBeenCalledWith("c1", undefined);
+    expect(updateContactLabelsById).toHaveBeenCalledWith("c1", ORG, undefined);
   });
 });
 
@@ -450,7 +475,7 @@ describe("deleteManyContactsHandler", () => {
 
     await deleteManyContactsHandler(request({ body: { contactIds: ["c1", "c2"] } }), rep);
 
-    expect(deleteManyContacts).toHaveBeenCalledWith(["c1", "c2"]);
+    expect(deleteManyContacts).toHaveBeenCalledWith(["c1", "c2"], ORG);
     expect(answer(rep)).toEqual({ code: 200, body: { count: 2 } });
   });
 });
@@ -555,19 +580,46 @@ describe("importCSVContactsHandler", () => {
     });
   });
 
-  // Fixed: an empty spreadsheet makes importCSVContacts return undefined; the
-  // handler now checks for that before reading `.status` and answers with a
-  // clear 400 instead of crashing into a 500. See issues.txt 18.19.
+  // An empty spreadsheet used to make importCSVContacts return undefined and both
+  // callers read `.status` off it — the user saw "Cannot read properties of
+  // undefined (reading 'status')" in place of "the file was empty". It reports a
+  // shaped error now. See issues.txt 18.19.
   test("reports an empty spreadsheet as a validation error", async () => {
-    (importCSVContacts as Mock).mockResolvedValue(undefined);
+    (importCSVContacts as Mock).mockResolvedValue({
+      data: [],
+      status: "error",
+      message: "The file contained no contacts.",
+    });
     const rep = reply();
 
     await importCSVContactsHandler(request({ file: vi.fn().mockResolvedValue(upload()) }), rep);
 
     expect(answer(rep)).toEqual({
       code: 400,
-      body: { error: "No contacts found in the uploaded file." },
+      body: {
+        error: "VALIDATION_ERR",
+        data: [],
+        message: "The file contained no contacts.",
+      },
     });
+  });
+
+  // A file where SOME rows imported is a 200 carrying both halves. It used to be
+  // a 400, which invited the user to fix one row and re-upload the whole file.
+  // See issues.txt 18.13.
+  test("answers a partly-valid file as a 200 carrying both halves", async () => {
+    (importCSVContacts as Mock).mockResolvedValue({
+      status: "partial",
+      imported: 499,
+      rejected: [{ name: "x", phone: "y" }],
+      data: [],
+    });
+    const rep = reply();
+
+    await importCSVContactsHandler(request({ file: vi.fn().mockResolvedValue(upload()) }), rep);
+
+    expect(answer(rep).code).toBe(200);
+    expect(answer(rep).body).toMatchObject({ status: "partial", imported: 499 });
   });
 });
 
@@ -812,7 +864,7 @@ describe("updateLifecycleStageofContactsHandler", () => {
       rep,
     );
 
-    expect(updateLifecycleStageofContacts).toHaveBeenCalledWith("lc-1", ["c1"]);
+    expect(updateLifecycleStageofContacts).toHaveBeenCalledWith("lc-1", ORG, ["c1"]);
     expect(rep.send).toHaveBeenCalledWith(undefined);
   });
 
@@ -825,10 +877,25 @@ describe("updateLifecycleStageofContactsHandler", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({
-      code: 500,
-      body: { message: "Error updating lifecycle stage of contacts" },
-    });
+    // The handler goes through the module's shared replyForError now, so every
+    // failure in this file answers the same shape. See issues.txt 18.17.
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
+  });
+
+  // A lifecycle the caller's org does not own reports as absent, and the write no
+  // longer happens first. See issues.txt 18.12.
+  test("answers 404 for a lifecycle the org does not have", async () => {
+    (updateLifecycleStageofContacts as Mock).mockRejectedValue(
+      new ContactNotFoundError("Lifecycle lc-1 not found"),
+    );
+    const rep = reply();
+
+    await updateLifecycleStageofContactsHandler(
+      request({ params: { lifecycleId: "lc-1" }, body: { contactIds: ["c1"] } }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Lifecycle lc-1 not found" } });
   });
 });
 
@@ -851,6 +918,7 @@ describe("bulkUpdateWaMessageAssignStatusHandler", () => {
 
     expect(bulkUpdateWaMessageAssignStatus).toHaveBeenCalledWith(
       ["c1", "c2"],
+      ORG,
       "CLOSED",
       USER,
       "m1",

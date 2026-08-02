@@ -2,8 +2,8 @@
 import prisma from "../../../utils/prisma.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
-import { getUsageStat } from "../../stats/stats.service.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
+import { checkConversationLimitAvailable } from "../whatsappSurvey/wasurvey.auth.js";
 import { log } from "../../../utils/logger.js";
 import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils.js";
 
@@ -39,10 +39,11 @@ export async function getAutomatedRepliesByOrgId(orgId: string) {
   return automatedReplies;
 }
 
-export async function getAutomatedReplyById(id: string) {
-  const automatedReply = await prisma.waAutomatedReply.findUnique({
+export async function getAutomatedReplyById(id: string, orgId: string) {
+  const automatedReply = await prisma.waAutomatedReply.findFirst({
     where: {
       id,
+      orgId,
     },
     include: {
       WaAutomatedReplyCommands: {
@@ -54,7 +55,7 @@ export async function getAutomatedReplyById(id: string) {
     },
   });
   if (!automatedReply) {
-    throw new Error(`Automated reply ${id} not found`);
+    return null;
   }
   const { WaAutomatedReplyCommands, ...rest } = automatedReply;
   return {
@@ -125,8 +126,17 @@ export async function updateAutomatedReply(
     whatsappSettingsPhoneId?: string;
     platform?: string;
   },
-  _orgId: string,
+  orgId: string,
 ) {
+  const existing = await prisma.waAutomatedReply.findFirst({
+    where: { id, orgId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    throw new Error("Automated reply not found");
+  }
+
   const updatedAutomatedReply = await prisma.waAutomatedReply.update({
     where: {
       id,
@@ -145,7 +155,16 @@ export async function updateAutomatedReply(
   return updatedAutomatedReply;
 }
 
-export async function deleteAutomatedReply(id: string) {
+export async function deleteAutomatedReply(id: string, orgId: string) {
+  const existing = await prisma.waAutomatedReply.findFirst({
+    where: { id, orgId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    throw new Error("Automated reply not found");
+  }
+
   const automatedReply = await prisma.waAutomatedReply.delete({
     where: {
       id,
@@ -184,13 +203,13 @@ export async function getCommandByOrgIdAndCommand(orgId: string, command: string
 }
 
 export async function verifyAutomationTriggerLimit(orgId: string) {
-  const [usageStats, subscription] = await Promise.all([
-    getUsageStat(orgId),
-    getSubscription(orgId),
-  ]);
-  if (!subscription || !subscription.features.whatsapp.active) {
+  const subscription = await getSubscription(orgId);
+  if (!subscription?.features?.whatsapp?.active) {
     log.error("Whatsapp is inactive. Aborting automation check...");
     return false;
   }
-  return true;
+  // The plans define an allowance on whatsapp.conversation.count.max (500 free /
+  // 1000 sample), not on the automation count, so that is the limit enforced here.
+  // checkConversationLimitAvailable answers true while the org is still within it.
+  return await checkConversationLimitAvailable(orgId);
 }

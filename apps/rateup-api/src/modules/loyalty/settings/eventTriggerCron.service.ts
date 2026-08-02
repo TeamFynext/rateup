@@ -3,6 +3,7 @@ import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { assignRewardToCustomer } from "../accounts/account.service.js";
 
 /**
  * Cron job to check for customer birthdays and send WhatsApp templates
@@ -15,6 +16,9 @@ export async function checkBirthdayEventTriggers() {
     const today = dayjs();
     const todayMonth = today.month() + 1; // dayjs months are 0-indexed
     const todayDate = today.date();
+    // The boundary the per-customer claim below compares against, so a second run
+    // on the same day greets nobody twice. See issues.txt 20.36.
+    const startOfToday = today.startOf("day").toDate();
 
     // Get all enabled birthday event triggers
     const birthdayTriggers = await prisma.loyaltyEventTrigger.findMany({
@@ -42,17 +46,23 @@ export async function checkBirthdayEventTriggers() {
     // Process each trigger's program
     for (const trigger of birthdayTriggers) {
       try {
-        // Get all active customers with birthdays today in this program
-        const customersWithBirthday = await prisma.customerLoyaltyAccount.findMany({
-          where: {
-            programId: trigger.programId,
-            status: "active",
-            contact: {
-              dob: {
-                not: null,
-              },
-            },
-          },
+        // The month and day are matched in SQL. This used to load EVERY active
+        // customer with a date of birth, for each trigger, and filter in
+        // JavaScript — so the whole membership was materialised daily, per
+        // trigger, to find the handful with a birthday. See issues.txt 20.36.
+        const birthdayAccountIds = await prisma.$queryRaw<{ id: string }[]>`
+          SELECT a.id
+          FROM "CustomerLoyaltyAccount" a
+          JOIN "Contact" c ON c.id = a."contactId"
+          WHERE a."programId" = ${trigger.programId}::uuid
+            AND a.status = 'active'
+            AND c.dob IS NOT NULL
+            AND EXTRACT(MONTH FROM c.dob) = ${todayMonth}
+            AND EXTRACT(DAY FROM c.dob) = ${todayDate}
+        `;
+
+        const birthdayCustomers = await prisma.customerLoyaltyAccount.findMany({
+          where: { id: { in: birthdayAccountIds.map((row) => row.id) } },
           include: {
             contact: {
               select: {
@@ -67,13 +77,6 @@ export async function checkBirthdayEventTriggers() {
           },
         });
 
-        // Filter customers whose birthday is today
-        const birthdayCustomers = customersWithBirthday.filter((customer) => {
-          if (!customer.contact.dob) return false;
-          const dob = dayjs(customer.contact.dob);
-          return dob.month() + 1 === todayMonth && dob.date() === todayDate;
-        });
-
         log.info(
           `Birthday Event Trigger Cron - Program ${trigger.program.name}: ${birthdayCustomers.length} customers with birthday today`,
         );
@@ -83,6 +86,29 @@ export async function checkBirthdayEventTriggers() {
           try {
             if (!customer.contact.phone) {
               log.warn(`Birthday Event Trigger - Customer ${customer.id} has no phone number`);
+              continue;
+            }
+
+            // Claim the customer BEFORE sending, exactly as the inactivity cron
+            // does. This cron used to have no idempotency guard and record nothing
+            // per customer, so a second run on the same day — a redeploy, a retry,
+            // two instances — greeted every birthday customer again.
+            // See issues.txt 20.36.
+            const claimed = await prisma.customerLoyaltyAccount.updateMany({
+              where: {
+                id: customer.id,
+                OR: [
+                  { lastBirthdayGreetedAt: null },
+                  { lastBirthdayGreetedAt: { lt: startOfToday } },
+                ],
+              },
+              data: { lastBirthdayGreetedAt: new Date() },
+            });
+
+            if (claimed.count === 0) {
+              log.info(
+                `Birthday Event Trigger - Customer ${customer.id} already greeted today, skipping`,
+              );
               continue;
             }
 
@@ -208,15 +234,25 @@ export async function checkInactivityEventTriggers() {
               continue;
             }
 
-            // Atomically claim this customer by updating lastActivityAt only if it
-            // still matches the original value — prevents duplicate sends if the
-            // cron overlaps or runs concurrently across multiple instances.
+            // Atomically claim this customer before sending, so an overlapping
+            // run cannot double-send.
+            //
+            // The claim is written to `lastInactivityReminderAt`, NOT to
+            // `lastActivityAt`. It used to be the latter — the same column this
+            // cron SELECTS on — so reminding a dormant customer marked them as
+            // active today: their inactivity clock restarted and they would not be
+            // reminded again for another full window. The reminder cancelled its
+            // own follow-up, and the customer's record claimed activity they had
+            // not performed. See issues.txt 20.37.
             const claimed = await prisma.customerLoyaltyAccount.updateMany({
               where: {
                 id: customer.id,
-                lastActivityAt: customer.lastActivityAt,
+                OR: [
+                  { lastInactivityReminderAt: null },
+                  { lastInactivityReminderAt: { lte: inactivityDate } },
+                ],
               },
-              data: { lastActivityAt: new Date() },
+              data: { lastInactivityReminderAt: new Date() },
             });
 
             if (claimed.count === 0) {
@@ -288,48 +324,27 @@ async function resolveEventTriggerTemplateId(
 }
 
 /**
- * Helper function to issue a reward to a customer
+ * Issues a reward to a customer, through assignRewardToCustomer.
+ *
+ * This used to be a THIRD short-code generator with its own alphabet, and unlike
+ * assignRewardToCustomer it did not loop until it found a free code. shortCode is
+ * @unique, so a collision threw — and the catch here swallowed it, which meant the
+ * customer received the birthday message promising "a special reward" and silently
+ * got nothing. The same swallow hid the "already assigned" error on a repeat run.
+ *
+ * The catch stays, because a failed reward must not stop the rest of the run, but
+ * it now logs what actually happened rather than hiding a collision behind an
+ * INFO-level success line. See issues.txt 20.36 and 20.9.
  */
 async function issueRewardToCustomer(accountId: string, rewardId: string) {
   try {
-    const reward = await prisma.loyaltyReward.findUnique({
-      where: { id: rewardId },
-    });
-
-    if (!reward) {
-      log.error(`Reward ${rewardId} not found`);
-      return;
-    }
-
-    // Generate unique short code for the reward
-    const shortCode = generateShortCode();
-
-    // Create customer reward assignment
-    await prisma.customerReward.create({
-      data: {
-        shortCode,
-        accountId,
-        rewardId,
-        status: "ISSUED",
-      },
-    });
-
-    log.info(`Issued reward ${rewardId} to customer account ${accountId} (code: ${shortCode})`);
+    const assignment = await assignRewardToCustomer(accountId, rewardId);
+    log.info(
+      `Issued reward ${rewardId} to customer account ${accountId} (code: ${assignment.shortCode})`,
+    );
   } catch (error) {
     log.error({ err: error }, `Error issuing reward ${rewardId} to customer ${accountId}:`);
   }
-}
-
-/**
- * Helper function to generate a unique short code for rewards
- */
-function generateShortCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
 }
 
 /**
@@ -372,7 +387,15 @@ export async function checkPointsExpiryAlerts() {
 
         if (!trigger) continue;
 
-        // Customers whose lastActivityAt is exactly (expirationMonths months - 14 days) ago
+        // Customers holding an EARN transaction that expires in 14 days.
+        //
+        // The alert used to select on `lastActivityAt` while the expiry itself
+        // expires individual earn transactions by their own `createdAt` — two
+        // different clocks for one event. A customer could be warned about an
+        // expiry that never arrived, or lose points with no warning at all,
+        // depending on which of the two had moved most recently. This selects on
+        // the clock that actually decides, which is the earning's own age.
+        // See issues.txt 20.37.
         const alertFrom = dayjs()
           .subtract(program.pointsExpirationMonths, "months")
           .add(14, "days")
@@ -389,7 +412,13 @@ export async function checkPointsExpiryAlerts() {
             programId: program.id,
             status: "active",
             currentPoints: { gt: 0 },
-            lastActivityAt: { gte: alertFrom, lte: alertTo },
+            transactions: {
+              some: {
+                transactionType: "earn",
+                points: { gt: 0 },
+                createdAt: { gte: alertFrom, lte: alertTo },
+              },
+            },
           },
           include: {
             contact: {
@@ -538,55 +567,73 @@ export async function checkPointsExpiration() {
               0,
             );
 
-            // Don't expire more points than the customer currently has
+            // Don't expire more points than the customer currently has.
             const pointsToExpire = Math.min(totalExpiredPoints, account.currentPoints);
 
             if (pointsToExpire <= 0) {
               continue;
             }
 
-            // Create expiration transactions for each expired earn transaction
-            for (const expiredTx of expiredTransactions) {
-              const pointsFromThisTx = Number(expiredTx.points);
+            // The cap is APPLIED, not merely computed.
+            //
+            // It used to be used only for the log line and the running total: the
+            // loop underneath wrote an `expire` row for each stale earning's FULL
+            // value while the balance was separately clamped with
+            // `Math.max(0, …)`. So the balance was protected and the ledger was
+            // not — a customer with 150 points of stale earnings but a 30-point
+            // balance, having spent the rest, got expire rows totalling -150 while
+            // their balance fell by 30. Replaying the ledger stopped reconciling
+            // with currentPoints, and the "points expired" figure the cron reports
+            // was inflated for every customer who had ever redeemed anything.
+            //
+            // The allocation walks the stale earnings oldest-first and stops when
+            // the cap is used up. Earnings past that point still get an expire row,
+            // with zero points: the row is what the NOT EXISTS above keys on, so
+            // without it they would be re-examined on every run forever.
+            //
+            // One balance write, one transaction. The old loop re-read the balance
+            // from the database once per stale transaction — an N+1 per customer —
+            // and wrote each row on its own with nothing around any of it.
+            // See issues.txt 20.38.
+            let remaining = pointsToExpire;
+            let runningBalance = account.currentPoints;
 
-              // Calculate new balance after expiring these points
-              const currentBalance = await prisma.customerLoyaltyAccount.findUnique({
+            const expiryRows = expiredTransactions.map((expiredTx) => {
+              const allocated = Math.min(remaining, Number(expiredTx.points));
+              remaining -= allocated;
+              runningBalance -= allocated;
+
+              return {
+                accountId: account.id,
+                programId: program.id,
+                transactionType: "expire",
+                points: -allocated, // Negative to deduct
+                balanceAfter: runningBalance,
+                source: "expiration",
+                referenceId: expiredTx.id, // Link to original earn transaction
+                description: `Points expired after ${program.pointsExpirationMonths} months`,
+                metadata: {
+                  expirationDate: dayjs(expirationDate).format("YYYY-MM-DD"),
+                  originalTransactionId: expiredTx.id,
+                  originalPoints: Number(expiredTx.points),
+                },
+              };
+            });
+
+            await prisma.$transaction(async (tx) => {
+              await tx.loyaltyTransaction.createMany({ data: expiryRows });
+
+              // `lastActivityAt` is deliberately NOT touched. Expiring a
+              // customer's points used to set it to now, which pushed their next
+              // expiry alert — and their inactivity reminder — out by a full
+              // window even though they had done nothing. See issues.txt 20.37.
+              await tx.customerLoyaltyAccount.update({
                 where: { id: account.id },
-                select: { currentPoints: true },
-              });
-
-              const newBalance = Math.max(
-                0,
-                (currentBalance?.currentPoints || 0) - pointsFromThisTx,
-              );
-
-              // Create expiration transaction
-              await prisma.loyaltyTransaction.create({
                 data: {
-                  accountId: account.id,
-                  programId: program.id,
-                  transactionType: "expire",
-                  points: -pointsFromThisTx, // Negative to deduct
-                  balanceAfter: newBalance,
-                  source: "expiration",
-                  referenceId: expiredTx.id, // Link to original earn transaction
-                  description: `Points expired after ${program.pointsExpirationMonths} months`,
-                  metadata: {
-                    expirationDate: dayjs(expirationDate).format("YYYY-MM-DD"),
-                    originalTransactionId: expiredTx.id,
-                  },
+                  currentPoints: runningBalance,
                 },
               });
-
-              // Update customer's current points
-              await prisma.customerLoyaltyAccount.update({
-                where: { id: account.id },
-                data: {
-                  currentPoints: newBalance,
-                  lastActivityAt: new Date(),
-                },
-              });
-            }
+            });
 
             totalPointsExpired += pointsToExpire;
             totalCustomersAffected++;

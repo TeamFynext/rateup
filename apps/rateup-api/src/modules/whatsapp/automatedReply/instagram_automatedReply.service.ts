@@ -68,6 +68,9 @@ export async function createInstagramAutomatedReply(data: {
         matchData: data.matchData,
         platform: PlatformType.INSTAGRAM,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+        sendOnceIn24Hours: data.sendOnceIn24Hours,
+        // `isActive` is the name the API uses; `isEnabled` is the column.
+        isEnabled: data.isActive,
       },
     });
 
@@ -97,10 +100,6 @@ export async function updateInstagramAutomatedReply(
   },
 ) {
   try {
-    // NOTE: sendOnceIn24Hours/isActive (isEnabled) have no backing columns on
-    // WaAutomatedReply - same gap as createInstagramAutomatedReply below, which already
-    // drops them on create. Dropping them here too keeps create/update consistent; the
-    // toggle is accepted by the API but not yet persisted anywhere.
     const automation = await prisma.waAutomatedReply.update({
       where: {
         id,
@@ -110,6 +109,9 @@ export async function updateInstagramAutomatedReply(
         name: data.name,
         matchData: data.matchData,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+        sendOnceIn24Hours: data.sendOnceIn24Hours,
+        // `isActive` is the name the API uses; `isEnabled` is the column.
+        isEnabled: data.isActive,
       },
     });
 
@@ -127,17 +129,19 @@ export async function updateInstagramAutomatedReply(
  */
 export async function deleteInstagramAutomatedReply(id: string) {
   try {
-    // Delete automation messages
-    await prisma.waAutomatedReplyMessage.deleteMany({
-      where: { waAutomatedReplyId: id },
-    });
+    // Both in one transaction, as deleteRule does: otherwise a failure on the second
+    // statement leaves the automation alive with its history already gone.
+    await prisma.$transaction(async (tx) => {
+      await tx.waAutomatedReplyMessage.deleteMany({
+        where: { waAutomatedReplyId: id },
+      });
 
-    // Delete automation
-    await prisma.waAutomatedReply.delete({
-      where: {
-        id,
-        platform: PlatformType.INSTAGRAM,
-      },
+      await tx.waAutomatedReply.delete({
+        where: {
+          id,
+          platform: PlatformType.INSTAGRAM,
+        },
+      });
     });
 
     log.info(`[Instagram Automation] Deleted automation ${id}`);

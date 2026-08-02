@@ -13,18 +13,19 @@ import {
   deleteBoardHandler,
   getBoardTeamMembersHandler,
 } from "./board.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import { verifyBoardAccess } from "./board.auth.js";
 
 export async function boardRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  // The parent ticketRoutes already adds checkSession, and this tree used to add a
+  // second one — so every board request resolved the session twice through
+  // SuperTokens and wrote two audit entries for one action. See issues.txt 28.7.
   // Tickets are a free feature — no subscription gate.
 
-  // Create board
+  // Create board. The team check that was commented out here lives in the service
+  // now, so it covers the update path too. See issues.txt 28.2.
   server.post(
     "/create",
     {
-      // preHandler: [verifyTeamAccess],
       schema: {
         body: createBoardRequestSchema,
       },

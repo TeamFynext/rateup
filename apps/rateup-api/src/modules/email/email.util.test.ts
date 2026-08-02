@@ -107,20 +107,21 @@ describe("getEmailBodyTemplate", () => {
     expect(html).toContain("Invitation");
   });
 
-  // NOTE: the switch has no default. `purpose` is a free-form z.string() on the
-  // public route, so anything unrecognised falls through and the caller gets
-  // undefined back — which becomes `html: undefined` on the outgoing message.
-  test("returns undefined for an unrecognised purpose", () => {
-    expect(getEmailBodyTemplate("PasswordReset", { otp: "1" })).toBeUndefined();
+  // The switch had no default, so an unrecognised purpose returned undefined and
+  // became `html: undefined` on the outgoing message — an email delivered with no
+  // body, answered 200. `purpose` is a z.enum on the schemas now, and this throw
+  // covers any other caller. See issues.txt 25.9.
+  test("throws for an unrecognised purpose rather than rendering nothing", () => {
+    expect(() => getEmailBodyTemplate("PasswordReset", { otp: "1" })).toThrow(/No email template/);
   });
 
-  test("returns undefined when the purpose is missing", () => {
-    expect(getEmailBodyTemplate(undefined, {})).toBeUndefined();
+  test("throws when the purpose is missing", () => {
+    expect(() => getEmailBodyTemplate(undefined, {})).toThrow(/No email template/);
   });
 
-  test("matches the purpose case sensitively", () => {
-    expect(getEmailBodyTemplate("generaltemplate", { body: "hi" })).toBeUndefined();
-    expect(getEmailBodyTemplate("SURVEYEMAILOTPQUESTION", { otp: "1" })).toBeUndefined();
+  test("still matches the purpose case sensitively, and refuses the rest", () => {
+    expect(() => getEmailBodyTemplate("generaltemplate", { body: "hi" })).toThrow();
+    expect(() => getEmailBodyTemplate("SURVEYEMAILOTPQUESTION", { otp: "1" })).toThrow();
   });
 
   // Both branches now read through `data?.`; a missing payload renders the template
@@ -139,33 +140,45 @@ describe("getEmailBodyTemplate", () => {
 // ===========================================================================
 
 describe("createGeneralEmailBodyTemaple", () => {
-  test("interpolates the body into the message unescaped", () => {
+  // Every value used to be interpolated raw, which is what made 25.1's relay a
+  // phishing tool rather than merely a spam tool. See issues.txt 25.12.
+  test("escapes the body", () => {
     const html = createGeneralEmailBodyTemaple(
       "<img src=x onerror=alert(1)>",
       "https://app.example",
     );
 
-    expect(html).toContain("<img src=x onerror=alert(1)>");
+    expect(html).not.toContain("<img src=x onerror=alert(1)>");
+    expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
   });
 
-  test("puts the link straight into the href with no scheme check", () => {
+  // Escaping alone would leave `javascript:` and `data:` hrefs intact, which some
+  // mail clients honour, so a link that is not ordinary http(s) is dropped.
+  test("drops a link that is not http or https", () => {
     const html = createGeneralEmailBodyTemaple("hi", "javascript:alert(1)");
 
-    expect(html).toContain(`href="javascript:alert(1)"`);
+    expect(html).not.toContain("javascript:alert(1)");
+    expect(html).not.toContain("<a href");
   });
 
-  // NOTE: neither value is quoted or escaped, so a caller-supplied link
-  // containing a double quote closes the attribute and can add its own.
-  test("a quote in the link breaks out of the href attribute", () => {
+  test("keeps an ordinary http(s) link", () => {
+    const html = createGeneralEmailBodyTemaple("hi", "https://app.example/invite?x=1");
+
+    expect(html).toContain(`href="https://app.example/invite?x=1"`);
+  });
+
+  // A caller-supplied link containing a double quote used to close the attribute
+  // and add its own.
+  test("a quote in the link can no longer break out of the href attribute", () => {
     const html = createGeneralEmailBodyTemaple("hi", `https://x" onclick="steal()`);
 
-    expect(html).toContain(`onclick="steal()"`);
+    expect(html).not.toContain(`onclick="steal()"`);
   });
 
-  test("interpolates the title unescaped", () => {
+  test("escapes the title", () => {
     const html = createGeneralEmailBodyTemaple("hi", "https://x", "<b>bold</b>");
 
-    expect(html).toContain("<h1><b>bold</b></h1>");
+    expect(html).toContain("<h1>&lt;b&gt;bold&lt;/b&gt;</h1>");
   });
 
   test("renders an empty heading when no title is given", () => {
@@ -174,17 +187,19 @@ describe("createGeneralEmailBodyTemaple", () => {
     expect(html).toContain("<h1></h1>");
   });
 
-  test("renders the string 'undefined' for a missing body", () => {
+  test("renders an empty paragraph for a missing body", () => {
     const html = createGeneralEmailBodyTemaple(undefined as never, "https://x");
 
-    expect(html).toContain("<p>undefined</p>");
+    expect(html).not.toContain("<p>undefined</p>");
+    expect(html).toContain("<p></p>");
   });
 
-  test("always renders the Visit button, even without a link", () => {
+  // It used to render `href="undefined"` and a Visit button that went nowhere.
+  test("omits the Visit button when there is no usable link", () => {
     const html = createGeneralEmailBodyTemaple("hi", undefined as never);
 
-    expect(html).toContain(`href="undefined"`);
-    expect(html).toContain("Visit");
+    expect(html).not.toContain(`href="undefined"`);
+    expect(html).not.toContain("Visit");
   });
 
   test("embeds the logo from the CDN env var", () => {
@@ -209,21 +224,26 @@ describe("createEmailBodyOTPGeneration", () => {
     expect(html).toContain("valid only for next 10 minutes");
   });
 
-  // NOTE: surveyName comes from the caller-supplied `data` blob on a public
-  // route; nothing checks it against the survey the userId belongs to.
-  test("interpolates the survey name unescaped", () => {
+  // NOTE: surveyName still comes from the caller-supplied `data` blob on a public
+  // route and nothing checks it against the survey the userId belongs to — but it
+  // is escaped, so it can no longer bring markup into the message.
+  // See issues.txt 25.12.
+  test("escapes the survey name", () => {
     const html = createEmailBodyOTPGeneration({
       otp: "1",
       surveyName: "<a href='https://evil.test'>click</a>",
     });
 
-    expect(html).toContain("<a href='https://evil.test'>click</a>");
+    expect(html).not.toContain("<a href='https://evil.test'>click</a>");
+    expect(html).toContain("&lt;a href=&#39;https://evil.test&#39;&gt;");
   });
 
-  test("renders the word undefined when the survey name is missing", () => {
+  // It used to read "To continue undefined, please use...".
+  test("reads correctly when the survey name is missing", () => {
     const html = createEmailBodyOTPGeneration({ otp: "1" });
 
-    expect(html).toContain("To continue undefined,");
+    expect(html).not.toContain("undefined");
+    expect(html).toContain("please use the following One Time Password");
   });
 
   // Previously dereferenced `.otp` on the payload directly and threw a TypeError.

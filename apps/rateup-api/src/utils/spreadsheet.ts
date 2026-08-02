@@ -25,6 +25,45 @@ export function getSpreadsheetFilename(basename: string, format: SpreadsheetExpo
   return `${basename}.${format}`;
 }
 
+/**
+ * Renders rows as CSV.
+ *
+ * Two things it does that hand-rolled `rows.map((r) => r.join(","))` does not:
+ *
+ *   - It quotes. A value containing a comma, a quote or a newline is wrapped and
+ *     its quotes are doubled, per RFC 4180. Without this a customer whose name
+ *     contains a comma shifts every later column on their row, so tier, points and
+ *     referral code all land in the wrong field and nothing signals it.
+ *
+ *   - It neutralises formula injection. A cell beginning `=`, `+`, `-`, `@`, or a
+ *     tab or carriage return, is prefixed with a single quote so Excel and Sheets
+ *     treat it as text. These cells come from user-supplied names, and the loyalty
+ *     signup form that supplies them is reachable without a session
+ *     (issues.txt 20.13) — so the attacker chooses the contents and an operator
+ *     opens the file.
+ *
+ * See issues.txt 20.24.
+ */
+export function toCsv(rows: Array<Array<string | number | null | undefined>>): string {
+  return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function csvCell(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+
+  let text = String(value);
+
+  if (/^[=+\-@\t\r]/.test(text)) {
+    text = `'${text}`;
+  }
+
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+
+  return text;
+}
+
 // --- Import (read) side ---
 
 export type SpreadsheetInputFormat = "csv" | "xlsx" | "ods";

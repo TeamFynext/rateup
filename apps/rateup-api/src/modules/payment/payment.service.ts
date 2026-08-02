@@ -3,7 +3,6 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   SubscriptionStatus,
-  type Order,
   type RateupPlan,
 } from "../../../generated/prisma/client.js";
 import axios from "axios";
@@ -846,12 +845,23 @@ export async function getRateuplanById(id: string) {
   });
 }
 
-export async function updateOrder(orderId: string, data: Partial<Order>) {
+/**
+ * Sets an order's status, within the caller's own organisation.
+ *
+ * This used to be `prisma.order.update({ where: { id: orderId }, data })` with
+ * `data` being the request body typed Partial<Order> — no org condition and every
+ * column writable, so `PUT /api/payment/order/<any order id>` was an unscoped
+ * write to another organisation's order record: amount, paymentStatus,
+ * subscriptionId and orgId all reachable by anyone with a session.
+ * See issues.txt 40.1.
+ */
+export async function updateOrder(orderId: string, status: OrderStatus, orgId: string) {
   return await prisma.order.update({
     where: {
       id: orderId,
+      orgId,
     },
-    data,
+    data: { status },
   });
 }
 

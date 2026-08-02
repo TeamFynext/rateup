@@ -29,13 +29,13 @@ import {
   rateupPlanParamInput,
   UpdatePlanInput,
   updateRateUpPlanInput,
+  type UpdateOrderStatusInput,
 } from "./payment.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
 import { log } from "../../utils/logger.js";
 // import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
-import { Order } from "../../../generated/prisma/client.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function createCheckoutSessionHandler(
@@ -316,19 +316,47 @@ export async function sendEmailPlanSelectionDetailsHandler(
   }
 }
 
+/**
+ * Marks an order complete.
+ *
+ * This was the only route in either payment tree with neither a role check nor a
+ * root-org check, and it is the one that changes what an organisation is
+ * entitled to: `PUT /api/payment/order/<any order id>` with `{"status":
+ * "COMPLETE"}` upgraded the CALLER's organisation to that order's plan, with the
+ * plan's entire feature set. Nothing on the path consulted a payment, a Stripe
+ * session, a Razorpay signature or the order's own orgId. And obtaining a usable
+ * order id needed no guessing — the Stripe checkout writes an Order row with the
+ * chosen plan before Stripe is called (40.4), so a caller created an order for
+ * the most expensive plan, abandoned the checkout, and PUT it complete.
+ *
+ * Three things changed. The update is scoped to the caller's org and writes only
+ * `status` (see updateOrder). The route requires SUPER_ADMIN. And the
+ * subscription is granted from the order's OWN paymentStatus — set by the
+ * signature-verified webhooks — rather than from the status the client sent.
+ * See issues.txt 40.1.
+ */
 export async function updateSubscriptionOrderHandler(
   request: FastifyRequest<{
     Params: { orderId: string };
-    Body: Partial<Order>;
+    Body: UpdateOrderStatusInput;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const order = await updateOrder(request.params.orderId, request.body);
     const { status } = request.body;
-    if (status && status === "COMPLETE") {
+    const order = await updateOrder(request.params.orderId, status, request.user.orgId);
+
+    if (status === "COMPLETE") {
+      if (order.paymentStatus !== "SUCCESS") {
+        return reply.code(409).send({
+          message: "This order has not been paid for; its subscription cannot be started",
+        });
+      }
       await updateSubscriptionForTrial(
-        request.user.orgId,
+        // The order's own org, not the session's. They are the same after the
+        // scoped update above; naming the order's makes that explicit rather
+        // than incidental.
+        order.orgId!,
         order.rateupPlanId,
         order.subscriptionId,
         request.userId,
@@ -336,7 +364,10 @@ export async function updateSubscriptionOrderHandler(
     }
     reply.code(200).send();
   } catch (e) {
+    if (e && typeof e === "object" && (e as { code?: string }).code === "P2025") {
+      return reply.code(404).send({ message: "Order not found" });
+    }
     log.error(e);
-    reply.code(500).send("Updating order failed");
+    reply.code(500).send({ message: "Updating order failed" });
   }
 }

@@ -20,10 +20,32 @@ import {
   WebsiteBody,
 } from "./metaAgent.schema.js";
 
+// Meta's status used to be relayed as this API's own, so a 429 from Meta became
+// a 429 from RateUp and a client's retry logic reacted to the wrong service's
+// rate limit — likewise a 401, which says nothing about the caller's session.
+// The message and detail are still relayed, since an operator configuring the
+// agent wants to read what Meta objected to; only the status is mapped.
+// See issues.txt 43.5.
+function statusFromMeta(status: number | undefined): number {
+  if (!status) return 502;
+  // The caller's own input was rejected — the one class worth relaying as a 4xx.
+  if (status === 400 || status === 422) return 400;
+  // Meta could not find what we named on the business's behalf.
+  if (status === 404) return 404;
+  // Our credentials, Meta's throttle or Meta being down: upstream problems, all
+  // of which are 502 from here.
+  return 502;
+}
+
 function handleError(reply: FastifyReply, error: unknown) {
   if (error instanceof MetaAgentApiError) {
     log.error({ err: error }, "Meta Business Agent API error");
-    return reply.code(error.status || 502).send({ message: error.message, detail: error.detail });
+    return reply.code(statusFromMeta(error.status)).send({
+      message: error.message,
+      detail: error.detail,
+      // Named explicitly so a client can tell an upstream refusal from ours.
+      upstreamStatus: error.status,
+    });
   }
   log.error({ err: error }, "Meta Business Agent handler error");
   return reply.code(500).send({ message: "Something went wrong" });
@@ -44,7 +66,8 @@ const wrap =
 // ---- record ----
 export const getMetaBusinessAgentHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>
->((req, orgId) => service.getOrCreateAgentRecord(orgId, req.params.whatsappSettingsId));
+  // A read, not a read-or-create. See issues.txt 43.3.
+>((req, orgId) => service.getAgentRecord(orgId, req.params.whatsappSettingsId));
 
 // ---- onboard ----
 export const checkAgentEligibilityHandler = wrap<

@@ -89,10 +89,17 @@ describe("fetchLocation", () => {
     expect(axiosGet).not.toHaveBeenCalled();
   });
 
-  // NOTE: latitude 0 is a real place (the equator) but reads as missing here, so a
-  // point on the equator is silently dropped rather than looked up.
-  test("treats a latitude of exactly zero as missing", async () => {
-    await expect(fetchLocation({ latitude: 0, longitude: 13.405 })).resolves.toBeNull();
-    expect(axiosGet).not.toHaveBeenCalled();
+  // Latitude 0 is the equator, a real place: absence is checked explicitly rather than
+  // by falsiness, so it is looked up like any other coordinate.
+  test("looks up a latitude of exactly zero", async () => {
+    await fetchLocation({ latitude: 0, longitude: 13.405 });
+
+    expect(axiosGet).toHaveBeenCalled();
+  });
+
+  test("looks up a longitude of exactly zero too", async () => {
+    await fetchLocation({ latitude: 52.52, longitude: 0 });
+
+    expect(axiosGet).toHaveBeenCalled();
   });
 });

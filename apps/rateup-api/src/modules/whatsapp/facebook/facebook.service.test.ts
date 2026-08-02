@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { waMessage: { findMany: vi.fn(), update: vi.fn() } },
+  default: { waMessage: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() } },
   excludeFields: vi.fn(),
 }));
 vi.mock("../wa_axios.js", () => ({
@@ -35,7 +35,8 @@ import {
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const db = (prisma as unknown as { waMessage: { findMany: Mock; update: Mock } }).waMessage;
+const db = (prisma as unknown as { waMessage: { findMany: Mock; findFirst: Mock; update: Mock } })
+  .waMessage;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const getSettingsMock = getWaSettingsByPageId as unknown as Mock;
 const updateByMessageIdMock = updateWaMessageByMessageId as unknown as Mock;
@@ -80,6 +81,8 @@ beforeEach(() => {
   updateByMessageIdMock.mockResolvedValue(null);
   callMetaApiMock.mockResolvedValue({ data: {} });
   db.findMany.mockResolvedValue([]);
+  // No message already stored with this mid — the retry guard lets the event through.
+  db.findFirst.mockResolvedValue(null);
   db.update.mockResolvedValue({});
 });
 
@@ -111,16 +114,15 @@ describe("getFacebookUserDetailsFromMeta", () => {
     expect(method).toBe("GET");
   });
 
-  // NOTE: pins current behaviour. Every other Meta call in this codebase passes the
-  // token as callMetaApi's third argument, which becomes an Authorization header.
-  // Here it is interpolated into the URL, and callMetaApi trace-logs the URL and
-  // dumps the whole axios response (config included) on failure. See issues.txt 10.4.
-  test("puts the page access token in the query string rather than the auth header", async () => {
+  // The token goes in the auth header, like every other Meta call in this codebase.
+  // Interpolated into the URL it was trace-logged with the request and dumped in the
+  // axios config on any non-2xx.
+  test("passes the page access token as the auth header, not in the query string", async () => {
     await getFacebookUserDetailsFromMeta(PSID, PAGE_ID);
 
     const [url, , token] = callMetaApiMock.mock.calls[0];
-    expect(url).toContain("access_token=page-token-abc");
-    expect(token).toBeUndefined();
+    expect(url).not.toContain("access_token");
+    expect(token).toBe("page-token-abc");
   });
 
   // NOTE: pins current behaviour. The declared return type promises an optional
@@ -261,7 +263,7 @@ describe("handleFacebookWebhook - events it passes over", () => {
   test("ignores an entry that carries no messaging events at all", async () => {
     const body: any = { object: "page", entry: [{ id: PAGE_ID, time: 1 }] };
 
-    await expect(handleFacebookWebhook(body)).resolves.toBeUndefined();
+    await expect(handleFacebookWebhook(body)).resolves.toEqual({ processed: 0, failed: 0 });
     expect(handleWaMessagesMock).not.toHaveBeenCalled();
   });
 
@@ -281,10 +283,10 @@ describe("handleFacebookWebhook - events it passes over", () => {
 });
 
 describe("handleFacebookWebhook - one bad event in a batch", () => {
-  // NOTE: pins current behaviour. There is no per-entry guard, so a database
-  // hiccup looking one page up abandons every entry after it in the same batch.
-  // Meta has already been told 200, so nothing is retried. See issues.txt 10.3.
-  test("abandons the rest of the batch when one page lookup fails", async () => {
+  // Each entry is guarded, so a database hiccup looking one page up no longer abandons
+  // the entries after it. The failure is counted, which the controller turns into a
+  // non-2xx so Meta retries the batch.
+  test("carries on with the rest of the batch when one page lookup fails", async () => {
     getSettingsMock.mockRejectedValueOnce(new Error("db down")).mockResolvedValue(SETTINGS);
 
     const body: any = {
@@ -295,13 +297,14 @@ describe("handleFacebookWebhook - one bad event in a batch", () => {
       ],
     };
 
-    await expect(handleFacebookWebhook(body)).rejects.toThrow("db down");
-    expect(handleWaMessagesMock).not.toHaveBeenCalled();
+    const result = await handleFacebookWebhook(body);
+
+    expect(handleWaMessagesMock).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ processed: 1, failed: 1 });
   });
 
-  // NOTE: pins current behaviour. handleFacebookMessages catches its own failures,
-  // so a storage failure on one message does NOT stop the batch — but see
-  // "swallows a storage failure" below for the cost of that. issues.txt 10.6.
+  // A storage failure on one message does not stop the batch; it is counted instead,
+  // and the controller answers non-2xx so Meta retries.
   test("carries on with the next message when one fails to store", async () => {
     handleWaMessagesMock
       .mockRejectedValueOnce(new Error("write failed"))
@@ -321,14 +324,18 @@ describe("handleFacebookWebhook - one bad event in a batch", () => {
       ],
     };
 
-    await expect(handleFacebookWebhook(body)).resolves.toBeUndefined();
+    const result = await handleFacebookWebhook(body);
+
     expect(handleWaMessagesMock).toHaveBeenCalledTimes(2);
+    // handleFacebookMessages swallows its own storage failure, so the batch sees both
+    // events as handled — see 10.6's remaining note in issues.txt.
+    expect(result).toEqual({ processed: 2, failed: 0 });
   });
 
-  // NOTE: pins current behaviour. handleFacebookPostback's catch block logs
-  // `sender.id` — the very expression that threw — so a postback with no sender
-  // throws out of the catch and aborts the whole batch. See issues.txt 10.2.
-  test("aborts the batch when a postback arrives with no sender", async () => {
+  // handleFacebookPostback guards on sender and no longer dereferences it inside its
+  // catch, so a postback with no sender is skipped rather than throwing out of the
+  // catch and aborting the whole batch.
+  test("skips a postback with no sender and carries on with the batch", async () => {
     const body: any = {
       object: "page",
       entry: [
@@ -343,8 +350,11 @@ describe("handleFacebookWebhook - one bad event in a batch", () => {
       ],
     };
 
-    await expect(handleFacebookWebhook(body)).rejects.toThrow(TypeError);
-    expect(handleWaMessagesMock).not.toHaveBeenCalled();
+    const result = await handleFacebookWebhook(body);
+
+    // The postback is skipped; the plain message after it is still stored.
+    expect(handleWaMessagesMock).toHaveBeenCalledTimes(1);
+    expect(result.failed).toBe(0);
   });
 });
 
@@ -505,33 +515,31 @@ describe("handleFacebookMessageRead", () => {
 
   // NOTE: pins current behaviour, and this one makes the whole handler a no-op.
   // Outbound bodies are stored under the key `send` (see WaInboxMessageBody and
-  // handleWaMessages, which builds `{ exchangeProcess, send, receive }`). This
-  // query filters on `["sent", "recipient", "id"]` — a key that does not exist —
-  // so findMany matches nothing and no Facebook message is ever marked read.
-  // See issues.txt 10.1.
-  test("filters on a message-body key the messages are not stored under", async () => {
+  // handleWaMessages, which builds `{ exchangeProcess, send, receive }`). The query
+  // used to filter on `["sent", ...]` — a key no row has — so findMany matched nothing
+  // and no Facebook message was ever marked read.
+  test("filters on the message-body key outbound messages are stored under", async () => {
     await handleFacebookMessageRead(readEvent());
 
     const { where } = db.findMany.mock.calls[0][0];
-    expect(where.messageBody.path).toEqual(["sent", "recipient", "id"]);
-    expect(where.messageBody.path).not.toEqual(["send", "recipient", "id"]);
+    expect(where.messageBody.path).toEqual(["send", "recipient", "id"]);
   });
 
-  // NOTE: pins current behaviour. sendBy holds the agent's user id, so it is null
-  // for anything the platform sent on its own — automated replies, campaigns,
-  // chatbot messages. Even with the `sent`/`send` key fixed, none of those would
-  // ever be marked read. See issues.txt 10.1.
-  test("considers only messages an agent sent by hand", async () => {
+  // sendBy holds the agent's user id, so it is null for anything the platform sent on
+  // its own — automated replies, campaigns, chatbot messages. Filtering on it meant
+  // none of those could ever be marked read, so the filter is gone.
+  test("considers messages the platform sent as well as those an agent sent by hand", async () => {
     await handleFacebookMessageRead(readEvent());
 
     const { where } = db.findMany.mock.calls[0][0];
-    expect(where.sendBy).toEqual({ not: null });
+    expect(where.sendBy).toBeUndefined();
   });
 
-  // NOTE: pins current behaviour. A watermark covers everything up to that point,
-  // so each new receipt re-selects the entire conversation and overwrites the read
-  // time of messages that were already read. See issues.txt 10.7.
-  test("overwrites the read time of a message that was already read", async () => {
+  // A watermark covers everything up to that point, so each receipt re-selects the whole
+  // conversation. Rows already marked read are skipped, so an old message's read time no
+  // longer drifts forward to whenever the customer last opened the thread — and a long
+  // thread no longer issues one write per message on every receipt.
+  test("leaves the read time of a message that was already read alone", async () => {
     const LATER = READ_AT + 60_000;
     db.findMany.mockResolvedValue([
       { id: "msg-1", stats: { read: new Date(READ_AT).toISOString() } },
@@ -539,7 +547,29 @@ describe("handleFacebookMessageRead", () => {
 
     await handleFacebookMessageRead(webhook(messaging({ read: { watermark: LATER } })));
 
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  test("still marks a message that has not been read yet", async () => {
+    const LATER = READ_AT + 60_000;
+    db.findMany.mockResolvedValue([
+      { id: "msg-1", stats: { read: new Date(READ_AT).toISOString() } },
+      { id: "msg-2", stats: { delivered: new Date(READ_AT).toISOString() } },
+    ]);
+
+    await handleFacebookMessageRead(webhook(messaging({ read: { watermark: LATER } })));
+
+    expect(db.update).toHaveBeenCalledTimes(1);
+    expect(db.update.mock.calls[0][0].where.id).toBe("msg-2");
     expect(db.update.mock.calls[0][0].data.stats.read).toBe(new Date(LATER).toISOString());
+  });
+
+  test("keeps the stats already on the row it marks", async () => {
+    db.findMany.mockResolvedValue([{ id: "msg-2", stats: { delivered: "earlier" } }]);
+
+    await handleFacebookMessageRead(readEvent());
+
+    expect(db.update.mock.calls[0][0].data.stats.delivered).toBe("earlier");
   });
 
   test("swallows a query failure rather than reporting it", async () => {
@@ -595,17 +625,18 @@ describe("handleFacebookPostback", () => {
     await expect(handleFacebookPostback(postbackEvent(), SETTINGS)).resolves.toBeUndefined();
   });
 
-  // NOTE: pins current behaviour. Unlike handleFacebookMessages there is no
-  // `sender?.id` guard, and the catch block logs `sender.id` — so the error
-  // handler throws the same TypeError it was meant to report. See issues.txt 10.2.
-  test("throws out of its own error handler when there is no sender", async () => {
+  // Guarded like handleFacebookMessages, and the catch no longer dereferences sender.
+  // Previously `${sender.id}` threw inside the try and the catch threw the same
+  // TypeError again while trying to report it, unwinding the whole batch.
+  test("skips an event with no sender rather than throwing", async () => {
     const body: any = webhook({
       recipient: { id: PAGE_ID },
       timestamp: 1,
       postback: { payload: "TRACK" },
     });
 
-    await expect(handleFacebookPostback(body, SETTINGS)).rejects.toThrow(TypeError);
+    await expect(handleFacebookPostback(body, SETTINGS)).resolves.toBeUndefined();
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
   });
 });
 
@@ -662,14 +693,15 @@ describe("handleFacebookQuickReply", () => {
     await expect(handleFacebookQuickReply(quickReplyEvent(), SETTINGS)).resolves.toBeUndefined();
   });
 
-  // NOTE: same shape as the postback handler above. See issues.txt 10.2.
-  test("throws out of its own error handler when there is no sender", async () => {
+  // Same shape as the postback handler above.
+  test("skips an event with no sender rather than throwing", async () => {
     const body: any = webhook({
       recipient: { id: PAGE_ID },
       timestamp: 1,
       message: { mid: "mid-1", quick_reply: { payload: "CONFIRM" } },
     });
 
-    await expect(handleFacebookQuickReply(body, SETTINGS)).rejects.toThrow(TypeError);
+    await expect(handleFacebookQuickReply(body, SETTINGS)).resolves.toBeUndefined();
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
   });
 });

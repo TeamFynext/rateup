@@ -48,7 +48,10 @@ export async function updateConversationHandler(
 ) {
   try {
     const { conversationId } = request.params;
-    const res = await updateConversation(conversationId, request.body);
+    // `PUT /conversations/:conversationId` let an authenticated user of any org
+    // rewrite any ticket's status, subject, description, close stamp and
+    // resolution result — request.user was never touched. See issues.txt 18.35.
+    const res = await updateConversation(conversationId, request.user.orgId, request.body);
     reply.send(res);
   } catch (error) {
     log.error({ err: error }, "Error updating conversation:");

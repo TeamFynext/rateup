@@ -88,20 +88,20 @@ describe("getFacebookWebhookEvent - what it declines to classify", () => {
     expect(getFacebookWebhookEvent(undefined as any)).toBeNull();
   });
 
-  // NOTE: pins current behaviour. Facebook message reactions are declared on
-  // FacebookWebhookBody and Meta does deliver them, but there is no branch for
-  // them here, so every reaction is silently dropped. The Instagram equivalent
-  // (getInstagramWebhookEvent) DOES return MESSAGE_REACTION. See issues.txt 10.1.
-  test("drops a message reaction instead of classifying it", () => {
+  // Reactions now classify, as they already did on Instagram — without this branch a
+  // customer reacting to a message left no trace in the inbox, and the same gesture
+  // behaved differently on the two platforms.
+  test("classifies a message reaction", () => {
     const event = getFacebookWebhookEvent(
       messaging({ reaction: { mid: "mid-1", action: "react", emoji: "❤️" } }),
     );
 
-    expect(event).toBeNull();
+    expect(event).toBe(FacebookEvent.MESSAGE_REACTION);
   });
 
-  // NOTE: pins current behaviour. FacebookEvent.OPT_IN exists in the enum and is
-  // never produced by anything, so an opt-in event is dropped. See issues.txt 10.5.
+  // STILL OPEN: FacebookEvent.OPT_IN exists in the enum and is never produced by
+  // anything, so an opt-in event is dropped. Left as-is because opt-ins are not
+  // currently subscribed to on the Meta app — see issues.txt 10.5.
   test("never reports an opt-in, even though the enum has one", () => {
     const event = getFacebookWebhookEvent(messaging({ optin: { ref: "promo" } }));
 
@@ -127,13 +127,13 @@ describe("getFacebookWebhookEvent - which check wins when several could match", 
     expect(event).toBe(FacebookEvent.MESSAGE_DELIVERED);
   });
 
-  // NOTE: pins current behaviour. The postback check sits below the general
-  // message check, so a payload carrying both loses the postback. See issues.txt 10.5.
-  test("a message beats a postback on the same object, losing the payload", () => {
+  // The postback check sits ABOVE the general message check now: below it, a payload
+  // carrying both classified as a plain MESSAGE and the postback payload was lost.
+  test("a postback wins over a message on the same object, keeping the payload", () => {
     const event = getFacebookWebhookEvent(
       messaging({ message: { mid: "mid-1", text: "hi" }, postback: { payload: "TRACK" } }),
     );
 
-    expect(event).toBe(FacebookEvent.MESSAGE);
+    expect(event).toBe(FacebookEvent.POSTBACK);
   });
 });

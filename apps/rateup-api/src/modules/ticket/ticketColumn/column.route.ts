@@ -16,17 +16,23 @@ import {
   reorderColumnsHandler,
 } from "./column.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
-import { verifyColumnAccess } from "./column.auth.js";
+import {
+  verifyColumnAccess,
+  verifyBoardAccessFromBody,
+  verifyColumnsReorderAccess,
+} from "./column.auth.js";
 import { verifyBoardAccess } from "../ticketBoard/board.auth.js";
 
 export async function columnRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   // Tickets are a free feature — no subscription gate.
 
-  // Create column
+  // Create column. The target board comes from the body, so the check resolves it
+  // from there — this route used to have none at all. See issues.txt 29.1.
   server.post(
     "/create",
     {
+      preHandler: [verifyBoardAccessFromBody],
       schema: {
         body: createColumnRequestSchema,
         response: {
@@ -86,10 +92,12 @@ export async function columnRoutes(server: FastifyInstance) {
     deleteColumnHandler,
   );
 
-  // Reorder columns (bulk update of column orders)
+  // Reorder columns (bulk update of column orders). Targets come from the body.
+  // See issues.txt 29.1.
   server.put(
     "/reorder",
     {
+      preHandler: [verifyColumnsReorderAccess],
       schema: {
         body: reorderColumnRequestSchema,
       },

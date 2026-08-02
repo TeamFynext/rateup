@@ -79,7 +79,11 @@ export async function getAllResponsesHandler(
     const surveyId = request.params.surveyId;
     const teamIds = await getTeamIdsByUserId(request.userId);
     const responses = await getAllResponses(surveyId, teamIds);
-    if (responses.length === 0) reply.code(404).send({ message: "No responses found" });
+    // The `if` had no return and no else, so an empty result sent a 404 that was
+    // delivered AND a 200 that Fastify refused, logging a duplicate-send warning
+    // per request — which every survey does on its first day. A survey that
+    // exists with no responses yet is an empty collection, not a 404.
+    // See issues.txt 37.5.
     reply.code(200).send(responses);
   } catch (e) {
     console.error(e);
@@ -124,7 +128,7 @@ export async function downloadExcelResponseHandler(
   try {
     const teamIds =
       request.body.filterTeams?.length > 0
-        ? await getTeamIdsBySurveyMapId(request.body.filterTeams)
+        ? await getTeamIdsBySurveyMapId(request.body.filterTeams, request.userId)
         : await getTeamIdsByUserId(request.userId);
     const campaignParticipantIds = await prisma.campaignParticipant.findMany({
       where: {
@@ -146,7 +150,7 @@ export async function downloadExcelResponseHandler(
 
     let question;
     if (request.body.dbFlowId) {
-      let flow = await getFlowFromDb(request.body.dbFlowId);
+      let flow = await getFlowFromDb(request.body.dbFlowId, request.user.orgId);
       // WaFlowScreen.layout.children is declared as WaFlowForm[], but at runtime (for the
       // flattened question list used here) these are actually flow form elements — same
       // dynamic-shape cast pattern used for this exact "flow screens -> questions" flattening
@@ -220,8 +224,10 @@ export async function deleteResponseHandler(
   reply: FastifyReply,
 ) {
   try {
-    const id = request.params.id;
-    const deleteRes = await deleteResponse(id);
+    const { id, surveyTeamMapId } = request.params;
+    // Both path parameters are passed on: verifyAccess checked the map, so the
+    // delete has to act on a response that belongs to it. See issues.txt 37.2.
+    const deleteRes = await deleteResponse(id, surveyTeamMapId);
     reply.code(201).send({ success: true, data: deleteRes });
   } catch (e) {
     console.error(e);
@@ -270,7 +276,12 @@ export async function createResponseHandler(
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
-      await Promise.all([
+      // allSettled, not all: the respondent was already answered on line 256, so
+      // a rejection here cannot be reported to them — and Promise.all abandoned
+      // whichever of the six operations had not yet resolved, so one failing
+      // testimonial write could silently cost the Google Sheet row, the webhook
+      // delivery or the Zapier event. See issues.txt 32.2.
+      const sideEffects = await Promise.allSettled([
         saveResponseToGoogleSheet({
           surveyTeamMapId,
           responses,
@@ -289,6 +300,14 @@ export async function createResponseHandler(
           response.surveyTeamMap.team.orgId,
         ),
       ]);
+      for (const [index, result] of sideEffects.entries()) {
+        if (result.status === "rejected") {
+          log.error(
+            { err: result.reason, responseId: response.id, index },
+            "Post-response side effect failed",
+          );
+        }
+      }
     }
   } catch (e) {
     console.error(e);
@@ -326,9 +345,15 @@ export async function syncResponseToGoogleSheetHandler(
   } catch (e) {
     console.log(e);
     if (e instanceof PrismaClientKnownRequestError) reply.code(400).send("Survey Not Found");
+    // Was `else if (e.response.data.error)` with no guard, so any failure that
+    // was neither a Prisma known-request error nor an axios rejection made the
+    // CATCH throw a TypeError on `e.response` — the prepared 500 never ran and
+    // the second error escaped to the global handler, so the operator saw
+    // "Cannot read properties of undefined" rather than what went wrong.
+    // See issues.txt 37.4.
     else if (axios.isAxiosError(e) && e.response?.data?.error)
       reply.code(500).send({ error: e.response.data.error });
-    else reply.code(500).send(e);
+    else reply.code(500).send({ message: "Something went wrong" });
   }
 }
 

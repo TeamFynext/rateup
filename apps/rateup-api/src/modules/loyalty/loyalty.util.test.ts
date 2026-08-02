@@ -19,13 +19,7 @@ import { getLoyaltyProgramByOrg } from "./program/program.service.js";
 import { handleSendTemplate } from "../contact/contact.utils.js";
 import { LoyaltyEventType } from "../../types/enums.js";
 import { dispatchLoyaltyNotification } from "./loyaltyWaDispatcher.js";
-import {
-  isLReferralAction,
-  isPurchaseAction,
-  LoyaltyActionType,
-  parsePhoneforWa,
-  requireLoyaltyProgram,
-} from "./util.js";
+import { isLReferralAction, isPurchaseAction, LoyaltyActionType, parsePhoneforWa } from "./util.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -35,11 +29,6 @@ const db = prisma as unknown as {
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
-
-function reply() {
-  const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
-  return rep;
-}
 
 function activeProgram(over: Record<string, unknown> = {}) {
   return {
@@ -61,55 +50,16 @@ beforeEach(() => {
 // util.ts
 // ===========================================================================
 
-describe("requireLoyaltyProgram", () => {
-  test("attaches the org's program to the request and lets it through", async () => {
-    const request: any = { user: { orgId: ORG } };
-    const rep = reply();
-
-    await requireLoyaltyProgram(request, rep);
-
-    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
-    expect(request.loyaltyProgram).toEqual({ id: "prog-1" });
-    expect(rep.code).not.toHaveBeenCalled();
-  });
-
-  test("refuses a request with no org in the session", async () => {
-    const rep = reply();
-
-    await requireLoyaltyProgram({ user: {} } as any, rep);
-
-    expect(rep.code).toHaveBeenCalledWith(400);
-    expect(rep.send).toHaveBeenCalledWith({ error: "Missing orgId in user context" });
-  });
-
-  test("tolerates a request with no user at all", async () => {
-    const rep = reply();
-
-    await requireLoyaltyProgram({} as any, rep);
-
-    expect(rep.code).toHaveBeenCalledWith(400);
-  });
-
-  test("answers 404 when the org has no program", async () => {
-    (getLoyaltyProgramByOrg as Mock).mockResolvedValue(null);
-    const rep = reply();
-
-    await requireLoyaltyProgram({ user: { orgId: ORG } } as any, rep);
-
-    expect(rep.code).toHaveBeenCalledWith(404);
-    expect(rep.send).toHaveBeenCalledWith({ error: "Loyalty program not found" });
-  });
-
-  // NOTE: this preHandler is exported and documented but registered on no route
-  // in the module — every controller resolves the program itself by calling
-  // getLoyaltyProgramByOrg inline instead. See issues.txt 20.32.
-  test("is a preHandler no route uses", async () => {
-    // Recorded as a behavioural fact: it resolves and attaches, and nothing more.
-    const request: any = { user: { orgId: ORG } };
-
-    expect(await requireLoyaltyProgram(request, reply())).toBeUndefined();
-  });
-});
+/*
+ * `requireLoyaltyProgram` used to live in util.ts and is gone, along with the
+ * tests that covered it: a Fastify preHandler, written, exported and documented,
+ * and registered on NO route — every controller in the module resolves the program
+ * inline instead. It is deleted rather than adopted, because a route that picked
+ * it up would have got behaviour nothing else in the module relies on: the program
+ * attached to `request.loyaltyProgram` rather than resolved where it is used, and
+ * a 400 for a missing org where every handler answers 404 for a missing program.
+ * See issues.txt 20.32.
+ */
 
 describe("parsePhoneforWa", () => {
   test("strips a single leading plus", () => {
@@ -125,11 +75,17 @@ describe("parsePhoneforWa", () => {
     expect(parsePhoneforWa(undefined as any)).toBeUndefined();
   });
 
-  // NOTE: only the FIRST plus is removed, and only when leading. A number typed
-  // as "++91…" or "91+…" is passed through unchanged into a WhatsApp send.
-  // See issues.txt 20.32.
-  test("removes only one leading plus", () => {
-    expect(parsePhoneforWa("++919000000001")).toBe("+919000000001");
+  // Only the FIRST plus used to be removed — `slice(1)` — so a number typed as
+  // "++91…" survived with a plus still on the front and every downstream lookup on
+  // that number missed. See issues.txt 20.32.
+  test("removes every leading plus", () => {
+    expect(parsePhoneforWa("++919000000001")).toBe("919000000001");
+  });
+
+  // Still only LEADING ones: a plus in the middle is not a formatting artefact and
+  // stripping it would silently change the number.
+  test("leaves a plus that is not at the front alone", () => {
+    expect(parsePhoneforWa("91+9000000001")).toBe("91+9000000001");
   });
 });
 
@@ -204,12 +160,13 @@ describe("dispatchLoyaltyNotification — the gates", () => {
     expect(handleSendTemplate).not.toHaveBeenCalled();
   });
 
-  // NOTE: the whole body is wrapped in try/catch and the catch only logs, so a
-  // failed notification never reaches the caller. That is deliberate — the
-  // comment says "silence error to avoid blocking transaction" — but it also
-  // means a template that is wrong for every customer fails silently forever.
-  // See issues.txt 20.32.
-  test("swallows every failure rather than surfacing it", async () => {
+  // The whole body is wrapped in try/catch and the catch only logs, so a failed
+  // notification never reaches the caller. That is deliberate and stays: a
+  // notification must never roll back the points or the redemption it announces.
+  // The cost is that a template which is wrong for EVERY customer fails invisibly,
+  // so the failure is logged at error level with the event and the org on it —
+  // that is the signal an operator has. See issues.txt 20.32.
+  test("swallows the failure rather than blocking the caller", async () => {
     (handleSendTemplate as Mock).mockRejectedValue(new Error("meta rejected the template"));
 
     await expect(
@@ -293,18 +250,30 @@ describe("dispatchLoyaltyNotification — the template parameters", () => {
     expect(params()).toEqual(["Ann", "Gold"]);
   });
 
-  // NOTE: pins current behaviour. Every parameter is appended only when its value
-  // is present, so a customer with no stored name shifts every later placeholder
-  // up by one — {{1}} becomes the points instead of the name. The template has
-  // no way to detect it. See issues.txt 20.32.
-  test("a missing name shifts every later placeholder up by one", async () => {
+  // Every parameter used to be appended only when its value was present, so a
+  // customer with no stored name shifted every later placeholder up by one: {{1}}
+  // rendered the points and {{2}} the balance, silently one place out, and a
+  // template is a fixed document with no way to notice. The array is built by
+  // POSITION now, with an empty string standing in for anything missing.
+  // See issues.txt 20.32.
+  test("a missing name leaves its slot empty rather than shifting the rest", async () => {
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
       customerPhone: "919000000001",
       points: 100,
       balanceAfter: 600,
     });
 
-    expect(params()).toEqual(["100", "600"]);
+    expect(params()).toEqual(["", "100", "600"]);
+  });
+
+  test("a missing reward name does not promote the code into its place", async () => {
+    await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      redemptionCode: "SHORT123",
+    });
+
+    expect(params()).toEqual(["Ann", "", "SHORT123", ""]);
   });
 
   test("a zero balance is still sent, unlike a missing one", async () => {

@@ -27,10 +27,23 @@ export async function createLoyaltyApiSetting(data: LApiSettingInput, orgId: str
   });
 }
 
-export async function updateLoyaltyApiSetting(id: string, data: UpdateApiSettingInput) {
+/**
+ * `orgId` is required, and it is part of the where clause.
+ *
+ * getLoyaltyApiSettings and getLoyaltyApiSettingById beside it were both
+ * org-scoped; this one took the setting id alone, and its handler never read
+ * `request.user` at all — so an API setting belonging to another org could be
+ * repointed at a different action or reward. See issues.txt 20.43.
+ */
+export async function updateLoyaltyApiSetting(
+  id: string,
+  data: UpdateApiSettingInput,
+  orgId: string,
+) {
   return await prisma.loyaltyApiSettings.update({
     where: {
       id,
+      orgId,
     },
     data: {
       ...data,

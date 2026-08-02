@@ -8,10 +8,14 @@ import {
   getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
   renameTheme,
-  updateAllWebSurveyThemesJson,
 } from "./surveyTheme.controller.js";
 import { CustomRouteShortHandOptions } from "../../types/global.js";
-import { assertRootOrg } from "../../utils/auth.js";
+import {
+  createThemeBodySchema,
+  renameThemeBodySchema,
+  themeIdParamsSchema,
+  updateActiveThemeBodySchema,
+} from "./surveyTheme.schema.js";
 
 const publicRouteOptions: CustomRouteShortHandOptions = {
   config: {
@@ -19,38 +23,54 @@ const publicRouteOptions: CustomRouteShortHandOptions = {
   },
 };
 
-const assertRootOrgRouteOptions: CustomRouteShortHandOptions = {
-  config: {
-    assertRootOrg: true,
-  },
-};
-
 export async function surveyThemeRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
+    // The hook used to ASSIGN rather than append, so any preHandler a route
+    // declared for itself was silently discarded. Nothing in this file declares
+    // one today, but this hook is what the whole module's authentication rests
+    // on and the next person to add one would find it removed without a warning.
+    // See issues.txt 33.5.
+    const declared = Array.isArray(routeOptions.preHandler)
+      ? routeOptions.preHandler
+      : routeOptions.preHandler
+        ? [routeOptions.preHandler]
+        : [];
     if (routeOptions.config && routeOptions.config["isPublic"]) {
-      routeOptions.preHandler = [];
+      routeOptions.preHandler = declared;
       return;
-    } else {
-      routeOptions.preHandler = [checkSession];
-      if (routeOptions.config && routeOptions.config["assertRootOrg"]) {
-        routeOptions.preHandler.push(assertRootOrg);
-      }
     }
+    routeOptions.preHandler = [checkSession, ...declared];
   });
 
   server.setErrorHandler(errorHandler);
 
-  server.get("/:webSurveyThemeId", publicRouteOptions, getSurveyThemeByIdHandler);
+  server.get(
+    "/:webSurveyThemeId",
+    { ...publicRouteOptions, schema: { params: themeIdParamsSchema } },
+    getSurveyThemeByIdHandler,
+  );
 
   server.get("/", getAllThemesOfUserOrg);
 
-  server.post("/", createNewTheme);
+  server.post("/", { schema: { body: createThemeBodySchema } }, createNewTheme);
 
-  server.put("/:webSurveyThemeId", updateSurveyThemeHandler);
+  server.put(
+    "/:webSurveyThemeId",
+    { schema: { params: themeIdParamsSchema, body: updateActiveThemeBodySchema } },
+    updateSurveyThemeHandler,
+  );
 
-  server.patch("/:webSurveyThemeId", renameTheme);
+  server.patch(
+    "/:webSurveyThemeId",
+    { schema: { params: themeIdParamsSchema, body: renameThemeBodySchema } },
+    renameTheme,
+  );
 
-  server.delete("/:webSurveyThemeId", deleteTheme);
+  server.delete("/:webSurveyThemeId", { schema: { params: themeIdParamsSchema } }, deleteTheme);
 
-  server.post("/updateWebSurveyThemes", assertRootOrgRouteOptions, updateAllWebSurveyThemesJson);
+  // REMOVED: POST /updateWebSurveyThemes — a root-org endpoint that claimed to
+  // migrate every theme in the database and was a no-op reporting success, whose
+  // one real statement had been commented out. Re-enabling it would have read
+  // every row and rewritten it in one unbatched transaction, aborting on the
+  // first row seeded from the current defaultTheme. See issues.txt 33.6.
 }

@@ -165,9 +165,7 @@ describe("completeInvite - the invitee already has an account", () => {
     const result = await completeInvite(TOKEN);
 
     expect(result.isUser).toBe(true);
-    // NOTE: the trailing "}" is a typo in the handler's template literal, pinned here
-    // deliberately so the fix is a visible test change.
-    expect(result.redirectLink).toBe("https://app.rateup.app/login}");
+    expect(result.redirectLink).toBe("https://app.rateup.app/login");
   });
 
   test("never provisions a second SuperTokens account for them", async () => {
@@ -267,7 +265,9 @@ describe("completeInvite - the invitee is brand new", () => {
   test("creates the local user with the recipe name from their login method", async () => {
     await completeInvite(TOKEN);
 
-    expect(getRecipeNameMock).toHaveBeenCalledWith("emailpassword");
+    // The provider id is passed through so an Apple sign-in is not recorded as Google;
+    // an emailpassword login method carries none.
+    expect(getRecipeNameMock).toHaveBeenCalledWith("emailpassword", undefined);
     expect(createUserMock).toHaveBeenCalledWith({
       id: "user-2",
       email: "invitee@acme.com",
@@ -302,40 +302,23 @@ describe("completeInvite - the invitee is brand new", () => {
     });
   });
 
-  // NOTE: the team-membership call is not awaited here, unlike the equivalent call on
-  // the existing-user path. Acceptance therefore finishes before the membership exists.
-  test("finishes before the team membership has been created", async () => {
-    let releaseLookup: (value: unknown) => void = () => {};
-    db.teamMember.findFirst.mockReturnValue(
-      new Promise((resolve) => {
-        releaseLookup = resolve;
-      }),
-    );
-
+  // The team-membership call is awaited here, matching the existing-user path, so
+  // acceptance does not finish until the membership exists.
+  test("does not finish until the team membership has been created", async () => {
     await completeInvite(TOKEN);
-    expect(db.teamMember.create).not.toHaveBeenCalled();
 
-    releaseLookup(null);
-    await new Promise((resolve) => setImmediate(resolve));
     expect(db.teamMember.create).toHaveBeenCalledWith({
       data: { teamId: "team-1", userId: "user-2" },
     });
   });
 
-  // Same missing await, seen from the caller: the existing-user path rejects with
-  // "Team member Record already exists", but here acceptance reports success.
-  test("reports success even when the invitee is already on the team", async () => {
-    const swallowRejection = () => {};
-    process.on("unhandledRejection", swallowRejection);
-    try {
-      db.teamMember.findFirst.mockResolvedValue({ id: "team-member-existing" });
+  // Same await, seen from the caller: a duplicate membership now fails acceptance
+  // instead of becoming an unhandled rejection while the caller is told it worked.
+  test("fails acceptance when the invitee is already on the team", async () => {
+    db.teamMember.findFirst.mockResolvedValue({ id: "team-member-existing" });
 
-      await expect(completeInvite(TOKEN)).resolves.toMatchObject({ isUser: false });
-      expect(db.teamMember.create).not.toHaveBeenCalled();
-      await new Promise((resolve) => setImmediate(resolve));
-    } finally {
-      process.off("unhandledRejection", swallowRejection);
-    }
+    await expect(completeInvite(TOKEN)).rejects.toThrow("Team member Record already exists");
+    expect(db.teamMember.create).not.toHaveBeenCalled();
   });
 
   test("hands back a password-reset link so they can set a real password", async () => {

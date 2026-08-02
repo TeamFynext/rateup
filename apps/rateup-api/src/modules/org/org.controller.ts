@@ -32,6 +32,7 @@ import { getWebhookSecret } from "../../utils/webhook.js";
 import { getUserByEmail } from "../user/user.service.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 import { errorMessage } from "../../utils/commonUtils.js";
+import { isRootOrg } from "../../utils/auth.js";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -196,31 +197,83 @@ export async function getOrgStatsHandler(
   reply.send(orgStats);
 }
 
+// Self-service deletion. The route's only gate is
+// checkRoleHandler(["SUPER_ADMIN"]), which establishes that the caller is an
+// owner — of their OWN organisation; it never compares organisations. So taking
+// the id from the path let the owner of any org delete any other org by naming
+// its id, and org ids are not secret. The org is now the session's, and a path
+// id naming someone else is refused rather than quietly ignored so a
+// mis-pointed client fails loudly. The platform operator keeps
+// DELETE /admin/:orgId, which is gated on assertRootOrg. See issues.txt 41.1.
 export async function deleteOrgHandler(
   request: FastifyRequest<{
     Params: { orgId: string };
   }>,
   reply: FastifyReply,
 ) {
+  const sessionOrgId = request.user?.orgId;
+  if (!sessionOrgId) {
+    reply.code(401).send({ success: false, message: "Not authorized" });
+    return;
+  }
+  if (request.params.orgId !== sessionOrgId) {
+    reply.code(403).send({
+      success: false,
+      message: "You can only delete your own organization",
+    });
+    return;
+  }
+  await runDeleteOrg(sessionOrgId, reply);
+}
+
+// The platform-operator twin, behind assertRootOrg — this one is meant to name
+// an arbitrary organisation.
+export async function deleteOrgAdminHandler(
+  request: FastifyRequest<{
+    Params: { orgId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  await runDeleteOrg(request.params.orgId, reply);
+}
+
+async function runDeleteOrg(orgId: string, reply: FastifyReply) {
   try {
-    const deleteOrganization = await deleteOrg(request.params.orgId);
+    const deleteOrganization = await deleteOrg(orgId);
     reply.code(200).send(deleteOrganization);
   } catch (e) {
-    console.error(e);
+    log.error({ err: e, orgId }, "Failed to delete org");
     reply.code(500).send({ success: false, message: e instanceof Error ? e.message : String(e) });
   }
 }
 
+// Same shape as 41.1: the role check says "an owner", not "an owner of THIS
+// org", so a path id let any SUPER_ADMIN suspend any organisation on the
+// platform — a full service interruption for that tenant's staff and its
+// customer-facing surveys. The org is now the session's, with the root org kept
+// as the platform-operator escape hatch since there is no /admin twin here.
+// See issues.txt 41.2.
 export async function pauseOrgHandler(
   request: FastifyRequest<{ Body: PauseOrgInput; Params: IdParamInput }>,
   reply: FastifyReply,
 ) {
   try {
-    const orgId = request.params.id;
-    const res = await pauseOrg(orgId, request.body);
+    const sessionOrgId = request.user?.orgId;
+    if (!sessionOrgId) {
+      reply.code(401).send({ success: false, message: "Not authorized" });
+      return;
+    }
+    if (request.params.id !== sessionOrgId && !isRootOrg(request)) {
+      reply.code(403).send({
+        success: false,
+        message: "You can only pause your own organization",
+      });
+      return;
+    }
+    const res = await pauseOrg(request.params.id, request.body);
     reply.code(200).send(res);
   } catch (e) {
-    console.error(e);
+    log.error({ err: e, orgId: request.params.id }, "Failed to pause org");
     reply.code(500).send(e);
   }
 }

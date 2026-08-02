@@ -1,8 +1,20 @@
 import { createEmailBodyOTPGeneration } from "./emailTemplates/emailTemplateOTPGeneration.js";
 import { rateupLogo } from "../../utils/constants/constants.js";
+import { escapeHtml } from "../../utils/html.js";
 import crypto from "node:crypto";
 
-/** `data`'s shape varies by `purpose`; each template reads only the keys it needs. */
+/** The templates this module can render. Anything else has no body to send. */
+export const EMAIL_PURPOSES = ["SurveyEmailOTPQuestion", "GeneralTemplate"] as const;
+
+/**
+ * `data`'s shape varies by `purpose`; each template reads only the keys it needs.
+ *
+ * An unrecognised purpose used to fall off the end of the switch and return
+ * undefined, which sendEmailService put straight into `html` — so the message went
+ * out with no body and the API answered 200. On the OTP route that meant a stored
+ * code, a delivered email and no code in it. The schemas constrain `purpose` to
+ * EMAIL_PURPOSES now; this throw covers any other caller. See issues.txt 25.9.
+ */
 export function getEmailBodyTemplate(
   purpose: string | undefined,
   data: EmailTemplateData | undefined,
@@ -12,6 +24,8 @@ export function getEmailBodyTemplate(
       return createEmailBodyOTPGeneration(data);
     case "GeneralTemplate":
       return createGeneralEmailBodyTemaple(data?.body ?? "", data?.buttonLink ?? "", data?.title);
+    default:
+      throw new Error(`No email template for purpose "${purpose}"`);
   }
 }
 
@@ -21,7 +35,19 @@ export function generateOTP(length: number) {
   return String(randomNumber).padStart(length, "0");
 }
 
+/**
+ * The general-purpose template, also used by the team-invite flow (team.service.ts).
+ *
+ * Every value used to be interpolated raw — body into a <p>, title into an <h1>,
+ * buttonLink into an href, where one double quote closed the attribute and could
+ * add its own. Under 25.1 the caller supplies all three, which is what makes the
+ * open relay a phishing tool rather than merely a spam one. All three are escaped
+ * now, and a link that is not ordinary http(s) is dropped rather than rendered —
+ * escaping alone would still allow a `javascript:` or `data:` href, which some mail
+ * clients honour. See issues.txt 25.12.
+ */
 export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, title?: string) {
+  const safeLink = httpUrlOrNothing(buttonLink);
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -89,7 +115,7 @@ export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, 
           <!-- Header -->
           <tr>
             <td class="header">
-              <h1>${title ?? ""}</h1>
+              <h1>${escapeHtml(title ?? "")}</h1>
             </td>
           </tr>
           <tr>
@@ -107,11 +133,14 @@ export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, 
           <!-- Body -->
           <tr>
             <td class="body" align="center" style="text-align:center;">
-              <p>${body}</p>
-              
-              <a href="${buttonLink}" class="link-btn" style="color: #e5e5ef">
+              <p>${escapeHtml(body)}</p>
+              ${
+                safeLink
+                  ? `<a href="${escapeHtml(safeLink)}" class="link-btn" style="color: #e5e5ef">
                  Visit
-              </a>
+              </a>`
+                  : ""
+              }
               
             </td>
           </tr>
@@ -122,4 +151,15 @@ export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, 
 </body>
 </html>
 `;
+}
+
+/** The link, if it is an ordinary http(s) URL; otherwise nothing. */
+function httpUrlOrNothing(value: string): string | undefined {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }

@@ -7,7 +7,6 @@ import {
   getRegisteredWebhooksHandler,
   registerWebhookByTopicHandler,
   registerWebhookHandler,
-  testShopifyCronActionFnHandler,
   updateShopifyIntegrationByShopHandler,
   getFulfillmentOrdersHandler,
   createFulfillmentHandler,
@@ -62,7 +61,11 @@ export async function shopifyRoutes(server: FastifyInstance) {
     },
     deleteIntegrationByShopHandler,
   );
-  server.get("/test", testShopifyCronActionFnHandler);
+  // GET /shopify/test used to run sendShopifySurveyCronAction — a PLATFORM-WIDE
+  // cron that iterates every Shopify integration on the platform and messages other
+  // organisations' customers on their quota — for any authenticated member, as many
+  // times as they liked. Removed; a cron belongs to the scheduler, not to a route.
+  // See issues.txt 26.18.
   server.get("/orders/:id/fulfillment-orders", getFulfillmentOrdersHandler);
   server.post("/orders/fulfill", createFulfillmentHandler);
 }

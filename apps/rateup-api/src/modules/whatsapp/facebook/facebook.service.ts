@@ -21,8 +21,12 @@ export async function getFacebookUserDetailsFromMeta(userId: string, pageId: str
     }
 
     const { pageAccessToken } = waSettings;
-    const url = `/${userId}?fields=name,profile_pic&access_token=${pageAccessToken}`;
-    const res = await callMetaApi(url, "GET");
+    // Token passed as callMetaApi's accessToken argument, which sends it as an
+    // Authorization header. Interpolated into the URL it ended up in the trace log of
+    // config.url, and in the full axios-config dump wa_axios.ts writes on any non-2xx —
+    // so a page token leaked to the logs on every failed profile fetch.
+    const url = `/${userId}?fields=name,profile_pic`;
+    const res = await callMetaApi(url, "GET", pageAccessToken);
 
     return res.data as {
       name: string;
@@ -36,12 +40,36 @@ export async function getFacebookUserDetailsFromMeta(userId: string, pageId: str
   }
 }
 
-export async function handleFacebookWebhook(data: FacebookWebhookBody) {
+/**
+ * Processes a webhook batch, returning a per-event outcome.
+ *
+ * Meta batches events, so both loops are guarded per item: previously
+ * getWaSettingsByPageId sat outside every handler's own try/catch, so one transient DB
+ * error on entry 1 silently skipped entries 2..n and dropped a whole batch of inbound
+ * messages.
+ *
+ * The result drives the controller's status code — see 10.6. A thrown error here means
+ * nothing was processed at all, which is a different thing from some events failing.
+ */
+export async function handleFacebookWebhook(
+  data: FacebookWebhookBody,
+): Promise<{ processed: number; failed: number }> {
+  let processed = 0;
+  let failed = 0;
+
   for (const entry of data.entry) {
     const pageId = entry.id;
 
-    // Get Facebook settings for this page
-    const waSettings = await getWaSettingsByPageId(pageId);
+    let waSettings;
+    try {
+      // Get Facebook settings for this page
+      waSettings = await getWaSettingsByPageId(pageId);
+    } catch (error) {
+      log.error({ err: error, pageId }, "[Facebook] Failed to load settings for page");
+      failed++;
+      continue;
+    }
+
     if (!waSettings) {
       log.trace("No Facebook settings found for page_id: %s", pageId);
       continue;
@@ -65,33 +93,73 @@ export async function handleFacebookWebhook(data: FacebookWebhookBody) {
           ],
         } as FacebookWebhookBody;
 
-        switch (event) {
-          case FacebookEvent.MESSAGE:
-            await handleFacebookMessages(currentEventData, waSettings);
-            break;
+        try {
+          switch (event) {
+            case FacebookEvent.MESSAGE:
+              await handleFacebookMessages(currentEventData, waSettings);
+              break;
 
-          case FacebookEvent.MESSAGE_DELIVERED:
-            await handleFacebookMessageDelivered(currentEventData);
-            break;
+            case FacebookEvent.MESSAGE_DELIVERED:
+              await handleFacebookMessageDelivered(currentEventData);
+              break;
 
-          case FacebookEvent.MESSAGE_READ:
-            await handleFacebookMessageRead(currentEventData);
-            break;
+            case FacebookEvent.MESSAGE_READ:
+              await handleFacebookMessageRead(currentEventData);
+              break;
 
-          case FacebookEvent.POSTBACK:
-            await handleFacebookPostback(currentEventData, waSettings);
-            break;
+            case FacebookEvent.MESSAGE_REACTION:
+              await handleFacebookMessageReaction(currentEventData, waSettings);
+              break;
 
-          case FacebookEvent.QUICK_REPLY:
-            await handleFacebookQuickReply(currentEventData, waSettings);
-            break;
+            case FacebookEvent.POSTBACK:
+              await handleFacebookPostback(currentEventData, waSettings);
+              break;
 
-          default:
-            log.warn("Unhandled Facebook event: %s", event);
+            case FacebookEvent.QUICK_REPLY:
+              await handleFacebookQuickReply(currentEventData, waSettings);
+              break;
+
+            default:
+              log.warn("Unhandled Facebook event: %s", event);
+          }
+          processed++;
+        } catch (error) {
+          log.error({ err: error, pageId, event }, "[Facebook] Failed to handle event");
+          failed++;
         }
       }
     }
   }
+
+  return { processed, failed };
+}
+
+/**
+ * Stores a reaction as an inbound message, the same way the Instagram equivalent does
+ * (handleInstagramMessageReaction) — the raw messaging object goes through
+ * handleWaMessages so the inbox renders it like any other reaction.
+ */
+export async function handleFacebookMessageReaction(
+  data: FacebookWebhookBody,
+  waSettings: FacebookPageSettings,
+) {
+  const { orgId, fbPageId } = waSettings;
+  const messaging = data.entry[0].messaging[0];
+  const { sender } = messaging;
+
+  if (!sender?.id) {
+    log.warn("No sender ID in Facebook reaction");
+    return;
+  }
+
+  await handleWaMessages(
+    "receive",
+    messaging,
+    sender.id,
+    orgId,
+    PlatformType.FACEBOOK,
+    fbPageId ?? undefined,
+  );
 }
 
 export async function handleFacebookMessages(
@@ -114,6 +182,23 @@ export async function handleFacebookMessages(
   if (message?.is_echo) {
     log.trace("Skipping Facebook message echo");
     return;
+  }
+
+  // Since the controller now answers non-2xx on failure (see 10.6), Meta retries the
+  // whole batch — including the events that already succeeded. addNewWaMessage does a
+  // plain create() and WaMessage.messageId has no unique index, so without this a retry
+  // would insert the same message again and it would appear twice in the inbox.
+  // Advisory, not airtight: two concurrent deliveries of the same mid could still race
+  // past this. A unique index on messageId is the real fix — recorded in issues.txt.
+  if (message?.mid) {
+    const existing = await prisma.waMessage.findFirst({
+      where: { messageId: message.mid },
+      select: { id: true },
+    });
+    if (existing) {
+      log.trace("[Facebook] Skipping message %s, already stored", message.mid);
+      return;
+    }
   }
 
   try {
@@ -179,16 +264,18 @@ export async function handleFacebookMessageRead(data: FacebookWebhookBody) {
         // Your page/account id
         sourceIdentifier: recipient.id,
 
-        // Only outbound messages
-        sendBy: {
-          not: null,
-        },
-
-        // Messages sent to this customer
+        // Outbound bodies are stored under the key `send` — handleWaMessages builds
+        // { exchangeProcess, send, receive }. The filter used to say `sent`, which no
+        // row has, so this matched nothing and the handler logged "Updated 0 messages"
+        // every time.
         messageBody: {
-          path: ["sent", "recipient", "id"],
+          path: ["send", "recipient", "id"],
           equals: sender.id,
         },
+
+        // No sendBy filter: it holds the agent's user id, so it is null for anything the
+        // platform sent on its own — automated replies, campaigns, chatbot messages.
+        // Requiring it meant those could never be marked read.
 
         // Only older messages
         waCreatedAt: {
@@ -201,8 +288,21 @@ export async function handleFacebookMessageRead(data: FacebookWebhookBody) {
       },
     });
 
+    // Only rows not already marked read. A watermark covers everything up to that point,
+    // so without this every receipt re-selected the whole conversation and stamped the
+    // newest watermark over it — an old message's read time drifted forward to whenever
+    // the customer last opened the thread, and a long thread issued one write per
+    // message on every receipt.
+    const unread = messages.filter((message) => {
+      const stats = message.stats as Record<string, unknown> | null;
+      return !stats?.read;
+    });
+
+    // Still one update per row rather than updateMany: `stats` is a Json column and each
+    // row's existing contents have to be preserved, which updateMany cannot do without
+    // overwriting the whole value.
     await Promise.all(
-      messages.map((message) =>
+      unread.map((message) =>
         prisma.waMessage.update({
           where: {
             id: message.id,
@@ -217,7 +317,7 @@ export async function handleFacebookMessageRead(data: FacebookWebhookBody) {
       ),
     );
 
-    log.trace(`[Facebook] Updated ${messages.length} messages as read`);
+    log.trace(`[Facebook] Updated ${unread.length} messages as read`);
   } catch (error) {
     log.error({ err: error }, "[Facebook] Error handling read receipt");
   }
@@ -231,6 +331,15 @@ export async function handleFacebookPostback(
   const sourceIdentifier = fbPageId ?? undefined;
   const messaging = data.entry[0].messaging[0];
   const { sender, postback, timestamp } = messaging;
+
+  // Guarded like handleFacebookMessages. Without it, `${sender.id}` in the log below
+  // threw a TypeError inside the try, and the catch then dereferenced sender AGAIN in
+  // its own message — throwing a second TypeError out of the catch, which unwound
+  // handleFacebookWebhook and abandoned every remaining event in the batch.
+  if (!sender?.id) {
+    log.warn("No sender ID in Facebook postback");
+    return;
+  }
 
   if (!postback?.payload) {
     log.warn("No postback payload in Facebook event");
@@ -255,12 +364,12 @@ export async function handleFacebookPostback(
       sender.id,
       orgId,
       PlatformType.FACEBOOK,
-      fbPageId || data.entry[0].id,
+      sourceIdentifier,
       undefined,
       `postback_${timestamp}`,
     );
   } catch (error) {
-    log.error({ err: error }, `[Facebook] Error handling postback from user ${sender.id}`);
+    log.error({ err: error, senderId: sender.id }, "[Facebook] Error handling postback");
   }
 }
 
@@ -272,6 +381,12 @@ export async function handleFacebookQuickReply(
   const sourceIdentifier = fbPageId ?? undefined;
   const messaging = data.entry[0].messaging[0];
   const { sender, message, timestamp } = messaging;
+
+  // Same guard as handleFacebookPostback — see the note there.
+  if (!sender?.id) {
+    log.warn("No sender ID in Facebook quick reply");
+    return;
+  }
 
   if (!message?.quick_reply?.payload) {
     log.warn("No quick_reply payload in Facebook event");
@@ -299,7 +414,7 @@ export async function handleFacebookQuickReply(
       sender.id,
       orgId,
       PlatformType.FACEBOOK,
-      fbPageId || data.entry[0].id,
+      sourceIdentifier,
       undefined,
       message.mid,
     );

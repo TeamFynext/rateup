@@ -4,7 +4,7 @@ import formDataPlugin from "@fastify/formbody";
 import supertokens from "supertokens-node";
 import { plugin, errorHandler } from "supertokens-node/framework/fastify/index.js";
 import { SuperTokensConfig } from "../config.js";
-import { parseArrayString } from "../utils/array.js";
+import { parseCorsWhitelist } from "../utils/corsWhitelist.js";
 import { registerCronJobs } from "./cron.js";
 import { registerSwagger } from "./swagger.js";
 import { registerKafka } from "./kafka.js";
@@ -29,14 +29,12 @@ export async function registerPlugins(server: FastifyInstance) {
     return payload;
   });
 
-  // CORS
-  const allowedOrigins: (string | RegExp)[] = [
-    process.env.ELECTION_APP_URL,
-    process.env.FRONTEND_URL,
-  ].filter((origin): origin is string => origin !== undefined);
-  allowedOrigins.push(
-    ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url)),
+  // CORS. Exact origins only — see parseCorsWhitelist for why these are no longer
+  // compiled to regexes.
+  const allowedOrigins: string[] = [process.env.ELECTION_APP_URL, process.env.FRONTEND_URL].filter(
+    (origin): origin is string => origin !== undefined,
   );
+  allowedOrigins.push(...parseCorsWhitelist(process.env.CORS_WHITELIST));
 
   await server.register(cors, {
     origin: allowedOrigins,

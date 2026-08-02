@@ -1,4 +1,7 @@
 import prisma from "../../utils/prisma.js";
+import { getColumnIdByCardId } from "./ticketCard/card.service.js";
+import { getBoardIdByColumnId } from "./ticketColumn/column.service.js";
+import { isBoardMember } from "./ticketBoard/board.service.js";
 import { CreateCommentInput } from "./ticket.schema.js";
 import {
   createEmailBodyTicketAssigned,
@@ -26,18 +29,23 @@ export async function sendTicketAssignedWaMessage(data: {
   }
   const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
   const { orgId } = data;
-  if (
-    !contact ||
-    (contact.lastReceivedMessageTimeStamp &&
-      dayjs().diff(dayjs(contact.lastReceivedMessageTimeStamp), "hour") < 24)
-  ) {
+  // The guard used to be the INVERSE of the WhatsApp customer-service window: it
+  // refused to send inside the 24 hours — when a free-form message is the one thing
+  // that is allowed — and sent once the window had closed, or to a contact who had
+  // never written at all. `lastReceivedMessageTimeStamp` is inbound recency (the
+  // dashboard counts rows newer than 24 hours as the org's active conversations).
+  // See issues.txt 30.2.
+  const withinServiceWindow =
+    Boolean(contact?.lastReceivedMessageTimeStamp) &&
+    dayjs().diff(dayjs(contact!.lastReceivedMessageTimeStamp), "hour") < 24;
+  if (!contact || !withinServiceWindow) {
     log.trace(
-      "Aborting...contact not found or message sent within the last 24 hours for phone: %s",
+      "Aborting...contact not found or outside the 24 hour service window for phone: %s",
       phone,
     );
     return;
   }
-  const message = `A ticket has been assigned to you on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
+  const message = `A ticket has been assigned to you on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: ${process.env.FRONTEND_URL}/dashboard/tickets/${data.id}`;
   // Ticket notifications are system messages — exempt from the conversation limit.
   await sendTextMessage({ phone, orgId }, null, message, true);
 }
@@ -67,8 +75,10 @@ export async function sendTicketAssignedEmail(data: {
       emailData: msg,
     });
   } catch (error) {
-    console.error(error);
-    throw new Error("Email sending failed. E:" + error);
+    // `"..." + error` concatenated the caught value onto a string and discarded the
+    // original stack; `{ cause }` keeps it. Same shape as issues.txt 22.4.
+    log.error({ err: error }, "Ticket notification email could not be queued");
+    throw new Error("Email sending failed", { cause: error });
   }
 }
 
@@ -87,18 +97,23 @@ export async function sendTicketCreateWaMessage(data: {
   }
   const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
   const { orgId } = data;
-  if (
-    !contact ||
-    (contact.lastReceivedMessageTimeStamp &&
-      dayjs().diff(dayjs(contact.lastReceivedMessageTimeStamp), "hour") < 24)
-  ) {
+  // The guard used to be the INVERSE of the WhatsApp customer-service window: it
+  // refused to send inside the 24 hours — when a free-form message is the one thing
+  // that is allowed — and sent once the window had closed, or to a contact who had
+  // never written at all. `lastReceivedMessageTimeStamp` is inbound recency (the
+  // dashboard counts rows newer than 24 hours as the org's active conversations).
+  // See issues.txt 30.2.
+  const withinServiceWindow =
+    Boolean(contact?.lastReceivedMessageTimeStamp) &&
+    dayjs().diff(dayjs(contact!.lastReceivedMessageTimeStamp), "hour") < 24;
+  if (!contact || !withinServiceWindow) {
     log.trace(
-      "Aborting...contact not found or message sent within the last 24 hours for phone: %s",
+      "Aborting...contact not found or outside the 24 hour service window for phone: %s",
       phone,
     );
     return;
   }
-  const message = `A new ticket has been created on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
+  const message = `A new ticket has been created on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: ${process.env.FRONTEND_URL}/dashboard/tickets/${data.id}`;
   // Ticket notifications are system messages — exempt from the conversation limit.
   await sendTextMessage({ phone, orgId }, null, message, true);
 }
@@ -115,7 +130,10 @@ export async function sendTicketCreateEmail(data: {
   const msg = {
     to: data.email,
     subject: `Ticket Created`,
-    text: `A ticket has been assigned to you on Rateup.app`,
+    // Said "assigned to you", the same string the assignment mail uses, so previews
+    // and text-only clients announced an assignment that never happened.
+    // See issues.txt 30.6.
+    text: `A ticket has been created on Rateup.app`,
     html: createEmailBodyTicketCreated({
       ticket_link,
       ticket_no: data.ticketId,
@@ -128,13 +146,42 @@ export async function sendTicketCreateEmail(data: {
       emailData: msg,
     });
   } catch (error) {
-    console.error(error);
-    throw new Error("Email sending failed. E:" + error);
+    // `"..." + error` concatenated the caught value onto a string and discarded the
+    // original stack; `{ cause }` keeps it. Same shape as issues.txt 22.4.
+    log.error({ err: error }, "Ticket notification email could not be queued");
+    throw new Error("Email sending failed", { cause: error });
   }
 }
 
+/** Raised when the caller may not comment on the named card. issues.txt 30.1. */
+export class TicketCommentAccessError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TicketCommentAccessError";
+  }
+}
+
+/**
+ * Attaches a comment to a card the caller can actually reach.
+ *
+ * The route's access check was commented out AND the path id was ignored — the
+ * target came from `body.ticketCardId` — so any authenticated user could plant a
+ * comment on any card on the platform, and getCardById renders it over the author's
+ * real name and email. Both halves are fixed: the board is resolved from the body's
+ * card id and membership is required, which is what a path-based preHandler could
+ * not have done. See issues.txt 30.1.
+ */
 export async function createComment(input: CreateCommentInput, userId: string) {
   const { ticketCardId, msg } = input;
+
+  const columnId = await getColumnIdByCardId(ticketCardId);
+  const boardId = columnId ? await getBoardIdByColumnId(columnId) : undefined;
+  if (!boardId) {
+    throw new TicketCommentAccessError("Card not found");
+  }
+  if (!(await isBoardMember(boardId, userId))) {
+    throw new TicketCommentAccessError("You don't have access to this card");
+  }
 
   const newComment = await prisma.ticketComment.create({
     data: {

@@ -1,100 +1,20 @@
-import { FastifyRequest, FastifyReply } from "fastify";
-import prisma from "../../utils/prisma.js";
-import {
-  CampaignParticipantStatus,
-  // SubscriptionFeaturePathName
-} from "../../types/enums.js";
-import { ByCampaignIdParams, SendCampaignInput } from "./campaign.schema.js";
-// import { log } from "../../utils/logger.js";
-
-export async function getUsageStats(orgId: string) {
-  return prisma.usageStats.findUnique({
-    where: { orgId },
-  });
-}
-
-export async function getSubscription(orgId: string) {
-  return prisma.subscription.findUnique({
-    where: { orgId },
-  });
-}
-
-async function getCampaignParticipants(
-  participantId: string | undefined,
-  campaignId: string,
-  sendToStatuses: CampaignParticipantStatus[],
-) {
-  if (participantId) {
-    const participant = await prisma.campaignParticipant.findFirst({
-      where: { id: participantId },
-    });
-    return participant ? [participant] : [];
-  } else {
-    return prisma.campaignParticipant.findMany({
-      where: {
-        campaignId,
-        status: { in: sendToStatuses },
-      },
-    });
-  }
-}
-
-export async function verifyMessageMonthlyLimitRestrictionForCampaign(
-  request: FastifyRequest<{
-    Params: ByCampaignIdParams;
-    Body: SendCampaignInput;
-  }>,
-  reply: FastifyReply,
-) {
-  // TODO: re-check
-  // try {
-  //   const orgId = request.user.orgId;
-  //   const {
-  //     participantId,
-  //     sendToStatuses = [CampaignParticipantStatus.PENDING, CampaignParticipantStatus.FAILED],
-  //   } = request.body;
-  //   const { campaignId } = request.params;
-  //   const subscription = request.subscription;
-  //
-  //   const usage = await getUsageStats(orgId);
-  //
-  //   if (!usage || !subscription) {
-  //     return reply.code(404).send({ message: "Usage stats or subscription not found." });
-  //   }
-  //
-  //   const campaignData = await getCampaignParticipants(participantId, campaignId, sendToStatuses);
-  //   const newMessagesCount = campaignData.length;
-  //   const monthlyMessageLimit =
-  //     subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit ?? 0;
-  //   const annualLimit = monthlyMessageLimit * 12;
-  //
-  //   if (
-  //     subscription?.isAnnualMessageLimit &&
-  //     (usage.annualTemplateMessageCount ?? 0) + newMessagesCount > annualLimit
-  //   ) {
-  //     let errorMessage =
-  //       usage.annualTemplateMessageCount >= annualLimit
-  //         ? "You have reached the maximum annual limit of messages."
-  //         : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
-  //             annualLimit - usage.annualTemplateMessageCount
-  //           } to proceed.`;
-  //     return reply.code(403).send({
-  //       message: errorMessage,
-  //       displayMessageInClient: true,
-  //     });
-  //   } else if ((usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount > monthlyMessageLimit) {
-  //     return reply.code(403).send({
-  //       message:
-  //         usage.monthlyTemplateMessageCount >= monthlyMessageLimit
-  //           ? "You have reached the maximum monthly limit of messages."
-  //           : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
-  //               monthlyMessageLimit - usage.monthlyTemplateMessageCount
-  //             } to proceed.`,
-  //       displayMessageInClient: true,
-  //     });
-  //   }
-  // } catch (error) {
-  //   log.error({ err: error }, "Error verifying message limit:");
-  //   return reply.code(500).send({ message: "Internal server error." });
-  // }
-}
+// This file is empty on purpose.
+//
+// verifyMessageMonthlyLimitRestrictionForCampaign stood here. Its body was
+// commented out behind a "TODO: re-check" exactly like its two siblings in
+// wa_templates.auth.ts, so it enforced nothing while reading like a plan gate on
+// the campaign send route. Deleted with them: the product has a conversation
+// limit, not a message limit, and sendMessage enforces it.
+//
+// getUsageStats and getSubscription went with it. issues.txt 17.1 kept them on the
+// grounds that they were exported and harmless, but their last remaining caller
+// was the dead message-limit block in wasurvey.controller.ts, removed under
+// issues.txt 17.10 — so nothing reads them now. Anything wanting a subscription
+// should use subscription.service.ts's own getSubscription.
+//
+// getCampaignParticipants — private, never called, and it looked a participant up
+// by id with no campaign or org filter — went too, rather than being left as an
+// unscoped read waiting for its first caller.
+//
+// See issues.txt 14.1(a), 17.1 and 17.10.
+export {};

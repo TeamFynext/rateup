@@ -30,6 +30,11 @@ new Worker(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ event, ...payload }),
+      // No timeout at all, unlike the verification fetch in the same module: with
+      // concurrency 10, ten slow receivers occupied every slot indefinitely and
+      // stalled deliveries for every other organisation. A hung TCP connection
+      // was enough. See issues.txt 34.3.
+      signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) {
       throw new Error(

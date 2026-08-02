@@ -12,11 +12,22 @@ import {
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    if (routeOptions.config?.["isPublic"] === true) {
-      routeOptions.preHandler = [];
-    } else {
-      routeOptions.preHandler = [checkSession];
-    }
+    // Both branches used to ASSIGN, discarding whatever the route declared for
+    // itself. No route relied on that yet, which is exactly the danger: a role
+    // check written into deleteGenerateQrRecordWithShortIdRouteOptions would
+    // have been overwritten here and the route would have stayed open to every
+    // member, with no error and nothing in the route table to show it — and a
+    // public route could not carry the rate limiter 44.2 needs. Appending keeps
+    // the hook's guarantee while letting a route add to it.
+    // See issues.txt 44.5.
+    const declared = Array.isArray(routeOptions.preHandler)
+      ? routeOptions.preHandler
+      : routeOptions.preHandler
+        ? [routeOptions.preHandler]
+        : [];
+
+    routeOptions.preHandler =
+      routeOptions.config?.["isPublic"] === true ? declared : [checkSession, ...declared];
   });
 
   // Public Routes

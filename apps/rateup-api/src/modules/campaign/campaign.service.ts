@@ -1,19 +1,16 @@
 import prisma from "../../utils/prisma.js";
+import { CampaignNotFoundError } from "./campaign.errors.js";
+export { CampaignNotFoundError };
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
 import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
-import {
-  CampaignParticipantStatus,
-  CampaignStatus,
-  WaTemplateComponentType,
-} from "../../types/enums.js";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
-import { checkConversationLimitExceeded } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
+import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { SpreadsheetExportFormat } from "../../utils/spreadsheet.js";
 import { write } from "hucre";
 
-import { WaTemplateComponent, WHATSAPP_BUTTON_TYPE } from "../../types/whatsapp.types.js";
 import {
   getCampaignCount,
   waCampaignDequeue,
@@ -50,177 +47,15 @@ export function getLatestStatus(participant: CampaignParticipantMessageMapping[]
   return latestStatus;
 }
 
-export async function getCampaignById(campaignId: string) {
-  //   const campaignTemp: Array<campaginExtentend> = await prisma.$queryRaw`
-  //   WITH campaign_data AS (
-  //   SELECT
-  //     c.*,
-  //     t.id as team_id,
-  //     t."orgId",
-  //     t.name as "teamName",
-  //     was."contactTags",
-  //     wt.data as template_data
-  //   FROM "Campaign" c
-  //   LEFT JOIN "Team" t ON c."teamId" = t.id
-  //   LEFT JOIN "Org" o ON t."orgId" = o.id
-  //   LEFT JOIN "WaAccountSettings" was ON o.id = was."orgId"
-  //   LEFT JOIN "WaTemplate" wt ON c."waTemplateId" = wt.id
-  //   WHERE c.id = ${campaignId}::uuid
-  // ),
-  // participant_data AS (
-  //   SELECT
-  //     cp.*,
-  //     c.name as name,
-  //     c.phone as contact_phone,
-  //     c.consent,
-  //     wm.stats as message_stats,
-  //     wm."waCreatedAt" as message_created_at,
-  //     camp."flowId"
-  //   FROM "CampaignParticipant" cp
-  //   LEFT JOIN "Contact" c ON cp."contactId" = c.id
-  //   LEFT JOIN "WaMessageCampaginParticipantMap" wmap ON cp.id = wmap."campaignParticipantId"
-  //   LEFT JOIN "WaMessage" wm ON wmap."waMessageId" = wm.id
-  //   LEFT JOIN "Campaign" camp ON cp."campaignId" = camp.id
-  //   WHERE cp."campaignId" = ${campaignId}::uuid
-  // )
-  // SELECT
-  //   cd.*,
-  //   json_build_object(
-  //     'id', cd.team_id,
-  //     'name', cd."teamName"
-  //   ) as team,
-  //   COALESCE(json_agg(
-  //     CASE WHEN pd.id IS NOT NULL THEN
-  //       json_build_object(
-  //         'id', pd.id,
-  //         'status', pd.status,
-  //         'contact', json_build_object(
-  //           'name', pd.name,
-  //           'phone', pd.contact_phone,
-  //           'consent', pd.consent
-  //         ),
-  //         'WaMessageCampaginParticipantMap', json_build_object(
-  //           'waMessage', json_build_object(
-  //             'stats', pd.message_stats,
-  //             'waCreatedAt', pd.message_created_at
-  //           )
-  //         ),
-  //         'campaign', json_build_object(
-  //           'flowId', pd."flowId"
-  //         )
-  //       )
-  //     END
-  //   ) FILTER (WHERE pd.id IS NOT NULL), '[]') as "campaignParticipants"
-  // FROM campaign_data cd
-  // LEFT JOIN participant_data pd ON cd.id = pd."campaignId"
-  // GROUP BY
-  //   cd.id,
-  //   cd.team_id,
-  //   cd."teamName",
-  //   cd."orgId",
-  //   cd."contactTags",
-  //   cd.template_data,
-  //   cd."createdAt",
-  //   cd."teamId",
-  //   cd."waTemplateId",
-  //   cd."flowId",
-  //   cd."name",
-  //   cd."status",
-  //   cd."startedAt",
-  //   cd."endedAt",
-  //   cd.type,
-  //   cd."campaignSentAt",
-  //   cd."errorMessage",
-  //   cd."scheduledStatuses",
-  //   cd."dynamicTags",
-  //   cd."useUserConsent"`;
-  //   let campaign = campaignTemp?.[0];
-
-  //   if (!campaign) {
-  //     throw new Error(`Campaign with ID ${campaignId} not found.`);
-  //   }
-  // // Process participants
-  // let countRead = 0,
-  //   countSent = 0,
-  //   countFailed = 0,
-  //   countDelivered = 0,
-  //   countPending = 0,
-  //   countCompleted = 0;
-
-  // campaign.campaignParticipants = campaign?.campaignParticipants || [];
-  // const groupedParticipants = campaign?.campaignParticipants?.reduce(
-  //   (acc, participant) => {
-  //     // Check if the participant ID is already in the map
-  //     if (!acc[participant.id]) {
-  //       acc[participant.id] = {
-  //         ...participant,
-  //         WaMessageCampaginParticipantMap: [
-  //           participant.WaMessageCampaginParticipantMap,
-  //         ],
-  //       };
-  //     } else {
-  //       // Merge the WaMessageCampaginParticipantMap for the same participant
-  //       acc[participant.id].WaMessageCampaginParticipantMap.push(
-  //         participant.WaMessageCampaginParticipantMap,
-  //       );
-  //     }
-  //     return acc;
-  //   },
-  //   {},
-  // );
-
-  // // Convert the map back into an array
-  // campaign.campaignParticipants = Object.values(groupedParticipants);
-  // for (const participant of campaign.campaignParticipants) {
-  //   const participantStatus = participant.status;
-  //   const participantMessages = participant?.WaMessageCampaginParticipantMap;
-
-  //   const latestStatus = getLatestStatus(participantMessages);
-
-  //   if (participantStatus === CampaignParticipantStatus.PENDING) {
-  //     countPending++;
-  //   } else if (participantStatus === CampaignParticipantStatus.FAILED) {
-  //     countFailed++;
-  //   } else {
-  //     participantMessages.forEach(
-  //       (item: {
-  //         waMessage: {
-  //           stats: WaMessageStats;
-  //         };
-  //       }) => {
-  //         if (item.waMessage.stats?.read) countRead++;
-  //         if (item.waMessage.stats?.sent) countSent++;
-  //         if (item.waMessage.stats?.delivered) countDelivered++;
-  //       },
-  //     );
-  //   }
-
-  //   if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
-  //     countFailed++;
-  //   }
-
-  //   if (
-  //     campaign.flowId &&
-  //     participantStatus === CampaignParticipantStatus.COMPLETED
-  //   ) {
-  //     countCompleted++;
-  //   }
-
-  //   participant.waStatus = latestStatus;
-  // }
-
-  // return {
-  //   ...campaign,
-  //   stats: {
-  //     countRead,
-  //     countSent,
-  //     countFailed,
-  //     countDelivered,
-  //     countPending,
-  //     countCompleted,
-  //   },
-  // };
-
+/**
+ * One campaign, scoped to the org asking for it.
+ *
+ * Reports undefined for a campaign another org owns, which is what makes every
+ * handler built on it answer 404 rather than handing the row over. The campaign's
+ * org is its team's org — Campaign carries no orgId of its own.
+ * See issues.txt 17.3.
+ */
+export async function getCampaignById(campaignId: string, orgId: string) {
   const campaign = await prisma.$queryRaw<
     Array<
       Campaign & {
@@ -245,14 +80,18 @@ export async function getCampaignById(campaignId: string) {
       LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
       LEFT JOIN "Team" t ON t.id = c."teamId"
       LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid
-      WHERE c.id = ${campaignId}::uuid`;
+      WHERE c.id = ${campaignId}::uuid
+        AND t."orgId" = ${orgId}::uuid`;
   return campaign[0];
 }
 
-export async function getCampaignsByTeamId(teamId: string) {
+export async function getCampaignsByTeamId(teamId: string, orgId: string) {
   const campaigns = await prisma.campaign.findMany({
     where: {
       teamId,
+      // A team id from the query string decided which campaigns came back, with
+      // nothing checking whose team it was. See issues.txt 17.3.
+      team: { orgId },
     },
     include: {
       team: {
@@ -293,12 +132,22 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
   return campaigns;
 }
 
-export async function createCampaign(data: CreateCampaignInput) {
+export async function createCampaign(data: CreateCampaignInput, orgId: string) {
+  // teamId arrives in the request body with nothing checking whose team it is, so
+  // a campaign could be planted under another org's team — and every send built on
+  // that campaign then runs as that org. See issues.txt 17.3.
+  const team = await prisma.team.findFirst({
+    where: { id: data.teamId, orgId },
+    select: { id: true },
+  });
+  if (!team) throw new CampaignNotFoundError("Team not found");
+
   let flowId = "";
   if (data.flowId) {
     const flow = await prisma.waFlow.findFirst({
       where: {
         flowId: data.flowId,
+        orgId,
       },
     });
     if (!flow) {
@@ -337,7 +186,7 @@ export async function createCampaign(data: CreateCampaignInput) {
   return campaign;
 }
 
-export async function updateCampaign(campaignId: string, data: UpdateCampaignInput) {
+export async function updateCampaign(campaignId: string, orgId: string, data: UpdateCampaignInput) {
   // `whatsappSettingsPhoneId` is accepted by UpdateCampaignInput but has no matching
   // column on the Campaign model (see campaign.schema.ts) — it is never persisted.
   // `dynamicTags`/`scheduledStatuses` need their null variants coerced below since the
@@ -352,16 +201,18 @@ export async function updateCampaign(campaignId: string, data: UpdateCampaignInp
   } = data;
 
   if (startedAt) {
-    const existingCampaign = await prisma.campaign.findUnique({
+    const existingCampaign = await prisma.campaign.findFirst({
       where: {
         id: campaignId,
         startedAt: null,
+        team: { orgId },
       },
     });
     if (existingCampaign) {
       await prisma.campaign.update({
         where: {
           id: campaignId,
+          team: { orgId },
         },
         data: {
           startedAt,
@@ -384,9 +235,13 @@ export async function updateCampaign(campaignId: string, data: UpdateCampaignInp
     // DB column is a non-nullable String[] — null means "set to empty", not "no-op".
     ...(scheduledStatuses !== undefined ? { scheduledStatuses: scheduledStatuses ?? [] } : {}),
   };
+  // The extended `where` — unique id plus a non-unique filter — makes Prisma raise
+  // P2025 rather than writing, so a campaign belonging to another org cannot be
+  // rewritten by naming its id. See issues.txt 17.3.
   const updatedCampaign = await prisma.campaign.update({
     where: {
       id: campaignId,
+      team: { orgId },
     },
     data: updateData,
   });
@@ -404,9 +259,11 @@ export async function updateCampaign(campaignId: string, data: UpdateCampaignInp
     // Process each drip step
     for (const step of dripStages) {
       if (step.id) {
-        // Update existing drip stage
+        // Keyed on the stage id ALONE before, so a request could rewrite a drip
+        // stage belonging to a different campaign — including another org's — by
+        // naming its id in the body. See issues.txt 17.3.
         await prisma.campaignDripStage.update({
-          where: { id: step.id },
+          where: { id: step.id, campaignId },
           data: {
             waTemplateId: step.templateId,
             delay: step.delay,
@@ -436,6 +293,7 @@ export async function updateCampaign(campaignId: string, data: UpdateCampaignInp
       await prisma.campaignDripStage.deleteMany({
         where: {
           id: { in: stageIdsToDelete },
+          campaignId,
         },
       });
     }
@@ -444,10 +302,11 @@ export async function updateCampaign(campaignId: string, data: UpdateCampaignInp
   return updatedCampaign;
 }
 
-export async function deleteCampaign(campaignId: string) {
+export async function deleteCampaign(campaignId: string, orgId: string) {
   return await prisma.campaign.delete({
     where: {
       id: campaignId,
+      team: { orgId },
     },
   });
 }
@@ -465,8 +324,11 @@ export async function sendCampaign(
     select: { team: { select: { orgId: true } } },
   });
   const campaignOrgId = campaignOrg?.team?.orgId;
-  if (campaignOrgId && !(await checkConversationLimitExceeded(campaignOrgId))) {
-    await updateCampaign(campaignId, {
+  if (!campaignOrgId) {
+    throw new CampaignNotFoundError(`Campaign ${campaignId} not found`);
+  }
+  if (!(await checkConversationLimitAvailable(campaignOrgId))) {
+    await updateCampaign(campaignId, campaignOrgId, {
       status: CampaignStatus.INACTIVE,
       errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
     });
@@ -474,7 +336,7 @@ export async function sendCampaign(
     return;
   }
 
-  await updateCampaign(campaignId, {
+  await updateCampaign(campaignId, campaignOrgId, {
     status: CampaignStatus.ACTIVE,
     startedAt: new Date(),
     campaignSentAt: null,
@@ -486,12 +348,13 @@ export async function sendCampaign(
   // add state indicating survey is sent to all participants?
 }
 
-export async function getCampaignFilterForFlows(surveyId: string) {
-  const flow = await getFlowBySurveyId(surveyId);
+export async function getCampaignFilterForFlows(surveyId: string, orgId: string) {
+  const flow = await getFlowBySurveyId(surveyId, orgId);
   if (!flow) return;
   const result = await prisma.campaign.findMany({
     where: {
       flowId: flow.dbFlowId,
+      team: { orgId },
     },
     select: {
       id: true,
@@ -529,11 +392,26 @@ export async function sendCampaignCronAction() {
   });
   if (campaignsToBeSent?.length === 0) return;
 
-  for await (const campaign of campaignsToBeSent) {
-    await sendCampaign(campaign.id, campaign.scheduledStatuses as CampaignParticipantStatus[]);
+  // Guarded per campaign. One that throws — a deleted template, a database hiccup —
+  // used to abandon every campaign scheduled behind it in the same run, and the
+  // count below never printed, so the failure showed only as campaigns that
+  // quietly did not go out. Same shape as issues.txt 3.4. See issues.txt 17.5.
+  let sent = 0;
+  const failed: string[] = [];
+  for (const campaign of campaignsToBeSent) {
+    try {
+      await sendCampaign(campaign.id, campaign.scheduledStatuses as CampaignParticipantStatus[]);
+      sent++;
+    } catch (error) {
+      failed.push(campaign.id);
+      log.error({ err: error, campaignId: campaign.id }, "Scheduled campaign failed to send");
+    }
   }
 
-  log.info(`sent ${campaignsToBeSent.length} campaings. At ${currentTime}`);
+  log.info(
+    { sent, failed, at: currentTime },
+    `sent ${sent} of ${campaignsToBeSent.length} scheduled campaigns`,
+  );
 }
 
 // `responses` and `questions` are raw dynamic JSON blobs from the query below (survey
@@ -552,7 +430,7 @@ interface CampaignSurveyResponseRow {
   questions: Question[];
 }
 
-export const getResponseByCampaignById = async (id: string) => {
+export const getResponseByCampaignById = async (id: string, orgId: string) => {
   const responses = await prisma.$queryRaw<CampaignSurveyResponseRow[]>`
   SELECT sr.id, sr."createdAt",
     sr.responses,
@@ -562,8 +440,10 @@ export const getResponseByCampaignById = async (id: string) => {
   INNER JOIN "Campaign" c ON c."teamId" = stm."teamId"
   INNER JOIN "WaFlow" wf ON wf."dbFlowId"::text = c."flowId"::text AND wf."surveyId" = stm."surveyId"
   INNER JOIN "Survey" s ON s.id = stm."surveyId"
+  INNER JOIN "Team" t ON t.id = c."teamId"
   LEFT JOIN "Contact" co ON sr."contactId" = co.id
-  WHERE c.id::text = ${id}::text`;
+  WHERE c.id::text = ${id}::text
+    AND t."orgId" = ${orgId}::uuid`;
 
   const responsesWithTitles = responses.map(
     ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
@@ -603,10 +483,11 @@ export const getResponseByCampaignById = async (id: string) => {
 
 export const getResponseExcelByCampaignById = async (
   id: string,
+  orgId: string,
   selectedDripStage?: string,
   format: SpreadsheetExportFormat = "xlsx",
 ) => {
-  const stats = await getCampaginStatsById(id, selectedDripStage);
+  const stats = await getCampaginStatsById(id, orgId, selectedDripStage);
   const pageSize = 10000; // Number of records per batch
   let page = 0;
   let hasMoreRecords = true;
@@ -617,12 +498,14 @@ export const getResponseExcelByCampaignById = async (
     sentAt: Date;
     campaign: { name: string };
   }> = [];
-  const campaign = await prisma.campaign.findUnique({
-    where: { id },
+  // This export carries every participant's NAME and PHONE NUMBER, so it is the
+  // one unscoped read with the most to give away. See issues.txt 17.3.
+  const campaign = await prisma.campaign.findFirst({
+    where: { id, team: { orgId } },
     select: { name: true },
   });
   if (!campaign) {
-    throw new Error(`Campaign with ID ${id} not found.`);
+    throw new CampaignNotFoundError(`Campaign with ID ${id} not found.`);
   }
 
   while (hasMoreRecords) {
@@ -646,6 +529,7 @@ export const getResponseExcelByCampaignById = async (
         LEFT JOIN "CampaignParticipant" cp ON cpds."participantId" = cp.id
         LEFT JOIN "Contact" c ON cp."contactId" = c.id
         WHERE cpds."dripStageId" = ${selectedDripStage}::uuid
+          AND cp."campaignId" = ${id}::uuid
         ORDER BY cpds."createdAt" DESC
         LIMIT ${pageSize}
         OFFSET ${page * pageSize}
@@ -771,6 +655,26 @@ const EMPTY_CAMPAIGN_SCHEDULE_INFO: CampaignScheduleInfo = {
   nextBatchCount: 0,
 };
 
+/**
+ * The one shape getCampaginStatsById answers with.
+ *
+ * It used to answer with three: the populated all-stages reply carried queueCount
+ * and the three schedule fields, the empty reply carried the schedule fields but
+ * not queueCount, and the per-stage reply carried queueCount but none of the
+ * schedule fields — so a client could not read the same keys off every response.
+ * See issues.txt 17.8.
+ */
+const EMPTY_CAMPAIGN_STATS = {
+  countRead: 0,
+  countSent: 0,
+  countFailed: 0,
+  countDelivered: 0,
+  countPending: 0,
+  countCompleted: 0,
+  queueCount: 0,
+  ...EMPTY_CAMPAIGN_SCHEDULE_INFO,
+};
+
 export async function getCampaignScheduleInfo(campaignId: string): Promise<CampaignScheduleInfo> {
   const empty: CampaignScheduleInfo = EMPTY_CAMPAIGN_SCHEDULE_INFO;
 
@@ -800,11 +704,16 @@ export async function getCampaignScheduleInfo(campaignId: string): Promise<Campa
   }
 }
 
-export async function getCampaginStatsById(campaignId: string, selectedDripStage = "all") {
+export async function getCampaginStatsById(
+  campaignId: string,
+  orgId: string,
+  selectedDripStage = "all",
+) {
   if (selectedDripStage === "all") {
-    const stats = await prisma.campaignStats.findUnique({
+    const stats = await prisma.campaignStats.findFirst({
       where: {
         campaignId,
+        campaign: { team: { orgId } },
       },
       include: {
         campaign: {
@@ -822,17 +731,7 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
         },
       },
     });
-    if (!stats) {
-      return {
-        countRead: 0,
-        countSent: 0,
-        countFailed: 0,
-        countDelivered: 0,
-        countPending: 0,
-        countCompleted: 0,
-        ...EMPTY_CAMPAIGN_SCHEDULE_INFO,
-      };
-    }
+    if (!stats) return EMPTY_CAMPAIGN_STATS;
     const [tc, schedule] = await Promise.all([
       getCampaignCount(campaignId),
       getCampaignScheduleInfo(campaignId),
@@ -849,9 +748,14 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
       ...schedule,
     };
   } else {
-    const stats = await prisma.campaignDripStage.findUnique({
+    // Keyed on the stage id alone before, so naming any drip stage id reported on
+    // it — whichever campaign, and whichever org, it belonged to.
+    // See issues.txt 17.3.
+    const stats = await prisma.campaignDripStage.findFirst({
       where: {
         id: selectedDripStage,
+        campaignId,
+        campaign: { team: { orgId } },
       },
       include: {
         _count: {
@@ -865,17 +769,11 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
         },
       },
     });
-    if (!stats) {
-      return {
-        countRead: 0,
-        countSent: 0,
-        countFailed: 0,
-        countDelivered: 0,
-        countPending: 0,
-        countCompleted: 0,
-      };
-    }
-    const tc = await getCampaignCount(campaignId);
+    if (!stats) return EMPTY_CAMPAIGN_STATS;
+    const [tc, schedule] = await Promise.all([
+      getCampaignCount(campaignId),
+      getCampaignScheduleInfo(campaignId),
+    ]);
 
     return {
       countRead: stats.totalRead,
@@ -885,6 +783,7 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
       countPending: stats._count.CampaignParticipantDripStage ?? 0,
       countCompleted: stats.totalCompleted,
       queueCount: tc ?? 0,
+      ...schedule,
     };
   }
 }
@@ -903,7 +802,11 @@ export async function enqueueCampaignMessage(
   dailySendLimit?: number,
 ): Promise<{ status: boolean; message: string }> {
   try {
-    waCampaignEnqueue.add(
+    // Awaited. Without it the try/catch could only see a synchronous throw, so an
+    // asynchronous rejection — Redis down, queue full — escaped as an unhandled
+    // promise rejection while the caller had already been told it worked, and the
+    // campaign row sat at QUEUING forever. See issues.txt 17.4.
+    await waCampaignEnqueue.add(
       campaignId,
       {
         campaignId,
@@ -919,7 +822,7 @@ export async function enqueueCampaignMessage(
     );
     return { status: true, message: "Campaign messages enqueued successfully" };
   } catch (error) {
-    console.error("Error enqueuing campaign message:", error);
+    log.error({ err: error, campaignId }, "Error enqueuing campaign message");
     return {
       status: false,
       message: "Campaign not scheduled, please try again",
@@ -927,19 +830,29 @@ export async function enqueueCampaignMessage(
   }
 }
 
-export function getFlowIdFromTemplateComponents(
-  components: WaTemplateComponent[],
-): string | undefined {
-  const flowId = components
-    .find((c) => c.type.toLocaleLowerCase() === WaTemplateComponentType.BUTTONS)
-    ?.buttons?.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
-    ?.flow_id?.toString();
+/**
+ * Re-exported rather than reimplemented: this was a line-for-line copy of the
+ * function of the same name in wa_templates.utils.ts, and neither imported the
+ * other. See issues.txt 17.8.
+ */
+export { getFlowIdFromTemplateComponents } from "../../utils/waTemplateComponents.js";
 
-  return flowId;
-}
-
-export const deleteCampaignParticipantsByCampaignId = async (campaignId: string) => {
-  waCampaignDequeue.add(campaignId, { campaignId });
+/**
+ * Asks the dispatcher to drop a campaign's queued messages.
+ *
+ * The add was not awaited and nothing was returned, so a cancellation could not be
+ * known to have been accepted. See issues.txt 17.4.
+ */
+export const deleteCampaignParticipantsByCampaignId = async (
+  campaignId: string,
+): Promise<{ status: boolean; message: string }> => {
+  try {
+    await waCampaignDequeue.add(campaignId, { campaignId });
+    return { status: true, message: "Campaign dequeue requested" };
+  } catch (error) {
+    log.error({ err: error, campaignId }, "Error requesting campaign dequeue");
+    return { status: false, message: "Campaign cancellation not requested, please try again" };
+  }
 };
 
 export async function doesCampaignIdExistInMessageQueue(campaignId: string) {
@@ -968,11 +881,13 @@ export const updateCampaignMessageQueueRetryCount = (campaignId: string) => {
 
 export const getCampaignParticipantCountByStatuses = (
   campaignId: string,
+  orgId: string,
   status: Array<CampaignParticipantStatus>,
 ): Promise<number> => {
   return prisma.campaignParticipant.count({
     where: {
       campaignId,
+      campaign: { team: { orgId } },
       status: {
         in: status,
       },

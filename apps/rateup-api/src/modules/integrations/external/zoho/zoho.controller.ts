@@ -572,7 +572,9 @@ export const disconnectZohoIntegrationHandler = async (
   reply: FastifyReply,
 ) => {
   try {
-    const { orgId } = request.params;
+    // The session's org, not the path's: the route carries checkSession now, and the
+    // path parameter is kept only so the existing URL still works. See issues.txt 26.7.
+    const orgId = request.user.orgId;
 
     if (!orgId) {
       return reply.code(400).send({

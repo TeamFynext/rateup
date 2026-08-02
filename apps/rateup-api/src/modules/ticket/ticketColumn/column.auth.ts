@@ -27,3 +27,44 @@ export async function verifyColumnAccess(
     return reply.code(403).send({ message: "You don't have access to this column" });
   }
 }
+
+/**
+ * The access check for the column routes that name their target in the BODY.
+ *
+ * POST /columns/create and PUT /columns/reorder carried no preHandler, so any
+ * authenticated user could add a column to any board on the platform, or shuffle
+ * another team's board into unusability. See issues.txt 29.1.
+ */
+export async function verifyBoardAccessFromBody(
+  request: FastifyRequest<{ Body: { ticketBoardId?: string } }>,
+  reply: FastifyReply,
+) {
+  const ticketBoardId = request.body?.ticketBoardId;
+  if (!ticketBoardId) {
+    return reply.code(400).send({ message: "Board ID is required" });
+  }
+  if (!(await isBoardMember(ticketBoardId, request.userId))) {
+    return reply.code(403).send({ message: "You don't have access to this board" });
+  }
+}
+
+/** Every column in a reorder must belong to a board the caller is on. issues.txt 29.1. */
+export async function verifyColumnsReorderAccess(
+  request: FastifyRequest<{ Body: { columns?: { id: string }[] } }>,
+  reply: FastifyReply,
+) {
+  const columns = request.body?.columns ?? [];
+  const boardIds = new Set<string>();
+  for (const column of columns) {
+    const boardId = await getBoardIdByColumnId(column.id);
+    if (!boardId) {
+      return reply.code(404).send({ message: "Column not found" });
+    }
+    boardIds.add(boardId);
+  }
+  for (const boardId of boardIds) {
+    if (!(await isBoardMember(boardId, request.userId))) {
+      return reply.code(403).send({ message: "You don't have access to this board" });
+    }
+  }
+}

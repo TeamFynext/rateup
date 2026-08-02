@@ -10,7 +10,13 @@ vi.mock("../../../utils/prisma.js", () => ({
     },
     contact: { findUnique: vi.fn() },
     loyaltyProgram: { findUnique: vi.fn() },
-    loyaltyReferral: { create: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    loyaltyReferral: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
     loyaltyTransaction: { create: vi.fn() },
   },
 }));
@@ -19,11 +25,19 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../accounts/account.service.js", () => ({ assignRewardToCustomer: vi.fn() }));
+vi.mock("../accounts/account.service.js", () => ({
+  assignRewardToCustomer: vi.fn(),
+  createCustomerAccount: vi.fn(),
+  findAccountByReferralCode: vi.fn(),
+}));
 vi.mock("../program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { assignRewardToCustomer } from "../accounts/account.service.js";
+import {
+  assignRewardToCustomer,
+  createCustomerAccount,
+  findAccountByReferralCode,
+} from "../accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 import {
   completeReferral,
@@ -97,16 +111,22 @@ beforeEach(() => {
   db.customerLoyaltyAccount.update.mockResolvedValue({});
   db.contact.findUnique.mockResolvedValue({
     id: "contact-1",
+    orgId: ORG,
     name: "Bobby",
     phone: "919000000002",
+    email: null,
+    dob: null,
   });
   db.loyaltyProgram.findUnique.mockResolvedValue(program());
   db.loyaltyReferral.create.mockResolvedValue({ id: "ref-1" });
   db.loyaltyReferral.findUnique.mockResolvedValue(null);
+  db.loyaltyReferral.findFirst.mockResolvedValue(null);
   db.loyaltyReferral.findMany.mockResolvedValue([]);
   db.loyaltyReferral.update.mockResolvedValue({});
   db.loyaltyTransaction.create.mockResolvedValue({ id: "txn-1" });
   (assignRewardToCustomer as Mock).mockResolvedValue({ id: "cr-1" });
+  (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-referee" });
+  (findAccountByReferralCode as Mock).mockResolvedValue(referrer);
   (getLoyaltyProgramByOrg as Mock).mockResolvedValue({ id: PROGRAM });
 });
 
@@ -114,22 +134,47 @@ beforeEach(() => {
 // trackReferral
 // ===========================================================================
 
+/*
+ * trackReferral no longer opens the referee's account itself — createCustomerAccount
+ * does, and these tests assert the delegation rather than a second implementation
+ * of it.
+ *
+ * It had drifted into a THIRD account-creation path that disagreed with the other
+ * two on nearly every point, and each disagreement was its own defect:
+ *
+ *   - It paid the referrer TWICE. createCustomerAccount guards the points credit
+ *     with `referralBonusType === "points"`; here the gift branch and the points
+ *     branch were two independent `if`s, so a program configured for a gift bonus
+ *     that also carried a non-zero `referralBonus` paid the gift AND the points,
+ *     every time.
+ *   - It never set `referredById`, so the referee's own row did not record who
+ *     referred them and anything reading the account rather than the
+ *     LoyaltyReferral table saw no referrer.
+ *   - It never set `currentTierId`, so the referee started untiered — which opened
+ *     the tier bypass of issues.txt 20.6.
+ *   - It minted its own referral-code format, un-upper-cased, so codes from here
+ *     read "Bobb-4RI82" while signup codes read "BOBBY-AB12", against a lookup
+ *     that was an exact case-sensitive match.
+ *
+ * All four followed from it being a second implementation of one operation.
+ * See issues.txt 20.40.
+ */
+
 describe("trackReferral — preconditions", () => {
   test("refuses a referral code that matches nothing in the program", async () => {
-    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
+    (findAccountByReferralCode as Mock).mockResolvedValue(null);
 
     await expect(trackReferral(PROGRAM, "NOPE", "contact-1")).rejects.toThrow(
       "Invalid referral code",
     );
   });
 
-  test("looks the code up inside the program", async () => {
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
+  // The lookup folds case, because it is a code the customer types in by hand and
+  // the two paths used to mint it in two different cases. See issues.txt 20.40.
+  test("looks the code up inside the program, ignoring case", async () => {
+    await trackReferral(PROGRAM, "ann-ab12", "contact-1");
 
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toEqual({
-      programId: PROGRAM,
-      referralCode: "ANN-AB12",
-    });
+    expect(findAccountByReferralCode).toHaveBeenCalledWith(PROGRAM, "ann-ab12");
   });
 
   test("refuses a referee who already has an account", async () => {
@@ -147,83 +192,59 @@ describe("trackReferral — preconditions", () => {
       "Contact not found",
     );
   });
+
+  test("refuses a contact with no phone number to enrol", async () => {
+    db.contact.findUnique.mockResolvedValue({ id: "contact-1", orgId: ORG, phone: null });
+
+    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1")).rejects.toThrow(
+      "Contact has no phone number",
+    );
+  });
 });
 
-describe("trackReferral — the accounts it creates", () => {
-  test("opens the referee's account inside the program", async () => {
+describe("trackReferral — the account it opens", () => {
+  test("opens the referee's account through createCustomerAccount", async () => {
     await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
 
-    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
-      programId: PROGRAM,
-      contactId: "contact-1",
-    });
-  });
-
-  test("credits a points-type referee bonus into the opening balance", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(program({ refereeBonus: 25 }));
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
-      currentPoints: 25,
-      lifetimePoints: 25,
-    });
-  });
-
-  // NOTE: pins current behaviour. createCustomerAccount sets `referredById` on
-  // the new account; this path does not, so the referee's own row never records
-  // who referred them — only the separate LoyaltyReferral table does. Anything
-  // reading the account (the customer screen, the export) sees no referrer.
-  // See issues.txt 20.40.
-  test("never records the referrer on the referee's own account", async () => {
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).not.toHaveProperty(
-      "referredById",
+    expect(createCustomerAccount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phone: "919000000002",
+        name: "Bobby",
+        orgId: ORG,
+      }),
+      PROGRAM,
+      ORG,
     );
+    // Nothing is written here directly any more.
+    expect(db.customerLoyaltyAccount.create).not.toHaveBeenCalled();
   });
 
-  // NOTE: nor does it set currentTierId, so a referred customer starts with no
-  // tier — which then bypasses every tier restriction (issues.txt 20.6).
-  // See issues.txt 20.40.
-  test("never places the referee in a tier", async () => {
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).not.toHaveProperty(
-      "currentTierId",
-    );
-  });
-
-  // NOTE: this is a FOURTH code generator — four characters of the name plus five
-  // of Math.random, unchecked for uniqueness. Unlike generateReferralCode in
-  // earningRulesEngine it does NOT upper-case the name, so codes minted here read
-  // "Bobb-4RI82" while codes minted at signup read "BOBBY-AB12". Referral codes
-  // are matched with an exact, case-sensitive `findFirst`, so a customer who
-  // types their own code in caps will not be found. See issues.txt 20.9.
-  test("mints a differently-cased referral code from the signup path", async () => {
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    const code = db.customerLoyaltyAccount.create.mock.calls[0][0].data.referralCode;
-    expect(code).toMatch(/^Bobb-[0-9A-Z]*$/);
-    expect(code).not.toBe(code.toUpperCase());
-  });
-
-  test("matches a referral code exactly, with no case folding", async () => {
+  // The referrer's OWN code is passed on, not the string the caller typed, so the
+  // referee's account records the referrer, receives the referee bonus and lands
+  // in the entry tier — all of which createCustomerAccount does and this path
+  // used to do none of. See issues.txt 20.40.
+  test("passes the referrer's canonical code, so the bonuses and tier are applied", async () => {
     await trackReferral(PROGRAM, "ann-ab12", "contact-1");
 
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.referralCode).toBe(
-      "ann-ab12",
-    );
+    expect((createCustomerAccount as Mock).mock.calls[0][0].referCode).toBe("ANN-AB12");
   });
 
-  test("falls back to the phone, then to REF, when there is no name", async () => {
-    db.contact.findUnique.mockResolvedValue({ id: "contact-1", phone: "919000000002" });
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data.referralCode).toMatch(/^9190-/);
+  test("carries the contact's details across", async () => {
+    db.contact.findUnique.mockResolvedValue({
+      id: "contact-1",
+      orgId: ORG,
+      name: "Bobby",
+      phone: "919000000002",
+      email: "bob@example.com",
+      dob: new Date("1990-05-04T00:00:00.000Z"),
+    });
 
-    db.contact.findUnique.mockResolvedValue({ id: "contact-1" });
     await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-    expect(db.customerLoyaltyAccount.create.mock.calls[1][0].data.referralCode).toMatch(/^REF-/);
+
+    expect((createCustomerAccount as Mock).mock.calls[0][0]).toMatchObject({
+      email: "bob@example.com",
+      dob: "1990-05-04T00:00:00.000Z",
+    });
   });
 
   test("records the referral as pending", async () => {
@@ -237,131 +258,31 @@ describe("trackReferral — the accounts it creates", () => {
       status: "pending",
     });
   });
-});
 
-describe("trackReferral — the bonuses", () => {
-  test("credits a points-type referral bonus to the referrer", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
-      where: { id: "acct-referrer" },
-      data: { currentPoints: { increment: 50 }, lifetimePoints: { increment: 50 } },
-    });
-  });
-
-  test("records the referrer's bonus against the referral", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
-      accountId: "acct-referrer",
-      source: "referral",
-      points: 50,
-      balanceAfter: 250,
-      metadata: { referralId: "ref-1", refereeContactId: "contact-1" },
-    });
-  });
-
-  test("assigns a gift-type referral reward", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(
-      program({ referralBonusType: "gift", referralRewardId: "rwd-1" }),
-    );
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-referrer", "rwd-1");
-  });
-
-  test("tolerates a gift the referrer already holds", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(
-      program({ referralBonusType: "gift", referralRewardId: "rwd-1" }),
-    );
-    (assignRewardToCustomer as Mock).mockRejectedValue(
-      new Error("Reward is already assigned to this customer"),
-    );
-
-    await expect(trackReferral(PROGRAM, "ANN-AB12", "contact-1")).resolves.toBeDefined();
-  });
-
-  // NOTE: pins current behaviour, and the two referral paths disagree. In
-  // createCustomerAccount the points credit is guarded by
-  // `referralBonusType === "points" && referralBonus > 0`. Here the gift branch
-  // and the points branch are INDEPENDENT `if`s, so a program configured for a
-  // gift bonus that also carries a non-zero referralBonus number pays the
-  // referrer BOTH the gift and the points. See issues.txt 20.40.
-  test("pays a gift-type referrer the points as well when the number is non-zero", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(
-      program({ referralBonusType: "gift", referralRewardId: "rwd-1", referralBonus: 50 }),
-    );
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(assignRewardToCustomer).toHaveBeenCalled();
-    expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
-      where: { id: "acct-referrer" },
-      data: { currentPoints: { increment: 50 }, lifetimePoints: { increment: 50 } },
-    });
-  });
-
-  // NOTE: same stale-read as issues.txt 20.15 — balanceAfter comes from the row
-  // fetched before the increment, not from the update's result.
-  test("derives the referrer's ledger balance from a pre-increment read", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-    db.customerLoyaltyAccount.update.mockResolvedValue({ currentPoints: 999 });
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.loyaltyTransaction.create.mock.calls[0][0].data.balanceAfter).toBe(250);
-  });
-
-  test("records the referee's bonus separately", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(program({ refereeBonus: 25 }));
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
-      accountId: "acct-referee",
-      points: 25,
-      balanceAfter: 25,
-    });
-  });
-
-  test("assigns a gift-type referee reward instead of points", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(
-      program({ refereeBonusType: "gift", refereeRewardId: "rwd-2", refereeBonus: 25 }),
-    );
-
-    await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
-
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-referee", "rwd-2");
-    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
-  });
-
-  test("returns the referral, both accounts and the bonus paid", async () => {
-    db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-
+  test("returns the referral and both accounts", async () => {
     const res = await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
 
     expect(res).toEqual({
       referral: { id: "ref-1" },
       referrer,
       referee: { id: "acct-referee" },
-      bonusAwarded: 50,
     });
   });
 
-  // NOTE: account creation, the referral row, the referrer's credit and both
-  // ledger rows are five separate writes with no transaction — the same gap as
-  // issues.txt 20.17.
-  test("writes the account before the referral row, untransacted", async () => {
+  // Every bonus — the referrer's points or gift, the referee's points or gift — is
+  // createCustomerAccount's to pay, and it pays exactly one of each. This path
+  // used to pay them itself, from two independent `if`s, so a gift-configured
+  // program with a non-zero points number paid both. See issues.txt 20.40.
+  test("pays no bonus of its own, in any configuration", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(
+      program({ referralBonusType: "gift", referralRewardId: "rwd-1", referralBonus: 50 }),
+    );
+
     await trackReferral(PROGRAM, "ANN-AB12", "contact-1");
 
-    expect(db.customerLoyaltyAccount.create.mock.invocationCallOrder[0]).toBeLessThan(
-      db.loyaltyReferral.create.mock.invocationCallOrder[0],
-    );
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    expect(assignRewardToCustomer).not.toHaveBeenCalled();
   });
 });
 
@@ -371,46 +292,60 @@ describe("trackReferral — the bonuses", () => {
 
 describe("completeReferral", () => {
   test("refuses a referral that does not exist", async () => {
-    await expect(completeReferral("nope", 500)).rejects.toThrow("Referral not found");
+    await expect(completeReferral("nope", PROGRAM)).rejects.toThrow("Referral not found");
   });
 
   test("refuses a referral that is not pending", async () => {
-    db.loyaltyReferral.findUnique.mockResolvedValue({ id: "ref-1", status: "completed" });
+    db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-1", status: "completed" });
 
-    await expect(completeReferral("ref-1", 500)).rejects.toThrow("Referral is not pending");
+    await expect(completeReferral("ref-1", PROGRAM)).rejects.toThrow("Referral is not pending");
   });
 
   test("marks the referral completed and stamps the time", async () => {
-    db.loyaltyReferral.findUnique.mockResolvedValue({ id: "ref-1", status: "pending" });
+    db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-1", status: "pending" });
 
-    await completeReferral("ref-1", 500);
+    await completeReferral("ref-1", PROGRAM);
 
     expect(db.loyaltyReferral.update.mock.calls[0][0].data.status).toBe("completed");
     expect(db.loyaltyReferral.update.mock.calls[0][0].data.completedAt).toBeInstanceOf(Date);
   });
 
-  // NOTE: pins current behaviour. The purchase amount is accepted and named
-  // `_purchaseAmount` — it is never read. Completing a referral awards nothing
-  // to anyone; the whole bonus is paid up front at trackReferral time, so the
-  // "pending -> completed" lifecycle has no financial meaning.
-  // See issues.txt 20.41.
-  test("ignores the purchase amount and awards nothing on completion", async () => {
-    db.loyaltyReferral.findUnique.mockResolvedValue({ id: "ref-1", status: "pending" });
+  // Completing a referral awards nothing to anyone: the whole bonus is paid up
+  // front at trackReferral time, so the pending -> completed lifecycle has no
+  // financial meaning and anything reading the status as "has this been earned" is
+  // reading it wrong.
+  //
+  // The `purchaseAmount` parameter is GONE. It was accepted on the schema, passed
+  // through the controller, named `_purchaseAmount` in the service and never read
+  // — a signature promising a purchase-triggered reward the code does not
+  // implement. Paying on completion instead is the better design and is a product
+  // decision, recorded as outstanding in issues.txt 20.41.
+  test("awards nothing on completion", async () => {
+    db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-1", status: "pending" });
 
-    await completeReferral("ref-1", 50000);
+    await completeReferral("ref-1", PROGRAM);
 
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: keyed on the referral id alone, with no program or org check.
-  // See issues.txt 20.18.
-  test("completes whichever referral id it is given", async () => {
-    db.loyaltyReferral.findUnique.mockResolvedValue({ id: "ref-other", status: "pending" });
+  // It used to be keyed on the referral id alone, with no program or org check.
+  // See issues.txt 20.41.
+  test("resolves the referral within the caller's program", async () => {
+    db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-other", status: "pending" });
 
-    await completeReferral("ref-other", 0);
+    await completeReferral("ref-other", PROGRAM);
 
-    expect(db.loyaltyReferral.update.mock.calls[0][0].where).toEqual({ id: "ref-other" });
+    expect(db.loyaltyReferral.findFirst.mock.calls[0][0].where).toEqual({
+      id: "ref-other",
+      programId: PROGRAM,
+    });
+  });
+
+  test("another program's referral is not found at all", async () => {
+    db.loyaltyReferral.findFirst.mockResolvedValue(null);
+
+    await expect(completeReferral("ref-other", PROGRAM)).rejects.toThrow("Referral not found");
   });
 });
 
@@ -459,7 +394,7 @@ describe("the referral controller", () => {
   });
 
   test("passes a service refusal through as a 500 with its message", async () => {
-    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
+    (findAccountByReferralCode as Mock).mockResolvedValue(null);
     const rep = reply();
 
     await trackReferralHandler(
@@ -470,16 +405,15 @@ describe("the referral controller", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Invalid referral code" } });
   });
 
-  test("completing a referral resolves no program at all", async () => {
-    db.loyaltyReferral.findUnique.mockResolvedValue({ id: "ref-1", status: "pending" });
+  // Completing used to resolve no program at all, so it completed whichever
+  // referral id it was given. See issues.txt 20.41.
+  test("completing a referral resolves the caller's program", async () => {
+    db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-1", status: "pending" });
     const rep = reply();
 
-    await completeReferralHandler(
-      request({ body: { referralId: "ref-1", purchaseAmount: 100 } }),
-      rep,
-    );
+    await completeReferralHandler(request({ body: { referralId: "ref-1" } }), rep);
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
     expect(answer(rep).code).toBe(200);
   });
 

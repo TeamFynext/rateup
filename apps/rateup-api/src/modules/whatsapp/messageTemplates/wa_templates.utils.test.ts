@@ -263,14 +263,18 @@ describe("generateTemplate - carousels", () => {
     ]);
   });
 
-  // NOTE: pins current behaviour. `card.buttons.length` is read with no optional
-  // chaining, unlike every other card field, so a carousel card saved without a
-  // buttons array throws instead of producing a button-less card.
-  // See issues.txt 14.8.
-  test("throws on a carousel card that has no buttons array", () => {
-    expect(() => generateTemplate(input({ mediaCarousel: [{ header: "h", body: "b" }] }))).toThrow(
-      TypeError,
+  // `card.buttons.length` was read with no optional chaining, unlike every other
+  // card field, so a carousel card saved without a buttons array threw instead of
+  // producing a button-less card. See issues.txt 14.8.
+  test("produces a button-less card when the card has no buttons array", () => {
+    const result: any = generateTemplate(input({ mediaCarousel: [{ header: "h", body: "b" }] }));
+
+    const carousel = result.components.find(
+      (c: any) => String(c.type).toUpperCase() === "CAROUSEL",
     );
+    expect(
+      carousel.cards[0].components.some((c: any) => String(c.type).toUpperCase() === "BUTTONS"),
+    ).toBe(false);
   });
 });
 
@@ -405,16 +409,16 @@ describe("getTemplateQuery", () => {
     );
   });
 
-  // NOTE: pins current behaviour, and this one means the function has never worked.
-  // The parameter list is spelled `paramteters`, so what Meta receives is a header
-  // component carrying no parameters at all. Nothing in the repo calls
-  // getTemplateQuery today — sendTemplateToUserCore builds its own components — so
-  // this is latent. See issues.txt 14.9.
-  test("misspells the parameter list, so the link it resolved is not sent", async () => {
+  // The parameter list was spelled `paramteters`, so what Meta received was a
+  // header component carrying no parameters at all — the link this branch had just
+  // resolved was never sent. Latent (nothing calls getTemplateQuery today;
+  // sendTemplateToUserCore builds its own components) but wrong.
+  // See issues.txt 14.9.
+  test("sends the link it resolved, under the name Meta expects", async () => {
     const result: any = await getTemplateQuery("tpl-1", "org-1", { header: "https://cdn/i.jpg" });
 
-    expect(result.components[0]).toHaveProperty("paramteters");
-    expect(result.components[0]).not.toHaveProperty("parameters");
+    expect(result.components[0]).toHaveProperty("parameters");
+    expect(result.components[0]).not.toHaveProperty("paramteters");
   });
 
   // NOTE: the HEADER case has no break after its inner switch, so a text header
@@ -497,17 +501,18 @@ describe("verifyTemplateSubscriptionLimit", () => {
     expect(rep.code).not.toHaveBeenCalled();
   });
 
-  // NOTE: the count query is inside the try, so a database failure is reported to
-  // the user as a 403 carrying the raw error text. See issues.txt 14.7.
-  test("reports a database failure to the user as a refusal", async () => {
+  // The count query sat inside the try, so a database outage reached the user as a
+  // 403 carrying the raw error text with displayMessageInClient set — an
+  // infrastructure failure dressed up as a permission refusal. Identical to the
+  // flows gate, issues.txt 11.7, which this is a copy of. See issues.txt 14.7.
+  test("lets a database failure surface rather than calling it a refusal", async () => {
     templateCountMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();
 
-    await verifyTemplateSubscriptionLimit(request(), rep);
+    await expect(verifyTemplateSubscriptionLimit(request(), rep)).rejects.toThrow(
+      "connection terminated unexpectedly",
+    );
 
-    expect(rep.send.mock.calls[0][0]).toEqual({
-      message: "connection terminated unexpectedly",
-      displayMessageInClient: true,
-    });
+    expect(rep.code).not.toHaveBeenCalled();
   });
 });

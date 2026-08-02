@@ -12,6 +12,7 @@ import {
   CustomFieldSchema,
   BulkUpdateContactStatusSchema,
 } from "./contact.schema.js";
+import { ContactNotFoundError } from "./contact.errors.js";
 import { log } from "../../utils/logger.js";
 import {
   addCustomField,
@@ -52,6 +53,22 @@ import {
 import { write, type CellValue } from "hucre";
 import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 //used in zapier
+/**
+ * A contact that is not the caller's answers 404, indistinguishable from one that
+ * never existed. Prisma's P2025 — raised when an extended `where` matched nothing —
+ * means the same thing on this module's writes. See issues.txt 18.5 and 18.10.
+ */
+function replyForError(reply: FastifyReply, error: unknown, context: string) {
+  if (error instanceof ContactNotFoundError) {
+    return reply.code(404).send({ error: error.message });
+  }
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    return reply.code(404).send({ error: "Contact not found" });
+  }
+  log.error({ err: error }, context);
+  return reply.code(500).send({ error: "Something went wrong" });
+}
+
 export async function createContactHandler(
   request: FastifyRequest<{
     Body: ContactCore;
@@ -104,11 +121,20 @@ export async function createContactHandler(
       reply.code(201).send(contact);
     }
   } catch (error) {
+    // A prisma error with any code OTHER than P2002 used to take the outer branch,
+    // match no inner condition, and leave the handler returning having sent
+    // nothing — which fastify's async wrapper turns into an empty 200. A
+    // foreign-key violation was reported to the client as success with no body.
+    // Same shape as issues.txt 3.2. See issues.txt 18.17.
+    //
+    // The loyalty branch above answers 201 BEFORE it looks up and dispatches the
+    // welcome message, deliberately — the user should not wait on Meta. So a
+    // failure after that point must not try to reply again: `reply.sent` guards
+    // the FST_ERR_REP_ALREADY_SENT this used to raise. See issues.txt 18.18.
     log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(400).send({ error: "Contact already exist" });
-      }
+    if (reply.sent) return;
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      reply.code(400).send({ error: "Contact already exist" });
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
@@ -157,11 +183,13 @@ export async function getContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await getContactById(request.params.contactId);
+    const contact = await getContactById(request.params.contactId, request.user.orgId);
+    // A contact another org owns reports as absent, and absent is a 404 — the two
+    // are indistinguishable from outside. See issues.txt 18.5.
+    if (!contact) return reply.code(404).send({ error: "Contact not found" });
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error reading a contact");
   }
 }
 
@@ -170,11 +198,10 @@ export async function deleteContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await deleteContactById(request.params.contactId);
+    const contact = await deleteContactById(request.params.contactId, request.user.orgId);
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error deleting a contact");
   }
 }
 
@@ -186,17 +213,20 @@ export async function updateContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await updateContactById(request.params.contactId, request.body, request.userId);
+    const contact = await updateContactById(
+      request.params.contactId,
+      request.user.orgId,
+      request.body,
+      request.userId,
+    );
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(400).send({ error: "Contact already exist" });
-      }
-    } else {
-      reply.code(500).send({ error: "Something went wrong" });
+    // See issues.txt 18.17 — the inner branch had no else, so any other prisma
+    // error left the reply unsent and fastify answered an empty 200.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return reply.code(400).send({ error: "Contact already exist" });
     }
+    return replyForError(reply, error, "Error updating a contact");
   }
 }
 
@@ -210,12 +240,12 @@ export async function updateContactLabelsByIdHandler(
   try {
     const contact = await updateContactLabelsById(
       request.params.contactId,
+      request.user.orgId,
       request.body?.lifecycleId,
     );
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error updating a contact lifecycle");
   }
 }
 
@@ -225,11 +255,12 @@ export async function deleteManyContactsHandler(
 ) {
   try {
     const { contactIds } = request.body;
-    const res = await deleteManyContacts(contactIds);
+    // `DELETE /api/contact` takes an arbitrary id array; without the org it
+    // deleted every one of them, whoever they belonged to. See issues.txt 18.5.
+    const res = await deleteManyContacts(contactIds, request.user.orgId);
     return reply.code(200).send(res);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error deleting contacts");
   }
 }
 
@@ -274,14 +305,14 @@ export async function importCSVContactsHandler(request: FastifyRequest, reply: F
       }
     }
     const res = await importCSVContacts(file, orgId, tags, update, undefined, hasHeaderRow);
-    // `importCSVContacts` returns nothing for an empty spreadsheet (no data
-    // rows) rather than a shaped error — answer that plainly instead of
-    // reading `.status` off `undefined`.
-    if (!res) {
-      return reply.code(400).send({ error: "No contacts found in the uploaded file." });
-    }
+    // A file where nothing at all could be imported is a 400. A file where SOME
+    // rows imported is a 200 carrying both halves: the valid rows were written,
+    // and telling the user "validation failed" invited them to fix one row and
+    // re-upload, which duplicated the work. See issues.txt 18.13 and 18.19.
     if (res.status === "error") {
-      return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
+      return reply
+        .code(400)
+        .send({ error: "VALIDATION_ERR", data: res.data, message: res.message });
     }
     reply.code(200).send(res);
   } catch (e) {
@@ -499,12 +530,12 @@ export async function updateLifecycleStageofContactsHandler(
   try {
     const res = await updateLifecycleStageofContacts(
       request.params.lifecycleId,
+      request.user.orgId,
       request.body.contactIds,
     );
     reply.send(res);
   } catch (e) {
-    log.error(e);
-    reply.code(500).send({ message: "Error updating lifecycle stage of contacts" });
+    return replyForError(reply, e, "Error updating lifecycle stage of contacts");
   }
 }
 
@@ -519,6 +550,7 @@ export async function bulkUpdateWaMessageAssignStatusHandler(
 
     const contacts = await bulkUpdateWaMessageAssignStatus(
       contactIds,
+      request.user.orgId,
       waMessageAssignStatus,
       request.userId,
       messageId,

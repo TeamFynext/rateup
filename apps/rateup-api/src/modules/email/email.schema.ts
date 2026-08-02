@@ -1,10 +1,15 @@
 import { z } from "zod";
+import { EMAIL_PURPOSES } from "./email.util.js";
 
 const sendEmailSchema = z.object({
   toEmail: z.string(),
   subject: z.string(),
-  purpose: z.string(),
+  // `purpose` was an unconstrained string matched case-sensitively against two
+  // literals, so a typo sent a bodyless email and answered 200. See issues.txt 25.9.
+  purpose: z.enum(EMAIL_PURPOSES),
   text: z.string(),
+  // `data` is z.any(), which Zod accepts as null — and the OTP handler used to
+  // assign `data.otp` onto it. See issues.txt 25.10.
   data: z.any(),
 });
 

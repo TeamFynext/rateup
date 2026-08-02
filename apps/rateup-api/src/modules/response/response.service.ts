@@ -113,17 +113,22 @@ export async function getAllResponses(
         }
       : {};
 
-  let whereCondtion =
-    teamIds && teamIds.length > 0
-      ? {
-          surveyId: surveyId,
-          teamId: {
-            in: teamIds,
-          },
-        }
-      : {
-          surveyId: surveyId,
-        };
+  // An EXPLICIT list scopes, even when it is empty — `teamIds.length > 0` used to
+  // drop the team condition for an empty array, so a caller who belongs to no
+  // team, or who named only map ids that resolve to none of their teams, got
+  // every team's responses for the survey. `undefined` still means unscoped,
+  // which is what the two internal callers in this file pass.
+  // See issues.txt 37.1.
+  let whereCondtion = teamIds
+    ? {
+        surveyId: surveyId,
+        teamId: {
+          in: teamIds,
+        },
+      }
+    : {
+        surveyId: surveyId,
+      };
   const responsesQuery = await prisma.surveyTeamMap.findMany({
     where: whereCondtion,
     select: {
@@ -719,10 +724,19 @@ export async function resetResponsesStats(surveyId: string) {
   return `Deleted ${deleteResponses.count} responses for surveyId: ${surveyId}`;
 }
 
-export async function deleteResponse(id: string) {
+/**
+ * The route is `DELETE /:surveyTeamMapId/delete/:id`, and verifyAccess checks the
+ * MAP. Nothing compared the response to it, so a caller supplied a map id they
+ * legitimately held and a response id belonging to any survey on the platform:
+ * the check passed on the first, the delete acted on the second. Both ids have
+ * to agree now, and a mismatch is P2025 rather than a silent cross-tenant
+ * deletion. See issues.txt 37.2.
+ */
+export async function deleteResponse(id: string, surveyTeamMapId: string) {
   const deleteResponse = await prisma.surveyResponse.delete({
     where: {
       id,
+      surveyTeamMapId,
     },
   });
 
@@ -1021,7 +1035,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
   await doc.loadInfo();
 
   const BATCH_SIZE = 8000; // Tune this based on memory and Google API limits
-  let flow = await getFlowBySurveyId(surveyId);
+  let flow = await getFlowBySurveyId(surveyId, orgId);
   const filteredSecondArray = flow?.json?.screens?.flatMap(
     (screen) => screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
     // The sheet's leading/trailing columns (created-at, respondent, tag, team) are pushed in
@@ -1376,7 +1390,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       };
       resObj["Created At"] = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
 
-      let flow = await getFlowBySurveyId(surveyId);
+      let flow = await getFlowBySurveyId(surveyId, team.orgId);
       const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
         screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
       ) as unknown as Question2[];
@@ -1691,12 +1705,15 @@ export async function exportContactResponseToContacts(surveyId: string, orgId: s
       if (!contacts.length) return;
       let contactGroup = await getContactGroupByNameAndTeam(groupName, teamId);
       if (!contactGroup)
-        contactGroup = await createContactGroup({
-          name: groupName,
-          teamId,
-          tags: [],
-          type: ContactGroupType.NORMAL,
-        });
+        contactGroup = await createContactGroup(
+          {
+            name: groupName,
+            teamId,
+            tags: [],
+            type: ContactGroupType.NORMAL,
+          },
+          orgId,
+        );
       // Ensure each contact has required fields: name, source
       const contactsWithRequired = contacts.map((c) => ({
         ...c,

@@ -1,55 +1,17 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-// import prisma from "../../../utils/prisma.js";
-// import { SubscriptionFeaturePathName } from "../../../types/enums.js";
-// import { getUsageStat } from "../../stats/stats.service.js";
-
-export async function verifyMessageMonthlyLimitRestriction(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  // TODO: re-check
-  // try {
-  //   let orgId = request.user.orgId;
-  //   const subscription = await prisma.subscription.findUnique({
-  //     where: {
-  //       orgId: orgId,
-  //     },
-  //   });
-  //   await verifyTemplateMessageLimit(subscription);
-  // } catch (e) {
-  //   return reply.code(403).send({
-  //     message: e,
-  //     displayMessageInClient: true,
-  //   });
-  // }
-}
-
-/** The (currently disabled) limit check below only ever reads these three fields.
- *  Typed structurally rather than against a concrete model because both
- *  `getSubscription()` variants feed this — the app-level select in
- *  `subscription.service.ts` and the raw Prisma row in `campaign.auth.ts` — and an org
- *  with no subscription row passes `null`. */
-type MessageLimitSubscription = {
-  orgId: string;
-  features: unknown;
-  isAnnualMessageLimit: boolean;
-} | null;
-
-export async function verifyTemplateMessageLimit(subscription: MessageLimitSubscription) {
-  // TODO: re-check
-  // const usage = await getUsageStat(subscription.orgId);
-  // if (
-  //   usage &&
-  //   subscription?.isAnnualMessageLimit &&
-  //   usage.annualTemplateMessageCount >=
-  //     subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit * 12
-  // ) {
-  //   throw new Error("You have reached the maximum annual limit of messages.");
-  // }
-  // if (
-  //   usage?.monthlyTemplateMessageCount >=
-  //   subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit
-  // ) {
-  //   throw new Error("You have reached the maximum monthly limit of messages.");
-  // }
-}
+// This file held verifyMessageMonthlyLimitRestriction and verifyTemplateMessageLimit.
+//
+// Both had their entire bodies commented out behind a "TODO: re-check", so they
+// were no-ops that let every request past — while reading, from the route files
+// and their eleven call sites, exactly like working plan enforcement. They were
+// the preHandler on the two routes that send billable template messages, and the
+// campaign equivalent in campaign.auth.ts was disabled the same way.
+//
+// DELETED rather than re-enabled: the product no longer has a per-message limit.
+// It has a CONVERSATION limit, and that one is live and enforced —
+// assertWithinConversationLimit in whatsappSurvey/wasurvey.auth.ts, called by
+// sendMessage (wasurvey.service.ts) on every outbound path, and by all ten
+// Instagram senders. Every route these dead gates guarded sends through
+// sendMessage, so they are already metered.
+//
+// See issues.txt 14.1(a) and 17.1.
+export {};

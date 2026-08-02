@@ -19,6 +19,9 @@ import {
   questionsRouteParamsSchema,
   updateQuestionRequestSchema,
   updateQuestionsOrderRequestSchema,
+  replaceQuestionsRequestSchema,
+  type ReplaceQuestionsInput,
+  type QuestionsRouteParams,
 } from "./question.schema.js";
 
 // Base route: /api/question/:surveyId
@@ -104,7 +107,19 @@ export async function questionRoutes(server: FastifyInstance) {
     updateQuestionHandler,
   );
 
-  server.put("/replace", replaceQuestionsHandler);
+  // Was `server.put("/replace", handler)` — two arguments, so the most
+  // destructive endpoint in the module was the only one that validated nothing.
+  // See issues.txt 39.2.
+  server.put<{ Body: ReplaceQuestionsInput; Params: QuestionsRouteParams }>(
+    "/replace",
+    {
+      schema: {
+        params: questionsRouteParamsSchema,
+        body: replaceQuestionsRequestSchema,
+      },
+    },
+    replaceQuestionsHandler,
+  );
 
   server.post(
     "/import-emails/:id",

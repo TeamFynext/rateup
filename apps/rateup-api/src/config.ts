@@ -142,7 +142,10 @@ export const SuperTokensConfig: TypeInput = {
               const email = emails[0];
 
               if (name && orgName) {
-                const recipeName = getUserRecipeName(loginMethods[0].recipeId);
+                const recipeName = getUserRecipeName(
+                  loginMethods[0].recipeId,
+                  loginMethods[0].thirdParty?.id,
+                );
                 if (!recipeName) {
                   throw new Error(`Unsupported auth recipe: ${loginMethods[0].recipeId}`);
                 }
@@ -179,7 +182,9 @@ export const SuperTokensConfig: TypeInput = {
         override: (originalImplementation) => ({
           ...originalImplementation,
           sendEmail: async function (input) {
-            sendResetPasswordMail(input?.passwordResetLink, input.user.email);
+            // Awaited so a queue failure surfaces to SuperTokens instead of becoming an
+            // unhandled rejection while the caller is told the reset email was sent.
+            await sendResetPasswordMail(input?.passwordResetLink, input.user.email);
           },
         }),
       },

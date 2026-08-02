@@ -92,8 +92,8 @@ export async function createCatalogProductsBatch(
       input = {
         ...rest,
         id: retailer_id,
-        price: `${parseFloat(String(price)).toFixed(2)} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        price: formatMoney(price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         internal_label: (internal_label ?? []).map((label) => `'${label}'`),
       };
     }
@@ -109,8 +109,8 @@ export async function createCatalogProductsBatch(
       });
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         ...tagInputs,
       };
     }
@@ -118,7 +118,7 @@ export async function createCatalogProductsBatch(
       const { base_price, currencyCode, ...rest } = data as CatalogHotelRoomInput;
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
       };
     }
     // `type` may in principle be any CatalogProductTypes member (FLIGHT,
@@ -171,6 +171,25 @@ export async function createCatalogProductsBatch(
   });
 }
 
+/**
+ * Formats a money field the way Meta expects: "99.50 INR".
+ *
+ * Shared by create and update because the two used to disagree — create sent
+ * `parseFloat(price).toFixed(2)` while update sent the raw value, so the same product
+ * went to Meta as "99.50 INR" on create and "99.5 INR" on update, and a price like
+ * 99.999 went through unrounded on update. Note sale_price and base_price were
+ * unformatted on BOTH paths; they go through here too now.
+ *
+ * A non-numeric or absent amount is passed through untouched rather than becoming
+ * "NaN <currency>", so bad input still fails at Meta's validation with the original
+ * value visible rather than being silently mangled here.
+ */
+function formatMoney(amount: unknown, currencyCode: string | undefined): string {
+  const parsed = parseFloat(String(amount));
+  const value = Number.isFinite(parsed) ? parsed.toFixed(2) : String(amount);
+  return `${value} ${currencyCode}`;
+}
+
 interface SendProductRequestProps {
   method: "CREATE" | "UPDATE" | "DELETE";
   // Payload sent to Meta's catalog items_batch endpoint. Its shape is fully
@@ -209,7 +228,7 @@ export async function syncCatalogProducts(
 ) {
   const [waSettings, catalogInfo] = await Promise.all([
     getWaSettings(orgId),
-    getWaCatalog(catalogId),
+    getWaCatalog(catalogId, orgId),
   ]);
   if (!waSettings || !catalogInfo) return;
   const { accessToken } = waSettings;
@@ -370,7 +389,17 @@ export async function syncCatalogProducts(
   };
 }
 
-export async function getCatalogProducts(catalogId: string, _query: unknown = null) {
+/**
+ * Lists every product in a catalog.
+ *
+ * Deliberately takes no query/filter argument. It used to accept one, name it `_query`
+ * and ignore it, so any search or paging a caller sent was silently dropped and the full
+ * list came back with no error. The dashboard sends nothing (products.api.ts calls
+ * `getCatalogProducts(catalogId)` with no params), so the parameter was dead rather than
+ * unimplemented — dropped instead of filled in. Add filtering here if a caller ever needs
+ * it, rather than accepting an argument that does nothing.
+ */
+export async function getCatalogProducts(catalogId: string) {
   return await prisma.waCatalogProduct.findMany({
     where: {
       catalogId,
@@ -383,7 +412,7 @@ export async function deleteCatalogProducts(
   catalogId: string,
   productIds: CatalogProductIdsSchema["productIds"],
 ) {
-  const catalogInfo = await getWaCatalog(catalogId);
+  const catalogInfo = await getWaCatalog(catalogId, orgId);
   if (!catalogInfo) {
     throw new Error(`Catalog not found for id ${catalogId}`);
   }
@@ -403,7 +432,10 @@ export async function deleteCatalogProducts(
     if (vertical === "hotel_room") {
       obj.data = {
         hotel_retailer_id: id.hotel_retailer_id,
-        hotel_room_id: id,
+        // `id.id`, not `id` — every other branch uses the field, and sending Meta the
+        // whole identifier object here matched nothing, so hotel-room deletes silently
+        // never reached Meta.
+        hotel_room_id: id.id,
       };
     }
     return obj;
@@ -414,21 +446,29 @@ export async function deleteCatalogProducts(
     throw new Error(`Unsupported catalog vertical: ${vertical}`);
   }
   await sendProducts(orgId, requests, catalogProductType, catalogId);
+  // Every branch is confined to this catalog. Without catalogId the deleteMany matched
+  // rows in ANY catalog of ANY org that happened to share the id — and retailer ids are
+  // merchant-chosen SKUs ("sku-1", "SHIRT-M"), so collisions across orgs are entirely
+  // plausible. One org deleting a product silently deleted another org's row.
+  // (The Meta call above was already correctly scoped; only this local delete was not.)
   let whereCondition;
   if (vertical === "commerce") {
     whereCondition = {
+      catalogId,
       retailer_id: {
         in: productIds.map((p) => p.id),
       },
     };
   } else if (vertical === "hotels") {
     whereCondition = {
+      catalogId,
       hotel_id: {
         in: productIds.map((p) => p.id),
       },
     };
   } else {
     whereCondition = {
+      catalogId,
       OR: productIds.map((p) => ({
         hotel_ratailer_id: p.hotel_retailer_id,
         hotel_room_id: p.id,
@@ -458,8 +498,8 @@ export async function updateCatalogProducts(
       input = {
         ...rest,
         id: retailer_id,
-        price: `${price} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        price: formatMoney(price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         internal_label: internal_label && internal_label.map((label) => `'${label}'`),
       };
     }
@@ -479,8 +519,8 @@ export async function updateCatalogProducts(
       });
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         ...tagInputs,
       };
     }
@@ -488,7 +528,7 @@ export async function updateCatalogProducts(
       const { base_price, currencyCode, ...rest } = data as Partial<CatalogHotelRoomInput>;
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
       };
     }
     if (!input) {

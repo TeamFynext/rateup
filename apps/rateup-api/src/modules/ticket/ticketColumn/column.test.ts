@@ -463,15 +463,15 @@ describe("columnRoutes", () => {
     expect(byBoard.opts.preHandler).toEqual([verifyBoardAccess]);
   });
 
-  // NOTE: the same two shapes as the card subfolder — the routes that take
-  // their target from the body are the routes with no access check.
-  test("leaves create and reorder with no access check", async () => {
+  // Same two shapes as the card subfolder: the routes that take their target from
+  // the body used to be the routes with no access check. See issues.txt 29.1.
+  test("guards create and reorder from the body instead", async () => {
     const { srv, routes } = fakeServer();
 
     await columnRoutes(srv);
 
     const open = routes.filter((r) => !r.opts?.preHandler);
-    expect(open.map((r) => `${r.method} ${r.url}`)).toEqual(["POST /create", "PUT /reorder"]);
+    expect(open).toEqual([]);
   });
 
   test("registers the parameterised put before the literal reorder", async () => {

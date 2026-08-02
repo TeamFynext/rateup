@@ -32,6 +32,13 @@ export const byChatbotIdSchema = z.object({
   chatbotId: z.string(),
 });
 
+// The create route declared no body schema, so `name` was whatever arrived —
+// including undefined, which prisma filled from the column default.
+// See issues.txt 21.13.
+export const createChatbotSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+});
+
 export const updateChatbotSchema = z.object({
   publicPageStatus: z.enum(ChatbotPublicPageStatus).optional(),
   enableWaChat: z.boolean().optional(),
@@ -48,3 +55,4 @@ export type publicMessageInput = z.infer<typeof publicMessageSchema>;
 export type UserIdInput = z.infer<typeof byUserIdSchema>;
 export type ChatbotIdInput = z.infer<typeof byChatbotIdSchema>;
 export type updateChatbotInput = z.infer<typeof updateChatbotSchema>;
+export type createChatbotInput = z.infer<typeof createChatbotSchema>;

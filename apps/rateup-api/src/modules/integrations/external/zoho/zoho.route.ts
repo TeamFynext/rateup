@@ -97,5 +97,15 @@ export async function zohoRoutes(server: FastifyInstance) {
 
   server.post("/webhooks/:product", handleZohoWebhook);
 
-  server.post("/unsubscribe/:orgId", disconnectZohoIntegrationHandler);
+  // Was the only route in this tree without a session check apart from the webhook,
+  // which does verify a shared secret — so an unauthenticated request could kill any
+  // organisation's Zoho sync by naming its id in the path, and revoking the refresh
+  // token is not reversible from this side. See issues.txt 26.7.
+  server.post<{ Params: { orgId: string } }>(
+    "/unsubscribe/:orgId",
+    {
+      preHandler: checkSession,
+    },
+    disconnectZohoIntegrationHandler,
+  );
 }

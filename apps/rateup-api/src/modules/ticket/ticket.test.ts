@@ -8,6 +8,10 @@ vi.mock("../../utils/prisma.js", () => ({
   default: { ticketComment: { create: vi.fn(), delete: vi.fn() } },
 }));
 
+vi.mock("./ticketCard/card.service.js", () => ({ getColumnIdByCardId: vi.fn() }));
+vi.mock("./ticketColumn/column.service.js", () => ({ getBoardIdByColumnId: vi.fn() }));
+vi.mock("./ticketBoard/board.service.js", () => ({ isBoardMember: vi.fn() }));
+
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
@@ -32,6 +36,9 @@ import { notificationQueue } from "../../utils/redisConnection.js";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service.js";
 import { parsePhoneforWa } from "../loyalty/util.js";
+import { getColumnIdByCardId } from "./ticketCard/card.service.js";
+import { getBoardIdByColumnId } from "./ticketColumn/column.service.js";
+import { isBoardMember } from "./ticketBoard/board.service.js";
 import {
   createComment,
   deleteComment,
@@ -42,13 +49,7 @@ import {
 } from "./ticket.service.js";
 import { createCommentHandler, deleteCommentHandler } from "./ticket.controller.js";
 import { ticketRoutes } from "./ticket.route.js";
-import {
-  createCommentRequestSchema,
-  createTicketRequestSchema,
-  idParamsSchema,
-  updateStatusRequestSchema,
-  updateTicketRequestSchema,
-} from "./ticket.schema.js";
+import { createCommentRequestSchema, idParamsSchema } from "./ticket.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -102,6 +103,12 @@ afterEach(() => {
 // ===========================================================================
 
 describe("createComment", () => {
+  beforeEach(() => {
+    (getColumnIdByCardId as unknown as Mock).mockResolvedValue("col-1");
+    (getBoardIdByColumnId as unknown as Mock).mockResolvedValue("board-1");
+    (isBoardMember as unknown as Mock).mockResolvedValue(true);
+  });
+
   test("stores the comment against the card and author", async () => {
     await createComment({ ticketCardId: OWN_CARD, msg: "hi" }, USER);
 
@@ -110,9 +117,11 @@ describe("createComment", () => {
     });
   });
 
-  // NOTE: the route is POST /:id/comment, but nothing reads request.params.id —
-  // the target card is request.body.ticketCardId. The path parameter is inert.
-  test("the handler ignores the path id entirely", async () => {
+  // The route is POST /:id/comment, but nothing reads request.params.id — the
+  // target card is request.body.ticketCardId, so the path parameter is inert and an
+  // access check on the route could not have covered it. The check resolves the
+  // board from the BODY's card id. See issues.txt 30.1.
+  test("resolves the board from the body's card id, not the path's", async () => {
     const rep = reply();
 
     await createCommentHandler(
@@ -124,61 +133,33 @@ describe("createComment", () => {
       rep,
     );
 
-    expect(db.ticketComment.create.mock.calls[0][0].data.ticketCardId).toBe(VICTIM_CARD);
+    expect(getColumnIdByCardId).toHaveBeenCalledWith(VICTIM_CARD);
     expect(answer(rep).code).toBe(201);
   });
 
-  // NOTE: the route's access check is commented out (ticket.route.ts:28) and
-  // there is nothing else — no board lookup, no membership test, no org.
-  test("nothing resolves the card's board before writing", async () => {
-    await createComment({ ticketCardId: VICTIM_CARD, msg: "planted" }, USER);
+  // The route's access check used to be a comment, and there was nothing else — no
+  // board lookup, no membership test — so any authenticated user could plant a
+  // comment on any card on the platform, rendered over their real name and email.
+  // See issues.txt 30.1.
+  test("refuses a card on a board the caller is not a member of", async () => {
+    (isBoardMember as unknown as Mock).mockResolvedValueOnce(false);
 
-    expect(db.ticketComment.create).toHaveBeenCalledOnce();
+    await expect(
+      createComment({ ticketCardId: VICTIM_CARD, msg: "planted" }, USER),
+    ).rejects.toThrow(/don't have access/);
+    expect(db.ticketComment.create).not.toHaveBeenCalled();
   });
 
-  test("never consults the session org", async () => {
-    const req: any = {
-      params: { id: OWN_CARD },
-      body: { ticketCardId: VICTIM_CARD, msg: "x" },
-      userId: USER,
-      get user() {
-        throw new Error("request.user was read");
-      },
-    };
+  test("refuses a card that does not exist", async () => {
+    (getColumnIdByCardId as unknown as Mock).mockResolvedValueOnce(undefined);
 
-    await expect(createCommentHandler(req, reply())).resolves.toBeUndefined();
-  });
-
-  // NOTE: the comment is attributed to the caller's own user id, so a planted
-  // comment carries a real name and email when the card is read back.
-  test("attributes the comment to the caller", async () => {
-    await createComment({ ticketCardId: VICTIM_CARD, msg: "x" }, USER);
-
-    expect(db.ticketComment.create.mock.calls[0][0].data.createdById).toBe(USER);
-  });
-
-  test("the body schema puts no bound on the message", () => {
-    expect(createCommentRequestSchema.safeParse({ ticketCardId: OWN_CARD, msg: "" }).success).toBe(
-      true,
+    await expect(createComment({ ticketCardId: VICTIM_CARD, msg: "x" }, USER)).rejects.toThrow(
+      /Card not found/,
     );
-    expect(
-      createCommentRequestSchema.safeParse({ ticketCardId: OWN_CARD, msg: "x".repeat(100_000) })
-        .success,
-    ).toBe(true);
   });
 
-  test("the body schema accepts any string as the card id", () => {
-    expect(
-      createCommentRequestSchema.safeParse({ ticketCardId: "not-a-uuid", msg: "x" }).success,
-    ).toBe(true);
-  });
-
-  // NOTE: nothing checks the card exists, so a bad id reaches the database and
-  // comes back as a foreign-key error.
-  test("a card that does not exist surfaces as a 500 carrying the driver message", async () => {
-    db.ticketComment.create.mockRejectedValueOnce(
-      new Error("Foreign key constraint failed on the field: `ticketCardId`"),
-    );
+  test("the handler answers 403 for both refusals", async () => {
+    (isBoardMember as unknown as Mock).mockResolvedValueOnce(false);
     const rep = reply();
 
     await createCommentHandler(
@@ -190,8 +171,58 @@ describe("createComment", () => {
       rep,
     );
 
-    expect(answer(rep).code).toBe(500);
-    expect(answer(rep).body.message).toContain("ticketCardId");
+    expect(answer(rep).code).toBe(403);
+  });
+
+  test("attributes the comment to the caller", async () => {
+    await createComment({ ticketCardId: OWN_CARD, msg: "x" }, USER);
+
+    expect(db.ticketComment.create.mock.calls[0][0].data.createdById).toBe(USER);
+  });
+
+  // msg was a bare z.string(), so a comment could be empty or arbitrarily large —
+  // a way to fill another org's board with text. See issues.txt 30.1.
+  test("the body schema bounds the message", () => {
+    expect(createCommentRequestSchema.safeParse({ ticketCardId: OWN_CARD, msg: "" }).success).toBe(
+      false,
+    );
+    expect(
+      createCommentRequestSchema.safeParse({ ticketCardId: OWN_CARD, msg: "x".repeat(100_000) })
+        .success,
+    ).toBe(false);
+    expect(
+      createCommentRequestSchema.safeParse({ ticketCardId: OWN_CARD, msg: "looks fine" }).success,
+    ).toBe(true);
+  });
+
+  test("the body schema accepts any string as the card id", () => {
+    expect(
+      createCommentRequestSchema.safeParse({ ticketCardId: "not-a-uuid", msg: "x" }).success,
+    ).toBe(true);
+  });
+
+  // The raw driver message used to go back to the caller, naming the model, the
+  // column and the constraint — and telling them whether a card id exists.
+  // See issues.txt 30.3.
+  test("a database failure answers 500 with a fixed message", async () => {
+    db.ticketComment.create.mockRejectedValueOnce(
+      new Error("Foreign key constraint failed on the field: `ticketCardId`"),
+    );
+    const rep = reply();
+
+    await createCommentHandler(
+      {
+        params: { id: OWN_CARD },
+        body: { ticketCardId: OWN_CARD, msg: "x" },
+        userId: USER,
+      } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({
+      code: 500,
+      body: { status: "failed", message: "Something went wrong" },
+    });
   });
 });
 
@@ -218,10 +249,11 @@ describe("deleteComment", () => {
     expect(answer(rep)).toEqual({ code: 204, body: undefined });
   });
 
-  // NOTE: createdById is not part of any unique constraint, so it rides along
-  // as a filter — a miss raises P2025, which the handler turns into a 500. A
-  // caller cannot tell "not yours" from "does not exist" from "server broke".
-  test("someone else's comment answers 500, not 403", async () => {
+  // createdById is not part of any unique constraint, so it rides along as a filter
+  // and a miss raises P2025 — which used to become a 500 carrying Prisma's own
+  // message. 404 covers both "not yours" and "does not exist", which is the right
+  // answer for either. See issues.txt 30.3.
+  test("someone else's comment answers 404, with no driver message", async () => {
     db.ticketComment.delete.mockRejectedValueOnce(
       Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
     );
@@ -229,8 +261,10 @@ describe("deleteComment", () => {
 
     await deleteCommentHandler({ params: { id: COMMENT }, userId: USER } as never, rep);
 
-    expect(answer(rep).code).toBe(500);
-    expect(answer(rep).body.message).toContain("Record to delete does not exist");
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { status: "failed", message: "Comment not found" },
+    });
   });
 
   // NOTE: the delete route declares no schema at all, so the id reaches Prisma
@@ -274,13 +308,23 @@ describe("the WhatsApp ticket notifications", () => {
     expect(sendTextMessage).not.toHaveBeenCalled();
   });
 
-  // NOTE: lastReceivedMessageTimeStamp records when the org last received a
-  // message FROM that number — dashboard.service.ts:20 counts it as the active
-  // 24-hour window. This guard aborts while that window is OPEN and proceeds
-  // once it has CLOSED, which is the inverse of the WhatsApp free-form rule.
-  test("refuses to send inside the twenty-four hour window", async () => {
+  // lastReceivedMessageTimeStamp records when the org last received a message FROM
+  // that number — the dashboard counts it as the active 24-hour window. The guard
+  // used to abort while that window was OPEN and proceed once it had CLOSED, which
+  // is the inverse of the WhatsApp free-form rule. See issues.txt 30.2.
+  test("sends inside the twenty-four hour window", async () => {
     (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
       contact({ lastReceivedMessageTimeStamp: new Date(NOW - 2 * 60 * 60 * 1000) }),
+    );
+
+    await sendTicketAssignedWaMessage(notify);
+
+    expect(sendTextMessage).toHaveBeenCalledOnce();
+  });
+
+  test("refuses once the window has closed", async () => {
+    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
+      contact({ lastReceivedMessageTimeStamp: new Date(NOW - 30 * 60 * 60 * 1000) }),
     );
 
     await sendTicketAssignedWaMessage(notify);
@@ -289,32 +333,22 @@ describe("the WhatsApp ticket notifications", () => {
     expect(log.trace).toHaveBeenCalled();
   });
 
-  test("sends once the window has closed", async () => {
-    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
-      contact({ lastReceivedMessageTimeStamp: new Date(NOW - 30 * 60 * 60 * 1000) }),
-    );
-
-    await sendTicketAssignedWaMessage(notify);
-
-    expect(sendTextMessage).toHaveBeenCalledOnce();
-  });
-
-  test("sends to a contact that has never messaged the org at all", async () => {
+  test("refuses a contact that has never messaged the org at all", async () => {
     (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(contact());
 
     await sendTicketCreateWaMessage(notify);
 
-    expect(sendTextMessage).toHaveBeenCalledOnce();
+    expect(sendTextMessage).not.toHaveBeenCalled();
   });
 
-  test("the boundary of exactly twenty-four hours sends", async () => {
+  test("the boundary of exactly twenty-four hours refuses", async () => {
     (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
       contact({ lastReceivedMessageTimeStamp: new Date(NOW - 24 * 60 * 60 * 1000) }),
     );
 
     await sendTicketAssignedWaMessage(notify);
 
-    expect(sendTextMessage).toHaveBeenCalledOnce();
+    expect(sendTextMessage).not.toHaveBeenCalled();
   });
 
   test("aborts when the phone cannot be parsed, before touching the database", async () => {
@@ -327,7 +361,9 @@ describe("the WhatsApp ticket notifications", () => {
   });
 
   test("marks the send as exempt from the conversation limit", async () => {
-    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(contact());
+    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
+      contact({ lastReceivedMessageTimeStamp: new Date(NOW - 60 * 60 * 1000) }),
+    );
 
     await sendTicketAssignedWaMessage(notify);
 
@@ -335,7 +371,9 @@ describe("the WhatsApp ticket notifications", () => {
   });
 
   test("both notification bodies name the board, column and ticket", async () => {
-    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValue(contact());
+    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValue(
+      contact({ lastReceivedMessageTimeStamp: new Date(NOW - 60 * 60 * 1000) }),
+    );
 
     await sendTicketAssignedWaMessage(notify);
     await sendTicketCreateWaMessage(notify);
@@ -347,17 +385,19 @@ describe("the WhatsApp ticket notifications", () => {
     }
   });
 
-  // NOTE: the link in the WhatsApp body is a hardcoded rateup.app URL while the
-  // email builds its link from FRONTEND_URL — the two disagree in any
-  // environment that is not production.
-  test("the WhatsApp link is hardcoded while the email link is configured", async () => {
-    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(contact());
+  // The WhatsApp body used to carry a hardcoded rateup.app URL while the email built
+  // its link from FRONTEND_URL, so outside production the two pointed at different
+  // environments. See issues.txt 30.5.
+  test("both links come from FRONTEND_URL", async () => {
+    (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
+      contact({ lastReceivedMessageTimeStamp: new Date(NOW - 60 * 60 * 1000) }),
+    );
 
     await sendTicketAssignedWaMessage(notify);
     await sendTicketAssignedEmail({ ...notify, email: "staff@example.test" });
 
     expect((sendTextMessage as unknown as Mock).mock.calls[0][2]).toContain(
-      "https://rateup.app/dashboard/tickets/",
+      "https://app.test.example/dashboard/tickets/",
     );
     const html = (notificationQueue.add as unknown as Mock).mock.calls[0][1].emailData.html;
     expect(html).toContain("https://app.test.example/dashboard/tickets/");
@@ -386,24 +426,25 @@ describe("the email ticket notifications", () => {
     );
   });
 
-  // NOTE: the plain-text part of the created-ticket mail says the ticket was
-  // assigned to the recipient, which is not what happened.
-  test("the created-ticket text part claims an assignment", async () => {
+  // The plain-text part of the created-ticket mail used to say the ticket had been
+  // assigned to the recipient, which is not what happened. See issues.txt 30.6.
+  test("the created-ticket text part says the ticket was created", async () => {
     await sendTicketCreateEmail({ ...notify, email: "staff@example.test" });
 
-    expect((notificationQueue.add as unknown as Mock).mock.calls[0][1].emailData.text).toContain(
-      "has been assigned to you",
-    );
+    const text = (notificationQueue.add as unknown as Mock).mock.calls[0][1].emailData.text;
+    expect(text).not.toContain("has been assigned to you");
+    expect(text).toContain("has been created");
   });
 
-  // NOTE: a queue failure is rethrown with the error concatenated onto a
-  // string, discarding the original stack — the same shape as issues.txt 22.4.
-  test("a queue failure rethrows a stringified error", async () => {
-    (notificationQueue.add as unknown as Mock).mockRejectedValueOnce(new Error("redis down"));
+  // A queue failure used to be rethrown with the error concatenated onto a string,
+  // discarding the original stack — the same shape as issues.txt 22.4.
+  test("a queue failure keeps the original error as its cause", async () => {
+    const cause = new Error("redis down");
+    (notificationQueue.add as unknown as Mock).mockRejectedValueOnce(cause);
 
     await expect(
       sendTicketAssignedEmail({ ...notify, email: "staff@example.test" }),
-    ).rejects.toThrow("Email sending failed. E:Error: redis down");
+    ).rejects.toMatchObject({ message: "Email sending failed", cause });
   });
 
   test("the failure propagates to the caller rather than being swallowed", async () => {
@@ -432,37 +473,16 @@ describe("ticket.schema", () => {
     expect(schemas).toEqual([createCommentRequestSchema]);
   });
 
-  test("the dead create schema requires fields no route accepts", () => {
-    expect(
-      createTicketRequestSchema.safeParse({
-        title: "x",
-        priority: "LOW",
-        teamId: "t",
-        assignedToId: "u",
-        firstComment: "c",
-      }).success,
-    ).toBe(true);
-  });
+  // Six schemas describing a ticket with a status, a teamId, an assignedToId and a
+  // deadline used to live in this file with no importer anywhere in src — the
+  // feature the module was originally going to be, rather than the kanban cards it
+  // stores. One declared `role` as a REQUEST BODY field, i.e. the caller stating
+  // their own role; the comment left in ticket.schema.ts records it so it is not
+  // restored as written. See issues.txt 30.4.
+  test("the file exports only the two schemas that are wired up", async () => {
+    const schema = await import("./ticket.schema.js");
 
-  // NOTE: the dead status schema takes the caller's role from the request body.
-  // Nothing uses it, but it records an intent worth not reviving.
-  test("the dead status schema reads the caller's role from the body", () => {
-    const parsed = updateStatusRequestSchema.safeParse({ status: "CLOSED", role: "SUPER_ADMIN" });
-
-    expect(parsed.success).toBe(true);
-    expect((parsed as any).data.role).toBe("SUPER_ADMIN");
-  });
-
-  test("the dead status schema rejects a role outside its two", () => {
-    expect(updateStatusRequestSchema.safeParse({ status: "CLOSED", role: "MEMBER" }).success).toBe(
-      false,
-    );
-  });
-
-  test("the dead update schema carries a denormalised assignee name", () => {
-    expect(
-      updateTicketRequestSchema.safeParse({ assignedToId: "u", assignedToName: "Ann" }).success,
-    ).toBe(true);
+    expect(Object.keys(schema).sort()).toEqual(["createCommentRequestSchema", "idParamsSchema"]);
   });
 
   test("the id params schema accepts any string, not a uuid", () => {

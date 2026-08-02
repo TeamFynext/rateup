@@ -131,15 +131,15 @@ describe("completeInviteHandler", () => {
     expect(addZapierTriggerMock).not.toHaveBeenCalled();
   });
 
-  // NOTE: the 200 is sent before the Zapier trigger is queued, so a queue failure
-  // makes the handler attempt a second, contradictory 500 reply on the same request.
-  test("still tries to send a 500 after the success reply when the Zapier trigger throws", async () => {
+  // The trigger is queued before the reply is sent, so a queue failure produces one
+  // 500 rather than a 500 contradicting an already-sent 200.
+  test("answers a single 500 when the Zapier trigger throws", async () => {
     addZapierTriggerMock.mockRejectedValue(new Error("queue down"));
     const reply = makeReply();
 
     await completeInviteHandler(makeRequest(), reply);
 
-    expect(reply.code).toHaveBeenNthCalledWith(1, 200);
-    expect(reply.code).toHaveBeenNthCalledWith(2, 500);
+    expect(reply.code).toHaveBeenCalledTimes(1);
+    expect(reply.code).toHaveBeenCalledWith(500);
   });
 });

@@ -1,6 +1,5 @@
 import {
   ShopifyEvents,
-  SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
   WaMessageAssignStatus,
   WaTemplateComponentType,
@@ -10,11 +9,11 @@ import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js
 import type { AutomationWithGraph } from "../whatsappSurvey/node-types.js";
 import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
+import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
 import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 import {
   findRecentAutomation,
   logAutomationAction,
@@ -28,6 +27,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
+import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { assignWaMessageToUser } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
@@ -57,6 +57,11 @@ import {
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
+// validateTimeWindow parses "HH:mm" slots, which needs customParseFormat. This module
+// used to get it only as a side effect of importing wasurvey.utils.js for assignChat —
+// so dropping that import would have made every time-slot comparison silently return
+// false, and automations would have stopped firing during business hours with no error.
+dayjs.extend(customParseFormat);
 
 export interface automationProps {
   commands: string[];
@@ -283,38 +288,17 @@ export enum ReplyComponentType {
   AiBot = "AiBot",
 }
 
+/**
+ * See issues.txt 17.2 — one of four copies of the same gate, now sharing
+ * enforceWhatsappCountLimit. Automated replies are unlimited by design: no plan in
+ * subscription.data.ts states a whatsapp count. A plan that does name one is still
+ * capped.
+ */
 export async function verifyAutomationLimit(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    let orgId = request.user.orgId;
-    const subscription = request.subscription;
-    if (!subscription) throw new Error("Subscription not found");
-
-    const automatedReplyCount = await prisma.waAutomatedReply.count({
-      where: {
-        orgId: orgId,
-      },
-    });
-
-    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
-    // `conversation.count`, see global.d.ts) - same gap as flow.utils.ts's
-    // whatsappFlowFeatures. Typed via the generic (rather than `as any` on
-    // the input) to describe the shape this code expects without asserting
-    // it's really there.
-    const whatsappAutomationFeature = getNestedProperty<{ count?: { max: number } }>(
-      subscription.features,
-      SubscriptionFeaturePathName.Whatsapp,
-    );
-    if (automatedReplyCount >= (whatsappAutomationFeature?.count?.max ?? Infinity)) {
-      throw new Error(
-        `You have reached the maximum limit of ${whatsappAutomationFeature?.count?.max} automated replies.`,
-      );
-    }
-  } catch (e) {
-    return reply.code(403).send({
-      message: e instanceof Error ? e.message : "Unknown error",
-      displayMessageInClient: true,
-    });
-  }
+  return await enforceWhatsappCountLimit(request, reply, {
+    label: "automated replies",
+    count: (orgId) => prisma.waAutomatedReply.count({ where: { orgId } }),
+  });
 }
 
 /**
@@ -996,6 +980,7 @@ async function executeCloseTicketAction(
   // Update the contact to closed status using the main update logic, pass existing contact
   await updateContactById(
     contact.id,
+    contact.orgId,
     {
       waMessageAssignStatus: status,
       messageId: generateInternalMessageId(),

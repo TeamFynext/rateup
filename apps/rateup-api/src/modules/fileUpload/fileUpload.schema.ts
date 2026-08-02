@@ -32,12 +32,11 @@ export const dataExtractFileMimeTypes = [
   ODS_MIMETYPE,
 ];
 
-const uploadFileSchema = z.object({
-  file: z.any().refine((value) => allowedMimeTypes.includes(value), {
-    path: ["file"],
-    error: "Invalid file format",
-  }),
-});
+// uploadFileSchema used to live here: `z.any().refine(value =>
+// allowedMimeTypes.includes(value))`, which compared the file VALUE against a list
+// of mimetypes and so could never pass. No route used it, and it read as though
+// upload validation were declarative when the real check is validateFile.
+// Deleted. See issues.txt 24.8.
 
 const fileDeleteInputSchema = z.object({
   fileKeyArray: z
@@ -49,9 +48,7 @@ const fileDeleteInputSchema = z.object({
     .min(1),
 });
 
-export type UploadFileInput = z.infer<typeof uploadFileSchema>;
-
 export type fileDeleteInput = z.infer<typeof fileDeleteInputSchema>;
 
 // Auto-exported after fastify-zod migration
-export { uploadFileSchema, fileDeleteInputSchema };
+export { fileDeleteInputSchema };
