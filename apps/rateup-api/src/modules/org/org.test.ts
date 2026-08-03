@@ -44,7 +44,13 @@ vi.mock("./businessHour.controller.js", () => ({
 
 vi.mock("../../utils/webhook.js", () => ({ getWebhookSecret: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
+vi.mock("../../utils/auth.js", async () => {
+  const { isRootOrg } = await vi.importActual<any>("../../utils/auth.js");
+  // assertRootOrg is stubbed so route registration can be identity-compared;
+  // isRootOrg is the real predicate, since pauseOrgHandler's platform-operator
+  // branch is one of the things under test.
+  return { assertRootOrg: vi.fn(), isRootOrg };
+});
 vi.mock("../../utils/checkRoleHandler.js", () => ({
   checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
 }));
@@ -54,6 +60,7 @@ import { getWebhookSecret } from "../../utils/webhook.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import {
+  deleteOrgAdminHandler,
   deleteOrgHandler,
   getWebhookClientSecretHandler,
   pauseOrgHandler,
@@ -107,10 +114,13 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("deleteOrgHandler", () => {
-  // NOTE: the handler passes request.params.orgId straight to deleteOrg and
-  // never reads request.user. The role check on the route establishes that the
-  // caller is a SUPER_ADMIN — of their own organisation.
-  test("deletes whatever org the path names", async () => {
+  // The handler passed request.params.orgId straight to deleteOrg and never
+  // read request.user. The route's only gate, checkRoleHandler(["SUPER_ADMIN"]),
+  // establishes that the caller is an owner — of their own organisation — so
+  // the owner of any org could delete any other by naming its id, and the
+  // deletion cascades to teams, members, surveys, contacts, integrations,
+  // webhooks and subscriptions.
+  test("refuses to delete an org other than the session's", async () => {
     const rep = reply();
 
     await deleteOrgHandler(
@@ -118,33 +128,50 @@ describe("deleteOrgHandler", () => {
       rep,
     );
 
+    expect(svc.deleteOrg).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(403);
+  });
+
+  test("deletes the session org", async () => {
+    const rep = reply();
+
+    await deleteOrgHandler(
+      { params: { orgId: OWN_ORG }, user: { orgId: OWN_ORG, role: "SUPER_ADMIN" } } as never,
+      rep,
+    );
+
+    expect(svc.deleteOrg).toHaveBeenCalledWith(OWN_ORG);
+    expect(answer(rep).code).toBe(200);
+  });
+
+  test("refuses a request with no session org", async () => {
+    const rep = reply();
+
+    await deleteOrgHandler({ params: { orgId: OWN_ORG }, user: {} } as never, rep);
+
+    expect(svc.deleteOrg).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(401);
+  });
+
+  // The platform-operator twin keeps the old behaviour, which is what it was
+  // always for: it is gated on assertRootOrg rather than on a role.
+  test("the admin twin deletes whatever org the path names", async () => {
+    const rep = reply();
+
+    await deleteOrgAdminHandler({ params: { orgId: VICTIM_ORG } } as never, rep);
+
     expect(svc.deleteOrg).toHaveBeenCalledWith(VICTIM_ORG);
     expect(answer(rep).code).toBe(200);
   });
 
-  test("never consults the session org", async () => {
-    const req: any = {
-      params: { orgId: VICTIM_ORG },
-      get user() {
-        throw new Error("request.user was read");
-      },
-    };
-
-    await expect(deleteOrgHandler(req, reply())).resolves.toBeUndefined();
-    expect(svc.deleteOrg).toHaveBeenCalledWith(VICTIM_ORG);
-  });
-
-  // NOTE: the same handler is registered twice — once behind a role check and
-  // once behind the platform-org check. The second registration is what the
-  // first was presumably meant to be.
-  test("the same handler is registered under two different gates", async () => {
+  test("the two routes now carry different handlers", async () => {
     const { routes } = await collectRoutes();
 
     const byId = routes.find((r) => r.method === "DELETE" && r.url === "/:orgId");
     const admin = routes.find((r) => r.method === "DELETE" && r.url === "/admin/:orgId");
 
     expect(byId.handler).toBe(deleteOrgHandler);
-    expect(admin.handler).toBe(deleteOrgHandler);
+    expect(admin.handler).toBe(deleteOrgAdminHandler);
     expect((byId.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
     expect(admin.opts.preHandler).toBe(assertRootOrg);
   });
@@ -153,7 +180,7 @@ describe("deleteOrgHandler", () => {
     svc.deleteOrg.mockRejectedValueOnce(new Error("Organization with ID x not found."));
     const rep = reply();
 
-    await deleteOrgHandler({ params: { orgId: VICTIM_ORG } } as never, rep);
+    await deleteOrgHandler({ params: { orgId: OWN_ORG }, user: { orgId: OWN_ORG } } as never, rep);
 
     expect(answer(rep)).toEqual({
       code: 500,
@@ -167,7 +194,10 @@ describe("deleteOrgHandler", () => {
 // ===========================================================================
 
 describe("pauseOrgHandler", () => {
-  test("pauses whatever org the path names", async () => {
+  // The same shape as 41.1: any SUPER_ADMIN could suspend any organisation on
+  // the platform, which is a full service interruption for that tenant's staff
+  // and its customer-facing surveys.
+  test("refuses to pause an org other than the session's", async () => {
     const rep = reply();
 
     await pauseOrgHandler(
@@ -179,20 +209,57 @@ describe("pauseOrgHandler", () => {
       rep,
     );
 
+    expect(svc.pauseOrg).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(403);
+  });
+
+  test("pauses the session org", async () => {
+    const rep = reply();
+
+    await pauseOrgHandler(
+      {
+        params: { id: OWN_ORG },
+        body: { isPaused: true },
+        user: { orgId: OWN_ORG, role: "SUPER_ADMIN" },
+      } as never,
+      rep,
+    );
+
+    expect(svc.pauseOrg).toHaveBeenCalledWith(OWN_ORG, { isPaused: true });
+    expect(answer(rep).code).toBe(200);
+  });
+
+  // There is no /admin twin for pause, so the platform operator keeps the
+  // cross-org path through the root org rather than losing the capability.
+  test("the root org may still pause any org", async () => {
+    const previous = process.env.ROOT_ORG;
+    process.env.ROOT_ORG = OWN_ORG;
+    const rep = reply();
+
+    await pauseOrgHandler(
+      {
+        params: { id: VICTIM_ORG },
+        body: { isPaused: true },
+        user: { orgId: OWN_ORG, role: "SUPER_ADMIN" },
+      } as never,
+      rep,
+    );
+
+    process.env.ROOT_ORG = previous;
     expect(svc.pauseOrg).toHaveBeenCalledWith(VICTIM_ORG, { isPaused: true });
     expect(answer(rep).code).toBe(200);
   });
 
-  test("never consults the session org", async () => {
-    const req: any = {
-      params: { id: VICTIM_ORG },
-      body: { isPaused: true },
-      get user() {
-        throw new Error("request.user was read");
-      },
-    };
+  test("refuses a request with no session org", async () => {
+    const rep = reply();
 
-    await expect(pauseOrgHandler(req, reply())).resolves.toBeUndefined();
+    await pauseOrgHandler(
+      { params: { id: OWN_ORG }, body: { isPaused: true }, user: {} } as never,
+      rep,
+    );
+
+    expect(svc.pauseOrg).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(401);
   });
 
   test("the body schema bounds what can be written", () => {
@@ -202,7 +269,10 @@ describe("pauseOrgHandler", () => {
     expect((parsed as any).data).not.toHaveProperty("name");
   });
 
-  test("both destructive routes are gated on role rather than on the platform org", async () => {
+  // The route gates are unchanged — the role check is still the right check for
+  // "may this member act on their own org". What changed is that the handlers
+  // now take the org from the session rather than the path.
+  test("both destructive routes are gated on role", async () => {
     const { routes } = await collectRoutes();
 
     const pause = routes.find((r) => r.url === "/pause/:id");
@@ -261,14 +331,17 @@ describe("updateRoleController", () => {
     });
   });
 
-  // NOTE: OrgMember.role is a Prisma enum of SUPER_ADMIN, ADMIN and MEMBER
-  // (prisma/schema.prisma:20-27, :592), but the body schema is a bare
-  // z.string() — so an unknown role passes validation and is rejected by the
-  // database instead, as a 500.
-  test("the role schema accepts any string, not just the three real roles", () => {
-    expect(updateRoleSchema.safeParse({ role: "SUPER_ADMIN" }).success).toBe(true);
-    expect(updateRoleSchema.safeParse({ role: "not-a-role" }).success).toBe(true);
-    expect(updateRoleSchema.safeParse({ role: "" }).success).toBe(true);
+  // OrgMember.role is a Prisma enum of SUPER_ADMIN, ADMIN and MEMBER
+  // (prisma/schema.prisma:20-27, :592), but the body schema was a bare
+  // z.string(), so an unknown role passed validation and was rejected by
+  // Postgres instead — a 500 telling the operator the server broke.
+  test("the role schema accepts only the three real roles", () => {
+    for (const role of ["SUPER_ADMIN", "ADMIN", "MEMBER"]) {
+      expect(updateRoleSchema.safeParse({ role }).success).toBe(true);
+    }
+    expect(updateRoleSchema.safeParse({ role: "not-a-role" }).success).toBe(false);
+    expect(updateRoleSchema.safeParse({ role: "" }).success).toBe(false);
+    expect(updateRoleSchema.safeParse({ role: "super_admin" }).success).toBe(false);
   });
 });
 

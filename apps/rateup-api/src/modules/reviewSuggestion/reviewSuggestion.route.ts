@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createReviewSuggestionsSchema,
   byReviewSuggestionIdSchema,
+  publicReviewsQuerySchema,
   updateReviewSuggestionSchema,
 } from "./reviewSuggestion.schema.js";
 import {
@@ -14,6 +15,7 @@ import {
   updateReviewSuggestionHandler,
 } from "./reviewSuggestion.controller.js";
 import { checkSession } from "../../utils/checkSession.js";
+import { rateLimit } from "../../utils/rateLimit.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
 import {
   bySurveyTeamMapIdParamsSchema,
@@ -33,11 +35,16 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     },
     getReviewsByTeamIdHandler,
   );
-  server.get(
+  server.get<{
+    Params: { surveyTeamMapId: string };
+    Querystring: { language?: string };
+  }>(
     "/public/:surveyTeamMapId",
     {
+      preHandler: rateLimit({ max: 120, windowSeconds: 3600, key: "reviewSuggestionPublic" }),
       schema: {
         params: bySurveyTeamMapIdParamsSchema,
+        querystring: publicReviewsQuerySchema,
       },
     },
     getReviewsBySurveyTeamMapIdHandler,
@@ -69,13 +76,15 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
       preHandler: [checkSession],
       schema: {
         params: byReviewSuggestionIdSchema,
+        body: updateReviewSuggestionSchema,
       },
     },
     updateReviewSuggestionHandler,
   );
-  server.delete(
+  server.delete<{ Params: byReviewSuggestionIdSchema }>(
     "/:reviewSuggestionId",
     {
+      preHandler: [checkSession],
       schema: {
         params: byReviewSuggestionIdSchema,
       },

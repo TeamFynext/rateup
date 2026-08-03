@@ -1,16 +1,40 @@
 import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { validateRedemption, generateRedemptionCode } from "../redemptionValidator.js";
+import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.schema.js";
 import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 
+/**
+ * A transaction client — what `prisma.$transaction(async (tx) => …)` hands the
+ * callback. Everything a redemption writes goes through one of these.
+ */
+type Tx = Prisma.TransactionClient;
+
+const EXPORT_LIMIT = 50_000;
+
+function isRecordNotFound(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2025";
+}
+
+async function moveBalance(tx: Tx, accountId: string, cost: number, delta: number) {
+  try {
+    return await tx.customerLoyaltyAccount.update({
+      where: { id: accountId, currentPoints: { gte: cost } },
+      data: { currentPoints: { increment: delta } },
+    });
+  } catch (error) {
+    if (isRecordNotFound(error)) {
+      throw new Error(`Insufficient points. Required: ${cost}`);
+    }
+    throw error;
+  }
+}
+
 export async function redeemReward(programId: string, data: RedeemRewardInput) {
-  // Get customer
-  const customer = await prisma.customerLoyaltyAccount.findUnique({
-    where: {
-      id: data.customerId,
-    },
+  const customer = await prisma.customerLoyaltyAccount.findFirst({
+    where: { id: data.customerId, programId },
     include: {
       contact: true,
       currentTier: true,
@@ -21,9 +45,8 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     throw new Error("Customer account not found");
   }
 
-  // Get reward
-  const reward = await prisma.loyaltyReward.findUnique({
-    where: { id: data.rewardId },
+  const reward = await prisma.loyaltyReward.findFirst({
+    where: { id: data.rewardId, programId },
   });
 
   if (!reward) {
@@ -52,73 +75,63 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   if (reward.rewardType === "point") {
     const pointsToAdd = Number((reward.rewardValue as { points?: number })?.points) || 0;
 
-    // Deduct redemption cost
-    const transaction = await prisma.loyaltyTransaction.create({
-      data: {
-        accountId: customer.id,
-        programId,
-        transactionType: "redeem",
-        source: "reward_redemption",
-        points: -reward.pointsCost,
-        balanceAfter: customer.currentPoints - reward.pointsCost,
-        description: `Redeemed: ${reward.name} (Cost: ${reward.pointsCost})`,
-        metadata: {
-          rewardId: reward.id,
-          rewardName: reward.name,
-          redemptionType: "point",
-        },
-      },
-    });
+    const instantRedemptionCode = await generateRedemptionCode();
 
-    // Update customer balance
-    await prisma.customerLoyaltyAccount.update({
-      where: { id: customer.id },
-      data: {
-        currentPoints: {
-          increment: pointsToAdd - reward.pointsCost,
-        },
-      },
-    });
+    const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
+      const account = await moveBalance(
+        tx,
+        customer.id,
+        reward.pointsCost,
+        pointsToAdd - reward.pointsCost,
+      );
 
-    const instantRedemptionCode = "INSTANT_" + Date.now().toString(36).toUpperCase();
-
-    const redemption = await prisma.loyaltyRedemption.create({
-      data: {
-        accountId: customer.id,
-        rewardId: reward.id,
-        transactionId: transaction.id,
-        redemptionCode: instantRedemptionCode,
-        status: "USED",
-        rulesValidatedAt: new Date(),
-        rulesValidationPassed: true,
-        usedAt: new Date(),
-        usedContext: {
-          locationId: data.locationId,
-          orderId: data.orderId,
-          notes: data.notes,
-          redemptionType: "point",
-        },
-      },
-    });
-
-    // Update stock
-    if (reward.stockQuantity !== null) {
-      await prisma.loyaltyReward.update({
-        where: { id: reward.id },
+      const transaction = await tx.loyaltyTransaction.create({
         data: {
-          stockRedeemed: {
-            increment: 1,
+          accountId: customer.id,
+          programId,
+          transactionType: "redeem",
+          source: "reward_redemption",
+          points: pointsToAdd - reward.pointsCost,
+          balanceAfter: account.currentPoints,
+          description: `Redeemed: ${reward.name} (Cost: ${reward.pointsCost})`,
+          metadata: {
+            rewardId: reward.id,
+            rewardName: reward.name,
+            redemptionType: "point",
           },
         },
       });
-    }
+
+      const created = await tx.loyaltyRedemption.create({
+        data: {
+          accountId: customer.id,
+          rewardId: reward.id,
+          transactionId: transaction.id,
+          redemptionCode: instantRedemptionCode,
+          status: "USED",
+          rulesValidatedAt: new Date(),
+          rulesValidationPassed: true,
+          usedAt: new Date(),
+          usedContext: {
+            locationId: data.locationId,
+            orderId: data.orderId,
+            notes: data.notes,
+            redemptionType: "point",
+          },
+        },
+      });
+
+      await burnStock(tx, reward);
+
+      return { redemption: created, balanceAfter: account.currentPoints };
+    });
 
     if (customer.contact?.phone && customer.contact?.orgId) {
       await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
         customerPhone: customer.contact.phone,
         customerName: customer.contact.name || "Customer",
         points: pointsToAdd,
-        balanceAfter: customer.currentPoints - reward.pointsCost + pointsToAdd,
+        balanceAfter,
         reason: `Redeemed point reward: ${reward.name}`,
       });
     }
@@ -138,85 +151,70 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
     const status = requiresApproval ? "PENDING" : "APPROVED";
 
-    let transaction;
-    if (!requiresApproval) {
-      // Deduct points for coupon
-      transaction = await prisma.loyaltyTransaction.create({
-        data: {
-          accountId: customer.id,
-          programId,
-          transactionType: "redeem",
-          source: "reward_redemption",
-          points: -reward.pointsCost,
-          balanceAfter: customer.currentPoints - reward.pointsCost,
-          description: data.notes || `Redeemed coupon: ${reward.name}`,
-          metadata: {
-            rewardId: reward.id,
-            rewardName: reward.name,
-            redemptionCode,
-            redemptionType: "coupon",
-          },
-        },
-      });
+    const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
+      let transaction = null;
+      let balance = customer.currentPoints;
 
-      await prisma.customerLoyaltyAccount.update({
-        where: { id: customer.id },
-        data: {
-          currentPoints: {
-            decrement: reward.pointsCost,
-          },
-        },
-      });
-    }
+      if (!requiresApproval) {
+        const account = await moveBalance(tx, customer.id, reward.pointsCost, -reward.pointsCost);
+        balance = account.currentPoints;
 
-    // Create redemption record to track usage
-    const redemption = await prisma.loyaltyRedemption.create({
-      data: {
-        accountId: customer.id,
-        rewardId: data.rewardId,
-        transactionId: transaction?.id,
-        redemptionCode,
-        status,
-        rulesValidatedAt: new Date(),
-        rulesValidationPassed: true,
-        usedContext: {
-          locationId: data.locationId,
-          orderId: data.orderId,
-          notes: data.notes,
-          redemptionType: "coupon",
-        },
-      },
-    });
-
-    if (!requiresApproval) {
-      // Update stock
-      if (reward.stockQuantity !== null) {
-        await prisma.loyaltyReward.update({
-          where: { id: reward.id },
+        transaction = await tx.loyaltyTransaction.create({
           data: {
-            stockRedeemed: {
-              increment: 1,
+            accountId: customer.id,
+            programId,
+            transactionType: "redeem",
+            source: "reward_redemption",
+            points: -reward.pointsCost,
+            balanceAfter: balance,
+            description: data.notes || `Redeemed coupon: ${reward.name}`,
+            metadata: {
+              rewardId: reward.id,
+              rewardName: reward.name,
+              redemptionCode,
+              redemptionType: "coupon",
             },
           },
         });
       }
 
-      if (customer.contact?.phone && customer.contact?.orgId) {
-        await dispatchLoyaltyNotification(
-          customer.contact.orgId,
-          LoyaltyEventType.REWARD_REDEEMED,
-          {
-            customerPhone: customer.contact.phone,
-            customerName: customer.contact.name || "Customer",
-            rewardName: reward.name,
-            redemptionCode: redemptionCode,
-            points: -reward.pointsCost,
-            balanceAfter: customer.currentPoints - reward.pointsCost,
-            rewardId: reward.id,
-            rewardWaTemplateId: reward.waTemplateId,
+      // Create redemption record to track usage
+      const created = await tx.loyaltyRedemption.create({
+        data: {
+          accountId: customer.id,
+          rewardId: data.rewardId,
+          transactionId: transaction?.id,
+          redemptionCode,
+          status,
+          rulesValidatedAt: new Date(),
+          rulesValidationPassed: true,
+          usedContext: {
+            locationId: data.locationId,
+            orderId: data.orderId,
+            notes: data.notes,
+            redemptionType: "coupon",
           },
-        );
+        },
+      });
+
+      if (!requiresApproval) {
+        await burnStock(tx, reward);
       }
+
+      return { redemption: created, balanceAfter: balance };
+    });
+
+    if (!requiresApproval && customer.contact?.phone && customer.contact?.orgId) {
+      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_REDEEMED, {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        rewardName: reward.name,
+        redemptionCode: redemptionCode,
+        points: -reward.pointsCost,
+        balanceAfter,
+        rewardId: reward.id,
+        rewardWaTemplateId: reward.waTemplateId,
+      });
     }
 
     return {
@@ -249,72 +247,75 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
   const status = requiresApproval ? "PENDING" : "APPROVED";
 
-  let transaction = null;
-  if (requiresApproval) {
-    // Pending approval - no points deducted yet
-    transaction = await prisma.loyaltyTransaction.create({
-      data: {
-        accountId: customer.id,
-        programId,
-        transactionType: "redeem",
-        source: "reward_redemption",
-        points: 0,
-        balanceAfter: customer.currentPoints,
-        description: data.notes || `Pending: ${reward.name}`,
-        metadata: {
-          rewardId: reward.id,
-          rewardName: reward.name,
-          redemptionCode,
-          status: "pending_approval",
-          redemptionType: reward.rewardType,
-        },
-      },
-    });
-  } else {
-    // Deduct points
-    transaction = await prisma.loyaltyTransaction.create({
-      data: {
-        accountId: customer.id,
-        programId,
-        transactionType: "redeem",
-        source: "reward_redemption",
-        points: -reward.pointsCost,
-        balanceAfter: customer.currentPoints - reward.pointsCost,
-        description: data.notes || `Redeemed: ${reward.name}`,
-        metadata: {
-          rewardId: reward.id,
-          rewardName: reward.name,
-          redemptionCode,
-          shortCode,
-          redemptionType: reward.rewardType,
-        },
-      },
-    });
-
-    await prisma.customerLoyaltyAccount.update({
-      where: { id: customer.id },
-      data: {
-        currentPoints: {
-          decrement: reward.pointsCost,
-        },
-      },
-    });
-
-    await prisma.customerReward.update({
+  const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
+    await tx.customerReward.upsert({
       where: {
         rewardId_accountId: {
           rewardId: reward.id,
           accountId: customer.id,
         },
       },
-      data: {
+      create: {
+        rewardId: reward.id,
+        accountId: customer.id,
         shortCode,
-        status: "REDEEMED",
+        status: requiresApproval ? "ISSUED" : "REDEEMED",
+      },
+      update: {
+        shortCode,
+        ...(requiresApproval ? {} : { status: "REDEEMED" as const }),
       },
     });
 
-    // Create redemption record
-    await prisma.loyaltyRedemption.create({
+    let transaction;
+    let balance = customer.currentPoints;
+
+    if (requiresApproval) {
+      // Pending approval - no points deducted yet
+      transaction = await tx.loyaltyTransaction.create({
+        data: {
+          accountId: customer.id,
+          programId,
+          transactionType: "redeem",
+          source: "reward_redemption",
+          points: 0,
+          balanceAfter: balance,
+          description: data.notes || `Pending: ${reward.name}`,
+          metadata: {
+            rewardId: reward.id,
+            rewardName: reward.name,
+            redemptionCode,
+            shortCode,
+            status: "pending_approval",
+            redemptionType: reward.rewardType,
+          },
+        },
+      });
+    } else {
+      const account = await moveBalance(tx, customer.id, reward.pointsCost, -reward.pointsCost);
+      balance = account.currentPoints;
+
+      transaction = await tx.loyaltyTransaction.create({
+        data: {
+          accountId: customer.id,
+          programId,
+          transactionType: "redeem",
+          source: "reward_redemption",
+          points: -reward.pointsCost,
+          balanceAfter: balance,
+          description: data.notes || `Redeemed: ${reward.name}`,
+          metadata: {
+            rewardId: reward.id,
+            rewardName: reward.name,
+            redemptionCode,
+            shortCode,
+            redemptionType: reward.rewardType,
+          },
+        },
+      });
+    }
+
+    const created = await tx.loyaltyRedemption.create({
       data: {
         accountId: customer.id,
         rewardId: data.rewardId,
@@ -333,54 +334,56 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       },
     });
 
-    // Update stock
-    if (reward.stockQuantity !== null) {
-      await prisma.loyaltyReward.update({
-        where: { id: reward.id },
-        data: {
-          stockRedeemed: {
-            increment: 1,
-          },
-        },
-      });
+    if (!requiresApproval) {
+      await burnStock(tx, reward);
     }
 
-    if (customer.contact?.phone && customer.contact?.orgId) {
-      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_ISSUED, {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        rewardName: reward.name,
-        redemptionCode: shortCode,
-        points: -reward.pointsCost,
-        balanceAfter: customer.currentPoints - reward.pointsCost,
-        rewardId: reward.id,
-        rewardWaTemplateId: reward.waTemplateId,
-      });
-    }
+    return { redemption: created, balanceAfter: balance };
+  });
+
+  if (!requiresApproval && customer.contact?.phone && customer.contact?.orgId) {
+    await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_ISSUED, {
+      customerPhone: customer.contact.phone,
+      customerName: customer.contact.name || "Customer",
+      rewardName: reward.name,
+      redemptionCode: shortCode,
+      points: -reward.pointsCost,
+      balanceAfter,
+      rewardId: reward.id,
+      rewardWaTemplateId: reward.waTemplateId,
+    });
   }
 
   return {
+    redemption,
     message: requiresApproval
       ? "Redemption pending approval"
       : `Reward assigned successfully. Short code: ${shortCode}`,
-    redemptionCode: requiresApproval ? redemptionCode : undefined,
-    shortCode: requiresApproval ? undefined : shortCode,
+    redemptionCode,
+    shortCode,
   };
 }
 
-// Helper function to generate short code
-function generateRewardShortCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+async function burnStock(tx: Tx, reward: { id: string; stockQuantity: number | null }) {
+  if (reward.stockQuantity === null) return;
+
+  await tx.loyaltyReward.update({
+    where: { id: reward.id },
+    data: {
+      stockRedeemed: {
+        increment: 1,
+      },
+    },
+  });
 }
 
-export async function verifyRedemption(redemptionCode: string) {
-  const redemption = await prisma.loyaltyRedemption.findUnique({
-    where: { redemptionCode },
+function ownedByOrg(orgId: string) {
+  return { account: { program: { orgId } } };
+}
+
+export async function verifyRedemption(redemptionCode: string, orgId: string) {
+  const redemption = await prisma.loyaltyRedemption.findFirst({
+    where: { redemptionCode, ...ownedByOrg(orgId) },
     include: {
       reward: true,
       account: {
@@ -403,9 +406,9 @@ export async function verifyRedemption(redemptionCode: string) {
   };
 }
 
-export async function applyRedemption(data: ApplyRedemptionInput) {
-  const redemption = await prisma.loyaltyRedemption.findUnique({
-    where: { redemptionCode: data.redemptionCode },
+export async function applyRedemption(data: ApplyRedemptionInput, orgId: string) {
+  const redemption = await prisma.loyaltyRedemption.findFirst({
+    where: { redemptionCode: data.redemptionCode, ...ownedByOrg(orgId) },
     include: {
       reward: true,
       account: {
@@ -428,54 +431,53 @@ export async function applyRedemption(data: ApplyRedemptionInput) {
     throw new Error("Redemption already applied");
   }
 
-  // Mark as used
-  const updated = await prisma.loyaltyRedemption.update({
-    where: { id: redemption.id },
-    data: {
-      status: "USED",
-      usedAt: new Date(),
-      usedContext: {
-        ...redemption.usedContext,
-        appliedBy: data.appliedBy,
-        applyNotes: data.notes,
-        appliedAt: new Date().toISOString(),
-      },
-    },
-    include: {
-      account: {
-        include: {
-          contact: true,
-        },
-      },
-      reward: true,
-    },
-  });
-
-  // Update reward stock if applicable
-  if (redemption.reward.stockQuantity !== null) {
-    await prisma.loyaltyReward.update({
-      where: { id: redemption.rewardId },
-      data: {
-        stockRedeemed: {
-          increment: 1,
-        },
-      },
-    });
-  }
-
-  // For coupon redemptions, just update stock (no CustomerReward involved)
-  // For regular rewards, update the CustomerReward status to REDEEMED
-  if (redemption.reward.rewardType !== "coupon") {
-    const shortCode = redemption.usedContext?.shortCode;
-    if (shortCode) {
-      await prisma.customerReward.update({
-        where: { shortCode },
+  const updated = await prisma.$transaction(async (tx) => {
+    let used;
+    try {
+      used = await tx.loyaltyRedemption.update({
+        where: { id: redemption.id, usedAt: null },
         data: {
-          status: "REDEEMED",
+          status: "USED",
+          usedAt: new Date(),
+          usedContext: {
+            ...redemption.usedContext,
+            appliedBy: data.appliedBy,
+            applyNotes: data.notes,
+            appliedAt: new Date().toISOString(),
+          },
+        },
+        include: {
+          account: {
+            include: {
+              contact: true,
+            },
+          },
+          reward: true,
         },
       });
+    } catch (error) {
+      if (isRecordNotFound(error)) {
+        throw new Error("Redemption already applied");
+      }
+      throw error;
     }
-  }
+
+    // For coupon redemptions there is no CustomerReward involved.
+    // For regular rewards, mark the assignment REDEEMED.
+    if (redemption.reward.rewardType !== "coupon") {
+      const shortCode = redemption.usedContext?.shortCode;
+      if (shortCode) {
+        await tx.customerReward.update({
+          where: { shortCode },
+          data: {
+            status: "REDEEMED",
+          },
+        });
+      }
+    }
+
+    return used;
+  });
 
   // Send notification
   if (updated.account.contact?.phone && updated.account.contact?.orgId) {
@@ -496,9 +498,9 @@ export async function applyRedemption(data: ApplyRedemptionInput) {
   return updated;
 }
 
-export async function getRedemptionsByCustomer(customerId: string) {
+export async function getRedemptionsByCustomer(customerId: string, orgId: string) {
   return await prisma.loyaltyRedemption.findMany({
-    where: { accountId: customerId },
+    where: { accountId: customerId, ...ownedByOrg(orgId) },
     include: {
       reward: true,
     },
@@ -555,7 +557,7 @@ export async function getTransactions(
     }
   }
 
-  const page = filters.page || 1;
+  const page = Math.max(1, filters.page || 1);
   const limit = filters.limit || 20;
   const skip = (page - 1) * limit;
 
@@ -634,7 +636,7 @@ export async function getTransactionsForExport(
     }
   }
 
-  return await prisma.loyaltyTransaction.findMany({
+  const rows = await prisma.loyaltyTransaction.findMany({
     where,
     include: {
       account: {
@@ -644,5 +646,14 @@ export async function getTransactionsForExport(
       },
     },
     orderBy: { createdAt: "desc" },
+    take: EXPORT_LIMIT + 1,
   });
+
+  if (rows.length > EXPORT_LIMIT) {
+    throw new Error(
+      `This export covers more than ${EXPORT_LIMIT} transactions. Narrow the date range or filters and try again.`,
+    );
+  }
+
+  return rows;
 }

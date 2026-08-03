@@ -10,11 +10,7 @@ import {
 import { sendMessage, sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import dayjs from "dayjs";
-import {
-  assignRewardToCustomer,
-  getLCustomerByPhone,
-  updateCustomerAccount,
-} from "../accounts/account.service.js";
+import { getLCustomerByPhone, updateCustomerAccount } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import {
@@ -24,6 +20,7 @@ import {
 } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import { validateRedemption } from "../redemptionValidator.js";
+import { redeemReward } from "../redemptions/redemption.service.js";
 
 const REWARD_BUTTON_PREFIX = "loyalty_reward:";
 const REWARD_CONFIRM_PREFIX = "loyalty_reward_confirm:";
@@ -43,10 +40,11 @@ export async function createLoyaltyWaCommand(data: LoyaltyTemplateInput & { orgI
   });
 }
 
-export async function getLoyaltyWaCommand(id: string) {
-  return await prisma.loyaltyWaCommand.findUnique({
+export async function getLoyaltyWaCommand(id: string, orgId: string) {
+  return await prisma.loyaltyWaCommand.findFirst({
     where: {
       id,
+      orgId,
     },
   });
 }
@@ -60,7 +58,11 @@ export async function getLoyaltyWaCommandByType(type: LoyaltyTemplateTypes, orgI
   });
 }
 
-export async function updateLoyaltyWaCommand(id: string, data: UpdateLoyaltyTemplateInput) {
+export async function updateLoyaltyWaCommand(
+  id: string,
+  data: UpdateLoyaltyTemplateInput,
+  orgId: string,
+) {
   // `actionId` is accepted on the input schema but `LoyaltyWaCommand` has no such column
   // (only `LoyaltyApiSettings` does, for a different feature) — drop it rather than pass
   // it through to Prisma, which would reject it as an unknown field at runtime.
@@ -68,6 +70,7 @@ export async function updateLoyaltyWaCommand(id: string, data: UpdateLoyaltyTemp
   return await prisma.loyaltyWaCommand.update({
     where: {
       id,
+      orgId,
     },
     data: {
       ...rest,
@@ -320,6 +323,8 @@ async function handleRewardConfirmation(
   if (!customer) return;
 
   try {
+    // The validator is called first only so the customer can be told WHICH rule
+    // refused them; redeemReward validates again for itself.
     const validation = await validateRedemption(customer.id, rewardId, {});
     if (!validation.valid) {
       await sendLoyaltyText(
@@ -327,10 +332,12 @@ async function handleRewardConfirmation(
       );
       return;
     }
-    const result = await assignRewardToCustomer(customer.id, rewardId, "WhatsApp redeem flow");
-    if (result.id) {
-      await handleDeduction(result.reward, customer, result.reward.programId);
-    }
+
+    const result = await redeemReward(customer.programId, {
+      customerId: customer.id,
+      rewardId,
+      notes: "WhatsApp redeem flow",
+    });
 
     const codeText = result?.shortCode ? `\nRedemption code: ${result.shortCode}` : "";
 
@@ -340,39 +347,6 @@ async function handleRewardConfirmation(
       error instanceof Error ? error.message : "Unable to redeem reward right now.",
     );
   }
-}
-async function handleDeduction(
-  reward: Awaited<ReturnType<typeof assignRewardToCustomer>>["reward"],
-  customer: { id: string; currentPoints: number },
-  programId: string,
-) {
-  // Deduct redemption cost
-  await prisma.loyaltyTransaction.create({
-    data: {
-      accountId: customer.id,
-      programId,
-      transactionType: "redeem",
-      source: "reward_redemption",
-      points: -reward.pointsCost,
-      balanceAfter: customer.currentPoints - reward.pointsCost,
-      description: `Redeemed: ${reward.name} (Cost: ${reward.pointsCost})`,
-      metadata: {
-        rewardId: reward.id,
-        rewardName: reward.name,
-        redemptionType: "point",
-      },
-    },
-  });
-
-  // Update customer balance
-  await prisma.customerLoyaltyAccount.update({
-    where: { id: customer.id },
-    data: {
-      currentPoints: {
-        decrement: reward.pointsCost,
-      },
-    },
-  });
 }
 export async function handleLoyaltyPointsCommand(
   phone: string,
@@ -478,7 +452,7 @@ export function replacedContentByDynamicVariable(
     : typeof content === "string"
       ? []
       : (content?.content ?? []);
-  const contentCopy = [...contentArray];
+  const contentCopy = structuredClone(contentArray);
   for (const para of contentCopy) {
     const contents = para.content;
     if (contents) {
@@ -516,10 +490,11 @@ function collectText(node: RichTextNode): string {
   return (node.content ?? []).map((child) => collectText(child)).join("");
 }
 
-export async function deleteLoyaltyWaCommandById(id: string) {
+export async function deleteLoyaltyWaCommandById(id: string, orgId: string) {
   return await prisma.loyaltyWaCommand.delete({
     where: {
       id,
+      orgId,
     },
   });
 }
@@ -535,7 +510,7 @@ export async function handleCustomerRemovalFromLoyalty(
     await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
-  await updateCustomerAccount(customer.id, { status: "inactive" });
+  await updateCustomerAccount(customer.id, { status: "inactive" }, customer.programId);
   if (responseType === WaAutomatedReplyResponseType.Template) {
     await handleSendTemplate(waTemplateId, orgId, phone, []);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
@@ -543,11 +518,10 @@ export async function handleCustomerRemovalFromLoyalty(
   }
 }
 
-// Event Trigger CRUD Services
-export async function createEventTrigger(data: EventTriggerInput) {
+export async function createEventTrigger(data: EventTriggerInput, programId: string) {
   return await prisma.loyaltyEventTrigger.create({
     data: {
-      programId: data.programId,
+      programId,
       eventType: data.eventType,
       enabled: data.enabled ?? true,
       triggerDays: data.triggerDays,
@@ -561,9 +535,13 @@ export async function createEventTrigger(data: EventTriggerInput) {
   });
 }
 
-export async function updateEventTrigger(id: string, data: UpdateEventTriggerInput) {
+export async function updateEventTrigger(
+  id: string,
+  data: UpdateEventTriggerInput,
+  programId: string,
+) {
   return await prisma.loyaltyEventTrigger.update({
-    where: { id },
+    where: { id, programId },
     data,
     include: {
       waTemplate: true,
@@ -572,9 +550,9 @@ export async function updateEventTrigger(id: string, data: UpdateEventTriggerInp
   });
 }
 
-export async function getEventTrigger(id: string) {
-  return await prisma.loyaltyEventTrigger.findUnique({
-    where: { id },
+export async function getEventTrigger(id: string, programId: string) {
+  return await prisma.loyaltyEventTrigger.findFirst({
+    where: { id, programId },
     include: {
       waTemplate: true,
       reward: true,
@@ -583,9 +561,9 @@ export async function getEventTrigger(id: string) {
   });
 }
 
-export async function getAllEventTriggers(programId?: string) {
+export async function getAllEventTriggers(programId: string) {
   return await prisma.loyaltyEventTrigger.findMany({
-    where: programId ? { programId } : undefined,
+    where: { programId },
     include: {
       waTemplate: true,
       reward: true,
@@ -597,8 +575,8 @@ export async function getAllEventTriggers(programId?: string) {
   });
 }
 
-export async function deleteEventTrigger(id: string) {
+export async function deleteEventTrigger(id: string, programId: string) {
   return await prisma.loyaltyEventTrigger.delete({
-    where: { id },
+    where: { id, programId },
   });
 }

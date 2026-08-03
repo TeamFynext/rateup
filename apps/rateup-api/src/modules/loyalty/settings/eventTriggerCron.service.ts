@@ -3,6 +3,7 @@ import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { assignRewardToCustomer } from "../accounts/account.service.js";
 
 /**
  * Cron job to check for customer birthdays and send WhatsApp templates
@@ -15,6 +16,7 @@ export async function checkBirthdayEventTriggers() {
     const today = dayjs();
     const todayMonth = today.month() + 1; // dayjs months are 0-indexed
     const todayDate = today.date();
+    const startOfToday = today.startOf("day").toDate();
 
     // Get all enabled birthday event triggers
     const birthdayTriggers = await prisma.loyaltyEventTrigger.findMany({
@@ -42,17 +44,19 @@ export async function checkBirthdayEventTriggers() {
     // Process each trigger's program
     for (const trigger of birthdayTriggers) {
       try {
-        // Get all active customers with birthdays today in this program
-        const customersWithBirthday = await prisma.customerLoyaltyAccount.findMany({
-          where: {
-            programId: trigger.programId,
-            status: "active",
-            contact: {
-              dob: {
-                not: null,
-              },
-            },
-          },
+        const birthdayAccountIds = await prisma.$queryRaw<{ id: string }[]>`
+          SELECT a.id
+          FROM "CustomerLoyaltyAccount" a
+          JOIN "Contact" c ON c.id = a."contactId"
+          WHERE a."programId" = ${trigger.programId}::uuid
+            AND a.status = 'active'
+            AND c.dob IS NOT NULL
+            AND EXTRACT(MONTH FROM c.dob) = ${todayMonth}
+            AND EXTRACT(DAY FROM c.dob) = ${todayDate}
+        `;
+
+        const birthdayCustomers = await prisma.customerLoyaltyAccount.findMany({
+          where: { id: { in: birthdayAccountIds.map((row) => row.id) } },
           include: {
             contact: {
               select: {
@@ -67,13 +71,6 @@ export async function checkBirthdayEventTriggers() {
           },
         });
 
-        // Filter customers whose birthday is today
-        const birthdayCustomers = customersWithBirthday.filter((customer) => {
-          if (!customer.contact.dob) return false;
-          const dob = dayjs(customer.contact.dob);
-          return dob.month() + 1 === todayMonth && dob.date() === todayDate;
-        });
-
         log.info(
           `Birthday Event Trigger Cron - Program ${trigger.program.name}: ${birthdayCustomers.length} customers with birthday today`,
         );
@@ -83,6 +80,24 @@ export async function checkBirthdayEventTriggers() {
           try {
             if (!customer.contact.phone) {
               log.warn(`Birthday Event Trigger - Customer ${customer.id} has no phone number`);
+              continue;
+            }
+
+            const claimed = await prisma.customerLoyaltyAccount.updateMany({
+              where: {
+                id: customer.id,
+                OR: [
+                  { lastBirthdayGreetedAt: null },
+                  { lastBirthdayGreetedAt: { lt: startOfToday } },
+                ],
+              },
+              data: { lastBirthdayGreetedAt: new Date() },
+            });
+
+            if (claimed.count === 0) {
+              log.info(
+                `Birthday Event Trigger - Customer ${customer.id} already greeted today, skipping`,
+              );
               continue;
             }
 
@@ -208,15 +223,15 @@ export async function checkInactivityEventTriggers() {
               continue;
             }
 
-            // Atomically claim this customer by updating lastActivityAt only if it
-            // still matches the original value — prevents duplicate sends if the
-            // cron overlaps or runs concurrently across multiple instances.
             const claimed = await prisma.customerLoyaltyAccount.updateMany({
               where: {
                 id: customer.id,
-                lastActivityAt: customer.lastActivityAt,
+                OR: [
+                  { lastInactivityReminderAt: null },
+                  { lastInactivityReminderAt: { lte: inactivityDate } },
+                ],
               },
-              data: { lastActivityAt: new Date() },
+              data: { lastInactivityReminderAt: new Date() },
             });
 
             if (claimed.count === 0) {
@@ -287,49 +302,15 @@ async function resolveEventTriggerTemplateId(
   return trigger?.waTemplateId ?? null;
 }
 
-/**
- * Helper function to issue a reward to a customer
- */
 async function issueRewardToCustomer(accountId: string, rewardId: string) {
   try {
-    const reward = await prisma.loyaltyReward.findUnique({
-      where: { id: rewardId },
-    });
-
-    if (!reward) {
-      log.error(`Reward ${rewardId} not found`);
-      return;
-    }
-
-    // Generate unique short code for the reward
-    const shortCode = generateShortCode();
-
-    // Create customer reward assignment
-    await prisma.customerReward.create({
-      data: {
-        shortCode,
-        accountId,
-        rewardId,
-        status: "ISSUED",
-      },
-    });
-
-    log.info(`Issued reward ${rewardId} to customer account ${accountId} (code: ${shortCode})`);
+    const assignment = await assignRewardToCustomer(accountId, rewardId);
+    log.info(
+      `Issued reward ${rewardId} to customer account ${accountId} (code: ${assignment.shortCode})`,
+    );
   } catch (error) {
     log.error({ err: error }, `Error issuing reward ${rewardId} to customer ${accountId}:`);
   }
-}
-
-/**
- * Helper function to generate a unique short code for rewards
- */
-function generateShortCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
 }
 
 /**
@@ -372,7 +353,6 @@ export async function checkPointsExpiryAlerts() {
 
         if (!trigger) continue;
 
-        // Customers whose lastActivityAt is exactly (expirationMonths months - 14 days) ago
         const alertFrom = dayjs()
           .subtract(program.pointsExpirationMonths, "months")
           .add(14, "days")
@@ -389,7 +369,13 @@ export async function checkPointsExpiryAlerts() {
             programId: program.id,
             status: "active",
             currentPoints: { gt: 0 },
-            lastActivityAt: { gte: alertFrom, lte: alertTo },
+            transactions: {
+              some: {
+                transactionType: "earn",
+                points: { gt: 0 },
+                createdAt: { gte: alertFrom, lte: alertTo },
+              },
+            },
           },
           include: {
             contact: {
@@ -538,55 +524,48 @@ export async function checkPointsExpiration() {
               0,
             );
 
-            // Don't expire more points than the customer currently has
+            // Don't expire more points than the customer currently has.
             const pointsToExpire = Math.min(totalExpiredPoints, account.currentPoints);
 
             if (pointsToExpire <= 0) {
               continue;
             }
 
-            // Create expiration transactions for each expired earn transaction
-            for (const expiredTx of expiredTransactions) {
-              const pointsFromThisTx = Number(expiredTx.points);
+            let remaining = pointsToExpire;
+            let runningBalance = account.currentPoints;
 
-              // Calculate new balance after expiring these points
-              const currentBalance = await prisma.customerLoyaltyAccount.findUnique({
-                where: { id: account.id },
-                select: { currentPoints: true },
-              });
+            const expiryRows = expiredTransactions.map((expiredTx) => {
+              const allocated = Math.min(remaining, Number(expiredTx.points));
+              remaining -= allocated;
+              runningBalance -= allocated;
 
-              const newBalance = Math.max(
-                0,
-                (currentBalance?.currentPoints || 0) - pointsFromThisTx,
-              );
-
-              // Create expiration transaction
-              await prisma.loyaltyTransaction.create({
-                data: {
-                  accountId: account.id,
-                  programId: program.id,
-                  transactionType: "expire",
-                  points: -pointsFromThisTx, // Negative to deduct
-                  balanceAfter: newBalance,
-                  source: "expiration",
-                  referenceId: expiredTx.id, // Link to original earn transaction
-                  description: `Points expired after ${program.pointsExpirationMonths} months`,
-                  metadata: {
-                    expirationDate: dayjs(expirationDate).format("YYYY-MM-DD"),
-                    originalTransactionId: expiredTx.id,
-                  },
+              return {
+                accountId: account.id,
+                programId: program.id,
+                transactionType: "expire",
+                points: -allocated, // Negative to deduct
+                balanceAfter: runningBalance,
+                source: "expiration",
+                referenceId: expiredTx.id, // Link to original earn transaction
+                description: `Points expired after ${program.pointsExpirationMonths} months`,
+                metadata: {
+                  expirationDate: dayjs(expirationDate).format("YYYY-MM-DD"),
+                  originalTransactionId: expiredTx.id,
+                  originalPoints: Number(expiredTx.points),
                 },
-              });
+              };
+            });
 
-              // Update customer's current points
-              await prisma.customerLoyaltyAccount.update({
+            await prisma.$transaction(async (tx) => {
+              await tx.loyaltyTransaction.createMany({ data: expiryRows });
+
+              await tx.customerLoyaltyAccount.update({
                 where: { id: account.id },
                 data: {
-                  currentPoints: newBalance,
-                  lastActivityAt: new Date(),
+                  currentPoints: runningBalance,
                 },
               });
-            }
+            });
 
             totalPointsExpired += pointsToExpire;
             totalCustomersAffected++;

@@ -58,7 +58,6 @@ import { pauseOrg } from "../../org/org.services.js";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
-import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
 import { awardPoints, getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { EarningRulesEngine } from "../../loyalty/earningRulesEngine.js";
@@ -132,7 +131,10 @@ export async function updateShopifyIntegrationByOrgId(orgId: string, data: Updat
   return await updateIntegrationByName(orgId, IntegratedApps.shopify, data);
 }
 
-export async function updateShopifyIntegrationByShop(shop: string, data: UpdateIntgrationInput) {
+export async function updateShopifyIntegrationByShop(
+  shop: string,
+  data: UpdateIntgrationInput & { orgId?: string },
+) {
   return await prisma.integration.updateMany({
     where: {
       credential: {
@@ -141,6 +143,19 @@ export async function updateShopifyIntegrationByShop(shop: string, data: UpdateI
       },
     },
     data,
+  });
+}
+
+export async function claimUnownedShopifyIntegration(shop: string, orgId: string) {
+  return await prisma.integration.updateMany({
+    where: {
+      credential: {
+        path: ["session", "shop"],
+        equals: shop,
+      },
+      orgId: null,
+    },
+    data: { orgId },
   });
 }
 
@@ -383,8 +398,6 @@ export async function sendShopifySurveyCronAction() {
         console.log("tobeSent", tobeSent);
         if (tobeSent) {
           try {
-            const subscription = await getSubscription(orgId);
-            await verifyTemplateMessageLimit(subscription);
             let parameterData = [];
             if (config.variableMapping && sch.body) {
               const bodyParameters = [];
@@ -527,9 +540,6 @@ export async function processShopifySurveySchedule(jobData: {
   }
 
   try {
-    const subscription = await getSubscription(orgId);
-    await verifyTemplateMessageLimit(subscription);
-
     let parameterData: { type: string; parameters: { type: string; text: string }[] }[] = [];
     if (survey.variableMapping && sch.body) {
       const bodyParameters: { type: string; text: string }[] = [];
@@ -620,7 +630,7 @@ export async function sendWhatsAppTemplateToCustomer(
     if (!teamId) {
       throw new Error("TeamId not found");
     }
-    const dbTemplate = await getDbTemplate(waTemplateId);
+    const dbTemplate = await getDbTemplate(waTemplateId, orgId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${waTemplateId} not found`);
     }
@@ -759,7 +769,7 @@ export async function registerWebhookByTopic(topic: string, session: Session) {
       variables: {
         topic,
         webhookSubscription: {
-          callbackUrl: `${API_URL}${WEBHOOK_API_ROUTE} `,
+          callbackUrl: `${API_URL}${WEBHOOK_API_ROUTE}`,
           format: "JSON",
         },
       },
@@ -1446,6 +1456,10 @@ export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
   const { shop } = webhook;
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) return;
+  if (!shopifyInfo.org || !shopifyInfo.orgId) {
+    await updateShopifyIntegrationByShop(shop, { active: false });
+    return;
+  }
   if (dayjs(shopifyInfo.org.createdAt).isBefore(dayjs(shopifyInfo.createdAt)))
     await updateShopifyIntegrationByShop(shop, { active: false });
   else {
@@ -1577,7 +1591,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         const { timeDelay, schedules = [], repeatInterval } = abandonedCheckoutConfig;
         const shopifySurveys = [...credential.shopifySurveys];
 
-        lastCheckouts.map(async (checkout) => {
+        lastCheckouts.forEach((checkout) => {
           const phone = validateAndParseCheckoutPhone(checkout);
 
           if (!phone) {
@@ -1618,7 +1632,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
                   dayjs().diff(dayjs(c.sentAt), repeatInterval?.unit) >= repeatInterval?.value,
               ),
             )
-            .map((checkout) => {
+            .forEach((checkout) => {
               const phone = validateAndParseCheckoutPhone(checkout);
               if (phone)
                 sentNowCheckoutList.push({
@@ -1627,51 +1641,51 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
                 });
             });
         }
-        const subscription = await getSubscription(orgId);
-        sentNowCheckoutList.map(async (checkout) => {
-          await verifyTemplateMessageLimit(subscription);
-          const res = await sendTemplateToUserCore(
-            orgId,
-            waTemplateId ?? "",
-            checkout.phone,
-            [],
-            teamId,
-          );
-          if (!("message" in res)) return;
+        await Promise.all(
+          sentNowCheckoutList.map(async (checkout) => {
+            const res = await sendTemplateToUserCore(
+              orgId,
+              waTemplateId ?? "",
+              checkout.phone,
+              [],
+              teamId,
+            );
+            if (!("message" in res)) return;
 
-          let messageSentAt = new Date();
-          if (res.status) {
-            const message = await prisma.waMessage.findFirst({
-              where: {
-                messageId: res.message,
-              },
-            });
-            messageSentAt = message?.waCreatedAt ?? messageSentAt;
-          }
-          const schedule = {
-            status: res.status ? "SENT" : `FAILED: ${res.message}`,
-            createdAt: messageSentAt,
-            scheduledAt: messageSentAt,
-            sentAt: res.status ? messageSentAt : null,
-          };
-          const index = schedules.findIndex((s) => s.checkoutId === checkout.checkoutId);
-          if (index !== -1) {
-            const history = schedules[index].history ?? [];
-            history.push(schedule);
-            schedules[index] = {
-              ...schedule,
-              phone: checkout.phone,
-              history,
+            let messageSentAt = new Date();
+            if (res.status) {
+              const message = await prisma.waMessage.findFirst({
+                where: {
+                  messageId: res.message,
+                },
+              });
+              messageSentAt = message?.waCreatedAt ?? messageSentAt;
+            }
+            const schedule = {
+              status: res.status ? "SENT" : `FAILED: ${res.message}`,
+              createdAt: messageSentAt,
+              scheduledAt: messageSentAt,
+              sentAt: res.status ? messageSentAt : null,
             };
-          } else {
-            schedules.push({
-              ...schedule,
-              history: [schedule],
-              phone: checkout.phone,
-              checkoutId: checkout.checkoutId,
-            });
-          }
-        });
+            const index = schedules.findIndex((s) => s.checkoutId === checkout.checkoutId);
+            if (index !== -1) {
+              const history = schedules[index].history ?? [];
+              history.push(schedule);
+              schedules[index] = {
+                ...schedule,
+                phone: checkout.phone,
+                history,
+              };
+            } else {
+              schedules.push({
+                ...schedule,
+                history: [schedule],
+                phone: checkout.phone,
+                checkoutId: checkout.checkoutId,
+              });
+            }
+          }),
+        );
 
         shopifySurveys.forEach((s) => {
           if (s.event === ShopifyEvents.ABANDONED_CHECKOUTS) s.schedules = schedules;

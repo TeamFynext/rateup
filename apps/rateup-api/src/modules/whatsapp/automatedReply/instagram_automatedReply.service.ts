@@ -57,8 +57,6 @@ export async function createInstagramAutomatedReply(data: {
   name: string;
   matchData: WaAutomatedReplyMatchData;
   whatsappSettingsPhoneId?: string;
-  sendOnceIn24Hours?: boolean;
-  isActive?: boolean;
 }) {
   try {
     const automation = await prisma.waAutomatedReply.create({
@@ -92,15 +90,9 @@ export async function updateInstagramAutomatedReply(
     name?: string;
     matchData?: WaAutomatedReplyMatchData;
     whatsappSettingsPhoneId?: string;
-    sendOnceIn24Hours?: boolean;
-    isActive?: boolean;
   },
 ) {
   try {
-    // NOTE: sendOnceIn24Hours/isActive (isEnabled) have no backing columns on
-    // WaAutomatedReply - same gap as createInstagramAutomatedReply below, which already
-    // drops them on create. Dropping them here too keeps create/update consistent; the
-    // toggle is accepted by the API but not yet persisted anywhere.
     const automation = await prisma.waAutomatedReply.update({
       where: {
         id,
@@ -127,17 +119,19 @@ export async function updateInstagramAutomatedReply(
  */
 export async function deleteInstagramAutomatedReply(id: string) {
   try {
-    // Delete automation messages
-    await prisma.waAutomatedReplyMessage.deleteMany({
-      where: { waAutomatedReplyId: id },
-    });
+    // Both in one transaction, as deleteRule does: otherwise a failure on the second
+    // statement leaves the automation alive with its history already gone.
+    await prisma.$transaction(async (tx) => {
+      await tx.waAutomatedReplyMessage.deleteMany({
+        where: { waAutomatedReplyId: id },
+      });
 
-    // Delete automation
-    await prisma.waAutomatedReply.delete({
-      where: {
-        id,
-        platform: PlatformType.INSTAGRAM,
-      },
+      await tx.waAutomatedReply.delete({
+        where: {
+          id,
+          platform: PlatformType.INSTAGRAM,
+        },
+      });
     });
 
     log.info(`[Instagram Automation] Deleted automation ${id}`);
@@ -256,32 +250,5 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
   } catch (error) {
     log.error({ err: error }, `[Instagram Automation] Error creating/updating automation message`);
     throw error;
-  }
-}
-
-/**
- * Check if automation was sent in the last 24 hours
- */
-export async function wasInstagramAutomationSentRecently(
-  igsId: string,
-  automationId: string,
-  orgId: string,
-): Promise<boolean> {
-  try {
-    const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const recentMessage = await prisma.waAutomatedReplyMessage.findFirst({
-      where: {
-        phone: igsId,
-        waAutomatedReplyId: automationId,
-        orgId,
-        createdAt: { gte: cutoffTime },
-      },
-    });
-
-    return !!recentMessage;
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error checking recent automation`);
-    return false;
   }
 }

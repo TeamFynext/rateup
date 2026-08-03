@@ -71,6 +71,8 @@ vi.mock("./stripe/stripe.service.js", () => ({
   syncStripeProducts: vi.fn(),
   updateOrder: vi.fn(),
   updateStripeProduct: vi.fn(),
+  deleteOrder: vi.fn(),
+  findOrderByCheckoutRef: vi.fn(),
 }));
 
 vi.mock("supertokens-node/recipe/session/index.js", () => ({
@@ -102,6 +104,7 @@ import {
   webHookHandler,
 } from "./stripe/stripe.controller.js";
 import { paymentRoutes } from "./payment.route.js";
+import { orderIdParamsSchema, updateOrderStatusSchema } from "./payment.schema.js";
 import { paymentStripeRoutes } from "./stripe/stripe.route.js";
 import { stripePublicRoutes } from "./stripe/stripe.public.route.js";
 import { paymentPublicRoutes } from "./payment.public.route.js";
@@ -133,6 +136,8 @@ beforeEach(() => {
   // clearAllMocks keeps implementations but drops queued values.
   pay.updateOrder.mockResolvedValue({
     id: VICTIM_ORDER,
+    orgId: ORG,
+    paymentStatus: "SUCCESS",
     rateupPlanId: ENTERPRISE_PLAN,
     subscriptionId: "sub_x",
   });
@@ -142,6 +147,8 @@ beforeEach(() => {
   stripeSvc.getAllStripeSubscriptions.mockResolvedValue([]);
   stripeSvc.deleteStripeProduct.mockResolvedValue({ deleted: true });
   stripeSvc.updateStripeProduct.mockResolvedValue({ id: "prod_x" });
+  stripeSvc.deleteOrder.mockResolvedValue({ count: 1 });
+  stripeSvc.findOrderByCheckoutRef.mockResolvedValue({ id: "order-1" });
   stripeStub.checkout.sessions.create.mockResolvedValue({
     id: "cs_test_1",
     client_secret: "cs_secret",
@@ -165,27 +172,26 @@ describe("updateSubscriptionOrderHandler", () => {
   const req = (body: Record<string, unknown>, orderId = VICTIM_ORDER) =>
     ({ params: { orderId }, body, user: { orgId: ORG }, userId: USER }) as never;
 
-  // NOTE: the route is PUT /api/payment/order/:orderId with checkSession only —
-  // no role check and no body schema — and updateOrder is
-  // prisma.order.update({ where: { id: orderId }, data }) with no org
-  // condition (payment.service.ts:768-775).
-  test("writes the whole body onto whatever order the path names", async () => {
+  // The route was PUT /api/payment/order/:orderId with checkSession only — no
+  // role check and no body schema — and updateOrder was
+  // `prisma.order.update({ where: { id: orderId }, data })` with no org
+  // condition, `data` being the request body typed Partial<Order>. So every
+  // column of any organisation's order was writable by anyone with a session.
+  test("writes only the status, and only within the caller's org", async () => {
     await updateSubscriptionOrderHandler(
       req({ status: "COMPLETE", paymentStatus: "SUCCESS", amount: 0 }),
       reply(),
     );
 
-    expect(pay.updateOrder).toHaveBeenCalledWith(VICTIM_ORDER, {
-      status: "COMPLETE",
-      paymentStatus: "SUCCESS",
-      amount: 0,
-    });
+    expect(pay.updateOrder).toHaveBeenCalledWith(VICTIM_ORDER, "COMPLETE", ORG);
   });
 
-  // NOTE: this is the payment bypass. Marking any order COMPLETE upgrades the
-  // CALLER's organisation to that order's plan, with the plan's full feature
-  // set and a fresh expiry — no payment is consulted anywhere on this path.
-  test("marking an order complete upgrades the caller's own org to its plan", async () => {
+  // This was the payment bypass: marking ANY order COMPLETE upgraded the
+  // CALLER's organisation to that order's plan, with the plan's full feature set
+  // and a fresh expiry, and no payment was consulted anywhere on the path. The
+  // subscription is now granted from the order's own paymentStatus — which only
+  // the signature-verified webhooks set.
+  test("a paid order still starts its subscription", async () => {
     await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), reply());
 
     expect(pay.updateSubscriptionForTrial).toHaveBeenCalledWith(
@@ -196,24 +202,48 @@ describe("updateSubscriptionOrderHandler", () => {
     );
   });
 
-  test("the org upgraded is the caller's, not the order's", async () => {
+  test("an unpaid order is refused rather than upgraded", async () => {
     pay.updateOrder.mockResolvedValueOnce({
       id: VICTIM_ORDER,
-      orgId: "a-different-org",
+      orgId: ORG,
+      paymentStatus: "PENDING",
+      rateupPlanId: ENTERPRISE_PLAN,
+      subscriptionId: "sub_x",
+    });
+    const rep = reply();
+
+    await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), rep);
+
+    expect(pay.updateSubscriptionForTrial).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(409);
+  });
+
+  // The org upgraded used to be the SESSION's, whatever org the order belonged
+  // to. It is the order's now — and the scoped update means they are the same.
+  test("the org upgraded is the order's", async () => {
+    pay.updateOrder.mockResolvedValueOnce({
+      id: VICTIM_ORDER,
+      orgId: "the-orders-own-org",
+      paymentStatus: "SUCCESS",
       rateupPlanId: ENTERPRISE_PLAN,
       subscriptionId: "sub_x",
     });
 
     await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), reply());
 
-    expect(pay.updateSubscriptionForTrial.mock.calls[0][0]).toBe(ORG);
+    expect(pay.updateSubscriptionForTrial.mock.calls[0][0]).toBe("the-orders-own-org");
   });
 
-  test("nothing checks that the order belongs to the caller", async () => {
-    await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), reply());
+  test("an order outside the caller's org answers 404", async () => {
+    pay.updateOrder.mockRejectedValueOnce(
+      Object.assign(new Error("Record to update not found."), { code: "P2025" }),
+    );
+    const rep = reply();
 
-    // The only lookup is the update itself.
-    expect(pay.updateOrder).toHaveBeenCalledOnce();
+    await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), rep);
+
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Order not found" } });
+    expect(pay.updateSubscriptionForTrial).not.toHaveBeenCalled();
   });
 
   test("any other status writes the order without touching the subscription", async () => {
@@ -238,20 +268,33 @@ describe("updateSubscriptionOrderHandler", () => {
   });
 
   test("a failure answers a fixed 500", async () => {
-    pay.updateOrder.mockRejectedValueOnce(new Error("Record to update not found"));
+    pay.updateOrder.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
     await updateSubscriptionOrderHandler(req({ status: "COMPLETE" }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: "Updating order failed" });
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Updating order failed" } });
   });
 
-  test("the route carries no role check and no schema", async () => {
+  // Registered as `server.put("/order/:orderId", handler)` — two arguments, so
+  // no role check and no body schema, on the one route in either payment tree
+  // that changes what an organisation is entitled to.
+  test("the route requires SUPER_ADMIN and validates its body", async () => {
     const { routes } = await collectPaymentRoutes();
 
     const order = routes.find((r) => r.url === "/order/:orderId");
-    expect(order.opts).toBe(updateSubscriptionOrderHandler);
-    expect(order.handler).toBeUndefined();
+    expect(order.handler).toBe(updateSubscriptionOrderHandler);
+    expect((order.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    expect(order.opts.schema.body).toBe(updateOrderStatusSchema);
+    expect(order.opts.schema.params).toBe(orderIdParamsSchema);
+  });
+
+  test("the body schema accepts only the three order statuses", () => {
+    expect(updateOrderStatusSchema.safeParse({ status: "COMPLETE" }).success).toBe(true);
+    expect(updateOrderStatusSchema.safeParse({ status: "complete" }).success).toBe(false);
+    expect(
+      updateOrderStatusSchema.parse({ status: "COMPLETE", paymentStatus: "SUCCESS", amount: 0 }),
+    ).toEqual({ status: "COMPLETE" });
   });
 });
 
@@ -293,21 +336,36 @@ describe("the Stripe product routes", () => {
     expect(answer(rep).body[0].customer_email).toBe("someone@othercompany.test");
   });
 
-  // NOTE: the Razorpay tree gates every catalogue route on assertRootOrg. The
-  // Stripe tree gates only the subscription cancellation, and on role rather
-  // than on the platform org.
-  test("only the cancellation is gated in the Stripe tree", async () => {
+  // The Razorpay tree gates every catalogue route on assertRootOrg; the Stripe
+  // tree gated only the subscription cancellation, and on role rather than on the
+  // platform org — so any authenticated user of any organisation could delete or
+  // rename products in the PLATFORM's Stripe account, and read every
+  // subscription on it.
+  test("the five catalogue and listing routes carry the root-org check", async () => {
     const { routes } = await collectStripeRoutes();
 
-    const gated = routes.filter((r) => r.opts?.preHandler);
-    expect(gated.map((r) => `${r.method} ${r.url}`)).toEqual(["PUT /subscriptions/cancel"]);
-    expect((gated[0].opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    const gated = routes.filter((r) => r.opts?.preHandler?.includes(assertRootOrg));
+    expect(gated.map((r) => `${r.method} ${r.url}`)).toEqual([
+      "GET /products",
+      "GET /subscriptions",
+      "POST /sync-products",
+      "PUT /product",
+      "DELETE /product/:productId",
+    ]);
   });
 
-  test("no Stripe route carries the root-org check", async () => {
+  test("the cancellation keeps its role check rather than a platform one", async () => {
     const { routes } = await collectStripeRoutes();
 
-    for (const r of routes) {
+    const cancel = routes.find((r) => r.url === "/subscriptions/cancel");
+    expect((cancel.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+  });
+
+  test("the buyer-facing routes stay open to any member", async () => {
+    const { routes } = await collectStripeRoutes();
+
+    for (const url of ["/create-checkout-session", "/session-status"]) {
+      const r = routes.find((x) => x.url === url);
       expect(r.opts?.preHandler ?? []).not.toContain(assertRootOrg);
     }
   });
@@ -319,6 +377,7 @@ describe("the Stripe product routes", () => {
 
     const gated = routes.filter((r) => r.opts?.preHandler?.includes(assertRootOrg));
     expect(gated.map((r) => `${r.method} ${r.url}`)).toEqual([
+      "POST /sync-plans",
       "GET /plans",
       "POST /rateup-plan",
       "PUT /rateup-plan",
@@ -330,13 +389,14 @@ describe("the Stripe product routes", () => {
     ]);
   });
 
-  // NOTE: sync-plans is the one Razorpay administrative route without it.
-  test("the Razorpay plan sync is not gated", async () => {
+  // sync-plans was the one Razorpay administrative route without it — a
+  // platform-wide catalogue resync any authenticated user could trigger, hitting
+  // Razorpay's API on every call.
+  test("the Razorpay plan sync is gated too", async () => {
     const { routes } = await collectPaymentRoutes();
 
     const sync = routes.find((r) => r.url === "/sync-plans");
-    expect(sync.opts).toBeDefined();
-    expect(sync.opts?.preHandler).toBeUndefined();
+    expect(sync.opts.preHandler).toEqual([assertRootOrg]);
   });
 });
 
@@ -345,14 +405,20 @@ describe("the Stripe product routes", () => {
 // ===========================================================================
 
 describe("getSessionStatusHandler", () => {
-  // NOTE: the session id comes from the query string and is retrieved from
-  // Stripe directly — nothing ties it to the caller's org or to an order.
-  test("retrieves whatever checkout session the query names", async () => {
+  const req = (session_id: string) => ({ query: { session_id }, user: { orgId: ORG } }) as never;
+
+  // The session id came from the query string and was retrieved from Stripe
+  // directly, with nothing tying it to the caller's org — so handing it another
+  // buyer's session id returned that person's email address and whether they
+  // paid. Session ids are not secret: the module's own return_url puts each one
+  // in the buyer's browser history and in anything that logs query strings.
+  test("resolves the session through an order in the caller's own org", async () => {
     const rep = reply();
 
-    await getSessionStatusHandler({ query: { session_id: "cs_test_victim" } } as never, rep);
+    await getSessionStatusHandler(req("cs_test_1"), rep);
 
-    expect(stripeStub.checkout.sessions.retrieve).toHaveBeenCalledWith("cs_test_victim");
+    expect(stripeSvc.findOrderByCheckoutRef).toHaveBeenCalledWith("cs_test_1", ORG);
+    expect(stripeStub.checkout.sessions.retrieve).toHaveBeenCalledWith("cs_test_1");
     expect(rep.send.mock.calls[0][0]).toEqual({
       status: "complete",
       payment_status: "paid",
@@ -360,12 +426,14 @@ describe("getSessionStatusHandler", () => {
     });
   });
 
-  test("the customer's email address is part of the response", async () => {
+  test("another org's session is a 404 and is never retrieved", async () => {
+    stripeSvc.findOrderByCheckoutRef.mockResolvedValueOnce(null);
     const rep = reply();
 
-    await getSessionStatusHandler({ query: { session_id: "cs_test_victim" } } as never, rep);
+    await getSessionStatusHandler(req("cs_test_victim"), rep);
 
-    expect(rep.send.mock.calls[0][0].customer_email).toContain("@");
+    expect(stripeStub.checkout.sessions.retrieve).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Checkout session not found" } });
   });
 
   // Previously customer_details was dereferenced without a guard, so a session that has
@@ -379,7 +447,7 @@ describe("getSessionStatusHandler", () => {
     });
     const rep = reply();
 
-    await getSessionStatusHandler({ query: { session_id: "cs_test_1" } } as never, rep);
+    await getSessionStatusHandler(req("cs_test_1"), rep);
 
     expect(rep.send.mock.calls[0][0]).toEqual({
       status: "open",
@@ -412,16 +480,30 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     expect(order).toEqual(["order", "stripe"]);
   });
 
-  // NOTE: only updateOrder is inside the try, so a Stripe failure escapes the
-  // handler with the Order row already written.
-  test("a Stripe failure leaves the order behind and escapes the handler", async () => {
+  // Only updateOrder used to be inside a try, so a Stripe failure escaped the
+  // handler with the Order row already written — carrying a rateupPlanId and no
+  // session, which is exactly the artefactfed on, and it could
+  // be produced deliberately by sending a price id that does not exist.
+  test("a Stripe failure removes the order and answers rather than escaping", async () => {
     stripeStub.checkout.sessions.create.mockRejectedValueOnce(new Error("No such price"));
+    const rep = reply();
 
-    await expect(createCheckoutSessionHandler({ body } as never, reply())).rejects.toThrow(
-      "No such price",
-    );
+    await expect(createCheckoutSessionHandler({ body } as never, rep)).resolves.toBeDefined();
+
     expect(stripeSvc.createOrder).toHaveBeenCalledOnce();
+    expect(stripeSvc.deleteOrder).toHaveBeenCalledWith("order-1");
     expect(stripeSvc.updateOrder).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(502);
+  });
+
+  test("a cleanup failure does not mask the checkout failure", async () => {
+    stripeStub.checkout.sessions.create.mockRejectedValueOnce(new Error("No such price"));
+    stripeSvc.deleteOrder.mockRejectedValueOnce(new Error("db down"));
+    const rep = reply();
+
+    await expect(createCheckoutSessionHandler({ body } as never, rep)).resolves.toBeDefined();
+
+    expect(answer(rep).code).toBe(502);
   });
 
   test("carries the local order id into the Stripe metadata", async () => {
@@ -432,9 +514,12 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     expect(arg.subscription_data.metadata).toEqual({ rateupOrderId: "order-1" });
   });
 
-  // NOTE: Stripe's documented ui_mode values are "embedded", "hosted" and
-  // "custom" — "embedded_page" is not one of them.
-  test("requests an ui_mode Stripe does not document", async () => {
+  // CORRECTION to: the entry read "embedded_page" against
+  // Stripe's public docs ("embedded", "hosted", "custom") and hedged both ways.
+  // The installed SDK settles it — Stripe.Checkout.SessionCreateParams.UiMode is
+  // 'elements' | 'embedded_page' | 'form' | 'hosted_page' for this API version —
+  // so the literal is valid and is left as it was.
+  test("requests the ui_mode this API version documents", async () => {
     await createCheckoutSessionHandler({ body } as never, reply());
 
     expect(stripeStub.checkout.sessions.create.mock.calls[0][0].ui_mode).toBe("embedded_page");
@@ -541,15 +626,16 @@ describe("the Stripe webhook", () => {
     expect(done2).toHaveBeenCalledWith(null, { a: 1 });
   });
 
-  // NOTE: the authenticated Stripe tree registers the same parser keyed on
-  // "/api/payment/webhook" — a route that tree does not have.
-  test("the authenticated tree's parser keys on a route that does not exist", async () => {
+  // The authenticated Stripe tree used to register a copy of the same parser
+  // keyed on "/api/payment/webhook" — a route that tree does not have — so the
+  // branch was unreachable and every request to the tree took the else path,
+  // hand-parsing the body instead of letting Fastify do it. It also read as
+  // though raw-body preservation were configured for a webhook in this tree.
+  test("the authenticated tree registers no content-type parser of its own", async () => {
     const { routes, parsers } = await collectStripeRoutes();
 
     expect(routes.map((r) => r.url)).not.toContain("/webhook");
-    const done = vi.fn();
-    parsers[0].fn({ url: "/api/payment/webhook" }, '{"a":1}', done);
-    expect(done).toHaveBeenCalledWith(null, '{"a":1}');
+    expect(parsers).toHaveLength(0);
   });
 
   test("the public payment tree exposes the Razorpay webhook with no session check", async () => {

@@ -22,8 +22,8 @@ enum sortOrder {
 }
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
 const paginationQuery = z.object({
-  page: z.coerce.number().optional(),
-  limit: z.coerce.number().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  limit: z.coerce.number().int().positive().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
   desc: z.enum(sortOrder).optional(),

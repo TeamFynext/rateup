@@ -22,7 +22,7 @@ const idParamRequestSchema = z.object({
 });
 
 const updateRoleSchema = z.object({
-  role: z.string(),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MEMBER"]),
 });
 
 const updateLogoSchema = z.object({

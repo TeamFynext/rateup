@@ -66,7 +66,10 @@ export async function updateReviewSuggestion(
     where: {
       id: reviewSuggestionId,
     },
-    data: data,
+    data: {
+      review: data.review,
+      language: data.language,
+    },
   });
 }
 

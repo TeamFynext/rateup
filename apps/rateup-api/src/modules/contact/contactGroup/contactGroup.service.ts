@@ -1,6 +1,8 @@
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
+export { ContactGroupNotFoundError };
 import type {
   Contact,
   ContactGroup,
@@ -21,10 +23,11 @@ import {
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
 
-export async function getContactGroupById(contactGroupId: string) {
-  const contactGroup = await prisma.contactGroup.findUnique({
+export async function getContactGroupById(contactGroupId: string, orgId: string) {
+  const contactGroup = await prisma.contactGroup.findFirst({
     where: {
       id: contactGroupId,
+      team: { orgId },
     },
     include: {
       team: {
@@ -42,10 +45,11 @@ export async function getContactGroupById(contactGroupId: string) {
   return contactGroup;
 }
 //also used in zapier controller
-export async function getContactGroupsByTeamId(teamId: string) {
+export async function getContactGroupsByTeamId(teamId: string, orgId: string) {
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       teamId,
+      team: { orgId },
       type: "NORMAL",
     },
     include: {
@@ -88,7 +92,13 @@ export async function getContactGroupsByOrgId(orgId: string, type?: ContactGroup
   });
   return contactGroups;
 }
-export async function createContactGroup(contactGroup: CreateContactGroupInput) {
+export async function createContactGroup(contactGroup: CreateContactGroupInput, orgId: string) {
+  const team = await prisma.team.findFirst({
+    where: { id: contactGroup.teamId, orgId },
+    select: { id: true },
+  });
+  if (!team) throw new ContactGroupNotFoundError("Team not found");
+
   return await prisma.contactGroup.create({
     data: {
       name: contactGroup.name,
@@ -100,10 +110,11 @@ export async function createContactGroup(contactGroup: CreateContactGroupInput) 
   });
 }
 
-export async function getContactsByContactGroupId(contactGroupId: string) {
-  const group = await prisma.contactGroup.findUnique({
+export async function getContactsByContactGroupId(contactGroupId: string, orgId: string) {
+  const group = await prisma.contactGroup.findFirst({
     where: {
       id: contactGroupId,
+      team: { orgId },
     },
     include: {
       contacts: {
@@ -114,13 +125,14 @@ export async function getContactsByContactGroupId(contactGroupId: string) {
     },
   });
   if (!group) {
-    throw new Error(`Contact group ${contactGroupId} not found`);
+    throw new ContactGroupNotFoundError(`Contact group ${contactGroupId} not found`);
   }
 
   return group.contacts.map((c) => c.contact);
 }
 export async function getContactsByContactGroupIdWithPagination(
   contactGroupId: string,
+  orgId: string,
   query?: PaginationQuery,
 ) {
   const {
@@ -189,25 +201,15 @@ export async function getContactsByContactGroupIdWithPagination(
   }
   if (search?.length > 0) {
     filterData.push({
-      name: {
-        contains: search,
-        mode: "insensitive",
-      },
-    });
-    filterData.push({
-      phone: {
-        contains: search,
-        mode: "insensitive",
-      },
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+      ],
     });
   }
 
   const searchCondition: Prisma.ContactWhereInput =
-    filterData?.length > 0
-      ? {
-          OR: filterData,
-        }
-      : {};
+    filterData?.length > 0 ? { AND: filterData } : {};
 
   const totalCount = await prisma.contact.count({
     where: {
@@ -216,12 +218,13 @@ export async function getContactsByContactGroupIdWithPagination(
           contactGroupId,
         },
       },
-      AND: filterData,
+      ...searchCondition,
     },
   });
-  const group = await prisma.contactGroup.findUnique({
+  const group = await prisma.contactGroup.findFirst({
     where: {
       id: contactGroupId,
+      team: { orgId },
     },
     include: {
       contacts: {
@@ -256,7 +259,7 @@ export async function getContactsByContactGroupIdWithPagination(
     },
   });
   if (!group) {
-    throw new Error(`Contact group ${contactGroupId} not found`);
+    throw new ContactGroupNotFoundError(`Contact group ${contactGroupId} not found`);
   }
   return {
     group: group.contacts.map((c) => c.contact),
@@ -276,11 +279,12 @@ export async function addNewContactsToGroup(
   contactsBody: AddNewContactsToGroupInput,
   orgId: string,
 ) {
-  const contactGroup = await getContactGroupById(contactGroupId);
+  const contactGroup = await getContactGroupById(contactGroupId, orgId);
   if (!contactGroup) {
-    throw new Error("Contact group not found");
+    throw new ContactGroupNotFoundError("Contact group not found");
   }
   const contacts = contactsBody.filter((data) => isValidPhoneNumber(`+${data.phone}`));
+  const invalidPhones = contactsBody.length - contacts.length;
   const phoneChunks = chunkArray(
     contacts.map((contact) => contact.phone).filter((phone): phone is string => Boolean(phone)),
     BATCH_SIZE,
@@ -312,6 +316,8 @@ export async function addNewContactsToGroup(
       orgId,
     );
   }
+
+  return { added: newMembers.length, invalidPhones };
 }
 
 export async function addExistingContactsToGroup(
@@ -321,16 +327,18 @@ export async function addExistingContactsToGroup(
   isCustomer: boolean | undefined,
   orgId: string,
 ) {
-  const contactGroup = await getContactGroupById(contactGroupId);
+  const contactGroup = await getContactGroupById(contactGroupId, orgId);
   if (!contactGroup) {
-    throw new Error("Contact group not found");
+    throw new ContactGroupNotFoundError("Contact group not found");
   }
-  // TODO: check if contactIds belong to the same team?
-  // FIXME:
+  const owned = await prisma.contact.findMany({
+    where: { id: { in: contactIds }, orgId },
+    select: { id: true },
+  });
   const newMembers = await prisma.contactGroupMap.createManyAndReturn({
     skipDuplicates: true,
-    data: contactIds.map((contactId) => ({
-      contactId,
+    data: owned.map((contact) => ({
+      contactId: contact.id,
       contactGroupId,
     })),
   });
@@ -341,33 +349,43 @@ export async function addExistingContactsToGroup(
       orgId,
     );
   }
+
+  return { added: newMembers.length, skipped: contactIds.length - owned.length };
 }
 
-export async function updateContactGroup(contactGroupId: string, data: UpdateContactGroupInput) {
+export async function updateContactGroup(
+  contactGroupId: string,
+  orgId: string,
+  data: UpdateContactGroupInput,
+) {
   return await prisma.contactGroup.update({
     where: {
       id: contactGroupId,
+      team: { orgId },
     },
     data,
   });
 }
 
-export async function deleteContactGroup(contactGroupId: string) {
+export async function deleteContactGroup(contactGroupId: string, orgId: string) {
   return await prisma.contactGroup.delete({
     where: {
       id: contactGroupId,
+      team: { orgId },
     },
   });
 }
 
 export async function removeContactsFromGroup(
   contactGroupId: string,
+  orgId: string,
   contactIds: RemoveGroupContactsSchema,
 ) {
   log.trace("Removing contacts from group %s %o", contactGroupId, contactIds);
   return await prisma.contactGroupMap.deleteMany({
     where: {
       contactGroupId,
+      contactGroup: { team: { orgId } },
       contactId: {
         in: contactIds,
       },
@@ -380,41 +398,39 @@ export async function addExistingContactsToMultipleGroups(
   contactGroupIds: Array<string>,
   orgId: string,
 ) {
+  const ownedGroups = await prisma.contactGroup.findMany({
+    where: { id: { in: contactGroupIds }, team: { orgId } },
+    select: { id: true },
+  });
+
   return await Promise.all(
-    contactGroupIds.map(async (contactGroupId) => {
-      const existingContacts = await prisma.contactGroupMap.findMany({
-        where: {
+    ownedGroups.map(async ({ id: contactGroupId }) => {
+      const newMembers = await prisma.contactGroupMap.createManyAndReturn({
+        skipDuplicates: true,
+        data: contactIds.map((contactId) => ({
+          contactId,
           contactGroupId,
-        },
+        })),
       });
-      const remainingContacts = contactIds.filter(
-        (id) => !existingContacts?.some((c) => c.contactId === id),
-      );
-      if (remainingContacts?.length) {
-        const newMembers = await prisma.contactGroupMap.createManyAndReturn({
-          data: remainingContacts.map((contactId) => ({
-            contactId,
-            contactGroupId,
-          })),
-        });
-        for (const contact of newMembers) {
-          await addZapierTriggerToQueue(
-            ZapierTriggers.CONTACT_ADDED_TO_GROUP,
-            { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
-            orgId,
-          );
-        }
+      for (const contact of newMembers) {
+        await addZapierTriggerToQueue(
+          ZapierTriggers.CONTACT_ADDED_TO_GROUP,
+          { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
+          orgId,
+        );
       }
+      return newMembers;
     }),
   );
 }
 
-export async function deleteManyContactGroups(groupIds: string[]) {
+export async function deleteManyContactGroups(groupIds: string[], orgId: string) {
   return await prisma.contactGroup.deleteMany({
     where: {
       id: {
         in: groupIds,
       },
+      team: { orgId },
     },
   });
 }

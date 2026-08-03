@@ -43,7 +43,7 @@ export async function getActiveLoyaltyEarningRules(programId: string) {
         },
       ],
     },
-    orderBy: { priority: "asc" },
+    orderBy: { priority: "desc" },
   });
 }
 

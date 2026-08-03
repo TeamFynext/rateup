@@ -131,12 +131,12 @@ describe("sendInstagramTextMessage", () => {
 });
 
 describe("the conversation limit, across every kind of message", () => {
-  // NOTE: pins current behaviour. Only the text and image senders call
-  // assertWithinConversationLimit. Video, file, quick reply, generic template,
-  // product template and story reply all skip it, so an org past its limit — or on
-  // a plan that does not include the channel — can keep sending by using any other
-  // message type. The automated-reply engine sends several of these directly.
-  // See issues.txt 12.10.
+  // Only the text and image senders used to call assertWithinConversationLimit.
+  // Video, file, quick reply, generic template, product template, story reply and
+  // private reply all skipped it, so an org past its limit — or on a plan that
+  // does not include the channel — could keep sending by using any other message
+  // type. The automated-reply engine sends several of these directly, so this was
+  // a billing and plan-enforcement gap.
   test.each([
     ["a video", () => sendInstagramVideo(IGS_ID, "https://cdn/v.mp4", ORG_ID, IBA_ID)],
     ["a file", () => sendInstagramFile(IGS_ID, "https://cdn/f.pdf", ORG_ID, IBA_ID)],
@@ -157,28 +157,47 @@ describe("the conversation limit, across every kind of message", () => {
     ],
     ["a product template", () => sendInstagramProductTemplate(IGS_ID, ["sku-1"], ORG_ID, IBA_ID)],
     ["a story reply", () => sendInstagramStoryReply(IGS_ID, "story-1", "nice", ORG_ID, IBA_ID)],
-    ["a private reply to a comment", () => sendInstagramPrivateReply("comment-1", "hi", IBA_ID)],
-  ])("sends %s without checking the conversation limit", async (_label, send) => {
+    [
+      "a private reply to a comment",
+      () => sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID),
+    ],
+    ["an image", () => sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID)],
+    ["a text message", () => sendInstagramTextMessage(IGS_ID, "hi", ORG_ID, IBA_ID)],
+  ])("checks the conversation limit before sending %s", async (_label, send) => {
     await send();
 
-    expect(assertLimitMock).not.toHaveBeenCalled();
+    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
     expect(callMetaApiMock).toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. sendInstagramImage's orgId is optional and the
-  // check is `if (orgId)`, so a caller that omits it skips the gate entirely.
-  // Every sibling requires orgId. See issues.txt 12.10.
-  test("skips the limit check for an image sent without an org", async () => {
-    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", undefined, undefined, IBA_ID);
+  test.each([
+    ["a video", () => sendInstagramVideo(IGS_ID, "https://cdn/v.mp4", ORG_ID, IBA_ID)],
+    ["an image", () => sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID)],
+    [
+      "a private reply to a comment",
+      () => sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID),
+    ],
+  ])("sends nothing when the org is over its limit, for %s", async (_label, send) => {
+    assertLimitMock.mockRejectedValue(new Error("Conversation limit reached"));
 
-    expect(assertLimitMock).not.toHaveBeenCalled();
-    expect(callMetaApiMock).toHaveBeenCalled();
+    await expect(send()).rejects.toThrow("Conversation limit reached");
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+
+  // sendInstagramImage's orgId and ibaId were optional and the check was
+  // `if (orgId)`, so a caller that simply omitted the org skipped the gate. Every
+  // sibling required orgId; these now do too, which is why there is no longer an
+  // "image sent without an org" case to test.
+  test("requires an org for an image, like every other sender", async () => {
+    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
+
+    expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
   });
 });
 
 describe("sendInstagramImage", () => {
   test("sends the image as a reusable attachment", async () => {
-    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", undefined, ORG_ID, IBA_ID);
+    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
 
     expect(lastCall().body).toEqual({
       recipient: { id: IGS_ID },
@@ -188,17 +207,17 @@ describe("sendInstagramImage", () => {
     });
   });
 
-  test("checks the conversation limit when it is given an org", async () => {
-    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", undefined, ORG_ID, IBA_ID);
+  test("checks the conversation limit", async () => {
+    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
 
     expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
   });
 
-  // NOTE: pins current behaviour. A caption is not attached to the image — it goes
-  // out as a second, separate text message, so the customer sees two bubbles and
-  // the caption can arrive out of order. See issues.txt 12.11.
-  test("sends a caption as a second message rather than attaching it", async () => {
-    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", "Our new arrival", ORG_ID, IBA_ID);
+  // A caption goes out as a second, separate text message. That is NOT the bug and
+  // was not changed: Instagram's send API takes either `text` or `attachment` on a
+  // message, not both, so there is no captioned image to attach it to.
+  test("sends a caption as a second message, which is all Instagram allows", async () => {
+    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID, "Our new arrival");
 
     expect(callMetaApiMock).toHaveBeenCalledTimes(2);
     expect(lastCall(1).body).toEqual({
@@ -207,25 +226,46 @@ describe("sendInstagramImage", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The caption send is inside the same try, so its
-  // failure is reported as "Error sending image" and rethrown — but the image has
-  // already gone out. The caller cannot tell a total failure from a half-sent one.
-  // See issues.txt 12.11.
-  test("reports the whole send as failed when only the caption failed", async () => {
+  // The caption send used to sit inside the same try, so its failure was reported
+  // as "Error sending image" and rethrown — even though the image had already gone
+  // out. The caller could not tell a total failure from a half-sent one, and a
+  // retry sent the image twice.
+  test("reports the image as sent and the caption as failed, separately", async () => {
     callMetaApiMock
       .mockResolvedValueOnce({ data: { message_id: "mid-out-1" } })
       .mockRejectedValueOnce(new Error("graph is down"));
 
-    await expect(
-      sendInstagramImage(IGS_ID, "https://cdn/i.jpg", "caption", ORG_ID, IBA_ID),
-    ).rejects.toThrow("graph is down");
+    const result = await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID, "caption");
+
+    expect(result.image).toEqual({ message_id: "mid-out-1" });
+    expect(result.caption?.sent).toBe(false);
     expect(callMetaApiMock).toHaveBeenCalledTimes(2);
+  });
+
+  test("reports the caption as sent when both halves succeed", async () => {
+    const result = await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID, "caption");
+
+    expect(result.caption).toEqual({ sent: true });
+  });
+
+  test("reports no caption at all when none was asked for", async () => {
+    const result = await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
+
+    expect(result.caption).toBeUndefined();
+  });
+
+  test("still fails outright when the image itself fails", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("graph is down"));
+
+    await expect(
+      sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID, "caption"),
+    ).rejects.toThrow("graph is down");
   });
 });
 
 describe("sendInstagramPrivateReply", () => {
   test("addresses the reply to the comment rather than to a user", async () => {
-    await sendInstagramPrivateReply("comment-1", "thanks!", IBA_ID);
+    await sendInstagramPrivateReply("comment-1", "thanks!", IBA_ID, ORG_ID);
 
     expect(lastCall().body).toEqual({
       recipient: { comment_id: "comment-1" },
@@ -236,7 +276,7 @@ describe("sendInstagramPrivateReply", () => {
   test("refuses when the account has no Facebook page behind it", async () => {
     getSettingsMock.mockResolvedValue({ ...SETTINGS, fbPageId: null });
 
-    await expect(sendInstagramPrivateReply("comment-1", "hi", IBA_ID)).rejects.toThrow(
+    await expect(sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID)).rejects.toThrow(
       `No Facebook Page ID configured for ibaId ${IBA_ID}`,
     );
     expect(callMetaApiMock).not.toHaveBeenCalled();
@@ -245,7 +285,7 @@ describe("sendInstagramPrivateReply", () => {
   test("refuses when the account is not connected", async () => {
     getSettingsMock.mockResolvedValue(null);
 
-    await expect(sendInstagramPrivateReply("comment-1", "hi", IBA_ID)).rejects.toThrow(
+    await expect(sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID)).rejects.toThrow(
       `No Instagram settings found for ibaId ${IBA_ID}`,
     );
   });
@@ -324,7 +364,7 @@ describe("ice breakers", () => {
 
     await setInstagramIceBreakers(iceBreakers, ORG_ID, IBA_ID);
 
-    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", {
+    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", ORG_ID, {
       instagramIceBreakers: iceBreakers,
     });
   });
@@ -354,7 +394,9 @@ describe("ice breakers", () => {
 
     expect(lastCall().method).toBe("DELETE");
     expect(lastCall().body).toEqual({ fields: ["ice_breakers"] });
-    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", { instagramIceBreakers: [] });
+    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", ORG_ID, {
+      instagramIceBreakers: [],
+    });
   });
 
   test("refuses when the account is not connected", async () => {
@@ -365,36 +407,56 @@ describe("ice breakers", () => {
     );
   });
 
-  // NOTE: pins current behaviour. callInstagramMessengerProfileApi already returns
-  // response.data, and setInstagramIceBreakers then returns `response.data` again —
-  // one unwrap too many, so it resolves to undefined. setInstagramPersistentMenu,
-  // which does the same job, returns `response` and is correct. The sync endpoint
-  // hands this straight back to the client as its `data`. See issues.txt 12.12.
-  test("resolves to nothing at all, having unwrapped Meta's answer twice", async () => {
+  // callInstagramMessengerProfileApi already returns response.data, and this used
+  // to return `response.data` again — one unwrap too many, so it resolved to
+  // undefined and the sync endpoint answered { success: true, data: undefined }.
+  // setInstagramPersistentMenu, which does the same job, was already correct.
+  test("reports what Meta answered, unwrapped exactly once", async () => {
     callMetaApiMock.mockResolvedValue({ data: { result: "success" } });
 
     await expect(
       setInstagramIceBreakers([{ question: "Hours?", payload: "HOURS" }], ORG_ID, IBA_ID),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ result: "success" });
   });
 
-  // NOTE: pins current behaviour. The cache is filled from `response.ice_breakers`,
-  // but the GET returns Meta's messenger_profile envelope, which carries the
-  // fields under `data`. So the top-level read finds nothing, `[]` is cached, and
-  // every later call takes the cached branch and reports no ice breakers — even
-  // though Meta has them. Note the two branches also return different shapes:
-  // `{ ice_breakers }` when cached, the raw envelope when not.
-  // See issues.txt 12.12.
-  test("caches an empty list when Meta's answer nests the field, and returns a different shape", async () => {
-    callMetaApiMock.mockResolvedValue({
-      data: { data: [{ ice_breakers: [{ question: "Hours?", payload: "HOURS" }] }] },
-    });
+  // The cache was filled from `response.ice_breakers`, but Meta's messenger_profile
+  // GET nests the requested fields under `data`. The top-level read found nothing,
+  // `[]` was cached, and every later call took the cached branch and reported no
+  // ice breakers at all — even though Meta had them.
+  test("caches what Meta actually returned, out of the nested envelope", async () => {
+    const ICE = [{ question: "Hours?", payload: "HOURS" }];
+    callMetaApiMock.mockResolvedValue({ data: { data: [{ ice_breakers: ICE }] } });
 
     const first = await getInstagramIceBreakers(ORG_ID, IBA_ID);
 
-    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", { instagramIceBreakers: [] });
-    expect(first).toEqual({ data: [{ ice_breakers: [{ question: "Hours?", payload: "HOURS" }] }] });
-    expect(first).not.toHaveProperty("ice_breakers");
+    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", ORG_ID, {
+      instagramIceBreakers: ICE,
+    });
+    expect(first).toEqual({ ice_breakers: ICE });
+  });
+
+  // Both branches return the same shape now. They used to differ —
+  // { ice_breakers } when cached, Meta's raw envelope when not — which
+  // normalizeIceBreakers in the controller papered over, which is why the
+  // empty-cache bug went unnoticed.
+  test("returns the same shape whether or not the answer came from the cache", async () => {
+    const ICE = [{ question: "Hours?", payload: "HOURS" }];
+    callMetaApiMock.mockResolvedValue({ data: { data: [{ ice_breakers: ICE }] } });
+
+    const fetched = await getInstagramIceBreakers(ORG_ID, IBA_ID);
+
+    getSettingsMock.mockResolvedValue({ ...SETTINGS, instagramIceBreakers: ICE });
+    const cached = await getInstagramIceBreakers(ORG_ID, IBA_ID);
+
+    expect(fetched).toEqual(cached);
+  });
+
+  // A bare top-level field is accepted too, in case Meta answers that way.
+  test("also reads the field when Meta puts it at the top level", async () => {
+    const ICE = [{ question: "Hours?", payload: "HOURS" }];
+    callMetaApiMock.mockResolvedValue({ data: { ice_breakers: ICE } });
+
+    await expect(getInstagramIceBreakers(ORG_ID, IBA_ID)).resolves.toEqual({ ice_breakers: ICE });
   });
 });
 
@@ -410,7 +472,7 @@ describe("the persistent menu", () => {
     await setInstagramPersistentMenu(MENU, ORG_ID, IBA_ID);
 
     expect(lastCall().body).toEqual({ persistent_menu: MENU });
-    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", {
+    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", ORG_ID, {
       instagramPersistentMenu: MENU,
     });
   });
@@ -436,20 +498,21 @@ describe("the persistent menu", () => {
     await deleteInstagramPersistentMenu(ORG_ID, IBA_ID);
 
     expect(lastCall().method).toBe("DELETE");
-    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", {
+    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", ORG_ID, {
       instagramPersistentMenu: [],
     });
   });
 
-  // NOTE: same caching gap as the ice breakers above. See issues.txt 12.12.
-  test("caches an empty menu when Meta's answer nests the field", async () => {
+  // Same caching gap as the ice breakers above.
+  test("caches the menu Meta actually returned, out of the nested envelope", async () => {
     callMetaApiMock.mockResolvedValue({ data: { data: [{ persistent_menu: MENU }] } });
 
-    await getInstagramPersistentMenu(ORG_ID, IBA_ID);
+    const result = await getInstagramPersistentMenu(ORG_ID, IBA_ID);
 
-    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", {
-      instagramPersistentMenu: [],
+    expect(updateSettingsMock).toHaveBeenCalledWith("settings-1", ORG_ID, {
+      instagramPersistentMenu: MENU,
     });
+    expect(result).toEqual({ persistent_menu: MENU });
   });
 });
 

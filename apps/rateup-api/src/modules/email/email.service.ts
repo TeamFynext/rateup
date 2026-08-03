@@ -4,14 +4,20 @@ import { SendEmailInput } from "./email.schema.js";
 import { getEmailBodyTemplate } from "./email.util.js";
 import crypto from "node:crypto";
 
-export async function sendEmailService(emailParams: SendEmailInput) {
+export async function sendEmailService(
+  emailParams: SendEmailInput,
+  data: EmailTemplateData | undefined = emailParams?.data,
+) {
   const msg = {
     to: emailParams?.toEmail,
     subject: emailParams?.subject,
     text: emailParams?.text,
-    html: getEmailBodyTemplate(emailParams?.purpose, emailParams?.data),
+    html: getEmailBodyTemplate(emailParams?.purpose, data),
   };
-  await sendAWSEmail(msg);
+  const sent = await sendAWSEmail(msg);
+  if (!sent) {
+    throw new Error("The email could not be sent");
+  }
 }
 
 export async function storeOtp(otp: string, userId: string, surveyId?: string) {
@@ -46,8 +52,10 @@ export async function validateOtp(otp: string, userId: string, surveyId?: string
   });
 
   if (storedOtp) {
-    if (parseInt(storedOtp.expiryDate) > Date.now()) return true;
-    else {
+    if (parseInt(storedOtp.expiryDate) > Date.now()) {
+      await prisma.otpStore.delete({ where: { userId, surveyId, otp: hashedOtp } });
+      return true;
+    } else {
       await prisma.otpStore.delete({
         where: {
           userId,

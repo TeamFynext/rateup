@@ -142,11 +142,14 @@ export async function createTemplateHandler(
         };
         break;
       default:
-        break;
+        return reply.code(400).send({
+          message: `templateType is required and must be one of ${Object.values(TemplateType).join(", ")}`,
+        });
     }
     if (templateData?.id) {
       await updateTemplateInDb(
         templateData.id,
+        orgId,
         fetchedTemplate,
         defaultValues as unknown as WaTemplateDefaultValues,
         templateType,
@@ -196,7 +199,7 @@ export async function saveTemplateAsDraftHandler(
       });
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
-      const template = await getDbTemplate(request.body.id);
+      const template = await getDbTemplate(request.body.id, orgId);
       if (!template) {
         reply.code(404).send({ message: "Template not found" });
         return;
@@ -210,6 +213,7 @@ export async function saveTemplateAsDraftHandler(
       template.data.language = formattedTemplate.language ?? "en";
       await updateTemplateInDb(
         request.body.id,
+        orgId,
         template.data,
         defaultValues as unknown as WaTemplateDefaultValues,
         templateType,
@@ -250,22 +254,18 @@ export async function updateTemplateHandler(
       reply.code(403).send({ message: "User is not a member of any org" });
       return;
     }
-    const template = await getDbTemplate(request.params.templateId);
+    const template = await getDbTemplate(request.params.templateId, orgAndRole.orgId);
 
     if (!template) {
       reply.status(404);
       log.trace("Template not found");
       return;
-    } else if (template.orgId !== orgAndRole.orgId) {
-      log.trace(
-        "User %s tried to update template %s from another org",
-        request.userId,
-        request.params.templateId,
-      );
-      reply.status(403);
-      return;
     }
-    const updatedTemplate = await updateTemplate(request.params.templateId, request.body);
+    const updatedTemplate = await updateTemplate(
+      request.params.templateId,
+      orgAndRole.orgId,
+      request.body,
+    );
     if (updatedTemplate) {
       reply.status(200).send(updatedTemplate);
     } else {
@@ -289,23 +289,28 @@ export async function deleteTemplateHandler(
 ) {
   const { templateId } = request.params;
   try {
-    const dbTemplate = await getDbTemplate(templateId);
+    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    if (!orgAndRole) {
+      reply.code(403);
+      return;
+    }
+    const orgId = orgAndRole.orgId;
+    const dbTemplate = await getDbTemplate(templateId, orgId);
     if (!dbTemplate) {
       reply.code(404);
       return;
     }
-    const { data: template, orgId } = dbTemplate;
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
-    if (!orgAndRole || orgAndRole.orgId !== orgId) {
-      reply.code(403);
-      return;
-    }
+    const { data: template } = dbTemplate;
     const { id, name } = template;
     if (id) {
-      await deleteTemplate(orgId, id, name);
+      const deletedAtMeta = await deleteTemplate(orgId, id, name);
+      if (!deletedAtMeta) {
+        reply.code(502).send({ message: "WhatsApp refused to delete this template" });
+        return;
+      }
     }
-    await deleteTemplateFromDb(templateId);
-    reply.code(204);
+    await deleteTemplateFromDb(templateId, orgId);
+    reply.code(204).send();
   } catch {
     reply.code(500);
   }
@@ -382,19 +387,18 @@ export async function uploadHandler(request: FastifyRequest, reply: FastifyReply
       data.file.resume();
       return reply.code(400).send({ message: validation.message });
     }
-    const sizeField = data.fields.size;
-    const size: number =
-      (sizeField && !Array.isArray(sizeField) && sizeField.type === "field"
-        ? Number(sizeField.value)
-        : 0) || 0;
     const orgAndRole = await getOrgIdAndRole({ id: request.userId });
     if (!orgAndRole) {
+      data.file.resume();
       return reply.code(403).send({ message: "User is not a member of any org" });
     }
+    const buffer = await data.toBuffer();
+    const size = buffer.length;
     const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
       data,
       size,
       orgAndRole.orgId,
+      buffer,
     );
     if (fileHandle === "error") return reply.code(400).send("image upload failed");
     return reply.code(200).send({ id: fileHandle, uploadSessionId });
@@ -553,7 +557,7 @@ export async function sendTemplateToUserCore(
         }
         break;
       case WaTemplateSupportedFormats.PRODUCT:
-        const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!);
+        const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!, orgId);
         if (!catalog || catalog.catalogId !== defaultValues?.catalog?.catalogId) {
           log.error(
             "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
@@ -784,14 +788,14 @@ export async function sendTemplateToUserCore(
                         },
                         tax: {
                           offset: 100,
-                          discription: defaultValues?.orderDetails?.taxDescription,
+                          description: defaultValues?.orderDetails?.taxDescription,
                           value: Number(defaultValues?.orderDetails?.tax) * 100,
                         },
                         ...(defaultValues?.orderDetails?.discount
                           ? {
                               discount: {
                                 offset: 100,
-                                discription: defaultValues?.orderDetails?.discountDescription,
+                                description: defaultValues?.orderDetails?.discountDescription,
                                 value: Number(defaultValues?.orderDetails?.discount) * 100,
                               },
                             }
@@ -809,7 +813,7 @@ export async function sendTemplateToUserCore(
                       },
                       total_amount: {
                         offset: 100,
-                        value: total_amount,
+                        value: total_amount * 100,
                       },
                     },
                   },
@@ -842,7 +846,7 @@ export async function sendTemplateToUserCore(
           (c) => c?.type.toLowerCase() === WaTemplateComponentType.HEADER,
         )?.format;
         if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
-          const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!);
+          const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!, orgId);
           if (!catalog || catalog.catalogId !== defaultValues?.catalog?.catalogId) {
             log.error(
               "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
@@ -1266,31 +1270,47 @@ export async function sendTemplatesToContactsHandler(
     const orgId = req.user.orgId;
     const userId = req.userId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+    if (!dbTemplate) {
+      return res.code(404).send({ message: "Template not found" });
+    }
     const contacts = await prisma.contact.findMany({
       where: {
         id: {
           in: req.body.contactIds,
         },
+        orgId,
       },
       select: {
+        id: true,
         phone: true,
       },
     });
 
+    let sent = 0;
+    const failed: string[] = [];
     for (const contact of contacts) {
       if (!contact.phone) continue;
-      await sendTemplateToPhone({
-        orgId,
-        phone: contact.phone,
-        dbTemplate,
-        teamId: req.body.teamId,
-        header: req.body.header,
-        userId,
-      });
+      try {
+        await sendTemplateToPhone({
+          orgId,
+          phone: contact.phone,
+          dbTemplate,
+          teamId: req.body.teamId,
+          header: req.body.header,
+          userId,
+        });
+        sent++;
+      } catch (error) {
+        log.error({ err: error, contactId: contact.id }, "Error sending template to contact");
+        failed.push(contact.id);
+      }
     }
+
+    const skipped = req.body.contactIds.length - contacts.length;
+    return res.code(200).send({ sent, failed, skipped });
   } catch (error) {
     log.error({ err: error }, "Error sending template to contacts");
-    res.code(500).send(error);
+    res.code(500).send({ message: error instanceof Error ? error.message : "Unknown error" });
   }
 }
 
@@ -1303,9 +1323,9 @@ const getLatestStatus = (statusObjInput: unknown) => {
     failed?: unknown;
     sent?: unknown;
   } | null;
+  if (statusObj?.failed) return "failed";
   if (statusObj?.read) return "read";
   if (statusObj?.delivered) return "delivered";
-  if (statusObj?.failed) return "failed";
   if (statusObj?.sent) return "sent";
   return "pending";
 };
@@ -1317,8 +1337,9 @@ export async function getMessageStatusByIdHandler(
 ) {
   try {
     const { messageId } = request.params;
+    const { orgId } = request.user;
     const messageStatus = await prisma.waMessage.findFirst({
-      where: { messageId },
+      where: { messageId, orgId },
       select: {
         messageId: true,
         stats: true,

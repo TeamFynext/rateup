@@ -25,8 +25,6 @@ export async function ticketRoutes(server: FastifyInstance) {
   server.post(
     "/:id/comment",
     {
-      // preHandler: [verifyTicketAccess],
-
       schema: {
         body: createCommentRequestSchema,
       },

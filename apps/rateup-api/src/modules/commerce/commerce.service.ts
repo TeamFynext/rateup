@@ -1,4 +1,9 @@
+import { ChannelNotFoundError } from "./commerce.errors.js";
+export { ChannelNotFoundError };
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+
+dayjs.extend(utc);
 import prisma from "../../utils/prisma.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import type {
@@ -27,25 +32,38 @@ function lineItems(products: unknown): OrderLineItem[] {
   return Array.isArray(products) ? (products as OrderLineItem[]) : [];
 }
 
+function money(value: unknown): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function itemsSubtotal(products: unknown): number {
   return lineItems(products).reduce(
-    (sum, item) => sum + Number(item?.price ?? 0) * Number(item?.quantity ?? 0),
+    (sum, item) => sum + money(item?.price) * money(item?.quantity),
     0,
   );
 }
 
 /** There is no stored total column — totals are items + delivery, as the UI shows them. */
 export function orderTotal(products: unknown, deliveryOption?: unknown): number {
-  const delivery = Number((deliveryOption as DeliveryOption)?.charge ?? 0);
+  const delivery = money((deliveryOption as DeliveryOption)?.charge);
   return itemsSubtotal(products) + delivery;
 }
 
 export function orderItemCount(products: unknown): number {
-  return lineItems(products).reduce((sum, item) => sum + Number(item?.quantity ?? 0), 0);
+  return lineItems(products).reduce((sum, item) => sum + money(item?.quantity), 0);
 }
 
 export function orderCurrency(products: unknown): string | undefined {
   return lineItems(products).find((item) => item?.currency)?.currency;
+}
+
+export function orderCurrencies(products: unknown): string[] {
+  const seen = new Set<string>();
+  for (const item of lineItems(products)) {
+    if (item?.currency) seen.add(item.currency);
+  }
+  return [...seen];
 }
 
 /**
@@ -64,7 +82,7 @@ export async function resolveChannelCatalogId(
       where: { whatsappSettingsPhoneId: filter.phoneId },
       select: { catalogId: true },
     });
-    if (!map) throw new Error("No catalog is connected to that channel");
+    if (!map) throw new ChannelNotFoundError();
     catalogId = map.catalogId;
   }
 
@@ -74,7 +92,7 @@ export async function resolveChannelCatalogId(
     where: { catalogId, orgId },
     select: { catalogId: true },
   });
-  if (!owned) throw new Error("Channel not found for this organization");
+  if (!owned) throw new ChannelNotFoundError();
   return catalogId;
 }
 
@@ -92,7 +110,7 @@ function buildOrderWhere(
   if (filter.from || filter.to) {
     where.createdAt = {
       ...(filter.from && { gte: filter.from }),
-      ...(filter.to && { lte: filter.to }),
+      ...(filter.to && { lt: filter.to }),
     };
   }
   if (filter.status) where.status = filter.status;
@@ -184,11 +202,22 @@ async function sumPeriod(where: Prisma.WaCatalogOrderWhereInput) {
   const paidSales = orders
     .filter((order) => order.paymentStatus?.toUpperCase() === "PAID")
     .reduce((sum, order) => sum + orderTotal(order.products, order.deliveryOption), 0);
-  return { totalSales, paidSales, orderCount: orders.length };
+
+  const currencies = new Set<string>();
+  for (const order of orders) {
+    for (const currency of orderCurrencies(order.products)) currencies.add(currency);
+  }
+
+  return {
+    totalSales,
+    paidSales,
+    orderCount: orders.length,
+    currencies: [...currencies],
+  };
 }
 
 function pctChange(current: number, previous: number): number | null {
-  if (!previous) return current > 0 ? 100 : null;
+  if (!previous) return null;
   return Number((((current - previous) / previous) * 100).toFixed(1));
 }
 
@@ -227,6 +256,8 @@ export async function getCommerceOverview(orgId: string, filter: CommerceFilter)
     paidSales: current.paidSales,
     orderCount: current.orderCount,
     avgOrderValue,
+    currencies: current.currencies,
+    mixedCurrency: current.currencies.length > 1,
     productsLive,
     delta: {
       totalSales: previous ? pctChange(current.totalSales, previous.totalSales) : null,
@@ -235,6 +266,8 @@ export async function getCommerceOverview(orgId: string, filter: CommerceFilter)
     },
   };
 }
+
+const MAX_BUCKETS = 2000;
 
 /** Sales/orders bucketed over time, with empty buckets filled so charts don't gap. */
 export async function getCommerceTimeseries(orgId: string, filter: CommerceTimeseriesQuery) {
@@ -251,10 +284,12 @@ export async function getCommerceTimeseries(orgId: string, filter: CommerceTimes
   const start = filter.from ?? orders[0]?.createdAt;
   const end = filter.to ?? new Date();
   if (start) {
+    let cursor = dayjs.utc(start).startOf(unit);
+    const last = dayjs.utc(end);
     for (
-      let cursor = dayjs(start).startOf(unit);
-      !cursor.isAfter(dayjs(end), unit);
-      cursor = cursor.add(1, unit)
+      let filled = 0;
+      cursor.isValid() && last.isValid() && !cursor.isAfter(last, unit) && filled < MAX_BUCKETS;
+      cursor = cursor.add(1, unit), filled++
     ) {
       const key = cursor.format("YYYY-MM-DD");
       buckets.set(key, { date: key, sales: 0, orders: 0 });
@@ -262,7 +297,7 @@ export async function getCommerceTimeseries(orgId: string, filter: CommerceTimes
   }
 
   for (const order of orders) {
-    const key = dayjs(order.createdAt).startOf(unit).format("YYYY-MM-DD");
+    const key = dayjs.utc(order.createdAt).startOf(unit).format("YYYY-MM-DD");
     const bucket = buckets.get(key) ?? { date: key, sales: 0, orders: 0 };
     bucket.sales += orderTotal(order.products, order.deliveryOption);
     bucket.orders += 1;
@@ -287,7 +322,6 @@ export async function getCommerceTopProducts(orgId: string, filter: CommerceTopP
     retailerId: string;
     name: string;
     image: string | null;
-    price: number;
     units: number;
     revenue: number;
   }
@@ -301,12 +335,11 @@ export async function getCommerceTopProducts(orgId: string, filter: CommerceTopP
         retailerId,
         name: item.title ?? retailerId,
         image: item.image ?? null,
-        price: Number(item.price ?? 0),
         units: 0,
         revenue: 0,
       };
-      entry.units += Number(item?.quantity ?? 0);
-      entry.revenue += Number(item?.price ?? 0) * Number(item?.quantity ?? 0);
+      entry.units += money(item?.quantity);
+      entry.revenue += money(item?.price) * money(item?.quantity);
       totals.set(retailerId, entry);
     }
   }
@@ -316,6 +349,7 @@ export async function getCommerceTopProducts(orgId: string, filter: CommerceTopP
 
   return top.map((entry) => ({
     ...entry,
+    price: entry.units ? Number((entry.revenue / entry.units).toFixed(2)) : 0,
     // Share of the top seller's revenue — the bar width the overview renders.
     share: Math.round((entry.revenue / maxRevenue) * 100),
   }));

@@ -572,7 +572,7 @@ export const disconnectZohoIntegrationHandler = async (
   reply: FastifyReply,
 ) => {
   try {
-    const { orgId } = request.params;
+    const orgId = request.user.orgId;
 
     if (!orgId) {
       return reply.code(400).send({

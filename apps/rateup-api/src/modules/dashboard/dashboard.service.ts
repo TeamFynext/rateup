@@ -1,8 +1,5 @@
-import dayjs from "dayjs";
 import { CampaignStatus, SurveyType, WaFlowStatus } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
-import Session from "supertokens-node/recipe/session/index.js";
-import { updateLastLoggedInTime } from "../user/user.service.js";
 import { UserAvailabilityStatus } from "../user/user.schema.js";
 
 interface OverallStats {
@@ -12,8 +9,20 @@ interface OverallStats {
   automationsCount: number;
   loyaltyCustomersCount: number;
   activeWebSurveysCount: number;
+  teamsCount: number;
   ticketCount: number;
 }
+
+const EMPTY_STATS: OverallStats = {
+  newChatCount: 0,
+  activeCampaignsCount: 0,
+  publishedFlowsCount: 0,
+  automationsCount: 0,
+  loyaltyCustomersCount: 0,
+  activeWebSurveysCount: 0,
+  teamsCount: 0,
+  ticketCount: 0,
+};
 
 export async function getOverallStats(orgId: string, userId: string): Promise<OverallStats> {
   const counts = await prisma.$queryRaw<OverallStats[]>`SELECT
@@ -22,7 +31,7 @@ export async function getOverallStats(orgId: string, userId: string): Promise<Ov
   (SELECT COUNT(*)::INTEGER FROM "Campaign" cp JOIN "Team" t ON cp."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND cp."status" = ${CampaignStatus.ACTIVE}) AS "activeCampaignsCount",
   (SELECT COUNT(*)::INTEGER FROM "WaFlow" WHERE "orgId"=${orgId}::uuid AND "status" = ${WaFlowStatus.PUBLISHED}) AS "publishedFlowsCount",
   (SELECT COUNT(*)::INTEGER FROM "WaAutomatedReply" WHERE "orgId" = ${orgId}::uuid) AS "automationsCount",
-  (SELECT COUNT(*)::INTEGER FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid) AS "loyaltyCustomersCount",
+  (SELECT COUNT(*)::INTEGER FROM "CustomerLoyaltyAccount" cla JOIN "LoyaltyProgram" lp ON cla."programId" = lp.id WHERE lp."orgId" = ${orgId}::uuid) AS "loyaltyCustomersCount",
   (SELECT COUNT(*)::INTEGER FROM "Survey" WHERE "orgId" = ${orgId}::uuid AND "active" = TRUE AND "type" = ${SurveyType.Web}) AS "activeWebSurveysCount",
   (SELECT COUNT(*)::INTEGER FROM "TeamMember" tm JOIN "Team" t ON tm."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND tm."userId" = ${userId}::uuid) AS "teamsCount",
   (SELECT COUNT(*)::INTEGER FROM "TicketCard" tc JOIN "TicketColumn" tcl ON tc."ticketColumnId" = tcl.id JOIN "TicketBoard" tb ON
@@ -30,7 +39,7 @@ export async function getOverallStats(orgId: string, userId: string): Promise<Ov
    AND tc."createdAt" > NOW() - INTERVAL '24 hours'
    ) AS "ticketCount"
    ;`;
-  return counts[0];
+  return counts[0] ?? EMPTY_STATS;
 }
 
 interface ActiveSurvey {
@@ -52,10 +61,10 @@ export async function getActiveSurveyStats(userId: string): Promise<ActiveSurvey
   LEFT JOIN "SurveyResponse" sr ON sr."surveyTeamMapId" = st.id
   LEFT JOIN "TeamMember" tm ON st."teamId" = tm."teamId"
   WHERE tm."userId" = ${userId}::uuid AND s."active" = TRUE 
-  GROUP BY s.id, wf."dbFlowId" ORDER BY s."createdAt" DESC) 
-  (SELECT * FROM filtered_surveys WHERE "type" = ${SurveyType.Web} LIMIT 10)
-   UNION ALL 
-  (SELECT * FROM filtered_surveys WHERE "type" = ${SurveyType.WaFlow} LIMIT 10)
+  GROUP BY s.id, wf."dbFlowId")
+  (SELECT * FROM filtered_surveys WHERE "type" = ${SurveyType.Web} ORDER BY "createdAt" DESC LIMIT 10)
+   UNION ALL
+  (SELECT * FROM filtered_surveys WHERE "type" = ${SurveyType.WaFlow} ORDER BY "createdAt" DESC LIMIT 10)
   ;`;
 }
 
@@ -73,7 +82,14 @@ interface TeamMember {
 
 export async function getTeamMemberStats(
   teamId: string,
-): Promise<(TeamMember & { isOnline: boolean })[]> {
+  orgId: string,
+): Promise<(TeamMember & { isOnline: boolean })[] | null> {
+  const team = await prisma.team.findFirst({
+    where: { id: teamId, orgId },
+    select: { id: true },
+  });
+  if (!team) return null;
+
   const users: TeamMember[] =
     await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role", orm. "status", u."lastLoggedInAt",
     (
@@ -86,31 +102,13 @@ export async function getTeamMemberStats(
         FROM "WaInboxAssign" inb
         WHERE inb."assignedUserId" = u.id
     ) AS "assignedChatsCount"
-   FROM "TeamMember" tm 
-   LEFT JOIN "User" u ON tm."userId" = u.id 
-   LEFT JOIN "OrgMember" orm ON orm."userId" = tm."userId"
-   WHERE tm."teamId" = ${teamId}::uuid;`;
-  const members: (TeamMember & { isOnline: boolean })[] = [];
-  for (const user of users) {
-    let sessionHandles = await Session.getAllSessionHandlesForUser(user.id);
-    if (!user.lastLoggedInAt || dayjs(user.lastLoggedInAt).year() <= 2020) {
-      let lastLoggedIn = 0;
-      for (const session of sessionHandles) {
-        const res = await Session.getSessionInformation(session);
-        if (res) {
-          lastLoggedIn = Math.max(lastLoggedIn, res.timeCreated);
-        }
-      }
-      const lastLoggedInAt = lastLoggedIn ? dayjs(lastLoggedIn).utc().format() : null;
-      if (lastLoggedInAt || (user.lastLoggedInAt && !lastLoggedInAt))
-        await updateLastLoggedInTime(user.id, lastLoggedInAt);
-
-      user.lastLoggedInAt = lastLoggedInAt;
-    }
-    members.push({
-      ...user,
-      isOnline: user.status === UserAvailabilityStatus.online,
-    });
-  }
-  return members;
+   FROM "TeamMember" tm
+   LEFT JOIN "User" u ON tm."userId" = u.id
+   LEFT JOIN "OrgMember" orm ON orm."userId" = tm."userId" AND orm."orgId" = ${orgId}::uuid
+   JOIN "Team" t ON tm."teamId" = t.id
+   WHERE tm."teamId" = ${teamId}::uuid AND t."orgId" = ${orgId}::uuid;`;
+  return users.map((user) => ({
+    ...user,
+    isOnline: user.status === UserAvailabilityStatus.online,
+  }));
 }

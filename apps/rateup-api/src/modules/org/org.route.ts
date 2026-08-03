@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   completeOrgDetailsHandler,
   createOrgHandler,
+  deleteOrgAdminHandler,
   deleteOrgHandler,
   getAllMembersWithTeamsAndInvitationHandler,
   getAllMembersWithTeamsHandler,
@@ -100,7 +101,7 @@ export async function orgRoutes(server: FastifyInstance) {
       },
       preHandler: assertRootOrg,
     },
-    deleteOrgHandler,
+    deleteOrgAdminHandler,
   );
 
   server.get(

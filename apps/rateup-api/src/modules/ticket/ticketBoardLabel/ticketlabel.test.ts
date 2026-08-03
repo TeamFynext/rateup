@@ -233,33 +233,34 @@ describe("createLabel", () => {
     });
   });
 
-  test("refuses a name already used on the board", async () => {
-    db.ticketBoardLabel.findUnique.mockResolvedValueOnce({ id: "other", name: "Bug" });
-
-    await expect(createLabel(BOARD, { name: "Bug", color: "#f00" })).rejects.toMatchObject({
-      statusCode: 409,
-    });
-    expect(db.ticketBoardLabel.create).not.toHaveBeenCalled();
-  });
-
-  test("checks uniqueness against the compound key the model declares", async () => {
-    await createLabel(BOARD, { name: "Bug", color: "#f00" });
-
-    expect(db.ticketBoardLabel.findUnique.mock.calls[0][0].where).toEqual({
-      ticketBoardId_name: { ticketBoardId: BOARD, name: "Bug" },
-    });
-  });
-
-  // NOTE: the check and the insert are two statements with no transaction, so a
-  // concurrent create passes the check and then trips the real constraint —
-  // and nothing catches P2002, so that request 500s instead of answering 409.
-  test("a race past the pre-check surfaces as an uncaught constraint error", async () => {
+  // Uniqueness used to be pre-checked with a findUnique and then written in a
+  // separate statement with no transaction, so two concurrent creates of the same
+  // name both passed the check and the loser tripped the real constraint — whose
+  // uncaught P2002 became a 500, the opposite of the 409 written above it. The
+  // constraint itself is now the check.
+  test("refuses a name already used on the board, from the constraint itself", async () => {
     db.ticketBoardLabel.create.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
     );
 
     await expect(createLabel(BOARD, { name: "Bug", color: "#f00" })).rejects.toMatchObject({
-      code: "P2002",
+      statusCode: 409,
+    });
+  });
+
+  test("does not read the row before writing it", async () => {
+    await createLabel(BOARD, { name: "Bug", color: "#f00" });
+
+    expect(db.ticketBoardLabel.findUnique).not.toHaveBeenCalled();
+  });
+
+  test("any other write failure is left alone", async () => {
+    db.ticketBoardLabel.create.mockRejectedValueOnce(
+      Object.assign(new Error("db down"), { code: "P1001" }),
+    );
+
+    await expect(createLabel(BOARD, { name: "Bug", color: "#f00" })).rejects.toMatchObject({
+      code: "P1001",
     });
   });
 
@@ -295,22 +296,11 @@ describe("the label readers and writers", () => {
     });
   });
 
-  test("a rename checks the new name against the label's own board", async () => {
-    db.ticketBoardLabel.findUnique
-      .mockResolvedValueOnce({ id: LABEL, ticketBoardId: BOARD })
-      .mockResolvedValueOnce(null);
-
-    await updateLabel(LABEL, { name: "Renamed" });
-
-    expect(db.ticketBoardLabel.findUnique.mock.calls[1][0].where).toEqual({
-      ticketBoardId_name: { ticketBoardId: BOARD, name: "Renamed" },
-    });
-  });
-
-  test("a rename onto another label's name is refused", async () => {
-    db.ticketBoardLabel.findUnique
-      .mockResolvedValueOnce({ id: LABEL, ticketBoardId: BOARD })
-      .mockResolvedValueOnce({ id: "other", name: "Renamed" });
+  // Renames had the same racing pre-check as create, and the constraint decides now.
+  test("a rename onto another label's name is refused as a 409", async () => {
+    db.ticketBoardLabel.update.mockRejectedValueOnce(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
+    );
 
     await expect(updateLabel(LABEL, { name: "Renamed" })).rejects.toMatchObject({
       statusCode: 409,
@@ -318,25 +308,22 @@ describe("the label readers and writers", () => {
   });
 
   test("renaming a label to its own name is allowed", async () => {
-    db.ticketBoardLabel.findUnique
-      .mockResolvedValueOnce({ id: LABEL, ticketBoardId: BOARD })
-      .mockResolvedValueOnce({ id: LABEL, name: "Bug" });
-
     await expect(updateLabel(LABEL, { name: "Bug" })).resolves.toBeDefined();
   });
 
-  // NOTE: when the label does not exist the uniqueness check is skipped
-  // silently and the update runs anyway, raising P2025 rather than a 404.
-  test("a missing label skips the check and fails at the update", async () => {
-    db.ticketBoardLabel.findUnique.mockResolvedValueOnce(null);
+  // A label that did not exist used to skip the check silently and then fail at the
+  // update with a raw P2025 rather than a 404.
+  test("a missing label answers 404", async () => {
     db.ticketBoardLabel.update.mockRejectedValueOnce(
       Object.assign(new Error("Record to update not found"), { code: "P2025" }),
     );
 
-    await expect(updateLabel(LABEL, { name: "Renamed" })).rejects.toMatchObject({ code: "P2025" });
+    await expect(updateLabel(LABEL, { name: "Renamed" })).rejects.toMatchObject({
+      statusCode: 404,
+    });
   });
 
-  test("a colour-only update skips the uniqueness check", async () => {
+  test("a colour-only update reads nothing first either", async () => {
     await updateLabel(LABEL, { color: "#0f0" });
 
     expect(db.ticketBoardLabel.findUnique).not.toHaveBeenCalled();

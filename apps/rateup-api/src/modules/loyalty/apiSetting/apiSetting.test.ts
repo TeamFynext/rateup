@@ -98,11 +98,15 @@ describe("the api-setting service", () => {
   });
 
   test("an update keeps only the id that matches the chosen feature", async () => {
-    await updateLoyaltyApiSetting("api-1", {
-      feature: "reward",
-      actionId: "act-1",
-      rewardId: "rwd-1",
-    });
+    await updateLoyaltyApiSetting(
+      "api-1",
+      {
+        feature: "reward",
+        actionId: "act-1",
+        rewardId: "rwd-1",
+      },
+      ORG,
+    );
 
     expect(db.loyaltyApiSettings.update.mock.calls[0][0].data).toMatchObject({
       actionId: undefined,
@@ -111,11 +115,15 @@ describe("the api-setting service", () => {
   });
 
   test("switching a setting to an action clears the reward link", async () => {
-    await updateLoyaltyApiSetting("api-1", {
-      feature: "action",
-      actionId: "act-1",
-      rewardId: "rwd-1",
-    });
+    await updateLoyaltyApiSetting(
+      "api-1",
+      {
+        feature: "action",
+        actionId: "act-1",
+        rewardId: "rwd-1",
+      },
+      ORG,
+    );
 
     expect(db.loyaltyApiSettings.update.mock.calls[0][0].data).toMatchObject({
       actionId: "act-1",
@@ -123,19 +131,21 @@ describe("the api-setting service", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The read and the create are both org-scoped —
-  // the update is not. It takes the setting id alone, so an API setting belonging
-  // to another org can be repointed at this org's action or reward.
-  // See issues.txt 20.43.
-  test("an update is keyed on the setting id alone, with no org", async () => {
-    await updateLoyaltyApiSetting("api-other-org", { feature: "action", actionId: "act-1" });
+  // The read and the create were both org-scoped and the update was not: it took
+  // the setting id alone, and its handler never read `request.user` at all, so an
+  // API setting belonging to another org could be repointed at a different action
+  // or reward.
+  test("an update is scoped to the caller's org", async () => {
+    await updateLoyaltyApiSetting("api-other-org", { feature: "action", actionId: "act-1" }, ORG);
 
-    expect(db.loyaltyApiSettings.update.mock.calls[0][0].where).toEqual({ id: "api-other-org" });
+    expect(db.loyaltyApiSettings.update.mock.calls[0][0].where).toEqual({
+      id: "api-other-org",
+      orgId: ORG,
+    });
   });
 
   // NOTE: `...(data as any)` spreads the whole request body into prisma, so any
   // column the schema does not mention still reaches the write.
-  // See issues.txt 20.43.
   test("spreads the whole body into the create", async () => {
     await createLoyaltyApiSetting({ name: "POS", somethingElse: "x" } as any, ORG);
 
@@ -182,9 +192,9 @@ describe("the api-setting controller", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: the handler never reads request.user, so the org is not even available
-  // to the update it calls. See issues.txt 20.43.
-  test("updates without consulting the session at all", async () => {
+  // The handler used to never read `request.user` at all, so the org was not even
+  // available to the update it called.
+  test("takes the org from the session and scopes the update with it", async () => {
     const rep = reply();
 
     await updateLoyaltyApiSettingHandler(
@@ -192,24 +202,26 @@ describe("the api-setting controller", () => {
       rep,
     );
 
-    expect(db.loyaltyApiSettings.update.mock.calls[0][0].where).toEqual({ id: "api-other-org" });
+    expect(db.loyaltyApiSettings.update.mock.calls[0][0].where).toEqual({
+      id: "api-other-org",
+      orgId: ORG,
+    });
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: every catch in this controller does `reply.send(e)` with the Error
-  // object itself. An Error has no enumerable own properties, so it serialises to
-  // `{}` — the client gets a 500 with an empty body and no message at all. The
-  // rest of the module sends `{ error: e.message }`. See issues.txt 20.43.
-  test("answers a failure with the bare Error object", async () => {
-    const boom = new Error("connection lost");
-    db.loyaltyApiSettings.findMany.mockRejectedValue(boom);
+  // Every catch in this controller used to be `reply.send(e)` with the Error
+  // object itself. An Error has no enumerable own properties, so that serialises
+  // to `{}` — the client got a 500 with an empty body and no message, and could
+  // not tell a validation failure from a database outage. The rest of the module
+  // sends `{ error: e.message }`.
+  test("answers a failure with the message, not an empty object", async () => {
+    db.loyaltyApiSettings.findMany.mockRejectedValue(new Error("connection lost"));
     const rep = reply();
 
     await getLoyaltyApiSettingsHandler(request(), rep);
 
-    expect(answer(rep).code).toBe(500);
-    expect(answer(rep).body).toBe(boom);
-    expect(JSON.stringify(answer(rep).body)).toBe("{}");
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "connection lost" } });
+    expect(JSON.stringify(answer(rep).body)).not.toBe("{}");
   });
 
   test("every handler reports a failure the same way", async () => {
@@ -223,8 +235,7 @@ describe("the api-setting controller", () => {
     await updateLoyaltyApiSettingHandler(request({ params: { id: "api-1" }, body: {} }), reps[2]);
 
     for (const rep of reps) {
-      expect(answer(rep).code).toBe(500);
-      expect(answer(rep).body).toBeInstanceOf(Error);
+      expect(answer(rep)).toEqual({ code: 500, body: { error: "x" } });
     }
   });
 });

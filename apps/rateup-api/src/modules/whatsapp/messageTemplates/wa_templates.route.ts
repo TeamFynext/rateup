@@ -17,7 +17,6 @@ import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import fastifyMultipart from "@fastify/multipart";
-import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth.js";
 import {
   type ByTemplateIdParamsSchema,
   byTemplateIdParamsSchema,
@@ -127,7 +126,6 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post<{ Params: ByTemplateIdParamsSchema; Body: WaUserSendTemplateBodySchema }>(
     "/:templateId/send",
     {
-      preHandler: verifyMessageMonthlyLimitRestriction,
       schema: {
         params: byTemplateIdParamsSchema,
         body: waUserSendTemplateBodySchema,

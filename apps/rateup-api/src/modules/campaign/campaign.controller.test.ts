@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("./campaign.service.js", () => ({
+vi.mock("./campaign.service.js", async () => ({
+  // The error class is real; every function around it is a mock.
+  CampaignNotFoundError: (
+    await vi.importActual<typeof import("./campaign.service.js")>("./campaign.service.js")
+  ).CampaignNotFoundError,
   createCampaign: vi.fn(),
   deleteCampaign: vi.fn(),
   deleteCampaignParticipantsByCampaignId: vi.fn(),
@@ -20,6 +24,7 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 import {
+  CampaignNotFoundError,
   createCampaign,
   deleteCampaign,
   deleteCampaignParticipantsByCampaignId,
@@ -66,7 +71,6 @@ const m = {
 };
 
 const ORG_A = "org-a";
-const ORG_B = "org-b";
 const CAMPAIGN_ID = "camp-1";
 
 function request(overrides: Record<string, unknown> = {}): any {
@@ -105,7 +109,7 @@ beforeEach(() => {
   m.byOrg.mockResolvedValue([{ id: CAMPAIGN_ID }]);
   m.countByStatuses.mockResolvedValue(5);
   m.enqueue.mockResolvedValue({ status: true, message: "ok" });
-  m.dequeue.mockResolvedValue(undefined);
+  m.dequeue.mockResolvedValue({ status: true, message: "ok" });
   m.stats.mockResolvedValue({ countSent: 10 });
   m.responses.mockResolvedValue([{ id: "resp-1" }]);
   m.excel.mockResolvedValue({ title: "March push", data: Buffer.from("wb") });
@@ -119,16 +123,18 @@ describe("createCampaignHandler", () => {
 
     await createCampaignHandler(request({ body }), rep);
 
-    expect(m.create).toHaveBeenCalledWith(body);
+    expect(m.create).toHaveBeenCalledWith(body, ORG_A);
     expect(rep.status).toHaveBeenCalledWith(201);
     expect(sent(rep)).toEqual({ id: CAMPAIGN_ID });
   });
 
-  // NOTE: pins current behaviour. teamId comes straight from the body and nothing
-  // checks it belongs to the caller's org — the handler never reads request.user at
-  // all. So a campaign can be created under another org's team, which then owns it
-  // for every other endpoint in this module. See issues.txt 17.3.
-  test("creates a campaign under a team belonging to another org", async () => {
+  // teamId came straight from the body with nothing checking it belonged to the
+  // caller's org — the handler never read request.user at all. So a campaign could
+  // be planted under another org's team, which then owned it for every other
+  // endpoint in this module, and every send built on it ran as that org.
+  // createCampaign resolves the team against the caller's org now.
+  test("refuses to create a campaign under a team belonging to another org", async () => {
+    m.create.mockRejectedValue(new CampaignNotFoundError("Team not found"));
     const rep = reply();
 
     await createCampaignHandler(
@@ -136,17 +142,21 @@ describe("createCampaignHandler", () => {
       rep,
     );
 
-    expect(m.create.mock.calls[0][0].teamId).toBe("another-orgs-team");
-    expect(rep.status).toHaveBeenCalledWith(201);
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(sent(rep).code).toBe("CAMPAIGN_NOT_FOUND");
   });
 
-  // NOTE: no try/catch, unlike sendCampaignHandler in the same file — a service
-  // failure escapes to fastify's default handler. Same family as issues.txt 3.5.
-  // See issues.txt 17.6.
-  test("lets a creation failure propagate", async () => {
+  // No try/catch, unlike sendCampaignHandler in the same file — a service failure
+  // escaped to fastify's default handler rather than becoming a reply. Same family
+  // as
+  test("answers 500 for a creation failure, rather than letting it escape", async () => {
     m.create.mockRejectedValue(new Error("db down"));
+    const rep = reply();
 
-    await expect(createCampaignHandler(request({ body: {} }), reply())).rejects.toThrow("db down");
+    await createCampaignHandler(request({ body: {} }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(500);
+    expect(sent(rep).message).toBe("db down");
   });
 });
 
@@ -156,14 +166,14 @@ describe("getCampaignsHandler", () => {
 
     await getCampaignsHandler(request({ query: { campaignId: CAMPAIGN_ID } }), rep);
 
-    expect(m.byId).toHaveBeenCalledWith(CAMPAIGN_ID);
+    expect(m.byId).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A);
     expect(m.byOrg).not.toHaveBeenCalled();
   });
 
   test("returns a team's campaigns when a team is named", async () => {
     await getCampaignsHandler(request({ query: { teamId: "team-1" } }), reply());
 
-    expect(m.byTeam).toHaveBeenCalledWith("team-1");
+    expect(m.byTeam).toHaveBeenCalledWith("team-1", ORG_A);
   });
 
   test("falls back to every campaign in the caller's org", async () => {
@@ -182,26 +192,27 @@ describe("getCampaignsHandler", () => {
     expect(m.byTeam).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. Only the third branch uses request.user.orgId.
-  // Naming a campaign id returns that campaign whoever owns it — template body
-  // included — and naming a team id returns that team's campaigns. See
-  // issues.txt 17.3.
-  test("returns another org's campaign when its id is named", async () => {
-    m.byId.mockResolvedValue({ id: CAMPAIGN_ID, orgId: ORG_B, templateData: { name: "theirs" } });
+  // Only the third branch used request.user.orgId. Naming a campaign id returned
+  // that campaign whoever owned it — template body included — and naming a team id
+  // returned that team's campaigns. Both branches carry the caller's org now, and a
+  // campaign the org does not own reports as absent: 404, indistinguishable from
+  // one that never existed.
+  test("answers 404 for a campaign belonging to another org", async () => {
+    m.byId.mockResolvedValue(undefined);
     const rep = reply();
 
     await getCampaignsHandler(request({ query: { campaignId: CAMPAIGN_ID } }), rep);
 
-    expect(sent(rep).orgId).toBe(ORG_B);
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(sent(rep).code).toBe("CAMPAIGN_NOT_FOUND");
   });
 
-  test("returns another org's team's campaigns when its team id is named", async () => {
+  test("scopes a team listing to the caller's org", async () => {
     const rep = reply();
 
     await getCampaignsHandler(request({ query: { teamId: "another-orgs-team" } }), rep);
 
-    expect(m.byTeam).toHaveBeenCalledWith("another-orgs-team");
-    expect(rep.code).toHaveBeenCalledWith(200);
+    expect(m.byTeam).toHaveBeenCalledWith("another-orgs-team", ORG_A);
   });
 });
 
@@ -211,7 +222,7 @@ describe("updateCampaignByIdHandler and deleteCampaignByIdHandler", () => {
 
     await updateCampaignByIdHandler(request({ body: { name: "Renamed" } }), rep);
 
-    expect(m.update).toHaveBeenCalledWith(CAMPAIGN_ID, { name: "Renamed" });
+    expect(m.update).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, { name: "Renamed" });
     expect(rep.status).toHaveBeenCalledWith(200);
   });
 
@@ -220,26 +231,45 @@ describe("updateCampaignByIdHandler and deleteCampaignByIdHandler", () => {
 
     await deleteCampaignByIdHandler(request(), rep);
 
-    expect(m.delete).toHaveBeenCalledWith(CAMPAIGN_ID);
+    expect(m.delete).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A);
     expect(rep.status).toHaveBeenCalledWith(200);
   });
 
-  // NOTE: neither handler reads request.user, so neither can be checking ownership.
-  // A campaign id is all it takes to rewrite or delete another org's campaign.
-  // See issues.txt 17.3.
-  test("neither handler consults who is asking", async () => {
+  // Neither handler read request.user, so neither could be checking ownership — a
+  // campaign id was all it took to rewrite or delete another org's campaign.
+  test("both handlers carry the caller's org", async () => {
     await updateCampaignByIdHandler(request({ body: {} }), reply());
     await deleteCampaignByIdHandler(request(), reply());
 
-    expect(m.update.mock.calls[0]).not.toContain(ORG_A);
-    expect(m.delete.mock.calls[0]).not.toContain(ORG_A);
+    expect(m.update.mock.calls[0][1]).toBe(ORG_A);
+    expect(m.delete.mock.calls[0][1]).toBe(ORG_A);
   });
 
-  // NOTE: no try/catch on either. See issues.txt 17.6.
-  test("lets a delete failure propagate", async () => {
-    m.delete.mockRejectedValue(new Error("db down"));
+  // The service uses an extended `where` — unique id plus the org filter — so
+  // Prisma raises P2025 rather than writing when the campaign is not the caller's.
+  // That becomes a 404, not a 500.
+  test.each([
+    ["update", (rep: any) => updateCampaignByIdHandler(request({ body: {} }), rep)],
+    ["delete", (rep: any) => deleteCampaignByIdHandler(request(), rep)],
+  ])("answers 404 when a %s matched no campaign of the caller's", async (_label, run) => {
+    const notFound = Object.assign(new Error("record not found"), { code: "P2025" });
+    m.update.mockRejectedValue(notFound);
+    m.delete.mockRejectedValue(notFound);
+    const rep = reply();
 
-    await expect(deleteCampaignByIdHandler(request(), reply())).rejects.toThrow("db down");
+    await run(rep);
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+  });
+
+  // No try/catch on either.
+  test("answers 500 for a delete failure, rather than letting it escape", async () => {
+    m.delete.mockRejectedValue(new Error("db down"));
+    const rep = reply();
+
+    await deleteCampaignByIdHandler(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(500);
   });
 });
 
@@ -253,7 +283,7 @@ describe("sendCampaignHandler", () => {
 
     await sendCampaignHandler(request({ body: sendBody() }), rep);
 
-    expect(m.update.mock.calls[0][1]).toMatchObject({ status: CampaignStatus.QUEUING });
+    expect(m.update.mock.calls[0][2]).toMatchObject({ status: CampaignStatus.QUEUING });
     expect(m.enqueue).toHaveBeenCalledWith(
       CAMPAIGN_ID,
       ["PENDING"],
@@ -285,7 +315,7 @@ describe("sendCampaignHandler", () => {
       rep,
     );
 
-    expect(m.update.mock.calls[0][1].status).toBe(CampaignStatus.DEQUEUING);
+    expect(m.update.mock.calls[0][2].status).toBe(CampaignStatus.DEQUEUING);
     expect(m.dequeue).toHaveBeenCalledWith(CAMPAIGN_ID);
     expect(sent(rep).code).toBe("MSG_SCHEDULE_CANCEL_REQUESTED");
   });
@@ -320,7 +350,7 @@ describe("sendCampaignHandler", () => {
       rep,
     );
 
-    expect(m.update.mock.calls[0][1]).toMatchObject({
+    expect(m.update.mock.calls[0][2]).toMatchObject({
       status: CampaignStatus.QUEUING,
       campaignSentAt,
     });
@@ -331,7 +361,7 @@ describe("sendCampaignHandler", () => {
   test("carries the daily cap through for a whole-campaign send", async () => {
     await sendCampaignHandler(request({ body: sendBody({ dailySendLimit: 500 }) }), reply());
 
-    expect(m.update.mock.calls[0][1].dailySendLimit).toBe(500);
+    expect(m.update.mock.calls[0][2].dailySendLimit).toBe(500);
     expect(m.enqueue.mock.calls[0][5]).toBe(500);
   });
 
@@ -341,7 +371,7 @@ describe("sendCampaignHandler", () => {
       reply(),
     );
 
-    expect(m.update.mock.calls[0][1]).not.toHaveProperty("dailySendLimit");
+    expect(m.update.mock.calls[0][2]).not.toHaveProperty("dailySendLimit");
     expect(m.enqueue.mock.calls[0][5]).toBeUndefined();
   });
 
@@ -351,44 +381,80 @@ describe("sendCampaignHandler", () => {
 
     await sendCampaignHandler(request({ body: sendBody() }), rep);
 
-    expect(rep.code).toHaveBeenCalledWith(500);
+    expect(rep.status).toHaveBeenCalledWith(500);
     expect(sent(rep).code).toBe("INTERNAL_SERVER_ERROR");
   });
 
-  // NOTE: pins current behaviour. Nothing here compares the campaign to the
-  // caller's org — getCampaignById is unscoped and its result is only read for a
-  // status check. So a campaign id is all it takes to fire another org's campaign
-  // at their contacts, from their WhatsApp number, on their bill. Of everything in
-  // this module this is the one that acts rather than reads. See issues.txt 17.3.
-  test("fires a campaign belonging to another org", async () => {
-    m.byId.mockResolvedValue({ id: CAMPAIGN_ID, status: CampaignStatus.ACTIVE, orgId: ORG_B });
+  // Of everything in this module this is the one that ACTS rather than reads.
+  // Nothing here compared the campaign to the caller's org — getCampaignById was
+  // unscoped and its result was read only for a status check, and the DRIP and
+  // INACTIVE branches never fetched the campaign at all. A campaign id was enough
+  // to fire another org's campaign at their contacts, from their WhatsApp number,
+  // on their bill. The campaign is resolved once, up front, and every branch works
+  // from it.
+  test("refuses to fire a campaign belonging to another org", async () => {
+    m.byId.mockResolvedValue(undefined);
     const rep = reply();
 
     await sendCampaignHandler(request({ body: sendBody() }), rep);
 
-    expect(m.enqueue).toHaveBeenCalled();
-    expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
+    expect(m.enqueue).not.toHaveBeenCalled();
+    expect(m.update).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: enqueueCampaignMessage returns { status, message } and the handler
-  // discards it, answering "request accepted" either way. Since that function
-  // reports success without awaiting the queue anyway (see campaign.service.test.ts),
-  // there is nothing along this path that could report a failed enqueue.
-  // See issues.txt 17.4.
-  test("reports the request accepted even when the enqueue reports failure", async () => {
+  test.each([
+    ["a drip status change", { type: CampaignType.DRIP, status: CampaignStatus.ACTIVE }],
+    ["a cancellation", { status: CampaignStatus.INACTIVE }],
+  ])("refuses %s on another org's campaign too", async (_label, overrides) => {
+    m.byId.mockResolvedValue(undefined);
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody(overrides) }), rep);
+
+    expect(m.update).not.toHaveBeenCalled();
+    expect(m.dequeue).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(404);
+  });
+
+  test("resolves the campaign against the caller's org", async () => {
+    await sendCampaignHandler(request({ body: sendBody() }), reply());
+
+    expect(m.byId).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A);
+  });
+
+  // enqueueCampaignMessage reports { status, message } and the handler discarded
+  // it, answering "request accepted" either way — while the campaign row was
+  // already marked QUEUING, so the UI showed it queued forever.
+  test("reports a failed enqueue, and rolls the campaign back", async () => {
     m.enqueue.mockResolvedValue({ status: false, message: "Campaign not scheduled" });
     const rep = reply();
 
     await sendCampaignHandler(request({ body: sendBody() }), rep);
 
-    expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
-    expect(rep.status).toHaveBeenCalledWith(200);
+    expect(rep.status).toHaveBeenCalledWith(502);
+    expect(sent(rep).code).toBe("ENQUEUE_FAILED");
+    expect(m.update.mock.calls.at(-1)![2]).toMatchObject({ status: CampaignStatus.INACTIVE });
   });
 
-  // NOTE: the campaign is marked DEQUEUING and the dequeue requested before
-  // anything checks whether a queue or dequeue is already in progress — that guard
-  // sits below, after the INACTIVE branch has already returned. See issues.txt 17.6.
-  test("switches a campaign off without checking whether it is mid-queue", async () => {
+  test("reports a failed dequeue rather than confirming the cancellation", async () => {
+    m.dequeue.mockResolvedValue({ status: false, message: "Campaign cancellation not requested" });
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ status: CampaignStatus.INACTIVE }) }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(502);
+    expect(sent(rep).code).toBe("MSG_SCHEDULE_CANCEL_FAILED");
+  });
+
+  // The campaign was marked DEQUEUING and the dequeue requested before anything
+  // checked whether a queue or dequeue was already in progress — that guard sat
+  // below, after the INACTIVE branch had already returned, so it could not protect
+  // the cancel path. It is above every branch now.
+  test("refuses to switch a campaign off while it is mid-queue", async () => {
     m.byId.mockResolvedValue({ id: CAMPAIGN_ID, status: CampaignStatus.QUEUING });
     const rep = reply();
 
@@ -397,9 +463,9 @@ describe("sendCampaignHandler", () => {
       rep,
     );
 
-    expect(m.byId).not.toHaveBeenCalled();
-    expect(m.dequeue).toHaveBeenCalled();
-    expect(sent(rep).code).toBe("MSG_SCHEDULE_CANCEL_REQUESTED");
+    expect(m.dequeue).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(sent(rep).code).toBe("CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS");
   });
 });
 
@@ -409,7 +475,7 @@ describe("the reporting handlers", () => {
 
     await getResponseByCampaignByIdHandler(request(), rep);
 
-    expect(m.responses).toHaveBeenCalledWith(CAMPAIGN_ID);
+    expect(m.responses).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A);
     expect(sent(rep)).toEqual([{ id: "resp-1" }]);
   });
 
@@ -419,7 +485,7 @@ describe("the reporting handlers", () => {
 
     await getResponseByCampaignByIdHandler(request(), rep);
 
-    expect(rep.code).toHaveBeenCalledWith(500);
+    expect(rep.status).toHaveBeenCalledWith(500);
   });
 
   test("streams the export with a filename header the browser can read", async () => {
@@ -444,7 +510,7 @@ describe("the reporting handlers", () => {
   test("defaults the export to a spreadsheet", async () => {
     await getResponseExcelByCampaignByIdHandler(request({ query: {} }), reply());
 
-    expect(m.excel).toHaveBeenCalledWith(CAMPAIGN_ID, undefined, "xlsx");
+    expect(m.excel).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, undefined, "xlsx");
   });
 
   test("returns a campaign's counters", async () => {
@@ -452,7 +518,7 @@ describe("the reporting handlers", () => {
 
     await getCampaignStatsHandler(request({ query: { selectedDripStage: "stage-1" } }), rep);
 
-    expect(m.stats).toHaveBeenCalledWith(CAMPAIGN_ID, "stage-1");
+    expect(m.stats).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, "stage-1");
     expect(sent(rep)).toEqual({ countSent: 10 });
   });
 
@@ -462,32 +528,43 @@ describe("the reporting handlers", () => {
 
     await getCampaignStatsHandler(request({ query: {} }), rep);
 
-    expect(rep.code).toHaveBeenCalledWith(500);
+    expect(rep.status).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour, and this is the one that leaks customer data.
-  // The export carries every participant's name and phone number, and neither
-  // handler reads request.user — a campaign id is all it takes to download another
-  // org's contact list. Same for the survey responses beside it.
-  // See issues.txt 17.3.
-  test("exports and reports on a campaign without consulting who is asking", async () => {
+  // The one that leaked customer data: the export carries every participant's name
+  // and phone number, and neither handler read request.user — a campaign id was all
+  // it took to download another org's contact list, and the same for the survey
+  // responses beside it.
+  test("both reporting handlers carry the caller's org", async () => {
     await getResponseExcelByCampaignByIdHandler(request({ query: {} }), reply());
     await getResponseByCampaignByIdHandler(request(), reply());
 
-    expect(m.excel.mock.calls[0]).not.toContain(ORG_A);
-    expect(m.responses.mock.calls[0]).not.toContain(ORG_A);
+    expect(m.excel.mock.calls[0][1]).toBe(ORG_A);
+    expect(m.responses.mock.calls[0][1]).toBe(ORG_A);
   });
 
-  // NOTE: both error paths send the caught Error itself. Its own properties are
-  // non-enumerable, so the client receives {}. Same shape as issues.txt 11.14.
-  // See issues.txt 17.6.
-  test("sends failures as a body that carries no information", async () => {
+  test("answers 404 when the export names a campaign that is not the caller's", async () => {
+    m.excel.mockRejectedValue(new CampaignNotFoundError());
+    const rep = reply();
+
+    await getResponseExcelByCampaignByIdHandler(request({ query: {} }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+  });
+
+  // Both error paths sent the caught Error itself. Its own properties are
+  // non-enumerable, so the client received {} — no message, no code, nothing to
+  // show or log.
+  test("sends a failure as a body that names what went wrong", async () => {
     m.stats.mockRejectedValue(new Error("db down"));
     const rep = reply();
 
     await getCampaignStatsHandler(request({ query: {} }), rep);
 
-    expect(JSON.stringify(sent(rep))).toBe("{}");
+    expect(JSON.parse(JSON.stringify(sent(rep)))).toEqual({
+      message: "db down",
+      code: "INTERNAL_SERVER_ERROR",
+    });
   });
 });
 
@@ -497,7 +574,7 @@ describe("getCampaignFilterForFlowsHandler", () => {
 
     await getCampaignFilterForFlowsHandler(request({ query: { surveyId: "survey-1" } }), rep);
 
-    expect(m.filterForFlows).toHaveBeenCalledWith("survey-1");
+    expect(m.filterForFlows).toHaveBeenCalledWith("survey-1", ORG_A);
     expect(sent(rep)).toEqual([{ id: CAMPAIGN_ID, name: "March push" }]);
   });
 

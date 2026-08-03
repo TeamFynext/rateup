@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../settings/wa_settings.service.js", () => ({
+  getWaSettingsByIbaId: vi.fn(),
   getWaSettingsById: vi.fn(),
   updateWaSettingsById: vi.fn(),
 }));
@@ -18,7 +19,11 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
-import { getWaSettingsById, updateWaSettingsById } from "../settings/wa_settings.service.js";
+import {
+  getWaSettingsByIbaId,
+  getWaSettingsById,
+  updateWaSettingsById,
+} from "../settings/wa_settings.service.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
@@ -49,6 +54,7 @@ const m = {
   getIceBreakers: getInstagramIceBreakers as unknown as Mock,
   getMedia: getInstagramMediaPosts as unknown as Mock,
   getMenu: getInstagramPersistentMenu as unknown as Mock,
+  getSettingsByIbaId: getWaSettingsByIbaId as unknown as Mock,
   getSettingsById: getWaSettingsById as unknown as Mock,
   getStories: getInstagramStories as unknown as Mock,
   setIceBreakers: setInstagramIceBreakers as unknown as Mock,
@@ -97,6 +103,7 @@ function sent(rep: any, index = 0) {
 beforeEach(() => {
   vi.clearAllMocks();
   m.getSettingsById.mockResolvedValue(settings());
+  m.getSettingsByIbaId.mockResolvedValue(settings());
   m.updateSettings.mockResolvedValue({});
   m.getIceBreakers.mockResolvedValue({ ice_breakers: ICE_BREAKERS });
   m.getMenu.mockResolvedValue({ persistent_menu: MENU });
@@ -168,14 +175,22 @@ describe("getInstagramProfileHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour. resolveInstagramSettings throws a named,
-  // actionable error for a WhatsApp channel with no Instagram account attached —
-  // "Instagram account is not connected for this channel" — and the catch turns it
-  // into a generic 500 "Failed to fetch Instagram profile settings". The user is
-  // shown a server error for what is really a setup step they have not done.
-  // Every handler in this file behaves the same way. See issues.txt 12.14.
-  test("reports an unconnected Instagram account as a server error", async () => {
+  // resolveInstagramSettings raises a named, actionable error for a channel with
+  // no Instagram account attached, and every catch used to flatten it into a
+  // generic 500 — so the user was shown a server error for a setup step they
+  // simply had not done.
+  test("reports an unconnected Instagram account as a 409, with the reason", async () => {
     m.getSettingsById.mockResolvedValue(settings({ ibaId: null }));
+    const rep = reply();
+
+    await getInstagramProfileHandler(request(), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(409);
+    expect(sent(rep).message).toBe("Instagram account is not connected for this channel");
+  });
+
+  test("still reports a genuine failure as a 500", async () => {
+    m.getIceBreakers.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
 
     await getInstagramProfileHandler(request(), rep);
@@ -191,7 +206,7 @@ describe("setInstagramIceBreakersHandler", () => {
 
     await setInstagramIceBreakersHandler(request({ body: { iceBreakers: ICE_BREAKERS } }), rep);
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, {
+    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, ORG_A, {
       instagramIceBreakers: ICE_BREAKERS,
     });
     expect(m.setIceBreakers).not.toHaveBeenCalled();
@@ -236,23 +251,38 @@ describe("setInstagramIceBreakersHandler", () => {
     expect(m.updateSettings).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. When syncWithMeta is not asked for, the response
-  // still carries `meta: { saved: true }` — which reads as though Meta was updated.
-  // Nothing was sent to Meta at all. See issues.txt 12.14.
-  test("claims a Meta result even when Meta was never contacted", async () => {
+  // When syncWithMeta was not asked for the response still carried
+  // `meta: { saved: true }`, which reads as though Meta had been updated when
+  // nothing was sent to Meta at all.
+  test("says plainly that Meta was not contacted", async () => {
     const rep = reply();
 
     await setInstagramIceBreakersHandler(request({ body: { iceBreakers: ICE_BREAKERS } }), rep);
 
-    expect(sent(rep).data.meta).toEqual({ saved: true });
+    expect(sent(rep).data.meta).toEqual({ syncedWithMeta: false });
     expect(m.setIceBreakers).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The local draft is written before the Meta push,
-  // so a Meta refusal answers 500 with our copy already changed — the UI shows the
-  // new ice breakers while Instagram still serves the old ones. Every set/delete
-  // handler in this file has the same ordering. See issues.txt 12.13.
-  test("has already saved our copy when the push to Meta fails", async () => {
+  test("reports the Meta result when it was asked to sync", async () => {
+    const rep = reply();
+
+    await setInstagramIceBreakersHandler(
+      request({ body: { iceBreakers: ICE_BREAKERS, syncWithMeta: true } }),
+      rep,
+    );
+
+    expect(sent(rep).data.meta).toEqual({
+      syncedWithMeta: true,
+      result: { result: "success" },
+    });
+  });
+
+  // The local draft used to be written before the Meta push, so a Meta refusal
+  // answered 500 with our copy already changed — the UI showed the new ice
+  // breakers while Instagram still served the old ones, and nothing reconciled
+  // them. setInstagramIceBreakers writes our copy itself once Meta accepts, so the
+  // handler no longer writes it up front.
+  test("leaves our copy alone when the push to Meta fails", async () => {
     m.setIceBreakers.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
 
@@ -261,19 +291,21 @@ describe("setInstagramIceBreakersHandler", () => {
       rep,
     );
 
-    expect(m.updateSettings).toHaveBeenCalled();
+    expect(m.updateSettings).not.toHaveBeenCalled();
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 });
 
 describe("deleteInstagramIceBreakersHandler", () => {
-  test("clears our copy and Meta's", async () => {
+  // deleteInstagramIceBreakers clears our copy itself once Meta accepts, so the
+  // handler no longer clears it up front.
+  test("clears Meta's copy, which clears ours with it", async () => {
     const rep = reply();
 
     await deleteInstagramIceBreakersHandler(request(), rep);
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, { instagramIceBreakers: [] });
     expect(m.deleteIceBreakers).toHaveBeenCalledWith(ORG_A, IBA_ID);
+    expect(m.updateSettings).not.toHaveBeenCalled();
     expect(rep.code).toHaveBeenCalledWith(200);
   });
 
@@ -286,20 +318,23 @@ describe("deleteInstagramIceBreakersHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: same ordering as the setter. See issues.txt 12.13.
-  test("has already cleared our copy when Meta refuses the delete", async () => {
+  // Same ordering as the setter. Our copy used to be emptied before Meta was
+  // asked, so a refusal left the UI blank while Instagram still served the old
+  // list.
+  test("leaves our copy alone when Meta refuses the delete", async () => {
     m.deleteIceBreakers.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
 
     await deleteInstagramIceBreakersHandler(request(), rep);
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, { instagramIceBreakers: [] });
+    expect(m.updateSettings).not.toHaveBeenCalled();
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 });
 
 describe("the persistent menu handlers", () => {
-  test("saves the menu locally and pushes it when asked", async () => {
+  // setInstagramPersistentMenu writes our copy itself once Meta accepts.
+  test("pushes the menu to Meta, which saves our copy with it", async () => {
     const rep = reply();
 
     await setInstagramPersistentMenuHandler(
@@ -307,18 +342,30 @@ describe("the persistent menu handlers", () => {
       rep,
     );
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, { instagramPersistentMenu: MENU });
     expect(m.setMenu).toHaveBeenCalledWith(MENU, ORG_A, IBA_ID);
+    expect(m.updateSettings).not.toHaveBeenCalled();
     expect(rep.code).toHaveBeenCalledWith(200);
   });
 
-  test("clears our copy and Meta's on a delete", async () => {
+  test("saves the draft locally when it was not asked to sync", async () => {
+    const rep = reply();
+
+    await setInstagramPersistentMenuHandler(request({ body: { persistentMenu: MENU } }), rep);
+
+    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, ORG_A, {
+      instagramPersistentMenu: MENU,
+    });
+    expect(m.setMenu).not.toHaveBeenCalled();
+    expect(sent(rep).data.meta).toEqual({ syncedWithMeta: false });
+  });
+
+  test("clears Meta's copy on a delete, which clears ours with it", async () => {
     const rep = reply();
 
     await deleteInstagramPersistentMenuHandler(request(), rep);
 
-    expect(m.updateSettings).toHaveBeenCalledWith(SETTINGS_ID, { instagramPersistentMenu: [] });
     expect(m.deleteMenu).toHaveBeenCalledWith(ORG_A, IBA_ID);
+    expect(m.updateSettings).not.toHaveBeenCalled();
   });
 
   test("answers 404 for a channel belonging to another org", async () => {
@@ -331,16 +378,49 @@ describe("the persistent menu handlers", () => {
     expect(m.updateSettings).not.toHaveBeenCalled();
   });
 
-  // NOTE: unlike the ice breakers, the menu handler applies no size or shape check
-  // at all before storing whatever the body carries. See issues.txt 12.14.
-  test("stores a menu of any size without checking it", async () => {
-    const huge = Array.from({ length: 50 }, () => MENU[0]);
+  // Unlike the ice breakers, the menu handler applied no size or shape check at
+  // all before storing whatever the body carried.
+  test("refuses a menu with more than one entry for the same locale", async () => {
+    const duplicated = [MENU[0], MENU[0]];
     const rep = reply();
 
-    await setInstagramPersistentMenuHandler(request({ body: { persistentMenu: huge } }), rep);
+    await setInstagramPersistentMenuHandler(request({ body: { persistentMenu: duplicated } }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(m.updateSettings).not.toHaveBeenCalled();
+  });
+
+  test("refuses a menu with no default locale", async () => {
+    const rep = reply();
+
+    await setInstagramPersistentMenuHandler(
+      request({ body: { persistentMenu: [{ ...MENU[0], locale: "en_GB" }] } }),
+      rep,
+    );
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+  });
+
+  test("refuses a locale carrying more than three menu items", async () => {
+    const tooMany = [
+      {
+        locale: "default",
+        call_to_actions: Array.from({ length: 4 }, () => MENU[0].call_to_actions[0]),
+      },
+    ];
+    const rep = reply();
+
+    await setInstagramPersistentMenuHandler(request({ body: { persistentMenu: tooMany } }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+  });
+
+  test("accepts an empty menu, which is how the UI clears it", async () => {
+    const rep = reply();
+
+    await setInstagramPersistentMenuHandler(request({ body: { persistentMenu: [] } }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(200);
-    expect(m.updateSettings.mock.calls[0][1].instagramPersistentMenu).toHaveLength(50);
   });
 });
 
@@ -378,7 +458,7 @@ describe("the sync handlers", () => {
   // time too many and resolves to undefined (see
   // instagram_messaging.service.test.ts), and the handler hands that straight back
   // as its `data`. The menu sync, which is otherwise identical, returns Meta's
-  // answer. See issues.txt 12.12.
+  // answer.
   test("reports success with nothing in it after an ice-breaker sync", async () => {
     m.setIceBreakers.mockResolvedValue(undefined);
     const rep = reply();
@@ -390,16 +470,17 @@ describe("the sync handlers", () => {
 });
 
 describe("reading the account's own posts and stories", () => {
-  test("lists the media of the account named in the path", async () => {
+  test("lists the media of the caller's own account", async () => {
     const rep = reply();
 
     await getInstagramMediaHandler(request({ params: { ibaId: IBA_ID } }), rep);
 
+    expect(m.getSettingsByIbaId).toHaveBeenCalledWith(IBA_ID);
     expect(m.getMedia).toHaveBeenCalledWith(IBA_ID);
     expect(sent(rep)).toEqual({ success: true, data: [{ id: "media-1" }] });
   });
 
-  test("lists the stories of the account named in the path", async () => {
+  test("lists the stories of the caller's own account", async () => {
     const rep = reply();
 
     await getInstagramStoriesHandler(request({ params: { ibaId: IBA_ID } }), rep);
@@ -416,16 +497,19 @@ describe("reading the account's own posts and stories", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour, and this is the serious one in this file. These
-  // two handlers take the Instagram account id straight from the path and pass it
-  // to the service, which looks the account's page token up by that id alone. They
-  // never call resolveInstagramSettings — the ownership check the other seven
-  // handlers here all perform. The route is authenticated but not scoped, so any
-  // logged-in user who knows (or guesses) another org's Instagram business account
-  // id gets that account's last 50 posts and its live stories, with captions,
-  // media urls and permalinks. Same IDOR family as issues.txt 1.1 and 11.1.
-  // See issues.txt 12.15.
-  test("lists another org's media given its Instagram account id", async () => {
+  // This was the serious one in this file. Both handlers took the Instagram
+  // account id straight from the path and passed it to the service, which looks
+  // that account's page token up by id alone — neither called the ownership check
+  // the other seven handlers here all perform. The route is authenticated but was
+  // not scoped, so any logged-in user who knew or guessed another org's Instagram
+  // business account id got that account's last 50 posts and its live stories,
+  // fetched with the victim's own page token. Same IDOR family as
+  // and 11.1.
+  //
+  // 404, not 403: an account another org owns is indistinguishable from one that
+  // does not exist, so this cannot be used to probe for account ids.
+  test("answers 404 for another org's media, fetching nothing", async () => {
+    m.getSettingsByIbaId.mockResolvedValue(settings({ orgId: ORG_A }));
     const rep = reply();
 
     await getInstagramMediaHandler(
@@ -433,13 +517,13 @@ describe("reading the account's own posts and stories", () => {
       rep,
     );
 
-    expect(m.getSettingsById).not.toHaveBeenCalled();
-    expect(m.getMedia).toHaveBeenCalledWith(IBA_ID);
-    expect(sent(rep).success).toBe(true);
+    expect(m.getMedia).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: same gap, same handler pair. See issues.txt 12.15.
-  test("lists another org's stories given its Instagram account id", async () => {
+  // Same gap, same handler pair.
+  test("answers 404 for another org's stories, fetching nothing", async () => {
+    m.getSettingsByIbaId.mockResolvedValue(settings({ orgId: ORG_A }));
     const rep = reply();
 
     await getInstagramStoriesHandler(
@@ -447,7 +531,7 @@ describe("reading the account's own posts and stories", () => {
       rep,
     );
 
-    expect(m.getSettingsById).not.toHaveBeenCalled();
-    expect(sent(rep).success).toBe(true);
+    expect(m.getStories).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(404);
   });
 });

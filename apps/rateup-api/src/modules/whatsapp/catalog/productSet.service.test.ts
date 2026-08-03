@@ -7,7 +7,7 @@ vi.mock("../../../utils/prisma.js", () => {
   return {
     default: {
       __tx: tx,
-      whatsappProductSet: { findMany: vi.fn(), findUnique: vi.fn() },
+      whatsappProductSet: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn() },
       $transaction: vi.fn(async (cb: (client: unknown) => Promise<unknown>) => cb(tx)),
     },
     excludeFields: vi.fn(),
@@ -32,7 +32,7 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
   __tx: { whatsappProductSet: { upsert: Mock; deleteMany: Mock } };
-  whatsappProductSet: { findMany: Mock; findUnique: Mock };
+  whatsappProductSet: { findMany: Mock; findUnique: Mock; findFirst: Mock };
   $transaction: Mock;
 };
 const tx = db.__tx;
@@ -56,6 +56,7 @@ beforeEach(() => {
   db.$transaction.mockImplementation(async (cb: (client: unknown) => Promise<unknown>) => cb(tx));
   db.whatsappProductSet.findMany.mockResolvedValue([]);
   db.whatsappProductSet.findUnique.mockResolvedValue(null);
+  db.whatsappProductSet.findFirst.mockResolvedValue(null);
   tx.whatsappProductSet.upsert.mockResolvedValue({});
   tx.whatsappProductSet.deleteMany.mockResolvedValue({ count: 0 });
   metaReturns([]);
@@ -203,36 +204,46 @@ describe("getProductSetsByCatalog", () => {
   test("lists the catalog's sets by name", async () => {
     db.whatsappProductSet.findMany.mockResolvedValue([{ productSetId: "set-1" }]);
 
-    const result = await getProductSetsByCatalog(CATALOG_ID);
+    const result = await getProductSetsByCatalog(CATALOG_ID, ORG_ID);
 
     expect(db.whatsappProductSet.findMany).toHaveBeenCalledWith({
-      where: { catalogId: CATALOG_ID },
+      where: { catalogId: CATALOG_ID, orgId: ORG_ID },
       orderBy: { name: "asc" },
     });
     expect(result).toEqual([{ productSetId: "set-1" }]);
   });
 
-  // NOTE: the listing is not scoped by org — a catalog id alone returns its sets.
-  test("takes no org to scope the listing by", async () => {
-    await getProductSetsByCatalog("cat-other");
+  // The listing carries the caller's org, so another org's catalog id matches nothing
+  // rather than handing back its sets and their product id lists.
+  test("scopes the listing to the caller's org", async () => {
+    await getProductSetsByCatalog("cat-other", "org-attacker");
 
     expect(db.whatsappProductSet.findMany.mock.calls[0][0].where).toEqual({
       catalogId: "cat-other",
+      orgId: "org-attacker",
     });
   });
 });
 
 describe("getProductSetById", () => {
-  test("fetches the set by its Meta id", async () => {
-    db.whatsappProductSet.findUnique.mockResolvedValue({ productSetId: "set-1" });
+  // findFirst on the { orgId, productSetId } pair rather than findUnique on the id
+  // alone — the pair is a unique index, so this is the same lookup, just one that
+  // cannot return another org's set.
+  test("fetches the set by its Meta id, within the caller's org", async () => {
+    db.whatsappProductSet.findFirst.mockResolvedValue({ productSetId: "set-1" });
 
-    await expect(getProductSetById("set-1")).resolves.toEqual({ productSetId: "set-1" });
-    expect(db.whatsappProductSet.findUnique).toHaveBeenCalledWith({
-      where: { productSetId: "set-1" },
+    await expect(getProductSetById("set-1", ORG_ID)).resolves.toEqual({ productSetId: "set-1" });
+    expect(db.whatsappProductSet.findFirst).toHaveBeenCalledWith({
+      where: { productSetId: "set-1", orgId: ORG_ID },
     });
   });
 
   test("returns null for a set that does not exist", async () => {
-    await expect(getProductSetById("missing")).resolves.toBeNull();
+    await expect(getProductSetById("missing", ORG_ID)).resolves.toBeNull();
+  });
+
+  test("returns null for a set belonging to another org", async () => {
+    await expect(getProductSetById("set-victim", "org-attacker")).resolves.toBeNull();
+    expect(db.whatsappProductSet.findFirst.mock.calls[0][0].where.orgId).toBe("org-attacker");
   });
 });

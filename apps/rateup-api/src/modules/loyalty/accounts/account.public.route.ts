@@ -1,15 +1,17 @@
 import { FastifyInstance } from "fastify";
-import { createCustomerAccountHandler } from "./account.controller.js";
-import { customerLoyaltyAccountSchema } from "./account.schema.js";
+import { createPublicCustomerAccountHandler } from "./account.controller.js";
+import { customerLoyaltyAccountSchema, CustomerLoyaltyAccountInput } from "./account.schema.js";
+import { rateLimit } from "../../../utils/rateLimit.js";
 
 export async function customerAccountPublicRoutes(server: FastifyInstance) {
-  server.post(
+  server.post<{ Body: CustomerLoyaltyAccountInput }>(
     "/",
     {
+      preHandler: rateLimit({ max: 20, windowSeconds: 60 * 60, key: "loyaltySignup" }),
       schema: {
         body: customerLoyaltyAccountSchema,
       },
     },
-    createCustomerAccountHandler,
+    createPublicCustomerAccountHandler,
   );
 }

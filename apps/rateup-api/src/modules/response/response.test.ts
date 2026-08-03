@@ -63,6 +63,8 @@ import prisma from "../../utils/prisma.js";
 import * as service from "./response.service.js";
 import { getTeamIdsBySurveyMapId, getTeamIdsByUserId } from "../team/team.service.js";
 import { createTestimonial } from "../testimonial/testimonial.service.js";
+import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
+import { log } from "../../utils/logger.js";
 import { fetchLocation } from "../../utils/location.js";
 import { hasAccessToSurvey } from "../../utils/auth.js";
 import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions.js";
@@ -189,27 +191,71 @@ describe("verifyAccess", () => {
     });
   });
 
-  // NOTE: the hook exempts two routes by comparing the registered URL string.
-  // /generate has assertRootOrg of its own; /download-response has nothing but
-  // checkSession.
-  test("returns without checking anything for the two exempt urls", async () => {
-    for (const url of ["/api/response/generate", "/api/response/download-response"]) {
-      vi.clearAllMocks();
+  // The hook used to exempt TWO routes by comparing the registered URL string.
+  // /generate has assertRootOrg of its own and names no survey to resolve — it
+  // creates them — so it stays exempt. /download-response was exempt beside it
+  // while carrying nothing but checkSession, and its handler takes surveyId
+  // straight from the body.
+  test("returns without checking anything only for /generate", async () => {
+    await verifyAccess(
+      req({ routeOptions: { url: "/api/response/generate" }, params: {} }),
+      reply(),
+    );
 
-      await verifyAccess(req({ routeOptions: { url }, params: {} }), reply());
-
-      expect(hasAccessToSurvey).not.toHaveBeenCalled();
-      expect(getSurveyIdfromMap).not.toHaveBeenCalled();
-    }
+    expect(hasAccessToSurvey).not.toHaveBeenCalled();
+    expect(getSurveyIdfromMap).not.toHaveBeenCalled();
   });
 
+  test("checks the download route against the survey its body names", async () => {
+    await verifyAccess(
+      req({
+        routeOptions: { url: "/api/response/download-response" },
+        params: {},
+        body: { surveyId: VICTIM_SURVEY },
+      }),
+      reply(),
+    );
+
+    expect(hasAccessToSurvey).toHaveBeenCalledWith(VICTIM_SURVEY, USER);
+  });
+
+  test("refuses the download when the caller has no access to that survey", async () => {
+    (hasAccessToSurvey as unknown as Mock).mockResolvedValueOnce(false);
+    const rep = reply();
+
+    await verifyAccess(
+      req({
+        routeOptions: { url: "/api/response/download-response" },
+        params: {},
+        body: { surveyId: VICTIM_SURVEY },
+      }),
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(403);
+  });
+
+  // The remaining exemption is still an exact string match, so a route
+  // re-registered at a different path would lose it rather than gain one.
   test("the exemption is an exact string match on the registered url", async () => {
     await verifyAccess(
-      req({ routeOptions: { url: "/api/response/download-response/" }, params: {} }),
+      req({
+        routeOptions: { url: "/api/response/generate/" },
+        params: { surveyTeamMapId: OWN_MAP },
+      }),
       reply(),
     );
 
     expect(getSurveyIdfromMap).toHaveBeenCalled();
+  });
+
+  test("a request naming no survey at all is a 400 rather than a pass", async () => {
+    const rep = reply();
+
+    await verifyAccess(req({ routeOptions: { url: "/api/response/x" }, params: {} }), rep);
+
+    expect(answer(rep).code).toBe(400);
+    expect(hasAccessToSurvey).not.toHaveBeenCalled();
   });
 });
 
@@ -218,23 +264,24 @@ describe("verifyAccess", () => {
 // ===========================================================================
 
 describe("downloadExcelResponseHandler", () => {
-  // NOTE: the survey id comes from the body, and the hook that would have
-  // checked it returned early for this url.
-  test("exports whatever survey id the body names", async () => {
+  // The survey id comes from the body. The hook checks it now (see the block
+  // above); the handler itself still reads it verbatim, which is why the hook is
+  // the load-bearing part.
+  test("exports the survey id the body names, after the hook has checked it", async () => {
     await downloadExcelResponseHandler(
       { body: xlsxBody(), userId: USER, user: { orgId: ORG } } as never,
       reply(),
     );
 
     expect(svc.getAllResponses.mock.calls[0][0]).toBe(VICTIM_SURVEY);
-    expect(hasAccessToSurvey).not.toHaveBeenCalled();
   });
 
-  // NOTE: filterTeams is a list of survey-team-map ids taken from the body, and
-  // getTeamIdsBySurveyMapId resolves them with no user or org condition
-  // (team.service.ts:734-747).
-  test("resolves the team filter from map ids the caller supplied", async () => {
-    (getTeamIdsBySurveyMapId as unknown as Mock).mockResolvedValueOnce(["victim-team"]);
+  // filterTeams is a list of survey-team-map ids taken from the body, and
+  // getTeamIdsBySurveyMapId used to resolve them with no user or org condition —
+  // so another organisation's map ids resolved to that organisation's teams. It
+  // takes the caller's userId now and filters on team membership.
+  test("resolves the team filter from map ids, restricted to the caller's teams", async () => {
+    (getTeamIdsBySurveyMapId as unknown as Mock).mockResolvedValueOnce(["own-team"]);
 
     await downloadExcelResponseHandler(
       {
@@ -245,9 +292,9 @@ describe("downloadExcelResponseHandler", () => {
       reply(),
     );
 
-    expect(getTeamIdsBySurveyMapId).toHaveBeenCalledWith([VICTIM_MAP]);
+    expect(getTeamIdsBySurveyMapId).toHaveBeenCalledWith([VICTIM_MAP], USER);
     expect(getTeamIdsByUserId).not.toHaveBeenCalled();
-    expect(svc.getAllResponses.mock.calls[0][1]).toEqual(["victim-team"]);
+    expect(svc.getAllResponses.mock.calls[0][1]).toEqual(["own-team"]);
   });
 
   test("falls back to the caller's own teams only when filterTeams is empty", async () => {
@@ -262,9 +309,13 @@ describe("downloadExcelResponseHandler", () => {
     expect(svc.getAllResponses.mock.calls[0][1]).toEqual(["own-team"]);
   });
 
-  // NOTE: an empty team list is not a refusal — getAllResponses drops the team
-  // filter entirely when the array is empty (response.service.ts:103-113).
-  test("an empty team list is passed through rather than refused", async () => {
+  // An empty team list used to DROP the team condition rather than match nothing,
+  // so a caller belonging to no team — or one whose named map ids resolved to
+  // none of their teams — received every team's responses for the survey. The
+  // handler still passes the empty array; what changed is that getAllResponses
+  // now treats an explicit array as a scope.and the
+  // getAllResponses block below.
+  test("an empty team list is still passed through, and now scopes", async () => {
     await downloadExcelResponseHandler(
       { body: xlsxBody(), userId: USER, user: { orgId: ORG } } as never,
       reply(),
@@ -296,19 +347,20 @@ describe("downloadExcelResponseHandler", () => {
 // ===========================================================================
 
 describe("deleteResponseHandler", () => {
-  // NOTE: the route binds :surveyTeamMapId and :id. verifyAccess resolves the
-  // survey from the MAP; the handler deletes by the ID, and the two are never
-  // compared.
-  test("deletes by the id alone, ignoring the map the check used", async () => {
+  // The route binds :surveyTeamMapId and :id. verifyAccess resolves the survey
+  // from the MAP, the handler deleted by the ID, and the two were never compared
+  // — a textbook confused deputy: authorise one object, operate on another. Both
+  // ids are passed on now, and the service requires them to agree.
+  test("passes both path parameters, so the delete must match the checked map", async () => {
     await deleteResponseHandler(
       { params: { surveyTeamMapId: OWN_MAP, id: VICTIM_RESPONSE } } as never,
       reply(),
     );
 
-    expect(svc.deleteResponse).toHaveBeenCalledWith(VICTIM_RESPONSE);
+    expect(svc.deleteResponse).toHaveBeenCalledWith(VICTIM_RESPONSE, OWN_MAP);
   });
 
-  test("the handler never looks at the map id", async () => {
+  test("the handler reads the map id", async () => {
     const rep = reply();
 
     await deleteResponseHandler(
@@ -316,7 +368,7 @@ describe("deleteResponseHandler", () => {
       rep,
     );
 
-    expect(svc.deleteResponse.mock.calls[0]).toHaveLength(1);
+    expect(svc.deleteResponse.mock.calls[0]).toHaveLength(2);
     expect(answer(rep).code).toBe(201);
   });
 
@@ -382,7 +434,7 @@ describe("createResponseHandler", () => {
   });
 
   // NOTE: the 201 is sent immediately after the row is created and BEFORE the
-  // post-processing block runs. This corrects issues.txt 32.2, which described
+  // post-processing block runs. This corrects, which described
   // the respondent receiving a 500.
   test("answers 201 before any post-processing runs", async () => {
     const order: string[] = [];
@@ -413,9 +465,10 @@ describe("createResponseHandler", () => {
     expect(rep.send.mock.calls[0][0]).toBeUndefined();
   });
 
-  // NOTE: a rejection inside the Promise.all reaches the catch, which tries to
-  // send a second reply on a request that was already answered.
-  test("a post-processing failure attempts a second send", async () => {
+  // A rejection inside the Promise.all used to reach the catch, which tried to
+  // send a second reply on a request that had already been answered. With
+  // allSettled the batch cannot reject, so the failure is logged instead.
+  test("a post-processing failure does not attempt a second send", async () => {
     (createTestimonial as unknown as Mock).mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
     );
@@ -423,29 +476,32 @@ describe("createResponseHandler", () => {
 
     await createResponseHandler({ body } as never, rep);
 
-    expect(rep.send).toHaveBeenCalledTimes(2);
-    expect(rep.code.mock.calls.map((c: any[]) => c[0])).toEqual([201, 500]);
+    expect(rep.send).toHaveBeenCalledTimes(1);
+    expect(rep.code.mock.calls.map((c: any[]) => c[0])).toEqual([201]);
   });
 
-  test("the second send carries the underlying error message", async () => {
-    (createTestimonial as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
-    const rep = reply();
-
-    await createResponseHandler({ body } as never, rep);
-
-    expect(rep.send.mock.calls[1][0]).toBe("boom");
-  });
-
-  // NOTE: Promise.all rejects on the first failure, so the operations that had
-  // not yet resolved are abandoned — the response row exists with only some of
-  // its side effects applied.
-  test("one failing side effect abandons the rest of the batch", async () => {
+  test("the failure is logged against the response id", async () => {
     (createTestimonial as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
 
     await createResponseHandler({ body } as never, reply());
 
-    // The Zapier trigger is queued in the same batch and never completes.
+    expect(log.error).toHaveBeenCalledWith(
+      expect.objectContaining({ err: expect.objectContaining({ message: "boom" }) }),
+      "Post-response side effect failed",
+    );
+  });
+
+  // Promise.all rejected on the first failure, so whichever of the six
+  // operations had not yet resolved were abandoned — a submission could be
+  // recorded with its Google Sheet row missing or its Zapier event never queued,
+  // and the respondent's 201 had already gone out.
+  test("one failing side effect does not abandon the rest of the batch", async () => {
+    (createTestimonial as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
+
+    await createResponseHandler({ body } as never, reply());
+
     expect(svc.sendResponseToWebhook).toHaveBeenCalled();
+    expect(addZapierTriggerToQueue).toHaveBeenCalled();
   });
 
   test("the WhatsApp platform skips the whole post-processing block", async () => {
@@ -513,9 +569,11 @@ describe("getAllResponsesHandler", () => {
     expect(svc.getAllResponses).toHaveBeenCalledWith(VICTIM_SURVEY, ["own-team"]);
   });
 
-  // NOTE: the empty branch sends a 404 and then falls through to the 200 — the
-  // `if` has no return.
-  test("an empty result sends both a 404 and a 200", async () => {
+  // The empty branch sent a 404 and then fell through to the 200 — the `if` had
+  // no return and no else — so an empty result produced a delivered 404, a
+  // refused 200 and a duplicate-send warning, which every survey does on its
+  // first day. A survey that exists with no responses is an empty collection.
+  test("an empty result sends a single 200 with the empty list", async () => {
     const rep = reply();
 
     await getAllResponsesHandler(
@@ -523,8 +581,9 @@ describe("getAllResponsesHandler", () => {
       rep,
     );
 
-    expect(rep.code.mock.calls.map((c: any[]) => c[0])).toEqual([404, 200]);
-    expect(rep.send).toHaveBeenCalledTimes(2);
+    expect(rep.code.mock.calls.map((c: any[]) => c[0])).toEqual([200]);
+    expect(rep.send).toHaveBeenCalledTimes(1);
+    expect(answer(rep).body).toEqual([]);
   });
 
   test("a non-empty result sends once", async () => {
@@ -558,11 +617,13 @@ describe("syncResponseToGoogleSheetHandler", () => {
     expect(answer(rep).code).toBe(201);
   });
 
-  // NOTE: the catch now guards the axios-only shape with axios.isAxiosError, so a
-  // plain error is answered with a 500 instead of throwing a second time.
-  test("an ordinary error is answered with a 500", async () => {
-    const err = new Error("db down");
-    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(err);
+  // The catch used to read `e.response.data.error` with no guard, so any failure
+  // that was neither a Prisma known-request error nor an axios rejection made the
+  // CATCH throw a TypeError and escape to the global handler. It is guarded with
+  // axios.isAxiosError, and the fallback sends a fixed message rather than the
+  // raw Error object.
+  test("an ordinary error is answered with a fixed 500", async () => {
+    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
     await syncResponseToGoogleSheetHandler(
@@ -570,7 +631,7 @@ describe("syncResponseToGoogleSheetHandler", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 500, body: err });
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
   });
 
   test("an axios error is reported cleanly", async () => {
@@ -626,24 +687,27 @@ describe("responseRoutes", () => {
       "DELETE /reset/:surveyId",
       "DELETE /:surveyTeamMapId/delete/:id",
       "POST /:surveyId/sync-response",
+      "POST /export-contacts/:surveyId",
+      "POST /summarize/:surveyId",
     ]);
     for (const r of gated) {
       expect(r.opts.preHandler[0].roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
     }
   });
 
-  // NOTE: the export and summarize routes write and spend respectively, and
-  // carry no role requirement.
-  test("leaves the export and summarize routes ungated by role", async () => {
+  // export-contacts turns survey respondents into Contact rows, changing who the
+  // org's campaigns will subsequently message; summarize spends the org's AI
+  // token allowance. Both were registered with no role requirement — export
+  // without an options object at all.
+  test("role-gates the export and summarize routes too", async () => {
     const { srv, routes } = fakeServer();
 
     await responseRoutes(srv);
 
     const exportRoute = routes.find((r) => r.url === "/export-contacts/:surveyId");
     const summarize = routes.find((r) => r.url === "/summarize/:surveyId");
-    // Registered as post(url, handler) — no options object at all.
-    expect(exportRoute.handler).toBeUndefined();
-    expect(summarize.opts.preHandler).toBeUndefined();
+    expect(exportRoute.opts.preHandler[0].roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+    expect(summarize.opts.preHandler[0].roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
   });
 
   test("the download route declares a body schema and no extra guard", async () => {

@@ -8,8 +8,13 @@ vi.mock("../../utils/redisConnection.js", () => ({
   notificationQueue: { add: vi.fn() },
 }));
 
+vi.mock("../../utils/logger.js", () => ({
+  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+}));
+
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
+import { log } from "../../utils/logger.js";
 import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js";
 import { createMsg } from "./contact.service.js";
 import { createContactMsgHandler } from "./contact.controller.js";
@@ -77,14 +82,12 @@ describe("createMsg — the honeypot", () => {
     expect(db.contactForm.create).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The honeypot branch returns the STRING
-  // "Error", not an error — so the controller treats it as a successful create
-  // and answers 201 with `{ success: true, data: "Error" }`. A bot can therefore
-  // detect the honeypot with a single pair of requests: a clean submission
-  // returns an object, a tripped one returns the literal string "Error". A
-  // honeypot that announces itself is not a honeypot. See issues.txt 22.2.
-  test("returns the literal string Error rather than throwing", async () => {
-    expect(await createMsg({ ...submission, address: "bot" } as any)).toBe("Error");
+  // The branch used to return the STRING "Error", which the controller then sent
+  // back as successful data — so a bot could detect the honeypot with a single
+  // pair of requests. It returns null now and the handler answers the same body
+  // either way.
+  test("returns null rather than a value the caller can echo", async () => {
+    expect(await createMsg({ ...submission, address: "bot" } as any)).toBeNull();
   });
 });
 
@@ -151,35 +154,30 @@ describe("createMsg — the write and the email", () => {
     expect(notificationQueue.add).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. The row is committed first and the queue write
-  // happens after, with no transaction and no compensation — so a Redis outage
-  // leaves the message stored and unseen while the visitor is told the
-  // submission failed and is likely to send it again.
-  // See issues.txt 22.4.
-  test("keeps the stored row when the notification cannot be queued", async () => {
+  // The row is committed first and the queue write happens after, with no
+  // transaction — so a Redis outage used to report the whole submission as failed
+  // while the message sat stored and unseen, and the visitor sent it again. The
+  // submission is kept and the queue failure is logged with the row's id.
+  test("keeps the submission when the notification cannot be queued", async () => {
     (notificationQueue.add as unknown as Mock).mockRejectedValue(new Error("redis down"));
 
-    await expect(createMsg(submission as any)).rejects.toThrow(/Email sending failed/);
+    expect(await createMsg(submission as any)).toEqual({ id: "msg-1", ...submission });
     expect(db.contactForm.create).toHaveBeenCalled();
   });
 
-  // NOTE: the rethrow concatenates the caught value onto a string, so the
-  // original error's stack is discarded and the message becomes
-  // "Email sending failed. E:Error: redis down". See issues.txt 22.4.
-  test("discards the original error's stack when it rethrows", async () => {
-    const cause = new Error("redis down");
-    (notificationQueue.add as unknown as Mock).mockRejectedValue(cause);
+  test("logs the queue failure with the id of the row that was stored", async () => {
+    (notificationQueue.add as unknown as Mock).mockRejectedValue(new Error("redis down"));
 
-    await expect(createMsg(submission as any)).rejects.toThrow(
-      "Email sending failed. E:Error: redis down",
-    );
-    await expect(createMsg(submission as any)).rejects.not.toBe(cause);
+    await createMsg(submission as any);
+
+    expect((log.error as unknown as Mock).mock.calls[0][0]).toMatchObject({
+      contactFormId: "msg-1",
+    });
   });
 
-  // NOTE: prisma.create either resolves with a row or rejects, so `if (user)` can
-  // never be false — the email is not actually conditional on anything.
-  // See issues.txt 22.5.
-  test("the guard around the email can never be false", async () => {
+  // prisma.create either resolves with a row or rejects, so the `if (user)` guard
+  // that used to wrap the notification could never be false.
+  test("queues the email with no guard standing between it and the write", async () => {
     db.contactForm.create.mockResolvedValue({ id: "msg-1" });
 
     await createMsg(submission as any);
@@ -201,29 +199,36 @@ describe("emailBodyContactForm", () => {
     expect(html).toContain("hello there");
   });
 
-  // NOTE: pins current behaviour. Every field is interpolated into the HTML
-  // unescaped. The submitter controls all three, and this module's only route is
-  // (or would be — see 22.1) unauthenticated, so a visitor chooses the markup
-  // that lands in the RateUp team's inbox: working links, remote images that
-  // report when the mail is opened, or content styled to look like the rest of
-  // the message. Same defect as the BookDemo mailer, issues.txt 16.2.
-  // See issues.txt 22.3.
-  test("interpolates the submitter's markup into the email unescaped", () => {
+  // Every field used to be interpolated raw. The submitter controls all three and
+  // the route is unauthenticated, so the visitor chose the markup that landed in
+  // the RateUp team's inbox: working links, remote images that report when the
+  // mail is opened, or content styled to look like the rest of the message. Same
+  // defect as the BookDemo mailer,/16.2.
+  test("escapes the submitter's markup instead of rendering it", () => {
     const html = emailBodyContactForm(
       '<a href="https://evil.test">Click here</a>',
       "ann@example.test",
       '<img src="https://evil.test/pixel.png">',
     );
 
-    expect(html).toContain('<a href="https://evil.test">Click here</a>');
-    expect(html).toContain('<img src="https://evil.test/pixel.png">');
+    expect(html).not.toContain('<a href="https://evil.test">');
+    expect(html).not.toContain("<img");
+    expect(html).toContain("&lt;a href=&quot;https://evil.test&quot;&gt;");
   });
 
-  test("does not escape angle brackets or quotes anywhere", () => {
-    const html = emailBodyContactForm("</li></ul><h1>Injected", "a@b.test", "x");
+  test("escapes angle brackets and quotes in every field", () => {
+    const html = emailBodyContactForm("</li></ul><h1>Injected", "a@b.test", 'it\'s "quoted"');
 
-    expect(html).toContain("</li></ul><h1>Injected");
-    expect(html).not.toContain("&lt;");
+    expect(html).not.toContain("</li></ul><h1>Injected");
+    expect(html).toContain("&lt;/li&gt;&lt;/ul&gt;&lt;h1&gt;Injected");
+    expect(html).toContain("&#39;");
+    expect(html).toContain("&quot;quoted&quot;");
+  });
+
+  test("leaves the template's own markup alone", () => {
+    const html = emailBodyContactForm("Ann", "ann@example.test", "hello");
+
+    expect(html).toContain("<li><strong>Name:</strong> Ann</li>");
   });
 });
 
@@ -232,33 +237,31 @@ describe("emailBodyContactForm", () => {
 // ===========================================================================
 
 describe("createContactMsgHandler", () => {
-  test("answers 201 with the stored row", async () => {
+  test("answers 201 and echoes nothing back", async () => {
     const rep = reply();
 
     await createContactMsgHandler({ body: submission } as any, rep);
 
-    expect(answer(rep)).toEqual({
-      code: 201,
-      body: { success: true, data: { id: "msg-1", ...submission } },
-    });
+    expect(answer(rep)).toEqual({ code: 201, body: { success: true } });
   });
 
-  // NOTE: the honeypot's "Error" string arrives here as an ordinary success
-  // value, so a bot that trips the honeypot is told the submission worked — and
-  // is handed the word "Error" as its data. See issues.txt 22.2.
-  test("reports a tripped honeypot as a successful submission", async () => {
-    const rep = reply();
+  // A tripped honeypot used to be answered with `{ success: true, data: "Error" }`
+  // while a real submission got an object, so two requests told a bot which field
+  // was the trap. Both answer identically now.
+  test("answers a tripped honeypot exactly as it answers a real submission", async () => {
+    const clean = reply();
+    const trapped = reply();
 
-    await createContactMsgHandler({ body: { ...submission, address: "bot" } } as any, rep);
+    await createContactMsgHandler({ body: submission } as any, clean);
+    await createContactMsgHandler({ body: { ...submission, address: "bot" } } as any, trapped);
 
-    expect(answer(rep)).toEqual({ code: 201, body: { success: true, data: "Error" } });
+    expect(answer(trapped)).toEqual(answer(clean));
+    expect(db.contactForm.create).toHaveBeenCalledTimes(1);
   });
 
-  // NOTE: the catch sends the raw error message to a caller this module never
-  // authenticates, so a database or Redis failure leaks its text — including the
-  // "Email sending failed. E:..." wrapper and whatever the driver put in it.
-  // See issues.txt 22.6.
-  test("leaks the raw error message to the caller", async () => {
+  // The catch used to send the raw error text to a caller this module never
+  // authenticates, so a database failure leaked the table and column names.
+  test("answers a failure with a fixed message", async () => {
     db.contactForm.create.mockRejectedValue(
       new Error('relation "ContactForm" does not exist at character 13'),
     );
@@ -268,20 +271,20 @@ describe("createContactMsgHandler", () => {
 
     expect(answer(rep)).toEqual({
       code: 500,
-      body: {
-        success: false,
-        message: 'relation "ContactForm" does not exist at character 13',
-      },
+      body: { success: false, message: "Something went wrong" },
     });
+    expect(log.error).toHaveBeenCalled();
   });
 
-  test("reports a failed notification as a 500 even though the row was stored", async () => {
+  // The row is stored by then, so telling the visitor it failed only produced a
+  // duplicate.
+  test("still reports success when only the notification failed", async () => {
     (notificationQueue.add as unknown as Mock).mockRejectedValue(new Error("redis down"));
     const rep = reply();
 
     await createContactMsgHandler({ body: submission } as any, rep);
 
-    expect(answer(rep).code).toBe(500);
+    expect(answer(rep)).toEqual({ code: 201, body: { success: true } });
     expect(db.contactForm.create).toHaveBeenCalled();
   });
 
@@ -330,11 +333,25 @@ describe("createContactMessageInputSchema", () => {
     );
   });
 
-  // NOTE: no upper bound on any field. The message goes into an unbounded text
-  // column and, unescaped, into an email (22.3). See issues.txt 22.7.
-  test("puts no upper bound on the message length", () => {
+  // There used to be no upper bound on any field, so one request could store an
+  // arbitrarily large string and put it into an email.
+  test("bounds the message, the name and the honeypot", () => {
     expect(
       createContactMessageInputSchema.safeParse({ ...submission, message: "x".repeat(200_000) })
+        .success,
+    ).toBe(false);
+    expect(
+      createContactMessageInputSchema.safeParse({ ...submission, name: "x".repeat(101) }).success,
+    ).toBe(false);
+    expect(
+      createContactMessageInputSchema.safeParse({ ...submission, address: "x".repeat(201) })
+        .success,
+    ).toBe(false);
+  });
+
+  test("still accepts a message of ordinary length", () => {
+    expect(
+      createContactMessageInputSchema.safeParse({ ...submission, message: "x".repeat(5000) })
         .success,
     ).toBe(true);
   });
@@ -358,20 +375,29 @@ describe("contactFormPublicRoutes", () => {
     expect(server.get).not.toHaveBeenCalled();
   });
 
-  // NOTE: no checkSession, no rate limit, no captcha and no preHandler of any
-  // kind — the honeypot (22.2) is the only abuse control the module has, and it
-  // announces itself. See issues.txt 22.7.
-  test("adds no hook, no preHandler and no rate limit", async () => {
+  // The route used to carry no preHandler of any kind, leaving the honeypot as the
+  // module's only abuse control. It is limited per IP now, like the other public
+  // marketing forms.
+  test("rate limits the submission per IP", async () => {
     const server: any = { post: vi.fn(), addHook: vi.fn(), register: vi.fn() };
 
     await contactFormPublicRoutes(server);
 
     expect(server.addHook).not.toHaveBeenCalled();
-    expect(server.register).not.toHaveBeenCalled();
     const options = server.post.mock.calls[0][1];
-    expect(options).not.toHaveProperty("preHandler");
-    expect(options).not.toHaveProperty("config");
-    expect(Object.keys(options)).toEqual(["schema"]);
+    expect(options.preHandler).toBeTypeOf("function");
+    expect(Object.keys(options).sort()).toEqual(["preHandler", "schema"]);
+  });
+
+  // NOTE: STILL OPEN. Nothing in registerRoutes.ts mounts this plugin, so the
+  // endpoint does not exist at runtime — every fix above is latent until somebody
+  // wires it up, which is now a one-line change.
+  test("is not registered anywhere in registerRoutes", async () => {
+    const source = await import("node:fs/promises").then((fs) =>
+      fs.readFile("src/registerRoutes.ts", "utf8"),
+    );
+
+    expect(source).not.toContain("contactFormPublicRoutes");
   });
 
   test("validates the body with the contact-message schema", async () => {

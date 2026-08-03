@@ -153,21 +153,18 @@ describe("checkSession - no usable session", () => {
     expect(reply.code).toHaveBeenCalledWith(401);
   });
 
-  // NOTE: the guard replies 401 but does not return, so the handler chain continues
-  // with a request that was just rejected for having no user id.
-  test("still populates the request after replying 401 for a missing user id", async () => {
+  // The guard returns after replying 401, so nothing downstream runs on a request that
+  // was just rejected for having no user id.
+  test("stops after replying 401 for a missing user id", async () => {
     getSessionMock.mockResolvedValue(makeSession({ getUserId: () => "" }));
     const request = makeRequest();
+    const reply = makeReply();
 
-    await checkSession(request, makeReply());
+    await checkSession(request, reply);
 
-    expect(request.user).toEqual({
-      userId: "",
-      role: "SUPER_ADMIN",
-      orgId: "org-1",
-      email: "owner@acme.com",
-    });
-    expect(auditLogHookMock).toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(request.user).toBeUndefined();
+    expect(auditLogHookMock).not.toHaveBeenCalled();
   });
 });
 

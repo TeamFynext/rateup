@@ -176,6 +176,7 @@ export enum WaTemplateStatus {
   REJECTED = "REJECTED",
   DRAFT = "DRAFT",
   PENDING_DELETION = "PENDING_DELETION",
+  DELETED = "DELETED",
 }
 export enum WaFlowStatus {
   PUBLISHED = "PUBLISHED",
@@ -477,8 +478,11 @@ export enum FacebookEvent {
   MESSAGE = "MESSAGE",
   MESSAGE_DELIVERED = "MESSAGE_DELIVERED",
   MESSAGE_READ = "MESSAGE_READ",
+  MESSAGE_REACTION = "MESSAGE_REACTION",
   POSTBACK = "POSTBACK",
   QUICK_REPLY = "QUICK_REPLY",
+  // Declared but never returned by getFacebookWebhookEvent — opt-ins are not currently
+  // subscribed to on the Meta app. Add a branch there if that changes.
   OPT_IN = "OPT_IN",
 }
 

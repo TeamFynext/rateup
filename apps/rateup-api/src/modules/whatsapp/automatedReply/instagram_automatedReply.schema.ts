@@ -10,16 +10,12 @@ export const createInstagramAutomationBodySchema = z.object({
   name: z.string().min(1, "Name is required"),
   matchData: z.any(),
   whatsappSettingsPhoneId: z.string().nullish(),
-  sendOnceIn24Hours: z.boolean().optional(),
-  isActive: z.boolean().optional(),
 });
 
 export const updateInstagramAutomationBodySchema = z.object({
   name: z.string().min(1).optional(),
   matchData: z.any().optional(),
   whatsappSettingsPhoneId: z.string().nullish(),
-  sendOnceIn24Hours: z.boolean().optional(),
-  isActive: z.boolean().optional(),
 });
 
 export const initiateInstagramAutomationBodySchema = z.object({

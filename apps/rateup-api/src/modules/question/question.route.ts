@@ -19,6 +19,9 @@ import {
   questionsRouteParamsSchema,
   updateQuestionRequestSchema,
   updateQuestionsOrderRequestSchema,
+  replaceQuestionsRequestSchema,
+  type ReplaceQuestionsInput,
+  type QuestionsRouteParams,
 } from "./question.schema.js";
 
 // Base route: /api/question/:surveyId
@@ -104,7 +107,16 @@ export async function questionRoutes(server: FastifyInstance) {
     updateQuestionHandler,
   );
 
-  server.put("/replace", replaceQuestionsHandler);
+  server.put<{ Body: ReplaceQuestionsInput; Params: QuestionsRouteParams }>(
+    "/replace",
+    {
+      schema: {
+        params: questionsRouteParamsSchema,
+        body: replaceQuestionsRequestSchema,
+      },
+    },
+    replaceQuestionsHandler,
+  );
 
   server.post(
     "/import-emails/:id",

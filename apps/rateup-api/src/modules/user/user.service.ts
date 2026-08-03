@@ -425,9 +425,15 @@ export async function updateUserProfilePhoto(
   return user;
 }
 
+// Called at login, where there is no org in context — picking one IS the job. The
+// ordering makes that pick deterministic: a user who belongs to several orgs always
+// lands in their oldest membership rather than whichever row the DB happened to return
+// first, which is what previously made their session org effectively arbitrary.
+// Choosing between several orgs deliberately would need an org switcher.
 async function getOrgIdAndRole({ id }: userInfoParams) {
   let orgMember = await prisma.orgMember.findFirst({
     where: { userId: id },
+    orderBy: { createdAt: "asc" },
     select: {
       orgId: true,
       role: true,
@@ -575,8 +581,8 @@ export async function updateUserRecipe() {
   for (const user of users) {
     const userInfo = await getUserInfo(user.email);
     if (userInfo.length) {
-      const recipeId = userInfo[0].loginMethods[0].recipeId;
-      const recipeName = getUserRecipeName(recipeId);
+      const loginMethod = userInfo[0].loginMethods[0];
+      const recipeName = getUserRecipeName(loginMethod.recipeId, loginMethod.thirdParty?.id);
       await prisma.user.update({
         where: {
           email: user.email,
@@ -598,10 +604,29 @@ export async function pauseUser(id: string, data: PauseUserInput) {
   });
 }
 
-export function getUserRecipeName(recipeId: string): UserRecipes | undefined {
+/**
+ * Maps a SuperTokens recipe to the stored UserRecipes value.
+ *
+ * `thirdPartyId` is the provider on the login method ("google" / "apple", as configured
+ * in config.ts). Without it every third-party sign-in was recorded as Google, so an
+ * Apple user's stored recipe depended on which code path created them —
+ * createAppleUserHandler sets ThirdPartyApple explicitly, this did not.
+ */
+export function getUserRecipeName(
+  recipeId: string,
+  thirdPartyId?: string,
+): UserRecipes | undefined {
   switch (recipeId) {
     case "thirdparty":
-      return UserRecipes.ThirdPartyGoogle;
+      switch (thirdPartyId) {
+        case "apple":
+          return UserRecipes.ThirdPartyApple;
+        case "google":
+          return UserRecipes.ThirdPartyGoogle;
+        default:
+          // An unrecognised (or absent) provider is not silently called Google.
+          return undefined;
+      }
     case "emailpassword":
       return UserRecipes.EmailPassword;
     case "passwordless":

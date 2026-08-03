@@ -3,14 +3,24 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 vi.mock("../../utils/redisConnection.js", () => ({
   notificationQueue: { add: vi.fn() },
 }));
-vi.mock("../../utils/constants/constants.js", () => ({ rateupLogo: "https://cdn/logo.png" }));
+vi.mock("../../utils/constants/constants.js", () => ({
+  rateupLogo: "https://cdn/logo.png",
+  webImagesBaseUrl: () =>
+    process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") ?? "",
+}));
+vi.mock("./bookDemo.service.js", () => ({ createBookDemo: vi.fn() }));
+vi.mock("../../utils/logger.js", () => ({
+  log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
+}));
 
 import { notificationQueue } from "../../utils/redisConnection.js";
+import { createBookDemo } from "./bookDemo.service.js";
 import { bookDemoHandler, partnerDataHandler } from "./bookDemo.controller.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 const queueAdd = (notificationQueue as unknown as { add: Mock }).add;
+const createDemo = createBookDemo as unknown as Mock;
 
 /** A valid demo request, as the route schema would have accepted it. */
 function demoBody(overrides: Record<string, unknown> = {}) {
@@ -72,6 +82,7 @@ const originalEnv = {
 beforeEach(() => {
   vi.clearAllMocks();
   queueAdd.mockResolvedValue(undefined);
+  createDemo.mockResolvedValue({ id: "demo-1" });
   process.env.ROOT_ORG_MAIL_ID = "sales@rateup.app";
   process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL = "https://cdn.example.com";
 });
@@ -126,6 +137,38 @@ describe("bookDemoHandler - the internal notification", () => {
   });
 });
 
+describe("bookDemoHandler - the record it keeps", () => {
+  // A demo request used to exist only as an email: bookDemoHandler queued two and
+  // returned, never touching the database, while createBookDemo sat with no callers
+  // and the BookDemo table sat empty. A dropped queue job lost the lead outright.
+  test("records the request before queueing anything", async () => {
+    await bookDemoHandler(request(demoBody()), reply());
+
+    expect(createDemo).toHaveBeenCalledWith({
+      name: "Ada Lovelace",
+      workEmail: "ada@example.com",
+      businessName: "Analytical Engines Ltd",
+      phone: "15550001234",
+      message: "Keen to see the WhatsApp inbox",
+    });
+    expect(createDemo.mock.invocationCallOrder[0]).toBeLessThan(
+      queueAdd.mock.invocationCallOrder[0],
+    );
+  });
+
+  // The emails are the faster path to the sales team, so a database that is down
+  // must not also cost the lead its notification.
+  test("still queues both emails when it could not record the request", async () => {
+    createDemo.mockRejectedValue(new Error("db down"));
+    const rep = reply();
+
+    await bookDemoHandler(request(demoBody()), rep);
+
+    expect(queueAdd).toHaveBeenCalledTimes(2);
+    expect(rep.status).toHaveBeenCalledWith(200);
+  });
+});
+
 describe("bookDemoHandler - the confirmation to the requester", () => {
   test("queues a second notification to the address they gave", async () => {
     await bookDemoHandler(request(demoBody()), reply());
@@ -164,22 +207,35 @@ describe("bookDemoHandler - the confirmation to the requester", () => {
     expect(queuedEmail(1).html).toContain("https://cdn.example.com/images/email/linkedin_logo.png");
   });
 
-  // NOTE: pins current behaviour. The image host comes from a NEXT_PUBLIC_ variable
-  // — a frontend naming convention — read inside the API. When it is not set on the
-  // API's own environment the src becomes the literal string "undefined/images/...".
-  // See issues.txt 16.5.
-  test("writes the word undefined into the image urls when the host is not set", async () => {
+  // The image host comes from a NEXT_PUBLIC_ variable — a frontend naming
+  // convention — read inside the API, and it was interpolated into an UNQUOTED src
+  // attribute. On an instance without it set, the src rendered as the literal
+  // string "undefined/images/...". There is no image worth rendering without a
+  // host, so the block is omitted rather than emitted broken.
+  test("omits the social icons rather than writing undefined into their urls", async () => {
     delete process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL;
 
     await bookDemoHandler(request(demoBody()), reply());
 
-    expect(queuedEmail(1).html).toContain("undefined/images/email/website_logo.png");
+    const { html } = queuedEmail(1);
+    expect(html).not.toContain("undefined/images");
+    expect(html).not.toContain("website_logo.png");
   });
 
-  test("sends an empty plain-text alternative", async () => {
+  test("quotes the src attribute, so a host with a space cannot break out of it", async () => {
     await bookDemoHandler(request(demoBody()), reply());
 
-    expect(queuedEmail(1).text).toBe("");
+    expect(queuedEmail(1).html).toContain('src="https://cdn.example.com/images/email/');
+  });
+
+  // A client that prefers text/plain used to be shown a blank message.
+  test("sends a plain-text alternative that carries the booking details", async () => {
+    await bookDemoHandler(request(demoBody()), reply());
+
+    const { text } = queuedEmail(1);
+    expect(text).toContain("Ada Lovelace");
+    expect(text).toContain("Analytical Engines Ltd");
+    expect(text).toContain("Keen to see the WhatsApp inbox");
   });
 });
 
@@ -196,7 +252,9 @@ describe("bookDemoHandler - what the caller is told", () => {
     });
   });
 
-  test("answers 500 when the notification queue is unreachable", async () => {
+  // The internal notification is what reaches a human, so failing to queue it is
+  // still a failure the requester should hear about.
+  test("answers 500 when the internal notification cannot be queued", async () => {
     queueAdd.mockRejectedValue(new Error("redis is down"));
     const rep = reply();
 
@@ -209,44 +267,42 @@ describe("bookDemoHandler - what the caller is told", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The internal notification is queued first, so a
-  // failure queueing the requester's confirmation answers 500 — telling the
-  // requester their booking failed — while the sales team has already been sent the
-  // lead and will contact them. Nothing records which of the two went out.
-  // See issues.txt 16.4.
-  test("has already told the sales team when the confirmation fails to queue", async () => {
+  // The internal notification is queued first, so a failure queueing the
+  // requester's own confirmation used to answer 500 — telling them their booking
+  // failed — while the sales team had already been sent the lead and would contact
+  // them. It is best-effort now, and logged.
+  test("still confirms the booking when only the confirmation fails to queue", async () => {
     queueAdd.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("redis is down"));
     const rep = reply();
 
     await bookDemoHandler(request(demoBody()), rep);
 
     expect(queuedEmail(0).to).toBe("sales@rateup.app");
-    expect(rep.status).toHaveBeenCalledWith(500);
+    expect(rep.status).toHaveBeenCalledWith(200);
   });
 });
 
 describe("bookDemoHandler - what a submitter can put in the email", () => {
-  // NOTE: pins current behaviour, and this is the serious one. Every field is
-  // interpolated into an HTML email body with no escaping. POST /api/bookdemo is
-  // registered with no checkSession and no rate limit (bookDemo.route.ts,
-  // registerRoutes.ts:124), so anyone on the internet can put arbitrary markup into
-  // an email that lands in the sales team's inbox. See issues.txt 16.1.
-  test("puts markup from the name straight into the internal email", async () => {
+  // The serious one. Every field was interpolated into an HTML email body with no
+  // escaping, and POST /api/bookdemo carries no checkSession — so anyone on the
+  // internet could put arbitrary markup into an email landing in the sales team's
+  // inbox.
+  test("escapes markup from the name in the internal email", async () => {
     await bookDemoHandler(
       request(demoBody({ name: '<a href="https://evil.example/login">Reset your password</a>' })),
       reply(),
     );
 
-    expect(queuedEmail(0).html).toContain('<a href="https://evil.example/login">');
-    expect(queuedEmail(0).html).not.toContain("&lt;a href");
+    const { html } = queuedEmail(0);
+    expect(html).not.toContain('<a href="https://evil.example/login">');
+    expect(html).toContain("&lt;a href=&quot;https://evil.example/login&quot;&gt;");
   });
 
-  // NOTE: the same absence of escaping on the confirmation, which is the worse
-  // half: the recipient is an address the submitter chose, the branding is
-  // RateUp's, and the body carries their markup. That is an unauthenticated way to
-  // send RateUp-branded mail carrying arbitrary content to any address.
-  // See issues.txt 16.1.
-  test("puts markup from the message into the RateUp-branded confirmation", async () => {
+  // The worse half: the recipient is an address the submitter chose, the branding
+  // is RateUp's, and the body carried their markup — an unauthenticated way to send
+  // convincing RateUp-branded mail with attacker-chosen content to any address,
+  // from RateUp's own sending domain.
+  test("escapes markup from the message in the RateUp-branded confirmation", async () => {
     await bookDemoHandler(
       request(
         demoBody({
@@ -260,20 +316,33 @@ describe("bookDemoHandler - what a submitter can put in the email", () => {
 
     const { to, html } = queuedEmail(1);
     expect(to).toBe("victim@example.com");
-    expect(html).toContain("<h1>Your account is suspended</h1>");
-    expect(html).toContain('<a href="https://evil.example">');
+    expect(html).not.toContain("<h1>Your account is suspended</h1>");
+    expect(html).not.toContain('<a href="https://evil.example">');
+    expect(html).toContain("&lt;h1&gt;Your account is suspended&lt;/h1&gt;");
   });
 
-  // NOTE: the schema sets a minimum length on message and no maximum, so a single
-  // request can push an arbitrarily large payload through the queue and into two
-  // emails. There is no rate limit on the route either. See issues.txt 16.2.
-  test("accepts a message of any size and queues it twice", async () => {
-    const huge = "x".repeat(200_000);
+  // The plain-text half is not markup, so it carries the value as typed.
+  test("leaves the plain-text alternative unescaped", async () => {
+    await bookDemoHandler(request(demoBody({ name: "Ada & Co <Ltd>" })), reply());
 
-    await bookDemoHandler(request(demoBody({ message: huge })), reply());
+    expect(queuedEmail(0).text).toContain("Ada & Co <Ltd>");
+  });
 
-    expect(queuedEmail(0).html).toContain(huge);
-    expect(queuedEmail(1).html).toContain(huge);
+  // The schema set a minimum length on message and no maximum, so a single request
+  // could push an arbitrarily large payload through the queue and duplicate it into
+  // both emails. The route is rate limited per IP as well.
+  test("caps the length of the free-text message", async () => {
+    const { createBookDemoInputSchema } = await import("./bookDemo.schema.js");
+
+    const result = createBookDemoInputSchema.safeParse(demoBody({ message: "x".repeat(200_000) }));
+
+    expect(result.success).toBe(false);
+  });
+
+  test("accepts a message of an ordinary length", async () => {
+    const { createBookDemoInputSchema } = await import("./bookDemo.schema.js");
+
+    expect(createBookDemoInputSchema.safeParse(demoBody()).success).toBe(true);
   });
 });
 
@@ -341,27 +410,29 @@ describe("partnerDataHandler", () => {
     expect(sent(rep)).toEqual({ success: false, message: "Internal server error" });
   });
 
-  // NOTE: the same unescaped interpolation as the demo form, on a route that is
-  // equally unauthenticated. This one only reaches the internal inbox, since there
-  // is no confirmation email. See issues.txt 16.1.
-  test("puts markup from the company name straight into the email", async () => {
+  // The same unescaped interpolation as the demo form, on an equally
+  // unauthenticated route. This one only reaches the internal inbox, since there is
+  // no confirmation email.
+  test("escapes markup from the company name", async () => {
     await partnerDataHandler(
       request(partnerBody({ companyName: "<script>alert(1)</script>" })),
       reply(),
     );
 
-    expect(queuedEmail(0).html).toContain("<script>alert(1)</script>");
+    const { html } = queuedEmail(0);
+    expect(html).not.toContain("<script>alert(1)</script>");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
   });
 
-  // NOTE: services is joined without a guard. The route schema requires an array,
-  // so this is only reachable by a caller that bypasses validation — but the
-  // function is exported and has no guard of its own. See issues.txt 16.5.
-  test("throws when handed services that are not a list", async () => {
+  // services was joined without a guard. The route schema requires an array, so
+  // this was only reachable by a caller bypassing validation — but the handler is
+  // exported and had no guard of its own.
+  test("copes with services that are not a list", async () => {
     const rep = reply();
 
     await partnerDataHandler(request(partnerBody({ services: "Implementation" })), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(500);
-    expect(queueAdd).not.toHaveBeenCalled();
+    expect(rep.status).toHaveBeenCalledWith(200);
+    expect(queuedEmail(0).text).toContain("Services: Implementation");
   });
 });

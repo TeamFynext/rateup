@@ -12,9 +12,18 @@ export async function instagramWebhookEventHandler(request: FastifyRequest, repl
     if (obj !== "instagram" && obj !== "page") {
       return reply.code(200).send();
     }
-    reply.code(200).send();
     const data = request.body as InstagramWebhookBody;
-    await handleInstagramWebhook(data);
+    const { processed, failed } = await handleInstagramWebhook(data);
+
+    if (failed > 0) {
+      log.error(
+        { processed, failed },
+        "[Instagram] Some webhook events failed; answering non-2xx so Meta retries",
+      );
+      return reply.code(500).send();
+    }
+
+    reply.code(200).send();
   } catch (e) {
     log.error(e);
     if (!reply.sent) {

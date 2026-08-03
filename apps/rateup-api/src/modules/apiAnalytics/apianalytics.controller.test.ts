@@ -6,7 +6,7 @@ vi.mock("./apianalytics.service.js", () => ({
   getTeamPerformanceStats: vi.fn(),
   getTemplateCategoryOverview: vi.fn(),
   getTemplatePerformanceStats: vi.fn(),
-  getWaMessageOverviewByTeamAndOrg: vi.fn(),
+  getWaMessageOverview: vi.fn(),
 }));
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -18,7 +18,7 @@ import {
   getTeamPerformanceStats,
   getTemplateCategoryOverview,
   getTemplatePerformanceStats,
-  getWaMessageOverviewByTeamAndOrg,
+  getWaMessageOverview,
 } from "./apianalytics.service.js";
 import {
   getApiAnalyticsHandler,
@@ -30,7 +30,7 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const m = {
-  overview: getWaMessageOverviewByTeamAndOrg as unknown as Mock,
+  overview: getWaMessageOverview as unknown as Mock,
   trend: getDeliveredFailedTrend as unknown as Mock,
   weekTrend: getDeliveredFailedWeekTrend as unknown as Mock,
   categoryOverview: getTemplateCategoryOverview as unknown as Mock,
@@ -69,7 +69,8 @@ describe("getApiAnalyticsHandler", () => {
 
     await getApiAnalyticsHandler(request({ teamId: "team-1" }), rep);
 
-    expect(m.overview).toHaveBeenCalledWith("team-1", ORG, [], "all");
+    // (orgId, teamId, …), matching every other function in the service.
+    expect(m.overview).toHaveBeenCalledWith(ORG, "team-1", undefined, "all");
     expect(sent(rep)).toEqual({ totalMessages: 10 });
   });
 
@@ -82,10 +83,19 @@ describe("getApiAnalyticsHandler", () => {
     expect(m.overview.mock.calls[0][2]).toEqual(["2026-03-01", "2026-03-07"]);
   });
 
-  test("passes an empty range when the caller named none", async () => {
+  // Two handlers used to pass `[]` for an absent range and two `undefined`. Both
+  // resolve to the same default now, but every handler parses the range the same
+  // way, which is what makes the panels on one screen reconcilable.
+  test("passes no range at all when the caller named none", async () => {
     await getApiAnalyticsHandler(request(), reply());
 
-    expect(m.overview.mock.calls[0][2]).toEqual([]);
+    expect(m.overview.mock.calls[0][2]).toBeUndefined();
+  });
+
+  test("passes no range when the caller named only one end", async () => {
+    await getApiAnalyticsHandler(request({ dateRange: "2026-03-01" }), reply());
+
+    expect(m.overview.mock.calls[0][2]).toBeUndefined();
   });
 
   test("counts both API sources unless told otherwise", async () => {
@@ -112,42 +122,26 @@ describe("getApiAnalyticsHandler", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The two halves of dateRange are split on a comma
-  // and passed on verbatim; nothing checks they parse. The service then hands
-  // `new Date("last tuesday")` — an Invalid Date — straight to Prisma, which fails
-  // at query time, so a typo in a query string surfaces as a 500 rather than a 400.
-  // The querystring schema types dateRange as a plain optional string.
-  // See issues.txt 15.7.
-  test("passes a date range that is not a date through unchecked", async () => {
-    await getApiAnalyticsHandler(request({ dateRange: "not-a-date,also-not" }), reply());
-
-    expect(m.overview.mock.calls[0][2]).toEqual(["not-a-date", "also-not"]);
-  });
-
-  // NOTE: pins current behaviour. teamId is a filter the caller chooses, not a
-  // boundary the server enforces — nothing consults the caller's team memberships
-  // or channel scope. So a user restricted to one team can ask for "all" and read
-  // the whole org's message volumes, delivery rates and per-team breakdown. Compare
-  // getAccessibleWaSettings, which narrows the channel list by team for exactly
-  // this reason. See issues.txt 15.7.
+  // teamId is a filter the caller chooses, not a boundary the server enforces, and
+  // that is deliberate: wa_channel_access.ts states the policy — team scoping
+  // "drives what the dashboard shows, not what the API allows". Every query still
+  // filters on the caller's own orgId, so this is never cross-tenant.
   test("gives any member the whole org's numbers when they ask for all teams", async () => {
     await getApiAnalyticsHandler(
       request({ teamId: "all", user: { orgId: ORG, role: "AGENT" } }),
       reply(),
     );
 
-    expect(m.overview.mock.calls[0][0]).toBe("all");
+    expect(m.overview.mock.calls[0][1]).toBe("all");
   });
 
-  // NOTE: same gap from the other direction — a team id is taken from the query
-  // with no check that it belongs to the caller's org. Harmless in practice because
-  // every query also filters on orgId, so a foreign team id simply matches nothing.
-  // See issues.txt 15.7.
-  test("passes a team id through without checking it belongs to the org", async () => {
+  // A team id belonging to another org matches nothing, because every query also
+  // filters on the caller's own orgId.
+  test("cannot read another org's team by naming its id", async () => {
     await getApiAnalyticsHandler(request({ teamId: "another-orgs-team" }), reply());
 
-    expect(m.overview.mock.calls[0][0]).toBe("another-orgs-team");
-    expect(m.overview.mock.calls[0][1]).toBe(ORG);
+    expect(m.overview.mock.calls[0][0]).toBe(ORG);
+    expect(m.overview.mock.calls[0][1]).toBe("another-orgs-team");
   });
 });
 
@@ -207,12 +201,13 @@ describe("getDeliveredFailedTrendHandler", () => {
     expect(rep.status).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour, and it is the visible half of issues.txt 15.1.
-  // Both trends are built from one request with one range, but only
-  // getDeliveredFailedWeekTrend defaults to the last seven days when the range is
-  // absent — getDeliveredFailedTrend falls back to the whole of history. So the
-  // response carries two series over two different windows under one roof.
-  test("hands the same absent range to two services that default it differently", async () => {
+  // The visible half of Both trends are built from one request
+  // with one range, but only getDeliveredFailedWeekTrend defaulted an absent range
+  // to the last seven days — getDeliveredFailedTrend fell back to the whole of
+  // history, so the response carried two series over two different windows under
+  // one roof. Both resolve an absent range through resolveDateRange now, so the
+  // handler passing undefined to each gives them the same window.
+  test("hands the same absent range to both trends", async () => {
     await getDeliveredFailedTrendHandler(request(), reply());
 
     expect(m.trend.mock.calls[0][3]).toBeUndefined();
@@ -264,7 +259,7 @@ describe("getTeamPerformanceStatsHandler", () => {
 
     await getTeamPerformanceStatsHandler(request(), rep);
 
-    expect(m.teamPerformance).toHaveBeenCalledWith(ORG, [], "all");
+    expect(m.teamPerformance).toHaveBeenCalledWith(ORG, undefined, "all");
     expect(sent(rep)).toEqual([{ teamId: "team-1" }]);
   });
 
@@ -286,9 +281,8 @@ describe("getTeamPerformanceStatsHandler", () => {
     expect(rep.status).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: this endpoint takes no teamId at all — it always reports on every team in
-  // the org. Combined with the absence of any team-scope check (see 15.7), a member
-  // of one team reads every other team's send volume and success rate.
+  // This endpoint takes no teamId at all — it always reports on every team in the
+  // org, by design: it IS the per-team comparison.
   test("reports on every team regardless of who is asking", async () => {
     await getTeamPerformanceStatsHandler(
       request({ teamId: "team-1", user: { orgId: ORG, role: "AGENT" } }),

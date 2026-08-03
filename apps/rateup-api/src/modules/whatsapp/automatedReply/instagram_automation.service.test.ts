@@ -14,7 +14,6 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("./instagram_automatedReply.service.js", () => ({
   createOrUpdateInstagramAutomationMessage: vi.fn(),
   logInstagramAutomationAction: vi.fn(),
-  wasInstagramAutomationSentRecently: vi.fn(),
 }));
 
 vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
@@ -43,7 +42,6 @@ import prisma from "../../../utils/prisma.js";
 import {
   createOrUpdateInstagramAutomationMessage,
   logInstagramAutomationAction,
-  wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import {
   sendInstagramGenericTemplate,
@@ -70,7 +68,6 @@ const db = prisma as unknown as {
 const m = {
   track: createOrUpdateInstagramAutomationMessage as unknown as Mock,
   logAction: logInstagramAutomationAction as unknown as Mock,
-  sentRecently: wasInstagramAutomationSentRecently as unknown as Mock,
   sendText: sendInstagramTextMessage as unknown as Mock,
   sendImage: sendInstagramImage as unknown as Mock,
   sendQuickReply: sendInstagramQuickReply as unknown as Mock,
@@ -114,7 +111,6 @@ beforeEach(() => {
   db.waAutomatedReplyMessage.updateMany.mockResolvedValue({ count: 1 });
   m.track.mockResolvedValue({ id: "msg-1" });
   m.logAction.mockResolvedValue({});
-  m.sentRecently.mockResolvedValue(false);
 });
 
 describe("startInstagramAutomationFlow", () => {
@@ -153,9 +149,11 @@ describe("startInstagramAutomationFlow", () => {
     expect(log.error).toHaveBeenCalled();
   });
 
-  test("stays silent when a once-a-day automation already reached this user", async () => {
-    m.sentRecently.mockResolvedValue(true);
-
+  // The once-per-24h guard moved to the rules engine (Rule.options.sendOncePerDay,
+  // enforced in validateRuleConditions before the flow is ever started, keyed on the
+  // igsId the rule context passes as `phone`). Starting a flow no longer consults any
+  // per-automation recency state of its own.
+  test("runs even when a stale sendOnceIn24Hours flag is still on the row", async () => {
     await startInstagramAutomationFlow(
       IGS_ID,
       flow([START], [], { sendOnceIn24Hours: true }),
@@ -163,24 +161,33 @@ describe("startInstagramAutomationFlow", () => {
       IBA_ID,
     );
 
-    expect(m.track).not.toHaveBeenCalled();
+    expect(m.track).toHaveBeenCalled();
   });
 
-  test("does not consult the recent-send log unless the option is set", async () => {
-    await startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID);
-
-    expect(m.sentRecently).not.toHaveBeenCalled();
-  });
-
-  // NOTE: failures are swallowed so one broken automation cannot disturb the webhook
-  // that triggered it — the caller cannot tell the flow never ran.
-  test("swallows a failure rather than reporting it", async () => {
+  // Still not rethrown — one broken automation must not disturb the webhook that
+  // triggered it — but the tracking row is marked failed so the flow is queryable.
+  test("marks the tracking row failed rather than only logging", async () => {
+    const automation = flow([START]);
     m.track.mockRejectedValue(new Error("db down"));
+
+    await expect(
+      startInstagramAutomationFlow(IGS_ID, automation, ORG_ID, IBA_ID),
+    ).resolves.toBeUndefined();
+    expect(log.error).toHaveBeenCalled();
+    expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
+      where: { phone: IGS_ID, waAutomatedReplyId: automation.id },
+      data: { status: "failed" },
+    });
+  });
+
+  // The marker is best-effort: failing to write it must not mask the original error.
+  test("does not throw when the failure marker itself cannot be written", async () => {
+    m.track.mockRejectedValue(new Error("db down"));
+    db.waAutomatedReplyMessage.updateMany.mockRejectedValue(new Error("db still down"));
 
     await expect(
       startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID),
     ).resolves.toBeUndefined();
-    expect(log.error).toHaveBeenCalled();
   });
 });
 
@@ -256,13 +263,25 @@ describe("processNextInstagramNode - walking the flow", () => {
     expect(m.sendText).toHaveBeenCalled();
   });
 
-  // NOTE: every failure inside node processing is caught and logged, so a flow that
-  // half-ran looks identical to one that finished.
-  test("swallows a failure mid-flow", async () => {
+  // A flow that half-ran is no longer indistinguishable from one that finished: the
+  // failure is still not rethrown, but the tracking row is marked failed.
+  test("marks the tracking row failed when a node fails mid-flow", async () => {
+    const automation = flow([textNode("t1")]);
+    m.logAction.mockRejectedValue(new Error("db down"));
+
+    await expect(run(automation, "t1")).resolves.toBeUndefined();
+    expect(log.error).toHaveBeenCalled();
+    expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
+      where: { phone: IGS_ID, waAutomatedReplyId: automation.id },
+      data: { status: "failed" },
+    });
+  });
+
+  test("still does not throw when the failure marker cannot be written either", async () => {
+    m.logAction.mockRejectedValue(new Error("db down"));
     db.waAutomatedReplyMessage.updateMany.mockRejectedValue(new Error("db down"));
 
     await expect(run(flow([textNode("t1")]), "t1")).resolves.toBeUndefined();
-    expect(log.error).toHaveBeenCalled();
   });
 });
 
@@ -284,7 +303,7 @@ describe("processNextInstagramNode - sending each node type", () => {
 
     await run(flow([node]), "i1");
 
-    expect(m.sendImage).toHaveBeenCalledWith(IGS_ID, "https://cdn/key-1", "Look", ORG_ID, IBA_ID);
+    expect(m.sendImage).toHaveBeenCalledWith(IGS_ID, "https://cdn/key-1", ORG_ID, IBA_ID, "Look");
   });
 
   test("skips an image node with no image", async () => {
@@ -376,7 +395,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
   test("answers the comment privately rather than messaging the user", async () => {
     await run(flow([textNode("t1", "Thanks!")]), "t1", "comment-1");
 
-    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Thanks!", IBA_ID);
+    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Thanks!", IBA_ID, ORG_ID);
     expect(m.sendText).not.toHaveBeenCalled();
   });
 
@@ -398,7 +417,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
 
     await run(flow([node]), "i1", "comment-1");
 
-    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Look", IBA_ID);
+    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Look", IBA_ID, ORG_ID);
     expect(m.sendImage).toHaveBeenCalled();
   });
 
@@ -411,6 +430,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
       "comment-1",
       "Thanks for your comment!",
       IBA_ID,
+      ORG_ID,
     );
   });
 });

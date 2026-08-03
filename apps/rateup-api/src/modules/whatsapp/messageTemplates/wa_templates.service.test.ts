@@ -135,11 +135,10 @@ describe("fetchTemplates", () => {
     callMetaApiMock.mockResolvedValue({ data: { data: [{ id: "wa-tpl-1" }] } });
 
     await expect(fetchTemplates(ORG_A)).resolves.toEqual([{ id: "wa-tpl-1" }]);
-    expect(callMetaApiMock.mock.calls[0].slice(0, 3)).toEqual([
-      "/waba-1/message_templates",
-      "GET",
-      "token-abc",
-    ]);
+    const [url, method, token] = callMetaApiMock.mock.calls[0];
+    expect(url).toContain("/waba-1/message_templates");
+    expect(method).toBe("GET");
+    expect(token).toBe("token-abc");
   });
 
   test("narrows to one connected number when told which", async () => {
@@ -148,36 +147,48 @@ describe("fetchTemplates", () => {
     expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_A, "phone-2");
   });
 
-  // NOTE: pins current behaviour, and this is what makes 14.2 silent. Any failure —
-  // no settings, an expired token, a Meta outage — is caught, logged and turned into
-  // an empty list, which is indistinguishable from an org that genuinely has no
-  // templates. syncTemplates then walks that empty list and reports success.
-  // See issues.txt 14.2.
-  test("reports an empty list rather than a failure when Meta is unreachable", async () => {
+  // Every failure — no settings, an expired token, a Meta outage — used to be
+  // caught and turned into an empty list, which is indistinguishable from an org
+  // that genuinely has no templates. syncTemplates then walked that empty list and
+  // reported a clean sync.
+  test("lets a Meta failure reach the caller", async () => {
     callMetaApiMock.mockRejectedValue(new Error("graph is down"));
 
-    await expect(fetchTemplates(ORG_A)).resolves.toEqual([]);
+    await expect(fetchTemplates(ORG_A)).rejects.toThrow("graph is down");
   });
 
-  test("reports an empty list for an org with no WhatsApp settings", async () => {
+  test("refuses an org with no WhatsApp settings", async () => {
     getWaSettingsMock.mockResolvedValue(null);
 
-    await expect(fetchTemplates(ORG_A)).resolves.toEqual([]);
+    await expect(fetchTemplates(ORG_A)).rejects.toThrow("No WhatsApp settings found");
   });
 
-  // NOTE: pins current behaviour. Only res.data.data is read; the paging cursor
-  // Meta returns alongside it is never followed, so only the first page of
-  // templates is ever seen. getFlowAssets in the flows module carries an explicit
-  // "TODO: handle pagination" for the same reason. See issues.txt 14.6.
-  test("reads only the first page Meta returns, ignoring the paging cursor", async () => {
-    callMetaApiMock.mockResolvedValue({
-      data: {
-        data: [{ id: "wa-tpl-1" }],
-        paging: { next: "https://graph.facebook.com/next-page" },
-      },
-    });
+  // Only res.data.data was read; the paging cursor Meta returns alongside it was
+  // never followed, so an account with more templates than one page silently
+  // synced a prefix of them. That also mattered for 14.6's reconciliation:
+  // "missing from Meta" is only meaningful once the read is complete.
+  test("follows the paging cursor to the end", async () => {
+    callMetaApiMock
+      .mockResolvedValueOnce({
+        data: {
+          data: [{ id: "wa-tpl-1" }],
+          paging: { next: "https://graph.facebook.com/v25.0/waba-1/message_templates?after=abc" },
+        },
+      })
+      .mockResolvedValueOnce({ data: { data: [{ id: "wa-tpl-2" }] } });
 
-    await expect(fetchTemplates(ORG_A)).resolves.toEqual([{ id: "wa-tpl-1" }]);
+    await expect(fetchTemplates(ORG_A)).resolves.toEqual([{ id: "wa-tpl-1" }, { id: "wa-tpl-2" }]);
+    expect(callMetaApiMock).toHaveBeenCalledTimes(2);
+    // Meta hands back an absolute url; only the path and query go to callMetaApi,
+    // which prefixes the graph base itself.
+    expect(callMetaApiMock.mock.calls[1][0]).toBe("/waba-1/message_templates?after=abc");
+  });
+
+  test("stops at the last page rather than looping", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { data: [{ id: "wa-tpl-1" }] } });
+
+    await fetchTemplates(ORG_A);
+
     expect(callMetaApiMock).toHaveBeenCalledTimes(1);
   });
 
@@ -225,23 +236,27 @@ describe("reading templates from our own database", () => {
     });
   });
 
-  // NOTE: pins current behaviour. getDbTemplate keys on the id alone and takes no
-  // org. updateTemplateHandler compares orgId itself after calling it, and
-  // deleteTemplateHandler does too — but updateTemplate (the service function)
-  // does not, and neither do updateTemplateInDb or deleteTemplateFromDb.
-  // See issues.txt 14.3.
-  test("returns a template by id without being told which org is asking", async () => {
-    db.findUnique.mockResolvedValue(row({ orgId: ORG_B }));
+  // getDbTemplate keyed on the id alone and took no org. updateTemplateHandler and
+  // deleteTemplateHandler each compared orgId themselves afterwards, but
+  // saveTemplateAsDraftHandler did not — so naming another org's template id in the
+  // body rewrote their template into a draft.
+  test("scopes a template lookup by id to the org asking", async () => {
+    await getDbTemplate(TEMPLATE_ID, ORG_A);
 
-    const result = await getDbTemplate(TEMPLATE_ID);
+    expect(db.findFirst.mock.calls[0][0]).toEqual({
+      where: { id: TEMPLATE_ID, orgId: ORG_A },
+    });
+  });
 
-    expect(result!.orgId).toBe(ORG_B);
-    expect(db.findUnique.mock.calls[0][0]).toEqual({ where: { id: TEMPLATE_ID } });
+  test("reports nothing for a template belonging to another org", async () => {
+    db.findFirst.mockResolvedValue(null);
+
+    await expect(getDbTemplate(TEMPLATE_ID, ORG_B)).resolves.toBeNull();
   });
 
   // NOTE: same gap, reached from the Meta template id — this one searches every
   // org's templates by design, since it is used to resolve webhook status updates.
-  // Worth knowing it is unscoped before reusing it. See issues.txt 14.3.
+  // Worth knowing it is unscoped before reusing it.
   test("finds a template by its Meta id across every org", async () => {
     await getTemplateWithHSMId("wa-tpl-1");
 
@@ -251,9 +266,9 @@ describe("reading templates from our own database", () => {
   });
 
   test("reports nothing rather than throwing when the lookup fails", async () => {
-    db.findUnique.mockRejectedValue(new Error("db down"));
+    db.findFirst.mockRejectedValue(new Error("db down"));
 
-    await expect(getDbTemplate(TEMPLATE_ID)).resolves.toBeNull();
+    await expect(getDbTemplate(TEMPLATE_ID, ORG_A)).resolves.toBeNull();
   });
 });
 
@@ -292,7 +307,6 @@ describe("createTemplate", () => {
   // non-2xx, so this branch only fires for a 2xx that is not exactly 200 — and when
   // it does, the specific reason Meta gave is logged and replaced by a bare
   // "Error creating template in whatsapp". Marked TODO in the source.
-  // See issues.txt 14.10.
   test("replaces Meta's reason with a generic message on a non-200 success", async () => {
     callMetaApiMock.mockResolvedValue({ status: 201, data: { error: "name already exists" } });
 
@@ -324,41 +338,40 @@ describe("saving and deleting templates in our database", () => {
     });
   });
 
-  test("updates the stored template by id", async () => {
-    await updateTemplateInDb(TEMPLATE_ID, { name: "renamed" });
+  test("scopes the update to the caller's org", async () => {
+    await updateTemplateInDb(TEMPLATE_ID, ORG_A, { name: "renamed" });
 
-    expect(db.update.mock.calls[0][0].where).toEqual({ id: TEMPLATE_ID });
+    expect(db.update.mock.calls[0][0].where).toEqual({ id: TEMPLATE_ID, orgId: ORG_A });
   });
 
   test("leaves the stored defaults alone when none are supplied", async () => {
-    await updateTemplateInDb(TEMPLATE_ID, { name: "renamed" });
+    await updateTemplateInDb(TEMPLATE_ID, ORG_A, { name: "renamed" });
 
     expect(db.update.mock.calls[0][0].data.defaultValues).toBeUndefined();
   });
 
-  // NOTE: pins current behaviour. All three swallow their failure — two of them
-  // to console.log rather than the logger — and resolve to undefined, so the
-  // caller cannot tell a stored template from a lost one. createTemplateHandler
-  // replies 200 "template created" either way. Same family as issues.txt 3.1.
-  // See issues.txt 14.2.
+  // All three used to swallow their failure — two of them to console.log rather
+  // than the logger — and resolve to undefined, so no caller could tell a stored
+  // template from a lost one, and createTemplateHandler replied 200 "template
+  // created" either way. Same family as
   test.each([
     ["saving", () => saveTemplate({ name: "n" }, ORG_A)],
-    ["updating", () => updateTemplateInDb(TEMPLATE_ID, { name: "n" })],
-    ["deleting", () => deleteTemplateFromDb(TEMPLATE_ID)],
-  ])("swallows a failure while %s and reports nothing", async (_label, run) => {
+    ["updating", () => updateTemplateInDb(TEMPLATE_ID, ORG_A, { name: "n" })],
+    ["deleting", () => deleteTemplateFromDb(TEMPLATE_ID, ORG_A)],
+  ])("reports a failure while %s rather than swallowing it", async (_label, run) => {
     db.create.mockRejectedValue(new Error("db down"));
     db.update.mockRejectedValue(new Error("db down"));
     db.delete.mockRejectedValue(new Error("db down"));
 
-    await expect(run()).resolves.toBeUndefined();
+    await expect(run()).rejects.toThrow("db down");
   });
 
-  // NOTE: neither takes an org, so the id alone decides which template is written
-  // or removed. See issues.txt 14.3.
-  test("takes no org to scope the delete by", async () => {
-    await deleteTemplateFromDb(TEMPLATE_ID);
+  // Neither took an org, so the id alone decided which template was written or
+  // removed.
+  test("scopes the delete to the caller's org", async () => {
+    await deleteTemplateFromDb(TEMPLATE_ID, ORG_A);
 
-    expect(db.delete.mock.calls[0][0]).toEqual({ where: { id: TEMPLATE_ID } });
+    expect(db.delete.mock.calls[0][0]).toEqual({ where: { id: TEMPLATE_ID, orgId: ORG_A } });
   });
 });
 
@@ -378,15 +391,20 @@ describe("deleteTemplate", () => {
     await expect(deleteTemplate(ORG_A, "wa-tpl-1", "order_update")).resolves.toBe(false);
   });
 
-  // NOTE: pins current behaviour. deleteTemplate ignores the connected number and
-  // always resolves the org's default settings, unlike every neighbouring function,
-  // so deleting a template that lives on a second WhatsApp number is attempted with
-  // the first number's business account. See issues.txt 14.6.
-  test("always uses the org's default number, whichever number the template is on", async () => {
+  // It ignored the connected number and always resolved the org's DEFAULT
+  // settings, unlike every neighbouring function — so deleting a template that
+  // lives on a second WhatsApp number was attempted against the first number's
+  // business account, and Meta refused.
+  test("deletes against the number the template actually lives on", async () => {
+    await deleteTemplate(ORG_A, "wa-tpl-1", "order_update", "phone-2");
+
+    expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_A, "phone-2");
+  });
+
+  test("falls back to the org's default number when none is named", async () => {
     await deleteTemplate(ORG_A, "wa-tpl-1", "order_update");
 
-    expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_A);
-    expect(getWaSettingsMock.mock.calls[0]).toHaveLength(1);
+    expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_A, undefined);
   });
 });
 
@@ -394,7 +412,7 @@ describe("updateTemplate", () => {
   test("pushes an approved template to Meta and then refreshes our copy", async () => {
     callMetaApiMock.mockResolvedValue({ status: 200, data: { data: [{ id: "wa-tpl-1" }] } });
 
-    await updateTemplate(TEMPLATE_ID, {
+    await updateTemplate(TEMPLATE_ID, ORG_A, {
       templateType: TemplateType.GENERAL_NOTIFICATION,
     } as any);
 
@@ -405,7 +423,7 @@ describe("updateTemplate", () => {
   test("does not touch our copy when Meta refuses the edit", async () => {
     callMetaApiMock.mockResolvedValue({ status: 400, data: { error: "too soon" } });
 
-    const result = await updateTemplate(TEMPLATE_ID, {
+    const result = await updateTemplate(TEMPLATE_ID, ORG_A, {
       templateType: TemplateType.GENERAL_NOTIFICATION,
     } as any);
 
@@ -414,7 +432,7 @@ describe("updateTemplate", () => {
   });
 
   test("keeps an order-details template local and pre-approved", async () => {
-    await updateTemplate(TEMPLATE_ID, { templateType: TemplateType.ORDER_DETAILS } as any);
+    await updateTemplate(TEMPLATE_ID, ORG_A, { templateType: TemplateType.ORDER_DETAILS } as any);
 
     expect(callMetaApiMock).not.toHaveBeenCalled();
     expect(db.update.mock.calls[0][0].data.data).toMatchObject({
@@ -432,34 +450,37 @@ describe("updateTemplate", () => {
       ],
     });
 
-    await updateTemplate(TEMPLATE_ID, {
+    await updateTemplate(TEMPLATE_ID, ORG_A, {
       templateType: TemplateType.PAYMENT_CONFIRMATION,
     } as any);
 
     expect(db.update.mock.calls[0][0].data.data.components).toEqual([{ type: "body", text: "hi" }]);
   });
 
-  // NOTE: getDbTemplate returns null for an id that matches nothing. The
-  // GENERAL_NOTIFICATION/LOYALTY branch reads template.orgId right after, so it now
-  // throws a descriptive error instead of crashing with a raw TypeError.
-  test("throws a clear error instead of crashing for a template that does not exist", async () => {
-    db.findUnique.mockResolvedValue(null);
+  // getDbTemplate reports null for an id that matches nothing OR for a template
+  // the caller's org does not own. updateTemplate used to read template.orgId
+  // straight off that result, so both cases gave a bare TypeError.
+  test("reports nothing for a template that does not exist", async () => {
+    db.findFirst.mockResolvedValue(null);
 
     await expect(
-      updateTemplate(TEMPLATE_ID, { templateType: TemplateType.GENERAL_NOTIFICATION } as any),
-    ).rejects.toThrow(`Template not found for id ${TEMPLATE_ID}`);
+      updateTemplate(TEMPLATE_ID, ORG_A, {
+        templateType: TemplateType.GENERAL_NOTIFICATION,
+      } as any),
+    ).resolves.toBeNull();
   });
 
-  // NOTE: the local-only branches never read the template they loaded, so an id
-  // that matches nothing walks straight into updateTemplateInDb — which is itself
-  // unscoped and swallows the resulting failure. See issues.txt 14.3 and 14.5.
-  test("writes on regardless for a local template type it never checked", async () => {
-    db.findUnique.mockResolvedValue(null);
+  // The local-only branches never read the template they loaded, so an id that
+  // matched nothing used to walk straight into updateTemplateInDb — which was
+  // itself unscoped and swallowed the resulting failure. Now every branch is past
+  // the same guard.
+  test("writes nothing for a local template type when the template is not the caller's", async () => {
+    db.findFirst.mockResolvedValue(null);
 
     await expect(
-      updateTemplate(TEMPLATE_ID, { templateType: TemplateType.ORDER_DETAILS } as any),
-    ).resolves.toBeDefined();
-    expect(db.update.mock.calls[0][0].where).toEqual({ id: TEMPLATE_ID });
+      updateTemplate(TEMPLATE_ID, ORG_A, { templateType: TemplateType.ORDER_DETAILS } as any),
+    ).resolves.toBeNull();
+    expect(db.update).not.toHaveBeenCalled();
   });
 });
 
@@ -469,7 +490,11 @@ describe("syncTemplates", () => {
       data: { data: [{ id: "wa-tpl-9", name: "new_one", components: [] }] },
     });
 
-    await expect(syncTemplates(ORG_A)).resolves.toEqual({ success: true, created: 1, updated: 0 });
+    await expect(syncTemplates(ORG_A)).resolves.toMatchObject({
+      success: true,
+      created: 1,
+      updated: 0,
+    });
     expect(db.create).toHaveBeenCalled();
   });
 
@@ -479,8 +504,12 @@ describe("syncTemplates", () => {
       data: { data: [{ id: "wa-tpl-1", name: "order_update", components: [] }] },
     });
 
-    await expect(syncTemplates(ORG_A)).resolves.toEqual({ success: true, created: 0, updated: 1 });
-    expect(db.update.mock.calls[0][0].where).toEqual({ id: TEMPLATE_ID });
+    await expect(syncTemplates(ORG_A)).resolves.toMatchObject({
+      success: true,
+      created: 0,
+      updated: 1,
+    });
+    expect(db.update.mock.calls[0][0].where).toEqual({ id: TEMPLATE_ID, orgId: ORG_A });
   });
 
   test("matches on name and number when the Meta id has changed", async () => {
@@ -530,34 +559,45 @@ describe("syncTemplates", () => {
     });
   });
 
-  // NOTE: pins current behaviour, and it is the visible half of 14.2. fetchTemplates
-  // turns a Meta outage into an empty list, so the loop below has nothing to do and
-  // the function reports success with zero changes — exactly what a genuinely
-  // up-to-date org looks like. syncTemplatesHandler then answers 200.
-  // See issues.txt 14.2.
-  test("reports a clean sync when Meta could not be reached at all", async () => {
+  // The visible half of 14.2. fetchTemplates turned a Meta outage into an empty
+  // list, so the loop had nothing to do and the function reported success with
+  // zero changes — exactly what a genuinely up-to-date org looks like — and
+  // syncTemplatesHandler answered 200. "Sync templates" is the button a user
+  // presses when their templates look wrong.
+  test("reports the failure when Meta could not be reached at all", async () => {
     callMetaApiMock.mockRejectedValue(new Error("graph is down"));
 
-    await expect(syncTemplates(ORG_A)).resolves.toEqual({
-      success: true,
-      created: 0,
-      updated: 0,
+    await expect(syncTemplates(ORG_A)).resolves.toMatchObject({
+      success: false,
+      message: "graph is down",
     });
   });
 
-  // NOTE: the sync only creates and updates. A template deleted at Meta stays in
-  // our database forever, and campaigns can still be pointed at it.
-  // See issues.txt 14.6.
-  test("leaves behind a template that no longer exists at Meta", async () => {
+  // The sync only created and updated, so a template deleted at Meta stayed in our
+  // database forever and campaigns could still be pointed at it. It is now MARKED,
+  // not deleted — campaigns reference these rows, and a partial read (before the
+  // paging fix) would have made every template past the first page look gone.
+  test("marks a template that no longer exists at Meta, without deleting it", async () => {
     db.findMany.mockResolvedValue([row()]);
     callMetaApiMock.mockResolvedValue({ data: { data: [] } });
 
-    await expect(syncTemplates(ORG_A)).resolves.toEqual({
+    await expect(syncTemplates(ORG_A)).resolves.toMatchObject({
       success: true,
       created: 0,
       updated: 0,
+      missingAtMeta: 1,
     });
     expect(db.delete).not.toHaveBeenCalled();
+    expect(db.update.mock.calls[0][0].data.data.status).toBe("DELETED");
+  });
+
+  test("leaves a template alone when Meta still has it", async () => {
+    db.findMany.mockResolvedValue([row()]);
+    callMetaApiMock.mockResolvedValue({
+      data: { data: [{ id: "wa-tpl-1", name: "order_update", components: [] }] },
+    });
+
+    await expect(syncTemplates(ORG_A)).resolves.toMatchObject({ missingAtMeta: 0 });
   });
 });
 
@@ -600,7 +640,6 @@ describe("getUnregisteredTemplates and registerTemplatesInDb", () => {
   // GET /unregistered cannot be fed to POST /register without the client
   // re-wrapping it, and nothing says so. registerTemplatesInDb also records neither
   // templateType nor whatsappSettingsPhoneId, unlike saveTemplate.
-  // See issues.txt 14.6.
   test("stores nothing usable when handed a raw Meta template", async () => {
     await registerTemplatesInDb(
       // Deliberately the raw Meta shape, not the { data } wrapper the function
@@ -678,15 +717,15 @@ describe("uploadFileToWaTemplate", () => {
     );
   });
 
-  // NOTE: pins current behaviour. The session call passes undefined as callMetaApi's
-  // accessToken argument and puts the token in the query params instead, so it ends
-  // up in the URL that callMetaApi trace-logs and dumps on failure. The second call
-  // gets it right, via an OAuth header. Same family as issues.txt 13.3.
-  test("puts the access token in the query string when opening the session", async () => {
+  // The session call used to pass undefined as callMetaApi's accessToken argument
+  // and put the token in the query params instead, so it ended up in the URL
+  // callMetaApi trace-logs and dumps on failure. The second call always got this
+  // right, via an OAuth header. Same family as
+  test("passes the access token as the auth argument when opening the session", async () => {
     await uploadFileToWaTemplate(file, 1024, ORG_A);
 
-    expect(callMetaApiMock.mock.calls[0][2]).toBeUndefined();
-    expect(callMetaApiMock.mock.calls[0][6].access_token).toBe("token-abc");
+    expect(callMetaApiMock.mock.calls[0][2]).toBe("token-abc");
+    expect(callMetaApiMock.mock.calls[0][6].access_token).toBeUndefined();
   });
 });
 
@@ -813,9 +852,9 @@ describe("sendTemplateToPhone", () => {
     await expect(sendTemplateToPhone(args())).rejects.toThrow("Team not found in survey");
   });
 
-  // NOTE: pins current behaviour, identical to issues.txt 11.9. The flow token is
+  // NOTE: pins current behaviour. The flow token is
   // the recipient's phone number, which Meta echoes back on every endpoint request
-  // and which the session lookup keys off. See issues.txt 14.11.
+  // and which the session lookup keys off.
   test("uses the recipient's phone number as the flow token", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
@@ -833,7 +872,7 @@ describe("sendTemplateToPhone", () => {
   // NOTE: pins current behaviour. The session is deleted and recreated BEFORE the
   // send, and the send is not guarded — so a template that Meta refuses leaves the
   // customer with a session pointing at a flow they were never sent, and any flow
-  // they had open is gone. See issues.txt 14.11.
+  // they had open is gone.
   test("has already replaced the customer's session when the send fails", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({

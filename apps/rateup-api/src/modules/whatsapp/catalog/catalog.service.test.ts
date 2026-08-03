@@ -14,7 +14,9 @@ vi.mock("../../../utils/prisma.js", () => {
       __tx: tx,
       whatsappCatalog: {
         delete: vi.fn(),
+        deleteMany: vi.fn(),
         update: vi.fn(),
+        updateMany: vi.fn(),
         findUnique: vi.fn(),
         findFirst: vi.fn(),
         findMany: vi.fn(),
@@ -91,7 +93,9 @@ const db = prisma as unknown as {
   };
   whatsappCatalog: {
     delete: Mock;
+    deleteMany: Mock;
     update: Mock;
+    updateMany: Mock;
     findUnique: Mock;
     findFirst: Mock;
     findMany: Mock;
@@ -145,7 +149,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.$transaction.mockImplementation(async (cb: (client: unknown) => Promise<unknown>) => cb(tx));
   db.whatsappCatalog.delete.mockResolvedValue({});
+  db.whatsappCatalog.deleteMany.mockResolvedValue({ count: 1 });
   db.whatsappCatalog.update.mockResolvedValue({});
+  db.whatsappCatalog.updateMany.mockResolvedValue({ count: 1 });
   db.whatsappCatalog.findUnique.mockResolvedValue(null);
   db.whatsappCatalog.findFirst.mockResolvedValue(null);
   db.whatsappCatalog.findMany.mockResolvedValue([]);
@@ -164,40 +170,57 @@ beforeEach(() => {
 });
 
 describe("catalog CRUD", () => {
-  test("deletes the catalog by its Meta id", async () => {
-    await deleteWaCatalog("cat-1");
+  test("deletes the catalog by its Meta id, within the caller's org", async () => {
+    await deleteWaCatalog("cat-1", ORG_ID);
 
-    expect(db.whatsappCatalog.delete).toHaveBeenCalledWith({ where: { catalogId: "cat-1" } });
+    expect(db.whatsappCatalog.deleteMany).toHaveBeenCalledWith({
+      where: { catalogId: "cat-1", orgId: ORG_ID },
+    });
   });
 
-  test("applies an update by Meta id", async () => {
-    await updateWaCatalog("cat-1", { name: "Renamed" } as any);
+  test("applies an update by Meta id, within the caller's org", async () => {
+    await updateWaCatalog("cat-1", ORG_ID, { name: "Renamed" } as any);
 
-    expect(db.whatsappCatalog.update).toHaveBeenCalledWith({
-      where: { catalogId: "cat-1" },
+    expect(db.whatsappCatalog.updateMany).toHaveBeenCalledWith({
+      where: { catalogId: "cat-1", orgId: ORG_ID },
       data: { name: "Renamed" },
     });
   });
 
-  // NOTE: neither delete nor update takes an org, so the catalog id alone decides
-  // what is affected — another org's catalog can be renamed or removed.
-  test("neither delete nor update is scoped by org", async () => {
-    await deleteWaCatalog("cat-victim");
-    await updateWaCatalog("cat-victim", { name: "hijacked" } as any);
+  // Both are scoped by org and affect zero rows for a catalog the org does not own,
+  // which they report as "Catalog not found" — the same answer as an id that never
+  // existed, so another org's catalog cannot be renamed or removed, nor probed for.
+  test("refuses to delete another org's catalog", async () => {
+    db.whatsappCatalog.deleteMany.mockResolvedValue({ count: 0 });
 
-    expect(db.whatsappCatalog.delete.mock.calls[0][0].where).toEqual({ catalogId: "cat-victim" });
-    expect(db.whatsappCatalog.update.mock.calls[0][0].where).toEqual({ catalogId: "cat-victim" });
+    await expect(deleteWaCatalog("cat-victim", "org-attacker")).rejects.toThrow(
+      "Catalog not found",
+    );
   });
 
-  test("fetches a catalog with the numbers connected to it", async () => {
-    db.whatsappCatalog.findUnique.mockResolvedValue({ catalogId: "cat-1" });
+  test("refuses to update another org's catalog", async () => {
+    db.whatsappCatalog.updateMany.mockResolvedValue({ count: 0 });
 
-    await getWaCatalog("cat-1");
+    await expect(
+      updateWaCatalog("cat-victim", "org-attacker", { name: "hijacked" } as any),
+    ).rejects.toThrow("Catalog not found");
+  });
 
-    expect(db.whatsappCatalog.findUnique).toHaveBeenCalledWith({
-      where: { catalogId: "cat-1" },
+  test("fetches a catalog with the numbers connected to it, scoped to the org", async () => {
+    db.whatsappCatalog.findFirst.mockResolvedValue({ catalogId: "cat-1" });
+
+    await getWaCatalog("cat-1", ORG_ID);
+
+    expect(db.whatsappCatalog.findFirst).toHaveBeenCalledWith({
+      where: { catalogId: "cat-1", orgId: ORG_ID },
       include: { connectedWaPhoneIds: true },
     });
+  });
+
+  test("returns null for a catalog belonging to another org", async () => {
+    db.whatsappCatalog.findFirst.mockResolvedValue(null);
+
+    await expect(getWaCatalog("cat-victim", "org-attacker")).resolves.toBeNull();
   });
 
   test("lists an org's catalogs with their connected numbers", async () => {
@@ -210,25 +233,24 @@ describe("catalog CRUD", () => {
   });
 
   test("finds the catalog attached to a number, with its products", async () => {
-    await getConnectedWaCatalog("phone-1");
+    await getConnectedWaCatalog("phone-1", ORG_ID);
 
     expect(db.whatsappCatalog.findFirst).toHaveBeenCalledWith({
-      where: { connectedWaPhoneIds: { some: { whatsappSettingsPhoneId: "phone-1" } } },
+      where: {
+        orgId: ORG_ID,
+        connectedWaPhoneIds: { some: { whatsappSettingsPhoneId: "phone-1" } },
+      },
       include: { products: true },
     });
   });
 
-  // NOTE: this lookup has no org filter either, so a phone id from another org
-  // returns that org's catalog and its full product list.
-  test("returns another org's catalog given one of its phone ids", async () => {
-    db.whatsappCatalog.findFirst.mockResolvedValue({
-      catalogId: "cat-victim",
-      orgId: "org-victim",
-    });
+  // The lookup now carries an org filter, so a phone id belonging to another org
+  // matches nothing rather than handing back that org's catalog and product list.
+  test("does not return another org's catalog given one of its phone ids", async () => {
+    db.whatsappCatalog.findFirst.mockResolvedValue(null);
 
-    await expect(getConnectedWaCatalog("phone-victim")).resolves.toMatchObject({
-      orgId: "org-victim",
-    });
+    await expect(getConnectedWaCatalog("phone-victim", "org-attacker")).resolves.toBeNull();
+    expect(db.whatsappCatalog.findFirst.mock.calls[0][0].where.orgId).toBe("org-attacker");
   });
 });
 
@@ -361,13 +383,37 @@ describe("syncWaCatalogs", () => {
     expect(db.catalogPhoneIdMap.createMany).not.toHaveBeenCalled();
   });
 
-  // NOTE: each account is wrapped in its own try/catch, so one failing account is
-  // logged and the rest still sync — but the caller is told nothing about it.
-  test("logs and moves on when one account fails entirely", async () => {
+  // Each account is still wrapped in its own try/catch so one failure cannot abandon
+  // the rest, but the outcome is now reported per account. Returning undefined made a
+  // total Meta outage indistinguishable from a clean sync — every account failed and
+  // the handler still replied 200.
+  test("reports the failure rather than only logging it", async () => {
     callMetaApiMock.mockRejectedValue(new Error("meta down"));
 
-    await expect(syncWaCatalogs(ORG_ID)).resolves.toBeUndefined();
+    const results = await syncWaCatalogs(ORG_ID);
+
     expect(log.error).toHaveBeenCalled();
+    expect(results).toEqual([{ wabaId: "waba-1", synced: false, warning: "meta down" }]);
+  });
+
+  test("reports success for an account that synced", async () => {
+    const results = await syncWaCatalogs(ORG_ID);
+
+    expect(results).toEqual([{ wabaId: "waba-1", synced: true }]);
+  });
+
+  test("reports a warning when Meta returns no business info", async () => {
+    metaReturns({ businessInfo: null });
+
+    const results = await syncWaCatalogs(ORG_ID);
+
+    expect(results).toEqual([
+      {
+        wabaId: "waba-1",
+        synced: false,
+        warning: "Meta returned no business info for this WhatsApp account.",
+      },
+    ]);
   });
 });
 
@@ -537,7 +583,10 @@ describe("disconnectCatalogFromWaba", () => {
   });
 
   test("asks Meta to unlink the catalog and clears the local mapping", async () => {
-    await disconnectCatalogFromWaba({ whatsappSettingsId: "set-1", catalogId: "cat-1" } as any);
+    await disconnectCatalogFromWaba(
+      { whatsappSettingsId: "set-1", catalogId: "cat-1" } as any,
+      ORG_ID,
+    );
 
     expect(callMetaApiMock).toHaveBeenCalledWith(
       "/waba-1/product_catalogs",
@@ -554,7 +603,7 @@ describe("disconnectCatalogFromWaba", () => {
     callMetaApiMock.mockResolvedValue({ data: { success: false } });
 
     await expect(
-      disconnectCatalogFromWaba({ whatsappSettingsId: "set-1", catalogId: "cat-1" } as any),
+      disconnectCatalogFromWaba({ whatsappSettingsId: "set-1", catalogId: "cat-1" } as any, ORG_ID),
     ).rejects.toThrow("Something went wrong");
     expect(db.catalogPhoneIdMap.deleteMany).not.toHaveBeenCalled();
   });
@@ -563,7 +612,7 @@ describe("disconnectCatalogFromWaba", () => {
     callMetaApiMock.mockRejectedValue(new Error("meta down"));
 
     await expect(
-      disconnectCatalogFromWaba({ whatsappSettingsId: "set-1", catalogId: "cat-1" } as any),
+      disconnectCatalogFromWaba({ whatsappSettingsId: "set-1", catalogId: "cat-1" } as any, ORG_ID),
     ).rejects.toThrow("meta down");
   });
 });

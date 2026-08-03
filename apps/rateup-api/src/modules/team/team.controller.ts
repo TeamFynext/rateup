@@ -160,12 +160,14 @@ export async function completeInviteHandler(
 ) {
   try {
     const invite = await completeInvite(request.params.token);
-    reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
+    // Queued before the reply: sending first meant a queue failure fell into the catch
+    // and attempted a contradictory 500 on an already-answered request.
     await addZapierTriggerToQueue(
       ZapierTriggers.NEW_TEAM_MEMBER_CREATED,
       { [ZapierTriggers.NEW_TEAM_MEMBER_CREATED]: invite },
       invite.orgId,
     );
+    reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ message: `Internal server error : ${e}` });

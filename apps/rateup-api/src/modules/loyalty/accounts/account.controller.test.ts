@@ -39,6 +39,7 @@ import {
   assignRewardToCustomerHandler,
   awardPointsHandler,
   createCustomerAccountHandler,
+  createPublicCustomerAccountHandler,
   exportCustomerAccountsHandler,
   getCustomerAccountByIdHandler,
   getCustomerAccountByPhoneHandler,
@@ -119,15 +120,11 @@ describe("createCustomerAccountHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { error: "orgId is required" } });
   });
 
-  // NOTE: pins current behaviour, and this is the module's widest exposure.
-  // The org is taken from the REQUEST BODY first — `request.body.orgId ||
-  // request.user.orgId` — and orgId is a required field on the schema. On the
-  // authenticated route that lets any org enrol customers into another org's
-  // program. The same handler is also registered unauthenticated at
-  // POST /api/public/loyalty/accounts (account.public.route.ts, registered in
-  // registerRoutes.ts with no checkSession), so the body org is the ONLY org
-  // there. See issues.txt 20.13.
-  test("prefers the org in the request body over the session's org", async () => {
+  // The module's widest exposure. The org was taken from the REQUEST BODY first —
+  // `request.body.orgId || request.user.orgId` — with orgId a required field on
+  // the schema, so on the authenticated route any org could enrol customers into
+  // another org's program by changing one field.
+  test("ignores the org in the request body and uses the session's", async () => {
     (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
 
     await createCustomerAccountHandler(
@@ -135,15 +132,33 @@ describe("createCustomerAccountHandler", () => {
       reply(),
     );
 
-    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith("org-somebody-else");
-    expect((createCustomerAccount as Mock).mock.calls[0][2]).toBe("org-somebody-else");
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+    expect((createCustomerAccount as Mock).mock.calls[0][2]).toBe(ORG);
   });
 
-  test("works with no session at all, as the public route invokes it", async () => {
-    (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
+  test("refuses when there is no session to take an org from", async () => {
     const rep = reply();
 
     await createCustomerAccountHandler(
+      { body: { ...body, orgId: "org-target" }, params: {}, query: {} } as any,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "orgId is required" } });
+    expect(createCustomerAccount).not.toHaveBeenCalled();
+  });
+
+  // The unauthenticated route has no session to take an org from, so it HAS to
+  // read the body — which is why it is now its own handler rather than sharing
+  // this one. The remaining exposure (anyone knowing an org's UUID can enrol into
+  // it, and supply a referCode that mints referral bonuses) is bounded by a
+  // per-IP rate limit on the route and recorded as outstanding in
+  // 20.13: the real fix is a signed link token.
+  test("the public handler takes the org from the body, as it must", async () => {
+    (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
       { body: { ...body, orgId: "org-target" }, params: {}, query: {} } as any,
       rep,
     );
@@ -152,9 +167,20 @@ describe("createCustomerAccountHandler", () => {
     expect((createCustomerAccount as Mock).mock.calls[0][2]).toBe("org-target");
   });
 
+  test("the public handler refuses a body with no org", async () => {
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, orgId: undefined }, params: {}, query: {} } as any,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "orgId is required" } });
+  });
+
   // NOTE: the handler passes only three arguments, so `sourceIdentifier` is
   // undefined and the welcome/join-link messages in createCustomerAccount are
-  // never sent from either route. See issues.txt 20.13.
+  // never sent from either route.
   test("never supplies a sending number, so no welcome message is sent", async () => {
     (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
 
@@ -199,19 +225,30 @@ describe("getCustomerAccountsHandler", () => {
 });
 
 describe("getCustomerAccountByIdHandler", () => {
-  // NOTE: the only handler in this file that never resolves the caller's
-  // program — the path id goes straight to the service. The reply includes the
-  // account's points, tier, transaction history and redemptions.
-  // See issues.txt 20.18.
-  test("fetches by the path id alone, without resolving the caller's program", async () => {
-    (getCustomerAccountById as Mock).mockResolvedValue({ id: "acct-other-org" });
+  // This was the only handler in the file that never resolved the caller's
+  // program — the path id went straight to the service, and the reply carries the
+  // account's points, tier, transaction history, redemptions and referrals. An
+  // account id was enough for a user of any org to read another org's customer.
+  test("resolves the caller's program and fetches within it", async () => {
+    (getCustomerAccountById as Mock).mockResolvedValue({ id: "acct-1" });
+    const rep = reply();
+
+    await getCustomerAccountByIdHandler(request({ params: { customerId: "acct-1" } }), rep);
+
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+    expect(getCustomerAccountById).toHaveBeenCalledWith("acct-1", PROGRAM);
+    expect(answer(rep).code).toBe(200);
+  });
+
+  // Another org's customer answers 404, indistinguishable from one that does not
+  // exist — the service scopes the query, so it simply finds nothing.
+  test("another org's account is a 404, not a 403", async () => {
+    (getCustomerAccountById as Mock).mockResolvedValue(null);
     const rep = reply();
 
     await getCustomerAccountByIdHandler(request({ params: { customerId: "acct-other-org" } }), rep);
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(getCustomerAccountById).toHaveBeenCalledWith("acct-other-org");
-    expect(answer(rep).code).toBe(200);
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Customer account not found" } });
   });
 
   test("answers 404 when the account does not exist", async () => {
@@ -338,14 +375,21 @@ describe("getCustomerAccountByPhoneHandler", () => {
     expect(answer(rep).body.availableRewards).toEqual([]);
   });
 
-  // NOTE: here the tier gate compares against the tier's NAME, while the
-  // redemption validator's tier gate compares against its ID (issues.txt 20.6).
-  // The same reward is filtered by two different keys depending on which path
-  // the customer takes. See issues.txt 20.23.
-  test("matches the tier restriction on the tier's name, not its id", async () => {
+  // This gate used to compare against the tier's NAME while the redemption
+  // validator compares against its ID — two different columns holding two
+  // different kinds of value, so a reward could be listed as available here and
+  // then refused at redemption, or the reverse, depending on whether the operator
+  // had populated `availableForTiers` with names or the rules JSON with ids.
+  // Renaming a tier silently changed which rewards appeared.
+  //
+  // Ids are the answer. The name is still accepted because existing rows hold
+  // names, and dropping it would hide every reward an operator has already
+  // configured — but both readers agree on the id, which is the point.
+  test("matches the tier restriction on the tier's id, and still on its name", async () => {
     (getActiveLoyaltyRewards as Mock).mockResolvedValue([
       { id: "coupon-1", rewardType: "coupon", availableForTiers: ["Gold"] },
       { id: "coupon-2", rewardType: "coupon", availableForTiers: ["tier-1"] },
+      { id: "coupon-3", rewardType: "coupon", availableForTiers: ["tier-platinum"] },
     ]);
     (getCustomerAccountByPhone as Mock).mockResolvedValue(account());
     const rep = reply();
@@ -355,7 +399,10 @@ describe("getCustomerAccountByPhoneHandler", () => {
       rep,
     );
 
-    expect(answer(rep).body.availableRewards.map((r: any) => r.id)).toEqual(["coupon-1"]);
+    expect(answer(rep).body.availableRewards.map((r: any) => r.id)).toEqual([
+      "coupon-1",
+      "coupon-2",
+    ]);
   });
 
   test("lists only unused approved coupons as active", async () => {
@@ -384,7 +431,7 @@ describe("getCustomerAccountByPhoneHandler", () => {
 // ===========================================================================
 
 describe("updateCustomerAccountHandler", () => {
-  test("passes the path id and the body straight through", async () => {
+  test("passes the path id, the body and the caller's program", async () => {
     (updateCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
     const rep = reply();
 
@@ -393,11 +440,14 @@ describe("updateCustomerAccountHandler", () => {
       rep,
     );
 
-    expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "suspended" });
+    expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "suspended" }, PROGRAM);
     expect(answer(rep).code).toBe(200);
   });
 
-  test("resolves no program, so nothing ties the account to the caller", async () => {
+  // The same gap as the by-id read, with a write on the end of it: an account id
+  // was enough to suspend or close another org's customer, and this handler never
+  // resolved a program at all.
+  test("resolves the caller's program before writing", async () => {
     (updateCustomerAccount as Mock).mockResolvedValue({});
 
     await updateCustomerAccountHandler(
@@ -405,7 +455,23 @@ describe("updateCustomerAccountHandler", () => {
       reply(),
     );
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+  });
+
+  // The service puts the program in the where clause, so prisma raises P2025 for
+  // an account the caller cannot see — answered as 404, not 500.
+  test("another org's account answers 404 rather than a server error", async () => {
+    (updateCustomerAccount as Mock).mockRejectedValue(
+      Object.assign(new Error("Record to update not found"), { code: "P2025" }),
+    );
+    const rep = reply();
+
+    await updateCustomerAccountHandler(
+      request({ params: { customerId: "acct-other-org" }, body: { status: "closed" } }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Customer account not found" } });
   });
 });
 
@@ -567,12 +633,12 @@ describe("exportCustomerAccountsHandler", () => {
     expect(rep.send.mock.calls[0][0]).toContain("N/A");
   });
 
-  // NOTE: pins current behaviour. The CSV is built with a bare
-  // `row.join(",")` — no quoting and no escaping. A customer whose name contains
-  // a comma shifts every later column on that row, so tier, points and referral
-  // code all land in the wrong place. Names come from the signup form, which is
-  // reachable unauthenticated (issues.txt 20.13). See issues.txt 20.24.
-  test("a comma in a customer's name breaks the column alignment", async () => {
+  // The CSV used to be built with a bare `row.join(",")` — no quoting, no
+  // escaping. A customer whose name contained a comma shifted every later column
+  // on their row, so tier, points and referral code all landed in the wrong field
+  // and nothing signalled it. Names come from the signup form, which is reachable
+  // without a session, so the attacker chooses the contents.
+  test("a comma in a customer's name is quoted, keeping the columns aligned", async () => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([
       customer({ contact: { name: "Smith, Ann", phone: "919000000001", email: "a@b.c" } }),
     ]);
@@ -581,13 +647,13 @@ describe("exportCustomerAccountsHandler", () => {
     await exportCustomerAccountsHandler(request({ query: {} }), rep);
 
     const row = (rep.send.mock.calls[0][0] as string).split("\n")[1];
-    expect(row).toBe("Smith, Ann,919000000001,a@b.c,Gold,500,900,ANN-AB12");
-    expect(row.split(",")).toHaveLength(8); // one more field than the header
+    expect(row).toBe('"Smith, Ann",919000000001,a@b.c,Gold,500,900,ANN-AB12');
   });
 
-  // NOTE: an unescaped leading `=` makes the cell a formula when the file is
-  // opened in Excel or Sheets. See issues.txt 20.24.
-  test("a name beginning with = is written into the CSV verbatim", async () => {
+  // An unescaped leading `=` makes the cell a live formula when an operator opens
+  // the file in Excel or Sheets. It is prefixed with a quote so the spreadsheet
+  // treats it as text.
+  test("a name beginning with = is neutralised before it reaches the file", async () => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([
       customer({
         contact: { name: '=HYPERLINK("http://x","click")', phone: "9", email: "" },
@@ -597,7 +663,9 @@ describe("exportCustomerAccountsHandler", () => {
 
     await exportCustomerAccountsHandler(request({ query: {} }), rep);
 
-    expect(rep.send.mock.calls[0][0]).toContain('=HYPERLINK("http://x","click")');
+    const csv = rep.send.mock.calls[0][0] as string;
+    expect(csv).toContain('"\'=HYPERLINK(""http://x"",""click"")"');
+    expect(csv).not.toContain("\n=HYPERLINK");
   });
 
   test("builds a workbook when excel is asked for", async () => {
