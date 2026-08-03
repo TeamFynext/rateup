@@ -1,8 +1,10 @@
-import { CheckCircle2, Flame } from "lucide-react";
+import { IconCircleCheck, IconFlame } from "@tabler/icons-react";
 
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
 import { Spoiler } from "@/components/ui/spoiler.tsx";
 import { cn } from "@/lib/utils.ts";
+
+import type { PricingPlan } from "../pricing-plan.ts";
 
 type BillingPeriod = "monthly" | "yearly";
 
@@ -12,7 +14,7 @@ const PlanCardNew = ({
   fallbackSymbol = "$",
   onButtonClick,
 }: {
-  plan: any;
+  plan: PricingPlan;
   period?: BillingPeriod;
   fallbackSymbol?: string;
   onButtonClick: () => void;
@@ -49,7 +51,7 @@ const PlanCardNew = ({
     >
       {isPopular && (
         <div className="flex items-center justify-center gap-2 bg-[#081C3F] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.08em] text-white">
-          <Flame className="h-4 w-4 text-[#FFD54C]" />
+          <IconFlame className="h-4 w-4 text-[#FFD54C]" />
           {plan.badge}
         </div>
       )}
@@ -89,7 +91,7 @@ const PlanCardNew = ({
           <div className="flex flex-col gap-3.5">
             {plan?.description?.map((item: string, index: number) => (
               <div key={index} className="flex items-start gap-2.5">
-                <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16A34A]" />
+                <IconCircleCheck className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16A34A]" />
                 <span className="text-sm leading-snug text-gray-700">{item}</span>
               </div>
             ))}

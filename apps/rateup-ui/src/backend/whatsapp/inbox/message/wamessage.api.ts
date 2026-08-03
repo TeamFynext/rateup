@@ -1,18 +1,36 @@
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { PaginationState, RequestPayload } from "@/types/api.ts";
 import type { MessagePlatform } from "@/types/enums.ts";
 import type { WaInboxMessage, WaTemplateComponent } from "@/types/global";
 
 import { WA_INBOX_BASE_PATH } from "..";
 import { axiosClient } from "../../../apiClient";
 
+/** Filter accepted by the WhatsApp message-log endpoints. */
+export interface WaMessageLogFilter {
+  dateKey?: string;
+  /** Either a preformatted range string or a two-element [from, to] tuple. */
+  dateRange?: string | (string | Date)[];
+  status?: string;
+  source?: string;
+  team?: string;
+  searchQuery?: string;
+  pagination?: PaginationState;
+}
+
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
 
 export interface WaGetMessagesBody {
   id: string;
-  waContctId: string;
-  createdAt: string;
+  /**
+   * Set by the server. A message the composer has added optimistically carries neither this,
+   * `createdAt`, nor `templateComponentParams` until the send round-trips.
+   */
+  waContctId?: string;
+  createdAt?: string;
   waCreatedAt: string;
   messageBody: WaInboxMessage;
-  templateComponentParams: WaTemplateComponent[];
+  templateComponentParams?: WaTemplateComponent[];
   stats?: { read: string; delivered: string; sent: string; failed: string };
   sender?: {
     name?: string;
@@ -22,15 +40,16 @@ export interface WaGetMessagesBody {
   readUsers?: string[];
   reactionMessage?: {
     id: string;
-    messageBody: any;
+    messageBody: WaGetMessagesBody;
     createdAt: string;
     sender?: {
       name?: string;
       profilePhoto?: string;
     };
   };
-  sourcePlatform: MessagePlatform;
-  sourceIdentifier: string;
+  /** `INTERNAL` for a private note, which belongs to no channel. */
+  sourcePlatform: MessagePlatform | "INTERNAL";
+  sourceIdentifier: string | null;
   // The ticket a message belongs to. Nullable for legacy messages that predate
   // the conversation backfill.
   conversationId?: string | null;
@@ -57,7 +76,7 @@ export async function getMessagesByContactId(
     .data as WaMessagePage;
 }
 
-export async function sendNewWaMessage(contactId: string, message: any) {
+export async function sendNewWaMessage(contactId: string, message: RequestPayload) {
   return await axiosClient.post(`${WA_CONTACT_BASE_PATH}/${contactId}`, message);
 }
 
@@ -118,7 +137,7 @@ export type ContactsWithLastMessage = ContactsData & {
   mentionCount?: number;
   /** Sibling tickets for the same contact — drives the thread's history strip. */
   otherTicketCount?: number;
-  contactLabels?: { id: string; name: string; color: string }[];
+  contactLabels?: ContactLabelOption[];
 };
 
 /**
@@ -179,7 +198,8 @@ export async function exportWaChats({
   filterData,
 }: {
   constraints: string;
-  filterData: string;
+  /** The store keeps `null` until a filter is applied; it is interpolated as-is. */
+  filterData: string | null;
 }) {
   return (
     await axiosClient.post(
@@ -247,7 +267,7 @@ export async function bulkAssignInboxToUser(data: {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data)).data;
 }
 
-export async function getAssignedUserForContact(contactId) {
+export async function getAssignedUserForContact(contactId: string) {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`)).data;
 }
 
@@ -255,7 +275,7 @@ export async function getInboxUserCount() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })).data;
 }
 
-export async function markWaMessagesAsRead(contactId) {
+export async function markWaMessagesAsRead(contactId: string) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`)).data;
 }
 
@@ -320,7 +340,14 @@ export async function updateConversation(
   data: { subject?: string | null; description?: string | null },
 ) {
   // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
-  return (await axiosClient.put(`/contact/conversations/${conversationId}`, data)).data;
+  return (await axiosClient.put(`/contact/conversations/${conversationId}`, data))
+    .data as UpdatedConversation;
+}
+
+/** What the conversation edit endpoint echoes back. */
+export interface UpdatedConversation {
+  subject?: string | null;
+  description?: string | null;
 }
 
 /**
@@ -363,15 +390,33 @@ export async function getInboxAnalytics() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/analytics`)).data;
 }
 
-export async function generateInboxResponse(data) {
+export async function generateInboxResponse(data: RequestPayload) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)).data;
 }
 
-export async function createPrivateMessage(contactId, data) {
+export async function createPrivateMessage(contactId: string, data: RequestPayload) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, data)).data;
 }
 
-export async function getWaMessageLogs(filter) {
+/** One row of the message-logs report. */
+export interface WaMessageLogRow {
+  id: string;
+  createdAt?: string;
+  phone?: string;
+  status?: string;
+  sourceMessage?: string;
+  messageType?: string;
+  messagePreview?: string;
+  /** Meta's raw error payload, kept verbatim so the popover can pretty-print it. */
+  logs?: { message?: string; error_data?: { details?: string }; [key: string]: unknown } | null;
+}
+
+export interface WaMessageLogsResponse {
+  data: WaMessageLogRow[];
+  pagination?: { total?: number };
+}
+
+export async function getWaMessageLogs(filter: WaMessageLogFilter): Promise<WaMessageLogsResponse> {
   // Format date range if it's an array of Date objects
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {
@@ -409,7 +454,7 @@ export async function getWaMessageLogs(filter) {
   ).data;
 }
 
-export async function exportWaMessageLogs(filter) {
+export async function exportWaMessageLogs(filter: WaMessageLogFilter) {
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {
     dateRange = `${dateRange[0]},${dateRange[1]}`;

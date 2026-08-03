@@ -1,8 +1,12 @@
 import { z } from "zod";
 
-import { ShopifyEvents } from "@/types/enums.ts";
+import { MessagePlatform, ShopifyEvents } from "@/types/enums.ts";
 
-const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [string, ...string[]];
+/** The `value`s of an option list, as the non-empty tuple `z.enum` expects. */
+const optionValues = (options: readonly { value: string }[]) =>
+  options.map((option) => option.value) as [string, ...string[]];
+
+const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [ShopifyEvents, ...ShopifyEvents[]];
 
 // Single source of truth for condition fields
 export const CONDITION_FIELDS = [
@@ -152,8 +156,8 @@ const GROUP_OPERATORS = [
 
 const ruleConditionSchema = z.object({
   id: z.string().optional(),
-  field: z.enum(CONDITION_FIELDS.map((f) => f.value) as [string, ...string[]]),
-  operator: z.enum(CONDITION_OPERATORS.map((o) => o.value) as [string, ...string[]]),
+  field: z.enum(optionValues(CONDITION_FIELDS)),
+  operator: z.enum(optionValues(CONDITION_OPERATORS)),
   value: z.string().min(1, "Value is required"),
 });
 
@@ -185,8 +189,8 @@ const sendTemplateActionSchema = z.object({
 const regularActionSchema = z.object({
   id: z.string().optional(),
   type: z.enum(
-    ACTION_TYPES.map((t) => t.value).filter(
-      (v) => v !== "CALL_EXTERNAL_API" && v !== "SEND_TEMPLATE",
+    optionValues(ACTION_TYPES).filter(
+      (value) => value !== "CALL_EXTERNAL_API" && value !== "SEND_TEMPLATE",
     ) as [string, ...string[]],
   ),
   value: z.string().min(1, "Value is required"),
@@ -200,7 +204,7 @@ const ruleActionSchema = z.union([
 
 const ruleGroupSchema = z.object({
   id: z.string().optional(),
-  operator: z.enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]]).default("AND"),
+  operator: z.enum(optionValues(GROUP_OPERATORS)).default("AND"),
   conditions: z.array(ruleConditionSchema).refine(
     (items) => {
       const seen = new Set();
@@ -237,12 +241,12 @@ const ruleOptionsSchema = z.object({
 });
 
 const createRuleBaseSchema = z.object({
-  platform: z.enum(PLATFORMS.map((p) => p.value) as [string, ...string[]]).default("WHATSAPP"),
+  platform: z.enum(optionValues(PLATFORMS)).default("WHATSAPP"),
   whatsappSettingsPhoneIds: z.array(z.string()).min(1, "Select at least one account"),
   name: z.string().min(1, "Name is required"),
-  operator: z.enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]]).default("AND"),
+  operator: z.enum(optionValues(GROUP_OPERATORS)).default("AND"),
   isActive: z.boolean().default(true),
-  triggerEvent: z.enum(TRIGGER_EVENTS.map((t) => t.value) as [string, ...string[]]),
+  triggerEvent: z.enum(optionValues(TRIGGER_EVENTS)),
   groups: z.array(ruleGroupSchema),
   actions: z
     .array(ruleActionSchema)
@@ -311,7 +315,13 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
   }
 });
 
+/** The rule's `platform`, narrowed to the enum the account pickers accept. */
+export const toMessagePlatform = (value: string | undefined): MessagePlatform | undefined =>
+  Object.values(MessagePlatform).find((platform) => platform === value);
+
 export type CreateRuleInput = z.input<typeof createRuleSchema>;
+/** What the schema produces once parsed — every defaulted field is present. */
+export type CreateRuleValues = z.output<typeof createRuleSchema>;
 
 // --- Type Exports for Compatibility ---
 

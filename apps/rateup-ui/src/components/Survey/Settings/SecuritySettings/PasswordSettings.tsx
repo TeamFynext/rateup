@@ -15,7 +15,7 @@ import {
 
 import { updatePwdSurvey } from "../updateSettings.ts";
 
-const PasswordSettings = ({ survey, surveyId }) => {
+const PasswordSettings = ({ survey, surveyId }: { survey: Survey; surveyId: string }) => {
   const uid = useId();
   const [password, setPassword] = useState("");
   const [passwordProtection, setPasswordProtection] = useState(survey?.isProtected);

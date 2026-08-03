@@ -1,4 +1,4 @@
-import { Activity, BarChart3 } from "lucide-react";
+import { IconActivity, IconChartBar } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import {
   Area,
@@ -15,7 +15,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-function ChartOverview({ messageTrendData, isLoading }) {
+function ChartOverview({
+  messageTrendData,
+  isLoading,
+}: {
+  messageTrendData: Array<Record<string, unknown>> | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   const hasData = Array.isArray(messageTrendData) && messageTrendData.length > 0;
 
@@ -23,7 +29,7 @@ function ChartOverview({ messageTrendData, isLoading }) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Activity className="w-4 h-4 text-primary" />
+          <IconActivity className="w-4 h-4 text-primary" />
           {t("Message Delivery Trend (24h)")}
         </CardTitle>
       </CardHeader>
@@ -40,7 +46,7 @@ function ChartOverview({ messageTrendData, isLoading }) {
         ) : !hasData ? (
           /* No Data State */
           <div className="h-[280px] flex flex-col items-center justify-center text-sm text-muted-foreground">
-            <Activity className="w-6 h-6 mb-2 opacity-40" />
+            <IconActivity className="w-6 h-6 mb-2 opacity-40" />
             {t("No data available for the last 24 hours")}
           </div>
         ) : (
@@ -98,7 +104,13 @@ function ChartOverview({ messageTrendData, isLoading }) {
 
 export default ChartOverview;
 
-export function DailyTrend({ dailyMessageData, isLoading }) {
+export function DailyTrend({
+  dailyMessageData,
+  isLoading,
+}: {
+  dailyMessageData: Array<Record<string, unknown>> | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   const hasData = Array.isArray(dailyMessageData) && dailyMessageData.length > 0;
 
@@ -106,7 +118,7 @@ export function DailyTrend({ dailyMessageData, isLoading }) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-primary" />
+          <IconChartBar className="w-4 h-4 text-primary" />
           {t("Daily Message Volume")}
         </CardTitle>
       </CardHeader>
@@ -123,7 +135,7 @@ export function DailyTrend({ dailyMessageData, isLoading }) {
         ) : !hasData ? (
           /* No Data State */
           <div className="h-[280px] flex flex-col items-center justify-center text-sm text-muted-foreground">
-            <BarChart3 className="w-6 h-6 mb-2 opacity-40" />
+            <IconChartBar className="w-6 h-6 mb-2 opacity-40" />
             {t("No data available")}
           </div>
         ) : (

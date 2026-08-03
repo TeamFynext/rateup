@@ -30,7 +30,7 @@ function useElementSize<T extends HTMLElement>() {
   return { ref, ...size };
 }
 
-export default function ThankyouPageThemeView({ survey }) {
+export default function ThankyouPageThemeView({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
 
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
@@ -70,12 +70,16 @@ export default function ThankyouPageThemeView({ survey }) {
   );
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value, name) => {
-      const data = {};
+    async (value: string, name: string) => {
+      const data: {
+        titleText?: string;
+        subtitleText?: string | null;
+        startButtonText?: string;
+      } = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
+          if (editSurveySelectedQuestion?.["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -85,7 +89,7 @@ export default function ThankyouPageThemeView({ survey }) {
       }
       if (editSurveySelectedQuestion) {
         await questionUpdateMutation.mutateAsync({
-          qId: editSurveySelectedQuestion["id"],
+          qId: editSurveySelectedQuestion?.["id"],
           data,
         });
       }
@@ -103,7 +107,7 @@ export default function ThankyouPageThemeView({ survey }) {
   return (
     <div className="flex h-full items-center" style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
+        enableCredits={!!backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
         <div
@@ -115,8 +119,8 @@ export default function ThankyouPageThemeView({ survey }) {
 
           <div className="flex h-full w-full flex-col items-center justify-center">
             <ThemeTitle
-              value={newTitle}
-              onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+              value={newTitle ?? ""}
+              onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
           </div>

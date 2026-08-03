@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 
 import { Spinner } from "@/components/ui/spinner";
+import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 
 export const Route = createFileRoute("/(auth)/login/callback/apple/")({
   component: AppleCallback,
@@ -19,7 +20,8 @@ function AppleCallback() {
         if (response.createdNewRecipeUser && response.user.loginMethods.length === 1) {
           // sign up successful
           navigate({
-            to: "/signup?auth=apple",
+            to: "/signup",
+            search: { auth: "apple" },
           });
 
           toast.success("Sign up success", {
@@ -48,8 +50,8 @@ function AppleCallback() {
         window.alert("No email provided by social login. Please use another form of login");
         window.location.assign("/logout"); // redirect back to login page
       }
-    } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         console.log(err);
         // this may be a custom error message sent from the API by you.
         // window.alert(err.message);

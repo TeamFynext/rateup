@@ -1,17 +1,18 @@
+import {
+  IconCheck,
+  IconChevronDown,
+  IconChevronRight,
+  IconChevronUp,
+  IconCircleDashed,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { isEqual } from "lodash";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  CircleDashed,
-  UserRoundCheck,
-  Users,
-} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -19,10 +20,7 @@ import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
@@ -35,9 +33,22 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
+import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
+
+/** An assignment row, as either the API or the local selection shape. */
+interface AssignedUserRow {
+  id?: string;
+  userId?: string;
+  name?: string;
+  teamId?: string;
+  contactId?: string;
+  assignedUserId?: string;
+  assignedUser?: { id?: string; name?: string };
+}
 
 const AssignUser = ({
   contactId,
@@ -55,12 +66,14 @@ const AssignUser = ({
   const { user } = useUser();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
     useGetAssignedUserForContact(contactId);
-  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const assignMut = useAssignInboxToUer(contactId, filterData ?? "");
   const messagesStore = useMessagesStore();
   const [assignedStaff, setAssignedStaff] = useState<
     { userId: string; teamId: string; contactId: string }[]
   >([]);
-  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>([]);
+  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<
+    { userId: string; teamId: string; contactId: string }[]
+  >([]);
   const { updateContactById, selectedContact } = useContactsStore();
   const isDefault = variant === "default";
   // Land the optimistic assign note in the open ticket's message bucket. AssignUser
@@ -81,15 +94,15 @@ const AssignUser = ({
       return;
     }
     const assignees = assignedUsers
-      ? assignedUsers?.map((a) => ({
+      ? assignedUsers?.map((a: AssignedUserRow) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
           contactId: a.contactId,
-          name: a.assignedUser.name,
+          name: a.assignedUser?.name,
         }))
       : [];
     setAssignedStaff(assignees);
-    prevAssignedRef.current = assignees.map((a) => ({
+    prevAssignedRef.current = assignees.map((a: AssignedUserRow) => ({
       userId: a.userId,
       teamId: a.teamId,
     }));
@@ -105,7 +118,7 @@ const AssignUser = ({
       assignees.length &&
       !isEqual(
         assignees,
-        assignedUsers?.map((a) => ({
+        assignedUsers?.map((a: AssignedUserRow) => ({
           userId: a.assignedUserId,
           teamId: a.teamId,
         })),
@@ -165,7 +178,7 @@ const AssignUser = ({
       }
 
       const id = generateInternalMessageId();
-      const newMessage = {
+      const newMessage: OptimisticMessage = {
         id: id,
         contactId: contactId,
         waCreatedAt: new Date().toISOString(),
@@ -179,17 +192,17 @@ const AssignUser = ({
             assignedUsers: [],
             assignStatus: assignStatus,
             triggeredByUser: {
-              id: user.userId,
-              name: user.userName,
+              id: user?.userId ?? "",
+              name: user?.userName ?? "",
             },
           },
           exchangeProcess: "internal",
         },
         sourcePlatform: "INTERNAL",
         sourceIdentifier: null,
-        sendBy: user.userId,
+        sendBy: user?.userId,
         sender: {
-          name: user.userName,
+          name: user?.userName,
           profilePhoto: user?.profilePhoto,
         },
         stats: {
@@ -205,15 +218,15 @@ const AssignUser = ({
         { contactId, assignees, messageId: id },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
-            messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-            messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+            queryClient.invalidateQueries({ queryKey: teamKeys.byUser() });
+            messagesStore.addMessage(`${rowKey}_all`, newMessage);
+            messagesStore.addMessage(`${rowKey}_internal`, newMessage);
             updateContactById(contactId, (contact) => ({
               ...contact,
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: assignees.map((a) => {
                 const user = staffMembers?.find((m) => m.id === a.userId);
-                return { id: user?.id, name: user?.name, teamId: a?.teamId };
+                return { id: user?.id ?? "", name: user?.name ?? "", teamId: a?.teamId };
               }),
             }));
           },
@@ -227,12 +240,12 @@ const AssignUser = ({
             );
 
             await queryClient.refetchQueries({
-              queryKey: ["assignedInboxUser", contactId],
+              queryKey: whatsappKeys.assignedInboxUserByContact(contactId),
               exact: true,
             });
 
             await queryClient.refetchQueries({
-              queryKey: ["teamsDataUserQuery"],
+              queryKey: teamKeys.byUser(),
             });
           },
         },
@@ -250,7 +263,7 @@ const AssignUser = ({
     );
   };
 
-  const updateStaffAssignment = (staff: any, teamId: string) => {
+  const updateStaffAssignment = (staff: TeamMembersData, teamId: string) => {
     const existing = assignedStaff.find((s) => s.userId === staff.id);
 
     if (existing && existing.teamId === teamId) {
@@ -261,7 +274,7 @@ const AssignUser = ({
     }
   };
 
-  const handleSelectTeam = (team: any) => {
+  const handleSelectTeam = (team: TeamData) => {
     const teamStaff = staffMembers.filter((m) => m.teams.some((t) => t.team_id === team.id));
     const allSelected = teamStaff.every((m) =>
       assignedStaff.some((a) => a.userId === m.id && a.teamId === team.id),
@@ -323,7 +336,7 @@ const AssignUser = ({
                 return (
                   <div key={a.userId} className="relative">
                     <p className="text-sm font-semibold">
-                      {staff?.name?.length > 10 ? staff?.name?.slice(0, 10) : staff?.name}
+                      {(staff?.name?.length ?? 0) > 10 ? staff?.name?.slice(0, 10) : staff?.name}
                     </p>
                   </div>
                 );
@@ -336,11 +349,13 @@ const AssignUser = ({
             trigger={
               !assignedStaff.length ? (
                 <div className="flex items-center gap-1">
-                  <UserRoundCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
+                  <IconUserCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
                   <span className={`${isDefault ? "" : "text-primary"} pr-2`}>Assign</span>
                 </div>
               ) : (
-                <ChevronDown className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`} />
+                <IconChevronDown
+                  className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`}
+                />
               )
             }
             side="bottom"
@@ -378,18 +393,18 @@ const AssignUser = ({
                 className="gap-2 items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <IconUsers className="w-4 h-4 text-muted-foreground" />
                   <div className="text-sm">{team.name}</div>
                 </div>
                 <div className="flex items-center gap-1">
                   {partiallySelected && !allSelected && (
-                    <CircleDashed className="w-4 h-4 text-green-600" />
+                    <IconCircleDashed className="w-4 h-4 text-green-600" />
                   )}
-                  {allSelected && <Check className="w-4 h-4 text-green-600" />}
+                  {allSelected && <IconCheck className="w-4 h-4 text-green-600" />}
                   {openTeams.includes(team.id) ? (
-                    <ChevronUp className="w-3 h-3" />
+                    <IconChevronUp className="w-3 h-3" />
                   ) : (
-                    <ChevronRight className="w-3 h-3" />
+                    <IconChevronRight className="w-3 h-3" />
                   )}
                 </div>
               </DropdownMenuItem>
@@ -435,7 +450,7 @@ const AssignUser = ({
                             <div>
                               <div className="text-sm">
                                 {staff.name}
-                                {staff.id === user.userId && (
+                                {staff.id === user?.userId && (
                                   <span className="ml-1">( {translations("You")} )</span>
                                 )}
                               </div>
@@ -465,7 +480,7 @@ const AssignUser = ({
                                 side="right"
                               />
                             )}
-                            {isSelected && <Check className="w-4 h-4 text-green-600" />}
+                            {isSelected && <IconCheck className="w-4 h-4 text-green-600" />}
                           </div>
                         </div>
                       </DropdownMenuItem>

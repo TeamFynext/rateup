@@ -1,4 +1,4 @@
-import { Edit, EllipsisVertical, Eye, Send, Trash } from "lucide-react";
+import { IconDotsVertical, IconEdit, IconEye, IconSend, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,7 +18,7 @@ import ContactDetailedView from "./ContactDetailedView.tsx";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import SendMessageModal from "./SendMessageModal.tsx";
 
-const ContactMenu = ({ contact, groupId }) => {
+const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: string }) => {
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
   const [openedEditModal, setOpenedEditModal] = useState(false);
@@ -42,14 +42,15 @@ const ContactMenu = ({ contact, groupId }) => {
   const { ContactLabelMap, contactGroups, waInboxAssign, ...rest } = contact;
   const initialValues = {
     ...rest,
-    labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label.id) : [],
-    contactGroupIds: contactGroups?.map((g) => g?.contactGroup?.id) || [],
-    assignedUserIds: waInboxAssign?.map((a) => a.assignedUserId) || [],
+    labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label?.id) : [],
+    contactGroupIds:
+      contactGroups?.map((g: { contactGroup?: { id?: string } }) => g?.contactGroup?.id) || [],
+    assignedUserIds: waInboxAssign?.map((a) => a.assignedUser?.id) || [],
   };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" />}>
-        <EllipsisVertical />
+        <IconDotsVertical />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem
@@ -57,21 +58,21 @@ const ContactMenu = ({ contact, groupId }) => {
             setViewDetails(true);
           }}
         >
-          <Eye className="w-4 h-4 mr-2" />
+          <IconEye className="w-4 h-4 mr-2" />
           {translations("View Details")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setOpenedEditModal(true)}>
-          <Edit className="w-4 h-4 mr-2" />
+          <IconEdit className="w-4 h-4 mr-2" />
           {translations("Edit")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setIsSendMessageOpen(true)}>
-          <Send className="w-4 h-4 mr-2" />
+          <IconSend className="w-4 h-4 mr-2" />
           {translations("Send Message")}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={openDeleteModal} className="text-red-500">
-          <Trash className="text-red-500 w-4 h-4 mr-2" />
+          <IconTrash className="text-red-500 w-4 h-4 mr-2" />
           {translations("Delete contact")}
         </DropdownMenuItem>
       </DropdownMenuContent>

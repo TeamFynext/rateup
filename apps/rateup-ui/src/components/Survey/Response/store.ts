@@ -2,9 +2,9 @@ import { create } from "zustand";
 
 interface ResponseFilter {
   enableServerFilter: boolean;
-  setServerFilters: (value) => void;
-  serverFilters: object;
-  setEnableServerFilter: (value) => void;
+  setServerFilters: (value: Record<string, unknown>) => void;
+  serverFilters: Record<string, unknown> | null;
+  setEnableServerFilter: (value: boolean) => void;
 }
 export const useResponseFilterStore = create<ResponseFilter>((set) => ({
   enableServerFilter: true,

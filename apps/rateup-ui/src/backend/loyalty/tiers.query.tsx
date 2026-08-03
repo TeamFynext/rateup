@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import type { LoyaltyTierInput } from "./tiers.api";
 import {
   createLoyaltyTier,
@@ -11,7 +13,7 @@ import {
 
 export const useLoyaltyTiers = () =>
   useQuery({
-    queryKey: ["loyalty-tiers"],
+    queryKey: loyaltyKeys.tiers(),
     queryFn: getLoyaltyTiers,
   });
 
@@ -21,7 +23,7 @@ export const useCreateLoyaltyTierMutation = (onSuccess?: () => void) => {
   return useMutation({
     mutationFn: (data: LoyaltyTierInput) => createLoyaltyTier(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -38,7 +40,7 @@ export const useUpdateLoyaltyTierMutation = (id: string, onSuccess?: () => void)
   return useMutation({
     mutationFn: (data: Partial<LoyaltyTierInput>) => updateLoyaltyTier(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
       onSuccess?.();
     },
     onError: (error) => {
@@ -56,7 +58,7 @@ export const useDeleteLoyaltyTierMutation = () => {
         downgradeCustomers: input.downgradeCustomers,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
     },
     onError: (error) => {
       toast.error(error?.message || `Error deleting loyalty tier: Unknown error`);

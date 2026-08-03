@@ -1,6 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { ArrowRight } from "lucide-react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -22,14 +21,14 @@ const TicketHero = () => {
               experiences.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <Link to={"https://rateup.app/login"}>
+              <a href={"https://rateup.app/login"}>
                 <Button
                   size="lg"
                   className="bg-[#1c518e] w-full cursor-pointer hover:bg-[#1c518e] text-[#ffffff] font-medium px-8"
                 >
                   Start For Free
                 </Button>
-              </Link>
+              </a>
               <BookDemoModal>
                 <Button
                   size="lg"
@@ -37,7 +36,7 @@ const TicketHero = () => {
                   className="border-[#1c518e] cursor-pointer text-[#1c518e] hover:bg-[#e6f7ff] group"
                 >
                   Book a Demo
-                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </BookDemoModal>
             </div>

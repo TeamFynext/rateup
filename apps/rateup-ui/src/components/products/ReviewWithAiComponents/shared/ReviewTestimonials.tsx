@@ -1,5 +1,5 @@
+import { IconStar } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { Star } from "lucide-react";
 import { easeOut, motion } from "motion/react";
 
 import { clientIcons } from "../../TicketLandingComponets/TicketingConstants.tsx";
@@ -73,7 +73,7 @@ const ReviewTestimonials = () => {
             >
               <div className="flex mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <IconStar key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                 ))}
               </div>
               <p className="text-gray-700 italic mb-6">"{testimonial.quote}"</p>

@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { cn } from "@/lib/utils";
 import { deleteUploadedFiles, getFileNameFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 import { luminance } from "./isLightColor.ts";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
@@ -36,10 +37,10 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
     try {
       if (!file) return;
       setError("");
-      const prevResponse = response;
+      const prevResponse = asAnswerText(response);
       if (prevResponse) updateResponse(null);
       setIsUploading(true);
-      if (prevResponse?.length) {
+      if (prevResponse.length) {
         await deleteUploadedFiles({
           fileKeyArray: [{ Key: prevResponse }],
         });
@@ -59,7 +60,7 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
     handleUploadedFiles();
   }, [file]);
 
-  const handleRemoveFile = async (filekey) => {
+  const handleRemoveFile = async (filekey: string) => {
     setIsRemoving(true);
     await deleteUploadedFiles({
       fileKeyArray: [{ Key: filekey }],
@@ -138,12 +139,12 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
       {response && !isPreview ? (
         <Card className="border p-4" style={{ borderColor: themePrimaryColor }}>
           <div className="flex items-center justify-between">
-            <span>{file?.name || getFileNameFromKey(response)}</span>
+            <span>{file?.name || getFileNameFromKey(asAnswerText(response))}</span>
             {isRemoving ? (
               <Spinner className="size-4" />
             ) : (
               <Button
-                onClick={() => handleRemoveFile(response)}
+                onClick={() => handleRemoveFile(asAnswerText(response))}
                 variant="secondary"
                 size="icon"
                 className="rounded-full"

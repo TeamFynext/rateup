@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
+import type { QueryFilter } from "@/types/api.ts";
+
 import {
   getAllSubscriptions,
   getMessageStats,
@@ -11,7 +14,7 @@ import {
 
 export const useSubscription = (enabled = true) =>
   useQuery({
-    queryKey: ["subscription"],
+    queryKey: subscriptionKeys.current(),
     queryFn: getUserSubscription,
     enabled,
     staleTime: 0,
@@ -19,12 +22,12 @@ export const useSubscription = (enabled = true) =>
   });
 export const useSubscriptionByOrgId = (orgId: string) =>
   useQuery({
-    queryKey: ["subscription", orgId],
+    queryKey: subscriptionKeys.byOrg(orgId),
     queryFn: () => getSubscription(orgId),
   });
 export const useAllSubscriptions = () =>
   useQuery({
-    queryKey: ["subscriptions"],
+    queryKey: subscriptionKeys.all(),
     queryFn: getAllSubscriptions,
   });
 
@@ -34,8 +37,8 @@ export const useUpdateSubscriptionMutation = () => {
     mutationFn: (data: { orgId: string; updatedData: object; isMenuPlanChange?: boolean }) =>
       updateSubscription(data?.orgId, data?.updatedData, data?.isMenuPlanChange),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.all() });
       toast.success("Subscription updated successfully");
     },
     onError: (error) => {
@@ -45,7 +48,7 @@ export const useUpdateSubscriptionMutation = () => {
   });
 };
 
-export const useMessageStats = (orgId, filter: any) => {
+export const useMessageStats = (orgId: string, filter: QueryFilter) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");

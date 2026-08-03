@@ -2,9 +2,13 @@ import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { getNestedProperty } from "../misc/obj.utils";
 
-export function hasFeature(subscription, featurePath: SubscriptionFeaturePathName) {
+export function hasFeature(
+  subscription: { features?: SubscriptionFeatures } | null | undefined,
+  featurePath: SubscriptionFeaturePathName,
+) {
   if (!subscription) return false;
-  return getNestedProperty(subscription.features, featurePath)?.active;
+  if (!subscription.features) return false;
+  return getNestedProperty<{ active?: boolean }>(subscription.features, featurePath)?.active;
 }
 
 export function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {

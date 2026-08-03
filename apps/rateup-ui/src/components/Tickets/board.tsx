@@ -315,14 +315,14 @@ export function Board({
                 ticketCards: column.ticketCards.filter((card) => {
                   let matches = true;
                   if (labelFilters && labelFilters.length > 0) {
-                    if (!card.labels?.some((l: any) => labelFilters.includes(l.id))) {
+                    if (!card.labels?.some((l) => labelFilters.includes(l.id))) {
                       matches = false;
                     }
                   }
                   if (searchQuery) {
                     const query = searchQuery.toLowerCase();
                     if (
-                      !card.title.toLowerCase().includes(query) &&
+                      !card.title?.toLowerCase().includes(query) &&
                       !card.description?.toLowerCase().includes(query)
                     ) {
                       matches = false;

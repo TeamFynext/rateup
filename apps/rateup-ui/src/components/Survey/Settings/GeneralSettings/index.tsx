@@ -42,7 +42,15 @@ type FormValues = {
   sendWeeklyReport: boolean;
 };
 
-const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
+const GeneralSettings = ({
+  survey,
+  enabledModules,
+  setSelectedLanguage,
+}: {
+  survey: Survey;
+  enabledModules: string[];
+  setSelectedLanguage?: (language: string) => void;
+}) => {
   const uid = useId();
   const { t: translations } = useTranslation();
   const { data: teamRes } = useTeamsByUser();
@@ -65,7 +73,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   } = useForm<FormValues>({
     defaultValues: {
       title: survey?.title || "",
-      languages: survey?.langauges || [],
+      languages: survey?.languages || [],
       teams: survey?.teams?.map((team) => team?.id) || [],
       sendWeeklyReport: survey?.sendWeeklyReport ?? true,
     },
@@ -76,7 +84,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
       reset({
         title: survey.title || "",
         languages: survey.languages || [],
-        teams: survey.teams?.map((t: any) => t?.id) || [],
+        teams: survey.teams?.map((t) => t?.id) || [],
         sendWeeklyReport: survey.sendWeeklyReport ?? true,
       });
     }
@@ -109,7 +117,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
           onKeyDown={(e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "s") {
               e.preventDefault();
-              handleSubmit(onSubmit)(e as any);
+              handleSubmit(onSubmit)(e);
             }
           }}
           className="flex flex-col gap-4"

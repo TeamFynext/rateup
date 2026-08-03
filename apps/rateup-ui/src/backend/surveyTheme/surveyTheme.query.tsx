@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { toast } from "sonner";
+
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 
 import {
   createNewTheme,
@@ -13,7 +16,7 @@ import {
 
 export const useSurveyTheme = (surveyThemeId: string) => {
   return useQuery({
-    queryKey: ["surveyTheme", surveyThemeId],
+    queryKey: surveyKeys.theme(surveyThemeId),
     queryFn: () => getSurveyTheme(surveyThemeId),
     enabled: !!surveyThemeId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -36,10 +39,10 @@ export const useUpdateSurveyTheme = (surveyThemeId: string, surveyId: string) =>
         queryKey: ["allThemes"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["survey", surveyId],
+        queryKey: surveyKeys.detail(surveyId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["surveyTheme", surveyThemeId],
+        queryKey: surveyKeys.theme(surveyThemeId),
       });
       toast.success("Survey theme updated successfully");
     },
@@ -65,7 +68,7 @@ export const useRenameSurveyThemeMutation = () => {
   });
 };
 
-export const useCreateNewThemeMutation = (surveyId) => {
+export const useCreateNewThemeMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createNewTheme,
@@ -74,18 +77,17 @@ export const useCreateNewThemeMutation = (surveyId) => {
         queryKey: ["allThemes"],
       });
       await queryClient.invalidateQueries({
-        queryKey: ["survey", surveyId],
+        queryKey: surveyKeys.detail(surveyId),
       });
       toast.success("Created and applied new theme successfully");
     },
     onError: (error) => {
-      // @ts-ignore
-      if (err?.response?.data?.message) {
-        // @ts-ignore
-        toast.error(error?.message || err?.response?.data?.message);
-      } else {
-        toast.error(error?.message || "Unable to create theme, please try again later.");
-      }
+      const apiMessage = axios.isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+      toast.error(
+        error?.message || apiMessage || "Unable to create theme, please try again later.",
+      );
     },
   });
 };

@@ -1,4 +1,8 @@
-import { BarChart2, PieChart as PieChartIcon, Radar as RadarIcon } from "lucide-react";
+import {
+  IconChartBar,
+  IconChartPie as PieChartIcon,
+  IconRadar as RadarIcon,
+} from "@tabler/icons-react";
 import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { QuestionType2 } from "@/types/enums.ts";
@@ -42,12 +47,33 @@ export default function ResultComparison({
 }: {
   surveyId: string;
   version: number;
-  flowQuestions: any[];
-  questions;
+  flowQuestions: FlowQuestionSummary[];
+  questions: Question[];
 }) {
   const { filterTeams } = useContext(SurveyContext);
   const { defaultLanguage } = useContext(SelectedLanguageContext);
-  const allQuestions = version === 1 ? questions : flowQuestions;
+  /**
+   * Title, badge and response type of a question, read from whichever list this flow version
+   * uses — a survey `Question` for v1, the flattened flow elements otherwise.
+   */
+  const describeQuestion = (questionId: string) => {
+    if (version === 1) {
+      const question = questions.find((item) => item.id === questionId);
+      if (!question) return null;
+      return {
+        title: question.title || question.label,
+        badge: question.type,
+        responseType: question.type,
+      };
+    }
+    const question = flowQuestions.find((item) => item.id === questionId);
+    if (!question) return null;
+    return {
+      title: question.header || question.label,
+      badge: QuestionType2[question.metaType as keyof typeof QuestionType2],
+      responseType: question.metaType,
+    };
+  };
   const { t: translations } = useTranslation();
   const {
     data: responseCountData,
@@ -57,10 +83,12 @@ export default function ResultComparison({
   const data = useMemo(
     () =>
       responseCountData
-        ? responseCountData?.teamWiseCount?.map((t) => ({
-            teamCode: t.teamCode,
-            count: t.count,
-          }))
+        ? responseCountData?.teamWiseCount?.map(
+            (t: { mapId: string; count: number; teamCode?: string }) => ({
+              teamCode: t.teamCode,
+              count: t.count,
+            }),
+          )
         : [],
     [responseCountData],
   );
@@ -78,11 +106,10 @@ export default function ResultComparison({
         <Heading subtitle={translations("Team Response Activity")} />
         <TeamResponseActivitySection data={data} />
         <Heading subtitle={translations("Team Question Activity")} />
-        {teamWiseComparison?.map((q) => {
-          const question = allQuestions.find((ques) => ques.id === q.questionId);
+        {teamWiseComparison?.map((q: { questionId: string; data?: unknown[] }) => {
+          const question = describeQuestion(q.questionId);
           if (!question) return null;
-          const questionTitle =
-            version === 1 ? question.title || question.label : question.header || question.label;
+          const questionTitle = question.title;
           const localizedTitle =
             typeof questionTitle === "object"
               ? getReplacedTitleFromVariable({
@@ -91,16 +118,16 @@ export default function ResultComparison({
                 })
               : questionTitle;
           const graphData = filterTeams.length
-            ? (q.data ?? []).filter((d) => filterTeams.includes(d.mapId))
+            ? ((q.data ?? []) as Array<{ mapId: string }>).filter((d) =>
+                filterTeams.includes(d.mapId),
+              )
             : (q.data ?? []);
           return (
             <Card key={q.questionId} className="min-h-[500px]">
               <CardContent className="flex flex-col gap-4 pt-6">
                 <div className="flex items-start justify-between gap-4">
                   <p className="w-[85%] font-black text-muted-foreground">{localizedTitle}</p>
-                  <Badge variant="secondary">
-                    {version === 1 ? question.type : QuestionType2[question.metaType]}
-                  </Badge>
+                  <Badge variant="secondary">{question.badge}</Badge>
                 </div>
                 <ResponsiveContainer height={400}>
                   <BarChart data={graphData} margin={{ top: 20 }}>
@@ -108,7 +135,7 @@ export default function ResultComparison({
                     <XAxis dataKey="teamCode" />
                     <YAxis />
                     <Tooltip />
-                    {Object.keys(q.data[0] ?? {})
+                    {Object.keys(q.data?.[0] ?? {})
                       .filter((key) => !["teamCode", "mapId"].includes(key))
                       .map((key) => (
                         <Bar
@@ -116,9 +143,9 @@ export default function ResultComparison({
                           key={key}
                           stackId="a"
                           fill={
-                            getResponseArrayByQuestionType(
-                              version === 1 ? question.type : question?.metaType,
-                            )?.find((j) => j.value.toString() === key)?.color
+                            getResponseArrayByQuestionType(question.responseType)?.find(
+                              (j) => j.value.toString() === key,
+                            )?.color
                           }
                           maxBarSize={50}
                           radius={10}
@@ -151,7 +178,7 @@ const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count
     <Tabs value={activePlot} onValueChange={(v) => setActivePlot(v as ActivePlot)}>
       <TabsList>
         <TabsTrigger value={ActivePlot.Bar}>
-          <BarChart2 className="size-4" />
+          <IconChartBar className="size-4" />
           {translations("Bar")}
         </TabsTrigger>
         <TabsTrigger value={ActivePlot.Pie}>

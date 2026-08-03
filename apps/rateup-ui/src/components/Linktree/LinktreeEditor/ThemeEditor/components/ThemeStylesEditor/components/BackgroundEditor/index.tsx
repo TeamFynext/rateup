@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 
+import type { SelectedImage } from "@/components/LocalOrUnsplashImagePicker/index.tsx";
+
 import LocalOrUnsplashImagePicker from "../../../../../../../LocalOrUnsplashImagePicker/index.tsx";
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
@@ -16,21 +18,21 @@ function BackgroundEditor() {
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
 
-  const handleBackgroundColorChange = useCallback((value) => {
+  const handleBackgroundColorChange = useCallback((value: string) => {
     themeDispatch({
       type: "background-color-change",
       payload: value,
     });
   }, []);
 
-  const handleDesktopBackgroundImageChange = useCallback((url) => {
+  const handleDesktopBackgroundImageChange = useCallback((url: SelectedImage) => {
     themeDispatch({
       type: "background-destktop-img-change",
       payload: url,
     });
   }, []);
 
-  const handleMobileBackgroundImageChange = useCallback((url) => {
+  const handleMobileBackgroundImageChange = useCallback((url: SelectedImage) => {
     themeDispatch({
       type: "background-mobile-img-change",
       payload: url,
@@ -41,7 +43,10 @@ function BackgroundEditor() {
     <div className={styles["background-editor-div"]}>
       <div className={`style-section-div`}>
         <h2>Background Color</h2>
-        <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
+        <CustomColorPicker
+          value={String(backgroundColor ?? "")}
+          onChange={handleBackgroundColorChange}
+        />
       </div>
 
       <div className={`style-section-div`}>
@@ -52,13 +57,13 @@ function BackgroundEditor() {
             forDevice={"desktop"}
             label={"Desktop"}
             onImageSelected={handleDesktopBackgroundImageChange}
-            value={desktopBgImgUrl}
+            value={desktopBgImgUrl ?? ""}
           />
           <LocalOrUnsplashImagePicker
             forDevice={"mobile"}
             label={"Mobile"}
             onImageSelected={handleMobileBackgroundImageChange}
-            value={mobileBgImgUrl}
+            value={mobileBgImgUrl ?? ""}
           />
         </div>
       </div>

@@ -1,16 +1,19 @@
 import {
-  ArrowLeft,
-  ArrowRight,
-  BarChart3,
-  CheckCircle,
-  ClipboardList,
-  Crown,
-  MessageSquare,
-} from "lucide-react";
+  IconArrowLeft,
+  IconArrowRight,
+  IconChartBar,
+  IconCircleCheck,
+  IconClipboardList,
+  IconCrown,
+  IconMessage,
+} from "@tabler/icons-react";
 import { motion } from "motion/react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+
+import type { OnboardingFormData } from "./onboarding-types.ts";
 
 export default function OnboardingStep1({
   data,
@@ -19,17 +22,17 @@ export default function OnboardingStep1({
   handleBack,
   handleNext,
 }: {
-  data: any;
-  setData: (fn: (prev: any) => any) => void;
+  data: OnboardingFormData;
+  setData: Dispatch<SetStateAction<OnboardingFormData>>;
   currentStep: number;
-  handleNext: any;
-  handleBack: any;
+  handleNext: () => void;
+  handleBack: () => void;
 }) {
   const services = [
     {
       id: "whatsapp-api",
       name: "WhatsApp Business API",
-      icon: MessageSquare,
+      icon: IconMessage,
       color: "bg-linear-to-br from-green-400 to-emerald-500",
       description: "Advanced WhatsApp automation and messaging",
       benefit: "Reach 2.5B+ users",
@@ -38,7 +41,7 @@ export default function OnboardingStep1({
     {
       id: "whatsapp-loyalty",
       name: "WhatsApp Loyalty Program",
-      icon: Crown,
+      icon: IconCrown,
       color: "bg-linear-to-br from-orange-400 to-pink-500",
       description: "Reward customers via WhatsApp",
       benefit: "Increase repeat purchases",
@@ -46,7 +49,7 @@ export default function OnboardingStep1({
     {
       id: "web-survey",
       name: "Web Survey Platform",
-      icon: BarChart3,
+      icon: IconChartBar,
       color: "bg-linear-to-br from-blue-400 to-indigo-500",
       description: "Collect customer feedback and insights",
       benefit: "Data-driven decisions",
@@ -61,7 +64,7 @@ export default function OnboardingStep1({
     setData((prev) => ({
       ...prev,
       services: prev.services.includes(serviceId)
-        ? prev.services.filter((s) => s !== serviceId)
+        ? prev.services.filter((s: string) => s !== serviceId)
         : [...prev.services, serviceId],
     }));
   };
@@ -75,7 +78,7 @@ export default function OnboardingStep1({
           transition={{ type: "spring", duration: 0.6 }}
           className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-2 mx-auto"
         >
-          <ClipboardList className="w-5 h-5 text-white" />
+          <IconClipboardList className="w-5 h-5 text-white" />
         </motion.div>
         <h2 className="text-gray-900 text-base">Select Your Services</h2>
         <p className="text-gray-600 text-sm">
@@ -114,7 +117,7 @@ export default function OnboardingStep1({
                 </div>
                 {data.services.includes(service.id) && (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                    <IconCircleCheck className="w-5 h-5 text-blue-600" />
                   </motion.div>
                 )}
               </div>
@@ -131,7 +134,7 @@ export default function OnboardingStep1({
           className="bg-linear-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2.5 mt-3 shadow-sm backdrop-blur-sm"
         >
           <div className="flex items-center space-x-2.5">
-            <CheckCircle className="w-4 h-4 text-blue-600" />
+            <IconCircleCheck className="w-4 h-4 text-blue-600" />
             <div>
               <p className="text-blue-700 text-sm">
                 Great! You've selected {data.services.length} service
@@ -150,7 +153,7 @@ export default function OnboardingStep1({
           disabled={currentStep === 1}
           className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <IconArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
@@ -163,7 +166,7 @@ export default function OnboardingStep1({
             }`}
           >
             Continue
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <IconArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>

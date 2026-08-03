@@ -1,4 +1,5 @@
 import { useId, useRef } from "react";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Field, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field.tsx";
@@ -7,7 +8,24 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import SliderCompatible from "@/components/ui/sliderCompatible.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
-function LogoTabpanel({ state, dispatch }) {
+/** The QR customisation panel's state. */
+export interface QrLogoPanelState {
+  qrBgColor: string;
+  qrColor: string;
+  logoSize: number;
+  logoFillType: CSSProperties["objectFit"];
+  logoBorderRadius: number;
+  logoFile: string | File | null;
+  isLogoEnabled?: boolean;
+}
+
+function LogoTabpanel({
+  state,
+  dispatch,
+}: {
+  state: QrLogoPanelState;
+  dispatch: (action: { type: string; payload?: unknown }) => void;
+}) {
   const uid = useId();
   const { qrBgColor, qrColor, logoSize, logoBorderRadius, isLogoEnabled } = state;
 
@@ -17,7 +35,7 @@ function LogoTabpanel({ state, dispatch }) {
   const ensureArray = (v: unknown, fallback: number) => {
     if (Array.isArray(v)) return v as number[];
     if (v == null) return [fallback];
-    const n = Number(v as any);
+    const n = Number(v);
     return Number.isFinite(n) ? [n] : [fallback];
   };
 

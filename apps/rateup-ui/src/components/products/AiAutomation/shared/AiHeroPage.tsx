@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -26,11 +25,11 @@ export default function AiHeroPage() {
           code.
         </p>
         <div className="flex flex-col sm:flex-row sm:justify-center md:justify-start gap-4 w-full sm:w-auto">
-          <Link to="https://rateup.app/login" className="w-full sm:w-auto">
+          <a href="https://rateup.app/login" className="w-full sm:w-auto">
             <button className="bg-[#004F98] w-full cursor-pointer hover:bg-[#001C57] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition">
               Start Automating Smarter Today
             </button>
-          </Link>
+          </a>
           <BookDemoModal>
             <button className="bg-white border cursor-pointer border-[#004F98] hover:bg-[#F0F8FF] text-[#004F98] font-semibold py-3 px-6 rounded-lg shadow-md transition">
               Schedule a Demo

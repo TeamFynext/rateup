@@ -1,6 +1,6 @@
+import { IconMenu, IconX } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
@@ -23,9 +23,9 @@ const ReviewAiHeader = () => {
       <div className="container mx-auto max-w-7xl px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Link to="https://rateup.app" className="flex items-center gap-2">
+            <a href="https://rateup.app" className="flex items-center gap-2">
               <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
-            </Link>
+            </a>
           </div>
 
           {/* Desktop Navigation */}
@@ -42,15 +42,15 @@ const ReviewAiHeader = () => {
             ))}
           </nav>
 
-          <Link to={"https://rateup.app/login"} className="hidden md:flex items-center gap-4">
+          <a href={"https://rateup.app/login"} className="hidden md:flex items-center gap-4">
             <Button className="bg-[#009987] cursor-pointer hover:bg-[#009987] text-[#FFFFFF]">
               Get Started
             </Button>
-          </Link>
+          </a>
 
           {/* Mobile Menu Button */}
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMenuOpen ? <IconX className="w-6 h-6" /> : <IconMenu className="w-6 h-6" />}
           </button>
         </div>
 

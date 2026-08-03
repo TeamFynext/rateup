@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -17,12 +17,18 @@ function SaveButton({
   themeObjBeingEdited,
   isThemeObjBeingEditedDefaultTheme,
   onSave = null,
+}: {
+  survey: Survey;
+  themeObjBeingEdited?: { id: string; name: string } | null;
+  isThemeObjBeingEditedDefaultTheme?: boolean;
+  onSave?: (() => void) | null;
+  className?: string;
 }) {
   const selectedPageTab = useSelectedPageTab();
   const themeObjState = useSurveyThemeContextValue();
   const [isSaving, setIsSaving] = useState(false);
   const { t: translations } = useTranslation();
-  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id, survey?.id);
+  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id ?? "", survey?.id);
 
   const handleSaveTheme = useCallback(async () => {
     if (!themeObjBeingEdited?.id) {
@@ -57,7 +63,7 @@ function SaveButton({
         disabled={isSaving}
         onClick={handleSaveTheme}
       >
-        {isSaving && <Loader2 className="mr-1 size-3 animate-spin" />}
+        {isSaving && <IconLoader2 className="mr-1 size-3 animate-spin" />}
         {isThemeObjBeingEditedDefaultTheme
           ? translations("Apply")
           : selectedPageTab === ThemeTabEnum.SURVEY

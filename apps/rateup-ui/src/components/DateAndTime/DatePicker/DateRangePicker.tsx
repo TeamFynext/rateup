@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import type { Range, RangeKeyDict } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -11,7 +12,17 @@ const DateRangePicker = lazy(() =>
   import("react-date-range").then((m) => ({ default: m.DateRangePicker })),
 );
 
-export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
+export const DateRangePickerModal = ({
+  opened,
+  onChange,
+  ranges,
+  close,
+}: {
+  opened: boolean;
+  onChange: (rangesByKey?: RangeKeyDict) => void;
+  ranges: Range[];
+  close: () => void;
+}) => {
   const { t: translations } = useTranslation();
   return (
     <Dialog

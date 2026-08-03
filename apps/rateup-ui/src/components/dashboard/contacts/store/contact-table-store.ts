@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface ContactTableFilter {
+export interface ContactTableFilter {
   searchTerm: string;
   lifecycleId: string;
   source: string;
@@ -20,7 +20,7 @@ export const useContactTableStore = create<{
       source: "all",
       labelId: "all",
     },
-    selectedContact: null,
+    selectedContact: null as unknown as ContactsData,
     setFilter: (filter: ContactTableFilter) => {
       set({ filter });
     },

@@ -43,13 +43,14 @@ import {
   CampaignParticipantSource,
   ContactGroupType,
 } from "@/types/enums.ts";
+import type { Campaign } from "@/types/global";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 import StatePagination from "./CampaignContactPagination.tsx";
 
 interface AddParticipantModalProps {
   close: () => void;
-  campaign: any;
+  campaign: Campaign;
   campaignType: string;
 }
 
@@ -59,9 +60,9 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
   const [selectedTab, setSelectedTab] = useState<CampaignParticipantSource>(
     CampaignParticipantSource.INDIVIDUAL,
   );
-  const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<any[]>([]);
-  const [selectedCampaigns, setSelectedCampaigns] = useState<any[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<ContactsData[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<ContactGroup[]>([]);
+  const [selectedCampaigns, setSelectedCampaigns] = useState<Campaign[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>(
     Object.values(CampaignParticipantAddStatus) || [],
   );
@@ -100,7 +101,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
   const contacts = data?.users;
   const isSelectedAll = useMemo(() => {
     if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
-      return contacts?.length > 0 && selectedContacts.length === contacts.length;
+      return (contacts?.length ?? 0) > 0 && selectedContacts.length === contacts?.length;
     }
 
     if (selectedTab === CampaignParticipantSource.GROUP) {
@@ -111,7 +112,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
     if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
       const selectableCampaigns =
-        campaignData?.data?.filter((c) => c?.campaignParticipantsCount) || [];
+        campaignData?.data?.filter((c: Campaign) => c?.campaignParticipantsCount) || [];
 
       return (
         selectableCampaigns.length > 0 && selectedCampaigns.length === selectableCampaigns.length
@@ -187,7 +188,8 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
       case CampaignParticipantSource.CAMPAIGN: {
         const selectableCampaigns =
-          campaignData?.data?.filter((c) => (c?.campaignParticipantsCount ?? 0) > 0) ?? [];
+          campaignData?.data?.filter((c: Campaign) => (c?.campaignParticipantsCount ?? 0) > 0) ??
+          [];
 
         setSelectedCampaigns(checked ? selectableCampaigns : []);
         break;
@@ -203,7 +205,9 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
     ? contactGroup?.data.filter((g) => g.name.toLowerCase().includes(searchText.toLowerCase()))
     : contactGroup?.data;
   const filteredCampaigns = searchText
-    ? campaignData?.data.filter((g) => g.name.toLowerCase().includes(searchText.toLowerCase()))
+    ? campaignData?.data.filter((g: Campaign) =>
+        g.name.toLowerCase().includes(searchText.toLowerCase()),
+      )
     : campaignData?.data;
 
   const getSelectedCount = () => {
@@ -316,7 +320,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
                         <Select
                           value={selectedStatus[0] || ""}
-                          onValueChange={(value) => setSelectedStatus([value])}
+                          onValueChange={(value) => setSelectedStatus([value ?? ""])}
                           items={Object.values(CampaignParticipantAddStatus).map((status) => ({
                             value: status,
                             label: status,
@@ -340,10 +344,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                       <div className="space-y-2 pr-4">
                         {selectedTab === CampaignParticipantSource.INDIVIDUAL && (
                           <>
-                            {filteredContacts?.length > 0 ? (
-                              filteredContacts.map((contact) => {
+                            {(filteredContacts?.length ?? 0) > 0 ? (
+                              filteredContacts?.map((contact) => {
                                 const isAlreadySelected = contact?.campaignParticipants?.some(
-                                  (c) => c?.campaignId === campaign?.id,
+                                  (c: { campaignId?: string }) => c?.campaignId === campaign?.id,
                                 );
                                 return (
                                   <Individual
@@ -365,8 +369,8 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 
                         {selectedTab === CampaignParticipantSource.GROUP && (
                           <>
-                            {filteredGroups?.length > 0 ? (
-                              filteredGroups.map((group) => (
+                            {(filteredGroups?.length ?? 0) > 0 ? (
+                              filteredGroups?.map((group) => (
                                 <CustomerGroup
                                   key={group.id}
                                   group={group}
@@ -385,7 +389,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                         {selectedTab === CampaignParticipantSource.CAMPAIGN && (
                           <>
                             {filteredCampaigns?.length > 0 ? (
-                              filteredCampaigns.map((campaign) => (
+                              filteredCampaigns.map((campaign: Campaign) => (
                                 <CustomerCampaign
                                   key={campaign.id}
                                   campaign={campaign}
@@ -404,7 +408,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                     </ScrollArea>
 
                     {selectedTab === CampaignParticipantSource.INDIVIDUAL &&
-                      filteredContacts?.length > 0 && (
+                      (filteredContacts?.length ?? 0) > 0 && (
                         <div className="mt-0">
                           <StatePagination
                             totalItems={data?.totalCount ?? 0}
@@ -516,9 +520,9 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
 };
 
 interface IndividualProps {
-  customer: any;
-  selectedContacts: any[];
-  setSelectedContacts: (contacts: any[]) => void;
+  customer: ContactsData;
+  selectedContacts: ContactsData[];
+  setSelectedContacts: (contacts: ContactsData[]) => void;
   isAlreadySelected?: boolean;
 }
 
@@ -568,9 +572,9 @@ const Individual = ({
 };
 
 interface CustomerGroupProps {
-  group: any;
-  selectedGroups: any[];
-  setSelectedGroups: (groups: any[]) => void;
+  group: ContactGroup;
+  selectedGroups: ContactGroup[];
+  setSelectedGroups: (groups: ContactGroup[]) => void;
   isAlreadySelected?: boolean;
 }
 
@@ -624,9 +628,9 @@ const CustomerGroup = ({
 };
 
 interface CustomerCampaignProps {
-  campaign: any;
-  selectedCampaigns: any[];
-  setSelectedCampaigns: (campaigns: any[]) => void;
+  campaign: Campaign;
+  selectedCampaigns: Campaign[];
+  setSelectedCampaigns: (campaigns: Campaign[]) => void;
 }
 
 const CustomerCampaign = ({

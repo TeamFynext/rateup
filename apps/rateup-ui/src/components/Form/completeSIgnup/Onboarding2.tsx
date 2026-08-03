@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Building, Sparkles } from "lucide-react";
+import { IconArrowLeft, IconArrowRight, IconBuilding, IconSparkles } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { useId } from "react";
 
@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 
+import type { OnboardingFormData } from "./onboarding-types.ts";
+
 export default function OnboardingStep2({
   currentStep,
   data,
@@ -20,10 +22,10 @@ export default function OnboardingStep2({
   handleNext,
 }: {
   currentStep: number;
-  data: any;
-  handleInputChange: any;
-  handleNext: any;
-  handleBack: any;
+  data: OnboardingFormData;
+  handleInputChange: (field: string, value: string) => void;
+  handleNext: () => void;
+  handleBack: () => void;
 }) {
   const uid = useId();
   const canProceed = () => {
@@ -54,7 +56,7 @@ export default function OnboardingStep2({
           transition={{ type: "spring", duration: 0.6 }}
           className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mx-auto mb-1"
         >
-          <Building className="w-5 h-5 text-white" />
+          <IconBuilding className="w-5 h-5 text-white" />
         </motion.div>
         <h2 className="text-gray-900">What's Your Industry?</h2>
         <p className="text-gray-600 text-sm">
@@ -68,7 +70,7 @@ export default function OnboardingStep2({
             Select Your Industry
           </FieldLabel>
           <Select
-            onValueChange={(value) => handleInputChange("industry", value)}
+            onValueChange={(value) => handleInputChange("industry", value ?? "")}
             value={data.industry}
             items={industries.map((industry) => ({ value: industry, label: industry }))}
           >
@@ -100,7 +102,7 @@ export default function OnboardingStep2({
             className="bg-linear-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm"
           >
             <div className="flex items-start space-x-3">
-              <Sparkles className="w-3 h-3 text-orange-600" />
+              <IconSparkles className="w-3 h-3 text-orange-600" />
               <div>
                 <p className="text-orange-700 text-sm">Perfect! We'll customize your experience</p>
                 <p className="text-gray-700 text-sm">
@@ -118,7 +120,7 @@ export default function OnboardingStep2({
           disabled={currentStep === 1}
           className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <IconArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
@@ -131,7 +133,7 @@ export default function OnboardingStep2({
             }`}
           >
             Continue
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <IconArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>

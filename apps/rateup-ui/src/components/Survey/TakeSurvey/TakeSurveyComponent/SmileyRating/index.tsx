@@ -8,14 +8,13 @@ import {
 import { useAnimate } from "motion/react";
 import { useEffect, useState } from "react";
 
-import {
-  generateGradient,
-  SmileyColorType,
-  SmileyVariantStyle,
-} from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
+import { generateGradient } from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";
 import { SmileyResponse } from "@/types/enums.ts";
+import type { StoredResponse } from "@/utils/response.ts";
+import { asAnswerText } from "@/utils/response.ts";
 
 import {
   getEmptyIcon,
@@ -23,20 +22,30 @@ import {
   getIconStyle,
   getSmileyEmojies,
 } from "./SmileyRatingStyling.tsx";
+import type { SmileyGradientStyle, SmileyIconStyle } from "./SmileyRatingStyling.tsx";
 
 const SMILEY_COUNT = 5;
 
-const SmileyRating = ({ updateResponse, response, features }) => {
+const SmileyRating = ({
+  updateResponse,
+  response,
+  features,
+}: {
+  updateResponse: (value: StoredResponse | null | undefined) => void;
+  response?: StoredResponse | null;
+  features?: { iconStyle?: SmileyIconStyle & SmileyGradientStyle; [key: string]: unknown };
+}) => {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
-  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
+  // The survey context is null on the standalone preview.
+  const { webSurveyAutoTransitionToNextQues } = (useSurveyContext() ?? {}) as Partial<Survey>;
 
-  const [iconColor, setIconColor] = useState(null);
+  const [iconColor, setIconColor] = useState<Record<number, string> | null>(null);
   const [customColor, setIsCustomColor] = useState(false);
   const [hoveredValue, setHoveredValue] = useState(-1);
 
-  const updateStringResponse = (value) => {
+  const updateStringResponse = (value: number) => {
     let stringValue;
     switch (value) {
       case 1:
@@ -61,7 +70,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
 
   const primaryColor = "dark";
 
-  const iconStyle = features?.iconStyle || {
+  const iconStyle: SmileyIconStyle & SmileyGradientStyle = features?.iconStyle || {
     variant: SmileyVariantStyle.Default,
     colorType: SmileyColorType.Default,
   };
@@ -81,12 +90,12 @@ const SmileyRating = ({ updateResponse, response, features }) => {
       if (!variant) return;
       if (![SmileyVariantStyle.Custom].includes(variant) && colorType !== SmileyColorType.Default) {
         setIsCustomColor(true);
-        const newColor = {};
+        const newColor: Record<number, string> = {};
         const colorArray = generateGradient(gradientStartColor, gradientEndColor, 5, primaryColor);
         Object.values(SmileyResponse)
           .reverse()
           .map((_s, i) => {
-            if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i];
+            if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i] ?? "";
             else newColor[i + 1] = color?.[i + 1] ?? primaryColor;
           });
         setIconColor(newColor);
@@ -97,7 +106,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
     }
   }, [features]);
 
-  const currentValue = getNumericValue(response);
+  const currentValue = getNumericValue(asAnswerText(response));
 
   const handleSelect = async (value: number) => {
     updateStringResponse(value);
@@ -139,7 +148,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
 
 export default SmileyRating;
 
-export const getNumericValue = (stringValue) => {
+export const getNumericValue = (stringValue: string) => {
   switch (stringValue) {
     case SmileyResponse.VerySad:
       return 1;
@@ -156,7 +165,7 @@ export const getNumericValue = (stringValue) => {
   }
 };
 
-export function mapSmileyIcon(value, color?: string) {
+export function mapSmileyIcon(value: unknown, color?: string) {
   switch (value) {
     case SmileyResponse.VeryHappy: {
       return <IconMoodCrazyHappy style={getIconStyle(color)} />;
@@ -195,7 +204,7 @@ export function getSmileyIcon(value: SmileyResponse, color = "black") {
   }
 }
 
-export function getCustomSmileyIcon(response: SmileyResponse, question) {
+export function getCustomSmileyIcon(response: SmileyResponse, question: Question) {
   const iconStyle = question?.features?.iconStyle;
   if (!iconStyle) return null;
   let emoji;

@@ -1,5 +1,5 @@
+import { IconArrowLeft, IconUsers } from "@tabler/icons-react";
 import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Users } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -29,7 +29,7 @@ function TeamManagement() {
   const { teamId } = useParams({
     strict: false,
   });
-  const { data: teamsData, isPending } = useGetTeamById(teamId);
+  const { data: teamsData, isPending } = useGetTeamById(teamId ?? "");
   const { user } = useUser();
   const isSuperAdmin = user?.role === UserRole.SUPADM;
   if (isPending) {
@@ -42,7 +42,7 @@ function TeamManagement() {
         <CardContent>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => history.back()} className="shrink-0">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <IconArrowLeft className="w-4 h-4 mr-2" />
               {t("Back to Settings")}
             </Button>
 
@@ -53,7 +53,7 @@ function TeamManagement() {
                 className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0"
                 style={{ backgroundColor: teamsData?.color }}
               >
-                <Users className="w-5 h-5 text-white" />
+                <IconUsers className="w-5 h-5 text-white" />
               </div>
 
               <div className="min-w-0">
@@ -79,7 +79,7 @@ function TeamManagement() {
           </TabsList>
 
           <TabsContent value="members">
-            <AddMembers selectedTeam={teamId} />
+            <AddMembers selectedTeam={teamId ?? ""} />
           </TabsContent>
 
           {isSuperAdmin && (

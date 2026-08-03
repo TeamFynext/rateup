@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 
 import { WHATSAPP_URL } from "..";
@@ -13,7 +14,7 @@ function transformAutomation(automation: WaAutomatedReply): WaAutomatedReply {
   };
 }
 
-export async function createWaAutomatedReply(data: any) {
+export async function createWaAutomatedReply(data: RequestPayload) {
   const res = await axiosClient.post(base, data);
   return transformAutomation(res.data as WaAutomatedReply);
 }
@@ -35,7 +36,7 @@ export async function getWaAutomatedRepliesById(waAutomatedReplyId: string) {
   return transformAutomation(res.data as WaAutomatedReply);
 }
 
-export async function updateWaAutomatedReply(waAutomatedReplyId: string, data: any) {
+export async function updateWaAutomatedReply(waAutomatedReplyId: string, data: RequestPayload) {
   const res = await axiosClient.put(`${base}/${waAutomatedReplyId}`, data);
   return transformAutomation(res.data as WaAutomatedReply);
 }

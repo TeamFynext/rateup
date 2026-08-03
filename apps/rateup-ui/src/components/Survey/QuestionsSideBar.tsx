@@ -1,4 +1,5 @@
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { IconPlus, IconStack2 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -9,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,19 +31,23 @@ import { reorder, reOrderPages } from "@/utils/questions.ts";
 import { QuestionTabsEnum } from "./EditSurvey.tsx";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard/index.ts";
 import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
+import type { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums.ts";
+import type { SurveyThemePage } from "./SurveyTheme/surveyThemeReducer.ts";
 
 interface QuestionsSideBarProps {
   questions: Question[];
-  selectedQ: Question;
-  setSelectedQ: (Q: Question) => void;
+  selectedQ: Question | null;
+  setSelectedQ: (Q: Question | null) => void;
   setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
   addQnTrigger?: number;
   surveyLanguages: string[];
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   isWaSurvey?: boolean;
   survey?: Survey;
-  setSurveyThemeContextValue?: any;
-  setSelectedSurveyThemeTab?: any;
+  setSurveyThemeContextValue: React.Dispatch<
+    React.SetStateAction<Record<string, SurveyThemePage> | undefined>
+  >;
+  setSelectedSurveyThemeTab: React.Dispatch<React.SetStateAction<ThemeTabEnum>>;
   checkForUnsavedChanges?: () => boolean;
   hasContactFeatureIssue?: () => boolean;
 }
@@ -82,14 +88,15 @@ export function QuestionsSideBar({
   }, [questions]);
 
   useEffect(() => {
-    if (addQnTrigger > 0) handleAddQn();
+    if ((addQnTrigger ?? 0) > 0) handleAddQn();
   }, [addQnTrigger]);
 
-  const openQuestion = (question) => {
+  const openQuestion = (question: Question) => {
     setSelectedQ(question);
     if (uniquePages.includes(question.type as PageType)) {
       const webSurveyPagesThemeCopy = cloneDeep(survey?.webSurveyPagesTheme);
-      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type);
+      // `uniquePages` is exactly the set of page types the helper maps, so this is never undefined.
+      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type as PageType)!;
       setSelectedSurveyThemeTab(surveyThemeTabValue);
       setSurveyThemeContextValue(webSurveyPagesThemeCopy);
     }
@@ -109,7 +116,7 @@ export function QuestionsSideBar({
     if (selectedQ === question) {
       return;
     }
-    const haveUnsavedChanges = checkForUnsavedChanges();
+    const haveUnsavedChanges = checkForUnsavedChanges?.();
     if (haveUnsavedChanges && uniquePages.includes(selectedQ?.type as PageType)) {
       openDiscardChangesModal(() => {
         openQuestion(question);
@@ -130,11 +137,11 @@ export function QuestionsSideBar({
   const handleAddQn = () => {
     const openTypeSelection = () => {
       setActiveTab(QuestionTabsEnum.TypeSelection);
-      setSelectedLanguage(surveyLanguages[0]);
+      setSelectedLanguage(surveyLanguages[0] ?? null);
       setSelectedQ(null);
     };
 
-    if (checkForUnsavedChanges()) {
+    if (checkForUnsavedChanges?.()) {
       openDiscardChangesModal(openTypeSelection);
       return;
     }
@@ -161,7 +168,7 @@ export function QuestionsSideBar({
     />
   ));
 
-  const handleDragEnd = ({ destination, source }) => {
+  const handleDragEnd = ({ destination, source }: DropResult) => {
     const reorderedQuestions = reorder(questionsState, source.index, destination?.index || 0);
     setQuestionsState(reorderedQuestions);
     questionsReorderMutation.mutate(reorderedQuestions);
@@ -175,8 +182,8 @@ export function QuestionsSideBar({
         reorderedQuestions?.map((q) => q.id),
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 

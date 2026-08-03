@@ -3,16 +3,16 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
-import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 
-import { useContactsStore, useMessagesStore } from "../../../components/dashboard/inbox/store.ts";
 import { resetBrowserQueryClient } from "../../../components/providers.tsx";
 
 export const Route = createFileRoute("/(auth)/logout/")({
   component: Logout,
 });
 
-function Logout() {
+function Logout(): null {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { clearAllContacts } = useContactsStore();

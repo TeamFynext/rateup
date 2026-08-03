@@ -1,22 +1,23 @@
-import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
 import {
-  Activity,
-  Ban,
-  Download,
-  Folder,
-  Globe,
-  Info,
-  Layers,
-  Plus,
-  Search,
-  Tag,
-  Trash,
-  Upload,
-  UserRoundPlus,
-  Users,
-  Zap,
-} from "lucide-react";
+  IconActivity,
+  IconBan,
+  IconBolt,
+  IconBrandInstagram,
+  IconBrandWhatsapp,
+  IconDownload,
+  IconFolder,
+  IconGlobe,
+  IconInfoCircle,
+  IconPlus,
+  IconSearch,
+  IconStack2,
+  IconTag,
+  IconTrash,
+  IconUpload,
+  IconUserPlus,
+  IconUsers,
+} from "@tabler/icons-react";
+import type { Table } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -64,28 +65,36 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { getApiErrorData } from "@/utils/apiError.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { useContactTableStore } from "../store/contact-table-store.ts";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps {
+  table: Table<ContactsData>;
 }
 
-const SourceSelector = ({ value, onChange }) => {
+const SourceSelector = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => {
   const ContactSources = [
-    { label: "All Sources", value: "all", icon: Layers },
+    { label: "All Sources", value: "all", icon: IconStack2 },
     { label: "WhatsApp", value: "whatsapp", icon: IconBrandWhatsapp },
     { label: "Instagram", value: "instagram", icon: IconBrandInstagram },
-    { label: "Web", value: "WEBCHAT", icon: Globe },
-    { label: "Manual", value: "manual", icon: UserRoundPlus },
-    { label: "Imported", value: "csv import", icon: Upload },
+    { label: "Web", value: "WEBCHAT", icon: IconGlobe },
+    { label: "Manual", value: "manual", icon: IconUserPlus },
+    { label: "Imported", value: "csv import", icon: IconUpload },
   ];
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       items={ContactSources.map((source) => ({ value: source.value, label: source.label }))}
     >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
@@ -107,24 +116,34 @@ const SourceSelector = ({ value, onChange }) => {
   );
 };
 
-const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = false }) => {
+const LabelSelector = ({
+  value,
+  onChange,
+  includeAll = false,
+  includeStatus = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  includeAll?: boolean;
+  includeStatus?: boolean;
+}) => {
   const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
   const labels = contactLabels.map((label) => ({
     id: label.id,
     name: label.name,
-    icon: Tag,
+    icon: IconTag,
   }));
   if (includeAll) {
     labels.unshift({
       id: "all",
       name: "All Contacts",
-      icon: Users,
+      icon: IconUsers,
     });
   }
   if (includeStatus) {
     labels.push(
-      { id: "active", name: "Active", icon: Zap },
-      { id: "blocked", name: "Blocked", icon: Ban },
+      { id: "active", name: "Active", icon: IconBolt },
+      { id: "blocked", name: "Blocked", icon: IconBan },
     );
   }
   if (isPendingContactLabels) {
@@ -134,7 +153,7 @@ const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = fa
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       items={labels.map((label) => ({ value: label.id, label: label.name }))}
     >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
@@ -156,7 +175,7 @@ const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = fa
   );
 };
 
-export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   const isFiltered = table.getState().columnFilters.length > 0;
   const { filter, setFilter } = useContactTableStore();
   const { t } = useTranslation();
@@ -204,7 +223,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
         <div className="flex justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name, phone, or email..."
                 className="pl-10 placeholder:text-sm bg-gray-100 border-none"
@@ -239,13 +258,13 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
               size="sm"
               onClick={() => setIsOpenedAddContactModal(true)}
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               <span className="font-medium text-sm">Add Contact</span>
             </Button>
             <ExportContacts table={table} />
 
             <Button variant="outline" size="sm" onClick={() => setOpenImportModal(true)}>
-              <Upload className="w-4 h-4 mr-2" />
+              <IconUpload className="w-4 h-4 mr-2" />
               <span className="font-medium text-sm">{t("Import")}</span>
             </Button>
             <ImportContactModal opened={openImportModal} setOpened={setOpenImportModal} />
@@ -269,7 +288,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
               className="hover:text-blue-500"
               onClick={() => setOpenAddtoGroupModal(true)}
             >
-              <Folder />
+              <IconFolder />
               <span>{t("Add to Group")}</span>
             </Button>
             <Button
@@ -277,7 +296,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
               className="hover:text-blue-500"
               onClick={() => setOpenLabelContactModal(true)}
             >
-              <Tag />
+              <IconTag />
               <span>{t("Apply Label")}</span>
             </Button>
             <Button
@@ -285,11 +304,11 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
               className="hover:text-blue-500"
               onClick={() => setOpenLifecycleContactModal(true)}
             >
-              <Activity />
+              <IconActivity />
               <span>{t("Update Lifecycle Stage")}</span>
             </Button>
             <Button variant="outline" className="hover:text-red-500" onClick={handleDeleteContacts}>
-              <Trash />
+              <IconTrash />
               <span>{t("Delete")}</span>
             </Button>
           </div>
@@ -321,7 +340,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
   );
 }
 
-const ExportContacts = ({ table }) => {
+const ExportContacts = ({ table }: { table: Table<ContactsData> }) => {
   const exportMut = useExportContactsMutation();
   const leafColumns = table
     .getAllLeafColumns()
@@ -342,7 +361,7 @@ const ExportContacts = ({ table }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
-        <Download className="w-4 h-4 mr-2" />
+        <IconDownload className="w-4 h-4 mr-2" />
         <span className="font-medium text-sm">Export</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
@@ -355,14 +374,20 @@ const ExportContacts = ({ table }) => {
   );
 };
 
-const ImportContactModal = ({ opened, setOpened }) => {
+const ImportContactModal = ({
+  opened,
+  setOpened,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+}) => {
   const { t } = useTranslation();
 
   const handleDownloadDemo = () => {
     // Example: download a text file (you can replace this with any file URL)
     const fileUrl = getFileUrlFromKey("/File/contact/demo.csv", false);
     const link = document.createElement("a");
-    link.href = fileUrl;
+    link.href = fileUrl ?? "";
     link.download = "example.pdf"; // Suggested filename
     link.click();
   };
@@ -371,13 +396,13 @@ const ImportContactModal = ({ opened, setOpened }) => {
   const [hasHeaderRow, setHasHeaderRow] = useState(true);
   const importCSVContactMutation = useImportCSVContactMutation();
   const [error, setError] = useState<string | null>(null);
-  const [fields, setFields] = useState([]);
+  const [fields, setFields] = useState<CustomField[]>([]);
   const { customFields } = useCustomFieldsContext();
 
   useEffect(() => {
     if (csvfile) {
       const fileExtension = csvfile.name.split(".").pop()?.toLowerCase();
-      if (!["csv", "xlsx", "ods"].includes(fileExtension)) {
+      if (!["csv", "xlsx", "ods"].includes(fileExtension ?? "")) {
         setError(t("Please upload a valid CSV, XLSX, or ODS file."));
       } else {
         setError(null);
@@ -404,8 +429,8 @@ const ImportContactModal = ({ opened, setOpened }) => {
         toast.success("Contact imported successfully");
         setOpened(false);
       },
-      onError: (error: any) => {
-        const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+      onError: (error) => {
+        const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
         if (!isValidationError) {
           toast.error(error?.message || "Importing failed");
         }
@@ -462,14 +487,14 @@ const ImportContactModal = ({ opened, setOpened }) => {
 
           <blockquote className="border-l-4 border-blue-500 bg-blue-50 p-4 flex flex-col gap-2">
             <div className="flex gap-2 text-blue-700 text-sm">
-              <Info />
+              <IconInfoCircle />
               {t(
                 "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
               )}
             </div>
 
             <Button variant="secondary" onClick={handleDownloadDemo}>
-              <Upload />
+              <IconUpload />
               <span className="font-medium text-sm">{t("Download Demo Csv File")}</span>
             </Button>
           </blockquote>
@@ -517,7 +542,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         </div>
       </DialogContent>
       <ContactImportErrorModal
-        body={(importCSVContactMutation?.error as any)?.response?.data}
+        body={getApiErrorData(importCSVContactMutation?.error)}
         isError={importCSVContactMutation.isError}
       />
     </Dialog>

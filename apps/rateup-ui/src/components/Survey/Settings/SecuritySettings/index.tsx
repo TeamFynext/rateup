@@ -6,7 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.t
 import ETESettings from "./ETESettings.tsx";
 import PasswordSettings from "./PasswordSettings.tsx";
 
-function SecuritySettings({ survey, surveyId, enabledModules }) {
+function SecuritySettings({
+  survey,
+  surveyId,
+  enabledModules,
+}: {
+  survey: Survey;
+  surveyId: string;
+  enabledModules: string[];
+}) {
   if (!enabledModules.includes("endtoendencryption") && !enabledModules.includes("password")) {
     return null;
   }

@@ -1,10 +1,10 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconBan, IconBrandWhatsapp, IconClock } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { Ban, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker.tsx";
@@ -16,6 +16,7 @@ import {
   MessageHeader,
 } from "@/components/ui/message.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import type {
   IgReceiveMessageBody,
@@ -24,6 +25,7 @@ import type {
   WaSendMessageBody,
 } from "@/types/global";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
+import type { ParsedWaMessageContent } from "@/utils/whatsapp/inbox.ts";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import { reactionEmojiMap } from "../layout/singleMessageLayout/index.tsx";
@@ -34,6 +36,7 @@ import WaInboxDocument from "./document/index.tsx";
 import WaInboxImage from "./image/index.tsx";
 import WaInboxInteractive from "./interactive/index.tsx";
 import WaInboxLocation from "./location/index.tsx";
+import type { OrderContent } from "./order";
 import WaInboxOrder from "./order/index.tsx";
 import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
@@ -54,40 +57,81 @@ const IgCommentBubble = ({
   );
 };
 
-export const SingleMessage = ({ message }) => {
+/**
+ * `messageType` decides which member of `ParsedWaMessageContent` the parser
+ * produced, but the two are separate values — these read the content in the
+ * shape each renderer needs, and fall back to an empty one if a message ever
+ * arrives with a body that does not match its type.
+ */
+const asText = (content: ParsedWaMessageContent): string =>
+  typeof content === "string" ? content : "";
+
+const asRecord = (content: ParsedWaMessageContent): Record<string, unknown> =>
+  typeof content === "object" && content !== null && !Array.isArray(content)
+    ? (content as Record<string, unknown>)
+    : {};
+
+const asComment = (content: ParsedWaMessageContent) =>
+  asRecord(content) as { text?: string; commentId?: string; mediaId?: string };
+
+const asAttachments = (content: ParsedWaMessageContent) => {
+  const record = asRecord(content);
+  return Array.isArray(record.attachments)
+    ? (record as Parameters<typeof WaInboxAttachments>[0]["messageContent"])
+    : { attachments: [] };
+};
+
+const asContacts = (content: ParsedWaMessageContent): WaSendMessageBody["contacts"] =>
+  Array.isArray(content) ? content : [];
+
+const asLocation = (content: ParsedWaMessageContent): WaSendMessageBody["location"] =>
+  asRecord(content) as WaSendMessageBody["location"];
+
+const asOrder = (content: ParsedWaMessageContent): OrderContent => {
+  const record = asRecord(content);
+  return {
+    text: typeof record.text === "string" ? record.text : undefined,
+    catalog_id: typeof record.catalog_id === "string" ? record.catalog_id : "",
+    product_items: Array.isArray(record.product_items) ? record.product_items : [],
+  };
+};
+
+export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
   const { t: translations } = useTranslation();
   const { messageContent, messageType, template, interactive, timeStamp } = parseWaMessage(message);
   switch (messageType) {
     case "text":
     case "quickreply":
-      return <WaInboxText messageContent={messageContent} />;
+      return <WaInboxText messageContent={asText(messageContent)} />;
     case "ig_comment":
-      return <IgCommentBubble messageContent={messageContent} />;
+      return <IgCommentBubble messageContent={asComment(messageContent)} />;
     case "image":
-      return <WaInboxImage messageContent={messageContent} />;
+      return <WaInboxImage messageContent={asText(messageContent)} />;
     case "button":
-      return <WaInboxText messageContent={messageContent} />;
+      return <WaInboxText messageContent={asText(messageContent)} />;
     case "template":
       return (
-        <WaInboxTemplate templateBody={template} parameters={message.templateComponentParams} />
+        <WaInboxTemplate templateBody={template!} parameters={message.templateComponentParams} />
       );
     case "interactive":
-      return <WaInboxInteractive interactiveBody={interactive} messageContent={messageContent} />;
+      return (
+        <WaInboxInteractive interactiveBody={interactive} messageContent={asText(messageContent)} />
+      );
     case "audio":
-      return <WaInboxAudio messageContent={messageContent} />;
+      return <WaInboxAudio messageContent={asText(messageContent)} />;
     case "video":
-      return <WaInboxVideo messageContent={messageContent} />;
+      return <WaInboxVideo messageContent={asText(messageContent)} />;
     case "document":
     case "file":
-      return <WaInboxDocument messageContent={messageContent} />;
+      return <WaInboxDocument messageContent={asText(messageContent)} />;
     case "contacts":
-      return <WaInboxContact messageContent={messageContent} />;
+      return <WaInboxContact messageContent={asContacts(messageContent)} />;
     case "location":
-      return <WaInboxLocation messageContent={messageContent} />;
+      return <WaInboxLocation messageContent={asLocation(messageContent)} />;
     case "attachments":
-      return <WaInboxAttachments messageContent={messageContent} />;
+      return <WaInboxAttachments messageContent={asAttachments(messageContent)} />;
     case "order":
-      return <WaInboxOrder messageContent={messageContent} timestamp={timeStamp} />;
+      return <WaInboxOrder messageContent={asOrder(messageContent)} timestamp={timeStamp} />;
     default:
       return (
         <span className="text-xs text-red-500 font-medium">
@@ -106,7 +150,7 @@ export const DeletedMessage = () => {
   const { t: translations } = useTranslation();
   return (
     <span className="flex items-center gap-1.5 text-sm text-muted-foreground italic">
-      <Ban className="size-3.5 shrink-0" />
+      <IconBan className="size-3.5 shrink-0" />
       {translations("This message was deleted")}
     </span>
   );
@@ -119,7 +163,7 @@ export function getReactionMessage({
 }: {
   message: WaGetMessagesBody;
   allMessages: WaGetMessagesBody[];
-  selectedContact: any;
+  selectedContact: ContactWithUpdatedAt;
 }) {
   const exchangeProcess = message?.messageBody?.exchangeProcess;
   const isInsta =
@@ -137,11 +181,11 @@ export function getReactionMessage({
       const reactedMessageId =
         msg.messageBody.exchangeProcess === "receive"
           ? !isInsta
-            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0].reaction?.message_id
-            : (msg.messageBody.receive as IgReceiveMessageBody).reaction.mid
+            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0]!.reaction?.message_id
+            : (msg.messageBody.receive as IgReceiveMessageBody)!.reaction!.mid
           : !isInsta
             ? (msg.messageBody.send as WaSendMessageBody).reaction?.message_id
-            : (msg.messageBody.send as IgSendMessageBody).payload.message_id;
+            : (msg.messageBody.send as IgSendMessageBody).payload!.message_id;
       return wa_id === reactedMessageId;
     }
     return false;
@@ -152,14 +196,14 @@ export function getReactionMessage({
     return {
       emoji: isSendReactionMsg
         ? !isInsta
-          ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction.emoji
-          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload.emoji ??
-            reactionEmojiMap((reactionMsg.messageBody.send as IgSendMessageBody).payload.reaction))
+          ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction!.emoji
+          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload!.emoji ??
+            reactionEmojiMap((reactionMsg.messageBody.send as IgSendMessageBody).payload!.reaction))
         : !isInsta
-          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody).messages[0].reaction.emoji
-          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction.emoji ??
+          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody).messages[0]!.reaction!.emoji
+          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction!.emoji ??
             reactionEmojiMap(
-              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction.reaction,
+              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction!.reaction,
             )),
       from: isSendReactionMsg
         ? reactionMsg.sender?.name
@@ -171,7 +215,19 @@ export function getReactionMessage({
     };
 }
 
-export const TempMessageBody = ({ body, timestamp }) => {
+export const TempMessageBody = ({
+  body,
+  timestamp,
+}: {
+  body: {
+    text?: TiptapNode | string;
+    url?: string;
+    urlType?: string;
+    filename?: string;
+  };
+  /** Optimistic messages stamp this with `Date.now()`. */
+  timestamp?: string | number;
+}) => {
   const { user } = useUser();
   return (
     <Message align="end">
@@ -204,7 +260,7 @@ export const TempMessageBody = ({ body, timestamp }) => {
         </Bubble>
         <MessageFooter className="gap-1.5">
           <span>{formatToCustomTime(timestamp)}</span>
-          <Clock className="size-3" />
+          <IconClock className="size-3" />
         </MessageFooter>
       </MessageContent>
     </Message>

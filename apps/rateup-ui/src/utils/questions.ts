@@ -6,16 +6,14 @@ import { ChoiceTypeQuestions, defaultTitleSubtitleStartBtnTextsObj } from "./con
 interface Reorderable {
   type?: string;
 }
-export function reorder<T extends Reorderable>(
-  array: Array<T>,
-  from: number,
-  to: number,
-): Array<T> {
+export function reorder<T>(array: Array<T>, from: number, to: number): Array<T> {
   const newArray = [...array];
   const item = newArray.splice(from, 1)[0];
   newArray.splice(to, 0, item);
 
-  const reOrderedList = reOrderPages(newArray);
+  // reOrderPages only reads an optional `type`, so callers reordering plain
+  // values (e.g. MCQ grid question labels) simply have none.
+  const reOrderedList = reOrderPages(newArray as Array<T & Reorderable>);
 
   return reOrderedList;
 }
@@ -33,7 +31,7 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
 
   const pagesTypeStrsArr = ["Welcome", "Language", "ThankYou", "GoogleReview"];
   // PagesObjs means objects with type key value as Welcome, Language, ThankYou.
-  const arrWithoutPagesObjs = pages.filter((obj) => !pagesTypeStrsArr.includes(obj.type));
+  const arrWithoutPagesObjs = pages.filter((obj) => !pagesTypeStrsArr.includes(obj.type ?? ""));
   if (welcomeItem) newArray.push({ ...welcomeItem });
   if (languageItem) newArray.push({ ...languageItem });
   for (const pageObj of arrWithoutPagesObjs) {
@@ -51,13 +49,18 @@ export function createPage(
   surveyType = SurveyType.Web,
 ): Question {
   const isWaFlow = surveyType === SurveyType.WaFlow;
-  const title = {};
-  const description = {};
-  const label = isWaFlow ? {} : undefined;
+  const title: Record<string, string> = {};
+  const description: Record<string, string> = {};
+  const label: Record<string, string> | undefined = isWaFlow ? {} : undefined;
+
+  // PageTitle/PageDescription only cover a subset of PageType (GoogleReview has
+  // no entry), so the lookup is partial — as it already was at runtime.
+  const pageTitles: Partial<Record<PageType, string>> = PageTitle;
+  const pageDescriptions: Partial<Record<PageType, string>> = PageDescription;
 
   for (const language of languages) {
-    title[language] = PageTitle[type];
-    description[language] = PageDescription[type];
+    title[language] = pageTitles[type] ?? "";
+    description[language] = pageDescriptions[type] ?? "";
     if (label) {
       label[language] = "";
     }
@@ -98,9 +101,9 @@ export function createBlankQuestion(
   surveyType = SurveyType.Web,
 ): Question {
   const isWaFlow = surveyType === SurveyType.WaFlow;
-  const title = {};
-  const description = {};
-  const label = isWaFlow ? {} : undefined;
+  const title: Record<string, string> = {};
+  const description: Record<string, string> = {};
+  const label: Record<string, string> | undefined = isWaFlow ? {} : undefined;
 
   for (const language of languages) {
     title[language] = "";
@@ -127,7 +130,7 @@ export function validateAllLanguagesArePopulated(
   languages: Array<string>,
   keyToValidate: Array<"title" | "description" | "choices">,
 ) {
-  const missingLangs = [];
+  const missingLangs: string[] = [];
 
   keyToValidate.forEach((key) => {
     if (key === "choices") {
@@ -155,7 +158,7 @@ const CONTACT_FEATURE_KEYS = ["name", "phone", "email"] as const;
  * its own type, so it must stay on.
  */
 export function getDefaultContactFeatureEnabled(
-  qtype: QuestionType,
+  qtype: QuestionType | PageType | undefined,
 ): Record<(typeof CONTACT_FEATURE_KEYS)[number], boolean> {
   return {
     name: false,
@@ -181,7 +184,7 @@ export function validateContactFeaturesPopulated(
 
   const defaultEnabled = getDefaultContactFeatureEnabled(question.type as QuestionType);
 
-  const missingLangs = [];
+  const missingLangs: string[] = [];
   languages.forEach((language) => {
     const featureSet = question?.features?.[language];
     const hasAnyEnabled = CONTACT_FEATURE_KEYS.some((key) =>
@@ -196,8 +199,8 @@ export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,
   type = SurveyType.Web,
-): Question & { enableNpsAnalytics?: boolean; extraConfig: any } => {
-  const emptyText = {};
+): Question & { enableNpsAnalytics?: boolean; extraConfig: Question["extraConfig"] } => {
+  const emptyText: Record<string, string> = {};
   languages?.forEach((lang) => {
     emptyText[lang] = "";
   });

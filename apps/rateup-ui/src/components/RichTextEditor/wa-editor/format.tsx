@@ -2,6 +2,7 @@ import { generateHTML } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 import React from "react";
+import type { ReactNode } from "react";
 
 /**
  * WhatsApp text-format helpers shared by every inlined WA editor and by the
@@ -13,19 +14,26 @@ import React from "react";
  * private note so the backend resolves mentions by id (robust to names that
  * contain spaces, which the text-based `@name` extraction can't match).
  */
-export function extractMentionUserIds(editorContent: any): string[] {
+export function extractMentionUserIds(editorContent: unknown): string[] {
   const ids = new Set<string>();
-  const walk = (node: any) => {
-    if (!node) return;
-    if (node.type === "mention" && node.attrs?.id) ids.add(String(node.attrs.id));
-    if (Array.isArray(node.content)) node.content.forEach(walk);
+  const walk = (node: unknown) => {
+    if (!node || typeof node !== "object") return;
+    const { type, attrs, content } = node as TiptapNode;
+    if (type === "mention" && attrs?.id) ids.add(String(attrs.id));
+    if (Array.isArray(content)) content.forEach(walk);
   };
   walk(editorContent);
   return Array.from(ids);
 }
 
-export function parseToWhatsAppFormat(editorContent) {
-  function formatText(text, type = "*") {
+/**
+ * `editorContent` is the editor's Tiptap document. Callers hold it in a field
+ * typed loosely (it round-trips through the message body), and guard against
+ * empty values before calling — an empty value has no `content` and would throw,
+ * exactly as before.
+ */
+export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
+  function formatText(text: string, type = "*") {
     const trimmedEnd = text.trimEnd();
     const trimmedStart = text.trimStart();
     const trimmed = text.trim();
@@ -35,15 +43,15 @@ export function parseToWhatsAppFormat(editorContent) {
     const formattedText = trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
     return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
   }
-  const parseNode = (node) => {
+  const parseNode = (node: TiptapNode): string => {
     if (!node) return "";
     switch (node.type) {
       case "paragraph":
-        return node?.content?.map(parseNode).join("");
+        return node?.content?.map(parseNode).join("") ?? "";
       case "text":
-        let text = node.text;
+        let text = node.text ?? "";
         if (node.marks) {
-          node.marks.forEach((mark) => {
+          node.marks.forEach((mark: { type: string }) => {
             switch (mark.type) {
               case "bold":
                 text = formatText(text, "*");
@@ -64,15 +72,19 @@ export function parseToWhatsAppFormat(editorContent) {
         }
         return text;
       case "bulletList":
-        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
+        return node.content?.map((item: TiptapNode) => `* ${parseNode(item)}`).join("\n") ?? "";
       case "orderedList":
-        return node.content.map((item, index) => `${index + 1}. ${parseNode(item)}`).join("\n");
+        return (
+          node.content
+            ?.map((item: TiptapNode, index: number) => `${index + 1}. ${parseNode(item)}`)
+            .join("\n") ?? ""
+        );
       case "blockquote":
-        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
+        return node.content?.map((item: TiptapNode) => `> ${parseNode(item)}`).join("\n") ?? "";
       case "codeBlock":
-        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
+        return `\`\`\`${node.content?.map(parseNode).join("") ?? ""}\`\`\``;
       case "listItem":
-        return node.content.map(parseNode).join("");
+        return node.content?.map(parseNode).join("") ?? "";
       case "mention":
         return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
       default:
@@ -80,13 +92,17 @@ export function parseToWhatsAppFormat(editorContent) {
     }
   };
 
-  return editorContent.content.map(parseNode).join("\n");
+  return (editorContent as TiptapNode).content?.map(parseNode).join("\n") ?? "";
 }
-interface TiptapNode {
-  type: string;
+/** A node of a Tiptap document, as the WhatsApp editor produces it. */
+export interface TiptapNode {
+  /** Optional so a `JSONContent` straight out of the editor satisfies this. */
+  type?: string;
   content?: TiptapNode[];
   marks?: { type: string }[];
   text?: string;
+  /** Node attributes, e.g. a mention's label/id. */
+  attrs?: Record<string, string | number | boolean | null | undefined>;
 }
 
 export function parseFromWhatsAppFormat(text: string): {
@@ -209,7 +225,7 @@ export function parseWhatsAppToReact(text: string): React.ReactNode {
       case "text":
         const text = node.text;
         if (node.marks) {
-          return node.marks.reduce((acc, mark) => {
+          return node.marks.reduce<ReactNode>((acc, mark) => {
             switch (mark.type) {
               case "bold":
                 return <strong>{acc}</strong>;
@@ -262,13 +278,13 @@ export function parseWhatsAppToReact(text: string): React.ReactNode {
   ));
 }
 
-export function parseJsonToReact(value) {
+export function parseJsonToReact(value: string | TiptapNode) {
   if (typeof value === "string") return value;
   if (!value?.content?.[0]?.content) return "";
   return parse(generateHTML(value, [StarterKit]));
 }
 
-export function whatsappToHTML(text) {
+export function whatsappToHTML(text: string) {
   if (!text) return "";
 
   let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

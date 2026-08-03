@@ -3,7 +3,7 @@ import type { Updater } from "use-immer";
 
 import type { WaFlowJson, WaFlowMap } from "@/types/global";
 
-interface IEditFlowContext {
+export interface IEditFlowContext {
   flowJson: WaFlowJson;
   updateFlowJson: Updater<WaFlowJson>;
 
@@ -22,18 +22,8 @@ interface IEditFlowContext {
   screenNumber: number;
   setScreenNumber: (value: number) => void;
 }
-export const EditFlowContext = createContext<IEditFlowContext>({
-  flowJson: undefined,
-  updateFlowJson: () => {},
-  map: undefined,
-  updateMap: () => {},
-  survey: undefined,
-  updateSurvey: () => {},
-  selectedLang: "en",
-  selectedFormElementId: undefined,
-  setSelectedFormElementId: () => {},
-  selectedScreenId: undefined,
-  setSelectedScreenId: () => {},
-  screenNumber: undefined,
-  setScreenNumber: () => {},
-});
+/**
+ * There is no meaningful default: every consumer renders inside the flow
+ * editor's provider, so the empty object stands in for "not yet provided".
+ */
+export const EditFlowContext = createContext<IEditFlowContext>({} as IEditFlowContext);

@@ -1,6 +1,7 @@
 import classNames from "classnames/bind";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
+import type { MouseEvent } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
@@ -16,11 +17,11 @@ import styles from "./OpinionScaleForm.module.css";
 
 const cx = classNames.bind(styles);
 interface iProps {
-  initValue?: any;
+  initValue?: number;
 }
 export function OpinionScaleForm({ initValue }: iProps) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [isHovered, setIsHovered] = useState(null);
+  const [isHovered, setIsHovered] = useState<number | null>(null);
 
   const themePrimaryColor = useThemePrimaryColor();
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
@@ -30,7 +31,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const handleHover = (index) => {
+  const handleHover = (index: number) => {
     setIsHovered(index);
   };
 
@@ -38,9 +39,10 @@ export function OpinionScaleForm({ initValue }: iProps) {
     setIsHovered(null);
   };
 
-  const handleBtnClick = async (e) => {
-    const clickedBtn = e.target;
-    const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
+  const handleBtnClick = async (e: MouseEvent<HTMLElement>) => {
+    // The click lands on the button element itself; `target` is typed only as EventTarget.
+    const clickedBtn = e.target as HTMLElement;
+    const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue ?? "");
     if (clickedBtnValue) {
       if (!initValue) updateResponse(clickedBtnValue);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {

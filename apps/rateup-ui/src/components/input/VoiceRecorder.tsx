@@ -1,6 +1,13 @@
+import {
+  IconMicrophone,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconSquare,
+  IconTrash,
+} from "@tabler/icons-react";
 import WavesurferPlayer from "@wavesurfer/react";
-import { Mic, Pause, Play, Square, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type WaveSurfer from "wavesurfer.js";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
@@ -20,8 +27,8 @@ interface VoiceRecordState {
   audioContext: AudioContext | null;
   source: MediaStreamAudioSourceNode | null;
   chunks: Blob[];
-  fileKey: string;
-  setFileKey: (value) => void;
+  fileKey: string | null;
+  setFileKey: (value: string | null) => void;
   setIsRecording: (value: boolean) => void;
   setAudioUrl: (value: string | null) => void;
   setMediaRecorder: (recorder: MediaRecorder | null) => void;
@@ -49,12 +56,12 @@ const VoiceRecorder = () => {
     resetRecordingState,
   } = useVoiceRecordStore();
 
-  const [wavesurfer, setWavesurfer] = useState<any>(null);
+  const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [barHeights, setBarHeights] = useState<number[]>([]);
   const animationRef = useRef<number | null>(null);
 
-  const onReady = (ws: any) => {
+  const onReady = (ws: WaveSurfer) => {
     setWavesurfer(ws);
     setIsPlaying(false);
   };
@@ -65,13 +72,13 @@ const VoiceRecorder = () => {
     }
   };
 
-  const startRecording = async () => {
+  const startRecording = async (): Promise<void> => {
     const supportedTypes = ["audio/aac", "audio/amr", "audio/mpeg", "audio/mp4", "audio/ogg"];
     const mimeType = supportedTypes.find((type) => MediaRecorder.isTypeSupported(type));
 
     if (!mimeType) {
       alert("None of the required audio formats are supported by this browser.");
-      return null;
+      return;
     }
 
     const newStream = await navigator.mediaDevices.getUserMedia({
@@ -94,7 +101,7 @@ const VoiceRecorder = () => {
     setChunks([]);
     setMediaRecorder(recorder);
 
-    function getAudioExtension(mimetype) {
+    function getAudioExtension(mimetype: string) {
       switch (mimetype) {
         case "audio/aac":
           return ".acc";
@@ -118,7 +125,7 @@ const VoiceRecorder = () => {
       try {
         const key = await uploadFile(file);
         setFileKey(key);
-        setAudioUrl(getFileUrlFromKey(key));
+        setAudioUrl(getFileUrlFromKey(key) ?? null);
       } catch (error) {
         console.error(error);
       }
@@ -200,7 +207,7 @@ const VoiceRecorder = () => {
           <CustomTooltip
             trigger={
               <Button onClick={onPlayPause} variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isPlaying ? <Pause /> : <Play />}
+                {isPlaying ? <IconPlayerPause /> : <IconPlayerPlay />}
               </Button>
             }
             content={<p>{isPlaying ? "Pause" : "Play"}</p>}
@@ -246,7 +253,7 @@ const VoiceRecorder = () => {
               size="sm"
               className="h-8 w-8 p-0"
             >
-              <Trash className="text-red-500" />
+              <IconTrash className="text-red-500" />
             </Button>
           }
           content={<p>Delete</p>}
@@ -266,7 +273,7 @@ const VoiceRecorder = () => {
                 startRecording();
               }}
             >
-              <Mic />
+              <IconMicrophone />
             </Button>
           }
           content={<p>Record</p>}
@@ -280,7 +287,7 @@ const VoiceRecorder = () => {
               className="h-8 w-8 p-0"
               onClick={async () => await stopAndUploadRecording()}
             >
-              <Square />
+              <IconSquare />
             </Button>
           }
           content={<p>Stop</p>}
@@ -291,38 +298,40 @@ const VoiceRecorder = () => {
 };
 
 export const useVoiceRecordStore = create<VoiceRecordState>()(
-  immer((set) => ({
-    isRecording: false,
-    audioUrl: null,
-    mediaRecorder: null,
-    stream: null,
-    analyser: null,
-    audioContext: null,
-    source: null,
-    chunks: [],
-    fileKey: null,
-    setIsRecording: (value) => set({ isRecording: value }),
-    setAudioUrl: (value) => set({ audioUrl: value }),
-    setMediaRecorder: (recorder) => set({ mediaRecorder: recorder }),
-    setStream: (stream) => set({ stream }),
-    setAnalyser: (analyser) => set({ analyser }),
-    setAudioContext: (context) => set({ audioContext: context }),
-    setSource: (source) => set({ source }),
-    setChunks: (chunks) => set({ chunks }),
-    setFileKey: (value) => set({ fileKey: value }),
-    resetRecordingState: () =>
-      set({
-        isRecording: false,
-        audioUrl: null,
-        mediaRecorder: null,
-        stream: null,
-        analyser: null,
-        audioContext: null,
-        source: null,
-        chunks: [],
-        fileKey: null,
-      }),
-  })),
+  immer(
+    (set): VoiceRecordState => ({
+      isRecording: false,
+      audioUrl: null,
+      mediaRecorder: null,
+      stream: null,
+      analyser: null,
+      audioContext: null,
+      source: null,
+      chunks: [],
+      fileKey: null,
+      setIsRecording: (value) => set({ isRecording: value }),
+      setAudioUrl: (value) => set({ audioUrl: value }),
+      setMediaRecorder: (recorder) => set({ mediaRecorder: recorder }),
+      setStream: (stream) => set({ stream }),
+      setAnalyser: (analyser) => set({ analyser }),
+      setAudioContext: (context) => set({ audioContext: context }),
+      setSource: (source) => set({ source }),
+      setChunks: (chunks) => set({ chunks }),
+      setFileKey: (value) => set({ fileKey: value }),
+      resetRecordingState: () =>
+        set({
+          isRecording: false,
+          audioUrl: null,
+          mediaRecorder: null,
+          stream: null,
+          analyser: null,
+          audioContext: null,
+          source: null,
+          chunks: [],
+          fileKey: null,
+        }),
+    }),
+  ),
 );
 
 export default VoiceRecorder;

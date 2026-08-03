@@ -6,7 +6,7 @@ export const fbPageview = () => {
   if (globalThis.fbq) globalThis.fbq("track", "PageView");
 };
 
-export const fbEvent = (name, options = {}, custom = true) => {
+export const fbEvent = (name: string, options: Record<string, unknown> = {}, custom = true) => {
   if (custom) {
     if (globalThis.fbq) globalThis.fbq("trackCustom", name, options);
   } else if (globalThis.fbq) globalThis.fbq("track", name, options);

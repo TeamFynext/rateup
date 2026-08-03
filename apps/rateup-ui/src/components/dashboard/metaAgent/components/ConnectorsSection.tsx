@@ -1,4 +1,4 @@
-import { Plug, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { IconPlug, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
@@ -66,11 +66,14 @@ export function ConnectorsSection({ waSettingsId }: { waSettingsId: string }) {
             disabled={sync.isPending}
             onClick={() => sync.mutate()}
           >
-            <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+            <IconRefresh
+              data-icon="inline-start"
+              className={sync.isPending ? "animate-spin" : ""}
+            />
             Sync
           </Button>
           <Button size="sm" onClick={() => setAdding((v) => !v)}>
-            <Plus data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             Add connector
           </Button>
         </div>
@@ -163,7 +166,7 @@ export function ConnectorsSection({ waSettingsId }: { waSettingsId: string }) {
             <div key={c.id} className="rounded-lg border p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5">
-                  <Plug className="mt-0.5 shrink-0 text-muted-foreground" />
+                  <IconPlug className="mt-0.5 shrink-0 text-muted-foreground" />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{c.name}</span>
@@ -182,7 +185,7 @@ export function ConnectorsSection({ waSettingsId }: { waSettingsId: string }) {
                   disabled={deleteConnector.isPending}
                   onClick={() => deleteConnector.mutate(c.id)}
                 >
-                  <Trash2 className="text-destructive" />
+                  <IconTrash className="text-destructive" />
                 </Button>
               </div>
               {c.authType === "API_KEY" && (

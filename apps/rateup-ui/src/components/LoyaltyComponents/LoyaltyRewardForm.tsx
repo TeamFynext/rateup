@@ -1,7 +1,9 @@
-import { Info } from "lucide-react";
+import { IconInfoCircle } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -42,9 +44,16 @@ interface LoyaltyRewardFormProps {
   setTimeRestrictionsEnabled: (val: boolean) => void;
 
   // Data
-  loyaltyTiers: any[] | undefined;
-  loyaltyTemplates: any[] | undefined;
+  loyaltyTiers: LoyaltyTier[] | undefined;
+  loyaltyTemplates: WaTemplateListEntry[] | undefined;
 }
+
+/**
+ * The numeric fields are `z.coerce.number()`, whose *input* type is `unknown`, so
+ * react-hook-form hands their value back unnarrowed. The inputs render it as typed.
+ */
+const numberInputValue = (value: unknown): string | number =>
+  typeof value === "number" || typeof value === "string" ? value : "";
 
 export function LoyaltyRewardForm({
   category,
@@ -83,7 +92,9 @@ export function LoyaltyRewardForm({
                 <Input
                   id={field.name}
                   aria-invalid={fieldState.invalid}
-                  placeholder={`e.g., ${loyaltyTiers?.[0]?.program?.currencyCode || "INR"} 10 Cashback, Free Coffee, 20% OFF`}
+                  // NOTE: the tiers endpoint does not include the program, so this placeholder
+                  // has always shown the "INR" fallback.
+                  placeholder={"e.g., INR 10 Cashback, Free Coffee, 20% OFF"}
                   {...field}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -155,6 +166,7 @@ export function LoyaltyRewardForm({
                     placeholder="1000"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -177,6 +189,7 @@ export function LoyaltyRewardForm({
                     placeholder="10"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                   />
                   <FieldDescription>The amount to return to the customer</FieldDescription>
@@ -201,6 +214,7 @@ export function LoyaltyRewardForm({
                     min="0"
                     max="100"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                   />
                   <FieldDescription>Percentage to discount from the total</FieldDescription>
@@ -225,6 +239,7 @@ export function LoyaltyRewardForm({
                     placeholder="25"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                   <FieldDescription>Estimated monetary value of this reward</FieldDescription>
@@ -286,6 +301,7 @@ export function LoyaltyRewardForm({
                           placeholder="100"
                           min="0"
                           {...field}
+                          value={numberInputValue(field.value)}
                           onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                         />
                         <FieldDescription>
@@ -556,6 +572,7 @@ export function LoyaltyRewardForm({
                     placeholder="20"
                     min="0"
                     {...field}
+                    value={numberInputValue(field.value)}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -577,6 +594,7 @@ export function LoyaltyRewardForm({
                   placeholder="100"
                   min="0"
                   {...field}
+                  value={numberInputValue(field.value)}
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                 />
                 <FieldDescription>Minimum order value required to use this coupon</FieldDescription>
@@ -601,6 +619,7 @@ export function LoyaltyRewardForm({
                       placeholder="500"
                       min="1"
                       {...field}
+                      value={numberInputValue(field.value)}
                       onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
                     />
                     <FieldDescription>
@@ -624,6 +643,7 @@ export function LoyaltyRewardForm({
                       placeholder="1"
                       min="1"
                       {...field}
+                      value={numberInputValue(field.value)}
                       onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
                     />
                     <FieldDescription>How many times a single user can redeem</FieldDescription>
@@ -805,6 +825,7 @@ export function LoyaltyRewardForm({
                   placeholder="100"
                   min="1"
                   {...field}
+                  value={numberInputValue(field.value)}
                   onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 />
                 <FieldDescription>Total number of gifts available for assignment</FieldDescription>
@@ -932,7 +953,7 @@ export function LoyaltyRewardForm({
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
+              <IconInfoCircle className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-[#1873E8] mb-1">
                   Referral System is Automated

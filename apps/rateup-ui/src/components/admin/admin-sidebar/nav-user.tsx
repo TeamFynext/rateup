@@ -1,5 +1,5 @@
+import { IconLogout, IconSelector } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -21,11 +21,7 @@ import {
 export function NavUser({
   user,
 }: Readonly<{
-  user: {
-    userName: string;
-    email: string;
-    profilePhoto: string;
-  };
+  user: UserData | undefined;
 }>) {
   const { isMobile } = useSidebar();
 
@@ -42,14 +38,14 @@ export function NavUser({
             }
           >
             <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage src={user.profilePhoto} alt={user.userName} />
+              <AvatarImage src={user?.profilePhoto} alt={user?.userName} />
               <AvatarFallback className="rounded-lg">CN</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.userName}</span>
-              <span className="truncate text-xs">{user.email}</span>
+              <span className="truncate font-medium">{user?.userName}</span>
+              <span className="truncate text-xs">{user?.email}</span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4" />
+            <IconSelector className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -61,12 +57,12 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user.profilePhoto} alt={user.userName} />
+                    <AvatarImage src={user?.profilePhoto} alt={user?.userName} />
                     <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.userName}</span>
-                    <span className="truncate text-xs">{user.email}</span>
+                    <span className="truncate font-medium">{user?.userName}</span>
+                    <span className="truncate text-xs">{user?.email}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -78,7 +74,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link to="/logout" />}>
-                <LogOut />
+                <IconLogout />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuGroup>

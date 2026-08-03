@@ -1,20 +1,21 @@
-import { useNavigate } from "@tanstack/react-router";
 import {
-  Bell,
-  ChevronLeft,
-  Columns,
-  LayoutGrid,
-  Settings,
-  Trash2,
-  ArrowRight,
-  Users,
-  Tag,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+  IconArrowRight,
+  IconBell,
+  IconChevronLeft,
+  IconColumns,
+  IconLayoutGrid,
+  IconSettings,
+  IconTag,
+  IconTrash,
+  IconUsers,
+  type TablerIcon,
+} from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useId, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateBoardMutation, useBoardQueries } from "@/backend/tickets/tickets.query";
+import type { EditableColumn } from "@/components/Tickets/ManageColumnsDialog.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,7 +38,7 @@ import { ManageLabels } from "./ManageLabels.tsx";
 import type { Board } from "./types.ts";
 
 interface SettingsFeatureCardProps {
-  icon: LucideIcon;
+  icon: TablerIcon;
   color: string;
   title: string;
   desc: string;
@@ -79,7 +80,7 @@ function SettingsFeatureCard({
           )}
         >
           {actionLabel}
-          <ArrowRight
+          <IconArrowRight
             size={12}
             strokeWidth={2.5}
             className={cn("transition-transform duration-150", hovered && "translate-x-0.5")}
@@ -203,7 +204,7 @@ function NotificationSettingsForm({ board, onSave }: NotificationSettingsFormPro
         {t("Select users who should receive notifications")}
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3.5 py-3">
-        <Users size={15} className="text-muted-foreground" strokeWidth={1.75} />
+        <IconUsers size={15} className="text-muted-foreground" strokeWidth={1.75} />
         <span className="font-body text-sm text-muted-foreground">
           {t("User selection coming soon")}
         </span>
@@ -251,7 +252,8 @@ function NotificationSettingsForm({ board, onSave }: NotificationSettingsFormPro
 
       <div className="mt-6 flex justify-end">
         <Button size="sm" onClick={() => onSave(s)}>
-          <Bell size={14} strokeWidth={2} className="mr-1.5" /> {t("Save Notification Settings")}
+          <IconBell size={14} strokeWidth={2} className="mr-1.5" />{" "}
+          {t("Save Notification Settings")}
         </Button>
       </div>
     </div>
@@ -269,7 +271,7 @@ export default function TicketSettings({
   selectedBoard: Board;
   teamOptions: { value: string; label: string }[];
   onClose?: () => void;
-  onSaveColumns?: (newColumns: any[], deletedIds: string[]) => void;
+  onSaveColumns?: (newColumns: EditableColumn[], deletedIds: string[]) => void;
 }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -336,11 +338,11 @@ export default function TicketSettings({
               onClick={() => setPanel("grid")}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-none bg-secondary text-muted-foreground cursor-pointer transition-colors hover:bg-secondary/80 hover:text-foreground"
             >
-              <ChevronLeft size={15} strokeWidth={2.5} />
+              <IconChevronLeft size={15} strokeWidth={2.5} />
             </button>
           )}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Settings size={20} />
+            <IconSettings size={20} />
           </div>
           <div className="flex-1">
             <div className="font-display text-xl font-extrabold text-foreground">
@@ -354,7 +356,7 @@ export default function TicketSettings({
           {panel === "grid" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <SettingsFeatureCard
-                icon={LayoutGrid}
+                icon={IconLayoutGrid}
                 color="#1C518E"
                 title={t("Board Details")}
                 desc={t("Rename the board or update its description.")}
@@ -362,7 +364,7 @@ export default function TicketSettings({
                 onAction={() => setIsBoardDetailsOpen(true)}
               />
               <SettingsFeatureCard
-                icon={Columns}
+                icon={IconColumns}
                 color="#F8951D"
                 title={t("Manage Columns")}
                 desc={t("Add, reorder, rename or recolor the workflow columns.")}
@@ -370,7 +372,7 @@ export default function TicketSettings({
                 onAction={() => setIsManageColumnsOpen(true)}
               />
               <SettingsFeatureCard
-                icon={Bell}
+                icon={IconBell}
                 color="#5B21B6"
                 title={t("Notifications")}
                 desc={t("Choose when to send email or WhatsApp alerts for ticket activity.")}
@@ -378,7 +380,7 @@ export default function TicketSettings({
                 onAction={() => setPanel("notifications")}
               />
               <SettingsFeatureCard
-                icon={Tag}
+                icon={IconTag}
                 color="#10B981"
                 title={t("Manage Labels")}
                 desc={t("Create, edit or delete labels available on this board.")}
@@ -386,7 +388,7 @@ export default function TicketSettings({
                 onAction={() => setIsManageLabelsOpen(true)}
               />
               <SettingsFeatureCard
-                icon={Trash2}
+                icon={IconTrash}
                 color="#DC2626"
                 title={t("Delete Board")}
                 danger

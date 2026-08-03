@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
+import type { WaFlowFormElement } from "@/types/global";
 import { decryptPrivateKey } from "@/utils/encryption/index.ts";
 import { pushToSessionStorage } from "@/utils/essential/index.ts";
 
 import Responses from "../Response/Responses.tsx";
 import WaResponses from "../Response/WaResponses.tsx";
+import type { WaFlowQuestion } from "../Response/WaResponses.tsx";
 
 const Result = ({
   survey,
@@ -26,6 +28,12 @@ const Result = ({
   setEncryptionPassword,
   flow = null,
   version = 1,
+}: {
+  survey: Survey;
+  encryptionpassword?: string;
+  setEncryptionPassword: (password: string) => void;
+  flow?: Pick<DbFlow, "json"> | null;
+  version?: number;
 }) => {
   const { defaultLanguage } = useContext(SelectedLanguageContext);
   // end to end encryption logic for result page begins here
@@ -45,17 +53,28 @@ const Result = ({
   // .
   const flowQuestions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen) =>
-      screen.layout.children
-        .filter((child) => child.type !== QuestionType2.Footer)
-        .map(({ id, label, metaType, type, name, "data-source": dataSource, header }) => ({
-          id,
-          label,
-          metaType: type || metaType,
-          dataSource,
-          name,
-          header,
-        }))
-        .filter(({ name }) => name),
+      (screen.layout.children as unknown as WaFlowFormElement[])
+        // v2 flows store elements directly under the screen layout.
+        .filter((child) => String(child.type) !== String(QuestionType2.Footer))
+        .map(
+          ({
+            id,
+            label,
+            metaType,
+            type,
+            name,
+            "data-source": dataSource,
+            header,
+          }: WaFlowFormElement & { metaType?: WaFlowQuestion["metaType"] }) => ({
+            id,
+            label,
+            metaType: (type || metaType) as unknown as WaFlowQuestion["metaType"],
+            dataSource: dataSource as WaFlowQuestion["dataSource"],
+            name,
+            header,
+          }),
+        )
+        .filter(({ name }: { name?: string }) => name),
     );
   }, [flow]);
   if (isQLoading) return <RateupLoader />;
@@ -65,9 +84,13 @@ const Result = ({
   return (
     <>
       {version === 1 ? (
-        <Responses survey={survey} defaultLanguage={defaultLanguage} questions={questions} />
+        <Responses survey={survey} defaultLanguage={defaultLanguage} questions={questions ?? []} />
       ) : (
-        <WaResponses survey={survey} defaultLanguage={defaultLanguage} questions={flowQuestions} />
+        <WaResponses
+          survey={survey}
+          defaultLanguage={defaultLanguage}
+          questions={flowQuestions ?? []}
+        />
       )}
       <EncryptionPasswordModal
         passwordModalOpened={passwordModalOpened}
@@ -94,15 +117,17 @@ function EncryptionPasswordModal({
   close,
 }: EncryptionPasswordModalProps) {
   const uid = useId();
-  const {
-    user: { encryptionKeys },
-  } = useUser();
+  const { user } = useUser();
+  const encryptionKeys = user?.encryptionKeys;
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const [encryptionpassword, setEncryptionPassword] = useState("");
 
   const onSubmitPassword = useCallback(async () => {
-    const { privateKey } = await decryptPrivateKey(encryptionKeys?.privateKey, encryptionpassword);
+    const { privateKey } = await decryptPrivateKey(
+      encryptionKeys?.privateKey ?? "",
+      encryptionpassword,
+    );
     if (privateKey) {
       close();
       pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);

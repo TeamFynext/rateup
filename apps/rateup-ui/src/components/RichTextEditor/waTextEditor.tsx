@@ -1,21 +1,25 @@
-import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconBolt,
+  IconClearFormatting,
+  IconDots,
+  IconFileFilled,
+  IconLayoutBoard,
+  IconPaperclip,
+  IconRobot,
+  IconTrash,
+  IconTypography,
+  IconWaveSine,
+  IconX,
+} from "@tabler/icons-react";
 import { Plugin } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
-import {
-  LayoutTemplate,
-  MoreHorizontal,
-  Paperclip,
-  Redo2,
-  RemoveFormatting,
-  TypeOutline,
-  Undo2,
-  X,
-  Zap,
-} from "lucide-react";
+import type { Editor } from "@tiptap/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
 import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
 import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
@@ -37,6 +41,7 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
@@ -63,8 +68,10 @@ import { createWaExtensions } from "./wa-editor/extensions.ts";
 import { parseFromWhatsAppFormat } from "./wa-editor/format.tsx";
 import { isJSONString, WaQuickReply } from "./WaQuickReply/index.tsx";
 interface WaTextEditorProps {
-  handleInputChange: (value) => void;
-  content: string;
+  /** Receives the editor's Tiptap document (`editor.getJSON()`). */
+  handleInputChange: (value: TiptapNode) => void;
+  /** Initial content: a Tiptap document, or WhatsApp-formatted/plain text. */
+  content: TiptapNode | string;
   className?: string;
   mah?: number | string;
   placeholder?: string;
@@ -260,7 +267,7 @@ function WaTextEditor({
       platform === MessagePlatform.INSTAGRAM &&
       whatsappSettingsPhoneId !== selectedContact?.lastMessage?.sourceIdentifier
     ) {
-      updatePhoneId(selectedContact.lastMessage.sourceIdentifier);
+      updatePhoneId(selectedContact?.lastMessage.sourceIdentifier ?? "");
     }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
 
@@ -271,7 +278,7 @@ function WaTextEditor({
     return (
       <AccountSelector
         onChange={(phoneId) => {
-          updatePhoneId(phoneId);
+          updatePhoneId(phoneId ?? "");
         }}
         value={whatsappSettingsPhoneId}
         // Shrinks with the row on a phone (the value is line-clamped, so it
@@ -285,8 +292,8 @@ function WaTextEditor({
   };
 
   useEffect(() => {
-    const handler = async (e: any) => {
-      const files: File[] = e.detail;
+    const handler = async (e: Event) => {
+      const files: File[] = (e as CustomEvent<File[]>).detail;
 
       for (const file of files) {
         try {
@@ -327,7 +334,11 @@ function WaTextEditor({
             return (
               <div className="relative inline-flex" key={me?.key}>
                 <span className="absolute -top-2 -right-2 z-10 flex size-4 items-center justify-center rounded-full bg-red-600 text-white">
-                  <IconX onClick={() => removeMedia(me.key)} size={12} className="cursor-pointer" />
+                  <IconX
+                    onClick={() => removeMedia(me.key ?? "")}
+                    size={12}
+                    className="cursor-pointer"
+                  />
                 </span>
                 <div
                   className="w-[50px] h-[50px] border-2 border-white flex flex-col justify-center items-center relative"
@@ -363,7 +374,7 @@ function WaTextEditor({
               className="h-6 text-xs"
               onClick={() => setShowQuickReplies(false)}
             >
-              <X className="w-3 h-3" />
+              <IconX className="w-3 h-3" />
             </Button>
           </div>
           <div className="overflow-auto min-w-40 min-h-20 max-h-50 ">
@@ -403,7 +414,7 @@ function WaTextEditor({
       )}
       <div className={`flex items-start gap-2 ${border ? "p-2 sm:p-4" : ""} pb-0`}>
         <div className="min-w-0 flex-1">
-          <ToolbarProvider editor={editor}>
+          <ToolbarProvider editor={editor!}>
             <TooltipProvider>
               {inbox && !quickRepliesControlled && (
                 <div className="flex items-center justify-end px-2 pb-1">
@@ -415,7 +426,7 @@ function WaTextEditor({
                         className="h-7 w-7 p-0"
                         onClick={() => setShowQuickReplies((prev) => !prev)}
                       >
-                        <Zap className="w-4 h-4 text-cyan-600" />
+                        <IconBolt className="w-4 h-4 text-cyan-600" />
                       </Button>
                     }
                     content={<p>Quick Replies</p>}
@@ -465,7 +476,7 @@ function WaTextEditor({
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <TypeOutline className="w-5 h-5" />
+                            <IconTypography className="w-5 h-5" />
                           </Button>
                         }
                         content={<span>Format Message</span>}
@@ -487,7 +498,7 @@ function WaTextEditor({
                               editor?.chain().focus().unsetAllMarks().clearNodes().run()
                             }
                           >
-                            <RemoveFormatting className="h-4 w-4" />
+                            <IconClearFormatting className="h-4 w-4" />
                           </Button>
                           <CodeToolbar />
                         </div>
@@ -517,7 +528,7 @@ function WaTextEditor({
                         <CustomTooltip
                           trigger={
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Paperclip className="w-5 h-5" />
+                              <IconPaperclip className="w-5 h-5" />
                             </Button>
                           }
                           content={<span>Insert Media</span>}
@@ -552,7 +563,7 @@ function WaTextEditor({
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" onClick={() => openModal()} size="sm">
-                            <LayoutTemplate className="w-4 h-4" />
+                            <IconLayoutBoard className="w-4 h-4" />
                           </Button>
                         }
                         content={<span>Template</span>}
@@ -592,13 +603,13 @@ function WaTextEditor({
                           />
                         }
                       >
-                        <MoreHorizontal className="size-5" />
+                        <IconDots className="size-5" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
                         {platform === MessagePlatform.WHATSAPP && (
                           <>
                             <DropdownMenuItem className="gap-2 text-xs" onClick={() => openModal()}>
-                              <LayoutTemplate className="size-4" />
+                              <IconLayoutBoard className="size-4" />
                               Template
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -622,14 +633,14 @@ function WaTextEditor({
                           className="gap-2 text-xs"
                           onClick={() => editor?.chain().focus().undo().run()}
                         >
-                          <Undo2 className="size-4" />
+                          <IconArrowBackUp className="size-4" />
                           Undo
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="gap-2 text-xs"
                           onClick={() => editor?.chain().focus().redo().run()}
                         >
-                          <Redo2 className="size-4" />
+                          <IconArrowForwardUp className="size-4" />
                           Redo
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -679,7 +690,7 @@ function WaTextEditor({
 
 export default WaTextEditor;
 
-const ShowMedia = ({ opened, close }) => {
+const ShowMedia = ({ opened, close }: { opened: boolean; close: () => void }) => {
   const { selectedMedia: media, removeMedia } = useMediaStore();
   if (!media) return null;
   return (
@@ -697,7 +708,7 @@ const ShowMedia = ({ opened, close }) => {
             aria-label="Remove media"
             className="bg-red-600 text-white hover:bg-red-700"
             onClick={async () => {
-              await removeMedia(media.key);
+              await removeMedia(media.key ?? "");
               close();
             }}
           >
@@ -715,7 +726,7 @@ const ShowMedia = ({ opened, close }) => {
   );
 };
 
-const WaTextCharacterCount = ({ editor, max }) => {
+const WaTextCharacterCount = ({ editor, max }: { editor: Editor | null; max: number }) => {
   const percentage = editor
     ? Math.round((100 / max) * editor.storage.characterCount.characters())
     : 0;

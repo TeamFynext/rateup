@@ -1,7 +1,9 @@
 import { IconSettings2 } from "@tabler/icons-react";
 import { useEffect } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { SurveyUpdateMutation } from "@/components/Survey/Settings/updateSettings.ts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -68,6 +70,20 @@ function KioskFetchLocSkipPreview({
   surveyId,
   webSurveyAutoTransitionToNextQues,
   setwebSurveyAutoTransitionToNextQues,
+}: {
+  enabledModules: string[];
+  kioskMode: boolean;
+  setKioskMode: Dispatch<SetStateAction<boolean>>;
+  editSurvey: SurveyUpdateMutation;
+  hasGoogleReview: boolean;
+  location: boolean;
+  setLocation: Dispatch<SetStateAction<boolean>>;
+  preview: boolean;
+  setPreview: Dispatch<SetStateAction<boolean>>;
+  survey: Survey;
+  surveyId: string;
+  webSurveyAutoTransitionToNextQues: boolean;
+  setwebSurveyAutoTransitionToNextQues: Dispatch<SetStateAction<boolean>>;
 }) {
   const { t: translations } = useTranslation();
 

@@ -35,7 +35,7 @@ function End() {
     titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
   };
 
-  const texts = questions?.find((questionObj) => questionObj.type === PageType.ThankYou);
+  const texts = questions?.find((questionObj: Question) => questionObj.type === PageType.ThankYou);
 
   return (
     <ThankYou

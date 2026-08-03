@@ -1,6 +1,6 @@
-import { IconPencil, IconTrash } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconLoader2, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
+import type { MouseEvent } from "react";
 
 import { useDeleteThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -11,6 +11,11 @@ function RenderOption({
   surveyActiveThemeId,
   comboboxHandleChange,
   handleOpenRenameThemeModal,
+}: {
+  option: { value: string; label: string };
+  surveyActiveThemeId?: string;
+  comboboxHandleChange?: (value: string) => void;
+  handleOpenRenameThemeModal?: (themeId: string, oldName?: string) => void;
 }) {
   const isDefaultOption = option.label === "Default Theme";
 
@@ -21,17 +26,17 @@ function RenderOption({
 
   const deleteThemeMutation = useDeleteThemeMutation();
 
-  const handleDeleteBtnClick = async (e) => {
+  const handleDeleteBtnClick = async (e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     setIsDeletingTheme(true);
     await deleteThemeMutation.mutateAsync(option.value);
     setIsDeletingTheme(false);
-    comboboxHandleChange(surveyActiveThemeId);
+    comboboxHandleChange?.(surveyActiveThemeId ?? "");
   };
 
-  const handleEditBtnClick = async (e) => {
+  const handleEditBtnClick = async (e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
-    handleOpenRenameThemeModal(option.value);
+    handleOpenRenameThemeModal?.(option.value);
   };
 
   return (
@@ -66,7 +71,7 @@ function RenderOption({
             disabled
             onClick={(e) => e.stopPropagation()}
           >
-            <Loader2 className="size-3 animate-spin" />
+            <IconLoader2 className="size-3 animate-spin" />
           </Button>
         )}
         {isSurveyThemeActive && (

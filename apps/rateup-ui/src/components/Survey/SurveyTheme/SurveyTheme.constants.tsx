@@ -1,3 +1,6 @@
+import type { ComponentType } from "react";
+
+import type { QuestionType } from "@/types/enums.ts";
 import { PageType } from "@/types/enums.ts";
 
 import BackgroundStyles from "./components/BackgroundStyles.tsx";
@@ -128,14 +131,23 @@ const languagePageEditors = [
   },
 ];
 
-export const supportedPageEditors = {
+/** One collapsible editor section within a page's theme panel. */
+export interface PageThemeEditor {
+  id: string;
+  Component: ComponentType<Record<string, never>>;
+  value: string;
+  label: string;
+}
+
+// Keyed by page tab, which arrives as a plain string.
+export const supportedPageEditors: Record<string, PageThemeEditor[]> = {
   surveyPage: surveyPageEditors,
   welcomePage: welcomePageEditors,
   thankyouPage: thankyouPageEditors,
   languagePage: languagePageEditors,
 };
 
-export const getSurveyThemeKeyOf = (selectedPageTab) => {
+export const getSurveyThemeKeyOf = (selectedPageTab: string) => {
   switch (selectedPageTab) {
     case "surveyPage":
       return "surveyTheme";
@@ -148,7 +160,7 @@ export const getSurveyThemeKeyOf = (selectedPageTab) => {
   }
 };
 
-export const getSurveyThemeTabValueFromPageType = (pageType) => {
+export const getSurveyThemeTabValueFromPageType = (pageType: PageType) => {
   switch (pageType) {
     case PageType.Welcome: {
       return ThemeTabEnum.WELCOME;
@@ -162,7 +174,7 @@ export const getSurveyThemeTabValueFromPageType = (pageType) => {
   }
 };
 
-export const getSurveyThemeKeyFromPageType = (pageType) => {
+export const getSurveyThemeKeyFromPageType = (pageType: PageType | QuestionType) => {
   switch (pageType) {
     case PageType.Welcome: {
       return "welcomeTheme";

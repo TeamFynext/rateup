@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { IconBell } from "@tabler/icons-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -6,10 +6,11 @@ import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 import { EventTriggerItem } from "./EventTriggerItem.tsx";
+import type { EventTriggersFormValues } from "./schemas.ts";
 import { LoyaltyTemplateTypes } from "./utils.ts";
 
 interface TransactionNotificationsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<EventTriggersFormValues>;
   isPending: boolean;
   onToggle: (eventType: LoyaltyEventType, enabled: boolean) => void;
   onSavePointsIssued: () => void;
@@ -51,7 +52,7 @@ export function TransactionNotifications({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Bell className="w-4 h-4 text-primary" />
+          <IconBell className="w-4 h-4 text-primary" />
           {t("Transaction Notifications")}
         </CardTitle>
       </CardHeader>

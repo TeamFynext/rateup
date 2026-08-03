@@ -10,9 +10,9 @@ const analyseEvent = ({
   action: string;
   category: string;
   label?: string;
-  value?: any;
+  value?: number | string;
 }) => {
-  globalThis.gtag("event", action, {
+  globalThis.gtag?.("event", action, {
     event_category: category,
     event_label: label ?? undefined,
     value: value ?? undefined,
@@ -31,7 +31,7 @@ export const setGAConsent = (consent: "granted" | "denied") => {
 };
 
 // For button click event
-export const gAnalyticsAndFbEvent = (gAcategory, fbEventName, label) => {
+export const gAnalyticsAndFbEvent = (gAcategory: string, fbEventName: string, label: string) => {
   if (isProduction) {
     analyseEvent({
       action: "button_click",

@@ -8,6 +8,8 @@ import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
+import type { FlowInputProps } from "./inputProps.ts";
+import { asList } from "./inputProps.ts";
 
 const MIN_IMAGES = 1;
 
@@ -16,10 +18,10 @@ interface CarouselImage {
   "alt-text": string;
 }
 
-const ImageCarouselInput = (props) => {
+const ImageCarouselInput = (props: FlowInputProps<CarouselImage[]>) => {
   const uid = useId();
   const MAX_IMAGES = props.maxImages || 3;
-  const resetRefs = useRef<Array<React.MutableRefObject<(() => void) | null>>>([]);
+  const resetRefs = useRef<Array<React.RefObject<(() => void) | null>>>([]);
   const [images, setImages] = useState<CarouselImage[]>([{ src: "", "alt-text": "" }]);
 
   const getResetRef = (idx: number) => {
@@ -29,12 +31,13 @@ const ImageCarouselInput = (props) => {
 
   const commit = (next: CarouselImage[]) => {
     setImages(next);
-    props.onChange(next);
+    props.onChange?.(next);
   };
 
   useEffect(() => {
-    if (props.value?.length > 0) {
-      setImages(props.value);
+    const value = asList<CarouselImage>(props.value);
+    if (value.length > 0) {
+      setImages(value);
     }
   }, [props.value]);
 

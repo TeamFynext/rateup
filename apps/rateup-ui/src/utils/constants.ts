@@ -379,3 +379,10 @@ export const WaMessageClosedStatus = [
   WaMessageAssignStatus.RESOLVED,
   WaMessageAssignStatus.UNRESOLVED,
 ];
+
+/**
+ * Default sort for contact-style listings (contacts, contact groups, loyalty customers).
+ * Lives here rather than beside the contacts table so the query layer can use it as a
+ * fallback without importing from `@/components`.
+ */
+export const CONTACT_SORT = { id: "createdAt", desc: true };

@@ -1,10 +1,22 @@
 import PlanCard from "../Card/PlanCard.tsx";
+import type { Cart } from "../store/RouteAndCartStore.ts";
+import type { PricingPlan } from "../types.ts";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const WhatsAppSection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
-  const whatsAppPlan = [] // plans, removing for now
+export const WhatsAppSection = ({
+  largeScreen,
+  handlePlanSelection,
+  freePlan,
+  currencySymbol,
+}: {
+  largeScreen: boolean;
+  handlePlanSelection: (cart: Cart) => void;
+  freePlan: PricingPlan[];
+  currencySymbol: string;
+}) => {
+  const whatsAppPlan = ([] as PricingPlan[]) // plans, removing for now
     ?.filter((item) => item?.name?.includes("WhatsApp"))
-    ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
+    ?.sort((a, b) => Number(a?.paymentPlan?.amount) - Number(b?.paymentPlan?.amount));
 
   whatsAppPlan?.push({
     displayName: "Business",
@@ -30,7 +42,7 @@ export const WhatsAppSection = ({ largeScreen, handlePlanSelection, freePlan, cu
       <div className="flex flex-wrap justify-center gap-8">
         {whatsAppPlans?.map((data, index) => {
           let isPopular = false;
-          isPopular = data?.displayName && data?.displayName.toLowerCase().includes("plus");
+          isPopular = !!data?.displayName?.toLowerCase().includes("plus");
 
           return (
             <div className="relative flex flex-col items-center" key={data?.id}>

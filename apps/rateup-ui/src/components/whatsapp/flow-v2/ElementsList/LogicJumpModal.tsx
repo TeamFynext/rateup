@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums.ts";
-import type { FlowLogicJump } from "@/types/global";
+import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
 import { getConditionsv2, getResponses2 } from "@/utils/survey/logic/logic.utils";
 
@@ -35,7 +35,8 @@ import useFlowStoreV3 from "../utils/store.ts";
 interface LogicJumpModalProps {
   opened: boolean;
   onClose: () => void;
-  elementId: string;
+  /** The element the jump is anchored to; absent for an element that has not been saved yet. */
+  elementId: string | undefined;
 }
 
 export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalProps) {
@@ -56,7 +57,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
       {
         conditions: [
           {
-            questionId: elementId,
+            questionId: elementId ?? "",
             condition: LogicCondition.Submitted,
             response: undefined,
           },
@@ -70,8 +71,11 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
   useEffect(() => {
     if (opened && !initializedRef.current) {
       const logicJumps = getLogicJumps(currentScreen?.id || "");
-      const elementLogicJumps = (logicJumps || []).filter((jump: any) =>
-        jump.conditions?.some((cond: any) => cond.questionId === elementId),
+      // This modal edits screen-level jumps only; component-level entries are
+      // filtered out by the condition shape they carry.
+      const elementLogicJumps = (logicJumps || []).filter(
+        (jump): jump is FlowLogicJump =>
+          jump.conditions?.some((cond) => cond.questionId === elementId) ?? false,
       );
       setLocalJumps(elementLogicJumps.length > 0 ? [...elementLogicJumps] : []);
       initializedRef.current = true;
@@ -116,13 +120,8 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
 
     try {
       const qType = question.metaType || question.type;
-      const conditions = getConditionsv2(qType as any);
-      return (conditions || [])
-        .map((c) => ({
-          label: c?.label || String(c?.value || c),
-          value: c?.value || c?.label || String(c),
-        }))
-        .filter((c) => c.value);
+      const conditions = getConditionsv2(qType);
+      return (conditions || []).map((c) => ({ label: String(c), value: c })).filter((c) => c.value);
     } catch (error) {
       console.error("Error getting conditions:", error);
       return [];
@@ -135,7 +134,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     if (!question) return [];
 
     try {
-      const responses = getResponses2(question as any);
+      const responses = getResponses2(question);
       if (!responses || responses.length === 0) return [];
       return responses
         .map((r) => {
@@ -160,8 +159,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
   const handleUpdateCondition = (
     jumpIndex: number,
     conditionIndex: number,
-    field: string,
-    value: any,
+    field: keyof FlowLogicCondition,
+    // Every editable field is chosen from a `Select`, which hands back `null` when cleared.
+    value: string | null,
   ) => {
     const updated = [...localJumps];
 
@@ -172,7 +172,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
 
     if (field === "questionId") {
       conditions[conditionIndex] = {
-        questionId: value,
+        questionId: value ?? "",
         condition: LogicCondition.Submitted,
         response: undefined,
       };
@@ -201,7 +201,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
               conditions: [
                 ...jump.conditions,
                 {
-                  questionId: elementId,
+                  questionId: elementId ?? "",
                   condition: LogicCondition.Submitted,
                   response: undefined,
                 },
@@ -225,9 +225,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     );
   };
 
-  const handleUpdateAction = (jumpIndex: number, action: any) => {
+  const handleUpdateAction = (jumpIndex: number, action: string | null) => {
     const updated = [...localJumps];
-    updated[jumpIndex].action = action;
+    updated[jumpIndex].action = action ?? "";
     setLocalJumps(updated);
   };
 
@@ -241,7 +241,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     const allLogicJumps = getLogicJumps(currentScreen.id);
 
     const otherJumps = (allLogicJumps || []).filter(
-      (jump: any) => !jump.conditions?.some((cond: any) => cond.questionId === elementId),
+      (jump) => !jump.conditions?.some((cond) => cond.questionId === elementId),
     );
 
     const allJumps = [...otherJumps, ...localJumps];
@@ -362,7 +362,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     <SelectValue placeholder={translations("Select condition")} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {getConditions(condition.questionId).map((c: any) => (
+                                    {getConditions(condition.questionId).map((c) => (
                                       <SelectItem key={c.value} value={c.value}>
                                         {c.label}
                                       </SelectItem>
@@ -381,7 +381,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     {translations("Response")}
                                   </FieldLabel>
                                   <Select
-                                    value={condition.response}
+                                    value={
+                                      Array.isArray(condition.response) ? "" : condition.response
+                                    }
                                     items={getResponseOptions(condition.questionId)}
                                     onValueChange={(value) =>
                                       handleUpdateCondition(jumpIndex, condIndex, "response", value)
@@ -394,7 +396,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                       <SelectValue placeholder={translations("Select response")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {getResponseOptions(condition.questionId).map((r: any) => (
+                                      {getResponseOptions(condition.questionId).map((r) => (
                                         <SelectItem key={r.value} value={r.value}>
                                           {r.label}
                                         </SelectItem>

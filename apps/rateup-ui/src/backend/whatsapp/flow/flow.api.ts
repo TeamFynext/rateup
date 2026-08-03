@@ -2,6 +2,7 @@ import type { CreateAxiosDefaults } from "axios";
 import { toast } from "sonner";
 
 import type { WaFlowJson, WaFlowWa } from "@/types/global";
+import { getApiErrorData } from "@/utils/apiError.ts";
 
 import { WHATSAPP_URL } from "..";
 import { axiosClient as ac } from "../../apiClient";
@@ -10,7 +11,6 @@ const axiosInstanceConfig: CreateAxiosDefaults = {
   timeout: 15000,
 };
 // cloning axios instance with default config
-// @ts-ignore  (Ignoring known error https://github.com/axios/axios/issues/5095)
 const axiosClient = ac.create(axiosInstanceConfig);
 
 axiosClient.interceptors.response.use(undefined, (error) => {
@@ -85,7 +85,7 @@ export async function updateFlow(dbFlowId: string, data: Partial<Omit<DbFlow, "i
     });
     return (await axiosClient.put(`${BASE}/${dbFlowId}`, data))?.data;
   } catch (error) {
-    return error?.response?.data;
+    return getApiErrorData(error);
   }
 }
 
@@ -130,7 +130,7 @@ export async function updateFlowMetaData(
     return (await axiosClient.put(`${BASE}/update-flow-metadata/${dbFlowId}`, data))?.data;
   } catch (error) {
     console.log(error, "error");
-    return error?.response?.data;
+    return getApiErrorData(error);
   }
 }
 

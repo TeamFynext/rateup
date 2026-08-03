@@ -1,5 +1,12 @@
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
+} from "@tabler/icons-react";
+import type { Dispatch, SetStateAction } from "react";
 
+import type { PaginationState } from "@/types/api.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 import { Button } from "../ui/button.tsx";
@@ -7,7 +14,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 const pageSizeOptions = PAGE_SIZE.map((size) => ({ value: size, label: size }));
 
-const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
+const ContactPagination = ({
+  totalPageCount,
+  setPagination,
+  pagination,
+}: {
+  totalPageCount: number;
+  setPagination: Dispatch<SetStateAction<PaginationState>>;
+  pagination: PaginationState;
+}) => {
   const totalPages = Math.max(1, Math.round(totalPageCount));
   const goTo = (pageIndex: number) =>
     setPagination((prev) => ({
@@ -27,7 +42,7 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
         disabled={isFirst}
         onClick={() => goTo(0)}
       >
-        <ChevronsLeft />
+        <IconChevronsLeft />
       </Button>
       <Button
         variant="outline"
@@ -36,7 +51,7 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
         disabled={isFirst}
         onClick={() => goTo(pagination.pageIndex - 1)}
       >
-        <ChevronLeft />
+        <IconChevronLeft />
       </Button>
       <span className="text-sm text-muted-foreground" aria-current="page">
         {pagination.pageIndex + 1} / {totalPages}
@@ -48,7 +63,7 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
         disabled={isLast}
         onClick={() => goTo(pagination.pageIndex + 1)}
       >
-        <ChevronRight />
+        <IconChevronRight />
       </Button>
       <Button
         variant="outline"
@@ -57,7 +72,7 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
         disabled={isLast}
         onClick={() => goTo(totalPages - 1)}
       >
-        <ChevronsRight />
+        <IconChevronsRight />
       </Button>
       <Select
         items={pageSizeOptions}

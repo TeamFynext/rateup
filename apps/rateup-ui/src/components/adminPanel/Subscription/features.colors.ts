@@ -1,6 +1,6 @@
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums.ts";
 
-export const subscriptionColorMap = {
+export const subscriptionColorMap: Partial<Record<sfpn, string>> = {
   [sfpn.Team]: "red",
   [sfpn.ReputationManagement]: "grape",
   [sfpn.WebSurvey]: "blue",

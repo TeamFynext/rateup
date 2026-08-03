@@ -1,5 +1,5 @@
+import { IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { X } from "lucide-react";
 
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -29,7 +29,7 @@ export function SubscriptionsDataTableToolbar<TData>({
         {isFiltered && (
           <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
-            <X />
+            <IconX />
           </Button>
         )}
       </div>

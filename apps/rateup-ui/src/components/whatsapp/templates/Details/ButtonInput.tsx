@@ -33,6 +33,7 @@ import {
   removeItem,
   setValue,
   type TemplateForm,
+  type TemplateFormValues,
 } from "./template-form.ts";
 import { useButtonState } from "./useButtonState.ts";
 
@@ -40,7 +41,21 @@ import { useButtonState } from "./useButtonState.ts";
  *  squeeze below a readable width — the row wraps instead. */
 const FIELD = "min-w-56 flex-1";
 
-const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailerIds }) => {
+const ButtonInput = ({
+  form,
+  index,
+  deleteButton,
+  data,
+  catalog,
+  productRetailerIds,
+}: {
+  form: TemplateForm;
+  index: number;
+  deleteButton: (index: number) => void;
+  data: Record<string, unknown>;
+  catalog?: unknown;
+  productRetailerIds?: string[];
+}) => {
   const { t: translations } = useTranslation();
   const uid = useId();
   /** Stable, unique DOM id for one of this button's fields, e.g. fid("text"). */
@@ -51,8 +66,14 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     example: form.watch()?.buttons?.[index]?.example,
   });
   if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
-    const screeenId = flows?.find((data) => data.flowId === form?.values?.buttons?.[index]?.flow_id)
-      ?.json?.screens?.[0]?.id;
+    // NOTE: reads the Mantine-era `form.values`, which a react-hook-form
+    // instance does not expose — so this is `undefined` today. Preserved as-is;
+    // see the migration notes.
+    const legacyValues = (form as unknown as { values?: TemplateFormValues }).values;
+    const screeenId = flows?.find(
+      (flow: { flowId?: string; json?: { screens?: Array<{ id?: string }> } }) =>
+        flow.flowId === legacyValues?.buttons?.[index]?.flow_id,
+    )?.json?.screens?.[0]?.id;
     if (screeenId) {
       data["navigate_screen"] = screeenId;
     }
@@ -60,9 +81,10 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
 
   function handleAddMPMSections() {
     const defaultValues = form.watch().defaultValues ?? {};
-    const catalog = defaultValues?.catalog ?? {
+    // The seed omits `catalogId`; it is filled in once a catalog is picked.
+    const catalog = (defaultValues?.catalog ?? {
       thumbnail_product_retailer_id: "",
-    };
+    }) as NonNullable<NonNullable<TemplateFormValues["defaultValues"]>["catalog"]>;
     const mpm = catalog?.mpm
       ? {
           ...catalog?.mpm,
@@ -80,7 +102,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
   const err = (field: string) => errorAt(form, `buttons.${index}.${field}`);
 
   let type = data.type;
-  if (data?.url?.includes("COPY_CODE")) {
+  if (String(data?.url ?? "").includes("COPY_CODE")) {
     type = WHATSAPP_BUTTON_TYPE.OTP;
   }
 
@@ -98,7 +120,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -141,7 +163,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -242,7 +264,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -316,7 +338,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.example?.length}
+                  length={form.watch()?.buttons?.[index]?.example?.length ?? 0}
                   maxValue={15}
                   atStart
                 />
@@ -351,7 +373,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.watch()?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                   maxValue={25}
                   atStart
                 />
@@ -395,7 +417,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                 />
                 <InputGroupAddon align="inline-end">
                   <LengthTracker
-                    length={form.watch()?.buttons?.[index]?.text?.length}
+                    length={form.watch()?.buttons?.[index]?.text?.length ?? 0}
                     maxValue={25}
                     atStart
                   />
@@ -450,7 +472,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             <Select
               items={toSelectOptions(productRetailerIds)}
               value={
-                form.watch()["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+                form.watch()["defaultValues"]?.["catalog"]?.["thumbnail_product_retailer_id"] ?? ""
               }
               onValueChange={(value) =>
                 setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
@@ -514,7 +536,8 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               <Select
                 items={toSelectOptions(productRetailerIds)}
                 value={
-                  form.watch()["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+                  form.watch()["defaultValues"]?.["catalog"]?.["thumbnail_product_retailer_id"] ??
+                  ""
                 }
                 onValueChange={(value) =>
                   setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
@@ -557,46 +580,48 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             Add Sections
             <IconChevronDown size={15} />
           </Button>
-          {form.watch().defaultValues?.catalog?.mpm?.sections?.map((_sec, index) => (
-            <div
-              className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background p-3"
-              key={index}
-            >
-              <Field className={FIELD}>
-                <FieldLabel htmlFor={fid(`section-${index}-title`)}>Section Title</FieldLabel>
-                <Input
-                  id={fid(`section-${index}-title`)}
-                  key={`defaultValues.catalog.mpm.sections.${index}.title`}
-                  {...registerField(form, `defaultValues.catalog.mpm.sections.${index}.title`)}
-                />
-              </Field>
-              <Field className={FIELD}>
-                <FieldLabel htmlFor={fid(`section-${index}-products`)}>
-                  Product Retailer Ids
-                </FieldLabel>
-                <MultiSelect
-                  id={fid(`section-${index}-products`)}
-                  options={toSelectOptions(productRetailerIds)}
-                  value={
-                    form.watch()["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
-                      "products"
-                    ] ?? []
-                  }
-                  onValueChange={(value) =>
-                    setValue(form, `defaultValues.catalog.mpm.sections.${index}.products`, value)
-                  }
-                />
-              </Field>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="shrink-0"
-                onClick={() => removeItem(form, "defaultValues.catalog.mpm.sections", index)}
+          {form
+            .watch()
+            .defaultValues?.catalog?.mpm?.sections?.map((_sec: unknown, index: number) => (
+              <div
+                className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background p-3"
+                key={index}
               >
-                <IconTrash color="red" size={15} />
-              </Button>
-            </div>
-          ))}
+                <Field className={FIELD}>
+                  <FieldLabel htmlFor={fid(`section-${index}-title`)}>Section Title</FieldLabel>
+                  <Input
+                    id={fid(`section-${index}-title`)}
+                    key={`defaultValues.catalog.mpm.sections.${index}.title`}
+                    {...registerField(form, `defaultValues.catalog.mpm.sections.${index}.title`)}
+                  />
+                </Field>
+                <Field className={FIELD}>
+                  <FieldLabel htmlFor={fid(`section-${index}-products`)}>
+                    Product Retailer Ids
+                  </FieldLabel>
+                  <MultiSelect
+                    id={fid(`section-${index}-products`)}
+                    options={toSelectOptions(productRetailerIds)}
+                    value={
+                      form.watch()["defaultValues"]?.["catalog"]?.["mpm"]?.["sections"]?.[
+                        `${index}`
+                      ]?.["products"] ?? []
+                    }
+                    onValueChange={(value) =>
+                      setValue(form, `defaultValues.catalog.mpm.sections.${index}.products`, value)
+                    }
+                  />
+                </Field>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="shrink-0"
+                  onClick={() => removeItem(form, "defaultValues.catalog.mpm.sections", index)}
+                >
+                  <IconTrash color="red" size={15} />
+                </Button>
+              </div>
+            ))}
         </div>
       );
     case WHATSAPP_BUTTON_TYPE.SPM:
@@ -629,7 +654,9 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             <FieldLabel htmlFor={fid("retailer")}>Product retailer id</FieldLabel>
             <Select
               items={toSelectOptions(productRetailerIds)}
-              value={form.watch()["defaultValues"]["catalog"]["spm"]["product_retailer_id"] ?? ""}
+              value={
+                form.watch()["defaultValues"]?.["catalog"]?.["spm"]?.["product_retailer_id"] ?? ""
+              }
               onValueChange={(value) =>
                 setValue(form, "defaultValues.catalog.spm.product_retailer_id", value)
               }
@@ -673,7 +700,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           <FieldLabel htmlFor={`${uid}-product-type`}>Product Type</FieldLabel>
           <Select
             items={toSelectOptions(["physical-goods", "digital-goods"])}
-            value={form.watch()["defaultValues"]["orderDetails"]["productType"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["productType"] ?? ""}
             onValueChange={(value) =>
               setValue(form, "defaultValues.orderDetails.productType", value)
             }
@@ -703,7 +730,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-product-price`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["item"]["price"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["item"]["price"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.item.price", Number(event.target.value))
             }
@@ -715,7 +742,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-product-sale-price`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["item"]["salePrice"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["item"]["salePrice"] ?? ""}
             onChange={(event) =>
               setValue(
                 form,
@@ -732,7 +759,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             type="number"
             min={0}
             step={1}
-            value={form.watch()["defaultValues"]["orderDetails"]["item"]["quantity"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["item"]["quantity"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.item.quantity", Number(event.target.value))
             }
@@ -792,7 +819,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-shipping-amount`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["shipping"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["shipping"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.shipping", Number(event.target.value))
             }
@@ -804,7 +831,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             id={`${uid}-tax-amount`}
             type="number"
             min={0}
-            value={form.watch()["defaultValues"]["orderDetails"]["tax"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["tax"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.tax", Number(event.target.value))
             }
@@ -824,7 +851,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
             type="number"
             min={0}
             step={1}
-            value={form.watch()["defaultValues"]["orderDetails"]["discount"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["discount"] ?? ""}
             onChange={(event) =>
               setValue(form, "defaultValues.orderDetails.discount", Number(event.target.value))
             }
@@ -852,7 +879,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           <FieldLabel htmlFor={`${uid}-payment-gateway-name`}>Payment gateway name</FieldLabel>
           <Select
             items={toSelectOptions(["razorpay", "payu", "zaakpay"])}
-            value={form.watch()["defaultValues"]["orderDetails"]["paymentType"] ?? ""}
+            value={form.watch()["defaultValues"]?.["orderDetails"]?.["paymentType"] ?? ""}
             onValueChange={(value) =>
               setValue(form, "defaultValues.orderDetails.paymentType", value)
             }

@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTrash, IconTypography } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
+import type { Content } from "@tiptap/react";
 import { EditorContent } from "@tiptap/react";
-import { TypeOutline } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -83,14 +83,14 @@ interface LoyaltyTemplateConfig {
   waTemplateId?: string;
   content?: string | null;
   whatsappSettingsPhoneId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface LoyaltyTemplateFormValues {
   type: LoyaltyTemplateTypes;
   waTemplateId: string;
   requestMessage: string;
-  content: any;
+  content: Content;
   responseType: WaAutomatedReplyResponseType;
   whatsappSettingsPhoneId: string;
 }
@@ -113,7 +113,7 @@ const LoyaltySettings = () => {
 
     if (!shouldDelete) return;
 
-    deleteMutation.mutate(config?.id);
+    deleteMutation.mutate(config?.id ?? "");
   }
 
   const columns = useLoyaltyTemplateColumns(setSelectedConfig, open, handleDeleteConfig);
@@ -170,7 +170,7 @@ const LoyaltyWaTemplateConfig = ({
   close: () => void;
 }) => {
   const templateMut = useCreateLoyaltyTemplate();
-  const updateTempMut = useUpdateLoyaltyTemplate(config?.id);
+  const updateTempMut = useUpdateLoyaltyTemplate(config?.id ?? "");
   const { data: loyaltyTemplates } = useWaTemplates(TemplateType.LOYALTY);
   const { t: translations } = useTranslation();
   const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();
@@ -193,7 +193,7 @@ const LoyaltyWaTemplateConfig = ({
           type: z.custom<LoyaltyTemplateTypes>(),
           waTemplateId: z.string(),
           requestMessage: z.string().trim().min(1, "required"),
-          content: z.custom<any>(),
+          content: z.custom<Content>(),
           responseType: z.custom<WaAutomatedReplyResponseType>(),
           whatsappSettingsPhoneId: z.string().trim().min(1, "required"),
         })
@@ -223,14 +223,17 @@ const LoyaltyWaTemplateConfig = ({
   );
 
   const form = useForm<LoyaltyTemplateFormValues>({
-    resolver: zodResolver(loyaltyTemplateSchema) as any,
+    resolver: zodResolver(loyaltyTemplateSchema),
     defaultValues: initialValues,
   });
   const values = form.watch();
   const contentEditor = useWaEditor({
     content: form.getValues("content"),
     onChange: (value) =>
-      form.setValue("content", value, { shouldDirty: true, shouldValidate: true }),
+      form.setValue("content", value, {
+        shouldDirty: true,
+        shouldValidate: true,
+      }),
   });
 
   const hanldeTemplateConfig = form.handleSubmit((submitted) => {
@@ -266,7 +269,7 @@ const LoyaltyWaTemplateConfig = ({
     label: getLoyaltyTemplateLabel(t).label,
   }));
 
-  const variableMeta = getLoyaltyTemplateVariableMeta(values.type);
+  const variableMeta = getLoyaltyTemplateVariableMeta(values.type) ?? [];
   const selectedTemplate = loyaltyTemplates?.find(
     (template) => template.id === values.waTemplateId,
   );
@@ -324,7 +327,9 @@ const LoyaltyWaTemplateConfig = ({
                     <Select
                       value={values.type}
                       onValueChange={(value) =>
-                        form.setValue("type", value as LoyaltyTemplateTypes, { shouldDirty: true })
+                        form.setValue("type", value as LoyaltyTemplateTypes, {
+                          shouldDirty: true,
+                        })
                       }
                       disabled={!!config}
                       items={typeData}
@@ -438,7 +443,7 @@ const LoyaltyWaTemplateConfig = ({
                         {getLoyaltyTemplateLabel(values.type).templateDescription}
                       </FieldDescription>
                       <div className="flex-1">
-                        <ToolbarProvider editor={contentEditor}>
+                        <ToolbarProvider editor={contentEditor!}>
                           <TooltipProvider>
                             <EditorContent
                               editor={contentEditor}
@@ -465,7 +470,7 @@ const LoyaltyWaTemplateConfig = ({
                                     className="h-8 w-8 p-0"
                                     title="Format"
                                   >
-                                    <TypeOutline className="h-5 w-5" />
+                                    <IconTypography className="h-5 w-5" />
                                   </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-full">
@@ -606,12 +611,6 @@ function useLoyaltyTemplateLabel() {
   );
 }
 
-interface LoyaltyTemplate {
-  type: string;
-  requestMessage: string;
-  responseType: string;
-  id?: string;
-}
 function useLoyaltyTemplateColumns(
   setSelectedConfig: (value: LoyaltyTemplateConfig | null) => void,
   open: () => void,
@@ -619,7 +618,7 @@ function useLoyaltyTemplateColumns(
 ) {
   const { t: translations } = useTranslation();
   const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();
-  const columnHelper = createColumnHelper<LoyaltyTemplate>();
+  const columnHelper = createColumnHelper<LoyaltyTemplateConfig>();
 
   return useMemo(
     () => [
@@ -783,14 +782,14 @@ function replaceDynamicVariables({
   variableMeta,
 }: {
   message: string;
-  variableMeta: Array<{ token: string; sample: string }>;
+  variableMeta?: Array<{ token: string; sample: string }>;
 }) {
-  return variableMeta.reduce((acc, variable) => {
+  return (variableMeta ?? []).reduce((acc, variable) => {
     return acc.replaceAll(variable.token, variable.sample);
   }, message);
 }
 
-function getPlainTextFromRichContent(content: any): string {
+function getPlainTextFromRichContent(content: unknown): string {
   if (!content) return "";
 
   if (typeof content === "string") {
@@ -802,9 +801,10 @@ function getPlainTextFromRichContent(content: any): string {
   }
 
   if (typeof content === "object") {
-    const text = typeof content.text === "string" ? content.text : "";
-    const nested = Array.isArray(content.content)
-      ? content.content.map(getPlainTextFromRichContent).join(" ")
+    const node = content as { text?: unknown; content?: unknown };
+    const text = typeof node.text === "string" ? node.text : "";
+    const nested = Array.isArray(node.content)
+      ? node.content.map(getPlainTextFromRichContent).join(" ")
       : "";
 
     return `${text} ${nested}`.trim();
@@ -817,7 +817,19 @@ function useSampleReplyMessage() {
   const { t: translations } = useTranslation();
 
   return useCallback(
-    ({ responseType, content, waTemplateId, selectedTemplate, variableMeta }) => {
+    ({
+      responseType,
+      content,
+      waTemplateId,
+      selectedTemplate,
+      variableMeta,
+    }: {
+      responseType: string;
+      content?: string;
+      waTemplateId?: string;
+      selectedTemplate?: { data?: { name?: string; components?: unknown[] } };
+      variableMeta?: Array<{ token: string; sample: string }>;
+    }) => {
       if (responseType === WaAutomatedReplyResponseType.Template) {
         const templateName = selectedTemplate?.data?.name;
         const templateBody = getWaTemplateBodyText(selectedTemplate?.data?.components);
@@ -855,15 +867,20 @@ function useSampleReplyMessage() {
   );
 }
 
-function getWaTemplateBodyText(templateComponents?: Array<any>) {
+function getWaTemplateBodyText(templateComponents?: unknown[]) {
   if (!Array.isArray(templateComponents)) {
     return "";
   }
 
-  const bodyComponent = templateComponents.find(
-    (component) =>
-      String(component?.type || "").toUpperCase() === "BODY" && typeof component?.text === "string",
-  );
+  const bodyComponent = templateComponents
+    .filter(
+      (component): component is Record<string, unknown> =>
+        typeof component === "object" && component !== null,
+    )
+    .find(
+      (component) =>
+        String(component.type || "").toUpperCase() === "BODY" && typeof component.text === "string",
+    );
 
-  return bodyComponent?.text || "";
+  return typeof bodyComponent?.text === "string" ? bodyComponent.text : "";
 }

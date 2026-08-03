@@ -1,13 +1,22 @@
-import { Columns3, GripVertical, Plus, Trash2, X } from "lucide-react";
+import { IconColumns3, IconGripVertical, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Column as ColumnType } from "./types.ts";
 
+/** A column row in the editor: an existing column, or one being added. */
+export interface EditableColumn {
+  id: string;
+  title: string;
+  color?: string;
+  isNew?: boolean;
+  ticketCardsCount?: number;
+}
+
 interface ManageColumnsDialogProps {
   columns: ColumnType[];
   onClose: () => void;
-  onSave: (newColumns: any[], deletedIds: string[]) => void;
+  onSave: (newColumns: EditableColumn[], deletedIds: string[]) => void;
 }
 
 export function ManageColumnsDialog({
@@ -17,15 +26,7 @@ export function ManageColumnsDialog({
 }: Readonly<ManageColumnsDialogProps>) {
   const { t } = useTranslation();
   // Map internal columns to a generic shape that handles "new" vs "existing"
-  const [localCols, setLocalCols] = useState<
-    {
-      id: string;
-      title: string;
-      color?: string;
-      isNew?: boolean;
-      ticketCardsCount?: number;
-    }[]
-  >([]);
+  const [localCols, setLocalCols] = useState<EditableColumn[]>([]);
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -40,7 +41,7 @@ export function ManageColumnsDialog({
       columns.map((c) => ({
         id: c.id,
         title: c.title,
-        color: (c as any).color || "#8B8E8A",
+        color: c.color || "#8B8E8A",
         isNew: false,
         ticketCardsCount: c._count?.ticketCards ?? c.ticketCards?.length ?? 0,
       })),
@@ -123,7 +124,7 @@ export function ManageColumnsDialog({
             className="w-[42px] h-[42px] rounded-xl flex items-center justify-center"
             style={{ background: "#1C518E18" }}
           >
-            <Columns3 size={22} className="text-primary" />
+            <IconColumns3 size={22} className="text-primary" />
           </div>
           <div className="flex-1">
             <div className="font-display font-extrabold text-xl text-foreground">
@@ -137,7 +138,7 @@ export function ManageColumnsDialog({
             onClick={onClose}
             className="w-[30px] h-[30px] rounded-[7px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-colors hover:bg-muted"
           >
-            <X size={16} strokeWidth={1.75} />
+            <IconX size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -164,7 +165,7 @@ export function ManageColumnsDialog({
                 }}
               >
                 <div className="cursor-grab text-muted-foreground hover:text-foreground transition-colors">
-                  <GripVertical size={16} strokeWidth={1.75} />
+                  <IconGripVertical size={16} strokeWidth={1.75} />
                 </div>
 
                 {/* Color Dot */}
@@ -194,7 +195,7 @@ export function ManageColumnsDialog({
                   onClick={() => deleteCol(col.id, col.isNew)}
                   className="w-[26px] h-[26px] rounded-[6px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-red-50 hover:text-red-600"
                 >
-                  <Trash2 size={13} strokeWidth={2} />
+                  <IconTrash size={13} strokeWidth={2} />
                 </button>
               </div>
             ))}
@@ -254,7 +255,7 @@ export function ManageColumnsDialog({
               className="w-full mt-3 rounded-[10px] border-[1.5px] border-dashed border-border bg-transparent text-muted-foreground font-body text-[13px] font-medium cursor-pointer flex items-center justify-center gap-[5px] transition-all duration-150 hover:border-primary/50 hover:text-primary hover:bg-primary/5"
               style={{ padding: "11px 12px" }}
             >
-              <Plus size={14} strokeWidth={2.5} /> {t("Add Column")}
+              <IconPlus size={14} strokeWidth={2.5} /> {t("Add Column")}
             </button>
           )}
 
@@ -286,7 +287,7 @@ export function ManageColumnsDialog({
               boxShadow: "0 1px 2px rgba(11,31,72,.12),0 4px 12px rgba(28,81,142,.16)",
             }}
           >
-            <Columns3 size={14} strokeWidth={2} /> {t("Save Columns")}
+            <IconColumns3 size={14} strokeWidth={2} /> {t("Save Columns")}
           </button>
         </div>
       </div>

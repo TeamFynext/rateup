@@ -1,5 +1,5 @@
+import { IconArrowRight } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useGetStaffPerformanceonConversation } from "@/backend/conversation/conversation.query";
@@ -7,10 +7,11 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
-export const StaffStatusBadge = ({ status }) => {
+export const StaffStatusBadge = ({ status }: { status?: string }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "online":
@@ -51,7 +52,7 @@ export const StaffStatusBadge = ({ status }) => {
         };
     }
   };
-  const color = getStatusColor(status);
+  const color = getStatusColor(status ?? "");
   return (
     <Badge
       variant="outline"
@@ -63,7 +64,7 @@ export const StaffStatusBadge = ({ status }) => {
   );
 };
 
-const ConversationStatsAgentPerformance = ({ dateRange }) => {
+const ConversationStatsAgentPerformance = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data = [], isLoading } = useGetStaffPerformanceonConversation({
     dateKey: dateRange.key,
@@ -165,7 +166,7 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
                         </Badge>
                       </td>
                       <td>
-                        <ArrowRight className="opacity-40" />
+                        <IconArrowRight className="opacity-40" />
                       </td>
                     </tr>
                   );

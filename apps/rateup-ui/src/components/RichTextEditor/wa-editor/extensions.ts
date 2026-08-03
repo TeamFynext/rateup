@@ -1,9 +1,10 @@
+import type { AnyExtension } from "@tiptap/core";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
 import { CharacterCount } from "@tiptap/extensions";
 import { Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import type { MutableRefObject } from "react";
+import type { RefObject } from "react";
 
 import type { MentionUser } from "../mention/MentionList.tsx";
 import { createMentionSuggestion } from "../mention/suggestion.ts";
@@ -40,7 +41,7 @@ export interface WaExtensionOptions {
    * Ref holding the current mention candidates. A ref (not a plain array) so the
    * suggestion list stays current without rebuilding the extension list.
    */
-  mentionUsersRef?: MutableRefObject<MentionUser[]>;
+  mentionUsersRef?: RefObject<MentionUser[]>;
 }
 
 /**
@@ -54,7 +55,7 @@ export function createWaExtensions({
   enableMention = false,
   mentionUsersRef,
 }: WaExtensionOptions = {}) {
-  const ext: any[] = [
+  const ext: AnyExtension[] = [
     StarterKit.configure({ link: false }),
     Placeholder.configure({ placeholder }),
     CharacterCount.configure({ limit: max }),

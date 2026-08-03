@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { referralKeys } from "@/backend/campaign/campaign.keys";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
+
 import { createReferral, deleteReferral, getAllReferrals, trackVisit } from "./referrals.api";
 
 export function useCreateReferralMutation({
@@ -9,7 +12,7 @@ export function useCreateReferralMutation({
   onError,
 }: {
   onSuccess?: (data: { referral_code: string }) => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 } = {}) {
   const { t: translations } = useTranslation();
 
@@ -19,10 +22,9 @@ export function useCreateReferralMutation({
       toast.success(translations("Referral code created successfully!"));
       if (onSuccess) onSuccess(data);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error creating referral:", error);
-      const msg =
-        error?.response?.data?.message || error?.message || "Failed to create referral code";
+      const msg = getApiErrorMessage(error, "Failed to create referral code");
       toast.error(translations(msg));
       if (onError) onError(error);
     },
@@ -34,7 +36,7 @@ export function useDeleteReferralMutation({
   onError,
 }: {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 } = {}) {
   const { t: translations } = useTranslation();
   const queryClient = useQueryClient();
@@ -43,12 +45,12 @@ export function useDeleteReferralMutation({
     mutationFn: (id: string) => deleteReferral(id),
     onSuccess: () => {
       toast.success(translations("Referral deleted successfully!"));
-      queryClient.invalidateQueries({ queryKey: ["referrals"] });
+      queryClient.invalidateQueries({ queryKey: referralKeys.all() });
       if (onSuccess) onSuccess();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error deleting referral:", error);
-      const msg = error?.response?.data?.message || error?.message || "Failed to delete referral";
+      const msg = getApiErrorMessage(error, "Failed to delete referral");
       toast.error(translations(msg));
       if (onError) onError(error);
     },
@@ -57,7 +59,7 @@ export function useDeleteReferralMutation({
 
 export function useAllReferralsQuery() {
   return useQuery({
-    queryKey: ["referrals"],
+    queryKey: referralKeys.all(),
     queryFn: () => getAllReferrals(),
   });
 }
@@ -67,14 +69,14 @@ export function useTrackVisitMutation({
   onError,
 }: {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 } = {}) {
   return useMutation({
     mutationFn: (code: string) => trackVisit(code),
     onSuccess: () => {
       if (onSuccess) onSuccess();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error tracking visit:", error);
       if (onError) onError(error);
     },

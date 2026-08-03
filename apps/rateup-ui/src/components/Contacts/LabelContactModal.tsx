@@ -1,4 +1,4 @@
-import { CircleCheck, Users } from "lucide-react";
+import { IconCircleCheck, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -18,9 +18,19 @@ import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import LabelSelector from "./LabelSelector.tsx";
 
-const LabelContactModal = ({ opened, setOpened, contactIds, onSuccess = null }) => {
+const LabelContactModal = ({
+  opened,
+  setOpened,
+  contactIds,
+  onSuccess = null,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  contactIds: string[];
+  onSuccess?: (() => void) | null;
+}) => {
   const { t } = useTranslation();
-  const [labelIds, setLabelIds] = useState([]);
+  const [labelIds, setLabelIds] = useState<string[]>([]);
   const assign = useAssignContactLabelsToMultipleContacts();
   function handleApplyLabels() {
     assign.mutate(
@@ -53,7 +63,7 @@ const LabelContactModal = ({ opened, setOpened, contactIds, onSuccess = null }) 
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 text-muted-foreground">
-          <Users className="w-5 h-5" />{" "}
+          <IconUsers className="w-5 h-5" />{" "}
           <span>
             {contactIds.length} {t("contacts selected")}
           </span>
@@ -72,7 +82,7 @@ const LabelContactModal = ({ opened, setOpened, contactIds, onSuccess = null }) 
             {t("Cancel")}
           </Button>
           <Button onClick={handleApplyLabels}>
-            {assign.isPending ? <Spinner /> : <CircleCheck />}
+            {assign.isPending ? <Spinner /> : <IconCircleCheck />}
             {t("Apply")}
           </Button>
         </DialogFooter>

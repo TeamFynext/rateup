@@ -10,10 +10,10 @@ import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
+import { useChatContactCountStore } from "@/store/inbox.store.ts";
 
 import {
   getSignupRedirect,
@@ -138,7 +138,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     }
 
     void navigate({
-      to: signupRedirect,
+      ...signupRedirect,
       replace: true,
     });
   }, [navigate, signupRedirect, userInfoErrorMessage, welcomeMessage]);
@@ -150,7 +150,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   useEffect(() => {
     if (resolvedUserData?.isOrgPaused) {
       void navigate({
-        to: "/login/callback/paused?pausedby=rateup",
+        to: "/login/callback/paused",
+        search: { pausedby: "rateup" },
         replace: true,
       });
 

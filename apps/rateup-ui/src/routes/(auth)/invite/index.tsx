@@ -1,11 +1,12 @@
 import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
+import { teamKeys } from "@/backend/org/org.keys";
 import { completeInvite } from "@/backend/team/team.api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,13 +16,18 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
 import styles from "../../../components/(auth)/invite/styles.module.css";
 
 export const Route = createFileRoute("/(auth)/invite/")({
+  /** Declares the search params this route reads, so they arrive typed. */
+  validateSearch: (search: Record<string, unknown>): { type?: string; token?: string } => ({
+    type: typeof search.type === "string" ? search.type : undefined,
+    token: typeof search.token === "string" ? search.token : undefined,
+  }),
   component: Invite,
 });
 
 function Invite() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const searchParams = useSearch({ strict: false });
+  const searchParams = Route.useSearch();
   const type = searchParams.type;
   const token = searchParams.token;
 
@@ -31,7 +37,7 @@ function Invite() {
   else if (type === "org") title = "Organization";
 
   const acceptInvite = async () => {
-    const inviteToken = token.toString();
+    const inviteToken = token ?? "";
     await signOut();
     return completeInvite(inviteToken);
   };
@@ -39,7 +45,7 @@ function Invite() {
   const updateInviteMutation = useMutation({
     mutationFn: () => acceptInvite(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }); // update team list on add
+      queryClient.invalidateQueries({ queryKey: teamKeys.details() }); // update team list on add
       toast.success(translations("Invite Accepted successfully."), {
         id: "load-data",
       });

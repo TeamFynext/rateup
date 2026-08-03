@@ -6,13 +6,13 @@ import { ActionCard } from "@/components/common/action-card.tsx";
 import { SurveyMenu } from "./SurveyMenu.tsx";
 
 interface SurveyCardProps {
-  survey: any; // Type from parent
-  handleCheckBox?: any;
-  isChecked?: any;
+  survey: Survey;
+  handleCheckBox?: (surveyId: string, checked: boolean) => void;
+  isChecked?: boolean;
   selectedTeamId?: string;
-  teamsData?: any;
+  teamsData?: TeamData[];
   route?: string;
-  refetchSurveys?: any;
+  refetchSurveys?: () => void;
 }
 
 const tagColorClasses = {
@@ -80,13 +80,12 @@ export function SurveyCard({
   });
 
   const totalResponses =
-    survey?.teams?.reduce((sum: number, t: any) => sum + (t.responsesCount?.responses || 0), 0) ||
-    0;
+    survey?.teams?.reduce((sum: number, t) => sum + (t.responsesCount?.responses || 0), 0) || 0;
 
   const questionCount = survey?.questions?.length || 0;
 
   // Extract question types as tags
-  const questionTypes = survey?.questions?.reduce((acc: Record<string, number>, q: any) => {
+  const questionTypes = survey?.questions?.reduce((acc: Record<string, number>, q) => {
     if (q.type && q.type !== "Welcome" && q.type !== "ThankYou") {
       acc[q.type] = (acc[q.type] || 0) + 1;
     }

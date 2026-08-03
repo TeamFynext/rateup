@@ -1,4 +1,4 @@
-import { Edit, Search, Tag } from "lucide-react";
+import { IconEdit, IconSearch, IconTag } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -116,7 +116,7 @@ export function ManageLabels({
     >
       {open === undefined && (
         <DialogTrigger render={<Button variant="outline" size="sm" className="h-9 shrink-0" />}>
-          <Tag className="w-4 h-4 sm:mr-2 text-muted-foreground" />
+          <IconTag className="w-4 h-4 sm:mr-2 text-muted-foreground" />
           <span className="hidden sm:inline">{t("Manage Labels")}</span>
         </DialogTrigger>
       )}
@@ -133,7 +133,7 @@ export function ManageLabels({
           {view === "list" ? (
             <div className="flex flex-col gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder={t("Search labels...")}
                   value={search}
@@ -197,7 +197,7 @@ export function ManageLabels({
                             setView("edit");
                           }}
                         >
-                          <Edit className="w-4 h-4" />
+                          <IconEdit className="w-4 h-4" />
                         </Button>
                       </div>
                     );

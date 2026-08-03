@@ -1,8 +1,15 @@
+import type { QueryFunctionContext } from "@tanstack/react-query";
+
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../apiClient";
+
+type ShareSettingsResource = { resourceName?: string; id?: string };
+type ShareSettingsQueryKey = readonly [string, ShareSettingsResource];
 
 const settingsApiUrl = "/shareSettings";
 
-const getShareSettings = async ({ queryKey }) => {
+const getShareSettings = async ({ queryKey }: QueryFunctionContext<ShareSettingsQueryKey>) => {
   const [_key, { resourceName, id }] = queryKey;
   if (resourceName && id) {
     const url = `${settingsApiUrl}/${resourceName}/${id}`;
@@ -14,7 +21,10 @@ const getShareSettings = async ({ queryKey }) => {
   }
 };
 
-const upadateShareSettings = async (obj) => {
+const upadateShareSettings = async (obj: {
+  params: ShareSettingsResource;
+  body: RequestPayload;
+}) => {
   const {
     params: { resourceName, id },
     body,

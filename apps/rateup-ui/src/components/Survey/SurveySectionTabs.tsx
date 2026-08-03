@@ -1,5 +1,5 @@
+import { IconCopy, IconGrid3x3, type TablerIcon } from "@tabler/icons-react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Copy, Grid3X3, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -12,9 +12,9 @@ const SECTION_ROUTES: Record<SurveySection, string> = {
   testimonial: "/dashboard/testimonial",
 };
 
-const ALL_SECTION_TABS: { value: SurveySection; label: string; icon: LucideIcon }[] = [
-  { value: "surveys", label: "Surveys", icon: Grid3X3 },
-  { value: "templates", label: "Templates", icon: Copy },
+const ALL_SECTION_TABS: { value: SurveySection; label: string; icon: TablerIcon }[] = [
+  { value: "surveys", label: "Surveys", icon: IconGrid3x3 },
+  { value: "templates", label: "Templates", icon: IconCopy },
   // { value: "testimonial", label: "Testimonial", icon: Star }, // not required for now
 ];
 

@@ -91,7 +91,7 @@ function MoreOptionsMenu({ shortUrlId, id, name, onModalOpen }: Readonly<MoreOpt
         <CreateLinktreeModal
           opened={isEditLinktreeModalOpen}
           onClose={() => setIsEditLinktreeModalOpen(false)}
-          mode="Rename"
+          mode="edit"
           shortUrlId={shortUrlId}
           initialName={name}
         />

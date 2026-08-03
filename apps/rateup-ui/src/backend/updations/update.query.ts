@@ -84,7 +84,7 @@ export const useMigrateLoyaltyTierPriority = () => {
 export const useSeedInboxStats = () => {
   return useMutation({
     mutationFn: seedInboxStats,
-    onSuccess: (response: any) => {
+    onSuccess: (response) => {
       toast.success(response?.data || "Inbox stats seeded successfully");
     },
     onError: (error) => {

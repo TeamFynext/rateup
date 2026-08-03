@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
+import { surveyKeys } from "@/backend/surveys/survey.keys";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -37,14 +38,15 @@ import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
+import type { RequestPayload } from "@/types/api.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 interface SurveyMenuProps {
   survey: Survey;
   selectedTeamId: string;
-  teamsData: any;
-  refetchSurveys: any;
+  teamsData?: TeamData[];
+  refetchSurveys?: () => void;
 }
 
 export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }: SurveyMenuProps) {
@@ -59,8 +61,8 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   const confirm = useConfirm();
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const allTeams = teamsData?.map((team) => team?.id);
-  const teamOptions = teamsData?.map((team) => ({
+  const allTeams = (teamsData ?? []).map((team) => team.id);
+  const teamOptions = (teamsData ?? []).map((team) => ({
     value: team?.id,
     label: team?.name,
   }));
@@ -106,13 +108,13 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   const surveyDeleteMutation = useMutation({
     mutationFn: ({ id, teamId }: { id: string; teamId?: string }) =>
       selectedTeamId && selectedTeamId !== "all"
-        ? deleteSurveyForOneTeam(id, teamId)
+        ? deleteSurveyForOneTeam(id, teamId ?? "")
         : deleteSurvey(id),
     onSuccess: () => {
       toast.success(translations("Deleted Survey Successfully!"), {
         id: "delete-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
     },
     onError: (error) => {
       // console.error("Error deleting Survey:", error.message);
@@ -123,12 +125,12 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   });
 
   const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    mutationFn: (data: RequestPayload) => updateSurvey(survey.id, data),
     onSuccess: () => {
       toast.success(translations("Survey status Updated!"), {
         id: "survey",
       });
-      refetchSurveys();
+      refetchSurveys?.();
     },
   });
 
@@ -152,7 +154,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     } else {
       await surveyDeleteMutation.mutateAsync({ id: survey?.id });
     }
-    refetchSurveys();
+    refetchSurveys?.();
   }
 
   const closeCloneModal = () => {
@@ -181,7 +183,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
           <form
             className="p-5"
             onSubmit={submitClone}
-            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitClone]])}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submitClone()]])}
           >
             <Field>
               <p className="text-sm text-muted-foreground">
@@ -303,7 +305,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   );
 }
 
-function arraysEqual(a, b) {
+function arraysEqual(a: string[], b: string[]) {
   if (a === b) return true;
   if (a == null || b == null) return false;
   if (a?.length !== b?.length) return false;

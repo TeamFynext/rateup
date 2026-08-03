@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 import {
   useRateupPaymentsPlanMutation,
   useRateupPaymentsPlanUpdateMutation,
@@ -36,7 +37,27 @@ const currencyOptions = [
   { value: "INR", label: "INR (₹)" },
 ];
 
-const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
+/** The plan row this admin modal edits. */
+export interface RateupPlanFormValues extends RateupPaymentPlan {
+  badge?: string;
+  price?: number;
+  monthlyPrice?: number;
+  yearlyPrice?: number;
+  monthlyPaymentPlanId?: string;
+  yearlyPaymentPlanId?: string;
+}
+
+const RateupPlanModal = ({
+  opened,
+  close,
+  planList,
+  plan = null,
+}: {
+  opened: boolean;
+  close: () => void;
+  planList: Array<{ group: string; items: unknown[] }> | undefined;
+  plan?: RateupPlanFormValues | null;
+}) => {
   const uid = useId();
   const [checked, setChecked] = useState(false);
   const { t: translations } = useTranslation();
@@ -146,10 +167,10 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
     }
   }, [checked]);
 
-  const handleSubmit = (values) => {
+  const handleSubmit = (values: z.infer<typeof schema>) => {
     const payload = { ...values, currency: values.currency || undefined };
     if (isEdit) {
-      rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan.id });
+      rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan?.id });
       toast.loading(translations("Hold.. your data is getting updated..."), {
         id: "load-data",
       });
@@ -189,7 +210,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
         <form
           className="p-5"
           onSubmit={submitPlan}
-          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitPlan]])}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submitPlan()]])}
         >
           <div className="grid grid-cols-2 gap-4">
             <Field>
@@ -228,7 +249,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 items={widgetIdOptions}
                 value={values.displayWidgetId ?? ""}
                 onValueChange={(value) =>
-                  form.setValue("displayWidgetId", value, { shouldDirty: true })
+                  form.setValue("displayWidgetId", value ?? undefined, { shouldDirty: true })
                 }
               >
                 <SelectTrigger id={`${uid}-field-3`} className="w-full">
@@ -251,7 +272,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               <Select
                 items={planTypeOptions}
                 value={values.planType ?? ""}
-                onValueChange={(value) => form.setValue("planType", value, { shouldDirty: true })}
+                onValueChange={(value) =>
+                  form.setValue("planType", value ?? "", { shouldDirty: true })
+                }
               >
                 <SelectTrigger id={`${uid}-field-4`} className="w-full">
                   <SelectValue placeholder={translations("Plan Type")} />
@@ -274,7 +297,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 id={`${uid}-field-5`}
                 value={values.description ?? []}
                 onValueChange={(value) =>
-                  form.setValue("description", value, { shouldDirty: true })
+                  form.setValue("description", value ?? undefined, { shouldDirty: true })
                 }
                 placeholder={translations("Type Description and press enter")}
               />
@@ -301,7 +324,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               <Select
                 items={currencyOptions}
                 value={values.currency ?? ""}
-                onValueChange={(value) => form.setValue("currency", value, { shouldDirty: true })}
+                onValueChange={(value) =>
+                  form.setValue("currency", value ?? undefined, { shouldDirty: true })
+                }
               >
                 <SelectTrigger id={`${uid}-field-6`} className="w-full">
                   <SelectValue placeholder={translations("Currency")} />
@@ -331,7 +356,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 items={razorpayOptions}
                 value={values.monthlyPaymentPlanId ?? ""}
                 onValueChange={(value) =>
-                  form.setValue("monthlyPaymentPlanId", value, { shouldDirty: true })
+                  form.setValue("monthlyPaymentPlanId", value ?? undefined, { shouldDirty: true })
                 }
                 disabled={!razorpayOptions.length}
               >
@@ -355,7 +380,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 items={razorpayOptions}
                 value={values.yearlyPaymentPlanId ?? ""}
                 onValueChange={(value) =>
-                  form.setValue("yearlyPaymentPlanId", value, { shouldDirty: true })
+                  form.setValue("yearlyPaymentPlanId", value ?? undefined, { shouldDirty: true })
                 }
                 disabled={!razorpayOptions.length}
               >

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
@@ -15,6 +16,16 @@ import { TabEnum } from "../SurveyId.tsx";
 
 const ResultsOverviewWebForm = lazy(() => import("../Result/ResultsOverviewWebForm.tsx"));
 
+/** What the active tab reports when the user tries to leave it. */
+export type UnsavedChangesCheck = () =>
+  | {
+      haveUnsavedChanges?: boolean;
+      feedbackElement?: string;
+      toastMessage?: string;
+    }
+  /** Nothing to report — the tab has no unsaved edits. */
+  | undefined;
+
 function TabPanelsComp({
   value,
   survey,
@@ -26,6 +37,19 @@ function TabPanelsComp({
   setEncryptionPassword,
   setActiveTab,
   setFunToRunBeforeSurveyIdPageHeaderTabsChange,
+}: {
+  value: string;
+  survey: Survey;
+  surveyId: string;
+  questions: Question[];
+  addQnTrigger: number;
+  setSelectedLanguage: Dispatch<SetStateAction<string | null>>;
+  encryptionpassword: string;
+  setEncryptionPassword: (password: string) => void;
+  setActiveTab: (tab: TabEnum) => void;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: Dispatch<
+    SetStateAction<UnsavedChangesCheck | null>
+  >;
 }) {
   const { data: subscription } = useSubscription();
 
@@ -78,7 +102,7 @@ function TabPanelsComp({
                   hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
                     "enableNotificationEmail",
                   hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",
-                ]
+                ].filter((m): m is string => typeof m === "string")
           }
         />
       </TabsContent>
@@ -95,8 +119,8 @@ function TabPanelsComp({
         >
           <ResultsOverviewWebForm
             surveyId={surveyId}
-            aiResponseSummary={survey?.aiResponseSummary}
-            flowId={null}
+            aiResponseSummary={survey?.aiResponseSummary ?? []}
+            flowId={undefined}
             version={1}
             flowQuestions={[]}
             questions={questions}

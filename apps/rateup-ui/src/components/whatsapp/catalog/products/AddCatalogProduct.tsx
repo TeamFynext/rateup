@@ -1,10 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
+import type { Control } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useCreateBatchCatalogProducts,
   useCreateShopifyProduct,
@@ -57,13 +59,13 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         title: "",
         description: "",
         condition: "new",
-        image: [{ url: "", tag: [] }],
-        internal_label: [],
+        image: [{ url: "", tag: [] as string[] }],
+        internal_label: [] as string[],
         link: "",
         price: 0,
         sale_price: 0,
         currencyCode: "INR",
-        video: [{ url: "", tag: [] }],
+        video: [{ url: "", tag: [] as string[] }],
         availability: "in stock",
         brand: "",
       };
@@ -73,14 +75,14 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         hotel_id: "",
         name: "",
         description: "",
-        tags: [],
-        numbertags: [],
+        tags: [] as string[],
+        numbertags: [] as string[],
         address: { address: "", city: "" },
         latitude: "",
         longitude: "",
         base_price: 0.0,
         currencyCode: "INR",
-        image: [{ url: "", tag: [] }],
+        image: [{ url: "", tag: [] as string[] }],
       };
     case CatalogProductType.HOTEL_ROOM:
       return {
@@ -91,7 +93,7 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         description: "",
         base_price: 0.0,
         currencyCode: "INR",
-        image: [{ url: "", tag: [] }],
+        image: [{ url: "", tag: [] as string[] }],
       };
   }
 }
@@ -114,11 +116,39 @@ function SourceToggle({
   );
 }
 
+/**
+ * The product form's values. Which fields are filled in depends on the
+ * catalog's vertical (product item, hotel, hotel room, flight, …), so all of
+ * them are optional here and `catalogProductSchema` enforces the required set.
+ */
+interface CatalogProductFormValues {
+  type: CatalogProductType;
+  retailer_id?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  condition?: string;
+  brand?: string;
+  availability?: string;
+  currencyCode?: string;
+  price?: number;
+  sale_price?: number;
+  base_price?: number;
+  link?: string;
+  image?: Array<{ url: string; tag: string[] }>;
+  video?: Array<{ url: string; tag: string[] }>;
+  internal_label?: string[];
+  hotel_id?: string;
+  hotel_room_id?: string;
+  hotel_retailer_id?: string;
+  [key: string]: unknown;
+}
+
 /** Conditional required-field validation mirroring the original Mantine `validate`. */
 const catalogProductSchema = z
-  .object({ type: z.any() })
-  .passthrough()
-  .superRefine((values: any, ctx) => {
+  .object({ type: z.custom<CatalogProductType>() })
+  .loose()
+  .superRefine((values: CatalogProductFormValues, ctx) => {
     const require = (field: string, invalid: boolean) => {
       if (invalid) ctx.addIssue({ code: "custom", path: [field], message: "required" });
     };
@@ -127,8 +157,8 @@ const catalogProductSchema = z
       require("title", !values.title?.length);
       require("description", !values.description?.length);
       require("condition", !values.condition?.length);
-      require("price", values.price < 0);
-      require("sale_price", values.sale_price < 0);
+      require("price", (values.price ?? 0) < 0);
+      require("sale_price", (values.sale_price ?? 0) < 0);
       require("currencyCode", !values.currencyCode?.length);
       require("availability", !values.availability?.length);
       require("brand", !values.brand?.length);
@@ -136,14 +166,14 @@ const catalogProductSchema = z
       require("hotel_id", !values.hotel_id?.length);
       require("name", !values.name?.length);
       require("description", !values.description?.length);
-      require("base_price", values.base_price < 0);
+      require("base_price", (values.base_price ?? 0) < 0);
       require("currencyCode", !values.currencyCode?.length);
     } else if (values.type === CatalogProductType.HOTEL_ROOM) {
       require("hotel_retailer_id", !values.hotel_retailer_id?.length);
       require("hotel_room_id", !values.hotel_room_id?.length);
       require("name", !values.name?.length);
       require("description", !values.description?.length);
-      require("base_price", values.base_price < 0);
+      require("base_price", (values.base_price ?? 0) < 0);
       require("currencyCode", !values.currencyCode?.length);
     }
   });
@@ -153,21 +183,33 @@ function TagController({
   control,
   name,
   maxTags,
-}: Readonly<{ control: any; name: string; maxTags?: number }>) {
+}: Readonly<{ control: Control<CatalogProductFormValues>; name: string; maxTags?: number }>) {
   return (
     <Controller
       name={name}
       control={control}
       render={({ field }) => (
-        <TagsInput value={field.value ?? []} onValueChange={field.onChange} maxTags={maxTags} />
+        <TagsInput
+          value={Array.isArray(field.value) ? field.value : []}
+          onValueChange={field.onChange}
+          maxTags={maxTags}
+        />
       )}
     />
   );
 }
 
-const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
+const AddCatalogProduct = ({
+  catalogData,
+  onCancel,
+  productData = null,
+}: {
+  catalogData: Pick<WaCatalog, "catalogId"> & { vertical?: string };
+  onCancel: () => void;
+  productData?: ({ image?: unknown[] } & Record<string, unknown>) | null;
+}) => {
   const uid = useId();
-  const form = useForm<any>({
+  const form = useForm<CatalogProductFormValues>({
     resolver: zodResolver(catalogProductSchema),
     defaultValues: getInitialValues(),
   });
@@ -184,8 +226,10 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
       if (productData) {
         if (productData.image?.length) setImageUpload("url");
         const initialValues = getInitialValues(type);
-        Object.keys(getInitialValues(type)).forEach((key) => {
-          initialValues[key] = productData[key];
+        // Copies only the keys the chosen product type declares.
+        const values = initialValues as Record<string, unknown>;
+        Object.keys(initialValues).forEach((key) => {
+          values[key] = productData[key];
         });
         form.reset(initialValues);
       } else {
@@ -201,14 +245,14 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
   const [addToShopify] = useState(false);
   const [imageUpload, setImageUpload] = useState("upload");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<File | null>(null);
   const [videoUpload, setVideoUpload] = useState("upload");
-  const [video, setVideo] = useState(null);
+  const [video, setVideo] = useState<File | null>(null);
 
   const isSaving = createBatch.isPending || updateProducts.isPending || createShopifyMut.isPending;
   const type = form.watch("type");
 
-  async function handleSave(values: any) {
+  async function handleSave(values: CatalogProductFormValues) {
     // ── Shopify mode ──────────────────────────────────────────────────────
     if (addToShopify && type === CatalogProductType.PRODUCT_ITEM) {
       form.clearErrors();
@@ -216,10 +260,10 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
       if (!values.title?.length) errs.title = "required";
       if (!values.description?.length) errs.description = "required";
       if (!values.brand?.length) errs.brand = "required";
-      if (values.price < 0) errs.price = "required";
+      if ((values.price ?? 0) < 0) errs.price = "required";
       if (!values.currencyCode?.length) errs.currencyCode = "required";
       if (Object.keys(errs).length > 0) {
-        Object.entries(errs).forEach(([k, v]) => form.setError(k as any, { message: v }));
+        Object.entries(errs).forEach(([k, v]) => form.setError(k, { message: v }));
         return;
       }
 
@@ -237,11 +281,11 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
       createShopifyMut.mutate(
         {
-          title: values.title,
-          description: values.description,
-          brand: values.brand,
-          price: values.price,
-          currencyCode: values.currencyCode,
+          title: values.title ?? "",
+          description: values.description ?? "",
+          brand: values.brand ?? "",
+          price: values.price ?? 0,
+          currencyCode: values.currencyCode ?? "",
           imageUrl,
         },
         {
@@ -268,13 +312,13 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     const { type: formType, ...rest } = values;
 
     try {
-      if (imageUpload === "upload" && image) {
+      if (imageUpload === "upload" && image && rest.image?.[0]) {
         const key = await uploadFile(image);
-        rest.image[0].url = getFileUrlFromKey(key);
+        rest.image[0].url = getFileUrlFromKey(key) ?? "";
       }
-      if (videoUpload === "upload" && video) {
+      if (videoUpload === "upload" && video && rest.video?.[0]) {
         const key = await uploadFile(video);
-        rest.video[0].url = getFileUrlFromKey(key);
+        rest.video[0].url = getFileUrlFromKey(key) ?? "";
       }
     } catch {}
 
@@ -401,7 +445,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                   <FieldLabel htmlFor="currency">Currency *</FieldLabel>
                   <Select
                     value={form.watch("currencyCode")}
-                    onValueChange={(v) => form.setValue("currencyCode", v)}
+                    onValueChange={(v) => form.setValue("currencyCode", v ?? "")}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="currency">
@@ -423,7 +467,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                     <FieldLabel htmlFor="availability">Availability *</FieldLabel>
                     <Select
                       value={form.watch("availability")}
-                      onValueChange={(v) => form.setValue("availability", v)}
+                      onValueChange={(v) => form.setValue("availability", v ?? "")}
                       items={CATALOG_PRODUCT_AVAILABILITY.map((a) => ({ value: a, label: a }))}
                     >
                       <SelectTrigger id="availability">
@@ -446,7 +490,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                     <FieldLabel htmlFor="condition">Product condition *</FieldLabel>
                     <Select
                       value={form.watch("condition")}
-                      onValueChange={(v) => form.setValue("condition", v)}
+                      onValueChange={(v) => form.setValue("condition", v ?? "")}
                       items={CATALOG_PRODUCT_CONDITIONS.map((c) => ({ value: c, label: c }))}
                     >
                       <SelectTrigger id="condition">
@@ -587,7 +631,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                   <FieldLabel htmlFor="hotel_currency">Currency *</FieldLabel>
                   <Select
                     value={form.watch("currencyCode")}
-                    onValueChange={(v) => form.setValue("currencyCode", v)}
+                    onValueChange={(v) => form.setValue("currencyCode", v ?? "")}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="hotel_currency">
@@ -683,7 +727,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                   <FieldLabel htmlFor="room_currency">Currency *</FieldLabel>
                   <Select
                     value={form.watch("currencyCode")}
-                    onValueChange={(v) => form.setValue("currencyCode", v)}
+                    onValueChange={(v) => form.setValue("currencyCode", v ?? "")}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="room_currency">
@@ -724,7 +768,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           Cancel
         </Button>
         <Button onClick={form.handleSubmit(handleSave)} disabled={isSaving}>
-          {isSaving && <Loader2 data-icon="inline-start" className="animate-spin" />}
+          {isSaving && <IconLoader2 data-icon="inline-start" className="animate-spin" />}
           {addToShopify ? "Add to Shopify" : productData ? "Save changes" : "Add product"}
         </Button>
       </DialogFooter>
@@ -732,7 +776,17 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   );
 };
 
-export const AddCatalogProductModal = ({ catalogData, opened, close, productData = null }) => {
+export const AddCatalogProductModal = ({
+  catalogData,
+  opened,
+  close,
+  productData = null,
+}: {
+  catalogData: Pick<WaCatalog, "catalogId"> & { vertical?: string };
+  opened: boolean;
+  close: () => void;
+  productData?: Record<string, unknown> | null;
+}) => {
   return (
     <Dialog open={opened} onOpenChange={(val) => !val && close()}>
       <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-2xl">

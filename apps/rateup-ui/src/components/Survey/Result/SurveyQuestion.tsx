@@ -1,27 +1,42 @@
-import { Smile, Target, Users } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { IconMoodSmile, IconTarget, IconUsers } from "@tabler/icons-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { stringToColour } from "@/utils/essential/index.ts";
 import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
 import SurveyResultByType from "./SurveySummaryNewWebForm.tsx";
 
+/** One aggregated choice bucket for a question. */
+interface ChoiceWiseDatum {
+  choice: string | number;
+  count: number;
+}
+
+/** Aggregated answers for a single question. */
+interface ChoiceWiseEntry {
+  responseCount?: number;
+  data: ChoiceWiseDatum[];
+}
+
+/** NPS breakdown for a single question. */
+interface NpsEntry {
+  npsData?: {
+    npsScore?: number;
+    promoters?: number;
+    passives?: number;
+    detractors?: number;
+  };
+}
+
 interface SurveyQuestionProps {
-  choiceWise: any;
-  NPS: any;
+  /** `Object.entries` of the analytics response, so one `[questionId, data]` pair per question. */
+  choiceWise: Array<[string, ChoiceWiseEntry]>;
+  NPS: Array<[string, NpsEntry]>;
   version?: number;
-  flowQuestions?: any[];
-  questions?: any[];
+  flowQuestions?: FlowQuestionSummary[];
+  questions?: Question[];
   surveyId: string;
   defaultLanguage: string;
 }
@@ -37,22 +52,25 @@ const SurveyQuestion = ({
 }: SurveyQuestionProps) => {
   if (choiceWise.length === 0) return null;
 
-  function getQuestion(questionId) {
-    const question =
-      version === 1
-        ? questions?.find((question) => question?.id === questionId)
-        : flowQuestions.find((q) => q.id === questionId);
-    return {
-      type: version === 1 ? question.type : question.metaType,
-      questionTitle:
-        version === 1 ? question.title || question.label : question.header || question.label,
-    };
+  function getQuestion(questionId: string) {
+    if (version === 1) {
+      const question = questions?.find((q) => q.id === questionId);
+      return { type: question?.type, questionTitle: question?.title || question?.label };
+    }
+    const question = flowQuestions?.find((q) => q.id === questionId);
+    return { type: question?.metaType, questionTitle: question?.header || question?.label };
   }
 
   const getPercentage = (count: number, total: number) =>
     total > 0 ? Math.round((count / total) * 100) : "0";
 
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: { count?: number; percentage?: number | string } }>;
+  }) => {
     if (active && payload?.length) {
       const { count, percentage } = payload[0].payload;
       return (
@@ -127,11 +145,7 @@ const SurveyQuestion = ({
                         <XAxis dataKey="choice" tick={{ fontSize: 12 }} tickLine={false} />
                         <YAxis tick={{ fontSize: 12 }} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
-                        <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                          {chartData.map((_, i) => (
-                            <Cell key={`cell-${i}`} fill={"#607D8B"} />
-                          ))}
-                        </Bar>
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#607D8B" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -144,17 +158,17 @@ const SurveyQuestion = ({
                           {
                             label: "Responses",
                             value: responseCount,
-                            icon: <Users size={18} color="#2B82DE" />,
+                            icon: <IconUsers size={18} color="#2B82DE" />,
                           },
                           {
                             label: "NPS",
                             value: npsScore >= 0 ? `+${npsScore}` : npsScore,
-                            icon: <Target size={20} color="#2B82DE" />,
+                            icon: <IconTarget size={20} color="#2B82DE" />,
                           },
                           {
                             label: "Happiness Index",
                             value: happinessIndex,
-                            icon: <Smile size={20} color="#2B82DE" />,
+                            icon: <IconMoodSmile size={20} color="#2B82DE" />,
                           },
                         ].map((item) => (
                           <div

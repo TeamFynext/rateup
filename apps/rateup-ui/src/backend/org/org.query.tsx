@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
+import { orgKeys, teamKeys } from "@/backend/org/org.keys";
+import { userKeys } from "@/backend/user/user.keys";
+
 import type { IUpdateLogo, IUpdateOrgDetails } from "./org.api";
 import {
   completeOrgDetails,
@@ -21,27 +25,27 @@ import {
 
 export const useTeamsMembersOfOrg = () => {
   return useQuery({
-    queryKey: ["orgTeamsDataQuery"],
+    queryKey: orgKeys.teams(),
     queryFn: () => getTeamsMembersOfOrg(),
   });
 };
 
 export const useAllTeamsMembersOfOrg = () => {
   return useQuery({
-    queryKey: ["orgTeamsAllDataQuery"],
+    queryKey: orgKeys.teamsAll(),
     queryFn: () => getAllTeamsMembersOfOrg(),
   });
 };
 
 export const useAllOrgs = () =>
   useQuery({
-    queryKey: ["org"],
+    queryKey: orgKeys.all(),
     queryFn: getAllOrgs,
   });
 
 export const useOrgStats = (orgId: string) =>
   useQuery({
-    queryKey: ["org", orgId, "stats"],
+    queryKey: orgKeys.stats(orgId),
     queryFn: () => getOrgStats(orgId),
     enabled: !!orgId,
   });
@@ -55,9 +59,9 @@ export function useUpdateRoleMutation() {
       toast.success("Staff Role Updated Successfully!", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
-      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
     },
     onError: (error) => {
       console.error("Error Role Update:", error.message);
@@ -68,7 +72,7 @@ export function useUpdateRoleMutation() {
   });
 }
 
-export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
+export function useUpdateOrgLogoMutation(setIsLoadingUpload: (uploading: boolean) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateLogo) => updateOrgLogo(values),
@@ -77,8 +81,8 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
         id: "load-data",
       });
       setIsLoadingUpload(false);
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: userKeys.info() });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
     },
     onError: (error) => {
       console.error("Error Logo Update:", error.message);
@@ -104,7 +108,7 @@ export function useUpdateOrgDetailsMutation(options?: { showSuccessToast?: boole
           id: "load-data",
         });
       }
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
     },
     onError: (error) => {
       console.error("Error in Organization Update:", error.message);
@@ -121,7 +125,7 @@ export const useUpdateOrgPause = () => {
     mutationFn: updateOrgPause,
     onSuccess: () => {
       toast.success("Pause status has been updated");
-      queryClient.invalidateQueries({ queryKey: ["org"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error in updating pause status");
@@ -129,7 +133,7 @@ export const useUpdateOrgPause = () => {
   });
 };
 
-export const useGetWebhookClientSecret = (webhookUrl) => {
+export const useGetWebhookClientSecret = (webhookUrl: string | undefined) => {
   return useQuery({
     queryKey: ["webhookClientSecret"],
     queryFn: getWebhookClientSecret,
@@ -146,14 +150,14 @@ export function useCompleteOrgDetails() {
 
 export function useOrgNameAndPhone() {
   return useQuery({
-    queryKey: ["orgNameAndPhone"],
+    queryKey: orgKeys.nameAndPhone(),
     queryFn: orgNameAndPhone,
   });
 }
 
 export function useChecklist() {
   return useQuery({
-    queryKey: ["onboarding-checklist"],
+    queryKey: subscriptionKeys.onboardingChecklist(),
     queryFn: getChecklist,
   });
 }
@@ -169,7 +173,7 @@ export const useDeleteOrgByAdminMutation = () => {
   return useMutation({
     mutationFn: (orgId: string) => deleteOrgByAdmin(orgId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org"] });
+      queryClient.invalidateQueries({ queryKey: orgKeys.all() });
     },
   });
 };

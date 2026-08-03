@@ -1,16 +1,18 @@
 import { create } from "zustand";
 
-interface Cart {
-  id: string;
-  name: string;
-  currency: string;
-  description: string[];
-  amount: string;
-  currencySymbol: string;
-  period: string;
-  gateway: string;
-  planId: string;
-  priceId: string;
+export interface Cart {
+  /** Built from the selected plan, whose fields are all optional. */
+  id?: string;
+  name?: string;
+  currency?: string;
+  description?: string[];
+  /** A number for real plans; the enterprise tiers store "Lets Talk!". */
+  amount?: string | number;
+  currencySymbol?: string;
+  period?: string;
+  gateway?: string;
+  planId?: string;
+  priceId?: string;
   trialDays?: number;
 }
 export interface Store {
@@ -54,7 +56,7 @@ interface ImageActions {
   updateImageArray: (image: object) => void;
   resetImage: () => void;
 }
-const initalImageData = {
+const initalImageData: ImageStore = {
   imageToDelete: [],
 };
 export const useImageStore = create<ImageStore & ImageActions>((set) => ({

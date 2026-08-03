@@ -1,4 +1,4 @@
-import { AlertCircle } from "lucide-react";
+import { IconAlertCircle } from "@tabler/icons-react";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { CampaignParticipantStatus } from "@/types/enums.ts";
@@ -8,7 +8,7 @@ import { getStatusBadgeStyle } from "./utils.ts";
 
 interface StatusBadgeProps {
   status: CampaignParticipantStatus;
-  errorMessage?: string;
+  errorMessage?: string | null;
 }
 
 export function StatusBadge({ status, errorMessage }: Readonly<StatusBadgeProps>) {
@@ -35,7 +35,7 @@ export function StatusBadge({ status, errorMessage }: Readonly<StatusBadgeProps>
         </HoverCardTrigger>
         <HoverCardContent className="w-64">
           <div className="flex items-center gap-1 mb-1">
-            <AlertCircle className="size-3 text-destructive" />
+            <IconAlertCircle className="size-3 text-destructive" />
             <span className="text-xs font-semibold text-destructive">Sending Failed</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{errorMessage}</p>

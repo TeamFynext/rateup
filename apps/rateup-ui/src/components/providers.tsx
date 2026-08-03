@@ -14,6 +14,7 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import axios from "axios";
 import { Suspense } from "react";
+import type { ReactNode } from "react";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary.tsx";
@@ -21,19 +22,20 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
+import { asApiError, getApiErrorData } from "@/utils/apiError.ts";
 import RouteChangeHandler from "@/utils/routeHandler.tsx";
 
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        placeholderData: (previousData, _previousQuery) => previousData, // This will apply to all queries
+        placeholderData: (previousData: unknown, _previousQuery: unknown) => previousData, // This will apply to all queries
         staleTime: 60 * 1000,
         gcTime: 600 * 1000,
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: unknown) => {
           // Don't retry for certain error responses
-          const serverError = error?.response?.data;
-          if (error?.response?.status === 401 || serverError?.message === "Not authorized") {
+          const response = asApiError(error)?.response;
+          if (response?.status === 401 || getApiErrorData(error)?.message === "Not authorized") {
             return false;
           }
           return failureCount <= 2;
@@ -44,7 +46,7 @@ function makeQueryClient() {
       onError: async (error) => {
         // Check if error is an instance of an Axios error
         if (!axios.isAxiosError(error)) return;
-        const serverError = (error as any)?.response?.data;
+        const serverError = getApiErrorData(error);
         if (error?.response?.status === 401 && serverError?.message === "Not authorized") {
           await Session.attemptRefreshingSession();
         }
@@ -74,7 +76,7 @@ export function resetBrowserQueryClient() {
   browserQueryClient = undefined;
 }
 
-export default function Providers({ children }) {
+export default function Providers({ children }: { children: ReactNode }) {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
   //       suspend because React will throw away the client on the initial

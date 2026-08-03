@@ -34,7 +34,7 @@ export async function updateInboxAutomation(
   return res.data;
 }
 
-export async function deleteInboxAutomation(condition: string): Promise<any> {
+export async function deleteInboxAutomation(condition: string): Promise<unknown> {
   const res = await axiosClient.delete(BASE_URL, { params: { condition } });
   return res.data;
 }

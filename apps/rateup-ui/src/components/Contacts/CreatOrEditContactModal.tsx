@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, UserPlus } from "lucide-react";
+import { IconCircleCheck, IconUserPlus } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
@@ -49,6 +50,45 @@ const collectErrorMessages = (node: unknown, messages: string[] = []): string[] 
   return messages;
 };
 
+/**
+ * Prefilled form values. Callers pass either a saved contact being edited (`id` present) or a
+ * draft assembled elsewhere — the inbox's "add this sender" flow supplies only a few fields.
+ */
+export interface ContactInitialValues {
+  id?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  dob?: Date | string | null;
+  source?: string;
+  profilePic?: string;
+  labels?: (string | undefined)[];
+  contactGroupIds?: (string | undefined)[];
+  assignedUserIds?: (string | undefined)[];
+  lifecycleId?: string;
+  notes?: string;
+  external_id?: string;
+  contactType?: string[];
+  updateExisting?: boolean;
+}
+
+/**
+ * The caller-supplied "create contacts" mutation (`useAddNewContactMutation`, which posts to a
+ * contact group). Only the members this modal touches are declared, so any react-query mutation
+ * over a contact payload satisfies it.
+ */
+export interface CreateContactsMutation {
+  mutate(contacts: RequestPayload, options?: MutationCallbacks): void;
+  isPending: boolean;
+}
+
+/** The subset of react-query's per-call `MutateOptions` these modals pass. */
+export interface MutationCallbacks {
+  onSuccess?: () => void;
+  onError?: () => void;
+  onSettled?: () => void;
+}
+
 const CreateOrEditContactModal = ({
   opened,
   setOpened,
@@ -57,10 +97,10 @@ const CreateOrEditContactModal = ({
   createNewContactMutation,
 }: {
   opened: boolean;
-  setOpened: (value) => void;
-  initialValues?: any;
+  setOpened: (value: boolean) => void;
+  initialValues?: ContactInitialValues;
   type?: ContactGroupType;
-  createNewContactMutation?: any;
+  createNewContactMutation?: CreateContactsMutation;
 }) => {
   const { t } = useTranslation();
   const { customFields = [] } = useCustomFieldsContext();
@@ -68,7 +108,7 @@ const CreateOrEditContactModal = ({
   const editContactMutation = useEditContactMutation();
   const contactSchema = useMemo(() => buildContactSchema(t, customFields), [t, customFields]);
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema) as any,
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       ...contactFormDefaults,
       contactType: customFields?.map((field) => field.slug) || [],
@@ -83,9 +123,10 @@ const CreateOrEditContactModal = ({
       external_id: values.external_id || undefined,
       phone: values.phone?.replace(/^\+/, "") || "",
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
-      lastReceivedMessageTimeStamp: undefined,
+      lastReceivedMessageTimeStamp: undefined as string | undefined,
     };
-    if (initialValues) {
+    // Edit mode is keyed on the contact's id; a draft without one takes the create path below.
+    if (initialValues?.id) {
       editContactMutation.mutate(
         { data: contactData, contactId: initialValues.id },
         {
@@ -143,7 +184,7 @@ const CreateOrEditContactModal = ({
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
               <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-blue-600 flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-white" />
+                <IconUserPlus className="w-4 h-4 text-white" />
               </div>
             )}
             {initialValues ? t("Edit Contact") : t("Add Contact")}
@@ -222,7 +263,7 @@ const CreateOrEditContactModal = ({
             editContactMutation.isPending ? (
               <Spinner />
             ) : (
-              <CheckCircle2 className="w-4 h-4 mr-2" />
+              <IconCircleCheck className="w-4 h-4 mr-2" />
             )}
             <span className="text-sm font-normal">{t("Save")}</span>
           </Button>

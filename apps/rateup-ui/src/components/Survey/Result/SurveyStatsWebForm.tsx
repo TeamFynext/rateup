@@ -1,4 +1,10 @@
-import { Globe, MessageCircle, Percent, Play, Users } from "lucide-react";
+import {
+  IconGlobe,
+  IconMessageCircle,
+  IconPercentage,
+  IconPlayerPlay,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useContext, useMemo } from "react";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
@@ -6,17 +12,20 @@ import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
 import { Card } from "@/components/ui/card.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 
-const SurveyStatsWebForm = ({ surveyId }) => {
+const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
   const { filterTeams } = useContext(SurveyContext);
 
   const { data: responseCountData } = useResponseCount(surveyId);
   const responseCount = useMemo(
     () =>
       filterTeams?.length
-        ? responseCountData?.teamWiseCount?.reduce((total, teamMap) => {
-            if (filterTeams.includes(teamMap.id)) total += teamMap.count;
-            return total;
-          }, 0)
+        ? responseCountData?.teamWiseCount?.reduce(
+            (total: number, teamMap: { id: string; count: number }) => {
+              if (filterTeams.includes(teamMap.id)) total += teamMap.count;
+              return total;
+            },
+            0,
+          )
         : responseCountData?.all,
     [responseCountData, filterTeams],
   );
@@ -25,7 +34,9 @@ const SurveyStatsWebForm = ({ surveyId }) => {
   const { visited, started, reviewLinkVisited } = useMemo(() => {
     let filteredStats = surveyStats ? [...surveyStats] : [];
     if (filterTeams?.length > 0) {
-      filteredStats = surveyStats?.filter((team) => filterTeams.includes(team?.surveyTeamMapId));
+      filteredStats = surveyStats?.filter((team: STStats) =>
+        filterTeams.includes(team?.surveyTeamMapId),
+      );
     }
     return filteredStats?.reduce(
       (acc, curr) => {
@@ -47,26 +58,26 @@ const SurveyStatsWebForm = ({ surveyId }) => {
     {
       title: "Total Responses",
       value: responseCount ?? 0,
-      badge: null,
-      icon: <MessageCircle className="text-[#2B82DE]" size={24} />,
+      badge: null as string | null,
+      icon: <IconMessageCircle className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Started",
       value: started ?? "NA",
       badge: null,
-      icon: <Play className="text-[#2B82DE]" size={24} />,
+      icon: <IconPlayerPlay className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Total Visits",
       value: visited ?? "NA",
       badge: null,
-      icon: <Users className="text-[#2B82DE]" size={24} />,
+      icon: <IconUsers className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Google Review Redirects",
       value: reviewLinkVisited ?? "NA",
       badge: null,
-      icon: <Globe className="text-[#2B82DE]" size={24} />,
+      icon: <IconGlobe className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Response Rate",
@@ -79,7 +90,7 @@ const SurveyStatsWebForm = ({ surveyId }) => {
           {responseRateStatus}
         </span>
       ),
-      icon: <Percent className="text-[#2B82DE]" size={24} />,
+      icon: <IconPercentage className="text-[#2B82DE]" size={24} />,
     },
   ];
 
@@ -115,7 +126,7 @@ function getResponseRateInfo(responseCount: number, visited: number) {
 
   const rate = visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
 
-  let status = "Too Low";
+  let status: "Great" | "Good" | "Low" | "Too Low" = "Too Low";
   if (rate >= 70) status = "Great";
   else if (rate >= 50) status = "Good";
   else if (rate >= 30) status = "Low";

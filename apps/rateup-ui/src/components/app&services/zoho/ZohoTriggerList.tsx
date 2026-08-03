@@ -1,0 +1,660 @@
+// Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
+
+import { IconDeviceFloppy, IconSettings } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
+import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
+import { useZohoPipelines, useZohoUsers } from "@/backend/appsIntegration/zoho/zoho.query";
+import { useLifecyclesWithContactCount } from "@/backend/lifecycle/lifecycle.query";
+import RefreshButton from "@/components/Button/RefreshButton";
+import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { useUser } from "@/context/UserContext";
+import { IntegratedApps } from "@/types/enums";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { ZohoTriggers, getTriggerLabel, getTriggerDescription } from "./shared.tsx";
+
+export const ZohoTriggerList = ({
+  integration,
+  refetch,
+  isLoading,
+}: {
+  integration: AppIntegration;
+  refetch: () => void;
+  isLoading: boolean;
+}) => {
+  const { user } = useUser();
+  const { t } = useTranslation();
+  const { data: zohoUsersResponse, isLoading: zohoUsersLoading } = useZohoUsers(
+    user?.orgId,
+    "bigin",
+  );
+
+  const [selectedBiginOwnerId, setSelectedBiginOwnerId] = useState<string>(
+    integration?.credential?.bigin?.biginOwner ?? "",
+  );
+
+  useEffect(() => {
+    if (integration?.credential?.bigin?.biginOwner) {
+      setSelectedBiginOwnerId(integration.credential.bigin.biginOwner);
+    }
+  }, [integration?.credential?.bigin?.biginOwner]);
+
+  const usersField = zohoUsersResponse?.users;
+  const zohoUsers = Array.isArray(usersField)
+    ? usersField
+    : Array.isArray(usersField?.users)
+      ? usersField.users
+      : [];
+
+  const triggers = integration ? (integration.credential?.triggerSubscriptions ?? []) : [];
+
+  const biginCreateEnabled = triggers.some(
+    (t) =>
+      (t.subscribed_field === ZohoTriggers.BIGIN_DEAL_CREATE ||
+        t.subscribed_field === ZohoTriggers.BIGIN_CONTACT_CREATE) &&
+      t.active,
+  );
+
+  const selectedOwner = zohoUsers.find((owner) => owner.id === selectedBiginOwnerId);
+
+  const savedPipeline = integration?.credential?.bigin?.pipeline?.selectedPipeline;
+
+  const savedSubPipeline = integration?.credential?.bigin?.pipeline?.selectedSubPipeline;
+
+  const savedRequiredFieldMappings =
+    integration?.credential?.bigin?.pipeline?.requiredFieldMappings || {};
+
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string>(
+    savedPipeline?.id ? String(savedPipeline.id) : "",
+  );
+
+  const [selectedSubPipelineId, setSelectedSubPipelineId] = useState<string>(
+    savedSubPipeline?.id ? String(savedSubPipeline.id) : "",
+  );
+
+  const [requiredFieldValues, setRequiredFieldValues] = useState<Record<string, string>>(
+    savedRequiredFieldMappings,
+  );
+
+  const [openLifecycleMappingModal, setOpenLifecycleMappingModal] = useState(false);
+
+  const [lifecycleMappings, setLifecycleMappings] = useState<
+    Array<{
+      lifecycleId: string;
+      lifecycleName?: string;
+      biginStageId?: string;
+      biginStageName?: string;
+    }>
+  >([]);
+
+  const { data: lifecycles } = useLifecyclesWithContactCount();
+
+  const updateMut = useUpdateIntegrationMutation(IntegratedApps.zoho);
+
+  const { data: zohopipelines } = useZohoPipelines("bigin");
+
+  const pipelines = zohopipelines?.pipelines ?? [];
+  const subPipelines = zohopipelines?.subPipelines ?? [];
+  const stages = zohopipelines?.stages ?? [];
+
+  const selectedPipeline = pipelines.find(
+    (pipeline) => String(pipeline.id) === String(selectedPipelineId),
+  );
+
+  const handleSavePipelineConfig = () => {
+    const selectedPipelineObj = pipelines.find(
+      (pipeline) => String(pipeline.id) === String(selectedPipelineId),
+    );
+
+    const selectedSubPipelineObj = subPipelines.find(
+      (pipeline) => String(pipeline.id) === String(selectedSubPipelineId),
+    );
+
+    updateMut.mutate({
+      credential: {
+        ...integration.credential,
+        bigin: {
+          pipeline: {
+            ...integration?.credential?.bigin?.pipeline,
+            selectedPipeline: {
+              id: selectedPipelineObj?.id,
+              name: selectedPipelineObj?.name,
+            },
+            selectedSubPipeline: {
+              id: selectedSubPipelineObj?.id,
+              name: selectedSubPipelineObj?.name,
+              value: selectedSubPipelineObj?.value,
+            },
+            requiredFieldMappings: requiredFieldValues,
+          },
+        },
+      },
+    });
+  };
+
+  const handleOpenLifecycleMapping = () => {
+    if (!lifecycles?.length) return;
+
+    const existingMappings = integration?.credential?.bigin?.pipeline?.lifecycleStageMappings || [];
+
+    const mappings = lifecycles.map((lifecycle) => {
+      const existing = existingMappings.find((m) => m.lifecycleId === lifecycle.id);
+
+      return {
+        lifecycleId: lifecycle.id,
+        lifecycleName: lifecycle.name,
+        biginStageId: existing?.biginStageId || "",
+        biginStageName: existing?.biginStageName || "",
+      };
+    });
+
+    setLifecycleMappings(mappings);
+
+    setOpenLifecycleMappingModal(true);
+  };
+
+  const handleSaveLifecycleMappings = () => {
+    const selectedPipelineObj = pipelines.find(
+      (pipeline) => String(pipeline.id) === String(selectedPipelineId),
+    );
+
+    const selectedSubPipelineObj = subPipelines.find(
+      (pipeline) => String(pipeline.id) === String(selectedSubPipelineId),
+    );
+
+    updateMut.mutate({
+      credential: {
+        ...integration.credential,
+        bigin: {
+          pipeline: {
+            selectedPipeline: {
+              id: selectedPipelineObj?.id,
+              name: selectedPipelineObj?.name,
+            },
+            selectedSubPipeline: {
+              id: selectedSubPipelineObj?.id,
+              name: selectedSubPipelineObj?.name,
+              value: selectedSubPipelineObj?.value,
+            },
+            requiredFieldMappings: requiredFieldValues,
+            lifecycleStageMappings: lifecycleMappings,
+          },
+        },
+      },
+    });
+    setOpenLifecycleMappingModal(false);
+  };
+
+  async function handleToggleTrigger(triggerKey: ZohoTriggers, enabled: boolean) {
+    let updatedTriggers = [...triggers];
+
+    if (enabled) {
+      const alreadyExists = updatedTriggers.find((t) => t.subscribed_field === triggerKey);
+
+      if (!alreadyExists) {
+        updatedTriggers.push({
+          subscribed_field: triggerKey,
+          active: true,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } else {
+      updatedTriggers = updatedTriggers.filter((t) => t.subscribed_field !== triggerKey);
+    }
+
+    updateMut.mutate({
+      credential: {
+        ...integration.credential,
+        triggerSubscriptions: updatedTriggers,
+      },
+    });
+  }
+
+  if (!integration) return null;
+
+  const supportedTriggers = [
+    ...(integration?.credential?.supportedProducts?.crm
+      ? [
+          ZohoTriggers.CONTACT_CREATE,
+          ZohoTriggers.CONTACT_UPDATE,
+          ZohoTriggers.CONTACT_DELETE,
+          ZohoTriggers.LEAD_UPDATE,
+          ZohoTriggers.LEAD_CREATE,
+          ZohoTriggers.CONTACT_WEBHOOK,
+          ZohoTriggers.LEAD_WEBHOOK,
+        ]
+      : []),
+
+    ...(integration?.credential?.supportedProducts?.bigin
+      ? [
+          ZohoTriggers.BIGIN_CONTACT_CREATE,
+          ZohoTriggers.BIGIN_CONTACT_UPDATE,
+          ZohoTriggers.BIGIN_CONTACT_DELETE,
+          ZohoTriggers.BIGIN_DEAL_CREATE,
+          ZohoTriggers.BIGIN_CONTACT_WEBHOOK,
+          ZohoTriggers.BIGIN_DEAL_WEBHOOK,
+        ]
+      : []),
+  ];
+
+  const autoManagedFields = [
+    "Deal_Name",
+    "Stage",
+    "Pipeline",
+    "Sub_Pipeline",
+    "Contact_Name",
+    "Lead_Source",
+  ];
+
+  return (
+    <div className="space-y-6 w-full">
+      {/* Trigger Card */}
+      <Card className="overflow-hidden rounded-3xl border shadow-sm">
+        <CardHeader className="border-b bg-muted/30">
+          <div className="flex items-center justify-between">
+            <CardTitle>{t("Trigger Subscriptions")}</CardTitle>
+            <RefreshButton onClick={refetch} isLoading={isLoading} />
+          </div>
+        </CardHeader>
+
+        <CardContent className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+          {supportedTriggers.map((triggerKey) => {
+            const subscribed = triggers.find((t) => t.subscribed_field === triggerKey && t.active);
+
+            return (
+              <div
+                key={triggerKey}
+                className="flex items-start justify-between rounded-2xl border bg-muted/40 p-4 transition-all hover:bg-muted/60"
+              >
+                <div className="flex items-start gap-3 pr-4">
+                  <div className="rounded-xl border bg-background p-2 shadow-sm">
+                    {triggerKey.startsWith("bigin") ? (
+                      <BiginLogo className="h-4 w-4" />
+                    ) : (
+                      <ZohoLogo className="h-4 w-4" />
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="font-semibold text-sm">{getTriggerLabel(triggerKey)}</p>
+
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      {getTriggerDescription(triggerKey)}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                      {subscribed ? "Enabled" : "Disabled"}
+                    </p>
+                  </div>
+                </div>
+
+                <Switch
+                  checked={!!subscribed}
+                  onCheckedChange={(checked) => handleToggleTrigger(triggerKey, checked)}
+                />
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {biginCreateEnabled && integration?.credential?.supportedProducts?.bigin && (
+        <Card className="overflow-hidden rounded-3xl border shadow-sm">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl border bg-background p-2 shadow-sm">
+                <BiginLogo className="h-5 w-5" />
+              </div>
+
+              <div>
+                <CardTitle className="text-lg">{t("Assign Bigin Owner")}</CardTitle>
+
+                <p className="text-muted-foreground text-sm">
+                  {t(
+                    "Select a Zoho user to assign as the owner for created Bigin contacts and deals.",
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6 p-6">
+            <div className="space-y-2">
+              <Label>{t("Bigin Owner")}</Label>
+              <Select
+                value={selectedBiginOwnerId}
+                onValueChange={(value) => setSelectedBiginOwnerId(String(value))}
+                disabled={zohoUsersLoading}
+                items={zohoUsers.map((owner) => ({
+                  value: owner.id,
+                  label: `${owner.name} ${owner.email ? `(${owner.email})` : ""}`,
+                }))}
+              >
+                <SelectTrigger className="h-11 rounded-xl w-full">
+                  <SelectValue
+                    placeholder={zohoUsersLoading ? t("Loading users...") : t("Select a Zoho user")}
+                  />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {zohoUsers.map((owner) => (
+                    <SelectItem key={owner.id} value={owner.id}>
+                      {owner.name} {owner.email ? `(${owner.email})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "The selected user id will be saved as the Bigin owner in your Zoho credential.",
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                onClick={() =>
+                  updateMut.mutate({
+                    credential: {
+                      ...integration.credential,
+                      bigin: {
+                        ...integration?.credential?.bigin,
+                        biginOwner: selectedBiginOwnerId,
+                      },
+                    },
+                  })
+                }
+                disabled={!selectedBiginOwnerId}
+              >
+                {t("Save Owner")}
+              </Button>
+
+              {selectedOwner ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("Current owner")}: {selectedOwner.name}
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bigin Config */}
+      {triggers.some((t) => t.subscribed_field === ZohoTriggers.BIGIN_DEAL_CREATE && t.active) && (
+        <Card className="overflow-hidden rounded-3xl border bg-gradient-to-br from-background to-muted/30 shadow-sm">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl border bg-background p-2 shadow-sm">
+                <BiginLogo className="h-5 w-5" />
+              </div>
+
+              <div>
+                <CardTitle className="text-lg">{t("Bigin Deal Configuration")}</CardTitle>
+
+                <p className="text-muted-foreground text-sm">
+                  {t("Configure where new deals should be created in Zoho Bigin")}.
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6 p-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Pipeline */}
+              <div className="space-y-2">
+                <Label>{t("Pipeline")}</Label>
+                <Select
+                  value={selectedPipelineId}
+                  onValueChange={(value) => {
+                    setSelectedPipelineId(String(value));
+                  }}
+                  items={pipelines.map((pipeline) => ({
+                    value: String(pipeline.id),
+                    label: pipeline.name,
+                  }))}
+                >
+                  <SelectTrigger className="h-11 rounded-xl w-full">
+                    <SelectValue placeholder="Select pipeline" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {pipelines.map((pipeline) => (
+                      <SelectItem key={String(pipeline.id)} value={String(pipeline.id)}>
+                        {pipeline.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sub Pipeline */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
+                  <Label>{t("Sub Pipeline")}</Label>
+
+                  <p className="text-xs text-red-500 font-medium">
+                    ({t("Select a sub pipeline that belongs to the selected pipeline")})
+                  </p>
+                </div>
+                <Select
+                  value={selectedSubPipelineId}
+                  onValueChange={(value) => {
+                    setSelectedSubPipelineId(String(value));
+                  }}
+                  items={subPipelines.map((pipeline) => ({
+                    value: String(pipeline.id),
+                    label: pipeline.name,
+                  }))}
+                >
+                  <SelectTrigger className="h-11 rounded-xl w-full">
+                    <SelectValue placeholder="Select sub pipeline" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {subPipelines.map((pipeline) => (
+                      <SelectItem key={String(pipeline.id)} value={String(pipeline.id)}>
+                        {pipeline.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* REQUIRED FIELDS */}
+            {(selectedPipeline?.requiredFields?.length ?? 0) > 0 && (
+              <div className="space-y-4 rounded-2xl border bg-muted/20 p-5">
+                <div>
+                  <h3 className="font-semibold">{t("Required Fields")}</h3>
+
+                  <p className="text-sm text-muted-foreground">
+                    {t("Configure mandatory fields for this pipeline")}.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(selectedPipeline?.requiredFields ?? [])
+                    .filter((field) => !autoManagedFields.includes(field.apiName))
+                    .map((field) => (
+                      <div key={field.apiName} className="space-y-2">
+                        <Label>{field.label}</Label>
+
+                        {field.dataType === "date" && (
+                          <Input
+                            type="number"
+                            min={0}
+                            placeholder={t("Enter number of days from today")}
+                            value={requiredFieldValues[field.apiName] || ""}
+                            onChange={(e) =>
+                              setRequiredFieldValues((prev) => ({
+                                ...prev,
+
+                                [field.apiName]: e.target.value,
+                              }))
+                            }
+                          />
+                        )}
+
+                        {(field.dataType === "text" ||
+                          field.dataType === "email" ||
+                          field.dataType === "phone") && (
+                          <Input
+                            value={requiredFieldValues[field.apiName] || ""}
+                            placeholder={t("Enter value")}
+                            onChange={(e) =>
+                              setRequiredFieldValues((prev) => ({
+                                ...prev,
+
+                                [field.apiName]: e.target.value,
+                              }))
+                            }
+                          />
+                        )}
+
+                        {field.dataType === "picklist" && (
+                          <Input
+                            placeholder={t("Enter value")}
+                            value={requiredFieldValues[field.apiName] || ""}
+                            onChange={(e) =>
+                              setRequiredFieldValues((prev) => ({
+                                ...prev,
+
+                                [field.apiName]: e.target.value,
+                              }))
+                            }
+                          />
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-xl px-8"
+                disabled={!selectedPipelineId || !selectedSubPipelineId}
+                onClick={handleSavePipelineConfig}
+              >
+                <IconDeviceFloppy />
+                {t("Save Configuration")}
+              </Button>
+
+              <Button
+                size="lg"
+                className="rounded-xl px-8"
+                disabled={!selectedPipelineId || !selectedSubPipelineId}
+                onClick={handleOpenLifecycleMapping}
+              >
+                <IconSettings />
+                {t("Configure Lifecycle Mapping")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lifecycle Modal */}
+      <Dialog open={openLifecycleMappingModal} onOpenChange={setOpenLifecycleMappingModal}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("Lifecycle Stage Mapping")}</DialogTitle>
+
+            <DialogDescription>
+              {t("Map Rateup lifecycles to Bigin stages.")}
+              <p className="text-sm text-red-500 font-medium mt-2">
+                {t(
+                  "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration.",
+                )}
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {(() => {
+              const unmatchedStages = stages.filter(
+                (stage) =>
+                  !lifecycleMappings.some(
+                    (mapping) => String(mapping.biginStageId) === String(stage.id),
+                  ),
+              );
+
+              return (
+                <div className="rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+                  {t("Unmatched stages left")}:{" "}
+                  <span className="font-semibold">{unmatchedStages.length}</span>
+                </div>
+              );
+            })()}
+            {lifecycleMappings.map((mapping, index) => (
+              <div
+                key={mapping.lifecycleId}
+                className="flex items-center gap-4 rounded-xl border p-4"
+              >
+                <div className="flex-1">
+                  <Label>{mapping.lifecycleName}</Label>
+                </div>
+
+                <Select
+                  value={mapping.biginStageId}
+                  onValueChange={(value) => {
+                    const stage = stages.find((s) => String(s.id) === String(value));
+                    const updated = [...lifecycleMappings];
+                    updated[index] = {
+                      ...mapping,
+                      biginStageId: stage?.id === undefined ? undefined : String(stage.id),
+                      biginStageName: stage?.name,
+                    };
+                    setLifecycleMappings(updated);
+                  }}
+                  items={stages.map((stage) => ({
+                    value: String(stage.id),
+                    label: stage.name,
+                  }))}
+                >
+                  <SelectTrigger className="w-[240px]">
+                    <SelectValue placeholder="Select stage" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {stages.map((stage) => (
+                      <SelectItem key={stage.id} value={String(stage.id)}>
+                        {stage.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={handleSaveLifecycleMappings}>
+              <IconDeviceFloppy />
+              {t("Save Mapping")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};

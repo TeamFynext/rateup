@@ -1,6 +1,12 @@
+import {
+  IconAlertTriangle,
+  IconCalendar,
+  IconCode,
+  IconShield,
+  IconUser,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { AlertTriangle, Calendar, Code, Shield, User } from "lucide-react";
 import { useMemo } from "react";
 
 import type { AuditLogData } from "@/backend/user/user.api";
@@ -89,7 +95,7 @@ const ActionCell = ({ action, route }: { action: string; route: string }) => {
 
   return (
     <div className="flex items-center gap-2">
-      <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+      <IconShield className="h-4 w-4 text-muted-foreground shrink-0" />
       <span className="font-medium">{formattedMessage}</span>
     </div>
   );
@@ -97,21 +103,21 @@ const ActionCell = ({ action, route }: { action: string; route: string }) => {
 
 const UserCell = ({ user }: { user?: { name?: string } }) => (
   <div className="flex items-center gap-2">
-    <User className="h-4 w-4 text-muted-foreground shrink-0" />
+    <IconUser className="h-4 w-4 text-muted-foreground shrink-0" />
     <span className="font-mono text-xs text-muted-foreground max-w-[150px] truncate">
       {user?.name || "N/A"}
     </span>
   </div>
 );
 
-const RequestBodyCell = ({ body }: { body: any }) => (
+const RequestBodyCell = ({ body }: { body: unknown }) => (
   <div className="flex items-center gap-2">
     <Popover>
       <PopoverTrigger
         nativeButton={false}
         render={<div className="flex items-center gap-2 cursor-pointer" />}
       >
-        <Code className="h-4 w-4 text-muted-foreground shrink-0" />
+        <IconCode className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="text-xs text-muted-foreground max-w-[100px] truncate">
           {body ? JSON.stringify(body) : "Empty"}
         </span>
@@ -125,7 +131,7 @@ const RequestBodyCell = ({ body }: { body: any }) => (
         </ScrollArea>
       </PopoverContent>
     </Popover>
-    <Code className="h-4 w-4 text-muted-foreground shrink-0" />
+    <IconCode className="h-4 w-4 text-muted-foreground shrink-0" />
     {/* <span className="text-xs text-muted-foreground max-w-[100px] truncate">
       {body ? JSON.stringify(body) : "Empty"}
     </span> */}
@@ -134,7 +140,7 @@ const RequestBodyCell = ({ body }: { body: any }) => (
 
 const TimestampCell = ({ timestamp }: { timestamp: string }) => (
   <div className="flex items-center gap-2">
-    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+    <IconCalendar className="h-4 w-4 text-muted-foreground shrink-0" />
     <span className="text-sm">{formatTimestamp(timestamp)}</span>
   </div>
 );
@@ -144,7 +150,7 @@ export const ErrorCard = ({ message }: { message: string }) => (
     <Card className="w-96">
       <CardHeader>
         <CardTitle className="text-destructive flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5" />
+          <IconAlertTriangle className="h-5 w-5" />
           Error
         </CardTitle>
         <CardDescription>{message}</CardDescription>

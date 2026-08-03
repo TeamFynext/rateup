@@ -1,10 +1,21 @@
+import {
+  IconExternalLink,
+  IconLoader2,
+  IconMapPin,
+  IconPackage,
+  IconShoppingBag,
+  IconTruck,
+} from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
-import { ExternalLink, Loader2, MapPin, Package, ShoppingBag, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { axiosClient } from "@/backend/apiClient";
+import type {
+  CatalogOrderAddress,
+  CatalogOrderProduct,
+} from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +28,43 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { COMMON_CARRIERS, EXCLUDED_KEYS, STAGE_LABELS } from "@/types/enums";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
+
+/**
+ * What the dialog reads off an order. Both the commerce list's `CommerceOrder`
+ * and the catalog's `CatalogOrder` satisfy it.
+ */
+export interface OrderDetails {
+  id: string;
+  createdAt: string;
+  contact?: { name?: string | null; phone?: string | null } | null;
+  products?: CatalogOrderProduct[];
+  status?: string | null;
+  orderStage?: string | null;
+  currency?: string | null;
+  shippingAddress?: CatalogOrderAddress | null;
+  deliveryOption?: { charge?: number; name?: string; days?: number } | null;
+  shopifyDraftOrderId?: string | null;
+  shopifyInvoiceUrl?: string | null;
+}
+
+/** A Shopify fulfillment order line item, from the integration proxy. */
+interface ShopifyFulfillmentLineItem {
+  id: string;
+  remainingQuantity: number;
+  totalQuantity?: number;
+  title?: string;
+  name?: string;
+  sku?: string | null;
+  image?: { url?: string } | null;
+}
+
+/** A Shopify fulfillment order, from the integration proxy. */
+interface ShopifyFulfillmentOrder {
+  id: string;
+  status?: string;
+  lineItems?: { nodes?: ShopifyFulfillmentLineItem[] };
+}
 
 export default function OrderDetailsDialog({
   open,
@@ -25,9 +73,9 @@ export default function OrderDetailsDialog({
 }: {
   open: boolean;
   onOpenChange: (b: boolean) => void;
-  order: any;
+  order: OrderDetails | null;
 }) {
-  const [fulfillmentOrders, setFulfillmentOrders] = useState<any[]>([]);
+  const [fulfillmentOrders, setFulfillmentOrders] = useState<ShopifyFulfillmentOrder[]>([]);
   const [loadingFulfillments, setLoadingFulfillments] = useState(false);
   const [submittingFulfillment, setSubmittingFulfillment] = useState(false);
   const [trackingCompany, setTrackingCompany] = useState("");
@@ -45,17 +93,18 @@ export default function OrderDetailsDialog({
       const response = await axiosClient.get(
         `/integrations/shopify/orders/${order.id}/fulfillment-orders`,
       );
-      setFulfillmentOrders(response.data || []);
+      const fulfillments: ShopifyFulfillmentOrder[] = response.data || [];
+      setFulfillmentOrders(fulfillments);
       const initialQtys: Record<string, number> = {};
-      response.data?.forEach((fo: any) => {
-        fo.lineItems?.nodes?.forEach((item: any) => {
+      fulfillments.forEach((fo) => {
+        fo.lineItems?.nodes?.forEach((item) => {
           if (item.remainingQuantity > 0) {
             initialQtys[item.id] = item.remainingQuantity;
           }
         });
       });
       setQuantitiesToFulfill(initialQtys);
-    } catch (e: any) {
+    } catch (e) {
       console.error("Failed to fetch fulfillment orders", e);
     } finally {
       setLoadingFulfillments(false);
@@ -71,15 +120,15 @@ export default function OrderDetailsDialog({
   }, [open, order?.id]);
 
   const handleCreateFulfillment = async (fulfillmentOrderId: string) => {
-    const fo = fulfillmentOrders.find((f: any) => f.id === fulfillmentOrderId);
+    const fo = fulfillmentOrders.find((f) => f.id === fulfillmentOrderId);
     if (!fo) return;
 
     const lineItemsToFulfill = fo.lineItems?.nodes
-      ?.map((item: any) => ({
+      ?.map((item) => ({
         id: item.id,
         quantity: quantitiesToFulfill[item.id] ?? 0,
       }))
-      .filter((item: any) => item.quantity > 0);
+      .filter((item) => item.quantity > 0);
 
     if (!lineItemsToFulfill || lineItemsToFulfill.length === 0) {
       toast.error("Please enter a quantity greater than 0 for at least one item.");
@@ -88,7 +137,14 @@ export default function OrderDetailsDialog({
 
     setSubmittingFulfillment(true);
     try {
-      const payload: any = {
+      const payload: {
+        lineItemsByFulfillmentOrder: Array<{
+          fulfillmentOrderId: string;
+          fulfillmentOrderLineItems: Array<{ id: string; quantity: number }>;
+        }>;
+        notifyCustomer: boolean;
+        trackingInfo?: { number?: string; company?: string; url?: string };
+      } = {
         lineItemsByFulfillmentOrder: [
           {
             fulfillmentOrderId,
@@ -114,9 +170,9 @@ export default function OrderDetailsDialog({
       setSelectedCarrier("");
       setCustomCarrierName("");
       await fetchFulfillmentOrders();
-    } catch (e: any) {
+    } catch (e) {
       console.error("Failed to create fulfillment", e);
-      toast.error(e.message || "Failed to create fulfillment in Shopify");
+      toast.error(getApiErrorMessage(e, "Failed to create fulfillment in Shopify"));
     } finally {
       setSubmittingFulfillment(false);
     }
@@ -124,18 +180,22 @@ export default function OrderDetailsDialog({
 
   if (!order) return null;
 
-  const products: any[] = order.products ?? [];
-  const address: any = order.shippingAddress;
-  const delivery: any = order.deliveryOption;
+  const products = order.products ?? [];
+  const address = order.shippingAddress;
+  const delivery = order.deliveryOption;
   const itemsTotal = products.reduce(
-    (s, p) => s + (parseFloat(p.price ?? 0) || 0) * (parseInt(p.quantity ?? 1) || 1),
+    (s, p) => s + (Number(p.price) || 0) * (Number(p.quantity) || 1),
     0,
   );
   const deliveryCharge = delivery?.charge ?? 0;
   const grandTotal = itemsTotal + deliveryCharge;
   const currency = products[0]?.currency ?? "₹";
 
-  const stageLabel = STAGE_LABELS[order.orderStage] ?? order.orderStage ?? order.status ?? "—";
+  const stageLabel =
+    (order.orderStage ? STAGE_LABELS[order.orderStage] : undefined) ??
+    order.orderStage ??
+    order.status ??
+    "—";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -182,9 +242,9 @@ export default function OrderDetailsDialog({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((item: any, idx: number) => {
-                const price = parseFloat(item.price ?? "0") || 0;
-                const qty = parseInt(item.quantity ?? "1") || 1;
+              {products.map((item, idx: number) => {
+                const price = Number(item.price) || 0;
+                const qty = Number(item.quantity) || 1;
                 return (
                   <TableRow key={idx}>
                     <TableCell>
@@ -212,7 +272,7 @@ export default function OrderDetailsDialog({
                         {Object.entries(item).map(([k, v]) => {
                           if (EXCLUDED_KEYS.has(k)) return null;
                           if (k === "additional_variant_attributes" && typeof v === "object" && v) {
-                            return Object.entries(v as any).map(([kk, vv]) => (
+                            return Object.entries(v).map(([kk, vv]) => (
                               <span key={kk} className="capitalize">
                                 {kk.replace(/_/g, " ")}: {String(vv)}
                               </span>
@@ -277,7 +337,7 @@ export default function OrderDetailsDialog({
         {address && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <MapPin className="h-4 w-4 text-primary" />
+              <IconMapPin className="h-4 w-4 text-primary" />
               <p className="text-sm font-semibold">Shipping Address</p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-0.5">
@@ -299,7 +359,7 @@ export default function OrderDetailsDialog({
         {delivery && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Truck className="h-4 w-4 text-primary" />
+              <IconTruck className="h-4 w-4 text-primary" />
               <p className="text-sm font-semibold">Delivery Partner</p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3 text-sm flex items-center justify-between">
@@ -320,7 +380,7 @@ export default function OrderDetailsDialog({
           <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <ShoppingBag className="h-4 w-4 text-primary" />
+                <IconShoppingBag className="h-4 w-4 text-primary" />
                 <p className="text-sm font-semibold">Shopify Order</p>
               </div>
               <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-1">
@@ -339,7 +399,7 @@ export default function OrderDetailsDialog({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
                   >
-                    Open Checkout Link <ExternalLink className="h-3 w-3" />
+                    Open Checkout Link <IconExternalLink className="h-3 w-3" />
                   </a>
                 )}
               </div>
@@ -349,17 +409,17 @@ export default function OrderDetailsDialog({
               <div className="space-y-4 border-t pt-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-primary" />
+                    <IconPackage className="h-4 w-4 text-primary" />
                     <span className="text-sm font-semibold">Shopify Fulfillment</span>
                     {loadingFulfillments && (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                      <IconLoader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                     )}
                   </div>
                 </div>
 
                 {loadingFulfillments ? (
                   <div className="rounded-lg border p-4 bg-muted/10 flex items-center justify-center text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <IconLoader2 className="h-4 w-4 animate-spin mr-2" />
                     Loading fulfillment status from Shopify...
                   </div>
                 ) : fulfillmentOrders.length === 0 ? (
@@ -369,10 +429,9 @@ export default function OrderDetailsDialog({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {fulfillmentOrders.map((fo: any) => {
+                    {fulfillmentOrders.map((fo) => {
                       const unfulfilledItems =
-                        fo.lineItems?.nodes?.filter((item: any) => item.remainingQuantity > 0) ||
-                        [];
+                        fo.lineItems?.nodes?.filter((item) => item.remainingQuantity > 0) || [];
                       const isFulfilled = fo.status === "FULFILLED";
 
                       return (
@@ -392,7 +451,7 @@ export default function OrderDetailsDialog({
                           </div>
 
                           <div className="text-sm space-y-2">
-                            {fo.lineItems?.nodes?.map((item: any) => {
+                            {fo.lineItems?.nodes?.map((item) => {
                               const hasRemaining = item.remainingQuantity > 0;
                               return (
                                 <div
@@ -545,7 +604,7 @@ export default function OrderDetailsDialog({
                                 >
                                   {submittingFulfillment ? (
                                     <>
-                                      <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                                      <IconLoader2 className="h-3 w-3 animate-spin mr-1.5" />
                                       Fulfilling...
                                     </>
                                   ) : (

@@ -1,5 +1,9 @@
-import { IconCircleDashedCheck } from "@tabler/icons-react";
-import { CornerUpLeft, ExternalLink, List } from "lucide-react";
+import {
+  IconCircleDashedCheck,
+  IconCornerUpLeft,
+  IconExternalLink,
+  IconList,
+} from "@tabler/icons-react";
 
 import { whatsappToHTML } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -46,7 +50,7 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
           variant="secondary"
           className="w-full text-xs text-indigo-600 gap-1.5 hover:bg-muted/40"
         >
-          <CornerUpLeft size={16} />
+          <IconCornerUpLeft size={16} />
           <span>{button?.reply?.title || button?.reply?.id}</span>
         </Button>
       ))}
@@ -70,7 +74,7 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
             variant="secondary"
             className="w-full text-xs text-indigo-600 gap-1.5 hover:bg-muted/40"
           >
-            <ExternalLink size={16} />
+            <IconExternalLink size={16} />
             <span>{props?.interactiveBody?.action?.parameters?.display_text}</span>
           </Button>
         </a>
@@ -86,7 +90,7 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
               />
             }
           >
-            <List className="w-4 h-4" />
+            <IconList className="w-4 h-4" />
             <span>{props?.interactiveBody?.action?.button}</span>
           </PopoverTrigger>
           <PopoverContent>

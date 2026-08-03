@@ -2,8 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { cn } from "@/lib/utils.ts";
-
-import { useChatFilterStore } from "./chatFilterStore.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 
 /**
  * Channel scope for the inbox list — WhatsApp number, Instagram account or
@@ -23,7 +22,9 @@ export default function ChannelFilter({ className }: Readonly<{ className?: stri
       <AccountSelector
         label={translations("Channel")}
         value={filter?.phone || "all"}
-        onChange={(phone: string) => setFilter({ ...filter, phone: phone === "all" ? "" : phone })}
+        onChange={(phone) =>
+          setFilter({ ...filter, phone: !phone || phone === "all" ? "" : phone })
+        }
         usePhoneNumber
         withAllOption
         optional

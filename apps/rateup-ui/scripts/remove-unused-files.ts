@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, rmdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-function removeEmptyDirs(dir) {
+function removeEmptyDirs(dir: string) {
   if (!existsSync(dir)) return;
 
   const entries = readdirSync(dir);

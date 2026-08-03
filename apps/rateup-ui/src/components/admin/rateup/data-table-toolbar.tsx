@@ -1,5 +1,5 @@
+import { IconPlus, IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { Plus, X } from "lucide-react";
 
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -31,13 +31,13 @@ export function DataTableToolbar<TData>({
         {isFiltered && (
           <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
-            <X />
+            <IconX />
           </Button>
         )}
       </div>
       <div className="flex items-center gap-2">
         <Button onClick={onCreatePlan} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
+          <IconPlus className="h-4 w-4 mr-2" />
           Create Plan
         </Button>
         <DataTableViewOptions table={table} />

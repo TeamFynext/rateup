@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconTrash } from "@tabler/icons-react";
+import type { UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -7,6 +8,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
+import type { updateIntegrationSchema } from "@/backend/appsIntegration/integration.api";
 import {
   useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
@@ -46,10 +49,16 @@ export function PetpoojaIntegration() {
   );
 }
 
-function PetpoojaConfig({ integration, updateIntegration }) {
+function PetpoojaConfig({
+  integration,
+  updateIntegration,
+}: {
+  integration: AppIntegration;
+  updateIntegration: UseMutationResult<unknown, Error, updateIntegrationSchema, unknown>;
+}) {
   const uid = useId();
   const [restaurantId, setRestaurantId] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const createIntegration = useCreateIntegrationMutation(IntegratedApps.petpooja);
   const deleteIntegration = useDeleteIntegrationMutation(IntegratedApps.petpooja);
   const confirm = useConfirm();
@@ -129,7 +138,13 @@ function PetpoojaConfig({ integration, updateIntegration }) {
   );
 }
 
-function WaTemplateSendSettings({ integration, updateIntegration }) {
+function WaTemplateSendSettings({
+  integration,
+  updateIntegration,
+}: {
+  integration: AppIntegration;
+  updateIntegration: UseMutationResult<unknown, Error, updateIntegrationSchema, unknown>;
+}) {
   const uid = useId();
   const { t: translations } = useTranslation();
   const schema = z.object({
@@ -249,9 +264,9 @@ function WaTemplateSendSettings({ integration, updateIntegration }) {
   );
 }
 
-function WaTemplateSentHistory({ integration }) {
+function WaTemplateSentHistory({ integration }: { integration: AppIntegration }) {
   const rows = integration
-    ? integration.credential?.history?.map((hist, idx) => ({
+    ? integration.credential?.history?.map((hist, idx: number) => ({
         id: `history-${idx}`,
         phone: hist.phone,
         name: hist.name,
@@ -263,7 +278,7 @@ function WaTemplateSentHistory({ integration }) {
       }))
     : [];
 
-  type HistoryRow = (typeof rows)[0];
+  type HistoryRow = NonNullable<typeof rows>[0];
 
   const columns: ColumnDef<HistoryRow>[] = [
     {
@@ -295,7 +310,7 @@ function WaTemplateSentHistory({ integration }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <DataTable columns={columns} data={rows} />
+      <DataTable columns={columns} data={rows ?? []} />
     </div>
   );
 }

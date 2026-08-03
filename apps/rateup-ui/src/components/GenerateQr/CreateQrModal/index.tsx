@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Info, Plus, QrCode } from "lucide-react";
+import { IconEdit, IconInfoCircle, IconPlus, IconQrcode } from "@tabler/icons-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,19 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
+function CreateQrModal({
+  opened,
+  onClose,
+  mode,
+  shortUrlId,
+  initialName,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  mode: "create" | "edit";
+  shortUrlId: string;
+  initialName: string;
+}) {
   const { t: translations } = useTranslation();
   const formSchema = z.object({
     name: z
@@ -43,7 +55,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const createQrMutation = useCreateQrMutation();
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
-  const handleCreateQrFormSubmit = useCallback(async (values) => {
+  const handleCreateQrFormSubmit = useCallback(async (values: { name: string; url: string }) => {
     await createQrMutation.mutateAsync({
       name: values.name,
       link: values.url,
@@ -53,7 +65,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   }, []);
 
   const handleUpdateQrFormSubmit = useCallback(
-    async (values) => {
+    async (values: { name: string; url?: string }) => {
       const name = values.name;
       await updateQrMutation.mutateAsync({
         shortUrlId: shortUrlId,
@@ -82,7 +94,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
 
           <div className="relative mx-auto w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shadow-lg">
-            <QrCode className="w-7 h-7 text-white" />
+            <IconQrcode className="w-7 h-7 text-white" />
           </div>
           <div className="text-center relative">
             <DialogTitle className="text-xl font-semibold text-white">
@@ -110,7 +122,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
             <Field data-invalid={!!form.formState.errors.name}>
               <FieldLabel htmlFor="display-name" className="font-semibold">
                 <div className="size-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
-                  <Edit className="size-3 text-white" />
+                  <IconEdit className="size-3 text-white" />
                 </div>
                 {translations("QR Name")} <span className="text-destructive">*</span>
               </FieldLabel>
@@ -128,7 +140,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
               <Field data-invalid={!!form.formState.errors.url}>
                 <FieldLabel htmlFor="qr-url" className="font-semibold">
                   <div className="size-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
-                    <Edit className="size-3 text-white" />
+                    <IconEdit className="size-3 text-white" />
                   </div>
                   {translations("URL")} <span className="text-destructive">*</span>
                 </FieldLabel>
@@ -147,7 +159,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
             {/* Info Box */}
             <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-rateup-darkblue dark:to-transparent border-l-4 border-primary rounded-r-lg p-3.5 flex gap-3">
               <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                <Info className="w-3 h-3 text-white" />
+                <IconInfoCircle className="w-3 h-3 text-white" />
               </div>
               <p className="text-xs leading-relaxed">
                 <span className="font-semibold">{translations("Pro Tip")}:</span>{" "}
@@ -168,9 +180,9 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
               disabled={mode === "create" ? createQrMutation.isPending : updateQrMutation.isPending}
             >
               {mode === "create" ? (
-                <Plus data-icon="inline-start" />
+                <IconPlus data-icon="inline-start" />
               ) : (
-                <Edit data-icon="inline-start" />
+                <IconEdit data-icon="inline-start" />
               )}
               {mode === "create" ? translations("Create QR") : translations("Rename QR")}
             </Button>

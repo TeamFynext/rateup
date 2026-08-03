@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -81,7 +81,7 @@ export function PointsExpirationSettings({
                 <Select
                   value={field.value.toString()}
                   onValueChange={
-                    disabled ? undefined : (val) => field.onChange(Number.parseInt(val))
+                    disabled ? undefined : (val) => field.onChange(Number.parseInt(val ?? ""))
                   }
                   disabled={disabled}
                   items={[
@@ -113,7 +113,7 @@ export function PointsExpirationSettings({
           <Button size="sm" className="w-full" type="submit" disabled={isPending || disabled}>
             {isPending ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 {t("Saving")}
               </>
             ) : (

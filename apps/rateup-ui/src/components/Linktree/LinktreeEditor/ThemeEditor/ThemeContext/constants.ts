@@ -3,8 +3,8 @@ const initialState = {
     styles: {
       backgroundColor: "#f7f7f7",
     },
-    desktopBgImgUrl: null,
-    mobileBgImgUrl: null,
+    desktopBgImgUrl: null as string | null,
+    mobileBgImgUrl: null as string | null,
   },
   title: {
     styles: {
@@ -27,7 +27,7 @@ const initialState = {
       height: 50,
       width: 50,
     },
-    logoUrl: null,
+    logoUrl: null as string | null,
   },
   linkListItem: {
     styles: {

@@ -1,5 +1,5 @@
-import { IconDots } from "@tabler/icons-react";
-import { Trash2 } from "lucide-react";
+import { IconDots, IconTrash } from "@tabler/icons-react";
+import type { MouseEvent } from "react";
 
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -15,8 +15,8 @@ import type { Rule } from "@/types/rule.ts";
 
 interface RuleCardProps {
   item: Rule;
-  onToggleActive: (e) => void;
-  onDelete: (e) => void;
+  onToggleActive: (isActive: boolean) => void;
+  onDelete: (e: MouseEvent<HTMLElement>) => void;
 }
 
 export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardProps>) {
@@ -52,7 +52,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
           }}
           className="text-red-600 focus:text-red-600"
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <IconTrash className="mr-2 h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

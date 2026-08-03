@@ -3,11 +3,11 @@ import {
   IconBold,
   IconCode,
   IconItalic,
+  IconMoodSmile,
   IconPlus,
   IconStrikethrough,
 } from "@tabler/icons-react";
 import type { EmojiClickData } from "emoji-picker-react";
-import { Smile } from "lucide-react";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,10 +24,10 @@ export const TextFormateToolBar = ({
   undo,
   dynamicVariables,
 }: {
-  insertValue: (value) => void;
+  insertValue: (value: string) => void;
   applyFormatting: (value: string) => void;
   undo: () => void;
-  dynamicVariables: any[];
+  dynamicVariables: unknown[];
 }) => {
   const [variableCount, setVariableCount] = useState(1);
   const { t: translations } = useTranslation();
@@ -115,7 +115,7 @@ export const PopoverEmojiPicker = ({
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted cursor-pointer" />
             }
           >
-            {showIcon ?? <Smile className="w-4 h-4" />}
+            {showIcon ?? <IconMoodSmile className="w-4 h-4" />}
           </PopoverTrigger>
         }
         content={<span>{translations("Insert an emoji")}</span>}

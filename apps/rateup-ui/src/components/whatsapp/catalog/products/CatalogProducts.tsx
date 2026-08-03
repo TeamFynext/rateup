@@ -1,6 +1,7 @@
 import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -14,16 +15,16 @@ import { useDisclosure } from "@/hooks/useDisclosure";
 import { AddCatalogProductModal } from "./AddCatalogProduct.tsx";
 import ProductItems from "./ProductItems.tsx";
 
-const CatalogProducts = ({ catalogData }) => {
+const CatalogProducts = ({ catalogData }: { catalogData: WaCatalog }) => {
   const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
   const syncFromMetaMut = useSyncCatalogProducts(catalogData?.catalogId);
 
-  function handleSyncFromMeta(data = null) {
+  function handleSyncFromMeta(data: { limit?: number; next?: string } | null = null) {
     toast.loading("Syncing products from Meta...", {
       id: "sync-catalog-products-meta",
     });
     syncFromMetaMut.mutate(data, {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast.success("Products synced from Meta", {
           id: "sync-catalog-products-meta",
         });

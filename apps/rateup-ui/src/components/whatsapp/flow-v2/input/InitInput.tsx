@@ -10,19 +10,32 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 
-const InitInput = (props) => {
+import type { FlowInputProps } from "./inputProps.ts";
+import { asText } from "./inputProps.ts";
+
+const InitInput = (
+  props: FlowInputProps<string> & { dataSource?: Array<{ id: string; title: string }> },
+) => {
   const uid = useId();
-  const options = props?.dataSource?.map((data) => ({ value: data.id, label: data.title })) ?? [];
+  const options =
+    props?.dataSource?.map((data: { id: string; title: string }) => ({
+      value: data.id,
+      label: data.title,
+    })) ?? [];
 
   return options.length > 0 ? (
     <Field>
       <FieldLabel htmlFor={`${uid}-field`}>{props.label}</FieldLabel>
-      <Select items={options} value={props.value ?? ""} onValueChange={props.onChange}>
+      <Select
+        items={options}
+        value={asText(props.value)}
+        onValueChange={(value) => props.onChange?.(value ?? "")}
+      >
         <SelectTrigger id={`${uid}-field`} className="w-full">
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {options.map((option) => (
+          {options.map((option: { value: string; label: string }) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
@@ -33,7 +46,11 @@ const InitInput = (props) => {
   ) : (
     <Field>
       <FieldLabel htmlFor={`${uid}-field-2`}>{props.label}</FieldLabel>
-      <Input id={`${uid}-field-2`} onChange={props.onChange} placeholder={props.placeholder} />
+      <Input
+        id={`${uid}-field-2`}
+        onChange={(e) => props.onChange?.(e.target.value)}
+        placeholder={props.placeholder}
+      />
     </Field>
   );
 };

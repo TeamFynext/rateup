@@ -12,6 +12,7 @@ import { CustomSection } from "./Section/CustomSection.tsx";
 import { SurveySection } from "./Section/SurveySection.tsx";
 import { WhatsAppSection } from "./Section/WhatsAppSection.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
+import type { Cart } from "./store/RouteAndCartStore.ts";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebSurveys" }) => {
   const [value, setValue] = useState(source);
@@ -46,7 +47,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
 
   const session = useCheckSession();
 
-  const handlePlanSelection = (data) => {
+  const handlePlanSelection = (data: Cart) => {
     let route = "/dashboard/settings/billing";
     updateRouteAndCart(route, data);
     if (isAccount) return handleSelection();
@@ -147,7 +148,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           <SurveySection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            freePlan={freePlan}
+            freePlan={freePlan ?? []}
             currencySymbol={currencySymbol}
           />
         )}
@@ -156,7 +157,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           <WhatsAppSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            freePlan={freePlan}
+            freePlan={freePlan ?? []}
             currencySymbol={currencySymbol}
           />
         )}
@@ -165,7 +166,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           <CustomSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
+            plans={updatedPlans ?? []}
             currencySymbol={currencySymbol}
           />
         )}

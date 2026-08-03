@@ -11,11 +11,11 @@ import {
 function InputStyles() {
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
-  const { input } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { input } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const handleColorPickerChange = useCallback((value) => {
+  const handleColorPickerChange = useCallback((value: string | number) => {
     surveyThemeDispatch({
       type: "input-color-change",
       payload: value,
@@ -28,7 +28,7 @@ function InputStyles() {
         <div className="w-full">
           <h2 className="mb-[0.3125rem] text-xs font-medium text-[#495057]">Color</h2>
           <CustomColorPicker
-            value={input?.primaryColor}
+            value={input?.primaryColor ?? ""}
             onChange={handleColorPickerChange}
             withoutEyedropper
           />

@@ -55,7 +55,8 @@ interface FBLoginOptions {
   response_type: string;
   override_default_response_type: boolean;
   extras: {
-    setup: any;
+    /** Embedded-signup prefill; Meta reads it opaquely, we never build one. */
+    setup: Record<string, unknown>;
     featureType: string;
     sessionInfoVersion: string;
   };

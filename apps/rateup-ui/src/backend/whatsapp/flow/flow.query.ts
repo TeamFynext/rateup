@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+
 import type { cloneFlowsProps, createFlowInput } from "./flow.api";
 import {
   cloneAndDeprecateFlows,
@@ -85,7 +87,7 @@ export const useImportFlowsMutation = () => {
     }) => importFlows(waFlowIds, teamIds, mapData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["flow"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
       toast.success("Flows Imported Successfully");
     },
     onError: (error) => {
@@ -100,7 +102,7 @@ export const useCloneAndDeprecateFlowsMutation = () => {
     mutationFn: (flowId: string) => cloneAndDeprecateFlows(flowId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["flow"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
       toast.success("Copy & Renew Flow Successfully", {
         id: "copy-renew",
       });
@@ -120,7 +122,7 @@ export const useCloneFlowsMutation = (onSucess: () => void) => {
     onSuccess: () => {
       onSucess();
       queryClient.invalidateQueries({ queryKey: ["flow"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
       toast.success("Clone Flow Successfully", {
         id: "copy",
       });
@@ -139,7 +141,7 @@ export const useCreateFlowMutation = () => {
     mutationFn: (data: createFlowInput) => createFlow(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
-      qc.invalidateQueries({ queryKey: ["surveys"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
       toast.success("Flow Created Successfully");
     },
     onError: (error) => {
@@ -157,7 +159,7 @@ export const useUpdateFlowMutation = () => {
         id: "flow-update",
       });
       qc.invalidateQueries({ queryKey: ["flow"] });
-      qc.invalidateQueries({ queryKey: ["surveys"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error saving flows");
@@ -171,7 +173,7 @@ export const useDeleteFlowMutation = () => {
     mutationFn: deleteFlow,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
-      qc.invalidateQueries({ queryKey: ["surveys"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
       toast.success("Flow Deleted Successfully");
     },
     onError: (error) => {
@@ -208,7 +210,7 @@ export const useDeprecateFlowMutation = () => {
   });
 };
 
-export const useSendFlowToUser = (phone: string) => {
+export const useSendFlowToUser = (phone: string | undefined) => {
   return useMutation({
     mutationFn: ({
       dbFlowId,
@@ -217,10 +219,11 @@ export const useSendFlowToUser = (phone: string) => {
       whatsappSettingsPhoneId,
     }: {
       dbFlowId: string;
-      teamId: string;
-      flowId: string;
-      whatsappSettingsPhoneId: string;
-    }) => sendFlow(dbFlowId, phone, teamId, flowId, whatsappSettingsPhoneId),
+      teamId: string | null;
+      flowId: string | undefined;
+      whatsappSettingsPhoneId: string | undefined;
+    }) =>
+      sendFlow(dbFlowId, phone ?? "", teamId ?? "", flowId ?? "", whatsappSettingsPhoneId ?? ""),
     onSuccess: () => {
       toast.success("Flow Sent Successfully");
     },
@@ -240,7 +243,7 @@ export const useUpdateFlowMetaDataMutation = () => {
         id: "flow-meta-data-update",
       });
       qc.invalidateQueries({ queryKey: ["flow"] });
-      qc.invalidateQueries({ queryKey: ["surveys"] });
+      qc.invalidateQueries({ queryKey: surveyKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error saving flows");

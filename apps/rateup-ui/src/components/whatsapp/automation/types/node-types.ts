@@ -1,8 +1,7 @@
 import type { Node } from "@xyflow/react";
 
+import type { WaTemplateComponent } from "@/types/global";
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
-
-import { CatalogMessages } from "../components/node-editor.tsx";
 
 // Base node data interface with common properties
 interface BaseNodeData {
@@ -122,7 +121,7 @@ export interface TemplateNodeData extends BaseNodeData {
     name?: string;
   };
   teamId?: string;
-  parameters?: any[];
+  parameters?: WaTemplateComponent[];
 }
 
 // Reaction Node
@@ -362,6 +361,91 @@ export interface NodeTypeMap {
   instagramIceBreakerNode: InstagramIceBreakerNodeData;
 }
 
+/**
+ * A structural view of every node's data. The canvas card, the phone preview
+ * and the validator each read fields from several node types at once, so they
+ * work against this rather than the discriminated `NodeData` union — every
+ * member of which satisfies it.
+ */
+export interface NodeFields {
+  label?: string;
+  body?: string;
+  text?: string;
+  caption?: string;
+  header?: string;
+  headerType?: string;
+  footer?: string;
+  type?: string;
+  link?: string;
+  filename?: string;
+  url?: string;
+  display_text?: string;
+  question?: string;
+  variableName?: string;
+  startMessage?: string;
+  endMessage?: string;
+  duration?: number;
+  unit?: "seconds" | "minutes" | "hours";
+  latitude?: number | string;
+  longitude?: number | string;
+  address?: string;
+  name?: string;
+  phone?: string;
+  phoneField?: string;
+  teamId?: string;
+  fbPageId?: string;
+  pageAccessToken?: string;
+  productRetailerId?: string;
+  productSetId?: string;
+  condition?: string;
+  options?: string[];
+  button?: string;
+  buttons?: Array<{
+    id?: string;
+    title?: string;
+    text?: string;
+    label?: string;
+    type?: string;
+    payload?: string;
+  }>;
+  sections?: Array<{
+    title?: string;
+    rows?: Array<{ id?: string; title?: string; text?: string; description?: string }>;
+    productItems?: string[];
+  }>;
+  quick_replies?: Array<{ id?: string; payload?: string; title?: string; text?: string }>;
+  iceBreakers?: Array<{ question?: string }>;
+  elements?: Array<{
+    id?: string;
+    buttons?: Array<{ id?: string; payload?: string; title?: string; type?: string }>;
+  }>;
+  story_mention?: boolean;
+  contacts?: Array<{
+    name?: { formatted_name?: string; first_name?: string };
+    phones?: Array<{ phone?: string }>;
+    emails?: Array<{ email?: string }>;
+    addresses?: Array<{ street?: string; city?: string }>;
+    urls?: Array<{ url?: string }>;
+  }>;
+  template?: { id?: string; name?: string };
+  flow?: { id?: string; name?: string };
+  ad?: { id?: string; name?: string };
+  ticket?: {
+    selectedBoardId?: string;
+    selectedBoardColumnId?: string;
+    selectedBoardName?: string;
+    selectedBoardColumnName?: string;
+  };
+  assign?: {
+    assignType?: string;
+    choice?: string;
+    assignIfOnline?: boolean;
+    teamName?: string;
+    roundRobin?: boolean;
+  };
+  ts?: number | string;
+}
+
 // Node type strings as a union type
 export type NodeType = keyof NodeTypeMap;
 
@@ -404,6 +488,15 @@ export type TypedNode<T extends NodeType = NodeType> = Omit<Node, "data" | "type
   type: T;
   data: NodeTypeMap[T];
 };
+
+/**
+ * React Flow types every node's `data` as an open record, while the editor works against the
+ * discriminated `TypedNode`. The canvas only ever holds flowbot nodes, so this is the single
+ * place that states the correspondence.
+ */
+export const asTypedNode = (node: Node): TypedNode => node as unknown as TypedNode;
+
+export const asTypedNodes = (nodes: Node[]): TypedNode[] => nodes as unknown as TypedNode[];
 
 // Validation functions for node data
 export function validateNodeData(node: TypedNode): {
@@ -1021,4 +1114,12 @@ export function validateNodeData(node: TypedNode): {
 
   // If we get here, all validations passed
   return { valid: true, message: "" };
+}
+
+/** The catalog message shapes a catalog node can send. */
+export enum CatalogMessages {
+  Catalog = "Catalog",
+  SingleProduct = "Single-Product",
+  MultiProduct = "Multi-Product",
+  ProductSet = "Product-Set",
 }

@@ -2,8 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContext } from "react";
 import { toast } from "sonner";
 
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
+import { contactKeys } from "@/backend/campaign/contacts/contacts.keys";
+import { responseKeys, surveyKeys } from "@/backend/surveys/survey.keys";
+import { allResponsesKeys } from "@/backend/whatsapp/automation.keys";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import type { QueryFilter } from "@/types/api.ts";
 import { decryptResultResponse } from "@/utils/response.ts";
 
 import { useSurvey } from "../surveys.query";
@@ -28,7 +33,7 @@ import {
 
 export const useResponses = (surveyTeamMapId: string) =>
   useQuery({
-    queryKey: ["responses", surveyTeamMapId],
+    queryKey: responseKeys.bySurveyTeamMap(surveyTeamMapId),
     queryFn: () => getResponses(surveyTeamMapId),
     enabled: !!surveyTeamMapId,
   });
@@ -38,14 +43,14 @@ export const useAllResponses = (surveyId: string) => {
   const { user } = useUser();
   const { encryptionpassword: passkey } = useContext(SurveyContext);
   return useQuery({
-    queryKey: ["allresponses", survey?.id],
+    queryKey: allResponsesKeys.bySurvey(survey?.id),
     queryFn: async () => {
-      let response = await getAllResponses(survey?.id);
+      let response = await getAllResponses(survey?.id ?? "");
       if (passkey) {
         const { decryptedResponses } = await decryptResultResponse(
           response,
-          user?.encryptionKeys?.privateKey,
-          user?.encryptionKeys?.publicKey,
+          user?.encryptionKeys?.privateKey ?? "",
+          user?.encryptionKeys?.publicKey ?? "",
           passkey,
         );
         response = decryptedResponses;
@@ -57,13 +62,13 @@ export const useAllResponses = (surveyId: string) => {
   });
 };
 
-export const useResponsesBySurvey = (surveyId, filter) => {
+export const useResponsesBySurvey = (surveyId: string, filter: QueryFilter) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
   return useQuery({
     queryFn: () => getResponsesBySurveyId(surveyId, filterQuery),
-    queryKey: ["response", "survey", surveyId, filter],
+    queryKey: responseKeys.bySurvey(surveyId, filter),
   });
 };
 export function useResetResponsesStats(
@@ -77,8 +82,8 @@ export function useResetResponsesStats(
   return useMutation({
     mutationFn: () => resetResponsesStats(surveyId),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["responses"] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
 
       toast.success(response?.success ? "Cleaned up responses & Stats" : "Please try again", {
         id: "load-data",
@@ -102,9 +107,9 @@ export function useDeleteResponse(surveyId: string, surveyTeamMapId: string, clo
   return useMutation({
     mutationFn: (id: string) => deleteResponse(id, surveyTeamMapId),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["responses"] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: allResponsesKeys.bySurvey(surveyId) });
 
       toast.success(response?.success ? "Deleted Response successfully" : "Please try again", {
         id: "load-data",
@@ -126,9 +131,9 @@ export function useGenerateResponse(surveyId: string) {
   return useMutation({
     mutationFn: (data: { surveyTeamMapId: string; batchSize: number }) => generateResponse(data),
     onSuccess: (_response) => {
-      queryClient.invalidateQueries({ queryKey: ["responses"] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: allResponsesKeys.bySurvey(surveyId) });
 
       toast.success("Generate Response successfully", {
         id: "generateResponse",
@@ -147,7 +152,7 @@ export function useSyncResponseToGoogleSheet(surveyId: string) {
   return useMutation({
     mutationFn: syncResponseToGoogleSheet,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
   });
 }
@@ -173,20 +178,20 @@ export function useGenerateLargeTextResponseSummaryByAI(surveyId: string) {
   return useMutation({
     mutationFn: getLargeTextResponseSummaryByAI,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
     },
   });
 }
 
-export const useExportContactResponses = (surveyId) => {
+export const useExportContactResponses = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => exportContactResponseToContacts(surveyId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       toast.success("Contacts exported successfully", {
         id: "export-contacts",
@@ -200,10 +205,10 @@ export const useExportContactResponses = (surveyId) => {
   });
 };
 
-export const useResponseCount = (surveyId) => {
+export const useResponseCount = (surveyId: string) => {
   return useQuery({
     queryFn: () => getSurveyResponseCount(surveyId),
-    queryKey: ["responseCount", surveyId],
+    queryKey: responseKeys.count(surveyId),
     enabled: !!surveyId,
   });
 };
@@ -212,7 +217,7 @@ interface FilterAnalytics {
   teamMapIds?: string[];
   dateRange?: string[];
 }
-export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
+export const useResponseAnalytics = (surveyId: string, filter: FilterAnalytics) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -223,10 +228,10 @@ export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
   });
 };
 
-export const useResponseForComparison = (surveyId) => {
+export const useResponseForComparison = (surveyId: string) => {
   return useQuery({
     queryFn: () => getResponseForComparison(surveyId),
-    queryKey: ["responseComparison", surveyId],
+    queryKey: responseKeys.comparison(surveyId),
     enabled: !!surveyId,
   });
 };
@@ -237,13 +242,13 @@ export function useSurveyHappyResponseAnalytics(
   enabled = true,
 ) {
   return useQuery({
-    queryKey: ["survey-happy-response-analytics", surveyId, timeFilter],
+    queryKey: surveyKeys.happyResponseAnalytics(surveyId, timeFilter),
     queryFn: () => getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),
     enabled: !!surveyId && enabled,
   });
 }
 
-export function useHappyIndex(surveyId: string, filterTeams) {
+export function useHappyIndex(surveyId: string, filterTeams?: string[]) {
   return useQuery({
     queryKey: ["happy-index", surveyId, filterTeams],
     queryFn: () => getHappyIndex(surveyId, filterTeams),

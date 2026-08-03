@@ -1,4 +1,4 @@
-import { XIcon } from "lucide-react";
+import { IconX } from "@tabler/icons-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -90,7 +90,7 @@ export function TagsInput({
             className="text-muted-foreground hover:text-foreground"
             aria-label={`Remove ${tag}`}
           >
-            <XIcon className="size-3" />
+            <IconX className="size-3" />
           </button>
         </span>
       ))}

@@ -1,17 +1,18 @@
 import { IconFileText, IconMapPin, IconPhoto, IconVideo } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 
-const MediaCardPreview = ({ children }) => {
+const MediaCardPreview = ({ children }: { children: ReactNode }) => {
   return (
     <span className="flex min-h-20 w-full flex-col items-center justify-center">{children}</span>
   );
 };
 
-export function HeaderWithFormatting(text, type) {
+export function HeaderWithFormatting(text: string | File, type: string) {
   switch (type) {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT:
-      return <p className="text-sm break-all">{text}</p>;
+      return <p className="text-sm break-all">{typeof text === "string" ? text : text?.name}</p>;
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>

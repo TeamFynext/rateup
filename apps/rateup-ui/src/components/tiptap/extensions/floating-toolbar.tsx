@@ -1,5 +1,3 @@
-"use client";
-
 import { type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { useEffect } from "react";
@@ -33,7 +31,7 @@ export function FloatingToolbar({ editor }: { editor: Editor | null }) {
       e.preventDefault();
     };
 
-    const el: any = editor.options.element;
+    const el = editor.view.dom;
     el.addEventListener("contextmenu", handleContextMenu);
 
     return () => el.removeEventListener("contextmenu", handleContextMenu);

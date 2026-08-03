@@ -24,6 +24,12 @@ const AddToGroupModal = ({
   selectedContactIds,
   contact = null,
   onSuccess = null,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  selectedContactIds: string[];
+  contact?: ContactsData | null;
+  onSuccess?: (() => void) | null;
 }) => {
   const uid = useId();
   const [contactGroupId, setContactGroupId] = useState("");

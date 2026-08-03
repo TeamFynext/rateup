@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createLoyaltyTemplate,
   deleteLoyaltyTemplate,
@@ -23,12 +26,12 @@ export const useCreateLoyaltyTemplate = () => {
   });
 };
 
-export const useUpdateLoyaltyTemplate = (commandId) => {
+export const useUpdateLoyaltyTemplate = (commandId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateLoyaltyTemplate(commandId, data),
+    mutationFn: (data: RequestPayload) => updateLoyaltyTemplate(commandId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.templates() });
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
       toast.success("Command configuration updated");
     },
@@ -43,7 +46,7 @@ export const useDeleteLoyaltyTemplate = () => {
   return useMutation({
     mutationFn: deleteLoyaltyTemplate,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.templates() });
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
       toast.success("Command configuration deleted");
     },
@@ -53,10 +56,10 @@ export const useDeleteLoyaltyTemplate = () => {
   });
 };
 
-export const useGetLoyaltyTemplate = (commandId) => {
+export const useGetLoyaltyTemplate = (commandId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyTemplate(commandId),
-    queryKey: ["LoyaltyTemplate"],
+    queryKey: loyaltyKeys.templates(),
     enabled: !!commandId,
   });
 };

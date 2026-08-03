@@ -1,4 +1,10 @@
-import { CheckCircle2, ChevronDown, CircleDashed, ShieldCheck, XCircle } from "lucide-react";
+import {
+  IconChevronDown,
+  IconCircleCheck,
+  IconCircleDashed,
+  IconCircleX,
+  IconShieldCheck,
+} from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
@@ -40,9 +46,9 @@ export function OnboardingHero({ waSettingsId }: { waSettingsId: string }) {
             value={
               <Badge variant={onboarded ? "default" : "secondary"} className="text-sm">
                 {onboarded ? (
-                  <CheckCircle2 data-icon="inline-start" />
+                  <IconCircleCheck data-icon="inline-start" />
                 ) : (
-                  <CircleDashed data-icon="inline-start" />
+                  <IconCircleDashed data-icon="inline-start" />
                 )}
                 {agent?.status ?? "NOT_ONBOARDED"}
               </Badge>
@@ -59,11 +65,11 @@ export function OnboardingHero({ waSettingsId }: { waSettingsId: string }) {
                 <span className="text-sm text-muted-foreground">Unknown</span>
               ) : agent.isEligible ? (
                 <Badge className="text-sm">
-                  <CheckCircle2 data-icon="inline-start" /> Eligible
+                  <IconCircleCheck data-icon="inline-start" /> Eligible
                 </Badge>
               ) : (
                 <Badge variant="destructive" className="text-sm">
-                  <XCircle data-icon="inline-start" /> Not eligible
+                  <IconCircleX data-icon="inline-start" /> Not eligible
                 </Badge>
               )
             }
@@ -91,7 +97,7 @@ export function OnboardingHero({ waSettingsId }: { waSettingsId: string }) {
                 {onboard.isPending ? (
                   <Spinner data-icon="inline-start" />
                 ) : (
-                  <ShieldCheck data-icon="inline-start" />
+                  <IconShieldCheck data-icon="inline-start" />
                 )}
                 {onboarded ? "Re-onboard" : "Onboard agent"}
               </Button>
@@ -148,7 +154,7 @@ function AllowlistDrawer({ waSettingsId }: { waSettingsId: string }) {
         <span>
           Allowlist <span className="text-foreground">({allowlist?.length ?? 0} numbers)</span>
         </span>
-        <ChevronDown className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <IconChevronDown className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <CardContent className="space-y-3 pb-5">
@@ -196,7 +202,7 @@ function AllowlistDrawer({ waSettingsId }: { waSettingsId: string }) {
                     disabled={removeEntry.isPending}
                     onClick={() => removeEntry.mutate(entry.id)}
                   >
-                    <XCircle className="size-3.5" />
+                    <IconCircleX className="size-3.5" />
                   </button>
                 </Badge>
               ))}

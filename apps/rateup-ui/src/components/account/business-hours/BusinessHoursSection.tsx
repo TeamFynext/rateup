@@ -1,4 +1,4 @@
-import { Clock, Edit } from "lucide-react";
+import { IconClock, IconEdit } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -120,7 +120,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-white" />
+              <IconClock className="w-5 h-5 text-white" />
             </div>
             <div>
               <h3 className="">{t("Business Hours")}</h3>
@@ -131,7 +131,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
           </div>
           {canManage && (
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setListOpen(true)}>
-              <Edit className="w-4 h-4" />
+              <IconEdit className="w-4 h-4" />
               {t("Manage")}
             </Button>
           )}
@@ -160,7 +160,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
                     onClick={() => openEdit(bh.id)}
                     className="text-blue-600 hover:text-blue-700"
                   >
-                    <Edit className="w-3 h-3" />
+                    <IconEdit className="w-3 h-3" />
                   </Button>
                 )}
               </div>
@@ -184,7 +184,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
 
           {list.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <IconClock className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>{t("No business hours set up yet")}</p>
               <p className="text-xs">{t("Click 'Manage' to add your first business hours")}</p>
             </div>

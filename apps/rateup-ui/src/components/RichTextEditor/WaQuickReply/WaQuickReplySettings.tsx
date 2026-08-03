@@ -1,9 +1,11 @@
-import { Plus, RefreshCcw } from "lucide-react";
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import type { Content } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import {
   useDeleteReply,
   useGetWaQuickReplies,
@@ -19,13 +21,13 @@ const WaQuickReplySettings = () => {
   const [opened, setOpened] = useState(false);
   const deleteReply = useDeleteReply();
 
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<QuickReply | null>(null);
 
-  function handleEditClick(reply) {
+  function handleEditClick(reply: QuickReply) {
     setSelectedItem(reply);
     setOpened(true);
   }
-  function handleDeleteQuickReply(reply) {
+  function handleDeleteQuickReply(reply: QuickReply) {
     deleteReply.mutate(reply.id, {
       onSuccess: () => {
         toast.success("Quick reply deleted successfully");
@@ -57,7 +59,7 @@ const WaQuickReplySettings = () => {
             className="text-muted-foreground hover:text-foreground h-7 w-7 p-0"
             size="icon"
           >
-            <RefreshCcw
+            <IconRefresh
               className={`w-3.5 h-3.5 ${isLoading || isRefetching ? "animate-spin" : ""}`}
             />
           </Button>
@@ -70,7 +72,7 @@ const WaQuickReplySettings = () => {
             setOpened(true);
           }}
         >
-          <Plus className="w-4 h-4" />
+          <IconPlus className="w-4 h-4" />
           <span className="text-sm">{t("Add Quick Reply")}</span>
         </Button>
       </div>
@@ -78,7 +80,7 @@ const WaQuickReplySettings = () => {
       {/* Quick replies list container */}
       {quickReplies && quickReplies.length > 0 ? (
         <div className="bg-white dark:bg-card border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
-          {quickReplies.map((reply) => (
+          {quickReplies.map((reply: QuickReply) => (
             <QuickReplyItem
               reply={reply}
               key={reply?.id}
@@ -104,7 +106,8 @@ const WaQuickReplySettings = () => {
 };
 
 export const quickReplySchema = z.object({
-  text: z.any(),
+  // The editor stores its value as a tiptap document (or plain text); it is not validated here.
+  text: z.custom<Content>(),
   key: z.string().min(1, { message: "key is required" }),
   category: z.string(),
   topic: z.string(),

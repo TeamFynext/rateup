@@ -23,12 +23,12 @@ function BackgroundStyles() {
   const selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
   const surveyTheme = useSurveyThemeContextValue();
-  const { bg, confettiEnabled } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { bg, confettiEnabled } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)!];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
   const handleBgColorPickerChange = useCallback(
-    (value) => {
+    (value: string) => {
       surveyThemeDispatch({
         type: "bg-background-color-change",
         payload: value,
@@ -37,29 +37,35 @@ function BackgroundStyles() {
     [selectedPreview],
   );
 
-  const handleDesktopBgImagePickerChange = useCallback((croppedImageObj) => {
-    const { url = "", file = null } = croppedImageObj || {};
-    surveyThemeDispatch({
-      type: "bg-desktopBgImg-change",
-      payload: {
-        desktopBgImg: url,
-        desktopBgImgFile: file,
-      },
-    });
-  }, []);
+  const handleDesktopBgImagePickerChange = useCallback(
+    (croppedImageObj: { file?: File; url: string } | null) => {
+      const { url = "", file = null } = croppedImageObj || {};
+      surveyThemeDispatch({
+        type: "bg-desktopBgImg-change",
+        payload: {
+          desktopBgImg: url,
+          desktopBgImgFile: file,
+        },
+      });
+    },
+    [],
+  );
 
-  const handleMobileBgImagePickerChange = useCallback((croppedImageObj) => {
-    const { url = "", file = null } = croppedImageObj || {};
-    surveyThemeDispatch({
-      type: "bg-mobileBgImg-change",
-      payload: {
-        mobileBgImg: url,
-        mobileBgImgFile: file,
-      },
-    });
-  }, []);
+  const handleMobileBgImagePickerChange = useCallback(
+    (croppedImageObj: { file?: File; url: string } | null) => {
+      const { url = "", file = null } = croppedImageObj || {};
+      surveyThemeDispatch({
+        type: "bg-mobileBgImg-change",
+        payload: {
+          mobileBgImg: url,
+          mobileBgImgFile: file,
+        },
+      });
+    },
+    [],
+  );
 
-  const handleConfettiChange = useCallback((e) => {
+  const handleConfettiChange = useCallback((e: { target: { checked: boolean } }) => {
     surveyThemeDispatch({
       type: "bg-confetti-change",
       payload: e.target.checked,
@@ -67,7 +73,7 @@ function BackgroundStyles() {
   }, []);
 
   const handleChooseBackgroundRadioGroupChange = useCallback(
-    (value) => {
+    (value: string) => {
       surveyThemeDispatch({
         type: "bg-choose-background-radio-change",
         payload: value,
@@ -76,7 +82,8 @@ function BackgroundStyles() {
     [selectedPreview],
   );
 
-  const { bgColor, chooseBgRadioInputValue, imageUrl } = bg[selectedPreview + "Bg"];
+  const { bgColor, chooseBgRadioInputValue, imageUrl } =
+    bg[(selectedPreview + "Bg") as "desktopBg" | "mobileBg"];
 
   const isSurveyPageTab = selectedPageTab === ThemeTabEnum.SURVEY;
   const useSurveyBackground = !isSurveyPageTab && bg.useSurveyBackground;
@@ -92,7 +99,7 @@ function BackgroundStyles() {
       {selectedPageTab === ThemeTabEnum.THANKYOU && (
         <CustomSwitch
           className={styles["confetti-switch"]}
-          checked={confettiEnabled}
+          checked={!!confettiEnabled}
           onChange={handleConfettiChange}
           label={!confettiEnabled ? "Enable Confetti" : "Disable Confetti"}
         />
@@ -125,7 +132,7 @@ function BackgroundStyles() {
           <div className="custom-color-picker-and-heading-container">
             <CustomColorPicker
               id={`${uid}-image`}
-              value={bgColor}
+              value={bgColor ?? ""}
               onChange={handleBgColorPickerChange}
               withoutEyedropper
             />
@@ -136,7 +143,7 @@ function BackgroundStyles() {
           <div className="flex flex-col">
             {selectedPreview === "desktop" && (
               <LocalOrUnsplashImagePicker
-                value={imageUrl}
+                value={imageUrl ?? ""}
                 label={"Desktop"}
                 forDevice={"desktop"}
                 onImageSelected={handleDesktopBgImagePickerChange}
@@ -145,7 +152,7 @@ function BackgroundStyles() {
 
             {selectedPreview === "mobile" && (
               <LocalOrUnsplashImagePicker
-                value={imageUrl}
+                value={imageUrl ?? ""}
                 label={"Mobile"}
                 forDevice={"mobile"}
                 onImageSelected={handleMobileBgImagePickerChange}

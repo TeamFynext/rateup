@@ -1,37 +1,37 @@
 import {
-  BarChart2,
-  Code,
-  Frown,
-  Inbox,
-  LayoutList,
-  Link,
-  MessageSquare,
-  Settings,
-  Share2,
-  Smile,
-  Wrench,
-} from "lucide-react";
+  IconChartBar,
+  IconCode,
+  IconInbox,
+  IconLayoutList,
+  IconLink,
+  IconMessage,
+  IconMoodSad,
+  IconMoodSmile,
+  IconSettings,
+  IconShare2,
+  IconTool,
+} from "@tabler/icons-react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
 export const steps = [
   {
-    icon: <MessageSquare size={34} strokeWidth={2.5} />,
+    icon: <IconMessage size={34} strokeWidth={2.5} />,
     title: "Ask for Feedback",
     description: "Send automated messages to customers at the perfect moment",
   },
   {
-    icon: <Smile size={34} strokeWidth={2.5} />,
+    icon: <IconMoodSmile size={34} strokeWidth={2.5} />,
     title: "Happy Customers",
     description: "Satisfied customers are prompted to share their positive experience",
   },
   {
-    icon: <Frown size={34} strokeWidth={2.5} />,
+    icon: <IconMoodSad size={34} strokeWidth={2.5} />,
     title: "Unhappy Customers",
     description: "Collect feedback from unsatisfied customers to improve their experience",
   },
   {
-    icon: <Wrench size={34} strokeWidth={2.5} />,
+    icon: <IconTool size={34} strokeWidth={2.5} />,
     title: "Customize & Display",
     description: "Easily embed and customize testimonials on your website",
   },
@@ -39,55 +39,55 @@ export const steps = [
 
 export const features = [
   {
-    icon: <Inbox size={28} strokeWidth={2} />,
+    icon: <IconInbox size={28} strokeWidth={2} />,
     title: "Multi-Channel Collection",
     description:
       "Collect testimonials from customers where they are: WhatsApp, email, forms, QR codes.",
   },
   {
-    icon: <Smile size={28} strokeWidth={2} />,
+    icon: <IconMoodSmile size={28} strokeWidth={2} />,
     title: "Happy Customer Flow",
     description:
       "Automatically guide satisfied customers to testimonials, and collect unhappy feedback for improvement.",
   },
   {
-    icon: <MessageSquare size={28} strokeWidth={2} />,
+    icon: <IconMessage size={28} strokeWidth={2} />,
     title: "Personalized Requests",
     description:
       "Send customized testimonial requests at the perfect moment in your customer journey with smart automation rules.",
   },
   {
-    icon: <LayoutList size={28} strokeWidth={2} />,
+    icon: <IconLayoutList size={28} strokeWidth={2} />,
     title: "Curate and Moderate",
     description:
       "Review, approve, and organize testimonials before they go public, ensuring only the best feedback is displayed.",
   },
   {
-    icon: <Code size={28} strokeWidth={2} />,
+    icon: <IconCode size={28} strokeWidth={2} />,
     title: "Easy Embedding",
     description:
       "Copy-paste a simple code snippet to showcase testimonials on your website in just a few clicks.",
   },
   {
-    icon: <Share2 size={28} strokeWidth={2} />,
+    icon: <IconShare2 size={28} strokeWidth={2} />,
     title: "Social Sharing",
     description:
       "Convert testimonials into shareable content for social media—perfect for amplifying your social proof.",
   },
   {
-    icon: <Link size={28} strokeWidth={2} />,
+    icon: <IconLink size={28} strokeWidth={2} />,
     title: "Custom Collection Links",
     description:
       "Create branded collection links to share via any channel, providing flexibility for different customer touchpoints.",
   },
   {
-    icon: <Settings size={28} strokeWidth={2} />,
+    icon: <IconSettings size={28} strokeWidth={2} />,
     title: "Automated Workflows",
     description:
       "Trigger testimonial requests at the perfect moment in your customer journey with smart automation rules.",
   },
   {
-    icon: <BarChart2 size={28} strokeWidth={2} />,
+    icon: <IconChartBar size={28} strokeWidth={2} />,
     title: "Performance Analytics",
     description:
       "Track conversion rates, response times, and testimonial performance to optimize your collection strategy.",

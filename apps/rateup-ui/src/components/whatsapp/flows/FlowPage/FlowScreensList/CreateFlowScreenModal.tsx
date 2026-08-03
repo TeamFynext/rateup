@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import type { WaFlowScreen } from "@/types/global";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
@@ -33,7 +34,7 @@ interface FlowScreenFormValues {
   footerBtnLabel: string;
 }
 
-function getInitialValues(screens): FlowScreenFormValues {
+function getInitialValues(screens: WaFlowScreen[]): FlowScreenFormValues {
   return {
     screenId: getUniqueRandomAlphaId(
       6,
@@ -47,7 +48,7 @@ function getInitialValues(screens): FlowScreenFormValues {
 interface CreateFlowScreenModalProps {
   opened: boolean;
   close: () => void;
-  screenId?: string;
+  screenId?: string | null;
 }
 
 function CreateFlowScreenModal({
@@ -82,10 +83,10 @@ function CreateFlowScreenModal({
       updateFlowJson((draft) => {
         if (!screenId) {
           draft.screens.push(getNewScreenObj(values));
-          updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+          updateFlowJsonNavigationAndDataPassing(draft, dbFlow!);
         } else {
           const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-          screenToBeEdited["title"] = values.screenTitle;
+          screenToBeEdited!["title"] = values.screenTitle;
         }
         form.reset(getInitialValues(draft.screens));
       });
@@ -97,12 +98,12 @@ function CreateFlowScreenModal({
   useEffect(() => {
     if (screenId) {
       const screenToBeEdited = getScreenObjById(flowJson.screens, screenId);
-      const layoutChildren = screenToBeEdited.layout["children"][0]["children"];
+      const layoutChildren = screenToBeEdited?.layout["children"][0]?.["children"] ?? [];
       const footerObj = layoutChildren[layoutChildren.length - 1];
       form.reset({
-        screenId: screenToBeEdited.id,
-        screenTitle: screenToBeEdited.title,
-        footerBtnLabel: footerObj.label,
+        screenId: screenToBeEdited?.id,
+        screenTitle: screenToBeEdited?.title,
+        footerBtnLabel: footerObj?.label,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,7 +119,7 @@ function CreateFlowScreenModal({
             {screenId ? translations("Edit Screen") : translations("Create Screen")}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submit]])}>
+        <form onSubmit={submit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void submit()]])}>
           <FieldGroup>
             <Controller
               name="screenTitle"

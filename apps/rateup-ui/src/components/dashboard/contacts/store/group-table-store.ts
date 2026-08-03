@@ -1,20 +1,20 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface GroupTableFilter {
+export interface GroupTableFilter {
   searchTerm: string;
 }
 export const useGroupTableStore = create<{
   filter: GroupTableFilter;
   setFilter: (value: GroupTableFilter) => void;
-  groupDetails: any;
-  setGroupDetails: (value) => void;
+  groupDetails: ContactGroupwithContacts | null;
+  setGroupDetails: (value: ContactGroupwithContacts | null) => void;
 }>()(
   immer((set, _get) => ({
     filter: {
       searchTerm: "",
     },
-    groupDetails: null,
+    groupDetails: null as ContactGroupwithContacts | null,
     setFilter: (filter: GroupTableFilter) => {
       set({ filter });
     },

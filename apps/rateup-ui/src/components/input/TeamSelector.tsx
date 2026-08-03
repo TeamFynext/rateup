@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { IconUsers } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface TeamSelectorProps {
   className?: string;
-  value?: string;
+  value?: string | null;
   onChange?: (teamId: string) => void;
   label?: React.ReactNode;
   enableAll?: boolean;
@@ -20,7 +20,7 @@ interface TeamSelectorProps {
   disabled?: boolean;
   name?: string;
   /** Extra props from legacy call sites (Mantine layout/select props) are ignored. */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 export function TeamSelector({
   value,
@@ -52,9 +52,9 @@ export function TeamSelector({
     // Setting the default teamId to the first team in the list
     if (value) return;
     if (enableAll) {
-      onChange("all");
+      onChange?.("all");
     } else if (teamOptions.length > 0 && enableDefaultValue) {
-      onChange(teamOptions[0].value);
+      onChange?.(teamOptions[0]!.value);
     }
   }, [teamOptions, value]);
 
@@ -73,10 +73,10 @@ export function TeamSelector({
   }
 
   return (
-    <Select value={value} onValueChange={onChange} items={teamOptions}>
+    <Select value={value} onValueChange={(next) => onChange?.(next ?? "")} items={teamOptions}>
       <SelectTrigger className={`${className || ""}`}>
         <div>
-          <Users className="size-4 text-muted-foreground" />
+          <IconUsers className="size-4 text-muted-foreground" />
         </div>
         <SelectValue placeholder="Team" />
       </SelectTrigger>

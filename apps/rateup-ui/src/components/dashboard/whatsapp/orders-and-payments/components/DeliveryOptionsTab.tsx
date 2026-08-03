@@ -1,4 +1,12 @@
-import { Check, Loader2, Pencil, Plus, Trash2, Truck, X } from "lucide-react";
+import {
+  IconCheck,
+  IconLoader2,
+  IconPencil,
+  IconPlus,
+  IconTrash,
+  IconTruck,
+  IconX,
+} from "@tabler/icons-react";
 import React, { useState } from "react";
 import { useId } from "react";
 
@@ -104,7 +112,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
           disabled={addingNew}
           className="gap-1.5"
         >
-          <Plus className="h-3.5 w-3.5" data-icon="inline-start" /> Add Option
+          <IconPlus className="h-3.5 w-3.5" data-icon="inline-start" /> Add Option
         </Button>
       </div>
 
@@ -113,7 +121,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
         <Card className="border-dashed">
           <CardContent className="py-12 flex flex-col items-center gap-3 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Truck className="h-6 w-6 text-muted-foreground" />
+              <IconTruck className="h-6 w-6 text-muted-foreground" />
             </div>
             <div>
               <p className="font-medium text-sm">No delivery options yet</p>
@@ -122,7 +130,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
               </p>
             </div>
             <Button size="sm" onClick={() => setAddingNew(true)} className="gap-1.5 mt-1">
-              <Plus className="h-3.5 w-3.5" /> Add First Option
+              <IconPlus className="h-3.5 w-3.5" /> Add First Option
             </Button>
           </CardContent>
         </Card>
@@ -187,9 +195,9 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                       className="gap-1.5 h-7 px-3 text-xs"
                     >
                       {isSaving ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <IconLoader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <Check className="h-3 w-3" />
+                        <IconCheck className="h-3 w-3" />
                       )}{" "}
                       Save
                     </Button>
@@ -199,14 +207,14 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                       onClick={cancelEdit}
                       className="gap-1.5 h-7 px-3 text-xs"
                     >
-                      <X className="h-3 w-3" /> Cancel
+                      <IconX className="h-3 w-3" /> Cancel
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                    <Truck className="h-4 w-4 text-primary" />
+                    <IconTruck className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -231,7 +239,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                       className="h-7 w-7"
                       onClick={() => startEdit(opt)}
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <IconPencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       size="icon"
@@ -240,7 +248,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                       onClick={() => deleteOption(opt.id)}
                       disabled={isSaving}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <IconTrash className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -308,9 +316,9 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                 className="gap-1.5 h-7 px-3 text-xs"
               >
                 {isSaving ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <IconLoader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <Check className="h-3 w-3" />
+                  <IconCheck className="h-3 w-3" />
                 )}{" "}
                 Add
               </Button>

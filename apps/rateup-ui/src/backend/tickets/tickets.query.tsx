@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { notificationKeys } from "@/backend/notification/notification.keys";
+import { teamKeys } from "@/backend/org/org.keys";
+import { responseKeys } from "@/backend/surveys/survey.keys";
+import { ticketKeys } from "@/backend/tickets/tickets.keys";
+import { cardKeys, allResponsesKeys } from "@/backend/whatsapp/automation.keys";
+
 import type { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 import type { Board } from "./tickets.api";
 import {
@@ -55,8 +61,8 @@ export const useCreateTicketMutation = () => {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["allresponses"] });
-      queryClient.invalidateQueries({ queryKey: ["responses"] });
+      queryClient.invalidateQueries({ queryKey: allResponsesKeys.all() });
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
     },
     onError: (error) => {
@@ -81,7 +87,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
   return useMutation({
     mutationFn: (data: IUpdateTicketStatusRequest) => {
       const { id, ...rest } = data;
-      const selectedTicketId = ticketId ?? id;
+      const selectedTicketId = (ticketId ?? id)!;
       return updateTicketStatus(selectedTicketId, rest);
     },
     onSuccess: () => {
@@ -101,7 +107,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
 };
 
 // update ticket
-export const useUpdateTicketMutation = (id) => {
+export const useUpdateTicketMutation = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketRequest) => {
@@ -130,10 +136,10 @@ export function useDeleteTicket() {
     mutationFn: (id: string) => deleteTicket(id),
     onSuccess: (_response) => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["allresponses"] });
+      queryClient.invalidateQueries({ queryKey: allResponsesKeys.all() });
       queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      queryClient.invalidateQueries({ queryKey: ["responses"] });
+      queryClient.invalidateQueries({ queryKey: responseKeys.all() });
       toast.success("Deleted Ticket successfully", {
         id: "load-data",
       });
@@ -148,7 +154,7 @@ export function useDeleteTicket() {
 }
 
 // create ticket comment
-export const useCreateCommentMutation = (id) => {
+export const useCreateCommentMutation = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createComment,
@@ -156,7 +162,7 @@ export const useCreateCommentMutation = (id) => {
       toast.success("Comment created successfully!", {
         id: "create-comment-success",
       });
-      queryClient.invalidateQueries({ queryKey: ["card", id] });
+      queryClient.invalidateQueries({ queryKey: cardKeys.detail(id) });
     },
     onError: (error) => {
       toast.error(error?.message, {
@@ -168,7 +174,7 @@ export const useCreateCommentMutation = (id) => {
 
 export function useBoardsQueries(enabled = true) {
   return useQuery({
-    queryKey: ["boards"],
+    queryKey: ticketKeys.boards(),
     queryFn: () => fetchBoards(),
     enabled,
   });
@@ -178,10 +184,10 @@ export function useUpdateBoardMutation() {
   return useMutation({
     mutationFn: updateBoard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      queryClient.invalidateQueries({ queryKey: ["board"] });
-      queryClient.invalidateQueries({ queryKey: ["notification"] });
-      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boards() });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.board() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
       toast.success("Board updated successfully!", {
         id: "update-board-success",
       });
@@ -198,7 +204,7 @@ export function useBoardQueries(enabled = true) {
   const queryClient = useQueryClient();
 
   const boardsQuery = useQuery({
-    queryKey: ["boards"],
+    queryKey: ticketKeys.boards(),
     queryFn: () => fetchBoards(),
     enabled,
   });
@@ -206,7 +212,7 @@ export function useBoardQueries(enabled = true) {
   const createBoardMutation = useMutation({
     mutationFn: createBoard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boards() });
       toast.success("Board created successfully!", {
         id: "create-board-success",
       });
@@ -221,8 +227,8 @@ export function useBoardQueries(enabled = true) {
   const updateBoardMutation = useMutation({
     mutationFn: updateBoard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      queryClient.invalidateQueries({ queryKey: ["board"] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boards() });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.board() });
       toast.success("Board updated successfully!", {
         id: "update-board-success",
       });
@@ -237,7 +243,7 @@ export function useBoardQueries(enabled = true) {
   const deleteBoardMutation = useMutation({
     mutationFn: deleteBoard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boards() });
       toast.success("Board deleted successfully!", {
         id: "delete-board-success",
       });
@@ -267,9 +273,9 @@ export const useUpdateCardMutation = () => {
       toast.success("Ticket updated successfully!", {
         id: "update-ticket-success",
       });
-      queryClient.invalidateQueries({ queryKey: ["card"] });
-      queryClient.invalidateQueries({ queryKey: ["board"] });
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: cardKeys.all() });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.board() });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boards() });
     },
   });
 };
@@ -278,7 +284,7 @@ export function useBoard(boardId: string) {
   const queryClient = useQueryClient();
 
   const boardQuery = useQuery({
-    queryKey: ["board", boardId],
+    queryKey: ticketKeys.boardDetail(boardId),
     queryFn: () => fetchBoard(boardId),
     enabled: !!boardId,
   });
@@ -286,7 +292,7 @@ export function useBoard(boardId: string) {
   const createColumnMutation = useMutation({
     mutationFn: createColumn,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Column created successfully!", {
         id: "create-column-success",
       });
@@ -301,7 +307,7 @@ export function useBoard(boardId: string) {
   const updateColumnMutation = useMutation({
     mutationFn: updateColumn,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Column updated successfully!", {
         id: "update-column-success",
       });
@@ -316,7 +322,7 @@ export function useBoard(boardId: string) {
   const deleteColumnMutation = useMutation({
     mutationFn: deleteColumn,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Column deleted successfully!", {
         id: "delete-column-success",
       });
@@ -331,8 +337,8 @@ export function useBoard(boardId: string) {
   const moveColumnMutation = useMutation({
     mutationFn: moveColumnToBoard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boards() });
       toast.success("Column moved successfully!", {
         id: "move-column-success",
       });
@@ -347,7 +353,7 @@ export function useBoard(boardId: string) {
   const createCardMutation = useMutation({
     mutationFn: createCard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Card created successfully!", {
         id: "create-card-success",
       });
@@ -362,7 +368,7 @@ export function useBoard(boardId: string) {
   const updateCardMutation = useMutation({
     mutationFn: updateCard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Card updated successfully!", {
         id: "update-card-success",
       });
@@ -377,7 +383,7 @@ export function useBoard(boardId: string) {
   const deleteCardMutation = useMutation({
     mutationFn: deleteCard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Card deleted successfully!", {
         id: "delete-card-success",
       });
@@ -394,7 +400,7 @@ export function useBoard(boardId: string) {
     // Add optimistic update
     onMutate: async (params) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["board", boardId] });
+      await queryClient.cancelQueries({ queryKey: ticketKeys.boardDetail(boardId) });
 
       // Snapshot the previous board state
       const previousBoard = queryClient.getQueryData<Board>(["board", boardId]);
@@ -465,7 +471,7 @@ export function useBoard(boardId: string) {
     },
     // Always refetch after error or success
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Card moved successfully!", {
         id: "move-card-success",
       });
@@ -477,7 +483,7 @@ export function useBoard(boardId: string) {
     // Update optimistic update for reordering
     onMutate: async (params) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["board", boardId] });
+      await queryClient.cancelQueries({ queryKey: ticketKeys.boardDetail(boardId) });
 
       // Snapshot the previous board state
       const previousBoard = queryClient.getQueryData<Board>(["board", boardId]);
@@ -497,7 +503,7 @@ export function useBoard(boardId: string) {
           const orderedCards = params.cards.map((cardOrder) => {
             // Find the card in the original cards array
             const card = column.ticketCards.find((c) => c.id === cardOrder.id);
-            return card; // Using ! because we know the card exists
+            return card!; // The reorder payload only ever names existing cards.
           });
 
           // Replace the column's cards with the ordered cards
@@ -521,7 +527,7 @@ export function useBoard(boardId: string) {
     },
     // Always refetch after error or success
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Cards reordered successfully!", {
         id: "reorder-card-success",
       });
@@ -533,7 +539,7 @@ export function useBoard(boardId: string) {
     // Add optimistic update for reordering columns
     onMutate: async (params) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["board", boardId] });
+      await queryClient.cancelQueries({ queryKey: ticketKeys.boardDetail(boardId) });
 
       // Snapshot the previous board state
       const previousBoard = queryClient.getQueryData<Board>(["board", boardId]);
@@ -546,7 +552,7 @@ export function useBoard(boardId: string) {
         const orderedColumns = params.columns.map((columnOrder) => {
           // Find the column in the original columns array
           const column = optimisticBoard.ticketColumns.find((c) => c.id === columnOrder.id);
-          return column; // Using ! because we know the column exists
+          return column!; // The reorder payload only ever names existing columns.
         });
 
         // Replace the board's columns with the ordered columns
@@ -569,7 +575,7 @@ export function useBoard(boardId: string) {
     },
     // Always refetch after error or success
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Columns reordered successfully!", {
         id: "reorder-columns-success",
       });
@@ -600,24 +606,24 @@ export function useBoard(boardId: string) {
 // Add useCardById hook
 export function useCardById(cardId: string | undefined) {
   return useQuery({
-    queryKey: ["card", cardId],
-    queryFn: () => fetchCardById(cardId),
+    queryKey: cardKeys.detail(cardId),
+    queryFn: () => fetchCardById(cardId!),
     enabled: !!cardId,
   });
 }
 
 export function useCardTeamMembersById(cardId: string | undefined) {
   return useQuery({
-    queryKey: ["teamMembersByCardId", cardId],
-    queryFn: () => fetchCardTeamMemberById(cardId),
+    queryKey: teamKeys.membersByCardId(cardId),
+    queryFn: () => fetchCardTeamMemberById(cardId!),
     enabled: !!cardId,
   });
 }
 
 export function useBoardTeamMembersById(cardId: string | undefined) {
   return useQuery({
-    queryKey: ["teamMembersByBoardId", cardId],
-    queryFn: () => fetchBoardTeamMemberById(cardId),
+    queryKey: teamKeys.membersByBoardId(cardId),
+    queryFn: () => fetchBoardTeamMemberById(cardId!),
     enabled: !!cardId,
   });
 }
@@ -626,7 +632,7 @@ export function useDeleteCommentMutation(cardId: string) {
   return useMutation({
     mutationFn: deleteComment,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["card", cardId] });
+      queryClient.invalidateQueries({ queryKey: cardKeys.detail(cardId) });
       toast.success("Comment deleted successfully!", {
         id: "delete-comment-success",
       });
@@ -665,7 +671,7 @@ export function useLabels(boardId: string) {
       updateLabel(data.id, data.label),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Label updated successfully!");
     },
     onError: (error) => {
@@ -677,7 +683,7 @@ export function useLabels(boardId: string) {
     mutationFn: deleteLabel,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Label deleted successfully!");
     },
     onError: (error) => {
@@ -689,7 +695,7 @@ export function useLabels(boardId: string) {
     mutationFn: (labelIds: string[]) => deleteLabels(boardId, labelIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
-      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.boardDetail(boardId) });
       toast.success("Labels deleted successfully!");
     },
     onError: (error) => {

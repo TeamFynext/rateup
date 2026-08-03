@@ -2,43 +2,47 @@ import React from "react";
 
 import { WaTemplateCategory } from "@/types/enums.ts";
 
-export default function TextWithFormatting(text, examples, category?) {
+export default function TextWithFormatting(text: string, examples?: string[], category?: string) {
   if (category === WaTemplateCategory.AUTHENTICATION) {
     return (
       <span>{`*{{1}}* is your OTP (One-Time Password). Do not share this code with anyone.`} </span>
     );
   }
   // Function to parse the text and apply formatting
-  const parseText = (text) => {
-    return text.split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g).map((part, index) => {
-      if (!part) return;
-      const tt =
-        part?.split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g)?.length > 1 ? parseText(part) : part;
-      if (index % 5 === 1) {
-        // Apply bold styling to text within *
-        return <strong key={index}>{tt}</strong>;
-      } else if (index % 5 === 2) {
-        // Apply italic styling to text within _
-        return <em key={index}>{tt}</em>;
-      } else if (index % 5 === 3) {
-        // Apply strikethrough styling to text within ~
-        return <del key={index}>{tt}</del>;
-      } else if (index % 5 === 4) {
-        // Apply code styling to text within ```
-        return <code key={index}>{tt}</code>;
-      } else {
-        return tt; // Return plain text for non-styled text parts
-      }
-    });
+  const parseText = (text: string): React.ReactNode[] => {
+    return text
+      .split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g)
+      .map((part: string | undefined, index: number) => {
+        if (!part) return;
+        const tt =
+          part?.split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g)?.length > 1
+            ? parseText(part)
+            : part;
+        if (index % 5 === 1) {
+          // Apply bold styling to text within *
+          return <strong key={index}>{tt}</strong>;
+        } else if (index % 5 === 2) {
+          // Apply italic styling to text within _
+          return <em key={index}>{tt}</em>;
+        } else if (index % 5 === 3) {
+          // Apply strikethrough styling to text within ~
+          return <del key={index}>{tt}</del>;
+        } else if (index % 5 === 4) {
+          // Apply code styling to text within ```
+          return <code key={index}>{tt}</code>;
+        } else {
+          return tt; // Return plain text for non-styled text parts
+        }
+      });
   };
   const parsedValue = parseText(text);
 
-  return <span>{replacePlaceholdersWithValues(parsedValue, examples)}</span>;
+  return <span>{replacePlaceholdersWithValues(parsedValue, examples ?? [])}</span>;
 }
 
 function replacePlaceholdersWithValues(inputReactContent: React.ReactNode, values: string[]) {
   // Recursive function to process each node in the React element tree
-  function processNode(node: React.ReactNode | string | number): any {
+  function processNode(node: React.ReactNode | string | number): React.ReactNode {
     if (typeof node === "string" || typeof node === "number") {
       // If the node is a string or number, perform placeholder replacement
       let processedNode = String(node);

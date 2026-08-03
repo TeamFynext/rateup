@@ -1,21 +1,22 @@
-import { IconHome } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
 import {
-  BarChart3,
-  Building2,
-  Command,
-  CreditCard,
-  Database,
-  QrCode,
-  RefreshCw,
-  ShoppingCart,
-  Star,
-  Store,
-  Users,
-  Zap,
-} from "lucide-react";
+  IconBolt,
+  IconBuilding,
+  IconBuildingStore,
+  IconChartBar,
+  IconCommand,
+  IconCreditCard,
+  IconDatabase,
+  IconHome,
+  IconQrcode,
+  IconRefresh,
+  IconShoppingCart,
+  IconStar,
+  IconUsers,
+} from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import * as React from "react";
 
+import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import {
   Sidebar,
   SidebarContent,
@@ -40,68 +41,68 @@ const data = {
     {
       name: "User Stats",
       url: "/admin/userstats",
-      icon: BarChart3,
+      icon: IconChartBar,
     },
     {
       name: "Orgs",
       url: "/admin/orgs",
-      icon: Building2,
+      icon: IconBuilding,
     },
     {
       name: "Subscriptions",
       url: "/admin/subscriptions",
-      icon: CreditCard,
+      icon: IconCreditCard,
     },
     {
       name: "RazorPay",
       url: "/admin/razorpay",
-      icon: Zap,
+      icon: IconBolt,
     },
     {
       name: "Stripe",
       url: "/admin/stripe",
-      icon: CreditCard,
+      icon: IconCreditCard,
     },
     {
       name: "Orders",
       url: "/admin/orders",
-      icon: ShoppingCart,
+      icon: IconShoppingCart,
     },
     {
       name: "Share QR",
       url: "/admin/share-qr",
-      icon: QrCode,
+      icon: IconQrcode,
     },
     {
       name: "RateUp Plans",
       url: "/admin/rateup",
-      icon: Star,
+      icon: IconStar,
     },
     {
       name: "Generate data",
       url: "/admin/generate",
-      icon: Database,
+      icon: IconDatabase,
     },
     {
       name: "Update Center",
       url: "/admin/updateCenter",
-      icon: RefreshCw,
+      icon: IconRefresh,
     },
     {
       name: "Shopify Stores",
       url: "/admin/shopify",
-      icon: Store,
+      icon: IconBuildingStore,
     },
     {
       name: "Referrals",
       url: "/admin/referrals",
-      icon: Users,
+      icon: IconUsers,
     },
   ],
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  data?: any;
+  data?: IUserInfoApiResponse;
 }
 
 export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProps>) {
@@ -110,9 +111,9 @@ export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProp
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="#" />}>
+            <SidebarMenuButton size="lg" render={<a href="#" />}>
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <Command className="size-4" />
+                <IconCommand className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">Rateup</span>

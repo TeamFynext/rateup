@@ -1,4 +1,7 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { TemplateType, WaTemplateCategory, WaTemplateStatus } from "@/types/enums.ts";
+import type { WaTemplateFetchBody, WaTemplateFetchBodyComponent } from "@/types/global";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient";
@@ -15,7 +18,7 @@ export interface WaTemplate {
   };
   data: {
     name: string;
-    components: Array<any>;
+    components: Array<WaTemplateFetchBodyComponent>;
     id: string;
     status: WaTemplateStatus;
     language: string;
@@ -31,12 +34,53 @@ export interface SyncTemplatesInput {
 }
 
 /**
+ * A draft template payload as the template-creation screens assemble it before
+ * sending it to the save-as-draft endpoint.
+ */
+export interface WaTemplateDraftPayload {
+  name: string;
+  header: string | null;
+  language: string;
+  body: string;
+  footer: string;
+  category: string;
+  format: string;
+  buttons: unknown[];
+  status: string;
+  example: string[];
+  templateType: string;
+  mediaCarousel: unknown[];
+  productCarousel: unknown[];
+  whatsappSettingsPhoneId: string;
+  defaultValues: {
+    catalog: {
+      thumbnail_product_retailer_id: string;
+      mpm: { sections: unknown[] };
+      spm: { product_retailer_id: string };
+      catalogId: string;
+    };
+    whatsappSettingsPhoneId: string;
+  };
+}
+
+/**
  * Fetches whatsapp templates using orgId user belongs to.
  */
-export const getWaTemplates = async (templatType) => {
+/** A saved template row, as the templates list returns it. */
+export interface WaTemplateListEntry {
+  id: string;
+  createdAt: string;
+  templateType?: string;
+  whatsappSettingsPhoneId?: string | null;
+  WhatsappSettings?: { phoneDisplayName?: string | null };
+  _count?: { Campaign?: number };
+  data: WaTemplateFetchBody;
+}
+
+export const getWaTemplates = async (templatType?: string) => {
   const url = templatType ? `${TEMPLATES_URL}?templateType=${templatType}` : TEMPLATES_URL;
   const res = await axiosClient.get(url);
-  return res.data as WaTemplate[];
+  return res.data as WaTemplateListEntry[];
 };
 
 export const getWaTemplateById = async (id: string) => {
@@ -44,28 +88,28 @@ export const getWaTemplateById = async (id: string) => {
   return res.data;
 };
 
-export const createWaTemplate = async (templateData: any) => {
+export const createWaTemplate = async (templateData: RequestPayload) => {
   return axiosClient.post(`${TEMPLATES_URL}`, templateData, {
     timeout: 25000,
   });
 };
-export const saveTemplateAsDraft = async (templateData: any) => {
+export const saveTemplateAsDraft = async (templateData: RequestPayload) => {
   return axiosClient.post(`${TEMPLATES_URL}/save-as-draft`, templateData);
 };
 export const deleteWaTemplate = async (id: string) => {
   return axiosClient.delete(`${TEMPLATES_URL}/${id}`);
 };
-export const updateWaTemplate = async (id: string, templateData: any) => {
+export const updateWaTemplate = async (id: string, templateData: RequestPayload) => {
   return axiosClient.put(`${TEMPLATES_URL}/${id}`, templateData);
 };
-export const syncTemplates = async (input: SyncTemplatesInput) => {
+export const syncTemplates = async (input?: SyncTemplatesInput) => {
   return axiosClient.post(`${TEMPLATES_URL}/sync`, input);
 };
 export const getUnregisteredTemplates = async () => {
   return (await axiosClient.get(`${TEMPLATES_URL}/unregistered`)).data;
 };
 export const registerTemplates = async (
-  dbTemplates: Array<{ data: any; acceptButton: string }>,
+  dbTemplates: Array<{ data: WaTemplateFetchBody; acceptButton: string }>,
 ) => {
   return axiosClient.post(`${TEMPLATES_URL}/register`, dbTemplates);
 };
@@ -87,14 +131,14 @@ export async function uploadTemplateMedia(file: File) {
     });
     return response?.data as imageResponse;
   } catch (error) {
-    throw new Error(error?.response?.data?.message);
+    throw new Error(getApiErrorMessage(error));
   }
 }
 
 export async function sendWaTemplateToUser(
   templateId: string,
   phone: string,
-  parameterData: any,
+  parameterData: RequestPayload,
   teamId: string,
   whatsappSettingsPhoneId: string,
 ) {

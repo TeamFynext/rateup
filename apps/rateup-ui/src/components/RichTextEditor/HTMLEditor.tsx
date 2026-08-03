@@ -60,7 +60,7 @@ function HTMLEditor({
   useEffect(() => {
     if (editor) {
       const selection = editor.state.selection;
-      editor.commands.setContent(titleValue, {
+      editor.commands.setContent(titleValue ?? "", {
         parseOptions: { preserveWhitespace: "full" },
       });
       editor.commands.setTextSelection(selection);
@@ -71,7 +71,7 @@ function HTMLEditor({
   useEffect(() => {
     if (codeEditor) {
       const selection = codeEditor.state.selection;
-      codeEditor.commands.setContent(descriptionValue, {
+      codeEditor.commands.setContent(descriptionValue ?? "", {
         parseOptions: { preserveWhitespace: "full" },
       });
       codeEditor.commands.setTextSelection(selection);

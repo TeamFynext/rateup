@@ -1,5 +1,4 @@
 import { IconCircleCheckFilled } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
@@ -7,8 +6,6 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
 import styles from "./ResponseSubmitted.module.css";
 
 export function ResponseSubmitted({ isSurveyPreview = false }) {
-  const navigate = useNavigate();
-
   return (
     <div
       className={`flex flex-col gap-4 ${styles["response-submitted-root-div"]} ${isSurveyPreview ? styles["survey-preview"] : ""}`}
@@ -39,10 +36,8 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
         <Button
           className={styles["try-now-btn"]}
           onClick={() => {
-            navigate({
-              to: "https://www.rateup.app",
-              replace: true,
-            });
+            // An external site, so it leaves the router rather than resolving against it.
+            globalThis.location.replace("https://www.rateup.app");
           }}
         >
           Try Now

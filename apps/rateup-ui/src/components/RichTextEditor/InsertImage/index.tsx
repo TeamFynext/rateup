@@ -114,13 +114,13 @@ function InsertImage({ editor }: { editor: Editor | null }) {
         }
       } else if (chooseImageDDState === UPLOAD_IMAGE) {
         setIsUploadingFile(true);
-        const { url } = await uploadFile("src", uploadImageFileInputValue);
+        const { url } = await uploadFile("src", uploadImageFileInputValue!);
         if (editor) {
           editor
             .chain()
             .focus()
             .setImage({
-              src: url,
+              src: url ?? "",
               style: `
   width: ${imgWidth}px;
   height: ${imgHeight}px;

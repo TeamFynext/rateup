@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 
 import { WHATSAPP_URL } from "..";
@@ -13,7 +14,7 @@ function transformAutomation(automation: WaAutomatedReply): WaAutomatedReply {
   };
 }
 
-export async function createInstagramAutomation(data: any) {
+export async function createInstagramAutomation(data: RequestPayload) {
   const res = await axiosClient.post(base, data);
   const result = res.data as { success: boolean; data: WaAutomatedReply };
   return {
@@ -40,7 +41,7 @@ export async function getInstagramAutomationById(automationId: string) {
   };
 }
 
-export async function updateInstagramAutomation(automationId: string, data: any) {
+export async function updateInstagramAutomation(automationId: string, data: RequestPayload) {
   const res = await axiosClient.put(`${base}/${automationId}`, data);
   const result = res.data as { success: boolean; data: WaAutomatedReply };
   return {

@@ -1,5 +1,6 @@
 import React from "react";
 
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
 import {
@@ -28,7 +29,7 @@ export const LifecycleSelector = ({
   value: string;
   onChange: (
     value: string,
-    lifecycleObj: { id: string; name: string; emoji: string; category: string },
+    lifecycleObj?: { id: string; name: string; emoji: string; category: string },
   ) => void;
   placeholder?: string;
   className?: string;
@@ -42,15 +43,21 @@ export const LifecycleSelector = ({
         group: "Lifecycle Stages",
         items:
           tags
-            ?.filter((lifecycle) => lifecycle?.category !== "lost")
-            .map((lifecycle) => ({ value: lifecycle?.id, label: toLabel(lifecycle) })) || [],
+            ?.filter((lifecycle: GetLabelsRes) => lifecycle?.category !== "lost")
+            .map((lifecycle: GetLabelsRes) => ({
+              value: lifecycle?.id,
+              label: toLabel(lifecycle),
+            })) || [],
       },
       {
         group: "Lost Stages",
         items:
           tags
-            ?.filter((lifecycle) => lifecycle?.category === "lost")
-            .map((lifecycle) => ({ value: lifecycle?.id, label: toLabel(lifecycle) })) || [],
+            ?.filter((lifecycle: GetLabelsRes) => lifecycle?.category === "lost")
+            .map((lifecycle: GetLabelsRes) => ({
+              value: lifecycle?.id,
+              label: toLabel(lifecycle),
+            })) || [],
       },
     ],
     [tags],
@@ -65,14 +72,14 @@ export const LifecycleSelector = ({
     if (newValue === value) return;
     onChange(
       newValue,
-      tags?.find((lifecycle) => lifecycle.id === newValue),
+      tags?.find((lifecycle: GetLabelsRes) => lifecycle.id === newValue),
     );
   };
 
   const visibleGroups = groups.filter((group) => group.items.length > 0);
 
   return (
-    <Select value={value || null} onValueChange={handleChange} items={items}>
+    <Select value={value || null} onValueChange={(next) => handleChange(next ?? "")} items={items}>
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder ?? "Select a lifecycle stage"} />
       </SelectTrigger>
@@ -87,7 +94,7 @@ export const LifecycleSelector = ({
             {(all || index > 0) && <SelectSeparator />}
             <SelectGroup>
               <SelectLabel>{group.group}</SelectLabel>
-              {group.items.map((item) => (
+              {group.items.map((item: { value: string; label: string }) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>

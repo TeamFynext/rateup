@@ -1,9 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+import { notificationKeys } from "@/backend/notification/notification.keys";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import { useContactsStore } from "@/store/inbox.store.ts";
+import type { RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
+import { CONTACT_SORT } from "@/utils/constants.ts";
 
 import {
   assignContactLabelsToContactId,
@@ -28,15 +34,23 @@ import {
   updateContactLabel,
   updateCustomField,
   updateLifecycleofMultipleContacts,
+  type IUpdateContactLabel,
 } from "./contacts.api";
+import { contactGroupKeys, contactKeys } from "./contacts.keys";
 
-export const useContacts = (pagination, searchData?, sorting?, columnFilters?, type?) => {
+export const useContacts = (
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
+  type?: string,
+) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";
   const groupType = type ?? ContactGroupType.NORMAL;
   return useQuery({
-    queryKey: ["contacts", pagination, search, sort, filters, groupType],
+    queryKey: contactKeys.list(pagination, search, sort, filters, groupType),
     queryFn: () => getContactsList(pagination, search, sort, filters, groupType),
   });
 };
@@ -44,7 +58,7 @@ export const useContacts = (pagination, searchData?, sorting?, columnFilters?, t
 export const useContactById = (contactId: string) =>
   useQuery({
     enabled: !!contactId,
-    queryKey: ["contacts", contactId],
+    queryKey: contactKeys.detail(contactId),
     queryFn: () => getContactById(contactId),
   });
 
@@ -53,10 +67,10 @@ export const useCreateContactMutation = () => {
   return useMutation({
     mutationFn: createContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       queryClient.invalidateQueries({
-        queryKey: ["contacts", "filtered"],
+        queryKey: contactKeys.filtered(),
       });
     },
     onError: (_error) => {},
@@ -68,7 +82,7 @@ export const useImportContactMutation = () => {
   return useMutation({
     mutationFn: importContacts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       toast.success("Contacts imported successfully", {
         id: "contact-create",
       });
@@ -86,9 +100,9 @@ export const useImportCSVContactMutation = () => {
   return useMutation({
     mutationFn: importCSVContacts,
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["contacts", "filtered"],
+        queryKey: contactKeys.filtered(),
       });
       // showSuccessToast(
       //   "Contacts imported successfully",
@@ -111,9 +125,9 @@ export const useContactDeleteMutation = (groupId: string) => {
   return useMutation({
     mutationFn: deleteContact,
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
       toast.success("Contact Deleted successfully", {
         id: "contact-delete",
@@ -133,17 +147,17 @@ export const useEditContactMutation = (groupId?: string) => {
   return useMutation({
     mutationFn: editContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["assignedInboxUser"],
+        queryKey: whatsappKeys.assignedInboxUser(),
       });
-      queryClient.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
-      queryClient.invalidateQueries({ queryKey: ["notification"] });
-      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      queryClient.invalidateQueries({ queryKey: contactKeys.filtered() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
       toast.success("Contact updated successfully.", {
         id: "contact-update",
       });
@@ -160,8 +174,8 @@ export const useEditContactLabelsMutation = (_contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContactLabels,
-    onSuccess: (_data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.filtered() });
       toast.success("Contact updated successfully.", {
         id: "contact-update",
       });
@@ -180,9 +194,9 @@ export const useDeleteManyContactsMutation = () => {
   return useMutation({
     mutationFn: deleteManyContacts,
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       // showSuccessToast(
       //   "Contact Deleted successfully",
@@ -228,7 +242,7 @@ export const useCreateCustomFieldMutation = () => {
 export const useUpdateCustomFieldMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ fieldId, data }: { fieldId: string; data: any }) =>
+    mutationFn: ({ fieldId, data }: { fieldId: string; data: RequestPayload }) =>
       updateCustomField(fieldId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customFields"] });
@@ -311,7 +325,7 @@ export const useCreateContactLabelMutation = () => {
 export const useUpdateContactLabelMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ labelId, data }: { labelId: string; data: any }) =>
+    mutationFn: ({ labelId, data }: { labelId: string; data: IUpdateContactLabel }) =>
       updateContactLabel(labelId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
@@ -350,7 +364,7 @@ export const useAssignContactLabelsToMultipleContacts = () => {
   return useMutation({
     mutationFn: assignContactLabelsToMultipleContacts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
   });
 };
@@ -362,7 +376,7 @@ export const useAssignContactLabelsToContactId = () => {
       assignContactLabelsToContactId(contactId, { labelIds }),
 
     onSuccess: (_data, _variables) => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
   });
 };
@@ -372,36 +386,36 @@ export const useUpdateLifecycleofMultipleContacts = () => {
   return useMutation({
     mutationFn: updateLifecycleofMultipleContacts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
   });
 };
 
-export const useBulkAssignStatusMutation = (groupId) => {
+export const useBulkAssignStatusMutation = (groupId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: bulkAssignStatus,
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["assignedInboxUser"],
+        queryKey: whatsappKeys.assignedInboxUser(),
       });
-      queryClient.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
-      queryClient.invalidateQueries({ queryKey: ["notification"] });
-      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      queryClient.invalidateQueries({ queryKey: contactKeys.filtered() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
 
       toast.success("Chats updated successfully.", {
         id: "bulk-chat-update",
       });
     },
 
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Error updating chats", {
         id: "bulk-chat-update",
       });

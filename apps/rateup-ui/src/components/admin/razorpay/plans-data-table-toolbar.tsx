@@ -1,5 +1,5 @@
+import { IconRefresh, IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { RefreshCw, X } from "lucide-react";
 
 import { usePlanSyncMutation } from "@/backend/payment/payment.query";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
@@ -29,7 +29,7 @@ export function PlansDataTableToolbar<TData>({ table }: Readonly<DataTableToolba
         {isFiltered && (
           <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
-            <X />
+            <IconX />
           </Button>
         )}
       </div>
@@ -40,7 +40,7 @@ export function PlansDataTableToolbar<TData>({ table }: Readonly<DataTableToolba
           onClick={() => syncPlans.mutate()}
           disabled={syncPlans.isPending}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${syncPlans.isPending ? "animate-spin" : ""}`} />
+          <IconRefresh className={`h-4 w-4 mr-2 ${syncPlans.isPending ? "animate-spin" : ""}`} />
           Sync Plans
         </Button>
         <DataTableViewOptions table={table} />

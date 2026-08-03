@@ -7,6 +7,7 @@ import {
   IconPhone,
   IconPlus,
 } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -67,8 +68,9 @@ export function SentMessageContainer({
 interface QuickReplyButtonProps {
   text: string;
   style?: React.CSSProperties;
-  onClick?: any;
-  type?: any;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  /** One of `WHATSAPP_BUTTON_TYPE`; decides the icon shown beside the label. */
+  type?: string;
 }
 export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButtonProps) {
   return (
@@ -85,7 +87,7 @@ export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButto
   );
 }
 
-const getIcon = (type) => {
+const getIcon = (type: string | undefined) => {
   switch (type) {
     case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
       return <IconPhone size={14} />;
@@ -126,13 +128,13 @@ export function SendMessageMock() {
   );
 }
 
-function WaMessageHeader(props) {
+function WaMessageHeader(props: { children?: ReactNode; [key: string]: unknown }) {
   return <p className="font-bold" {...props} />;
 }
-function WaMessageBody(props) {
+function WaMessageBody(props: { children?: ReactNode; [key: string]: unknown }) {
   return <p {...props} />;
 }
-function WaMessageFooter(props) {
+function WaMessageFooter(props: { children?: ReactNode; [key: string]: unknown }) {
   return <p className="text-sm text-muted-foreground" {...props} />;
 }
 
@@ -168,7 +170,10 @@ export function WaResponseMessage({
       </ResponseMessageContainer>
       {/* update changes in whatsapp */}
       {quickReplyButtons.map((text, i) => (
-        <QuickReplyButton key={i} text={typeof text === "string" ? text : text.value} />
+        <QuickReplyButton
+          key={i}
+          text={typeof text === "string" ? text : String((text as { title?: string }).title ?? "")}
+        />
       ))}
     </div>
   );

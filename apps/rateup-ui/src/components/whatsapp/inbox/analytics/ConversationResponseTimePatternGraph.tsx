@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import { IconClock } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -14,9 +14,10 @@ import {
 import type { ChartConfig } from "@/components/ui/chart.tsx";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 
-const ConversationResponseTimePatternGraph = ({ dateRange }) => {
+const ConversationResponseTimePatternGraph = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data = [], isLoading } = useGetAverageConversationResponseTimeGraphData({
     dateKey: dateRange.key,
@@ -46,7 +47,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
       <CardHeader className="flex flex-col gap-0 w-full">
         <div className="flex justify-between items-center gap-2 w-full">
           <CardTitle className="flex gap-1 items-center">
-            <Clock className="w-5 h-5 text-primary mr-1" />
+            <IconClock className="w-5 h-5 text-primary mr-1" />
             {t("Response Time Pattern")}
           </CardTitle>
           <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">

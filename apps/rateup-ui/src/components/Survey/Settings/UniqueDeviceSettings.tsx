@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import { updateUniqueDevice } from "./updateSettings.ts";
 
-const UniqueDeviceSettings = ({ survey, surveyId }) => {
+const UniqueDeviceSettings = ({ survey, surveyId }: { survey: Survey; surveyId: string }) => {
   const [enableUniqueDevice, setEnableUniqueDevice] = useState(survey?.uniqueDeviceResponse);
   const editSurvey = useEditSurveyMutation(surveyId);
   const { t: translations } = useTranslation();

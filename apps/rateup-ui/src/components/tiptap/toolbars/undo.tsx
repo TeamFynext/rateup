@@ -1,6 +1,4 @@
-"use client";
-
-import { Undo2 } from "lucide-react";
+import { IconArrowBackUp } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +29,7 @@ const UndoToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
             />
           }
         >
-          {children ?? <Undo2 className="h-4 w-4" />}
+          {children ?? <IconArrowBackUp className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Undo</span>

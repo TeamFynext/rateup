@@ -27,7 +27,9 @@ import { DataSourceInput } from "../input/DataSource.tsx";
 import ImageCarouselInput from "../input/imageCarouselInput.tsx";
 import ImageInput from "../input/ImageInput.tsx";
 import InitInput from "../input/InitInput.tsx";
+import { asList } from "../input/inputProps.ts";
 import TiptapMarkdown from "../input/TiptapMarkdown.tsx";
+import type { FormElement } from "../utils/store.ts";
 import useFlowStore from "../utils/store.ts";
 import { getInitialValues, getValidationSchema } from "../utils/util.ts";
 import { LogicJumpModal } from "./LogicJumpModal.tsx";
@@ -48,8 +50,21 @@ const FieldComponentMap = {
 };
 
 interface InlineElementEditorProps {
-  element: any;
+  element: FormElement;
 }
+
+/** A stored date bound, as dayjs accepts it. Bounds are saved as ISO strings. */
+const toDateInput = (value: unknown): string | Date | undefined =>
+  typeof value === "string" || value instanceof Date ? value : undefined;
+
+/** The `target` of a DOM change event, when the control emitted one rather than a bare value. */
+const getEventTarget = (
+  eventOrValue: unknown,
+): { value?: unknown; checked?: unknown } | undefined => {
+  if (typeof eventOrValue !== "object" || eventOrValue === null) return undefined;
+  const { target } = eventOrValue as { target?: unknown };
+  return typeof target === "object" && target !== null ? target : undefined;
+};
 
 // Inline editor for element properties with rich text support
 function InlineElementEditor({ element }: InlineElementEditorProps) {
@@ -76,7 +91,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     return getValidationSchema(elementType);
   }, [elementType]);
 
-  const form = useForm<any>({
+  const form = useForm<Record<string, unknown>>({
     resolver: validationSchema ? zodResolver(validationSchema) : undefined,
     defaultValues: {},
   });
@@ -85,7 +100,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
   useEffect(() => {
     if (element) {
-      const updatedValues = { ...element };
+      const updatedValues: Record<string, unknown> = { ...element };
 
       // Merge with default values from initialValues if fields are missing in element
       Object.keys(initialValues).forEach((key) => {
@@ -96,11 +111,13 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
       // Convert date strings to Date objects for date picker
       ["min-date", "max-date"].forEach((key) => {
-        if (updatedValues[key]) updatedValues[key] = dayjs(updatedValues[key]).toDate();
+        const stored = toDateInput(updatedValues[key]);
+        if (stored) updatedValues[key] = dayjs(stored).toDate();
       });
-      if (updatedValues["unavailable-dates"]) {
-        updatedValues["unavailable-dates"] = updatedValues["unavailable-dates"].map((date: any) =>
-          dayjs(date).toDate(),
+      const unavailableDates = updatedValues["unavailable-dates"];
+      if (Array.isArray(unavailableDates)) {
+        updatedValues["unavailable-dates"] = unavailableDates.map((date) =>
+          dayjs(toDateInput(date)).toDate(),
         );
       }
       reset(updatedValues);
@@ -109,12 +126,12 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
   const onSubmit = handleSubmit(
     useCallback(
-      (values: any) => {
-        const updatedValues = { ...values };
+      (values) => {
+        const updatedValues: Record<string, unknown> = { ...values };
 
         // Convert Date objects back to strings for date picker
         if (updatedValues.metaType === QuestionType2.DatePicker) {
-          const formatDate = (date: any) => dayjs(date).format("YYYY-MM-DD");
+          const formatDate = (date: unknown) => dayjs(toDateInput(date)).format("YYYY-MM-DD");
           ["min-date", "max-date"].forEach((key) => {
             if (updatedValues[key]) updatedValues[key] = formatDate(updatedValues[key]);
           });
@@ -132,7 +149,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     ),
   );
 
-  function getChoiceCount(type) {
+  function getChoiceCount(type: string) {
     switch (type) {
       case QuestionType2.CheckboxGroup:
       case QuestionType2.RadioButtonsGroup:
@@ -149,9 +166,10 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     }
   }
 
-  const renderField = (field) => {
+  const renderField = (field: string) => {
     const fieldType = initialValues[field].type;
-    const FieldComponent = FieldComponentMap[fieldType] || TextField;
+    const FieldComponent =
+      FieldComponentMap[fieldType as keyof typeof FieldComponentMap] || TextField;
     const extra = initialValues[field]?.extra || {};
 
     if (["hidden"].includes(fieldType) || field === "visible") return null;
@@ -176,40 +194,42 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
               placeholder={`Enter ${field}`}
               {...extra}
               value={value}
-              checked={fieldType === "checkbox" ? value : undefined}
-              onChange={(e) => {
-                // Handle different input types correctly
-                let newValue;
+              checked={fieldType === "checkbox" ? Boolean(value) : undefined}
+              onChange={(eventOrValue: unknown) => {
+                // Handle different input types correctly: the text inputs emit a DOM event,
+                // every other control emits its value directly.
+                const target = getEventTarget(eventOrValue);
+                let newValue: unknown;
                 if (fieldType === "checkbox") {
                   // For checkboxes, use checked property
-                  newValue = e?.target?.checked ?? e;
-                } else if (e?.target?.value !== undefined) {
+                  newValue = target?.checked ?? eventOrValue;
+                } else if (target?.value !== undefined) {
                   // For text inputs (which have e.target.value), use value property
-                  newValue = e.target.value;
+                  newValue = target.value;
                 } else {
                   // For other components (select, date, multiselect, etc.), use the value directly
-                  newValue = e;
+                  newValue = eventOrValue;
                 }
                 onChange(newValue);
               }}
               error={error?.message}
               {...(field === "data-source" && {
-                insertListItem: (_path: string, item: any) => {
-                  const currentValue = getValues(field) || [];
-                  setValue(field, [...currentValue, item]);
+                insertListItem: (_path: string, item: unknown) => {
+                  setValue(field, [...asList(getValues(field)), item]);
                 },
                 removeListItem: (_path: string, index: number) => {
-                  const currentValue = getValues(field) || [];
                   setValue(
                     field,
-                    currentValue.filter((_: any, i: number) => i !== index),
+                    asList(getValues(field)).filter((_, i) => i !== index),
                   );
                 },
                 metaType: elementType,
-                maxChoice: getChoiceCount(QuestionType2?.[allValues.metaType as string])?.max ?? 20,
+                maxChoice:
+                  getChoiceCount(QuestionType2?.[allValues.metaType as keyof typeof QuestionType2])
+                    ?.max ?? 20,
               })}
               {...(field === "init-value" && {
-                dataSource: allValues?.["data-source"],
+                dataSource: asList<{ id: string; title: string }>(allValues?.["data-source"]),
               })}
             />
           )}
@@ -268,7 +288,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                     render={({ field: { onChange, value } }) => (
                       <Checkbox
                         id="visible"
-                        checked={value}
+                        checked={Boolean(value)}
                         onCheckedChange={(checked) => {
                           onChange(checked);
                           if (checked === false) {

@@ -9,7 +9,9 @@ import dayjs from "dayjs";
 import { useContext } from "react";
 
 import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
+import type { QuestionType2, WaFlowFormElementType } from "@/types/enums.ts";
 import {
+  PageType,
   LDResponse,
   LDResponse2,
   NPSWeightage,
@@ -23,45 +25,115 @@ import {
 import SelectedLanguageContext from "../context/SelectedLanguage.ts";
 import { decryptPrivateKey, decryptResponse } from "./encryption/index.ts";
 
-export function getResponse(q: any, response: any) {
+/** A single choice a respondent picked, or typed into the "other" field. */
+interface ChoiceResponse {
+  value?: string;
+  other?: string;
+}
+
+/** An answer as stored on a response record: text, or a keyed bag of values. */
+type ResponseRecord = Record<string, unknown>;
+
+/** A stored answer. Which member applies follows the question's type. */
+export type StoredResponse = string | number | boolean | Date | ResponseRecord | ResponseRecord[];
+
+/**
+ * The fields a question form reads off an answer. Which apply depends on the question type —
+ * a choice question stores `{ value, other }`, a contact question `{ name, phone, email }` —
+ * so the shared ones are named and the rest stay open.
+ */
+export interface AnswerFields {
+  value?: string;
+  other?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  isValid?: boolean;
+  [key: string]: unknown;
+}
+
+/** Reads an answer as the keyed bag a question form stores; other shapes have no fields. */
+export const asAnswer = (response: StoredResponse | null | undefined): AnswerFields =>
+  typeof response === "object" &&
+  response !== null &&
+  !Array.isArray(response) &&
+  !(response instanceof Date)
+    ? (response as AnswerFields)
+    : {};
+
+/** Reads an answer as the list of picks a multi-select question stores. */
+export const asAnswerList = (response: StoredResponse | null | undefined): AnswerFields[] =>
+  Array.isArray(response) ? (response as AnswerFields[]) : [];
+
+/** Reads one row of a grid answer, which stores `{ [row]: { value } }`. */
+export const asAnswerRow = (
+  response: StoredResponse | null | undefined,
+  row: string,
+): AnswerFields => asAnswer(asAnswer(response)[row] as StoredResponse | undefined);
+
+/** Reads an answer as the plain text a free-text question stores. */
+export const asAnswerText = (response: StoredResponse | null | undefined): string =>
+  typeof response === "string" ? response : "";
+
+/** Narrows an answer to the choice shape(s) the choice questions store. */
+function asChoices(response: StoredResponse): ChoiceResponse | ChoiceResponse[] {
+  if (Array.isArray(response)) return response as ChoiceResponse[];
+  return typeof response === "object" && response !== null && !(response instanceof Date)
+    ? (response as ChoiceResponse)
+    : {};
+}
+
+/** Narrows an answer to its keyed form; a non-object answer has no fields. */
+function asRecord(response: StoredResponse): ResponseRecord {
+  return typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    !(response instanceof Date)
+    ? response
+    : {};
+}
+
+export function getResponse(q: Question | undefined, response: StoredResponse) {
   if (!response && response !== 0) return "";
 
   switch (q?.type) {
     case QuestionType.Testimonial:
-      return formatTestimonialResponse(response);
+      return formatTestimonialResponse(
+        typeof response === "string" ? response : asRecord(response),
+      );
     case QuestionType.Date:
-      return formatDateTime(response);
+      return formatDateTime(response instanceof Date ? response : String(response));
     case QuestionType.Contact:
     case QuestionType.Phone:
     case QuestionType.Email:
     case QuestionType.EmailPhone:
-      return formatContactInfo(response);
+      return formatContactInfo(typeof response === "string" ? response : asRecord(response));
     case QuestionType.DDMS:
     case QuestionType.MSQ:
     case QuestionType.CustomNPS:
     case QuestionType.MCQ:
     case QuestionType.DDSS:
     case QuestionType.WaButtons:
-      return formatChoiceTypeQuestions(q, response);
+      return formatChoiceTypeQuestions(q, asChoices(response));
     case QuestionType.WaList:
-      return formatWaList(response);
+      return formatWaList(asRecord(response));
     case QuestionType.MultiTextInput:
-      return formatMultiTextInput(q, response);
+      return formatMultiTextInput(q, typeof response === "string" ? response : asRecord(response));
     case QuestionType.MCQGrid:
-      return formatMCQGridResponse(q, response);
+      return formatMCQGridResponse(q, asRecord(response));
     case QuestionType.EmailOtp:
-      return formatEmailOtpResponse(response);
+      return formatEmailOtpResponse(asRecord(response));
     default:
-      return formatDefaultResponse(q, response);
+      return formatDefaultResponse(response);
   }
 }
 
-function formatDateTime(response) {
+function formatDateTime(response: string | number | Date) {
   const date = dayjs(response);
   return date.format("DD, MMM YYYY");
 }
 
-function formatContactInfo(response) {
+function formatContactInfo(response: string | ResponseRecord) {
   if (typeof response === "string") return response;
   return Object.entries(response)
     .filter(Boolean)
@@ -69,31 +141,37 @@ function formatContactInfo(response) {
     .join(", ");
 }
 
-function formatEmailOtpResponse(response) {
+function formatEmailOtpResponse(response: ResponseRecord) {
   return `Verified Email Id: ${response?.email}`;
 }
-function formatMultiTextInput(q, response) {
+function formatMultiTextInput(q: Question, response: string | ResponseRecord) {
   if (typeof response === "string") return response;
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
   if (fields) {
-    return fields?.map((f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`);
+    return fields?.map(
+      (f: { fieldKey: string }) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
+    );
   }
 }
 
-function formatMCQGridResponse(question, response) {
+function formatMCQGridResponse(question: Question, response: ResponseRecord) {
   if (!response) return;
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
-  return gridQuestions?.map((q) => `${q}: ${response?.[q]?.value ?? "NA"}`);
+  return gridQuestions?.map((q: string) => {
+    const cell = response?.[q] as { value?: unknown } | undefined;
+    return `${q}: ${cell?.value ?? "NA"}`;
+  });
 }
 
-function formatChoiceTypeQuestions(q, response) {
+function formatChoiceTypeQuestions(q: Question, response: ChoiceResponse | ChoiceResponse[]) {
   const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   let formattedValue = "";
   if (response) {
-    if ([QuestionType.DDMS, QuestionType.MSQ].includes(q?.type)) {
-      formattedValue = response
+    if (q?.type === QuestionType.DDMS || q?.type === QuestionType.MSQ) {
+      // These two question types always store their answer as a list of choices.
+      formattedValue = (response as ChoiceResponse[])
         .map(
           (item) =>
             item?.value?.trim() ||
@@ -101,29 +179,31 @@ function formatChoiceTypeQuestions(q, response) {
         )
         .join(", ");
     } else if (
-      [
-        QuestionType.DDSS,
-        QuestionType.MCQ,
-        QuestionType.CustomNPS,
-        QuestionType.WaButtons,
-      ].includes(q?.type)
+      q?.type === QuestionType.DDSS ||
+      q?.type === QuestionType.MCQ ||
+      q?.type === QuestionType.CustomNPS ||
+      q?.type === QuestionType.WaButtons
     ) {
+      const single = response as ChoiceResponse;
       formattedValue =
-        response.value ||
-        `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${response?.other}`;
+        single.value ||
+        `${q?.features?.[selectedLanguage || defaultLanguage]?.other?.title} : ${single?.other}`;
     }
   }
   return formattedValue;
 }
 
-function formatWaList(response) {
-  const { title, description } = response[QuestionType.WaList];
+function formatWaList(response: ResponseRecord) {
+  const { title, description } = (response[QuestionType.WaList] ?? {}) as {
+    title?: string;
+    description?: string;
+  };
   return description ? `${title}: ${description}` : title;
 }
 
-function formatTestimonialResponse(response) {
+function formatTestimonialResponse(response: string | ResponseRecord) {
   if (typeof response === "string") return response;
-  const contentArray = [];
+  const contentArray: string[] = [];
   Object.entries(response).map(([key, value]) => {
     if (key === "photo") return;
     contentArray.push(`${key}:  ${value ? String(value) : "NA"}`);
@@ -134,7 +214,7 @@ function formatTestimonialResponse(response) {
   };
 }
 
-function formatDefaultResponse(_q, response) {
+function formatDefaultResponse(response: StoredResponse) {
   // Handle other types or default case
   return response;
 }
@@ -198,11 +278,28 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
   }
 }
 
-export function getResponseArrayByQuestionType(questionType: QuestionType | WaQuestions): Array<{
+/**
+ * A question's type as any of the vocabularies it can arrive in — a survey `QuestionType` or
+ * `PageType`, or one of the flow editor's names — and `undefined` when the question is gone.
+ */
+export type AnyQuestionType =
+  | QuestionType
+  | PageType
+  | QuestionType2
+  | WaQuestions
+  | WaFlowFormElementType
+  | undefined;
+
+export function getResponseArrayByQuestionType(questionType: AnyQuestionType): Array<{
   value: string | number;
   color: string;
-  Icon?: any;
-}> {
+  Icon?: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    stroke?: number;
+    className?: string;
+  }>;
+}> | null {
   switch (questionType) {
     case QuestionType.Rating: {
       return [
@@ -279,11 +376,16 @@ export function getResponseArrayByQuestionType(questionType: QuestionType | WaQu
     }
   }
 }
-export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions): Array<{
+export function getResponseArrayByQuestionTypeV2(questionType: AnyQuestionType): Array<{
   value: string | number;
   color: string;
-  Icon?: any;
-}> {
+  Icon?: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    stroke?: number;
+    className?: string;
+  }>;
+}> | null {
   switch (questionType) {
     case WaQuestions.Rating: {
       return [
@@ -353,22 +455,24 @@ export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions): Arr
 
 export async function decryptResultResponse(
   responses: TeamWiseResponses[],
-  nonceWithEncryptedPrivateKey: any,
-  publicKey: any,
+  nonceWithEncryptedPrivateKey: string,
+  publicKey: string,
   passkey: string,
 ) {
   const decryptedResponses = responses;
   const { privateKey } = await decryptPrivateKey(nonceWithEncryptedPrivateKey, passkey);
+  if (!privateKey) return { decryptedResponses };
   for (let i = 0; i < responses.length; i++) {
-    for (let j = 0; j < responses[i].responses.length; j++) {
-      const response = responses[i].responses[j];
+    const teamResponses = responses[i]?.responses ?? [];
+    for (let j = 0; j < teamResponses.length; j++) {
+      const response = teamResponses[j]!;
       if (response.encryptedResponses) {
         const { decryptedResponse } = await decryptResponse(
           response.encryptedResponses,
           privateKey,
           publicKey,
         );
-        decryptedResponses[i].responses[j].responses = decryptedResponse;
+        decryptedResponses[i]!.responses![j]!.responses = decryptedResponse;
       }
     }
   }

@@ -12,10 +12,22 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SurveyType } from "@/types/enums.ts";
 
+/**
+ * This selector is still written against the Mantine form API (`values`/`setFieldValue`) while
+ * its callers hand it a react-hook-form instance, which exposes neither — see the migration
+ * notes. This describes what the component touches rather than changing its behaviour.
+ */
+interface WebsurveySelectorForm {
+  values?: { buttons?: Array<{ url?: string; example?: string[] }> } & Record<string, unknown>;
+  setFieldValue?: (path: string, value: unknown) => void;
+  /** Present on the react-hook-form instance the callers actually pass. */
+  getValues?: unknown;
+}
+
 interface WebsurveySelectorProps {
   onChange?: (flowId: string) => void;
   onlyPublished?: boolean;
-  form: any;
+  form: WebsurveySelectorForm;
   carousel?: string;
   index?: number;
   label?: React.ReactNode;
@@ -26,6 +38,10 @@ interface WebsurveySelectorProps {
   /** Accepted for call-site compatibility; the shadcn Select filters natively. */
   searchable?: boolean;
 }
+
+/** Reads one property off a value that may not be an object. */
+const readProp = (value: unknown, key: string): unknown =>
+  typeof value === "object" && value !== null ? (value as Record<string, unknown>)[key] : undefined;
 
 export function WebsurveySelector({
   onlyPublished = false,
@@ -61,24 +77,24 @@ export function WebsurveySelector({
   const handleChange = (url: string) => {
     const arr = url?.split("?");
     if (carousel) {
-      form.setFieldValue(`${carousel}.url`, `${arr?.[0]}{{1}}`);
-      form.setFieldValue(`${carousel}.example`, [arr?.[1]]);
+      form.setFieldValue?.(`${carousel}.url`, `${arr?.[0]}{{1}}`);
+      form.setFieldValue?.(`${carousel}.example`, [arr?.[1]]);
     } else {
-      form.setFieldValue(`buttons.${index}.url`, `${arr?.[0]}{{1}}`);
-      form.setFieldValue(`buttons.${index}.example`, [arr?.[1]]);
+      form.setFieldValue?.(`buttons.${index}.url`, `${arr?.[0]}{{1}}`);
+      form.setFieldValue?.(`buttons.${index}.example`, [arr?.[1]]);
     }
   };
 
   let value = "";
   if (carousel) {
     const fields = carousel.split(".");
-    const button = fields.reduce((acc, key) => acc?.[key], form.values);
-    value = button.url?.replace("{{1}}", `?${button.example}`);
-  } else {
-    value = form.values.buttons[index].url?.replace(
-      "{{1}}",
-      `?${form.values.buttons[index].example}`,
-    );
+    const button = fields.reduce<unknown>((acc, key) => readProp(acc, key), form.values);
+    const url = readProp(button, "url");
+    const example = readProp(button, "example");
+    value = typeof url === "string" ? url.replace("{{1}}", `?${example}`) : "";
+  } else if (index !== undefined) {
+    const button = form.values?.buttons?.[index];
+    value = button?.url?.replace("{{1}}", `?${button.example}`) ?? "";
   }
 
   return (
@@ -90,7 +106,7 @@ export function WebsurveySelector({
       )}
       <Select
         value={value ?? ""}
-        onValueChange={handleChange}
+        onValueChange={(value) => handleChange(value ?? "")}
         items={selectOptions}
         disabled={disabled}
       >

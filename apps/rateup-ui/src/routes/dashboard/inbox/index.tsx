@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { Activity, useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -14,8 +13,15 @@ import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx"
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): { tab?: string; contactId?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    contactId: typeof search.contactId === "string" ? search.contactId : undefined,
+  }),
   component: WhatsAppInbox,
 });
 
@@ -44,7 +50,9 @@ function WhatsAppInbox() {
           setSelectedContact(contactFromStore);
           consumed = true;
         } else if (fetchedContact) {
-          setSelectedContact(fetchedContact);
+          // A contact fetched by id carries no list-side `updatedAt`; the store
+          // registers it as a synthesized row, which is what this path wants.
+          setSelectedContact(fetchedContact as ContactWithUpdatedAt);
           consumed = true;
         }
         if (consumed) {

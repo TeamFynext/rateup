@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
@@ -50,11 +50,14 @@ export function SkillsSection({ waSettingsId }: { waSettingsId: string }) {
             disabled={sync.isPending}
             onClick={() => sync.mutate()}
           >
-            <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+            <IconRefresh
+              data-icon="inline-start"
+              className={sync.isPending ? "animate-spin" : ""}
+            />
             Sync
           </Button>
           <Button size="sm" onClick={() => setAdding((v) => !v)}>
-            <Plus data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             Add skill
           </Button>
         </div>
@@ -143,7 +146,7 @@ export function SkillsSection({ waSettingsId }: { waSettingsId: string }) {
                     disabled={deleteSkill.isPending}
                     onClick={() => deleteSkill.mutate(s.id)}
                   >
-                    <Trash2 className="text-destructive" />
+                    <IconTrash className="text-destructive" />
                   </Button>
                 </div>
                 <AccordionContent>

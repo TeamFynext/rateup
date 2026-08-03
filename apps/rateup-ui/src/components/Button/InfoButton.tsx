@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
-const InfoButton = ({ docUrl, className = "" }) => {
+const InfoButton = ({ docUrl, className = "" }: { docUrl: string; className?: string }) => {
   const { t: translations } = useTranslation();
   return (
     <Tooltip>

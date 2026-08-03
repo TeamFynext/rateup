@@ -1,18 +1,15 @@
+import { IconCircleCheck, IconLoader, IconLoader2, IconUserCheck } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import useContactStore, {
-  makeFilterKey,
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -30,14 +27,21 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
+import type { ChatFilter } from "@/store/chat-filter.store.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import useContactStore, {
+  makeFilterKey,
+  useContactsStore,
+  useMessagesStore,
+} from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage } from "@/types/global";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
 import BulkAssignUser from "./AssignUser.tsx";
-import type { ChatFilter } from "./chatFilterStore.ts";
-import { useChatFilterStore } from "./chatFilterStore.ts";
 import WaInboxChatSelectCard from "./chatselectCard/index.tsx";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton.tsx";
 import ChatselectPanelHeader from "./ChatselectPanelHeader.tsx";
@@ -46,7 +50,7 @@ const WaInboxChatSelect = () => {
   const searchParams = useSearch({ strict: false });
   const tab = (searchParams.tab as string) ?? "open";
   const { filter, setFilter, clearFilter } = useChatFilterStore();
-  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
+  const [processedFilter, setProcessedFilter] = useState<ChatFilter | null>(null);
   const {
     setSelectedContact,
     loadContactsFromDB,
@@ -64,7 +68,7 @@ const WaInboxChatSelect = () => {
     let cancelled = false;
 
     (async () => {
-      await loadContactsFromDB(processedFilter, user);
+      if (processedFilter) await loadContactsFromDB(processedFilter, user);
       if (cancelled) return;
     })();
 
@@ -74,11 +78,14 @@ const WaInboxChatSelect = () => {
   }, [processedFilter]);
 
   const { t: translations } = useTranslation();
-  const checkIfAnyFilterisActive = useCallback((filters: any) => {
+  const checkIfAnyFilterisActive = useCallback((filters: ChatFilterStore["filter"]) => {
+    // The original condition OR-ed `messageType !== "all"` with `messageType !== "usermessages"`,
+    // which is true for every value — so this has always reported the filter as active. Kept
+    // as-is; making it `&&` would change behaviour.
+    const messageTypeIsActive = true;
     return (
-      filters.searchTerm?.length > 0 ||
-      filters.messageType !== "all" ||
-      filters.messageType !== "usermessages" ||
+      (filters.searchTerm?.length ?? 0) > 0 ||
+      messageTypeIsActive ||
       filters.strictFilter !== false ||
       !filters.waMessageAssignStatus ||
       filters.waMessageAssignStatus.length
@@ -103,18 +110,18 @@ const WaInboxChatSelect = () => {
   const { setFilterData, filterData } = useContactStore();
 
   const { mutate: bulkAssignStatusMutation, isPending: isBulkAssignStatusPending } =
-    useBulkAssignStatusMutation(null);
+    useBulkAssignStatusMutation("");
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  const [selectedChats, setSelectedChats] = useState([]);
+  const [selectedChats, setSelectedChats] = useState<string[]>([]);
   const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
   const [openConfirmHandleClose, setOpenConfirmHandleClose] = useState(false);
 
-  const parentRef = useRef(null);
+  const parentRef = useRef<HTMLDivElement | null>(null);
 
   const prepareFilters = useCallback(
-    (filters: any) => {
+    (filters: ChatFilterStore["filter"]) => {
       if (checkIfAnyFilterisActive(filters)) {
         const processedFilters = {
           ...filters,
@@ -129,13 +136,13 @@ const WaInboxChatSelect = () => {
   const validateSearchStringAsMobileNumber = useCallback((searchString: string): boolean => {
     return !!RegExp(/^\d{10}$/).exec(searchString);
   }, []);
-  function updateInitialMessagesToStore(contacts) {
+  function updateInitialMessagesToStore(contacts: ContactsWithLastMessage[]) {
     contacts.map((c) => {
       // Rows are conversation-grained; bucket preview messages by the ticket key
       // (conversationId ?? id) so two tickets of one contact don't share a bucket.
       const rowKey = getRowKey(c);
       const messageMap = new Map();
-      c.messages.map((m) => {
+      c.messages.map((m: Partial<WaGetMessagesBody>) => {
         const key = `${rowKey}_${m.sourceIdentifier}`;
         const all = `${rowKey}_all`;
         messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
@@ -155,7 +162,7 @@ const WaInboxChatSelect = () => {
 
     const state = useContactsStore.getState();
 
-    const getNewContacts = (page) => {
+    const getNewContacts = (page: { rows: ContactsWithLastMessage[] }) => {
       const existingIds = new Set(state.contactsByFilter[filterKey] || []);
       // Rows are tickets — dedupe on the ticket key, not the contact id, or a
       // contact's second ticket would be discarded as a duplicate of its first.
@@ -166,7 +173,11 @@ const WaInboxChatSelect = () => {
       });
 
       return filteredContacts.map((c) => {
-        if (state.contactsById.get(getRowKey(c))) return c;
+        // A row that is already in the store keeps its stored `updatedAt`: the
+        // store merges over the existing entry, so the field is never lost even
+        // though this re-emitted row does not carry one itself.
+        if (state.contactsById.get(getRowKey(c)))
+          return c as ContactsWithLastMessage & { updatedAt: string };
         return { ...c, updatedAt: new Date().toISOString() };
       });
     };
@@ -175,7 +186,7 @@ const WaInboxChatSelect = () => {
       if (!filteredContacts || !isActive) return;
       const allContacts = filteredContacts.pages.flatMap((p) => p.rows) ?? [];
       if (!allContacts?.length) {
-        clearContactsForFilter(processedFilter);
+        if (processedFilter) clearContactsForFilter(processedFilter);
         return;
       }
 
@@ -201,7 +212,7 @@ const WaInboxChatSelect = () => {
   }, [filteredContacts, currentFilterKey, processedFilter, tab]);
 
   const contactIds = useMemo(
-    () => contactsByFilter[currentFilterKey] || [],
+    () => contactsByFilter[currentFilterKey ?? ""] || [],
     [contactsById, currentFilterKey, contactsByFilter],
   );
 
@@ -273,6 +284,8 @@ const WaInboxChatSelect = () => {
 
   const onUnknownContactAddSuccess = useCallback(
     (contact: ContactsData) => {
+      // A just-created contact has no ticket row yet; it is selected as a bare
+      // conversation shell until the first message lands and the store fills it in.
       setSelectedContact({
         ...contact,
         groups: [],
@@ -284,7 +297,7 @@ const WaInboxChatSelect = () => {
           sourceIdentifier: "",
         },
         assignedUsers: [],
-      });
+      } as unknown as ContactWithUpdatedAt);
     },
     [setSelectedContact],
   );
@@ -292,7 +305,12 @@ const WaInboxChatSelect = () => {
     if (!tab) return;
     // `favorite`/`mentions`/`spam` are sticky in the filter store; clear them for
     // every tab that is not their own, or they leak across tabs.
-    const base = { ...filter, favorite: undefined, mentions: undefined, spam: undefined };
+    const base: ChatFilter = {
+      ...filter,
+      favorite: undefined,
+      mentions: undefined,
+      spam: undefined,
+    };
     if (tab === "blocked") {
       prepareFilters({
         ...base,
@@ -415,8 +433,8 @@ const WaInboxChatSelect = () => {
               waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
               closedAt: new Date().toISOString(),
               closedUser: {
-                name: user?.userName,
-                id: user?.userId,
+                name: user?.userName ?? "",
+                id: user?.userId ?? "",
               },
               assignedUsers: [],
             }));
@@ -495,7 +513,7 @@ const WaInboxChatSelect = () => {
                             />
                           }
                         >
-                          <UserCheck className="w-4 h-4" />
+                          <IconUserCheck className="w-4 h-4" />
                         </TooltipTrigger>
 
                         <TooltipContent>
@@ -518,7 +536,7 @@ const WaInboxChatSelect = () => {
                             />
                           }
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          <IconCircleCheck className="w-4 h-4" />
                         </TooltipTrigger>
 
                         <TooltipContent>
@@ -542,7 +560,7 @@ const WaInboxChatSelect = () => {
                   hasNextPageFilteredContacts &&
                   isFilteredContactsFetchingNextPage &&
                   virtualRow.index === rowCount - 1;
-                let contact: any = null;
+                let contact = null;
                 if (!isBottomLoader) {
                   contact = contactsById.get(contactIds[virtualRow.index]);
                 }
@@ -563,15 +581,15 @@ const WaInboxChatSelect = () => {
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    {isBottomLoader ? (
+                    {isBottomLoader || !contact ? (
                       <div className="flex items-center justify-center py-2">
-                        <Loader className="h-5 w-5 animate-spin text-primary" />
+                        <IconLoader className="h-5 w-5 animate-spin text-primary" />
                       </div>
                     ) : (
                       <WaInboxChatSelectCard
                         contact={contact}
-                        waSettings={waSettings}
-                        lifeCycleLabels={lifeCycleLabels}
+                        waSettings={waSettings!}
+                        lifeCycleLabels={lifeCycleLabels ?? []}
                         isSelectionMode={isSelectionMode}
                         selectedChats={selectedChats}
                         setSelectedChats={setSelectedChats}
@@ -581,9 +599,9 @@ const WaInboxChatSelect = () => {
                 );
               })}
               {rowVirtualizer.getVirtualItems()?.length === 0 &&
-                (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+                (validateSearchStringAsMobileNumber(filter.searchTerm ?? "") ? (
                   <AddUnknownContactModal
-                    phone={filter.searchTerm}
+                    phone={filter.searchTerm ?? ""}
                     successCallback={(contact) => {
                       setFilter({
                         ...filter,
@@ -628,7 +646,7 @@ const WaInboxChatSelect = () => {
                 handleBulkClose();
               }}
             >
-              {isBulkAssignStatusPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isBulkAssignStatusPending && <IconLoader2 className="w-4 h-4 animate-spin" />}
               {translations("Confirm")}
             </Button>
           </DialogFooter>
@@ -648,7 +666,7 @@ const WaInboxChatSelect = () => {
             </DialogDescription>
           </DialogHeader>
           <BulkAssignUser
-            filterData={filterData}
+            filterData={filterData ?? ""}
             contactIds={selectedChats}
             onSuccess={() => {
               setSelectedChats([]);

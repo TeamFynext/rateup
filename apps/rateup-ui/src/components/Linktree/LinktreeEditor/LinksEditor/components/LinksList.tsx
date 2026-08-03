@@ -1,6 +1,7 @@
 import { useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
 import LinkCard from "./LinkCard.tsx";
@@ -9,7 +10,7 @@ import ReorderItem from "./Reorder/ReorderItem.tsx";
 
 import styles from "../LinksEditor.module.css";
 
-function LinksList({ links }) {
+function LinksList({ links }: { links: LinktreeLink[] }) {
   const params = useParams({
     strict: false,
   });
@@ -18,7 +19,7 @@ function LinksList({ links }) {
   const { mutateAsync: linktreeUpdateMutateAsync } = useUpdateLinktreeMutation(shortUrlId);
 
   const handleDragEnd = useCallback(
-    async (reorderedLinks) => {
+    async (reorderedLinks: LinktreeLink[]) => {
       await updateLinktreeMutation.mutateAsync({
         shortUrlId,
         links: reorderedLinks,
@@ -28,7 +29,7 @@ function LinksList({ links }) {
   );
 
   const handleDelete = useCallback(
-    async (linkId) => {
+    async (linkId: string) => {
       const filteredLinks = links.filter(({ id }) => id !== linkId);
       await updateLinktreeMutation.mutateAsync({
         shortUrlId,

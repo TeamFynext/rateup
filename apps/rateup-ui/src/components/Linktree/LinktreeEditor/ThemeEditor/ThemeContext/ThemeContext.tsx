@@ -1,20 +1,26 @@
 import { createContext, useContext, useState } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useImmerReducer } from "use-immer";
+
+import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 
 import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 import { initialState } from "./constants.ts";
+import type { LinktreeThemeAction } from "./ThemeReducer.tsx";
 import themeReducer from "./ThemeReducer.tsx";
 
-const ThemeContext = createContext(null);
-const ThemeDispatchContext = createContext(null);
+// Only read inside `ThemeObjProvider`; the defaults stand in for
+// "not yet provided".
+const ThemeContext = createContext<LinktreeTheme>({} as LinktreeTheme);
+const ThemeDispatchContext = createContext<Dispatch<LinktreeThemeAction>>(() => {});
 
 const SelectedPreviewDeviceContext = createContext("desktop");
-const SetSelectPreviewDeviceContext = createContext(null);
+const SetSelectPreviewDeviceContext = createContext<Dispatch<SetStateAction<string>>>(() => {});
 
-const SelectedEditorContext = createContext(null);
-const SetSelectedEditorContext = createContext(null);
+const SelectedEditorContext = createContext<string>("background");
+const SetSelectedEditorContext = createContext<Dispatch<SetStateAction<string>>>(() => {});
 
-function ThemeObjProvider({ children }) {
+function ThemeObjProvider({ children }: { children: ReactNode }) {
   let { theme } = useLinktreeObj();
   if (!theme) theme = initialState;
   const [themeObj, dispatch] = useImmerReducer(themeReducer, theme);

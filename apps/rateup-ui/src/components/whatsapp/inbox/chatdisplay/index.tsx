@@ -1,14 +1,13 @@
-import { IconExclamationCircle, IconPaperclip } from "@tabler/icons-react";
-import { MessageSquare } from "lucide-react";
+import { IconExclamationCircle, IconMessage, IconPaperclip } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Alert, AlertTitle } from "@/components/ui/alert.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {
@@ -41,7 +40,7 @@ export default function WaInboxChatDisplay() {
   const [showCustomerInfo, setShowCustomerInfo] = useState(true);
   const [showDetailsOverlay, setShowDetailsOverlay] = useState(false);
   const contactId = contact?.id;
-  const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
+  const { data: assignedUserList } = useGetAssignedUserForContact(contactId ?? "");
   const MAX_FILES = 10;
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
@@ -67,11 +66,17 @@ export default function WaInboxChatDisplay() {
   useEffect(() => {
     if (!contact?.id || !assignedUserList) return;
 
-    const mapped = assignedUserList.map((a) => ({
-      id: a.assignedUserId,
-      name: a.assignedUser?.name,
-      teamId: a.teamId,
-    }));
+    const mapped = assignedUserList.map(
+      (a: {
+        assignedUserId?: string;
+        teamId?: string;
+        assignedUser?: { id?: string; name?: string };
+      }) => ({
+        id: a.assignedUserId,
+        name: a.assignedUser?.name,
+        teamId: a.teamId,
+      }),
+    );
 
     updateContactById(contact.id, (prev) => {
       if (
@@ -101,7 +106,7 @@ export default function WaInboxChatDisplay() {
   } else if (isClosedTicket || !contact?.assignedUsers?.length) {
     // Closed or unassigned → the assign/closed banner (which explains a closed
     // ticket and offers reopen-by-assign), not the message editor.
-    footerContent = <WaInboxAssignUserFooter contact={contact} user={user} />;
+    footerContent = <WaInboxAssignUserFooter contact={contact!} user={user!} />;
   } else if (isAssignedToMe) {
     footerContent = <WaInboxChatDisplayFooter contact={contact} />;
   } else {
@@ -169,7 +174,7 @@ export default function WaInboxChatDisplay() {
       {!contact ? (
         <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
           <div className="text-center">
-            <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <IconMessage className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="mb-2">{translations("Select a chat to see messages")}</h3>
           </div>
         </div>

@@ -1,17 +1,25 @@
-import { Users } from "lucide-react";
+import { IconUsers } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
+
+import type { TeamApiOverviewRow } from "@/backend/apiAnalytics/apianalytics.api";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-function TeamOverview({ teamData, isLoading }) {
+function TeamOverview({
+  teamData,
+  isLoading,
+}: {
+  teamData: TeamApiOverviewRow[] | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   const hasData = Array.isArray(teamData) && teamData.length > 0;
   return (
     <Card>
       <CardHeader className="py-0">
         <CardTitle className="text-base flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
+          <IconUsers className="w-4 h-4 text-primary" />
           {t("Team Performance Breakdown")}
         </CardTitle>
       </CardHeader>
@@ -38,7 +46,7 @@ function TeamOverview({ teamData, isLoading }) {
         ) : !hasData ? (
           /* No Data State */
           <div className="h-[200px] flex flex-col items-center justify-center text-sm text-muted-foreground">
-            <Users className="w-6 h-6 mb-2 opacity-40" />
+            <IconUsers className="w-6 h-6 mb-2 opacity-40" />
             {t("No team data available")}
           </div>
         ) : (
@@ -54,7 +62,7 @@ function TeamOverview({ teamData, isLoading }) {
                     className="w-10 h-10 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: team.teamColor ?? "#1873E8" }}
                   >
-                    <Users className="w-5 h-5 text-white" />
+                    <IconUsers className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <p className="font-medium">{team.teamName}</p>

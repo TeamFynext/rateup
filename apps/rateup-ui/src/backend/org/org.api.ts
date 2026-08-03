@@ -1,4 +1,23 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
+
+/**
+ * The setup wizard's per-step completion flags. Mirrors the API's
+ * `onboardingChecklist` zod object; every step is optional.
+ */
+export interface OnboardingChecklist {
+  api?: boolean;
+  verify?: boolean;
+  payment?: boolean;
+  invite?: boolean;
+  auto?: boolean;
+  points?: boolean;
+  tiers?: boolean;
+  rewards?: boolean;
+  referral?: boolean;
+  cmds?: boolean;
+  loyaltyauto?: boolean;
+}
 
 import { axiosClient } from "../apiClient";
 
@@ -56,20 +75,21 @@ export interface IUpdateOrgDetails {
   waAssignedChatPermission: WaAssignedChatPermission;
   showLifecycle: boolean;
   onboardingChecklistCompleted: boolean;
-  onboardingChecklist: any;
+  onboardingChecklist: OnboardingChecklist;
   isConversionApiActive: boolean;
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);
 
+/** An organisation row as the admin org list returns it. */
+export type AdminOrg = Org & {
+  _count: { members: number; teams: number; invitations: number };
+  owner: { id: string; name: string; email: string };
+  AuditLog: { createdAt: string }[];
+};
+
 export async function getAllOrgs() {
-  return (await axiosClient.get("/org")).data as Array<
-    Org & {
-      _count: { members: number; teams: number; invitations: number };
-      owner: { id: string; name: string; email: string };
-      AuditLog: { createdAt: string }[];
-    }
-  >;
+  return (await axiosClient.get("/org")).data as AdminOrg[];
 }
 export async function getOrgStats(orgId: string) {
   return (await axiosClient.get(`/org/${orgId}`)).data;
@@ -79,7 +99,7 @@ export async function deleteOrg(orgId: string) {
   return await axiosClient.delete(`org/${orgId}`);
 }
 
-export async function updateOrgPause({ orgId, data }) {
+export async function updateOrgPause({ orgId, data }: { orgId: string; data: RequestPayload }) {
   return await axiosClient.put(`org/pause/${orgId}`, data);
 }
 
@@ -87,7 +107,7 @@ export async function getWebhookClientSecret() {
   return (await axiosClient.get(`org/webhook-client-secret`)).data;
 }
 
-export async function completeOrgDetails(onboarding) {
+export async function completeOrgDetails(onboarding: RequestPayload) {
   await axiosClient.put("/org/completeorgdetails", {
     onboarding,
   });
@@ -98,7 +118,13 @@ export async function orgNameAndPhone() {
   return res.data;
 }
 
-export async function getChecklist() {
+/** Response of `GET /org/checklist`; the API defaults both fields when unset. */
+export interface OnboardingChecklistResponse {
+  onboardingChecklist: OnboardingChecklist;
+  onboardingChecklistCompleted: boolean;
+}
+
+export async function getChecklist(): Promise<OnboardingChecklistResponse> {
   const res = await axiosClient.get("/org/checklist");
   return res.data;
 }

@@ -1,9 +1,10 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../apiClient";
 
-export const getCampaigns = async (type) => {
+export const getCampaigns = async (type: string) => {
   const res = await axiosClient.get(`/campaign/?type=${type}`);
   return res;
 };
@@ -13,22 +14,28 @@ export const getCampaignsByTeam = async (teamId: string) => {
   return res;
 };
 
-export const createCampaign = async (data) => {
+export const createCampaign = async (data: RequestPayload) => {
   const res = await axiosClient.post("/campaign/", data);
   return res;
 };
 
-export const getCampaignById = async (campaignId) => {
+export const getCampaignById = async (campaignId: string) => {
   const res = await axiosClient.get(`/campaign?campaignId=${campaignId}`);
   return res?.data;
 };
 
-export const updateCampaign = async ({ data, campaignId }) => {
+export const updateCampaign = async ({
+  data,
+  campaignId,
+}: {
+  data: RequestPayload;
+  campaignId: string;
+}) => {
   const res = await axiosClient.put(`/campaign/${campaignId}`, data);
   return res;
 };
 
-export const deleteCampaign = async (campaignId) => {
+export const deleteCampaign = async (campaignId: string) => {
   const res = await axiosClient.delete(`/campaign/${campaignId}`);
   return res;
 };
@@ -90,7 +97,7 @@ export const campaignResponseDownloadById = async ({
   return downloadBlob(blob, response?.headers?.filename ?? `file.${format}`);
 };
 
-export async function getCampaignStatsById(campaignId, selectedDripStage) {
+export async function getCampaignStatsById(campaignId: string, selectedDripStage?: string) {
   return (
     await axiosClient.get(
       `/campaign/${campaignId}/stats?selectedDripStage=${selectedDripStage ?? "all"}`,

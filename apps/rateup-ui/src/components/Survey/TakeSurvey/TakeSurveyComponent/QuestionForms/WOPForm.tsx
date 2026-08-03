@@ -2,11 +2,12 @@ import { useContext, useState } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import type { Wop } from "@/types/global";
+import { asAnswerText } from "@/utils/response.ts";
 
 import { DEFAULT_WOP } from "../util.tsx";
 import WheelComponent from "../WheelComponent.tsx";
 
-const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop: Wop }) => {
+const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop?: Wop }) => {
   const [price, setPrice] = useState("");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
@@ -27,7 +28,7 @@ const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop: Wop }) =
         size={wopData?.size}
         isOnlyOnce={!isPreview}
         disable={!!response}
-        winningSegment={response}
+        winningSegment={asAnswerText(response) || undefined}
       />
       {!isPreview && price && `You have won ${price}`}
       {!isPreview && response && !price && `You have won ${response}`}

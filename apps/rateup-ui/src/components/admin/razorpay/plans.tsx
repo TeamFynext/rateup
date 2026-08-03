@@ -1,6 +1,13 @@
+import {
+  IconCalendar,
+  IconClock,
+  IconCreditCard,
+  IconCurrencyDollar,
+  IconPackage,
+  IconTrash,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Calendar, Clock, CreditCard, DollarSign, Package, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -25,9 +32,26 @@ import {
 } from "@/components/ui/card.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { RequestPayload } from "@/types/api.ts";
 import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar.tsx";
+
+/** A Razorpay plan row from the sync endpoint. */
+interface RazorpayPlan {
+  id: string;
+  planId?: string;
+  paymentPlanId?: string;
+  name?: string;
+  description?: string;
+  status?: PaymentPlanStatus;
+  amount?: number;
+  currency?: string;
+  period?: string;
+  interval?: number;
+  /** Razorpay reports creation as a unix timestamp. */
+  createdAt?: number;
+}
 
 interface PlanTableData {
   id: string;
@@ -52,13 +76,13 @@ const RazorpayPlans = () => {
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
 
-  const handleUpdatePlans = (updatedData: any) => {
+  const handleUpdatePlans = (updatedData: RequestPayload) => {
     planUpdateMutate.mutate(updatedData);
   };
 
   const handleDeleteClick = () => {
     const planIdLocal = Array.isArray(plans?.data)
-      ? plans?.data?.find((plan) => plan?.planId == selectedPlanId)?.id
+      ? plans?.data?.find((plan: RazorpayPlan) => plan?.planId == selectedPlanId)?.id
       : "";
     const planInrateupPlans =
       rateupPlans && rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
@@ -89,7 +113,7 @@ const RazorpayPlans = () => {
       header: createSortableHeader("Name"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <IconPackage className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
@@ -100,7 +124,7 @@ const RazorpayPlans = () => {
       header: createSortableHeader("Created At"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <IconCalendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
@@ -111,7 +135,7 @@ const RazorpayPlans = () => {
       header: createSortableHeader("Amount"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <IconCurrencyDollar className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
@@ -138,7 +162,7 @@ const RazorpayPlans = () => {
       header: "Interval",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <IconClock className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono">{row.getValue("interval")}</span>
         </div>
       ),
@@ -173,7 +197,7 @@ const RazorpayPlans = () => {
             ]}
             onValueChange={(value) => {
               const planIdLocal = Array.isArray(plans?.data)
-                ? plans?.data?.find((plan) => plan?.planId == row.original.id)?.id
+                ? plans?.data?.find((plan: RazorpayPlan) => plan?.planId == row.original.id)?.id
                 : "";
               handleUpdatePlans({
                 id: planIdLocal,
@@ -234,7 +258,7 @@ const RazorpayPlans = () => {
           disabled={!row.original.canDelete}
           className="h-8 w-8 p-0"
         >
-          <Trash2 className="h-4 w-4" />
+          <IconTrash className="h-4 w-4" />
         </Button>
       ),
       meta: { title: "Actions" },
@@ -258,18 +282,20 @@ const RazorpayPlans = () => {
 
   const tableData: PlanTableData[] = Array.isArray(plans?.data)
     ? plans?.data
-        ?.filter((p) => p.status !== "INACTIVE")
-        ?.map((plan) => ({
+        ?.filter((p: RazorpayPlan) => p.status !== "INACTIVE")
+        ?.map((plan: RazorpayPlan) => ({
           id: plan.planId,
           name: plan.name,
-          createdAt: dayjs.unix(plan.createdAt).format("DD/MM/YYYY HH:mm:ss"),
+          createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
           amount: plan.amount,
           currency: plan.currency,
           period: plan.period,
           interval: plan.interval,
           status: plan.status,
           description: plan.description,
-          canDelete: ![PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status),
+          canDelete: !(
+            plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
+          ),
         }))
     : [];
 
@@ -285,7 +311,7 @@ const RazorpayPlans = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-blue-600" />
+              <IconCreditCard className="h-4 w-4 text-blue-600" />
               <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
                 {translations("List of plans from Razorpay DB")}
               </CardTitle>

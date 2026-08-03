@@ -4,15 +4,17 @@ import { toast } from "sonner";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
+import type { FlowInputProps } from "./inputProps.ts";
+import { asText } from "./inputProps.ts";
 
-const ImageInput = (props) => {
+const ImageInput = (props: FlowInputProps<string>) => {
   const resetRef = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const clearFile = () => {
     setError(null);
     resetRef.current?.();
-    props.onChange("");
+    props.onChange?.("");
   };
   const handleFileChange = async (file: File) => {
     try {
@@ -23,7 +25,7 @@ const ImageInput = (props) => {
       }
       setError(null);
       const base64String = await FileConverter.fileToBase64(file);
-      props.onChange(base64String);
+      props.onChange?.(base64String);
     } catch (error) {
       toast.error("Error converting file to Base64:" + JSON.stringify(error), {
         id: "file-converting",
@@ -35,7 +37,7 @@ const ImageInput = (props) => {
       clearFile={clearFile}
       handleFileChange={handleFileChange}
       resetRef={resetRef}
-      fileSrc={props.value}
+      fileSrc={asText(props.value)}
       error={error ?? undefined}
       style={{ marginTop: "25px" }}
       size="md"

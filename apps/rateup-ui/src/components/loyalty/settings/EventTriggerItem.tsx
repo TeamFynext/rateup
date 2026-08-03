@@ -1,4 +1,4 @@
-import { Loader2, Save } from "lucide-react";
+import { IconDeviceFloppy, IconLoader2 } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
+import type { EventTriggersFormValues } from "./schemas.ts";
 import type { LoyaltyTemplateTypes } from "./utils.ts";
 import { getLoyaltyTemplateLabel } from "./utils.ts";
 
 interface EventTriggerItemProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<EventTriggersFormValues>;
   eventType: LoyaltyEventType;
   templateType: LoyaltyTemplateTypes;
   title: string;
@@ -83,9 +84,9 @@ export function EventTriggerItem({
           {isModified && (
             <Button size="sm" onClick={onSave} disabled={isPending || disabled} className="w-full">
               {isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <Save className="w-4 h-4 mr-2" />
+                <IconDeviceFloppy className="w-4 h-4 mr-2" />
               )}
               {t("Save")}
             </Button>

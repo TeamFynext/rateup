@@ -20,6 +20,11 @@ function SurveyThemeView({
   previewId,
   isSurveyThemePreview = true,
   isSurveyThemeEditView = false,
+}: {
+  survey: Survey;
+  previewId?: string;
+  isSurveyThemePreview?: boolean;
+  isSurveyThemeEditView?: boolean;
 }) {
   const selectedPageTab = useSelectedPageTab();
   const isSurveyPageTabSelected = selectedPageTab === ThemeTabEnum.SURVEY;
@@ -56,7 +61,7 @@ function SurveyThemeView({
     );
   } else if (isThankyouPage && !isSurveyThemeEditView) {
     const thankyouTypePageQuestionObj = surveyCopy?.questions?.find(
-      (question) => question?.type === PageType.ThankYou,
+      (question: Question) => question?.type === PageType.ThankYou,
     );
 
     const titleText = thankyouTypePageQuestionObj?.titleText;
@@ -68,7 +73,7 @@ function SurveyThemeView({
         surveyThemeData={surveyCopy?.webSurveyTheme?.theme}
         pagesThemeData={surveyCopy?.webSurveyPagesTheme}
         titleText={titleText}
-        subtitleText={subtitleText}
+        subtitleText={subtitleText ?? undefined}
         isSurveyPreview={true}
       />
     );

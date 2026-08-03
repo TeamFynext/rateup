@@ -1,3 +1,4 @@
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../../apiClient";
@@ -8,7 +9,7 @@ export interface ICreateContact {
   email?: string;
   teamId?: string;
   source?: string;
-  tags?: any;
+  tags?: string[];
   external_id?: string;
 }
 
@@ -36,7 +37,7 @@ export const getContactsList = async (
     id: string;
     desc: boolean;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
   type?: string,
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
@@ -57,12 +58,12 @@ export const createContact = async (data: ICreateContact) => {
   return res as { data: ContactsData };
 };
 
-export const importContacts = async (data) => {
+export const importContacts = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${CONTACT_BASE_URL}/importcontacts`, data);
   return res;
 };
 
-export const importCSVContacts = async (data) => {
+export const importCSVContacts = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
     timeout: 60000,
   });
@@ -81,18 +82,41 @@ export const deleteManyContacts = async (contactIds: string[]) => {
   return res;
 };
 
-export const editContact = async ({ data, contactId }) => {
+export const editContact = async ({
+  data,
+  contactId,
+}: {
+  data: RequestPayload;
+  contactId: string;
+}) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}`, data);
   return res;
 };
 
-export const editContactLabels = async ({ data, contactId }) => {
+export const editContactLabels = async ({
+  data,
+  contactId,
+}: {
+  data: RequestPayload;
+  contactId: string;
+}) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}/labels`, data);
   return res;
 };
 
+/** A contact label as the labels endpoint returns it. */
+export interface ContactLabelOption {
+  id: string;
+  name: string;
+  color?: string;
+  description?: string | null;
+  createdAt?: string;
+  orgId?: string;
+  _count?: { contactLabels: number };
+}
+
 export const getContactLabels = async () => {
-  const res = await axiosClient.get(`${CONTACT_BASE_URL}/labels`);
+  const res = await axiosClient.get<ContactLabelOption[]>(`${CONTACT_BASE_URL}/labels`);
   return res.data;
 };
 
@@ -130,7 +154,7 @@ export const assignContactLabelsToContactId = async (
 };
 
 export const updateLifecycleofMultipleContacts = async (data: {
-  lifecycleId;
+  lifecycleId: string;
   contactIds: string[];
 }) => {
   const res = await axiosClient.put(
@@ -139,6 +163,9 @@ export const updateLifecycleofMultipleContacts = async (data: {
   );
   return res.data;
 };
+/** Mirrors `contact.schema.ts`'s `z.enum([...])` for a custom field's data type. */
+export type CustomFieldType = "text" | "number" | "email" | "multivalue";
+
 export interface CustomFieldData {
   id: string;
   orgId: string;
@@ -146,7 +173,8 @@ export interface CustomFieldData {
   name: string;
   description: string | null;
   visibility: boolean;
-  type: string;
+  required?: boolean;
+  type: CustomFieldType;
   createdAt: string;
   values: string;
   listValues?: string[];
@@ -156,12 +184,12 @@ export const getCustomField = async () => {
   const res = await axiosClient.get(`${CONTACT_BASE_URL}/custom-fields`);
   return res?.data as CustomFieldData[];
 };
-export const createCustomField = async (data) => {
+export const createCustomField = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${CONTACT_BASE_URL}/custom-fields`, data);
   return res?.data as CustomFieldData;
 };
 
-export const updateCustomField = async (fieldId: string, data) => {
+export const updateCustomField = async (fieldId: string, data: RequestPayload) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/custom-fields/${fieldId}`, data);
   return res?.data as CustomFieldData;
 };
@@ -183,7 +211,7 @@ export const exportContacts = async (data: { format: "xlsx" | "ods"; fields: str
   return downloadBlob(blob, `contacts.${data.format}`);
 };
 
-export const bulkAssignStatus = async (data) => {
+export const bulkAssignStatus = async (data: RequestPayload) => {
   const res = await axiosClient.put(`${CONTACT_BASE_URL}/bulk-assign-status`, data);
   return res;
 };

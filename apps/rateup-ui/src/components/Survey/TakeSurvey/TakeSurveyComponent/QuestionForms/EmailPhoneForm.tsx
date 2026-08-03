@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
@@ -12,7 +13,7 @@ import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 export function EmailPhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateResponse({ ...response, email: e.target.value });
+    updateResponse({ ...asAnswer(response), email: e.target.value });
   };
   const { t: translations } = useTranslation();
   const emailRef = useRef<HTMLInputElement>(null);
@@ -25,7 +26,7 @@ export function EmailPhoneForm() {
           <Input
             placeholder={translations("Enter your email")}
             ref={emailRef}
-            value={response?.email || ""}
+            value={asAnswer(response).email || ""}
             onChange={handleEmailChange}
             className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
           />
@@ -36,8 +37,8 @@ export function EmailPhoneForm() {
         international
         countryCallingCodeEditable={false}
         placeholder={translations("Enter phone number")}
-        value={response?.phone || undefined}
-        onChange={(value) => updateResponse({ ...response, phone: value })}
+        value={asAnswer(response).phone || undefined}
+        onChange={(value) => updateResponse({ ...asAnswer(response), phone: value })}
         className="w-full max-w-[500px]"
       />
     </div>

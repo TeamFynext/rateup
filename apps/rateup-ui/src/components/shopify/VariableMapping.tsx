@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useId, useMemo } from "react";
 
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
@@ -34,7 +34,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
   const variables = useMemo(() => {
     if (!template?.data?.components) return [];
     const bodyComponent = template.data.components.find(
-      (c: any) => c.type === "BODY" || c.type === "body",
+      (c: { type?: string }) => c.type === "BODY" || c.type === "body",
     );
     // WhatsApp templates use example.body_text[0] to store examples for parameters {{1}}, {{2}}...
     const bodyExamples = bodyComponent?.example?.body_text?.[0];
@@ -55,7 +55,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 py-4">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <IconLoader2 className="h-4 w-4 animate-spin" />
         <span className="text-sm text-muted-foreground">Loading template variables...</span>
       </div>
     );
@@ -87,7 +87,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
               </FieldLabel>
               <Select
                 value={currentMapping?.shopifyPath || ""}
-                onValueChange={(val) => handleMappingChange(i, val)}
+                onValueChange={(val) => handleMappingChange(i, val ?? "")}
                 items={variableOptions}
               >
                 <SelectTrigger id={`${uid}-variable-e-g-${i}`} className="h-9">

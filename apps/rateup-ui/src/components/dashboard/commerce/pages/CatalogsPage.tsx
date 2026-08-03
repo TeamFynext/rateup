@@ -1,18 +1,19 @@
 import {
-  ChevronRight,
-  Ellipsis,
-  LayoutGrid,
-  Package,
-  Plus,
-  RefreshCw,
-  Settings2,
-  ShoppingBag,
-  Trash2,
-} from "lucide-react";
+  IconChevronRight,
+  IconDots,
+  IconLayoutGrid,
+  IconPackage,
+  IconPlus,
+  IconRefresh,
+  IconSettings2,
+  IconShoppingBag,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import type { CatalogProductRow } from "@/backend/whatsapp/catalog/products/products.api.ts";
 import {
   useDeletCatalogProducts,
   useSyncCatalogProducts,
@@ -58,7 +59,7 @@ const TILE_CLASSES = [
   "bg-sky-500/10 text-sky-600",
 ];
 
-function stockMeta(props: any) {
+function stockMeta(props: CatalogProductRow["productProps"]) {
   const out = /out\s*of\s*stock/i.test(props?.availability ?? "");
   return out
     ? {
@@ -76,10 +77,10 @@ function stockMeta(props: any) {
 }
 
 /** Flatten a catalog product into the shape AddCatalogProduct's form expects. */
-function toFormValues(product: any) {
+function toFormValues(product: CatalogProductRow) {
   const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
     product.productProps ?? {};
-  const num = (v: any) => (v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : undefined);
+  const num = (v: unknown) => (v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : undefined);
 
   return {
     ...product,
@@ -106,10 +107,10 @@ export function CatalogsPage() {
   const deleteProducts = useDeletCatalogProducts(catalogId);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editProduct, setEditProduct] = useState<any>(null);
+  const [editProduct, setEditProduct] = useState<CatalogProductRow | null>(null);
 
-  const productList: any[] = products ?? [];
-  const collectionList: any[] = productSets ?? [];
+  const productList: CatalogProductRow[] = products ?? [];
+  const collectionList = productSets ?? [];
   const vertical = catalogData?.vertical;
 
   const handleSync = () => {
@@ -126,12 +127,12 @@ export function CatalogsPage() {
     setModalOpen(true);
   };
 
-  const openEdit = (product: any) => {
-    setEditProduct(toFormValues(product));
+  const openEdit = (product: CatalogProductRow) => {
+    setEditProduct(toFormValues(product) as CatalogProductRow);
     setModalOpen(true);
   };
 
-  const handleDelete = async (product: any) => {
+  const handleDelete = async (product: CatalogProductRow) => {
     const title = product.productProps?.title ?? product.productProps?.name ?? "this product";
     const ok = await confirm({
       title: "Delete product",
@@ -143,11 +144,13 @@ export function CatalogsPage() {
 
     let productIds: { id: string; hotel_reatiler_id?: string }[] = [];
     if (vertical === "commerce") {
-      productIds = [{ id: product.retailer_id }];
+      productIds = [{ id: product.retailer_id ?? "" }];
     } else if (vertical === "hotels") {
-      productIds = [{ id: product.hotel_id }];
+      productIds = [{ id: product.hotel_id ?? "" }];
     } else if (vertical === "hotel_room") {
-      productIds = [{ id: product.hotel_room_id, hotel_reatiler_id: product.hotel_retailer_id }];
+      productIds = [
+        { id: product.hotel_room_id ?? "", hotel_reatiler_id: product.hotel_retailer_id },
+      ];
     }
 
     toast.loading("Deleting product…", { id: "cx-delete-product" });
@@ -155,8 +158,7 @@ export function CatalogsPage() {
       { productIds },
       {
         onSuccess: () => toast.success("Product deleted", { id: "cx-delete-product" }),
-        onError: (e: any) =>
-          toast.error(e?.message || "Deletion failed", { id: "cx-delete-product" }),
+        onError: (e) => toast.error(e?.message || "Deletion failed", { id: "cx-delete-product" }),
       },
     );
   };
@@ -177,12 +179,12 @@ export function CatalogsPage() {
             {syncProducts.isPending ? (
               <Spinner data-icon="inline-start" />
             ) : (
-              <RefreshCw data-icon="inline-start" className="text-emerald-600" />
+              <IconRefresh data-icon="inline-start" className="text-emerald-600" />
             )}
             Sync with Meta
           </Button>
           <Button size="sm" onClick={openCreate} disabled={!catalogId}>
-            <Plus data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             Add Product
           </Button>
         </>
@@ -192,7 +194,7 @@ export function CatalogsPage() {
         <Empty className="rounded-xl border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <ShoppingBag />
+              <IconShoppingBag />
             </EmptyMedia>
             <EmptyTitle>No catalog connected</EmptyTitle>
             <EmptyDescription>
@@ -204,15 +206,15 @@ export function CatalogsPage() {
         <Tabs defaultValue="products" className="flex flex-col gap-5">
           <TabsList>
             <TabsTrigger value="products">
-              <ShoppingBag data-icon="inline-start" />
+              <IconShoppingBag data-icon="inline-start" />
               Products · {productList.length}
             </TabsTrigger>
             <TabsTrigger value="collections">
-              <LayoutGrid data-icon="inline-start" />
+              <IconLayoutGrid data-icon="inline-start" />
               Collections · {collectionList.length}
             </TabsTrigger>
             <TabsTrigger value="settings">
-              <Settings2 data-icon="inline-start" />
+              <IconSettings2 data-icon="inline-start" />
               Settings
             </TabsTrigger>
           </TabsList>
@@ -228,7 +230,7 @@ export function CatalogsPage() {
               <Empty className="rounded-xl border">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Package />
+                    <IconPackage />
                   </EmptyMedia>
                   <EmptyTitle>No products yet</EmptyTitle>
                   <EmptyDescription>
@@ -240,7 +242,7 @@ export function CatalogsPage() {
               <Empty className="rounded-xl border">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Package />
+                    <IconPackage />
                   </EmptyMedia>
                   <EmptyTitle>Unsupported catalog type</EmptyTitle>
                   <EmptyDescription>{vertical} items are not supported yet.</EmptyDescription>
@@ -279,7 +281,7 @@ export function CatalogsPage() {
                             className="size-full object-cover"
                           />
                         ) : (
-                          <Package className="size-11" />
+                          <IconPackage className="size-11" />
                         )}
 
                         <Badge
@@ -331,7 +333,7 @@ export function CatalogsPage() {
                                 />
                               }
                             >
-                              <Ellipsis />
+                              <IconDots />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuGroup>
@@ -340,7 +342,7 @@ export function CatalogsPage() {
                                   onClick={() => handleDelete(p)}
                                   disabled={deleteProducts.isPending}
                                 >
-                                  <Trash2 />
+                                  <IconTrash />
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuGroup>
@@ -366,7 +368,7 @@ export function CatalogsPage() {
                 {syncSets.isPending ? (
                   <Spinner data-icon="inline-start" />
                 ) : (
-                  <RefreshCw data-icon="inline-start" />
+                  <IconRefresh data-icon="inline-start" />
                 )}
                 Sync collections
               </Button>
@@ -385,7 +387,7 @@ export function CatalogsPage() {
                         tile,
                       )}
                     >
-                      <LayoutGrid className="size-[22px]" />
+                      <IconLayoutGrid className="size-[22px]" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-foreground">
@@ -395,12 +397,12 @@ export function CatalogsPage() {
                         {c.productIds?.length ?? 0} products
                       </div>
                     </div>
-                    <ChevronRight className="size-4 text-muted-foreground" />
+                    <IconChevronRight className="size-4 text-muted-foreground" />
                   </Card>
                 );
               })}
               <div className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed p-4.5 text-sm font-semibold text-muted-foreground">
-                <Plus className="size-4" />
+                <IconPlus className="size-4" />
                 New collection
               </div>
             </div>

@@ -1,5 +1,4 @@
-import { IconDownload } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -66,7 +65,11 @@ export default function WaInboxVideo({ messageContent }: Props) {
             aria-label="Download Video"
             disabled={isPending}
           >
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <IconDownload size={16} />}
+            {isPending ? (
+              <IconLoader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <IconDownload size={16} />
+            )}
           </Button>
         )}
       </div>

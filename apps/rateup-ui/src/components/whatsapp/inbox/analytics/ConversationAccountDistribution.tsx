@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import { IconMessageCircle } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -6,6 +6,7 @@ import { useGetConversationAccountDistribution } from "@/backend/conversation/co
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Progress, ProgressIndicator } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 
 function getMessageSourcePlatformColor(platform: MessagePlatform) {
@@ -21,7 +22,7 @@ function getMessageSourcePlatformColor(platform: MessagePlatform) {
   }
 }
 
-const ConversationAccountDistribution = ({ dateRange }) => {
+const ConversationAccountDistribution = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data: channelDistribution = [], isLoading } = useGetConversationAccountDistribution({
     dateRange: dateRange.range,
@@ -39,7 +40,7 @@ const ConversationAccountDistribution = ({ dateRange }) => {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <MessageCircle className="w-4 h-4 text-primary" />
+          <IconMessageCircle className="w-4 h-4 text-primary" />
           {t("Channel Distribution")}
         </CardTitle>
       </CardHeader>

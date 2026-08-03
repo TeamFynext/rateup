@@ -1,4 +1,5 @@
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
+import type { UseMutationResult } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { useId, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,26 +26,28 @@ const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
 
 /** Checks is all properties in ob1 is equal to that in ob2 */
-function isEqual(ob1: object, ob2: object): boolean {
-  return Object.keys(ob1).every((k) => {
-    if (ob1[k] != ob2[k]) console.log(k, ob1[k], ob2[k]);
-    return ob1[k] == ob2[k];
+function isEqual(ob1: object | undefined, ob2: object | undefined): boolean {
+  const a = (ob1 ?? {}) as Record<string, unknown>;
+  const b = (ob2 ?? {}) as Record<string, unknown>;
+  return Object.keys(a).every((k) => {
+    if (a[k] != b[k]) console.log(k, a[k], b[k]);
+    return a[k] == b[k];
   });
 }
 
 interface SimpleForm<T> {
   values: T;
   setValues: (values: T) => void;
-  setFieldValue: (name: keyof T, value: any) => void;
+  setFieldValue: (name: keyof T, value: unknown) => void;
   setInitialValues: (values: T) => void;
   reset: () => void;
-  getInputProps: (name: keyof T) => { value: any; onChange: (e: any) => void };
+  getInputProps: (name: keyof T) => { value: string; onChange: (e: unknown) => void };
   errors: Partial<Record<keyof T, string>>;
 }
 
 function useSimpleForm<T extends object>(opts: {
   initialValues: T;
-  validate?: Partial<Record<keyof T, (value: any) => string | undefined | false>>;
+  validate?: Partial<Record<keyof T, (value: T[keyof T]) => string | undefined | false>>;
 }): SimpleForm<T> {
   const [values, setValues] = useState<T>(opts.initialValues);
   const initialRef = useRef<T>(opts.initialValues);
@@ -54,11 +57,11 @@ function useSimpleForm<T extends object>(opts: {
     initialRef.current = newInitial;
   };
 
-  const setFieldValue = (name: keyof T, value: any) => {
+  const setFieldValue = (name: keyof T, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }));
     const validator = opts.validate?.[name];
     if (validator) {
-      setErrors((prev) => ({ ...prev, [name]: validator(value) || undefined }));
+      setErrors((prev) => ({ ...prev, [name]: validator(value as T[keyof T]) || undefined }));
     }
   };
 
@@ -68,15 +71,36 @@ function useSimpleForm<T extends object>(opts: {
   };
 
   const getInputProps = (name: keyof T) => ({
-    value: (values[name] as any) ?? "",
-    onChange: (e: any) =>
-      setFieldValue(name, e && typeof e === "object" && "target" in e ? e.target.value : e),
+    // Every field this form drives is a text input.
+    value: typeof values[name] === "string" ? (values[name] as string) : "",
+    onChange: (e: unknown) =>
+      setFieldValue(
+        name,
+        e && typeof e === "object" && "target" in e
+          ? (e as { target: { value: unknown } }).target.value
+          : e,
+      ),
   });
 
   return { values, setValues, setFieldValue, setInitialValues, reset, getInputProps, errors };
 }
 
-function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues }) {
+function FlowShareTemplateEditor({
+  form,
+  dbFlowId,
+  updateMutation,
+  initialValues,
+}: {
+  form: SimpleForm<WaFlowTemplateMessage>;
+  dbFlowId: string;
+  updateMutation: UseMutationResult<
+    unknown,
+    Error,
+    { dbFlowId: string; data: Partial<Omit<DbFlow, "dbFlowId">> },
+    unknown
+  >;
+  initialValues: WaFlowTemplateMessage;
+}) {
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const [status, setStatus] = useState(SaveStatus.saved);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,7 +148,7 @@ function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues
     setImageToUpload(file);
   };
   const { t: translations } = useTranslation();
-  const [imageToUpload, setImageToUpload] = useState(null);
+  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
 
   // saving image
   useEffect(() => {
@@ -189,7 +213,12 @@ function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues
 interface FlowStartMessageEditorProps {
   form: SimpleForm<WaFlowStartMessageConfig>;
   dbFlowId: string;
-  updateMutation: any;
+  updateMutation: UseMutationResult<
+    unknown,
+    Error,
+    { dbFlowId: string; data: Partial<Omit<DbFlow, "dbFlowId">> },
+    unknown
+  >;
   initialValues: WaFlowStartMessageConfig;
 }
 function FlowStartMessageEditor({
@@ -256,23 +285,23 @@ function FlowStartMessageEditor({
   );
 }
 
-export function FlowShareMessageEditor({ selectedTeamCode }) {
+export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode: string }) {
   const params = useParams({
     strict: false,
   });
   const dbFlowId = params.dbFlowId as string;
 
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-  const { data: survey } = useSurvey(dbFlow?.surveyId);
+  const { data: survey } = useSurvey(dbFlow?.surveyId ?? "");
   const updateMutation = useUpdateFlowMutation();
-  const templateInitialValues = generateTemplateInitialValues(dbFlow);
+  const templateInitialValues = generateTemplateInitialValues(dbFlow!);
 
   const templateForm = useSimpleForm({
     initialValues: templateInitialValues,
     validate: templateFormValidation,
   });
 
-  const startMessageInitialValues = generateStartMessageInitialValues(dbFlow);
+  const startMessageInitialValues = generateStartMessageInitialValues(dbFlow!);
   const startMessageForm = useSimpleForm<WaFlowStartMessageConfig>({
     initialValues: startMessageInitialValues,
   });
@@ -314,7 +343,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
                       }}
                     >
                       {generateWaSurveyIdentifier_byName(
-                        survey?.title,
+                        survey?.title ?? "",
                         selectedTeamCode,
                       ).replaceAll("`", "")}
                     </code>
@@ -328,7 +357,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
                 footer={templateForm.values.footer}
                 body={templateForm.values.body}
                 quickReplyButtons={[templateForm.values.cta]}
-                image={getFileUrlFromKey(templateForm.values.headerImage)}
+                image={getFileUrlFromKey(templateForm.values.headerImage ?? "")}
               />
             </div>
           </div>
@@ -338,8 +367,8 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
   );
 }
 
-function RenderNewLine({ text }) {
-  return text.split("\n").map((t, i) => {
+function RenderNewLine({ text }: { text: string }) {
+  return text.split("\n").map((t: string, i: number) => {
     return <p key={i}>{t}</p>;
   });
 }
@@ -423,10 +452,10 @@ function SaveStatusIndicator({ status }: SaveStatusProps) {
   );
 }
 
-function generateTemplateInitialValues(dbFlow: DbFlow) {
+function generateTemplateInitialValues(dbFlow: DbFlow): WaFlowTemplateMessage {
   return {
     header: dbFlow.templateMessage.header || "",
-    headerImage: dbFlow.templateMessage.headerImage || null,
+    headerImage: dbFlow.templateMessage.headerImage || undefined,
     body: dbFlow.templateMessage.body || "Would you like to start survey?",
     footer: dbFlow.templateMessage.footer || "",
     cta: dbFlow.templateMessage.cta || "Open",
@@ -441,17 +470,18 @@ function generateStartMessageInitialValues(dbFlow: DbFlow): WaFlowStartMessageCo
 }
 
 const templateFormValidation = {
-  header: (h) => h.length > 60 && exceed(60),
-  body: (b) => {
-    if (b.length === 0) {
+  // `header`/`footer` are optional on the template message.
+  header: (h: string | undefined) => (h?.length ?? 0) > 60 && exceed(60),
+  body: (b: string | undefined) => {
+    if (!b?.length) {
       return empty;
     } else if (b.length > 1024) {
       return exceed(1024);
     }
   },
-  footer: (f) => f.length > 60 && exceed(60),
-  cta: (c) => {
-    if (c.length === 0) {
+  footer: (f: string | undefined) => (f?.length ?? 0) > 60 && exceed(60),
+  cta: (c: string | undefined) => {
+    if (!c?.length) {
       return empty;
     } else if (c.length > 20) {
       return exceed(20);

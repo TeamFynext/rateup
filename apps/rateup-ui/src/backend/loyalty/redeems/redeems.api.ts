@@ -1,4 +1,5 @@
 import { axiosClient } from "@/backend/apiClient";
+import type { RequestPayload } from "@/types/api.ts";
 
 import { LOYALTY_BASE } from "../base.ts";
 
@@ -33,7 +34,7 @@ export async function redeemReward(data: {
   return (await axiosClient.post<RedeemRewardResponse>(`${base}/redeem`, data)).data;
 }
 
-export async function updateRedeem({ redeemId, data }) {
+export async function updateRedeem({ redeemId, data }: { redeemId: string; data: RequestPayload }) {
   await axiosClient.put(`${base}/${redeemId}`, data);
 }
 

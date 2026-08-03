@@ -21,7 +21,7 @@ function AuthCallBack() {
   const mut = useCreateAuthToken();
 
   useEffect(() => {
-    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
+    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
     if (error) {
       navigate({
         to: callbackRoute,
@@ -32,7 +32,7 @@ function AuthCallBack() {
         {
           onSuccess: () => {
             setIsLoading(false);
-            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
+            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
           },
         },
       );

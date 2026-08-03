@@ -1,9 +1,10 @@
+import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { Calendar, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { MemberData } from "@/components/Tickets/types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 
 import { PRIORITY_CONFIG } from "./card.tsx";
@@ -20,7 +21,7 @@ export function TicketListView({
   labelFilters: string[];
   searchQuery: string;
   assigneeFilter: string | null;
-  boardMembers?: any[];
+  boardMembers?: MemberData[];
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export function TicketListView({
   const filtered = tickets.filter(({ card }) => {
     let matches = true;
     if (labelFilters && labelFilters.length > 0) {
-      if (!card.labels?.some((l: any) => labelFilters.includes(l.id))) {
+      if (!card.labels?.some((l) => labelFilters.includes(l.id))) {
         matches = false;
       }
     }
@@ -128,7 +129,10 @@ export function TicketListView({
               transform: sortBy === id && sortDir === "asc" ? "rotate(180deg)" : "none",
             }}
           >
-            <ChevronDown size={11} className={sortBy === id ? "text-primary" : "text-gray-300"} />
+            <IconChevronDown
+              size={11}
+              className={sortBy === id ? "text-primary" : "text-gray-300"}
+            />
           </span>
         )}
       </span>
@@ -209,10 +213,10 @@ function ListRow({
   card: Card;
   col: ColumnType;
   isOverdue: boolean;
-  pConf: any;
+  pConf: (typeof PRIORITY_CONFIG)[string];
   customerName: string | null;
   channel: string | null;
-  boardMembers: any[];
+  boardMembers: MemberData[];
   onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -351,7 +355,7 @@ function ListRow({
               padding: isOverdue ? "2px 8px" : "0",
             }}
           >
-            <Calendar
+            <IconCalendar
               size={12}
               strokeWidth={2}
               className={isOverdue ? "text-red-600" : "text-muted-foreground"}

@@ -1,9 +1,16 @@
 import { IconLockSquareRounded } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
-const PremiumFeature = ({ isSubscribed, children }) => {
+const PremiumFeature = ({
+  isSubscribed,
+  children,
+}: {
+  isSubscribed: boolean;
+  children: ReactNode;
+}) => {
   const { t: translations } = useTranslation();
 
   const content = (

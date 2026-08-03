@@ -1,7 +1,10 @@
-import { Edit2, Save, Trash2, X } from "lucide-react";
+import { IconDeviceFloppy, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
 import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
+import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -17,7 +20,7 @@ import { LoyaltyRewardStatus } from "@/types/enums.ts";
 import { LoyaltyRewardForm } from "./LoyaltyRewardForm.tsx";
 
 interface RewardCardProps {
-  readonly reward: any; // Type this properly if possible
+  readonly reward: LoyaltyReward;
   readonly category: string;
   readonly isEditing: boolean;
   readonly onEditStart: () => void;
@@ -38,8 +41,8 @@ interface RewardCardProps {
   readonly setMinimumSpendEnabled: (val: boolean) => void;
   readonly timeRestrictionsEnabled: boolean;
   readonly setTimeRestrictionsEnabled: (val: boolean) => void;
-  readonly loyaltyTiers: any[] | undefined;
-  readonly loyaltyTemplates: any[] | undefined;
+  readonly loyaltyTiers: LoyaltyTier[] | undefined;
+  readonly loyaltyTemplates: WaTemplateListEntry[] | undefined;
 
   // Display Helpers
   readonly getRewardIcon: (type: string) => React.ReactNode;
@@ -134,11 +137,11 @@ export function RewardCard({
               <h4 className="font-semibold text-sm">Edit {getCategoryLabel()}</h4>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={onEditCancel} className="h-8">
-                  <X className="w-3.5 h-3.5 mr-1" />
+                  <IconX className="w-3.5 h-3.5 mr-1" />
                   Cancel
                 </Button>
                 <Button size="sm" onClick={onEditSave} className="h-8">
-                  <Save className="w-3.5 h-3.5 mr-1" />
+                  <IconDeviceFloppy className="w-3.5 h-3.5 mr-1" />
                   Save
                 </Button>
               </div>
@@ -170,7 +173,7 @@ export function RewardCard({
                 />
               </Field>
               <Button variant="destructive" size="sm" className="h-8" onClick={onDelete}>
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                <IconTrash className="w-3.5 h-3.5 mr-1" />
                 Delete Reward
               </Button>
             </div>
@@ -235,7 +238,7 @@ export function RewardCard({
                 onCheckedChange={onToggleStatus}
               />
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEditStart}>
-                <Edit2 className="w-3.5 h-3.5" />
+                <IconPencil className="w-3.5 h-3.5" />
               </Button>
               <Button
                 variant="ghost"
@@ -243,7 +246,7 @@ export function RewardCard({
                 className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={onDelete}
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <IconTrash className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>

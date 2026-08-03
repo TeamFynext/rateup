@@ -1,10 +1,15 @@
-import { ArrowLeft, Loader2, Plus } from "lucide-react";
+import { IconArrowLeft, IconLoader2, IconPlus } from "@tabler/icons-react";
 import type { UseFormReturn } from "react-hook-form";
 
+import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import type {
   CouponFormValues,
+  CouponValues,
   GiftFormValues,
+  GiftValues,
   PointRewardFormValues,
+  PointRewardValues,
 } from "@/components/dashboard/loyalty/rewards/schemas.ts";
 import { LoyaltyRewardForm } from "@/components/LoyaltyComponents/LoyaltyRewardForm.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -14,13 +19,13 @@ interface RewardFormContainerProps {
   category: string;
   onCancel: () => void;
   // Forms
-  pointRewardForm: UseFormReturn<PointRewardFormValues>;
-  couponForm: UseFormReturn<CouponFormValues>;
-  giftForm: UseFormReturn<GiftFormValues>;
+  pointRewardForm: UseFormReturn<PointRewardFormValues, unknown, PointRewardValues>;
+  couponForm: UseFormReturn<CouponFormValues, unknown, CouponValues>;
+  giftForm: UseFormReturn<GiftFormValues, unknown, GiftValues>;
   // Submit handlers
-  onSubmitPointReward: (data: PointRewardFormValues) => void;
-  onSubmitCoupon: (data: CouponFormValues) => void;
-  onSubmitGift: (data: GiftFormValues) => void;
+  onSubmitPointReward: (data: PointRewardValues) => void;
+  onSubmitCoupon: (data: CouponValues) => void;
+  onSubmitGift: (data: GiftValues) => void;
   // State
   isPending: boolean;
   editingId: string | null;
@@ -32,8 +37,8 @@ interface RewardFormContainerProps {
   setTimeRestrictionsEnabled: (val: boolean) => void;
 
   // Data
-  loyaltyTiers: any[] | undefined;
-  loyaltyTemplates: any[] | undefined;
+  loyaltyTiers: LoyaltyTier[] | undefined;
+  loyaltyTemplates: WaTemplateListEntry[] | undefined;
 }
 
 export function RewardFormContainer({
@@ -94,7 +99,7 @@ export function RewardFormContainer({
           onClick={onCancel}
           className="text-gray-600 hover:text-gray-900"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <IconArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
       </div>
@@ -131,8 +136,8 @@ export function RewardFormContainer({
                 onClick={pointRewardForm.handleSubmit(onSubmitPointReward)}
                 disabled={isPending}
               >
-                {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {!isPending && <Plus className="w-4 h-4 mr-2" />}
+                {isPending && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {!isPending && <IconPlus className="w-4 h-4 mr-2" />}
                 {editingId ? "Update Reward" : "Create Reward"}
               </Button>
             )}
@@ -143,8 +148,8 @@ export function RewardFormContainer({
                 onClick={couponForm.handleSubmit(onSubmitCoupon)}
                 disabled={isPending}
               >
-                {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {!isPending && <Plus className="w-4 h-4 mr-2" />}
+                {isPending && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {!isPending && <IconPlus className="w-4 h-4 mr-2" />}
                 {editingId ? "Update Coupon" : "Create Coupon"}
               </Button>
             )}
@@ -155,8 +160,8 @@ export function RewardFormContainer({
                 onClick={giftForm.handleSubmit(onSubmitGift)}
                 disabled={isPending}
               >
-                {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {!isPending && <Plus className="w-4 h-4 mr-2" />}
+                {isPending && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {!isPending && <IconPlus className="w-4 h-4 mr-2" />}
                 {editingId ? "Update Gift" : "Create Free Gift"}
               </Button>
             )}

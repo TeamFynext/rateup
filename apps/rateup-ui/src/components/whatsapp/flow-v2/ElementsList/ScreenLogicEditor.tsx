@@ -2,6 +2,7 @@ import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import type { Updater } from "use-immer";
 import { useImmer } from "use-immer";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -17,16 +18,28 @@ import {
 } from "@/components/ui/select.tsx";
 import { LogicAction, LogicCondition, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import type { FlowLogicCondition, FlowLogicJump } from "@/types/global";
+import type { FlowLogicJumpComponentLevel } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
+import { toSelectOptions } from "@/utils/select-options.ts";
 import { getConditionsv2, getResponses2 } from "@/utils/survey/logic/logic.utils";
 
 import useFlowStore, { EditorType } from "../utils/store.ts";
 // Component logic editor for conditional component visibility
 import ComponentLogicEditor from "./ComponentLogicEditor.tsx";
 
+/**
+ * Screen-level jumps navigate to a screen, so their `action` is that screen's id; a
+ * component-level block carries a `{ success, fail }` object (or no action at all).
+ */
+const isScreenLevelJump = (
+  item: FlowLogicJump | FlowLogicJumpComponentLevel,
+): item is FlowLogicJump => typeof item.action === "string";
+
 export const ScreenLogicEditor = () => {
   const [logicJumps, updateLogicJumps] = useImmer<Array<FlowLogicJump>>([]);
-  const [logicJumpsComponentLevel, updateLogicJumpsComponentLevel] = useImmer([]);
+  const [logicJumpsComponentLevel, updateLogicJumpsComponentLevel] = useImmer<
+    Array<FlowLogicJumpComponentLevel>
+  >([]);
 
   const {
     getCurrentScreen,
@@ -59,20 +72,20 @@ export const ScreenLogicEditor = () => {
       const existingJumps = getLogicJumps(currentScreenId);
 
       if (existingJumps && existingJumps.length > 0) {
-        const stringActions = [];
-        const objectActions = [];
+        const stringActions: FlowLogicJump[] = [];
+        const objectActions: FlowLogicJumpComponentLevel[] = [];
 
         // Split the data based on action type
-        existingJumps.forEach((item: any) => {
-          if (typeof item.action === "string") {
+        existingJumps.forEach((item) => {
+          if (isScreenLevelJump(item)) {
             stringActions.push(item);
           } else if (!item.action) {
             objectActions.push(item);
           }
         });
 
-        updateLogicJumps(stringActions as any);
-        updateLogicJumpsComponentLevel(objectActions as any);
+        updateLogicJumps(stringActions);
+        updateLogicJumpsComponentLevel(objectActions);
       } else {
         updateLogicJumps([]);
         updateLogicJumpsComponentLevel([]);
@@ -82,7 +95,7 @@ export const ScreenLogicEditor = () => {
 
   const handleSave = () => {
     // Validate component-level jumps if needed
-    const hasInvalidComponentJumps = logicJumpsComponentLevel.some((jump: any) => {
+    const hasInvalidComponentJumps = logicJumpsComponentLevel.some((jump) => {
       return !jump.conditions || jump.conditions.length === 0 || !jump.then || !jump.else;
     });
 
@@ -97,7 +110,7 @@ export const ScreenLogicEditor = () => {
     const allJumps = [...logicJumps, ...logicJumpsComponentLevel];
 
     // Save to store
-    saveLogicJumps(currentScreenId, allJumps);
+    saveLogicJumps(currentScreenId ?? "", allJumps);
 
     toast.success("Logic jumps saved successfully", {
       id: "success-logic-jumps",
@@ -206,7 +219,7 @@ function AtomicConditionBlock({
     setCondition({
       condition: selectedCondition,
       response: matchData,
-      questionId: selectedQId,
+      questionId: selectedQId ?? "",
     });
   }, [selectedCondition, matchData, selectedQId]);
 
@@ -227,7 +240,7 @@ function AtomicConditionBlock({
           <FieldLabel htmlFor={`${uid}-field`}>{translations("For Question")}</FieldLabel>
           <Select
             value={selectedQId}
-            onValueChange={setSelectedQId}
+            onValueChange={(value) => setSelectedQId(value ?? "")}
             items={logicSupportedQuestionsInScreen.map((q) => ({ value: q.id, label: q.label }))}
           >
             <SelectTrigger id={`${uid}-field`} className="shrink-0">
@@ -247,19 +260,19 @@ function AtomicConditionBlock({
           <FieldLabel htmlFor={`${uid}-field-2`}>{translations("If condition")}</FieldLabel>
           <Select
             value={selectedCondition}
-            onValueChange={(val: any) => setSelectedCondition(val)}
-            items={getConditionsv2(selectedQType as any).map((opt: any) => ({
-              value: opt.value,
-              label: opt.label,
+            onValueChange={(val) => val && setSelectedCondition(val as LogicCondition)}
+            items={getConditionsv2(selectedQType).map((opt) => ({
+              value: opt,
+              label: opt,
             }))}
           >
             <SelectTrigger id={`${uid}-field-2`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {getConditionsv2(selectedQType as any).map((opt: any) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {getConditionsv2(selectedQType).map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -279,7 +292,7 @@ function AtomicConditionBlock({
             <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Response")}</FieldLabel>
             <MultiSelect
               id={`${uid}-field-3`}
-              options={(getResponses2(selectedQ) || []).map((opt: any) =>
+              options={(getResponses2(selectedQ) || []).map((opt) =>
                 typeof opt === "string" ? { label: opt, value: opt } : opt,
               )}
               value={Array.isArray(matchData) ? matchData : []}
@@ -293,17 +306,14 @@ function AtomicConditionBlock({
             <FieldLabel htmlFor={`${uid}-field-4`}>{translations("Response")}</FieldLabel>
             <Select
               value={Array.isArray(matchData) ? "" : matchData}
-              onValueChange={setMatchData}
-              items={getResponses2(selectedQ).map((opt: any) => ({
-                value: opt.value,
-                label: opt.label,
-              }))}
+              onValueChange={(value) => setMatchData(value ?? "")}
+              items={toSelectOptions(getResponses2(selectedQ) ?? [])}
             >
               <SelectTrigger id={`${uid}-field-4`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {getResponses2(selectedQ).map((opt: any) => (
+                {toSelectOptions(getResponses2(selectedQ) ?? []).map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -328,7 +338,7 @@ function AtomicConditionBlock({
 // Conditions and Action Block
 interface ConditionsActionMapBlockProps {
   logic: FlowLogicJump;
-  updateLogicJumps: any;
+  updateLogicJumps: Updater<FlowLogicJump[]>;
   index: number;
 }
 
@@ -355,7 +365,7 @@ function ConditionsActionMapBlock({
   ];
 
   useEffect(() => {
-    updateLogicJumps((draft: any) => {
+    updateLogicJumps((draft) => {
       draft[index].action = selectedAction;
     });
   }, [selectedAction]);
@@ -370,17 +380,17 @@ function ConditionsActionMapBlock({
               <AtomicConditionBlock
                 condition={condition}
                 setCondition={(newCondition) => {
-                  updateLogicJumps((draft: any) => {
+                  updateLogicJumps((draft) => {
                     draft[index].conditions[conditionIndex] = newCondition;
                   });
                 }}
                 handleDelete={() => {
                   if (logic.conditions.length === 1) {
-                    updateLogicJumps((draft: any) => {
+                    updateLogicJumps((draft) => {
                       draft.splice(index, 1);
                     });
                   } else {
-                    updateLogicJumps((draft: any) => {
+                    updateLogicJumps((draft) => {
                       draft[index].conditions.splice(conditionIndex, 1);
                     });
                   }
@@ -397,7 +407,7 @@ function ConditionsActionMapBlock({
             size="sm"
             className="mt-2"
             onClick={() => {
-              updateLogicJumps((draft: any) => {
+              updateLogicJumps((draft) => {
                 draft[index].conditions.push({
                   questionId: "",
                   condition: LogicCondition.Submitted,
@@ -418,7 +428,7 @@ function ConditionsActionMapBlock({
             <FieldLabel htmlFor={`${uid}-field-5`}>{translations("Navigate to")}</FieldLabel>
             <Select
               value={selectedAction}
-              onValueChange={(val: any) => setSelectedAction(val)}
+              onValueChange={(val) => val && setSelectedAction(val as LogicAction)}
               items={possibleActions}
             >
               <SelectTrigger id={`${uid}-field-5`}>

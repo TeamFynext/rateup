@@ -6,6 +6,8 @@ import {
   submitNewPassword,
 } from "supertokens-auth-react/recipe/emailpassword";
 
+import { isSuperTokensGeneralError } from "./index.tsx";
+
 export function useSendResetEmail() {
   const navigate = useNavigate();
   return async function (email: string) {
@@ -40,8 +42,8 @@ export function useSendResetEmail() {
           to: `/login/reset-password?emailTo=${encodeURIComponent(email)}&requestStatus=success`,
         });
       }
-    } catch (err: any) {
-      if (err?.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err?.message, { id: "reset-email-error" });
       } else {
@@ -51,7 +53,7 @@ export function useSendResetEmail() {
   };
 }
 
-export function useSetNewPassword(open) {
+export function useSetNewPassword(open: () => void) {
   const navigate = useNavigate();
   return async function (newPassword: string) {
     try {
@@ -82,8 +84,8 @@ export function useSetNewPassword(open) {
       } else {
         open();
       }
-    } catch (err: any) {
-      if (err?.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         // this may be a custom error message sent from the API by you.
         toast.error(err?.message, { id: "set-pwd-error" });
       } else {

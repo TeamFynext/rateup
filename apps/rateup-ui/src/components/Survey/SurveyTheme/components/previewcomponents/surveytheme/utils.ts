@@ -1,6 +1,6 @@
 import { PageType } from "@/types/enums.ts";
 
-const getSurveyEditViewQuestions = (questionsArr) => {
+const getSurveyEditViewQuestions = (questionsArr: Question[]) => {
   const isWelcomePageActive = questionsArr?.find((question) => question?.type === PageType.Welcome);
   const isLanguagePageActive = questionsArr?.find(
     (question) => question?.type === PageType.Language,

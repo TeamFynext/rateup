@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface WaTemplateSelector {
   value?: string;
-  onChange?: (value: string) => void;
+  /** `null` clears the selection when the current value is no longer available. */
+  onChange?: (value: string | null) => void;
   label?: React.ReactNode;
   description?: React.ReactNode;
   error?: React.ReactNode;
@@ -24,7 +25,7 @@ interface WaTemplateSelector {
   /** Accepts a react-hook-form field spread. */
   name?: string;
   onBlur?: () => void;
-  ref?: React.Ref<any>;
+  ref?: React.Ref<HTMLElement>;
 }
 
 const WaTemplateSelector = ({
@@ -57,7 +58,7 @@ const WaTemplateSelector = ({
 
   useEffect(() => {
     if (value?.length && templatesData && !templatesData?.map((t) => t.value).includes(value)) {
-      onChange(null);
+      onChange?.(null);
     }
   }, [value, templatesData, onChange]);
 

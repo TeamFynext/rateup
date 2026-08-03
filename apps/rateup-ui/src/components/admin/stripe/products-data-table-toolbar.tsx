@@ -1,5 +1,5 @@
+import { IconRefresh, IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { RefreshCw, X } from "lucide-react";
 
 import { useSyncStripeProducts } from "@/backend/payment/stripe/stripe.query";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
@@ -29,7 +29,7 @@ export function ProductsDataTableToolbar<TData>({ table }: Readonly<DataTableToo
         {isFiltered && (
           <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
-            <X />
+            <IconX />
           </Button>
         )}
       </div>
@@ -40,7 +40,7 @@ export function ProductsDataTableToolbar<TData>({ table }: Readonly<DataTableToo
           onClick={() => syncStripeProductMutate.mutate()}
           disabled={syncStripeProductMutate.isPending}
         >
-          <RefreshCw
+          <IconRefresh
             className={`h-4 w-4 mr-2 ${syncStripeProductMutate.isPending ? "animate-spin" : ""}`}
           />
           Sync Products

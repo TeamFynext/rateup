@@ -1,5 +1,4 @@
-import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
-import { Send } from "lucide-react";
+import { IconBrandInstagram, IconBrandWhatsapp, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +19,15 @@ import { Field, FieldLabel } from "../ui/field.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
-const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
+const SendMessageModal = ({
+  opened,
+  setOpened,
+  selectedContact,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  selectedContact: ContactsData;
+}) => {
   const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] = useState("");
   const [message, setMessage] = useState("");
   const [platform, setPlatform] = useState<string>(MessagePlatform.WHATSAPP);
@@ -53,7 +60,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
             <FieldLabel htmlFor="message-channel">Select Channel</FieldLabel>
             <Select
               value={platform}
-              onValueChange={setPlatform}
+              onValueChange={(value) => setPlatform(value ?? "")}
               items={[
                 { value: MessagePlatform.WHATSAPP, label: "WhatsApp" },
                 { value: MessagePlatform.INSTAGRAM, label: "Instagram" },
@@ -82,7 +89,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
             <FieldLabel htmlFor="message-account">Account</FieldLabel>
             <AccountSelector
               value={whatsappSettingsPhoneId}
-              onChange={(value) => setWhatsappSettingsPhoneId(value)}
+              onChange={(value) => setWhatsappSettingsPhoneId(value ?? "")}
               platform={platform as MessagePlatform}
             />
           </div>
@@ -110,7 +117,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
               }
             }}
           >
-            <Send className="w-4 h-4 mr-2" />
+            <IconSend className="w-4 h-4 mr-2" />
             Send Message
           </Button>
         </DialogFooter>

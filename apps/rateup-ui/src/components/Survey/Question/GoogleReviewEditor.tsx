@@ -1,5 +1,5 @@
+import { IconStar } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import { Star } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q, SmileyResponse } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
@@ -57,7 +58,7 @@ const GoogleReviewEditor = ({
     selectedQ?.googleReview?.reqOptions || ["VeryHappy", "Happy"],
   );
 
-  const updateGoogleReview = (googleReview: any) => {
+  const updateGoogleReview = (googleReview: Question["googleReview"]) => {
     if (selectedQ) setSelectedQ({ ...selectedQ, googleReview });
   };
   const { t: translations } = useTranslation();
@@ -67,18 +68,18 @@ const GoogleReviewEditor = ({
       setEnableGoogleReview(true);
       switch (selectedQ?.type) {
         case Q.Rating:
-          if (minRating !== selectedQ["googleReview"]["minRating"]) {
-            setMinRating(selectedQ["googleReview"]["minRating"]);
+          if (minRating !== selectedQ["googleReview"]!["minRating"]!) {
+            setMinRating(selectedQ["googleReview"]!["minRating"]!);
           }
           break;
         case Q.Opinion:
-          if (minOpinion !== selectedQ["googleReview"]["minOpinion"]) {
-            setMinOpinion(selectedQ["googleReview"]["minOpinion"]);
+          if (minOpinion !== selectedQ["googleReview"]!["minOpinion"]!) {
+            setMinOpinion(selectedQ["googleReview"]!["minOpinion"]!);
           }
           break;
         case Q.Smiley:
-          if (selectedSmileys !== selectedQ["googleReview"]["reqOptions"]) {
-            setSelectedSmileys(selectedQ["googleReview"]["reqOptions"]);
+          if (selectedSmileys !== selectedQ["googleReview"]!["reqOptions"]!) {
+            setSelectedSmileys(selectedQ["googleReview"]!["reqOptions"]!);
           }
           break;
       }
@@ -114,7 +115,7 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const updateSmileyResponse = (value) => {
+  const updateSmileyResponse = (value: SmileyResponse) => {
     setSelectedSmileys((prevSmileys) => {
       return prevSmileys.includes(value)
         ? prevSmileys.filter((smiley) => smiley !== value)
@@ -126,7 +127,7 @@ const GoogleReviewEditor = ({
   const teamsToDisplay = teamsRes?.data?.filter((t) => survey?.teams.some((st) => st.id === t.id));
 
   const handleSave = async () => {
-    if (teamsToDisplay.some((team) => !team.googleLink)) {
+    if (teamsToDisplay?.some((team) => !team.googleLink)) {
       toast.error(translations("Please enter Google Review links for all teams"));
       return;
     }
@@ -142,11 +143,14 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const handleError = (error) => {
+  const handleError = (error: unknown) => {
     console.error("Failed to update", error);
-    toast.error(`${translations("Failed to update.. try again. Error:")} ${error.message}`, {
-      id: "load-data",
-    });
+    toast.error(
+      `${translations("Failed to update.. try again. Error:")} ${getApiErrorMessage(error)}`,
+      {
+        id: "load-data",
+      },
+    );
   };
 
   useEffect(() => {
@@ -155,7 +159,7 @@ const GoogleReviewEditor = ({
 
   const finishQuestionOptionsUpdate = async () => {
     if (waFlowSave) {
-      updateComponentInScreen(currentElementId, {
+      updateComponentInScreen(currentElementId ?? "", {
         googleReview: selectedQ?.googleReview,
       });
       setDetailActiveEditor(EditorType.ElementEditor);
@@ -239,7 +243,7 @@ const GoogleReviewEditor = ({
                                     onMouseLeave={() => setHoveredRating(-1)}
                                     className="flex items-center justify-center p-0.5"
                                   >
-                                    <Star
+                                    <IconStar
                                       className={cn(
                                         "size-6",
                                         filled

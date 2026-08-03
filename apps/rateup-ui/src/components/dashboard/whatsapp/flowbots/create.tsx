@@ -4,13 +4,13 @@ import {
   IconBrandWhatsapp,
   IconCheck,
   IconLayoutGrid,
+  IconLoader2,
   IconSearch,
   IconTemplate,
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,7 @@ import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import {
   useCreateInstagramAutomationMutation,
   useUpdateInstagramAutomationMutation,
@@ -58,6 +59,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import type { RequestPayloadFields } from "@/types/api.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform } from "@/types/platform.ts";
 
@@ -288,7 +290,10 @@ type AutomatedReplyFormValues = {
   platform: AutomationPlatform | string;
   matchData: WaAutomatedReply["matchData"];
   whatsappSettingsPhoneId: string | null;
-} & Record<string, any>;
+  /** Present once an existing reply is loaded for editing. */
+  id?: string;
+  /** The editor also round-trips the reply's other columns untouched. */
+} & RequestPayloadFields;
 
 function getInitialValues(
   initialValues?: WaAutomatedReply,
@@ -297,7 +302,7 @@ function getInitialValues(
   if (initialValues) {
     return {
       ...initialValues,
-      platform: forcedPlatform ?? initialValues.platform,
+      platform: forcedPlatform ?? initialValues.platform ?? AutomationPlatform.WHATSAPP,
     };
   }
 
@@ -372,7 +377,8 @@ export function AutomatedReplyForm({
 
   const qc = useQueryClient();
   const searchParams = useSearch({ strict: false });
-  const waAutomatedReplyId = searchParams.waAutomatedReplyId;
+  const waAutomatedReplyId =
+    typeof searchParams.waAutomatedReplyId === "string" ? searchParams.waAutomatedReplyId : "";
 
   const createMutation = useCreateWaAutomatedReplyMutation();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
@@ -404,25 +410,31 @@ export function AutomatedReplyForm({
 
     if (editMode) {
       if (isInstagram) {
-        updateInstagramMutation.mutate(data, {
-          onSuccess: () => {
-            qc.invalidateQueries({
-              queryKey: ["instagramAutomation", { automationId: waAutomatedReplyId }],
-            });
-            toast.success(t("Instagram Automation updated successfully"));
-            setSaveSuccess(true);
+        updateInstagramMutation.mutate(
+          { ...data, id: data.id ?? waAutomatedReplyId ?? "" },
+          {
+            onSuccess: () => {
+              qc.invalidateQueries({
+                queryKey: automationKeys.instagramAutomation({ automationId: waAutomatedReplyId }),
+              });
+              toast.success(t("Instagram Automation updated successfully"));
+              setSaveSuccess(true);
+            },
           },
-        });
+        );
       } else {
-        updateMutation.mutate(data, {
-          onSuccess: () => {
-            qc.invalidateQueries({
-              queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-            });
-            toast.success(t("Automated Reply updated successfully"));
-            setSaveSuccess(true);
+        updateMutation.mutate(
+          { ...data, id: data.id ?? waAutomatedReplyId ?? "" },
+          {
+            onSuccess: () => {
+              qc.invalidateQueries({
+                queryKey: automationKeys.waAutomatedReply({ waAutomatedReplyId }),
+              });
+              toast.success(t("Automated Reply updated successfully"));
+              setSaveSuccess(true);
+            },
           },
-        });
+        );
       }
       return;
     }
@@ -575,8 +587,8 @@ export function AutomatedReplyForm({
                       render={({ field }) => (
                         <AccountSelector
                           optional={true}
-                          value={field.value}
-                          onChange={field.onChange}
+                          value={field.value ?? undefined}
+                          onChange={(value) => field.onChange(value ?? "")}
                         />
                       )}
                     />
@@ -606,7 +618,7 @@ export function AutomatedReplyForm({
 
           {/* Right: Save with proper spinner */}
           <Button type="submit" disabled={isSaving} className="min-w-30">
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
             {!isSaving && saveSuccess && editMode && <IconCheck size={16} className="mr-2" />}
             {submitLabel}
           </Button>

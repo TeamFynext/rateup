@@ -1,4 +1,11 @@
-import { Ban, Check, MoreVertical, RotateCcw, ShieldAlert, ShieldOff } from "lucide-react";
+import {
+  IconBan,
+  IconCheck,
+  IconDotsVertical,
+  IconRotate,
+  IconShieldExclamation,
+  IconShieldOff,
+} from "@tabler/icons-react";
 
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import {
@@ -10,11 +17,6 @@ import {
   useReopenConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -27,11 +29,14 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
 import { generateInternalMessageId } from "../../util.tsx";
+import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
 
 /**
@@ -67,7 +72,7 @@ interface CloseTicketMenuProps {
  * a ticket that no tab but Spam can show would be a dead end.
  */
 export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuProps>) {
-  const editContactMutation = useEditContactMutation(null);
+  const editContactMutation = useEditContactMutation(undefined);
   const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -75,7 +80,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const blockmut = useBlockWhatsAppUser();
   const spamMutation = useSetContactSpam();
   const { filterData } = useContactStore();
-  const reopenMutation = useReopenConversation(filterData);
+  const reopenMutation = useReopenConversation(filterData ?? undefined);
 
   const closed = isTicketClosed(contact);
   const isSpam = !!contact?.isSpam;
@@ -109,7 +114,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
    */
   function addEventMessage(body: string, assignStatus: string) {
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),
@@ -121,25 +126,25 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           assignedUsers: [],
           assignStatus,
           triggeredByUser: {
-            id: user.userId,
-            name: user.userName,
+            id: user?.userId ?? "",
+            name: user?.userName ?? "",
           },
         },
         exchangeProcess: "internal",
       },
       sourcePlatform: "INTERNAL",
       sourceIdentifier: null,
-      sendBy: user.userId,
+      sendBy: user?.userId,
       sender: {
-        name: user.userName,
+        name: user?.userName,
         profilePhoto: user?.profilePhoto,
       },
       stats: { read: "", sent: "", failed: "", delivered: "" },
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
     return {
       id,
       rollback: () => {
@@ -222,7 +227,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             conversationStatus: status,
             resolutionResult,
             closedAt: closed ? null : new Date().toISOString(),
-            closedUser: closed ? null : { name: user?.userName, id: user.userId },
+            closedUser: closed ? null : { name: user?.userName ?? "", id: user?.userId ?? "" },
             assignedUsers: [],
           }));
         },
@@ -251,13 +256,13 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     <DropdownMenuGroup>
       {!isSpam && (
         <DropdownMenuItem onClick={() => handleSpam(true)} disabled={spamMutation.isPending}>
-          <ShieldAlert className="size-4 text-muted-foreground" />
+          <IconShieldExclamation className="size-4 text-muted-foreground" />
           Mark contact as spam
         </DropdownMenuItem>
       )}
       {canBlock && (
         <DropdownMenuItem onClick={handleBlock} className="text-destructive">
-          <Ban className="size-4 text-destructive" />
+          <IconBan className="size-4 text-destructive" />
           Block contact
         </DropdownMenuItem>
       )}
@@ -272,7 +277,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             <Button variant="ghost" size="icon" className="size-8" aria-label="More actions" />
           }
         >
-          <MoreVertical className="size-4 text-muted-foreground" />
+          <IconDotsVertical className="size-4 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">{contactActions}</DropdownMenuContent>
       </DropdownMenu>
@@ -290,7 +295,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           disabled={spamMutation.isPending}
           onClick={() => handleSpam(false)}
         >
-          <ShieldOff className="size-3.5" />
+          <IconShieldOff className="size-3.5" />
           <span className="text-xs font-bold">Not spam</span>
         </Button>
         {overflow}
@@ -308,7 +313,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           disabled={reopenMutation.isPending}
           onClick={handleReopen}
         >
-          <RotateCcw className="size-3.5" />
+          <IconRotate className="size-3.5" />
           <span className="text-xs font-bold">Reopen</span>
         </Button>
         {overflow}
@@ -328,7 +333,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             />
           }
         >
-          <Check className="size-3.5" />
+          <IconCheck className="size-3.5" />
           <span className="text-xs font-bold">Close</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
@@ -340,7 +345,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           <DropdownMenuGroup>
             {CLOSE_STATUSES.map(({ status, label, tooltip }) => {
               const closedStatusIcon = getContactClosedIcon(status);
-              const Icon = closedStatusIcon.icon;
+              const Icon = closedStatusIcon?.icon;
               return (
                 <DropdownMenuItem
                   key={status}
@@ -349,7 +354,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
                   }
                   onClick={() => applyStatus(status, null)}
                 >
-                  <Icon className={closedStatusIcon.color} />
+                  {Icon && <Icon className={closedStatusIcon?.color} />}
                   {tooltip ? (
                     <CustomTooltip trigger={<p>{label}</p>} content={<p>{tooltip}</p>} />
                   ) : (

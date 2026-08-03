@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 
 import {
@@ -41,11 +41,14 @@ export function FaqsPanel({ waSettingsId }: { waSettingsId: string }) {
             disabled={sync.isPending}
             onClick={() => sync.mutate()}
           >
-            <RefreshCw data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
+            <IconRefresh
+              data-icon="inline-start"
+              className={sync.isPending ? "animate-spin" : ""}
+            />
             Sync
           </Button>
           <Button size="sm" onClick={() => setAdding((v) => !v)}>
-            <Plus data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             Add FAQ
           </Button>
         </div>
@@ -124,7 +127,7 @@ export function FaqsPanel({ waSettingsId }: { waSettingsId: string }) {
                     disabled={deleteFaq.isPending}
                     onClick={() => deleteFaq.mutate(faq.id)}
                   >
-                    <Trash2 className="text-destructive" />
+                    <IconTrash className="text-destructive" />
                   </Button>
                 </div>
                 <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>

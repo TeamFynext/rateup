@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight } from "@tabler/icons-react";
 
 import { features } from "../WhatsAppSurveyConstants.tsx";
 
@@ -28,13 +27,13 @@ export default function WhatsAppSurveyService() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
               <p className="text-gray-500 pt-2">{feature.description}</p>
-              <Link
-                to="https://rateup.app/login"
+              <a
+                href="https://rateup.app/login"
                 className="text-[#009987] font-semibold inline-flex items-center mt-4 group"
               >
                 Learn More
-                <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+                <IconArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
             </div>
           </div>
         ))}

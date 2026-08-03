@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-const TncExtraProps = ({ form }) => {
+import type { QuestionExtraPropsForm } from "./questionForm.ts";
+
+const TncExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const { t: translations } = useTranslation();
 
-  const tnc = form.values.tnc?.[selectedLanguage] || {
+  const tnc = form.values?.tnc?.[selectedLanguage] || {
     title: translations("I agree to"),
     urlTitle: translations("terms and conditions"),
     content: translations(
@@ -24,8 +26,8 @@ const TncExtraProps = ({ form }) => {
   const [content, setContent] = useState(tnc?.content);
 
   useEffect(() => {
-    form.setFieldValue("tnc", {
-      ...form.values.tnc,
+    form.setFieldValue?.("tnc", {
+      ...form.values?.tnc,
       [selectedLanguage]: { title, urlTitle, content },
     });
   }, [title, urlTitle, content]);

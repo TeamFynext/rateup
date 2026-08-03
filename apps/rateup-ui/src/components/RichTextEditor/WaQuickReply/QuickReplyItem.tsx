@@ -1,6 +1,7 @@
-import { Edit, Trash } from "lucide-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 
@@ -14,7 +15,7 @@ const QuickReplyItem = ({
   onClick,
   cursor,
 }: {
-  reply: any;
+  reply: QuickReply;
   onEditClick?: () => void;
   onDelete?: () => void;
   onClick?: (value: string) => void;
@@ -91,7 +92,7 @@ const QuickReplyItem = ({
                   onEditClick();
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <IconEdit className="w-4 h-4" />
               </Button>
             }
             content={<span>{t("Edit")}</span>}
@@ -109,7 +110,7 @@ const QuickReplyItem = ({
                   onDelete();
                 }}
               >
-                <Trash className="w-4 h-4" />
+                <IconTrash className="w-4 h-4" />
               </Button>
             }
             content={<span>{t("Delete")}</span>}

@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
+import { CONTACT_SORT } from "@/utils/constants.ts";
 
 import type { AssignRewardRequest } from "./assignReward.api";
 import { assignRewardToCustomer } from "./assignReward.api";
@@ -23,8 +25,8 @@ export const useCreateLoyaltyCustomerMutation = () => {
   return useMutation({
     mutationFn: createLoyaltyCustomer,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error creating customer");
@@ -32,10 +34,10 @@ export const useCreateLoyaltyCustomerMutation = () => {
   });
 };
 
-export const useGetLoyaltyCustomerById = (customerId) => {
+export const useGetLoyaltyCustomerById = (customerId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyCustomerById(customerId),
-    queryKey: ["loyaltyCustomer", customerId],
+    queryKey: loyaltyKeys.customer(customerId),
     enabled: !!customerId,
   });
 };
@@ -43,18 +45,23 @@ export const useGetLoyaltyCustomerById = (customerId) => {
 export const useGetLoyaltyCustomerByContactId = (contactId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyCustomerByContactId(contactId),
-    queryKey: ["loyaltyCustomerByContact", contactId],
+    queryKey: loyaltyKeys.customerByContact(contactId),
     enabled: !!contactId,
   });
 };
 
-export const useLoyaltyCustomers = (pagination, searchData?, sorting?, columnFilters?) => {
+export const useLoyaltyCustomers = (
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
+) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";
   return useQuery({
     queryFn: () => getAllCustomers(pagination, search, sort, filters),
-    queryKey: ["loyaltyCustomers", pagination, search, sort, filters],
+    queryKey: loyaltyKeys.customerList(pagination, search, sort, filters),
   });
 };
 
@@ -63,9 +70,9 @@ export const useDeleteLoyaltyCustomerMutation = () => {
   return useMutation({
     mutationFn: deleteLoyaltyCustomer,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       toast.success("Success");
     },
     onError: (error) => {
@@ -79,8 +86,8 @@ export const useLCAction = () => {
   return useMutation({
     mutationFn: createLCAction,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
       toast.success("success action");
     },
     onError: (error) => {
@@ -94,7 +101,7 @@ export const useImportCSVCustomerMutation = () => {
   return useMutation({
     mutationFn: importCustomers,
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       toast.success("Contacts imported successfully", {
         // <IconCheck />,
         id: "Customer-create",
@@ -140,11 +147,11 @@ export const useUpdateLoyaltyCustomerMutation = () => {
       data: { status?: "active" | "suspended" | "closed" };
     }) => updateLoyaltyCustomer(customerId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       queryClient.invalidateQueries({
-        queryKey: ["loyaltyCustomer", variables.customerId],
+        queryKey: loyaltyKeys.customer(variables.customerId),
       });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       toast.success("Customer updated successfully");
     },
     onError: (error) => {
@@ -168,12 +175,12 @@ export const useAwardPointsMutation = () => {
       notes?: string;
     }) => awardPoints(data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       queryClient.invalidateQueries({
-        queryKey: ["loyaltyCustomerByContact", variables.contactId],
+        queryKey: loyaltyKeys.customerByContact(variables.contactId),
       });
-      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-cashier-customer"] });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
       toast.success("Points awarded successfully");
     },
     onError: (error) => {
@@ -189,10 +196,10 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
     mutationFn: (payload: AssignRewardRequest) => assignRewardToCustomer(payload),
     onSuccess: (payload) => {
       queryClient.invalidateQueries({
-        queryKey: ["loyalty-customer", payload?.data?.customerId],
+        queryKey: loyaltyKeys.customer(payload?.data?.customerId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["loyalty-customers"],
+        queryKey: loyaltyKeys.customers(),
       });
       onSuccess?.();
       toast.success("Reward assigned successfully!");

@@ -1,4 +1,4 @@
-import { CheckIcon } from "lucide-react";
+import { IconCheck } from "@tabler/icons-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import timezones from "timezones-list";
@@ -34,7 +34,13 @@ const timezoneList: TimezoneOption[] = (() => {
   return [];
 })();
 
-const TimeZoneSelector = ({ value, onChange }) => {
+const TimeZoneSelector = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => {
   const [timezoneOpen, setTimezoneOpen] = React.useState(false);
   const { t } = useTranslation();
 
@@ -63,7 +69,7 @@ const TimeZoneSelector = ({ value, onChange }) => {
         <ComboboxList>
           {(item: { value: string; label: string }) => (
             <ComboboxItem key={item.value} value={item.value}>
-              <CheckIcon
+              <IconCheck
                 className={cn("mr-2 h-4 w-4", value === item.value ? "opacity-100" : "opacity-0")}
               />
               {item.label}

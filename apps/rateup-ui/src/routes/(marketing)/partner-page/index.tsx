@@ -1,21 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowRight,
-  BadgeCheck,
-  BookOpen,
-  CheckCircle2,
-  ChevronDown,
-  Crown,
-  DollarSign,
-  GraduationCap,
-  Handshake,
-  LifeBuoy,
-  Rocket,
-  Target,
-  TrendingUp,
-  UserPlus,
-  Users,
-} from "lucide-react";
+  IconArrowRight,
+  IconBook,
+  IconChevronDown,
+  IconCircleCheck,
+  IconCrown,
+  IconCurrencyDollar,
+  IconHeartHandshake,
+  IconLifebuoy,
+  IconRocket,
+  IconRosetteDiscountCheck,
+  IconSchool,
+  IconTarget,
+  IconTrendingUp,
+  IconUserPlus,
+  IconUsers,
+} from "@tabler/icons-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { PartnerApplyModal } from "@/components/partner/partnerData";
@@ -54,7 +54,7 @@ function PartnershipPage() {
           <div className="mx-auto max-w-5xl relative">
             <div className="text-center space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-                <Handshake className="w-4 h-4 text-[#FF9500]" />
+                <IconHeartHandshake className="w-4 h-4 text-[#FF9500]" />
                 <span className="text-sm text-white">Partner Program</span>
               </div>
 
@@ -78,7 +78,7 @@ function PartnershipPage() {
                   className="bg-gradient-to-r from-[#2E5BFF] to-[#1a3db8] hover:from-[#1a3db8] hover:to-[#2E5BFF] text-white shadow-xl shadow-[#2E5BFF]/30 px-8 py-6 text-lg group border-0"
                 >
                   Apply Now
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <IconArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button
                   size="lg"
@@ -126,7 +126,7 @@ function PartnershipPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="p-8 border-2 border-gray-100 hover:border-[#2E5BFF]/30 hover:shadow-lg transition-all">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2E5BFF] to-[#1a3db8] flex items-center justify-center mb-4">
-                  <Target className="w-7 h-7 text-white" />
+                  <IconTarget className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Your Role</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -137,7 +137,7 @@ function PartnershipPage() {
 
               <Card className="p-8 border-2 border-gray-100 hover:border-[#2E5BFF]/30 hover:shadow-lg transition-all">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center mb-4">
-                  <DollarSign className="w-7 h-7 text-white" />
+                  <IconCurrencyDollar className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Your Earnings</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -148,7 +148,7 @@ function PartnershipPage() {
 
               <Card className="p-8 border-2 border-gray-100 hover:border-[#2E5BFF]/30 hover:shadow-lg transition-all">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2E5BFF] to-[#1a3db8] flex items-center justify-center mb-4">
-                  <Users className="w-7 h-7 text-white" />
+                  <IconUsers className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Customer Ownership</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -159,7 +159,7 @@ function PartnershipPage() {
 
               <Card className="p-8 border-2 border-gray-100 hover:border-[#2E5BFF]/30 hover:shadow-lg transition-all">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center mb-4">
-                  <Rocket className="w-7 h-7 text-white" />
+                  <IconRocket className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Growth Support</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -191,7 +191,7 @@ function PartnershipPage() {
                 <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-xl p-4 border-2 border-[#2E5BFF]/20">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#2E5BFF] to-[#1a3db8] flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-white" />
+                      <IconTrendingUp className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-gray-900">40%</div>
@@ -203,7 +203,7 @@ function PartnershipPage() {
                 <div className="absolute -top-6 -right-6 bg-white rounded-xl shadow-xl p-4 border-2 border-[#FF9500]/20">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center">
-                      <Users className="w-6 h-6 text-white" />
+                      <IconUsers className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-gray-900">500+</div>
@@ -236,17 +236,17 @@ function PartnershipPage() {
                 <div className="space-y-4">
                   {[
                     {
-                      icon: CheckCircle2,
+                      icon: IconCircleCheck,
                       title: "Proven Track Record",
                       description: "Partners average 35% revenue growth in their first year",
                     },
                     {
-                      icon: CheckCircle2,
+                      icon: IconCircleCheck,
                       title: "Dedicated Support",
                       description: "Personal partner manager and 24/7 technical assistance",
                     },
                     {
-                      icon: CheckCircle2,
+                      icon: IconCircleCheck,
                       title: "Market Leader",
                       description: "Industry-leading platform trusted by 5,000+ businesses",
                     },
@@ -270,7 +270,7 @@ function PartnershipPage() {
                     className="bg-gradient-to-r from-[#2E5BFF] to-[#1a3db8] hover:from-[#1a3db8] hover:to-[#2E5BFF] text-white shadow-lg shadow-[#2E5BFF]/30 px-8 py-6 group border-0"
                   >
                     Become a Partner
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <IconArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               </div>
@@ -302,42 +302,42 @@ function PartnershipPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: BookOpen,
+                  icon: IconBook,
                   title: "Sales Collaterals",
                   description:
                     "Access comprehensive sales materials, demo accounts, and onboarding resources to close deals faster.",
                   color: "from-[#2E5BFF] to-[#1a3db8]",
                 },
                 {
-                  icon: LifeBuoy,
+                  icon: IconLifebuoy,
                   title: "Dedicated Partner Manager",
                   description:
                     "Get personalized support from your dedicated partner manager for regular collaboration and guidance.",
                   color: "from-[#FF9500] to-[#cc7700]",
                 },
                 {
-                  icon: GraduationCap,
+                  icon: IconSchool,
                   title: "Success Training",
                   description:
                     "Learn from our sales team's best practices through comprehensive training programs and workshops.",
                   color: "from-[#2E5BFF] to-[#1a3db8]",
                 },
                 {
-                  icon: BadgeCheck,
+                  icon: IconRosetteDiscountCheck,
                   title: "Partner Badge & Directory",
                   description:
                     "Gain credibility with an official partner badge and listing in our partner directory for visibility.",
                   color: "from-[#FF9500] to-[#cc7700]",
                 },
                 {
-                  icon: UserPlus,
+                  icon: IconUserPlus,
                   title: "Pre-Qualified Leads",
                   description:
                     "Receive pre-qualified leads distributed by region and specialty to grow your client base.",
                   color: "from-[#2E5BFF] to-[#1a3db8]",
                 },
                 {
-                  icon: TrendingUp,
+                  icon: IconTrendingUp,
                   title: "Revenue Share",
                   description:
                     "Maximize earnings with competitive revenue share opportunities on all resold plans and upgrades.",
@@ -381,21 +381,21 @@ function PartnershipPage() {
                   title: "Apply",
                   description:
                     "Submit your partner application and complete the qualification process.",
-                  icon: UserPlus,
+                  icon: IconUserPlus,
                 },
                 {
                   step: "02",
                   title: "Get Trained",
                   description:
                     "Access training materials and complete onboarding with your partner manager.",
-                  icon: GraduationCap,
+                  icon: IconSchool,
                 },
                 {
                   step: "03",
                   title: "Start Earning",
                   description:
                     "Refer clients, close deals, and earn recurring monthly commissions.",
-                  icon: DollarSign,
+                  icon: IconCurrencyDollar,
                 },
               ].map((step, idx) => (
                 <div key={idx} className="relative">
@@ -471,7 +471,7 @@ function PartnershipPage() {
                     <div
                       className={`flex-shrink-0 w-8 h-8 rounded-lg bg-[#2E5BFF]/10 flex items-center justify-center transition-transform ${openFaqIndex === idx ? "rotate-180" : ""}`}
                     >
-                      <ChevronDown className="w-5 h-5 text-[#2E5BFF]" />
+                      <IconChevronDown className="w-5 h-5 text-[#2E5BFF]" />
                     </div>
                   </button>
                   {openFaqIndex === idx && (
@@ -497,7 +497,7 @@ function PartnershipPage() {
 
           <div className="mx-auto max-w-4xl text-center relative">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
-              <Crown className="w-4 h-4 text-[#FF9500]" />
+              <IconCrown className="w-4 h-4 text-[#FF9500]" />
               <span className="text-sm text-white">Join Today</span>
             </div>
 
@@ -520,7 +520,7 @@ function PartnershipPage() {
                 className="bg-gradient-to-r from-[#2E5BFF] to-[#1a3db8] hover:from-[#1a3db8] hover:to-[#2E5BFF] text-white shadow-xl shadow-[#2E5BFF]/30 px-8 py-6 text-lg group border-0"
               >
                 Apply Now
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <IconArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
                 size="lg"
@@ -533,19 +533,19 @@ function PartnershipPage() {
             {/* Trust indicators */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-12 pt-8 border-t border-white/10">
               <div className="flex items-center gap-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-[#2E5BFF]" />
+                <IconCircleCheck className="w-5 h-5 text-[#2E5BFF]" />
                 <span className="text-sm">No joining fees</span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-[#2E5BFF]" />
+                <IconCircleCheck className="w-5 h-5 text-[#2E5BFF]" />
                 <span className="text-sm">Free demo account</span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-[#2E5BFF]" />
+                <IconCircleCheck className="w-5 h-5 text-[#2E5BFF]" />
                 <span className="text-sm">Recurring commissions</span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-[#2E5BFF]" />
+                <IconCircleCheck className="w-5 h-5 text-[#2E5BFF]" />
                 <span className="text-sm">Dedicated support</span>
               </div>
             </div>

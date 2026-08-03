@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import {
@@ -37,9 +37,9 @@ export function AnalyticsStatCard({
 
           {trendValue !== undefined &&
             (isPositive ? (
-              <TrendingUp className="w-6 h-6 text-green-600" />
+              <IconTrendingUp className="w-6 h-6 text-green-600" />
             ) : (
-              <TrendingDown className="w-6 h-6 text-red-600" />
+              <IconTrendingDown className="w-6 h-6 text-red-600" />
             ))}
         </div>
 

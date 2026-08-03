@@ -1,25 +1,23 @@
-import { IconCopy } from "@tabler/icons-react";
-import type { EmojiClickData } from "emoji-picker-react";
 import {
-  AlertCircle,
-  Archive,
-  Bot,
-  Check,
-  CheckCheck,
-  CheckCircle2,
-  Circle,
-  CircleAlertIcon,
-  Clock,
-  Lock,
-  ShieldOff,
-  UserCog,
-} from "lucide-react";
+  IconAlertCircle,
+  IconArchive,
+  IconCheck,
+  IconChecks,
+  IconCircle,
+  IconCircleCheck,
+  IconClock,
+  IconCopy,
+  IconLock,
+  IconRobot,
+  IconShieldOff,
+  IconUserCog,
+} from "@tabler/icons-react";
+import type { EmojiClickData } from "emoji-picker-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Bubble, BubbleContent, BubbleReactions } from "@/components/ui/bubble.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -41,6 +39,7 @@ import {
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
@@ -86,22 +85,22 @@ function emojiReactionMap(emojiUnified?: string) {
  */
 function getLatestStatusIcon(statusObj?: { [key: string]: string }) {
   if (statusObj?.read) {
-    return <CheckCheck className="size-3.5 text-primary" />;
+    return <IconChecks className="size-3.5 text-primary" />;
   }
 
   if (statusObj?.delivered) {
-    return <CheckCheck className="size-3.5" />;
+    return <IconChecks className="size-3.5" />;
   }
 
   if (statusObj?.failed) {
-    return <CircleAlertIcon className="size-3.5 text-destructive" />;
+    return <IconAlertCircle className="size-3.5 text-destructive" />;
   }
 
   if (statusObj?.sent) {
-    return <Check className="size-3.5" />;
+    return <IconCheck className="size-3.5" />;
   }
 
-  return <Clock className="size-3.5" />;
+  return <IconClock className="size-3.5" />;
 }
 
 /**
@@ -110,35 +109,35 @@ function getLatestStatusIcon(statusObj?: { [key: string]: string }) {
  */
 function getInternalStatus(assignStatus?: string): { icon: React.ReactNode; label: string } | null {
   if (assignStatus === WaMessageAssignStatus.ASSIGNED) {
-    return { icon: <UserCog />, label: "Assigned" };
+    return { icon: <IconUserCog />, label: "Assigned" };
   }
 
   if (assignStatus === "REASSIGNED") {
-    return { icon: <UserCog />, label: "Reassigned" };
+    return { icon: <IconUserCog />, label: "Reassigned" };
   }
 
   if (assignStatus === WaMessageAssignStatus.RESOLVED) {
-    return { icon: <CheckCircle2 />, label: "Resolved" };
+    return { icon: <IconCircleCheck />, label: "Resolved" };
   }
 
   if (assignStatus === WaMessageAssignStatus.CLOSED) {
-    return { icon: <Archive />, label: "Closed" };
+    return { icon: <IconArchive />, label: "Closed" };
   }
 
   if (assignStatus === WaMessageAssignStatus.UNRESOLVED) {
-    return { icon: <Circle />, label: "Unresolved" };
+    return { icon: <IconCircle />, label: "Unresolved" };
   }
 
   if (assignStatus === WaMessageAssignStatus.SPAM) {
-    return { icon: <AlertCircle />, label: "Spam" };
+    return { icon: <IconAlertCircle />, label: "Spam" };
   }
 
   if (assignStatus === NOT_SPAM_EVENT) {
-    return { icon: <ShieldOff />, label: "Not spam" };
+    return { icon: <IconShieldOff />, label: "Not spam" };
   }
 
   if (assignStatus === WaMessageAssignStatus.UNASSIGNED) {
-    return { icon: <UserCog />, label: "Unassigned" };
+    return { icon: <IconUserCog />, label: "Unassigned" };
   }
 
   return null;
@@ -148,7 +147,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
   const { user } = useUser();
   const { selectedContact } = useContactsStore();
-  const currentUser = selectedContact.assignedUsers?.find((c) => c.id === user?.userId);
+  const currentUser = selectedContact?.assignedUsers?.find((c) => c.id === user?.userId);
 
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef<HTMLDivElement | null>(null);
@@ -178,14 +177,14 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  function sendReaction(emoji: string, emojiData: EmojiClickData) {
+  function sendReaction(emoji: string, emojiData?: EmojiClickData) {
     if (!whatsappSettingsPhoneId) {
       toast.error("Select a account to send the message");
       return;
     }
     let reactionText;
     if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK) {
-      reactionText = emojiReactionMap(emojiData.unified);
+      reactionText = emojiReactionMap(emojiData?.unified);
       if (!reactionText) {
         toast.error(`${emoji} not supported`);
         return;
@@ -231,7 +230,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
         <TooltipTrigger
           render={<Button variant="ghost" size="icon" className="size-8" onClick={handleCopy} />}
         >
-          {copied ? <Check className="size-4" /> : <IconCopy size={16} />}
+          {copied ? <IconCheck className="size-4" /> : <IconCopy size={16} />}
         </TooltipTrigger>
         <TooltipContent side="right">
           <p>{copied ? "Copied" : "Copy"}</p>
@@ -274,7 +273,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
       <Message align="center">
         <MessageContent className="max-w-[78%]">
           <MessageHeader className="gap-1.5 text-[10px] font-extrabold tracking-wider uppercase">
-            <Lock className="size-3 shrink-0" />
+            <IconLock className="size-3 shrink-0" />
             <span className="truncate">
               Internal note · {senderName} · {timestamp}
             </span>
@@ -299,7 +298,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
       <Message align="end">
         <MessageContent>
           <MessageHeader>
-            <Bot className="size-3 shrink-0" />
+            <IconRobot className="size-3 shrink-0" />
             Automation
           </MessageHeader>
           <Bubble variant="muted" align="end">
@@ -388,7 +387,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   );
 }
 
-export function reactionEmojiMap(reaction) {
+export function reactionEmojiMap(reaction: string | undefined) {
   if (reaction === "love") {
     return "❤";
   }

@@ -1,5 +1,5 @@
+import { IconTrendingUp } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -14,9 +14,10 @@ import {
 import type { ChartConfig } from "@/components/ui/chart.tsx";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
-const ConversationTrendsGraph = ({ dateRange }) => {
+const ConversationTrendsGraph = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data, isLoading } = useGetResolvedConversationStats({
     days: 7,
@@ -50,7 +51,7 @@ const ConversationTrendsGraph = ({ dateRange }) => {
       <CardHeader className="flex flex-col gap-0 w-full">
         <div className="flex justify-between items-center gap-2 w-full">
           <CardTitle className="flex gap-1 items-center">
-            <TrendingUp className="w-5 h-5 text-primary mr-1" />
+            <IconTrendingUp className="w-5 h-5 text-primary mr-1" />
             {t("Conversation Trends")}
           </CardTitle>
         </div>

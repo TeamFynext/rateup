@@ -24,7 +24,7 @@ interface FlowSettingsProps {
   flowName: string;
   flowDbId: string;
   anonymous: boolean;
-  survey: any;
+  survey: Survey;
   surveyId: string;
 }
 

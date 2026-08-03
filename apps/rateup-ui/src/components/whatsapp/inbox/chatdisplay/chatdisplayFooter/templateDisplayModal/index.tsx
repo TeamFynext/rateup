@@ -7,6 +7,7 @@ import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { WaTemplateStatus } from "@/types/enums.ts";
+import type { WaTemplateFetchBodyComponent } from "@/types/global";
 
 import { TeamSelector } from "../../../../../input/TeamSelector.tsx";
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
@@ -15,12 +16,12 @@ import { WaInboxTemplatePreviewNew } from "./templatePreview/index.tsx";
 
 interface Props {
   sessionExpired: boolean;
-  contact: ContactsData;
+  contact: ContactsData | null;
   opened: boolean;
-  onClose: any;
+  onClose: () => void;
 }
 
-function templateBodyText(templateComponent) {
+function templateBodyText(templateComponent: WaTemplateFetchBodyComponent[]) {
   const templateBody = templateComponent.filter((i) => i.type === "BODY");
   const text = templateBody[0]?.text || "";
 
@@ -31,7 +32,7 @@ function templateBodyText(templateComponent) {
 
 export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }: Readonly<Props>) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const sendTemplate = useSendWaTemplateToUser(contact?.phone, contact?.id);
+  const sendTemplate = useSendWaTemplateToUser(contact?.phone ?? "", contact?.id);
   const [teamId, setTeamId] = useState<string>("");
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
@@ -50,6 +51,10 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
     filteredTemplates &&
     filteredTemplates?.length > 0 &&
     searchFilteredTemplates?.find((data) => data.id === selectedTemplateId);
+  // The preview needs the selected template itself, not just the flag above.
+  const selectedTemplate = selectedTemplateId
+    ? filteredTemplates.find((template) => template.id === selectedTemplateId)?.data
+    : undefined;
   const { t: translations } = useTranslation();
 
   return (
@@ -191,12 +196,10 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
         sm:overflow-y-auto
       "
           >
-            {hasTemplates && selectedTemplateId ? (
+            {hasTemplates && selectedTemplate ? (
               <WaInboxTemplatePreviewNew
                 teamId={teamId}
-                template={
-                  filteredTemplates.find((template) => template.id === selectedTemplateId)?.data
-                }
+                template={selectedTemplate}
                 selectedTemplateId={selectedTemplateId}
                 sendTemplate={sendTemplate}
                 onClose={onClose}

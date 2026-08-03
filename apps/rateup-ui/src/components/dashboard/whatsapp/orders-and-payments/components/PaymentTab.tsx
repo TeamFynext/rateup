@@ -1,15 +1,15 @@
 import {
-  Banknote,
-  Building2,
-  CreditCard,
-  ExternalLink,
-  HandHelping,
-  Landmark,
-  Loader2,
-  Save,
-  ShoppingBag,
-  Smartphone,
-} from "lucide-react";
+  IconBuilding,
+  IconBuildingBank,
+  IconCash,
+  IconCreditCard,
+  IconDeviceFloppy,
+  IconDeviceMobile,
+  IconExternalLink,
+  IconHeartHandshake,
+  IconLoader2,
+  IconShoppingBag,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -25,10 +25,25 @@ import { cn } from "@/lib/utils";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 // ─── Shopify payment options ─────────────────────────────────────────────────
-const SHOPIFY_METHODS = [
+/** One selectable payment method in the orders & payments settings. */
+interface PaymentMethodOption {
+  id: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  desc: string;
+  logos?: Array<{ src: string | undefined; alt: string }>;
+  badges?: Array<{ label: string; className: string }>;
+  fields?: Array<{ key: string; label: string; placeholder: string }>;
+  collectAddressApplicable: boolean;
+  collectDeliveryApplicable: boolean;
+}
+
+const SHOPIFY_METHODS: PaymentMethodOption[] = [
   {
     id: "shopify_checkout",
-    icon: ExternalLink,
+    icon: IconExternalLink,
     iconBg: "bg-green-100 dark:bg-green-950",
     iconColor: "text-green-600",
     label: "Shopify Checkout URL",
@@ -50,7 +65,7 @@ const SHOPIFY_METHODS = [
   },
   {
     id: "shopify_native",
-    icon: Smartphone,
+    icon: IconDeviceMobile,
     iconBg: "bg-indigo-100 dark:bg-indigo-950",
     iconColor: "text-indigo-600",
     label: "WhatsApp Native Payment",
@@ -70,10 +85,10 @@ const SHOPIFY_METHODS = [
 ];
 
 // ─── Standard payment options ────────────────────────────────────────────────
-const STANDARD_METHODS = [
+const STANDARD_METHODS: PaymentMethodOption[] = [
   {
     id: "manual",
-    icon: HandHelping,
+    icon: IconHeartHandshake,
     iconBg: "bg-slate-100 dark:bg-slate-900",
     iconColor: "text-slate-600",
     label: "Manual",
@@ -86,7 +101,7 @@ const STANDARD_METHODS = [
   },
   {
     id: "upi",
-    icon: CreditCard,
+    icon: IconCreditCard,
     iconBg: "bg-violet-100 dark:bg-violet-950",
     iconColor: "text-violet-600",
     label: "UPI Payment Link",
@@ -109,7 +124,7 @@ const STANDARD_METHODS = [
   },
   {
     id: "cod",
-    icon: Banknote,
+    icon: IconCash,
     iconBg: "bg-amber-100 dark:bg-amber-950",
     iconColor: "text-amber-600",
     label: "Cash on Delivery",
@@ -128,7 +143,7 @@ const STANDARD_METHODS = [
   },
   {
     id: "bank",
-    icon: Landmark,
+    icon: IconBuildingBank,
     iconBg: "bg-blue-100 dark:bg-blue-950",
     iconColor: "text-blue-600",
     label: "Bank Transfer",
@@ -161,7 +176,7 @@ const STANDARD_METHODS = [
   },
   {
     id: "native",
-    icon: Smartphone,
+    icon: IconDeviceMobile,
     iconBg: "bg-indigo-100 dark:bg-indigo-950",
     iconColor: "text-indigo-600",
     label: "WhatsApp Native Payment",
@@ -206,7 +221,14 @@ export default function PaymentTab({
         settings.paymentMethod ??
           (settings.storeType === "shopify" ? "shopify_checkout" : "manual"),
       );
-      setPaymentConfig((settings.standardPaymentConfig as any) ?? {});
+      setPaymentConfig(
+        Object.fromEntries(
+          Object.entries(settings.standardPaymentConfig ?? {}).map(([key, value]) => [
+            key,
+            String(value ?? ""),
+          ]),
+        ),
+      );
       setCollectAddress(settings.collectAddress ?? false);
       setCollectDelivery(settings.collectDelivery ?? false);
       setFixedDeliveryCharge(settings.fixedDeliveryCharge ?? false);
@@ -217,7 +239,7 @@ export default function PaymentTab({
   const handleSave = async () => {
     await save({
       storeType,
-      paymentMethod: paymentMethod as any,
+      paymentMethod: paymentMethod,
       standardPaymentConfig: paymentConfig,
       collectAddress,
       collectDelivery,
@@ -241,14 +263,14 @@ export default function PaymentTab({
   const STORE_TYPES = [
     {
       key: "standard" as const,
-      Icon: Building2,
+      Icon: IconBuilding,
       tile: "bg-primary/10 text-primary",
       label: "Standard",
       sub: "No Shopify required",
     },
     {
       key: "shopify" as const,
-      Icon: ShoppingBag,
+      Icon: IconShoppingBag,
       tile: "bg-emerald-500/10 text-emerald-600",
       label: "Shopify Store",
       sub: "Connected to Shopify",
@@ -355,7 +377,7 @@ export default function PaymentTab({
 
                   {(logos.length > 0 || badges.length > 0) && (
                     <div className="flex shrink-0 items-center gap-1.5 pl-2">
-                      {logos.map((logo: any) => (
+                      {logos.map((logo) => (
                         <span
                           key={logo.src}
                           className="flex h-6 items-center justify-center rounded border bg-background px-1.5"
@@ -367,7 +389,7 @@ export default function PaymentTab({
                           />
                         </span>
                       ))}
-                      {badges.map((b: any) => (
+                      {badges.map((b) => (
                         <Badge key={b.label} variant="outline" className="text-[10px]">
                           {b.label}
                         </Badge>
@@ -379,7 +401,7 @@ export default function PaymentTab({
                 {isSelected && fields.length > 0 && (
                   <div className="border-t bg-muted/30 p-4">
                     <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {fields.map((f: any) => (
+                      {fields.map((f) => (
                         <Field key={f.key}>
                           <FieldLabel htmlFor={`pay-${f.key}`}>{f.label}</FieldLabel>
                           <Input
@@ -403,9 +425,9 @@ export default function PaymentTab({
 
       <Button onClick={handleSave} disabled={isSaving || !catalogId} className="w-fit">
         {isSaving ? (
-          <Loader2 data-icon="inline-start" className="animate-spin" />
+          <IconLoader2 data-icon="inline-start" className="animate-spin" />
         ) : (
-          <Save data-icon="inline-start" />
+          <IconDeviceFloppy data-icon="inline-start" />
         )}
         Save Settings
       </Button>

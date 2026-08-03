@@ -1,4 +1,36 @@
-export const updateKioskMode = (setKioskMode, editSurvey) => {
+import type { Dispatch, SetStateAction } from "react";
+
+/**
+ * Each helper flips a survey setting in local state and pushes the new value
+ * through the survey-update mutation. Only the `mutate`/`mutateAsync` members
+ * are used, so the mutation is modelled by what is called rather than by
+ * react-query's full `UseMutationResult`.
+ */
+export interface SurveyUpdateMutation<TVariables = Record<string, unknown>> {
+  mutate: (
+    variables: TVariables,
+    options?: {
+      onSuccess?: (data: unknown) => void;
+      onError?: (error: unknown) => void;
+      onSettled?: () => void;
+    },
+  ) => void;
+  mutateAsync?: (variables: TVariables) => Promise<unknown>;
+  isPending?: boolean;
+}
+
+/** Shape of the survey's redirect setting. */
+interface RedirectSetting {
+  enable?: boolean;
+  url?: string;
+  /** Seconds before redirecting; the settings form edits it as a number. */
+  time?: string | number;
+}
+
+export const updateKioskMode = (
+  setKioskMode: Dispatch<SetStateAction<boolean>>,
+  editSurvey: SurveyUpdateMutation,
+) => {
   setKioskMode((prev) => {
     const newKioskMode = !prev;
     editSurvey.mutate({ kioskMode: newKioskMode });
@@ -6,7 +38,11 @@ export const updateKioskMode = (setKioskMode, editSurvey) => {
   });
 };
 
-export const updateRedirect = (setRedirect, editSurvey, updateData = {}) => {
+export const updateRedirect = (
+  setRedirect: Dispatch<SetStateAction<RedirectSetting>>,
+  editSurvey: SurveyUpdateMutation,
+  updateData: RedirectSetting = {},
+) => {
   const otherUpdate = Object.keys(updateData)?.length > 0;
   setRedirect((prev) => {
     const newRedirect = {
@@ -18,7 +54,10 @@ export const updateRedirect = (setRedirect, editSurvey, updateData = {}) => {
   });
 };
 
-export const updateGetLocation = (setLocation, editSurvey) => {
+export const updateGetLocation = (
+  setLocation: Dispatch<SetStateAction<boolean>>,
+  editSurvey: SurveyUpdateMutation,
+) => {
   setLocation((prev) => {
     const newGetLoc = !prev;
     editSurvey.mutate({ getLocation: newGetLoc });
@@ -26,7 +65,10 @@ export const updateGetLocation = (setLocation, editSurvey) => {
   });
 };
 
-export const updateSkipPreview = (setPreview, editSurvey) => {
+export const updateSkipPreview = (
+  setPreview: Dispatch<SetStateAction<boolean>>,
+  editSurvey: SurveyUpdateMutation,
+) => {
   setPreview((prev) => {
     const newPreview = !prev;
     editSurvey.mutate({ skipPreview: newPreview });
@@ -35,17 +77,21 @@ export const updateSkipPreview = (setPreview, editSurvey) => {
 };
 
 export const updatewebSurveyAutoTransitionToNextQues = (
-  setwebSurveyAutoTransitionToNextQues,
-  editSurvey,
+  setwebSurveyAutoTransitionToNextQues: Dispatch<SetStateAction<boolean>>,
+  editSurvey: SurveyUpdateMutation,
 ) => {
   setwebSurveyAutoTransitionToNextQues((prev) => {
     const newValue = !prev;
-    editSurvey.mutateAsync({ webSurveyAutoTransitionToNextQues: newValue });
+    editSurvey.mutateAsync?.({ webSurveyAutoTransitionToNextQues: newValue });
     return newValue;
   });
 };
 
-export const updatePwdSurvey = (updateSurveyPassword, setPasswordProtection, surveyId) => {
+export const updatePwdSurvey = (
+  updateSurveyPassword: SurveyUpdateMutation<{ surveyId: string; password: string }>,
+  setPasswordProtection: Dispatch<SetStateAction<boolean>>,
+  surveyId: string,
+) => {
   setPasswordProtection((prev) => {
     const isProtected = !prev;
     if (!isProtected) {
@@ -55,7 +101,10 @@ export const updatePwdSurvey = (updateSurveyPassword, setPasswordProtection, sur
   });
 };
 
-export const updateEmailSurvey = (setEnabledNotificationEmail, editSurvey) => {
+export const updateEmailSurvey = (
+  setEnabledNotificationEmail: Dispatch<SetStateAction<boolean | undefined>>,
+  editSurvey: SurveyUpdateMutation,
+) => {
   setEnabledNotificationEmail((prev) => {
     const isEnabled = !prev;
     editSurvey.mutate({ enableNotificationEmail: isEnabled });
@@ -63,7 +112,10 @@ export const updateEmailSurvey = (setEnabledNotificationEmail, editSurvey) => {
   });
 };
 
-export const updateUniqueDevice = (setEnableUniqueDevice, editSurvey) => {
+export const updateUniqueDevice = (
+  setEnableUniqueDevice: Dispatch<SetStateAction<boolean>>,
+  editSurvey: SurveyUpdateMutation,
+) => {
   setEnableUniqueDevice((prev) => {
     const isEnabled = !prev;
     editSurvey.mutate({ uniqueDeviceResponse: isEnabled });
@@ -71,7 +123,11 @@ export const updateUniqueDevice = (setEnableUniqueDevice, editSurvey) => {
   });
 };
 
-export const updateEndToEndEncryption = (setEndToEndEncryption, publicKey, editSurvey) => {
+export const updateEndToEndEncryption = (
+  setEndToEndEncryption: Dispatch<SetStateAction<boolean>>,
+  publicKey: string | null | undefined,
+  editSurvey: SurveyUpdateMutation,
+) => {
   setEndToEndEncryption((prev) => {
     const newGetEte = !prev;
     const responsetoUpdate = {

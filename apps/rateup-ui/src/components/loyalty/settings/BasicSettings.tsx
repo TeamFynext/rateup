@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
@@ -32,7 +32,7 @@ export function BasicSettings({
   if (isPending) {
     buttonLabel = (
       <>
-        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
         {t("Saving")}
       </>
     );

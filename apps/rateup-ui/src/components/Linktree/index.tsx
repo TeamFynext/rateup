@@ -1,9 +1,10 @@
+import { IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { linktreeKeys } from "@/backend/campaign/campaign.keys";
 import { useLinktrees } from "@/backend/linktree/linktree.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
@@ -53,14 +54,23 @@ function LinktreeDashboard() {
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/lt`;
 
   const linktreeInfos = useMemo(() => {
-    return linktrees.map((lt) => ({
-      id: lt.id,
-      name: lt.name,
-      shortUrlId: lt.shortUrlId,
-      createdAt: lt.createdAt,
-      visitorsCount: lt.visitorsCount,
-      isPublished: lt.isPublished,
-    })) as LinktreeListEntry[];
+    return linktrees.map(
+      (lt: {
+        id: string;
+        name?: string;
+        shortUrlId?: string;
+        createdAt?: string;
+        visitorsCount?: number;
+        isPublished?: boolean;
+      }) => ({
+        id: lt.id,
+        name: lt.name,
+        shortUrlId: lt.shortUrlId,
+        createdAt: lt.createdAt,
+        visitorsCount: lt.visitorsCount,
+        isPublished: lt.isPublished,
+      }),
+    ) as LinktreeListEntry[];
   }, [linktrees]);
 
   const filteredLinktrees = useMemo(() => {
@@ -78,7 +88,7 @@ function LinktreeDashboard() {
   };
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+    queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
   };
 
   return (
@@ -87,7 +97,7 @@ function LinktreeDashboard() {
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={handleCreateLinktree}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Access Link")}
             </Button>
             <RefreshButton queryKeys={["linktrees"]} />

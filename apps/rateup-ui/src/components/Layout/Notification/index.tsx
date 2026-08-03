@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import type { ComponentProps, Dispatch, SetStateAction } from "react";
 
+import { notificationKeys } from "@/backend/notification/notification.keys";
 import {
   useDeleteAllNotifications,
   useNotifications,
@@ -46,8 +47,8 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
   }, [close, data, isLoading, tab]);
 
   const handleOpen = () => {
-    qc.invalidateQueries({ queryKey: ["notification"] });
-    qc.invalidateQueries({ queryKey: ["notificationCount"] });
+    qc.invalidateQueries({ queryKey: notificationKeys.all() });
+    qc.invalidateQueries({ queryKey: notificationKeys.count() });
     setOpened(true);
   };
 

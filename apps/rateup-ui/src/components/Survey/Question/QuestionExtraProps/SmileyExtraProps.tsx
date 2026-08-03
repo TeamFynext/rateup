@@ -12,22 +12,10 @@ import {
 } from "@/components/ui/select";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
+import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";
 
 import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
-
-export enum SmileyVariantStyle {
-  Default = "Default",
-  Filled = "Filled",
-  FilledOnHover = "FilledOnHover",
-  Emojis = "Emojis",
-  Custom = "Custom",
-}
-
-export enum SmileyColorType {
-  Default = "Default",
-  Individual = "Individual",
-  Gradient = "Gradient",
-}
+import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
 
 function ColorInput({
   label,
@@ -69,13 +57,17 @@ function ColorInput({
   );
 }
 
-const SmileyExtraProps = ({ form }) => {
+const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
-  const features = form.values.features ? { ...form.values.features } : {};
+  // This editor works on the question's feature bag directly (smiley styling is
+  // not per-language), unlike the language-keyed editors.
+  const features: QuestionFormFeatures = form.values?.features
+    ? ({ ...form.values?.features } as QuestionFormFeatures)
+    : {};
   const [opened, setOpened] = useState(true);
 
-  const handleChange = (field, value) => {
-    const updateData: Record<string, any> = { [field]: value };
+  const handleChange = (field: string, value: unknown) => {
+    const updateData: Record<string, unknown> = { [field]: value };
     if (
       field === "colorType" &&
       value === SmileyColorType.Gradient &&
@@ -100,7 +92,7 @@ const SmileyExtraProps = ({ form }) => {
     if (field !== "variant" && !features?.iconStyle?.variant) {
       updateData["variant"] = SmileyVariantStyle.Default;
     }
-    form.setFieldValue("features", {
+    form.setFieldValue?.("features", {
       ...features,
       iconStyle: { ...features?.iconStyle, ...updateData },
     });
@@ -109,7 +101,7 @@ const SmileyExtraProps = ({ form }) => {
   };
 
   const updateSmileyColor = (smiley: number, value: string) => {
-    form.setFieldValue("features", {
+    form.setFieldValue?.("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
@@ -119,7 +111,7 @@ const SmileyExtraProps = ({ form }) => {
   };
 
   const updateSmileyEmoji = (smiley: number, value: string) => {
-    form.setFieldValue("features", {
+    form.setFieldValue?.("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
@@ -268,8 +260,8 @@ function rgbToHex(r: number, g: number, b: number) {
 }
 
 export function generateGradient(
-  startColor: string,
-  endColor: string,
+  startColor: string | undefined,
+  endColor: string | undefined,
   steps: number,
   defaultColor: string,
 ) {

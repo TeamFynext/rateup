@@ -5,7 +5,17 @@ import { cn } from "@/lib/utils.ts";
 
 import { PreviewTypeEnum } from "../../SurveyTheme.enums";
 
-function PreviewDeviceSelector({ onChange, value, withLabel = true, className = "" }) {
+function PreviewDeviceSelector({
+  onChange,
+  value,
+  withLabel = true,
+  className = "",
+}: {
+  onChange: (value: string) => void;
+  value: string;
+  withLabel?: boolean;
+  className?: string;
+}) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
       {withLabel && <p className="text-xl">Preview:</p>}

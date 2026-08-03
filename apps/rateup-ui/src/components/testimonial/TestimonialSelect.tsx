@@ -5,10 +5,10 @@ import {
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
 } from "@/backend/testimonials/testimonial.query";
+import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
-import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";
@@ -25,14 +25,14 @@ const TestimonialSelect = ({
   selectedTestimonialIds: string[];
   setSelectedTestimonialIds: React.Dispatch<React.SetStateAction<string[]>>;
   filters: filterType;
-  type: string;
+  type: string | null;
 }) => {
   const params = useParams({
     strict: false,
   });
   const collectionId = params.collectionId as string;
   const { data: alltestimonials, isLoading: isTestimonialLoading } = useGetAllTestimonialsByOrg();
-  const filteredTestimonials = getFilteredTestimonials(alltestimonials, filters, type);
+  const filteredTestimonials = getFilteredTestimonials(alltestimonials ?? [], filters, type);
   const { t: translations } = useTranslation();
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   function checkIfTestimonialIdsAreIncludedInAllTestimonials(idtocheck: string) {
@@ -40,7 +40,7 @@ const TestimonialSelect = ({
     return esistingtestimonialIds?.includes(idtocheck);
   }
   if (isTestimonialLoading) return <Spinner />;
-  if (filteredTestimonials?.length <= 0)
+  if ((filteredTestimonials?.length ?? 0) <= 0)
     return (
       <div className="flex items-center justify-center mt-37.5">
         <NothingFound text={translations("No testimonials found")} />

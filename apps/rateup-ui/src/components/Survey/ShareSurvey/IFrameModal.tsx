@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -87,7 +87,7 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           </FieldLabel>
           <Select
             value={values.widthUnit}
-            onValueChange={(unit) => setValues((prev) => ({ ...prev, widthUnit: unit }))}
+            onValueChange={(unit) => setValues((prev) => ({ ...prev, widthUnit: unit ?? "" }))}
             items={units}
           >
             <SelectTrigger id={`${uid}-field-2`} className="w-full">
@@ -122,7 +122,7 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           </FieldLabel>
           <Select
             value={values.heightUnit}
-            onValueChange={(unit) => setValues((prev) => ({ ...prev, heightUnit: unit }))}
+            onValueChange={(unit) => setValues((prev) => ({ ...prev, heightUnit: unit ?? "" }))}
             items={units}
           >
             <SelectTrigger id={`${uid}-field-4`} className="w-full">
@@ -150,7 +150,11 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
               onClick={handleCopy}
               disabled={hasError}
             >
-              {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+              {copied ? (
+                <IconCheck data-icon="inline-start" />
+              ) : (
+                <IconCopy data-icon="inline-start" />
+              )}
               {copied ? translations("Copied") : translations("Copy code")}
             </Button>
           </div>

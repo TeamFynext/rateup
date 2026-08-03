@@ -1,5 +1,11 @@
+import {
+  IconCopy,
+  IconEdit,
+  IconExternalLink,
+  IconSparkles,
+  IconTrendingUp,
+} from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import { Copy, Edit, ExternalLink, Sparkles, TrendingUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +34,7 @@ function GeneratedQrPage() {
   const [, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const destinationUrlInputRef = useRef(null);
+  const destinationUrlInputRef = useRef<HTMLElement | null>(null);
   let componentToBeRendered = null;
   const handleSaveDestinationUrl = async () => {
     try {
@@ -86,7 +92,7 @@ function GeneratedQrPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-                <Sparkles className="w-3 h-3 text-white" />
+                <IconSparkles className="w-3 h-3 text-white" />
               </div>
               <h1 className="text-base font-semibold">{data?.name}</h1>
             </div>
@@ -107,7 +113,7 @@ function GeneratedQrPage() {
                 htmlFor="destination-url"
                 className="text-xs font-semibold flex items-center gap-1"
               >
-                <ExternalLink className="w-4 h-4 text-primary" />
+                <IconExternalLink className="w-4 h-4 text-primary" />
                 {translations("Destination URL")}
               </FieldLabel>
               <div className="flex gap-1.5">
@@ -124,7 +130,7 @@ function GeneratedQrPage() {
                   onClick={handleEditSaveBtnClick}
                   className="bg-primary px-3 h-8 min-w-32 rounded-lg text-xs shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
                 >
-                  <Edit className="w-3 h-3 mr-1" />
+                  <IconEdit className="w-3 h-3 mr-1" />
                   {isDestinationUrlFromApiAndDestinationUrlSame ? "Edit" : "Save"}
                 </Button>
               </div>
@@ -136,7 +142,7 @@ function GeneratedQrPage() {
                 htmlFor="qr-url"
                 className="text-xs font-semibold mb-1 flex items-center gap-1"
               >
-                <Copy className="w-4 h-4 text-primary" />
+                <IconCopy className="w-4 h-4 text-primary" />
                 {translations("QR URL")}
               </FieldLabel>
               <div className="flex gap-1.5">
@@ -147,7 +153,7 @@ function GeneratedQrPage() {
                   onClick={handleCopy}
                   className="bg-primary px-3 h-8 min-w-32 rounded-lg text-xs shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
                 >
-                  <Copy className="w-3 h-3 mr-1" />
+                  <IconCopy className="w-3 h-3 mr-1" />
                   {copied ? translations("Copied") : translations("Copy URL")}
                 </Button>
               </div>
@@ -157,7 +163,7 @@ function GeneratedQrPage() {
           <div className="flex items-center">
             <div className="px-4 py-2.5 rounded-xl border-2 shadow-md min-w-[120px]">
               <div className="flex items-center gap-1 mb-1">
-                <TrendingUp className="w-3 h-3 text-primary" />
+                <IconTrendingUp className="w-3 h-3 text-primary" />
                 <div className="text-[11px] font-semibold uppercase">
                   {translations("Statistics")}
                 </div>

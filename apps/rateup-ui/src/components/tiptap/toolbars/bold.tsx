@@ -1,6 +1,4 @@
-"use client";
-
-import { BoldIcon } from "lucide-react";
+import { IconBold } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -38,7 +36,7 @@ const BoldToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
             />
           }
         >
-          {children ?? <BoldIcon className="h-4 w-4" />}
+          {children ?? <IconBold className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Bold</span>

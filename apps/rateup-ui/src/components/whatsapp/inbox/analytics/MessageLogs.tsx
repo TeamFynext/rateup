@@ -1,21 +1,22 @@
-import type { ColumnDef, PaginationState } from "@tanstack/react-table";
-import dayjs from "dayjs";
 import {
-  CheckCircle2,
-  Clock,
-  Download,
-  Loader2,
-  Megaphone,
-  MessageCircle,
-  Search,
-  Send,
-  X,
-  XCircle,
-} from "lucide-react";
+  IconCircleCheck,
+  IconCircleX,
+  IconClock,
+  IconDownload,
+  IconLoader2,
+  IconMessageCircle,
+  IconSearch,
+  IconSend,
+  IconSpeakerphone,
+  IconX,
+} from "@tabler/icons-react";
+import type { ColumnDef, PaginationState, Updater } from "@tanstack/react-table";
+import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { WaMessageLogRow } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
 import {
   useExportWaMessageLogs,
   useWaMessageLogs,
@@ -32,8 +33,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 
-function MessageLogs({ dateRange }) {
+/** A log row, or a placeholder the table renders as a shimmer while the page loads. */
+type MessageLogTableRow = Partial<WaMessageLogRow> & { id: string; isSkeleton?: boolean };
+
+function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSource, setSelectedSource] = useState("all");
@@ -68,7 +73,7 @@ function MessageLogs({ dateRange }) {
   const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
   const { mutate: exportLogs, isPending: isExporting } = useExportWaMessageLogs();
 
-  const handlePaginationChange = useCallback((updater: any) => {
+  const handlePaginationChange = useCallback((updater: Updater<PaginationState>) => {
     setPagination((prev) => {
       const newPagination = typeof updater === "function" ? updater(prev) : updater;
       return newPagination;
@@ -88,21 +93,21 @@ function MessageLogs({ dateRange }) {
     if (formatted === "Inbox") {
       return {
         className: "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
-        icon: <MessageCircle className="w-3 h-3 mr-1" />,
+        icon: <IconMessageCircle className="w-3 h-3 mr-1" />,
       };
     }
 
     if (formatted === "Campaign") {
       return {
         className: "bg-orange-50 dark:bg-transparent text-orange-700 border-orange-200",
-        icon: <Megaphone className="w-3 h-3 mr-1" />,
+        icon: <IconSpeakerphone className="w-3 h-3 mr-1" />,
       };
     }
 
     if (formatted === "Template") {
       return {
         className: "bg-purple-50 dark:bg-transparent text-purple-700 border-purple-200",
-        icon: <Megaphone className="w-3 h-3 mr-1" />,
+        icon: <IconSpeakerphone className="w-3 h-3 mr-1" />,
       };
     }
 
@@ -118,34 +123,34 @@ function MessageLogs({ dateRange }) {
     if (s === "delivered") {
       return {
         className: "bg-green-50 dark:bg-transparent text-green-700 border-green-200",
-        icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
+        icon: <IconCircleCheck className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "sent") {
       return {
         className: "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
-        icon: <Send className="w-3 h-3 mr-1" />,
+        icon: <IconSend className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "read") {
       return {
         className: "bg-indigo-50 dark:bg-transparent text-indigo-700 border-indigo-200",
-        icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
+        icon: <IconCircleCheck className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "failed") {
       return {
         className: "bg-red-50 dark:bg-transparent text-red-700 border-red-200",
-        icon: <XCircle className="w-3 h-3 mr-1" />,
+        icon: <IconCircleX className="w-3 h-3 mr-1" />,
       };
     }
 
     return {
       className: "bg-gray-50 dark:bg-transparent text-gray-600 border-gray-200",
-      icon: <Clock className="w-3 h-3 mr-1" />,
+      icon: <IconClock className="w-3 h-3 mr-1" />,
     };
   }
 
@@ -154,7 +159,7 @@ function MessageLogs({ dateRange }) {
     exportLogs(params);
   }
 
-  const columns = useMemo<ColumnDef<any>[]>(
+  const columns = useMemo<ColumnDef<MessageLogTableRow>[]>(
     () => [
       {
         accessorKey: "createdAt",
@@ -294,17 +299,19 @@ function MessageLogs({ dateRange }) {
     [],
   );
 
-  const skeletonData = Array.from({ length: pagination.pageSize }).map((_, i) => ({
-    id: i,
-    isSkeleton: true,
-  }));
+  const skeletonData: MessageLogTableRow[] = Array.from({ length: pagination.pageSize }).map(
+    (_, i) => ({
+      id: String(i),
+      isSkeleton: true,
+    }),
+  );
 
   return (
     <div className="h-full relative">
       <div className="p-3 border shadow-xs rounded-xl mb-4 bg-white dark:bg-transparent">
         <div className="flex items-center gap-2">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t("Search phone or message")}
               value={search}
@@ -318,14 +325,14 @@ function MessageLogs({ dateRange }) {
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
                 onClick={() => setSearch("")}
               >
-                <X className="w-3.5 h-3.5" />
+                <IconX className="w-3.5 h-3.5" />
               </Button>
             )}
           </div>
 
           <Select
             value={selectedStatus}
-            onValueChange={(value) => setSelectedStatus(value)}
+            onValueChange={(value) => setSelectedStatus(value ?? "all")}
             items={[
               { value: "all", label: t("All Status") },
               { value: "sent", label: t("Sent") },
@@ -348,7 +355,7 @@ function MessageLogs({ dateRange }) {
 
           <Select
             value={selectedSource}
-            onValueChange={(value) => setSelectedSource(value)}
+            onValueChange={(value) => setSelectedSource(value ?? "all")}
             items={[
               { value: "all", label: t("All Sources") },
               { value: "CAMPAIGN", label: t("Campaign") },
@@ -382,9 +389,9 @@ function MessageLogs({ dateRange }) {
             disabled={isExporting}
           >
             {isExporting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Download className="w-4 h-4 mr-2" />
+              <IconDownload className="w-4 h-4 mr-2" />
             )}
             {isExporting ? t("Exporting...") : t("Export")}
           </Button>

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 import { useSetLinktreeEditorTab } from "../LinktreeContext/LinktreeContext.tsx";
 
-function NoLinksFoundModal({ opened, onClose }) {
+function NoLinksFoundModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
   const setLinktreeEditorTab = useSetLinktreeEditorTab();
   const handleGotoLinksPageBtnClick = useCallback(() => {
     setLinktreeEditorTab("links");

@@ -12,9 +12,11 @@ import TestimonialFeatureSection from "@/components/products/TestimonialGateway/
 import TestimonialFeaturesGrid from "@/components/products/TestimonialGateway/shared/TestimonialFeaturesGrid.tsx";
 import TestimonialHero from "@/components/products/TestimonialGateway/shared/TestimonialHero.tsx";
 import TestimonialSteps from "@/components/products/TestimonialGateway/shared/TestimonialSteps.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/testimonial-gateway/")({
   component: page,
+  head: () => buildPageHead("/products/testimonial-gateway"),
 });
 
 function page() {

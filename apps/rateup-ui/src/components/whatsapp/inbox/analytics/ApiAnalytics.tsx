@@ -1,6 +1,12 @@
+import {
+  IconBolt,
+  IconCircleCheck,
+  IconCircleX,
+  IconDownload,
+  IconSend,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
-import { CheckCircle2, Download, Send, XCircle, Zap } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,10 +24,11 @@ import TemplateOverview from "@/components/apiAnalytics/TemplateOverview.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 
 dayjs.extend(isToday);
 
-const formatTime = (time) => {
+const formatTime = (time: string | number | Date) => {
   const d = dayjs(time);
 
   if (d.isToday()) {
@@ -31,10 +38,10 @@ const formatTime = (time) => {
   }
 };
 
-function ApiAnalytics({ dateRange }) {
+function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const { t } = useTranslation("apianalytics");
-  const targetRef = useRef(null);
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const targetRef = useRef<HTMLDivElement | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [granularity] = useState("hour");
   const [apiType, setApiType] = useState("all");
   const { data: teamData, isLoading: isTeamDataLoading } = useGetTeamApiOverview({
@@ -63,12 +70,12 @@ function ApiAnalytics({ dateRange }) {
     apiType: apiType,
   });
 
-  const localTrend = trend?.trend.map((item) => ({
+  const localTrend = trend?.trend.map((item: { time: string; [key: string]: unknown }) => ({
     ...item,
     time: formatTime(item.time),
   }));
 
-  const localWeekTrend = trend?.weekTrend.map((item) => ({
+  const localWeekTrend = trend?.weekTrend.map((item: { time: string; [key: string]: unknown }) => ({
     ...item,
     day: dayjs(item.time).format("ddd, DD MMM"),
   }));
@@ -106,7 +113,7 @@ function ApiAnalytics({ dateRange }) {
               });
             }}
           >
-            <Download />
+            <IconDownload />
             {t("Export")}
           </Button>
         </div>
@@ -129,7 +136,7 @@ function ApiAnalytics({ dateRange }) {
             title={t("Total Messages Sent")}
             bg={"bg-blue-50"}
             iconColor={"text-blue-500"}
-            Icon={Send}
+            Icon={IconSend}
             trendLogoRequired={true}
             trendValue={data?.totalMessagesChange}
           />
@@ -138,7 +145,7 @@ function ApiAnalytics({ dateRange }) {
             title={t("Successful Delivery")}
             bg={"bg-green-50"}
             iconColor={"text-green-500"}
-            Icon={CheckCircle2}
+            Icon={IconCircleCheck}
             trendLogoRequired={false}
             trendValue={data?.deliveredPercentage?.toFixed(1)}
           />
@@ -147,7 +154,7 @@ function ApiAnalytics({ dateRange }) {
             title={t("Failed Messages")}
             bg={"bg-red-50"}
             iconColor={"text-red-500"}
-            Icon={XCircle}
+            Icon={IconCircleX}
             trendLogoRequired={false}
             trendValue={data?.failedPercentage?.toFixed(1)}
           />
@@ -160,7 +167,7 @@ function ApiAnalytics({ dateRange }) {
             title={t("Avg Delivery Time")}
             bg={"bg-purple-50"}
             iconColor={"text-purple-500"}
-            Icon={Zap}
+            Icon={IconBolt}
             trendLogoRequired={true}
             trendValue={data?.averageDeliveryTimeChange}
           />

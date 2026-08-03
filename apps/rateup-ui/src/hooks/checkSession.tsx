@@ -10,7 +10,8 @@ export const useCheckSession = () => {
 
   const searchParams = useSearch({ strict: false });
   const auth = searchParams.auth;
-  const redirectTo = searchParams?.redirectToPath;
+  const redirectTo =
+    typeof searchParams?.redirectToPath === "string" ? searchParams.redirectToPath : undefined;
   const [doesSessionExist, setDoesSessionExist] = useState(false);
   const checkSession = useCallback(async () => {
     try {

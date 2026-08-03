@@ -1,11 +1,10 @@
-import { Loader2 } from "lucide-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
@@ -18,9 +17,18 @@ import {
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
-const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
+const BulkAssignUser = ({
+  contactIds,
+  filterData,
+  onSuccess,
+}: {
+  contactIds: string[];
+  filterData: string;
+  onSuccess?: () => void;
+}) => {
   const { user } = useUser();
   const { data: teamMembers, isLoading: membersLoading } = useTeamsMembersOfOrg();
   const { data: teamsRes, isLoading: teamsLoading } = useTeamsByUser();
@@ -39,9 +47,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
   const teamMembersFiltered = useMemo(() => {
     if (!selectedTeam) return [];
 
-    return staffMembers.filter((member) =>
-      member.teams.some((t: any) => t.team_id === selectedTeam),
-    );
+    return staffMembers.filter((member) => member.teams.some((t) => t.team_id === selectedTeam));
   }, [selectedTeam, staffMembers]);
 
   const handleAssign = () => {
@@ -64,8 +70,8 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: [
                 {
-                  id: user?.id,
-                  name: user?.name,
+                  id: user?.id ?? "",
+                  name: user?.name ?? "",
                   teamId: selectedTeam,
                 },
               ],
@@ -86,8 +92,8 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
       {
         contactIds,
         assignee: {
-          userId: user.userId,
-          teamId: user.teams?.[0],
+          userId: user?.userId ?? "",
+          teamId: user?.teams?.[0] ?? "",
         },
       },
       {
@@ -98,9 +104,9 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: [
                 {
-                  id: user?.userId,
-                  name: user?.userName,
-                  teamId: user.teams?.[0],
+                  id: user?.userId ?? "",
+                  name: user?.userName ?? "",
+                  teamId: user?.teams?.[0] ?? "",
                 },
               ],
             }));
@@ -127,7 +133,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
           <Select
             value={selectedTeam}
             onValueChange={(val) => {
-              setSelectedTeam(val);
+              setSelectedTeam(val ?? "");
               setSelectedUser("");
             }}
             items={teams.map((team) => ({ value: team.id, label: team.name }))}
@@ -155,9 +161,9 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
         ) : (
           <Select
             value={selectedUser}
-            onValueChange={setSelectedUser}
+            onValueChange={(value) => setSelectedUser(value ?? "")}
             disabled={!selectedTeam}
-            items={teamMembersFiltered.map((staff: any) => ({
+            items={teamMembersFiltered.map((staff) => ({
               value: staff.id,
               label: staff.name,
             }))}
@@ -167,7 +173,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
             </SelectTrigger>
 
             <SelectContent>
-              {teamMembersFiltered.map((staff: any) => (
+              {teamMembersFiltered.map((staff) => (
                 <SelectItem key={staff.id} value={staff.id}>
                   <div className="flex items-center gap-2 py-1">
                     <CreativeAvatar
@@ -193,7 +199,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "assign" && (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <IconLoader2 className="w-4 h-4 animate-spin" />
           )}
           {t("Assign Chats")}
         </Button>
@@ -213,7 +219,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "self" && (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <IconLoader2 className="w-4 h-4 animate-spin" />
           )}
           {t("Assign To Me")}
         </Button>

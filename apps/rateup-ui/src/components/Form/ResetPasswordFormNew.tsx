@@ -1,6 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  IconArrowLeft,
+  IconEye,
+  IconEyeOff,
+  IconLock,
+  IconMail,
+  IconShield,
+} from "@tabler/icons-react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -26,9 +33,16 @@ import {
 import { Input } from "../ui/input.tsx";
 import { Loader } from "../ui/loader.tsx";
 
-const ResetPasswordForm = ({ mode }) => {
+/** Fields of either step of the reset flow — the email step or the new-password step. */
+type ResetPasswordValues = {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+};
+
+const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false });
+  const searchParams = useSearch({ from: "/(auth)/login/reset-password/" });
   const token = searchParams.token;
   const rid = searchParams.rid;
   const [showPassword, setShowPassword] = useState(false);
@@ -126,10 +140,10 @@ const ResetPasswordForm = ({ mode }) => {
   const setNewPassword = useSetNewPassword(handleSuccess);
 
   const onSubmit = isEmailPage
-    ? async (values) => {
+    ? async (values: ResetPasswordValues) => {
         try {
           const user = await checkEmailMutaion.mutateAsync({
-            email: values.email,
+            email: values.email ?? "",
           });
           if (!user?.success) {
             emailForm.setError("email", {
@@ -141,16 +155,16 @@ const ResetPasswordForm = ({ mode }) => {
             return;
           }
           setIsLoading(true);
-          sendResetEmail(values.email).finally(() => {
+          sendResetEmail(values.email ?? "").finally(() => {
             setIsLoading(false);
           });
         } catch {
           setIsLoading(false);
         }
       }
-    : (values) => {
+    : (values: ResetPasswordValues) => {
         setIsLoading(true);
-        setNewPassword(values.confirmPassword).finally(() => {
+        setNewPassword(values.confirmPassword ?? "").finally(() => {
           setIsLoading(false);
         });
       };
@@ -165,9 +179,9 @@ const ResetPasswordForm = ({ mode }) => {
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
               {isEmailPage ? (
-                <Mail className="w-6 h-6 text-primary" />
+                <IconMail className="w-6 h-6 text-primary" />
               ) : (
-                <Lock className="w-6 h-6 text-primary" />
+                <IconLock className="w-6 h-6 text-primary" />
               )}
             </div>
             <div className="text-2xl font-normal">
@@ -184,7 +198,7 @@ const ResetPasswordForm = ({ mode }) => {
               <form
                 onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => emailForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, () => void emailForm.handleSubmit(onSubmit)()],
                 ])}
               >
                 <FieldGroup className="gap-4">
@@ -221,7 +235,7 @@ const ResetPasswordForm = ({ mode }) => {
               <form
                 onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => pwdForm.handleSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, () => void pwdForm.handleSubmit(onSubmit)()],
                 ])}
               >
                 <FieldGroup className="gap-4">
@@ -233,7 +247,7 @@ const ResetPasswordForm = ({ mode }) => {
                         <FieldLabel htmlFor="password">{translations("New Password")}</FieldLabel>
                         <InputGroup>
                           <InputGroupAddon>
-                            <Lock />
+                            <IconLock />
                           </InputGroupAddon>
                           <InputGroupInput
                             {...field}
@@ -257,7 +271,7 @@ const ResetPasswordForm = ({ mode }) => {
                               }
                               onClick={() => setShowPassword(!showPassword)}
                             >
-                              {showPassword ? <EyeOff /> : <Eye />}
+                              {showPassword ? <IconEyeOff /> : <IconEye />}
                             </InputGroupButton>
                           </InputGroupAddon>
                         </InputGroup>
@@ -277,7 +291,7 @@ const ResetPasswordForm = ({ mode }) => {
                         </FieldLabel>
                         <InputGroup>
                           <InputGroupAddon>
-                            <Shield />
+                            <IconShield />
                           </InputGroupAddon>
                           <InputGroupInput
                             {...field}
@@ -296,7 +310,7 @@ const ResetPasswordForm = ({ mode }) => {
                               }
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
-                              {showConfirmPassword ? <EyeOff /> : <Eye />}
+                              {showConfirmPassword ? <IconEyeOff /> : <IconEye />}
                             </InputGroupButton>
                           </InputGroupAddon>
                         </InputGroup>
@@ -343,7 +357,7 @@ const ResetPasswordForm = ({ mode }) => {
               to={"/login"}
               className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-primary/20 hover:text-primary"
             >
-              <ArrowLeft strokeWidth={1} />
+              <IconArrowLeft strokeWidth={1} />
               {translations("Back to Sign In")}
             </Link>
           </div>
@@ -351,7 +365,7 @@ const ResetPasswordForm = ({ mode }) => {
       ) : (
         <Card className="border-none shadow-lg p-6 max-w-md w-full flex flex-col items-center text-center gap-6">
           <div className="w-18 h-18 bg-primary/10 rounded-full flex items-center justify-center">
-            <Mail className="w-10 h-10 text-primary" />
+            <IconMail className="w-10 h-10 text-primary" />
           </div>
 
           <div className="flex flex-col gap-4">
@@ -368,7 +382,7 @@ const ResetPasswordForm = ({ mode }) => {
             to="/login"
             className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
           >
-            <ArrowLeft strokeWidth={1.5} className="w-4 h-4" />
+            <IconArrowLeft strokeWidth={1.5} className="w-4 h-4" />
             {translations("Back to Sign In")}
           </Link>
         </Card>

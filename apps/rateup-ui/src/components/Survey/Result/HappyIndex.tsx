@@ -61,7 +61,7 @@ const HappinessRing = ({
   );
 };
 
-const HappyIndex = ({ surveyId }) => {
+const HappyIndex = ({ surveyId }: { surveyId: string }) => {
   const { filterTeams } = useContext(SurveyContext);
   const { data, isLoading } = useHappyIndex(surveyId, filterTeams);
   const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
@@ -238,7 +238,17 @@ const HappyIndex = ({ surveyId }) => {
 
 export default HappyIndex;
 
-const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
+const NPSGaugeWithNeedle = ({
+  nps,
+  promoters,
+  passives,
+  detractors,
+}: {
+  nps: number;
+  promoters: number;
+  passives: number;
+  detractors: number;
+}) => {
   const total = promoters + passives + detractors;
 
   const promoterPercent = (promoters / total) * 100;
@@ -251,7 +261,7 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
   const passiveAngle = (passivePercent / 100) * totalAngle;
   const detractorAngle = (detractorPercent / 100) * totalAngle;
 
-  const polarToCartesian = (cx, cy, r, angle) => {
+  const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
     const rad = (angle - 90) * (Math.PI / 180);
     return {
       x: cx + r * Math.cos(rad),
@@ -259,7 +269,7 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
     };
   };
 
-  const getArc = (startAngle, sweepAngle, radius, color) => {
+  const getArc = (startAngle: number, sweepAngle: number, radius: number, color: string) => {
     const endAngle = startAngle + sweepAngle;
     const start = polarToCartesian(110, 110, radius, endAngle);
     const end = polarToCartesian(110, 110, radius, startAngle);

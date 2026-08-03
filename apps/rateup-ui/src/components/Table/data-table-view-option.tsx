@@ -1,5 +1,5 @@
-import type { Table } from "@tanstack/react-table";
-import { Settings2 } from "lucide-react";
+import { IconSettings2 } from "@tabler/icons-react";
+import type { Column, Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -22,7 +22,7 @@ export function DataTableViewOptions<TData>({
       <DropdownMenuTrigger
         render={<Button variant="outline" size="sm" className="ml-auto hidden lg:flex" />}
       >
-        <Settings2 />
+        <IconSettings2 />
         <span className="font-medium text-sm">View</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-37.5">
@@ -48,14 +48,15 @@ export function DataTableViewOptions<TData>({
   );
 }
 
-function getColumnLabel(column: any) {
+function getColumnLabel<TData, TValue>(column: Column<TData, TValue>) {
   const header = column.columnDef.header;
 
   if (typeof header === "string") {
     return header;
   } else if (typeof column.columnDef.header === "function") {
     try {
-      const result = column.columnDef.header({} as any);
+      // `createSortableHeader` needs the header context; the catch below covers it.
+      const result = (column.columnDef.header as (context: unknown) => unknown)({});
       if (typeof result === "string") return result;
     } catch {
       // header requires column context (e.g. createSortableHeader)

@@ -5,7 +5,17 @@ import { useCallback } from "react";
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
 
-function EditTranslations({ survey, element, uiTextTranslations, languages }) {
+function EditTranslations({
+  survey,
+  element,
+  uiTextTranslations,
+  languages,
+}: {
+  survey: Survey;
+  element: { id: string; name: string; label: string };
+  uiTextTranslations: Record<string, Record<string, string>>;
+  languages: string[];
+}) {
   const { name, label } = element;
 
   const translatedValues = uiTextTranslations?.[name] || {};
@@ -13,12 +23,12 @@ function EditTranslations({ survey, element, uiTextTranslations, languages }) {
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
 
   const handleSave = useCallback(
-    async (value, language) => {
+    async (value: string, language?: string) => {
       const newUiTextTranslationsObj = produce(uiTextTranslations, (draft) => {
         if (!draft[name]) {
           draft[name] = {};
         }
-        draft[name][language.toLowerCase()] = value;
+        draft[name]![(language ?? "").toLowerCase()] = value;
       });
       await surveyUpdateMutation.mutateAsync({
         surveyId: survey.id,

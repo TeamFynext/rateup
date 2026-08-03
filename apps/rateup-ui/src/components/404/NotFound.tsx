@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
+import type { CSSProperties } from "react";
 
 import { rateupLogoHorizontalTransparent } from "@/utils/constants";
 
@@ -8,12 +9,12 @@ import { RateupStar } from "../integrations/logos";
 import styles from "@/styles/commonCssModules/404.module.css";
 
 // Individual floating particle
-function Particle({ style }) {
+function Particle({ style }: { style: CSSProperties }) {
   return <div className={styles.particle} style={style} />;
 }
 
 export default function NotFoundPage() {
-  const particlesRef = useRef(null);
+  const particlesRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   // Generate particle styles once — stable across renders via useMemo if needed

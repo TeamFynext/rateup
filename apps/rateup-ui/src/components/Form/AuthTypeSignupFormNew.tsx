@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconBriefcase, IconSparkles, IconUserPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Briefcase, Sparkles, UserPlus } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,11 +8,13 @@ import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+import type { ICreateGoogleUser } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
 
 import { Card } from "../ui/card.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
 import { Step1, Step2, Step3 } from "./SignupFormNew.tsx";
+import { asSignupForm } from "./SignupFormNew.tsx";
 
 function AuthTypeSignupForm({
   setIsLoading,
@@ -20,6 +22,12 @@ function AuthTypeSignupForm({
   createAppleUserMutation,
   isLoading,
   authType,
+}: {
+  setIsLoading: (loading: boolean) => void;
+  createUserMutation: { mutate: (values: ICreateGoogleUser) => void };
+  createAppleUserMutation: { mutate: (values: ICreateGoogleUser) => void };
+  isLoading: boolean;
+  authType?: string | string[];
 }) {
   const { data: userInfo } = useUserInfo();
   const navigate = useNavigate();
@@ -115,21 +123,21 @@ function AuthTypeSignupForm({
       case 1:
         return (
           <div className="text-primary flex items-center gap-1">
-            <UserPlus size={12} strokeWidth={2.5} />
+            <IconUserPlus size={12} strokeWidth={2.5} />
             <span className="text-xs">Get started</span>
           </div>
         );
       case 2:
         return (
           <div className="text-primary flex items-center gap-1">
-            <Briefcase size={12} strokeWidth={2.5} />
+            <IconBriefcase size={12} strokeWidth={2.5} />
             <span className="text-xs">Your business</span>
           </div>
         );
       case 3:
         return (
           <div className="text-primary flex items-center gap-1">
-            <Sparkles size={12} strokeWidth={2.5} />
+            <IconSparkles size={12} strokeWidth={2.5} />
             <span className="text-xs">Personalize</span>
           </div>
         );
@@ -156,8 +164,8 @@ function AuthTypeSignupForm({
     const referralCode = existingCookie?.split("=")[1];
 
     const data = {
-      name: values?.name,
-      orgName: values?.orgName,
+      name: values?.name ?? "",
+      orgName: values?.orgName ?? "",
       email: values?.email,
       type: authType,
       industry: values?.industry,
@@ -247,14 +255,22 @@ function AuthTypeSignupForm({
               <p className="font-normal text-[11px]">{getStepSubtitle()}</p>
             </div>
             {currentStep === 1 && (
-              <Step1 formData={signupForm} handleNext={handleNext} authType={authType} />
+              <Step1
+                formData={asSignupForm(signupForm)}
+                handleNext={handleNext}
+                authType={authType}
+              />
             )}
             {currentStep === 2 && (
-              <Step2 formData={signupForm} handleBack={handleBack} handleNext={handleNext} />
+              <Step2
+                formData={asSignupForm(signupForm)}
+                handleBack={handleBack}
+                handleNext={handleNext}
+              />
             )}
             {currentStep === 3 && (
               <Step3
-                formData={signupForm}
+                formData={asSignupForm(signupForm)}
                 handleBack={handleBack}
                 handleSubmit={handleSubmit}
                 isLoading={isLoading}

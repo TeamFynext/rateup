@@ -1,4 +1,4 @@
-import { BookOpen, Store } from "lucide-react";
+import { IconBook, IconBuildingStore } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import {
@@ -19,14 +19,14 @@ function StoreSwitcher() {
   return (
     <Select
       value={selectedSettingId}
-      onValueChange={setSelectedSettingId}
+      onValueChange={(value) => setSelectedSettingId(value ?? "")}
       items={waSettings.map((s) => ({
         value: s.id,
         label: s.phoneDisplayName || s.phone || "Unknown",
       }))}
     >
       <SelectTrigger aria-label="Select store" className="w-[200px]">
-        <Store className="size-4 text-muted-foreground" data-icon="inline-start" />
+        <IconBuildingStore className="size-4 text-muted-foreground" data-icon="inline-start" />
         <SelectValue placeholder="Select store" />
       </SelectTrigger>
       <SelectContent>
@@ -47,11 +47,11 @@ function CatalogSwitcher() {
   return (
     <Select
       value={catalogId}
-      onValueChange={setCatalogId}
+      onValueChange={(value) => setCatalogId(value ?? "")}
       items={catalogs.map((c) => ({ value: c.catalogId, label: c.name || c.catalogId }))}
     >
       <SelectTrigger aria-label="Select catalog" className="w-[220px]">
-        <BookOpen className="size-4 text-muted-foreground" data-icon="inline-start" />
+        <IconBook className="size-4 text-muted-foreground" data-icon="inline-start" />
         <SelectValue placeholder="Select catalog" />
       </SelectTrigger>
       <SelectContent>

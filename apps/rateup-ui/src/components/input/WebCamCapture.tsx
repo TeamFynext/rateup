@@ -13,20 +13,20 @@ const videoConstraints = {
 interface WebcamProps {
   height?: string | number;
   width?: string | number;
-  setCapturedImg: any;
-  close;
+  setCapturedImg: (dataUrl: string) => void;
+  close: () => void;
 }
 
 const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: WebcamProps) => {
-  const webcamRef = useRef(null);
-  const [imgSrc, setImgSrc] = useState(null);
+  const webcamRef = useRef<Webcam | null>(null);
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
   const { t: translations } = useTranslation();
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot({
+    const imageSrc = webcamRef.current?.getScreenshot({
       width: 200,
       height: 200,
     });
-    setImgSrc(imageSrc);
+    setImgSrc(imageSrc ?? null);
   }, [webcamRef]);
   return (
     <div className="flex flex-col gap-4">
@@ -50,7 +50,7 @@ const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: We
         )}
         <Button
           onClick={() => {
-            setCapturedImg(imgSrc);
+            setCapturedImg(imgSrc ?? "");
             close();
           }}
         >

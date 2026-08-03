@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { CheckCircle2 } from "lucide-react";
+import { IconCircleCheck } from "@tabler/icons-react";
 import { motion } from "motion/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -54,22 +53,22 @@ const PricingSection = ({ color1, color2 }: Colors) => {
                 "WhatsApp: Single Flow, One Automation, One Campaign with 1000 monthly template messages",
               ].map((item, index) => (
                 <li key={index} className="flex items-center gap-2">
-                  <CheckCircle2 className="text-green-500 w-5 h-5 shrink-0" />
+                  <IconCircleCheck className="text-green-500 w-5 h-5 shrink-0" />
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <Link
-            to="https://rateup.app/login"
+          <a
+            href="https://rateup.app/login"
             style={{ "--c1": color1 || "#1c518e" } as React.CSSProperties}
             className="mt-6 text-center font-semibold py-2 rounded-md border transition
              bg-white text-[var(--c1)] border-[var(--c1)]
              hover:bg-[var(--c1)] hover:text-white"
           >
             Subscribe Now
-          </Link>
+          </a>
         </div>
 
         <div className={sharedStyles}>

@@ -108,6 +108,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   showTooltip?: boolean;
   tooltip?: React.ReactNode;
   shortcutKeys?: string;
+  /** Legacy attributes some call sites still pass instead of `variant`/`size`. */
+  "data-style"?: ButtonProps["variant"];
+  "data-size"?: ButtonProps["size"];
+  "data-appearence"?: string;
 }
 
 const buttonVariants = {
@@ -159,11 +163,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const shortcuts = useMemo<string[]>(() => parseShortcutKeys({ shortcutKeys }), [shortcutKeys]);
 
     // Handle data-style and data-size props from legacy code if passed
-    const finalVariant = (props as any)["data-style"] || variant;
-    const finalSize = (props as any)["data-size"] || size;
+    const finalVariant = props["data-style"] || variant;
+    const finalSize = props["data-size"] || size;
 
     // Map legacy 'subdued' appearance or ghost style to ghost variant
-    const isGhost = finalVariant === "ghost" || (props as any)["data-appearence"] === "subdued";
+    const isGhost = finalVariant === "ghost" || props["data-appearence"] === "subdued";
     const computedVariantClass = isGhost
       ? buttonVariants.ghost
       : buttonVariants[finalVariant as keyof typeof buttonVariants] || buttonVariants.secondary;
@@ -259,7 +263,7 @@ const formatShortcutKey = (key: string, isMac: boolean, capitalize: boolean = tr
   return capitalize ? key.charAt(0).toUpperCase() + key.slice(1) : key;
 };
 function isMac(): boolean {
-  return typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac");
+  return typeof navigator !== "undefined" && /mac/i.test(navigator.userAgent);
 }
 
 export function useTiptapEditor(providedEditor?: Editor | null): {

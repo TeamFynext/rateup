@@ -1,8 +1,12 @@
+import { IconExternalLink, IconShoppingBag } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { ExternalLink, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import type {
+  CatalogOrder,
+  CatalogOrderProduct,
+} from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
@@ -11,7 +15,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Separator } from "@/components/ui/separator.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
-const CatalogOrders = ({ catalogId }) => {
+/** An order row, with the contact's phone and name flattened for sorting and filtering. */
+type CatalogOrderRow = CatalogOrder & { phone: string; name: string };
+
+const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
   const [pagination, setPagination] = useState({
     pageSize: Number(PAGE_SIZE[0]),
     pageIndex: 0,
@@ -23,12 +30,12 @@ const CatalogOrders = ({ catalogId }) => {
     refetch,
     isRefetching,
   } = useWaCatalogOrders(catalogId, pagination);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<CatalogOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const data = useMemo(() => {
+  const data: CatalogOrderRow[] = useMemo(() => {
     return orders
-      ? orders?.data?.map((order) => ({
+      ? orders?.data?.map((order: CatalogOrder) => ({
           ...order,
           phone: order.contact.phone,
           name: order.contact.name,
@@ -36,7 +43,7 @@ const CatalogOrders = ({ catalogId }) => {
       : [];
   }, [orders]);
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<CatalogOrderRow>[] = [
     {
       header: () => "Created At",
       accessorKey: "createdAt",
@@ -64,7 +71,7 @@ const CatalogOrders = ({ catalogId }) => {
           <Button
             variant="ghost"
             onClick={() => {
-              setSelectedOrder(info.getValue());
+              setSelectedOrder(info.row.original);
               setIsModalOpen(true);
             }}
           >
@@ -111,7 +118,7 @@ const CatalogOrders = ({ catalogId }) => {
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline text-sm flex items-center gap-1"
           >
-            Checkout Link <ExternalLink className="w-3 h-3" />
+            Checkout Link <IconExternalLink className="w-3 h-3" />
           </a>
         );
       },
@@ -119,17 +126,23 @@ const CatalogOrders = ({ catalogId }) => {
   ];
 
   const { totalPrice, productItems } = useMemo(() => {
-    let productItems = [];
+    let productItems: Array<{
+      id: string;
+      retailerId: string;
+      quantity: number;
+      price: string;
+      total: string;
+    }> = [];
     let totalPrice = 0;
     if (selectedOrder) {
-      productItems = selectedOrder.products.map((item, idx) => ({
+      productItems = selectedOrder.products.map((item: CatalogOrderProduct, idx: number) => ({
         id: `product-${idx}`,
         retailerId: item.retailerId,
         quantity: item.quantity,
         price: `${item.currency} ${item.price}`,
         total: `${item.currency} ${item.price * item.quantity}`,
       }));
-      selectedOrder.products.forEach((item) => {
+      selectedOrder.products.forEach((item: CatalogOrderProduct) => {
         totalPrice += item.price * item.quantity;
       });
     }
@@ -179,7 +192,7 @@ const CatalogOrders = ({ catalogId }) => {
         <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5" />
+              <IconShoppingBag className="w-5 h-5" />
               Order Details
             </DialogTitle>
           </DialogHeader>

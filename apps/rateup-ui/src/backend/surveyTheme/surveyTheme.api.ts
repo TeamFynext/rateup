@@ -1,6 +1,5 @@
-import type { SurveyTheme } from "@/components/Survey/SurveyTheme/surveyTheme.types";
-
 import { axiosClient } from "../apiClient";
+import type { SurveyTheme } from "./surveyTheme.types";
 
 const THEME_API_PATH = "/surveyTheme";
 
@@ -14,7 +13,13 @@ export const getAllThemes = async () => {
   return response.data;
 };
 
-export const createNewTheme = async ({ name: themeName, surveyId = null }) => {
+export const createNewTheme = async ({
+  name: themeName,
+  surveyId = null,
+}: {
+  name: string;
+  surveyId?: string | null;
+}) => {
   const response = await axiosClient.post(`${THEME_API_PATH}`, {
     themeName,
     surveyId: surveyId,
@@ -44,7 +49,7 @@ export const renameSurveyTheme = async ({
   return response.data;
 };
 
-export const deleteTheme = async (surveyThemeId) => {
+export const deleteTheme = async (surveyThemeId: string) => {
   const response = await axiosClient.delete(`${THEME_API_PATH}/${surveyThemeId}`);
   return response.data;
 };

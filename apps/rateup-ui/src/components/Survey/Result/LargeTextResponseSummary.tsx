@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, Sparkles } from "lucide-react";
+import { IconArrowLeft, IconInfoCircle, IconSparkles } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -45,13 +45,13 @@ const LargeTextResponseSummary = ({
   const getSummary = useGenerateLargeTextResponseSummaryByAI(surveyId);
   const { defaultLanguage } = useContext(SelectedLanguageContext);
   const [summaryTab, setSummaryTab] = useState(ResponseSummaryType.All);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | FormElement | null>(null);
   const { teams } = useContext(SurveyContext);
-  const ref = useRef(null);
-  const [height, setHeight] = useState(null);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [height, setHeight] = useState<number | null>(null);
   const { t: translations } = useTranslation();
 
-  const getResponseSummary = (questionId, teamId?) => {
+  const getResponseSummary = (questionId: string, teamId?: string) => {
     if (getSummary.isPending) return;
     toast.loading("loading", { id: "summary" });
     getSummary.mutate(
@@ -78,7 +78,7 @@ const LargeTextResponseSummary = ({
 
   const LargeTextTeamwiseSummary = () => {
     if (!selectedQuestion) setSummaryTab(ResponseSummaryType.Team);
-    const questionSummary = currentSummary.find((q) => q.questionId === selectedQuestion.id);
+    const questionSummary = currentSummary.find((q) => q.questionId === selectedQuestion?.id);
     const teamWiseSummary = questionSummary?.team;
 
     return (
@@ -90,7 +90,7 @@ const LargeTextResponseSummary = ({
             className="size-8"
             onClick={() => setSummaryTab(ResponseSummaryType.All)}
           >
-            <ArrowLeft className="size-4" />
+            <IconArrowLeft className="size-4" />
           </Button>
           <span className="font-bold text-muted-foreground">{translations("Back")}</span>
         </div>
@@ -99,7 +99,10 @@ const LargeTextResponseSummary = ({
           <p className="font-semibold">
             {version === 1
               ? getReplacedTitleFromVariable({
-                  title: selectedQuestion?.title[defaultLanguage],
+                  title:
+                    selectedQuestion && "title" in selectedQuestion
+                      ? selectedQuestion.title[defaultLanguage]
+                      : undefined,
                   surveyId,
                 })
               : selectedQuestion?.label}
@@ -117,9 +120,11 @@ const LargeTextResponseSummary = ({
                         render={
                           <Button
                             size="sm"
-                            onClick={() => getResponseSummary(selectedQuestion.id, team.value)}
+                            onClick={() =>
+                              getResponseSummary(selectedQuestion?.id ?? "", team.value)
+                            }
                           >
-                            <Sparkles
+                            <IconSparkles
                               className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
                             />
                             {translations("Generate")}
@@ -132,7 +137,9 @@ const LargeTextResponseSummary = ({
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger
-                        render={<Info className="size-4 text-muted-foreground cursor-help" />}
+                        render={
+                          <IconInfoCircle className="size-4 text-muted-foreground cursor-help" />
+                        }
                       />
                       <TooltipContent className="max-w-64">
                         {translations(
@@ -180,7 +187,10 @@ const LargeTextResponseSummary = ({
                         <span className="font-semibold text-sm flex-1">
                           {version === 1
                             ? getReplacedTitleFromVariable({
-                                title: question?.title?.[defaultLanguage],
+                                title:
+                                  "title" in question
+                                    ? question.title?.[defaultLanguage]
+                                    : undefined,
                                 surveyId,
                               })
                             : question?.label}
@@ -188,8 +198,11 @@ const LargeTextResponseSummary = ({
                         <Tooltip>
                           <TooltipTrigger
                             render={
-                              <Button size="sm" onClick={() => getResponseSummary(question.id)}>
-                                <Sparkles
+                              <Button
+                                size="sm"
+                                onClick={() => getResponseSummary(question.id ?? "")}
+                              >
+                                <IconSparkles
                                   className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
                                 />
                                 {translations("Generate")}
@@ -200,7 +213,9 @@ const LargeTextResponseSummary = ({
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger
-                            render={<Info className="size-4 text-muted-foreground cursor-help" />}
+                            render={
+                              <IconInfoCircle className="size-4 text-muted-foreground cursor-help" />
+                            }
                           />
                           <TooltipContent className="max-w-64">
                             {translations(

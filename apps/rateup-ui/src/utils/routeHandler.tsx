@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { fbPageview } from "./fbpixel.ts";
 
-export default function RouteChangeHandler() {
+export default function RouteChangeHandler(): null {
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
   });

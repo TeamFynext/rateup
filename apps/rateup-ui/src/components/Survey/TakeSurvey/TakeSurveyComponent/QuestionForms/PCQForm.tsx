@@ -8,6 +8,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { samplePictureChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
@@ -29,7 +30,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const options: any = selectedQ
+  const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage] && previewChoices?.[selectedLanguage]?.length > 0
       ? previewChoices?.[selectedLanguage]
@@ -44,13 +45,16 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   useEffect(() => {
     if (response) {
-      const val = response.value?.value ?? response.value;
+      const answerValue = asAnswer(response).value;
+      const val = typeof answerValue === "object" ? asAnswer(answerValue).value : answerValue;
       setSelectedOp(typeof val === "string" ? val : "");
     }
   }, [response]);
 
   const handleSelectedOp = async (value: string) => {
-    const res = options?.find((op) => (op?.value?.value ?? op?.value) === value);
+    const res = options?.find(
+      (op: Choice) => ((op?.value as { value?: string })?.value ?? op?.value) === value,
+    );
     updateResponse(res);
     const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
@@ -64,7 +68,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
     publicRoute || isSurveyThemePreview
       ? false
       : !(previewChoices?.[selectedLanguage] && previewChoices?.[selectedLanguage]?.length > 0);
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
 
   return (
     <div ref={scope} className="mr-2 w-full">

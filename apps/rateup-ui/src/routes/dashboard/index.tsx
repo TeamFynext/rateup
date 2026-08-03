@@ -1,8 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getTeamFeatures } from "@/backend/team/team.api";
-import { fetchUserInfo } from "@/backend/user/user.api";
-import { getQueryClient } from "@/components/providers.tsx";
+import { userInfoQuery } from "@/backend/user/user.options";
 import { Loader } from "@/components/ui/loader.tsx";
 import { getDashboardLandingTarget } from "@/utils/dashboard-feature-access.ts";
 import { UserRole } from "@/utils/enums/index.ts";
@@ -22,13 +21,9 @@ async function getMemberAllowedFeatures(teamIds: string[]): Promise<Set<string>>
 
 export const Route = createFileRoute("/dashboard/")({
   ssr: false,
-  loader: async () => {
-    const queryClient = getQueryClient();
-    const userQueryData = await queryClient.fetchQuery({
-      queryKey: ["userInfoQuery"],
-      queryFn: fetchUserInfo,
-      staleTime: 60 * 1000,
-    });
+  loader: async ({ context }) => {
+    const queryClient = context.getQueryClient();
+    const userQueryData = await queryClient.fetchQuery(userInfoQuery());
     const user = userQueryData && "data" in userQueryData ? userQueryData.data : null;
 
     if (!user) {
@@ -57,7 +52,8 @@ export const Route = createFileRoute("/dashboard/")({
     }
 
     throw redirect({
-      to: "/dashboard/inbox?tab=open",
+      to: "/dashboard/inbox",
+      search: { tab: "open" },
       replace: true,
     });
   },

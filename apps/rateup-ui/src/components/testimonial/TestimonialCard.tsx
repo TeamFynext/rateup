@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { IconX } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,11 +7,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar.tsx"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { StarRating } from "@/components/ui/star-rating.tsx";
 import type { Testimonial } from "@/types/global";
+import type { TestimonialStyleType } from "@/types/global";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 interface TestimonialCardInterface {
   readonly testimonial: Omit<Testimonial, "teamId" | "survey">;
-  readonly currentStyle?: any;
+  readonly currentStyle?: TestimonialStyleType | null;
 }
 
 function TestimonialCard({ testimonial, currentStyle = null }: Readonly<TestimonialCardInterface>) {
@@ -92,7 +93,7 @@ function TestimonialCard({ testimonial, currentStyle = null }: Readonly<Testimon
               onClick={() => setOpened(false)}
               className="text-muted-foreground hover:text-foreground"
             >
-              <X className="w-4 h-4" />
+              <IconX className="w-4 h-4" />
             </button>
           </DialogHeader>
 

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createCatalogProductBatch,
   createShopifyProduct,
@@ -12,7 +14,7 @@ import {
   updateCatalogProducts,
 } from "./products.api";
 
-export const useWaCatalogProducts = (catalogId) => {
+export const useWaCatalogProducts = (catalogId: string) => {
   return useQuery({
     queryFn: () => getCatalogProducts(catalogId),
     queryKey: ["catalog_products", catalogId],
@@ -20,10 +22,10 @@ export const useWaCatalogProducts = (catalogId) => {
   });
 };
 
-export const useCreateBatchCatalogProducts = (catalogId) => {
+export const useCreateBatchCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => createCatalogProductBatch(catalogId, data),
+    mutationFn: (data: RequestPayload) => createCatalogProductBatch(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
@@ -31,17 +33,18 @@ export const useCreateBatchCatalogProducts = (catalogId) => {
   });
 };
 
-export const useSyncCatalogProducts = (catalogId) => {
+export const useSyncCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => syncCatalogProducts(catalogId, data),
+    mutationFn: (data: { limit?: number; next?: string } | null) =>
+      syncCatalogProducts(catalogId, data ?? {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
   });
 };
 
-export const useDeletCatalogProducts = (catalogId) => {
+export const useDeletCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { productIds: { id: string; hotel_reatiler_id?: string }[] }) =>
@@ -52,10 +55,10 @@ export const useDeletCatalogProducts = (catalogId) => {
   });
 };
 
-export const useUpdateCatalogProducts = (catalogId) => {
+export const useUpdateCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateCatalogProducts(catalogId, data),
+    mutationFn: (data: RequestPayload) => updateCatalogProducts(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
@@ -75,7 +78,7 @@ export const useShopifyAvailableProducts = (catalogId: string, enabled: boolean)
 export const useImportShopifyProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (items: any[]) => importShopifyProducts(catalogId, items),
+    mutationFn: (items: RequestPayload[]) => importShopifyProducts(catalogId, items),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
       qc.invalidateQueries({

@@ -86,17 +86,22 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     toast.loading(translations("Hold On..Registering webhooks"), {
       id: "webhooks",
     });
-    registerWebhooksmutate.mutate(null, {
+    registerWebhooksmutate.mutate(undefined, {
       onSuccess: () => {
         setIsWebhookEnabled(true);
       },
     });
   };
 
-  async function confirmAndRun(deletionCase, confirmFunc, confirmFuncArgs?, data?) {
+  async function confirmAndRun(
+    deletionCase: string,
+    confirmFunc: (...args: never[]) => void,
+    confirmFuncArgs?: unknown[],
+    data?: { event?: string; [key: string]: unknown },
+  ) {
     const deleteCase = getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs, data);
     const shouldProceed = await confirm({
-      title: deleteCase?.headerTitle,
+      title: deleteCase?.headerTitle ?? "",
       description: deleteCase?.headerLabel,
       warning: deleteCase?.deleteQuotion,
       confirmText: translations(deleteCase?.confirmLabel || "Delete"),
@@ -105,11 +110,11 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
 
     if (!shouldProceed) return;
 
-    if (confirmFuncArgs) confirmFunc(...confirmFuncArgs);
+    if (confirmFuncArgs) confirmFunc(...(confirmFuncArgs as never[]));
     else confirmFunc();
   }
 
-  const handleWebhookRegistration = (isEnabled) => {
+  const handleWebhookRegistration = (isEnabled: boolean) => {
     if (isEnabled) {
       registerWebhooks();
     } else {
@@ -120,7 +125,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
   const handleDeleteAllShopifySurveys = () => {
     const updateData = {
       ...shopifyInfo.credential,
-      shopifySurveys: [],
+      shopifySurveys: [] as unknown[],
     };
     toast.loading(translations("hold on..deleting surveys delivery settings"), {
       id: "integration-update",
@@ -143,7 +148,10 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     updateIntegration.mutate({ credential: updateData });
   };
 
-  const handleChangeWebhookByTopic = (event, isEnabled) => {
+  const handleChangeWebhookByTopic = (
+    event: { label: string; value: ShopifyEvents },
+    isEnabled: boolean,
+  ) => {
     if (isEnabled) {
       toast.loading(translations("Hold On..Registering webhooks"), {
         id: "webhooks",
@@ -156,7 +164,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     }
   };
 
-  const handleDeleteWebhookByTopic = (topic) => {
+  const handleDeleteWebhookByTopic = (topic: ShopifyEvents) => {
     toast.loading(translations("hold on..deleting webhooks"), {
       id: "webhooks",
     });
@@ -302,7 +310,12 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
   );
 };
 
-function getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs?, data?) {
+function getLabelsforConfirmModal(
+  deletionCase: string,
+  confirmFunc: (...args: never[]) => void,
+  confirmFuncArgs?: unknown[],
+  data?: { event?: string; [key: string]: unknown },
+) {
   switch (deletionCase) {
     case "webhooks":
       return {
@@ -342,7 +355,7 @@ function getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs?, d
       };
     case "ShopifyWebhookTopic":
       return {
-        headerTitle: `Disable ${data.event} event`,
+        headerTitle: `Disable ${data?.event} event`,
         headerLabel: "Are you sure to disable this webhook?",
         confirmFunction: confirmFunc,
         confirmFuncArgs,

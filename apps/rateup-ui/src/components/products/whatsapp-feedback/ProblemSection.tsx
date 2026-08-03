@@ -17,7 +17,7 @@ const XIcon = () => (
 
 const cards = [
   {
-    icon: (color) => (
+    icon: (color: string) => (
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -36,7 +36,7 @@ const cards = [
     delay: "1",
   },
   {
-    icon: (color) => (
+    icon: (color: string) => (
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -54,7 +54,7 @@ const cards = [
     delay: "2",
   },
   {
-    icon: (color) => (
+    icon: (color: string) => (
       <svg
         viewBox="0 0 24 24"
         fill="none"

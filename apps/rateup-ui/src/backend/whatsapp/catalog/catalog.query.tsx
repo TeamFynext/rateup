@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
+import type { CatalogSettings } from "./catalog.api";
 import {
   createCatalogAddressFlow,
   deleteWaCatalog,
@@ -23,7 +27,7 @@ export const useDeleteWaCatalog = () => {
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
       toast.success("Catalog deleted");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to delete catalog");
     },
   });
@@ -56,21 +60,21 @@ export const useSyncConnectedCatalog = () => {
         toast.success("Connected catalog synced successfully");
       }
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to sync connected catalog");
     },
   });
 };
 
-export const useUpateCatalog = (catalogId) => {
+export const useUpateCatalog = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateWaCatalog(catalogId, data),
+    mutationFn: (data: RequestPayload) => updateWaCatalog(catalogId, data),
     onSuccess: () => {
       toast.success("updated");
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
     },
     onError: (error) => {
       toast.error(error?.message || "Connection failed");
@@ -78,14 +82,14 @@ export const useUpateCatalog = (catalogId) => {
   });
 };
 
-export const useDisconnectCatalogFromWa = (catalogId) => {
+export const useDisconnectCatalogFromWa = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: disconnectCatalogFromWaba,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
-      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.settings() });
       toast.success("disconnected");
     },
     onError: (error) => {
@@ -94,7 +98,7 @@ export const useDisconnectCatalogFromWa = (catalogId) => {
   });
 };
 
-export const useWaCatalog = (catalogId) => {
+export const useWaCatalog = (catalogId: string) => {
   return useQuery({
     queryFn: () => getWaCatalogById(catalogId),
     queryKey: ["WaCatalog", catalogId],
@@ -108,9 +112,9 @@ export const useAllWaCatalogs = () => {
     queryKey: ["allWaCatalog"],
   });
 };
-export const useConnectedWaCatalog = (whatsappSettingsPhoneId) => {
+export const useConnectedWaCatalog = (whatsappSettingsPhoneId: string | undefined) => {
   return useQuery({
-    queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId),
+    queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId ?? ""),
     queryKey: ["connected_catalog", whatsappSettingsPhoneId],
     enabled: !!whatsappSettingsPhoneId,
   });
@@ -130,12 +134,12 @@ export const useCatalogSettings = (catalogId: string, pollingEnabled = false) =>
 export const useUpdateCatalogSettings = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateCatalogSettings(catalogId, data),
+    mutationFn: (data: Partial<CatalogSettings>) => updateCatalogSettings(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
       toast.success("Settings saved");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to save settings");
     },
   });
@@ -144,13 +148,13 @@ export const useUpdateCatalogSettings = (catalogId: string) => {
 export const useCreateAddressFlow = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ json, map }: { json?: any; map?: any } = {}) =>
+    mutationFn: ({ json, map }: { json?: RequestPayload; map?: RequestPayload } = {}) =>
       createCatalogAddressFlow(catalogId, json, map),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
       toast.success("Address flow submitted to Meta for review!");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to create address flow");
     },
   });

@@ -7,10 +7,16 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import useContactStore, { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { contactKeys } from "@/backend/campaign/contacts/contacts.keys";
+import { notificationKeys } from "@/backend/notification/notification.keys";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import useContactStore, { useContactsStore } from "@/store/inbox.store.ts";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { AssignInboxResult } from "./wamessage.api";
+import type { WaMessageLogFilter } from "./wamessage.api";
 import {
   assignInboxToUser,
   blockWhatsAppUser,
@@ -47,7 +53,7 @@ export const useGetMessagesByContactId = (
   return useInfiniteQuery({
     // conversationId is part of the key so two tickets of the same contact are
     // cached (and fetched) separately.
-    queryKey: ["wa-messages", contactId, selectedPhone, conversationId ?? null],
+    queryKey: whatsappKeys.messagesByConversation(contactId, selectedPhone, conversationId ?? null),
     initialPageParam: "",
     placeholderData: { pages: [], pageParams: [] },
     queryFn: ({ pageParam }) =>
@@ -62,22 +68,22 @@ export const useGetMessagesByContactId = (
 };
 
 export const useSendNewWaMessage = (
-  contactId: string,
-  teamId: string | null,
-  whatsappSettingsPhoneId: string,
+  contactId: string | undefined,
+  teamId: string | null | undefined,
+  whatsappSettingsPhoneId: string | undefined,
   platform = MessagePlatform.WHATSAPP,
 ) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (message: any) =>
-      sendNewWaMessage(contactId, {
+    mutationFn: (message: RequestPayloadFields) =>
+      sendNewWaMessage(contactId ?? "", {
         ...message,
         whatsappSettingsPhoneId,
         platform,
         teamId,
       }),
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
     },
     onError: (error) => {
       console.error("Error sending message", error);
@@ -87,7 +93,7 @@ export const useSendNewWaMessage = (
 
 export const useFilteredContacts = (filterData: string, isEnabled: boolean) => {
   return useInfiniteQuery({
-    queryKey: ["contacts", "filtered", filterData],
+    queryKey: contactKeys.filteredBy(filterData),
     initialPageParam: 1,
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
@@ -159,7 +165,7 @@ function followAssignmentToItsTicket(result: AssignInboxResult, contactId: strin
   });
 }
 
-export const useAssignInboxToUer = (_contactId, filterData) => {
+export const useAssignInboxToUer = (_contactId: string, filterData: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
@@ -167,11 +173,11 @@ export const useAssignInboxToUer = (_contactId, filterData) => {
       // Runs before the caller's own onSuccess, so their `updateContactById`
       // lands on the ticket the assignment actually went to.
       followAssignmentToItsTicket(result, variables.contactId);
-      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
-      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      qc.invalidateQueries({ queryKey: ["notification"] });
-      qc.invalidateQueries({ queryKey: ["notificationCount"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.assignedInboxUser() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: notificationKeys.all() });
+      qc.invalidateQueries({ queryKey: notificationKeys.count() });
       toast.success("Assigned successfully");
     },
     onError: (e) => {
@@ -191,10 +197,10 @@ export const useReopenConversation = (filterData?: string) => {
     mutationFn: reopenConversation,
     onSuccess: (result, variables) => {
       followAssignmentToItsTicket(result, variables.contactId);
-      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
-      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      qc.invalidateQueries({ queryKey: ["wa-messages", variables.contactId] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.assignedInboxUser() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(variables.contactId) });
       toast.success("Ticket reopened");
     },
     onError: (e) => {
@@ -208,30 +214,30 @@ export const useBulkAssignInboxToUser = (filterData?: string) => {
   return useMutation({
     mutationFn: bulkAssignInboxToUser,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: whatsappKeys.assignedInboxUser() });
       qc.invalidateQueries({
-        queryKey: ["contacts", "filtered", filterData],
+        queryKey: contactKeys.filteredBy(filterData),
       });
       qc.invalidateQueries({
-        queryKey: ["contactInboxCount"],
+        queryKey: contactKeys.inboxCount(),
       });
       qc.invalidateQueries({
-        queryKey: ["notification"],
+        queryKey: notificationKeys.all(),
       });
       qc.invalidateQueries({
-        queryKey: ["notificationCount"],
+        queryKey: notificationKeys.count(),
       });
       toast.success("Chats assigned successfully");
     },
-    onError: (e: any) => {
+    onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
     },
   });
 };
 
-export const useGetAssignedUserForContact = (contactId) => {
+export const useGetAssignedUserForContact = (contactId: string) => {
   return useQuery({
-    queryKey: ["assignedInboxUser", contactId],
+    queryKey: whatsappKeys.assignedInboxUserByContact(contactId),
     queryFn: () => getAssignedUserForContact(contactId),
     enabled: !!contactId,
   });
@@ -239,13 +245,13 @@ export const useGetAssignedUserForContact = (contactId) => {
 
 export const useGetInboxUserCount = (enabled: boolean) => {
   return useQuery({
-    queryKey: ["contactInboxCount"],
+    queryKey: contactKeys.inboxCount(),
     queryFn: getInboxUserCount,
     enabled,
   });
 };
 
-export const useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
+export const useMarkWaMessagesAsRead = (contactId: string, _filterData?: string) => {
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
@@ -273,8 +279,8 @@ export const useToggleFavorite = () => {
           selectedContact: { ...selectedContact, isFavorite: variables.isFavorite },
         });
       }
-      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
     },
     onError: () => toast.error("Could not update favourite"),
   });
@@ -313,8 +319,8 @@ export const useSetContactSpam = () => {
             : {}),
         }));
       }
-      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
       toast.success(variables.isSpam ? "Contact marked as spam" : "Contact removed from spam");
     },
     onError: () => toast.error("Could not update spam"),
@@ -340,8 +346,8 @@ export const useClearMention = () => {
           selectedContact: { ...selectedContact, mentionCount: 0 },
         });
       }
-      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
     },
     onError: () => toast.error("Could not clear mention"),
   });
@@ -360,11 +366,11 @@ export const useEditConversation = () => {
       subject?: string | null;
       description?: string | null;
     }) => updateConversation(conversationId, data),
-    onSuccess: (res: any, variables) => {
+    onSuccess: (res, variables) => {
       // Prefer what the server actually stored; fall back to what we sent.
       const subject = res?.subject !== undefined ? res.subject : variables.subject;
       const description = res?.description !== undefined ? res.description : variables.description;
-      const patch = (c) => ({
+      const patch = (c: ContactWithUpdatedAt): ContactWithUpdatedAt => ({
         ...c,
         ...(subject !== undefined ? { ticketSubject: subject } : {}),
         ...(description !== undefined ? { ticketDescription: description } : {}),
@@ -387,7 +393,7 @@ export const useEditConversation = () => {
       }
 
       toast.success("Ticket updated");
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
       // The history strip lists sibling tickets by subject, so it has to refresh
       // too — otherwise a renamed ticket keeps its old title there.
       const contactId = fresh?.id ?? store.contactsById.get(variables.conversationId)?.id;
@@ -419,7 +425,7 @@ export const useBlockWhatsAppUser = () => {
     mutationFn: blockWhatsAppUser,
     onSuccess: () => {
       toast.success("User blocked successfully");
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
     },
     onError: (error) => {
       toast.error(error?.message || "Unable to block users");
@@ -427,13 +433,13 @@ export const useBlockWhatsAppUser = () => {
   });
 };
 
-export const useUnBlockWhatsAppUser = (filterData) => {
+export const useUnBlockWhatsAppUser = (filterData: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: unblockWhatsAppUser,
     onSuccess: () => {
       toast.success("User unblocked successfully");
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
     },
     onError: (error) => {
       toast.error(error?.message || "Unable to unblock users");
@@ -474,11 +480,11 @@ export function useGenerateInboxResponse() {
     mutationFn: generateInboxResponse,
     onSuccess: (_response) => {
       queryClient.invalidateQueries({
-        queryKey: ["wa-messages"],
+        queryKey: whatsappKeys.messages(),
         exact: false,
       });
       queryClient.invalidateQueries({
-        queryKey: ["contacts", "filtered"],
+        queryKey: contactKeys.filtered(),
         exact: false,
       });
       toast.success("Response generated successfully", {
@@ -494,16 +500,16 @@ export function useGenerateInboxResponse() {
 }
 
 interface CreatePrivateMessageVariables {
-  data: any;
+  data: RequestPayload;
 }
 
-export function useCreatePrivateMessage(contactId) {
+export function useCreatePrivateMessage(contactId: string) {
   return useMutation({
     mutationFn: ({ data }: CreatePrivateMessageVariables) => createPrivateMessage(contactId, data),
   });
 }
 
-export function useWaMessageLogs(filter) {
+export function useWaMessageLogs(filter: WaMessageLogFilter) {
   return useQuery({
     queryKey: [
       "wa-message-logs",
@@ -538,7 +544,7 @@ export const useExportWaMessageLogs = () => {
         id: "export-logs",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error exporting logs", error);
       toast.error(error?.message || "Error exporting logs", {
         id: "export-logs",

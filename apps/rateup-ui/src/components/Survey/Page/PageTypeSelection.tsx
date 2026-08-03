@@ -8,7 +8,17 @@ import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { ElementGroupTitle, ElementTypeChip } from "../Question/QuestionTypeSelection.tsx";
 
-const PageTypeSelection = ({ handleTypeSelection, questions, subscription, query = "" }) => {
+const PageTypeSelection = ({
+  handleTypeSelection,
+  questions,
+  subscription,
+  query = "",
+}: {
+  handleTypeSelection: (type: PageType) => void;
+  questions: Question[];
+  subscription: Subscription;
+  query?: string;
+}) => {
   const { t: translations } = useTranslation();
 
   const needle = query.trim().toLowerCase();

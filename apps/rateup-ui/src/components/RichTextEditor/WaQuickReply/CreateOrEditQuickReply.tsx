@@ -1,12 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconTypography } from "@tabler/icons-react";
 import { EditorContent } from "@tiptap/react";
-import { TypeOutline } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import {
   useCreateWaQuickReply,
   useUpdateReply,
@@ -56,7 +57,7 @@ const CreateOrEditQuickReply = ({
   setOpen,
 }: {
   isEdit?: boolean;
-  reply?: any;
+  reply?: QuickReply | null;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
@@ -96,7 +97,7 @@ const CreateOrEditQuickReply = ({
     const payload = { ...values, text: JSON.stringify(values.text) };
     if (isEdit) {
       update.mutate(
-        { id: reply.id, data: payload },
+        { id: reply?.id ?? "", data: payload },
         {
           onSuccess: () => {
             toast.success("Quick reply Updated");
@@ -205,7 +206,7 @@ const CreateOrEditQuickReply = ({
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
                     <div className="flex-1">
-                      <ToolbarProvider editor={textEditor}>
+                      <ToolbarProvider editor={textEditor!}>
                         <TooltipProvider>
                           <EditorContent
                             editor={textEditor}
@@ -232,7 +233,7 @@ const CreateOrEditQuickReply = ({
                                   className="h-8 w-8 p-0"
                                   title="Format"
                                 >
-                                  <TypeOutline className="h-5 w-5" />
+                                  <IconTypography className="h-5 w-5" />
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-full">

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useContext, useEffect, useRef, useState } from "react";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -8,13 +9,14 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { sampleChoices } from "@/utils/constants/forms.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
-  features?: Record<string, any>;
+  features?: Record<string, QuestionFormFeatures>;
 }
 
 export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
@@ -27,7 +29,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] = useState(false);
 
   const themePrimaryColor = useThemePrimaryColor();
-  const otherInputContainerRef = useRef(null);
+  const otherInputContainerRef = useRef<HTMLDivElement | null>(null);
   const otherInputRef = useRef<HTMLInputElement>(null);
 
   const [scope, animate] = useAnimate();
@@ -35,29 +37,29 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const bDivRef = useRef(null);
+  const bDivRef = useRef<HTMLDivElement | null>(null);
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
 
-  const data = options?.map((op) => op?.value);
+  const data = options?.map((op: Choice) => op?.value);
 
   useEffect(() => {
     if (response) {
-      if (response?.value) {
-        if (selectedOp !== response?.value) setSelectedOp(response.value);
-      } else if (response?.other) {
-        setSelectedOp(selectedFeature?.other?.title);
+      if (asAnswer(response).value) {
+        if (selectedOp !== asAnswer(response).value) setSelectedOp(asAnswer(response).value ?? "");
+      } else if (asAnswer(response).other) {
+        setSelectedOp(selectedFeature?.other?.title ?? "");
       }
     }
   }, [response]);
 
-  const handleSelectedOp = async (value) => {
+  const handleSelectedOp = async (value: string) => {
     setSelectedOp(value);
     if (value !== selectedFeature?.other?.title) {
-      const res = options?.find((op) => op?.value === value);
+      const res = options?.find((op: Choice) => op?.value === value);
       updateResponse(res);
       const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
@@ -73,7 +75,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   useEffect(() => {
     if (selectedOp === selectedFeature?.other?.title && otherInputContainerRef.current) {
-      bDivRef.current.scrollIntoView({ behavior: "smooth" });
+      bDivRef.current?.scrollIntoView({ behavior: "smooth" });
     } else if (isOtherInputFocusTrapActive) {
       setIsOtherInputFocusTrapActive(false);
     }
@@ -88,7 +90,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   if (selectedFeature?.other?.isEnabled) {
     data.push(selectedFeature?.other?.title);
   } else {
-    data?.filter((op) => op !== selectedFeature?.other?.title);
+    data?.filter((op: unknown) => op !== selectedFeature?.other?.title);
   }
 
   return (
@@ -110,7 +112,13 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
             key={"other-option-input"}
             ref={otherInputContainerRef}
             onAnimationComplete={(defObj) => {
-              if (otherInputContainerRef.current && defObj["x"] === 0) {
+              // The definition is this element's own target object, `{ x: … }`.
+              if (
+                otherInputContainerRef.current &&
+                typeof defObj === "object" &&
+                "x" in defObj &&
+                defObj.x === 0
+              ) {
                 setIsOtherInputFocusTrapActive(true);
               }
             }}
@@ -122,7 +130,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
               <Input
                 ref={otherInputRef}
                 placeholder={selectedFeature?.other?.placeholder}
-                value={response?.other || ""}
+                value={asAnswer(response).other || ""}
                 onChange={(e) =>
                   !e.target.value?.length
                     ? updateResponse(null)

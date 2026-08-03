@@ -7,25 +7,25 @@ import { getQuestionForm } from "./util.tsx";
 
 function QuestionForm() {
   const { selectedQ, alignment } = useContext(SelectedQContext);
-  const { type } = selectedQ;
+  const type = selectedQ?.type;
   return (
     <div className="flex gap-4" style={{ justifyContent: getFormAlignment(alignment) }}>
       {(() => {
-        if (type in PageType) {
+        if (!type || type in PageType) {
           return <></>;
         }
         switch (type) {
           case Q.Date:
-            return getQuestionForm(type, selectedQ);
+            return getQuestionForm(type, selectedQ!);
           default:
-            return getQuestionForm(type, selectedQ);
+            return getQuestionForm(type, selectedQ!);
         }
       })()}
     </div>
   );
 }
 
-function getFormAlignment(alignment) {
+function getFormAlignment(alignment: string) {
   if (!alignment) return "flex-start";
   switch (alignment) {
     case "left":

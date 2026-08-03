@@ -10,7 +10,15 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
 
-export default function Page({ survey, error_occured, fromShortUrl = false }) {
+export default function Page({
+  survey,
+  error_occured,
+  fromShortUrl = false,
+}: {
+  survey: Survey | null;
+  error_occured?: boolean;
+  fromShortUrl?: boolean;
+}) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
   const { t: translations } = useTranslation();
@@ -70,14 +78,14 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
     <>
       {isReviewPage ? (
         <GoogleReview
-          orgLogoUrl={survey?.webSurveyTheme?.surveyTheme?.logo?.logo}
+          orgLogoUrl={survey?.webSurveyTheme?.theme?.surveyTheme?.logo?.logo ?? undefined}
           survey={survey}
           surveyTeamMapId={survey?.surveyTeamMapId}
         />
       ) : (
         <TakeSurveyLayoutWeb survey={survey}>
           <TakeSurvey
-            survey={survey}
+            survey={survey!}
             setIsReviewPage={setIsReviewPage}
             fromShortUrl={fromShortUrl}
           />

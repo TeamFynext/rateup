@@ -1,4 +1,4 @@
-import { CircleCheck, Users } from "lucide-react";
+import { IconCircleCheck, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -18,7 +18,17 @@ import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
-const ApplyLifecycletoContactsModal = ({ opened, setOpened, contactIds, onSuccess = null }) => {
+const ApplyLifecycletoContactsModal = ({
+  opened,
+  setOpened,
+  contactIds,
+  onSuccess = null,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  contactIds: string[];
+  onSuccess?: (() => void) | null;
+}) => {
   const { t } = useTranslation();
   const [lifecycleId, setLifecycleId] = useState("");
   const update = useUpdateLifecycleofMultipleContacts();
@@ -51,7 +61,7 @@ const ApplyLifecycletoContactsModal = ({ opened, setOpened, contactIds, onSucces
           <DialogDescription>{t("Update Lifecycle Stage of Contacts")}</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 text-muted-foreground">
-          <Users className="w-5 h-5" />{" "}
+          <IconUsers className="w-5 h-5" />{" "}
           <span>
             {contactIds.length} {t("contacts selected")}
           </span>
@@ -65,7 +75,7 @@ const ApplyLifecycletoContactsModal = ({ opened, setOpened, contactIds, onSucces
             {t("Cancel")}
           </Button>
           <Button onClick={handleUpdateLifecycleStage}>
-            {update.isPending ? <Spinner /> : <CircleCheck />}
+            {update.isPending ? <Spinner /> : <IconCircleCheck />}
             {t("Update")}
           </Button>
         </DialogFooter>

@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import React from "react";
+import type { ComponentType, ReactNode } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -32,7 +33,17 @@ const TIME_PERIODS = [
   { label: "Weekly", value: "weekly" },
 ];
 
-const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoading }) => {
+const OverallResponseGraphWebForm = ({
+  data,
+  timePeriod,
+  setTimePeriod,
+  isLoading,
+}: {
+  data: Array<Record<string, unknown>> | undefined;
+  timePeriod: string;
+  setTimePeriod: (period: string) => void;
+  isLoading: boolean;
+}) => {
   if (isLoading) {
     return <div className="w-full h-100 animate-pulse bg-gray-100 rounded-xl" />;
   }
@@ -63,7 +74,7 @@ const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoadin
           <Select
             items={TIME_PERIODS}
             value={timePeriod}
-            onValueChange={(val) => setTimePeriod(val)}
+            onValueChange={(val) => setTimePeriod(val ?? "")}
           >
             <SelectTrigger size="sm" className="w-30">
               <SelectValue placeholder="Select" />
@@ -126,19 +137,39 @@ const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoadin
   );
 };
 
+/**
+ * One point of the happiness-journey series. Recharts hands the tooltip the raw datum it was
+ * given, so these are the fields `data` carries; every one is read defensively because the
+ * series is assembled per time period.
+ */
+interface HappinessDatum {
+  date?: string;
+  total?: number;
+  promoters?: number;
+  passives?: number;
+  detractors?: number;
+  npsScore?: number;
+  avgNPSRating?: number;
+  happinessIndex?: number;
+}
+
+/**
+ * `active`/`payload`/`label` are injected by recharts' `<Tooltip content={...} />`, which is why
+ * they are optional here — only `timePeriod` is passed at the call site.
+ */
 const CustomTooltip = ({
   active,
   payload,
   label,
   timePeriod,
 }: {
-  active?: any;
-  payload?: any;
-  label?: any;
-  timePeriod?: any;
+  active?: boolean;
+  payload?: Array<{ dataKey?: string | number; payload: HappinessDatum }>;
+  label?: string | number;
+  timePeriod?: string;
 }) => {
   if (active && payload && payload.length) {
-    const d = payload.find((p: any) => p.dataKey === "date")?.payload || payload[0].payload;
+    const d = payload.find((p) => p.dataKey === "date")?.payload || payload[0].payload;
 
     const labelFormatted =
       timePeriod === "hourly"
@@ -194,7 +225,15 @@ const CustomTooltip = ({
   return null;
 };
 
-const Metric = ({ label, icon: Icon, value }) => (
+const Metric = ({
+  label,
+  icon: Icon,
+  value,
+}: {
+  label: string;
+  icon: ComponentType<{ className?: string; size?: number }>;
+  value: ReactNode;
+}) => (
   <div className="flex justify-between items-center gap-2">
     <div className="flex items-center gap-2 text-blue-600">
       <Icon size={18} className="text-blue-500" />
@@ -204,7 +243,15 @@ const Metric = ({ label, icon: Icon, value }) => (
   </div>
 );
 
-const Breakdown = ({ label, value, color }) => {
+const Breakdown = ({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: ReactNode;
+  color: "green" | "yellow" | "red";
+}) => {
   const colorMap = {
     green: "text-green-600 bg-green-500",
     yellow: "text-yellow-600 bg-yellow-400",

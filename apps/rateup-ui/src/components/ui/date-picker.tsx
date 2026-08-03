@@ -10,7 +10,8 @@ export function DatePicker({
   className,
 }: Readonly<{
   value?: Date;
-  onChange?: (date: Date) => void;
+  /** `undefined` when the user clears the selection. */
+  onChange?: (date: Date | undefined) => void;
   className?: string;
 }>) {
   const [open, setOpen] = React.useState(false);

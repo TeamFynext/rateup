@@ -1,16 +1,25 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import {
+  IconBolt,
+  IconBrandWhatsapp,
+  IconBuilding,
+  IconCheck,
+  IconClipboardList,
+  IconSparkles,
+  IconX,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Building, Check, ClipboardList, Sparkles, X, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import React, { useState } from "react";
 
 import { useCompleteOrgDetails, useOrgNameAndPhone } from "@/backend/org/org.query";
+import { userKeys } from "@/backend/user/user.keys";
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "@/components/ui/card.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
+import type { OnboardingFormData } from "./onboarding-types.ts";
 import OnboardingStep1 from "./Onboarding1.tsx";
 import OnboardingStep2 from "./Onboarding2.tsx";
 import OnboardingStep4 from "./Onboarding4.tsx";
@@ -19,11 +28,11 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: info, isLoading } = useOrgNameAndPhone();
-  const [formData, setFormData] = useState({
-    services: [] as string[],
+  const [formData, setFormData] = useState<OnboardingFormData>({
+    services: [],
     industry: "",
     selectedTemplate: "",
-    integrationsSelected: [] as string[],
+    integrationsSelected: [],
   });
 
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -49,10 +58,10 @@ export default function OnboardingWizard() {
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({
-            queryKey: ["userInfoQuery"],
+            queryKey: userKeys.info(),
           });
           await queryClient.refetchQueries({
-            queryKey: ["userInfoQuery"],
+            queryKey: userKeys.info(),
           });
 
           const data = localStorage.getItem("subscriptionRoutAndCart");
@@ -89,19 +98,19 @@ export default function OnboardingWizard() {
     {
       id: 1,
       title: "Select Services",
-      icon: ClipboardList,
+      icon: IconClipboardList,
       description: "Choose your tools",
     },
     {
       id: 2,
       title: "Select Your Industry",
-      icon: Building,
+      icon: IconBuilding,
       description: "Tell us about your business",
     },
     {
       id: 3,
       title: "Select Integrations",
-      icon: Zap,
+      icon: IconBolt,
       description: "Connect channels",
     },
   ];
@@ -152,7 +161,7 @@ export default function OnboardingWizard() {
                 onClick={() => setActiveIntegration(null)}
                 className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
               >
-                <X className="w-5 h-5" />
+                <IconX className="w-5 h-5" />
               </button>
               {activeIntegration === "whatsapp" && <ChannelDetailsPage />}
             </motion.div>
@@ -176,7 +185,7 @@ export default function OnboardingWizard() {
             className="text-center flex flex-col gap-1 items-center justify-center"
           >
             <div className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-100 to-purple-100 border border-blue-200/60 rounded-full px-3 py-1 shadow-sm backdrop-blur-sm mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <IconSparkles className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-blue-700 text-sm">Setup Guide</span>
             </div>
             <h1 className="text-gray-900 text-sm">
@@ -242,7 +251,7 @@ export default function OnboardingWizard() {
                                 damping: 25,
                               }}
                             >
-                              <Check className="w-4 h-4 text-white" />
+                              <IconCheck className="w-4 h-4 text-white" />
                             </motion.div>
                           ) : (
                             <step.icon

@@ -2,6 +2,7 @@ import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
 import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -22,13 +23,13 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
-interface DataTableRowActionsProps<TData> {
+interface DataTableRowActionsProps {
   row: {
-    original: TData;
+    original: CustomFieldData;
   };
 }
 
-export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActionsProps<TData>>) {
+export function DataTableRowActions({ row }: Readonly<DataTableRowActionsProps>) {
   const deleteCustomFieldMutation = useDeleteCustomFieldMutation();
   const { t } = useTranslation();
   const confirm = useConfirm();
@@ -44,7 +45,7 @@ export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActions
 
     if (!confirmed) return;
 
-    deleteCustomFieldMutation.mutate((row.original as any)?.id);
+    deleteCustomFieldMutation.mutate(row.original?.id);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -82,7 +83,15 @@ export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActions
   );
 }
 
-const EditCustomFieldModal = ({ opened, setOpened, customField }) => {
+const EditCustomFieldModal = ({
+  opened,
+  setOpened,
+  customField,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  customField: CustomFieldData;
+}) => {
   const { t } = useTranslation();
 
   return (

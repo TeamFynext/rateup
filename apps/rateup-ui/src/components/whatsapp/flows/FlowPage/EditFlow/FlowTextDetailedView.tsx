@@ -29,24 +29,32 @@ import {
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 
+/** The text element's editable properties. `fontWeight` is stored as `font-weight` on the element. */
+interface FlowTextFormValues {
+  text: string;
+  type: WaFlowFormElementType;
+  fontWeight: string;
+  strikethrough: boolean;
+}
+
 export function FlowTextDetailedView() {
   const uid = useId();
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
-  const [nonInputTextType, setNonInputTextType] = useState(
-    selectedFormElement.type === WaFlowFormElementType.nonInputText
+  const [nonInputTextType, setNonInputTextType] = useState<WaFlowFormElementType>(
+    selectedFormElement?.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
-      : selectedFormElement.type,
+      : (selectedFormElement?.type ?? WaFlowFormElementType.textHeading),
   );
   const { t: translations } = useTranslation();
 
-  const form = useForm<any>({
+  const form = useForm<FlowTextFormValues>({
     defaultValues: {
-      text: selectedFormElement.text || "",
+      text: selectedFormElement?.text || "",
       type: nonInputTextType,
-      fontWeight: selectedFormElement["font-weight"] || "normal",
-      strikethrough: selectedFormElement.strikethrough || false,
+      fontWeight: selectedFormElement?.["font-weight"] || "normal",
+      strikethrough: selectedFormElement?.strikethrough || false,
     },
   });
 
@@ -76,18 +84,18 @@ export function FlowTextDetailedView() {
     }
     form.clearErrors("text");
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
+    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl.children[index].text = values.text;
+      formEl!.children[index].text = values.text;
       if (textDecoration) {
-        formEl.children[index]["font-weight"] = values.fontWeight;
-        formEl.children[index].strikethrough = values.strikethrough;
+        formEl!.children[index]["font-weight"] = values.fontWeight;
+        formEl!.children[index].strikethrough = values.strikethrough;
       } else {
-        delete formEl.children[index]["font-weight"];
-        delete formEl.children[index].strikethrough;
+        delete formEl?.children[index]["font-weight"];
+        delete formEl?.children[index].strikethrough;
       }
-      formEl.children[index].type = nonInputTextType;
+      formEl!.children[index].type = nonInputTextType;
     });
   }
 
@@ -97,7 +105,7 @@ export function FlowTextDetailedView() {
   }, [textValue, fontWeight, strikethrough]);
 
   const fontStyle: React.CSSProperties = {
-    fontSize: textFontSize[nonInputTextType],
+    fontSize: textFontSize[nonInputTextType as keyof typeof textFontSize],
     fontWeight: textDecoration ? "inherit" : 800,
     ...getTextStyle(fontWeight, textDecoration),
     textDecoration: textDecoration && strikethrough ? "line-through" : "none",
@@ -109,7 +117,7 @@ export function FlowTextDetailedView() {
         <div className="flex justify-between">
           <Select
             value={nonInputTextType}
-            onValueChange={(v) => setNonInputTextType(v as any)}
+            onValueChange={(v) => v && setNonInputTextType(v)}
             items={TEXT_TYPE_OPTIONS(translations)}
           >
             <SelectTrigger>

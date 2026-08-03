@@ -10,7 +10,7 @@ export const Route = createFileRoute("/(public-facing)/qr/$shortId/")({
   component: GenerateQrRedirectionPage,
 });
 
-function GenerateQrRedirectionPage() {
+function GenerateQrRedirectionPage(): null {
   const params = useParams({
     strict: false,
   });

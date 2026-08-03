@@ -49,7 +49,15 @@ const customPlatformSchema = z.object({
 });
 type CustomPlatformFormValues = z.infer<typeof customPlatformSchema>;
 
-function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
+function QuestionReviewPageEditor({
+  selectedQ,
+  survey,
+  setActiveTab,
+}: {
+  selectedQ: Question;
+  survey: Survey;
+  setActiveTab: (tab: QuestionTabsEnum) => void;
+}) {
   const [state, setState] = useState(selectedQ?.reviewPageOptions);
   const [reviewPagePlatformDDState, setReviewPageDDState] = useState(selectedQ?.reviewPagePlatform);
   const [isSwitchStateSaving, setIsSwitchStateSaving] = useState(false);
@@ -62,7 +70,9 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   const { t: translations } = useTranslation();
 
   const { data: teamsRes } = useTeamsByUser();
-  const teamsToDisplay = teamsRes?.data?.filter((t) => survey?.teams.some((st) => st.id === t.id));
+  const teamsToDisplay = teamsRes?.data?.filter((t: { id: string }) =>
+    survey?.teams.some((st) => st.id === t.id),
+  );
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId: survey?.id,
@@ -96,7 +106,14 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
           "Kiosk mode has been turned off automatically as the review page is enabled.",
         );
       }
-      const data = { reviewPageOptions: {} };
+      const data: {
+        reviewPageOptions: {
+          minRating?: number;
+          minOpinion?: number;
+          reqOptions?: string[];
+        };
+        reviewPagePlatform?: ReviewPagePlatform;
+      } = { reviewPageOptions: {} };
       if (selectedQ.type === QuestionType.Rating) {
         data["reviewPageOptions"]["minRating"] = 3;
       } else if (selectedQ.type === QuestionType.Opinion) {
@@ -131,7 +148,10 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     setState(selectedQ?.reviewPageOptions);
     setReviewPageDDState(selectedQ?.reviewPagePlatform);
     if (selectedQ?.reviewPagePlatform === ReviewPagePlatform.Custom) {
-      customPlatformForm.setValue("platformName", selectedQ?.reviewPageOptions?.customPlatformName);
+      customPlatformForm.setValue(
+        "platformName",
+        selectedQ?.reviewPageOptions?.customPlatformName ?? "",
+      );
     } else {
       customPlatformForm.reset();
     }
@@ -149,7 +169,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   }, [reviewPagePlatformDDState]);
 
   const handleSave = async () => {
-    if (teamsToDisplay.some((team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState])) {
+    if (teamsToDisplay?.some((team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState])) {
       toast.error("Please enter review page link for all teams.");
       return;
     }
@@ -162,7 +182,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     try {
       setIsSwitchStateSaving(true);
       const data = {
-        reviewPageOptions: state,
+        reviewPageOptions: { ...state },
         reviewPagePlatform: reviewPagePlatformDDState,
       };
       if (reviewPagePlatformDDState === ReviewPagePlatform.Custom) {

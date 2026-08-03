@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { IconStar } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
 
@@ -39,7 +39,7 @@ export function RatingForm() {
     <div ref={scope} className={cn("flex items-center", isMobile ? "gap-1.5" : "gap-4")}>
       {Array.from({ length: 5 }, (_, i) => {
         const starValue = i + 1;
-        const filled = starValue <= (hoveredValue !== -1 ? hoveredValue : response || 0);
+        const filled = starValue <= (hoveredValue !== -1 ? hoveredValue : Number(response) || 0);
         return (
           <button
             key={starValue}
@@ -49,7 +49,7 @@ export function RatingForm() {
             onMouseLeave={() => setHoveredValue(-1)}
             className="flex items-center justify-center"
           >
-            <Star
+            <IconStar
               className={cn(
                 "size-[50px] transition-colors",
                 filled ? "fill-current" : "text-muted-foreground",

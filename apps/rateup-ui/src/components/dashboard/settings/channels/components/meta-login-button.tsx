@@ -18,7 +18,12 @@ const fbLogin = (
     code: string;
   };
 }> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    // Mirrors the previous behaviour: calling into an unloaded SDK rejected the promise.
+    if (!globalThis.FB) {
+      reject(new Error("Facebook SDK is not loaded"));
+      return;
+    }
     globalThis.FB.login((response) => resolve(response), {
       config_id: configId ?? import.meta.env.VITE_META_CONFIG_ID,
       response_type: "code",

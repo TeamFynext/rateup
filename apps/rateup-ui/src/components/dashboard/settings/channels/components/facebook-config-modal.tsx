@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -33,10 +33,10 @@ export function FacebookConfigModal({
   close: () => void;
   selectedWaSettings: WaSetting | null;
 }>) {
-  const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id);
+  const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id ?? "");
 
   const upsertMutation = useUpsertWaSettingsMutation();
-  const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id);
+  const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id ?? "");
 
   const { t: translations } = useTranslation();
 
@@ -135,7 +135,7 @@ export function FacebookConfigModal({
                     />
                   }
                 >
-                  <RefreshCw
+                  <IconRefresh
                     className={`h-4 w-4 ${syncfbpageMut.isPending ? "animate-spin" : ""}`}
                   />
                   {translations("Sync FB pages")}
@@ -153,7 +153,7 @@ export function FacebookConfigModal({
                   ...rest,
                   fbPageId: config.fbPageId,
                   pageAccessToken: config.pageAccessToken,
-                  teams: undefined,
+                  teams: undefined as string[] | undefined,
                 };
 
                 if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {

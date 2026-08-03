@@ -25,7 +25,8 @@ export interface CropperProps {
   aspectRatio?: number;
   freeMode?: boolean;
   onReady?: () => void;
-  onChange?: (event: any) => void;
+  /** Fires on the cropper's `change` event. */
+  onChange?: (event: Event) => void;
   className?: string;
 }
 

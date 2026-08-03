@@ -6,7 +6,7 @@ const DEFAULT_EVENTS = ["mousedown", "touchstart"];
  * Replacement for `useClickOutside` from `@mantine/hooks`. Returns a ref to
  * attach to the element; `handler` fires on a pointer press outside of it.
  */
-export function useClickOutside<T extends HTMLElement = any>(
+export function useClickOutside<T extends HTMLElement = HTMLElement>(
   handler: () => void,
   events: string[] | null = DEFAULT_EVENTS,
 ) {

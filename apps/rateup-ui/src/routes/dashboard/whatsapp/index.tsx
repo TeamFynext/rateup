@@ -1,8 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getTeamFeatures } from "@/backend/team/team.api";
-import { fetchUserInfo } from "@/backend/user/user.api";
-import { getQueryClient } from "@/components/providers.tsx";
+import { userInfoQuery } from "@/backend/user/user.options";
 import {
   getDashboardLandingTarget,
   getWhatsappLandingTarget,
@@ -24,13 +23,9 @@ async function getMemberAllowedFeatures(teamIds: string[]): Promise<Set<string>>
 
 export const Route = createFileRoute("/dashboard/whatsapp/")({
   ssr: false,
-  loader: async () => {
-    const queryClient = getQueryClient();
-    const userQueryData = await queryClient.fetchQuery({
-      queryKey: ["userInfoQuery"],
-      queryFn: fetchUserInfo,
-      staleTime: 60 * 1000,
-    });
+  loader: async ({ context }) => {
+    const queryClient = context.getQueryClient();
+    const userQueryData = await queryClient.fetchQuery(userInfoQuery());
 
     const user = userQueryData && "data" in userQueryData ? userQueryData.data : null;
 

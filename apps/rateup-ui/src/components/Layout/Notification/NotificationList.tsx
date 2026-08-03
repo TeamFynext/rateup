@@ -8,6 +8,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 
+import type { AppNotification } from "@/backend/notification/notification.api";
 import { useDeleteNotification } from "@/backend/notification/notification.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
@@ -15,10 +16,18 @@ import { Button } from "@/components/ui/button.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
-const NotificationList = ({ close, data, isLoading }) => {
+const NotificationList = ({
+  close,
+  data,
+  isLoading,
+}: {
+  close: () => void;
+  data: AppNotification[] | undefined;
+  isLoading: boolean;
+}) => {
   const deleteNotificationMut = useDeleteNotification();
 
-  const getNotificationIcon = useCallback((source) => {
+  const getNotificationIcon = useCallback((source: string) => {
     switch (source) {
       case "whatsapp":
         return <IconBrandWhatsappFilled className="size-4 text-foreground" />;
@@ -35,7 +44,7 @@ const NotificationList = ({ close, data, isLoading }) => {
     }
   }, []);
 
-  const getNotificationMessageComp = useCallback((notification) => {
+  const getNotificationMessageComp = useCallback((notification: AppNotification) => {
     const { subSource, data } = notification;
     switch (subSource) {
       case "chat-assigned":
@@ -45,7 +54,8 @@ const NotificationList = ({ close, data, isLoading }) => {
               A chat from <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
               has been assigned to you.
               <Link
-                to={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
+                to="/dashboard/inbox"
+                search={{ tab: "mine", contactId: data?.contactId }}
                 onClick={close}
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >
@@ -61,7 +71,8 @@ const NotificationList = ({ close, data, isLoading }) => {
               Chat from <span className="font-medium text-foreground">{data?.contactName}</span> has
               been closed.
               <Link
-                to={`/dashboard/inbox?tab=closed&contactId=${data?.contactId}`}
+                to="/dashboard/inbox"
+                search={{ tab: "closed", contactId: data?.contactId }}
                 onClick={close}
                 className="ml-1 inline font-medium text-primary hover:underline"
               >
@@ -78,7 +89,8 @@ const NotificationList = ({ close, data, isLoading }) => {
               <span className="font-medium text-foreground">{data?.board_name}</span> has been
               assigned to you.
               <Link
-                to={`/dashboard/tickets/${data?.cardId}`}
+                to="/dashboard/tickets/$ticketId"
+                params={{ ticketId: String(data?.cardId ?? "") }}
                 onClick={close}
                 className="ml-1 inline font-medium text-primary hover:underline"
               >
@@ -94,7 +106,8 @@ const NotificationList = ({ close, data, isLoading }) => {
               You were mentioned in a chat from{" "}
               <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
               <Link
-                to={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
+                to="/dashboard/inbox"
+                search={{ tab: "mine", contactId: data?.contactId }}
                 onClick={close}
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >
@@ -109,7 +122,8 @@ const NotificationList = ({ close, data, isLoading }) => {
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               Your campaign "{data?.campaignName}" completed.
               <Link
-                to={`/dashboard/campaign/${data?.campaignId}`}
+                to="/dashboard/campaign/$campaignId"
+                params={{ campaignId: String(data?.campaignId ?? "") }}
                 onClick={close}
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >

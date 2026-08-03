@@ -1,7 +1,7 @@
 import { createContext } from "react";
 
 interface SelectedQContextType {
-  selectedQ: Question;
+  selectedQ: Question | null;
   alignment: string;
 }
 export const SelectedQContext = createContext<SelectedQContextType>({

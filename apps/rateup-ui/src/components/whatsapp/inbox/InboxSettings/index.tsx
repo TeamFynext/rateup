@@ -1,4 +1,4 @@
-import { MessageSquare, Zap } from "lucide-react";
+import { IconBolt, IconMessage } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -32,7 +32,7 @@ const InboxSettings = () => {
               : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
           }`}
         >
-          <MessageSquare className="w-4 h-4" />
+          <IconMessage className="w-4 h-4" />
           {t("Quick Replies")}
         </button>
         <button
@@ -43,7 +43,7 @@ const InboxSettings = () => {
               : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
           }`}
         >
-          <Zap className="w-4 h-4" />
+          <IconBolt className="w-4 h-4" />
           {t("Automation")}
         </button>
       </div>

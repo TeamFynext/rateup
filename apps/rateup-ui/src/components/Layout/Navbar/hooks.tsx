@@ -1,6 +1,7 @@
 import {
   IconActivity,
   IconAddressBook,
+  IconAt,
   IconAward,
   IconBolt,
   IconBrandFacebook,
@@ -27,12 +28,15 @@ import {
   IconMessage,
   IconQrcode,
   IconReportAnalytics,
-  // IconRobotFace,
   IconSend,
   IconSettings,
   IconShield,
+  IconShieldExclamation,
   IconShoppingCart,
   IconSitemap,
+  IconSparkles,
+  IconStack2,
+  IconStar,
   IconTag,
   IconTemplate,
   IconTerminal2,
@@ -44,24 +48,78 @@ import {
   IconWaveSine,
   IconWebhook,
 } from "@tabler/icons-react";
-import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
+import type { ChannelOption } from "@/components/input/channelOptions.ts";
+import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
+import type { User } from "@/context/UserContext.tsx";
+import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
+import type { ChatContactCountStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
-const CHANNEL_PLATFORM_ICON = {
+const CHANNEL_PLATFORM_ICON: Partial<
+  Record<MessagePlatform, React.ComponentType<{ size?: number | string; className?: string }>>
+> = {
   [MessagePlatform.WHATSAPP]: IconBrandWhatsapp,
   [MessagePlatform.INSTAGRAM]: IconBrandInstagram,
   [MessagePlatform.FACEBOOK]: IconBrandFacebook,
 };
 
+/**
+ * One entry in the sidebar tree. Entries are heterogeneous — a link, a labelled
+ * group of links, or a slot for a filter control — so every field is optional.
+ */
+export interface NavEntry {
+  title?: string;
+  url?: string;
+  group?: string;
+  icon?: React.ComponentType<{ size?: number | string; className?: string }>;
+  items?: NavEntry[];
+  /** Rendering hints the sidebar reads off an entry. */
+  type?: string;
+  variant?: string;
+  className?: string;
+  componentKey?: string;
+  description?: React.ReactNode;
+  hint?: React.ReactNode;
+  count?: number;
+  isActive?: boolean;
+  showTitle?: boolean;
+  settingsStyle?: boolean;
+  hasSepeartorOnTop?: boolean;
+  hasSeperatorOnBottom?: boolean;
+  showClearButton?: boolean;
+  clearButtonName?: string;
+  clearFilter?: () => void;
+  handleClick?: () => void;
+  [key: string]: unknown;
+}
+
+/** Everything the sidebar's nav tree is derived from, gathered by `AppSidebar`. */
+interface NavMainInput {
+  subscription?: Subscription;
+  lifecycles?: GetLabelsRes[];
+  contactLabels?: ContactLabelOption[];
+  channels?: ChannelOption[];
+  staff: Array<{ id: string; name?: string }>;
+  teams: Array<{ id: string; name?: string }>;
+  chatFilterStore: ChatFilterStore;
+  hiddenModules: string[];
+  handleFilter: (label: string, value: string) => void;
+  allowedFeatures: AllowedFeatures;
+  user: User | null;
+  sectionCounts: ChatContactCountStore["sectionCounts"];
+}
+
 export function useNavMain({
   subscription,
-  lifecycles,
-  contactLabels,
-  channels,
+  lifecycles = [],
+  contactLabels = [],
+  channels = [],
   staff,
   teams,
   chatFilterStore,
@@ -70,13 +128,13 @@ export function useNavMain({
   allowedFeatures,
   user,
   sectionCounts,
-}: any) {
+}: NavMainInput) {
   const { t } = useTranslation();
 
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
-  return useMemo(
+  return useMemo<NavEntry[]>(
     () => [
       // {
       //   title: t("Home"),
@@ -104,7 +162,7 @@ export function useNavMain({
                 {
                   title: t("New"),
                   url: "/dashboard/inbox?tab=new",
-                  icon: Sparkles,
+                  icon: IconSparkles,
                   count: sectionCounts?.newCount || 0,
                   variant: "inbox-tab",
                 },
@@ -118,35 +176,35 @@ export function useNavMain({
                 {
                   title: t("All"),
                   url: "/dashboard/inbox?tab=all",
-                  icon: Layers,
+                  icon: IconStack2,
                   count: sectionCounts?.allCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("Mine"),
                   url: "/dashboard/inbox?tab=mine",
-                  icon: UserCheck,
+                  icon: IconUserCheck,
                   count: sectionCounts?.mineCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("@Mentions"),
                   url: "/dashboard/inbox?tab=mentions",
-                  icon: AtSign,
+                  icon: IconAt,
                   count: sectionCounts?.mentionsCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("Favourites"),
                   url: "/dashboard/inbox?tab=favourites",
-                  icon: Star,
+                  icon: IconStar,
                   count: sectionCounts?.favouriteCount || 0,
                   variant: "inbox-tab",
                 },
                 {
                   title: t("Spam"),
                   url: "/dashboard/inbox?tab=spam",
-                  icon: ShieldAlert,
+                  icon: IconShieldExclamation,
                   count: sectionCounts?.spamCount || 0,
                   variant: "inbox-tab",
                 },
@@ -190,8 +248,10 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 lifecycle: "",
                               }),
-                            items: lifecycles.map((lbl) => ({
-                              icon: (props) => <div {...props}>{lbl.emoji}</div>,
+                            items: lifecycles.map((lbl: GetLabelsRes) => ({
+                              icon: (props: Record<string, unknown>) => (
+                                <div {...props}>{lbl.emoji}</div>
+                              ),
                               title: lbl.name,
                               url: "#",
                               handleClick: () => {
@@ -214,23 +274,25 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 labels: [],
                               }),
-                            items: contactLabels.map((lbl) => ({
-                              title: lbl.name,
-                              url: "#",
-                              icon: (props) => (
-                                <div
-                                  {...props}
-                                  className={`rounded-full ${props?.className ?? ""} w-3 h-3`}
-                                  style={{
-                                    background: lbl?.color,
-                                  }}
-                                />
-                              ),
-                              handleClick: () => {
-                                handleFilter("label", lbl.id);
-                              },
-                              isActive: chatFilterStore.filter.labels?.includes(lbl.id),
-                            })),
+                            items: contactLabels.map(
+                              (lbl: { id: string; name: string; color?: string }) => ({
+                                title: lbl.name,
+                                url: "#",
+                                icon: (props: Record<string, unknown>) => (
+                                  <div
+                                    {...props}
+                                    className={`rounded-full ${props?.className ?? ""} w-3 h-3`}
+                                    style={{
+                                      background: lbl?.color,
+                                    }}
+                                  />
+                                ),
+                                handleClick: () => {
+                                  handleFilter("label", lbl.id);
+                                },
+                                isActive: chatFilterStore.filter.labels?.includes(lbl.id),
+                              }),
+                            ),
                           },
                         ]
                       : []),
@@ -246,7 +308,7 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 assignedUserIds: [],
                               }),
-                            items: staff.map((member) => ({
+                            items: staff.map((member: { id: string; name?: string }) => ({
                               title: member.name,
                               url: "#",
                               handleClick: () => handleFilter("assignedStaff", member.id),
@@ -267,7 +329,7 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 assignedTeams: [],
                               }),
-                            items: teams.map((team) => ({
+                            items: teams.map((team: { id: string; name?: string }) => ({
                               title: team.name,
                               url: "#",
                               handleClick: () => handleFilter("assignedTeams", team.id),

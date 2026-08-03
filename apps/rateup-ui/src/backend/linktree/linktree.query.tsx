@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { linktreeKeys } from "@/backend/campaign/campaign.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createLinktree,
   deleteLinktree,
@@ -14,12 +17,12 @@ import {
 // get all linktrees
 function useLinktrees() {
   return useQuery({
-    queryKey: ["linktrees"],
+    queryKey: linktreeKeys.all(),
     queryFn: getLinktrees,
   });
 }
 
-function useGetLinktreeWithShortId(shortUrlId) {
+function useGetLinktreeWithShortId(shortUrlId: string) {
   return useQuery({
     queryKey: ["linktree", shortUrlId],
     queryFn: getLinktreeWithShortId(shortUrlId),
@@ -35,7 +38,7 @@ function useCreateLinktreeMutation() {
       toast.success("Created linktree successfully.", {
         id: "CreateLinktree",
       });
-      queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+      queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "Unable to create linktree, please try again later", {
@@ -45,17 +48,17 @@ function useCreateLinktreeMutation() {
   });
 }
 
-function useUpdateLinktreeMutation(shortUrlId) {
+function useUpdateLinktreeMutation(shortUrlId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: RequestPayload) => {
       return updateLinktree(data);
     },
     onSuccess: () => {
       toast.success("Updated linktree successfully.", {
         id: "UpdateLinktree",
       });
-      queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+      queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
       queryClient.invalidateQueries({ queryKey: ["linktree", shortUrlId] });
     },
     onError: (error) => {
@@ -66,7 +69,7 @@ function useUpdateLinktreeMutation(shortUrlId) {
   });
 }
 
-function useDeleteLinktreeMutation(id) {
+function useDeleteLinktreeMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => {
@@ -76,7 +79,7 @@ function useDeleteLinktreeMutation(id) {
       toast.success("Deleted linktree successfully.", {
         id: "deleteLinktree",
       });
-      queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+      queryClient.invalidateQueries({ queryKey: linktreeKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "unable to delete linktree, please try again later", {
@@ -87,7 +90,7 @@ function useDeleteLinktreeMutation(id) {
 }
 
 // This is being used to get options for dropdowns in linktree AddLinkOverlay component.
-function useLinkTypeOptions(linkType) {
+function useLinkTypeOptions(linkType: string) {
   return useQuery({
     queryKey: ["linktype-options", linkType],
     queryFn: getDropdownOptionsOfLinkType(linkType),
@@ -95,7 +98,7 @@ function useLinkTypeOptions(linkType) {
   });
 }
 
-function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId) {
+function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId: string) {
   return useMutation({
     mutationFn: (bodyData: { resourceToBeUpdated: string; linkId?: string }) => {
       return updatePageVisitsOrLinkClicks(shortUrlId, bodyData);

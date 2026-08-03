@@ -1,4 +1,4 @@
-import { type Editor as CoreEditor, Extension, type Range } from "@tiptap/core";
+import { type CommandProps, type Editor as CoreEditor, Extension, type Range } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet, type EditorView } from "@tiptap/pm/view";
@@ -106,7 +106,11 @@ function processSearches(
   };
 }
 
-const replace = (replaceTerm: string, results: Range[], { state, dispatch }: any) => {
+const replace = (
+  replaceTerm: string,
+  results: Range[],
+  { state, dispatch }: Pick<CommandProps, "state" | "dispatch">,
+) => {
   const firstResult = results[0];
 
   if (!firstResult) {
@@ -154,7 +158,7 @@ const rebaseNextResult = (
 const replaceAll = (
   replaceTerm: string,
   results: Range[],
-  { tr, dispatch }: { tr: any; dispatch: any },
+  { tr, dispatch }: Pick<CommandProps, "tr" | "dispatch">,
 ) => {
   if (!results.length) {
     return;
@@ -174,7 +178,7 @@ const replaceAll = (
     }
   }
 
-  dispatch(tr);
+  dispatch?.(tr);
 };
 
 const selectNext = (editor: CoreEditor) => {
@@ -200,11 +204,11 @@ const selectNext = (editor: CoreEditor) => {
   const view: EditorView | undefined = editor.view;
 
   if (view) {
-    view
-      .domAtPos(from)
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      .node.scrollIntoView({ behavior: "smooth", block: "center" });
+    const { node } = view.domAtPos(from);
+    // `domAtPos` can land on a text node, which has no `scrollIntoView` — scroll
+    // its element parent instead.
+    const target = node instanceof Element ? node : node.parentElement;
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 };
 
@@ -228,11 +232,11 @@ const selectPrevious = (editor: CoreEditor) => {
   const view: EditorView | undefined = editor.view;
 
   if (view) {
-    view
-      .domAtPos(from)
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      .node.scrollIntoView({ behavior: "smooth", block: "center" });
+    const { node } = view.domAtPos(from);
+    // `domAtPos` can land on a text node, which has no `scrollIntoView` — scroll
+    // its element parent instead.
+    const target = node instanceof Element ? node : node.parentElement;
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 };
 

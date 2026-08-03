@@ -69,6 +69,20 @@ Kill the process running on port 3000 (Windows PowerShell)
 - Use Tailwind utility classes and project tokens; avoid introducing one-off raw color values.
 - shadcn/ui primitives (`src/components/ui/`) are built on `@base-ui/react`, not Radix — there is no direct `@radix-ui/*` dependency in `package.json`. For a multi-select field, use `MultiSelect` (`src/components/ui/multi-select.tsx`), a thin wrapper over `Combobox` (`src/components/ui/combobox.tsx`); don't reintroduce `cmdk`/`Command`-based patterns.
 
+## TypeScript
+
+The project compiles under `"strict": true` (including `strictNullChecks` and `noImplicitAny`),
+with `noUnusedLocals` and `noUnusedParameters`. `npm run typecheck` should report zero errors, and
+strictness flags are not relaxed to make code compile.
+
+- Don't add `any` — prefer `unknown` with a type guard, a generic, or a real interface. Legacy
+  `any` still exists; replace it site by site with a real type, not with a bulk find-and-replace.
+- No `@ts-ignore` / `@ts-expect-error`; there are none in `src/`.
+- Opaque request bodies use `RequestPayload` (`src/types/api.ts`).
+- Read failed-request messages through `src/utils/apiError.ts` (`getApiErrorMessage`,
+  `getApiErrorData`, `asApiError`) — react-query hands you an `Error`, not an axios error.
+- Shared domain shapes live in `src/types/global.d.ts` and mirror the `rateup-api` schema.
+
 ## Internationalization
 
 - Uses `react-i18next` with locale files in `src/locales/`.
@@ -77,5 +91,3 @@ Kill the process running on port 3000 (Windows PowerShell)
 
 - [AGENTS.md](AGENTS.md)
 - [.agents/skills/shadcn/SKILL.md](.agents/skills/shadcn/SKILL.md)
-- [.agents/skills/tanstack-start-best-practices/SKILL.md](.agents/skills/tanstack-start-best-practices/SKILL.md)
-- [.agents/skills/tanstack-router-best-practices/SKILL.md](.agents/skills/tanstack-router-best-practices/SKILL.md)

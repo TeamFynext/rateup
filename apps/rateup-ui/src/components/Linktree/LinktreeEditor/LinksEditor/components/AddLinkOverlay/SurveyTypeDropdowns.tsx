@@ -37,6 +37,21 @@ function SurveyTypeDropdowns({
   selectedTeam,
   onSelectedTeamDDChange,
   errors,
+}: {
+  selectedLinkType: string;
+  selectedSurveyTitle: string;
+  onSurveyTitleDDChange: (value: string) => void;
+  surveyTitleAutoCompleteSearch: string;
+  onSurveyTitleAutoCompleteSearchChange: (value: string) => void;
+  linkDisplayName: string;
+  onLinkDisplayNameChange: (value: string) => void;
+  selectedTeam: string;
+  onSelectedTeamDDChange: (value: string) => void;
+  errors?: {
+    selectedSurveyTitleErr?: string;
+    selectedTeamErr?: string;
+    wsOrWasLinkDisplayNameErr?: string;
+  };
 }) {
   const { data: selectLinkTypeOptionsData, isPending: isSelectedLinkTypeOptionsLoading } =
     useLinkTypeOptions(selectedLinkType);
@@ -44,7 +59,7 @@ function SurveyTypeDropdowns({
   const [sTAutoCompleteSearchFocused, setSTAutoCompleteSearchFocused] = useState(false);
 
   const handleSurveyTitleAutoCompleteOnBlur = useCallback(
-    (_value) => {
+    (_event?: unknown) => {
       onSurveyTitleAutoCompleteSearchChange(
         getSurveyTitleWithId(selectLinkTypeOptionsData, selectedSurveyTitle),
       );
@@ -79,7 +94,7 @@ function SurveyTypeDropdowns({
         <Combobox
           items={selectedSurveyTitleOptions}
           value={selectedSurveyTitle}
-          onValueChange={onSurveyTitleDDChange}
+          onValueChange={(value) => onSurveyTitleDDChange(value ?? "")}
           inputValue={surveyTitleAutoCompleteSearch}
           onInputValueChange={onSurveyTitleAutoCompleteSearchChange}
         >
@@ -117,7 +132,7 @@ function SurveyTypeDropdowns({
         <FieldLabel htmlFor="select-team">Select Team</FieldLabel>
         <Select
           value={selectedTeam ?? ""}
-          onValueChange={onSelectedTeamDDChange}
+          onValueChange={(value) => onSelectedTeamDDChange(value ?? "")}
           items={selectedTeamOptions}
         >
           <SelectTrigger

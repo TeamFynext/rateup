@@ -1,6 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -63,14 +62,14 @@ const InboxHero = () => {
           </p>
 
           <div className="mt-10 flex flex-row gap-4">
-            <Link to="https://rateup.app/login">
+            <a href="https://rateup.app/login">
               <Button
                 size="lg"
                 className="bg-[#1c518e] cursor-pointer hover:bg-[#1c518e] text-white font-medium px-8"
               >
                 Start Your Free Trial
               </Button>
-            </Link>
+            </a>
             <BookDemoModal>
               <Button
                 size="lg"
@@ -78,7 +77,7 @@ const InboxHero = () => {
                 className="border-[#1c518e] text-[#1c518e] cursor-pointer hover:bg-[#e6f7ff] group"
               >
                 Learn More
-                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
             </BookDemoModal>
           </div>

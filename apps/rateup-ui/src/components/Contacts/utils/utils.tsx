@@ -1,18 +1,18 @@
-import { IconBrandInstagram } from "@tabler/icons-react";
-import type { ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
 import {
-  ArrowUpDown,
-  Ban,
-  CircleCheck,
-  CircleX,
-  Gift,
-  Globe,
-  MessageSquare,
-  Upload,
-  UserPlus,
-  Zap,
-} from "lucide-react";
+  IconArrowsSort,
+  IconBan,
+  IconBolt,
+  IconBrandInstagram,
+  IconCircleCheck,
+  IconCircleX,
+  IconGift,
+  IconGlobe,
+  IconMessage,
+  IconUpload,
+  IconUserPlus,
+} from "@tabler/icons-react";
+import type { Column, ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
 
-const selectCheckBox: ColumnDef<any>[] = [
+const selectCheckBox: ColumnDef<ContactsData>[] = [
   {
     id: "select",
     accessorKey: "select",
@@ -51,18 +51,18 @@ const selectCheckBox: ColumnDef<any>[] = [
   },
 ];
 
-const HeaderWithSort = ({ column, title }) => {
+const HeaderWithSort = ({ column, title }: { column: Column<ContactsData>; title: string }) => {
   return (
     <div className="flex gap-2 items-center">
       <span>{title}</span>
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        <ArrowUpDown className="h-4 w-4" />
+        <IconArrowsSort className="h-4 w-4" />
       </Button>
     </div>
   );
 };
 
-const contactDetailsColumn: ColumnDef<any>[] = [
+const contactDetailsColumn: ColumnDef<ContactsData>[] = [
   {
     header: ({ column }) => <HeaderWithSort column={column} title={"Name"} />,
     accessorKey: "name",
@@ -81,10 +81,10 @@ const contactDetailsColumn: ColumnDef<any>[] = [
   },
 ];
 
-export const getSourceBadge = (source: string) => {
+export const getSourceBadge = (source: string | undefined) => {
   const config = {
     whatsapp: {
-      icon: MessageSquare,
+      icon: IconMessage,
       label: "WhatsApp",
       className: "bg-green-100 text-green-700",
     },
@@ -94,22 +94,22 @@ export const getSourceBadge = (source: string) => {
       className: "bg-pink-100 text-pink-700",
     },
     WEBCHAT: {
-      icon: Globe,
+      icon: IconGlobe,
       label: "Web Chat",
       className: "bg-blue-100 text-blue-700",
     },
     MANUAL: {
-      icon: UserPlus,
+      icon: IconUserPlus,
       label: "Manual",
       className: "bg-gray-100 text-gray-700",
     },
     "CSV IMPORT": {
-      icon: Upload,
+      icon: IconUpload,
       label: "Imported",
       className: "bg-gray-100 text-gray-700",
     },
     loyalty_program: {
-      icon: Gift,
+      icon: IconGift,
       label: "Loyalty Customer",
       className: "bg-orange-100 text-orange-700",
     },
@@ -124,7 +124,10 @@ export const getSourceBadge = (source: string) => {
   );
 };
 
-export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle = false) => {
+export const contactColumn = (
+  contactTags: CustomFieldData[] = [],
+  showLifecycle = false,
+): ColumnDef<ContactsData>[] => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
@@ -142,12 +145,12 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
       cell: (info) =>
         !info.getValue() ? (
           <Badge variant="secondary" className="bg-green-100 text-green-700">
-            <Zap />
+            <IconBolt />
             Active
           </Badge>
         ) : (
           <Badge variant="secondary" className="bg-red-100 text-red-700">
-            <Ban />
+            <IconBan />
             Blocked
           </Badge>
         ),
@@ -168,10 +171,13 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
       accessorKey: "ContactLabelMap",
       id: "ContactLabelMap",
       cell: (info) => {
-        const labels = info.row.original.ContactLabelMap?.map((label) => label?.label?.name) || [];
+        const labels =
+          info.row.original.ContactLabelMap?.map(
+            (label: { label?: { name?: string } }) => label?.label?.name,
+          ) || [];
         return labels.length > 0 ? (
           <div className="flex flex-wrap gap-1">
-            {labels.map((label, index) => (
+            {labels.map((label: string | undefined, index: number) => (
               <Badge key={index} variant="secondary" color="blue">
                 {label}
               </Badge>
@@ -192,21 +198,26 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
             cell: (info) => info.getValue(),
             enableSorting: false,
             meta: { title: "Lifecycle Stage" },
-          },
+          } satisfies ColumnDef<ContactsData>,
         ]
       : []),
     ...(contactTags?.length > 0
       ? contactTags
           .filter((tag) => tag?.visibility)
-          .map((data) => ({
-            header: data?.name,
-            accessorFn: (row) => row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
-            id: data?.name,
-            cell: (info) => info.getValue()?.toString() ?? "-",
+          .map(
+            (data) =>
+              ({
+                header: data?.name,
+                accessorFn: (row: ContactsData) =>
+                  row?.customFields?.find((f: { fieldId?: string }) => f?.fieldId === data?.id)
+                    ?.value,
+                id: data?.name,
+                cell: (info) => info.getValue()?.toString() ?? "-",
 
-            enableSorting: false,
-            meta: { title: data?.name },
-          }))
+                enableSorting: false,
+                meta: { title: data?.name },
+              }) satisfies ColumnDef<ContactsData>,
+          )
       : []),
     {
       header: "Source",
@@ -223,17 +234,17 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
       cell: (info) =>
         info.getValue() ? (
           <Badge variant="secondary" className="bg-green-100 text-green-700">
-            <CircleCheck />
+            <IconCircleCheck />
             Granted
           </Badge>
         ) : (
           <Badge variant="secondary" className="bg-red-100 text-red-700">
-            <CircleX />
+            <IconCircleX />
             Denied
           </Badge>
         ),
       meta: {
-        filterComponent: (setFilterValue) => {
+        filterComponent: (setFilterValue: (value: boolean | null) => void) => {
           const consentItems = [
             { value: "true", label: "true" },
             { value: "false", label: "false" },
@@ -279,5 +290,3 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
     },
   ];
 };
-
-export const CONTACT_SORT = { id: "createdAt", desc: true };

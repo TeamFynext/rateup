@@ -1,4 +1,4 @@
-import type { PaginationState, SortingState } from "@tanstack/react-table";
+import type { PaginationState, SortingState, Updater } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 
 import { useUserAuditLogs } from "@/backend/user/user.query";
@@ -18,11 +18,11 @@ export function AuditLogs() {
   const params = useMemo(() => ({ pagination, sorting }), [pagination, sorting]);
   const { data, isFetched, isLoading, isError, error } = useUserAuditLogs(params);
 
-  const handlePaginationChange = useCallback((updater: any) => {
+  const handlePaginationChange = useCallback((updater: Updater<PaginationState>) => {
     setPagination(updater);
   }, []);
 
-  const handleSortingChange = useCallback((updater: any) => {
+  const handleSortingChange = useCallback((updater: Updater<SortingState>) => {
     setSorting(updater);
   }, []);
 

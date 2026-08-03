@@ -2,7 +2,7 @@ import { CardGrid } from "@/components/common/generic-card.tsx";
 
 import FlowCard from "../FlowCard/index.tsx";
 
-function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsData }>) {
+function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsData: TeamData[] }>) {
   return (
     <CardGrid
       items={flows ?? []}
@@ -10,7 +10,7 @@ function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsDa
       renderItem={(flow) => {
         const responseCount =
           flow.survey?.teams?.reduce(
-            (acc: number, team: any) => acc + (team.surveyStats?.completed || 0),
+            (acc: number, team) => acc + (team.surveyStats?.completed || 0),
             0,
           ) || 0;
         return (

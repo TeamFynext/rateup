@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
 import type { ICreateCheckoutType } from "./payment.api";
 import {
   cancelRazorpaySubscription,
@@ -36,17 +39,17 @@ export function useRateupPaymentsPlans() {
 
 export function useUserOrgOrders(enabled = true) {
   return useQuery({
-    queryKey: ["userOrgOrdersQuery"],
+    queryKey: subscriptionKeys.orgOrders(),
     queryFn: getAllOrdersUserOrg,
     enabled,
   });
 }
 
-export function useRateupPaymentsPlanMutation(close) {
+export function useRateupPaymentsPlanMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => createRateupPaymentPlan(data),
+    mutationFn: (data: RequestPayload) => createRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
       toast.success("RateUp Plan created successfully.", {
@@ -62,14 +65,14 @@ export function useRateupPaymentsPlanMutation(close) {
   });
 }
 
-export function useRateupPaymentsPlanUpdateMutation(close) {
+export function useRateupPaymentsPlanUpdateMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => updateRateupPaymentPlan(data),
+    mutationFn: (data: RequestPayload) => updateRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
       toast.success("RateUp Plan updated successfully.", {
         id: "load-data",
       });
@@ -122,7 +125,10 @@ export function usePlanSyncMutation() {
   });
 }
 
-export function useCreateCheckoutSession(setIsLoading, setOrder) {
+export function useCreateCheckoutSession<TOrder>(
+  setIsLoading: (loading: boolean) => void,
+  setOrder: (order: TOrder) => void,
+) {
   return useMutation({
     mutationFn: (values: ICreateCheckoutType) => createCheckoutSession(values),
     onSuccess: (data) => {
@@ -174,15 +180,15 @@ export function useCancelRazorpaySubscriptionMutation() {
   return useMutation({
     mutationFn: () => cancelRazorpaySubscription(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.success("Rateup Subscription cancelled. Enjoy services till expiry date.", {
         id: "load-data",
       });
     },
     onError: (error) => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.error(error?.message || "Error cancelling Rateup Subscription", {
         id: "load-data",
       });
@@ -221,10 +227,10 @@ export function useSendMailPlanSelectDetails() {
   });
 }
 
-export const useUpdateSubscriptionOrder = (orderId) => {
+export const useUpdateSubscriptionOrder = (orderId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => updateSubscriptionOrder(orderId, data),
+    mutationFn: (data: RequestPayload) => updateSubscriptionOrder(orderId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentorders"] });
     },

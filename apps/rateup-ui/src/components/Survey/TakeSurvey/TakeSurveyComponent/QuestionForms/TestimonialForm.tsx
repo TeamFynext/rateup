@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -13,6 +14,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils.ts";
 import { fallbackImage } from "@/utils/constants.ts";
 import { dataURItoBlob, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
+import { asAnswer } from "@/utils/response.ts";
 
 import WebcamCapture from "../../../../input/WebCamCapture.tsx";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal.tsx";
@@ -20,8 +22,9 @@ import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
 interface TestimonialProps {
-  features;
-  isPreview?;
+  /** Per-language question labels and toggles for the testimonial fields. */
+  features?: Record<string, QuestionFormFeatures>;
+  isPreview?: boolean;
 }
 
 const unstyledInputClassName =
@@ -33,7 +36,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [opened, setOpened] = useState(false);
-  const [capturedImg, setCapturedImg] = useState(null);
+  const [capturedImg, setCapturedImg] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [openedCropDialog, setOpenedCropDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,15 +46,15 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const closeCropDialog = () => setOpenedCropDialog(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateResponse({ ...response, name: e.currentTarget.value });
+    updateResponse({ ...asAnswer(response), name: e.currentTarget.value });
   };
   const { t: translations } = useTranslation();
-  const handleJobTitleChange = (e) => {
-    updateResponse({ ...response, jobTitle: e.currentTarget.value });
+  const handleJobTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateResponse({ ...asAnswer(response), jobTitle: e.currentTarget.value });
   };
 
   const handleTestimonialChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    updateResponse({ ...response, testimonial: e.currentTarget.value });
+    updateResponse({ ...asAnswer(response), testimonial: e.currentTarget.value });
   };
 
   useEffect(() => {
@@ -71,7 +74,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     setIsUploading(true);
     uploadFile(file)
       .then((key) => {
-        updateResponse({ ...response, photo: key });
+        updateResponse({ ...asAnswer(response), photo: key });
         setIsUploading(false);
       })
       .catch((_err) => {
@@ -79,9 +82,11 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       });
   }, [file]);
-  const handleCropImageSave = async (cropedImage) => {
+  const handleCropImageSave = async (cropedImage: string | File) => {
     if (!cropedImage) return;
-    setFile(cropedImage);
+    // Opened for local uploads only, so the crop always yields a File — the
+    // string form is the Unsplash path, which this question does not offer.
+    setFile(cropedImage as File);
   };
 
   const onChangePicture = (event: File) => {
@@ -107,7 +112,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <FormPaperLayout>
           <Input
             placeholder={translations("Enter name")}
-            value={response?.name}
+            value={asAnswer(response).name}
             onChange={handleNameChange}
             style={{ maxWidth: "400px" }}
             className={cn(unstyledInputClassName, "text-base")}
@@ -121,7 +126,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           <FormPaperLayout>
             <Input
               placeholder={translations("Enter job title")}
-              value={response?.jobTitle}
+              value={String(asAnswer(response).jobTitle ?? "")}
               onChange={handleJobTitleChange}
               style={{ maxWidth: "400px" }}
               className={cn(unstyledInputClassName, "text-base")}
@@ -135,7 +140,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <FormPaperLayout>
           <Textarea
             placeholder={translations("Enter testimonial")}
-            value={response?.testimonial}
+            value={String(asAnswer(response).testimonial ?? "")}
             onChange={handleTestimonialChange}
             style={{ maxWidth: "400px" }}
             className={cn(unstyledInputClassName, "text-base min-h-0")}
@@ -153,13 +158,15 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
               <button
                 key={star}
                 type="button"
-                onClick={() => updateResponse({ ...response, rating: star })}
+                onClick={() => updateResponse({ ...asAnswer(response), rating: star })}
                 className="p-0.5"
               >
                 <IconStar
                   size={32}
                   className={
-                    response?.rating >= star ? "fill-primary text-primary" : "text-gray-300"
+                    Number(asAnswer(response).rating ?? 0) >= star
+                      ? "fill-primary text-primary"
+                      : "text-gray-300"
                   }
                 />
               </button>
@@ -200,7 +207,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 </div>
               )}
               <img
-                src={getFileUrlFromKey(response?.photo)}
+                src={getFileUrlFromKey(String(asAnswer(response).photo ?? ""))}
                 alt="Your uploaded image"
                 className="size-full rounded-[10px] object-cover"
                 style={{ height: fallbackImage ? 148 : 200 }}

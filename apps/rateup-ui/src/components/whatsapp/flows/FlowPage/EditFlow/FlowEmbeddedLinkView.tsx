@@ -31,18 +31,25 @@ import {
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 
+/** The embedded-link element's editable properties, plus the screen it navigates to. */
+interface EmbeddedLinkFormValues {
+  text: string;
+  type: WaFlowFormElementType;
+  embeddedLinkScreenId: string;
+}
+
 export function FlowEmbeddedLinkDetailedView() {
   const uid = useId();
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
   const [nonInputTextType] = useState(
-    selectedFormElement.type === WaFlowFormElementType.nonInputText
+    selectedFormElement?.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
-      : selectedFormElement.type,
+      : selectedFormElement?.type,
   );
   const { t: translations } = useTranslation();
-  const limit = getFlowTextLimit(selectedFormElement.type);
+  const limit = getFlowTextLimit(selectedFormElement?.type);
 
   const schema = z.object({
     text: z
@@ -50,14 +57,14 @@ export function FlowEmbeddedLinkDetailedView() {
       .trim()
       .min(1, "Text is required")
       .max(limit, `Text should be less than ${limit} characters`),
-    type: z.any(),
+    type: z.custom<WaFlowFormElementType>(),
     embeddedLinkScreenId: z.string(),
   });
 
-  const form = useForm<any>({
+  const form = useForm<EmbeddedLinkFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      text: selectedFormElement.text || "",
+      text: selectedFormElement?.text || "",
       type: nonInputTextType,
       embeddedLinkScreenId: "",
     },
@@ -66,13 +73,13 @@ export function FlowEmbeddedLinkDetailedView() {
   const onSave = form.handleSubmit(
     (values) => {
       const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-      const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
+      const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-        const footer = formEl.children?.find((data) => data.type === WaFlowFormElementType.footer);
+        const footer = formEl?.children?.find((data) => data.type === WaFlowFormElementType.footer);
 
-        formEl.children[index].text = values.text;
-        formEl.children[index]["on-click-action"] = {
+        formEl!.children[index]!.text = values.text;
+        formEl!.children[index]!["on-click-action"] = {
           name: "navigate",
           next: {
             type: "screen",
@@ -97,7 +104,7 @@ export function FlowEmbeddedLinkDetailedView() {
       <ScrollArea className="h-4/5">
         <div className="flex justify-between">
           <Badge variant="outline" className="text-muted-foreground">
-            {getWaFlowFormElementTypeLabel(selectedFormElement.type)}
+            {getWaFlowFormElementTypeLabel(selectedFormElement?.type)}
           </Badge>
         </div>
         <div className="flex gap-0.5 p-0.5 pr-10">
@@ -112,7 +119,7 @@ export function FlowEmbeddedLinkDetailedView() {
                     value={field.value ?? ""}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSave]])}
+                    onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => void onSave()]])}
                     maxValue={getFlowTextLimit(nonInputTextType)}
                     placeholder={translations("Enter your text here *")}
                     aria-invalid={fieldState.invalid}

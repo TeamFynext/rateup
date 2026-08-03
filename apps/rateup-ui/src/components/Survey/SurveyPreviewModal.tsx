@@ -1,8 +1,17 @@
 import { IconX } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 
-function SurveyPreviewModal({ opened, onClose, children }) {
+function SurveyPreviewModal({
+  opened,
+  onClose,
+  children,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  children: ReactNode;
+}) {
   if (!opened) return null;
 
   return (

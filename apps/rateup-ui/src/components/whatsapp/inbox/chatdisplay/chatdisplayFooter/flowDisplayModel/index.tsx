@@ -1,5 +1,4 @@
-import { IconSend } from "@tabler/icons-react";
-import { Loader2 } from "lucide-react";
+import { IconLoader2, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +16,7 @@ import WaInboxFlowSelectCard from "./flowSelectCard/index.tsx";
 
 interface Props {
   sessionExpired: boolean;
-  contact: ContactsData;
+  contact: ContactsData | null;
   opened: boolean;
   close: () => void;
 }
@@ -25,7 +24,7 @@ interface Props {
 export default function WaInboxFlowDisplayModal(props: Props) {
   const [selectedDbFlowId, setSelectedDbFlowId] = useState<string>("");
   const { data, isLoading, error } = useWaFlowsFromDb();
-  const [teamId, setTeamId] = useState(null);
+  const [teamId, setTeamId] = useState<string | null>(null);
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
 
@@ -64,7 +63,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
         </DialogHeader>
         {isLoading && (
           <div className="flex items-center justify-center p-6">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <IconLoader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
         {error && (
@@ -72,7 +71,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             <Badge variant="destructive">{translations("Error")}</Badge>
           </div>
         )}
-        {data && acceptedFlows.length > 0 ? (
+        {data && (acceptedFlows?.length ?? 0) > 0 ? (
           <>
             <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto p-1">
               <TeamSelector
@@ -102,7 +101,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
                 onClick={handleSendFlow}
               >
                 {sendFlowToUser.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                  <IconLoader2 className="h-4 w-4 animate-spin mr-1.5" />
                 ) : null}
                 <span>{translations("Send")}</span>
                 {!sendFlowToUser.isPending && <IconSend className="ml-1.5 h-4 w-4" />}

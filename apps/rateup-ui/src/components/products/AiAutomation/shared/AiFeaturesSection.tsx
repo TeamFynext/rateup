@@ -1,52 +1,52 @@
-import { Link } from "@tanstack/react-router";
 import {
-  Bot,
-  Languages,
-  MessageSquareCode,
-  MousePointerClick,
-  Settings,
-  Share2,
-} from "lucide-react";
+  IconLanguage,
+  IconMessageCode,
+  IconPointer,
+  IconRobot,
+  IconSettings,
+  IconShare2,
+} from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import { easeInOut, motion } from "motion/react";
 
 const features = [
   {
-    icon: Bot,
+    icon: IconRobot,
     title: "Multiple AI Agents in One Flow",
     description:
       "Orchestrate complex interactions by adding and configuring multiple AI agents within the same automation flow. Each agent can be assigned distinct roles, from customer support to product recommendations, ensuring every task is handled efficiently.",
     href: "#",
   },
   {
-    icon: MessageSquareCode,
+    icon: IconMessageCode,
     title: "Context-Aware Interactions",
     description:
       "Our AI agents don’t just respond; they understand. By analyzing user context, past interactions, and real-time inputs, they personalize responses and dynamically route conversations or tasks for a truly seamless experience.",
     href: "#",
   },
   {
-    icon: Share2,
+    icon: IconShare2,
     title: "Seamless Integration with WhatsApp and Web",
     description:
       "Reach your customers wherever they are. Our smart agents integrate effortlessly with popular channels like WhatsApp, your website, kiosks, and other embedded platforms, providing consistent and intelligent support across all touchpoints.",
     href: "#",
   },
   {
-    icon: MousePointerClick,
+    icon: IconPointer,
     title: "No-Code, All Power",
     description:
       "Forget complex coding. Our intuitive drag-and-drop interface allows anyone to design sophisticated customer journeys with intelligent decision trees, sentiment-based branching, and automated triggers — no technical expertise required.",
     href: "#",
   },
   {
-    icon: Settings,
+    icon: IconSettings,
     title: "Trainable and Customizable Agents",
     description:
       "Tailor each AI agent to your unique business needs. Train them with specific knowledge (FAQs, product info, escalation paths) and fine-tune their responses to reflect your brand’s tone and language perfectly.",
     href: "#",
   },
   {
-    icon: Languages,
+    icon: IconLanguage,
     title: "Multi-Language Support",
     description:
       "Serve a global audience with ease. Our agents can communicate fluently in regional languages and dynamically switch based on customer preference, breaking down communication barriers.",

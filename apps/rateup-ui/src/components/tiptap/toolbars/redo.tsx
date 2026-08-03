@@ -1,6 +1,4 @@
-"use client";
-
-import { Redo2 } from "lucide-react";
+import { IconArrowForwardUp } from "@tabler/icons-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +29,7 @@ const RedoToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
             />
           }
         >
-          {children ?? <Redo2 className="h-4 w-4" />}
+          {children ?? <IconArrowForwardUp className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>
           <span>Redo</span>

@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { IntegratedApps } from "@/types/enums.ts";
 import type { AmeliaCredential, petpoojaCredential } from "@/types/global";
 
@@ -14,14 +15,16 @@ export const getIntegrationByType = async (type: IntegratedApps) => {
   return response.data;
 };
 
-interface integrationSchemaProps {
+export interface integrationSchemaProps {
   id?: string;
-  credential: AmeliaCredential | petpoojaCredential;
+  /** Zapier creates with no credential — the server mints the API key. */
+  credential: AmeliaCredential | petpoojaCredential | Record<string, never>;
   name: string;
 }
 
 export interface updateIntegrationSchema {
-  credential: any;
+  /** The provider's credential blob; its shape differs per integration. */
+  credential: RequestPayload;
   updateKey?: boolean;
 }
 
@@ -45,7 +48,7 @@ export async function getGoogleSheetAuthorizationUrl() {
   return res.data;
 }
 
-export async function createGoogleSheetAuthToken(data) {
+export async function createGoogleSheetAuthToken(data: RequestPayload) {
   const res = await axiosClient.post(`${ROUTE_URL}google/auth-token`, data);
   return res.data;
 }
@@ -68,7 +71,7 @@ export const getWaPaymentConfigurationByName = async ({
   return response.data;
 };
 
-export const createWaPaymentConfiguration = async (data) => {
+export const createWaPaymentConfiguration = async (data: RequestPayload) => {
   const response = await axiosClient.post(`${ROUTE_URL}wa_payment_configuration`, data);
   return response.data;
 };
@@ -82,15 +85,75 @@ export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
   return response.data;
 };
 
+/** An installed app integration row. */
+export interface AppIntegration {
+  id: string;
+  name: IntegratedApps;
+  orgId: string;
+  active: boolean;
+  createdAt: string;
+  /**
+   * Per-provider credential blob. The named members are the ones the
+   * integration screens read; the rest varies by provider.
+   */
+  credential: {
+    session?: { shop?: string };
+    accessToken?: string;
+    restaurantId?: string;
+    orderEvent?: Record<string, unknown>;
+    history?: Array<{
+      phone?: string;
+      name?: string;
+      status?: string;
+      scheduledAt?: string;
+      createdAt?: string;
+    }>;
+    supportedProducts?: { crm?: boolean; bigin?: boolean; [key: string]: unknown };
+    triggerSubscriptions?: Array<{
+      subscribed_field?: string;
+      active?: boolean;
+      [key: string]: unknown;
+    }>;
+    crm?: {
+      leadLifecycleMappings?: Array<{
+        zohoLeadStatus: string;
+        lifecycleId?: string;
+        lifecycleName?: string;
+      }>;
+      [key: string]: unknown;
+    };
+    bigin?: {
+      biginOwner?: string;
+      pipeline?: {
+        selectedPipeline?: { id?: string | number; [key: string]: unknown };
+        selectedSubPipeline?: { id?: string | number; [key: string]: unknown };
+        requiredFieldMappings?: Record<string, string>;
+        lifecycleStageMappings?: Array<{
+          lifecycleId: string;
+          lifecycleName?: string;
+          biginStageId?: string;
+          biginStageName?: string;
+        }>;
+      };
+      lifecycleStageMappings?: Record<string, string>;
+      [key: string]: unknown;
+    };
+    lastZohoSyncAt?: string;
+    lastZohoLeadSyncAt?: string;
+    lastBiginSyncAt?: string;
+    [key: string]: unknown;
+  };
+}
+
 export async function getAllIntegrations() {
-  return (await axiosClient.get(`${ROUTE_URL}all`)).data;
+  return (await axiosClient.get(`${ROUTE_URL}all`)).data as AppIntegration[];
 }
 
 export async function getIntegrationStatuses() {
   return (await axiosClient.get(`${ROUTE_URL}statuses`)).data;
 }
 
-export async function deleteZapierTriggerHook(data) {
+export async function deleteZapierTriggerHook(data: RequestPayload) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
 

@@ -1,4 +1,4 @@
-import { ArrowUpCircle, Loader2, Save, Send } from "lucide-react";
+import { IconArrowUpCircle, IconDeviceFloppy, IconLoader2, IconSend } from "@tabler/icons-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.t
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
+import type { EventTriggersFormValues } from "./schemas.ts";
 import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils.ts";
 
 interface TierUpdateSettingsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<EventTriggersFormValues>;
   isPending: boolean;
   onToggle: (eventType: LoyaltyEventType, enabled: boolean) => void;
   onSave: () => void;
@@ -37,7 +38,7 @@ export function TierUpdateSettings({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <ArrowUpCircle className="w-4 h-4 text-primary" />
+          <IconArrowUpCircle className="w-4 h-4 text-primary" />
           {t("Tier Updates")}
         </CardTitle>
       </CardHeader>
@@ -90,7 +91,7 @@ export function TierUpdateSettings({
 
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <Send className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <IconSend className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -104,9 +105,9 @@ export function TierUpdateSettings({
             {isModified && (
               <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 )}
                 {t("Save Settings")}
               </Button>

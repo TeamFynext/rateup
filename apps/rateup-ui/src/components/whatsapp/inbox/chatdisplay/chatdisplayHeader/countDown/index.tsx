@@ -1,6 +1,6 @@
+import { IconClock } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Clock, TimerIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
@@ -29,7 +29,7 @@ export default function WaInboxCountdownTimer({ timeStamp }: { timeStamp: string
   if (!timeStamp || isInboxSessionExpired(timeStamp)) {
     return (
       <CustomTooltip
-        trigger={<TimerIcon className="text-muted" />}
+        trigger={<IconClock className="text-muted" />}
         content={<span>No Session</span>}
         side="bottom"
       />
@@ -42,7 +42,7 @@ export default function WaInboxCountdownTimer({ timeStamp }: { timeStamp: string
     return (
       <div>
         <div className="flex items-center gap-1">
-          <Clock className="w-4 h-4 text-primary" />
+          <IconClock className="w-4 h-4 text-primary" />
           <span className="text-primary text-sm font-medium">{`${hours ?? 0} : ${minutes ?? 0}`}</span>
         </div>
       </div>

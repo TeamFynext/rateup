@@ -1,13 +1,23 @@
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 
+import type { RequestPayload } from "@/types/api.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
+
 import { axiosClient } from "../apiClient";
 
 export interface ICreateGoogleUser {
   name: string;
   orgName: string;
-  type: string;
+  /** Comes straight off the `authType` search param, which may repeat. */
+  type: string | string[] | undefined;
   email?: string;
   referralCode?: string;
+  industry?: string;
+  website?: string;
+  phoneNumber?: string;
+  location?: string;
+  goals?: string[];
+  integrationsSelected?: string[];
 }
 
 export interface IChangePassword {
@@ -57,7 +67,7 @@ export async function fetchUserInfo() {
     const response: IUserInfoApiResponse = (await axiosClient.get("/user/info")).data;
     return response;
   } catch (e) {
-    return { error: e.response.data }; // TODO: improve error handling for react query
+    return { error: getApiErrorData(e) }; // TODO: improve error handling for react query
   }
 }
 
@@ -88,7 +98,7 @@ export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) =>
     data: data,
   });
 
-export const createGoogleUser = (data) => {
+export const createGoogleUser = (data: RequestPayload) => {
   return axiosClient({
     url: `/user/complete-google-signup`,
     method: "POST",
@@ -96,7 +106,7 @@ export const createGoogleUser = (data) => {
   });
 };
 
-export const createAppleUser = (data) => {
+export const createAppleUser = (data: RequestPayload) => {
   return axiosClient({
     url: `/user/complete-apple-signup`,
     method: "POST",
@@ -135,7 +145,7 @@ export async function updateRecipeName() {
   return (await axiosClient.post(`user/update-recipe`)).data;
 }
 
-export async function updateUserPause({ userId, data }) {
+export async function updateUserPause({ userId, data }: { userId: string; data: RequestPayload }) {
   return await axiosClient.put(`user/pause/${userId}`, data);
 }
 
@@ -175,7 +185,7 @@ interface IPagination {
   hasPrevPage: boolean;
 }
 
-export type AuditLog = Record<string, any>;
+export type AuditLog = Record<string, unknown>;
 export interface AuditLogData {
   id: string;
   userId: string;
@@ -186,7 +196,7 @@ export interface AuditLogData {
   action: string;
   method: string;
   route: string;
-  body: any;
+  body: RequestPayload;
   createdAt: string;
   rawCreatedAt: Date;
 }

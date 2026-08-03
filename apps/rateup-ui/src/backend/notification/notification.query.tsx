@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { notificationKeys } from "@/backend/notification/notification.keys";
+
 import {
   deleteAllNotifications,
   deleteNotification,
@@ -13,7 +15,7 @@ import {
 export const useNotifications = (enabled = true) => {
   return useQuery({
     queryFn: getNotifications,
-    queryKey: ["notification"],
+    queryKey: notificationKeys.all(),
     enabled,
   });
 };
@@ -21,7 +23,7 @@ export const useNotifications = (enabled = true) => {
 export const useNotificationsCount = () => {
   return useQuery({
     queryFn: getNotificationsCount,
-    queryKey: ["notificationCount"],
+    queryKey: notificationKeys.count(),
     refetchOnWindowFocus: "always",
   });
 };
@@ -29,7 +31,7 @@ export const useNotificationsCount = () => {
 export const useNotificationSettings = (enabled = true) => {
   return useQuery({
     queryFn: getNotificationSettings,
-    queryKey: ["notificationSettings"],
+    queryKey: notificationKeys.settings(),
     enabled,
   });
 };
@@ -48,7 +50,7 @@ export const useUpdateNotificationSettings = () => {
       return updateNotificationSettings(data);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["notificationSettings"] });
+      qc.invalidateQueries({ queryKey: notificationKeys.settings() });
       toast.success("success", {
         id: "notification",
       });
@@ -64,15 +66,15 @@ export const useUpdateNotificationSettings = () => {
 export const useDeleteNotification = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (notificationId) => {
+    mutationFn: (notificationId: string) => {
       toast.loading("Hold on...deleting", {
         id: "notification",
       });
       return deleteNotification(notificationId);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["notification"] });
-      qc.invalidateQueries({ queryKey: ["notificationCount"] });
+      qc.invalidateQueries({ queryKey: notificationKeys.all() });
+      qc.invalidateQueries({ queryKey: notificationKeys.count() });
       toast.success("success", {
         id: "notification",
       });
@@ -95,8 +97,8 @@ export const useDeleteAllNotifications = () => {
       return deleteAllNotifications();
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["notification"] });
-      qc.invalidateQueries({ queryKey: ["notificationCount"] });
+      qc.invalidateQueries({ queryKey: notificationKeys.all() });
+      qc.invalidateQueries({ queryKey: notificationKeys.count() });
       toast.success("success", {
         id: "notification",
       });

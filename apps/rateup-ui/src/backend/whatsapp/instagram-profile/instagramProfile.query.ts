@@ -48,7 +48,7 @@ export const useSetInstagramIceBreakersMutation = (waSettingsId?: string) => {
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram ice breakers saved to DB");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to update Instagram ice breakers");
     },
   });
@@ -63,7 +63,7 @@ export const useSyncInstagramIceBreakersMutation = (waSettingsId?: string) => {
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram ice breakers synced with Meta");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to sync Instagram ice breakers");
     },
   });
@@ -78,7 +78,7 @@ export const useDeleteInstagramIceBreakersMutation = (waSettingsId?: string) => 
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram ice breakers deleted");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to delete Instagram ice breakers");
     },
   });
@@ -94,7 +94,7 @@ export const useSetInstagramPersistentMenuMutation = (waSettingsId?: string) => 
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram persistent menu saved to DB");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to update Instagram persistent menu");
     },
   });
@@ -109,7 +109,7 @@ export const useSyncInstagramPersistentMenuMutation = (waSettingsId?: string) =>
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram persistent menu synced with Meta");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to sync Instagram persistent menu");
     },
   });
@@ -124,7 +124,7 @@ export const useDeleteInstagramPersistentMenuMutation = (waSettingsId?: string) 
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram persistent menu deleted");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error?.message || "Failed to delete Instagram persistent menu");
     },
   });

@@ -1,11 +1,11 @@
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 /**
- * Receives the native `KeyboardEvent`. Typed loosely (as Mantine's was) because
- * call sites also pass react-hook-form submit handlers, which declare a
- * `BaseSyntheticEvent` parameter but only ever touch `preventDefault`.
+ * Receives the native `KeyboardEvent`. `getHotkeyHandler` has already called
+ * `preventDefault` by the time this runs, so handlers that ignore the event —
+ * which is all of them — are fine.
  */
-type HotkeyHandler = (event: any) => void;
+type HotkeyHandler = (event: KeyboardEvent) => void;
 type HotkeyItem = [string, HotkeyHandler, { preventDefault?: boolean }?];
 
 interface ParsedHotkey {

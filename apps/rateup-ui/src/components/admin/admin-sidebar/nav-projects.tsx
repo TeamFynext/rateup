@@ -1,5 +1,5 @@
+import type { TablerIcon } from "@tabler/icons-react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -14,7 +14,7 @@ export function NavProjects({
   projects: {
     name: string;
     url: string;
-    icon: LucideIcon;
+    icon: TablerIcon;
   }[];
 }>) {
   const pathname = useRouterState({

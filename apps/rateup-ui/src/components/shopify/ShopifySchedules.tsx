@@ -2,10 +2,12 @@ import { IconEye } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import type { ShopifyProduct } from "@/backend/appsIntegration/shopify/shopify.api";
+import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -19,20 +21,20 @@ import RefreshButton from "../Button/RefreshButton.tsx";
 interface ScheduleRowData {
   id: string;
   phone: string;
-  scheduleTime: string;
-  sentAt: string;
+  scheduleTime: string | null;
+  sentAt: string | null;
   status: string;
-  actionStatus: any;
+  actionStatus?: ShopifySchedule["actionStatus"];
   apiStatus: string;
-  createdAt: string;
+  createdAt: string | null;
   history: ShopifySchedule;
-  event_details: ShopifySurvey;
+  event_details: ShopifySurvey | undefined;
 }
 
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;
-  onOpen: (event: ShopifySurvey) => void;
-  translations: any;
+  onOpen: (event: ShopifySurvey | undefined) => void;
+  translations: TFunction;
 }
 
 const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCellProps) => (
@@ -50,9 +52,9 @@ const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCe
 );
 
 interface HistoryCellProps {
-  schedule: ShopifySchedule;
-  onOpen: (schedule: ShopifySchedule) => void;
-  translations: any;
+  schedule: ShopifySchedule | null;
+  onOpen: (schedule: ShopifySchedule | null) => void;
+  translations: TFunction;
 }
 
 const HistoryCell = ({ schedule, onOpen, translations }: HistoryCellProps) => (
@@ -75,16 +77,17 @@ const ShopifySchedules = ({
   waTemplates,
   teams,
 }: {
-  shopifyProducts: any[];
+  shopifyProducts: ShopifyProduct[];
   shopifyInfo: ShopifyIntegration;
-  waTemplates: WaTemplate[];
+  waTemplates: WaTemplateListEntry[];
   teams: TeamData[];
 }) => {
   const schedules = shopifyInfo.credential.shopifySurveys.flatMap((s) => s.schedules);
-  const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] = useState<ShopifySurvey>(null);
+  const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] =
+    useState<ShopifySurvey | null>(null);
   const [opened, setOpened] = useState(false);
   const [historyOpened, setHistoryOpened] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<ShopifySchedule>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<ShopifySchedule | null>(null);
   const { t: translations } = useTranslation();
 
   const templateAndteam = {
@@ -143,7 +146,7 @@ const ShopifySchedules = ({
       cell: ({ row }) => (
         <EventDetailsCell
           eventDetails={row.original.event_details}
-          onOpen={setSelectedShopifySurveyEvent}
+          onOpen={(event) => setSelectedShopifySurveyEvent(event ?? null)}
           translations={translations}
         />
       ),
@@ -191,7 +194,21 @@ const ShopifySchedules = ({
   );
 };
 
-const EventDetailsModal = ({ opened, close, shopifySurvey, templateAndTeam }) => {
+const EventDetailsModal = ({
+  opened,
+  close,
+  shopifySurvey,
+  templateAndTeam,
+}: {
+  opened: boolean;
+  close: () => void;
+  shopifySurvey: ShopifySurvey | null;
+  templateAndTeam: {
+    templateName?: string;
+    teamName?: string;
+    product?: string;
+  };
+}) => {
   const { t: translations } = useTranslation();
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>
@@ -206,7 +223,8 @@ const EventDetailsModal = ({ opened, close, shopifySurvey, templateAndTeam }) =>
           <p>
             {translations("WhatsApp Template :")}{" "}
             <Link
-              to={`/dashboard/whatsapp/templates/${shopifySurvey?.waTemplateId}`}
+              to="/dashboard/whatsapp/templates/$templateId"
+              params={{ templateId: shopifySurvey?.waTemplateId ?? "" }}
               className="text-primary underline"
             >
               {templateAndTeam?.templateName}
@@ -244,7 +262,7 @@ const ScheduleHistoryModal = ({
   opened,
   close,
 }: {
-  schedule: ShopifySchedule;
+  schedule: ShopifySchedule | null;
   opened: boolean;
   close: () => void;
 }) => {

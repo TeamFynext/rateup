@@ -1,6 +1,6 @@
+import { IconStar } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import parse from "html-react-parser";
-import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ const ReadOnlyRating = ({ value }: { value: number }) => {
   return (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
-        <Star
+        <IconStar
           key={star}
           className={`h-4 w-4 ${
             star <= value ? "fill-current text-yellow-500" : "text-muted-foreground"
@@ -33,7 +33,7 @@ const SurveyResponsesView = ({
   no,
   language,
 }: {
-  question: any;
+  question: Question;
   response: QuestionResponse;
   type: string;
   no: number;
@@ -100,7 +100,7 @@ const SurveyResponsesView = ({
                         {responseData.map((item) => {
                           const choices = question?.choices?.[language] ?? question?.choices;
 
-                          const choice = choices?.find((c: any) => c.id === item);
+                          const choice = choices?.find((c: { id?: string }) => c.id === item);
 
                           return <li key={choice?.title}>{choice?.title || item?.value}</li>;
                         })}
@@ -183,7 +183,7 @@ const SurveyResponsesView = ({
 
                   const choices = question?.choices?.[language] ?? question?.choices;
 
-                  const choice = choices?.find((c: any) => c.id === selectedValue);
+                  const choice = choices?.find((c: { id?: string }) => c.id === selectedValue);
 
                   return <p>{choice?.title || selectedValue?.value}</p>;
                 }

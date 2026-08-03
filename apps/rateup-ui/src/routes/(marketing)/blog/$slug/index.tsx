@@ -8,6 +8,7 @@ import RoutePending from "@/components/Loaders/RoutePending.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { getMarkdownContent } from "@/lib/content.ts";
 import { getSinglePost } from "@/lib/posts.ts";
+import type { Tag } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
@@ -139,7 +140,7 @@ function Page() {
           <header className="py-8 md:py-12">
             {post.primary_tag && (
               <div className="mb-4">
-                <Link to={`/blog/tag/${post.primary_tag?.slug}`}>
+                <Link to="/blog/tag/$slug" params={{ slug: post.primary_tag.slug }}>
                   <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
                     {post.primary_tag?.name}
                   </span>
@@ -159,7 +160,7 @@ function Page() {
               </Avatar>
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <Link to={`/blog/author/${post.primary_author?.slug}`}>
+                  <Link to="/blog/author/$slug" params={{ slug: post.primary_author?.slug ?? "" }}>
                     <div className="font-medium text-slate-900">{post.primary_author?.name}</div>
                   </Link>
                   <div className="text-sm text-slate-500">
@@ -197,10 +198,11 @@ function Page() {
               <div className="mt-12 border-t border-slate-200 pt-8">
                 <h2 className="mb-4 text-lg font-semibold text-slate-900">Tags</h2>
                 <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
+                  {post.tags.map((tag: Tag) => (
                     <Link
                       key={tag.id}
-                      to={`/blog?tag=${tag.slug}`}
+                      to="/blog/tag/$slug"
+                      params={{ slug: tag.slug }}
                       className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800 hover:bg-slate-200"
                     >
                       {tag?.name}

@@ -1,4 +1,4 @@
-import { StarIcon } from "lucide-react";
+import { IconStar } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
 
@@ -41,13 +41,13 @@ export function StarRating({
         const fill = Math.max(0, Math.min(1, clamped - i));
         return (
           <span key={i} className={cn("relative inline-block", starClass)}>
-            <StarIcon className={cn(starClass, "absolute inset-0 text-muted-foreground/40")} />
+            <IconStar className={cn(starClass, "absolute inset-0 text-muted-foreground/40")} />
             {fill > 0 && (
               <span
                 className="absolute inset-0 overflow-hidden"
                 style={fill < 1 ? { width: `${fill * 100}%` } : undefined}
               >
-                <StarIcon
+                <IconStar
                   className={cn(starClass, "fill-amber-400 text-amber-400 dark:fill-amber-500")}
                 />
               </span>

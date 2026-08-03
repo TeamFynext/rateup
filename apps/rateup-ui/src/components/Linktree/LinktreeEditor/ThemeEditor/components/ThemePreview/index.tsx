@@ -1,5 +1,7 @@
 import { useCallback, useRef } from "react";
+import type { ChangeEvent, CSSProperties } from "react";
 
+import type { LinktreeLink } from "@/backend/linktree/linktree.api.ts";
 import { useLinktreeObj } from "@/components/Linktree/LinktreeEditor/LinktreeContext/LinktreeContext.tsx";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -31,16 +33,16 @@ function ThemePreview() {
 
   const themeDispatch = useThemeDispatch();
 
-  const previewDivRef = useRef(null);
+  const previewDivRef = useRef<HTMLDivElement | null>(null);
 
-  const handleTitleTextChange = useCallback((e) => {
+  const handleTitleTextChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     themeDispatch({
       type: "title-text-change",
       payload: e.target.value,
     });
   }, []);
 
-  const handleSubtitleTextChange = useCallback((e) => {
+  const handleSubtitleTextChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     themeDispatch({
       type: "subtitle-text-change",
       payload: e.target.value,
@@ -48,7 +50,7 @@ function ThemePreview() {
   }, []);
 
   let backgroundImageUrl = "";
-  const backgroundImageObj = {};
+  const backgroundImageObj: CSSProperties = {};
   if (selectedPreviewDevice === "desktop") {
     if (desktopBgImgUrl) backgroundImageUrl = desktopBgImgUrl;
     backgroundImageObj["backgroundImage"] = `url(${desktopBgImgUrl})`;
@@ -115,7 +117,7 @@ function ThemePreview() {
             </div>
 
             <div className={styles["links-list-container"]}>
-              {links.map(({ id, linkDisplayName, linkUrl }) => {
+              {links.map(({ id, linkDisplayName, linkUrl }: LinktreeLink) => {
                 return (
                   <a
                     target="_blank"

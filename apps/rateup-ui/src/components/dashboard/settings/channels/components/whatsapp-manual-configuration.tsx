@@ -89,7 +89,7 @@ export function WhatsAppManualConfiguration({
     upsertMutation.mutate(payload, { onSuccess: () => onSaved?.() });
   };
 
-  const handleDelete = () => deleteMutation.mutate(waSettings?.phoneId);
+  const handleDelete = () => deleteMutation.mutate(waSettings?.phoneId ?? "");
 
   return (
     <Card className="border-border/80">

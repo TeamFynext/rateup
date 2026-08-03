@@ -8,13 +8,13 @@ import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useExportWaChats } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import useContactStore from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
 import { Field, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import useContactStore from "@/store/inbox.store.ts";
 
 const DateType = {
   BETWEEN: "between",
@@ -42,33 +42,33 @@ const chatExportSchema = z
     if (val.date.type === "between") {
       if (!val.date.between.from) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "From date is required",
           path: ["date", "between", "from"],
         });
       }
       if (!val.date.between.to) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "To date is required",
           path: ["date", "between", "to"],
         });
       }
     } else if (val.date.type === "before" && !val.date.before) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Date is required",
         path: ["date", "before"],
       });
     } else if (val.date.type === "after" && !val.date.after) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Date is required",
         path: ["date", "after"],
       });
     } else if (val.date.type === "on" && !val.date.on) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Date is required",
         path: ["date", "on"],
       });
@@ -326,7 +326,7 @@ const CustomDatePicker = ({
 }: {
   label: string;
   value?: Date;
-  onChange?: (date: Date) => void;
+  onChange?: (date: Date | undefined) => void;
 }) => {
   return (
     <Field className="gap-1 p-2 border rounded-lg bg-card max-w-[140px] flex-1">

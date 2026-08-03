@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 
 import { Spinner } from "@/components/ui/spinner";
+import { isSuperTokensGeneralError } from "@/utils/auth/index.tsx";
 
 export const Route = createFileRoute("/(auth)/login/callback/google/")({
   component: GoogleCallbacck,
@@ -20,7 +21,8 @@ function GoogleCallbacck() {
         if (response.createdNewRecipeUser && response.user.loginMethods.length === 1) {
           // sign up successful
           navigate({
-            to: "/signup?auth=google",
+            to: "/signup",
+            search: { auth: "google" },
           });
 
           toast.success("Sign up success", {
@@ -49,8 +51,8 @@ function GoogleCallbacck() {
         window.alert("No email provided by social login. Please use another form of login");
         window.location.assign("/logout"); // redirect back to login page
       }
-    } catch (err: any) {
-      if (err.isSuperTokensGeneralError === true) {
+    } catch (err) {
+      if (isSuperTokensGeneralError(err)) {
         console.log(err);
         // this may be a custom error message sent from the API by you.
         // window.alert(err.message);

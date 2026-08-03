@@ -11,6 +11,7 @@ import StylesComponent from "./SurveyTheme/components/stylescomponent/index.tsx"
 import SurveyTheme from "./SurveyTheme/index.tsx";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
+import type { UnsavedChangesCheck } from "./Tabs/TabPanels.tsx";
 import UiTextTranslationsModal from "./UiTextTranslationsModal/index.tsx";
 
 interface EditThemeProps {
@@ -18,7 +19,9 @@ interface EditThemeProps {
   questions: Array<Question>;
   /** Leaves the Edit Theme tab (used by the panel's Close button). */
   onClose: () => void;
-  setFunToRunBeforeSurveyIdPageHeaderTabsChange: any;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: React.Dispatch<
+    React.SetStateAction<UnsavedChangesCheck | null>
+  >;
 }
 
 /**
@@ -39,7 +42,7 @@ export function EditTheme({
   const [isUiTextTranslationsModalOpen, setIsUiTextTranslationsModalOpen] = useState(false);
 
   // To store state of surveyThemeContextProvider.
-  const surveyThemeContextProviderValueRef = useRef(null);
+  const surveyThemeContextProviderValueRef = useRef<HTMLElement | null>(null);
 
   // Remounts the preview when the question set changes. TakeSurvey (rendered deep
   // inside the preview) keeps its own state — selected question, answers, slide
@@ -50,7 +53,9 @@ export function EditTheme({
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
 
-  const themeObjBeingEdited = allThemesArr?.find((obj) => obj.id === themeSelectorState);
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj: { id: string }) => obj.id === themeSelectorState,
+  );
   const isThemeObjBeingEditedDefaultTheme = themeObjBeingEdited?.name === "Default Theme";
 
   useEffect(() => {

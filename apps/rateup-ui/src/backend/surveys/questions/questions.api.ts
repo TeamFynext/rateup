@@ -1,9 +1,11 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../../apiClient";
 
 const QUESTION_URL = "/question";
 
 // TODO: somehow import types from backend?
-export async function createQuestion(surveyId: string, data) {
+export async function createQuestion(surveyId: string, data: RequestPayload) {
   return axiosClient.post(`${QUESTION_URL}/${surveyId}`, data);
 }
 
@@ -34,7 +36,15 @@ export async function updateQuestion(
   return axiosClient.put(`${QUESTION_URL}/${surveyId}/${questionId}`, data);
 }
 
-export async function importEmailIds({ surveyId, questionId, data }) {
+export async function importEmailIds({
+  surveyId,
+  questionId,
+  data,
+}: {
+  surveyId: string;
+  questionId: string;
+  data: RequestPayload;
+}) {
   return (await axiosClient.post(`${QUESTION_URL}/${surveyId}/import-emails/${questionId}`, data))
     .data;
 }

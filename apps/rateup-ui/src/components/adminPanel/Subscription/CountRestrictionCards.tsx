@@ -29,7 +29,7 @@ function CountField({
       <Input
         type="number"
         name={field.name}
-        value={field.value ?? ""}
+        value={typeof field.value === "number" ? field.value : ""}
         onBlur={field.onBlur}
         onChange={(e) => field.onChange(Number(e.target.value))}
       />
@@ -42,10 +42,13 @@ export function CountRestrictionCards({
   control,
 }: Readonly<CountRestrictionCardsProps>) {
   const features = useWatch({ control, name: "features" });
-  const feature = getNestedProperty(features, featurePathName);
+  const feature = getNestedProperty<{ count: Partial<Record<"max" | "min", number>> }>(
+    features,
+    featurePathName,
+  );
   return (
     <>
-      {Object.keys(feature.count).map((property: "max" | "min") => (
+      {(Object.keys(feature?.count ?? {}) as Array<"max" | "min">).map((property) => (
         <CountField
           key={property}
           control={control}

@@ -1,4 +1,5 @@
 import { axiosClient } from "@/backend/apiClient";
+import type { CatalogOrderProduct } from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { downloadBlob } from "@/utils/downloadBlob";
 
 const BASE_URL = "/commerce";
@@ -67,7 +68,7 @@ export interface CommerceTopProduct {
 export interface CommerceOrder {
   id: string;
   catalogId: string;
-  products: unknown[];
+  products: CatalogOrderProduct[];
   paymentMethod: string | null;
   paymentStatus: string | null;
   status: string | null;

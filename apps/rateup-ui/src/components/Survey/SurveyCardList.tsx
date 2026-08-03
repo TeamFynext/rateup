@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge.tsx";
 
-export function StatusBadge({ active }) {
+export function StatusBadge({ active }: { active: boolean }) {
   return (
     <Badge
       className={

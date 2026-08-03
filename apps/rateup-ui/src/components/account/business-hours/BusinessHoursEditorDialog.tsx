@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useId, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -35,6 +35,9 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 import type { BusinessHoursFormValues, DayKey } from "./schema.ts";
+
+/** One open/close window within a day's schedule. */
+type TimeSlot = BusinessHoursFormValues["schedule"][DayKey]["timeSlots"][number];
 import { businessHoursFormSchema, days, timeOptions } from "./schema.ts";
 
 interface Props {
@@ -53,6 +56,19 @@ function TimeSlotRow({
   slotError,
   handleTimeSlotChange,
   removeTimeSlot,
+}: {
+  slot: TimeSlot;
+  slotIndex: number;
+  day: DayKey;
+  daySchedule: { isOpen: boolean; timeSlots: TimeSlot[] };
+  slotError?: Partial<Record<"openTime" | "closeTime", { message?: string }>>;
+  handleTimeSlotChange: (
+    day: DayKey,
+    slotIndex: number,
+    field: "openTime" | "closeTime",
+    value: string,
+  ) => void;
+  removeTimeSlot: (day: DayKey, slotIndex: number) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -60,7 +76,7 @@ function TimeSlotRow({
       <div className="flex items-center gap-3">
         <Select
           value={slot.openTime}
-          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "openTime", val)}
+          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "openTime", val ?? "")}
           items={timeOptions.map((time) => ({ value: time, label: time }))}
         >
           <SelectTrigger className="w-24">
@@ -79,7 +95,7 @@ function TimeSlotRow({
 
         <Select
           value={slot.closeTime}
-          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "closeTime", val)}
+          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "closeTime", val ?? "")}
           items={timeOptions.map((time) => ({ value: time, label: time }))}
         >
           <SelectTrigger className="w-24">
@@ -102,7 +118,7 @@ function TimeSlotRow({
             onClick={() => removeTimeSlot(day, slotIndex)}
             className="p-1 h-8 w-8"
           >
-            <Trash2 className="w-3 h-3 text-red-500" />
+            <IconTrash className="w-3 h-3 text-red-500" />
           </Button>
         )}
       </div>
@@ -308,10 +324,22 @@ export function BusinessHoursEditorDialog({
                   <div className="mt-4 space-y-4">
                     {days.map((day, idx) => {
                       const daySchedule = field.value[day];
-                      const dayErrors =
-                        (fieldState.error as any)?.[day]?.timeSlots?.length > 0
-                          ? (fieldState.error as any)[day].timeSlots
-                          : null;
+                      // RHF nests the per-day errors under the field's own object shape.
+                      const scheduleErrors = fieldState.error as
+                        | Partial<
+                            Record<
+                              DayKey,
+                              {
+                                timeSlots?: Array<
+                                  Partial<Record<"openTime" | "closeTime", { message?: string }>>
+                                >;
+                              }
+                            >
+                          >
+                        | undefined;
+                      const dayErrors = scheduleErrors?.[day]?.timeSlots?.length
+                        ? scheduleErrors[day]?.timeSlots
+                        : null;
                       return (
                         <div key={day} className="space-y-3">
                           <div className="flex items-center justify-between">
@@ -345,13 +373,13 @@ export function BusinessHoursEditorDialog({
                                 onClick={() => addTimeSlot(day)}
                                 className="gap-1"
                               >
-                                <Plus className="w-3 h-3" />
+                                <IconPlus className="w-3 h-3" />
                               </Button>
                             )}
                           </div>
                           {daySchedule.isOpen && (
                             <div className="ml-28 space-y-2">
-                              {daySchedule.timeSlots.map((slot: any, slotIndex: number) => (
+                              {daySchedule.timeSlots.map((slot, slotIndex: number) => (
                                 <TimeSlotRow
                                   key={slotIndex + slot?.openTime + slot?.closeTime}
                                   slot={slot}

@@ -1,5 +1,5 @@
+import { IconCreditCard, IconPackage, IconReceipt } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditCard, Package, Receipt } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
@@ -16,7 +16,7 @@ function Index() {
       {/* Header Section */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
-          <CreditCard className="h-5 w-5 text-primary" />
+          <IconCreditCard className="h-5 w-5 text-primary" />
           <h1 className="text-2xl font-semibold tracking-tight">Razorpay Dashboard</h1>
         </div>
       </div>
@@ -27,11 +27,11 @@ function Index() {
       <Tabs defaultValue="plans">
         <TabsList>
           <TabsTrigger value="plans">
-            <Package className="h-4 w-4" />
+            <IconPackage className="h-4 w-4" />
             Plans
           </TabsTrigger>
           <TabsTrigger value="subscriptions">
-            <Receipt className="h-4 w-4" />
+            <IconReceipt className="h-4 w-4" />
             Subscriptions
           </TabsTrigger>
         </TabsList>

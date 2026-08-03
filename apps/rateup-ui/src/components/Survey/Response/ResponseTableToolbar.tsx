@@ -1,7 +1,12 @@
-import { IconFileDownload, IconTableExport } from "@tabler/icons-react";
+import {
+  IconFileDownload,
+  IconRefresh,
+  IconSearch,
+  IconTableExport,
+  IconUsers,
+} from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { RefreshCw, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
@@ -34,12 +39,12 @@ import { useResponseFilterStore } from "./store.ts";
 
 interface ResponseTableToolbarProps<TData> {
   table: Table<TData>;
-  CFData?: any[];
+  CFData?: Array<{ id: string; name: string }>;
   campaignIds: string[];
   setCampaignIds: (ids: string[]) => void;
   ranges: Range[];
   setRange: (range: Range[]) => void;
-  survey: any;
+  survey: Survey;
   isSyncing: boolean;
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;
@@ -69,7 +74,7 @@ export function ResponseTableToolbar<TData>({
   const { t: translations } = useTranslation();
   const [openedExport, setOpenedExport] = useState(false);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
-  const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
+  const filters = serverFilters ?? {};
 
   const getBackendFilterKey = (columnId: string) => {
     if (!columnId) return "";
@@ -229,7 +234,9 @@ export function ResponseTableToolbar<TData>({
       return (
         <Select
           value={searchTerm || "__none__"}
-          onValueChange={(value) => form.setValue("searchTerm", value === "__none__" ? "" : value)}
+          onValueChange={(value) =>
+            form.setValue("searchTerm", value === "__none__" ? "" : (value ?? ""))
+          }
           items={[
             { value: "__none__", label: translations("Select value") },
             ...numericOptions.map((option) => ({ value: option, label: option })),
@@ -320,7 +327,7 @@ export function ResponseTableToolbar<TData>({
             <Select
               value={searchBy}
               onValueChange={(value) => {
-                form.setValue("searchBy", value);
+                form.setValue("searchBy", value ?? "");
                 form.setValue("searchTerm", "");
               }}
               items={filterableColumns.map((column) => ({ value: column.id, label: column.label }))}
@@ -349,7 +356,7 @@ export function ResponseTableToolbar<TData>({
                 onClick={applySearch}
                 aria-label={translations("Search")}
               >
-                <Search className="size-4 text-muted-foreground" />
+                <IconSearch className="size-4 text-muted-foreground" />
               </Button>
             </div>
             <Button
@@ -397,7 +404,7 @@ export function ResponseTableToolbar<TData>({
                     else handleSyncGoogleSheet();
                   }}
                 >
-                  <RefreshCw className={`mr-2 size-4 ${isSyncing ? "animate-spin" : ""}`} />
+                  <IconRefresh className={`mr-2 size-4 ${isSyncing ? "animate-spin" : ""}`} />
                   {survey.spreadSheetId
                     ? translations("Resync with Google Sheet")
                     : translations("Sync with Google Sheet")}
@@ -424,7 +431,7 @@ export function ResponseTableToolbar<TData>({
                 ))}
                 {hasContactQuestion && handleExportContacts && (
                   <DropdownMenuItem onClick={handleExportContacts}>
-                    <Users className="mr-2 size-4" />
+                    <IconUsers className="mr-2 size-4" />
                     {translations("Contacts")}
                   </DropdownMenuItem>
                 )}

@@ -1,3 +1,17 @@
+<!-- intent-skills:start -->
+
+## Skill Loading
+
+Before editing files for a substantial task:
+
+- Run `npx @tanstack/intent@latest list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `npx @tanstack/intent@latest load <package>#<skill>` before changing files.
+- Use the loaded `SKILL.md` guidance while making the change.
+- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
+
+<!-- intent-skills:end -->
+
 # AI Coding Agent Instructions for rateup-ui
 
 This file provides essential guidance for AI coding agents working in this codebase. It summarizes key conventions, build/test commands, and links to further documentation and skills for productivity.
@@ -38,10 +52,36 @@ This file provides essential guidance for AI coding agents working in this codeb
   - `src/context/` — React context providers
   - `src/hooks/`, `src/store/`, `src/types/`, `src/utils/` — Hooks, state, types, utilities
 
-## TanStack Best Practices
+## TypeScript
 
-- Follow `.agents/skills/tanstack-start-best-practices/SKILL.md` for server functions, middleware, SSR, and deployment patterns.
-- Follow `.agents/skills/tanstack-router-best-practices/SKILL.md` for type-safe routing, loaders, search params, and navigation.
+`tsconfig.json` runs with `"strict": true` (which turns on `strictNullChecks`, `noImplicitAny`
+and the rest), plus `noUnusedLocals`/`noUnusedParameters`. **Never relax a strictness flag to make
+code compile** — fix the type instead. `npm run typecheck` must be clean before a change ships.
+
+- **Do not add `any`.** Prefer `unknown` plus a type guard, a generic, or a real interface. If a
+  value is genuinely opaque, `unknown` is the correct type — it forces the narrowing to happen at
+  the point of use. (There is still legacy `any` in the tree; replace it opportunistically in code
+  you are already touching, and don't bulk-strip it — the annotations are load-bearing until each
+  site gets a real type.)
+- **No `@ts-ignore` / `@ts-expect-error`.** There are currently zero in `src/`; keep it that way.
+  A suppression hides the next bug on that line, not just this one.
+- **Avoid `as` and `!`.** Use them only where the invariant is provable and local, and say why in a
+  comment. Never `as unknown as T` to bridge unrelated types.
+- **Opaque request bodies** use `RequestPayload` (`src/types/api.ts`, an alias for `unknown`) rather
+  than `any` — e.g. `export async function updateQr(data: RequestPayload)`.
+- **Errors from axios/react-query are `unknown`/`Error`, not axios shapes.** Reading
+  `error.response.data.message` off them does not type-check and throws when the rejection isn't an
+  axios error. Use the helpers in `src/utils/apiError.ts`: `getApiErrorMessage(error, fallback)`,
+  `getApiErrorData(error)`, `asApiError(error)`.
+- **Domain shapes live in `src/types/global.d.ts`** (ambient, mirrors the API). When adding or
+  correcting one, check the source of truth in `rateup-api` — `prisma/schema.prisma` for columns and
+  the module's `*.schema.ts` (zod) for JSON payload shapes — rather than inferring from one caller.
+- **Base UI hands back `null`, not `undefined`.** `Select`/`Combobox` `onValueChange` is
+  `(value: string | null) => void`; coalesce at the handler (`onChange(value ?? "")`) instead of
+  widening the field's own type.
+- **Prefer fixing the signature over patching the call site.** If a function legitimately accepts an
+  absent value, widen its parameter (`string | undefined`) once rather than `?? ""`-ing at every
+  caller.
 
 ## shadcn/ui Usage
 
@@ -120,8 +160,6 @@ User-visible changes are announced in-app from the megaphone button in the icon 
 **For more details, see:**
 
 - [shadcn skill](.agents/skills/shadcn/SKILL.md)
-- [TanStack Start best practices skill](.agents/skills/tanstack-start-best-practices/SKILL.md)
-- [TanStack Router best practices skill](.agents/skills/tanstack-router-best-practices/SKILL.md)
 - [package.json](package.json)
 - [vite.config.ts](vite.config.ts)
 - [src/config/](src/config/)

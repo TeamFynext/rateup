@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
+import { contactGroupKeys, contactKeys } from "@/backend/campaign/contacts/contacts.keys";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
+import { CONTACT_SORT } from "@/utils/constants.ts";
 
 import {
   addExistingContactsToGroup,
@@ -23,7 +27,7 @@ import {
 
 export const useContactGroup = (type: ContactGroupType = ContactGroupType.NORMAL) => {
   return useQuery({
-    queryKey: ["campaignContactGroupsData", type],
+    queryKey: campaignKeys.contactGroupsByType(type),
     queryFn: () => getContactGroupList(type),
   });
 };
@@ -31,16 +35,16 @@ export const useContactGroup = (type: ContactGroupType = ContactGroupType.NORMAL
 export const useContactGroupById = (
   groupId: string,
   enabled = false,
-  pagination,
-  searchData?,
-  sorting?,
-  columnFilters?,
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
 ) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";
   return useQuery({
-    queryKey: ["contactGroupById", groupId, pagination, search, sort, filters],
+    queryKey: contactGroupKeys.list(groupId, pagination, search, sort, filters),
     queryFn: () => getContactGroupById(groupId, pagination, search, sort, filters),
     enabled: !!groupId && enabled,
   });
@@ -48,14 +52,14 @@ export const useContactGroupById = (
 
 export const useContactGroupsByTeamId = (teamId: string) => {
   return useQuery({
-    queryKey: ["contactGroupsDataByTeamId"],
+    queryKey: contactGroupKeys.byTeam(),
     queryFn: () => getContactGroupsByTeamId(teamId),
   });
 };
 
 export const useContactGroupsByContactId = (contactId: string) => {
   return useQuery({
-    queryKey: ["contactGroupsDataByContactId", contactId],
+    queryKey: contactGroupKeys.byContact(contactId),
     queryFn: () => getContactGroupsByContactId(contactId),
     enabled: !!contactId,
   });
@@ -67,7 +71,7 @@ export const useCreateContactGroupMutation = () => {
     mutationFn: createContactGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
     },
     onError: (error) => {
@@ -84,11 +88,11 @@ export const useAddNewContactMutation = (groupId: string) => {
     mutationFn: (data) => addNewContact({ data, groupId }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupsDataByContactId"],
+        queryKey: contactGroupKeys.byContact(),
         exact: false,
         refetchType: "all",
       });
@@ -107,20 +111,20 @@ export const useAddNewContactMutation = (groupId: string) => {
 export const useAddNewContactFromCSVMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data) => addNewContactFromCSV({ data, groupId }),
+    mutationFn: (data: FormData) => addNewContactFromCSV({ data, groupId }),
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
     onSuccess: () => {
       toast.success("Added new member successfully.", {
         id: "contact-group-add-member",
       });
     },
-    onError: (error: any) => {
-      const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+    onError: (error) => {
+      const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
       if (!isValidationError) {
         toast.error(error?.message || `Error adding member`, {
           id: "contact-group-add-member",
@@ -136,10 +140,10 @@ export const useDeleteGroupMutation = () => {
     mutationFn: deleteContactGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupsDataByContactId"],
+        queryKey: contactGroupKeys.byContact(),
         exact: false,
         refetchType: "all",
       });
@@ -155,16 +159,16 @@ export const useDeleteGroupMutation = () => {
   });
 };
 
-export const useEditContactGroupMutation = (groupId: string) => {
+export const useEditContactGroupMutation = (groupId: string | undefined) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Omit<Partial<ContactGroup>, "tags">) => updateContactGroup(groupId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
       // showSuccessToast(
       //   "Contact Group Updated Successfully.",
@@ -189,16 +193,16 @@ export const useAddExistingContactMutation = (groupId: string) => {
     mutationFn: addExistingContactsToGroup,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contacts"],
+        queryKey: contactKeys.all(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupsDataByContactId"],
+        queryKey: contactGroupKeys.byContact(),
         exact: false,
         refetchType: "all",
       });
@@ -214,7 +218,7 @@ export const useAddExistingContactMutation = (groupId: string) => {
   });
 };
 
-export const useRemoveContactsFromGroup = (groupId) => {
+export const useRemoveContactsFromGroup = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeContactsFromGroup,
@@ -223,16 +227,16 @@ export const useRemoveContactsFromGroup = (groupId) => {
         id: "contact-group-remove",
       });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupById", groupId],
+        queryKey: contactGroupKeys.detail(groupId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contacts"],
+        queryKey: contactKeys.all(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupsDataByContactId"],
+        queryKey: contactGroupKeys.byContact(),
         exact: false,
         refetchType: "all",
       });
@@ -255,11 +259,11 @@ export const useAddExistingContactToMultipleGroupsMutation = (
     onSuccess: () => {
       for (const id of groupIds) {
         queryClient.invalidateQueries({
-          queryKey: ["contactGroupById", id],
+          queryKey: contactGroupKeys.detail(id),
         });
       }
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       toast.success("Contacts added to groups successfully.", {
         id: "contact-group-add-existing",
@@ -280,7 +284,7 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
     mutationFn: deleteManyContactGroups,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
       toast.success("Contact Groups Deleted successfully", {
         id: "contact-group-delete",
@@ -295,7 +299,7 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
   });
 };
 
-export const useUpdateContactGroupsForContactMutation = (contactId) => {
+export const useUpdateContactGroupsForContactMutation = (contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -310,13 +314,13 @@ export const useUpdateContactGroupsForContactMutation = (contactId) => {
 
     onSuccess: (_, _variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["contacts"],
+        queryKey: contactKeys.all(),
       });
       queryClient.invalidateQueries({
-        queryKey: ["contactGroupsDataByContactId", contactId],
+        queryKey: contactGroupKeys.byContact(contactId),
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaignContactGroupsData"],
+        queryKey: campaignKeys.contactGroups(),
       });
     },
   });

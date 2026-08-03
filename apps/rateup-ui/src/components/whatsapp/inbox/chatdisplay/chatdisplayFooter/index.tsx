@@ -1,19 +1,19 @@
-import { IconExclamationCircle } from "@tabler/icons-react";
+import {
+  IconBan,
+  IconBolt,
+  IconExclamationCircle,
+  IconMessage,
+  IconNote,
+  IconSend,
+  IconShieldExclamation,
+  IconTypography,
+  IconUserCheck,
+  IconUserPlus,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { EditorContent } from "@tiptap/react";
 import dayjs from "dayjs";
-import {
-  Ban,
-  MessageSquare,
-  Send,
-  ShieldAlert,
-  StickyNote,
-  TypeOutline,
-  UserCheck,
-  UserPlus,
-  Zap,
-} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import { create } from "zustand";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useConversationLimit } from "@/backend/stats/stats.query";
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
@@ -29,17 +30,14 @@ import {
   useSetContactSpam,
   useUnBlockWhatsAppUser,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
 import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
 import {
   extractMentionUserIds,
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/wa-editor/format.tsx";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
@@ -62,6 +60,8 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
@@ -89,10 +89,11 @@ function countEditorCharacters(content: unknown): number {
   if (!content) return 0;
   if (typeof content === "string") return content.length;
   let count = 0;
-  const walk = (node: any) => {
-    if (!node) return;
-    if (node.type === "text" && typeof node.text === "string") count += node.text.length;
-    if (Array.isArray(node.content)) node.content.forEach(walk);
+  const walk = (node: unknown) => {
+    if (!node || typeof node !== "object") return;
+    const { type, text, content: children } = node as TiptapNode;
+    if (type === "text" && typeof text === "string") count += text.length;
+    if (Array.isArray(children)) children.forEach(walk);
   };
   walk(content);
   return count;
@@ -121,7 +122,7 @@ export default function WaInboxChatDisplayFooter({
   const { activeTab, setActiveTab } = useComposerTabStore();
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
 
-  const submiRef = useRef(null);
+  const submiRef = useRef<(() => void) | null>(null);
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
@@ -136,7 +137,7 @@ export default function WaInboxChatDisplayFooter({
   const platform = getContactPlatform(contact);
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
-    currentUser.teamId,
+    currentUser?.teamId,
     whatsappSettingsPhoneId,
     platform,
   );
@@ -294,7 +295,7 @@ export default function WaInboxChatDisplayFooter({
                   },
                 },
           exchangeProcess: "send",
-          receive: null,
+          receive: undefined,
         },
         waCreatedAt: new Date().toISOString(),
         sourceIdentifier: whatsappSettingsPhoneId,
@@ -325,7 +326,7 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
     setAudioUrl(null);
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),
@@ -338,17 +339,17 @@ export default function WaInboxChatDisplayFooter({
           },
           mentionedUser,
           triggeredByUser: {
-            id: user.userId,
-            name: user.userName,
+            id: user?.userId ?? "",
+            name: user?.userName ?? "",
           },
         },
         exchangeProcess: "privateNote",
       },
       sourcePlatform: "INTERNAL",
       sourceIdentifier: null,
-      sendBy: user.userId,
+      sendBy: user?.userId,
       sender: {
-        name: user.userName,
+        name: user?.userName,
         profilePhoto: user?.profilePhoto,
       },
       stats: {
@@ -360,8 +361,8 @@ export default function WaInboxChatDisplayFooter({
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
 
     createPrivateMessage.mutate(
       {
@@ -407,7 +408,7 @@ export default function WaInboxChatDisplayFooter({
               (!media.length && !body.media?.length && !isTextValid)
             }
           >
-            <Send className="w-4 h-4" />
+            <IconSend className="w-4 h-4" />
           </Button>
         }
         content={<span>{translations("Send")}</span>}
@@ -428,7 +429,7 @@ export default function WaInboxChatDisplayFooter({
               (!media.length && !body.media?.length && !isTextValid)
             }
           >
-            <Send className="w-4 h-4" />
+            <IconSend className="w-4 h-4" />
           </Button>
         }
         content={<span>{translations("Send")}</span>}
@@ -452,7 +453,7 @@ export default function WaInboxChatDisplayFooter({
       <div className="flex flex-col gap-2">
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as any)}
+          onValueChange={(v) => setActiveTab(v)}
           className="bg-white p-1.5 dark:bg-transparent sm:p-2"
         >
           {/* One line, always: the tabs give up width (the note tab shortens its
@@ -464,7 +465,7 @@ export default function WaInboxChatDisplayFooter({
                 value="message"
                 className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-white sm:text-sm"
               >
-                <MessageSquare className="mr-1.5 size-3.5" />
+                <IconMessage className="mr-1.5 size-3.5" />
                 Message
               </TabsTrigger>
 
@@ -472,7 +473,7 @@ export default function WaInboxChatDisplayFooter({
                 value="private"
                 className="flex items-center px-2 text-xs data-[state=active]:bg-amber-600 data-[state=active]:text-white sm:text-sm"
               >
-                <StickyNote className="mr-1.5 size-3.5" />
+                <IconNote className="mr-1.5 size-3.5" />
                 <span className="sm:hidden">Note</span>
                 <span className="hidden sm:inline">Private Note</span>
               </TabsTrigger>
@@ -488,7 +489,7 @@ export default function WaInboxChatDisplayFooter({
                       className="size-7 p-0"
                       onClick={() => setQuickRepliesOpen((prev) => !prev)}
                     >
-                      <Zap className="size-4 text-cyan-600" />
+                      <IconBolt className="size-4 text-cyan-600" />
                     </Button>
                   }
                   content={<p>Quick Replies</p>}
@@ -529,7 +530,7 @@ export default function WaInboxChatDisplayFooter({
                 content={body.text.body}
                 mih={67}
                 inbox={true}
-                customEnter={() => submiRef.current()}
+                customEnter={() => submiRef.current?.()}
                 editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
                 placeholder="Type a message...Type / for quick replies"
                 sendMessageButton={<SendMessageComponent />}
@@ -547,7 +548,7 @@ export default function WaInboxChatDisplayFooter({
                 the editor column is allowed to shrink and the send button is not. */}
             <div className="flex items-start gap-2 p-2 pb-0 sm:p-4 sm:pb-0">
               <div className="min-w-0 flex-1">
-                <ToolbarProvider editor={privateNoteEditor}>
+                <ToolbarProvider editor={privateNoteEditor!}>
                   <TooltipProvider>
                     <EditorContent
                       editor={privateNoteEditor}
@@ -571,7 +572,7 @@ export default function WaInboxChatDisplayFooter({
                             className="h-8 w-8 p-0"
                             title="Format Message"
                           >
-                            <TypeOutline className="h-5 w-5" />
+                            <IconTypography className="h-5 w-5" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-full">
@@ -626,7 +627,7 @@ export const WaInboxAssignUserFooter = ({
   const { t } = useTranslation();
   const { filterData } = useContactStore();
   const messagesStore = useMessagesStore();
-  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const assignMut = useAssignInboxToUer(contactId ?? "", filterData ?? "");
   const { updateContactById } = useContactsStore();
   const qc = useQueryClient();
 
@@ -636,7 +637,7 @@ export const WaInboxAssignUserFooter = ({
     }
     const message = `Chat assigned to ${user.userName}`;
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contactId,
       waCreatedAt: new Date().toISOString(),
@@ -672,8 +673,8 @@ export const WaInboxAssignUserFooter = ({
       messageId: id,
     };
     const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
     assignMut.mutate(
       {
         messageId: id,
@@ -695,8 +696,8 @@ export const WaInboxAssignUserFooter = ({
           if (assignedRowKey && assignedRowKey !== rowKey) {
             messagesStore.removeMessage(`${rowKey}_all`, id);
             messagesStore.removeMessage(`${rowKey}_internal`, id);
-            messagesStore.addMessage(`${assignedRowKey}_all`, newMessage as any);
-            messagesStore.addMessage(`${assignedRowKey}_internal`, newMessage as any);
+            messagesStore.addMessage(`${assignedRowKey}_all`, newMessage);
+            messagesStore.addMessage(`${assignedRowKey}_internal`, newMessage);
           }
           updateContactById(assignedRowKey ?? contactId, (contact) => ({
             ...contact,
@@ -709,7 +710,7 @@ export const WaInboxAssignUserFooter = ({
               },
             ],
           }));
-          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+          qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         },
         onError: () => {
           messagesStore.removeMessage(`${rowKey}_all`, id);
@@ -732,7 +733,7 @@ export const WaInboxAssignUserFooter = ({
       // `flex!` because Alert's base `grid` would otherwise win the display cascade.
       className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40"
     >
-      <UserPlus className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <IconUserPlus className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         {isClosed ? (
           <>
@@ -756,7 +757,7 @@ export const WaInboxAssignUserFooter = ({
         disabled={assignMut.isPending}
         onClick={handleAssignToMe}
       >
-        <UserCheck className="size-3.5" />
+        <IconUserCheck className="size-3.5" />
         <span className="text-xs font-bold">{t("Assign to me")}</span>
       </Button>
 
@@ -767,11 +768,11 @@ export const WaInboxAssignUserFooter = ({
   );
 };
 
-export const WaInboxBlockedContactFooter = ({ contact }) => {
+export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithUpdatedAt }) => {
   const { filterData } = useContactStore();
   const { setSelectedContact } = useContactsStore();
   const confirm = useConfirm();
-  const unblockMut = useUnBlockWhatsAppUser(filterData);
+  const unblockMut = useUnBlockWhatsAppUser(filterData ?? "");
   async function handleUnblock() {
     const shouldUnblock = await confirm({
       title: `Unblock ${contact?.name ?? contact?.phone}`,
@@ -795,7 +796,7 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
     // Same banner shape as the assign footer, so the three footer states read as
     // one family rather than a black bar next to a redesigned one.
     <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
-      <Ban className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <IconBan className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         This contact has been blocked by you.
       </AlertTitle>
@@ -817,7 +818,7 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
  * shape as the blocked banner, since both are contact-level states rather than
  * anything to do with the ticket.
  */
-export const WaInboxSpamContactFooter = ({ contact }) => {
+export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpdatedAt }) => {
   const confirm = useConfirm();
   const spamMutation = useSetContactSpam();
 
@@ -834,7 +835,7 @@ export const WaInboxSpamContactFooter = ({ contact }) => {
 
   return (
     <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
-      <ShieldAlert className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <IconShieldExclamation className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         This contact is marked as spam.
       </AlertTitle>
@@ -855,7 +856,8 @@ interface Message {
   id?: string;
   contactId: string;
   body: {
-    text: string;
+    /** The composer's Tiptap document, or plain text for legacy entries. */
+    text: TiptapNode | string;
     url?: string;
     urlType?: string;
     filename?: string;
@@ -907,11 +909,26 @@ export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
     }),
 }));
 
+/**
+ * An optimistic message pushed into the thread before the server echoes it.
+ * The `null` slots mirror the wire shape, where only one of
+ * send/receive/privateNote is populated.
+ */
+/**
+ * A message the composer adds to the thread before the send round-trips. It is the same row
+ * the list renders, minus the fields only the server can fill in.
+ */
+export interface OptimisticMessage extends WaGetMessagesBody {
+  contactId: string;
+  sendBy?: string;
+}
+
 interface WaMedia {
   type: string;
   url: string;
   name: string;
-  key: string;
+  /** Absent until the file has been uploaded (e.g. a fresh voice note). */
+  key?: string;
   isVoiceNote?: boolean;
 }
 
@@ -921,8 +938,8 @@ interface MediaStore {
   removeMedia: (key: string) => Promise<void>;
   removeMediaSilently: (key: string) => void;
   resetMedia: () => void;
-  selectedMedia: WaMedia;
-  setSelectedMedia: (value) => void;
+  selectedMedia: WaMedia | null;
+  setSelectedMedia: (value: WaMedia | null) => void;
 }
 
 export const useMediaStore = create<MediaStore>((set) => ({
@@ -942,7 +959,7 @@ export const useMediaStore = create<MediaStore>((set) => ({
   resetMedia: () => set(() => ({ media: [] })),
 }));
 
-const initialMessgabody = {
+const initialMessgabody: MessageBody = {
   type: "text",
   media: [],
   text: { body: "" },
@@ -953,23 +970,27 @@ const initialMessgabody = {
   location: null,
 };
 
-export const useMessageBodyStore = create<{
-  body: {
-    type: string;
-    media?: WaMedia[];
-    text?: { body: string };
-    contacts?: {
-      contactIds: string[];
-      groupIds: string[];
-    };
-    location?: {
-      longitude: string;
-      latitude: string;
-      name?: string;
-      address?: string;
-    };
+/** The composer's in-progress outgoing message. */
+interface MessageBody {
+  type: string;
+  media?: WaMedia[];
+  /** Holds the editor's Tiptap document. */
+  text: { body: TiptapNode | string };
+  contacts?: {
+    contactIds: string[];
+    groupIds: string[];
   };
-  setBody: (value) => void;
+  location?: {
+    longitude: string | number;
+    latitude: string | number;
+    name?: string;
+    address?: string;
+  } | null;
+}
+
+export const useMessageBodyStore = create<{
+  body: MessageBody;
+  setBody: (value: MessageBody) => void;
   resetBody: () => void;
 }>((set) => ({
   body: initialMessgabody,

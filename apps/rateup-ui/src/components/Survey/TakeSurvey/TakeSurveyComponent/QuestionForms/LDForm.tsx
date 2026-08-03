@@ -1,6 +1,7 @@
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext } from "react";
+import type { MouseEvent } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
@@ -25,8 +26,9 @@ export function LDForm() {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const handleLikeOrDislikeClick = async (e) => {
-    const clikcedBtn = e.target;
+  const handleLikeOrDislikeClick = async (e: MouseEvent<HTMLElement>) => {
+    // The click lands on the button element itself; `target` is typed only as EventTarget.
+    const clikcedBtn = e.target as HTMLElement;
     const clickedBtnName = clikcedBtn.dataset.name;
     const clickedRes = clickedBtnName === "like" ? LDResponse.Like : LDResponse.Dislike;
     updateResponse(clickedRes);

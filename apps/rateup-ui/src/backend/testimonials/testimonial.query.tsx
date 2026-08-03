@@ -14,7 +14,7 @@ import {
   updateTestimonialCollection,
 } from "./testimonial.api";
 
-export function useGetAllTestimonials(surveyId) {
+export function useGetAllTestimonials(surveyId: string) {
   return useQuery({
     queryKey: ["allTestimonialBySurvey", surveyId],
     queryFn: () => getAllTestimonialBySurvey(surveyId),
@@ -57,7 +57,7 @@ export function useCreateTestimonialCollection() {
   });
 }
 
-export function useGetAllTestimonialsByCollection(collectionId) {
+export function useGetAllTestimonialsByCollection(collectionId: string) {
   return useQuery({
     queryKey: ["allTestimonialsByCollection", collectionId],
     queryFn: () => getAllTestimonialsByCollection(collectionId),
@@ -65,7 +65,7 @@ export function useGetAllTestimonialsByCollection(collectionId) {
   });
 }
 
-export function useUpdateCollection(collectionId) {
+export function useUpdateCollection(collectionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateTestimonialCollection,

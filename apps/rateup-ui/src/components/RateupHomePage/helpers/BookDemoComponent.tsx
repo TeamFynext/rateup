@@ -51,7 +51,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -81,7 +81,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
         });
         onClose();
       },
-      onError: (err: any) => {
+      onError: (err) => {
         console.error("Demo booking failed:", err);
         toast.error("Failed to submit demo request. Please try again.");
       },

@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { PageType as Page, QuestionType as Q } from "@/types/enums.ts";
+import type { PageType, QuestionType } from "@/types/enums.ts";
+import type { TNC, Wop } from "@/types/global";
 
 import CustomHTML from "../../Page/Previews/CustomHTML.tsx";
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm.tsx";
@@ -30,7 +33,21 @@ import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/Tex
 import WOPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/WOPForm.tsx";
 import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm.tsx";
 
-const QuestionTypePreview = ({ type, choices, features, tnc, wop, htmlContent = null }) => {
+const QuestionTypePreview = ({
+  type,
+  choices,
+  features,
+  tnc,
+  wop,
+  htmlContent = null,
+}: {
+  type: QuestionType | PageType;
+  choices?: Record<string, Choice[]>;
+  features?: Record<string, QuestionFormFeatures>;
+  tnc?: Record<string, TNC>;
+  wop?: Wop;
+  htmlContent?: string | null;
+}) => {
   const { t: translations } = useTranslation();
   switch (type) {
     case Q.Text:
@@ -82,7 +99,7 @@ const QuestionTypePreview = ({ type, choices, features, tnc, wop, htmlContent = 
     case Q.MultiTextInput:
       return <MultiTextInputForm features={features} />;
     case Q.MCQGrid:
-      return <MCQGridForm features={features} previewChoices={choices} isPreview={true} />;
+      return <MCQGridForm features={features ?? {}} previewChoices={choices} isPreview={true} />;
     case Q.File:
       return <FileInputForm isPreview={true} />;
     case Q.EmailOtp:
@@ -94,7 +111,7 @@ const QuestionTypePreview = ({ type, choices, features, tnc, wop, htmlContent = 
     // case Page.ThankYou:
     //   return <WOPForm isPreview={true} wop={wop} />;
     case Page.Custom:
-      return <CustomHTML content={htmlContent} />;
+      return <CustomHTML content={htmlContent ?? undefined} />;
     default:
       return <div>{translations("not previews")}</div>;
   }

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+
 import {
   getLoyaltyRedeems,
   getRewardByShortCode,
@@ -11,7 +13,7 @@ import {
 
 export const useGetLoyaltyRedeems = () => {
   return useQuery({
-    queryKey: ["loyaltyRedeems"],
+    queryKey: loyaltyKeys.redeems(),
     queryFn: getLoyaltyRedeems,
   });
 };
@@ -27,8 +29,8 @@ export const useRedeemRewardByShortCode = () => {
   return useMutation({
     mutationFn: redeemRewardByShortCode,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
     },
     onError: (error) => {
       toast.error(error?.message || `Redemption failed`);
@@ -41,15 +43,15 @@ export const useRedeemReward = (selectedPhone: string) => {
   return useMutation({
     mutationFn: redeemReward,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       qc.invalidateQueries({
-        queryKey: ["loyalty-cashier-customer", selectedPhone],
+        queryKey: loyaltyKeys.cashierCustomer(selectedPhone),
       });
     },
     onError: (error) => {
-      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
       toast.error(error?.message || `Reward redeem failed`);
     },
   });
@@ -60,13 +62,13 @@ export const useUpdateRedeem = () => {
   return useMutation({
     mutationFn: updateRedeem,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       toast.success("Redeem updated successfully");
     },
     onError: (error) => {
-      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      qc.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
       toast.error(error?.message || `Redeem updation failed`);
     },
   });

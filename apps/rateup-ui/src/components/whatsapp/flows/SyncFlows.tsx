@@ -32,6 +32,7 @@ import {
 import { useListState } from "@/hooks/use-list-state.ts";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
+import type { QuestionType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormChoice, WaFlowFormElement, WaFlowWa } from "@/types/global";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
 import {
@@ -48,8 +49,22 @@ import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
 import { Input } from "../../ui/input.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
-function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
-  const [selectedFlows, handlers] = useListState([]);
+/**
+ * The flow-import mapping the wizard builds: `map[flowId][questionId]` holds the chosen
+ * question type alongside one entry per mapped choice.
+ */
+type FlowImportMapValues = { map: Record<string, Record<string, Record<string, unknown>>> };
+
+function SyncTemplatesModal({
+  opened,
+  onClose,
+  unsyncedFlows,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  unsyncedFlows: WaFlowWa[];
+}) {
+  const [selectedFlows, handlers] = useListState<string>([]);
   const [currentScreen, setCurrentScreen] = useState<"selectFlows" | "configureFlows">(
     "selectFlows",
   );
@@ -78,7 +93,9 @@ function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
           />
         ) : (
           <ImportFlows
-            flows={selectedFlows.map((flowId) => unsyncedFlows.find((flow) => flow.id === flowId))}
+            flows={selectedFlows
+              .map((flowId: string) => unsyncedFlows.find((flow) => flow.id === flowId))
+              .filter((flow) => !!flow)}
             handleClose={handleClose}
           />
         )}
@@ -96,7 +113,7 @@ interface ImportFlowsProps {
  */
 function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   const [currentFlowIndex, setCurrentFlowIndex] = useState(0);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState("");
   const flow = flows[currentFlowIndex];
   const importMutation = useImportFlowsMutation();
   const { t: translations } = useTranslation();
@@ -125,7 +142,7 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
     }
   }
 
-  const form = useForm<{ map: Record<string, any> }>({
+  const form = useForm<FlowImportMapValues>({
     defaultValues: {
       map: {},
     },
@@ -171,7 +188,7 @@ function ConfigureFlow({
   handleNext,
 }: {
   flow: WaFlowWa;
-  form: UseFormReturn<{ map: Record<string, any> }>;
+  form: UseFormReturn<FlowImportMapValues>;
   handleNext: () => void;
 }) {
   const uid = useId();
@@ -268,7 +285,10 @@ function ConfigureFlow({
                         </div>
                         <Select
                           items={qTypes.map((t) => ({ label: t, value: t }))}
-                          value={getNestedProperty(form.watch(), qPath)?.type ?? ""}
+                          value={
+                            getNestedProperty<{ type?: QuestionType }>(form.watch(), qPath)?.type ??
+                            ""
+                          }
                           onValueChange={(value) => {
                             setMapValue(form, qPath, {
                               type: value,
@@ -295,10 +315,13 @@ function ConfigureFlow({
                           <div className="flex flex-col pl-16">
                             {choices.map((choice) => {
                               const choicePath = `${qPath}.${choice.id}`;
-                              let qRes = [];
-                              const qType = getNestedProperty(form.watch(), qPath)?.type;
+                              let qRes: string[] = [];
+                              const qType = getNestedProperty<{ type?: QuestionType }>(
+                                form.watch(),
+                                qPath,
+                              )?.type;
                               if (qType) {
-                                qRes = getQuestionResponses(qType);
+                                qRes = getQuestionResponses(qType) ?? [];
                                 if (
                                   qRes?.length > 0 &&
                                   !getNestedProperty(form.watch(), choicePath)
@@ -308,7 +331,7 @@ function ConfigureFlow({
                               return (
                                 <div className="flex items-center" key={choice.id}>
                                   <p>{choice.title}</p>
-                                  {qTypesWithAmbiguousChoices.includes(qType) ? (
+                                  {qType && qTypesWithAmbiguousChoices.includes(qType) ? (
                                     <Select
                                       items={qRes.map((r) => ({ label: r, value: r }))}
                                       value={getNestedProperty(form.watch(), choicePath) ?? ""}
@@ -351,7 +374,21 @@ function ConfigureFlow({
  * @param param0
  * @returns
  */
-function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, onImport }) {
+function DisplayTemplates({
+  selectedTemplates,
+  unregisteredTemplates,
+  handlers,
+  onImport,
+}: {
+  selectedTemplates: string[];
+  unregisteredTemplates: Array<{ id: string; name?: string; status?: WaFlowStatus }>;
+  handlers: {
+    remove: (index: number) => void;
+    setState: (ids: string[]) => void;
+    append: (id: string) => void;
+  };
+  onImport: () => void;
+}) {
   function handleSelect(selected: boolean, id: string) {
     if (selected) {
       if (!selectedTemplates.includes(id)) {
@@ -359,7 +396,7 @@ function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, 
       }
     } else {
       if (selectedTemplates.includes(id)) {
-        handlers.remove(selectedTemplates.findIndex((templateId) => templateId === id));
+        handlers.remove(selectedTemplates.findIndex((templateId: string) => templateId === id));
       }
     }
   }
@@ -400,7 +437,7 @@ function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, 
                 </TableCell>
                 <TableCell>{template.name}</TableCell>
                 <TableCell>
-                  <WaTemplateStatusBadge status={template.status} />
+                  <WaTemplateStatusBadge status={template.status!} />
                 </TableCell>
               </TableRow>
             ))}
@@ -441,7 +478,7 @@ export function SyncFlowsButton({ disabled = false }) {
       <SyncTemplatesModal
         opened={openModal && !isLoading && !isError}
         onClose={close}
-        unsyncedFlows={unsyncedFlows}
+        unsyncedFlows={unsyncedFlows ?? []}
       />
     </>
   );
@@ -451,10 +488,6 @@ export function SyncFlowsButton({ disabled = false }) {
  * Writes to a `map.<flowId>.<questionId>` path. These are built at runtime from flow data,
  * so they cannot be expressed as a statically-known RHF `FieldPath`.
  */
-function setMapValue(
-  form: UseFormReturn<{ map: Record<string, any> }>,
-  path: string,
-  value: unknown,
-) {
+function setMapValue(form: UseFormReturn<FlowImportMapValues>, path: string, value: unknown) {
   form.setValue(path as never, value as never, { shouldDirty: true });
 }

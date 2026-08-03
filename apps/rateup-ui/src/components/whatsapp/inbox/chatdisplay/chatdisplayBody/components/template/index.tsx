@@ -4,7 +4,7 @@ import WaInboxTemplateComponents from "./components/index.tsx";
 
 interface Props {
   templateBody: WaTemplateFetchBody;
-  parameters: WaTemplateComponent[];
+  parameters?: WaTemplateComponent[];
 }
 export default function WaInboxTemplate(props: Props) {
   return (

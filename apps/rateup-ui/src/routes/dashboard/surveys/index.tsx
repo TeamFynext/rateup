@@ -1,5 +1,5 @@
+import { IconPlus, IconUsers } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -33,6 +33,10 @@ import {
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/surveys/")({
+  /** Declares the search params this route reads, so links to it type-check. */
+  validateSearch: (search: Record<string, unknown>): { action?: string } => ({
+    action: typeof search.action === "string" ? search.action : undefined,
+  }),
   component: Page,
 });
 
@@ -83,7 +87,7 @@ function Page() {
     const filtered = webSurveys.filter((survey) => {
       const matchesSearch = !searchValue || survey.title.toLowerCase().includes(searchValue);
       const matchesTeam =
-        selectedTeamId === "all" || survey.teams?.some((team: any) => team.id === selectedTeamId);
+        selectedTeamId === "all" || survey.teams?.some((team) => team.id === selectedTeamId);
       const matchesFilter =
         filterParam === "all" ||
         (filterParam === "active" && survey.active) ||
@@ -105,7 +109,7 @@ function Page() {
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
             <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               {translations("Create Survey")}
             </Button>
             <InfoButton docUrl={`${docsPath}/surveys`} />
@@ -192,7 +196,7 @@ function SurveysPageFilter({
     <div className="flex flex-col sm:flex-row gap-2">
       <Select
         value={filterParam}
-        onValueChange={setFilterParam}
+        onValueChange={(value) => setFilterParam(value ?? "")}
         items={[
           { value: "all", label: t("All") },
           { value: "active", label: t("Active") },
@@ -213,14 +217,14 @@ function SurveysPageFilter({
 
       <Select
         value={selectedTeamId}
-        onValueChange={setSelectedTeamId}
+        onValueChange={(value) => setSelectedTeamId(value ?? "")}
         disabled={disabled}
         items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
       >
         <SelectTrigger className="min-w-42">
           <div className="flex items-center gap-2 truncate">
             <div className="flex size-7 items-center justify-center rounded-md bg-muted">
-              <Users className="size-4 text-muted-foreground" />
+              <IconUsers className="size-4 text-muted-foreground" />
             </div>
             <SelectValue placeholder={t("Team")} />
           </div>

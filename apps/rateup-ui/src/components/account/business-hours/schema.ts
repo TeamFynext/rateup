@@ -43,7 +43,7 @@ const dayScheduleSchema = z.object({
       withIndex.forEach((s) => {
         if (s.start >= s.end) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "End time must be after start time",
             path: [s.index, "closeTime"],
           });
@@ -55,12 +55,12 @@ const dayScheduleSchema = z.object({
         const curr = sorted[i];
         if (curr.start < prev.end) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Time ranges overlap",
             path: [curr.index, "openTime"],
           });
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Time ranges overlap",
             path: [prev.index, "closeTime"],
           });

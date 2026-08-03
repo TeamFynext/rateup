@@ -14,8 +14,10 @@ import { SurveyThemeContextProvider } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { LogicAction, PageType } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";
 import { isHtml } from "@/utils/index.ts";
+import type { StoredResponse } from "@/utils/response.ts";
 import { parseLogicAction } from "@/utils/survey/logic/logic.utils";
 
 import CustomHTML from "../../Page/Previews/CustomHTML.tsx";
@@ -51,6 +53,12 @@ function TakeSurvey({
   fromShortUrl = false,
   setIsThankyouPage = null,
   setIsDefaultThankyouPage = null,
+}: {
+  survey: Survey;
+  setIsReviewPage?: (language: string) => void;
+  fromShortUrl?: boolean;
+  setIsThankyouPage?: ((isThankYou: boolean) => void) | null;
+  setIsDefaultThankyouPage?: ((isDefault: boolean) => void) | null;
 }) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
 
@@ -64,8 +72,9 @@ function TakeSurvey({
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Calling preventDefault is what triggers the browser's leave-confirmation prompt;
+      // the old `returnValue = ""` companion is deprecated and no longer needed.
       event.preventDefault();
-      event.returnValue = "";
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -80,7 +89,7 @@ function TakeSurvey({
     survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
   );
 
-  const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const [selectedQ, setSelectedQ] = useState<Question | null>(null);
   const [alignment, setAlignment] = useState("left");
   const [isConfirmResponsesModalOpen, setIsConfirmResponsesModalOpen] = useState(false);
   const openConfirmationResponsesModal = () => setIsConfirmResponsesModalOpen(true);
@@ -92,12 +101,11 @@ function TakeSurvey({
   // used for animation of question change in Question AnimationPresence below.
   const [aPDirection, setApDirection] = useState(0);
 
-  const [coordinates, setCoordinates] = useState<{
-    latitude: number;
-    longitude: number;
-  }>(undefined);
+  const [coordinates, setCoordinates] = useState<
+    { latitude: number; longitude: number } | undefined
+  >(undefined);
 
-  const updateCompleted = useUpdateCompletedMutation(survey?.id);
+  const updateCompleted = useUpdateCompletedMutation(survey?.id ?? "");
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
   const responsesRef = useRef(responses);
@@ -144,10 +152,11 @@ function TakeSurvey({
     }
   }, [survey]);
 
-  const takeSurveyRootDivRef = useRef(null);
+  const takeSurveyRootDivRef = useRef<HTMLDivElement | null>(null);
 
   const pendingUpdate = useRef(false);
-  const viewportHandler = (event) => {
+  const viewportHandler = (event: Event) => {
+    const visualViewport = event.target as VisualViewport;
     if (pendingUpdate.current) return;
     pendingUpdate.current = true;
 
@@ -159,7 +168,6 @@ function TakeSurvey({
         const nextPrevBtnDivHeight = nextPrevBtnDiv.getBoundingClientRect().height;
         const nextPrevBtnOffsetTop = nextPrevBtnDiv.offsetTop;
 
-        const visualViewport = event.target;
         const offsetLeft = visualViewport.offsetLeft;
 
         const nextPrevBtnDivTranslateY =
@@ -172,16 +180,16 @@ function TakeSurvey({
   };
 
   useEffect(() => {
-    window?.visualViewport.addEventListener("scroll", viewportHandler);
-    window?.visualViewport.addEventListener("resize", viewportHandler);
+    window?.visualViewport?.addEventListener("scroll", viewportHandler);
+    window?.visualViewport?.addEventListener("resize", viewportHandler);
 
     return () => {
-      window?.visualViewport.removeEventListener("scroll", viewportHandler);
-      window?.visualViewport.removeEventListener("resize", viewportHandler);
+      window?.visualViewport?.removeEventListener("scroll", viewportHandler);
+      window?.visualViewport?.removeEventListener("resize", viewportHandler);
     };
   }, [isSurveyThemePreview]);
 
-  const errorTextDivRef = useRef(null);
+  const errorTextDivRef = useRef<HTMLDivElement | null>(null);
 
   if (!questionsLength) {
     return (
@@ -196,7 +204,8 @@ function TakeSurvey({
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
-  const currentResponse = currentQRes?.response[selectedQ.type];
+  const currentResponse =
+    currentQRes?.response[selectedQ.type as keyof QuestionResponse["response"]];
 
   const goTo = (question: Question) => {
     setSelectedQ(question);
@@ -206,12 +215,12 @@ function TakeSurvey({
 
   const goBack = () => {
     const prevQId = questionsHistory[questionsHistory.length - 2];
-    setSelectedQ(survey.questions.find((q) => q.id === prevQId));
+    setSelectedQ(survey.questions.find((q) => q.id === prevQId) ?? null);
     questionsHistoryHandlers.pop();
     setApDirection(-1);
   };
 
-  const handleNext = (response: any) => {
+  const handleNext = (response?: StoredResponse | null) => {
     const currentResponse_ = response ? response : currentResponse;
     const lastQuestion = getLastQuestion(survey);
     const isLastQuestion = selectedQ?.id === lastQuestion?.id;
@@ -239,7 +248,7 @@ function TakeSurvey({
               try {
                 finishSurvey(nextQ.type);
               } catch (error) {
-                toast.error(error?.message?.toString());
+                toast.error(getApiErrorMessage(error));
               }
               return;
             }
@@ -262,13 +271,13 @@ function TakeSurvey({
       try {
         finishSurvey();
       } catch (error) {
-        toast.error(error?.message?.toString());
+        toast.error(getApiErrorMessage(error));
       }
     } else {
       openConfirmationResponsesModal();
     }
   }
-  function getColumnIdFromTickets(questions, responses) {
+  function getColumnIdFromTickets(questions: Question[], responses: QuestionResponse[]) {
     for (const question of questions) {
       const ticketIssue = question?.ticketIssue;
       if (!ticketIssue) continue;
@@ -285,15 +294,20 @@ function TakeSurvey({
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
     const shouldRaiseTicket =
       survey?.enableAutoGenerateTicket ||
-      checkRaiseTicketIssueQuestion(survey?.questions, responsesRef.current, selectedLanguage);
-    let selectedColumnId = survey?.ticketColumnId;
+      checkRaiseTicketIssueQuestion(
+        survey?.questions ?? [],
+        responsesRef.current,
+        selectedLanguage,
+      );
+    let selectedColumnId: string | undefined = survey?.ticketColumnId;
     if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
-      selectedColumnId = getColumnIdFromTickets(survey?.questions, responsesRef.current);
+      selectedColumnId =
+        getColumnIdFromTickets(survey?.questions ?? [], responsesRef.current) ?? undefined;
     }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
-        setIsReviewPage(selectedLanguage);
+        setIsReviewPage?.(selectedLanguage);
       } else if (isThankYouPageEnabled) {
         setIsThankyouPage?.(true);
       } else {
@@ -310,8 +324,11 @@ function TakeSurvey({
     let defaultResponses = responsesRef.current;
     let encryptedResponses = "";
     if (survey?.isEncrypted || survey?.publicKey) {
-      const { encryptedResponse } = await encryptResponse(responsesRef.current, survey?.publicKey);
-      encryptedResponses = encryptedResponse;
+      const { encryptedResponse } = await encryptResponse(
+        responsesRef.current,
+        survey?.publicKey ?? "",
+      );
+      encryptedResponses = encryptedResponse ?? "";
       defaultResponses = [];
     }
     const shortId = params?.shortId as string;
@@ -322,18 +339,18 @@ function TakeSurvey({
       selectedLanguage,
       setIsSavingResponses,
       coordinates,
-      tag: searchParams.tag,
+      tag: typeof searchParams.tag === "string" ? searchParams.tag : null,
       shouldRaiseTicket,
       checkUniqueDevice,
       selectedColumnId,
     })
       .then(() => {
-        updateCompleted.mutate(surveyTeamMapId);
+        updateCompleted.mutate(surveyTeamMapId ?? "");
         let kioskMode = survey?.kioskMode ? "y" : "n";
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
 
         if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
-          setIsReviewPage(selectedLanguage);
+          setIsReviewPage?.(selectedLanguage);
         } else if (isThankYouPageEnabled) {
           if (fromShortUrl) {
             navigate({
@@ -369,7 +386,7 @@ function TakeSurvey({
     goBack();
   };
 
-  const updateResponse = (response: object) => {
+  const updateResponse = (response: StoredResponse | null | undefined) => {
     const index = responsesRef.current.findIndex((r) => r.questionId === selectedQ.id);
     // Converting response to QuestionResponse
     const formattedResponse: QuestionResponse = {

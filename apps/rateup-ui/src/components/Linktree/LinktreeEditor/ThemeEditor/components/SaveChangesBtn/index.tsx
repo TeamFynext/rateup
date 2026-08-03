@@ -3,6 +3,7 @@ import { produce } from "immer";
 import { isEqual } from "lodash";
 import { useCallback, useState } from "react";
 
+import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -49,14 +50,14 @@ function SaveChangesBtn() {
       { prop: "mobileBgImgUrl", file: mobileBgImgFile },
       { prop: "logoUrl", file: logoFile },
     ];
-    const promisesArray = [];
+    const promisesArray: Array<Promise<{ prop: string; url: string | null }>> = [];
     filesArray.forEach(({ prop, file }) => {
       if (file instanceof File) promisesArray.push(uploadFile(prop, file));
     });
 
     try {
       const newBgImgValues = await Promise.all(promisesArray);
-      const newLinktreeTheme = produce(currentThemeObj, (draft) => {
+      const newLinktreeTheme = produce(currentThemeObj, (draft: LinktreeTheme) => {
         newBgImgValues.forEach(({ prop, url }) => {
           switch (prop) {
             case "desktopBgImgUrl": {

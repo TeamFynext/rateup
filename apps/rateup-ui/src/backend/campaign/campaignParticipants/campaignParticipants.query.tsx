@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { campaignKeys } from "@/backend/campaign/campaign.keys";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
+
 import {
   addCampaignParticipants,
   addContactParticipants,
@@ -11,7 +14,7 @@ import {
   getCampaignParticipants,
 } from "./campaignParticipants.api";
 
-export const useAddContactParticipantMutation = (campaignId) => {
+export const useAddContactParticipantMutation = (campaignId: string) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -21,7 +24,7 @@ export const useAddContactParticipantMutation = (campaignId) => {
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       toast.success(translations("Added participants successfully."));
     },
@@ -31,7 +34,7 @@ export const useAddContactParticipantMutation = (campaignId) => {
   });
 };
 
-export const useAddGroupParticipantMutation = (campaignId) => {
+export const useAddGroupParticipantMutation = (campaignId: string) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -41,7 +44,7 @@ export const useAddGroupParticipantMutation = (campaignId) => {
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       toast.success(translations("Added group participants successfully."));
     },
@@ -52,12 +55,12 @@ export const useAddGroupParticipantMutation = (campaignId) => {
 };
 
 export const useCampaignParticipants = (
-  campaignId,
-  pagination,
-  search,
-  sort,
-  columnFilters,
-  selectedDripStage,
+  campaignId: string,
+  pagination: PaginationState,
+  search: string,
+  sort: SortState | SortState[],
+  columnFilters: ColumnFilterState[],
+  selectedDripStage?: string,
 ) => {
   return useQuery({
     queryKey: [
@@ -82,7 +85,10 @@ export const useCampaignParticipants = (
   });
 };
 
-export const useAddCampaignParticipants = (campaignId, onSuccess = () => {}) => {
+export const useAddCampaignParticipants = (
+  campaignId: string,
+  onSuccess: () => void = () => {},
+) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -92,7 +98,7 @@ export const useAddCampaignParticipants = (campaignId, onSuccess = () => {}) => 
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       toast.success(translations("Campaign particiants added successfully."));
       onSuccess();
@@ -117,7 +123,7 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
     },
     onError(error) {
@@ -139,7 +145,7 @@ export const useRemoveMulitpleGroupParticipants = (campaignId: string, onSucess:
         queryKey: ["campaignParticipants", campaignId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["campaigns"],
+        queryKey: campaignKeys.all(),
       });
       onSucess();
     },

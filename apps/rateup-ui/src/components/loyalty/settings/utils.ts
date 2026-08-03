@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
   PointInformation = "PointInformation",
@@ -15,7 +17,7 @@ export enum LoyaltyTemplateTypes {
   PointsExpired = "PointsExpired",
 }
 
-export function getLoyaltyTemplateLabel(type: LoyaltyTemplateTypes, translations: any) {
+export function getLoyaltyTemplateLabel(type: LoyaltyTemplateTypes, translations: TFunction) {
   switch (type) {
     case LoyaltyTemplateTypes.PointsIssued:
       return {

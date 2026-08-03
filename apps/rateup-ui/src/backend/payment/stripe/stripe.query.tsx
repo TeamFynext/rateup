@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   cancelStripeSubscription,
   createStripeCheckoutSession,
@@ -12,9 +15,9 @@ import {
   updateStripeProduct,
 } from "./stripe.api";
 
-export function useCreateStripeCheckoutSession(setIsLoading) {
+export function useCreateStripeCheckoutSession(setIsLoading: (loading: boolean) => void) {
   return useMutation({
-    mutationFn: (values: any) => createStripeCheckoutSession(values),
+    mutationFn: (values: RequestPayload) => createStripeCheckoutSession(values),
     onSuccess: (_data) => {
       toast.loading("Please wait get ready for payment", {
         id: "load-data",
@@ -33,7 +36,7 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
   });
 }
 
-export const useGetStripeCheckoutSession = (sessionId) => {
+export const useGetStripeCheckoutSession = (sessionId: string) => {
   return useQuery({
     enabled: !!sessionId,
     queryFn: () => getCheckoutSession(sessionId),
@@ -107,15 +110,15 @@ export function useCancelStripeSubscriptionMutation() {
   return useMutation({
     mutationFn: () => cancelStripeSubscription(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.success("Rateup Subscription cancelled. Enjoy services till expiry date.", {
         id: "load-data",
       });
     },
     onError: (error) => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
       toast.error(error?.message || "Error cancelling Rateup Subscription", {
         id: "load-data",
       });

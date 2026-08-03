@@ -1,4 +1,5 @@
 import { isNumber } from "@tiptap/react";
+import type { CSSProperties } from "react";
 import { useCallback } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
@@ -16,7 +17,7 @@ import ThemeTitle from "../../ThemeTitle.tsx";
 
 import classes from "../../../SurveyTheme.module.css";
 
-export default function WelcomePageThemeView({ survey }) {
+export default function WelcomePageThemeView({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
 
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
@@ -63,12 +64,16 @@ export default function WelcomePageThemeView({ survey }) {
   const orgLogoStyles = logoStyles;
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
-    async (value, name) => {
-      const data = {};
+    async (value: string, name?: string) => {
+      const data: {
+        titleText?: string;
+        subtitleText?: string | null;
+        startButtonText?: string;
+      } = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
+          if (editSurveySelectedQuestion?.["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -82,7 +87,7 @@ export default function WelcomePageThemeView({ survey }) {
       }
       if (editSurveySelectedQuestion) {
         await questionUpdateMutation.mutateAsync({
-          qId: editSurveySelectedQuestion["id"],
+          qId: editSurveySelectedQuestion?.["id"],
           data,
         });
       }
@@ -106,7 +111,7 @@ export default function WelcomePageThemeView({ survey }) {
   return (
     <div className="flex h-full items-center" style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
+        enableCredits={!!backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
         <div
@@ -129,8 +134,8 @@ export default function WelcomePageThemeView({ survey }) {
             )}
 
             <ThemeTitle
-              value={newTitle}
-              onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+              value={newTitle ?? ""}
+              onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
             <div
@@ -165,12 +170,12 @@ export default function WelcomePageThemeView({ survey }) {
   );
 }
 
-export function getInlineStyleFromStyleObj(styles) {
+export function getInlineStyleFromStyleObj(styles: CSSProperties | undefined) {
   if (!styles) return "text-align:center";
   const newStyles = [];
-  for (const key in styles) {
+  for (const [key, rawValue] of Object.entries(styles)) {
     const kebabKey = key.replace(/([A-Z])/g, "-$1").toLowerCase();
-    const value = isNumber(styles[key]) ? `${styles[key]}px` : `${styles[key]}`;
+    const value = isNumber(rawValue) ? `${rawValue}px` : `${rawValue}`;
     newStyles.push(`${kebabKey}:${value}`);
   }
   return newStyles.join(";") + ";";

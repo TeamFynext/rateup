@@ -1,10 +1,15 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { useParams } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
+import type { CollectionTestimonial } from "@/backend/testimonials/testimonial.api";
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
+import type { filterType } from "@/components/dashboard/testimonial/CollectionById.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import type { TestimonialStyleType } from "@/types/global";
 import { reorder } from "@/utils/questions.ts";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
@@ -22,25 +27,34 @@ const TestimonialEdit = ({
   selectedTestimonialIds,
   setSelectedTestimonialIds,
   setFilters,
+}: {
+  currentStyle: TestimonialStyleType | undefined;
+  testimonials: CollectionTestimonial[];
+  filters: filterType;
+  isDelete?: boolean;
+  type?: string | null;
+  selectedTestimonialIds: string[];
+  setSelectedTestimonialIds: Dispatch<SetStateAction<string[]>>;
+  setFilters?: Dispatch<SetStateAction<filterType>>;
 }) => {
   const params = useParams({
     strict: false,
   });
   const collectionId = params.collectionId as string;
-  const filteredTestimonials = getFilteredTestimonials(testimonials, filters, type);
+  const filteredTestimonials = getFilteredTestimonials(testimonials, filters, type ?? null);
 
   const updateCollection = useUpdateCollection(collectionId);
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     const reorderedTestimonials = reorder(
       testimonials,
       result.source.index,
       result.destination?.index || 0,
-    ) as any;
-    setFilters(null);
+    );
+    setFilters?.({ date: null, rating: null, length: null, surveys: [], teams: [] });
     updateCollection.mutate({
-      data: { testimonialIds: reorderedTestimonials.map((t) => t.id) },
+      data: { testimonialIds: reorderedTestimonials.map((t: CollectionTestimonial) => t.id) },
       collectionId,
     });
   };

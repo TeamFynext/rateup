@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -24,14 +23,14 @@ const TestimonialCTASection = () => {
               conversions
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="https://rateup.app/login">
+              <a href="https://rateup.app/login">
                 <Button
                   size="lg"
                   className="bg-[#00397b]  cursor-pointer hover:bg-[#00397b] text-white font-semibold px-6 py-3 text-base transition"
                 >
                   Get Started for Free
                 </Button>
-              </Link>
+              </a>
               <BookDemoModal>
                 <Button
                   size="lg"

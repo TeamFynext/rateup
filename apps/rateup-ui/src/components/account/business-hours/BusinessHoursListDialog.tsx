@@ -1,4 +1,4 @@
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { IBusinessHour } from "@/backend/org/business-hours/business-hours.api";
@@ -67,7 +67,7 @@ export function BusinessHoursListDialog({
               className="w-full border-2 border-dashed  text-gray-700 flex items-center gap-2"
               variant="outline"
             >
-              <Plus className="w-4 h-4" />
+              <IconPlus className="w-4 h-4" />
               {t("Add New Business Hours")}
             </Button>
 
@@ -95,7 +95,7 @@ export function BusinessHoursListDialog({
                         onClick={() => onEdit(bh.id)}
                         className="text-blue-600 hover:text-blue-700"
                       >
-                        <Edit className="w-4 h-4" />
+                        <IconEdit className="w-4 h-4" />
                       </Button>
                       {/* {canDelete && ( */}
                       <Button
@@ -104,7 +104,7 @@ export function BusinessHoursListDialog({
                         onClick={() => handleDeleteClick(bh.id, bh.name)}
                         className="text-red-600 hover:text-red-700"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <IconTrash className="w-4 h-4" />
                       </Button>
                       {/* )} */}
                     </div>

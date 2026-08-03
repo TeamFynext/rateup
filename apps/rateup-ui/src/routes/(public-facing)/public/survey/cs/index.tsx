@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -39,7 +39,13 @@ function Page() {
   );
 }
 
-function Welcome({ setStartClicked, largeScreen }) {
+function Welcome({
+  setStartClicked,
+  largeScreen,
+}: {
+  setStartClicked: (clicked: boolean) => void;
+  largeScreen: boolean;
+}) {
   return (
     <>
       {/* .........Survey Welcome page.......... */}
@@ -68,7 +74,7 @@ const survey2 =
 const survey3 =
   "https://www.rateup.app/public/survey/74a86d7e-ec59-40e3-8bf5-4dbece9023e2?start=true";
 
-function StartPage({ largeScreen }) {
+function StartPage({ largeScreen }: { largeScreen: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center gap-6 h-[70vh]">
       <h3
@@ -78,23 +84,23 @@ function StartPage({ largeScreen }) {
         Select one option :
       </h3>
 
-      <Link to={`${survey1}`}>
+      <a href={`${survey1}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
           I Have Ration Card & Aadhaar Card
         </Button>
-      </Link>
+      </a>
 
-      <Link to={`${survey2}`}>
+      <a href={`${survey2}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
           I have Aadhaar only [No Ration Card]
         </Button>
-      </Link>
+      </a>
 
-      <Link to={`${survey3}`}>
+      <a href={`${survey3}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
           I have No Aadhaar & Ration Card
         </Button>
-      </Link>
+      </a>
     </div>
   );
 }

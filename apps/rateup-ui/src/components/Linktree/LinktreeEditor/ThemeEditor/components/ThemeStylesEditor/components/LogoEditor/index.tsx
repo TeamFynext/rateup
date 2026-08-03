@@ -26,35 +26,44 @@ function LogoEditor() {
   }, []);
 
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
-  const handleLogoWidthChange = useCallback((value) => {
+  const handleLogoWidthChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "logo-width-change",
       payload: value,
     });
   }, []);
 
-  const handleLogoHeightChange = useCallback((value) => {
+  const handleLogoHeightChange = useCallback((value: string | number) => {
     themeDispatch({
       type: "logo-height-change",
       payload: value,
     });
   }, []);
 
-  const onCroppedImgSave = useCallback((url) => {
-    themeDispatch({
-      type: "logo-file-change",
-      payload: url,
-    });
-    resetFileInput();
-  }, []);
+  const onCroppedImgSave = useCallback(
+    (url: { file?: File; url: string; source?: string } | null) => {
+      themeDispatch({
+        type: "logo-file-change",
+        payload: url,
+      });
+      resetFileInput();
+    },
+    [],
+  );
 
   const onCroppedImgCancel = useCallback(() => {
     resetFileInput();
   }, []);
 
-  const handleLogoFileChange = useCallback((fileOrNull) => {
+  const handleLogoFileChange = useCallback((fileOrNull: File | null) => {
     if (fileOrNull) {
       const { name } = fileOrNull;
       const url = URL.createObjectURL(fileOrNull);
@@ -84,7 +93,7 @@ function LogoEditor() {
       <div className={`style-section-div`}>
         <h2>Width</h2>
         <Slider
-          value={[width]}
+          value={[Number(width ?? 0)]}
           onValueChange={(value) => handleLogoWidthChange(Array.isArray(value) ? value[0] : value)}
           step={1}
           min={30}
@@ -95,7 +104,7 @@ function LogoEditor() {
       <div className={`style-section-div`}>
         <h2>Height</h2>
         <Slider
-          value={[height]}
+          value={[Number(height ?? 0)]}
           onValueChange={(value) => handleLogoHeightChange(Array.isArray(value) ? value[0] : value)}
           step={1}
           min={30}

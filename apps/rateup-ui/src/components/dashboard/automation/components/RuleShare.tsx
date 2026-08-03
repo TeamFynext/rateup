@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { IconCopy } from "@tabler/icons-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,10 +18,12 @@ import {
 } from "@/components/ui/select.tsx";
 import type { RuleGroup } from "@/types/rule.ts";
 
+import { toMessagePlatform } from "./schema.ts";
+
 interface RuleShareProps {
   groups: RuleGroup[];
   channels: string[];
-  platform?: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
+  platform?: string;
 }
 
 const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHATSAPP" }) => {
@@ -31,8 +33,8 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
 
   const keywordOptions = (groups || [])
     .flatMap((g) => g.conditions)
-    .filter((c: any) => c.field === "MESSAGE_BODY" && c.value)
-    .map((c: any) => c.value);
+    .filter((c) => c.field === "MESSAGE_BODY" && c.value)
+    .map((c) => c.value);
 
   const validKeyword =
     shareKeyword && keywordOptions.includes(shareKeyword) ? shareKeyword : keywordOptions[0] || "";
@@ -65,9 +67,9 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
             <div className="max-w-md">
               <AccountSelector
                 value={validAccountId}
-                onChange={setShareAccountId}
+                onChange={(value) => setShareAccountId(value ?? "")}
                 filterIds={channels.length > 0 ? channels : undefined}
-                platform={platform as any}
+                platform={toMessagePlatform(platform)}
               />
             </div>
           </div>
@@ -77,7 +79,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
             <div className="max-w-md">
               <Select
                 value={validKeyword}
-                onValueChange={setShareKeyword}
+                onValueChange={(value) => setShareKeyword(value ?? "")}
                 items={keywordOptions.map((k) => ({ value: k, label: k }))}
               >
                 <SelectTrigger>
@@ -109,7 +111,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
                     toast.success("Link copied to clipboard");
                   }}
                 >
-                  <Copy className="h-4 w-4" />
+                  <IconCopy className="h-4 w-4" />
                 </Button>
               </div>
             </div>

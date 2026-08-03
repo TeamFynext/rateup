@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./avatar.tsx";
 import { getAvatarInitials, isEmojiName } from "./utils.ts";
 
 interface CreativeAvatarProps {
-  name: string;
+  name: string | undefined;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
   showOnlineStatus?: boolean;
@@ -91,7 +91,7 @@ const getAvatarColor = (name: string) => {
   // Generate a hash from the name
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
-    hash = name.codePointAt(i) + ((hash << 5) - hash);
+    hash = (name.codePointAt(i) ?? 0) + ((hash << 5) - hash);
   }
 
   const index = Math.abs(hash) % colors.length;
@@ -185,10 +185,10 @@ export function CreativeAvatar({
   variant,
   ringClassName,
 }: Readonly<CreativeAvatarProps>) {
-  const initials = getAvatarInitials(name);
+  const initials = getAvatarInitials(name ?? "");
   // An emoji is the whole identity, not an abbreviation of one: it gets no drop
   // shadow (which muddies a colour glyph) and a size step up so it reads at xs.
-  const showsEmoji = isEmojiName(name);
+  const showsEmoji = isEmojiName(name ?? "");
   const colors =
     variant || ringClassName
       ? {
@@ -198,7 +198,7 @@ export function CreativeAvatar({
         }
       : platform
         ? getAvatarColorFromPlatform(platform)
-        : getAvatarColor(name);
+        : getAvatarColor(name ?? "");
 
   const sizes = sizeClasses[size];
 

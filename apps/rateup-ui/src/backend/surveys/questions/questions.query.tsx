@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { surveyKeys } from "@/backend/surveys/survey.keys";
+import type { RequestPayload } from "@/types/api.ts";
+
 import {
   createQuestion,
   deleteQuestion,
@@ -12,7 +15,7 @@ import {
 
 export const useQuestions = (surveyId: string) => {
   return useQuery({
-    queryKey: ["questions", surveyId],
+    queryKey: surveyKeys.questions(surveyId),
     enabled: !!surveyId,
     queryFn: () => getQuestions(surveyId),
   });
@@ -20,7 +23,8 @@ export const useQuestions = (surveyId: string) => {
 
 interface QuestionUpdateMutationArgs {
   qId: string;
-  data: any;
+  /** The edited question; `type` is stripped before it is sent. */
+  data: Partial<Question>;
 }
 
 interface iProps {
@@ -29,13 +33,13 @@ interface iProps {
 export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: (data: any) => createQuestion(surveyId, data),
+    mutationFn: (data: RequestPayload) => createQuestion(surveyId, data),
     onSuccess: () => {
       toast.success("Question created");
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
     },
     onError: (error) => {
@@ -56,8 +60,8 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
       toast.success("Saved Changes..", {
         id: "load-data",
       });
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
     },
     onError: (error) => {
       toast.error(error?.message || "Error updating question", {
@@ -79,10 +83,10 @@ export const useQuestionDeleteMutation = (
     mutationFn: (qId: string) => deleteQuestion(surveyId, qId),
     onSuccess: (_data, variables) => {
       onSuccess(variables);
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
       toast.success("Question deleted");
     },
@@ -101,10 +105,10 @@ export const useReplaceQuestionsMutation = (surveyId: string) => {
       return replaceQuestions(surveyId, questions, screenId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
     },
     onError: (error) => {
@@ -114,15 +118,15 @@ export const useReplaceQuestionsMutation = (surveyId: string) => {
   return replaceMutation;
 };
 
-export const useImportEmailIdsMutation = (surveyId) => {
+export const useImportEmailIdsMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importEmailIds,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
-      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.questions(surveyId) });
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(surveyId) });
       queryClient.invalidateQueries({
-        queryKey: ["surveyVariables", surveyId],
+        queryKey: surveyKeys.variables(surveyId),
       });
     },
   });

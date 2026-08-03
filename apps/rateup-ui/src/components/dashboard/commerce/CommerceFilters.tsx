@@ -1,4 +1,4 @@
-import { Download, Loader2 } from "lucide-react";
+import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 
 import type { SpreadsheetFormat } from "@/backend/commerce/commerce.api";
 import { Button } from "@/components/ui/button";
@@ -39,9 +39,9 @@ export function CommerceExportButton({
         render={<Button variant="outline" size="sm" disabled={disabled || isPending} />}
       >
         {isPending ? (
-          <Loader2 className="animate-spin" data-icon="inline-start" />
+          <IconLoader2 className="animate-spin" data-icon="inline-start" />
         ) : (
-          <Download data-icon="inline-start" />
+          <IconDownload data-icon="inline-start" />
         )}
         {label}
       </DropdownMenuTrigger>

@@ -1,3 +1,4 @@
+import type { JSONContent } from "@tiptap/react";
 import { z } from "zod";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
@@ -47,14 +48,19 @@ function getPlainTextFromTemplate(value: unknown): string {
   return "";
 }
 
+/** The editor stores its value as a tiptap document; anything object-shaped is one. */
+const isTiptapDoc = (value: unknown): value is JSONContent =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
 const ReferralMessageTemplateSchema = z
-  .union([z.string(), z.array(z.unknown()), z.object({ content: z.array(z.unknown()) })])
+  // Stored either as plain text or as the tiptap document the editor emits.
+  .union([z.string(), z.array(z.unknown()), z.custom<JSONContent>(isTiptapDoc)])
   .superRefine((value, ctx) => {
     const plainText = getPlainTextFromTemplate(value);
 
     if (!plainText.trim()) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Join message template is required",
       });
       return;
@@ -62,14 +68,14 @@ const ReferralMessageTemplateSchema = z
 
     if ((plainText.match(/\{\{1\}\}/g) || []).length !== 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Message must include exactly one {{1}} for contact name",
       });
     }
 
     if ((plainText.match(/\{\{2\}\}/g) || []).length !== 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Message must include exactly one {{2}} for referral code",
       });
     }
@@ -116,3 +122,5 @@ export const EventTriggersFormSchema = z.object({
   [LoyaltyEventType.POINTS_EXPIRY_ALERT]: EventTriggerSchema,
   [LoyaltyEventType.POINTS_EXPIRED]: EventTriggerSchema,
 });
+
+export type EventTriggersFormValues = z.infer<typeof EventTriggersFormSchema>;
