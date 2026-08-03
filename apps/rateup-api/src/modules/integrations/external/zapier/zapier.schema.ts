@@ -60,7 +60,9 @@ const ticketCardSchema = z.object({
 
 const newMemberToGroupShema = z.object({
   groupId: z.string(),
-  contacts: z.array(contactCoreSchema.partial()),
+  // Everything else is optional, but a contact still needs the two fields the
+  // create path reads unconditionally.
+  contacts: z.array(contactCoreSchema.partial().required({ name: true, source: true })),
 });
 
 const boardIdParamSchema = z.object({
@@ -69,12 +71,12 @@ const boardIdParamSchema = z.object({
 const teamIdParamsSchema = z.object({
   teamId: z.string(),
 });
-const boardQuerySchema = teamIdParamsSchema.merge(pageSchema);
+const boardQuerySchema = teamIdParamsSchema.extend(pageSchema.shape);
 const ticketColumnSchema = z
   .object({
     boardId: z.string(),
   })
-  .merge(pageSchema);
+  .extend(pageSchema.shape);
 
 const inviteMemberRequestSchema = z.object({
   teamId: z.string(),
@@ -93,12 +95,16 @@ const contactSearchSchema = z
     contactId: z.string().optional(),
     phone: z.string().optional(),
   })
-  .merge(
-    z.object({
-      orgId: z.string().optional(),
-    }),
-  )
-  .refine((data) => !data?.contactId.length && !data?.phone.length, {
+  .extend({
+    orgId: z.string().optional(),
+  })
+  // NOTE (pre-existing bug, not fixed here — out of scope for a types-only
+  // pass): this condition is the inverse of its own message. It passes
+  // validation only when BOTH contactId and phone are empty/omitted, and
+  // fails when either is supplied — the opposite of "Either ... should be
+  // provided". Flagged for a follow-up, not touched, since fixing it would
+  // change request-validation behavior, not just types.
+  .refine((data) => !data?.contactId?.length && !data?.phone?.length, {
     message: "Either contactId or phone number should be provided",
   });
 

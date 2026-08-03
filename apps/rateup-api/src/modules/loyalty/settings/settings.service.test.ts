@@ -105,17 +105,31 @@ function customer(over: Record<string, unknown> = {}) {
   };
 }
 
+interface CommandFixture {
+  id: string;
+  orgId: string;
+  type: LoyaltyTemplateTypes;
+  responseType: WaAutomatedReplyResponseType;
+  waTemplateId: string | null;
+  requestMessage: string | null;
+  createdAt: Date;
+  content: RichTextNode | string | null;
+  whatsappSettingsPhoneId: string | null;
+}
+
 function command(over: Record<string, unknown> = {}) {
-  return {
+  const base: CommandFixture = {
     id: "cmd-1",
     orgId: ORG,
     type: LoyaltyTemplateTypes.PointInformation,
     responseType: WaAutomatedReplyResponseType.Text,
     waTemplateId: "tmpl-1",
+    requestMessage: null,
+    createdAt: new Date("2024-01-01T00:00:00.000Z"),
     content: null,
     whatsappSettingsPhoneId: null,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 beforeEach(() => {
@@ -163,7 +177,7 @@ describe("the WhatsApp command CRUD", () => {
   });
 
   test("a command is fetched by type within one org", async () => {
-    await getLoyaltyWaCommandByType("PointInformation", ORG);
+    await getLoyaltyWaCommandByType(LoyaltyTemplateTypes.PointInformation, ORG);
 
     expect(db.loyaltyWaCommand.findFirst.mock.calls[0][0].where).toEqual({
       type: "PointInformation",
@@ -204,14 +218,19 @@ describe("the WhatsApp command CRUD", () => {
     });
   });
 
-  test("an update blanks out empty ids rather than writing them", async () => {
+  // `actionId` is accepted on the input schema, but `LoyaltyWaCommand` has no such
+  // column in the DB (only `LoyaltyApiSettings` does, for a different feature) — it is
+  // now dropped before reaching Prisma rather than being written and rejected at
+  // runtime as an unknown field.
+  test("an update blanks out empty ids and drops the unsupported actionId field", async () => {
     await updateLoyaltyWaCommand("cmd-1", { waTemplateId: "", actionId: "", content: "x" });
 
-    expect(db.loyaltyWaCommand.update.mock.calls[0][0].data).toMatchObject({
+    const data = db.loyaltyWaCommand.update.mock.calls[0][0].data;
+    expect(data).toMatchObject({
       waTemplateId: undefined,
-      actionId: undefined,
       content: "x",
     });
+    expect(data).not.toHaveProperty("actionId");
   });
 });
 
@@ -471,12 +490,11 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. validateRedemption returns
-  // `{ valid, violations, reward, customer }` — there is no `message` key, so the
-  // `validation.message || ...` fallback ALWAYS wins. The customer is told
-  // "Unable to redeem reward right now" and never learns which rule they broke,
-  // even though the validator computed exactly that. See issues.txt 20.34.
-  test("never tells the customer which rule refused the redemption", async () => {
+  // Fixed: validateRedemption returns `{ valid, violations, reward, customer }` — there
+  // is no `message` key, so the old `validation.message || ...` fallback always won and
+  // the customer never learned which rule they broke. Now reads `violations` directly.
+  // See issues.txt 20.34.
+  test("tells the customer which rule refused the redemption", async () => {
     (validateRedemption as Mock).mockResolvedValue({
       valid: false,
       violations: ["Daily redemption limit reached"],
@@ -484,9 +502,7 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
 
     await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
 
-    expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toBe(
-      "Unable to redeem reward right now.",
-    );
+    expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toBe("Daily redemption limit reached");
     expect(assignRewardToCustomer).not.toHaveBeenCalled();
   });
 

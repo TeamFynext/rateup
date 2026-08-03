@@ -9,47 +9,59 @@ import {
 } from "../../../modules/contact/contact.controller.js";
 import { ExtCreateContactSchema } from "../contact-groups/contact.external.schema.js";
 
+// The external create route accepts one contact or a batch and stamps `source` before
+// delegating to the internal handler, which owns the actual create logic.
 export async function createContactsExternalController(
   request: FastifyRequest<{
-    Body: ExtCreateContactSchema | ExtCreateContactSchema[];
+    Body:
+      | (ExtCreateContactSchema & { source?: string })
+      | (ExtCreateContactSchema & {
+          source?: string;
+        })[];
   }>,
   reply: FastifyReply,
 ) {
   if (Array.isArray(request.body)) {
     request.body.forEach((contact) => {
-      (contact as any).source = "external";
+      contact.source = "external";
     });
-    return createMultipleContactsHandler(request as any, reply);
+    return createMultipleContactsHandler(
+      request as unknown as Parameters<typeof createMultipleContactsHandler>[0],
+      reply,
+    );
   }
 
-  (request.body as any).source = "external";
-  return createContactHandler(request as any, reply);
+  request.body.source = "external";
+  return createContactHandler(
+    request as unknown as Parameters<typeof createContactHandler>[0],
+    reply,
+  );
 }
 
 export async function getAllContactsExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getAllContactsHandler>[0],
   reply: FastifyReply,
 ) {
-  return getAllContactsHandler(request as any, reply);
+  return getAllContactsHandler(request, reply);
 }
 
 export async function getContactByIdExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getContactByIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return getContactByIdHandler(request as any, reply);
+  return getContactByIdHandler(request, reply);
 }
 
 export async function updateContactByIdExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof updateContactByIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return updateContactByIdHandler(request as any, reply);
+  return updateContactByIdHandler(request, reply);
 }
 
 export async function deleteContactByIdExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof deleteContactByIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return deleteContactByIdHandler(request as any, reply);
+  return deleteContactByIdHandler(request, reply);
 }

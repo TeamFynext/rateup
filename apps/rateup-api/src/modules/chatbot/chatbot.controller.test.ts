@@ -186,16 +186,17 @@ describe("publicChatbotMessageHandler", () => {
     expect((getPublicAIResponseForQuery as Mock).mock.calls[0][0].userId).toBe("somebody-elses-id");
   });
 
-  // NOTE: an unknown short url id makes getChatbotDetailsByShortUrlId return
-  // null, and the destructure on the next line throws — so a bad link is a 500
-  // rather than a 404. See issues.txt 21.11.
-  test("answers a 500 for a short url id that matches no chatbot", async () => {
+  // Previously an unknown short url id made getChatbotDetailsByShortUrlId return null, and
+  // an unguarded destructure on the next line threw — so a bad link was a 500 rather than
+  // a 404. Fixed to guard and answer a proper 404 while getting typed for the strict-mode
+  // migration.
+  test("answers a 404 for a short url id that matches no chatbot", async () => {
     (getChatbotDetailsByShortUrlId as Mock).mockResolvedValue(null);
     const rep = reply();
 
     await publicChatbotMessageHandler(request({ body }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong!" } });
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Chatbot not found" } });
   });
 
   test("hides the underlying failure behind a generic message", async () => {
@@ -242,13 +243,16 @@ describe("getChatbotPublicPageStatusHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { publicPageStatus: "ACTIVE" } });
   });
 
-  test("answers a 500 for an unknown short url id", async () => {
+  // Previously this destructured off a possibly-null lookup and crashed into the generic
+  // 500 handler. Fixed to guard and answer a proper 404 while getting typed for the
+  // strict-mode migration.
+  test("answers a 404 for an unknown short url id", async () => {
     (getChatbotDetailsByShortUrlId as Mock).mockResolvedValue(null);
     const rep = reply();
 
     await getChatbotPublicPageStatusHandler(request({ params: { chatbotId: "nope" } }), rep);
 
-    expect(answer(rep).code).toBe(500);
+    expect(answer(rep).code).toBe(404);
   });
 });
 

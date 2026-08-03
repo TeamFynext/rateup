@@ -98,6 +98,12 @@ export async function sendCampaignHandler(
 
   try {
     if (type === CampaignType.DRIP) {
+      if (!status) {
+        return reply.status(400).send({
+          message: "status is required to update a DRIP campaign",
+          code: "STATUS_REQUIRED",
+        });
+      }
       await updateCampaign(campaignId, {
         status,
         campaignSentAt: null,
@@ -122,7 +128,8 @@ export async function sendCampaignHandler(
       });
     }
     const campaign = await getCampaignById(campaignId);
-    if ([CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(campaign.status)) {
+    const inProgressStatuses: string[] = [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING];
+    if (inProgressStatuses.includes(campaign.status)) {
       return reply.status(400).send({
         message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
         code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",

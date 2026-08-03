@@ -67,6 +67,7 @@ import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service.j
 import { WaAutomatedReplyMatchType } from "../../../types/enums.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import {
+  type automationProps,
   generateInternalMessageId,
   generateOrderReferenceId,
   selectAutomationByBusinessHours,
@@ -508,14 +509,20 @@ describe("selectAutomationByBusinessHours", () => {
 
   test("prefers an automation whose business hours are open right now", () => {
     const open = { id: "open", businessHour: openAllDay("monday") };
-    const fallback = { id: "fallback", businessHour: null };
+    const fallback: { id: string; businessHour: automationProps["businessHour"] } = {
+      id: "fallback",
+      businessHour: null,
+    };
 
     expect(selectAutomationByBusinessHours([fallback, open])).toBe(open);
   });
 
   test("falls back to the always-on automation when none are open", () => {
     const closed = { id: "closed", businessHour: openAllDay("tuesday") };
-    const fallback = { id: "fallback", businessHour: null };
+    const fallback: { id: string; businessHour: automationProps["businessHour"] } = {
+      id: "fallback",
+      businessHour: null,
+    };
 
     expect(selectAutomationByBusinessHours([closed, fallback])).toBe(fallback);
   });

@@ -828,14 +828,26 @@ describe("sendNewWaMessageHandler", () => {
   });
 
   test("sends a shared location", async () => {
+    // Real request bodies carry `latitude`/`longitude` as strings (matching the
+    // `location` Zod schema) — the handler converts them to the numbers Meta's
+    // Cloud API (and `WaSendMessageBody["location"]`) actually require.
     const request = makeRequest({
       params: { contactId: "contact-1" },
-      body: { type: "location", location: { lat: 1, long: 2 }, platform: PlatformType.WHATSAPP },
+      body: {
+        type: "location",
+        location: { latitude: "1", longitude: "2", name: "HQ", address: "1 Main St" },
+        platform: PlatformType.WHATSAPP,
+      },
     });
 
     await sendNewWaMessageHandler(request, makeReply());
 
-    expect(m.sendLocationMessage.mock.calls[0][0]).toEqual({ lat: 1, long: 2 });
+    expect(m.sendLocationMessage.mock.calls[0][0]).toEqual({
+      latitude: 1,
+      longitude: 2,
+      name: "HQ",
+      address: "1 Main St",
+    });
   });
 
   test("returns 500 when sending throws", async () => {
@@ -877,7 +889,7 @@ describe("getWaMessagesByContactIdHandler", () => {
     expect(reply.payload).toEqual([{ id: "msg-1" }]);
   });
 
-  test("defaults every optional filter to null", async () => {
+  test("defaults every optional filter to null (phone defaults to undefined)", async () => {
     m.getWaMessagesByContactId.mockResolvedValue([]);
 
     await getWaMessagesByContactIdHandler(
@@ -885,7 +897,10 @@ describe("getWaMessagesByContactIdHandler", () => {
       makeReply(),
     );
 
-    expect(m.getWaMessagesByContactId).toHaveBeenCalledWith("contact-1", null, null, null);
+    // `phone` is `undefined`, not `null`, here: getWaMessagesByContactId's `phone`
+    // param only accepts `string | undefined` (matches the query schema's
+    // `.optional()`), unlike `cursor`/`conversationId` which explicitly accept `null`.
+    expect(m.getWaMessagesByContactId).toHaveBeenCalledWith("contact-1", null, undefined, null);
   });
 
   test("returns 500 when the lookup throws", async () => {

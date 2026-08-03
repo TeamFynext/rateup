@@ -77,7 +77,12 @@ import {
 import { verifyAccess } from "./response.auth.js";
 import { responseRoutes } from "./response.route.js";
 import { responsePublicRoutes } from "./response.public.route.js";
-import { createResponseInputSchema, generateXlsxSchema } from "./response.schema.js";
+import {
+  createResponseInputSchema,
+  generateXlsxSchema,
+  generateXlsxBody,
+  CreateResponseInput,
+} from "./response.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -108,18 +113,20 @@ function answer(rep: any) {
   };
 }
 
-const xlsxBody = (over: Record<string, unknown> = {}) => ({
-  surveyId: VICTIM_SURVEY,
-  defaultLanguage: "English",
-  visibleColumn: [],
-  tz: "Asia/Calcutta",
-  filterTeams: [],
-  campaignIds: [],
-  format: "xlsx",
-  columnFilters: [],
-  ranges: {},
-  ...over,
-});
+const xlsxBody = (over: Record<string, unknown> = {}) => {
+  const base: generateXlsxBody = {
+    surveyId: VICTIM_SURVEY,
+    defaultLanguage: "English",
+    visibleColumn: [],
+    tz: "Asia/Calcutta",
+    filterTeams: [],
+    campaignIds: [],
+    format: "xlsx",
+    columnFilters: [],
+    ranges: {},
+  };
+  return { ...base, ...over };
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -334,7 +341,7 @@ describe("deleteResponseHandler", () => {
 // ===========================================================================
 
 describe("createResponseHandler", () => {
-  const body = {
+  const body: CreateResponseInput = {
     surveyTeamMapId: OWN_MAP,
     language: "English",
     responses: [],
@@ -342,7 +349,18 @@ describe("createResponseHandler", () => {
     platform: "WEB",
   };
 
-  const created = {
+  const created: {
+    id: string;
+    surveyTeamMapId: string;
+    responses: CreateResponseInput["responses"];
+    language: string;
+    createdAt: Date;
+    Contact: { phone: string };
+    tag: string | null;
+    location: Record<string, unknown> | null;
+    surveyTeam?: { id: string };
+    surveyTeamMap: { team: { orgId: string } };
+  } = {
     id: "resp-1",
     surveyTeamMapId: OWN_MAP,
     responses: [],
@@ -540,23 +558,28 @@ describe("syncResponseToGoogleSheetHandler", () => {
     expect(answer(rep).code).toBe(201);
   });
 
-  // NOTE: the catch reads e.response.data.error unguarded, so any error that is
-  // not an axios rejection throws a second time inside the handler.
-  test("an ordinary error throws again inside the catch", async () => {
-    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(new Error("db down"));
+  // NOTE: the catch now guards the axios-only shape with axios.isAxiosError, so a
+  // plain error is answered with a 500 instead of throwing a second time.
+  test("an ordinary error is answered with a 500", async () => {
+    const err = new Error("db down");
+    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(err);
+    const rep = reply();
 
-    await expect(
-      syncResponseToGoogleSheetHandler(
-        { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
-        reply(),
-      ),
-    ).rejects.toThrow(TypeError);
+    await syncResponseToGoogleSheetHandler(
+      { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 500, body: err });
   });
 
-  test("an axios-shaped error is reported cleanly", async () => {
-    svc.syncResponseToGoogleSheet.mockRejectedValueOnce({
-      response: { data: { error: "invalid_grant" } },
-    });
+  test("an axios error is reported cleanly", async () => {
+    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(
+      Object.assign(new Error("invalid_grant"), {
+        isAxiosError: true,
+        response: { data: { error: "invalid_grant" } },
+      }),
+    );
     const rep = reply();
 
     await syncResponseToGoogleSheetHandler(

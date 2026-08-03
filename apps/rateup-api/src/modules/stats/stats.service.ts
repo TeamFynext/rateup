@@ -63,8 +63,8 @@ async function maybeNotifyConversationLimitReached(
 ) {
   try {
     const subscription = await prisma.subscription.findUnique({ where: { orgId } });
-    const max = (subscription?.features as any)?.[SubscriptionFeaturePathName.Whatsapp]
-      ?.conversation?.count?.max;
+    const max =
+      subscription?.features?.[SubscriptionFeaturePathName.Whatsapp]?.conversation?.count?.max;
     if (!max || max <= 0) return;
 
     const isAnnual = subscription?.isAnnualMessageLimit;
@@ -144,7 +144,7 @@ export async function createStats(orgId: string) {
   try {
     let currentStat = await getUsageStat(orgId);
 
-    if (currentStat?.teamMembersCount > 0) return null;
+    if ((currentStat?.teamMembersCount ?? 0) > 0) return null;
 
     const teamCount = await prisma.team.count({
       where: {
@@ -270,7 +270,35 @@ export async function updateUsageStats(
   return usageStats;
 }
 
-export async function decrementStatsCount(orgId, stat) {
+type UsageStatsCountField =
+  | "teamsCount"
+  | "teamMembersCount"
+  | "surveysCount"
+  | "surveyResponsesCount"
+  | "waSurveysCount"
+  | "waSurveyResponsesCount"
+  | "messagesCount"
+  | "aiPromptTokensCount"
+  | "aiCompletionTokensCount"
+  | "loyaltyActionCount"
+  | "loyaltyRewardCount"
+  | "loyaltyCustomerCount"
+  | "waAutomationCount"
+  | "annualConversationsCount"
+  | "monthlySurveyResponses"
+  | "monthlyWaSurveyResponses"
+  | "monthlyConversationsCount"
+  | "allowedTeams"
+  | "allowedTeamMembers"
+  | "allowedSurveys"
+  | "allowedSurveyResponses"
+  | "allowedMessagesCount"
+  | "annualTemplateMessageCount"
+  | "monthlyTemplateMessageCount"
+  | "templateMessagesCount"
+  | "monthlyAutomationTriggerCount";
+
+export async function decrementStatsCount(orgId: string, stat: UsageStatsCountField) {
   await prisma.usageStats.update({
     where: {
       orgId,
@@ -283,7 +311,7 @@ export async function decrementStatsCount(orgId, stat) {
   });
 }
 
-export async function updateUsageStatsLastReset(orgId, renewedAt) {
+export async function updateUsageStatsLastReset(orgId: string, renewedAt: Date) {
   const difference = dayjs().diff(dayjs(renewedAt), "day") % 30;
   const lastMonthlyResettedDate = dayjs().subtract(difference, "day").toDate();
 

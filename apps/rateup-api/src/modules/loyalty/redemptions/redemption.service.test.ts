@@ -43,18 +43,36 @@ const db = prisma as unknown as {
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PROGRAM = "prog-1";
 
+interface CustomerFixture {
+  id: string;
+  currentPoints: number;
+  contact: { name: string; phone: string; orgId: string };
+  currentTier: { id: string; name: string } | null;
+}
+
+interface RewardFixture {
+  id: string;
+  name: string;
+  rewardType: string;
+  pointsCost: number;
+  rewardValue: Record<string, unknown>;
+  stockQuantity: number | null;
+  redemptionRules: Record<string, unknown>;
+  waTemplateId: string | null;
+}
+
 function customer(over: Record<string, unknown> = {}) {
-  return {
+  const base: CustomerFixture = {
     id: "acct-1",
     currentPoints: 500,
     contact: { name: "Ann", phone: "919000000001", orgId: ORG },
     currentTier: null,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 function reward(over: Record<string, unknown> = {}) {
-  return {
+  const base: RewardFixture = {
     id: "rwd-1",
     name: "Free coffee",
     rewardType: "coupon",
@@ -63,8 +81,8 @@ function reward(over: Record<string, unknown> = {}) {
     stockQuantity: null,
     redemptionRules: {},
     waTemplateId: null,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 const input = { customerId: "acct-1", rewardId: "rwd-1" } as any;
@@ -466,7 +484,15 @@ describe("verifyRedemption", () => {
 });
 
 describe("applyRedemption", () => {
-  const approved = {
+  const approved: {
+    id: string;
+    status: string;
+    usedAt: Date | null;
+    rewardId: string;
+    usedContext: { shortCode: string };
+    reward: { id: string; name: string; rewardType: string; stockQuantity: number | null };
+    account: { contact: { name: string; phone: string; orgId: string } };
+  } = {
     id: "red-1",
     status: "APPROVED",
     usedAt: null,

@@ -8,8 +8,8 @@ import {
   updateSubscriptionHandler,
 } from "./subscription.controller.js";
 import { assertRootOrg } from "../../utils/auth.js";
-import { updateSubscriptionInputSchema } from "./subscription.schema.js";
-import { byOrgIdParams } from "../org/org.schema.js";
+import { updateSubscriptionInput, updateSubscriptionInputSchema } from "./subscription.schema.js";
+import { ByOrgIdParams, byOrgIdParams } from "../org/org.schema.js";
 
 export async function subscriptionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -22,14 +22,14 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     },
     getAllSubscriptionsHandler,
   );
-  server.get(
+  server.get<{ Params: ByOrgIdParams }>(
     "/:orgId",
     {
       preHandler: assertRootOrg,
     },
     getSubscriptionHandler,
   );
-  server.put(
+  server.put<{ Params: ByOrgIdParams; Body: updateSubscriptionInput }>(
     "/:orgId",
     {
       preHandler: assertRootOrg,
@@ -41,7 +41,7 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     updateSubscriptionHandler,
   );
 
-  server.put(
+  server.put<{ Params: ByOrgIdParams; Body: updateSubscriptionInput }>(
     "/menu/:orgId",
     {
       schema: {
@@ -52,5 +52,8 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     updateSubscriptionHandler,
   );
 
-  server.get("/message-stats/:orgId", getMessageStatsHandler);
+  server.get<{ Params: ByOrgIdParams; Querystring: { dateRange?: string } }>(
+    "/message-stats/:orgId",
+    getMessageStatsHandler,
+  );
 }

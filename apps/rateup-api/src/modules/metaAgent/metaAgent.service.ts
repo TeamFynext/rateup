@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { aes_decrypt } from "../../../utils/encryption/encryption.utils.js";
 import { callMetaAgentApi } from "./metaAgent.client.js";
@@ -34,7 +35,7 @@ async function getEntityContext(orgId: string, whatsappSettingsId: string) {
   const accessToken = settings.accessToken_iv
     ? aes_decrypt(
         settings.accessToken,
-        Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
+        Buffer.from(process.env.wa_access_token_encryption_key!, "hex"),
         settings.accessToken_iv,
       )
     : settings.accessToken;
@@ -195,10 +196,19 @@ export async function updateAgentSettings(
   return getAgentSettings(orgId, whatsappSettingsId);
 }
 
+/** The agent_config/settings payload as Meta's Graph API returns it. */
+interface MetaAgentRemoteSettings {
+  rollout?: { enabled?: boolean };
+  handoff?: { enabled?: boolean; message?: string };
+  followup?: { enabled?: boolean; followup_interval_in_seconds?: number; message?: string };
+  ai_audience?: string;
+}
+
 export async function syncAgentSettings(orgId: string, whatsappSettingsId: string) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  const data = await callMetaAgentApi<any[]>(
+  // Meta returns the settings either bare or wrapped in a single-element array.
+  const data = await callMetaAgentApi<MetaAgentRemoteSettings[] | MetaAgentRemoteSettings>(
     `/${entityId}/agent_config/settings`,
     "GET",
     accessToken,
@@ -243,7 +253,7 @@ export async function updateBusinessInfo(
   );
   await prisma.metaBusinessAgent.update({
     where: { id: agent.id },
-    data: { businessInfo: data as any, businessInfoSyncedAt: new Date() },
+    data: { businessInfo: data, businessInfoSyncedAt: new Date() },
   });
   return getBusinessInfo(orgId, whatsappSettingsId);
 }
@@ -254,7 +264,7 @@ export async function deleteBusinessInfo(orgId: string, whatsappSettingsId: stri
   await callMetaAgentApi(`/${entityId}/agent_config/business_info`, "DELETE", accessToken);
   await prisma.metaBusinessAgent.update({
     where: { id: agent.id },
-    data: { businessInfo: null as any, businessInfoSyncedAt: new Date() },
+    data: { businessInfo: Prisma.DbNull, businessInfoSyncedAt: new Date() },
   });
 }
 
@@ -268,7 +278,7 @@ export async function syncBusinessInfo(orgId: string, whatsappSettingsId: string
   );
   await prisma.metaBusinessAgent.update({
     where: { id: agent.id },
-    data: { businessInfo: data as any, businessInfoSyncedAt: new Date() },
+    data: { businessInfo: data, businessInfoSyncedAt: new Date() },
   });
   return getBusinessInfo(orgId, whatsappSettingsId);
 }
@@ -297,7 +307,7 @@ export async function createFaq(orgId: string, whatsappSettingsId: string, body:
       metaId: data.id,
       question: body.question,
       answer: body.answer,
-      metadata: body.metadata as any,
+      metadata: body.metadata,
     },
   });
 }
@@ -316,7 +326,7 @@ export async function updateFaq(
   }
   return prisma.metaAgentFaq.update({
     where: { id },
-    data: { question: body.question, answer: body.answer, metadata: body.metadata as any },
+    data: { question: body.question, answer: body.answer, metadata: body.metadata },
   });
 }
 
@@ -344,7 +354,7 @@ export async function syncFaqs(orgId: string, whatsappSettingsId: string) {
         metaId: faq.id,
         question: faq.question,
         answer: faq.answer,
-        metadata: faq.metadata as any,
+        metadata: faq.metadata,
       })),
     }),
   ]);
@@ -784,7 +794,7 @@ export async function createConnectorTool(
       metaId: data.id,
       name: body.name,
       description: body.description,
-      requestDefinition: body.request_definition as any,
+      requestDefinition: body.request_definition,
       userAuthRequired: body.user_auth_required ?? false,
     },
   });
@@ -819,7 +829,7 @@ export async function runConnectorTool(
   whatsappSettingsId: string,
   connectorId: string,
   toolId: string,
-  input?: Record<string, any>,
+  input?: Record<string, unknown>,
 ) {
   const { connector, entityId, accessToken } = await withConnector(
     orgId,
@@ -852,7 +862,7 @@ export async function syncConnectorTools(
       id: string;
       name: string;
       description: string;
-      request_definition: Record<string, any>;
+      request_definition: Record<string, unknown>;
       user_auth_required?: boolean;
     }[]
   >(`/${entityId}/agent_connectors/${connector.metaId}/tools`, "GET", accessToken);
@@ -864,7 +874,7 @@ export async function syncConnectorTools(
         metaId: tool.id,
         name: tool.name,
         description: tool.description,
-        requestDefinition: tool.request_definition as any,
+        requestDefinition: tool.request_definition,
         userAuthRequired: tool.user_auth_required ?? false,
       })),
     }),

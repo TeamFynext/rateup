@@ -26,11 +26,14 @@ import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import { verifyFlowSubscriptionLimit } from "./flow.utils.js";
 import {
+  type ByDbFlowIdParams,
   byDbFlowIdParams,
   byWaFlowIdParams,
   cloneFlowSchema,
+  type CreateFlowInput,
   createFlowInput,
   importFlowsBody,
+  type SendFlowBody,
   sendFlowBodySchema,
   sourceQuery,
   updateFlowInput,
@@ -98,7 +101,7 @@ export async function flowRoutes(server: FastifyInstance) {
     importFlowsHandler,
   );
 
-  server.post(
+  server.post<{ Body: CreateFlowInput }>(
     "/",
     {
       preHandler: verifyFlowSubscriptionLimit,
@@ -199,7 +202,7 @@ export async function flowRoutes(server: FastifyInstance) {
     publishFlowHandler,
   );
 
-  server.post(
+  server.post<{ Body: SendFlowBody; Params: ByDbFlowIdParams }>(
     "/:dbFlowId/send",
     {
       preHandler: verifyMessageMonthlyLimitRestriction,

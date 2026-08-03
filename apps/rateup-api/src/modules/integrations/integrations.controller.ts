@@ -79,7 +79,7 @@ export async function getAllIntegrationsHandler(request: FastifyRequest, reply: 
     const integrations = await getAllIntegrations();
     reply.code(200).send(integrations);
   } catch (e) {
-    log.error("Error fetching all integrations %o", e);
+    log.error({ err: e }, "Error fetching all integrations");
     reply.code(500).send(e);
   }
 }
@@ -189,7 +189,7 @@ export const updateIntegrationByNameHandler = async (
     reply.send(data);
   } catch (error) {
     console.error(error);
-    log.error("Error updating integration by name => %o", error);
+    log.error({ err: error }, "Error updating integration by name");
     return reply.code(500).send({ error: "Something went wrong" });
   }
 };
@@ -235,16 +235,20 @@ export async function createGoogleSheetAuthToken(
     const code = request.body.code;
     const oauth2Client = await initializeAuthClient();
     const { tokens } = await oauth2Client.getToken(code);
+    if (!tokens.access_token)
+      throw new Error("Google OAuth response did not include an access token");
     const { email } = await oauth2Client.getTokenInfo(tokens.access_token);
+    // Chosen later, when the user picks a Drive folder to export sheets into.
+    const driveFolderId: string | null = null;
     const data = {
       name: IntegratedApps.googlesheet,
       credential: {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: tokens.expiry_date,
-        scopes: tokens.scope.split(","),
+        scopes: tokens.scope ? tokens.scope.split(",") : [],
         userEmail: email,
-        driveFolderId: null,
+        driveFolderId,
       },
     };
     await createIntegration(data, request.user.orgId);
@@ -255,11 +259,19 @@ export async function createGoogleSheetAuthToken(
   }
 }
 
+/** The order webhook PetPooja posts; only the restaurant and customer are read. */
+interface PetPoojaWebhookBody {
+  properties: {
+    Restaurant: { restID: string };
+    Customer: { phone: string };
+  };
+}
+
 export async function petPoojaWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const {
       properties: { Restaurant, Customer },
-    } = request.body as any;
+    } = request.body as PetPoojaWebhookBody;
     const restaurantID = Restaurant.restID;
     const integration = await getIntegrationByPetPoojaRestaurantId(restaurantID);
     const customerPhone = parsePhoneNumber(Customer.phone, "IN");
@@ -283,7 +295,10 @@ export async function petPoojaWebhookHandler(request: FastifyRequest, reply: Fas
 
 export async function deleteZapierTriggerHookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const res = await deleteZapierTriggerHooks(request.body as any, request.user.orgId);
+    const res = await deleteZapierTriggerHooks(
+      request.body as Parameters<typeof deleteZapierTriggerHooks>[0],
+      request.user.orgId,
+    );
     reply.send(res);
   } catch (e) {
     log.error(e);

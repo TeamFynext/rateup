@@ -1,5 +1,6 @@
 import {
   PlatformType,
+  Prisma,
   ResponsePlatform,
   WhatsappSettings,
 } from "../../../../generated/prisma/client.js";
@@ -15,6 +16,7 @@ import {
 } from "../../../types/enums.js";
 import {
   LeadGenBody,
+  LeadGenFieldData,
   WaMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
@@ -48,6 +50,14 @@ import {
   getWaSettingsByPageId,
 } from "../settings/wa_settings.service.js";
 import { GraphApiError, callMetaApi } from "../wa_axios.js";
+
+/** Meta returns failures as `{ error: {...} }`; anything else is a transport-level error. */
+function graphApiErrorDetail(error: unknown): WaGraphApiErrorDetail | undefined {
+  if (error !== null && typeof error === "object" && "error" in error) {
+    return (error as { error?: WaGraphApiErrorDetail }).error;
+  }
+  return undefined;
+}
 import {
   createCTAButtonMessage,
   createNativeListMessage,
@@ -74,6 +84,16 @@ import {
 } from "../../integrations/external/zapier/zapier.service.js";
 import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
+import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
+
+// getSession() itself can return null (findUnique), but every function below that takes
+// a session as a parameter is only ever called after the caller has null-checked it.
+export type WaSession = NonNullable<WaSessionWithRelations>;
+// Sessions created with a surveyTeamMapId (i.e. every session in the active
+// survey-taking flow) always have a real surveyTeamMap relation.
+export type WaSessionWithSurveyTeamMap = WaSession & {
+  surveyTeamMap: NonNullable<WaSession["surveyTeamMap"]>;
+};
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -90,7 +110,14 @@ export const toBeIncludedWaSessionRelations = {
 
 export async function sendMessage(
   orgId: string,
-  messageData: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody,
+  // sendPaymentInitTemplate()'s payment order-details message has a shape
+  // WaSendMessageBody doesn't model (see wa_message_scheduler.ts) but is a valid
+  // outbound payload here too.
+  messageData:
+    | WaSendMessageBody
+    | IgSendMessageBody
+    | FbSendMessageBody
+    | Awaited<ReturnType<typeof sendPaymentInitTemplate>>,
   userName?: string,
   userId?: string,
   whatsappSettingsPhoneId?: string,
@@ -109,32 +136,46 @@ export async function sendMessage(
   if (!skipConversationLimit) {
     await assertWithinConversationLimit(orgId);
   }
-  let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
+  let waSettings: Omit<WhatsappSettings, "accessToken_iv"> | null = null;
   let to: string;
-  let configId: string;
-  let accessToken: string;
-  let sourceIdentifier: string;
+  let configId: string | undefined;
+  let accessToken: string | undefined;
+  let sourceIdentifier: string | undefined;
   if (platform === PlatformType.INSTAGRAM) {
+    if (!whatsappSettingsPhoneId) {
+      throw new Error("whatsappSettingsPhoneId is required for Instagram messages");
+    }
     waSettings = await getWaSettingsByIbaId(whatsappSettingsPhoneId);
+    if (!waSettings) {
+      throw new Error(`Instagram account is not configured for id: ${whatsappSettingsPhoneId}`);
+    }
     to = (messageData as IgSendMessageBody).recipient.id;
     configId = "me";
-    accessToken = waSettings.pageAccessToken;
-    sourceIdentifier = waSettings.ibaId;
+    accessToken = waSettings.pageAccessToken ?? undefined;
+    sourceIdentifier = waSettings.ibaId ?? undefined;
   } else if (platform === PlatformType.FACEBOOK) {
+    if (!whatsappSettingsPhoneId) {
+      throw new Error("whatsappSettingsPhoneId is required for Facebook messages");
+    }
     waSettings = await getWaSettingsByPageId(whatsappSettingsPhoneId);
     if (!waSettings) {
       throw new Error(`Facebook page is not configured for page ID: ${whatsappSettingsPhoneId}`);
     }
     to = (messageData as FbSendMessageBody).recipient.id;
     configId = "me";
-    accessToken = waSettings.pageAccessToken;
-    sourceIdentifier = waSettings.fbPageId;
+    accessToken = waSettings.pageAccessToken ?? undefined;
+    sourceIdentifier = waSettings.fbPageId ?? undefined;
   } else if (platform !== PlatformType.WEBCHAT) {
     waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+    if (!waSettings) {
+      throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+    }
     to = (messageData as WaSendMessageBody).to;
-    configId = waSettings.phoneId;
+    configId = waSettings.phoneId ?? undefined;
     accessToken = waSettings.accessToken;
-    sourceIdentifier = waSettings.phone;
+    sourceIdentifier = waSettings.phone ?? undefined;
+  } else {
+    to = (messageData as WaSendMessageBody).to;
   }
   let messageUrl = "messages";
   if (category === WaTemplateCategory.MARKETING) {
@@ -148,7 +189,7 @@ export async function sendMessage(
       res = await callMetaApi(
         `/${configId}/${messageUrl}`,
         "POST",
-        platform === PlatformType.INSTAGRAM ? null : accessToken,
+        platform === PlatformType.INSTAGRAM ? undefined : accessToken,
         messageData,
         platform === PlatformType.INSTAGRAM ? { params: { access_token: accessToken } } : {},
       );
@@ -180,13 +221,13 @@ export async function sendMessage(
       externalApi,
     );
     return { status: true, message: messageId };
-  } catch (e: any) {
+  } catch (e) {
     console.log("🚀 ~ file: wasurvey.service.ts:436 ~ sendMessage ~ e:", e);
 
     console.log("🚀 main:", {
       orgId,
       phone: to,
-      logs: e?.error,
+      logs: (e as { error?: unknown } | null | undefined)?.error,
     });
     await handleWaMessages(
       "send",
@@ -196,7 +237,7 @@ export async function sendMessage(
       platform,
       sourceIdentifier,
       userName,
-      null,
+      undefined,
       userId,
       true,
       teamId ?? null,
@@ -208,7 +249,7 @@ export async function sendMessage(
       data: {
         orgId,
         phone: to,
-        logs: [e?.error || { message: "Network or unknown error" }],
+        logs: [graphApiErrorDetail(e) ?? { message: "Network or unknown error" }],
       },
     });
     log.error({ error: e }, "Error sending message");
@@ -225,14 +266,14 @@ export async function sendMessage(
       platform,
       sourceIdentifier,
       userName,
-      null,
+      undefined,
       userId,
       true,
       teamId ?? null,
       messageType,
       isAutomated,
       externalApi,
-      e?.error,
+      graphApiErrorDetail(e),
     );
     return {
       status: false,
@@ -251,6 +292,7 @@ function createBlockWhatsappUserBody(phoneNumbersList: string[]) {
 
 export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) throw new Error(`WhatsApp settings not found for org: ${orgId}`);
   const body = createBlockWhatsappUserBody(phoneNumbers);
   try {
     const res = await callMetaApi(
@@ -294,8 +336,12 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
     }
     if (res.status === 400 && res.data?.error?.code === 139100) {
       log.error("Failed to block some users: see error %o", res.data);
-      const blockedNumbers = res.data?.blocked_users?.added_users?.map((user) => user?.input);
-      const failedNumbers = res.data?.blocked_users?.failed_users?.map((user) => user?.input);
+      const blockedNumbers = res.data?.blocked_users?.added_users?.map(
+        (user: { input?: string }) => user?.input,
+      );
+      const failedNumbers = res.data?.blocked_users?.failed_users?.map(
+        (user: { input?: string }) => user?.input,
+      );
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       const contactsToBlock = await prisma.contact.findMany({
         where: {
@@ -341,6 +387,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
 
 export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[]) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) throw new Error(`WhatsApp settings not found for org: ${orgId}`);
   const body = createBlockWhatsappUserBody(phoneNumbers);
   try {
     const res = await callMetaApi(
@@ -384,8 +431,12 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
     }
     if (res.status === 400 && res.data?.error?.code === 139100) {
       log.error("Failed to block some users: see error %o", res.data);
-      const unblockedNumbers = res.data?.blocked_users?.added_users?.map((user) => user?.input);
-      const failedNumbers = res.data?.blocked_users?.failed_users?.map((user) => user?.input);
+      const unblockedNumbers = res.data?.blocked_users?.added_users?.map(
+        (user: { input?: string }) => user?.input,
+      );
+      const failedNumbers = res.data?.blocked_users?.failed_users?.map(
+        (user: { input?: string }) => user?.input,
+      );
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       const contactsToUnblock = await prisma.contact.findMany({
         where: {
@@ -452,8 +503,9 @@ export async function deleteSession(orgId: string, phone: string) {
         },
       },
     });
-  } catch (e: any) {
-    if (e.code === "P2025") {
+  } catch (e) {
+    // P2025 = "record to delete does not exist"; the session was already gone.
+    if ((e as { code?: string } | null | undefined)?.code === "P2025") {
       // No session found. Ignoring...
     } else {
       throw e;
@@ -512,10 +564,14 @@ export async function createSession({
   });
 
   log.trace("Session created");
-  return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
+  return session as unknown as WaSessionWithSurveyTeamMap; // overriding JSON type of responses
 }
 
-export async function updateSession(orgId: string, phone: string, data: any) {
+export async function updateSession(
+  orgId: string,
+  phone: string,
+  data: Prisma.WaSessionUncheckedUpdateInput,
+) {
   log.trace("Updating session \n%o\n", { phone, orgId, data });
   const session = await prisma.waSession.update({
     where: {
@@ -528,21 +584,30 @@ export async function updateSession(orgId: string, phone: string, data: any) {
     data: data,
   });
   log.trace("Session updated");
-  return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
+  return session as unknown as WaSessionWithSurveyTeamMap; // overriding JSON type of responses
 }
 
-export async function sendNextQuestion(session: WaSessionWithRelations, response: any) {
+export async function sendNextQuestion(session: WaSession, response: unknown) {
   const { currentQuestionId, surveyTeamMap } = session;
   if (!currentQuestionId) {
     log.error("CurrentQuestionId is null");
     throw new Error("CurrentQuestionId is null");
+  }
+  if (!surveyTeamMap) {
+    throw new Error("Session has no associated surveyTeamMap");
   }
   const questions = surveyTeamMap.survey.questions;
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
   if (!currentQuestion) {
     throw new Error("CurrentQuestion Not Found");
   }
-  const next = parseLogicAction(currentQuestion, response, session.language);
+  // parseLogicAction only evaluates scalar/choice answers; richer answer shapes (e.g. the
+  // testimonial object) simply never match a logic jump and fall through to NextQ.
+  const next = parseLogicAction(
+    currentQuestion,
+    response as Choice | string | Choice[] | number,
+    session.language,
+  );
   log.info("Next action: %s", next);
   const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
 
@@ -555,7 +620,7 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
     await saveResponses(session);
     if (
       shouldShowGoogleReview({
-        questions: session.surveyTeamMap.survey.questions,
+        questions: surveyTeamMap.survey.questions,
         responses: session.responses,
       })
     ) {
@@ -583,6 +648,11 @@ export async function sendNextQuestion(session: WaSessionWithRelations, response
   }
 }
 const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
+const googleReviewSupportedMetaTypes: WaQuestions[] = [
+  WaQuestions.Rating,
+  WaQuestions.Smiley,
+  WaQuestions.Opinion,
+];
 
 interface ShouldShowGoogleReviewProps {
   questions: Question[];
@@ -594,27 +664,23 @@ export function shouldShowGoogleReview({ questions, responses }: ShouldShowGoogl
   questions.forEach((q: Question) => {
     if (googleReviewSupportedTypes.includes(q.type) && q.googleReview) {
       const questionResponse = responses.find((r) => r.questionId === q.id);
+      if (!questionResponse) return;
+      const value = String(
+        (questionResponse.response as Record<string, unknown>)[questionResponse.type] ?? "",
+      );
       switch (q.type) {
         case Q.Rating:
-          if (
-            Number.parseInt(questionResponse.response[questionResponse.type]) >=
-            q.googleReview.minRating
-          ) {
+          if (Number.parseInt(value) >= (q.googleReview.minRating ?? Infinity)) {
             showGoogleReview = true;
           }
           break;
         case Q.Smiley:
-          if (
-            q.googleReview.reqOptions.includes(questionResponse.response[questionResponse.type])
-          ) {
+          if ((q.googleReview.reqOptions ?? []).includes(value)) {
             showGoogleReview = true;
           }
           break;
         case Q.Opinion:
-          if (
-            Number.parseInt(questionResponse.response[questionResponse.type]) >=
-            q.googleReview.minOpinion
-          ) {
+          if (Number.parseInt(value) >= (q.googleReview.minOpinion ?? Infinity)) {
             showGoogleReview = true;
           }
           break;
@@ -623,30 +689,43 @@ export function shouldShowGoogleReview({ questions, responses }: ShouldShowGoogl
   });
   return showGoogleReview;
 }
-export function shouldShowGoogleReviewV2({ screens, responses }) {
+export function shouldShowGoogleReviewV2({
+  screens,
+  responses,
+}: {
+  screens: WaFlowScreen[];
+  // v2 flow answers carry no QuestionType — this reads `questionId`/`response`
+  // only, so it accepts either shape.
+  responses: WaFlowQuestionResponse[];
+}) {
+  // WaFlowScreen.layout.children is declared as WaFlowForm[], but at runtime these are
+  // WaFlowFormElement-shaped (id/metaType) — the same gap as elsewhere in this file.
   const questions = screens.flatMap((screen) =>
-    screen.layout.children.filter((child) =>
-      [WaQuestions.Rating, WaQuestions.Smiley, WaQuestions.Opinion].includes(child.metaType),
+    screen.layout.children.filter(
+      (child) =>
+        child.metaType !== undefined && googleReviewSupportedMetaTypes.includes(child.metaType),
     ),
   );
   log.trace("q\n%o\nr%o", questions, responses);
   let showGoogleReview = false;
-  questions.forEach((q: Question2) => {
+  questions.forEach((q) => {
     if (q.googleReview) {
       const questionResponse = responses.find((r) => r.questionId === q.id);
+      if (!questionResponse) return;
+      const value = String(questionResponse.response ?? "");
       switch (q.metaType) {
         case WaQuestions.Rating:
-          if (Number.parseInt(questionResponse.response) >= q.googleReview.minRating) {
+          if (Number.parseInt(value) >= (q.googleReview.minRating ?? Infinity)) {
             showGoogleReview = true;
           }
           break;
         case WaQuestions.Smiley:
-          if (q.googleReview.reqOptions.includes(questionResponse.response)) {
+          if ((q.googleReview.reqOptions ?? []).includes(value)) {
             showGoogleReview = true;
           }
           break;
         case WaQuestions.Opinion:
-          if (Number.parseInt(questionResponse.response) >= q.googleReview.minOpinion) {
+          if (Number.parseInt(value) >= (q.googleReview.minOpinion ?? Infinity)) {
             showGoogleReview = true;
           }
           break;
@@ -669,7 +748,7 @@ async function updateCurrentQuestion(orgId: string, from: string, newQId: string
     },
   });
 }
-export async function sendQuestion(question: Question, session: WaSessionWithRelations) {
+export async function sendQuestion(question: Question, session: WaSession) {
   if (question.type == QuestionType.Testimonial) {
     const hasResponse = session.responses.find((s) => s.questionId == question.id);
     if (!hasResponse) {
@@ -684,7 +763,21 @@ export async function sendQuestion(question: Question, session: WaSessionWithRel
   }
 }
 
-function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses) {
+/**
+ * Ticket rules are evaluated for both v1 survey answers (`QuestionResponse`, whose
+ * `response` is keyed by question type) and v2 flow answers (a bare scalar/array).
+ */
+type FlowQuestionResponse = WaFlowQuestionResponse;
+
+/** Ticket conditions compare against scalars, so collapse either answer shape to text. */
+function ticketAnswerValues(response: FlowQuestionResponse["response"]): string[] {
+  if (Array.isArray(response)) return response.map((item) => String(item));
+  if (response !== null && typeof response === "object") {
+    return Object.values(response).map((item) => String(item));
+  }
+  return [String(response ?? "")];
+}
+function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses: FlowQuestionResponse[]) {
   let shouldRaiseTicket = false;
   for (const ticket of ticketIssued) {
     const response = responses.find((r) => r.questionId === ticket.questionId);
@@ -692,28 +785,34 @@ function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses) {
     if (ticket.condition.submissionTicket) shouldRaiseTicket = true;
     switch (ticket.type) {
       case QuestionType2.Rating:
-        shouldRaiseTicket = Number(response.response) <= ticket.condition.minRating;
+        shouldRaiseTicket =
+          Number(ticketAnswerValues(response.response)[0]) <=
+          (ticket.condition.minRating ?? -Infinity);
         break;
       case QuestionType2.Smiley:
-        shouldRaiseTicket = ticket.condition.reqOptions.includes(response.response);
+        shouldRaiseTicket = (ticket.condition.reqOptions ?? []).includes(
+          ticketAnswerValues(response.response)[0]!,
+        );
         break;
       case QuestionType2.Opinion:
-        shouldRaiseTicket = Number(response.response) <= ticket.condition.minOpinion;
+        shouldRaiseTicket =
+          Number(ticketAnswerValues(response.response)[0]) <=
+          (ticket.condition.minOpinion ?? -Infinity);
         break;
       case QuestionType2.CheckboxGroup:
       case QuestionType2.ChipsSelector:
       case QuestionType2.Dropdown:
-      case QuestionType2.RadioButtonsGroup:
-        shouldRaiseTicket = Array.isArray(response.response)
-          ? ticket.condition.reqOptions.some((op) => response.response.includes(op))
-          : ticket.condition.reqOptions.includes(response.response);
+      case QuestionType2.RadioButtonsGroup: {
+        const answers = ticketAnswerValues(response.response);
+        shouldRaiseTicket = (ticket.condition.reqOptions ?? []).some((op) => answers.includes(op));
         break;
+      }
     }
     if (shouldRaiseTicket) return true;
   }
   return shouldRaiseTicket;
 }
-function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses) {
+function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses: FlowQuestionResponse[]) {
   for (const ticket of ticketIssued) {
     const response = responses.find((r) => r.questionId === ticket.questionId);
     if (!response) continue;
@@ -727,7 +826,7 @@ function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses) {
  *
  * -> updates completedSurvey count
  */
-export async function saveResponses(session: WaSessionWithRelations) {
+export async function saveResponses(session: WaSession) {
   let anonymous = session?.surveyTeamMap?.survey?.WaFlow?.anonymous ?? false;
   log.trace("Saving responses for %o", {
     id: session.id,
@@ -745,10 +844,12 @@ export async function saveResponses(session: WaSessionWithRelations) {
   if (responsesWithSha256?.length > 0) {
     try {
       const settings = await getWaSettings(session.orgId);
+      if (!settings) throw new Error(`WhatsApp settings not found for org: ${session.orgId}`);
       // Step 1: Download the media from WhatsApp API
       for await (let response of responsesWithSha256) {
-        let parsedResponse = response.response?.[0];
-        const fileUrl = await callMetaApi(`/${parsedResponse?.id}`, "GET", settings.accessToken);
+        let parsedResponse = (response.response as WaMediaResponseItem[] | undefined)?.[0];
+        if (!parsedResponse) continue;
+        const fileUrl = await callMetaApi(`/${parsedResponse.id}`, "GET", settings.accessToken);
         if (fileUrl?.data) {
           // Step 2: Convert the downloaded media to a Buffer (for binary data)
           const fileResponse = await axios.get(fileUrl?.data.url, {
@@ -769,10 +870,12 @@ export async function saveResponses(session: WaSessionWithRelations) {
 
           // Step 4: Upload the file to S3
           const obj = await uploadFile(s3Params);
+          const key = obj?.Key ?? null;
           if (response.type) {
-            response.response[response.type] = obj["Key"] ? obj["Key"] : null;
+            (response.response as Record<string, unknown>)[response.type] = key;
           } else {
-            response.response = obj["Key"] ? obj["Key"] : (null as any);
+            // Untyped question types store the S3 key directly rather than under a type key.
+            (response as { response: unknown }).response = key;
           }
         } else {
           log.error("Failed to download media file from WhatsApp API.");
@@ -782,8 +885,13 @@ export async function saveResponses(session: WaSessionWithRelations) {
       log.error({ err: error }, "Error occurred while processing media file:");
     }
   }
+  if (!session.surveyTeamMapId) {
+    throw new Error("Session has no associated surveyTeamMapId");
+  }
   // TODO: save name
-  const { contact } = !anonymous && (await getOrCreateContactByPhone(session.phone, session.orgId));
+  const contact = anonymous
+    ? null
+    : (await getOrCreateContactByPhone(session.phone, session.orgId))?.contact;
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
@@ -796,9 +904,9 @@ export async function saveResponses(session: WaSessionWithRelations) {
   const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
     ?.ticketIssued as unknown as FlowTicket[];
   let shouldRaiseTicket = session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
-  let columnId = session?.surveyTeamMap?.survey?.ticketColumnId;
+  let columnId = session?.surveyTeamMap?.survey?.ticketColumnId ?? undefined;
   if (ticketIssued.length && !shouldRaiseTicket) {
-    columnId = getColumnIdFromTickets(ticketIssued, questionResponses);
+    columnId = getColumnIdFromTickets(ticketIssued, questionResponses) ?? undefined;
     shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
   }
   const res = await createResponse(surveyResponse, shouldRaiseTicket, false, null, columnId);
@@ -892,8 +1000,8 @@ async function updateDripCampaignStats(id: string) {
 
 export async function sendTextMessage(
   to: { phone: string; orgId: string },
-  title: string,
-  description: any = "",
+  title: string | null,
+  description = "",
   // System/transactional callers (e.g. ticket notifications) pass true to bypass
   // the conversation limit; normal business text sends stay gated.
   skipConversationLimit = false,
@@ -927,6 +1035,9 @@ export async function sendSurveyToParticipant({
   dbTemplate,
 }: sendSurveyToParticipantParams) {
   try {
+    if (!dbTemplate.orgId) {
+      throw new Error("Template has no associated orgId");
+    }
     log.fatal("Deleting existing session if any for %s", phone); // TODO: handle this. Maybe provide options to send to remaining participants or send to all
     await deleteSession(dbTemplate.orgId, phone);
     log.trace("Sending survey to participant %s", phone);
@@ -949,7 +1060,7 @@ export async function sendSurveyToParticipant({
 
     // TODO: send error if sending template failed
     await sendMessage(session.orgId, consentTemplateMessage);
-    updateVisitedSurvey(session.surveyTeamMapId).then(() => {});
+    updateVisitedSurvey(surveyTeamMapId).then(() => {});
     return true;
   } catch (e) {
     log.error(e);
@@ -957,15 +1068,13 @@ export async function sendSurveyToParticipant({
   }
 }
 
-export async function handleTestimonialQuestion(
-  question: Question,
-  session: WaSessionWithRelations,
-) {
+export async function handleTestimonialQuestion(question: Question, session: WaSession) {
   const features = question.features?.[session.language];
   const to = session.phone;
-  const response = session?.responses?.find((s) => s.questionId == question.id)?.response?.[
-    QuestionType.Testimonial
-  ];
+  const response: Partial<TestimonialResponse> =
+    session?.responses?.find((s) => s.questionId == question.id)?.response?.[
+      QuestionType.Testimonial
+    ] ?? {};
   if (features?.jobTitle && !response.jobTitle) {
     const description = "\nPlease share your job title";
     const nextSubQuestion = createTextMessage(to, null, description);
@@ -997,10 +1106,7 @@ export async function handleTestimonialQuestion(
   await sendNextQuestion(session, response);
 }
 
-export async function startTestimonialQuestion(
-  question: Question,
-  session: WaSessionWithRelations,
-) {
+export async function startTestimonialQuestion(question: Question, session: WaSession) {
   if (!session.language) {
     log.error({ session }, "No language found for session");
     throw new Error("No language found for session");
@@ -1015,8 +1121,8 @@ export async function startTestimonialQuestion(
 export async function handleTestimonialReply(
   reply: WaMessageBody,
   question: Question,
-  session: WaSessionWithRelations,
-) {
+  session: WaSession,
+): Promise<void> {
   const features = question.features?.[session?.language];
   let message = parseMessage(reply).message;
   const response = session?.responses?.find((s) => s.questionId == question.id)?.response?.[
@@ -1038,12 +1144,15 @@ export async function handleTestimonialReply(
     response.testimonial = message;
   } else if (features?.rating && !response.rating) {
     //assume its rating
-    const rating = Number.parseInt(
-      (reply.entry[0].changes[0].value as WaReceiveMessageBody).messages[0].interactive.list_reply
-        .id,
-    );
-    if (rating < 1 || rating > 5) isValid = false;
-    else response.rating = rating;
+    const listReplyId = (reply.entry[0].changes[0].value as WaReceiveMessageBody).messages[0]
+      .interactive?.list_reply?.id;
+    if (!listReplyId) {
+      isValid = false;
+    } else {
+      const rating = Number.parseInt(listReplyId);
+      if (rating < 1 || rating > 5) isValid = false;
+      else response.rating = rating;
+    }
   } else if (features?.photo && !response.photo) {
     //assume its photo
     const { message } = getMessageObject(reply);
@@ -1069,7 +1178,7 @@ export async function handleTestimonialReply(
   const currentResponses = (session.responses as unknown as Array<QuestionResponse>).filter(
     (r) => r.questionId !== session.currentQuestionId,
   );
-  const updatedResponses = [...currentResponses, formattedResponse] as any;
+  const updatedResponses = [...currentResponses, formattedResponse];
 
   session = await updateSession(session.orgId, session.phone, {
     responses: updatedResponses,
@@ -1080,7 +1189,7 @@ export async function handleTestimonialReply(
 export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,
-  errors?: any,
+  errors?: unknown,
 ) => {
   if (!messageId) return;
   const now = new Date().toISOString();
@@ -1135,26 +1244,28 @@ export async function aibotNodeCompletion(phone: string, orgId: string) {
   const progress = await findRecentAutomation(phone, orgId);
   const automation = progress?.waAutomatedReply;
   if (automation) {
-    const matchData = automation.matchData as {
-      json: { edges: any[]; nodes: any };
-    };
-    const nextEdge = matchData?.json?.edges?.find(
-      (edge: any) => edge.target === progress.currentNode,
-    );
+    const matchData = automation.matchData;
+    const nextEdge = matchData?.json?.edges?.find((edge) => edge.target === progress.currentNode);
 
     if (!nextEdge) return;
 
-    const nextNode = matchData?.json?.nodes?.find((node: any) => node.id === nextEdge.source);
+    const nextNode = matchData?.json?.nodes?.find((node) => node.id === nextEdge.source);
 
     const automationLog = await logAutomationAction({
       phone,
-      nodeId: progress.currentNode,
+      nodeId: progress.currentNode ?? "",
       automationId: automation.id,
       orgId,
     });
 
     if (nextNode) {
-      await processNextNode(phone, automation, progress.currentNode, orgId, automationLog?.id);
+      await processNextNode(
+        phone,
+        automation,
+        progress.currentNode ?? "",
+        orgId,
+        automationLog?.id ?? "",
+      );
     }
   }
 }
@@ -1186,15 +1297,21 @@ export async function handleLeadGen(body: WaMessageBody) {
       log.trace("No lead automation found for pageid:%s and ad id: %s", page_id, ad_id);
       return;
     }
-    if (!hasFeature(automation.orgId, SubscriptionFeaturePathName.Whatsapp)) {
+    if (!automation.orgId) {
+      log.trace("Lead automation has no associated orgId, automationId => %s", automation.id);
+      return;
+    }
+    if (!(await hasFeature(automation.orgId, SubscriptionFeaturePathName.Whatsapp))) {
       log.trace("Aborting..Not subscribed to lead automation, orgId => %s", automation.orgId);
       return;
     }
-    const matchData = automation.matchData as {
-      json: { edges: any[]; nodes: any };
-    };
-    const leadgenNode = matchData?.json.nodes.find((node) => node.type === "leadgenNode");
-    const leadgenNodeData = leadgenNode.data as LeadgenNodeData;
+    const matchData = automation.matchData;
+    const leadgenNode = matchData?.json?.nodes.find((node) => node.type === "leadgenNode");
+    if (!leadgenNode) {
+      log.trace("Lead automation %s has no leadgenNode; aborting", automation.id);
+      return;
+    }
+    const leadgenNodeData = leadgenNode.data as unknown as LeadgenNodeData;
     let phone = leadgenNodeData.phone;
     let errorMessage = "";
     let leadData;
@@ -1221,15 +1338,21 @@ export async function handleLeadGen(body: WaMessageBody) {
         });
         if (leadgenNodeData.phoneField?.trim().length) {
           const formValues = res.data.field_data;
-          const fieldValue = formValues.find((field) => field.name === leadgenNodeData.phoneField);
+          const fieldValue = formValues.find(
+            (field: LeadGenFieldData) => field.name === leadgenNodeData.phoneField,
+          );
           if (fieldValue) {
             phone = fieldValue?.values[0];
           }
         }
       }
     } catch (e) {
-      log.error("error in fetching lead details: %o", e);
-      errorMessage = `Error: ${e?.error?.message ?? "some error occured"}`;
+      log.error({ err: e }, "error in fetching lead details");
+      const message =
+        e && typeof e === "object" && "error" in e
+          ? ((e as { error?: { message?: string } }).error?.message ?? "some error occured")
+          : "some error occured";
+      errorMessage = `Error: ${message}`;
     }
     const automationLog = await logAutomationAction({
       phone,
@@ -1246,7 +1369,7 @@ export async function handleLeadGen(body: WaMessageBody) {
       automation,
       leadgenNode.id,
       automation.orgId,
-      automationLog?.id,
+      automationLog?.id ?? "",
       leadData,
     );
   }

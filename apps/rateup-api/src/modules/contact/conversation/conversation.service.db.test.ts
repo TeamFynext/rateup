@@ -676,13 +676,19 @@ describe("getConversationOverview", () => {
     });
   });
 
-  // NOTE: the `res ? res[0] : {...}` fallback can never run — an array is always
-  // truthy — so an empty result yields undefined rather than the nulls the
-  // signature promises. See issues.txt 18.37.
-  test("returns undefined rather than the declared fallback for an empty result", async () => {
+  // Fixed: the fallback now checks `res.length` (an array is always truthy, so
+  // the old `res ? res[0] : {...}` check could never take the fallback branch)
+  // and returns zeroed counters instead of nulls, matching the non-nullable
+  // `number` fields in the declared return type. See issues.txt 18.37.
+  test("returns the zeroed fallback for an empty result", async () => {
     db.$queryRaw.mockResolvedValue([]);
 
-    expect(await getConversationOverview(ORG, [])).toBeUndefined();
+    expect(await getConversationOverview(ORG, [])).toEqual({
+      totalConversations: 0,
+      averageResponseTime: 0,
+      averageResponseTimeByAgent: 0,
+      resolutionRate: 0,
+    });
   });
 });
 
@@ -823,13 +829,15 @@ describe("getStaffDetailedConversationAnalytics", () => {
     });
   });
 
-  // NOTE: the route declares no querystring schema, so `days` is undefined on a
-  // plain request; the since-date becomes an Invalid Date and `.toISOString()`
-  // on it throws before the query is even issued. See issues.txt 18.40.
+  // NOTE: the controller now defaults an omitted `days` to 30 (issues.txt
+  // 18.40), so this can no longer happen through a real caller — exercised
+  // here directly against the service (with a call-site cast, since the
+  // real signature requires a number) to document what the service itself
+  // does if ever called without one.
   test("throws when the caller did not supply a day count", async () => {
-    await expect(getStaffDetailedConversationAnalytics(ORG, USER, undefined)).rejects.toThrow(
-      RangeError,
-    );
+    await expect(
+      getStaffDetailedConversationAnalytics(ORG, USER, undefined as unknown as number),
+    ).rejects.toThrow(RangeError);
   });
 });
 

@@ -17,18 +17,18 @@ export async function verifyCampaignMaxLimit(request: FastifyRequest, reply: Fas
       },
     });
 
-    const whatsappCampaignFeature = getNestedProperty(
-      subscription.features as any,
+    const whatsappCampaignFeature = getNestedProperty<{ count?: { max?: number } }>(
+      subscription.features as object,
       SubscriptionFeaturePathName.Whatsapp,
     );
-    if (campaignCount >= whatsappCampaignFeature?.count?.max) {
+    if (campaignCount >= (whatsappCampaignFeature?.count?.max ?? Infinity)) {
       throw new Error(
         `You have reached the maximum limit of ${whatsappCampaignFeature?.count?.max} campaigns.`,
       );
     }
   } catch (e) {
     return reply.code(403).send({
-      message: e?.message,
+      message: e instanceof Error ? e.message : String(e),
       displayMessageInClient: true,
     });
   }

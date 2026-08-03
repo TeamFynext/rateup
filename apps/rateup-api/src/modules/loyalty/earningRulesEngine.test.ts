@@ -27,8 +27,35 @@ const db = prisma as unknown as {
 const PROGRAM = "prog-1";
 const CUSTOMER = "cust-1";
 
+interface RuleFixture {
+  id: string;
+  name: string;
+  priority: number;
+  pointsPerUnit: number;
+  multiplier: number;
+  bonusPoints: number;
+  validFrom: string | Date | null;
+  validUntil: string | Date | null;
+  allowedDays: DayOfWeek[];
+  allowedTimeRanges: { time_ranges: Array<{ start: string; end: string }> } | null;
+  minPurchaseAmount: number | null;
+  maxPurchaseAmount: number | null;
+  applicableToTiers: string[];
+  maxTotalUses: number | null;
+  currentTotalUses: number;
+  maxUsesPerCustomer: number | null;
+  conditions: Record<string, unknown>;
+  isDefault: boolean;
+}
+
+interface AccountFixture {
+  id: string;
+  currentTierId: string | null;
+  currentTier: { pointsMultiplier: number } | null;
+}
+
 function rule(over: Record<string, unknown> = {}) {
-  return {
+  const base: RuleFixture = {
     id: "rule-1",
     name: "Base rule",
     priority: 0,
@@ -47,12 +74,13 @@ function rule(over: Record<string, unknown> = {}) {
     maxUsesPerCustomer: null,
     conditions: {},
     isDefault: false,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 function account(over: Record<string, unknown> = {}) {
-  return { id: CUSTOMER, currentTierId: null, currentTier: null, ...over };
+  const base: AccountFixture = { id: CUSTOMER, currentTierId: null, currentTier: null };
+  return { ...base, ...over };
 }
 
 beforeEach(() => {
@@ -91,7 +119,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
 
     const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    expect(res.rule.id).toBe("high");
+    expect(res.rule?.id).toBe("high");
     expect(res.points).toBe(500);
   });
 
@@ -119,7 +147,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "now" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "now",
     );
   });
@@ -132,7 +160,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "now" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "now",
     );
   });
@@ -145,7 +173,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "anyday" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "anyday",
     );
   });
@@ -161,7 +189,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "anytime" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "anytime",
     );
   });
@@ -176,7 +204,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "happyhour",
     );
   });
@@ -187,7 +215,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "any" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "any",
     );
   });
@@ -198,7 +226,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "any" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "any",
     );
   });
@@ -209,7 +237,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "any" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "any",
     );
   });
@@ -221,7 +249,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
     ]);
     db.loyaltyTransaction.count.mockResolvedValue(1);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "any",
     );
     expect(db.loyaltyTransaction.count.mock.calls[0][0].where).toEqual({
@@ -236,7 +264,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "gold", applicableToTiers: ["tier-gold"] }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "gold",
     );
   });
@@ -250,7 +278,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
       rule({ id: "any" }),
     ]);
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "any",
     );
   });
@@ -269,7 +297,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
 
     const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    expect(res.rule.id).toBe("platinum-only");
+    expect(res.rule?.id).toBe("platinum-only");
     expect(res.points).toBe(1000);
   });
 });
@@ -283,7 +311,7 @@ describe("calculatePointsForPurchase — the default rule", () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ minPurchaseAmount: 5000 })]);
     db.loyaltyEarningRule.findFirst.mockResolvedValue(rule({ id: "default", isDefault: true }));
 
-    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule.id).toBe(
+    expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "default",
     );
   });
@@ -301,7 +329,7 @@ describe("calculatePointsForPurchase — the default rule", () => {
 
     const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    expect(res.rule.id).toBe("default");
+    expect(res.rule?.id).toBe("default");
     expect(db.loyaltyEarningRule.findFirst.mock.calls[0][0]).toEqual({
       where: { programId: PROGRAM, isDefault: true },
     });
@@ -433,7 +461,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
   /// The id of the rule that wins for a given earning context.
   async function matched(context: Record<string, unknown> = {}) {
-    return (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, context as any)).rule.id;
+    return (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, context as any)).rule?.id;
   }
 
   test("a location-restricted rule needs a matching location", async () => {
@@ -441,7 +469,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { location_id: "store-1" } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("conditional");
   });
 
@@ -450,7 +478,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { location_id: "store-2" } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("fallback");
   });
 
@@ -468,7 +496,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
         await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {
           categories: ["snacks", "tobacco"],
         } as any)
-      ).rule.id,
+      ).rule?.id,
     ).toBe("fallback");
   });
 
@@ -477,7 +505,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { categories: ["coffee"] } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("conditional");
   });
 
@@ -489,7 +517,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
         await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {
           product_skus: ["SKU-9"],
         } as any)
-      ).rule.id,
+      ).rule?.id,
     ).toBe("fallback");
   });
 
@@ -498,11 +526,11 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { payment_method: "upi" } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("conditional");
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { payment_method: "cash" } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("fallback");
   });
 
@@ -511,7 +539,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { channel: "whatsapp" } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("conditional");
   });
 
@@ -520,7 +548,7 @@ describe("calculatePointsForPurchase — additional conditions", () => {
 
     expect(
       (await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, { customer_type: "vip" } as any))
-        .rule.id,
+        .rule?.id,
     ).toBe("conditional");
   });
 
@@ -575,7 +603,7 @@ describe("checkAndUpgradeTier", () => {
     const res = await checkAndUpgradeTier(CUSTOMER, 5000);
 
     expect(res.upgraded).toBe(true);
-    expect(res.newTier.id).toBe("gold");
+    expect(res.newTier?.id).toBe("gold");
     expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
       where: { id: CUSTOMER },
       data: { currentTierId: "gold" },
@@ -612,7 +640,7 @@ describe("checkAndUpgradeTier", () => {
     const res = await checkAndUpgradeTier(CUSTOMER, 5);
 
     expect(res.upgraded).toBe(true);
-    expect(res.newTier.id).toBe("bronze");
+    expect(res.newTier?.id).toBe("bronze");
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentTierId).toBe("bronze");
   });
 });

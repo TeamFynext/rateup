@@ -9,6 +9,8 @@ import {
   getStripeProducts,
   handleInvoicePaymentFailed,
   processOrder,
+  StripeCheckoutSessionPayload,
+  StripeInvoiceData,
   syncStripeProducts,
   updateOrder,
   updateStripeProduct,
@@ -21,10 +23,34 @@ import {
 } from "./stripe.schema.js";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  throw new Error("STRIPE_SECRET_KEY is not configured");
+}
+const stripe = new Stripe(stripeSecretKey);
 
 interface SessionRetrieveRequest {
   session_id: string;
+}
+
+// Stripe's SDK types model the Invoice/Checkout Session shape of the *current* Stripe API
+// version, but this account's configured webhook API version delivers the older, flatter
+// shape this codebase's business logic already expects (e.g. `invoice.subscription` /
+// `invoice.payment_intent` as direct string fields, rather than nested under
+// `invoice.parent.subscription_details`) - and `Stripe.Event.Data.Object` itself is an
+// intentionally-empty stub in the SDK's own types. There's no compile-time type that
+// accurately describes this account's real payload shape, so this bridges through
+// `unknown` rather than a `Record<string,...>` shape check (which would reject Stripe
+// event payloads the SDK's own types don't fully populate, e.g. minimal test fixtures or
+// event variants this codebase doesn't otherwise care about). The individual fields each
+// service function actually reads are still null-guarded at their point of use in
+// stripe.service.ts (see `createStripePayment`, `handleInvoicePaymentFailed`, `processOrder`).
+function toStripeCheckoutSessionPayload(value: unknown): StripeCheckoutSessionPayload {
+  return value as unknown as StripeCheckoutSessionPayload;
+}
+
+function toStripeInvoiceData(value: unknown): StripeInvoiceData {
+  return value as unknown as StripeInvoiceData;
 }
 
 export async function createCheckoutSessionHandler(
@@ -82,7 +108,7 @@ export async function getSessionStatusHandler(
   reply.send({
     status: session.status,
     payment_status: session.payment_status,
-    customer_email: session.customer_details.email,
+    customer_email: session.customer_details?.email ?? null,
   });
 }
 
@@ -95,7 +121,11 @@ export async function webHookHandler(
   const sig = request.headers["stripe-signature"];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event;
+  if (!endpointSecret) {
+    throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
+  }
+
+  let event: Stripe.Event;
 
   try {
     // Ensure request.body is a Buffer or string as required by Stripe
@@ -104,27 +134,32 @@ export async function webHookHandler(
         ? request.body
         : Buffer.from(JSON.stringify(request.body));
 
-    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+    // A missing signature header (sig === undefined) is passed through as "" rather than
+    // short-circuited here - constructEvent() below already rejects a missing/invalid
+    // signature and the surrounding try/catch already turns that into a 400, so an early
+    // guard here would only duplicate that handling.
+    event = stripe.webhooks.constructEvent(rawBody, sig ?? "", endpointSecret);
   } catch (err) {
     console.log(".....Event error");
-    console.log(err.message);
+    const message = err instanceof Error ? err.message : String(err);
+    console.log(message);
 
-    return reply.status(400).send(`Webhook Error: ${err.message}`);
+    return reply.status(400).send(`Webhook Error: ${message}`);
   }
 
   console.log("Stripe Event...........", event.type);
 
   switch (event.type) {
     case "checkout.session.completed":
-      await processOrder(event.data.object);
+      await processOrder(toStripeCheckoutSessionPayload(event.data.object));
       break;
 
     case "invoice.paid":
-      await createStripePayment(event.data.object);
+      await createStripePayment(toStripeInvoiceData(event.data.object));
       break;
 
     case "invoice.payment_failed":
-      await handleInvoicePaymentFailed(event.data.object);
+      await handleInvoicePaymentFailed(toStripeInvoiceData(event.data.object));
       break;
 
     //... handle other event types

@@ -38,16 +38,29 @@ import {
   updateWaSettingsById,
   upsertWaSettings,
 } from "./wa_settings.service.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 import { WaConfigType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
+
+/**
+ * These onboarding-sync payloads are already plain JSON (parsed by axios out of a Meta
+ * Graph API response), but their TypeScript shapes — the `MetaGraph*` interfaces from
+ * wa_settings.service.ts, and looser fields like a leadgen form's `questions` — aren't
+ * structurally recognized as JSON by Prisma's `InputJsonValue`, or by the stricter
+ * `MetaAsset` shape the same data gets read back as. Round-tripping through JSON
+ * re-expresses the same values as a plain JSON type instead of asserting it with a cast.
+ */
+function asJson<T>(value: T[]): Prisma.InputJsonValue[] {
+  return JSON.parse(JSON.stringify(value));
+}
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
   res: FastifyReply,
 ) {
   const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
+  if (!org || org.role !== Role.SUPER_ADMIN) {
     return res.status(403).send({
       statusCode: 403,
       message: "You are not authorized to perform this action",
@@ -65,14 +78,15 @@ export async function createWaSettingsHandler(
 
 export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId, userId, role } = req.user;
-  const waSettings = await getAccessibleWaSettings(orgId, userId, role);
+  const waSettings = await getAccessibleWaSettings(orgId, userId!, role);
   if (!waSettings?.length) {
     return res.status(200).send([]);
   }
-  const response = waSettings?.map((data) => ({
-    ...data,
-    encryption: undefined,
-  }));
+  const response = waSettings?.map((data) => {
+    // The flow key pair is redacted before the settings leave the API.
+    const encryption: undefined = undefined;
+    return { ...data, encryption };
+  });
   return res.status(200).send(response);
 }
 
@@ -83,37 +97,53 @@ export async function updateWaSettingsHandler(
   res: FastifyReply,
 ) {
   const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
+  if (!org || org.role !== Role.SUPER_ADMIN) {
     return res.status(403).send({
       statusCode: 403,
       message: "You are not authorized to perform this action",
     });
   }
-  const waSettings = await updateWaSettings(org.orgId, req.body?.phoneId, req.body);
+  if (!req.body.phoneId) {
+    return res.status(400).send({
+      statusCode: 400,
+      message: "phoneId is required",
+    });
+  }
+  const waSettings = await updateWaSettings(org.orgId, req.body.phoneId, req.body);
   return res.status(200).send(waSettings);
 }
 
 export async function upsertWaSettingsHandler(
-  req: FastifyRequest<{ Body: updateWaSettingsInput }>,
+  req: FastifyRequest<{ Body: updateWaSettingsInput & { encryption?: WaEncryptionKeys } }>,
   res: FastifyReply,
 ) {
   try {
     const org = await getOrgIdAndRole({ id: req.userId });
-    if (org.role !== Role.SUPER_ADMIN) {
+    if (!org || org.role !== Role.SUPER_ADMIN) {
       return res.status(403).send({
         statusCode: 403,
         message: "You are not authorized to perform this action",
       });
     }
-    const waSettings = await upsertWaSettings(org.orgId, req.body?.phoneId, req.body as any);
+    if (!req.body.phoneId) {
+      return res.status(400).send({
+        statusCode: 400,
+        message: "phoneId is required",
+      });
+    }
+    const waSettings = await upsertWaSettings(org.orgId, req.body.phoneId, req.body);
     return res.status(200).send(waSettings);
   } catch (e) {
-    log.error(e);
+    log.error({ err: e }, "Error while upserting WhatsApp settings");
     res.code(500).send(e);
   }
 }
 
-export async function subscribePageToApp(pageId, pageAccessToken, fields) {
+export async function subscribePageToApp(
+  pageId: string,
+  pageAccessToken: string,
+  fields: string[],
+) {
   await callMetaApi(
     `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`,
     "POST",
@@ -130,19 +160,28 @@ export async function updateWaSettingsByIdHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const settings = await getWaSettingsById(whatsappSettingsId);
+    // Same shape as the null check everywhere else — this just gives the "channel
+    // doesn't exist" case a message instead of a bare property-access crash, both of
+    // which land on the catch block below and answer 500 either way.
+    if (!settings) {
+      throw new Error("WhatsApp settings not found");
+    }
     if (request.body.fbPageId?.length && settings.fbPageId !== request.body.fbPageId) {
+      if (!request.body.pageAccessToken) {
+        throw new Error("pageAccessToken is required to connect a Facebook page");
+      }
       await subscribePageToApp(request.body.fbPageId, request.body.pageAccessToken, [
         "messages",
         "message_reads",
         "message_reactions",
       ]);
       const igData = await callMetaApi(
-        `/${request.body.ibaId}?fields=username&access_token=${settings?.accessToken}`,
+        `/${request.body.ibaId}?fields=username&access_token=${settings.accessToken}`,
         "GET",
       );
       request.body.igUserName = igData.data.username;
       const fbData = await callMetaApi(
-        `/${request.body.fbPageId}?fields=name&access_token=${settings?.accessToken}`,
+        `/${request.body.fbPageId}?fields=name&access_token=${settings.accessToken}`,
         "GET",
       );
       request.body.fbUserName = fbData.data.name;
@@ -158,7 +197,7 @@ export async function updateWaSettingsByIdHandler(
     await updateWaSettingsById(whatsappSettingsId, request.body);
     reply.code(200).send();
   } catch (e) {
-    log.error(e);
+    log.error({ err: e }, "Error while updating WhatsApp settings by id");
     reply.code(500).send();
   }
 }
@@ -170,7 +209,7 @@ export async function deleteWaSettingsHandler(
   res: FastifyReply,
 ) {
   const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
+  if (!org || org.role !== Role.SUPER_ADMIN) {
     return res.status(403).send({
       statusCode: 403,
       message: "You are not authorized to perform this action",
@@ -233,11 +272,14 @@ export async function syncFbPagesHandler(
     const { whatsappSettingsId } = request.params;
     const pages = await getFbPagesFromWa(whatsappSettingsId);
     if (!pages || !pages?.length) return reply.code(404).send("No fb pages found");
-    const data = pages.map((page) => ({ ...page, subscribedFields: [] }));
+    const data = pages.map((page) => {
+      const subscribedFields: string[] = [];
+      return { ...page, subscribedFields };
+    });
     await syncMetaAssetstoDb("pages", data, whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting fb pages %o", error);
+    log.error({ err: error }, "Error while getting fb pages");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -254,10 +296,10 @@ export async function syncLeadgenFormsHandler(
 
     const forms = await getLeadgenFormsFromWa(fbPageId, pageAccessToken);
     const data = forms.map((form) => ({ ...form, pageId: fbPageId }));
-    await syncMetaAssetstoDb("leadgenForms", data, request.params.whatsappSettingsId);
+    await syncMetaAssetstoDb("leadgenForms", asJson(data), request.params.whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting leadgen forms %o", error);
+    log.error({ err: error }, "Error while getting leadgen forms");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -282,10 +324,10 @@ export async function syncLeadgenFormQuestionsHandler(
       }
       return form;
     });
-    await syncMetaAssetstoDb("leadgenForms", newLeadgenForms, whatsappSettingsId);
+    await syncMetaAssetstoDb("leadgenForms", asJson(newLeadgenForms), whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting leadgen form questions %o", error);
+    log.error({ err: error }, "Error while getting leadgen form questions");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -297,10 +339,10 @@ export async function syncAdAccountsHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const data = await getAdAccountsFromWa(whatsappSettingsId);
-    await syncMetaAssetstoDb("adAccounts", data, whatsappSettingsId);
+    await syncMetaAssetstoDb("adAccounts", asJson(data), whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting ad accounts %o", error);
+    log.error({ err: error }, "Error while getting ad accounts");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -326,7 +368,7 @@ export async function syncAdsByAdAccountHandler(
     await syncMetaAssetstoDb("adAccounts", newAdaccounts, whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting ads %o", error);
+    log.error({ err: error }, "Error while getting ads");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -341,6 +383,9 @@ export async function subscribeFieldstoPageHandler(
   try {
     const { fields, fbPageId, pageAccessToken } = request.body;
     const { whatsappSettingsId } = request.params;
+    if (!fields || fields.length === 0) {
+      throw new Error("fields is required to subscribe a page");
+    }
     const data = await subscribeFieldtoPage(fbPageId, pageAccessToken, fields);
     if (data.success) {
       const assets = await getMetaAssets(whatsappSettingsId);
@@ -361,7 +406,7 @@ export async function subscribeFieldstoPageHandler(
     }
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while subscribing fields %o", error);
+    log.error({ err: error }, "Error while subscribing fields");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -375,7 +420,7 @@ export async function getMetaAssetsHandler(
     const data = await getMetaAssets(whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting meta assets %o", error);
+    log.error({ err: error }, "Error while getting meta assets");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -408,7 +453,7 @@ export async function getWaSettingsForOrgHandler(request: FastifyRequest, reply:
       verificationStatus,
     });
   } catch (error) {
-    log.error("Error while getting meta assets %o", error);
+    log.error({ err: error }, "Error while getting meta assets for org");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -470,7 +515,7 @@ export async function getMetaDatasetsHandler(
     const data = await getMetaDatasetsFromWa(whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting meta datasets %o", error);
+    log.error({ err: error }, "Error while getting meta datasets");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

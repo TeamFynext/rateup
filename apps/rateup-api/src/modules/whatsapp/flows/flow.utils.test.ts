@@ -19,6 +19,7 @@ import {
   LogicCondition,
   QuestionType,
   WaFlowFormElementType,
+  WaFlowLayoutType,
   WaFlowStatus,
   WaQuestions,
 } from "../../../types/enums.js";
@@ -90,21 +91,21 @@ describe("generateFlowMessageData", () => {
   test("carries the body and call-to-action from the flow's template message", () => {
     const message = generateFlowMessageData({ to: "1", dbFlow: dbFlow() });
 
-    expect(message.interactive.body).toEqual({ text: "Rate us" });
+    expect(message.interactive!.body).toEqual({ text: "Rate us" });
     expect(params(message).flow_cta).toBe("Start");
   });
 
   test("falls back to a default body and call-to-action when the template has neither", () => {
     const message = generateFlowMessageData({ to: "1", dbFlow: dbFlow({ templateMessage: {} }) });
 
-    expect(message.interactive.body).toEqual({ text: "Would you like to start survey?" });
+    expect(message.interactive!.body).toEqual({ text: "Would you like to start survey?" });
     expect(params(message).flow_cta).toBe("Open");
   });
 
   test("adds a RateUp footer when the template supplies none", () => {
     const message = generateFlowMessageData({ to: "1", dbFlow: dbFlow() });
 
-    expect(message.interactive.footer).toEqual({ text: "Powered by RateUp" });
+    expect(message.interactive!.footer).toEqual({ text: "Powered by RateUp" });
   });
 
   test("keeps the template's own footer when it has one", () => {
@@ -113,7 +114,7 @@ describe("generateFlowMessageData", () => {
       dbFlow: dbFlow({ templateMessage: { body: "b", cta: "c", footer: "Ask us anything" } }),
     });
 
-    expect(message.interactive.footer).toEqual({ text: "Ask us anything" });
+    expect(message.interactive!.footer).toEqual({ text: "Ask us anything" });
   });
 
   test("resolves a header image key to a public url", () => {
@@ -123,7 +124,7 @@ describe("generateFlowMessageData", () => {
     });
 
     expect(getFileUrlFromKeyMock).toHaveBeenCalledWith("key/header.png");
-    expect(message.interactive.header).toEqual({
+    expect(message.interactive!.header).toEqual({
       type: "image",
       image: { link: "https://cdn/header.png" },
     });
@@ -137,7 +138,7 @@ describe("generateFlowMessageData", () => {
       }),
     });
 
-    expect(message.interactive.header.type).toBe("image");
+    expect(message.interactive!.header!.type).toBe("image");
   });
 
   test("refuses to send a flow that is neither draft nor published", () => {
@@ -413,10 +414,14 @@ describe("parseFlowResponse", () => {
     ],
   };
 
-  function parse(type: QuestionType, response: any, mapExtras: Record<string, unknown> = {}) {
+  function parse(
+    type: QuestionType,
+    response: WaFlowRawResponse,
+    mapExtras: Record<string, string> = {},
+  ) {
     return parseFlowResponse({
       elementName: "choice",
-      flowMap: { choice: { type, ...mapExtras } },
+      flowMap: { choice: { questionId: "q1", type, ...mapExtras } },
       flowJson,
       response,
     });
@@ -458,7 +463,7 @@ describe("parseFlowResponse", () => {
   // default branch, which logs an error and hands the raw Meta payload straight
   // into the stored response. See issues.txt 11.11.
   test("stores the raw payload for a question type it does not know", () => {
-    expect(parse(QuestionType.Contact, { some: "shape" })).toEqual({ some: "shape" });
+    expect(parse(QuestionType.Contact, ["some", "shape"])).toEqual(["some", "shape"]);
   });
 });
 
@@ -469,13 +474,24 @@ describe("parseFlowResponseV2", () => {
   ];
 
   test("returns free text as it stands", () => {
-    expect(parseFlowResponseV2(WaQuestions.TextInput, "hello", undefined)).toBe("hello");
+    // Text/date types never touch dataSource — undefined is a valid real input here.
+    expect(
+      parseFlowResponseV2(
+        WaQuestions.TextInput,
+        "hello",
+        undefined as unknown as typeof dataSource,
+      ),
+    ).toBe("hello");
   });
 
   test("reads a date back from epoch milliseconds", () => {
-    expect(parseFlowResponseV2(WaQuestions.DatePicker, "1700000000000", undefined)).toEqual(
-      new Date(1_700_000_000_000),
-    );
+    expect(
+      parseFlowResponseV2(
+        WaQuestions.DatePicker,
+        "1700000000000",
+        undefined as unknown as typeof dataSource,
+      ),
+    ).toEqual(new Date(1_700_000_000_000));
   });
 
   test("resolves a radio answer to its title", () => {
@@ -498,7 +514,9 @@ describe("parseFlowResponseV2", () => {
   // element built without options looks like — throws instead of reporting the
   // answer it could not resolve. See issues.txt 11.11.
   test("throws when the element it is resolving against has no options", () => {
-    expect(() => parseFlowResponseV2(WaQuestions.Dropdown, "0", undefined)).toThrow(TypeError);
+    expect(() =>
+      parseFlowResponseV2(WaQuestions.Dropdown, "0", undefined as unknown as typeof dataSource),
+    ).toThrow(TypeError);
   });
 });
 
@@ -593,7 +611,11 @@ describe("waFlowFormElementIterator", () => {
 });
 
 describe("the flow map, read in both directions", () => {
-  const map = { element_a: { questionId: "q-1" }, element_b: { questionId: "q-2" } };
+  // Real flow-map entries always carry the question type alongside its id.
+  const map: WaFlowMap = {
+    element_a: { questionId: "q-1", type: QuestionType.Text },
+    element_b: { questionId: "q-2", type: QuestionType.Text },
+  };
 
   test("finds the question behind an element", () => {
     expect(getQuestionIdFromFlowFormElementName("element_b", map)).toBe("q-2");
@@ -671,11 +693,26 @@ describe("sanitizeScreenData", () => {
   });
 });
 
+/** A minimal v2 flow json with one screen holding the given layout children. */
+function flowJsonWith(children: WaFlowForm[]): WaFlowJson {
+  return {
+    version: "7.2",
+    screens: [
+      {
+        id: "SCREEN_ONE",
+        title: "Screen one",
+        data: {},
+        layout: { type: WaFlowLayoutType.scl, children },
+      },
+    ],
+  };
+}
+
 describe("convertHeaderToNewQuestion", () => {
   test("lifts an element's header out into a text block above it", () => {
-    const result = convertHeaderToNewQuestion({
-      screens: [{ layout: { children: [{ type: "TextInput", name: "q1", header: "Your name" }] } }],
-    });
+    const result = convertHeaderToNewQuestion(
+      flowJsonWith([{ type: "TextInput", name: "q1", header: "Your name" }]),
+    );
 
     expect(result.screens[0].layout.children).toEqual([
       { text: "Your name", type: "TextBody", markdown: true },
@@ -684,9 +721,7 @@ describe("convertHeaderToNewQuestion", () => {
   });
 
   test("leaves an element with no header untouched", () => {
-    const result = convertHeaderToNewQuestion({
-      screens: [{ layout: { children: [{ type: "TextInput", name: "q1" }] } }],
-    });
+    const result = convertHeaderToNewQuestion(flowJsonWith([{ type: "TextInput", name: "q1" }]));
 
     expect(result.screens[0].layout.children).toEqual([{ type: "TextInput", name: "q1" }]);
   });

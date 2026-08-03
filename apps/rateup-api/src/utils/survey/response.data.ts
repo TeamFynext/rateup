@@ -2,8 +2,14 @@ import { faker } from "@faker-js/faker";
 import { LDResponse, QuestionType, SmileyResponse, YNResponse } from "../../types/enums.js";
 import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { load } from "cheerio";
+import { CreateResponseInput } from "../../modules/response/response.schema.js";
 
-export const generateResponseData = (surveyTeamMapId, survey) => {
+export const generateResponseData = (
+  surveyTeamMapId: string,
+  survey: { questions: Question[]; languages: string[] },
+) => {
+  const deviceData: CreateResponseInput["deviceData"] | null = null;
+  const contactId: string | null = null;
   return {
     surveyTeamMapId: surveyTeamMapId,
     responses: getResponseFromQuestion(survey.questions),
@@ -12,30 +18,31 @@ export const generateResponseData = (surveyTeamMapId, survey) => {
     tag: "",
     ip: faker.internet.ipv4(),
     location: {},
-    deviceData: null,
-    contactId: null,
+    deviceData,
+    contactId,
   };
 };
 
-const getResponseFromQuestion = (question = []) => {
+const getResponseFromQuestion = (question: Question[] = []) => {
   return question?.map((data) => {
     let response;
 
     switch (data.type as QuestionType) {
       case QuestionType.Contact:
-        const features = data?.features;
+        // A Contact question's per-language features are keyed by sub-field
+        // name (name/email/phone), each a QuestionFeatureToggle.
+        const firstFeature: QuestionFeatures | undefined = Object.values(data?.features ?? {})[0];
+        const isEnabled = (subField: string) =>
+          (firstFeature?.[subField] as QuestionFeatureToggle | undefined)?.isEnabled === true;
 
         response = {
-          ...(Object.values(features as { name: { isEnabled: boolean } }[])?.[0]?.name
-            ?.isEnabled && {
+          ...(isEnabled("name") && {
             name: faker.person.fullName(),
           }),
-          ...(Object.values(features as { email: { isEnabled: boolean } }[])?.[0]?.email
-            ?.isEnabled && {
+          ...(isEnabled("email") && {
             email: faker.internet.email(),
           }),
-          ...(Object.values(features as { phone: { isEnabled: boolean } }[])?.[0]?.phone
-            ?.isEnabled && {
+          ...(isEnabled("phone") && {
             phone: faker.phone.number(),
           }),
         };
@@ -94,14 +101,14 @@ const getResponseFromQuestion = (question = []) => {
       case QuestionType.DDSS:
       case QuestionType.PCQ:
       case QuestionType.CustomNPS:
-        const singleValue: any = Object.values(data?.choices ?? {})[0] ?? [];
+        const singleValue = (Object.values(data?.choices ?? {})[0] ?? []) as Choice[];
 
         response = faker.helpers.arrayElement(singleValue);
         break;
 
       case QuestionType.MSQ:
       case QuestionType.DDMS:
-        const multipleValues: any = Object.values(data?.choices ?? {})[0] ?? [];
+        const multipleValues = (Object.values(data?.choices ?? {})[0] ?? []) as Choice[];
         response = faker.helpers.arrayElements(multipleValues);
         break;
       case QuestionType.TnC:
@@ -137,12 +144,12 @@ export const getContent = (title: string) => {
 };
 
 export const getPropValueFromQuestionCustomComponent = (
-  str,
+  str: string,
   componentName = "variable-component",
   prop = "label",
 ) => {
   const doc = load(str);
-  const labels = [];
+  const labels: string[] = [];
   const customComponents = doc(componentName);
   if (!customComponents?.length) return null;
   customComponents.each((index, component) => {

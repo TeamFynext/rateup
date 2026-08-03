@@ -19,10 +19,13 @@ const createTicketRequestSchema = z.object({
 });
 
 const createTicketResponseSchema = z.object({
+  ...ticketCore,
   id: z.string(),
   createdAt: z.string(),
+  // Overrides ticketCore's looser `type: z.string().optional()` with the actual strict
+  // enum the response is documented to return — must come after the spread, or the
+  // spread's `type` silently wins and this line becomes dead code.
   type: z.enum(["REVIEW", "SURVEY_RESPONSE", "CUSTOM"]),
-  ...ticketCore,
 });
 
 //gettickets by team schema

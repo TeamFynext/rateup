@@ -10,12 +10,15 @@ import {
   syncZohoContactsHandler,
   syncZohoLeadsHandler,
   zohoAuthenticationHandler,
+  ZohoAuthBody,
+  ZohoAuthQuery,
 } from "./zoho.controller.js";
 import { successSchema, zohoAuthSchema, zohoQuerySchema } from "./zoho.schema.js";
+import { ZohoProduct } from "./zoho.client.js";
 
 export async function zohoRoutes(server: FastifyInstance) {
   // Authentication endpoint
-  server.post(
+  server.post<{ Querystring: ZohoAuthQuery; Body: ZohoAuthBody }>(
     "/auth",
     {
       preHandler: checkSession,
@@ -29,7 +32,7 @@ export async function zohoRoutes(server: FastifyInstance) {
     zohoAuthenticationHandler,
   );
 
-  server.get(
+  server.get<{ Querystring: { orgId: string; product?: ZohoProduct } }>(
     "/contacts",
     {
       preHandler: checkSession,
@@ -40,7 +43,7 @@ export async function zohoRoutes(server: FastifyInstance) {
     getZohoContactsHandler,
   );
 
-  server.post(
+  server.post<{ Querystring: { product?: ZohoProduct } }>(
     "/contacts/sync",
     {
       preHandler: checkSession,
@@ -51,7 +54,7 @@ export async function zohoRoutes(server: FastifyInstance) {
     syncZohoContactsHandler,
   );
 
-  server.get(
+  server.get<{ Querystring: { orgId: string } }>(
     "/leads",
     {
       preHandler: checkSession,
@@ -62,7 +65,7 @@ export async function zohoRoutes(server: FastifyInstance) {
     getZohoLeadsHandler,
   );
 
-  server.get(
+  server.get<{ Querystring: { orgId: string } }>(
     "/users",
     {
       preHandler: checkSession,
@@ -73,7 +76,7 @@ export async function zohoRoutes(server: FastifyInstance) {
     getZohoUsersHandler,
   );
 
-  server.get(
+  server.get<{ Querystring: { product?: ZohoProduct } }>(
     "/pipelines",
     {
       preHandler: checkSession,

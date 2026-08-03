@@ -41,7 +41,7 @@ import {
   setConversationFavorite,
   setContactSpam,
 } from "./wamessage.service.js";
-import { ByContactIdParams, ContactCore } from "../../../contact/contact.schema.js";
+import { ByContactIdParams } from "../../../contact/contact.schema.js";
 import {
   createReactionMessage,
   createTextMessage,
@@ -74,7 +74,12 @@ import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { PlatformType } from "../../../../../generated/prisma/client.js";
 import { Role } from "../../../../utils/enums/index.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
-import { WaSendMessageBody } from "../../../../types/whatsapp.types.js";
+import {
+  OutgoingTemplateComponent,
+  OutgoingTemplatePayload,
+  WaReceiveMessageBody,
+  WaSendMessageBody,
+} from "../../../../types/whatsapp.types.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -93,11 +98,11 @@ import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
-  messageBody: any,
+  messageBody: WaMessagePayload,
   from: string,
   orgId: string,
   sourcePlatform: PlatformType = PlatformType.WHATSAPP,
-  sourceIdentifier: string,
+  sourceIdentifier: string | undefined,
   userName?: string,
   messageId?: string,
   userId?: string,
@@ -106,18 +111,25 @@ export async function handleWaMessages(
   messageType: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW" = "INBOX",
   isAutomated: boolean = false,
   externalApi: boolean = false,
-  logs = {},
+  logs: WaGraphApiErrorDetail = {},
 ) {
   try {
     // Prepare message body
     let waMessageBody: WaInboxMessageBody = {
       exchangeProcess: type,
-      send: type === "send" ? messageBody : null,
-      receive: type === "receive" ? messageBody : null,
+      // The envelope's arms are the modelled shapes; a synthesized payload is stored
+      // as-is (see WaMessagePayload).
+      send: type === "send" ? (messageBody as WaInboxMessageBody["send"]) : undefined,
+      receive: type === "receive" ? (messageBody as WaInboxMessageBody["receive"]) : undefined,
     };
     // Prepare contact core data
     const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody, sourcePlatform);
-    const contactCore: ContactCore = {
+    // Not typed as `ContactCore` (contactCoreSchema's inferred type): that schema
+    // requires `name`, but this can genuinely run with no username (e.g. a plain
+    // phone contact). This object only ever flows into
+    // `Omit<updateContactSchema, "customFields">`-typed params below, where every
+    // field is optional, so it's left to infer its own (accurate) shape instead.
+    const contactCore = {
       name: userName,
       ...(sourcePlatform === PlatformType.WEBCHAT || sourcePlatform === PlatformType.FACEBOOK
         ? { other: from }
@@ -132,7 +144,7 @@ export async function handleWaMessages(
 
     // Fetch additional Instagram data if needed
     let additionalData = {};
-    if (sourcePlatform === PlatformType.INSTAGRAM && type === "receive") {
+    if (sourcePlatform === PlatformType.INSTAGRAM && type === "receive" && sourceIdentifier) {
       try {
         const userDetails = await getIgUserDetailsFromMeta(from, sourceIdentifier);
         additionalData = {
@@ -142,12 +154,12 @@ export async function handleWaMessages(
           isIgVerifiedUser: userDetails?.is_verified_user,
         };
       } catch (e) {
-        log.error("Error getting Instagram user details: %o", e);
+        log.error({ err: e }, "Error getting Instagram user details");
       }
     }
 
     // Fetch additional Facebook data if needed
-    if (sourcePlatform === PlatformType.FACEBOOK && type === "receive") {
+    if (sourcePlatform === PlatformType.FACEBOOK && type === "receive" && sourceIdentifier) {
       try {
         const userDetails = await getFacebookUserDetailsFromMeta(from, sourceIdentifier);
         additionalData = {
@@ -156,7 +168,7 @@ export async function handleWaMessages(
           profilePic: userDetails?.profile_pic ?? undefined,
         };
       } catch (e) {
-        log.error("Error getting Facebook user details: %o", e);
+        log.error({ err: e }, "Error getting Facebook user details");
       }
     }
 
@@ -169,7 +181,10 @@ export async function handleWaMessages(
       lastMessagePlatform: sourcePlatform,
       ...(type === "receive"
         ? {
-            lastReceivedMetadata: messageBody?.receive?.metadata || null,
+            // `messageBody` is the payload itself, not the { send, receive } envelope —
+            // this used to read `.receive.metadata` and so was always null.
+            lastReceivedMetadata:
+              (messageBody as WaReceiveMessageBody | undefined)?.metadata || null,
           }
         : {}),
       lastMessageSourceIdentifier: sourceIdentifier,
@@ -190,13 +205,26 @@ export async function handleWaMessages(
     } else {
       res = await getOrCreateContactByPhone(from, orgId, contactData, undefined, true);
     }
+    // getOrCreateContactBy*() swallow their own errors and return `undefined`
+    // instead of throwing (see contact.service.ts) — surface that here as a clear
+    // error rather than crashing below with an opaque destructuring failure.
+    if (!res) {
+      throw new Error(`Failed to get or create contact for ${sourcePlatform} message from ${from}`);
+    }
     let { contact, conversation } = res;
     // Prepare parameter data and handle specific cases
-    let parameterData = {};
-    if (type === "send" && messageBody?.type === "template") {
-      const template = await getTemplateByNameAndOrgId(messageBody.template.name, orgId);
-      parameterData = messageBody.template.components;
-      (waMessageBody.send as WaSendMessageBody).template = template.data as any;
+    let parameterData: OutgoingTemplateComponent[] | undefined;
+    const sendBody = messageBody as WaSendMessageBody;
+    if (type === "send" && sendBody?.type === "template" && sendBody.template) {
+      const template = await getTemplateByNameAndOrgId(sendBody.template.name, orgId);
+      if (!template) {
+        throw new Error(`Template "${sendBody.template.name}" not found for org ${orgId}`);
+      }
+      parameterData = sendBody.template.components;
+      // The stored row is the READ-BACK template (uppercase component names); the send
+      // payload wants the create shape. Same values, different casing.
+      (waMessageBody.send as WaSendMessageBody).template =
+        template.data as unknown as OutgoingTemplatePayload;
     }
 
     if (type === "receive") {
@@ -225,7 +253,12 @@ export async function handleWaMessages(
           (await getActiveConversationForContact(contact.id)) ??
           (await openConversationForContact(contact.id, orgId));
       } else {
-        conversation = await getLastCreatedConversationForContact(contact.id);
+        // `getLastCreatedConversationForContact` signals "none" with `null`,
+        // whereas this local `conversation` (destructured from
+        // getOrCreateContactBy*'s own return shape) uses `undefined` for the
+        // same absence — normalize so this function's later `conversation &&`
+        // / `conversation?.` checks keep working regardless of which path set it.
+        conversation = (await getLastCreatedConversationForContact(contact.id)) ?? undefined;
       }
     }
 
@@ -328,7 +361,7 @@ export async function handleWaMessages(
 
     return waMessage;
   } catch (error) {
-    log.error("Error in handleWaMessages: %o", error);
+    log.error({ err: error }, "Error in handleWaMessages");
   }
 }
 
@@ -343,31 +376,38 @@ export async function sendNewWaMessageHandler(
     const { contactId } = request.params;
     const { type, contacts, location, whatsappSettingsPhoneId, platform, teamId } = request.body;
     const { orgId, userId } = request.user;
-    const contact = await getContactById(contactId);
-    let to;
-    switch (platform) {
-      case PlatformType.INSTAGRAM:
-        to = contact?.igsId;
-        break;
-      case PlatformType.FACEBOOK:
-        to = contact?.psid;
-        break;
-      case PlatformType.WEBCHAT:
-        to = contact?.other;
-        break;
-      default:
-        to = contact?.phone;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
     }
+    const contact = await getContactById(contactId);
     if (!contact) {
       log.error("Contact not found with id %s", contactId);
       reply.status(404).send("Contact not found");
       return;
     }
+    let to;
+    switch (platform) {
+      case PlatformType.INSTAGRAM:
+        to = contact.igsId;
+        break;
+      case PlatformType.FACEBOOK:
+        to = contact.psid;
+        break;
+      case PlatformType.WEBCHAT:
+        to = contact.other;
+        break;
+      default:
+        to = contact.phone;
+    }
     switch (type) {
       case "text": {
         const media = request.body.media;
-        if (media.length) {
-          const text = request.body.text.body;
+        if (media?.length) {
+          if (!contact.phone) {
+            throw new Error(`Contact ${contact.id} has no phone number for a media send`);
+          }
+          const text = request.body.text?.body;
           const caption = typeof text === "string" ? text : parseToWhatsAppFormat(text);
           await sendMediaMessages(
             media,
@@ -380,6 +420,12 @@ export async function sendNewWaMessageHandler(
             teamId,
           );
           break;
+        }
+        // `to` is nullable (the contact may lack the identifier this platform
+        // needs, e.g. no igsId on an Instagram send) — a clear thrown error here
+        // beats createTextMessage crashing on a non-string `to` further down.
+        if (!to) {
+          throw new Error(`No destination address found for contact ${contact.id} on ${platform}`);
         }
         const messageBody = createTextMessage(
           to,
@@ -403,8 +449,21 @@ export async function sendNewWaMessageHandler(
         break;
       }
       case "reaction": {
-        const { emoji, toWaMessageId, reaction } = request.body.reaction;
-        const messageBody = createReactionMessage(to, toWaMessageId, emoji, reaction, platform);
+        if (!to) {
+          throw new Error(`No destination address found for contact ${contact.id} on ${platform}`);
+        }
+        const reactionBody = request.body.reaction;
+        if (!reactionBody) {
+          throw new Error("Reaction details not provided for reaction message");
+        }
+        const { emoji, toWaMessageId, reaction } = reactionBody;
+        const messageBody = createReactionMessage(
+          to,
+          toWaMessageId,
+          emoji,
+          reaction,
+          platform as PlatformType,
+        );
         await sendMessage(
           orgId,
           messageBody,
@@ -421,7 +480,12 @@ export async function sendNewWaMessageHandler(
         break;
       }
       case "media":
-        if (request.body.media.length)
+        if (request.body.media?.length) {
+          if (!to) {
+            throw new Error(
+              `No destination address found for contact ${contact.id} on ${platform}`,
+            );
+          }
           await sendMediaMessages(
             request.body.media,
             to,
@@ -432,8 +496,15 @@ export async function sendNewWaMessageHandler(
             whatsappSettingsPhoneId,
             teamId,
           );
+        }
         break;
       case "contact": {
+        if (!contacts) {
+          throw new Error("Contacts not provided for contact message");
+        }
+        if (!contact.phone) {
+          throw new Error(`Contact ${contact.id} has no phone number for a contact-card send`);
+        }
         await sendContactMessage(
           contacts,
           contact.phone,
@@ -444,9 +515,23 @@ export async function sendNewWaMessageHandler(
         );
         break;
       }
-      case "location":
+      case "location": {
+        if (!location) {
+          throw new Error("Location not provided for location message");
+        }
+        if (!contact.phone) {
+          throw new Error(`Contact ${contact.id} has no phone number for a location send`);
+        }
+        // Meta's Cloud API expects numeric coordinates; the request body carries
+        // them as strings (form-friendly), so they're converted here rather than
+        // loosening WaSendMessageBody["location"]'s (accurate) numeric typing.
         await sendLocationMessage(
-          location,
+          {
+            latitude: Number(location.latitude),
+            longitude: Number(location.longitude),
+            name: location.name,
+            address: location.address,
+          },
           contact.phone,
           orgId,
           userId,
@@ -454,11 +539,12 @@ export async function sendNewWaMessageHandler(
           teamId,
         );
         break;
+      }
     }
     reply.send("Message Sent");
   } catch (error) {
     console.error(error);
-    log.error("Error in sendNewWaMessageHandler: %o", error);
+    log.error({ err: error }, "Error in sendNewWaMessageHandler");
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -472,7 +558,10 @@ export async function getWaMessagesByContactIdHandler(
 ) {
   try {
     const cursor = request.query.cursor || null;
-    const phone = request.query.phone || null;
+    // `phone` is optional on the query schema (`string | undefined`) — no `|| null`
+    // fallback needed (and getWaMessagesByContactId's `phone` param doesn't accept
+    // `null`, only `undefined`).
+    const phone = request.query.phone || undefined;
     const conversationId = request.query.conversationId || null;
     const { contactId } = request.params;
     const messages = await getWaMessagesByContactId(contactId, cursor, phone, conversationId);
@@ -488,7 +577,12 @@ export async function markMessagesAsReadHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await markMessagesAsRead(request.params.contactId, request.user.userId);
+    const { userId } = request.user;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
+    }
+    const res = await markMessagesAsRead(request.params.contactId, userId);
     reply.code(200).send(res);
   } catch (e) {
     reply.code(500).send(e);
@@ -505,14 +599,19 @@ export async function clearConversationMentionsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { userId } = request.user;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
+    }
     await clearMentionsForConversation(
-      request.user.userId,
+      userId,
       request.params.contactId,
       request.body?.conversationId ?? null,
     );
     reply.code(200).send({ success: true });
   } catch (e) {
-    log.error("Error clearing mentions: %o", e);
+    log.error({ err: e }, "Error clearing mentions");
     reply.code(500).send("Internal Server Error");
   }
 }
@@ -525,16 +624,21 @@ export async function reopenConversationHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId, userId } = request.user;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
+    }
     const res = await reopenConversation(
-      request.user.orgId,
-      request.user.userId,
+      orgId,
+      userId,
       request.params.contactId,
       request.body?.conversationId ?? null,
       request.body?.messageId,
     );
     reply.code(200).send(res);
   } catch (e) {
-    log.error("Error reopening conversation: %o", e);
+    log.error({ err: e }, "Error reopening conversation");
     reply.code(500).send("Internal Server Error");
   }
 }
@@ -557,17 +661,26 @@ export async function getFilteredContactsHandler(
 ) {
   try {
     const { orgId, userId, role } = request.user;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
+    }
     const { page, filterData } = request.query;
+    // `page` is optional on the query schema; missing it previously fed `NaN`
+    // silently into `filterChats`' offset math (Postgres would then error on the
+    // NaN parameter, and `filterChats`'s own catch swallows that into `[]`) —
+    // default to the first page instead.
+    const pageNumber = parseInt(page ?? "1", 10);
     const contacts = await filterChats(
       orgId,
-      parseInt(page),
+      pageNumber,
       JSON.parse(decodeURIComponent(filterData)),
       userId,
       role as Role,
     );
     reply.status(200).send({
       rows: contacts ?? [],
-      nextOffset: Array.isArray(contacts) && contacts.length > 0 ? parseInt(page) + 1 : null,
+      nextOffset: Array.isArray(contacts) && contacts.length > 0 ? pageNumber + 1 : null,
     });
   } catch (error) {
     console.log(error);
@@ -593,7 +706,7 @@ export async function getMediaFileByMediaId(
       reply.status(404).send("Media not found");
     }
   } catch (error) {
-    log.error("Error in getMediaFileByMediaId: %o", error);
+    log.error({ err: error }, "Error in getMediaFileByMediaId");
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -684,11 +797,12 @@ export async function getContactsCountByInboxTabHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getContactsCountByInbox(
-      request.user.orgId,
-      request.user.userId,
-      request.user.role,
-    );
+    const { orgId, userId, role } = request.user;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
+    }
+    const res = await getContactsCountByInbox(orgId, userId, role);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -772,7 +886,7 @@ export async function generateChatAnalyticsHandler(request: FastifyRequest, repl
     const analyticsData = await generateChatAnalytics(orgId);
     reply.status(200).send(analyticsData);
   } catch (error) {
-    log.error("Error in generateChatAnalyticsHandler: %o", error);
+    log.error({ err: error }, "Error in generateChatAnalyticsHandler");
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -783,12 +897,16 @@ export async function generateInboxResponseHandler(
 ) {
   try {
     const { orgId, userId } = request.user;
+    if (!userId) {
+      reply.status(401).send("User not found on request");
+      return;
+    }
 
     const result = await generateInboxResponse(request.body, orgId, userId);
 
     reply.status(200).send(result);
   } catch (error) {
-    log.error("Error in generateInboxResponseHandler: %o", error);
+    log.error({ err: error }, "Error in generateInboxResponseHandler");
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -823,11 +941,14 @@ export async function createPrivateMessageHandler(
       // Client sends explicit ids when the note came from the mention picker;
       // these win over the name-based `mentionedUsers` fallback below.
       mentionedUserIds: body.mentionedUserIds,
-      messageId: body.messageId,
+      // `messageId` is optional on the request body (used for optimistic client
+      // ids) but required by createInternalWaMessage — same fallback used by its
+      // other callers in wamessage.service.ts.
+      messageId: body.messageId ?? crypto.randomUUID(),
     });
     reply.code(200).send(res);
   } catch (error) {
-    log.error("Error in creating private note: %o", error);
+    log.error({ err: error }, "Error in creating private note");
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -866,7 +987,7 @@ export async function bulkAssignWaMessageHandler(
   } catch (error) {
     log.error(error);
     return reply.code(500).send({
-      error: error?.message || "Something went wrong",
+      error: error instanceof Error ? error.message : "Something went wrong",
     });
   }
 }
@@ -902,7 +1023,7 @@ export async function getWaMessageLogsHandler(
     );
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching message logs :%o", e);
+    log.error({ err: e }, "Error fetching message logs");
     reply.status(500).send({
       error: "An error occurred while fetching the message logs.",
     });
@@ -984,7 +1105,7 @@ export async function exportWaMessageLogsHandler(
     reply.header("Content-Disposition", "attachment; filename=message_logs.xlsx");
     reply.send(buffer);
   } catch (e) {
-    log.error("Error exporting message logs :%o", e);
+    log.error({ err: e }, "Error exporting message logs");
     reply.status(500).send({
       error: "An error occurred while exporting the message logs.",
     });

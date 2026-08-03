@@ -29,8 +29,15 @@ const db = prisma as unknown as {
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PROGRAM = "prog-1";
 
+interface ProgramFixture {
+  id: string;
+  currencySymbol: string;
+  tiers: Array<Record<string, unknown>>;
+}
+
 function program(over: Record<string, unknown> = {}) {
-  return { id: PROGRAM, currencySymbol: "₹", tiers: [], ...over };
+  const base: ProgramFixture = { id: PROGRAM, currencySymbol: "₹", tiers: [] };
+  return { ...base, ...over };
 }
 
 beforeEach(() => {
@@ -242,16 +249,28 @@ describe("getLoyaltyDashboardStats — the breakdowns", () => {
 });
 
 describe("getLoyaltyDashboardStats — recent activity", () => {
-  const txn = (over: Record<string, unknown> = {}) => ({
-    transactionType: "earn",
-    points: 100,
-    createdAt: new Date(2026, 2, 1),
-    description: null,
-    source: "purchase",
-    account: { contact: { name: "Ann" } },
-    reward: null,
-    ...over,
-  });
+  interface TxnFixture {
+    transactionType: string;
+    points: number;
+    createdAt: Date;
+    description: string | null;
+    source: string;
+    account: { contact: { name: string } };
+    reward: { name: string } | null;
+  }
+
+  const txn = (over: Record<string, unknown> = {}) => {
+    const base: TxnFixture = {
+      transactionType: "earn",
+      points: 100,
+      createdAt: new Date(2026, 2, 1),
+      description: null,
+      source: "purchase",
+      account: { contact: { name: "Ann" } },
+      reward: null,
+    };
+    return { ...base, ...over };
+  };
 
   test("takes the five most recent transactions", async () => {
     await getLoyaltyDashboardStats(ORG);

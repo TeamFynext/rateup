@@ -21,6 +21,13 @@ import { log } from "../../../utils/logger.js";
 import { handleAutomatedReply } from "../whatsappSurvey/wasurvey.controller.js";
 import connection from "../../../utils/redisConnection.js";
 
+// Matches any thrown value carrying a Prisma-style `code`, deliberately duck-typed rather
+// than narrowed via `instanceof PrismaClientKnownRequestError` — the original code checked
+// `error.code` structurally, and callers/tests supply plain objects annotated with a `code`.
+function hasErrorCode(e: unknown, code: string): e is { code: string } {
+  return typeof e === "object" && e !== null && "code" in e && e.code === code;
+}
+
 export async function getAutomatedRepliesMessagIdHandler(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
@@ -52,11 +59,13 @@ export async function createAutomatedReplyHandler(
     const automatedReply = await createAutomatedReply(req.body, req.user.orgId);
     reply.code(201).send(automatedReply);
   } catch (error) {
-    if (error.code === "P2002") {
+    if (hasErrorCode(error, "P2002")) {
       reply.code(409).send("Some specified keywords already exist for this organization.");
     } else {
-      log.error(error);
-      reply.code(500).send(error?.message || "error in creating automatedReply");
+      log.error({ err: error }, "Error creating automated reply");
+      reply
+        .code(500)
+        .send(error instanceof Error ? error.message : "error in creating automatedReply");
     }
   }
 }
@@ -76,11 +85,13 @@ export async function cloneAutomatedReplyHandler(
     );
     reply.code(201).send(automatedReply);
   } catch (error) {
-    if (error?.message === "Automated reply not found") {
+    if (error instanceof Error && error.message === "Automated reply not found") {
       reply.code(404).send(error.message);
     } else {
-      log.error(error);
-      reply.code(500).send(error?.message || "error in cloning automatedReply");
+      log.error({ err: error }, "Error cloning automated reply");
+      reply
+        .code(500)
+        .send(error instanceof Error ? error.message : "error in cloning automatedReply");
     }
   }
 }
@@ -96,11 +107,13 @@ export async function updateAutomatedReplyHandler(
     await updateAutomatedReply(req.params.waAutomatedReplyId, req.body, req.user.orgId);
     reply.code(204).send();
   } catch (error) {
-    if (error.code === "P2002") {
+    if (hasErrorCode(error, "P2002")) {
       reply.code(409).send("Some specified keywords already exist for this organization.");
     } else {
-      log.error(error);
-      reply.code(500).send(error?.message || "error in updating automatedReply");
+      log.error({ err: error }, "Error updating automated reply");
+      reply
+        .code(500)
+        .send(error instanceof Error ? error.message : "error in updating automatedReply");
     }
   }
 }

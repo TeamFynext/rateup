@@ -1,4 +1,7 @@
 import sgMail from "@sendgrid/mail";
+if (!process.env.SENDGRID_API_KEY) {
+  throw new Error("SENDGRID_API_KEY environment variable must be set");
+}
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 interface EmailParams {
@@ -15,7 +18,7 @@ const sendEmail = (emailParams: EmailParams) => {
     .then(() => {
       console.log("Email sent");
     })
-    .catch((error: any) => {
+    .catch((error: unknown) => {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);
     });

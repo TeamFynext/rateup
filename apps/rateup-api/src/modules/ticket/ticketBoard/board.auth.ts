@@ -3,12 +3,12 @@ import { isBoardMember } from "./board.service.js";
 
 export async function verifyBoardAccess(
   request: FastifyRequest<{
-    Params: { id?: string; ticketBoardId?: string };
+    Params?: { id?: string; ticketBoardId?: string };
   }>,
   reply: FastifyReply,
 ) {
   const userId = request.userId;
-  const boardId = request.params.id || request.params.ticketBoardId;
+  const boardId = request.params?.id || request.params?.ticketBoardId;
 
   if (!boardId) {
     return reply.code(400).send({ message: "Board ID is required" });

@@ -169,7 +169,11 @@ describe("the column readers", () => {
   });
 
   test("gives a card with no labels an empty array", async () => {
-    db.ticketColumn.findMany.mockResolvedValueOnce([{ id: COLUMN, ticketCards: [{ id: "c-1" }] }]);
+    // The query always runs with `include: { labels: ... }`, so a card with no labels
+    // comes back with an empty join list rather than the key missing.
+    db.ticketColumn.findMany.mockResolvedValueOnce([
+      { id: COLUMN, ticketCards: [{ id: "c-1", labels: [] }] },
+    ]);
 
     const columns = await getColumns(OWN_BOARD);
 

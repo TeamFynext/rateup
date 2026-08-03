@@ -4,7 +4,7 @@ import axios from "axios";
 import { log } from "./logger.js";
 import { wait } from "../modules/whatsapp/whatsappSurvey/wasurvey.controller.js";
 
-export async function sendWebhook(endpoint: string, payload, orgId: string) {
+export async function sendWebhook(endpoint: string, payload: unknown, orgId: string) {
   if (!endpoint.startsWith("https://")) return;
   let attempt = 0;
   let webhookId = randomUUID();
@@ -28,7 +28,8 @@ export async function sendWebhook(endpoint: string, payload, orgId: string) {
       break;
     } catch (e) {
       log.error(e);
-      if (e.response && e.response.status >= 500) log.trace("error sending webhook");
+      if (axios.isAxiosError(e) && e.response && e.response.status >= 500)
+        log.trace("error sending webhook");
       else break;
       attempt++;
       await wait(Math.pow(2, attempt) * 1000);
@@ -36,13 +37,22 @@ export async function sendWebhook(endpoint: string, payload, orgId: string) {
   }
 }
 
-export async function getWebhookSecret(orgId) {
-  const { ownerId } = await getOrgById(orgId);
-  const derivedKey = (await pbkdf2Async(orgId, ownerId)) as Buffer;
+export async function getWebhookSecret(orgId: string) {
+  const org = await getOrgById(orgId);
+  if (!org) {
+    throw new Error(`Org not found for id ${orgId}`);
+  }
+  const derivedKey = await pbkdf2Async(orgId, org.ownerId);
   return derivedKey.toString("base64");
 }
 
-function pbkdf2Async(input, salt, iterations = 100000, keylen = 32, digest = "sha256") {
+function pbkdf2Async(
+  input: string,
+  salt: string,
+  iterations = 100000,
+  keylen = 32,
+  digest = "sha256",
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     crypto.pbkdf2(input, salt, iterations, keylen, digest, (err, derivedKey) => {
       if (err) reject(err);

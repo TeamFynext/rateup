@@ -46,7 +46,7 @@ export async function createCustomerAccountHandler(
     reply.code(201).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -64,7 +64,7 @@ export async function getCustomerAccountsHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -80,7 +80,7 @@ export async function getCustomerAccountByIdHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -100,7 +100,7 @@ export async function getCustomerAccountByContactHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -126,19 +126,15 @@ export async function getCustomerAccountByPhoneHandler(
     const allRewards = await getActiveLoyaltyRewards(program.id);
 
     // Get assigned reward IDs for this customer (excluding redeemed ones)
-    const assignedRewardIds = (account as any).assignedRewards
-      ? (account as any).assignedRewards
-          .filter((d) => d.status !== "REDEEMED")
-          .map((ar: any) => ar.rewardId)
+    const assignedRewardIds = account.assignedRewards
+      ? account.assignedRewards.filter((d) => d.status !== "REDEEMED").map((ar) => ar.rewardId)
       : [];
 
     // Get coupon redemptions (active ones)
-    const couponRedemptions = (account as any).redemptions
-      ? (account as any).redemptions
-          .filter(
-            (r: any) => r.reward?.rewardType === "coupon" && r?.status === "APPROVED" && !r.usedAt,
-          )
-          .map((r: any) => ({
+    const couponRedemptions = account.redemptions
+      ? account.redemptions
+          .filter((r) => r.reward?.rewardType === "coupon" && r?.status === "APPROVED" && !r.usedAt)
+          .map((r) => ({
             id: r.id,
             rewardId: r.rewardId,
             redemptionCode: r.redemptionCode,
@@ -168,7 +164,7 @@ export async function getCustomerAccountByPhoneHandler(
     });
 
     // Further filter by tier eligibility
-    const eligibleRewards = availableRewards.filter((reward: any) => {
+    const eligibleRewards = availableRewards.filter((reward) => {
       // Check if reward is restricted to specific tiers
       if (reward.availableForTiers && reward.availableForTiers.length > 0) {
         if (!account.currentTier || !reward.availableForTiers.includes(account.currentTier.name)) {
@@ -199,7 +195,7 @@ export async function getCustomerAccountByPhoneHandler(
     });
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -215,7 +211,7 @@ export async function updateCustomerAccountHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -247,7 +243,7 @@ export async function awardPointsHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -333,7 +329,7 @@ export async function exportCustomerAccountsHandler(
     }
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -353,10 +349,10 @@ export async function assignRewardToCustomerHandler(
     });
   } catch (e) {
     log.error(e);
-    if (e.message === "Reward is already assigned to this customer") {
+    if (e instanceof Error && e.message === "Reward is already assigned to this customer") {
       return reply.code(400).send({ error: e.message });
     }
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -369,7 +365,7 @@ export async function getRewardByShortCodeHandler(
     const result = await getRewardByShortCode(request.params.shortCode, orgId);
     reply.send(result);
   } catch (e) {
-    reply.code(400).send({ error: e.message });
+    reply.code(400).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -383,6 +379,6 @@ export async function redeemRewardByShortCodeHandler(
     reply.send(result);
   } catch (e) {
     log.error(e);
-    reply.code(400).send({ error: e.message });
+    reply.code(400).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }

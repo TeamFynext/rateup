@@ -7,7 +7,7 @@ import {
 } from "./campaignParticipants.schema.js";
 import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { PaginationQuery } from "../../contact/contact.schema.js";
-import { CampaignParticipant } from "../../../../generated/prisma/client.js";
+import { CampaignParticipant, Prisma } from "../../../../generated/prisma/client.js";
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,
@@ -78,9 +78,12 @@ export async function createCampaignParticipantsFromAnotherCampaign(
     },
   });
   const status = mapStatuses(data.status);
+  // `status` is a String column at the DB level (see Prisma schema comment), not the
+  // CampaignParticipantStatus enum itself, so compare against the enum's string values.
+  const statusValues: string[] = status;
   const campaignParticipants = await prisma.campaignParticipant.createMany({
     data: campaignParticipantsOld
-      ?.filter((participant) => status.includes(participant.status?.toUpperCase()))
+      ?.filter((participant) => statusValues.includes(participant.status.toUpperCase()))
       ?.map(({ contactId, contactGroupId }) => ({
         campaignId,
         contactId: contactId,
@@ -175,13 +178,13 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
     sort = "createdAt",
     selectedDripStage,
     ...filter
-  } = query;
+  } = query ?? {};
 
-  let filterData = [];
+  let filterData: Prisma.CampaignParticipantWhereInput[] = [];
   if (filter) {
     const params = new URLSearchParams(filter);
     for await (const [key, value] of params.entries()) {
-      if (["name", "phone"].includes(key)) {
+      if (key === "name" || key === "phone") {
         filterData.push({
           contact: {
             [key]: {
@@ -190,19 +193,28 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
             },
           },
         });
-      } else if ("consent" === key) {
+      } else if (key === "consent") {
         filterData.push({
           contact: {
-            [key]: {
+            consent: {
               equals: value?.toLocaleLowerCase() === "true",
             },
           },
         });
-      } else if (["createdAt", "status", "sentAt"].includes(key)) {
+      } else if (key === "status") {
+        filterData.push({
+          status: {
+            equals: value,
+            mode: "insensitive",
+          },
+        });
+      } else if (key === "createdAt" || key === "sentAt") {
+        // DateTime fields — no `mode` (that's string-only) and the Prisma filter key is
+        // `equals`, not `equal` (the previous typo silently produced an invalid filter
+        // that was never actually applied).
         filterData.push({
           [key]: {
-            equal: value,
-            mode: "insensitive",
+            equals: value,
           },
         });
       }
@@ -242,53 +254,77 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
     });
   else searchCount = totalCount;
 
-  const campaignParticipants = await prisma.campaignParticipant.findMany({
-    where:
-      filterData?.length > 0
-        ? {
-            campaignId,
-            OR: filterData,
-          }
-        : {
-            campaignId,
-          },
-    include: {
-      contact: {
-        select: {
-          name: true,
-          phone: true,
-          consent: true,
-        },
-      },
-      ...(selectedDripStage && selectedDripStage !== "all"
-        ? {
-            CampaignParticipantDripStage: {
-              where: {
-                dripStageId: selectedDripStage,
+  const where: Prisma.CampaignParticipantWhereInput =
+    filterData?.length > 0
+      ? {
+          campaignId,
+          OR: filterData,
+        }
+      : {
+          campaignId,
+        };
+  const skip = page && limit ? Number(page) * Number(limit) : undefined;
+  const take = limit ? Number(limit) : undefined;
+  const orderBy = { [sort]: desc };
+  const contactSelect = {
+    select: {
+      name: true,
+      phone: true,
+      consent: true,
+    },
+  } as const;
+
+  // The include shape — and the resulting `.map()` — is branched (rather than a single
+  // query with a conditionally-spread `include` key) so each branch's Prisma result type
+  // is statically known and concrete, not a union that collapses the drip-stage relation
+  // down to `unknown`.
+  const participants =
+    selectedDripStage && selectedDripStage !== "all"
+      ? (
+          await prisma.campaignParticipant.findMany({
+            where,
+            include: {
+              contact: contactSelect,
+              CampaignParticipantDripStage: {
+                where: {
+                  dripStageId: selectedDripStage,
+                },
               },
             },
-          }
-        : {}),
-    },
-    skip: page && limit ? Number(page) * Number(limit) : undefined,
-    take: limit ? Number(limit) : undefined,
-    orderBy: {
-      [sort]: desc,
-    },
-  });
+            skip,
+            take,
+            orderBy,
+          })
+        ).map((campaignParticipant) => {
+          const dripStage = campaignParticipant.CampaignParticipantDripStage[0];
+          return {
+            ...campaignParticipant,
+            status: dripStage?.status ?? campaignParticipant.status,
+            dripStageId: dripStage?.dripStageId ?? null,
+            sentAt: dripStage?.sentAt ?? campaignParticipant.sentAt,
+            createdAt: dripStage?.createdAt ?? campaignParticipant.createdAt,
+          };
+        })
+      : (
+          await prisma.campaignParticipant.findMany({
+            where,
+            include: {
+              contact: contactSelect,
+            },
+            skip,
+            take,
+            orderBy,
+          })
+        ).map((campaignParticipant) => {
+          const dripStageId: string | null = null;
+          return {
+            ...campaignParticipant,
+            dripStageId,
+          };
+        });
 
   return {
-    participants: campaignParticipants.map((campaignParticipant) => ({
-      ...campaignParticipant,
-      status:
-        campaignParticipant.CampaignParticipantDripStage?.[0].status ?? campaignParticipant.status,
-      dripStageId: campaignParticipant.CampaignParticipantDripStage?.[0].dripStageId ?? null,
-      sentAt:
-        campaignParticipant.CampaignParticipantDripStage?.[0].sentAt ?? campaignParticipant.sentAt,
-      createdAt:
-        campaignParticipant.CampaignParticipantDripStage?.[0].createdAt ??
-        campaignParticipant.createdAt,
-    })),
+    participants,
     totalCount,
     searchCount,
   };
@@ -373,10 +409,13 @@ export async function addWaMessageCampaignParticipantMap(
       messageId,
     },
   });
+  if (!waMessage) {
+    throw new Error(`WaMessage with messageId ${messageId} not found.`);
+  }
   const mapData = await prisma.waMessageCampaginParticipantMap.create({
     data: {
       campaignParticipantId,
-      waMessageId: waMessage?.id,
+      waMessageId: waMessage.id,
     },
   });
   return mapData;

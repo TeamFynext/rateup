@@ -406,6 +406,9 @@ export async function getCustomerAccountByPhone(
       redemptions: {
         take: 10,
         orderBy: { createdAt: "desc" },
+        include: {
+          reward: true,
+        },
       },
     },
   });
@@ -460,11 +463,25 @@ export async function awardPoints(
   }
 
   // Calculate points using earning rules engine
-  const { points, appliedRule } = await calculatePointsForPurchase(
+  const { points, rule: appliedRule } = await calculatePointsForPurchase(
     programId,
     customer.id,
     purchaseAmount,
-    context,
+    {
+      purchase_amount: purchaseAmount,
+      location_id: context.locationId,
+      categories: context.productCategories,
+      product_skus: context.productSkus,
+      payment_method: context.paymentMethod,
+      channel:
+        context.channel === "online" ||
+        context.channel === "in_store" ||
+        context.channel === "mobile_app"
+          ? context.channel
+          : undefined,
+      orderId: context.orderId,
+      notes: context.notes,
+    },
   );
 
   // Update customer points and total spend
@@ -535,7 +552,7 @@ export async function awardPoints(
   };
 }
 
-export async function getLCustomerByPhone(phone, orgId) {
+export async function getLCustomerByPhone(phone: string, orgId: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
     where: {
       contact: {

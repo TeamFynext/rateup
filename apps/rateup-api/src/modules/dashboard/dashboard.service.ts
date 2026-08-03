@@ -16,7 +16,7 @@ interface OverallStats {
 }
 
 export async function getOverallStats(orgId: string, userId: string): Promise<OverallStats> {
-  const counts = await prisma.$queryRaw`SELECT
+  const counts = await prisma.$queryRaw<OverallStats[]>`SELECT
   (SELECT COUNT(*)::INTEGER FROM "Contact" c WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."orgId" = ${orgId}::uuid) 
    AS "newChatCount",
   (SELECT COUNT(*)::INTEGER FROM "Campaign" cp JOIN "Team" t ON cp."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND cp."status" = ${CampaignStatus.ACTIVE}) AS "activeCampaignsCount",
@@ -65,7 +65,7 @@ interface TeamMember {
   name: string;
   profilePhoto: string;
   role: string;
-  lastLoggedInAt: string;
+  lastLoggedInAt: string | null;
   assignedTicketsCount: number;
   assignedChatsCount: number;
   status: UserAvailabilityStatus;
@@ -73,7 +73,7 @@ interface TeamMember {
 
 export async function getTeamMemberStats(
   teamId: string,
-): Promise<TeamMember & { isOnline: boolean }[]> {
+): Promise<(TeamMember & { isOnline: boolean })[]> {
   const users: TeamMember[] =
     await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role", orm. "status", u."lastLoggedInAt",
     (
@@ -90,14 +90,16 @@ export async function getTeamMemberStats(
    LEFT JOIN "User" u ON tm."userId" = u.id 
    LEFT JOIN "OrgMember" orm ON orm."userId" = tm."userId"
    WHERE tm."teamId" = ${teamId}::uuid;`;
-  const members = [];
+  const members: (TeamMember & { isOnline: boolean })[] = [];
   for (const user of users) {
     let sessionHandles = await Session.getAllSessionHandlesForUser(user.id);
     if (!user.lastLoggedInAt || dayjs(user.lastLoggedInAt).year() <= 2020) {
       let lastLoggedIn = 0;
       for (const session of sessionHandles) {
         const res = await Session.getSessionInformation(session);
-        lastLoggedIn = Math.max(lastLoggedIn, res.timeCreated);
+        if (res) {
+          lastLoggedIn = Math.max(lastLoggedIn, res.timeCreated);
+        }
       }
       const lastLoggedInAt = lastLoggedIn ? dayjs(lastLoggedIn).utc().format() : null;
       if (lastLoggedInAt || (user.lastLoggedInAt && !lastLoggedInAt))
@@ -110,5 +112,5 @@ export async function getTeamMemberStats(
       isOnline: user.status === UserAvailabilityStatus.online,
     });
   }
-  return members as TeamMember & { isOnline: boolean }[];
+  return members;
 }

@@ -1,6 +1,7 @@
 import { rateupLogo } from "../../../utils/constants/constants.js";
 
-export function createEmailBodyOTPGeneration(data) {
+// Only `surveyName` and `otp` are read here.
+export function createEmailBodyOTPGeneration(data: EmailTemplateData | undefined) {
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -107,7 +108,7 @@ export function createEmailBodyOTPGeneration(data) {
               </tr>
               <tr>
                <td style="max-width: 500px; text-align: center; margin: 0 auto;">
-                 <h2 class="otp-text">${data.otp}</h2>
+                 <h2 class="otp-text">${data?.otp}</h2>
                </td>
               </tr>
               <tr><td></td></tr>

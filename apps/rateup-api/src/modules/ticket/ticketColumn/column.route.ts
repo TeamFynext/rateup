@@ -38,7 +38,7 @@ export async function columnRoutes(server: FastifyInstance) {
   );
 
   // Get all columns for a board
-  server.get(
+  server.get<{ Params: { ticketBoardId: string } }>(
     "/board/:ticketBoardId",
     {
       preHandler: [verifyBoardAccess],
@@ -50,7 +50,7 @@ export async function columnRoutes(server: FastifyInstance) {
   );
 
   // Get single column
-  server.get(
+  server.get<{ Params: { id: string } }>(
     "/:id",
     {
       preHandler: [verifyColumnAccess],
@@ -62,7 +62,7 @@ export async function columnRoutes(server: FastifyInstance) {
   );
 
   // Update column
-  server.put(
+  server.put<{ Params: { id: string }; Body: { title?: string } }>(
     "/:id",
     {
       preHandler: [verifyColumnAccess],
@@ -75,7 +75,7 @@ export async function columnRoutes(server: FastifyInstance) {
   );
 
   // Delete column
-  server.delete(
+  server.delete<{ Params: { id: string } }>(
     "/:id",
     {
       preHandler: [verifyColumnAccess],

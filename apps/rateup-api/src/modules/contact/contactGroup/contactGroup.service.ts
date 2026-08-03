@@ -1,6 +1,12 @@
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import type {
+  Contact,
+  ContactGroup,
+  ContactGroupMap,
+  Prisma,
+} from "../../../../generated/prisma/client.js";
 import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
@@ -107,6 +113,9 @@ export async function getContactsByContactGroupId(contactGroupId: string) {
       },
     },
   });
+  if (!group) {
+    throw new Error(`Contact group ${contactGroupId} not found`);
+  }
 
   return group.contacts.map((c) => c.contact);
 }
@@ -128,9 +137,16 @@ export async function getContactsByContactGroupIdWithPagination(
     sort: "createdAt",
     desc: "asc",
   };
-  let filterData = [];
+  // Each branch below builds a differently-shaped Prisma filter fragment
+  // (string contains, boolean equals, a relation `some`, ...).
+  let filterData: Prisma.ContactWhereInput[] = [];
   if (filter) {
-    const params = new URLSearchParams(filter as any);
+    // The remaining query keys are the filter; values arrive as strings or numbers.
+    const params = new URLSearchParams(
+      Object.entries(filter).flatMap(([key, value]) =>
+        value === undefined ? [] : [[key, String(value)] as [string, string]],
+      ),
+    );
     for await (const [key, value] of params.entries()) {
       if (["name", "phone"].includes(key)) {
         filterData.push({
@@ -146,10 +162,11 @@ export async function getContactsByContactGroupIdWithPagination(
           },
         });
       } else if ("createdAt" === key) {
+        // `createdAt` is a DateTime column: the operator is `equals` (not `equal`, which
+        // Prisma rejects outright) and it takes a Date, not a string with a text `mode`.
         filterData.push({
-          [key]: {
-            equal: value,
-            mode: "insensitive",
+          createdAt: {
+            equals: new Date(value),
           },
         });
       } else if ("filterGroupName" === key) {
@@ -185,7 +202,7 @@ export async function getContactsByContactGroupIdWithPagination(
     });
   }
 
-  const searchCondition: any =
+  const searchCondition: Prisma.ContactWhereInput =
     filterData?.length > 0
       ? {
           OR: filterData,
@@ -238,6 +255,9 @@ export async function getContactsByContactGroupIdWithPagination(
       },
     },
   });
+  if (!group) {
+    throw new Error(`Contact group ${contactGroupId} not found`);
+  }
   return {
     group: group.contacts.map((c) => c.contact),
     totalCount,
@@ -262,11 +282,11 @@ export async function addNewContactsToGroup(
   }
   const contacts = contactsBody.filter((data) => isValidPhoneNumber(`+${data.phone}`));
   const phoneChunks = chunkArray(
-    contacts.map((contact) => contact.phone).filter((phone) => phone),
+    contacts.map((contact) => contact.phone).filter((phone): phone is string => Boolean(phone)),
     BATCH_SIZE,
   );
 
-  let createdContacts: any[] = [];
+  let createdContacts: Contact[] = [];
 
   for (const chunk of phoneChunks) {
     const result = await prisma.contact.findMany({
@@ -297,7 +317,8 @@ export async function addNewContactsToGroup(
 export async function addExistingContactsToGroup(
   contactGroupId: string,
   contactIds: Array<string>,
-  isCustomer: boolean,
+  // Accepted (matches the optional Zod input) but currently unused by the body.
+  isCustomer: boolean | undefined,
   orgId: string,
 ) {
   const contactGroup = await getContactGroupById(contactGroupId);
@@ -437,7 +458,12 @@ export async function updateContactGroupsForContact(
   });
   if (!contact || contact.orgId !== orgId) return { added: [], removed: [] };
 
-  const result: { added: any[]; removed: any[] } = { added: [], removed: [] };
+  // Asymmetric on purpose-by-accident: `removed` carries the ContactGroup rows that were
+  // detached, while `added` carries the join rows that were created.
+  const result: {
+    added: ContactGroupMap[];
+    removed: ContactGroup[];
+  } = { added: [], removed: [] };
 
   if (removeGroupIds?.length) {
     const toRemove = await prisma.contactGroupMap.findMany({

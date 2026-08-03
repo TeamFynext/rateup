@@ -31,6 +31,7 @@ import { log } from "../../utils/logger.js";
 import { getWebhookSecret } from "../../utils/webhook.js";
 import { getUserByEmail } from "../user/user.service.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
+import { errorMessage } from "../../utils/commonUtils.js";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -42,11 +43,11 @@ export async function createOrgHandler(
   try {
     const survey = await createOrg(body);
     reply.code(201).send(survey);
-  } catch (e: any) {
+  } catch (e) {
     // TODO
     console.error(e);
 
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -133,9 +134,9 @@ export async function updateRoleController(
       reply.code(400).send({ success: false, message: roleUpdate });
       return;
     }
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
@@ -153,9 +154,9 @@ export async function updateLogoHandler(
 
   try {
     _user = await updateOrgLogo(body, request, reply);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
@@ -171,9 +172,9 @@ export async function updateOrgDetailsHandler(
   const body = request.body;
   try {
     await updateOrgDetails(body, request, reply);
-  } catch (e: any) {
+  } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
@@ -206,7 +207,7 @@ export async function deleteOrgHandler(
     reply.code(200).send(deleteOrganization);
   } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply.code(500).send({ success: false, message: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -239,6 +240,8 @@ export interface OnBoarding {
   industry: string;
   template: string;
   integration: string;
+  // Stored as-is into the `onboarding` Json column, which callers extend freely.
+  [field: string]: unknown;
 }
 
 export async function completeOrgDetailsHandler(
@@ -249,12 +252,20 @@ export async function completeOrgDetailsHandler(
 ) {
   try {
     const userId = request.user.userId;
-    const user = await getUserByEmail(request.user.email);
+    const email = request.user.email;
+    if (!userId || !email) {
+      return reply.code(401).send({ error: "User not authenticated" });
+    }
+    const user = await getUserByEmail(email);
     const orgData = await completeOrgDetails(userId, {
       onboarding: request.body.onboarding,
       onboardingCompleted: true,
     });
-    const tellUsMore = orgData.updatedOrg.onboarding;
+    // `onboarding` is a raw Json? column (see Org.onboarding in schema.prisma) with no
+    // static shape — the fields read below are the ones this handler itself just wrote
+    // via `request.body.onboarding: OnBoarding`, so this narrows a genuinely dynamic
+    // JSON blob to the shape this code knows it produced.
+    const tellUsMore = orgData.updatedOrg.onboarding as Partial<OnBoarding> | null | undefined;
     const emaildata = {
       to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
       subject: `New RateUp SignUp: ${orgData.updatedOrg.name}`,
@@ -295,6 +306,9 @@ Onboarding Questionnaire:
 export async function orgNameAndPhoneNumber(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.user.userId;
+    if (!userId) {
+      return reply.code(401).send({ error: "User not authenticated" });
+    }
     const updates = await getOrgNameAndUserPhone(userId);
     reply.code(200).send(updates);
   } catch (e) {

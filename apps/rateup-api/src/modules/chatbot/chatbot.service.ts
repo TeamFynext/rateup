@@ -1,5 +1,10 @@
-import axios from "axios";
-import { dataSourceUploadInput } from "./chatbot.schema.js";
+import axios, { AxiosInstance } from "axios";
+import {
+  dataSourceUploadInput,
+  deleteContentInput,
+  deleteManyContentInput,
+  updateChatbotInput,
+} from "./chatbot.schema.js";
 import { getShortUrlId } from "../../utils/commonUtils.js";
 import prisma from "../../utils/prisma.js";
 import { FastifyRequest } from "fastify";
@@ -26,8 +31,11 @@ interface messageInput {
   chatbotId: string;
   customPrompt?: string;
 }
-export async function getAIResponseForQuery(data: messageInput, jwtToken) {
+export async function getAIResponseForQuery(data: messageInput, jwtToken: string) {
   const subscription = await getSubscription(data.orgId);
+  if (!subscription) {
+    throw new Error(`No subscription found for org ${data.orgId}`);
+  }
 
   const allowedTokens = subscription.features.ai.count;
   const usedTokens = await prisma.usageStats.findUnique({
@@ -67,9 +75,17 @@ export async function getAIResponseForQuery(data: messageInput, jwtToken) {
   return message;
 }
 
-export async function getPublicAIResponseForQuery(data) {
+interface publicMessageInput {
+  query: string;
+  userId: string;
+  orgId: string;
+}
+export async function getPublicAIResponseForQuery(data: publicMessageInput) {
   const subscription = await getSubscription(data.orgId);
-  const allowedTokens = await subscription.features.ai.count;
+  if (!subscription) {
+    throw new Error(`No subscription found for org ${data.orgId}`);
+  }
+  const allowedTokens = subscription.features.ai.count;
   const usedTokens = await prisma.usageStats.findUnique({
     where: {
       orgId: data.orgId,
@@ -105,7 +121,7 @@ export async function getPublicAIResponseForQuery(data) {
   return message;
 }
 
-export async function uploadFileForAIEmbed(data, jwtToken) {
+export async function uploadFileForAIEmbed(data: FormData, jwtToken: string) {
   console.log("uploadFileForAIEmbed data : ", data);
 
   return await axios.post(`${CHATBOT_BASEURL}/embed-doc/file`, data, {
@@ -116,7 +132,7 @@ export async function uploadFileForAIEmbed(data, jwtToken) {
   });
 }
 
-export async function getUploadedSources(jwtToken, chatbotId: string) {
+export async function getUploadedSources(jwtToken: string, chatbotId?: string) {
   const url = new URL(CHATBOT_BASEURL);
   if (chatbotId) {
     url.searchParams.append("chatbotId", chatbotId); // Append chatbotId to the query params
@@ -131,7 +147,7 @@ export async function getUploadedSources(jwtToken, chatbotId: string) {
   return res?.data;
 }
 
-export async function deleteEmbeddedSource(data, jwtToken) {
+export async function deleteEmbeddedSource(data: deleteContentInput, jwtToken: string) {
   return await axios.delete(`${CHATBOT_BASEURL}/delete-source`, {
     headers: {
       Accept: "application/json",
@@ -141,7 +157,7 @@ export async function deleteEmbeddedSource(data, jwtToken) {
   });
 }
 
-export async function deleteManyEmbeddedSource(data, jwtToken) {
+export async function deleteManyEmbeddedSource(data: deleteManyContentInput, jwtToken: string) {
   return await axios.delete(`${CHATBOT_BASEURL}/delete-many-sources`, {
     headers: {
       Accept: "application/json",
@@ -151,7 +167,7 @@ export async function deleteManyEmbeddedSource(data, jwtToken) {
   });
 }
 
-export async function deleteChatHistory(jwtToken) {
+export async function deleteChatHistory(jwtToken: string) {
   return await axios.delete(`${CHATBOT_BASEURL}/delete-chat-history`, {
     headers: {
       Accept: "application/json",
@@ -160,7 +176,7 @@ export async function deleteChatHistory(jwtToken) {
   });
 }
 
-export async function deletePublicChatHistory(userId) {
+export async function deletePublicChatHistory(userId: string) {
   return await axios.delete(`${CHATBOT_PUBLIC_BASEURL}/${userId}`, {
     headers: {
       Accept: "application/json",
@@ -196,7 +212,11 @@ export async function getAllChatbot(orgId: string) {
   });
 }
 
-export async function updateChatbotDetails(data, orgId: string, chatbotId: string) {
+export async function updateChatbotDetails(
+  data: updateChatbotInput,
+  orgId: string,
+  chatbotId: string,
+) {
   const res = await prisma.chatbot.upsert({
     where: {
       orgId,
@@ -231,13 +251,18 @@ export async function getChatbotDetailsByShortUrlId(shortUrlId: string) {
 }
 
 export async function getTextSummaryByAI(
-  texts,
+  texts: unknown[],
   request: FastifyRequest,
-  allowedTokens,
-  usedTokens,
+  allowedTokens: { completionTokens: number; promptTokens: number },
+  usedTokens: { aiCompletionTokensCount: number; aiPromptTokensCount: number } | null,
 ) {
   try {
     const axiosAIClient = await getAxiosAIClient(request);
+    // getAxiosAIClient() swallows its own construction failure and resolves undefined -
+    // guard here instead of letting `.post` crash with a cryptic property-read error.
+    if (!axiosAIClient) {
+      throw new Error("Unable to initialize AI client for text summary request");
+    }
     const res = await axiosAIClient.post(`/chatbot/summarize`, {
       texts,
       allowedTokens,
@@ -249,12 +274,21 @@ export async function getTextSummaryByAI(
     };
   } catch (err) {
     log.error(err);
-    throw `Error in getting text summary, ${err?.response?.data ?? err}`;
+    const responseData =
+      typeof err === "object" && err !== null && "response" in err
+        ? (err as { response?: { data?: unknown } }).response?.data
+        : undefined;
+    throw new Error(`Error in getting text summary, ${responseData ?? String(err)}`);
   }
 }
 
-export async function getChatBotHistory(client, chatbotId?: string) {
-  const res = await client.get(`/chatbot/chathistory`, {
+interface ChatHistoryEntry {
+  userId: string;
+  [key: string]: unknown;
+}
+
+export async function getChatBotHistory(client: AxiosInstance, chatbotId?: string) {
+  const res = await client.get<ChatHistoryEntry[]>(`/chatbot/chathistory`, {
     params: chatbotId ? { chatbotId } : {},
   });
   const userIds = res.data.map((hist) => hist.userId);
@@ -292,7 +326,13 @@ export async function getChatBotHistory(client, chatbotId?: string) {
   }));
 }
 
-export async function deleteChatbotFromDatabase({ chatbotId, orgId }) {
+export async function deleteChatbotFromDatabase({
+  chatbotId,
+  orgId,
+}: {
+  chatbotId: string;
+  orgId: string;
+}) {
   // Ensure chatbot belongs to the organization before deleting
   return await prisma.chatbot.delete({
     where: {

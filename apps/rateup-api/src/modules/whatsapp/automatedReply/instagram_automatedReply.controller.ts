@@ -20,7 +20,7 @@ import { startInstagramAutomationFlow } from "./instagram_automation.service.js"
  */
 export async function getInstagramAutomationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
 
     const automations = await getInstagramAutomatedRepliesByOrgId(orgId);
 
@@ -29,7 +29,7 @@ export async function getInstagramAutomationsHandler(request: FastifyRequest, re
       data: automations,
     });
   } catch (error) {
-    log.error(`[Instagram Automation Controller] Error getting automations: %o`, error);
+    log.error({ err: error }, `[Instagram Automation Controller] Error getting automations`);
     reply.code(500).send({
       success: false,
       error: "Failed to fetch Instagram automations",
@@ -45,7 +45,7 @@ export async function getInstagramAutomationByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const { id } = request.params;
 
     const automation = await getInstagramAutomatedReplyById(id);
@@ -58,7 +58,7 @@ export async function getInstagramAutomationByIdHandler(
     }
 
     // Verify ownership
-    if (automation.orgId !== orgId) {
+    if (automation.orgId == null || automation.orgId !== orgId) {
       return reply.code(403).send({
         success: false,
         error: "Unauthorized access to this automation",
@@ -70,7 +70,7 @@ export async function getInstagramAutomationByIdHandler(
       data: automation,
     });
   } catch (error) {
-    log.error(`[Instagram Automation Controller] Error getting automation: %o`, error);
+    log.error({ err: error }, `[Instagram Automation Controller] Error getting automation`);
     reply.code(500).send({
       success: false,
       error: "Failed to fetch Instagram automation",
@@ -85,7 +85,7 @@ export async function createInstagramAutomationHandler(
   request: FastifyRequest<{
     Body: {
       name: string;
-      matchData: any;
+      matchData: WaAutomatedReplyMatchData;
       whatsappSettingsPhoneId?: string;
       sendOnceIn24Hours?: boolean;
       isActive?: boolean;
@@ -94,7 +94,7 @@ export async function createInstagramAutomationHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const body = request.body;
 
     const automation = await createInstagramAutomatedReply({
@@ -113,7 +113,7 @@ export async function createInstagramAutomationHandler(
       data: automation,
     });
   } catch (error) {
-    log.error(`[Instagram Automation Controller] Error creating automation: %o`, error);
+    log.error({ err: error }, `[Instagram Automation Controller] Error creating automation`);
     reply.code(500).send({
       success: false,
       error: "Failed to create Instagram automation",
@@ -129,7 +129,7 @@ export async function updateInstagramAutomationHandler(
     Params: { id: string };
     Body: {
       name?: string;
-      matchData?: any;
+      matchData?: WaAutomatedReplyMatchData;
       whatsappSettingsPhoneId?: string;
       sendOnceIn24Hours?: boolean;
       isActive?: boolean;
@@ -138,7 +138,7 @@ export async function updateInstagramAutomationHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const { id } = request.params;
     const body = request.body;
 
@@ -167,7 +167,7 @@ export async function updateInstagramAutomationHandler(
       data: automation,
     });
   } catch (error) {
-    log.error(`[Instagram Automation Controller] Error updating automation: %o`, error);
+    log.error({ err: error }, `[Instagram Automation Controller] Error updating automation`);
     reply.code(500).send({
       success: false,
       error: "Failed to update Instagram automation",
@@ -183,7 +183,7 @@ export async function deleteInstagramAutomationHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const { id } = request.params;
 
     // Verify automation exists and belongs to org
@@ -211,7 +211,7 @@ export async function deleteInstagramAutomationHandler(
       message: "Instagram automation deleted successfully",
     });
   } catch (error) {
-    log.error(`[Instagram Automation Controller] Error deleting automation: %o`, error);
+    log.error({ err: error }, `[Instagram Automation Controller] Error deleting automation`);
     reply.code(500).send({
       success: false,
       error: "Failed to delete Instagram automation",
@@ -233,7 +233,7 @@ export async function initiateInstagramAutomationHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const { id } = request.params;
     const { igsId, ibaId } = request.body;
 
@@ -246,7 +246,7 @@ export async function initiateInstagramAutomationHandler(
       });
     }
 
-    if (automation.orgId !== orgId) {
+    if (automation.orgId == null || automation.orgId !== orgId) {
       return reply.code(403).send({
         success: false,
         error: "Unauthorized access to this automation",
@@ -254,7 +254,12 @@ export async function initiateInstagramAutomationHandler(
     }
 
     // Start the automation flow
-    await startInstagramAutomationFlow(igsId, automation as any, orgId, ibaId);
+    await startInstagramAutomationFlow(
+      igsId,
+      { ...automation, orgId: automation.orgId },
+      orgId,
+      ibaId,
+    );
 
     log.info(
       `[Instagram Automation Controller] Manually triggered automation ${id} for igsId ${igsId}`,
@@ -265,7 +270,7 @@ export async function initiateInstagramAutomationHandler(
       message: "Instagram automation initiated successfully",
     });
   } catch (error) {
-    log.error(`[Instagram Automation Controller] Error initiating automation: %o`, error);
+    log.error({ err: error }, `[Instagram Automation Controller] Error initiating automation`);
     reply.code(500).send({
       success: false,
       error: "Failed to initiate Instagram automation",

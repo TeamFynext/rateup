@@ -38,7 +38,7 @@ export async function sendInstagramPrivateReply(
   commentId: string,
   text: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -64,8 +64,8 @@ export async function sendInstagramPrivateReply(
     return response.data;
   } catch (error) {
     log.error(
-      `[Instagram Messaging] Error sending private reply to comment ${commentId}: %o`,
-      error,
+      { err: error },
+      `[Instagram Messaging] Error sending private reply to comment ${commentId}`,
     );
     throw error;
   }
@@ -79,7 +79,7 @@ export async function sendInstagramTextMessage(
   text: string,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     // Outbound — gate on the conversation limit (inbound is never blocked).
     await assertWithinConversationLimit(orgId);
@@ -111,7 +111,7 @@ export async function sendInstagramTextMessage(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending text message to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending text message to ${igsId}`);
     throw error;
   }
 }
@@ -125,10 +125,13 @@ export async function sendInstagramImage(
   caption?: string,
   orgId?: string,
   ibaId?: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     // Outbound — gate on the conversation limit (inbound is never blocked).
     if (orgId) await assertWithinConversationLimit(orgId);
+    if (!ibaId) {
+      throw new Error(`No Instagram business account id provided for igsId ${igsId}`);
+    }
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -137,7 +140,7 @@ export async function sendInstagramImage(
 
     const { pageAccessToken } = waSettings;
 
-    const payload: any = {
+    const payload = {
       recipient: {
         id: igsId,
       },
@@ -159,12 +162,17 @@ export async function sendInstagramImage(
 
     // If caption is provided, send it as a separate text message
     if (caption) {
+      if (!orgId) {
+        throw new Error(
+          `No organization id provided for Instagram image caption to igsId ${igsId}`,
+        );
+      }
       await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
     }
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending image to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending image to ${igsId}`);
     throw error;
   }
 }
@@ -187,7 +195,7 @@ export async function sendInstagramGenericTemplate(
   }>,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -231,7 +239,7 @@ export async function sendInstagramGenericTemplate(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending generic template to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending generic template to ${igsId}`);
     throw error;
   }
 }
@@ -250,7 +258,7 @@ export async function sendInstagramQuickReply(
   }>,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -283,7 +291,7 @@ export async function sendInstagramQuickReply(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending quick reply to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending quick reply to ${igsId}`);
     throw error;
   }
 }
@@ -298,7 +306,7 @@ export async function sendInstagramProductTemplate(
   productIds: string[],
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -331,7 +339,7 @@ export async function sendInstagramProductTemplate(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending product template to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending product template to ${igsId}`);
     throw error;
   }
 }
@@ -345,7 +353,7 @@ export async function sendInstagramStoryReply(
   text: string,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -376,7 +384,7 @@ export async function sendInstagramStoryReply(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending story reply to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending story reply to ${igsId}`);
     throw error;
   }
 }
@@ -392,7 +400,7 @@ export async function setInstagramIceBreakers(
   }>,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -401,6 +409,9 @@ export async function setInstagramIceBreakers(
     }
 
     const { pageAccessToken } = waSettings;
+    if (!pageAccessToken) {
+      throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
+    }
 
     const payload = {
       ice_breakers: iceBreakers.map((iceBreaker) => ({
@@ -420,14 +431,17 @@ export async function setInstagramIceBreakers(
     if (settings) {
       await updateWaSettingsById(settings.id, {
         instagramIceBreakers: iceBreakers,
-      } as any);
+      });
     }
 
     log.info(`[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`);
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error setting ice breakers for ibaId ${ibaId}: %o`, error);
+    log.error(
+      { err: error },
+      `[Instagram Messaging] Error setting ice breakers for ibaId ${ibaId}`,
+    );
     throw error;
   }
 }
@@ -446,6 +460,9 @@ export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
   }
 
   const { pageAccessToken } = waSettings;
+  if (!pageAccessToken) {
+    throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
+  }
   const response = await callInstagramMessengerProfileApi(
     ibaId,
     pageAccessToken,
@@ -459,7 +476,7 @@ export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
   const iceBreakers = response?.ice_breakers ?? [];
   await updateWaSettingsById(waSettings.id, {
     instagramIceBreakers: iceBreakers,
-  } as any);
+  });
 
   return response;
 }
@@ -472,12 +489,15 @@ export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
   }
 
   const { pageAccessToken } = waSettings;
+  if (!pageAccessToken) {
+    throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
+  }
   const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
     fields: ["ice_breakers"],
   });
   await updateWaSettingsById(waSettings.id, {
     instagramIceBreakers: [],
-  } as any);
+  });
   return response;
 }
 
@@ -493,7 +513,7 @@ export async function setInstagramPersistentMenu(
   }>,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   const waSettings = await getWaSettingsByIbaId(ibaId);
 
   if (!waSettings) {
@@ -501,13 +521,16 @@ export async function setInstagramPersistentMenu(
   }
 
   const { pageAccessToken } = waSettings;
+  if (!pageAccessToken) {
+    throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
+  }
   const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "POST", {
     persistent_menu: menus,
   });
 
   await updateWaSettingsById(waSettings.id, {
     instagramPersistentMenu: menus,
-  } as any);
+  });
 
   return response;
 }
@@ -526,6 +549,9 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
   }
 
   const { pageAccessToken } = waSettings;
+  if (!pageAccessToken) {
+    throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
+  }
   const response = await callInstagramMessengerProfileApi(
     ibaId,
     pageAccessToken,
@@ -539,7 +565,7 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
   const persistentMenu = response?.persistent_menu ?? [];
   await updateWaSettingsById(waSettings.id, {
     instagramPersistentMenu: persistentMenu,
-  } as any);
+  });
 
   return response;
 }
@@ -552,12 +578,15 @@ export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string
   }
 
   const { pageAccessToken } = waSettings;
+  if (!pageAccessToken) {
+    throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
+  }
   const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
     fields: ["persistent_menu"],
   });
   await updateWaSettingsById(waSettings.id, {
     instagramPersistentMenu: [],
-  } as any);
+  });
   return response;
 }
 
@@ -569,7 +598,7 @@ export async function sendInstagramVideo(
   videoUrl: string,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -600,7 +629,7 @@ export async function sendInstagramVideo(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending video to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending video to ${igsId}`);
     throw error;
   }
 }
@@ -613,7 +642,7 @@ export async function sendInstagramFile(
   fileUrl: string,
   orgId: string,
   ibaId: string,
-): Promise<any> {
+): Promise<unknown> {
   try {
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -644,7 +673,7 @@ export async function sendInstagramFile(
 
     return response.data;
   } catch (error) {
-    log.error(`[Instagram Messaging] Error sending file to ${igsId}: %o`, error);
+    log.error({ err: error }, `[Instagram Messaging] Error sending file to ${igsId}`);
     throw error;
   }
 }

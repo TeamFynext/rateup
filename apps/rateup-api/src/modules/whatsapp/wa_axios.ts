@@ -25,10 +25,11 @@ async function axiosWithRetry<T = any>(
       });
 
       return response;
-    } catch (error: any) {
-      lastError = error;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      lastError = axiosError;
 
-      const isRetryable = retryableErrors.has(error.code);
+      const isRetryable = retryableErrors.has(axiosError.code ?? "");
 
       if (!isRetryable || attempt === retries) {
         throw error;
@@ -36,7 +37,7 @@ async function axiosWithRetry<T = any>(
 
       log.warn(
         {
-          code: error.code,
+          code: axiosError.code,
           attempt,
         },
         "WhatsApp API request failed. Retrying...",
@@ -53,7 +54,11 @@ export { META_API_HOST, META_API_VERSION } from "../../utils/meta.js";
 export async function callMetaApi(
   url: string,
   method: AxiosRequestConfig["method"],
-  accessToken?: string,
+  // `null` is a legitimate, intentional value here (as opposed to just
+  // omitting the argument): some callers embed the access token in the
+  // request body instead of the Authorization header (e.g. Meta's catalog
+  // items_batch endpoint) and explicitly pass `null` to make that clear.
+  accessToken?: string | null,
   data?: AxiosRequestConfig["data"],
   otherConfig: AxiosRequestConfig = {},
   headerConfig: AxiosRequestConfig["headers"] = {},

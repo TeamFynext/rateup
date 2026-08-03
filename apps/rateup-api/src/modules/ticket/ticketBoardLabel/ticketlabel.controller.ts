@@ -14,7 +14,7 @@ export async function createLabelHandler(
   const { ticketBoardId } = request.params;
   const user = request.user;
 
-  if (!user || !(await isBoardMember(ticketBoardId, user.id))) {
+  if (!user?.userId || !(await isBoardMember(ticketBoardId, user.userId))) {
     throw createHttpError(403, "Forbidden");
   }
 
@@ -29,7 +29,7 @@ export async function getLabelsHandler(
   const { ticketBoardId } = request.params;
   const user = request.user;
 
-  if (!user || !(await isBoardMember(ticketBoardId, user.id))) {
+  if (!user?.userId || !(await isBoardMember(ticketBoardId, user.userId))) {
     throw createHttpError(403, "Forbidden");
   }
 
@@ -47,7 +47,7 @@ export async function updateLabelHandler(
   const { id } = request.params;
   const user = request.user;
 
-  if (!user || !(await labelService.verifyLabelAccess(id, user.id))) {
+  if (!user?.userId || !(await labelService.verifyLabelAccess(id, user.userId))) {
     throw createHttpError(403, "Forbidden");
   }
 
@@ -62,7 +62,7 @@ export async function deleteLabelHandler(
   const { id } = request.params;
   const user = request.user;
 
-  if (!user || !(await labelService.verifyLabelAccess(id, user.id))) {
+  if (!user?.userId || !(await labelService.verifyLabelAccess(id, user.userId))) {
     throw createHttpError(403, "Forbidden");
   }
 
@@ -80,7 +80,7 @@ export async function deleteLabelsHandler(
   const { ticketBoardId } = request.params;
   const user = request.user;
 
-  if (!user || !(await isBoardMember(ticketBoardId, user.id))) {
+  if (!user?.userId || !(await isBoardMember(ticketBoardId, user.userId))) {
     throw createHttpError(403, "Forbidden");
   }
 

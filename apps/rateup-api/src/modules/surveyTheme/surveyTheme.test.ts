@@ -47,6 +47,7 @@ import {
 } from "./surveyTheme.controller.js";
 import { surveyThemeRoutes } from "./surveyTheme.routes.js";
 import { getImgUrl, verifyAndConvertSurveyThemeObj } from "./utils.js";
+import type { FastifyError } from "fastify";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -342,7 +343,7 @@ describe("getSurveyThemeById", () => {
   test("the module's error handler turns that into a fixed 500", () => {
     const rep = reply();
 
-    errorHandler(new TypeError("Cannot destructure"), {} as never, rep);
+    errorHandler(new TypeError("Cannot destructure") as FastifyError, {} as never, rep);
 
     expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
     expect(log.error).toHaveBeenCalled();

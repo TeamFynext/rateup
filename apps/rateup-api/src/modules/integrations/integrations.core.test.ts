@@ -296,11 +296,11 @@ describe("updateIntegrationByName", () => {
     expect(generateApiKey).not.toHaveBeenCalled();
   });
 
-  // NOTE: the zapier branch writes into data.credential without checking it
-  // exists, so updateKey with no credential throws before Prisma is reached.
+  // The zapier branch has nowhere to write the rotated token without a
+  // credential, so it rejects explicitly before Prisma is reached.
   test("throws when updateKey is set with no credential", async () => {
     await expect(updateIntegrationByName(ORG, "zapier", { updateKey: true })).rejects.toThrow(
-      TypeError,
+      "Missing credential to regenerate the zapier access token",
     );
   });
 

@@ -37,8 +37,8 @@ const deliveryOptionSchema = z.object({
 });
 
 const updateCatalogSettingsSchema = z.object({
-  storeType: z.nativeEnum(CatalogStoreType).optional(),
-  paymentMethod: z.nativeEnum(CatalogPaymentMethod).optional(),
+  storeType: z.enum(CatalogStoreType).optional(),
+  paymentMethod: z.enum(CatalogPaymentMethod).optional(),
   standardPaymentConfig: z.record(z.string(), z.any()).optional(),
   collectAddress: z.boolean().optional(),
   collectDelivery: z.boolean().optional(),

@@ -196,10 +196,14 @@ describe("the verify token", () => {
       rep,
     );
 
+    // The controller now short-circuits with a dedicated "verifyToken is required"
+    // error before ever calling verifyWebhookUrl, instead of sending a challenge
+    // request containing the literal string "undefined" and letting that fail.
     expect(answer(rep)).toEqual({
       code: 400,
-      body: { message: "Webhook URL challenge verification failed" },
+      body: { message: "verifyToken is required" },
     });
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(db.webhook.upsert).not.toHaveBeenCalled();
   });
 });

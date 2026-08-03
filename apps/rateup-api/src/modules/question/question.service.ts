@@ -1,6 +1,6 @@
 import { MultipartFile } from "@fastify/multipart";
 import { parseCsvObjects } from "hucre/csv";
-import { readXlsxObjects } from "hucre";
+import { readXlsxObjects, type CellValue } from "hucre";
 import { randomUUID } from "node:crypto";
 import prisma from "../../utils/prisma.js";
 import { updateSurveyVariables } from "../survey/survey.service.js";
@@ -73,7 +73,10 @@ export async function deleteQuestionById(surveyId: string, id: string) {
       surveyId: surveyId,
     },
   });
-  function removeObjectsByQuestionId(data, questionIdToRemove) {
+  function removeObjectsByQuestionId(
+    data: PrismaJson.PWaFlowLogicJumps,
+    questionIdToRemove: string,
+  ) {
     // Iterate through each key in the object
     for (const key in data) {
       if (data.hasOwnProperty(key)) {
@@ -146,7 +149,7 @@ export async function updateQuestionsOnSurvey(surveyId: string, questions: Array
       id: surveyId,
     },
     data: {
-      questions: questions as any,
+      questions,
     },
   });
 
@@ -209,7 +212,8 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
   } else {
     const { data } = await readXlsxObjects(buffer, {
       transformHeader: (header) => header?.toString()?.trim()?.toLowerCase(),
-      transformValue: (value) => value?.toString()?.trim(),
+      // An empty cell yields undefined here, as it always has.
+      transformValue: (value) => value?.toString()?.trim() as CellValue,
     });
     data.forEach(processEmail);
   }

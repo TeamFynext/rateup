@@ -19,10 +19,12 @@ import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import fastifyMultipart from "@fastify/multipart";
 import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth.js";
 import {
+  type ByTemplateIdParamsSchema,
   byTemplateIdParamsSchema,
   syncTemplatesSchema,
   templateTypeParamsSchema,
   waTemplateInputSchema,
+  type WaUserSendTemplateBodySchema,
   waUserSendTemplateBodySchema,
 } from "./wa_templates.schema.js";
 
@@ -122,7 +124,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     uploadHandler,
   );
 
-  server.post(
+  server.post<{ Params: ByTemplateIdParamsSchema; Body: WaUserSendTemplateBodySchema }>(
     "/:templateId/send",
     {
       preHandler: verifyMessageMonthlyLimitRestriction,

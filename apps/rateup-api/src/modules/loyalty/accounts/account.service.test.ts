@@ -68,8 +68,19 @@ const PROGRAM = "prog-1";
 
 const signupInput = { name: "Ann", phone: "+919000000001", orgId: ORG } as any;
 
+interface ProgramFixture {
+  id: string;
+  signupBonus: number;
+  referralBonus: number;
+  referralBonusType: string;
+  referralRewardId: string | null;
+  refereeBonus: number;
+  refereeBonusType: string;
+  refereeRewardId: string | null;
+}
+
 function program(over: Record<string, unknown> = {}) {
-  return {
+  const base: ProgramFixture = {
     id: PROGRAM,
     signupBonus: 0,
     referralBonus: 0,
@@ -78,8 +89,8 @@ function program(over: Record<string, unknown> = {}) {
     refereeBonus: 0,
     refereeBonusType: "points",
     refereeRewardId: null,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 beforeEach(() => {
@@ -476,12 +487,12 @@ describe("awardPoints", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The engine returns the matched rule under the
-  // key `rule`, but awardPoints destructures `{ points, appliedRule }` — a key
-  // the engine never returns. Every purchase transaction therefore records
-  // `appliedRuleId: undefined`, so the ledger cannot say which earning rule
-  // priced it. See issues.txt 20.16.
-  test("records an empty rule reference for every purchase", async () => {
+  // Fixed: the engine returns the matched rule under the key `rule`, and
+  // awardPoints now destructures `{ points, rule: appliedRule }` to match —
+  // previously it destructured a nonexistent `appliedRule` key, so every
+  // purchase transaction recorded `appliedRuleId: undefined` regardless of
+  // which rule actually priced it. See issues.txt 20.16.
+  test("records which earning rule priced the purchase", async () => {
     (calculatePointsForPurchase as Mock).mockResolvedValue({
       points: 100,
       rule: { id: "rule-1", name: "Double points Tuesday" },
@@ -490,8 +501,8 @@ describe("awardPoints", () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
     const metadata = db.loyaltyTransaction.create.mock.calls[0][0].data.metadata;
-    expect(metadata.appliedRuleId).toBeUndefined();
-    expect(metadata.appliedRuleName).toBeUndefined();
+    expect(metadata.appliedRuleId).toBe("rule-1");
+    expect(metadata.appliedRuleName).toBe("Double points Tuesday");
   });
 
   test("carries the purchase context into the ledger metadata", async () => {

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   CreateResponseInput,
@@ -57,6 +58,9 @@ export async function getResponsesHandler(
 ) {
   try {
     const surveyTeamMapId = request.params.surveyTeamMapId;
+    if (!surveyTeamMapId) {
+      return reply.code(400).send({ message: "surveyTeamMapId is required" });
+    }
     const responses = await getResponses(surveyTeamMapId);
     reply.send(responses);
   } catch (e) {
@@ -143,9 +147,13 @@ export async function downloadExcelResponseHandler(
     let question;
     if (request.body.dbFlowId) {
       let flow = await getFlowFromDb(request.body.dbFlowId);
+      // WaFlowScreen.layout.children is declared as WaFlowForm[], but at runtime (for the
+      // flattened question list used here) these are actually flow form elements — same
+      // dynamic-shape cast pattern used for this exact "flow screens -> questions" flattening
+      // in response.service.ts (e.g. downloadExcelResponse's WhatsApp-flow branch).
       question = flow?.json?.screens?.flatMap((screen) =>
         screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
-      );
+      ) as unknown as Parameters<typeof downloadExcelResponseV2>[1];
       const data = await downloadExcelResponseV2(
         allResponse,
         question,
@@ -199,7 +207,9 @@ export async function resetResponsesHandler(
     reply.code(201).send({ success: true, data: reset });
   } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -215,7 +225,9 @@ export async function deleteResponseHandler(
     reply.code(201).send({ success: true, data: deleteRes });
   } catch (e) {
     console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
+    reply
+      .code(500)
+      .send({ success: false, message: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -233,8 +245,13 @@ export async function createResponseHandler(
       data,
       shouldRaiseTicket,
       checkUniqueDevice,
-      ip,
-      selectedColumnId,
+      // response.service.ts's createResponse infers `ip`'s parameter type as exactly `null`
+      // (untyped default parameter `ip = null`), but the DB column (SurveyResponse.ip String?)
+      // and the checkUniqueDevice lookup both need the real client IP string — this is a
+      // pre-existing type gap in that (out-of-scope, already-verified-clean-elsewhere) file,
+      // not something to silently work around by passing null and breaking checkUniqueDevice.
+      ip as unknown as Parameters<typeof createResponse>[3],
+      selectedColumnId ?? undefined,
     );
     reply.code(201).send();
     const {
@@ -246,11 +263,8 @@ export async function createResponseHandler(
       tag,
     } = response;
     const responses = responseArray as unknown as QuestionResponse[];
-    const coords = (response.location as any)?.coordinates;
-    let location = await fetchLocation(coords);
-    if (!location) {
-      location = undefined;
-    }
+    const coords = response.location?.coordinates;
+    const location = (await fetchLocation(coords)) ?? undefined;
     // checking location information after response is created since we dont
     // want to leave the user waiting
     if (data.platform === "WHATSAPP") {
@@ -278,7 +292,7 @@ export async function createResponseHandler(
     }
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e.message);
+    reply.code(500).send(e instanceof Error ? e.message : "Unknown error");
   }
 }
 export async function generateResponseHandler(
@@ -292,7 +306,7 @@ export async function generateResponseHandler(
     reply.code(201).send();
   } catch (e) {
     if (e instanceof PrismaClientKnownRequestError) reply.code(400).send("Survey Not Found");
-    else reply.code(500).send(e.message);
+    else reply.code(500).send(e instanceof Error ? e.message : "Unknown error");
   }
 }
 
@@ -312,7 +326,8 @@ export async function syncResponseToGoogleSheetHandler(
   } catch (e) {
     console.log(e);
     if (e instanceof PrismaClientKnownRequestError) reply.code(400).send("Survey Not Found");
-    else if (e.response.data.error) reply.code(500).send({ error: e.response.data.error });
+    else if (axios.isAxiosError(e) && e.response?.data?.error)
+      reply.code(500).send({ error: e.response.data.error });
     else reply.code(500).send(e);
   }
 }
@@ -455,6 +470,6 @@ export async function getHappyIndexResponsesHandler(
     reply.send(result);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e.message);
+    reply.code(500).send(e instanceof Error ? e.message : String(e));
   }
 }

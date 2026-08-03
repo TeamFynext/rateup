@@ -49,8 +49,21 @@ const db = prisma as unknown as {
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PROGRAM = "prog-1";
 
+interface ApprovalFixture {
+  id: string;
+  status: string;
+  requestType: string;
+  accountId: string;
+  redemptionId: string | null;
+  points: number | null;
+  reason: string | null;
+  requestData: Record<string, unknown>;
+  expiresAt: Date | null;
+  account: { contact: { name: string; phone: string; orgId: string } };
+}
+
 function approval(over: Record<string, unknown> = {}) {
-  return {
+  const base: ApprovalFixture = {
     id: "apr-1",
     status: "PENDING",
     requestType: "REWARD_REDEMPTION",
@@ -61,8 +74,8 @@ function approval(over: Record<string, unknown> = {}) {
     requestData: {},
     expiresAt: null,
     account: { contact: { name: "Ann", phone: "919000000001", orgId: ORG } },
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 function tx() {

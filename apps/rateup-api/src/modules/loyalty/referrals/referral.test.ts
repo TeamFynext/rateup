@@ -51,8 +51,18 @@ const db = prisma as unknown as {
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PROGRAM = "prog-1";
 
+interface ProgramFixture {
+  id: string;
+  referralBonus: number;
+  referralBonusType: string;
+  referralRewardId: string | null;
+  refereeBonus: number;
+  refereeBonusType: string;
+  refereeRewardId: string | null;
+}
+
 function program(over: Record<string, unknown> = {}) {
-  return {
+  const base: ProgramFixture = {
     id: PROGRAM,
     referralBonus: 0,
     referralBonusType: "points",
@@ -60,8 +70,8 @@ function program(over: Record<string, unknown> = {}) {
     refereeBonus: 0,
     refereeBonusType: "points",
     refereeRewardId: null,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 const referrer = { id: "acct-referrer", currentPoints: 200, referralCode: "ANN-AB12" };

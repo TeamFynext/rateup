@@ -5,6 +5,7 @@ import {
   deleteReferral,
   updateReferral,
 } from "./referrals.service.js";
+import { errorMessage } from "../../utils/commonUtils.js";
 
 export async function trackVisitHandler(
   request: FastifyRequest<{ Body: { code: string } }>,
@@ -17,10 +18,10 @@ export async function trackVisitHandler(
     }
     await updateReferral(code, "visit");
     return reply.code(200).send({ success: true, message: "Visit tracked successfully" });
-  } catch (error: any) {
+  } catch (error) {
     request.log.error(error, "Failed to track referral visit");
-    if (error.message === "Referral not found") {
-      return reply.code(404).send({ message: error.message });
+    if (errorMessage(error) === "Referral not found") {
+      return reply.code(404).send({ message: errorMessage(error) });
     }
     return reply.code(500).send({ message: "Internal server error" });
   }
@@ -71,8 +72,9 @@ export async function createReferralHandler(
     return reply.code(201).send({
       referral_code: referral.referral_code,
     });
-  } catch (error: any) {
-    if (error.code === "P2002") {
+  } catch (error) {
+    // P2002 = unique constraint violation on the referral's email.
+    if ((error as { code?: string } | null)?.code === "P2002") {
       return reply.code(400).send({ message: "Email already exists" });
     }
     request.log.error(error, "Failed to create referral");

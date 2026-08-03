@@ -1,6 +1,14 @@
 import { rateupLogo } from "../constants/constants.js";
 
-export const createInactivityWarningTemplate = ({ orgName, ownerName, deadlineDate }) => {
+export const createInactivityWarningTemplate = ({
+  orgName,
+  ownerName,
+  deadlineDate,
+}: {
+  orgName: string;
+  ownerName: string;
+  deadlineDate: string | number | Date;
+}) => {
   const formattedDeadline = new Date(deadlineDate).toDateString();
 
   return `<!DOCTYPE html>
@@ -118,7 +126,17 @@ export const createInactivityWarningTemplate = ({ orgName, ownerName, deadlineDa
   </html>`;
 };
 
-export const createOrgDeletionReminderTemplate = ({ orgName, ownerName, triggeredDate, orgId }) => {
+export const createOrgDeletionReminderTemplate = ({
+  orgName,
+  ownerName,
+  triggeredDate,
+  orgId,
+}: {
+  orgName: string;
+  ownerName: string;
+  triggeredDate: string | number | Date;
+  orgId: string;
+}) => {
   const formattedDate = new Date(triggeredDate).toDateString();
 
   return `<!DOCTYPE html>

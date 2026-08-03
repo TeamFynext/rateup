@@ -45,15 +45,26 @@ import {
   inviteMemberRequestResponse,
   inviteMemberRequestSchema,
   setTeamFeaturesSchema,
+  SetTeamFeaturesInput,
   getTeamFeaturesResponseSchema,
   setTeamChannelsSchema,
   getTeamChannelsResponseSchema,
+  CreateTeamInput,
+  GetTeamsByOrgInput,
+  DeleteTeamInput,
+  EditTeamInput,
+  IdParamInput,
+  tagQuerySchema as TagQueryInput,
+  InviteMemberInput,
+  InviteCompleteInput,
+  GetTeamMembersInput,
+  SetTeamChannelsInput,
 } from "./team.schema.js";
 
 // TODO: add checkSession as server.addHook instead of defining it in every route
 // move routes which doesn't need checkSession to another route (invitation)
 export async function teamRoutes(server: FastifyInstance) {
-  server.post(
+  server.post<{ Body: CreateTeamInput }>(
     "/",
     {
       preHandler: [
@@ -72,7 +83,7 @@ export async function teamRoutes(server: FastifyInstance) {
     createTeamHandler,
   );
 
-  server.get(
+  server.get<{ Params: GetTeamsByOrgInput }>(
     "/:orgId",
     {
       preHandler: [
@@ -96,7 +107,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getTeamsByUserHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: DeleteTeamInput }>(
     "/:id",
     {
       preHandler: [
@@ -111,7 +122,7 @@ export async function teamRoutes(server: FastifyInstance) {
     deleteTeamByIdHandler,
   );
 
-  server.put(
+  server.put<{ Body: EditTeamInput; Params: IdParamInput; Querystring: TagQueryInput }>(
     "/edit/:id",
     {
       preHandler: [checkSession, verifyTeamAdminAccess],
@@ -127,7 +138,7 @@ export async function teamRoutes(server: FastifyInstance) {
     return { message: "Teams API working fine!" };
   });
 
-  server.post(
+  server.post<{ Body: InviteMemberInput }>(
     "/invite",
     {
       preHandler: [
@@ -145,7 +156,7 @@ export async function teamRoutes(server: FastifyInstance) {
     },
     inviteMemberHandler,
   );
-  server.put(
+  server.put<{ Params: IdParamInput }>(
     "/invite/resend/:id",
     {
       preHandler: [
@@ -160,7 +171,7 @@ export async function teamRoutes(server: FastifyInstance) {
     resendInviteMemberHandler,
   );
 
-  server.post(
+  server.post<{ Params: InviteCompleteInput }>(
     "/complete-invite/:token",
     {
       schema: {
@@ -170,7 +181,7 @@ export async function teamRoutes(server: FastifyInstance) {
     completeInviteHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: DeleteTeamInput }>(
     "/invite/:id",
     {
       preHandler: [
@@ -185,7 +196,7 @@ export async function teamRoutes(server: FastifyInstance) {
     deleteInviteHandler,
   );
 
-  server.get(
+  server.get<{ Params: GetTeamMembersInput }>(
     "/members/:teamId",
     {
       preHandler: [
@@ -200,7 +211,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getTeamMembersHandler,
   );
 
-  server.get(
+  server.get<{ Params: GetTeamMembersInput }>(
     "/notmembers/:teamId",
     {
       preHandler: [
@@ -215,7 +226,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getUsersNotInTeamHandler,
   );
 
-  server.get(
+  server.get<{ Params: GetTeamMembersInput }>(
     "/invitation/:teamId",
     {
       preHandler: [
@@ -231,7 +242,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getTeamMembersFromInviteHandler,
   );
 
-  server.get(
+  server.get<{ Params: GetTeamMembersInput }>(
     `/:teamId/survey-languages`,
     {
       preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamAccess],
@@ -242,7 +253,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getSurveyLanguagesByTeamIdHandler,
   );
 
-  server.delete(
+  server.delete<{ Querystring: { teamId: string; userId: string } }>(
     "/member",
     {
       preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
@@ -253,7 +264,7 @@ export async function teamRoutes(server: FastifyInstance) {
     deleteTeamMemberHandler,
   );
 
-  server.post(
+  server.post<{ Params: { id: string }; Body: { teamIds: string[]; userEmail: string } }>(
     "/members/:id",
     {
       preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
@@ -265,7 +276,7 @@ export async function teamRoutes(server: FastifyInstance) {
     addMembertoTeamsHandler,
   );
 
-  server.get(
+  server.get<{ Params: { teamId: string } }>(
     "/teams/:teamId",
     {
       preHandler: [checkSession, verifyTeamAccess],
@@ -278,7 +289,7 @@ export async function teamRoutes(server: FastifyInstance) {
 
   // ── Team Feature Access ───────────────────────────────────────────────────
 
-  server.get(
+  server.get<{ Params: { teamId: string } }>(
     "/:teamId/features",
     {
       preHandler: [
@@ -294,7 +305,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getTeamFeaturesHandler,
   );
 
-  server.put(
+  server.put<{ Params: { teamId: string }; Body: SetTeamFeaturesInput }>(
     "/:teamId/features",
     {
       preHandler: [
@@ -313,7 +324,7 @@ export async function teamRoutes(server: FastifyInstance) {
 
   // ── Team Channel Access ───────────────────────────────────────────────────
 
-  server.get(
+  server.get<{ Params: { teamId: string } }>(
     "/:teamId/channels",
     {
       preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamAccess],
@@ -325,7 +336,7 @@ export async function teamRoutes(server: FastifyInstance) {
     getTeamChannelsHandler,
   );
 
-  server.put(
+  server.put<{ Params: { teamId: string }; Body: SetTeamChannelsInput }>(
     "/:teamId/channels",
     {
       preHandler: [

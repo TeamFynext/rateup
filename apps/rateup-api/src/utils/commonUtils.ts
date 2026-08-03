@@ -7,16 +7,21 @@ const getShortUrlId = () => {
   return customAlphabet(nolookalikesSafe, 8)();
 };
 
-const shortIdUniqueConstraintErrHandler = async (functionToBeHandled, ...args) => {
+const shortIdUniqueConstraintErrHandler = async <R>(
+  functionToBeHandled: (...args: unknown[]) => R | Promise<R>,
+  ...args: unknown[]
+): Promise<R> => {
   try {
     return await functionToBeHandled(...args);
   } catch (err) {
     console.log("err from shortidurluniqueconstrainterrorhandler", err);
+    const target =
+      err instanceof Prisma.PrismaClientKnownRequestError ? err.meta?.target : undefined;
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === "P2002" &&
-      // @ts-ignore
-      err.meta.target?.includes("shortUrlId")
+      Array.isArray(target) &&
+      target.includes("shortUrlId")
     ) {
       return shortIdUniqueConstraintErrHandler(functionToBeHandled);
     } else {
@@ -25,10 +30,10 @@ const shortIdUniqueConstraintErrHandler = async (functionToBeHandled, ...args) =
   }
 };
 
-const asyncErrHandler = (
-  functionToBeHandled,
-): ((req: FastifyRequest, rep: FastifyReply) => void) => {
-  return async (req: FastifyRequest, rep: FastifyReply) => {
+const asyncErrHandler = <Req extends FastifyRequest = FastifyRequest>(
+  functionToBeHandled: (req: Req, rep: FastifyReply) => Promise<void> | void,
+): ((req: Req, rep: FastifyReply) => Promise<void>) => {
+  return async (req: Req, rep: FastifyReply) => {
     try {
       await functionToBeHandled(req, rep);
     } catch (err) {
@@ -41,6 +46,17 @@ const asyncErrHandler = (
   };
 };
 
-const isEmptyString = (str: string): string | null => (!str || !str.trim().length ? null : str);
+const isEmptyString = (str: string | undefined): string | null =>
+  !str || !str.trim().length ? null : str;
 
-export { asyncErrHandler, getShortUrlId, shortIdUniqueConstraintErrHandler, isEmptyString };
+/** Reads `.message` off a thrown value without assuming it is an Error. */
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+export {
+  asyncErrHandler,
+  getShortUrlId,
+  shortIdUniqueConstraintErrHandler,
+  isEmptyString,
+  errorMessage,
+};

@@ -235,7 +235,7 @@ describe("reading templates from our own database", () => {
 
     const result = await getDbTemplate(TEMPLATE_ID);
 
-    expect(result.orgId).toBe(ORG_B);
+    expect(result!.orgId).toBe(ORG_B);
     expect(db.findUnique.mock.calls[0][0]).toEqual({ where: { id: TEMPLATE_ID } });
   });
 
@@ -283,7 +283,7 @@ describe("createTemplate", () => {
   test("refuses when the org has no WhatsApp settings", async () => {
     getWaSettingsMock.mockResolvedValue(null);
 
-    await expect(createTemplate(ORG_A, {})).rejects.toThrow(
+    await expect(createTemplate(ORG_A, { name: "order_update" })).rejects.toThrow(
       "No WhatsApp settings found for orgId " + ORG_A,
     );
   });
@@ -296,7 +296,9 @@ describe("createTemplate", () => {
   test("replaces Meta's reason with a generic message on a non-200 success", async () => {
     callMetaApiMock.mockResolvedValue({ status: 201, data: { error: "name already exists" } });
 
-    await expect(createTemplate(ORG_A, {})).rejects.toThrow("Error creating template in whatsapp");
+    await expect(createTemplate(ORG_A, { name: "order_update" })).rejects.toThrow(
+      "Error creating template in whatsapp",
+    );
   });
 });
 
@@ -307,7 +309,7 @@ describe("saving and deleting templates in our database", () => {
       ORG_A,
       { image: { link: "k" } },
       TemplateType.LOYALTY,
-      { price: 1 },
+      { price: 1, name: "item", tax: 0 },
       "phone-1",
     );
 
@@ -317,7 +319,7 @@ describe("saving and deleting templates in our database", () => {
       orgId: ORG_A,
       defaultValues: { image: { link: "k" } },
       templateType: TemplateType.LOYALTY,
-      config: { price: 1 },
+      config: { price: 1, name: "item", tax: 0 },
       whatsappSettingsPhoneId: "phone-1",
     });
   });
@@ -437,17 +439,15 @@ describe("updateTemplate", () => {
     expect(db.update.mock.calls[0][0].data.data.components).toEqual([{ type: "body", text: "hi" }]);
   });
 
-  // NOTE: pins current behaviour. getDbTemplate returns null for an id that matches
-  // nothing, and the approved-template branch reads template.orgId straight after
-  // with no guard. updateTemplateHandler checks for null first, so this only bites
-  // callers that do not — but the function is exported and has no guard of its own.
-  // See issues.txt 14.5.
-  test("throws rather than reporting nothing for a template that does not exist", async () => {
+  // NOTE: getDbTemplate returns null for an id that matches nothing. The
+  // GENERAL_NOTIFICATION/LOYALTY branch reads template.orgId right after, so it now
+  // throws a descriptive error instead of crashing with a raw TypeError.
+  test("throws a clear error instead of crashing for a template that does not exist", async () => {
     db.findUnique.mockResolvedValue(null);
 
     await expect(
       updateTemplate(TEMPLATE_ID, { templateType: TemplateType.GENERAL_NOTIFICATION } as any),
-    ).rejects.toThrow(TypeError);
+    ).rejects.toThrow(`Template not found for id ${TEMPLATE_ID}`);
   });
 
   // NOTE: the local-only branches never read the template they loaded, so an id
@@ -602,22 +602,28 @@ describe("getUnregisteredTemplates and registerTemplatesInDb", () => {
   // templateType nor whatsappSettingsPhoneId, unlike saveTemplate.
   // See issues.txt 14.6.
   test("stores nothing usable when handed a raw Meta template", async () => {
-    await registerTemplatesInDb([{ id: "wa-tpl-9", name: "n", components: [] }], ORG_A);
+    await registerTemplatesInDb(
+      // Deliberately the raw Meta shape, not the { data } wrapper the function
+      // expects — that mismatch is the behaviour this test pins.
+      [{ id: "wa-tpl-9", name: "n", components: [] }] as unknown as Parameters<
+        typeof registerTemplatesInDb
+      >[0],
+      ORG_A,
+    );
 
     expect(db.createMany.mock.calls[0][0].data).toEqual([
       { orgId: ORG_A, acceptButton: undefined, data: undefined },
     ]);
   });
 
-  // NOTE: the button count is read as `.buttons.length` off whatever component
-  // matched, with no guard, so a buttons component Meta returned without a buttons
-  // array throws out of the listing. See issues.txt 14.6.
-  test("throws on a buttons component that carries no buttons array", async () => {
+  // A buttons component Meta returned without a buttons array used to throw a
+  // raw TypeError out of the listing; it is now simply not a candidate.
+  test("skips a buttons component that carries no buttons array", async () => {
     callMetaApiMock.mockResolvedValue({
       data: { data: [{ id: "wa-tpl-9", components: [{ type: "BUTTONS" }] }] },
     });
 
-    await expect(getUnregisteredTemplates(ORG_A)).rejects.toThrow(TypeError);
+    await expect(getUnregisteredTemplates(ORG_A)).resolves.toEqual([]);
   });
 });
 

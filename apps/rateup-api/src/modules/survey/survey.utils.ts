@@ -1,6 +1,7 @@
 import { QuestionType, SurveyType, SurveyVariableType } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
 import { createSurveyVariable, getSurveyById } from "./survey.service.js";
+import { surveyVariableInput } from "./survey.schema.js";
 
 export function isShortId(id: string) {
   return id.length === 8;
@@ -15,7 +16,7 @@ export async function getSurveysOrgId(surveyId: string) {
       team: true,
     },
   });
-  return surveyTeamMap.team.orgId;
+  return surveyTeamMap!.team.orgId;
 }
 
 export async function getSurveyTeamMapIdFromShortId(shortId: string) {
@@ -31,11 +32,16 @@ export async function getSurveyTeamMapIdFromShortId(shortId: string) {
   return res?.id;
 }
 
-export async function createSurveyDefaultVariableForQuestion(surveyId, question, position) {
+export async function createSurveyDefaultVariableForQuestion(
+  surveyId: string,
+  // Only the question's id and type are read here.
+  question: Pick<Question, "id" | "type"> | undefined,
+  position: number,
+) {
   const survey = await getSurveyById(surveyId);
   if (survey.type !== SurveyType.Web) return;
-  const variables = [];
-  let variable = null;
+  const variables: surveyVariableInput[] = [];
+  let variable: surveyVariableInput | null = null;
   switch (question?.type) {
     case QuestionType.Contact:
       variables.push({

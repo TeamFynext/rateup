@@ -9,7 +9,7 @@ export function arrayEquals(a: Array<string>, b: Array<string>) {
  * @param str
  * @returns Array<string>
  */
-export function parseArrayString(str: string): Array<string> {
+export function parseArrayString(str: string | undefined): Array<string> {
   if (!str) return [];
   return str.split(",").map((s) => s.trim());
 }

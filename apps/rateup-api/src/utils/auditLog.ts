@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "./prisma.js";
 
-const actionMap = {
+const actionMap: Record<string, string> = {
   POST: "Create",
   PUT: "Update",
   PATCH: "Update",

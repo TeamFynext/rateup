@@ -178,17 +178,21 @@ describe("updateInstagramAutomatedReply", () => {
     });
   });
 
-  // The API calls it isActive; the column is isEnabled.
-  test("maps isActive onto the stored isEnabled flag", async () => {
+  // NOTE: WaAutomatedReply has no isEnabled/sendOnceIn24Hours columns, so - like
+  // creation - the update call drops both rather than sending Prisma an update payload
+  // with fields it doesn't recognize.
+  test("drops isActive on update, same as creation", async () => {
     await updateInstagramAutomatedReply("ig-auto-1", { isActive: false });
 
-    expect(db.waAutomatedReply.update.mock.calls[0][0].data.isEnabled).toBe(false);
+    const data = db.waAutomatedReply.update.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty("isEnabled");
   });
 
-  test("carries the once-a-day setting through, unlike creation", async () => {
+  test("drops sendOnceIn24Hours on update, same as creation", async () => {
     await updateInstagramAutomatedReply("ig-auto-1", { sendOnceIn24Hours: true });
 
-    expect(db.waAutomatedReply.update.mock.calls[0][0].data.sendOnceIn24Hours).toBe(true);
+    const data = db.waAutomatedReply.update.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty("sendOnceIn24Hours");
   });
 
   test("leaves unmentioned fields undefined so Prisma skips them", async () => {

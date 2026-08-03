@@ -436,21 +436,29 @@ describe("verifyApiAccessTokenHook", () => {
     orgById.mockRejectedValueOnce(new Error("invalid uuid"));
     const rep = reply();
 
+    // No authorization header is given, so after the 404 fall-through the second
+    // reply is now the specific 400 "no bearer token" (see the fixed test above),
+    // not the generic 401 the old `.startsWith` crash used to produce.
     await verifyApiAccessTokenHook(hookReq({ params: { orgId: "not-a-uuid" } }), rep);
 
     expect(rep.send).toHaveBeenCalledTimes(2);
-    expect(rep.code.mock.calls.map((c) => c[0])).toEqual([404, 401]);
+    expect(rep.code.mock.calls.map((c: unknown[]) => c[0])).toEqual([404, 400]);
   });
 
-  test("a missing Authorization header answers a generic 401, never the 400", async () => {
-    // The 400 branch is unreachable when the header is absent: `authHeader`
-    // is undefined and .startsWith throws into the outer catch.
+  // Fixed as part of the strict-mode migration: a missing `authorization` header
+  // used to throw `.startsWith` on `undefined` into the outer catch, answering a
+  // generic 401 instead of the specific "no bearer token" 400 given to every other
+  // malformed-header case. Now guarded the same way as the non-bearer case below.
+  test("a missing Authorization header answers the same 400 as a non-bearer header", async () => {
     const rep = reply();
 
     await verifyApiAccessTokenHook(hookReq({ params: { orgId: ORG } }), rep);
 
-    expect(rep.code).toHaveBeenCalledWith(401);
-    expect(rep.send).toHaveBeenCalledWith({ message: "Not authorized" });
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(rep.send).toHaveBeenCalledWith({
+      message: "Invalid request",
+      error: "No bearer token found in headers",
+    });
   });
 
   test("a non-bearer Authorization header answers 400", async () => {

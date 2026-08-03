@@ -4,28 +4,23 @@ import baseRedis from "../utils/redisConnection.js";
 import {
   handleWebhook,
   processShopifySurveySchedule,
+  ShopifyWebhookJobData,
 } from "../modules/integrations/shopify/shopify.service.js";
 import { ShopifyEvents } from "../types/enums.js";
 
 const workerConnection = baseRedis.duplicate();
 
-interface WebhookJobData {
-  topic: string;
-  webhookId: string;
-  body: any;
-  shop: string;
-}
-
 export const shopifyWebhookWorker = new Worker(
   "webhookQueue",
-  async (job: Job<WebhookJobData>) => {
+  async (job: Job<ShopifyWebhookJobData>) => {
     const webhook = job.data;
     log.info(`Processing webhook job ${job.id} for topic: ${webhook.topic}`);
 
     try {
       await handleWebhook(webhook);
     } catch (error) {
-      log.error({ error }, `Error processing webhook ${webhook.webhookId}: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      log.error({ error }, `Error processing webhook ${webhook.webhookId}: ${message}`);
       throw error; // Trigger a BullMQ retry
     }
   },
@@ -69,10 +64,8 @@ export const shopifySurveyWorker = new Worker(
     try {
       await processShopifySurveySchedule(surveyData);
     } catch (error) {
-      log.error(
-        { error },
-        `Error processing survey schedule ${surveyData.scheduleId}: ${error.message}`,
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      log.error({ error }, `Error processing survey schedule ${surveyData.scheduleId}: ${message}`);
       throw error; // Trigger a BullMQ retry if failure is unexpected
     }
   },

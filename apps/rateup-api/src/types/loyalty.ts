@@ -3,6 +3,12 @@
  * Complete type definitions for the loyalty program system
  */
 
+import type {
+  CustomerLoyaltyAccount,
+  LoyaltyEarningRule,
+  LoyaltyReward,
+} from "../../generated/prisma/client.js";
+
 // ============================================================================
 // ENUMS
 // ============================================================================
@@ -241,14 +247,14 @@ export interface LoyaltyTransactionMetadata {
   location_id?: string;
   payment_method?: string;
   channel?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LoyaltyRedemptionContext {
   purchase_amount?: number;
   order_id?: string;
   location_id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // ============================================================================
@@ -464,8 +470,8 @@ export interface ApplyRedemptionResponse {
 export interface RedemptionValidationResult {
   valid: boolean;
   violations: string[];
-  reward: any;
-  customer: any;
+  reward: LoyaltyReward | null;
+  customer: CustomerLoyaltyAccount | null;
 }
 
 // ============================================================================
@@ -480,7 +486,7 @@ export interface EarningContext {
   payment_method?: string;
   customer_type?: "new" | "returning" | "first_purchase_only";
   channel?: "online" | "in_store" | "mobile_app";
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // ============================================================================
@@ -489,7 +495,7 @@ export interface EarningContext {
 
 export interface PointsCalculationResult {
   points: number;
-  rule: any;
+  rule: LoyaltyEarningRule | null;
   calculation: PointsCalculation;
 }
 

@@ -30,10 +30,10 @@ function handleError(reply: FastifyReply, error: unknown) {
 }
 
 const wrap =
-  <TReq extends FastifyRequest>(fn: (req: TReq, orgId: string) => Promise<any>) =>
+  <TReq extends FastifyRequest>(fn: (req: TReq, orgId: string) => Promise<unknown>) =>
   async (req: TReq, reply: FastifyReply) => {
     try {
-      const { orgId } = (req as any).user;
+      const { orgId } = req.user;
       const data = await fn(req, orgId);
       return reply.code(200).send(data ?? {});
     } catch (error) {
@@ -137,8 +137,8 @@ export async function uploadFileHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = (req as any).user;
-    const file = await (req as any).file();
+    const { orgId } = req.user;
+    const file = await req.file();
     if (!file) {
       return reply.code(400).send({ message: "No file provided" });
     }
@@ -261,7 +261,10 @@ export const syncConnectorsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSet
 );
 
 // ---- connector tools ----
-type ConnectorToolParams = { whatsappSettingsId: string; connectorId: string };
+interface ConnectorToolParams {
+  whatsappSettingsId: string;
+  connectorId: string;
+}
 type ConnectorToolIdParams = ConnectorToolParams & { toolId: string };
 
 export const listConnectorToolsHandler = wrap<FastifyRequest<{ Params: ConnectorToolParams }>>(
@@ -292,7 +295,7 @@ export const deleteConnectorToolHandler = wrap<FastifyRequest<{ Params: Connecto
 );
 
 export const runConnectorToolHandler = wrap<
-  FastifyRequest<{ Params: ConnectorToolIdParams; Body: { input?: Record<string, any> } }>
+  FastifyRequest<{ Params: ConnectorToolIdParams; Body: { input?: Record<string, unknown> } }>
 >((req, orgId) =>
   service.runConnectorTool(
     orgId,

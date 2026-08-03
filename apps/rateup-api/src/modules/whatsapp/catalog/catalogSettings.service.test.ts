@@ -61,7 +61,18 @@ const db = prisma as unknown as {
   whatsappCatalog: { findUnique: Mock; update: Mock };
 };
 
-const CATALOG_SETTINGS = {
+const CATALOG_SETTINGS: {
+  catalogId: string;
+  orgId: string;
+  storeType: string;
+  paymentMethod: string;
+  collectAddress: boolean;
+  collectDelivery: boolean;
+  addressFlowId: string | null;
+  addressFlowStatus: CatalogAddressFlowStatus;
+  addressFlowFields: unknown;
+  deliveryOptions: unknown;
+} = {
   catalogId: "cat-1",
   orgId: "org-1",
   storeType: "NATIVE",

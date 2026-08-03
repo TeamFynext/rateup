@@ -12,6 +12,8 @@ import {
   programIdParamSchema,
   loyaltyProgramUpdateSchema,
   deleteProgramQuerySchema,
+  ProgramIdParam,
+  DeleteProgramQuery,
 } from "./program.schema.js";
 import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
 
@@ -52,7 +54,7 @@ export async function loyaltyProgramRoutes(server: FastifyInstance) {
     updateLoyaltyProgramHandler,
   );
 
-  server.delete(
+  server.delete<{ Params: ProgramIdParam; Querystring: DeleteProgramQuery }>(
     "/:programId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],

@@ -7,17 +7,23 @@ import {
   YNResponse,
 } from "../types/enums.js";
 
-export const LDResponseMap = { 1: LDResponse.Like, 2: LDResponse.Dislike };
-export const YNResponseMap = { 1: YNResponse.Yes, 2: YNResponse.No };
+export const LDResponseMap: Record<number, LDResponse | undefined> = {
+  1: LDResponse.Like,
+  2: LDResponse.Dislike,
+};
+export const YNResponseMap: Record<number, YNResponse | undefined> = {
+  1: YNResponse.Yes,
+  2: YNResponse.No,
+};
 
-export const SmileyResponseMap = {
+export const SmileyResponseMap: Record<number, SmileyResponse | undefined> = {
   1: SmileyResponse.VerySad,
   2: SmileyResponse.Sad,
   3: SmileyResponse.Neutral,
   4: SmileyResponse.Happy,
   5: SmileyResponse.VeryHappy,
 };
-export const RatingScaleMap = {
+export const RatingScaleMap: Record<number, RatingScale | undefined> = {
   1: RatingScale.VeryPoor,
   2: RatingScale.Poor,
   3: RatingScale.Average,

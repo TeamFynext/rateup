@@ -4,7 +4,7 @@ import { handleFacebookWebhook } from "./facebook.service.js";
 
 export async function facebookWebhookEventHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const body = request.body as any;
+    const body = request.body as FacebookWebhookBody;
 
     log.trace("[Facebook] Received webhook event => %o", body);
 
@@ -22,7 +22,7 @@ export async function facebookWebhookEventHandler(request: FastifyRequest, reply
     const data = body as FacebookWebhookBody;
     await handleFacebookWebhook(data);
   } catch (e) {
-    log.error("[Facebook] Error in webhook event handler: %o", e);
+    log.error({ err: e }, "[Facebook] Error in webhook event handler");
     if (!reply.sent) {
       reply.code(500).send();
     }

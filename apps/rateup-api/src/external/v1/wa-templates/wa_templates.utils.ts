@@ -15,8 +15,7 @@ import { parseStringWithVariables } from "../../../utils/template.js";
 import { CreateWaTemplateFormattedInput, CreateWaTemplateInput } from "./wa_templates.schema.js";
 
 export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplateFormattedInput {
-  // TODO: remove 'any' type
-  let components: any = [];
+  let components: CreateWaTemplateFormattedInput["components"] = [];
   if (parseStringWithVariables(input.body)?.length > 0) {
     components.push({
       type: WaTemplateComponentType.BODY,
@@ -32,7 +31,7 @@ export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplate
     });
   }
 
-  if (input.buttons?.length > 0) {
+  if (input.buttons && input.buttons.length > 0) {
     components.push({
       type: WaTemplateComponentType.BUTTONS,
       buttons: input.buttons,
@@ -54,7 +53,7 @@ export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplate
     } else {
       components.push({
         type: WaTemplateComponentType.HEADER,
-        format: input.format,
+        format: input.format as WaTemplateSupportedFormats,
         example: {
           header_handle: [input.header],
         },
@@ -77,7 +76,23 @@ export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplate
 
 export const waAllowedMimeTypes = ["image/jpeg", "image/png", "video/mp4", "application/pdf"];
 
-export function getTemplateInMessageFormat(messageBody: WaSendMessageBody, parameterData: any) {
+/**
+ * The pre-conversion message body: `template` still holds the shape Meta returns when a
+ * template is READ BACK (uppercase component types, `language` as a bare code string).
+ * This function rewrites it into the send shape.
+ */
+interface FetchedTemplateMessageBody extends Omit<WaSendMessageBody, "template"> {
+  template?: {
+    name: string;
+    language: string;
+    components?: WaTemplateFetchComponents[];
+  };
+}
+
+export function getTemplateInMessageFormat(
+  messageBody: FetchedTemplateMessageBody,
+  parameterData: WaTemplateParameterData | null,
+) {
   function getHeaderObject(header: WaTemplateFetchComponents) {
     const commonHeader = {
       type: "header",
@@ -126,7 +141,7 @@ export function getTemplateInMessageFormat(messageBody: WaSendMessageBody, param
   }
 
   function getButtonObject(buttons: WaTemplateFetchComponents["buttons"]) {
-    return buttons.map((button, i) => ({
+    return (buttons ?? []).map((button, i) => ({
       type: "button",
       sub_type: "quick_reply",
       index: i.toString(),
@@ -140,7 +155,7 @@ export function getTemplateInMessageFormat(messageBody: WaSendMessageBody, param
       language: {
         code: messageBody?.template?.language,
       },
-      components: messageBody?.template?.components
+      components: (messageBody?.template?.components ?? [])
         .map((component) => {
           switch (component.type) {
             case WaTemplateComponentTypeUpperCase.HEADER:
@@ -158,7 +173,11 @@ export function getTemplateInMessageFormat(messageBody: WaSendMessageBody, param
   };
 }
 
-export async function getTemplateQuery(templateId: string, orgId: string, paramerterData: any) {
+export async function getTemplateQuery(
+  templateId: string,
+  orgId: string,
+  paramerterData: WaTemplateParameterData | null,
+) {
   const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
   const { data } = dbTemplate;
   const commonQuery = {
@@ -212,7 +231,7 @@ export function getFlowIdFromTemplateComponents(
 ): string | undefined {
   const flowId = components
     .find((c) => c.type.toLocaleLowerCase() === WaTemplateComponentType.BUTTONS)
-    ?.buttons.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
+    ?.buttons?.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
     ?.flow_id?.toString();
 
   return flowId;

@@ -10,6 +10,7 @@ import {
   updatePageVisitOrLinkClickInDB,
 } from "./linktree.service.js";
 import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
+import { CreateLinktreeReqBody } from "./linktree.schema.js";
 
 async function getLinktrees(req: FastifyRequest, rep: FastifyReply) {
   const allLinktreesArray = await getAllLinktreesFromDB(req);
@@ -36,8 +37,11 @@ async function getPublicLinktreeWithShortId(
   rep.code(200).send(linktreeWithShortUrlId);
 }
 
-async function createLinktree(req: FastifyRequest, rep: FastifyReply) {
-  const newLinktree = await shortIdUniqueConstraintErrHandler(createLinktreeInDB, req);
+async function createLinktree(
+  req: FastifyRequest<{ Body: CreateLinktreeReqBody }>,
+  rep: FastifyReply,
+) {
+  const newLinktree = await shortIdUniqueConstraintErrHandler(() => createLinktreeInDB(req));
   rep.code(201).send(newLinktree);
 }
 

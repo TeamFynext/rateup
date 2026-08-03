@@ -58,7 +58,14 @@ function answer(rep: any) {
   return { code: rep.code.mock.calls[0]?.[0], body: rep.send.mock.calls[0]?.[0] };
 }
 
-const OVERVIEW = {
+const OVERVIEW: {
+  totalSales: number;
+  paidSales: number;
+  orderCount: number;
+  avgOrderValue: number;
+  productsLive: number;
+  delta: { totalSales: number; orderCount: number; avgOrderValue: number | null };
+} = {
   totalSales: 1000,
   paidSales: 800,
   orderCount: 4,

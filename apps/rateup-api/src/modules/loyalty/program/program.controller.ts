@@ -11,6 +11,7 @@ import {
   LoyaltyProgramInput,
   LoyaltyProgramUpdateInput,
   ProgramIdParam,
+  DeleteProgramQuery,
 } from "./program.schema.js";
 
 export async function createLoyaltyProgramHandler(
@@ -22,7 +23,7 @@ export async function createLoyaltyProgramHandler(
     reply.code(201).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -35,7 +36,7 @@ export async function getLoyaltyProgramHandler(request: FastifyRequest, reply: F
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -51,14 +52,14 @@ export async function updateLoyaltyProgramHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
 export async function deleteLoyaltyProgramHandler(
   request: FastifyRequest<{
     Params: ProgramIdParam;
-    Querystring: { force?: boolean };
+    Querystring: DeleteProgramQuery;
   }>,
   reply: FastifyReply,
 ) {
@@ -68,7 +69,7 @@ export async function deleteLoyaltyProgramHandler(
     reply.code(204).send();
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -81,6 +82,6 @@ export async function resetProgramPointsHandler(
     reply.code(200).send({ message: "Points reset successfully" });
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }

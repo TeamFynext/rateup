@@ -17,8 +17,8 @@ export async function verifyAccess(
     return;
   const surveyId = request.params.surveyId
     ? request.params.surveyId
-    : await getSurveyIdfromMap(request.params.surveyTeamMapId);
-  const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
+    : await getSurveyIdfromMap(request.params.surveyTeamMapId!);
+  const hasAccess = await hasAccessToSurvey(surveyId!, request.userId);
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this survey" });

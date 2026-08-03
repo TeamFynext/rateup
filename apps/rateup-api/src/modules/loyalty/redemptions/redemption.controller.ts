@@ -31,11 +31,15 @@ export async function redeemRewardHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    if (e.code === "P2002") {
+    // Intentionally broad: any error-like object with a P2002 "code" is reported as an
+    // already-redeemed reward, not just real PrismaClientKnownRequestError instances —
+    // see the redemption controller test suite for why (unique-constraint collisions on
+    // any of the three unique columns this path writes should read the same way to the user).
+    if (typeof e === "object" && e !== null && "code" in e && e.code === "P2002") {
       reply.code(400).send({ error: "Reward already redeemed" });
       return;
     }
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -48,7 +52,7 @@ export async function verifyRedemptionHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -61,7 +65,7 @@ export async function applyRedemptionHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -74,7 +78,7 @@ export async function getRedemptionsByCustomerHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -212,6 +216,6 @@ export async function getTransactionsHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ error: e.message });
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }

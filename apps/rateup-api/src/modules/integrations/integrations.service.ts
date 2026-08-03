@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import { IntegratedApps } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
+import type { Integration as PrismaIntegration } from "../../../generated/prisma/client.js";
 import { callWaAmeliaApi } from "./integration_axios.js";
 import {
   IntegrationSchema,
@@ -15,6 +16,40 @@ import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
 import axios from "axios";
+
+// Shape of a single entry in Meta's payment_configurations API responses (both the
+// list endpoint and the by-name/oauth-regeneration endpoints reuse this same shape).
+interface WaPaymentConfigurationItem {
+  configuration_name: string;
+  oauth_url?: string;
+  expiration?: string;
+  [key: string]: unknown;
+}
+
+interface WaPaymentConfigurationGroup {
+  payment_configurations: WaPaymentConfigurationItem[];
+}
+
+/**
+ * The waPayment integration row, whose `credential` column holds the list of Meta payment
+ * configurations rather than an OAuth blob like the other providers.
+ */
+type WaPaymentIntegration = Omit<PrismaIntegration, "credential"> & {
+  credential: WaPaymentConfigurationItem[] | null;
+};
+
+/** Reads the waPayment row's credential at the single DB boundary. */
+function asWaPaymentIntegration(
+  integration: PrismaIntegration | null,
+): WaPaymentIntegration | null {
+  return integration as WaPaymentIntegration | null;
+}
+
+// Raw envelope returned by Meta's payment_configurations list endpoint (as opposed to
+// the DB row returned when getWaPaymentConfigurations persists the result instead).
+interface WaPaymentConfigurationsRawResponse {
+  data?: WaPaymentConfigurationGroup[];
+}
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
@@ -40,11 +75,21 @@ export async function getAllIntegrations() {
   return await prisma.integration.findMany();
 }
 
-export const getWaPaymentConfigurations = async (
+export function getWaPaymentConfigurations(
+  orgId: string,
+  noDbSave: true,
+  whatsappSettingsId?: string,
+): Promise<WaPaymentConfigurationsRawResponse>;
+export function getWaPaymentConfigurations(
+  orgId: string,
+  noDbSave?: false,
+  whatsappSettingsId?: string,
+): Promise<Awaited<ReturnType<typeof prisma.integration.upsert>>>;
+export async function getWaPaymentConfigurations(
   orgId: string,
   noDbSave = false,
   whatsappSettingsId?: string,
-) => {
+) {
   // If a specific WA account is requested, use it. Otherwise fall back to the first account.
   const waSettings = whatsappSettingsId
     ? await getWaSettingsById(whatsappSettingsId)
@@ -65,9 +110,11 @@ export const getWaPaymentConfigurations = async (
   }
   if (noDbSave) return res?.data;
 
-  const filteredConfigurations =
-    res?.data?.data?.flatMap((item) => item?.payment_configurations) || [];
-  const waPayment: any = await getIntegrationByName(orgId, IntegratedApps.waPayment);
+  const responseGroups: WaPaymentConfigurationGroup[] = res?.data?.data ?? [];
+  const filteredConfigurations = responseGroups.flatMap((item) => item?.payment_configurations);
+  const waPayment = asWaPaymentIntegration(
+    await getIntegrationByName(orgId, IntegratedApps.waPayment),
+  );
   const mapedData = filteredConfigurations.map((itemA) => {
     const matchingItemB = waPayment?.credential?.find(
       (itemB) => itemB.configuration_name === itemA.configuration_name,
@@ -97,10 +144,13 @@ export const getWaPaymentConfigurations = async (
     },
   });
   return data;
-};
+}
 
 export const getWaPaymentConfigByName = async (orgId: string, name: string) => {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("WhatsApp settings not found");
+  }
   const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configuration/${name}`,
     "GET",
@@ -135,16 +185,21 @@ export const getWaPaymentConfigByName = async (orgId: string, name: string) => {
 };
 
 export const getRegenerateWaPaymentConfigOauth = async (orgId: string, name: string) => {
-  const data: any = await prisma.integration.findUnique({
-    where: {
-      orgid_integration_name_unique: {
-        orgId,
-        name: IntegratedApps.waPayment,
+  const data = asWaPaymentIntegration(
+    await prisma.integration.findUnique({
+      where: {
+        orgid_integration_name_unique: {
+          orgId,
+          name: IntegratedApps.waPayment,
+        },
       },
-    },
-  });
+    }),
+  );
   if (!data) throw new Error("No integration found");
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("WhatsApp settings not found");
+  }
   const res = await callMetaApi(
     `/${waSettings.wabaId}/generate_payment_configuration_oauth_link`,
     "POST",
@@ -155,7 +210,10 @@ export const getRegenerateWaPaymentConfigOauth = async (orgId: string, name: str
   );
 
   if (res.status === 200) {
-    const formatedData = data.credential.find((item) => item.configuration_name === name);
+    const formatedData = data?.credential?.find((item) => item.configuration_name === name);
+    if (!formatedData) {
+      throw new Error(`WhatsApp payment configuration "${name}" not found for org ${orgId}`);
+    }
     formatedData.oauth_url = res.data?.oauth_url;
     formatedData.expiration = res.data?.expiration;
 
@@ -167,7 +225,7 @@ export const getRegenerateWaPaymentConfigOauth = async (orgId: string, name: str
         },
       },
       data: {
-        credential: data.credential,
+        credential: data?.credential ?? [],
       },
     });
     return true;
@@ -179,6 +237,9 @@ export const getRegenerateWaPaymentConfigOauth = async (orgId: string, name: str
 
 export const createWaPaymentConfigurations = async (orgId: string, body: WaPaymentCreateSchema) => {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("WhatsApp settings not found");
+  }
 
   const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configuration`,
@@ -226,16 +287,21 @@ export const createWaPaymentConfigurations = async (orgId: string, body: WaPayme
 };
 
 export const deleteWaPaymentConfiguration = async (orgId: string, name: string) => {
-  const wa_payment_configuration: any = await prisma.integration.findUnique({
-    where: {
-      orgid_integration_name_unique: {
-        orgId,
-        name: IntegratedApps.waPayment,
+  const wa_payment_configuration = asWaPaymentIntegration(
+    await prisma.integration.findUnique({
+      where: {
+        orgid_integration_name_unique: {
+          orgId,
+          name: IntegratedApps.waPayment,
+        },
       },
-    },
-  });
+    }),
+  );
   if (!wa_payment_configuration) throw new Error("No Configurations Found");
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("WhatsApp settings not found");
+  }
   const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configuration`,
     "DELETE",
@@ -279,6 +345,9 @@ export const updateIntegrationByName = async (
 ) => {
   let apikey;
   if (name === IntegratedApps.zapier && data.updateKey) {
+    if (!data.credential) {
+      throw new Error("Missing credential to regenerate the zapier access token");
+    }
     const { key, hash } = await generateApiKey();
     data.credential.accessToken = hash;
     apikey = key;
@@ -316,7 +385,7 @@ interface AmeliaApiRequest {
   acessToken: string;
   serviceId?: number;
   persons?: number;
-  extras?: any[];
+  extras?: Array<string | number>;
 }
 
 export const getWaAmeliaTimeSlot = async ({
@@ -363,7 +432,7 @@ export async function getGoogleAuthUrl() {
   });
 }
 
-export async function removeSurveySpreadSheetSheetId(orgId) {
+export async function removeSurveySpreadSheetSheetId(orgId: string) {
   await prisma.survey.updateMany({
     where: {
       orgId,
@@ -374,7 +443,7 @@ export async function removeSurveySpreadSheetSheetId(orgId) {
   });
 }
 
-export async function getIntegrationByPetPoojaRestaurantId(restaurantId) {
+export async function getIntegrationByPetPoojaRestaurantId(restaurantId: string) {
   return (await prisma.integration.findFirst({
     where: {
       credential: {
@@ -411,7 +480,10 @@ export async function sendPetpoojaWaTemplateCronAction() {
     if (!history.length) return;
 
     const schedules = history.filter(
-      (hist) => hist.status === "SCHEDULED" && new Date(hist.scheduledAt) <= fiveMinutesLater,
+      (hist) =>
+        hist.status === "SCHEDULED" &&
+        hist.scheduledAt !== undefined &&
+        new Date(hist.scheduledAt) <= fiveMinutesLater,
     );
 
     if (!schedules.length) return;
@@ -425,7 +497,11 @@ export async function sendPetpoojaWaTemplateCronAction() {
         schedule.name,
       );
       const integration = integrations.find((integration) => integration.orgId === schedule.orgId);
-      const newHistory = [...integration.credential.history];
+      if (!integration) {
+        log.error("Petpooja integration not found for org %s", schedule.orgId);
+        continue;
+      }
+      const newHistory = [...(integration.credential.history ?? [])];
       newHistory.forEach((hist) => {
         if (hist.id === schedule.id)
           hist.status = res ? (res.status ? "SENT" : `FAILED: ${res?.message}`) : "FAILED";
@@ -439,7 +515,10 @@ export async function sendPetpoojaWaTemplateCronAction() {
   }
 }
 
-export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
+export async function sendWaTemplateOnPetpoojaOrder(
+  integration: petPoojaIntegration,
+  customer: { name: string; phone: string },
+) {
   const { waTemplateId, teamId, timeDelay } = integration.credential.orderEvent;
   const history = integration.credential.history ?? [];
   const existingIds = history.map((hist) => hist.id);
@@ -475,7 +554,7 @@ export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
 
 export async function deleteZapierTriggerHooks(
   data: ZapierIntegration["credential"]["triggerSubscriptions"][0],
-  orgId,
+  orgId: string,
 ) {
   if (data.active) {
     await axios.delete(data.hookUrl);

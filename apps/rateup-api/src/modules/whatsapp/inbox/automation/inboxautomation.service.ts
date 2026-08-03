@@ -3,6 +3,7 @@ import { UpdateInboxAutomationInput } from "./inboxautomation.schema.js";
 import { InboxAutomationCondition } from "../../../../../generated/prisma/client.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
+import type { Prisma } from "../../../../../generated/prisma/client.js";
 
 export async function enableInboxAutomation(orgId: string, condition: InboxAutomationCondition) {
   const existing = await prisma.inboxAutomation.findFirst({
@@ -55,7 +56,11 @@ export async function updateInboxAutomation(
     where: { orgId, condition },
   });
 
-  const updateData: any = {};
+  // Shared by the create and the update below, so it holds only the plain columns.
+  const updateData: Pick<
+    Prisma.InboxAutomationUncheckedCreateInput,
+    "active" | "action" | "closeAfterHours"
+  > = {};
   if (data.active !== undefined) updateData.active = data.active;
   if (data.action !== undefined) updateData.action = data.action;
   if (data.closeAfterHours !== undefined) {

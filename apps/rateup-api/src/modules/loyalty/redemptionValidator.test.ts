@@ -25,8 +25,18 @@ const db = prisma as unknown as {
 const CUSTOMER = "cust-1";
 const REWARD = "rwd-1";
 
+interface RewardFixture {
+  id: string;
+  name: string;
+  rewardType: string;
+  pointsCost: number;
+  stockQuantity: number | null;
+  stockRedeemed: number;
+  redemptionRules: Record<string, unknown>;
+}
+
 function reward(over: Record<string, unknown> = {}) {
-  return {
+  const base: RewardFixture = {
     id: REWARD,
     name: "Free coffee",
     rewardType: "coupon",
@@ -34,8 +44,8 @@ function reward(over: Record<string, unknown> = {}) {
     stockQuantity: null,
     stockRedeemed: 0,
     redemptionRules: {},
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 function customer(over: Record<string, unknown> = {}) {

@@ -244,14 +244,16 @@ describe("getBoardById", () => {
   });
 
   test("gives a card with no labels an empty array", async () => {
+    // The query always runs with `include: { labels: ... }`, so a card with no labels
+    // comes back with an empty join list rather than the key missing.
     db.ticketBoard.findUnique.mockResolvedValueOnce({
       id: BOARD,
-      ticketColumns: [{ id: "col-1", ticketCards: [{ id: "card-1" }] }],
+      ticketColumns: [{ id: "col-1", ticketCards: [{ id: "card-1", labels: [] }] }],
     });
 
     const board = await getBoardById(BOARD);
 
-    expect((board as any).ticketColumns[0].ticketCards[0].labels).toEqual([]);
+    expect(board?.ticketColumns[0].ticketCards[0].labels).toEqual([]);
   });
 
   test("returns null untouched for a board that does not exist", async () => {

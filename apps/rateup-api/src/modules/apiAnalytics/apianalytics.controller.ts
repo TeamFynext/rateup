@@ -24,7 +24,7 @@ export async function getApiAnalyticsHandler(
     const res = await getWaMessageOverviewByTeamAndOrg(teamId, orgId, dateRange, apiType);
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching api analytics :%o", e);
+    log.error({ err: e }, "Error fetching api analytics");
     reply.status(500).send({
       error: "An error occurred while fetching the api analytics.",
     });
@@ -56,7 +56,7 @@ export async function getDeliveredFailedTrendHandler(
       weekTrend,
     });
   } catch (e) {
-    log.error("Error fetching message trend: %o", e);
+    log.error({ err: e }, "Error fetching message trend");
     reply.status(500).send({
       error: "An error occurred while fetching the message trend.",
     });
@@ -85,7 +85,7 @@ export async function getTemplateCategoryHandler(
       templatePerformance,
     });
   } catch (e) {
-    log.error("Error fetching template analytics :%o", e);
+    log.error({ err: e }, "Error fetching template analytics");
     reply.status(500).send({
       error: "An error occurred while fetching the template analytics.",
     });
@@ -105,7 +105,7 @@ export async function getTeamPerformanceStatsHandler(
     const res = await getTeamPerformanceStats(orgId, dateRange, apiType);
     reply.send(res);
   } catch (e) {
-    log.error("Error fetching team api stats :%o", e);
+    log.error({ err: e }, "Error fetching team api stats");
     reply.status(500).send({
       error: "An error occurred while fetching team api stats.",
     });

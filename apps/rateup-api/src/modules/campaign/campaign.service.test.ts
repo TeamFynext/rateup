@@ -313,14 +313,16 @@ describe("createCampaign", () => {
     expect(db.campaign.create.mock.calls[0][0].data.flowId).toBe("");
   });
 
-  // NOTE: pins current behaviour. The flow is looked up by Meta flow id alone, with
-  // no org filter, and `flow.dbFlowId` is read with no null check — so an unknown
-  // flow id throws a TypeError, and a flow id belonging to another org is accepted
-  // and attached to the campaign. See issues.txt 17.3.
+  // NOTE: the flow is looked up by Meta flow id alone, with no org filter, so a flow
+  // id belonging to another org is still accepted and attached to the campaign. See
+  // issues.txt 17.3. `flow.dbFlowId` is now null-checked, so an unknown flow id
+  // throws a clear, descriptive error instead of a bare TypeError.
   test("throws for a flow id that matches nothing", async () => {
     db.waFlow.findFirst.mockResolvedValue(null);
 
-    await expect(createCampaign({ ...input, flowId: "nope" })).rejects.toThrow(TypeError);
+    await expect(createCampaign({ ...input, flowId: "nope" })).rejects.toThrow(
+      "WaFlow with flowId nope not found.",
+    );
   });
 });
 
@@ -428,7 +430,7 @@ describe("sendCampaign", () => {
   test("marks the campaign active and hands it to the dispatcher", async () => {
     await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING], undefined, "user-1");
 
-    expect(db.campaign.update.mock.calls.at(-1)[0].data).toMatchObject({
+    expect(db.campaign.update.mock.calls.at(-1)![0].data).toMatchObject({
       status: CampaignStatus.ACTIVE,
       errorMessage: null,
     });

@@ -1,6 +1,11 @@
 import { rateupLogo } from "../../constants/constants.js";
 
-export function createEmailBodyPricingPlanSelected(data) {
+export function createEmailBodyPricingPlanSelected(data: {
+  name: string;
+  email: string;
+  orgName?: string;
+  planName: string;
+}) {
   return `<!DOCTYPE html>
 <html>
 <head>

@@ -25,7 +25,8 @@ export async function fetchLocationFromCoordinates(latitude: number, longitude: 
  * @param coords
  * @returns
  */
-export async function fetchLocation(coords: { latitude: number; longitude: number }) {
+// Callers pass the stored `SurveyResponse.location.coordinates`, which is optional.
+export async function fetchLocation(coords?: { latitude: number; longitude: number }) {
   let location = null;
   if (!coords || !coords.latitude) {
     return null;

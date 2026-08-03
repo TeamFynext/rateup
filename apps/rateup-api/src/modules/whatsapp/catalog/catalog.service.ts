@@ -1,7 +1,11 @@
 import { WaMessage, WhatsappSettings } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
-import { CatalogWhatsappSettingSchema, UpdateCatalogSchema } from "./catalog.schema.js";
+import {
+  CatalogWhatsappSettingSchema,
+  DeliveryOptionSchema,
+  UpdateCatalogSchema,
+} from "./catalog.schema.js";
 import { syncProductSetsForCatalog } from "./productSet.service.js";
 import { WaReceiveMessageBody } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
@@ -24,6 +28,44 @@ import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.service.js";
 import { sendAddressFlowToCustomer } from "./catalogSettings.service.js";
 
+/**
+ * Shape written onto `WaCatalogOrder.products` (a `Json[]` column) by
+ * `handleWaOrderfromCatalog` below. Prisma has no `prisma-json-types-generator`
+ * annotation wired up for this column, so it reads back as `unknown[]` — this
+ * interface documents the actual runtime shape instead of falling back to `any`
+ * at every read site. The index signature covers per-catalog variant attributes
+ * (size, color, material, additional_variant_attributes, ...) that get spread in
+ * dynamically from Meta's order payload and aren't worth their own named fields.
+ */
+interface CatalogOrderProductItem {
+  retailerId: string;
+  currency: string;
+  price: number;
+  quantity: number;
+  title: string;
+  image: string | null;
+  [key: string]: unknown;
+}
+
+/**
+ * `productProps` on `WaCatalogProduct` is a Json blob holding one of
+ * CatalogProductCore | CatalogHotel | CatalogHotelRoom (see global.d.ts)
+ * depending on the product's `type`, but the call sites below don't discriminate
+ * on `type` — they duck-type across all three shapes (pulling whichever of
+ * title/name/image_link/image exist). The optional members below are the ones the
+ * call sites actually read; everything else passes through the index signature.
+ */
+interface CatalogProductPropsJson {
+  title?: string;
+  name?: string;
+  image_link?: string;
+  image?: Array<{ url?: string }>;
+  description?: string;
+  price?: number;
+  currency?: string;
+  [prop: string]: unknown;
+}
+
 export async function deleteWaCatalog(catalogId: string) {
   await prisma.whatsappCatalog.delete({
     where: { catalogId },
@@ -39,7 +81,7 @@ export async function updateWaCatalog(catalogId: string, data: UpdateCatalogSche
   });
 }
 
-export async function getWaCatalog(catalogId) {
+export async function getWaCatalog(catalogId: string) {
   return await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId,
@@ -50,7 +92,7 @@ export async function getWaCatalog(catalogId) {
   });
 }
 
-async function getMetaBusinessInfoByWABAId(wabaId, accessToken) {
+async function getMetaBusinessInfoByWABAId(wabaId: string | null, accessToken: string) {
   const res = await callMetaApi(
     `/${wabaId}?fields=on_behalf_of_business_info&access_token=${accessToken}`,
     "GET",
@@ -82,11 +124,13 @@ export async function syncWaCatalogs(orgId: string) {
         "GET",
       );
 
-      const catalogs = res.data.data.map(({ id, ...rest }) => ({
-        orgId,
-        catalogId: id,
-        ...rest,
-      }));
+      const catalogs = res.data.data.map(
+        ({ id, ...rest }: { id: string; name: string; vertical: string }) => ({
+          orgId,
+          catalogId: id,
+          ...rest,
+        }),
+      );
 
       await prisma.$transaction(async (tx) => {
         await tx.whatsappCatalog.createMany({
@@ -98,10 +142,13 @@ export async function syncWaCatalogs(orgId: string) {
             orgId,
           },
         });
-        const updateCatalogs = [];
-        const deletedCatalogs = [];
+        const updateCatalogs: { catalogId: string; data: { name: string; vertical: string } }[] =
+          [];
+        const deletedCatalogs: string[] = [];
         existingCatalogs.map((ct) => {
-          const catalog = res.data.data.find((c) => c.id === ct.catalogId);
+          const catalog = res.data.data.find(
+            (c: { id: string; name: string; vertical: string }) => c.id === ct.catalogId,
+          );
           if (!catalog) {
             deletedCatalogs.push(ct.catalogId);
             return;
@@ -151,7 +198,7 @@ export async function syncWaCatalogs(orgId: string) {
         try {
           await syncProductSetsForCatalog(catalog.catalogId, orgId, accessToken);
         } catch (e) {
-          log.error("Error syncing product sets for catalog %s: %o", catalog.catalogId, e);
+          log.error({ err: e }, `Error syncing product sets for catalog ${catalog.catalogId}`);
         }
       }
 
@@ -166,7 +213,10 @@ export async function syncWaCatalogs(orgId: string) {
             },
           });
         } else {
-          const phoneIds = waSettings.filter((s) => s.wabaId === wabaId).map((s) => s.phoneId);
+          const phoneIds = waSettings
+            .filter((s) => s.wabaId === wabaId)
+            .map((s) => s.phoneId)
+            .filter((phoneId): phoneId is string => phoneId != null);
 
           // Clear existing mappings for these phone numbers before re-syncing from Meta
           // This ensures we always have the most up-to-date mappings
@@ -212,6 +262,7 @@ export async function syncConnectedCatalog(orgId: string) {
 
   for (const setting of waSettings) {
     const { accessToken, wabaId } = setting;
+    if (!wabaId) continue; // not linked to a Meta WABA yet — nothing to sync
     if (seenWabaIds.has(wabaId)) continue;
     seenWabaIds.add(wabaId);
 
@@ -247,7 +298,10 @@ export async function syncConnectedCatalog(orgId: string) {
       }
 
       // Update CatalogPhoneIdMap for all phone IDs under this wabaId
-      const phoneIds = waSettings.filter((s) => s.wabaId === wabaId).map((s) => s.phoneId);
+      const phoneIds = waSettings
+        .filter((s) => s.wabaId === wabaId)
+        .map((s) => s.phoneId)
+        .filter((phoneId): phoneId is string => phoneId != null);
 
       await prisma.catalogPhoneIdMap.deleteMany({
         where: { whatsappSettingsPhoneId: { in: phoneIds } },
@@ -281,7 +335,7 @@ export async function syncConnectedCatalog(orgId: string) {
   return results;
 }
 
-export async function getWaCatalogsByOrg(orgId) {
+export async function getWaCatalogsByOrg(orgId: string) {
   return await prisma.whatsappCatalog.findMany({
     where: {
       orgId,
@@ -292,7 +346,7 @@ export async function getWaCatalogsByOrg(orgId) {
   });
 }
 
-export async function getConnectedWaCatalog(whatsappSettingsPhoneId) {
+export async function getConnectedWaCatalog(whatsappSettingsPhoneId: string) {
   return await prisma.whatsappCatalog.findFirst({
     where: {
       connectedWaPhoneIds: {
@@ -313,6 +367,23 @@ export async function handleWaOrderfromCatalog(
   waSettings: Omit<WhatsappSettings, "accessToken_iv">,
 ) {
   const order = data.messages[0].order;
+  if (!order) {
+    // Callers only reach here when the message type is "order" (see
+    // wasurvey.controller.ts), so this should be unreachable in practice — kept as
+    // a guard rather than a non-null assertion since the payload is Meta-supplied.
+    log.trace("handleWaOrderfromCatalog called without an order payload; skipping");
+    return;
+  }
+  if (!messageObj.contactId) {
+    // WaMessage.contactId can be null when contact resolution failed upstream.
+    // WaCatalogOrder.contactId is a required column, so we can't create an order
+    // without it — bail out cleanly instead of letting the Prisma insert throw.
+    log.error(
+      "handleWaOrderfromCatalog: message %s has no resolved contactId; cannot create catalog order",
+      messageObj.id,
+    );
+    return;
+  }
   const catalog = await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId: order.catalog_id,
@@ -330,9 +401,9 @@ export async function handleWaOrderfromCatalog(
     },
   });
 
-  const productsWithDetails = order.product_items.map((p) => {
+  const productsWithDetails: CatalogOrderProductItem[] = order.product_items.map((p) => {
     const dbProduct = dbProducts.find((dp) => dp.retailer_id === p.product_retailer_id);
-    const props = (dbProduct?.productProps as any) || {};
+    const props = (dbProduct?.productProps as CatalogProductPropsJson | null) ?? {};
 
     // Exclude fields that are explicitly handled or not needed in the dynamic spread
     const {
@@ -353,7 +424,7 @@ export async function handleWaOrderfromCatalog(
       price: p.item_price,
       quantity: p.quantity,
       title: title || name || `Product ${p.product_retailer_id}`,
-      image: image_link || (image && image.length > 0 ? image[0].url : null),
+      image: image_link || (image && image.length > 0 ? (image[0].url ?? null) : null),
       ...restProps, // Dynamically spread all other properties (size, color, material, pattern, additional_variant_attributes, etc.)
     };
   });
@@ -363,9 +434,9 @@ export async function handleWaOrderfromCatalog(
       catalogId: order.catalog_id,
       contactId: messageObj.contactId,
       products: productsWithDetails,
-      createdAt: messageObj.waCreatedAt,
+      createdAt: messageObj.waCreatedAt ?? undefined,
       paymentMethod: waSettings?.paymentMethod ?? "NATIVE",
-      storeType: (catalog as any).storeType ?? CatalogStoreType.STANDARD,
+      storeType: catalog.storeType ?? CatalogStoreType.STANDARD,
       orderStage: CatalogOrderStage.PENDING_ADDRESS,
     },
   });
@@ -388,13 +459,22 @@ export async function handleWaOrderfromCatalog(
       orgId: true,
     },
   });
+  if (!catalogFull) {
+    // Same catalogId looked up via `catalog` a moment ago — should never be
+    // missing here, but the two queries aren't in the same transaction, so guard
+    // against a race (e.g. catalog deleted mid-request) instead of dereferencing
+    // null further down.
+    log.error("Catalog config vanished for catalogId %s mid-order-handling", order.catalog_id);
+    return;
+  }
 
-  const catalogPaymentMethod = (catalogFull as any)?.paymentMethod ?? CatalogPaymentMethod.MANUAL;
-  const collectAddress = (catalogFull as any)?.collectAddress ?? false;
-  const collectDelivery = (catalogFull as any)?.collectDelivery ?? false;
+  const orderProducts = newOrder.products as CatalogOrderProductItem[];
+  const catalogPaymentMethod = catalogFull.paymentMethod ?? CatalogPaymentMethod.MANUAL;
+  const collectAddress = catalogFull.collectAddress;
+  const collectDelivery = catalogFull.collectDelivery;
   const hasApprovedFlow =
-    catalogFull?.addressFlowId &&
-    catalogFull?.addressFlowStatus === CatalogAddressFlowStatus.APPROVED;
+    catalogFull.addressFlowId &&
+    catalogFull.addressFlowStatus === CatalogAddressFlowStatus.APPROVED;
 
   const contact = await prisma.contact.findUnique({
     where: { id: messageObj.contactId },
@@ -410,20 +490,18 @@ export async function handleWaOrderfromCatalog(
     try {
       const checkoutUrl = await buildShopifyCartUrl(
         catalog.orgId,
-        (newOrder.products as any[]).map((p) => ({
+        orderProducts.map((p) => ({
           retailerId: p.retailerId,
           quantity: p.quantity,
           title: p.title,
         })),
       );
       if (checkoutUrl) {
-        const productLines = (newOrder.products as any[])
+        const productLines = orderProducts
           .map((p) => {
             const qty = p.quantity > 1 ? ` ×${p.quantity}` : "";
             const price =
-              p.price !== undefined
-                ? ` - ${p.currency ?? ""}${parseFloat(p.price).toFixed(2)}`
-                : "";
+              p.price !== undefined ? ` - ${p.currency ?? ""}${p.price.toFixed(2)}` : "";
             return `• ${p.title}${qty}${price}`;
           })
           .join("\n");
@@ -441,23 +519,23 @@ export async function handleWaOrderfromCatalog(
           },
           undefined,
           undefined,
-          waSettings?.phoneId,
+          waSettings?.phoneId ?? undefined,
         );
         await prisma.waCatalogOrder.update({
           where: { id: newOrder.id },
-          data: { orderStage: CatalogOrderStage.PENDING_CHECKOUT } as any,
+          data: { orderStage: CatalogOrderStage.PENDING_CHECKOUT },
         });
       } else {
         log.warn("Could not build Shopify cart URL for org %s", catalog.orgId);
       }
     } catch (e) {
-      log.error("Error generating Shopify checkout link => %o", e);
+      log.error({ err: e }, "Error generating Shopify checkout link");
     }
     return; // Shopify checkout — done
   }
 
   //  Route 2: Collect address first (if enabled + flow approved)
-  if (collectAddress && hasApprovedFlow) {
+  if (collectAddress && hasApprovedFlow && catalogFull.addressFlowId) {
     try {
       if (customerPhone) {
         await sendAddressFlowToCustomer({
@@ -465,22 +543,20 @@ export async function handleWaOrderfromCatalog(
           phone: customerPhone,
           orderId: newOrder.id,
           waFlowId: catalogFull.addressFlowId,
-          whatsappSettingsPhoneId: waSettings?.phoneId,
+          whatsappSettingsPhoneId: waSettings?.phoneId ?? undefined,
         });
         log.info("Address flow sent for order %s to %s", newOrder.id, customerPhone);
         return; // Continue when customer submits flow (handleAddressFlowResponse)
       }
     } catch (e) {
-      log.error("Failed to send address flow for order %s: %o", newOrder.id, e);
+      log.error({ err: e }, `Failed to send address flow for order ${newOrder.id}`);
     }
   }
 
   // Route 3: Skip address - check delivery
-  const deliveryOptions = (catalogFull?.deliveryOptions as any[]) ?? [];
+  const deliveryOptions = (catalogFull.deliveryOptions as DeliveryOptionSchema[] | null) ?? [];
   const shouldAskDelivery =
-    collectDelivery &&
-    !catalogFull.fixedDeliveryCharge &&
-    deliveryOptions.some((o: any) => o.enabled);
+    collectDelivery && !catalogFull.fixedDeliveryCharge && deliveryOptions.some((o) => o.enabled);
 
   if (shouldAskDelivery) {
     try {
@@ -489,16 +565,16 @@ export async function handleWaOrderfromCatalog(
         orgId: catalog.orgId,
         phone: customerPhone,
         deliveryOptions,
-        whatsappSettingsPhoneId: waSettings?.phoneId,
+        whatsappSettingsPhoneId: waSettings?.phoneId ?? undefined,
       });
       await prisma.waCatalogOrder.update({
         where: { id: newOrder.id },
-        data: { orderStage: CatalogOrderStage.PENDING_DELIVERY } as any,
+        data: { orderStage: CatalogOrderStage.PENDING_DELIVERY },
       });
       log.info("Delivery list sent for order %s", newOrder.id);
       return; // Continue when customer picks delivery (handleDeliveryListReply)
     } catch (e) {
-      log.error("Error sending delivery list for order %s: %o", newOrder.id, e);
+      log.error({ err: e }, `Error sending delivery list for order ${newOrder.id}`);
     }
   }
 
@@ -512,7 +588,7 @@ export async function handleWaOrderfromCatalog(
     await dispatchPaymentMessage(
       {
         id: newOrder.id,
-        products: newOrder.products as any[],
+        products: orderProducts,
         shippingAddress: null,
         deliveryOption: fixedOption,
         catalogId: order.catalog_id,
@@ -520,21 +596,21 @@ export async function handleWaOrderfromCatalog(
       },
       {
         orgId: catalog.orgId,
-        storeType: (catalogFull as any)?.storeType,
+        storeType: catalogFull.storeType ?? undefined,
         paymentMethod: catalogPaymentMethod,
-        standardPaymentConfig: (catalogFull as any)?.standardPaymentConfig,
+        standardPaymentConfig: catalogFull.standardPaymentConfig,
       },
       customerPhone,
-      waSettings?.phoneId,
+      waSettings?.phoneId ?? undefined,
     );
   } catch (e) {
-    log.error("Error dispatching payment for order %s: %o", newOrder.id, e);
+    log.error({ err: e }, `Error dispatching payment for order ${newOrder.id}`);
     // Final fallback: native payment (existing behaviour)
     await handleWaOrderNativePayment(
       catalog.orgId,
       customerPhone,
       order.catalog_id,
-      newOrder.products as any,
+      orderProducts,
       waSettings,
       newOrder.id,
     );
@@ -572,11 +648,18 @@ export async function handleWaOrderNativePayment(
 
     const paymentConfigs = paymentConfigsResponse?.data?.data || [];
 
-    let activeConfig = null;
+    // Meta returns the configurations grouped; only `status` is read here.
+    interface MetaPaymentConfiguration {
+      status?: string;
+      provider_name?: string;
+      configuration_name?: string;
+      [field: string]: unknown;
+    }
+    let activeConfig: MetaPaymentConfiguration | undefined;
 
     for (const item of paymentConfigs) {
       activeConfig = item.payment_configurations?.find(
-        (config: any) => config.status?.toLowerCase() === "active",
+        (config: MetaPaymentConfiguration) => config.status?.toLowerCase() === "active",
       );
       if (activeConfig) break;
     }
@@ -586,8 +669,8 @@ export async function handleWaOrderNativePayment(
       return;
     }
 
-    const providerType = activeConfig.provider_name?.toLowerCase();
-    const configName = activeConfig.configuration_name;
+    const providerType = activeConfig.provider_name?.toLowerCase() ?? "";
+    const configName = activeConfig.configuration_name ?? "";
 
     const retailerIds = productItems.map((p) => p.retailerId);
     const dbProducts = await prisma.waCatalogProduct.findMany({
@@ -597,14 +680,17 @@ export async function handleWaOrderNativePayment(
       },
     });
 
-    const paymentProducts: any[] = productItems.map((p) => {
-      const dbP = dbProducts.find((dp) => dp.retailer_id === p.retailerId);
-      return {
-        name: (dbP?.productProps as any)?.title || `Product ${p.retailerId}`,
-        amount: p.price * 100, // multiplying by 100 to account for the 2 decimal offset
-        quantity: p.quantity,
-      };
-    });
+    const paymentProducts: { name: string; amount: number; quantity: number }[] = productItems.map(
+      (p) => {
+        const dbP = dbProducts.find((dp) => dp.retailer_id === p.retailerId);
+        const props = (dbP?.productProps as CatalogProductPropsJson | null) ?? {};
+        return {
+          name: props.title || `Product ${p.retailerId}`,
+          amount: p.price * 100, // multiplying by 100 to account for the 2 decimal offset
+          quantity: p.quantity,
+        };
+      },
+    );
 
     const shippingObj =
       deliveryOption && (deliveryOption.charge ?? 0) > 0
@@ -638,11 +724,16 @@ export async function handleWaOrderNativePayment(
     await sendMessage(orgId, message);
     log.info("Sent native payment request to %s for order %s", contactPhone, referenceId);
   } catch (e) {
-    log.error("Error in handleWaOrderNativePayment => %o", e);
+    log.error({ err: e }, "Error in handleWaOrderNativePayment");
   }
 }
 
-export async function updateConnectWaCatalog(wabaId, orgId, catalogId, syncWithMeta = true) {
+export async function updateConnectWaCatalog(
+  wabaId: string,
+  orgId: string,
+  catalogId: string,
+  syncWithMeta = true,
+) {
   const waSettings = await prisma.whatsappSettings.findMany({
     where: {
       wabaId: wabaId,
@@ -667,7 +758,9 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId, syncWithM
     throw Error("No whatsapp settings found");
   }
 
-  const phoneIds = waSettings?.map((s) => s.phoneId)?.filter(Boolean);
+  const phoneIds = waSettings
+    .map((s) => s.phoneId)
+    .filter((phoneId): phoneId is string => phoneId != null);
 
   if (!syncWithMeta) {
     await prisma.catalogPhoneIdMap.deleteMany({
@@ -734,6 +827,9 @@ export async function disconnectCatalogFromWaba({
   catalogId,
 }: CatalogWhatsappSettingSchema) {
   const waSettings = await getWaSettingsById(whatsappSettingsId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings ${whatsappSettingsId} not found`);
+  }
   const { wabaId, accessToken } = waSettings;
   const res = await callMetaApi(`/${wabaId}/product_catalogs`, "DELETE", accessToken, {
     catalog_id: catalogId,

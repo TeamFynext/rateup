@@ -3,6 +3,7 @@ import { log } from "../utils/logger.js";
 import prisma from "../utils/prisma.js";
 import baseRedis from "../utils/redisConnection.js";
 import { processNextNode } from "../modules/whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { WaAutomationProgressStatus } from "../../generated/prisma/enums.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -35,7 +36,7 @@ export const pausedAutomationWorker = new Worker(
         return;
       }
 
-      if (automationMessage.status !== ("paused" as any)) {
+      if (automationMessage.status !== "paused") {
         log.warn(
           `Automation message ${automationMessageId} is not paused (status: ${automationMessage.status}), skipping resume`,
         );
@@ -57,8 +58,8 @@ export const pausedAutomationWorker = new Worker(
       }
 
       // Find next edges in the automation flow
-      const nextEdges = (automation.matchData as any)?.json?.edges?.filter(
-        (edge: any) => edge.source === currentNode,
+      const nextEdges = automation.matchData?.json?.edges?.filter(
+        (edge) => edge.source === currentNode,
       );
 
       if (nextEdges && nextEdges.length > 0) {
@@ -73,15 +74,13 @@ export const pausedAutomationWorker = new Worker(
         // No next node, mark as completed
         await prisma.waAutomatedReplyMessage.update({
           where: { id: automationMessageId },
-          data: { status: "completed" as any },
+          data: { status: WaAutomationProgressStatus.completed },
         });
         log.info(`Automation ${automationMessageId} completed (no next nodes)`);
       }
     } catch (error) {
-      log.error(
-        { error },
-        `Error processing paused automation ${automationMessageId}: ${error.message}`,
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      log.error({ error }, `Error processing paused automation ${automationMessageId}: ${message}`);
       throw error; // Re-throw to trigger BullMQ retry
     }
   },

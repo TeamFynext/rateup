@@ -28,6 +28,30 @@ export type Node =
   | CatalogNodeData;
 
 // Restore all required node data interfaces for WhatsApp Survey Flow
+/** One card of an Instagram generic (carousel) template. */
+export interface InstagramTemplateButton {
+  type: "postback" | "web_url";
+  title: string;
+  id?: string;
+  payload?: string;
+  url?: string;
+}
+
+export interface InstagramTemplateElement {
+  title: string;
+  subtitle?: string;
+  image_url?: string;
+  buttons?: InstagramTemplateButton[];
+}
+
+export interface InstagramQuickReplyOption {
+  content_type: "text";
+  title: string;
+  id?: string;
+  payload: string;
+  image_url?: string;
+}
+
 export interface BaseNodeData {
   label: string;
 }
@@ -145,9 +169,23 @@ export interface CTAUrlNodeData extends BaseNodeData {
 }
 
 // Template Node
+export interface TemplateComponentParameter {
+  type: string;
+  /**
+   * Usually the resolved text. On a leadgen automation it can instead hold a
+   * placeholder naming the lead field to substitute, until it is resolved.
+   */
+  text?: string | { type: string; value: string } | null;
+  image?: { link?: string };
+  document?: { link?: string; filename?: string };
+  video?: { link?: string };
+  [field: string]: unknown;
+}
+
 export interface TemplateComponent {
   type: string;
-  parameters: any[];
+  parameters: TemplateComponentParameter[];
+  [field: string]: unknown;
 }
 
 export interface TemplateNodeData extends BaseNodeData {
@@ -394,5 +432,44 @@ export interface WhatsAppMessage {
   recipient_type: string;
   to: string;
   type: string;
-  [key: string]: any;
+  // The payload key matching `type` (text, image, interactive, ...); readers
+  // narrow on `type` before reaching into it.
+  [key: string]: unknown;
+}
+
+/**
+ * A node of an automation graph, as stored under
+ * `WaAutomatedReply.matchData.json`. `data` carries the node-kind-specific
+ * fields (see NodeTypeMap); use assertNodeType/getTypedNodeData to narrow it.
+ */
+export interface AutomationNode {
+  id: string;
+  type: NodeType | string;
+  data: Partial<BaseNodeData> & Record<string, unknown>;
+  position?: { x: number; y: number };
+}
+
+/** An edge joining two automation nodes. */
+export interface AutomationEdge {
+  id?: string;
+  source: string;
+  target: string;
+  /** Identifies which outgoing branch of `source` this edge leaves from. */
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+}
+
+/** The graph stored on `WaAutomatedReply.matchData.json`. */
+export interface AutomationGraph {
+  nodes: AutomationNode[];
+  edges: AutomationEdge[];
+}
+
+/** The fields of a WaAutomatedReply row the flow-runner needs. */
+export interface AutomationWithGraph {
+  id: string;
+  orgId?: string | null;
+  whatsappSettingsPhoneId?: string | null;
+  /** `json` is absent on keyword-only automations. */
+  matchData: { json?: AutomationGraph };
 }

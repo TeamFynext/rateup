@@ -1,12 +1,50 @@
 import {
   WaButtonType,
-  WaFlowStatus,
   WaTemplateCategory,
   WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
 } from "./enums.js";
+
+/**
+ * A template's review status changed (`message_template_status_update`).
+ */
+export interface WaTemplateStatusChange {
+  event: WaTemplateStatus;
+  message_template_id: number;
+  message_template_name: string;
+  message_template_language: string;
+  reason: string | null;
+}
+
+/**
+ * Meta reclassified a template (`template_category_update`).
+ */
+export interface WaTemplateCategoryChange {
+  message_template_id: number;
+  message_template_name: string;
+  message_template_language: string;
+  previous_category: string;
+  new_category: string;
+}
+
+/**
+ * The WABA itself was restricted or banned (`account_update`).
+ */
+export interface WaAccountUpdate {
+  event?: string;
+  ban_info?: { ban_status?: string; ban_date?: string };
+  restriction_info?: Array<{ restriction_type?: string; expiration?: string }>;
+}
+
+/** Every payload shape a webhook `changes[].value` can carry. */
+export type WaWebhookChangeValue =
+  | WaReceiveMessageBody
+  | LeadGenBody
+  | WaTemplateStatusChange
+  | WaTemplateCategoryChange
+  | WaAccountUpdate;
 
 // TODO: find if there is an official type for this
 export interface WaMessageBody {
@@ -16,7 +54,7 @@ export interface WaMessageBody {
       id: string; // waba_id
       changes: [
         {
-          value: WaReceiveMessageBody | LeadGenBody;
+          value: WaWebhookChangeValue;
           field: string;
         },
       ];
@@ -68,7 +106,8 @@ export interface WaReceiveMessageBody {
         link?: string;
         caption?: string;
       };
-      button?: any;
+      /** Quick-reply button tap: the label shown and the payload behind it. */
+      button?: { text?: string; payload?: string };
       /**
        * Present when the WhatsApp user deleted a message they had sent (WhatsApp
        * Business app / coexistence only). Points at the message being revoked.
@@ -144,7 +183,8 @@ export interface WaReceiveMessageBody {
           status?: string;
         };
       };
-      errors?: any;
+      /** Present on a failed status update; the same shape as a Graph API error. */
+      errors?: WaGraphApiErrorDetail[];
     },
   ];
 }
@@ -182,7 +222,14 @@ export interface WaMessageEchoBody {
   ];
 }
 
+/** One answered field on a Meta lead form. */
+export interface LeadGenFieldData {
+  name: string;
+  values: string[];
+}
+
 export interface LeadGenBody {
+  [field: string]: unknown;
   leadgen_id: string;
   page_id: string;
   form_id: string;
@@ -198,10 +245,14 @@ export interface WaInternalMessageBody {
   text: {
     body: string;
   };
+  // Null when the actor triggering the event is a real user with no `name` set,
+  // or a system/automation actor with no user id at all (see
+  // `createInternalWaMessage` in wamessage.service.ts, which can genuinely fail
+  // to resolve either half).
   triggeredByUser: {
-    id: string;
+    id: string | null;
     name: string;
-  };
+  } | null;
   assignStatus?: string;
   assignedUsers?: {
     id: string;
@@ -216,10 +267,11 @@ export interface WaPrivateMessageBody {
   text: {
     body: string;
   };
+  // See WaInternalMessageBody.triggeredByUser above.
   triggeredByUser: {
-    id: string;
+    id: string | null;
     name: string;
-  };
+  } | null;
   mentionedUser?: {
     id: string;
     name: string;
@@ -246,7 +298,7 @@ export interface WaSendMessageBody {
     preview_url?: boolean;
     body: string;
   };
-  template?: WaTemplateFetchBody;
+  template?: OutgoingTemplatePayload;
   image?: {
     link: string;
     caption?: string;
@@ -260,7 +312,8 @@ export interface WaSendMessageBody {
       | "catalog_message"
       | "product"
       | "product_list"
-      | "order_details";
+      | "order_details"
+      | "order_status";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars
@@ -365,17 +418,64 @@ interface WaInteractiveMessageAction {
   parameters?: {
     display_text?: string;
     url?: string;
-    flow_message_version?: number;
+    // Meta accepts "3"; callers in this repo send both the string and the number.
+    flow_message_version?: number | string;
     flow_token?: string;
     flow_id?: string;
     flow_cta?: string; // text to be displayed on the button. max 20 chars
+    // How the flow opens: straight to a screen, or via a data-exchange request.
+    flow_action?: "navigate" | "data_exchange";
     flow_action_payload?: {
       screen: string; // id of the screen
-      data?: any; // data to be sent to the screen
+      // Initial data for the screen, matching that screen's data schema.
+      data?: Record<string, unknown>;
     };
-    mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
+    // Meta expects the lowercase form of WaFlowStatus.
+    mode?: "draft" | "published";
     thumbnail_product_retailer_id?: string;
+    // order_details / order_status: the order this message refers to.
+    reference_id?: string;
+    /** order_details only — e.g. "physical-goods". */
+    type?: string;
+    payment_settings?: Array<WaPaymentSetting>;
+    currency?: string;
+    total_amount?: WaMoney;
+    order?: {
+      status: "pending" | "processing" | "shipped" | "completed" | "canceled";
+      /** order_details only; absent on a bare order_status update. */
+      type?: string;
+      items?: Array<{ name: string; amount: WaMoney; quantity: number }>;
+      subtotal?: WaMoney;
+      shipping?: WaMoney & { description?: string };
+    };
   };
+}
+
+/** Meta sends money as a minor-unit integer plus the divisor that restores it. */
+export interface WaMoney {
+  value: number;
+  offset: number;
+}
+
+export interface WaPaymentSetting {
+  type: string;
+  payment_gateway: {
+    type: string;
+    configuration_name: string;
+    /** The gateway-specific block, keyed by the gateway's own name. */
+    [gateway: string]: unknown;
+  };
+}
+
+/**
+ * The template payload on an OUTGOING message — name, language and the filled-in
+ * components. Distinct from `WaTemplateFetchBody`, which is what Meta returns when
+ * a template is read back (and carries id/status/category).
+ */
+export interface OutgoingTemplatePayload {
+  name: string;
+  language: { code: string };
+  components?: OutgoingTemplateComponent[];
 }
 
 export enum WaMessageTypes {
@@ -417,19 +517,53 @@ export interface WaTemplateComponent {
   type: WaTemplateComponentTypeUpperCase;
   format?: WaTemplateSupportedFormats;
   text?: string;
-  example?: any;
+  /** Meta's sample values; media headers carry uploaded handles here. */
+  example?: {
+    header_handle?: string[];
+    header_text?: string[];
+    body_text?: string[] | string[][];
+  };
   buttons?: WaTemplateButton[];
+  cards?: {
+    components: WaTemplateComponent[];
+  }[];
+  // Meta returns more fields than are modelled here, and callers reach them
+  // through the looser WaMetaTemplateComponent view of the same payload.
+  [field: string]: unknown;
+}
+
+/**
+ * A template component as our code builds it for sending. Media parameters are
+ * keyed by their own format at runtime ("image", "video", "document"), so the
+ * parameter entries carry an index signature alongside their `type`.
+ */
+export interface OutgoingTemplateComponent {
+  type: string;
+  sub_type?: string;
+  /** Button components carry their position; some callers pass it as a number. */
+  index?: string | number;
+  parameters?: Array<{ type: string; [mediaKey: string]: unknown }>;
+  /** Carousel components carry one component list per card. */
+  cards?: Array<{ card_index?: number; components: OutgoingTemplateComponent[] }>;
+  /** Meta's component vocabulary is wider than what this repo builds by hand. */
+  [field: string]: unknown;
 }
 
 export interface WaTemplateButton {
-  type: WHATSAPP_BUTTON_TYPE;
-  text: string;
+  // Create payloads use the lowercase names (WaButtonType), rows read back
+  // from Meta use the uppercase ones. Payloads built from user input carry it
+  // as a plain string until Meta validates it.
+  type: WHATSAPP_BUTTON_TYPE | WaButtonType | string;
+  /** Absent on a button whose label Meta supplies (e.g. an OTP copy-code button). */
+  text?: string;
   phone_number?: string;
   url?: string;
   flow_id?: string;
   flow_action?: "navigate" | "data_exchange";
   navigate_screen?: string;
-  example?: any;
+  /** Meta's sample values for the button (e.g. example URLs, coupon codes). */
+  example?: string | string[];
+  [field: string]: unknown;
 }
 
 export enum WHATSAPP_BUTTON_TYPE {

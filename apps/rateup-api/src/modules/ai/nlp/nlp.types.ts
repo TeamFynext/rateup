@@ -1,6 +1,7 @@
 export interface AnnotatedTextResult {
   sentences: RawSentence[];
-  tokens: any[];
+  /** Per-token parse output; unread by this codebase, kept so the shape round-trips. */
+  tokens: unknown[];
   entities: RawEntity[];
   documentSentiment: RawSentiment;
   language: string;

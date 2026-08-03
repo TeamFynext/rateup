@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createBoardRequestSchema,
   idParamsSchema,
+  UpdateBoardRequestSchema,
   updateBoardRequestSchema,
 } from "./board.schema.js";
 import {
@@ -35,7 +36,7 @@ export async function boardRoutes(server: FastifyInstance) {
   server.get("/", getAllBoardsHandler);
 
   // Get single board with associated columns and cards
-  server.get(
+  server.get<{ Params: { id: string } }>(
     "/:id",
     {
       preHandler: [verifyBoardAccess],
@@ -47,7 +48,7 @@ export async function boardRoutes(server: FastifyInstance) {
   );
 
   // Update board
-  server.put(
+  server.put<{ Params: { id: string }; Body: UpdateBoardRequestSchema }>(
     "/:id",
     {
       preHandler: [verifyBoardAccess],
@@ -60,7 +61,7 @@ export async function boardRoutes(server: FastifyInstance) {
   );
 
   // Delete board
-  server.delete(
+  server.delete<{ Params: { id: string } }>(
     "/:id",
     {
       preHandler: [verifyBoardAccess],
@@ -71,7 +72,7 @@ export async function boardRoutes(server: FastifyInstance) {
     deleteBoardHandler,
   );
   // Get all team members for a board
-  server.get(
+  server.get<{ Params: { id: string } }>(
     "/:id/team-members",
     {
       preHandler: [verifyBoardAccess],

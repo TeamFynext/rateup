@@ -1,6 +1,8 @@
 import {
   OrderStatus,
   PaymentStatus,
+  Prisma,
+  StripeProductType,
   SubscriptionStatus,
 } from "../../../../generated/prisma/client.js";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail.js";
@@ -8,13 +10,74 @@ import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { paymentFailed } from "../../../utils/email/payments/paymentFailed.js";
 import prisma from "../../../utils/prisma.js";
+import type { CreateStripeCheckoutInput } from "./stripe.schema.js";
 
 const STRIPE_API = "https://api.stripe.com/v1";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  throw new Error("STRIPE_SECRET_KEY is not configured");
+}
+const stripe = new Stripe(stripeSecretKey);
 
-export async function createOrder(data, userId) {
+// The functions below call Stripe's REST API directly via axios (rather than through the
+// Stripe SDK client), so the shapes below describe only the fields this file actually reads
+// off each Stripe object type - not the full Stripe API surface. Exported because
+// stripe.controller.ts's webhook handler also needs to shape `event.data.object` into these
+// (the Stripe SDK's own `Event.Data.Object` type is an intentionally-empty stub).
+export interface StripeInvoiceData {
+  billing_reason: string;
+  payment_intent?: string | null;
+  subscription?: string | null;
+  subscription_details?: { metadata?: { rateupOrderId?: string } } | null;
+  amount_paid: number;
+  currency: string;
+  customer_email?: string | null;
+  customer_phone?: string | null;
+  status_transitions: { paid_at: number | null };
+  status?: string;
+}
+
+interface StripePaymentIntentData {
+  payment_method_types: string[];
+  description?: string | null;
+}
+
+interface StripeSubscriptionData {
+  id?: string;
+  status?: string;
+  created?: number;
+  current_period_start?: number;
+  current_period_end: number;
+  latest_invoice?: string | null;
+  plan?: { product?: string };
+}
+
+export interface StripeCheckoutSessionPayload {
+  id: string;
+  subscription: string;
+}
+
+interface StripeProductData {
+  id: string;
+  name: string;
+  description: string | null;
+  created: number;
+  active: boolean;
+  livemode: boolean;
+  default_price: string | null;
+}
+
+interface StripePriceData {
+  id: string;
+  currency: string;
+  unit_amount: number | null;
+  type: string;
+  recurring?: { interval: string; interval_count: number } | null;
+}
+
+export async function createOrder(data: CreateStripeCheckoutInput, userId: string) {
   const order = await prisma.order.create({
     data: {
       name: data.planName,
@@ -29,7 +92,7 @@ export async function createOrder(data, userId) {
   return order;
 }
 
-export async function updateOrder(id, priceId, sessionId) {
+export async function updateOrder(id: string, priceId: string, sessionId: string) {
   const order = await prisma.order.update({
     where: { id: id },
     data: {
@@ -42,11 +105,20 @@ export async function updateOrder(id, priceId, sessionId) {
   return order;
 }
 
-export async function createStripePayment(invoiceData) {
+export async function createStripePayment(invoiceData: StripeInvoiceData) {
   if (invoiceData.billing_reason === "subscription_create") {
     const { payment_intent, subscription } = invoiceData;
+    if (!payment_intent || !subscription) {
+      throw new Error("Stripe invoice is missing payment_intent or subscription");
+    }
 
     let orderId = invoiceData.subscription_details?.metadata?.rateupOrderId;
+    if (!orderId) {
+      throw new Error("Stripe invoice is missing subscription_details.metadata.rateupOrderId");
+    }
+    if (invoiceData.status_transitions.paid_at == null) {
+      throw new Error("Stripe invoice is missing status_transitions.paid_at");
+    }
     let paymentIntentData = await getSinglePaymentIntent(payment_intent);
     let subscriptionData = await getSingleStripeSubscription(subscription);
 
@@ -59,7 +131,7 @@ export async function createStripePayment(invoiceData) {
         description: paymentIntentData.description,
         customer_email: invoiceData.customer_email || "",
         customer_phone: invoiceData.customer_phone || "",
-        rateupOrderId: invoiceData.subscription_details?.metadata?.rateupOrderId,
+        rateupOrderId: orderId,
         createdAt: invoiceData.status_transitions.paid_at,
       },
     });
@@ -80,11 +152,14 @@ export async function createStripePayment(invoiceData) {
     });
 
     if (updatedOrder) {
+      if (!updatedOrder.orgId) {
+        throw new Error(`Order ${updatedOrder.id} is missing orgId; cannot update subscription`);
+      }
       await prisma.subscription.update({
-        where: { orgId: updatedOrder?.orgId },
+        where: { orgId: updatedOrder.orgId },
         data: {
-          basePlanId: updatedOrder?.rateupPlanId,
-          features: updatedOrder.RateupPlan?.features,
+          basePlanId: updatedOrder.rateupPlanId,
+          features: updatedOrder.RateupPlan?.features ?? {},
           renewedAt: new Date(),
           expiresAt: new Date(subscriptionData.current_period_end * 1000),
           subscriptionRef: subscription,
@@ -94,26 +169,33 @@ export async function createStripePayment(invoiceData) {
 
       console.log("Sending stripe subscription summary email....");
 
-      const msg = {
-        to: invoiceData.customer_email,
-        subject: "Rateup Subscription Activated - Rateup.app",
-        text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
-        html: createEmailBodySubscriptionActivated(
-          updatedOrder?.RateupPlan?.displayName,
-          new Date(subscriptionData.current_period_end * 1000),
-        ),
-      };
-      try {
-        sendAWSEmail(msg);
-      } catch (error) {
-        console.error(error);
-        throw new Error("Email sending failed. E:" + error);
+      if (invoiceData.customer_email) {
+        const msg = {
+          to: invoiceData.customer_email,
+          subject: "Rateup Subscription Activated - Rateup.app",
+          text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
+          html: createEmailBodySubscriptionActivated(
+            updatedOrder.RateupPlan?.displayName ?? updatedOrder.RateupPlan?.name ?? "Rateup Plan",
+            new Date(subscriptionData.current_period_end * 1000),
+          ),
+        };
+        try {
+          sendAWSEmail(msg);
+        } catch (error) {
+          console.error(error);
+          throw new Error("Email sending failed. E:" + error);
+        }
+      } else {
+        console.log("Skipping subscription summary email: invoice has no customer_email");
       }
     }
     return payment;
   } else if (invoiceData.billing_reason === "subscription_cycle") {
     //ACTION ON RECURRING PAYMENT
     const { subscription } = invoiceData;
+    if (!subscription) {
+      throw new Error("Stripe invoice is missing subscription");
+    }
 
     let subscriptionData = await getSingleStripeSubscription(subscription);
 
@@ -129,61 +211,71 @@ export async function createStripePayment(invoiceData) {
       },
     });
 
-    const msg = {
-      to: invoiceData.customer_email,
-      subject: "Rateup Subscription Renewed - Rateup.app",
-      text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
-      html: createEmailBodySubscriptionActivated(
-        updatedSubscription?.basePlan?.displayName,
-        new Date(subscriptionData.current_period_end * 1000),
-        true,
-      ),
-    };
-    try {
-      sendAWSEmail(msg);
-    } catch (error) {
-      console.error(error);
-      throw new Error("Email sending failed. E:" + error);
+    if (invoiceData.customer_email) {
+      const msg = {
+        to: invoiceData.customer_email,
+        subject: "Rateup Subscription Renewed - Rateup.app",
+        text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
+        html: createEmailBodySubscriptionActivated(
+          updatedSubscription.basePlan?.displayName ??
+            updatedSubscription.basePlan?.name ??
+            "Rateup Plan",
+          new Date(subscriptionData.current_period_end * 1000),
+          true,
+        ),
+      };
+      try {
+        sendAWSEmail(msg);
+      } catch (error) {
+        console.error(error);
+        throw new Error("Email sending failed. E:" + error);
+      }
+    } else {
+      console.log("Skipping subscription renewal email: invoice has no customer_email");
     }
 
     return updatedSubscription;
   }
 }
 
-export async function handleInvoicePaymentFailed(invoiceData) {
+export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData) {
   const { billing_reason, subscription, customer_email } = invoiceData;
   console.log("Sub Id: ", subscription);
 
   if (billing_reason === "subscription_cycle") {
     console.log("Recurring Payment Failed...", customer_email);
 
-    const msg = {
-      to: invoiceData.customer_email,
-      subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
-      text: `Subscription Renewal Failed. Please update your payment method.`,
-      html: paymentFailed(true),
-    };
-    try {
-      sendAWSEmail(msg);
-    } catch (error) {
-      console.error(error);
-      throw new Error("Email sending failed. E:" + error);
+    if (customer_email) {
+      const msg = {
+        to: customer_email,
+        subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
+        text: `Subscription Renewal Failed. Please update your payment method.`,
+        html: paymentFailed(true),
+      };
+      try {
+        sendAWSEmail(msg);
+      } catch (error) {
+        console.error(error);
+        throw new Error("Email sending failed. E:" + error);
+      }
     }
     // await stripe.subscriptions.del(subscriptionId);
   } else if (billing_reason === "subscription_create") {
     console.log("Subscription Create Payment Failed...", customer_email);
 
-    const msg = {
-      to: invoiceData.customer_email,
-      subject: "Payment Failed - Rateup.app Subscription",
-      text: `Subscription Payment Failed. Please update your payment method.`,
-      html: paymentFailed(false),
-    };
-    try {
-      sendAWSEmail(msg);
-    } catch (error) {
-      console.error(error);
-      throw new Error("Email sending failed. E:" + error);
+    if (customer_email) {
+      const msg = {
+        to: customer_email,
+        subject: "Payment Failed - Rateup.app Subscription",
+        text: `Subscription Payment Failed. Please update your payment method.`,
+        html: paymentFailed(false),
+      };
+      try {
+        sendAWSEmail(msg);
+      } catch (error) {
+        console.error(error);
+        throw new Error("Email sending failed. E:" + error);
+      }
     }
 
     // await stripe.subscriptions.update(subscriptionId, {cancel_at_period_end: true});
@@ -193,11 +285,14 @@ export async function handleInvoicePaymentFailed(invoiceData) {
   }
 }
 
-export async function processOrder(payload) {
+export async function processOrder(payload: StripeCheckoutSessionPayload) {
   const { id, subscription } = payload;
 
   let subscriptionData = await getSingleStripeSubscription(subscription);
 
+  if (!subscriptionData.latest_invoice) {
+    throw new Error(`Stripe subscription ${subscription} is missing latest_invoice`);
+  }
   let invoiceData = await getSingleStripeInvoice(subscriptionData.latest_invoice);
 
   if (invoiceData?.status && invoiceData?.status === "paid") {
@@ -240,24 +335,28 @@ export async function syncStripeProducts() {
       })
     )?.data,
   ]);
-  const stripeProducts = stripeProductRes?.data;
-  const priceList = priceRes?.data;
-  const formattedData = [];
+  const stripeProducts: StripeProductData[] = stripeProductRes?.data ?? [];
+  const priceList: StripePriceData[] = priceRes?.data ?? [];
+  const formattedData: Prisma.StripeProductsCreateManyInput[] = [];
   for (const product of stripeProducts) {
     const price = priceList.find((price) => price?.id === product?.default_price);
+    if (!price) {
+      console.log(`Skipping Stripe product ${product?.id}: no matching price found`);
+      continue;
+    }
     formattedData.push({
-      name: product?.name,
-      description: product?.description,
-      createdAt: product?.created,
-      active: product?.active,
-      liveMode: product?.livemode,
-      productId: product?.id,
-      priceId: product?.default_price,
-      currency: price?.currency,
-      amount: price?.unit_amount / 100,
-      interval: price?.recurring?.interval,
-      intervalCount: price?.recurring?.interval_count,
-      type: price.type,
+      name: product.name,
+      description: product.description,
+      createdAt: product.created,
+      active: product.active,
+      liveMode: product.livemode,
+      productId: product.id,
+      priceId: product.default_price ?? "",
+      currency: price.currency,
+      amount: (price.unit_amount ?? 0) / 100,
+      interval: price.recurring?.interval ?? "",
+      intervalCount: price.recurring?.interval_count ?? 0,
+      type: price.type === "recurring" ? StripeProductType.recurring : StripeProductType.one_time,
     });
   }
   const existingProducts = (await prisma.stripeProducts.findMany()).map(
@@ -276,9 +375,9 @@ export async function getStripeProducts() {
   return res;
 }
 
-export async function getSingleStripeInvoice(id) {
+export async function getSingleStripeInvoice(id: string): Promise<StripeInvoiceData> {
   const invoice = (
-    await axios.get(`${STRIPE_API}/invoices/${id}`, {
+    await axios.get<StripeInvoiceData>(`${STRIPE_API}/invoices/${id}`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },
@@ -288,9 +387,9 @@ export async function getSingleStripeInvoice(id) {
   return invoice;
 }
 
-export async function getSinglePaymentIntent(id) {
+export async function getSinglePaymentIntent(id: string): Promise<StripePaymentIntentData> {
   const payment_intent = (
-    await axios.get(`${STRIPE_API}/payment_intents/${id}`, {
+    await axios.get<StripePaymentIntentData>(`${STRIPE_API}/payment_intents/${id}`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },
@@ -300,9 +399,9 @@ export async function getSinglePaymentIntent(id) {
   return payment_intent;
 }
 
-export async function getSingleStripeSubscription(id) {
+export async function getSingleStripeSubscription(id: string): Promise<StripeSubscriptionData> {
   const subscription = (
-    await axios.get(`${STRIPE_API}/subscriptions/${id}`, {
+    await axios.get<StripeSubscriptionData>(`${STRIPE_API}/subscriptions/${id}`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },
@@ -314,30 +413,36 @@ export async function getSingleStripeSubscription(id) {
 
 export async function getAllStripeSubscriptions() {
   const subscriptions = (
-    await axios.get(`${STRIPE_API}/subscriptions`, {
+    await axios.get<{ data: StripeSubscriptionData[] }>(`${STRIPE_API}/subscriptions`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },
     })
   )?.data?.data;
   const allStripeProducts = await prisma.stripeProducts.findMany();
-  return subscriptions?.map((sub) => {
-    const product = allStripeProducts?.find((prod) => prod.productId === sub.plan.product);
-    return {
-      id: sub.id,
-      productName: product.name,
-      amount: product.amount,
-      currency: product.currency,
-      status: sub.status,
-      createdAt: sub.created,
-      startsAt: sub.current_period_start,
-      endsAt: sub.current_period_end,
-    };
-  });
+  return subscriptions
+    ?.map((sub) => {
+      const product = allStripeProducts?.find((prod) => prod.productId === sub.plan?.product);
+      if (!product) {
+        console.log(`Skipping Stripe subscription ${sub.id}: no matching local product found`);
+        return null;
+      }
+      return {
+        id: sub.id,
+        productName: product.name,
+        amount: product.amount,
+        currency: product.currency,
+        status: sub.status,
+        createdAt: sub.created,
+        startsAt: sub.current_period_start,
+        endsAt: sub.current_period_end,
+      };
+    })
+    .filter((sub) => sub !== null);
 }
 
 //Cancel Stripe subscription
-export async function cancelStripeSubscription(orgId) {
+export async function cancelStripeSubscription(orgId: string) {
   console.log("Cancelling subscription........");
 
   if (!orgId) {
@@ -372,7 +477,10 @@ export async function cancelStripeSubscription(orgId) {
   return res?.status;
 }
 
-export async function updateStripeProduct(productId, data) {
+export async function updateStripeProduct(
+  productId: string,
+  data: Prisma.StripeProductsUpdateInput,
+) {
   return await prisma.stripeProducts.update({
     where: {
       productId,
@@ -381,7 +489,7 @@ export async function updateStripeProduct(productId, data) {
   });
 }
 
-export async function deleteStripeProduct(productId) {
+export async function deleteStripeProduct(productId: string) {
   return await prisma.stripeProducts.delete({
     where: {
       productId,

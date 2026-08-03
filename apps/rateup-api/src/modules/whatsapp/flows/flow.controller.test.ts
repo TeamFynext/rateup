@@ -350,13 +350,12 @@ describe("updateFlowHandler", () => {
     await expect(updateFlowHandler(request({ body: {} }), reply())).rejects.toThrow("db down");
   });
 
-  // NOTE: pins current behaviour. previousFlow.logicJumps is read with no null
-  // check, so an id that matches no flow raises a TypeError rather than a 404.
-  // See issues.txt 11.4.
-  test("throws rather than answering 404 for a flow that does not exist", async () => {
+  test("throws a descriptive error rather than a raw TypeError for a flow that does not exist", async () => {
     m.getFlowFromDb.mockResolvedValue(null);
 
-    await expect(updateFlowHandler(request({ body: {} }), reply())).rejects.toThrow(TypeError);
+    await expect(updateFlowHandler(request({ body: {} }), reply())).rejects.toThrow(
+      "Flow not found",
+    );
   });
 });
 

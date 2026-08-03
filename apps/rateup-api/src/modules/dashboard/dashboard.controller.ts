@@ -6,7 +6,7 @@ import { ByTeamIdParams } from "../team/team.schema.js";
 export async function getOverallStatsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId, userId } = request.user;
-    const res = await getOverallStats(orgId, userId);
+    const res = await getOverallStats(orgId, userId!);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -17,7 +17,7 @@ export async function getOverallStatsHandler(request: FastifyRequest, reply: Fas
 export async function getActiveSurveyStatsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId } = request.user;
-    const res = await getActiveSurveyStats(userId);
+    const res = await getActiveSurveyStats(userId!);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

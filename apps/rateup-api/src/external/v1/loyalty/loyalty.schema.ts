@@ -7,7 +7,7 @@ const customerLoyaltyAccountSchemaExternal = customerLoyaltyAccountSchema
     source: true,
   })
   .extend({
-    dob: z.string().date(),
+    dob: z.iso.date(),
   });
 
 const loyaltyTierResponseSchemaExternal = z.object({

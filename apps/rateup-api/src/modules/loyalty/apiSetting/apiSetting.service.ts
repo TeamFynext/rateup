@@ -1,5 +1,5 @@
 import prisma from "../../../utils/prisma.js";
-import { LApiSettingInput } from "./apiSetting.schema.js";
+import { LApiSettingInput, UpdateApiSettingInput } from "./apiSetting.schema.js";
 
 export async function getLoyaltyApiSettings(orgId: string) {
   return await prisma.loyaltyApiSettings.findMany({
@@ -19,7 +19,7 @@ export async function getLoyaltyApiSettingById(id: string, orgId: string) {
 export async function createLoyaltyApiSetting(data: LApiSettingInput, orgId: string) {
   return await prisma.loyaltyApiSettings.create({
     data: {
-      ...(data as any),
+      ...data,
       actionId: data.actionId?.length ? data.actionId : undefined,
       rewardId: data.rewardId?.length ? data.rewardId : undefined,
       orgId,
@@ -27,7 +27,7 @@ export async function createLoyaltyApiSetting(data: LApiSettingInput, orgId: str
   });
 }
 
-export async function updateLoyaltyApiSetting(id, data) {
+export async function updateLoyaltyApiSetting(id: string, data: UpdateApiSettingInput) {
   return await prisma.loyaltyApiSettings.update({
     where: {
       id,

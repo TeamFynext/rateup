@@ -1,4 +1,4 @@
-import { TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
+import { Prisma, TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
 import { getShortUrlId } from "../../../utils/commonUtils.js";
 import prisma from "../../../utils/prisma.js";
 import { UpdateCardRequest } from "./card.schema.js";
@@ -36,6 +36,9 @@ export interface CardInput {
 //used in zapier also
 export async function createCard(data: CardInput) {
   const { title, userId, orgId, labelIds, assignees, ...otherData } = data;
+  if (!title) {
+    throw new Error("title is required to create a ticket card");
+  }
   // Get the highest order in the column to place new card at the end
   const highestOrderCard = await prisma.ticketCard.findFirst({
     where: { ticketColumnId: data.ticketColumnId },
@@ -88,7 +91,7 @@ export async function createCard(data: CardInput) {
     },
   });
 
-  (card as any).labels = (card as any).labels?.map((l: any) => l.label) || [];
+  const cardWithLabels = { ...card, labels: card.labels.map((l) => l.label) };
 
   // Log activity for card creation
   await prisma.ticketActivity.create({
@@ -123,6 +126,9 @@ export async function createCard(data: CardInput) {
       },
     },
   });
+  if (!board) {
+    throw new Error(`TicketBoard with ID ${column.ticketBoardId} not found.`);
+  }
   for await (const notificationRecipient of board.notificationRecipients) {
     const { user } = notificationRecipient;
     if (board.ticketCreatedEmail)
@@ -134,7 +140,7 @@ export async function createCard(data: CardInput) {
         email: user.email,
         orgId,
       });
-    if (board.ticketCreatedWhatsapp)
+    if (board.ticketCreatedWhatsapp && user.phone)
       await sendTicketCreateWaMessage({
         board_name: board.title,
         column_name: column.title,
@@ -163,10 +169,10 @@ export async function createCard(data: CardInput) {
   }
   await addZapierTriggerToQueue(
     ZapierTriggers.TICKET_CREATED,
-    { [ZapierTriggers.TICKET_CREATED]: card },
+    { [ZapierTriggers.TICKET_CREATED]: cardWithLabels },
     orgId,
   );
-  return card;
+  return cardWithLabels;
 }
 
 export async function getCards(ticketColumnId: string) {
@@ -177,7 +183,7 @@ export async function getCards(ticketColumnId: string) {
   });
   return cards.map((c) => ({
     ...c,
-    labels: (c as any).labels?.map((l: any) => l.label) || [],
+    labels: c.labels.map((l) => l.label),
   }));
 }
 
@@ -263,6 +269,10 @@ export async function getCardById(id: string) {
       },
     },
   });
+  if (!ticketCard) {
+    return null;
+  }
+  let waAutomatedReplyMessageContact = null;
   if (ticketCard.waAutomatedReplyMessageId) {
     const contact = await prisma.contact.findFirst({
       where: {
@@ -277,10 +287,15 @@ export async function getCardById(id: string) {
         consent: true,
       },
     });
-    (ticketCard.waAutomatedReplyMessage as any).contact = contact;
+    waAutomatedReplyMessageContact = contact;
   }
-  (ticketCard as any).labels = (ticketCard as any).labels?.map((l: any) => l.label) || [];
-  return ticketCard;
+  return {
+    ...ticketCard,
+    labels: ticketCard.labels.map((l) => l.label),
+    waAutomatedReplyMessage: ticketCard.waAutomatedReplyMessage
+      ? { ...ticketCard.waAutomatedReplyMessage, contact: waAutomatedReplyMessageContact }
+      : ticketCard.waAutomatedReplyMessage,
+  };
 }
 export async function getCardTeamMembersById(id: string) {
   const result = await prisma.$queryRaw<{ id: string; name: string }[]>`
@@ -361,7 +376,7 @@ export async function updateCard(
         : {}),
       deadline: data.deadline !== undefined ? data.deadline : undefined,
       contactId: data.contactId !== undefined ? data.contactId : undefined,
-      checklists: data.checklists !== undefined ? data.checklists : undefined,
+      checklists: data.checklists === null ? Prisma.DbNull : data.checklists,
       // attachments is now String[] — replace the whole array
       ...(data.attachments !== undefined ? { attachments: { set: data.attachments } } : {}),
       ...(data.assignedToIds !== undefined
@@ -405,7 +420,7 @@ export async function updateCard(
             }
             return acc;
           },
-          {} as Record<string, any>,
+          {} as Record<string, unknown>,
         ),
       },
     });
@@ -550,8 +565,8 @@ export async function updateCard(
 
   // Check checklist changes
   if (data.checklists !== undefined) {
-    const prevChecklists = (previousCard?.checklists as any[]) || [];
-    const newChecklists = (data.checklists as any[]) || [];
+    const prevChecklists = previousCard?.checklists ?? [];
+    const newChecklists = data.checklists ?? [];
 
     // Removed checklists
     for (const prevList of prevChecklists) {
@@ -586,7 +601,7 @@ export async function updateCard(
 
         // Removed items
         for (const prevItem of prevItems) {
-          if (!newItems.find((ni: any) => ni.id === prevItem.id)) {
+          if (!newItems.find((ni) => ni.id === prevItem.id)) {
             await prisma.ticketActivity.create({
               data: {
                 type: "REMOVED_CHECKLIST_ITEM",
@@ -603,7 +618,7 @@ export async function updateCard(
 
         // Added and changed items
         for (const newItem of newItems) {
-          const prevItem = prevItems.find((pi: any) => pi.id === newItem.id);
+          const prevItem = prevItems.find((pi) => pi.id === newItem.id);
           if (!prevItem) {
             await prisma.ticketActivity.create({
               data: {
@@ -728,7 +743,7 @@ export async function updateCard(
               email: user.email,
               orgId,
             });
-          if (board.ticketAssignedWhatsapp)
+          if (board.ticketAssignedWhatsapp && user.phone)
             await sendTicketAssignedWaMessage({
               board_name: board.title,
               column_name: column.title,

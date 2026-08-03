@@ -4,12 +4,13 @@
 
 import nlp from "@google-cloud/language";
 import fs from "node:fs";
+import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 
 fs.writeFileSync("./nlp_auth.json", process.env.NLP_AUTH || "");
 
 // Instantiates a client
-const nlp_client = new nlp.v1beta2.LanguageServiceClient();
+const nlp_client = new nlp.v1.LanguageServiceClient();
 
 async function annotateText(text: string) {
   const result = await nlp_client.annotateText(
@@ -44,7 +45,7 @@ export async function memoizedAnnotateText(text: string) {
     await prisma.nLP_Cache.create({
       data: {
         text,
-        result: result as any,
+        result: result as unknown as Prisma.InputJsonValue,
       },
     });
     return { result, fromCache: false };

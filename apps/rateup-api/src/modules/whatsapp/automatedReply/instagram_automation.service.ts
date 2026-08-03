@@ -22,6 +22,11 @@ import {
   sendInstagramPrivateReply,
 } from "../instagram/instagram_messaging.service.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import type {
+  AutomationNode,
+  InstagramQuickReplyOption,
+  InstagramTemplateElement,
+} from "../whatsappSurvey/node-types.js";
 
 // Type definitions for Instagram automation nodes
 export type InstagramNodeType =
@@ -37,28 +42,28 @@ export type InstagramNodeType =
   | "instagramProductTemplateNode"
   | "instagramIceBreakerNode";
 
-interface InstagramNode {
-  id: string;
-  type: InstagramNodeType;
-  data: any;
+/** Nodes on an Instagram automation graph are the shared node shape, narrowed by `type`. */
+type InstagramNode = AutomationNode;
+
+// A node's `data` is a free-form JSON blob written by the flow builder; these read one
+// field out of it without pretending the whole blob has a fixed shape.
+function nodeString(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+function nodeNumber(value: unknown): number {
+  return typeof value === "number" ? value : 0;
+}
+function nodeArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
-interface InstagramAutomation {
+export interface InstagramAutomation {
   id: string;
   orgId: string;
   name: string;
-  matchData: {
-    json: {
-      nodes: InstagramNode[];
-      edges: Array<{
-        source: string;
-        target: string;
-        sourceHandle?: string;
-      }>;
-    };
-  };
+  matchData: WaAutomatedReplyMatchData;
   sendOnceIn24Hours?: boolean;
-  whatsappSettingsPhoneId?: string;
+  whatsappSettingsPhoneId?: string | null;
 }
 
 /**
@@ -126,7 +131,7 @@ export async function startInstagramAutomationFlow(
       commentId,
     );
   } catch (error) {
-    log.error(`[Instagram Automation] Error starting flow ${automation.id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error starting flow ${automation.id}`);
     // Error is logged but not thrown to prevent affecting other operations
   }
 }
@@ -209,7 +214,11 @@ export async function processNextInstagramNode(
       case "imageNode":
         // Images cannot be sent as private replies; send a text private reply first if commentId present
         if (remainingCommentId) {
-          const rawText = node.data?.caption || node.data?.body || node.data?.text || "";
+          const rawText =
+            nodeString(node.data?.caption) ??
+            nodeString(node.data?.body) ??
+            nodeString(node.data?.text) ??
+            "";
           const fallbackText = parseToWhatsAppFormat(rawText) || "Thanks for your comment!";
           await sendInstagramPrivateReply(remainingCommentId, fallbackText, ibaId);
           remainingCommentId = undefined;
@@ -315,7 +324,7 @@ export async function processNextInstagramNode(
       log.info(`[Instagram Automation] Completed automation ${automation.id} for igsId ${igsId}`);
     }
   } catch (error) {
-    log.error(`[Instagram Automation] Error processing node ${nodeId}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error processing node ${nodeId}`);
     // Error is logged but not thrown to prevent affecting other operations
   }
 }
@@ -331,7 +340,7 @@ async function handleInstagramTextNode(
   commentId?: string,
 ): Promise<void> {
   try {
-    const rawText = node.data?.body || node.data?.text || "Hello!";
+    const rawText = nodeString(node.data?.body) ?? nodeString(node.data?.text) ?? "Hello!";
     const text = parseToWhatsAppFormat(rawText) || "Hello!";
     if (commentId) {
       await sendInstagramPrivateReply(commentId, text, ibaId);
@@ -339,7 +348,7 @@ async function handleInstagramTextNode(
       await sendInstagramTextMessage(igsId, text, orgId, ibaId);
     }
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling text node ${node.id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error handling text node ${node.id}`);
   }
 }
 
@@ -353,8 +362,8 @@ async function handleInstagramImageNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const imageUrl = node.data?.link || node.data?.url;
-    const caption = parseToWhatsAppFormat(node.data?.caption) || "";
+    const imageUrl = nodeString(node.data?.link) ?? nodeString(node.data?.url);
+    const caption = parseToWhatsAppFormat(nodeString(node.data?.caption) ?? "") || "";
 
     if (!imageUrl) {
       log.warn(`[Instagram Automation] Image node ${node.id} has no image URL`);
@@ -363,7 +372,7 @@ async function handleInstagramImageNode(
 
     await sendInstagramImage(igsId, getFileUrlFromKey(imageUrl), caption, orgId, ibaId);
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling image node ${node.id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error handling image node ${node.id}`);
   }
 }
 
@@ -377,9 +386,9 @@ async function handleInstagramGenericTemplateNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const elements = (node.data?.elements || []).map((el: any) => ({
+    const elements = nodeArray<InstagramTemplateElement>(node.data?.elements).map((el) => ({
       ...el,
-      buttons: (el.buttons || []).map((btn: any) => ({
+      buttons: (el.buttons ?? []).map((btn) => ({
         ...btn,
         // Use the button's id as the payload so it matches the edge sourceHandle
         payload: btn.type === "postback" ? btn.id || btn.payload || btn.title : btn.payload,
@@ -393,7 +402,10 @@ async function handleInstagramGenericTemplateNode(
 
     await sendInstagramGenericTemplate(igsId, elements, orgId, ibaId);
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling generic template node ${node.id}: %o`, error);
+    log.error(
+      { err: error },
+      `[Instagram Automation] Error handling generic template node ${node.id}`,
+    );
   }
 }
 
@@ -407,14 +419,13 @@ async function handleInstagramQuickReplyNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const text = parseToWhatsAppFormat(node.data?.text) || "Choose an option:";
-    const quickReplies = (node.data?.quick_replies || node.data?.quickReplies || []).map(
-      (qr: any) => ({
-        ...qr,
-        // Use the reply's id as the payload so it matches the edge sourceHandle
-        payload: qr.id || qr.payload || qr.title,
-      }),
-    );
+    const text = parseToWhatsAppFormat(nodeString(node.data?.text) ?? "") || "Choose an option:";
+    const rawQuickReplies = node.data?.quick_replies ?? node.data?.quickReplies;
+    const quickReplies = nodeArray<InstagramQuickReplyOption>(rawQuickReplies).map((qr) => ({
+      ...qr,
+      // Use the reply's id as the payload so it matches the edge sourceHandle
+      payload: qr.id || qr.payload || qr.title,
+    }));
 
     if (quickReplies.length === 0) {
       log.warn(`[Instagram Automation] Quick reply node ${node.id} has no quick replies`);
@@ -425,7 +436,7 @@ async function handleInstagramQuickReplyNode(
 
     await sendInstagramQuickReply(igsId, text, quickReplies, orgId, ibaId);
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling quick reply node ${node.id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error handling quick reply node ${node.id}`);
   }
 }
 
@@ -439,8 +450,9 @@ async function handleInstagramProductTemplateNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const productIds: string[] =
-      node.data?.productIds || (node.data?.product?.id ? [node.data.product.id] : []);
+    const productId = nodeString((node.data?.product as { id?: unknown } | undefined)?.id);
+    const declaredIds = nodeArray<string>(node.data?.productIds);
+    const productIds: string[] = declaredIds.length ? declaredIds : productId ? [productId] : [];
 
     if (productIds.length === 0) {
       log.warn(`[Instagram Automation] Product template node ${node.id} has no product IDs`);
@@ -449,7 +461,10 @@ async function handleInstagramProductTemplateNode(
 
     await sendInstagramProductTemplate(igsId, productIds, orgId, ibaId);
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling product template node ${node.id}: %o`, error);
+    log.error(
+      { err: error },
+      `[Instagram Automation] Error handling product template node ${node.id}`,
+    );
   }
 }
 
@@ -465,8 +480,8 @@ async function handleInstagramPauseNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const duration = node.data?.duration || 0;
-    const unit = node.data?.unit || "seconds";
+    const duration = nodeNumber(node.data?.duration);
+    const unit = nodeString(node.data?.unit) ?? "seconds";
 
     let ms = 0;
     if (unit === "seconds") ms = duration * 1000;
@@ -478,7 +493,7 @@ async function handleInstagramPauseNode(
     // Update status to paused
     await prisma.waAutomatedReplyMessage.update({
       where: { id: automationMessageId },
-      data: { status: "paused" as any },
+      data: { status: "paused" },
     });
 
     // Schedule resumption using setTimeout (for simple implementation)
@@ -490,11 +505,13 @@ async function handleInstagramPauseNode(
         // Update status back to inProgress
         await prisma.waAutomatedReplyMessage.update({
           where: { id: automationMessageId },
-          data: { status: "inProgress" as any },
+          data: { status: "inProgress" },
         });
 
         // Continue to next node
-        const nextEdges = automation.matchData.json.edges.filter((edge) => edge.source === node.id);
+        const nextEdges = automation.matchData.json?.edges.filter(
+          (edge) => edge.source === node.id,
+        );
 
         if (nextEdges && nextEdges.length > 0) {
           for (const nextEdge of nextEdges) {
@@ -509,11 +526,11 @@ async function handleInstagramPauseNode(
           }
         }
       } catch (error) {
-        log.error(`[Instagram Automation] Error resuming after pause: %o`, error);
+        log.error({ err: error }, `[Instagram Automation] Error resuming after pause`);
       }
     }, ms);
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling pause node ${node.id}: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error handling pause node ${node.id}`);
   }
 }
 
@@ -533,7 +550,7 @@ export async function handleInstagramUserResponse(
       where: {
         phone: igsId,
         orgId,
-        status: "inProgress" as any,
+        status: "inProgress",
         waAutomatedReply: {
           platform: PlatformType.INSTAGRAM,
         },
@@ -550,12 +567,16 @@ export async function handleInstagramUserResponse(
       return false; // No active automation found
     }
 
-    const automation = recentAutomation.waAutomatedReply as any;
+    const automation = recentAutomation.waAutomatedReply as InstagramAutomation;
     const currentNodeId = recentAutomation.currentNode;
+
+    if (!currentNodeId) {
+      return false; // No current node tracked for this automation
+    }
 
     // Find the current node
     const currentNode = automation.matchData?.json?.nodes?.find(
-      (node: any) => node.id === currentNodeId,
+      (node) => node.id === currentNodeId,
     );
 
     if (!currentNode) {
@@ -604,7 +625,7 @@ export async function handleInstagramUserResponse(
     ) {
       // Find the next node based on the button clicked
       const nextEdges = automation.matchData?.json?.edges?.filter(
-        (edge: any) =>
+        (edge) =>
           edge.source === currentNodeId &&
           (edge.sourceHandle === buttonPayload || !edge.sourceHandle),
       );
@@ -632,7 +653,7 @@ export async function handleInstagramUserResponse(
 
     return false;
   } catch (error) {
-    log.error(`[Instagram Automation] Error handling user response: %o`, error);
+    log.error({ err: error }, `[Instagram Automation] Error handling user response`);
     return false;
   }
 }

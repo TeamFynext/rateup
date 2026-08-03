@@ -17,30 +17,44 @@ interface InstagramProfileParams {
   whatsappSettingsId: string;
 }
 
-function normalizeIceBreakers(data: any) {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.ice_breakers)) return data.ice_breakers;
+// resolveInstagramSettings always guards `ibaId` before returning, so callers can rely
+// on it being present without a non-null assertion at every use site.
+type InstagramWaSettings = NonNullable<Awaited<ReturnType<typeof getWaSettingsById>>> & {
+  ibaId: string;
+};
+
+// The getters return either the stored draft (a bare array) or Meta's read-back envelope
+// ({ ice_breakers: [...] } / { persistent_menu: [...] }), so both shapes are unwrapped here.
+function normalizeIceBreakers(data: unknown): InstagramIceBreaker[] {
+  if (Array.isArray(data)) return data as InstagramIceBreaker[];
+  const wrapped = (data as { ice_breakers?: unknown } | null | undefined)?.ice_breakers;
+  if (Array.isArray(wrapped)) return wrapped as InstagramIceBreaker[];
   return [];
 }
 
-function normalizePersistentMenu(data: any) {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.persistent_menu)) return data.persistent_menu;
+function normalizePersistentMenu(data: unknown): InstagramPersistentMenuEntry[] {
+  if (Array.isArray(data)) return data as InstagramPersistentMenuEntry[];
+  const wrapped = (data as { persistent_menu?: unknown } | null | undefined)?.persistent_menu;
+  if (Array.isArray(wrapped)) return wrapped as InstagramPersistentMenuEntry[];
   return [];
 }
 
-async function resolveInstagramSettings(whatsappSettingsId: string, orgId: string) {
+async function resolveInstagramSettings(
+  whatsappSettingsId: string,
+  orgId: string,
+): Promise<InstagramWaSettings | null> {
   const settings = await getWaSettingsById(whatsappSettingsId);
 
   if (!settings || settings.orgId !== orgId) {
     return null;
   }
 
-  if (!settings.ibaId) {
+  const { ibaId } = settings;
+  if (!ibaId) {
     throw new Error("Instagram account is not connected for this channel");
   }
 
-  return settings;
+  return { ...settings, ibaId };
 }
 
 export async function getInstagramProfileHandler(
@@ -48,7 +62,7 @@ export async function getInstagramProfileHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -59,8 +73,8 @@ export async function getInstagramProfileHandler(
     }
 
     const [iceBreakersRaw, persistentMenuRaw] = await Promise.all([
-      getInstagramIceBreakers(orgId, settings.ibaId!),
-      getInstagramPersistentMenu(orgId, settings.ibaId!),
+      getInstagramIceBreakers(orgId, settings.ibaId),
+      getInstagramPersistentMenu(orgId, settings.ibaId),
     ]);
 
     const iceBreakers = normalizeIceBreakers(iceBreakersRaw);
@@ -74,7 +88,7 @@ export async function getInstagramProfileHandler(
       },
     });
   } catch (error) {
-    log.error("[Instagram Profile] Error fetching profile settings: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error fetching profile settings");
     return reply.code(500).send({
       success: false,
       message: "Failed to fetch Instagram profile settings",
@@ -93,7 +107,7 @@ export async function setInstagramIceBreakersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -112,11 +126,11 @@ export async function setInstagramIceBreakersHandler(
 
     await updateWaSettingsById(settings.id, {
       instagramIceBreakers: request.body.iceBreakers,
-    } as any);
+    });
 
-    let metaResult: any = { saved: true };
+    let metaResult: unknown = { saved: true };
     if (request.body.syncWithMeta) {
-      metaResult = await setInstagramIceBreakers(request.body.iceBreakers, orgId, settings.ibaId!);
+      metaResult = await setInstagramIceBreakers(request.body.iceBreakers, orgId, settings.ibaId);
     }
 
     return reply.code(200).send({
@@ -127,7 +141,7 @@ export async function setInstagramIceBreakersHandler(
       },
     });
   } catch (error) {
-    log.error("[Instagram Profile] Error setting ice breakers: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error setting ice breakers");
     return reply.code(500).send({
       success: false,
       message: "Failed to set Instagram ice breakers",
@@ -140,7 +154,7 @@ export async function deleteInstagramIceBreakersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -152,13 +166,13 @@ export async function deleteInstagramIceBreakersHandler(
 
     await updateWaSettingsById(settings.id, {
       instagramIceBreakers: [],
-    } as any);
+    });
 
-    const data = await deleteInstagramIceBreakers(orgId, settings.ibaId!);
+    const data = await deleteInstagramIceBreakers(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
   } catch (error) {
-    log.error("[Instagram Profile] Error deleting ice breakers: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error deleting ice breakers");
     return reply.code(500).send({
       success: false,
       message: "Failed to delete Instagram ice breakers",
@@ -185,7 +199,7 @@ export async function setInstagramPersistentMenuHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -197,14 +211,14 @@ export async function setInstagramPersistentMenuHandler(
 
     await updateWaSettingsById(settings.id, {
       instagramPersistentMenu: request.body.persistentMenu,
-    } as any);
+    });
 
-    let metaResult: any = { saved: true };
+    let metaResult: unknown = { saved: true };
     if (request.body.syncWithMeta) {
       metaResult = await setInstagramPersistentMenu(
         request.body.persistentMenu,
         orgId,
-        settings.ibaId!,
+        settings.ibaId,
       );
     }
 
@@ -216,7 +230,7 @@ export async function setInstagramPersistentMenuHandler(
       },
     });
   } catch (error) {
-    log.error("[Instagram Profile] Error setting persistent menu: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error setting persistent menu");
     return reply.code(500).send({
       success: false,
       message: "Failed to set Instagram persistent menu",
@@ -229,7 +243,7 @@ export async function deleteInstagramPersistentMenuHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -241,13 +255,13 @@ export async function deleteInstagramPersistentMenuHandler(
 
     await updateWaSettingsById(settings.id, {
       instagramPersistentMenu: [],
-    } as any);
+    });
 
-    const data = await deleteInstagramPersistentMenu(orgId, settings.ibaId!);
+    const data = await deleteInstagramPersistentMenu(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
   } catch (error) {
-    log.error("[Instagram Profile] Error deleting persistent menu: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error deleting persistent menu");
     return reply.code(500).send({
       success: false,
       message: "Failed to delete Instagram persistent menu",
@@ -260,7 +274,7 @@ export async function syncInstagramIceBreakersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -270,11 +284,11 @@ export async function syncInstagramIceBreakersHandler(
       });
     }
 
-    const draft = (settings.instagramIceBreakers as any[]) ?? [];
-    const data = await setInstagramIceBreakers(draft, orgId, settings.ibaId!);
+    const draft = settings.instagramIceBreakers ?? [];
+    const data = await setInstagramIceBreakers(draft, orgId, settings.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {
-    log.error("[Instagram Profile] Error syncing ice breakers: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error syncing ice breakers");
     return reply.code(500).send({
       success: false,
       message: "Failed to sync Instagram ice breakers to Meta",
@@ -287,7 +301,7 @@ export async function syncInstagramPersistentMenuHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user as any;
+    const { orgId } = request.user;
     const settings = await resolveInstagramSettings(request.params.whatsappSettingsId, orgId);
 
     if (!settings) {
@@ -297,11 +311,11 @@ export async function syncInstagramPersistentMenuHandler(
       });
     }
 
-    const draft = (settings.instagramPersistentMenu as any[]) ?? [];
-    const data = await setInstagramPersistentMenu(draft, orgId, settings.ibaId!);
+    const draft = settings.instagramPersistentMenu ?? [];
+    const data = await setInstagramPersistentMenu(draft, orgId, settings.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {
-    log.error("[Instagram Profile] Error syncing persistent menu: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error syncing persistent menu");
     return reply.code(500).send({
       success: false,
       message: "Failed to sync Instagram persistent menu to Meta",
@@ -317,7 +331,7 @@ export async function getInstagramMediaHandler(
     const data = await getInstagramMediaPosts(request.params.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {
-    log.error("[Instagram Profile] Error fetching media posts: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error fetching media posts");
     return reply.code(500).send({ success: false, message: "Failed to fetch Instagram media" });
   }
 }
@@ -330,7 +344,7 @@ export async function getInstagramStoriesHandler(
     const data = await getInstagramStories(request.params.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {
-    log.error("[Instagram Profile] Error fetching stories: %o", error);
+    log.error({ err: error }, "[Instagram Profile] Error fetching stories");
     return reply.code(500).send({ success: false, message: "Failed to fetch Instagram stories" });
   }
 }

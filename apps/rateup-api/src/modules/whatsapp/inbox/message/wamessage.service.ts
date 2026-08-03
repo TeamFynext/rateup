@@ -60,23 +60,74 @@ import {
 import { isTerminalInboxStatus, NOT_SPAM_EVENT } from "../../constants.js";
 import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
 import dayjs from "dayjs";
+import { HttpError } from "../../../../utils/http.js";
+import type {
+  OutgoingTemplateComponent,
+  WaSendMessageBody,
+} from "../../../../types/whatsapp.types.js";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import type { ByContactIdParams } from "../../../contact/contact.schema.js";
+
+/**
+ * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
+ * wholesale into the response, so only the columns this file reads are named.
+ */
+interface InboxConversationRow {
+  conversationId: string;
+  lastMessageBody?: unknown;
+  lastMessageWaCreatedAt?: Date | null;
+  lastMessagePlatform?: string | null;
+  lastMessageSourceIdentifier?: string | null;
+  lastMessageDeletedAt?: Date | null;
+  lastReceivedMetadata?: unknown;
+  [column: string]: unknown;
+}
+
+/** One row of the per-conversation "latest 10 messages" query. */
+interface InboxMessageRow {
+  id: string;
+  contactId: string;
+  conversationId: string;
+  waCreatedAt: Date;
+  messageBody: unknown;
+  sourcePlatform: string;
+  sourceIdentifier: string | null;
+  sendBy: string | null;
+  stats: unknown;
+  messageId: string | null;
+  deletedAt: Date | null;
+  senderName: string | null;
+  senderProfilePhoto: string | null;
+}
+
+/** A message as it is handed back on the inbox list, with its sender flattened. */
+type InboxThreadMessage = Omit<InboxMessageRow, "senderName" | "senderProfilePhoto"> & {
+  sender: { name: string | null; profilePhoto: string | null } | null;
+};
 
 /** What a revoked message reads as wherever its content would otherwise appear. */
 const DELETED_MESSAGE_PLACEHOLDER = "This message was deleted";
+
+function isWaMessageAssignStatusTabKey(key: string): key is keyof typeof WaMessageAssignStatusTab {
+  return key in WaMessageAssignStatusTab;
+}
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
   contactId: string,
   waCreatedAt: string,
   sourcePlatform: PlatformType,
-  sourceIdentifier: string,
-  conversationId: string,
-  componentParams?: any,
+  sourceIdentifier: string | undefined,
+  // Matches the nullable `WaMessage.conversationId` column — a message can
+  // genuinely have no conversation yet (see `tracksMetrics` below, which already
+  // treats a falsy `conversationId` as a real, handled case).
+  conversationId: string | undefined,
+  componentParams?: OutgoingTemplateComponent[],
   messageId?: string,
   sendBy?: string,
   failed: boolean = false,
   sourceMessage: string = "inbox",
-  logs = {},
+  logs: WaGraphApiErrorDetail = {},
 ) {
   const initialStats = {
     read: "",
@@ -108,7 +159,7 @@ export async function addNewWaMessage(
 
   const createMessage = prisma.waMessage.create({
     data: {
-      messageBody: messageBody as any,
+      messageBody,
       contactId,
       waCreatedAt,
       templateComponentParams: componentParams,
@@ -220,7 +271,8 @@ export async function getWaMessagesByContactId(
     });
   }
   const hasNextPage = messages.length === 50;
-  const nextCursor = hasNextPage ? messages.at(-1).id : null;
+  const lastMessage = messages.at(-1);
+  const nextCursor = hasNextPage && lastMessage ? lastMessage.id : null;
   return { messages, nextCursor, hasNextPage };
 }
 
@@ -269,11 +321,18 @@ export async function generateChatFilterData(orgId: string) {
     };
     const multiSelectTagsData =
       contactTags?.length > 0
-        ? contactTags[0]?.contactTags?.map((tag) => {
+        ? (contactTags[0]?.contactTags?.map((tag) => {
             const uniqueTags = new Set();
             tagsFromContacts?.forEach((t) => {
-              if (t?.tags[tag]) {
-                uniqueTags.add(t.tags[tag]);
+              // `Contact.tags` is a free-form JSON blob (keyed by the org's
+              // configured contact-tag names), so its shape is only known at
+              // runtime — hence the narrow-then-index below rather than a cast.
+              const tags = t?.tags;
+              if (tags && typeof tags === "object" && !Array.isArray(tags)) {
+                const value = (tags as Record<string, unknown>)[tag];
+                if (value !== undefined) {
+                  uniqueTags.add(value);
+                }
               }
             });
             return {
@@ -283,7 +342,7 @@ export async function generateChatFilterData(orgId: string) {
                 value: `${tag}|-${item}`,
               })),
             };
-          })
+          }) ?? [])
         : [];
     const chatFilters = [groupData, campaignsData, ...multiSelectTagsData];
     return chatFilters;
@@ -309,7 +368,7 @@ export async function filterChats(
       return teamIdsCache;
     };
 
-    const params: any[] = [orgId, (page - 1) * 20, userId];
+    const params: unknown[] = [orgId, (page - 1) * 20, userId];
     let paramIndex = 4;
     const filters: string[] = [`c."orgId" = $1::uuid`];
 
@@ -361,7 +420,7 @@ export async function filterChats(
       sortBy = "ASC";
     }
 
-    const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
+    const isSearchMode = (bodyFilterProps?.searchTerm?.length ?? 0) > 0;
 
     /**
      * Spam contacts are hidden from every other tab — that is what marking spam is
@@ -379,7 +438,7 @@ export async function filterChats(
         filters.push(`(c."lastReceivedMessageTimeStamp" IS NOT NULL)`);
       }
 
-      if (bodyFilterProps?.labels?.length > 0) {
+      if ((bodyFilterProps?.labels?.length ?? 0) > 0) {
         params.push(bodyFilterProps.labels);
         filters.push(`EXISTS (
           SELECT 1 FROM "ContactLabelMap" clm 
@@ -463,7 +522,9 @@ export async function filterChats(
         } else {
           // FIX: Handle case mismatch (e.g. "Addressed" vs "ADDRESSED")
           const rawStatus = bodyFilterProps.waMessageAssignStatus;
-          const assignedStatus = WaMessageAssignStatusTab[rawStatus] || rawStatus.toUpperCase();
+          const assignedStatus = isWaMessageAssignStatusTabKey(rawStatus)
+            ? WaMessageAssignStatusTab[rawStatus]
+            : rawStatus.toUpperCase();
 
           if (assignedStatus === "ADDRESSED") {
             // A subset was picked in the filter panel (only SPAM, say), so match it
@@ -545,7 +606,7 @@ export async function filterChats(
             waAssignedChatPermission === WaAssignedChatPermission.Admins &&
             role === Role.MEMBER
           ) {
-            if (bodyFilterProps.assignedUserIds.includes(userId)) {
+            if (bodyFilterProps.assignedUserIds?.includes(userId)) {
               params.push(userId);
               const userParam = paramIndex++;
               convConditions.push(`cam."userId" = $${userParam}::uuid`);
@@ -596,7 +657,7 @@ export async function filterChats(
       filters.push(`c."blockedOnWhatsApp" = ${bodyFilterProps?.blockedUsers ? "TRUE" : "FALSE"}`);
     }
 
-    if (isSearchMode) {
+    if (isSearchMode && bodyFilterProps.searchTerm) {
       params.push(`%${bodyFilterProps.searchTerm}%`);
       params.push(`%${bodyFilterProps.searchTerm.replace(/\s+/g, "")}%`);
       filters.push(
@@ -786,12 +847,12 @@ export async function filterChats(
       ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
 
-    const conversations: any[] = await prisma.$queryRawUnsafe(query, ...params);
+    const conversations = await prisma.$queryRawUnsafe<InboxConversationRow[]>(query, ...params);
     if (conversations.length === 0) return [];
 
     const conversationIds = conversations.map((row) => row.conversationId);
 
-    const messagesRows: any[] = await prisma.$queryRaw`
+    const messagesRows = await prisma.$queryRaw<InboxMessageRow[]>`
       WITH ranked AS (
         SELECT
           w.id,
@@ -822,7 +883,7 @@ export async function filterChats(
       ORDER BY r."conversationId", r."waCreatedAt" DESC
     `;
 
-    const messagesByConversation = new Map<string, any[]>();
+    const messagesByConversation = new Map<string, InboxThreadMessage[]>();
     for (const row of messagesRows) {
       const list = messagesByConversation.get(row.conversationId) || [];
       list.push({
@@ -845,7 +906,7 @@ export async function filterChats(
       messagesByConversation.set(row.conversationId, list);
     }
 
-    return conversations.map((row: any) => ({
+    return conversations.map((row) => ({
       ...row,
       lastMessage: row.lastMessageBody
         ? {
@@ -861,13 +922,16 @@ export async function filterChats(
     }));
   } catch (error) {
     // If Postgres threw a parameter bounds error earlier, it was swallowed here.
-    log.error("Error in inbox chat filter API: %o", error);
+    log.error({ err: error }, "Error in inbox chat filter API");
     return [];
   }
 }
 
 export async function getMediaFile(mediaId: string, orgId: string) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error(`WhatsApp settings not found for org ${orgId}`);
+  }
   const fileUrl = await callMetaApi(`/${mediaId}`, "GET", waSettings.accessToken);
   if (fileUrl?.data) {
     // Step 2: Convert the downloaded media to a Buffer (for binary data)
@@ -1001,7 +1065,7 @@ export async function assignWaMessageToUser(
       },
     });
     const assignIfOnline = data.assignIfOnline ?? false;
-    const newUsers = [];
+    const newUsers: { userId: string; teamId: string }[] = [];
     const existingUserIds = existingUsers.map((u) => u.assignedUserId);
 
     const incomingUserIds = data.assignees.map((a) => a.userId);
@@ -1036,9 +1100,7 @@ export async function assignWaMessageToUser(
             newUsers.push(assignee);
             updateCount = true;
           } else {
-            const error: any = new Error(`User is offline and cannot be assigned`);
-            error.statusCode = 400;
-            throw error;
+            throw new HttpError(`User is offline and cannot be assigned`, 400);
           }
         } else {
           newUsers.push(assignee);
@@ -1102,7 +1164,7 @@ export async function assignWaMessageToUser(
           })),
         },
         trigerredByUser: userId ?? "RateUp",
-        messageId: data.messageId,
+        messageId: data.messageId ?? crypto.randomUUID(),
       });
     } else {
       if (newUsers.length) {
@@ -1111,7 +1173,7 @@ export async function assignWaMessageToUser(
           waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
           assignedUsers: newUsers,
           trigerredByUser: userId ?? "RateUp",
-          messageId: data.messageId,
+          messageId: data.messageId ?? crypto.randomUUID(),
         });
       }
 
@@ -1124,7 +1186,7 @@ export async function assignWaMessageToUser(
             teamId: u.teamId,
           })),
           trigerredByUser: userId ?? "RateUp",
-          messageId: data.messageId,
+          messageId: data.messageId ?? crypto.randomUUID(),
         });
       }
     }
@@ -1205,9 +1267,7 @@ export async function assignWaMessageToUser(
     if (e) {
       throw e;
     } else {
-      const error: any = new Error(`Internal error`);
-      error.statusCode = 500;
-      throw error;
+      throw new HttpError(`Internal error`, 500);
     }
   }
 }
@@ -1271,7 +1331,7 @@ export async function reopenConversation(
   };
 }
 
-export async function getAssignedUserForContact(contactId) {
+export async function getAssignedUserForContact(contactId: string) {
   return await prisma.waInboxAssign.findMany({
     where: {
       contactId,
@@ -1295,7 +1355,7 @@ export async function getAssignedUsersCountForContactByTeam(contactId: string, t
   });
 }
 
-export async function deleteAssignedUsersforContact(contactId) {
+export async function deleteAssignedUsersforContact(contactId: string) {
   return await prisma.waInboxAssign.deleteMany({
     where: {
       contactId,
@@ -1541,27 +1601,30 @@ export async function setContactSpam(
   return { success: true, isSpam };
 }
 
+// Matches the `WaMedia` zod schema in wamessage.schema.ts, where all three
+// fields are required — they were previously (incorrectly) optional here even
+// though every real caller (the media-send route) always supplies them.
 export interface WaMedia {
-  type?: "audio" | "image" | "document" | "video";
-  url?: string;
-  name?: string;
+  type: "audio" | "image" | "document" | "video";
+  url: string;
+  name: string;
 }
 
 export async function sendMediaMessages(
   media: WaMedia[],
-  to,
-  orgId,
-  userId,
+  to: string,
+  orgId: string,
+  userId: string,
   platform: PlatformType,
   caption = "",
   whatsappSettingsPhoneId = "",
-  teamId,
+  teamId?: string,
 ) {
   for (let i = 0; i < media.length; i++) {
     const item = media[i];
     const isLastItem = i === media.length - 1;
-    let captionMsg = isLastItem ? caption : "";
-    let messageBody;
+    const captionMsg = isLastItem ? caption : "";
+    let messageBody: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody | undefined;
     switch (item.type) {
       case "image": {
         messageBody = createReplyImageMessage(to, item.url, platform, captionMsg);
@@ -1580,10 +1643,18 @@ export async function sendMediaMessages(
         break;
       }
     }
+    // `item.type` is validated against exactly these four values at the schema
+    // boundary, so this is unreachable in practice — but the switch has no
+    // exhaustiveness guarantee, so guard rather than send a message body that
+    // was never built.
+    if (!messageBody) {
+      log.error("Unsupported media type %s for %s; skipping item", item.type, to);
+      continue;
+    }
     await sendMessage(
       orgId,
       messageBody,
-      null,
+      undefined,
       userId,
       whatsappSettingsPhoneId,
       platform,
@@ -1637,25 +1708,23 @@ export async function clearMentionsForConversation(
 
 export async function sendContactMessage(
   contacts: { contactIds?: string[]; groupIds?: string[] },
-  phone,
-  orgId,
-  userId,
-  whatsappSettingsPhoneId,
-  teamId,
+  phone: string,
+  orgId: string,
+  userId: string,
+  whatsappSettingsPhoneId: string,
+  teamId?: string,
 ) {
   if (!contacts.contactIds && !contacts.groupIds) return;
-  let filterCondition = {
-    OR: [],
-  };
+  const orConditions: Prisma.ContactWhereInput[] = [];
   if (contacts.contactIds && contacts.contactIds.length) {
-    filterCondition.OR.push({
+    orConditions.push({
       id: {
         in: contacts.contactIds,
       },
     });
   }
   if (contacts.groupIds && contacts.groupIds.length) {
-    filterCondition.OR.push({
+    orConditions.push({
       contactGroups: {
         some: {
           contactGroupId: {
@@ -1665,6 +1734,7 @@ export async function sendContactMessage(
       },
     });
   }
+  const filterCondition: Prisma.ContactWhereInput = { OR: orConditions };
   const contactsData = await prisma.contact.findMany({
     where: filterCondition,
     select: {
@@ -1685,7 +1755,7 @@ export async function sendContactMessage(
   await sendMessage(
     orgId,
     messageBody,
-    null,
+    undefined,
     userId,
     whatsappSettingsPhoneId,
     undefined,
@@ -1695,18 +1765,18 @@ export async function sendContactMessage(
 }
 
 export async function sendLocationMessage(
-  location,
-  phone,
-  orgId,
-  userId,
-  whatsappSettingsPhoneId,
-  teamId,
+  location: WaSendMessageBody["location"],
+  phone: string,
+  orgId: string,
+  userId: string,
+  whatsappSettingsPhoneId: string,
+  teamId?: string,
 ) {
   const messageBody = createLocationMessage(phone, location);
   await sendMessage(
     orgId,
     messageBody,
-    null,
+    undefined,
     userId,
     whatsappSettingsPhoneId,
     undefined,
@@ -1715,7 +1785,7 @@ export async function sendLocationMessage(
   );
 }
 
-export async function getWaMessageByMessageId(messageId: string): Promise<WaMessage> {
+export async function getWaMessageByMessageId(messageId: string): Promise<WaMessage | null> {
   return await prisma.waMessage.findFirst({
     where: {
       messageId,
@@ -1755,7 +1825,7 @@ export async function markWaMessageAsDeleted(waMessageId: string, orgId: string)
 
 export async function updateWaMessageByMessageId(
   messageId: string,
-  data: Partial<WaMessage>,
+  data: Prisma.WaMessageUncheckedUpdateInput,
   id?: string,
 ) {
   const whereClause = id ? { id } : { messageId };
@@ -1775,10 +1845,12 @@ export async function updateWaMessageByMessageId(
     },
     data: {
       ...data,
+      // `stats` is a free-form JSON blob of delivery-status timestamps — merge
+      // the caller's partial update over the existing row rather than replacing it.
       stats: data.stats
         ? {
-            ...(message.stats as Record<string, any>),
-            ...(data.stats as Record<string, any>),
+            ...(message.stats as Record<string, unknown>),
+            ...(data.stats as Record<string, unknown>),
           }
         : undefined,
     },
@@ -1786,7 +1858,18 @@ export async function updateWaMessageByMessageId(
 }
 
 export async function generateChatAnalytics(orgId: string) {
-  const analytics = await prisma.$queryRaw`
+  const analytics = await prisma.$queryRaw<
+    Array<{
+      newChatCount: number;
+      waMessageCount: number;
+      unassignedContactCount: number;
+      assignedContactCount: number;
+      newContactCount: number;
+      closedContactCount: number;
+      blockedContactCount: number;
+      waInboxAssignedCount: number;
+    }>
+  >`
     SELECT
       (SELECT COUNT(*)::INTEGER FROM "Contact" c WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."orgId" = ${orgId}::uuid) 
         AS "newChatCount",
@@ -1834,7 +1917,10 @@ export async function generateChatAnalytics(orgId: string) {
   return { ...analytics?.[0], assignedUserCounts };
 }
 
-export async function getChatByContactId(req, res) {
+export async function getChatByContactId(
+  req: FastifyRequest<{ Params: ByContactIdParams }>,
+  res: FastifyReply,
+) {
   const { contactId } = req.params;
   try {
     const chat = await prisma.waMessage.findMany({
@@ -1848,7 +1934,7 @@ export async function getChatByContactId(req, res) {
     });
     return res.status(200).send(chat);
   } catch (error) {
-    log.error("Error in getChatByContactId: %o", error);
+    log.error({ err: error }, "Error in getChatByContactId");
     res.status(500).send({ error: "Failed to retrieve chat" });
   }
 }
@@ -1880,6 +1966,9 @@ export async function generateInboxResponse(
   }
 
   const settings = await getWaSettings(orgId);
+  if (!settings) {
+    throw new Error(`WhatsApp settings not found for org ${orgId}`);
+  }
 
   for (const contact of contacts) {
     console.log(`Seeding chats for contact: ${contact.name} (${contact.phone})`);
@@ -1935,7 +2024,11 @@ export async function createInternalWaMessage({
 }) {
   const conversation = await getLastCreatedConversationForContact(contactId);
 
-  let triggeredByUserDetails: { id: string; name: string } | null = null;
+  // `id` is null for the system/automation actor (it has no user row), and the
+  // whole value stays null when a real user id was given but that user has no
+  // `name` set — both are genuine, not just type-theoretical: `User.name` is
+  // optional in the schema.
+  let triggeredByUserDetails: { id: string | null; name: string } | null = null;
 
   if (trigerredByUser && trigerredByUser !== "RateUp" && trigerredByUser !== "Automation") {
     const user = await prisma.user.findUnique({
@@ -1962,7 +2055,9 @@ export async function createInternalWaMessage({
 
   if (exchangeProcess === "internal") {
     let messageText: string;
-    let assignStatus: string;
+    // Optional to match `waMessageAssignStatus` above (the `default:` branch below
+    // stores it verbatim, including when it's undefined).
+    let assignStatus: string | undefined;
     let assignedUserDetails: { id: string; name: string }[] = [];
 
     if (
@@ -2045,8 +2140,6 @@ export async function createInternalWaMessage({
         waCreatedAt: new Date(),
         messageBody: {
           exchangeProcess: "internal",
-          send: null,
-          receive: null,
           internal: {
             text: { body: messageText },
             triggeredByUser: triggeredByUserDetails,
@@ -2075,6 +2168,10 @@ export async function createInternalWaMessage({
       throw new Error("Contact not found");
     }
 
+    if (!privateMessageText) {
+      throw new Error("privateMessageText is required to create a private note message");
+    }
+
     if (mentionedUserIds?.length) {
       // Preferred: the client resolved the mentions to ids, so names with spaces
       // (which the `@name` text match can't capture) still work.
@@ -2083,7 +2180,7 @@ export async function createInternalWaMessage({
         select: { id: true, name: true },
       });
       mentionedUserDetails = users.map((u) => ({ id: u.id, name: u.name ?? "" }));
-    } else if (mentionedUsers?.length > 0) {
+    } else if ((mentionedUsers?.length ?? 0) > 0) {
       const users = await prisma.user.findMany({
         where: { name: { in: mentionedUsers } },
         select: { id: true, name: true },
@@ -2102,8 +2199,6 @@ export async function createInternalWaMessage({
         messageId: messageId,
         messageBody: {
           exchangeProcess: "privateNote",
-          send: null,
-          receive: null,
           privateNote: {
             text: { body: privateMessageText },
             triggeredByUser: triggeredByUserDetails,
@@ -2150,7 +2245,8 @@ export async function createInternalWaMessage({
   }
 }
 
-function getStatusLabel(status: string): string | null {
+function getStatusLabel(status: string | undefined): string | null {
+  if (!status) return null;
   const map: Record<string, string> = {
     [WaMessageAssignStatus.CLOSED]: "closed",
     [WaMessageAssignStatus.SPAM]: "spam",
@@ -2161,7 +2257,10 @@ function getStatusLabel(status: string): string | null {
 }
 
 interface CreateWaMessageOrgTeamMapInput {
-  teamId: string;
+  // Matches the nullable `WaMessageOrgTeamMap.teamId` column (unassigned sends
+  // have no team) — was incorrectly required here even though the one real
+  // caller already computes a possibly-null value.
+  teamId: string | null;
   messageId: string;
   orgId: string;
   isAutomedMessage?: boolean;
@@ -2335,7 +2434,7 @@ export async function getWaMessageLogs(
       messageType: string | null;
       messagePreview: string;
       status: string | null;
-      logs: any;
+      logs: WaGraphApiErrorDetail | null;
       errorMessage: string | null;
     }>
   >`

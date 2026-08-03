@@ -20,6 +20,7 @@ import {
   WaPrivateMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
+  WaTemplateComponent,
   WaTemplateSendComponent,
 } from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
@@ -67,24 +68,56 @@ declare global {
     value: string;
     weightage?: NPSWeightage;
   }
+  /**
+   * A single toggleable sub-field of a question's per-language `features` blob
+   * (e.g. the `name`/`phone`/`email` toggles on a Contact question, or the
+   * `other` option on a choice question).
+   */
+  interface QuestionFeatureToggle {
+    isEnabled?: boolean;
+    required?: boolean;
+    title?: string;
+  }
+  /**
+   * Per-language extra configuration for a question. Which keys are populated
+   * depends on `Question.type`:
+   * - Contact/Email/Phone/Testimonial: arbitrary sub-field keys -> QuestionFeatureToggle
+   * - MCQGrid: `questions`
+   * - MultiTextInput: `fields`
+   * - choice questions: `other`
+   * The index signature covers the type-dependent sub-field keys; readers must
+   * narrow before use.
+   */
+  interface QuestionFeatures {
+    questions?: string[];
+    fields?: Array<{ fieldKey?: string; label?: string }>;
+    other?: QuestionFeatureToggle;
+    allowedEmails?: string[];
+    [featureKey: string]: unknown;
+  }
   interface Question {
-    title: Zod.RecordType<string, string>;
-    description: Zod.RecordType<string, string>;
+    title: Record<string, string>;
+    description: Record<string, string>;
     required: boolean;
     type: QuestionType;
-    choices?: Zod.RecordType<string, Array<Choice>>;
-    features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
-    sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
-    label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
+    choices?: Record<string, Array<Choice>>;
+    features?: Record<string, QuestionFeatures>;
+    sections?: Record<string, WaSectionsType>; // only for whatsapp surveys
+    label?: Record<string, string>; // only for whatsapp-flow surveys
     id: string;
     googleReview?: GoogleReview;
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
-    validationRules?: ValidationRules | any;
+    validationRules?: ValidationRules;
     tnc?: TNC;
     waAppName?: string;
-    reviewPageOptions?: any;
+    reviewPageOptions?: Record<string, unknown>;
     reviewPagePlatform?: string;
+    // Read/written by whatsapp-flow logic (flow.controller.ts) and defined in
+    // question.schema.ts's Zod input schema, but was missing here.
+    onSelectAction?: boolean;
+    // Opts this question into NPS analytics; defined in question.schema.ts.
+    enableNpsAnalytics?: boolean;
   }
   interface Question2 {
     id: string;
@@ -108,15 +141,45 @@ declare global {
       };
       payload: Record<string, unknown>;
     };
+    // Opts this question into NPS analytics; defined in question.schema.ts.
+    enableNpsAnalytics?: boolean;
+  }
+
+  /** `SurveyResponse.location` — where the respondent answered from. */
+  /** One day's opening hours in a BusinessHour schedule. */
+  interface BusinessHourDay {
+    isOpen: boolean;
+    timeSlots: Array<{ openTime: string; closeTime: string }>;
+  }
+
+  /** `BusinessHour.schedule` — opening hours keyed by weekday. */
+  interface BusinessHourSchedule {
+    monday: BusinessHourDay;
+    tuesday: BusinessHourDay;
+    wednesday: BusinessHourDay;
+    thursday: BusinessHourDay;
+    friday: BusinessHourDay;
+    saturday: BusinessHourDay;
+    sunday: BusinessHourDay;
+  }
+
+  interface ResponseLocation {
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+    city?: string;
+    state?: string;
+    country?: string;
   }
 
   interface ResponseSummary {
     questionId: string;
-    all: {
+    all?: {
       summary: string;
       responseIds: string[];
     };
-    team: {
+    team?: {
       teamId: string;
       summary: string;
       responseIds: string[];
@@ -131,12 +194,30 @@ declare global {
     createdAt: string;
   }
 
+  /**
+   * `Contact.integrationIds` — links a Rateup contact to the records that
+   * represent it in each external system, keyed by provider and then by record
+   * kind (e.g. `{ zoho: { contact: { id }, lead: { id } } }`).
+   */
+  interface ContactIntegrationIds {
+    zoho?: {
+      contact?: { id?: string };
+      lead?: { id?: string };
+    };
+    bigin?: {
+      contact?: { id?: string };
+      deal?: { id?: string };
+    };
+    [provider: string]: Record<string, { id?: string } | undefined> | undefined;
+  }
+
   interface GoogleSheetCredential {
     accessToken: string;
     refreshToken: string;
     expiryDate: string;
     scopes: string[];
     userEmail: string | null;
+    driveFolderId?: string | null;
   }
   type GoogleSheetIntegration = Integration & {
     credential: GoogleSheetCredential;
@@ -204,20 +285,29 @@ declare global {
   }
 
   interface ScheduleObj {
+    // Assigned by callers via crypto.randomUUID() to correlate a schedule with
+    // its BullMQ job and its own history entries (see shopify.service.ts).
+    scheduleId?: string;
     createdAt: Date;
-    sentAt?: Date;
+    // Persisted as an explicit `null` (not omitted) in the credential JSON blob
+    // while a schedule is still pending, so this must accept null, not just
+    // undefined, to match what's actually written to the DB.
+    sentAt?: Date | null;
     scheduledAt: Date;
-    status?: string;
+    status?: string | null;
   }
 
   type ShopifySchedules = ScheduleObj & {
     phone: string;
     webhookId?: string;
     checkoutId?: string;
-    actionStatus?: "success" | "failed";
+    // Reserved for future use — always written as `null` today, never set to
+    // "success"/"failed" by any code path.
+    actionStatus?: "success" | "failed" | null;
     history: ScheduleObj[];
-    apiStatus?: string;
-    body?: any;
+    apiStatus?: string | null;
+    /** Raw Shopify webhook payload retained for retries/debugging. */
+    body?: import("../modules/integrations/shopify/shopify.types.js").ShopifyWebhookBody;
   };
 
   type ZapierIntegration = Integration & {
@@ -305,21 +395,59 @@ declare global {
     response: string | string[]; // for (MSQ and DDMS) or (for conditions like includeAnyOf) it will be an array of indices of selected choices
     action: LogicAction;
   }
+  /**
+   * A template as Meta's API represents it — both the payload we send to create
+   * one (no `id`/`status` yet; Meta assigns those) and the row it returns.
+   * Older stored rows keep a flattened form alongside `components`, so extra
+   * fields are permitted.
+   */
+  /**
+   * A component of a Meta template. Create payloads use the lowercase type
+   * names, rows read back from Meta use the uppercase ones.
+   */
+  interface WaMetaTemplateComponent {
+    type: WaTemplateComponentType | WaTemplateComponentTypeUpperCase | string;
+    format?: string;
+    text?: string;
+    /** Meta's sample values; media headers carry uploaded handles here. */
+    // body_text is documented as a list of example sets; this repo sends one flat set.
+    example?: {
+      header_handle?: string[];
+      header_text?: string[];
+      body_text?: string[] | string[][];
+    };
+    buttons?: Array<import("./whatsapp.types.js").WaTemplateButton>;
+    cards?: Array<Record<string, unknown>>;
+    [field: string]: unknown;
+  }
+
+  interface WaMetaTemplate {
+    name: string;
+    language?: string;
+    category?: WaTemplateCategory | string;
+    components?: WaMetaTemplateComponent[];
+    id?: string;
+    status?: WaTemplateStatus | string;
+    allow_category_change?: boolean | null;
+    [field: string]: unknown;
+  }
+
   interface WaTemplateWithTypes {
     id: string;
     createdAt: Date;
-    whatsappSettingsPhoneId?: string;
+    whatsappSettingsPhoneId?: string | null;
     data: {
       name: string;
-      components: Array<any>;
+      components: Array<WaTemplateComponent>;
       id: string;
       status: WaTemplateStatus;
       language: string;
       category: WaTemplateCategory;
     };
-    acceptButton?: string;
-    orgId?: string;
-    defaultValues?: WaTemplateDefaultValues;
+    acceptButton?: string | null;
+    orgId: string;
+    templateType?: import("../../generated/prisma/client.js").TemplateType;
+    defaultValues?: WaTemplateDefaultValues | null;
   }
   type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
 
@@ -384,7 +512,7 @@ declare global {
     basePlan: SPlan;
     isAnnualMessageLimit: boolean;
     subscriptionRef?: string;
-    shopifyPlanId?: string;
+    shopifyPlanId?: string | null;
   }
   interface WaFlowWa {
     // wa flow type from whatsapp
@@ -396,9 +524,64 @@ declare global {
   interface WaFlowJson {
     version: string;
     screens: Array<WaFlowScreen>;
-    data_api_version: string;
-    routing_model: Json;
+    // Both only get populated by transformFlowAndLogicJumps (flow.utils.ts)
+    // once logic jumps exist — a freshly-created flow's json legitimately
+    // starts without them.
+    data_api_version?: string;
+    routing_model?: Json;
   }
+
+  /**
+   * One entry of `WaFlow.map`, keyed by form-element name. Always carries the
+   * Survey question that element backs (`questionId`, `type`); choice-based
+   * question types additionally carry numeric-string keys mapping a response
+   * index to the choice label (see generateDataSourceFromQuestion's `mapData`).
+   */
+  interface WaFlowMapEntry {
+    questionId: string;
+    type: QuestionType;
+    [responseIndex: string]: string | QuestionType | undefined;
+  }
+
+  /** `WaFlow.map` — form-element name -> the question that element backs. */
+  type WaFlowMap = Record<string, WaFlowMapEntry>;
+
+  /**
+   * The map as it is handed *in* to createSurveyFromFlow: each entry names the
+   * question type the form element backs, but has no `questionId` yet — that is
+   * filled in once the Survey questions have been created.
+   */
+  interface WaFlowMapDraftEntry {
+    questionId?: string;
+    type: QuestionType;
+    [responseIndex: string]: string | QuestionType | undefined;
+  }
+
+  type WaFlowMapDraft = Record<string, WaFlowMapDraftEntry>;
+
+  /**
+   * A raw answer as WhatsApp delivers it in a flow-response payload: a string
+   * for text/date/single-choice elements, a number for numeric inputs, or an
+   * array of choice ids for multi-select elements.
+   */
+  type WaFlowRawResponse = string | number | string[];
+
+  /** Flow response payload: form-element payload name -> raw answer. */
+  type WaFlowResponses = Record<string, WaFlowRawResponse | null | undefined>;
+
+  /**
+   * A v2 flow answer. v2 flows key responses by form-element id and use a
+   * different question-type system (Question2/WaQuestions), so unlike v1 these
+   * carry no `QuestionType` and hold the raw answer rather than a
+   * QuestionType-keyed response object.
+   */
+  interface WaFlowV2QuestionResponse {
+    questionId: string;
+    response: WaFlowRawResponse;
+  }
+
+  /** What generateQuestionResponsesFromFlowResponse yields, per flow version. */
+  type WaFlowQuestionResponse = QuestionResponse | WaFlowV2QuestionResponse;
 
   interface FlowTicket {
     questionId: string;
@@ -417,8 +600,15 @@ declare global {
     id: string;
     title: string;
     layout: WaFlowLayout;
-    data: any; // add types
-    terminal: boolean;
+    /**
+     * The screen's Flow-JSON data schema (JSON-Schema-shaped: `type`, `items`,
+     * `properties`, `__example__`). Keys are screen-specific — e.g.
+     * `available_slots` injected for date-picker screens by flow.utils.ts.
+     */
+    data: Record<string, unknown>;
+    /** Only set on a flow's final screen; omitted elsewhere (e.g. the
+     * address-collection flow built in catalogSettings.service.ts). */
+    terminal?: boolean;
   }
 
   interface WaFlowLayout {
@@ -426,14 +616,49 @@ declare global {
     children: Array<WaFlowForm>;
   }
 
+  /**
+   * A child of a screen's layout. In v1 flows this is the "Form" wrapper whose
+   * `children` hold the question elements; v2 flows put the question elements
+   * at this level instead, which is why the Question2-style fields below are
+   * present (and optional) here.
+   */
   interface WaFlowForm {
     type: string; // add types
-    name: string;
-    children: Array<WaFlowFormElement>;
+    /** Absent on non-interactive v2 elements (TextBody, TextHeading, ...). */
+    name?: string;
+    /** Only the v1 "Form" wrapper nests children; v2 elements are leaves. */
+    children?: Array<WaFlowFormElement>;
+    /** v2 only: the Meta component type backing this question. */
+    metaType?: WaQuestions;
+    /** v2 only: the element's stable id (injectIdToFlowJson). */
+    id?: string;
+    /** v2 only: opts the question into NPS analytics. */
+    enableNpsAnalytics?: boolean;
+    /** v2 only: google-review gating config for this question. */
+    googleReview?: GoogleReview;
+    /** v2 only: the question's selectable options. */
+    "data-source"?: Array<WaFlowFormChoice>;
+    /** v2 only: an external link, rewritten to an open_url action on export. */
+    url?: string;
+    /** v2 only: the element's display label. */
+    label?: string;
+    /** v2 only: heading text, lifted into its own TextBody element on export. */
+    header?: string;
+    /** Text elements only. */
+    text?: string;
+    markdown?: boolean;
+    condition?: string;
+    // Only present on the "Footer" variant of a screen's layout children —
+    // this interface models every layout-child kind (Form, Footer, ...), so
+    // it's optional here even though a real Footer node always has it.
+    "on-click-action"?: WaFlowOnClickAction;
   }
 
   interface WaFlowFormElement {
-    id: string; // for internal use only. Should be removed before sending to whatsapp server
+    // For internal use only (injectIdToFlowJson assigns it, removeIdFromFlowJson
+    // deletes it before sending to the WhatsApp server) — optional because it's
+    // absent both before injection and after removal.
+    id?: string;
     type: WaFlowFormElementType;
     text?: string;
     label?: string;
@@ -442,6 +667,10 @@ declare global {
     "input-type"?: string; // add types
     "on-click-action"?: WaFlowOnClickAction;
     "data-source"?: Array<WaFlowFormChoice>;
+    /** Date pickers only: the earliest selectable date (epoch millis string). */
+    "min-date"?: string;
+    /** Date pickers only: the latest selectable date (epoch millis string). */
+    "max-date"?: string;
   }
 
   interface WaFlowFormChoice {
@@ -455,7 +684,13 @@ declare global {
       type: string; // add types
       name: string;
     };
-    payload: any;
+    /**
+     * Maps a response key to a Flow form-binding expression (`${form.<name>}`);
+     * findElementNameFromPayloadName parses these values as strings.
+     */
+    payload?: Record<string, string>;
+    /** Present on `open_url` actions instead of a payload. */
+    url?: string;
   }
   interface WaFlowPreview {
     preview_url: string;
@@ -468,11 +703,183 @@ declare global {
     footer?: string;
     cta: string;
   }
+  /** Restricts which contacts an automation fires for. */
+  interface WaAutomationContactFilters {
+    /** Only fire for contacts created in the last 24 hours. */
+    newContactsOnly?: boolean;
+    /** Contact-group ids the contact must belong to (any of). */
+    inGroups?: string[];
+    /** Custom-field ids the contact must have a value for. */
+    requiredFieldsWithAnyValue?: string[];
+  }
+
   interface WaAutomatedReplyMatchData {
     keywords?: Array<string>;
     exactText?: string;
-    caseSensitive: boolean;
+    /** Keyword automations only; flow-builder automations do not set it. */
+    caseSensitive?: boolean;
+    contactFilters?: WaAutomationContactFilters;
+    /**
+     * Present on flow-builder automations: the node/edge graph driving the
+     * conversation. Keyword-only automations have no `json`.
+     */
+    json?: import("../modules/whatsapp/whatsappSurvey/node-types.js").AutomationGraph;
   }
+  /**
+   * A ProseMirror/TipTap-style rich-text document, as stored in
+   * `LoyaltyWaCommand.content`. Text lives on leaf nodes; `content` nests.
+   */
+  interface RichTextNode {
+    type?: string;
+    text?: string;
+    content?: RichTextNode[];
+    [key: string]: unknown;
+  }
+
+  /**
+   * The `error` object Meta returns on a failed Graph API call, as captured on
+   * `WaMessage.logs` / `WaLogs.logs`. Fields vary by failure, so all are optional.
+   */
+  interface WaGraphApiErrorDetail {
+    message?: string;
+    type?: string;
+    code?: number;
+    error_subcode?: number;
+    error_data?: { details?: string };
+    fbtrace_id?: string;
+    [key: string]: unknown;
+  }
+
+  /**
+   * Type-specific payload on a loyalty ApprovalRequest. Which fields are set depends
+   * on `requestType`, so each is optional and read only by its own approver.
+   */
+  interface ApprovalRequestData {
+    newTierId?: string;
+    previousTierId?: string;
+    suspensionReason?: string;
+    operation?: string;
+    accountIds?: string[];
+    [key: string]: unknown;
+  }
+
+  /** Parameters on an outgoing `catalog_message` interactive action. */
+  interface WaCatalogActionParameters {
+    thumbnail_product_retailer_id?: string;
+  }
+
+  /**
+   * The runtime values substituted into a template's placeholders when it is sent.
+   * `header` is the media link (or location text) for a media/location header.
+   */
+  interface WaTemplateParameterData {
+    header?: string;
+    [key: string]: unknown;
+  }
+
+  /** `WhatsappSettings.conversionData` — how Meta Conversions API events are labelled. */
+  interface MetaConversionSettings {
+    event_name?: string;
+    currency?: string;
+  }
+
+  /** The `custom_data` block on a Meta Conversions API event. */
+  interface MetaConversionCustomData {
+    lifecycle_stage?: string;
+    currency?: string;
+    value?: number;
+  }
+
+  /** `LoyaltyRedemption.usedContext` — where and how a redemption was consumed. */
+  interface LoyaltyUsedContext {
+    locationId?: string;
+    orderId?: string;
+    notes?: string;
+    shortCode?: string;
+    redemptionType?: string;
+    [key: string]: unknown;
+  }
+
+  /**
+   * `Linktree.links` — one entry per link on a linktree page. The editor lets users add
+   * presentation fields freely, so only what the server reads or writes is named.
+   */
+  interface LinktreeLink {
+    id?: string;
+    noOfClicks?: number;
+    [field: string]: unknown;
+  }
+
+  /** Every property optional, all the way down. */
+  type DeepPartial<T> = {
+    [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+  };
+
+  /**
+   * A `Subscription.features` blob in whatever schema version it was written in — a
+   * subset of the current shape, plus retired keys the migrations still read. The
+   * migration reads it defensively (`f.team?.count?.max ?? 1`), so nothing is required.
+   */
+  type LegacySubscriptionFeatures = DeepPartial<SubscriptionFeatures> & {
+    /** Retired: whatsapp sub-features flattened into `conversation`. */
+    whatsapp?: DeepPartial<SubscriptionFeatures["whatsapp"]> & {
+      template?: Record<string, unknown>;
+      automation?: Record<string, unknown>;
+    };
+  };
+
+  interface LoyaltyTimeRange {
+    start: string;
+    end: string;
+  }
+
+  /**
+   * `LoyaltyEarningRule.allowedTimeRanges` — the windows a rule may earn in. Written as a
+   * bare array (see the schema comment); older rows wrap it under `time_ranges`.
+   */
+  type LoyaltyAllowedTimeRanges = LoyaltyTimeRange[] | { time_ranges?: LoyaltyTimeRange[] };
+
+  /**
+   * The `data` blob on a send-email/generate-OTP request. Which keys are populated
+   * depends on the request's `purpose`, so all are optional.
+   */
+  interface EmailTemplateData {
+    surveyName?: string;
+    otp?: string;
+    body?: string;
+    buttonLink?: string;
+    title?: string;
+    [key: string]: unknown;
+  }
+
+  /** One tickable line on a ticket card's checklist. */
+  interface TicketChecklistItem {
+    id: string;
+    text?: string;
+    isCompleted?: boolean;
+  }
+
+  /** `TicketCard.checklists` — a named group of checklist items. */
+  interface TicketChecklist {
+    id: string;
+    name?: string;
+    items?: TicketChecklistItem[];
+  }
+
+  /** The testimonial sub-answer, built up field-by-field across several WhatsApp replies. */
+  type TestimonialResponse = NonNullable<QuestionResponse["response"][QuestionType.Testimonial]>;
+
+  /**
+   * A media answer as WhatsApp reports it before the file is downloaded and re-uploaded to S3.
+   * `sha256` is what marks a stored response as still pointing at WhatsApp-hosted media.
+   */
+  interface WaMediaResponseItem {
+    id?: string;
+    sha256?: string;
+    file_name?: string;
+    mime_type?: string;
+  }
+
   //--- instagram
   interface InstagramCommentValue {
     id: string; // comment ID
@@ -545,7 +952,7 @@ declare global {
 
               quick_reply?: {
                 // Included when a customer clicks a quick reply
-                payload: any; // The payload with the option selected by the customer
+                payload: string; // The payload with the option selected by the customer
               };
 
               referral?:
@@ -557,7 +964,7 @@ declare global {
                   }
                 | {
                     // Included when a customer clicks an CTD ad or ig.me link
-                    ref: any;
+                    ref: string;
                     ad_id?: string;
                     source: "ADS" | "SHORTLINKS";
                     type: "OPEN_THREAD";
@@ -662,7 +1069,7 @@ declare global {
               is_unsupported?: boolean;
 
               quick_reply?: {
-                payload: any;
+                payload: string;
               };
 
               reply_to?: {
@@ -740,6 +1147,23 @@ declare global {
   type FbReceiveMessageBody = FacebookWebhookBody["entry"][0]["messaging"][0];
   //---instagram
 
+  /**
+   * One side of a WaInboxMessageBody — the payload as sent or as received. Some callers
+   * synthesize a partial envelope (webchat echoes, Facebook postback/quick-reply events);
+   * those are stored verbatim, so the record arm covers them. Readers must narrow.
+   */
+  type WaMessagePayload =
+    | WaSendMessageBody
+    | IgSendMessageBody
+    | FbSendMessageBody
+    | WaReceiveMessageBody
+    | IgReceiveMessageBody
+    | FbReceiveMessageBody
+    | WaInternalMessageBody
+    | WaPrivateMessageBody
+    | import("./whatsapp.types.js").WaWebhookChangeValue
+    | Record<string, unknown>;
+
   interface WaInboxMessageBody {
     exchangeProcess: "send" | "receive" | "internal" | "privateNote";
     send?: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody;
@@ -758,16 +1182,59 @@ declare global {
     video?: {
       link: string;
     };
+    whatsappSettingsPhoneId?: string;
     catalog?: {
       thumbnail_product_retailer_id?: string;
       mpm?: {
-        sections: { title: string; products: [] }[];
+        sections: { title: string; products: string[] }[];
       };
       spm?: {
         product_retailer_id: string;
       };
+      catalogId: string;
+    };
+    mediaCarousel?: {
+      headerLink: string;
+      cardIndex: number;
+      quickReplyPayload?: string;
+    }[];
+    productCarousel?: {
+      product_retailer_id: string;
+      cardIndex: number;
+    }[];
+    orderDetails?: {
+      paymentConfigName: string;
+      paymentType: string;
+      productType: string;
+      item: {
+        name: string;
+        salePrice: number;
+        price: number;
+        quantity: number;
+        origin: string;
+        importerName: string;
+        importerAddress1: string;
+        importerCity: string;
+        importerZoneCode: string;
+        importerPostalCode: string;
+      };
+      shipping: number;
+      tax: number;
+      discount?: number;
+      discountDescription?: string;
+      taxDescription: string;
+      expiry?: string;
     };
   }
+  /**
+   * `WaTemplate.config` — the priced item an order-details template quotes.
+   */
+  interface WaTemplateConfig {
+    price: number;
+    name: string;
+    tax: number;
+  }
+
   interface WaFlowStartMessageConfig {
     prefix: string;
     suffix: string;
@@ -779,8 +1246,8 @@ declare global {
   }
 
   interface LoyaltyActionMessage {
-    message: any;
-    forwardMessage?: any;
+    message: WaSendMessageBody;
+    forwardMessage?: WaSendMessageBody;
   }
   interface CatalogImage {
     url: string;
@@ -803,7 +1270,8 @@ declare global {
       | "cpo"
       | "open_box_new";
     image?: CatalogImage[];
-    internal_label?: string;
+    /** Meta stores this as a list of labels, quoted; see the Shopify sync. */
+    internal_label?: string[];
     link?: string;
     price: string;
     video?: CatalogImage[];
@@ -866,6 +1334,70 @@ declare global {
 
   type WaCatalogProductItem = CatalogProductCore | CatalogHotel | CatalogHotelRoom;
 
+  /**
+   * `WhatsappCatalog.standardPaymentConfig` — the merchant's own payment
+   * details, shown to the customer at checkout for a "standard" (non-Shopify)
+   * store. Which subset is filled depends on `standardPaymentMethod`.
+   */
+  interface WaCatalogPaymentConfig {
+    upiId?: string;
+    upiDisplayName?: string;
+    accountNumber?: string;
+    ifsc?: string;
+    bankName?: string;
+    holderName?: string;
+    status?: string;
+  }
+
+  /**
+   * One selectable delivery method on a catalog — either configured by the
+   * merchant or derived from Shopify's available shipping rates.
+   */
+  interface WaCatalogDeliveryOption {
+    id: string;
+    name: string;
+    charge: number;
+    enabled: boolean;
+    /** Estimated delivery time in days, when the merchant supplied one. */
+    days?: string;
+  }
+
+  /**
+   * The delivery choice stored on an order. Usually a WaCatalogDeliveryOption
+   * the customer picked, but when the catalog charges a flat rate the code
+   * synthesizes a pseudo-option carrying only a name and charge, so every field
+   * except `charge` is optional here.
+   */
+  type WaCatalogSelectedDelivery = Partial<WaCatalogDeliveryOption> & { charge: number };
+
+  /** `WaCatalogOrder.shippingAddress` — collected via the address flow. */
+  interface WaCatalogShippingAddress {
+    name?: string;
+    phone?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    province?: string;
+    zip?: string;
+    country?: string;
+    country_code?: string;
+    [field: string]: string | undefined;
+  }
+
+  /**
+   * One line of `WaCatalogOrder.products` as stored. The WhatsApp order webhook
+   * writes `price`/`quantity` as strings while other paths write numbers, so
+   * readers parse both (see calculateOrderTotal); every field is optional
+   * because older rows predate some of them.
+   */
+  interface WaCatalogOrderProduct {
+    retailerId: string;
+    currency: string;
+    quantity?: string | number;
+    price?: string | number;
+    title?: string;
+  }
+
   interface WaCatalogOrder {
     catalogId: string;
     products: {
@@ -884,21 +1416,90 @@ declare global {
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
+    type PWaFlowMap = WaFlowMap;
     type PWaFlowPreview = WaFlowPreview;
     type PWaFlowTemplateMessage = WaFlowTemplateMessage;
 
     type PQuestion = Question;
     type PQuestionResponse = QuestionResponse;
+    type PResponseLocation = ResponseLocation;
+    type PBusinessHourSchedule = BusinessHourSchedule;
     type PWaAutomatedReplyMatchData = WaAutomatedReplyMatchData;
 
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
-    type PWaTemplateComponentParams = WaTemplateSendComponent;
+    // The column stores the filled-in component ARRAY of the template that was sent —
+    // `messageBody.template.components` verbatim.
+    type PWaTemplateComponentParams = import("./whatsapp.types.js").OutgoingTemplateComponent[];
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
+    type PWaTemplateConfig = WaTemplateConfig;
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
+    // Keyed by screen id — see WaFlow.logicJumps in schema.prisma.
+    type PWaFlowLogicJumps = Record<string, FlowLogicJump[]>;
     type PWaEncryptionKeys = WaEncryptionKeys;
+    // The stored copy of a catalog row's fields, as sent to Meta. Prices come back as
+    // "10.00 USD" strings, so this is Partial rather than the strict input type.
+    type PWaCatalogProductProps = Partial<CatalogProductCore>;
     type PWaCatalogProducts = WaCatalogProductItem[];
     type PWaCatalogOrders = WaCatalogOrder[];
+    type PWaCatalogPaymentConfig = WaCatalogPaymentConfig;
+    type PWaCatalogDeliveryOptions = WaCatalogDeliveryOption[];
+    type PWaCatalogDeliveryOption = WaCatalogSelectedDelivery;
+    type PWaCatalogShippingAddress = WaCatalogShippingAddress;
+    type PWaCatalogOrderProduct = WaCatalogOrderProduct;
+
+    type PMetaAgentBusinessInfo =
+      import("../modules/metaAgent/metaAgent.schema.js").BusinessInfoBody;
+    /** Meta's FAQ metadata is a flat string map. */
+    type PMetaAgentFaqMetadata = Record<string, string>;
+    /** An OpenAPI-ish request spec Meta stores verbatim for a connector tool. */
+    type PMetaAgentRequestDefinition = Record<string, unknown>;
+    /** `ApprovalRequest.requestData` — the fields specific to each request type. */
+    type PApprovalRequestData = ApprovalRequestData;
+    type PMetaConversionSettings = MetaConversionSettings;
+    // Either one of the three known discount/free-item shapes or, for reward types
+    // that predate them, a free-form value blob.
+    type PLoyaltyRewardValue =
+      | import("./loyalty.js").LoyaltyRewardValue
+      | (Record<string, unknown> & { points?: number });
+    type PLoyaltyUsedContext = LoyaltyUsedContext;
+    type PContactIntegrationIds = ContactIntegrationIds;
+    type PLinktreeLinks = LinktreeLink[];
+    // Rows written before the current schema keep older shapes; readers migrate them
+    // (see migrateFeaturesToCurrentSchema), so the stored type is the legacy superset.
+    type PSubscriptionFeatures = LegacySubscriptionFeatures;
+    // Either a plain outgoing message or the payment order-details message, which has a
+    // wider interactive action than WaSendMessageBody models.
+    type PWaScheduledMessageBody =
+      | import("./whatsapp.types.js").WaSendMessageBody
+      | Record<string, unknown>;
+    type LoyaltyEarningRuleTimeRanges = LoyaltyAllowedTimeRanges;
+    type PWaRuleOptions =
+      import("../modules/whatsapp/automatedReply/wa_rule.schema.js").RuleOptions;
+    type PTicketChecklists = TicketChecklist[];
+    type PRichTextContent = RichTextNode | string;
+    type PWaGraphApiErrorDetail = WaGraphApiErrorDetail;
+    type PInstagramIceBreakers = InstagramIceBreaker[];
+    type PInstagramPersistentMenu = InstagramPersistentMenuEntry[];
+  }
+
+  /** One tappable prompt shown before an Instagram conversation starts. */
+  interface InstagramIceBreaker {
+    question: string;
+    payload: string;
+  }
+
+  interface InstagramMenuAction {
+    type: "postback" | "web_url";
+    title: string;
+    payload?: string;
+    url?: string;
+  }
+
+  /** Persistent menu is declared per locale — Meta picks the entry matching the user. */
+  interface InstagramPersistentMenuEntry {
+    locale: string;
+    call_to_actions: InstagramMenuAction[];
   }
 
   interface LoyaltyApiSetting {
@@ -921,11 +1522,23 @@ declare global {
 export interface FlowLogicCondition {
   questionId: string;
   condition: LogicCondition;
-  response: any;
+  /** The choice id / literal the answer is compared against. */
+  response: string;
 }
+/** v2 logic jumps name the elements to reveal on each branch. */
+export interface FlowLogicBranchAction {
+  success?: string;
+  fail?: string;
+}
+
 export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
-  action: LogicAction;
+  /**
+   * v1 jumps store either a `LogicAction` verb or the id of the screen to jump
+   * to; v2 jumps store a branch action instead. Readers discriminate with
+   * `typeof action === "string"` (see flow.utils.ts / flow.service.ts).
+   */
+  action: string | FlowLogicBranchAction;
 }
 
 export interface orgWsMessage {
@@ -939,7 +1552,7 @@ export interface orgWsMessage {
   message_deleted?: {
     /** WhatsApp message id (wamid) of the revoked message. */
     messageId: string;
-    contactId: string;
+    contactId: string | null;
     conversationId?: string | null;
     sourceIdentifier?: string | null;
     deletedAt: string;
@@ -949,28 +1562,52 @@ export interface orgWsMessage {
 }
 
 declare module "fastify" {
+  /**
+   * Per-route `config` block. Every key here is read by a hook somewhere:
+   * `feature`/`fallbackEmptyArray` by utils/permissions.ts, `rawBody` by the
+   * Shopify webhook route, `isPublic`/`assertRootOrg` by the linktree,
+   * generateQr and surveyTheme route guards.
+   */
+  interface FastifyContextConfig {
+    feature?: import("../../generated/prisma/client.js").TeamFeature;
+    /** On a denied feature gate, reply 200 with `[]` instead of 403. */
+    fallbackEmptyArray?: boolean;
+    rawBody?: boolean;
+    isPublic?: boolean;
+    assertRootOrg?: boolean;
+  }
   interface FastifyRequest {
     userId: string;
+    /** Set by the external (/external/v1) prefix hook from the `:orgId` path param. */
+    orgId?: string;
     user: {
-      userId: string;
-      id: string;
+      // userId/id/email are absent for API-access-token-authenticated requests
+      // (see apiAccessToken.auth.ts's verifyApiAccessTokenHook, which only ever
+      // sets orgId + role) — every other auth path sets all five fields.
+      userId?: string;
+      id?: string;
       role: Role;
       orgId: string;
-      email: string;
+      email?: string;
     };
     subscription: Subscription;
     features: Set<import("../../generated/prisma/client.js").TeamFeature>;
     can: (feature: import("../../generated/prisma/client.js").TeamFeature) => boolean;
+    loyaltyProgram?: Awaited<
+      ReturnType<
+        typeof import("../modules/loyalty/program/program.service.js").getLoyaltyProgramByOrg
+      >
+    >;
   }
 }
 
 export interface CustomRouteShortHandOptions extends Omit<RouteShorthandOptions, "config"> {
-  config: any;
+  config: import("fastify").FastifyContextConfig;
 }
 
 export interface CustomRouteShortHandOptionsWithHandler extends Omit<
   RouteShorthandOptionsWithHandler,
   "config"
 > {
-  config: any;
+  config: import("fastify").FastifyContextConfig;
 }

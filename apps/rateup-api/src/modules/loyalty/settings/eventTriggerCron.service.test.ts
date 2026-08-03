@@ -54,8 +54,18 @@ function localDate(year: number, month: number, day: number) {
   return new Date(year, month, day, 12);
 }
 
+interface TriggerFixture {
+  id: string;
+  programId: string;
+  waTemplateId: string | null;
+  rewardId: string | null;
+  triggerDays: number | null;
+  program: { id: string; name: string; orgId: string };
+  reward: { id: string; name: string; pointsCost: number } | null;
+}
+
 function trigger(over: Record<string, unknown> = {}) {
-  return {
+  const base: TriggerFixture = {
     id: "trg-1",
     programId: PROGRAM,
     waTemplateId: "tmpl-1",
@@ -63,8 +73,8 @@ function trigger(over: Record<string, unknown> = {}) {
     triggerDays: null,
     program: { id: PROGRAM, name: "Rewards", orgId: ORG },
     reward: null,
-    ...over,
   };
+  return { ...base, ...over };
 }
 
 function account(over: Record<string, unknown> = {}) {

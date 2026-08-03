@@ -5,15 +5,15 @@ import {
 } from "../../../modules/response/response.controller.js";
 
 export async function getSurveyResponsesExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getResponsesBySurveyIdHandler>[0],
   reply: FastifyReply,
 ) {
-  return getResponsesBySurveyIdHandler(request as any, reply);
+  return getResponsesBySurveyIdHandler(request, reply);
 }
 
 export async function getSurveyListExternalController(
-  request: FastifyRequest,
+  request: Parameters<typeof getSurveyListHandler>[0],
   reply: FastifyReply,
 ) {
-  return getSurveyListHandler(request as any, reply);
+  return getSurveyListHandler(request, reply);
 }

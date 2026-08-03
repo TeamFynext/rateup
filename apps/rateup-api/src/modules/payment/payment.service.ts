@@ -3,6 +3,8 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   SubscriptionStatus,
+  type Order,
+  type RateupPlan,
 } from "../../../generated/prisma/client.js";
 import axios from "axios";
 import {
@@ -24,6 +26,12 @@ import { notificationQueue } from "../../utils/redisConnection.js";
 const credentials = Buffer.from(
   `${process.env.RAZORPAY_API_KEY}:${process.env.RAZORPAY_API_SECRET}`,
 ).toString("base64");
+
+// Every `catch (error)` block below reports `error.message` back to the caller;
+// under strict mode the catch binding is `unknown`, so narrow it once here.
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 export enum PaymentPlanType {
   BASE = "BASE",
@@ -70,13 +78,13 @@ export async function createCheckoutSession(userId: string, data: CreateCheckout
       data: {
         ...order,
         subExpiry: apiResponse?.data?.current_end,
-        hasTrial: data.trialDays > 0,
+        hasTrial: (data.trialDays ?? 0) > 0,
       },
     };
   } catch (error) {
     // Handle errors
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -116,7 +124,7 @@ export async function syncPaymentPlans() {
   } catch (error) {
     // Handle errors
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -127,7 +135,7 @@ export async function getAllPaymentPlans() {
     return { success: true, data: allItems };
   } catch (error) {
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -249,6 +257,9 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       id: data?.id,
     },
   });
+  if (!existingPlan) {
+    throw new Error(`Rateup plan not found for id ${data?.id}`);
+  }
 
   const plans = await prisma.rateupPlan.update({
     data: {
@@ -328,7 +339,7 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
         basePlanId: plans.id,
       },
       data: {
-        features: plans.features,
+        features: plans.features ?? {},
       },
     });
   }
@@ -342,8 +353,43 @@ export async function deleteRateUpPlan(data: rateupPlanParamInput) {
   });
 }
 
+// Razorpay webhook payload shapes — only the fields these handlers actually
+// read off each event. Notes are whatever this codebase put on the
+// subscription/order when it was created (see `createCheckoutSession` above
+// and the one-off razorpay payment flow that stamps `rateupOrderId`).
+export interface RazorpaySubscriptionEntity {
+  id?: string;
+  charge_at?: number | null;
+  current_end?: number;
+  notes?: {
+    rateupPlanId?: string;
+    orgId?: string;
+    isAnnualMessageLimit?: string;
+  } | null;
+}
+
+export interface RazorpaySubscriptionWebhookPayload {
+  subscription?: { entity?: RazorpaySubscriptionEntity };
+}
+
+export interface RazorpaySubscriptionChargedPayload extends RazorpaySubscriptionWebhookPayload {
+  payment?: { entity?: { email?: string; amount: number } };
+}
+
+export interface RazorpayPaymentWebhookData {
+  id: string;
+  amount: number;
+  currency: string;
+  method: string;
+  description?: string;
+  email?: string;
+  contact?: string;
+  notes?: { rateupOrderId?: string } | null;
+  created_at: number;
+}
+
 //Webhook action On Subscription Activated
-export async function activateSubscription(payload) {
+export async function activateSubscription(payload: RazorpaySubscriptionWebhookPayload) {
   try {
     const { subscription } = payload;
     const { id, charge_at } = subscription?.entity || {};
@@ -365,25 +411,31 @@ export async function activateSubscription(payload) {
     }
   } catch (error) {
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
 //Webhook action On Subscription charged
-export async function updateSubscription(payload) {
+export async function updateSubscription(payload: RazorpaySubscriptionChargedPayload) {
   try {
     const { subscription, payment } = payload;
     const { id, notes, current_end, charge_at } = subscription?.entity || {};
+    if (!current_end) {
+      throw new Error("Subscription webhook is missing current_end");
+    }
 
     const rateupPlan = await prisma.rateupPlan.findUnique({
       where: { id: notes?.rateupPlanId },
     });
+    if (!rateupPlan) {
+      throw new Error(`Rateup plan not found for id ${notes?.rateupPlanId}`);
+    }
 
     const updatedSubscription = await prisma.subscription.update({
       where: { orgId: notes?.orgId },
       data: {
         basePlanId: notes?.rateupPlanId,
-        features: rateupPlan.features,
+        features: rateupPlan.features ?? {},
         renewedAt: new Date(),
         expiresAt: new Date(current_end * 1000),
         subscriptionRef: id,
@@ -423,37 +475,45 @@ export async function updateSubscription(payload) {
     if (updatedOrder) {
       console.log("sending email....");
 
-      const msg = {
-        to: payment?.entity?.email, // Change to your recipient
-        // from: 'hello@rateup.app', // Change to your verified sender
-        subject: "Rateup Subscription Activated - Rateup.app",
-        text: `We have received a payment of ${payment.entity.amount / 100}`,
-        html: createEmailBodySubscriptionActivated(
-          rateupPlan?.displayName,
-          new Date(current_end * 1000),
-        ),
-      };
-      try {
-        await notificationQueue.add("notification", {
-          emailData: msg,
-        });
-      } catch (error) {
-        console.error(error);
-        throw new Error("Email sending failed. E:" + error);
+      if (!payment?.entity?.email) {
+        console.warn("No payment email on subscription-charged webhook; skipping activation email");
+      } else {
+        const msg = {
+          to: payment.entity.email, // Change to your recipient
+          // from: 'hello@rateup.app', // Change to your verified sender
+          subject: "Rateup Subscription Activated - Rateup.app",
+          text: `We have received a payment of ${payment.entity.amount / 100}`,
+          html: createEmailBodySubscriptionActivated(
+            rateupPlan.displayName ?? "your plan",
+            new Date(current_end * 1000),
+          ),
+        };
+        try {
+          await notificationQueue.add("notification", {
+            emailData: msg,
+          });
+        } catch (error) {
+          console.error(error);
+          throw new Error("Email sending failed. E:" + error);
+        }
       }
     }
 
     return { success: true, data: updatedSubscription };
   } catch (error) {
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
 //Webhook action On Payment Captured  // PAYMENT Failed
-export async function verifyPayment(data, event) {
+export async function verifyPayment(data: RazorpayPaymentWebhookData, event: string) {
   try {
     const { id, amount, currency, method, description, email, contact, notes, created_at } = data;
+    const rateupOrderId = notes?.rateupOrderId;
+    if (!rateupOrderId) {
+      throw new Error("Payment webhook is missing notes.rateupOrderId");
+    }
     const payment = await prisma.payments.create({
       data: {
         payId: id,
@@ -463,7 +523,7 @@ export async function verifyPayment(data, event) {
         description: description || "",
         customer_email: email || "",
         customer_phone: contact || "",
-        rateupOrderId: notes?.rateupOrderId,
+        rateupOrderId,
         createdAt: created_at,
       },
     });
@@ -471,7 +531,7 @@ export async function verifyPayment(data, event) {
     let _updatedOrder;
     if (event === "payment.failed") {
       _updatedOrder = await prisma.order.update({
-        where: { id: notes?.rateupOrderId },
+        where: { id: rateupOrderId },
         data: {
           paymentStatus: PaymentStatus.FAILED,
           status: OrderStatus.FAILED,
@@ -480,7 +540,7 @@ export async function verifyPayment(data, event) {
       });
     } else {
       _updatedOrder = await prisma.order.update({
-        where: { id: notes?.rateupOrderId },
+        where: { id: rateupOrderId },
         data: {
           paymentStatus: PaymentStatus.SUCCESS,
           status: OrderStatus.PENDING,
@@ -492,7 +552,7 @@ export async function verifyPayment(data, event) {
     return { success: true, data: payment };
   } catch (error) {
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -508,6 +568,15 @@ export async function updatePaymentPlan(plan: UpdatePlanInput) {
   return updatedPlan;
 }
 
+interface RazorpaySubscriptionListItem {
+  id: string;
+  plan_id: string;
+  status: string;
+  created_at: number;
+  current_start: number;
+  current_end: number;
+}
+
 //Get all razorpay subscriptions
 export async function getAllPaymentSubscriptions() {
   const res = await axios.get("https://api.razorpay.com/v1/subscriptions", {
@@ -516,13 +585,13 @@ export async function getAllPaymentSubscriptions() {
     },
   });
   const allPlans = (await getAllPaymentPlans()).data;
-  const subscriptions = res?.data?.items?.map((sub) => {
-    const plan = allPlans.find((plan) => plan.planId == sub.plan_id);
+  const subscriptions = res?.data?.items?.map((sub: RazorpaySubscriptionListItem) => {
+    const plan = allPlans?.find((p) => p.planId == sub.plan_id);
     return {
       id: sub.id,
-      planName: plan.name,
-      currency: plan.currency,
-      amount: plan.amount,
+      planName: plan?.name,
+      currency: plan?.currency,
+      amount: plan?.amount,
       status: sub.status,
       createdAt: dayjs.unix(sub.created_at).format("DD/MM/YYYY HH:mm:ss"),
       start: dayjs.unix(sub.current_start).format("DD/MM/YYYY HH:mm:ss"),
@@ -533,7 +602,7 @@ export async function getAllPaymentSubscriptions() {
 }
 
 //Cancel razorpay subscription
-export async function cancelRazorpaySubscription(orgId) {
+export async function cancelRazorpaySubscription(orgId: string) {
   console.log("Cancelling subscription........");
 
   if (!orgId) {
@@ -662,8 +731,18 @@ export async function getAllOrgOrders(orgId: string) {
       (order) => order.planId || order.priceId || order.shopifyPlanId,
     );
 
+    // Only the fields actually read below (see the `return` further down) —
+    // each of the three sources (paymentPlans/stripeProducts/shopify) fetches
+    // extra columns it doesn't need, which is fine since this is structurally
+    // a subset.
+    type OrderPlanDetail = {
+      amount: number;
+      currency: string;
+      RateupPlan: Pick<RateupPlan, "description" | "planType" | "displayName"> | null;
+    } | null;
+
     const planDetailsPromises = filteredOrders.map(async (order) => {
-      let planDetail = null;
+      let planDetail: OrderPlanDetail = null;
       if (order.planId) {
         planDetail = await prisma.paymentPlans.findFirst({
           where: {
@@ -690,30 +769,32 @@ export async function getAllOrgOrders(orgId: string) {
             RateupPlan: true,
           },
         });
-      } else if (order.shopifyPlanId) {
+      } else if (order.shopifyPlanId && order.subscriptionId) {
         const integration = await getShopifyInfo(orgId);
         if (integration) {
           const recurringCharge = await getRecurringCharge(order.subscriptionId, integration);
           if (recurringCharge) {
             const rateupPlan = await prisma.rateupPlan.findFirst({
               where: {
-                displayName: recurringCharge?.name,
+                displayName: recurringCharge.name,
               },
             });
-            planDetail = {
-              amount: recurringCharge.price,
-              currency: recurringCharge.currency,
-              description: rateupPlan.description,
-              interval: "monthly",
-              RateupPlan: rateupPlan,
-            };
+            // `price`/`currency` aren't real fields on `ShopifyRecurringCharge` — the
+            // pricing actually lives on the first line item's plan.
+            const pricing = recurringCharge.lineItems[0]?.plan.pricingDetails.price;
+            if (rateupPlan && pricing) {
+              planDetail = {
+                amount: Number(pricing.amount),
+                currency: pricing.currencyCode,
+                RateupPlan: rateupPlan,
+              };
+            }
           }
         }
       }
 
-      const {
-        createdBy: { email, name },
-      } = order;
+      const email = order.createdBy?.email;
+      const name = order.createdBy?.name;
 
       return {
         id: order.id,
@@ -741,7 +822,7 @@ export async function getAllOrgOrders(orgId: string) {
     return { success: true, data: planDetails };
   } catch (error) {
     console.error("Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -765,7 +846,7 @@ export async function getRateuplanById(id: string) {
   });
 }
 
-export async function updateOrder(orderId, data) {
+export async function updateOrder(orderId: string, data: Partial<Order>) {
   return await prisma.order.update({
     where: {
       id: orderId,
@@ -774,25 +855,39 @@ export async function updateOrder(orderId, data) {
   });
 }
 
-export async function updateSubscriptionForTrial(orgId, rateupPlanId, subscriptionId, userId) {
+export async function updateSubscriptionForTrial(
+  orgId: string,
+  rateupPlanId: string | null,
+  subscriptionId: string | null,
+  userId: string,
+) {
+  if (!rateupPlanId) {
+    throw new Error("A rateupPlanId is required to start a subscription trial");
+  }
   const rateupPlan = await prisma.rateupPlan.findUnique({
     where: { id: rateupPlanId },
     include: {
       paymentPlan: true,
     },
   });
+  if (!rateupPlan) {
+    throw new Error(`Rateup plan not found for id ${rateupPlanId}`);
+  }
 
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
     },
   });
+  if (!user) {
+    throw new Error(`User not found for id ${userId}`);
+  }
 
   const updatedSubscription = await prisma.subscription.update({
     where: { orgId: orgId },
     data: {
       basePlanId: rateupPlanId,
-      features: rateupPlan.features,
+      features: rateupPlan.features ?? {},
       renewedAt: new Date(),
       subscriptionRef: subscriptionId,
       lastLimitAlertSentAt: null,
@@ -819,14 +914,14 @@ export async function updateSubscriptionForTrial(orgId, rateupPlanId, subscripti
   console.log("....................updating subscription.....................");
 
   const msg = {
-    to: user?.email, // Change to your recipient
+    to: user.email, // Change to your recipient
     // from: 'hello@rateup.app', // Change to your verified sender
     subject: "Rateup Subscription Trial Started - Rateup.app",
     text: `Rateup Subscription Trial Started`,
     html: createEmailBodyTrialSubscriptionActivated(
       rateupPlan,
       dayjs(updatedUsageStats.subscriptionEndDate).format("MMMM D, YYYY"),
-      user.name,
+      user.name ?? "there",
     ),
   };
   try {

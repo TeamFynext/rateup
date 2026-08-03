@@ -1,7 +1,8 @@
 import prisma from "../../../../utils/prisma.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
+import type { Prisma } from "../../../../../generated/prisma/client.js";
 
-type StatsField =
+export type StatsField =
   | "unassignedCount"
   | "assignedCount"
   | "closedCount"
@@ -123,7 +124,7 @@ export async function transitionInboxStat(
 ) {
   if (amount <= 0 || fromField === toField) return;
 
-  const updateData: any = {};
+  const updateData: Prisma.InboxStatsUncheckedUpdateInput = {};
   if (fromField) updateData[fromField] = { decrement: amount };
   if (toField) updateData[toField] = { increment: amount };
 

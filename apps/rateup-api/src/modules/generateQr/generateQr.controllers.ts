@@ -20,7 +20,9 @@ async function createGenerateQrRecord(
   }>,
   rep: FastifyReply,
 ) {
-  const newLandingPage = await shortIdUniqueConstraintErrHandler(createGenerateQrRecordInDB, req);
+  const newLandingPage = await shortIdUniqueConstraintErrHandler(() =>
+    createGenerateQrRecordInDB(req),
+  );
   rep.code(201).send(newLandingPage);
 }
 

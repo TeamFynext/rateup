@@ -4,12 +4,12 @@ import { isBoardMember } from "../ticketBoard/board.service.js";
 
 export async function verifyColumnAccess(
   request: FastifyRequest<{
-    Params: { id?: string; ticketColumnId?: string };
+    Params?: { id?: string; ticketColumnId?: string };
   }>,
   reply: FastifyReply,
 ) {
   const userId = request.userId;
-  const ticketColumnId = request.params.id || request.params.ticketColumnId;
+  const ticketColumnId = request.params?.id || request.params?.ticketColumnId;
 
   if (!ticketColumnId) {
     return reply.code(400).send({ message: "Column ID is required" });

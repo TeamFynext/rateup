@@ -8,9 +8,16 @@ import { log } from "../../utils/logger.js";
  * dedicated entry point for those "business_ai_agent" style change notifications
  * so they don't have to be parsed inline with the message-handling webhook.
  */
+/** Meta's webhook envelope: entries, each carrying the fields that changed. */
+interface MetaAgentWebhookBody {
+  entry?: Array<{
+    changes?: Array<{ field?: string; value?: unknown }>;
+  }>;
+}
+
 export async function metaAgentWebhookEventHandler(req: FastifyRequest, reply: FastifyReply) {
   try {
-    const body = req.body as any;
+    const body = req.body as MetaAgentWebhookBody;
     log.info({ body }, "Received Meta Business Agent webhook event");
 
     const entries = body?.entry ?? [];

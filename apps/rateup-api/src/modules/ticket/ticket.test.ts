@@ -247,13 +247,22 @@ describe("deleteComment", () => {
 // ===========================================================================
 
 describe("the WhatsApp ticket notifications", () => {
-  const contact = (over: Record<string, unknown> = {}) => ({
-    id: "c-1",
-    phone: notify.phone,
-    orgId: ORG,
-    lastReceivedMessageTimeStamp: null,
-    ...over,
-  });
+  interface ContactFixture {
+    id: string;
+    phone: string;
+    orgId: string;
+    lastReceivedMessageTimeStamp: Date | null;
+  }
+
+  const contact = (over: Record<string, unknown> = {}) => {
+    const base: ContactFixture = {
+      id: "c-1",
+      phone: notify.phone,
+      orgId: ORG,
+      lastReceivedMessageTimeStamp: null,
+    };
+    return { ...base, ...over };
+  };
 
   // NOTE: the recipient is a staff member, but the lookup is against the
   // Contact table — so the notification only sends when that person's phone

@@ -2,6 +2,13 @@ import prisma from "../../../utils/prisma.js";
 import { callMetaApi } from "../wa_axios.js";
 import { log } from "../../../utils/logger.js";
 
+/** A product set as Meta's catalog API returns it. */
+interface MetaProductSet {
+  id: string;
+  name?: string;
+  filter?: unknown;
+}
+
 /**
  * Sync Product Sets from Meta for a specific catalog
  */
@@ -22,7 +29,7 @@ export async function syncProductSetsForCatalog(
 
     // For each product set, fetch the products in it
     const productSetsWithProducts = await Promise.all(
-      productSets.map(async (set: any) => {
+      productSets.map(async (set: MetaProductSet) => {
         try {
           const productsResponse = await callMetaApi(
             `/${set.id}/products?fields=retailer_id&access_token=${accessToken}`,
@@ -35,10 +42,12 @@ export async function syncProductSetsForCatalog(
             orgId,
             name: set.name,
             filter: set.filter || null,
-            productIds: productsResponse.data.data.map((p: any) => p.retailer_id),
+            productIds: productsResponse.data.data.map(
+              (p: { retailer_id: string }) => p.retailer_id,
+            ),
           };
         } catch (e) {
-          log.error("Error fetching products for product set %s: %o", set.id, e);
+          log.error({ err: e }, `Error fetching products for product set ${set.id}`);
           return {
             productSetId: set.id,
             catalogId,
@@ -81,7 +90,7 @@ export async function syncProductSetsForCatalog(
 
     return productSetsWithProducts;
   } catch (error) {
-    log.error("Error syncing product sets: %o", error);
+    log.error({ err: error }, "Error syncing product sets");
     throw error;
   }
 }

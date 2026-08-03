@@ -32,6 +32,7 @@ import {
 import { Prisma } from "../../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
 import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
+import { getMultipartFieldValue } from "../../../utils/upload/validate.js";
 import { PaginationQuery } from "../contact.schema.js";
 
 export async function getContactGroupsHandler(
@@ -239,25 +240,28 @@ export async function addNewContactsfromCSVToGroupHandler(
     const file = await request.file();
     const { orgId } = request.user;
     const contactGroupId = request.params.contactGroupId;
-    if (!dataExtractFileMimeTypes.includes(file?.mimetype))
+    if (!dataExtractFileMimeTypes.includes(file?.mimetype as string))
       return reply.code(400).send({ error: "This file type is not permitted." });
-    const tags = [];
+    const tags: string[] = [];
     let update = false;
     for (const key in file?.fields) {
+      const value = getMultipartFieldValue(file?.fields?.[key]);
       if (key.startsWith("tags[")) {
-        tags.push(file?.fields?.[key]?.["value"]);
+        if (typeof value === "string") tags.push(value);
       } else if (key === "update") {
-        update = file?.fields?.[key]?.["value"] === "true";
+        update = value === "true";
       }
     }
-    const res: any = await importCSVContacts(file, orgId, tags, update, contactGroupId);
-    if (res.status === "error") {
-      return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
+    const res = await importCSVContacts(file!, orgId, tags, update, contactGroupId);
+    if (res!.status === "error") {
+      return reply.code(400).send({ error: "VALIDATION_ERR", data: res!.data });
     }
     reply.code(200).send(res);
   } catch (err) {
-    log.error(err);
-    reply.code(500).send({ error: err?.message || "Something went wrong" });
+    log.error({ err }, "Error importing CSV contacts to group");
+    reply
+      .code(500)
+      .send({ error: (err instanceof Error && err.message) || "Something went wrong" });
   }
 }
 

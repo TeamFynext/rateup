@@ -2,6 +2,7 @@ import { integrationTriggerQueue } from "../../../../utils/redisConnection.js";
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
 import axios from "axios";
+import type { Job } from "bullmq";
 import {
   createZohoRecord,
   deleteZohoRecord,
@@ -15,6 +16,20 @@ import {
 } from "./zoho.client.js";
 import { isZohoTriggerEnabled } from "./zoho.utils.js";
 import { IntegratedApps } from "../../../../types/enums.js";
+import { getZohoCredential } from "./zoho.types.js";
+import { Prisma } from "../../../../../generated/prisma/client.js";
+import type {
+  ZohoBiginDealPayload,
+  ZohoCredential,
+  ZohoFieldMeta,
+  ZohoLayoutMeta,
+  ZohoLayoutSection,
+  ZohoPickListValue,
+  ZohoRecord,
+  ZohoTriggerData,
+  ZohoUser,
+} from "./zoho.types.js";
+import type { Integration } from "../../../../../generated/prisma/client.js";
 
 export enum ZohoTriggers {
   CONTACT_CREATE = "contact_created",
@@ -34,12 +49,20 @@ export enum ZohoTriggers {
 
 export interface ZohoPayload {
   trigger: ZohoTriggers;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   orgId: string;
   timestamp: string;
 }
 
-export async function processIntegration(job) {
+interface IntegrationJobData {
+  integrationName: string;
+  triggerKey: string;
+  data: ZohoTriggerData;
+  orgId: string;
+  rateupContactId?: string;
+}
+
+export async function processIntegration(job: Job<IntegrationJobData>) {
   const { integrationName, triggerKey, data, orgId, rateupContactId } = job.data;
 
   const integration = await prisma.integration.findUnique({
@@ -68,16 +91,16 @@ export async function processIntegration(job) {
 }
 
 async function processZoho(
-  integration: any,
+  integration: Integration,
   triggerKey: string,
-  data: any,
+  data: ZohoTriggerData,
   orgId: string,
   rateupContactId?: string,
 ) {
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
   const triggerSubscriptions = credential.triggerSubscriptions || [];
   const isSubscribed = triggerSubscriptions.some(
-    (subscription: any) => subscription.subscribed_field === triggerKey && subscription.active,
+    (subscription) => subscription.subscribed_field === triggerKey && subscription.active,
   );
 
   if (!isSubscribed) {
@@ -110,7 +133,8 @@ async function processZoho(
             },
           });
 
-          const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+          const existingIntegrationIds =
+            (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
           await prisma.contact.update({
             where: {
               id: rateupContactId,
@@ -190,7 +214,8 @@ async function processZoho(
             },
           });
 
-          const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+          const existingIntegrationIds =
+            (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
           await prisma.contact.update({
             where: {
               id: rateupContactId,
@@ -261,7 +286,8 @@ async function processZoho(
             },
           });
 
-          const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+          const existingIntegrationIds =
+            (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
           await prisma.contact.update({
             where: {
               id: rateupContactId,
@@ -336,7 +362,7 @@ async function processZoho(
 
       const mappings = biginConfig?.lifecycleStageMappings || [];
 
-      const mapping = mappings.find((m: any) => m.lifecycleId === data.lifecycleId);
+      const mapping = mappings.find((m) => m.lifecycleId === data.lifecycleId);
 
       if (!mapping) {
         log.warn("No Bigin lifecycle mapping found for lifecycle=%s", data.lifecycleId);
@@ -354,7 +380,8 @@ async function processZoho(
           },
         });
 
-        const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+        const existingIntegrationIds =
+          (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
         biginContactId = existingIntegrationIds?.bigin?.contact?.id;
         const biginDealIdFromContact = existingIntegrationIds?.bigin?.deal?.id;
 
@@ -363,7 +390,7 @@ async function processZoho(
         }
       }
 
-      const payload: any = {
+      const payload: ZohoBiginDealPayload = {
         Deal_Name: data.name || data.email || data.phone,
         Lead_Source: data.source || "Rateup",
         Layout: {
@@ -401,13 +428,13 @@ async function processZoho(
 
       // If there is no Bigin contact but creating contacts is enabled, create one first
       const createContactEnabled = (triggerSubscriptions || []).some(
-        (s: any) => s.subscribed_field === "bigin_contact_created" && s.active,
+        (s) => s.subscribed_field === "bigin_contact_created" && s.active,
       );
 
       if (!biginContactId && createContactEnabled) {
         try {
           // Build a contact payload from available data
-          const contactPayload: any = {};
+          const contactPayload: ZohoRecord = {};
 
           const nameVal = data.name || data.Full_Name || data.fullName || "";
           if (nameVal) {
@@ -454,7 +481,8 @@ async function processZoho(
                   select: { integrationIds: true },
                 });
 
-                const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+                const existingIntegrationIds =
+                  (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
 
                 await prisma.contact.update({
                   where: { id: rateupContactId },
@@ -479,12 +507,12 @@ async function processZoho(
               payload.Contact_Name = { id: biginContactId };
             }
           }
-        } catch (err: any) {
-          log.error("Failed creating Bigin contact before deal create => %o", err);
+        } catch (err) {
+          log.error({ err }, "Failed creating Bigin contact before deal create");
         }
       }
 
-      let response: any;
+      let response: Awaited<ReturnType<typeof createZohoRecord>> | undefined;
 
       try {
         if (existingDealId) {
@@ -509,8 +537,11 @@ async function processZoho(
 
           log.info("Bigin deal created");
         }
-      } catch (error: any) {
-        console.log("Bigin API error =>", JSON.stringify(error?.response?.data, null, 2));
+      } catch (error) {
+        console.log(
+          "Bigin API error =>",
+          JSON.stringify(axios.isAxiosError(error) ? error.response?.data : error, null, 2),
+        );
         throw error;
       }
 
@@ -528,7 +559,8 @@ async function processZoho(
             },
           });
 
-          const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+          const existingIntegrationIds =
+            (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
           await prisma.contact.update({
             where: {
               id: rateupContactId,
@@ -556,8 +588,8 @@ async function processZoho(
   }
 }
 
-export async function getValidZohoAccessToken(integration: any): Promise<string> {
-  const credential = integration.credential as any;
+export async function getValidZohoAccessToken(integration: Integration): Promise<string> {
+  const credential = getZohoCredential(integration);
   const expiresAt = new Date(credential.expires_at);
   const refreshBuffer = 5 * 60 * 1000;
   const shouldRefresh = Date.now() >= expiresAt.getTime() - refreshBuffer;
@@ -591,14 +623,14 @@ export async function getValidZohoAccessToken(integration: any): Promise<string>
 
     return newAccessToken;
   } catch (error) {
-    log.error("Zoho token refresh failed => %o", error);
+    log.error({ err: error }, "Zoho token refresh failed");
 
     throw new Error("Failed to refresh Zoho access token");
   }
 }
 
-export async function refreshZohoIntegrationCredential(integration: any) {
-  const credential = integration.credential as any;
+export async function refreshZohoIntegrationCredential(integration: Integration) {
+  const credential = getZohoCredential(integration);
   const response = await refreshZohoToken(credential.refresh_token);
   const newAccessToken = response.access_token;
   const expiresIn = response.expires_in;
@@ -608,7 +640,24 @@ export async function refreshZohoIntegrationCredential(integration: any) {
     expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
   };
 
-  if (credential.supportedProducts?.crm) {
+  // Set when the integration is first connected (zoho.controller.ts). Without
+  // it Zoho has no way to authenticate the callbacks, so re-registration is
+  // skipped rather than sent with an undefined token as it was previously.
+  const zohoWebhookSecret = credential.zohoWebhookSecret;
+  if (credential.supportedProducts?.crm && !zohoWebhookSecret) {
+    log.warn(
+      "No zohoWebhookSecret on integration=%s; skipping CRM webhook re-registration",
+      integration.id,
+    );
+  }
+  if (credential.supportedProducts?.bigin && !zohoWebhookSecret) {
+    log.warn(
+      "No zohoWebhookSecret on integration=%s; skipping Bigin webhook re-registration",
+      integration.id,
+    );
+  }
+
+  if (credential.supportedProducts?.crm && zohoWebhookSecret) {
     try {
       if (credential.crmWebhook?.channelId) {
         try {
@@ -621,7 +670,7 @@ export async function refreshZohoIntegrationCredential(integration: any) {
 
           log.info("Old CRM webhook unsubscribed successfully for integration=%s", integration.id);
         } catch (err) {
-          log.warn("CRM webhook unsubscribe failed, continuing => %o", err);
+          log.warn({ err }, "CRM webhook unsubscribe failed, continuing");
         }
       }
 
@@ -639,7 +688,7 @@ export async function refreshZohoIntegrationCredential(integration: any) {
           "Leads.edit",
           "Leads.delete",
         ],
-        zohoWebhookSecret: credential.zohoWebhookSecret,
+        zohoWebhookSecret,
       });
 
       updatedCredential = {
@@ -654,11 +703,11 @@ export async function refreshZohoIntegrationCredential(integration: any) {
 
       log.info("CRM webhook re-registered successfully for integration=%s", integration.id);
     } catch (err) {
-      log.error("Failed registering CRM webhook for integration=%s => %o", integration.id, err);
+      log.error({ err }, "Failed registering CRM webhook for integration=%s", integration.id);
     }
   }
 
-  if (credential.supportedProducts?.bigin) {
+  if (credential.supportedProducts?.bigin && zohoWebhookSecret) {
     try {
       if (credential.biginWebhook?.channelId) {
         await unsubscribeZohoWebhook({
@@ -683,7 +732,7 @@ export async function refreshZohoIntegrationCredential(integration: any) {
           "Deals.edit",
           "Deals.delete",
         ],
-        zohoWebhookSecret: credential.zohoWebhookSecret,
+        zohoWebhookSecret,
       });
 
       updatedCredential = {
@@ -696,11 +745,7 @@ export async function refreshZohoIntegrationCredential(integration: any) {
       };
       log.info("Bigin webhook re-registered successfully for integration=%s", integration.id);
     } catch (err) {
-      log.error(
-        "Failed re-registering Bigin webhook for integration=%s => %o",
-        integration.id,
-        err,
-      );
+      log.error({ err }, "Failed re-registering Bigin webhook for integration=%s", integration.id);
     }
   }
 
@@ -728,7 +773,7 @@ export async function refreshZohoTokensAndWebhooks() {
     try {
       await refreshZohoIntegrationCredential(integration);
     } catch (err) {
-      log.error("Zoho scheduled refresh failed for integration=%s => %o", integration.id, err);
+      log.error({ err, integrationId: integration.id }, "Zoho scheduled refresh failed");
     }
   }
 }
@@ -760,7 +805,7 @@ export async function fetchZohoContacts(orgId: string, product: ZohoProduct = "c
     throw new Error("Zoho integration not found");
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
 
   const accessToken = await getValidZohoAccessToken(integration);
 
@@ -797,7 +842,7 @@ export async function syncZohoContacts(orgId: string, product: ZohoProduct = "cr
     throw new Error(`${product} integration not found`);
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
 
   const accessToken = await getValidZohoAccessToken(integration);
 
@@ -840,7 +885,7 @@ export async function syncZohoContacts(orgId: string, product: ZohoProduct = "cr
 }
 
 export async function syncZohoContactsToRateup(
-  contacts: any[],
+  contacts: ZohoRecord[],
   orgId: string,
   product: ZohoProduct = "crm",
 ) {
@@ -857,7 +902,7 @@ export async function syncZohoContactsToRateup(
       const integrationPath =
         product === "bigin" ? ["bigin", "contact", "id"] : ["zoho", "contact", "id"];
 
-      const orConditions: any[] = [
+      const orConditions: Prisma.ContactWhereInput[] = [
         {
           integrationIds: {
             path: integrationPath,
@@ -885,7 +930,8 @@ export async function syncZohoContactsToRateup(
         },
       });
 
-      const existingIntegrationIds = (existingContact?.integrationIds as any) || {};
+      const existingIntegrationIds =
+        (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
 
       const integrationIds = {
         ...existingIntegrationIds,
@@ -939,7 +985,7 @@ export async function syncZohoContactsToRateup(
         log.info("Created Rateup contact from %s", product);
       }
     } catch (error) {
-      log.error("Failed syncing %s contact => %o", product, error);
+      log.error({ err: error, product }, "Failed syncing contact");
     }
   }
 
@@ -960,7 +1006,7 @@ export async function fetchZohoLeads(orgId: string) {
     throw new Error("Zoho integration not found");
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
   const accessToken = await getValidZohoAccessToken(integration);
   const response = await getZohoRecords(
     accessToken,
@@ -993,7 +1039,7 @@ export async function syncZohoLeads(orgId: string) {
     throw new Error("Zoho integration not found");
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
   const accessToken = await getValidZohoAccessToken(integration);
   const response = await getZohoRecords(
     accessToken,
@@ -1021,7 +1067,7 @@ export async function syncZohoLeads(orgId: string) {
 
   return leads;
 }
-export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
+export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) {
   const integration = await prisma.integration.findUnique({
     where: {
       orgid_integration_name_unique: {
@@ -1035,7 +1081,7 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
     throw new Error("Zoho integration not found");
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
   const leadLifecycleMappings = credential?.crm?.leadLifecycleMappings || [];
 
   // Build mapping object
@@ -1055,7 +1101,7 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
       const name = `${firstName} ${lastName}`.trim();
       const leadStatus = (zohoLead.Lead_Status || "").toString().trim().toLowerCase();
       const mappedLifecycleId = lifecycleMap.get(leadStatus) || null;
-      const orConditions: any[] = [
+      const orConditions: Prisma.ContactWhereInput[] = [
         {
           integrationIds: {
             path: ["zoho", "lead", "id"],
@@ -1084,10 +1130,10 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
       });
 
       const integrationIds = {
-        ...(existingContact?.integrationIds as any),
+        ...((existingContact?.integrationIds as ContactIntegrationIds | null) ?? {}),
 
         zoho: {
-          ...(existingContact?.integrationIds as any)?.zoho,
+          ...((existingContact?.integrationIds as ContactIntegrationIds | null) ?? {}).zoho,
 
           lead: {
             id: zohoId,
@@ -1121,7 +1167,7 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
         });
       }
     } catch (error) {
-      log.error("Failed syncing Zoho lead => %o", error);
+      log.error({ err: error }, "Failed syncing Zoho lead");
     }
   }
 
@@ -1131,7 +1177,7 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
 export async function updateZohoLeadQueue(
   orgId: string,
   zohoLeadId: string,
-  fields: Record<string, any>,
+  fields: Record<string, unknown>,
 ) {
   await integrationTriggerQueue.add("zoho-lead-update", {
     integrationName: "zoho",
@@ -1158,7 +1204,7 @@ export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct 
     throw new Error("Zoho integration not found");
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
   const accessToken = await getValidZohoAccessToken(integration);
 
   // FETCH BOTH
@@ -1172,17 +1218,17 @@ export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct 
   const excludedFields = ["Deal_Name", "Stage", "Pipeline", "Sub_Pipeline", "Contact_Name"];
 
   const pipelines =
-    layoutResponse.layouts?.map((layout: any) => {
+    layoutResponse.layouts?.map((layout: ZohoLayoutMeta) => {
       // GET REQUIRED FIELDS
       const requiredFields =
         layout.sections
-          ?.flatMap((section: any) => section.fields || [])
+          ?.flatMap((section: ZohoLayoutSection) => section.fields || [])
           ?.filter(
-            (field: any) =>
+            (field: ZohoFieldMeta) =>
               (field.required || field.system_mandatory) &&
-              !excludedFields.includes(field.api_name),
+              !excludedFields.includes(field.api_name ?? ""),
           )
-          ?.map((field: any) => ({
+          ?.map((field: ZohoFieldMeta) => ({
             id: String(field.id),
             apiName: field.api_name,
             label: field.display_label,
@@ -1204,19 +1250,19 @@ export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct 
 
   // SUB PIPELINE FIELD
   const subPipelineField = fields.find(
-    (field: any) => field.api_name === "Sub_Pipeline" && field.data_type === "picklist",
+    (field: ZohoFieldMeta) => field.api_name === "Sub_Pipeline" && field.data_type === "picklist",
   );
 
   // STAGE FIELD
   const stageField = fields.find(
-    (field: any) => field.api_name === "Stage" && field.data_type === "picklist",
+    (field: ZohoFieldMeta) => field.api_name === "Stage" && field.data_type === "picklist",
   );
 
   // SUB PIPELINES
   const subPipelines =
     subPipelineField?.pick_list_values
-      ?.filter((pipeline: any) => pipeline.actual_value !== "-None-")
-      .map((pipeline: any) => ({
+      ?.filter((pipeline: ZohoPickListValue) => pipeline.actual_value !== "-None-")
+      .map((pipeline: ZohoPickListValue) => ({
         id: String(pipeline.id),
         name: pipeline.display_value,
         value: pipeline.actual_value,
@@ -1225,8 +1271,8 @@ export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct 
   // STAGES
   const stages =
     stageField?.pick_list_values
-      ?.filter((stage: any) => stage.actual_value !== "-None-")
-      .map((stage: any) => ({
+      ?.filter((stage: ZohoPickListValue) => stage.actual_value !== "-None-")
+      .map((stage: ZohoPickListValue) => ({
         id: String(stage.id),
         name: stage.display_value,
         value: stage.actual_value,
@@ -1276,8 +1322,9 @@ export async function syncContactFromZohoRecord({
   orgId: string;
   product: "crm" | "bigin";
   module: string;
-  zohoRecord: any;
-  credential: any;
+  zohoRecord: ZohoRecord;
+  /** Only the lifecycle-mapping config and the trigger list are read here. */
+  credential: Pick<ZohoCredential, "crm" | "bigin" | "triggerSubscriptions">;
 }) {
   let requiredTrigger: string | null = null;
 
@@ -1334,7 +1381,7 @@ export async function syncContactFromZohoRecord({
     return null;
   }
 
-  const updateData: any = {};
+  const updateData: Prisma.ContactUncheckedUpdateInput = {};
 
   if (module === "Contacts" || module === "Leads") {
     updateData.name = zohoRecord.Full_Name || null;
@@ -1350,7 +1397,7 @@ export async function syncContactFromZohoRecord({
   if (product === "crm" && module === "Leads") {
     const leadStatus = zohoRecord.Lead_Status;
     const mappings = credential?.crm?.leadLifecycleMappings || [];
-    const matchedMapping = mappings.find((m: any) => m.zohoLeadStatus === leadStatus);
+    const matchedMapping = mappings.find((m) => m.zohoLeadStatus === leadStatus);
     if (matchedMapping?.lifecycleId) {
       updateData.lifecycleId = matchedMapping.lifecycleId;
       log.info("Mapped CRM Lead Status to lifecycle");
@@ -1360,7 +1407,7 @@ export async function syncContactFromZohoRecord({
   if (product === "bigin" && module === "Deals") {
     const stageName = zohoRecord.Stage;
     const mappings = credential?.bigin?.pipeline?.lifecycleStageMappings || [];
-    const matchedMapping = mappings.find((m: any) => m.biginStageName === stageName);
+    const matchedMapping = mappings.find((m) => m.biginStageName === stageName);
     if (matchedMapping?.lifecycleId) {
       updateData.lifecycleId = matchedMapping.lifecycleId;
       log.info("Mapped Bigin stage to lifecycle");
@@ -1391,7 +1438,7 @@ export async function fetchZohoUsers(orgId: string, product: ZohoProduct = "bigi
     throw new Error("Zoho integration not found");
   }
 
-  const credential = integration.credential as any;
+  const credential = getZohoCredential(integration);
   const accessToken = await getValidZohoAccessToken(integration);
   const response = await getZohoRecords(
     accessToken,
@@ -1405,7 +1452,7 @@ export async function fetchZohoUsers(orgId: string, product: ZohoProduct = "bigi
   );
 
   const users =
-    response?.users?.map((user: any) => ({
+    response?.users?.map((user: ZohoUser) => ({
       id: String(user.id),
       name: user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim(),
       email: user.email,

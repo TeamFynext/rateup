@@ -25,10 +25,13 @@ import {
   createUserGoogleSchema,
   pauseUserSchema,
   userStatusSchema,
+  PauseUserInput,
+  UserStatusSchema,
 } from "./user.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { idParamsSchema } from "../stats/stats.schema.js";
+import { IdParamInput } from "../survey/survey.schema.js";
 
 export async function userRoutes(server: FastifyInstance) {
   server.get(
@@ -92,7 +95,7 @@ export async function userRoutes(server: FastifyInstance) {
   );
 
   //this route is dedicated for updating the account-active status of user. Currently used for soft deleting the user.
-  server.put(
+  server.put<{ Params: { userId: string } }>(
     "/update-active-status/:userId",
     {
       preHandler: [checkSession],
@@ -147,7 +150,7 @@ export async function userRoutes(server: FastifyInstance) {
     updateRecipeNameHandler,
   );
 
-  server.put(
+  server.put<{ Body: PauseUserInput; Params: IdParamInput }>(
     "/pause/:id",
     {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
@@ -159,7 +162,7 @@ export async function userRoutes(server: FastifyInstance) {
     pauseUserHandler,
   );
 
-  server.put(
+  server.put<{ Body: UserStatusSchema }>(
     "/status",
     {
       preHandler: [checkSession],
@@ -170,7 +173,14 @@ export async function userRoutes(server: FastifyInstance) {
     updateUserAvailabilityStatusHandler,
   );
 
-  server.get(
+  server.get<{
+    Querystring: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+    };
+  }>(
     "/audit-logs",
     {
       preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],

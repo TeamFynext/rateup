@@ -33,7 +33,7 @@ function getZohoRecordModulePath(moduleName: string, product: ZohoProduct = "crm
 export async function createZohoRecord(
   accessToken: string,
   moduleName: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   baseUrl?: string,
   product: ZohoProduct = "crm",
 ) {
@@ -48,7 +48,7 @@ export async function updateZohoRecord(
   accessToken: string,
   moduleName: string,
   recordId: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   baseUrl?: string,
   product: ZohoProduct = "crm",
 ) {
@@ -63,7 +63,7 @@ export async function getZohoRecords(
   accessToken: string,
   moduleName: string,
   baseUrl?: string,
-  params?: Record<string, any>,
+  params?: Record<string, unknown>,
   modifiedSince?: string,
   product: ZohoProduct = "crm",
 ) {

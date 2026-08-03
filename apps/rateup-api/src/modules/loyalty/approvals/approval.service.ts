@@ -5,6 +5,27 @@ import {
   RejectRequestInput,
   CancelRequestInput,
 } from "./approval.schema.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
+
+/** Every approver is handed the row with its account (and contact/tier) already joined. */
+const approvalWithAccount = {
+  account: {
+    include: {
+      contact: true,
+      currentTier: true,
+    },
+  },
+  redemption: {
+    include: {
+      reward: true,
+    },
+  },
+  transaction: true,
+} satisfies Prisma.ApprovalRequestInclude;
+
+type ApprovalWithAccount = Prisma.ApprovalRequestGetPayload<{
+  include: typeof approvalWithAccount;
+}>;
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
@@ -60,7 +81,7 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
   try {
     const { requestType, accountId, fromDate, toDate, page = 1, limit = 20 } = filters;
 
-    const where: any = {
+    const where: Prisma.ApprovalRequestWhereInput = {
       account: {
         programId,
       },
@@ -311,7 +332,7 @@ export async function cancelApprovalRequest(data: CancelRequestInput) {
 /**
  * Approve a redemption request
  */
-async function approveRedemption(approval: any, data: ApproveRequestInput) {
+async function approveRedemption(approval: ApprovalWithAccount, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
     const customer = await tx.customerLoyaltyAccount.findUnique({
       where: { id: approval.accountId },
@@ -433,7 +454,7 @@ async function approveRedemption(approval: any, data: ApproveRequestInput) {
 /**
  * Approve a points adjustment (add or deduct)
  */
-async function approvePointsAdjustment(approval: any, data: ApproveRequestInput) {
+async function approvePointsAdjustment(approval: ApprovalWithAccount, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
     const customer = await tx.customerLoyaltyAccount.findUnique({
       where: { id: approval.accountId },
@@ -540,9 +561,9 @@ async function approvePointsAdjustment(approval: any, data: ApproveRequestInput)
 /**
  * Approve a tier override
  */
-async function approveTierOverride(approval: any, data: ApproveRequestInput) {
+async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
-    const requestData = approval.requestData as any;
+    const requestData = approval.requestData;
 
     // Update customer tier
     const customer = await tx.customerLoyaltyAccount.update({
@@ -605,7 +626,7 @@ async function approveTierOverride(approval: any, data: ApproveRequestInput) {
 /**
  * Approve an account suspension
  */
-async function approveAccountSuspension(approval: any, data: ApproveRequestInput) {
+async function approveAccountSuspension(approval: ApprovalWithAccount, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
     // Suspend account
     await tx.customerLoyaltyAccount.update({
@@ -643,7 +664,10 @@ async function approveAccountSuspension(approval: any, data: ApproveRequestInput
 /**
  * Approve an account reactivation
  */
-async function approveAccountReactivation(approval: any, data: ApproveRequestInput) {
+async function approveAccountReactivation(
+  approval: ApprovalWithAccount,
+  data: ApproveRequestInput,
+) {
   return await prisma.$transaction(async (tx) => {
     // Reactivate account
     await tx.customerLoyaltyAccount.update({
@@ -681,7 +705,7 @@ async function approveAccountReactivation(approval: any, data: ApproveRequestInp
 /**
  * Approve a bulk operation
  */
-async function approveBulkOperation(approval: any, data: ApproveRequestInput) {
+async function approveBulkOperation(approval: ApprovalWithAccount, data: ApproveRequestInput) {
   // For bulk operations, just mark as approved
   // The actual bulk processing would be triggered separately
   return await prisma.$transaction(async (tx) => {

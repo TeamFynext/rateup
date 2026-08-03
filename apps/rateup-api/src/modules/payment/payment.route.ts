@@ -20,9 +20,14 @@ import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   createCheckoutRequestSchema,
   createRateUpPlanSchema,
+  createRateUpPlanInput,
   paymentPlanDeleteSchema,
+  paymentPlanDeleteInput,
   rateupPlanParamSchema,
+  rateupPlanParamInput,
   updateRateUpPlanSchema,
+  updateRateUpPlanInput,
+  UpdatePlanInput,
 } from "./payment.schema.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
@@ -38,7 +43,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     getAllPaymentPlansHandler,
   );
 
-  server.post(
+  server.post<{ Body: createRateUpPlanInput }>(
     "/rateup-plan",
     {
       preHandler: [assertRootOrg],
@@ -49,7 +54,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     createRateUpPlanHandler,
   );
 
-  server.put(
+  server.put<{ Body: updateRateUpPlanInput }>(
     "/rateup-plan",
     {
       preHandler: [assertRootOrg],
@@ -59,7 +64,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     },
     updateRateUpPlanHandler,
   );
-  server.delete(
+  server.delete<{ Params: rateupPlanParamInput }>(
     "/rateup-plan/:id",
     {
       preHandler: [assertRootOrg],
@@ -79,7 +84,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     createCheckoutSessionHandler,
   );
 
-  server.put(
+  server.put<{ Body: UpdatePlanInput }>(
     "/updateplans",
     {
       preHandler: [assertRootOrg],
@@ -113,7 +118,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     getAllPaymentOrdersHandler,
   );
 
-  server.delete(
+  server.delete<{ Body: paymentPlanDeleteInput }>(
     "/",
     {
       preHandler: [assertRootOrg],

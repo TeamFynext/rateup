@@ -225,19 +225,34 @@ describe("getCustomerAccountByIdHandler", () => {
 });
 
 describe("getCustomerAccountByPhoneHandler", () => {
-  const account = (over: Record<string, unknown> = {}) => ({
-    id: "acct-1",
-    contactId: "contact-1",
-    currentPoints: 500,
-    lifetimePoints: 900,
-    referralCode: "ANN-AB12",
-    currentTier: { id: "tier-1", name: "Gold" },
-    contact: { name: "Ann", phone: "919000000001", email: "a@b.c" },
-    status: "active",
-    assignedRewards: [],
-    redemptions: [],
-    ...over,
-  });
+  interface AccountFixture {
+    id: string;
+    contactId: string;
+    currentPoints: number;
+    lifetimePoints: number;
+    referralCode: string;
+    currentTier: { id: string; name: string } | null;
+    contact: { name: string; phone: string; email: string };
+    status: string;
+    assignedRewards: Array<Record<string, unknown>>;
+    redemptions: Array<Record<string, unknown>>;
+  }
+
+  const account = (over: Record<string, unknown> = {}) => {
+    const base: AccountFixture = {
+      id: "acct-1",
+      contactId: "contact-1",
+      currentPoints: 500,
+      lifetimePoints: 900,
+      referralCode: "ANN-AB12",
+      currentTier: { id: "tier-1", name: "Gold" },
+      contact: { name: "Ann", phone: "919000000001", email: "a@b.c" },
+      status: "active",
+      assignedRewards: [],
+      redemptions: [],
+    };
+    return { ...base, ...over };
+  };
 
   test("answers 404 when the phone has no account", async () => {
     (getCustomerAccountByPhone as Mock).mockResolvedValue(null);

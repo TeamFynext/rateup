@@ -49,7 +49,15 @@ const IBA_ID = "iba-1";
 const IGS_ID = "igs-1";
 const ORG_ID = "org-1";
 
-const SETTINGS = {
+const SETTINGS: {
+  id: string;
+  orgId: string;
+  ibaId: string;
+  fbPageId: string;
+  pageAccessToken: string;
+  instagramIceBreakers: unknown;
+  instagramPersistentMenu: unknown;
+} = {
   id: "settings-1",
   orgId: ORG_ID,
   ibaId: IBA_ID,

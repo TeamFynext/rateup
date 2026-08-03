@@ -1,3 +1,4 @@
+import { Prisma, WaAutomationProgressStatus } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 
@@ -18,7 +19,7 @@ export async function findRecentAutomation(
 ) {
   const { timeWindow } = options;
 
-  const whereClause: any = {
+  const whereClause: Prisma.WaAutomatedReplyMessageWhereInput = {
     phone,
     orgId,
   };
@@ -69,11 +70,11 @@ export async function logAutomationAction({
   nodeId: string;
   automationId: string;
   orgId: string;
-  response?: Record<string, any>;
-  status?: string;
+  response?: Prisma.InputJsonValue;
+  status?: WaAutomationProgressStatus;
 }) {
   try {
-    const data: any = {
+    const data: Prisma.WaAutomatedReplyMessageUncheckedCreateInput = {
       phone,
       currentNode: nodeId,
       waAutomatedReplyId: automationId,
@@ -87,7 +88,7 @@ export async function logAutomationAction({
 
     return await prisma.waAutomatedReplyMessage.create({ data });
   } catch (error) {
-    log.error(`Error logging automation action: ${error.message}`);
+    log.error({ err: error }, "Error logging automation action");
     return null;
   }
 }
@@ -104,7 +105,7 @@ export async function logFlowCompletion({
   phone: string;
   orgId: string;
   flowId: string;
-  recentActivity?: any;
+  recentActivity?: Awaited<ReturnType<typeof findRecentAutomation>>;
 }) {
   // If no recent activity, find the most recent one
   if (!recentActivity) {
@@ -115,8 +116,8 @@ export async function logFlowCompletion({
   if (recentActivity?.waAutomatedReply) {
     return await logAutomationAction({
       phone,
-      nodeId: recentActivity.currentNode,
-      automationId: recentActivity.waAutomatedReplyId,
+      nodeId: recentActivity.currentNode ?? "",
+      automationId: recentActivity.waAutomatedReplyId ?? "",
       orgId,
       response: {
         value: "flow completed",
