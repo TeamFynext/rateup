@@ -29,12 +29,6 @@ export async function sendTicketAssignedWaMessage(data: {
   }
   const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
   const { orgId } = data;
-  // The guard used to be the INVERSE of the WhatsApp customer-service window: it
-  // refused to send inside the 24 hours — when a free-form message is the one thing
-  // that is allowed — and sent once the window had closed, or to a contact who had
-  // never written at all. `lastReceivedMessageTimeStamp` is inbound recency (the
-  // dashboard counts rows newer than 24 hours as the org's active conversations).
-  // See issues.txt 30.2.
   const withinServiceWindow =
     Boolean(contact?.lastReceivedMessageTimeStamp) &&
     dayjs().diff(dayjs(contact!.lastReceivedMessageTimeStamp), "hour") < 24;
@@ -75,8 +69,6 @@ export async function sendTicketAssignedEmail(data: {
       emailData: msg,
     });
   } catch (error) {
-    // `"..." + error` concatenated the caught value onto a string and discarded the
-    // original stack; `{ cause }` keeps it. Same shape as issues.txt 22.4.
     log.error({ err: error }, "Ticket notification email could not be queued");
     throw new Error("Email sending failed", { cause: error });
   }
@@ -97,12 +89,6 @@ export async function sendTicketCreateWaMessage(data: {
   }
   const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
   const { orgId } = data;
-  // The guard used to be the INVERSE of the WhatsApp customer-service window: it
-  // refused to send inside the 24 hours — when a free-form message is the one thing
-  // that is allowed — and sent once the window had closed, or to a contact who had
-  // never written at all. `lastReceivedMessageTimeStamp` is inbound recency (the
-  // dashboard counts rows newer than 24 hours as the org's active conversations).
-  // See issues.txt 30.2.
   const withinServiceWindow =
     Boolean(contact?.lastReceivedMessageTimeStamp) &&
     dayjs().diff(dayjs(contact!.lastReceivedMessageTimeStamp), "hour") < 24;
@@ -130,9 +116,6 @@ export async function sendTicketCreateEmail(data: {
   const msg = {
     to: data.email,
     subject: `Ticket Created`,
-    // Said "assigned to you", the same string the assignment mail uses, so previews
-    // and text-only clients announced an assignment that never happened.
-    // See issues.txt 30.6.
     text: `A ticket has been created on Rateup.app`,
     html: createEmailBodyTicketCreated({
       ticket_link,
@@ -146,14 +129,11 @@ export async function sendTicketCreateEmail(data: {
       emailData: msg,
     });
   } catch (error) {
-    // `"..." + error` concatenated the caught value onto a string and discarded the
-    // original stack; `{ cause }` keeps it. Same shape as issues.txt 22.4.
     log.error({ err: error }, "Ticket notification email could not be queued");
     throw new Error("Email sending failed", { cause: error });
   }
 }
 
-/** Raised when the caller may not comment on the named card. issues.txt 30.1. */
 export class TicketCommentAccessError extends Error {
   constructor(message: string) {
     super(message);
@@ -161,16 +141,6 @@ export class TicketCommentAccessError extends Error {
   }
 }
 
-/**
- * Attaches a comment to a card the caller can actually reach.
- *
- * The route's access check was commented out AND the path id was ignored — the
- * target came from `body.ticketCardId` — so any authenticated user could plant a
- * comment on any card on the platform, and getCardById renders it over the author's
- * real name and email. Both halves are fixed: the board is resolved from the body's
- * card id and membership is required, which is what a path-based preHandler could
- * not have done. See issues.txt 30.1.
- */
 export async function createComment(input: CreateCommentInput, userId: string) {
   const { ticketCardId, msg } = input;
 

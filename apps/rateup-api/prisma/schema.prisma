@@ -1757,8 +1757,9 @@ model WaAutomatedReply {
   org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
   platform                String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
-  sendOnceIn24Hours       Boolean  @default(false)
-  isEnabled               Boolean  @default(true)
+
+  // The enable/disable toggle and the once-per-24h guard live on Rule now:
+  // Rule.isActive and Rule.options.sendOncePerDay, enforced in validateRuleConditions.
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
@@ -2138,10 +2139,6 @@ model CustomerLoyaltyAccount {
   lastActivityAt DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  // Cron bookkeeping. Both exist so the crons stop claiming their work by writing
-  // `lastActivityAt`, which is the column they SELECT on: reminding a dormant
-  // customer marked them active today, so their inactivity clock restarted and the
-  // reminder cancelled its own follow-up. See issues.txt 20.37 and 20.36.
   lastInactivityReminderAt DateTime?
   lastBirthdayGreetedAt    DateTime?
 
@@ -2611,18 +2608,6 @@ model NotificationSetting {
   waMessageClosedNotification Boolean   @default(false)
 }
 
-/// Demo requests from the public marketing form.
-///
-/// The table described a booking form the API no longer offers: it required nine
-/// fields while the live route collects five, and workEmail was the only one the
-/// two had in common. Nothing ever wrote to it — createBookDemo had no callers —
-/// so a demo request existed only as an email, and a dropped queue job lost the
-/// lead outright. See issues.txt 16.3.
-///
-/// The five fields the form actually collects are below. The nine legacy columns
-/// are kept, relaxed to nullable, so the change is additive: nothing is dropped
-/// and no data can be lost by applying it. They can be removed once it is
-/// confirmed the table is empty.
 model BookDemo {
   id             String   @id @default(cuid())
   name           String

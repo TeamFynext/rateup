@@ -1,6 +1,5 @@
 import {
   ShopifyEvents,
-  WaAutomatedReplyMatchType,
   WaMessageAssignStatus,
   WaTemplateComponentType,
 } from "../../../types/enums.js";
@@ -14,10 +13,7 @@ import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  findRecentAutomation,
-  logAutomationAction,
-} from "../whatsappSurvey/automation-logger.utils.js";
+import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.js";
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
@@ -85,8 +81,6 @@ export interface automationProps {
   orgId: string | null;
   whatsappSettingsPhoneId: string | null;
   whatsappSettingsPhoneIds: string[];
-  isEnabled: boolean;
-  sendOnceIn24Hours: boolean;
 }
 // Helper to check substring match while preserving optional case sensitivity
 export function includesWholePhrase(text: string, phrase: string, caseSensitive = false) {
@@ -94,72 +88,6 @@ export function includesWholePhrase(text: string, phrase: string, caseSensitive 
   const flags = caseSensitive ? "" : "i";
 
   return new RegExp(String.raw`(?<!\w)${escapedPhrase}(?!\w)`, flags).test(text);
-}
-
-/**
- * Enhanced validation for automation match conditions including contact and time filters
- */
-export async function validateAutomationMatchCondition(
-  automation: automationProps,
-  message: string,
-  orgId?: string,
-  phone?: string,
-): Promise<boolean> {
-  const { matchType, matchData, commands } = automation;
-  // findRecentAutomation requires a real phone/orgId to scope its lookup -
-  // without both, there's nothing to dedupe against, so skip the check
-  // rather than passing undefined through to the query.
-  if (automation.sendOnceIn24Hours && phone && orgId) {
-    const recentActivity = await findRecentAutomation(phone, orgId, {
-      timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-    });
-    if (recentActivity) return false;
-  }
-  // First validate the message matching logic (existing logic)
-  let messageMatches = false;
-
-  if (matchType === WaAutomatedReplyMatchType.Exact) {
-    if (matchData.caseSensitive) {
-      messageMatches = commands?.[0] === message;
-    } else {
-      messageMatches = commands?.[0]?.toLowerCase() === message?.toLowerCase();
-    }
-  } else if (
-    [WaAutomatedReplyMatchType.ContainsAllOf, WaAutomatedReplyMatchType.ContainsAnyOf].includes(
-      matchType as WaAutomatedReplyMatchType,
-    )
-  ) {
-    let comparator: "some" | "every";
-
-    if (WaAutomatedReplyMatchType.ContainsAllOf === matchType) {
-      comparator = "every";
-    } else if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType) {
-      comparator = "some";
-    } else {
-      // Unreachable: the outer `else if` above already restricted matchType
-      // to one of these two values before entering this branch.
-      throw new Error(`WaAutomation not implemented for: ${matchType}`);
-    }
-
-    const caseSensitive = !!matchData.caseSensitive;
-    messageMatches = commands[comparator]((keyword) =>
-      includesWholePhrase(message, keyword, caseSensitive),
-    );
-  } else {
-    throw new Error(`WaAutomation not implemented for: ${matchType}`);
-  }
-
-  // If message doesn't match, return false early
-  if (!messageMatches) return false;
-
-  // If we don't have orgId and phone for additional validations, return message match result
-  if (!orgId || !phone) return messageMatches;
-
-  // Validate contact filters
-  const contactFiltersValid = await validateContactFilters(matchData.contactFilters, orgId, phone);
-  if (!contactFiltersValid) return false;
-
-  return true;
 }
 
 // Example usage:
@@ -288,79 +216,11 @@ export enum ReplyComponentType {
   AiBot = "AiBot",
 }
 
-/**
- * See issues.txt 17.2 — one of four copies of the same gate, now sharing
- * enforceWhatsappCountLimit. Automated replies are unlimited by design: no plan in
- * subscription.data.ts states a whatsapp count. A plan that does name one is still
- * capped.
- */
 export async function verifyAutomationLimit(request: FastifyRequest, reply: FastifyReply) {
   return await enforceWhatsappCountLimit(request, reply, {
     label: "automated replies",
     count: (orgId) => prisma.waAutomatedReply.count({ where: { orgId } }),
   });
-}
-
-/**
- * Validates contact-based filter conditions
- */
-async function validateContactFilters(
-  contactFilters: WaAutomationContactFilters | null | undefined,
-  orgId: string,
-  phone: string,
-): Promise<boolean> {
-  if (!contactFilters) return true;
-
-  const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
-  if (!contact) return false;
-
-  // Check if automation should only trigger for new contacts
-  if (contactFilters.newContactsOnly) {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    if (contact.createdAt < oneDayAgo) {
-      return false;
-    }
-  }
-
-  // Check if contact is in required groups
-  const requiredGroups = contactFilters.inGroups;
-  if (requiredGroups?.length) {
-    const contactGroups = contact?.contactGroups?.map((g) => g.contactGroupId) || [];
-    return requiredGroups.some((group) => contactGroups.includes(group));
-  }
-
-  // Check if contact has values for required fields
-  const requiredFields = contactFilters.requiredFieldsWithAnyValue;
-  if (requiredFields?.length) {
-    const customFieldsMap = new Map(
-      contact.customFields?.map((cf) => [cf.fieldId, cf.value]) || [],
-    );
-
-    for (const fieldSlug of requiredFields) {
-      const fieldValue = customFieldsMap.get(fieldSlug);
-
-      // Check custom fields first
-      if (fieldValue?.trim()) continue;
-
-      // Check built-in fields
-      switch (fieldSlug.toLowerCase()) {
-        case "email":
-          if (contact?.email?.trim()) continue;
-          break;
-        case "name":
-          if (contact?.name?.trim()) continue;
-          break;
-        case "phone":
-          if (contact?.phone?.trim()) continue;
-          break;
-        default:
-          // Field doesn't have a value
-          return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 /**

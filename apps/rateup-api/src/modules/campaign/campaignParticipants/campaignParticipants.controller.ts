@@ -20,19 +20,6 @@ import { ByCampaignIdParams } from "../campaign.schema.js";
 import { CampaignNotFoundError } from "../campaign.errors.js";
 import { log } from "../../../utils/logger.js";
 
-/**
- * Turns a service failure into a controlled reply.
- *
- * Six of these seven handlers had no try/catch at all, so a service failure
- * escaped to fastify's default error handler rather than becoming a reply. The
- * seventh, multipleDeleteCampaignParticipantHandler, was worse: it caught and then
- * `reply.send(error)` with no status, so fastify answered 200 with a body whose
- * own properties are non-enumerable — the client received `{}` and read it as a
- * successful delete. See issues.txt 17.6.
- *
- * A campaign that is not the caller's answers 404, indistinguishable from one that
- * never existed. See issues.txt 17.3.
- */
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
   if (error instanceof CampaignNotFoundError) {
     return reply.status(404).send({ message: error.message, code: "CAMPAIGN_NOT_FOUND" });

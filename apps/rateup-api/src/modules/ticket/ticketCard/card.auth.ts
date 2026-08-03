@@ -38,15 +38,6 @@ export async function verifyCardAccess(
   }
 }
 
-/**
- * The access check for the routes that name their target in the BODY.
- *
- * POST /cards/create and PUT /cards/reorder carried no preHandler at all, because
- * there is no path id for the by-id checks to resolve — so any authenticated user
- * could add a card to any column on the platform (firing that board's email and
- * WhatsApp notifications, stamped with the CALLER's org) or rewrite the order of
- * any board's cards. See issues.txt 29.1.
- */
 export async function verifyColumnAccessFromBody(
   request: FastifyRequest<{ Body: { ticketColumnId?: string } }>,
   reply: FastifyReply,
@@ -64,7 +55,6 @@ export async function verifyColumnAccessFromBody(
   }
 }
 
-/** Every card in a reorder must sit on a board the caller belongs to. issues.txt 29.1. */
 export async function verifyCardsReorderAccess(
   request: FastifyRequest<{ Body: { cards?: { id: string }[] } }>,
   reply: FastifyReply,

@@ -377,7 +377,6 @@ describe("getUserAccessTokenHanlder", () => {
     expect(url).toContain("instagram_business_account");
     // Token as the auth header, not in the URL, and the full response — which
     // carries access_token for every page — is no longer logged at info.
-    // Same leak as issues.txt 13.3, in a second file.
     expect(url).not.toContain("access_token=");
     expect(token).toBe("token-abc");
   });

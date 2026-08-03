@@ -17,20 +17,8 @@ import {
 
 dayjs.extend(utc);
 
-/**
- * Either the prisma client or a transaction client. The usage counter is written
- * through whichever one the caller passes, so awardPoints can enrol it in the same
- * transaction as the points and the ledger row. See issues.txt 20.10.
- */
 type Db = Prisma.TransactionClient | typeof prisma;
 
-/**
- * Every clock in this file is UTC, for the same reason as redemptionValidator.ts:
- * `getDay()` and `toTimeString()` used to read the deployment's local timezone, so
- * a rule written as "Tuesdays, 09:00-17:00" followed the server's clock rather
- * than the merchant's and produced different answers if the API moved region.
- * See issues.txt 20.2.
- */
 export class EarningRulesEngine {
   /**
    * Calculate points for a purchase based on earning rules
@@ -103,14 +91,6 @@ export class EarningRulesEngine {
         continue;
       }
 
-      // Check tier eligibility.
-      //
-      // The `&& customer.currentTierId` that used to close this condition meant an
-      // untiered customer skipped the comparison and so matched every
-      // tier-exclusive rule, including the platinum ones. New accounts were
-      // created untiered whenever the entry-tier lookup missed, which it did for
-      // every single-tier program (issues.txt 20.11). A null tier is not in any
-      // list. See issues.txt 20.6.
       if (rule.applicableToTiers && rule.applicableToTiers.length > 0) {
         if (!customer.currentTierId || !rule.applicableToTiers.includes(customer.currentTierId)) {
           continue;
@@ -149,21 +129,6 @@ export class EarningRulesEngine {
       break;
     }
 
-    // 4. There is no separate fallback query any more.
-    //
-    // There used to be one: `findFirst({ where: { programId, isDefault: true } })`
-    // — no status, no validity window, no tier list, no usage caps. It ran
-    // whenever the loop above found nothing, which meant a default rule that an
-    // operator had deliberately deactivated, or whose validity window had passed,
-    // or whose own maxTotalUses was exhausted, still priced every purchase that no
-    // other rule matched.
-    //
-    // It was also redundant. The default rule is an ordinary row in `rules`, so if
-    // it is active and eligible the loop has already matched it — the fallback
-    // could only ever fire for a default rule that had just been REJECTED, and
-    // then ignore the reason. A program whose only rule is switched off now says
-    // so instead of quietly pricing at the switched-off rate.
-    // See issues.txt 20.10.
     if (!matchedRule) {
       throw new Error("No earning rule found for this program");
     }
@@ -174,19 +139,6 @@ export class EarningRulesEngine {
     const bonusAdded = ruleMultiplied + (matchedRule.bonusPoints || 0);
     const finalPoints = Math.floor(bonusAdded * Number(tierMultiplier));
 
-    // 6. Count the use — conditionally, and through the caller's client.
-    //
-    // This used to be an unconditional `update` on the global prisma client, run
-    // before the caller had written the points or the ledger row and outside any
-    // transaction. Three things followed: the counter was burned for purchases
-    // that failed afterwards, it was burned for purchases that earned nothing, and
-    // two concurrent purchases both saw the pre-increment value — so a promotion
-    // limited to N uses could exceed N.
-    //
-    // `db` is the caller's transaction when there is one, so the count rolls back
-    // with everything else. The `currentTotalUses` filter makes the cap part of
-    // the write's own condition rather than a read taken at the top of this
-    // function. See issues.txt 20.10.
     if (finalPoints > 0) {
       const capped = matchedRule.maxTotalUses
         ? { currentTotalUses: { lt: matchedRule.maxTotalUses } }
@@ -348,16 +300,6 @@ export class EarningRulesEngine {
       return { upgraded: false, direction: "none" };
     }
 
-    // Which way the customer is moving.
-    //
-    // This function writes whichever tier the supplied spend qualifies for, in
-    // EITHER direction — which is what a tier reset needs — but it used to report
-    // every one of those moves as `{ upgraded: true }`, and awardPoints uses that
-    // flag to send a TIER_UPGRADED WhatsApp message naming the new tier. Any
-    // caller passing something other than a rising lifetime spend therefore moved
-    // customers down and congratulated them for it. The move and the direction are
-    // separate answers now, and only a genuine promotion is an upgrade.
-    // See issues.txt 20.12.
     const direction: TierMoveDirection = !customer.currentTier
       ? "up"
       : Number(qualifiedTier.threshold) > Number(customer.currentTier.threshold)
@@ -374,22 +316,6 @@ export class EarningRulesEngine {
     return { upgraded: direction === "up", direction, newTier: qualifiedTier };
   }
 
-  /**
-   * Generate a referral code that is not already in use.
-   *
-   * A referral code earns its owner points on every signup that quotes it, and the
-   * public enrolment route accepts one without a session (issues.txt 20.13) — so
-   * it is a credential, not a label.
-   *
-   * It used to be the first six letters of the CUSTOMER'S OWN NAME plus four
-   * Math.random characters, never checked against the table: derived from
-   * something an attacker can read off the customer, and with a search space of
-   * about 1.6 million per known name. The two findings composed into a
-   * points-minting loop. The name part stays because customers read these codes
-   * out and recognise their own, but the entropy no longer depends on it — ten
-   * characters from a 32-symbol alphabet is 50 bits after the dash.
-   * See issues.txt 20.9.
-   */
   async generateReferralCode(customerName: string, _customerPhone: string): Promise<string> {
     const namePart = customerName
       ? customerName.substring(0, 6).toUpperCase().replace(/\s/g, "")
@@ -408,7 +334,6 @@ export class EarningRulesEngine {
   }
 }
 
-/** Which way a tier move went. See issues.txt 20.12. */
 export type TierMoveDirection = "up" | "down" | "none";
 
 /** How many times to redraw a referral code before giving up. */

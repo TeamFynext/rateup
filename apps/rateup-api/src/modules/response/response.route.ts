@@ -113,13 +113,6 @@ export async function responseRoutes(server: FastifyInstance) {
     syncResponseToGoogleSheetHandler,
   );
 
-  // Three routes in this file are gated with checkRoleHandler(["SUPER_ADMIN",
-  // "ADMIN"]) — the reset, the single delete and the sheet sync. These two were
-  // not: export-contacts turns survey respondents into Contact rows, changing who
-  // the org's campaigns will subsequently message, and summarize spends the org's
-  // AI token allowance. Both are within the caller's own organisation, so this is
-  // an internal privilege question rather than a tenancy one.
-  // See issues.txt 37.6.
   server.post<{ Params: GetResponsesParams }>(
     "/export-contacts/:surveyId",
     {

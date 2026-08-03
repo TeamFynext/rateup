@@ -79,7 +79,6 @@ describe("sendEmailHandler", () => {
   // The whole request body — recipient address included — used to be written to
   // stdout with console.log rather than the project's logger, bypassing both level
   // filtering and redaction, on the most abused route in the module.
-  // See issues.txt 25.11.
   test("prints nothing to stdout", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -99,7 +98,7 @@ describe("sendEmailHandler", () => {
   // recipient and content are whatever the unauthenticated caller supplied. The
   // route is rate limited per IP now, and the templates escape what they are
   // given, but the endpoint still sends caller-composed mail from the verified
-  // sender to any address. See issues.txt 25.1.
+  // sender to any address.
   test("delivers to any address the caller names", async () => {
     const rep = reply();
 
@@ -121,7 +120,7 @@ describe("sendEmailHandler", () => {
 
   // The raw message used to go back to the caller on a route with no
   // authentication, naming the model, the field and the constraint of a Prisma
-  // failure. See issues.txt 25.8.
+  // failure.
   test("keeps the underlying error out of the response", async () => {
     service.send.mockRejectedValueOnce(
       new Error(`Invalid \`prisma.otpStore.upsert()\` invocation on OtpStore.userId`),
@@ -185,7 +184,7 @@ describe("sendOTPEmailHandler", () => {
   });
 
   // The code used to be injected by assigning onto `request.body.data`; the
-  // template payload is built and passed separately now. See issues.txt 25.10.
+  // template payload is built and passed separately now.
   test("passes the code to the service without mutating the request body", async () => {
     const body = otpBody();
 
@@ -214,7 +213,7 @@ describe("sendOTPEmailHandler", () => {
   // `data: z.any()` accepts null, and `data.otp = otp` used to throw on it — after
   // the code had already been written to the database, so the request 500'd with a
   // row left behind. JSON has no undefined, so null is how a real request reaches
-  // this. See issues.txt 25.10.
+  // this.
   test("survives a null data rather than 500ing after the code is stored", async () => {
     const rep = reply();
     const missingData: ReturnType<typeof otpBody>["data"] | null = null;
@@ -232,7 +231,6 @@ describe("sendOTPEmailHandler", () => {
   // address the caller chose. Binding them means either deriving the address from
   // the userId server-side or refusing a mismatch, and both depend on what the
   // survey frontend actually sends as `userId` — left for an explicit decision.
-  // See issues.txt 25.2.
   test("sends the code for one userId to an unrelated address", async () => {
     const body = { ...otpBody(), userId: "victim-user", toEmail: "attacker@evil.test" };
 
@@ -252,7 +250,7 @@ describe("sendOTPEmailHandler", () => {
 
   // NOTE: purpose comes from the body too, so a caller can store a code and have
   // the message rendered by a template that never mentions it. It is at least a
-  // template that EXISTS now — an unknown purpose is a 400 (issues.txt 25.9).
+  // template that EXISTS now — an unknown purpose is a 400.
   test("stores a code even when the purpose renders no code", async () => {
     const rep = reply();
     const body = { ...otpBody(), purpose: "GeneralTemplate" };
@@ -274,7 +272,7 @@ describe("sendOTPEmailHandler", () => {
   });
 
   // NOTE: nothing limits it at the HANDLER; the route carries a 15/hour per-IP
-  // limit (issues.txt 25.4).
+  // limit.
   test("nothing in the handler limits how many codes one caller may request", async () => {
     for (let i = 0; i < 20; i++) {
       await sendOTPEmailHandler({ body: otpBody() } as never, reply());
@@ -337,7 +335,7 @@ describe("validateOTPHandler", () => {
   // NOTE: STILL OPEN. The verdict is returned to the caller and stored nowhere, so
   // no later request — the one that writes the "verified email Id" answer, for
   // instance — can tell whether this check ever happened. Recording it needs a
-  // column on OtpStore and a reader in the response path. See issues.txt 25.3.
+  // column on OtpStore and a reader in the response path.
   test("records nothing about the outcome", async () => {
     const rep = reply();
 
@@ -402,7 +400,7 @@ describe("emailPublicRoutes", () => {
   });
 
   // NOTE: registered at /api/email with no session check — all three routes are
-  // still open to the internet (issues.txt 25.1). What they do carry now is a
+  // still open to the internet. What they do carry now is a
   // per-IP limit each.
   test("rate limits every route, and still authenticates none of them", async () => {
     const { srv, posts } = server();
@@ -495,7 +493,7 @@ describe("the body schemas", () => {
   });
 
   // `purpose` was an unconstrained z.string() matched case-sensitively against two
-  // literals, so a typo produced a delivered, bodyless email. See issues.txt 25.9.
+  // literals, so a typo produced a delivered, bodyless email.
   test("accepts only a purpose that has a template", () => {
     const base = { toEmail: "a@b.test", subject: "s", text: "t", data: {} };
 

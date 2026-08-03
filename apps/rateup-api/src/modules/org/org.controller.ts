@@ -197,14 +197,6 @@ export async function getOrgStatsHandler(
   reply.send(orgStats);
 }
 
-// Self-service deletion. The route's only gate is
-// checkRoleHandler(["SUPER_ADMIN"]), which establishes that the caller is an
-// owner — of their OWN organisation; it never compares organisations. So taking
-// the id from the path let the owner of any org delete any other org by naming
-// its id, and org ids are not secret. The org is now the session's, and a path
-// id naming someone else is refused rather than quietly ignored so a
-// mis-pointed client fails loudly. The platform operator keeps
-// DELETE /admin/:orgId, which is gated on assertRootOrg. See issues.txt 41.1.
 export async function deleteOrgHandler(
   request: FastifyRequest<{
     Params: { orgId: string };
@@ -247,12 +239,6 @@ async function runDeleteOrg(orgId: string, reply: FastifyReply) {
   }
 }
 
-// Same shape as 41.1: the role check says "an owner", not "an owner of THIS
-// org", so a path id let any SUPER_ADMIN suspend any organisation on the
-// platform — a full service interruption for that tenant's staff and its
-// customer-facing surveys. The org is now the session's, with the root org kept
-// as the platform-operator escape hatch since there is no /admin twin here.
-// See issues.txt 41.2.
 export async function pauseOrgHandler(
   request: FastifyRequest<{ Body: PauseOrgInput; Params: IdParamInput }>,
   reply: FastifyReply,

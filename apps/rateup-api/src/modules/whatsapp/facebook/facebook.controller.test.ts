@@ -168,7 +168,7 @@ describe("facebookWebhookEventHandler - who is allowed to post here", () => {
   // can post fabricated inbound messages into that org's inbox — and those
   // messages run the org's automated replies. isRequestSignatureValid exists in
   // wa_encryption.utils.ts but is stubbed to `return true` and is not called from
-  // here anyway. See issues.txt 10.8.
+  // here anyway.
   test("processes an event that carries no signature header", async () => {
     await facebookWebhookEventHandler(makeRequest(PAGE_EVENT, {}), makeReply());
 

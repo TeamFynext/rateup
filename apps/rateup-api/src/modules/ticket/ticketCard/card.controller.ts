@@ -64,9 +64,6 @@ export async function createCardHandler(
     });
     return reply.code(201).send(card);
   } catch (error) {
-    // A missing column, a foreign contact or an assignee who is not on the board
-    // are all caller errors, not server failures — createCard used to answer 201
-    // with an empty body for the first of them. See issues.txt 29.8, 29.2, 29.5.
     if (error instanceof TicketReferenceError) {
       return reply.code(400).send({ message: error.message });
     }
@@ -181,8 +178,6 @@ export async function moveCardHandler(
 
     return reply.code(200).send(movedCard);
   } catch (error) {
-    // The destination board is checked now; a card can no longer be moved onto a
-    // board the caller has no access to. See issues.txt 29.3.
     if (error instanceof TicketReferenceError) {
       return reply.code(403).send({ message: error.message });
     }

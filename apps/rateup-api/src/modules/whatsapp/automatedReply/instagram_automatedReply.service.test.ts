@@ -38,7 +38,6 @@ import {
   getInstagramAutomatedReplyById,
   logInstagramAutomationAction,
   updateInstagramAutomatedReply,
-  wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -147,28 +146,15 @@ describe("createInstagramAutomatedReply", () => {
     });
   });
 
-  // Both now have backing columns and are persisted on create. `isActive` is the name
-  // the API uses; `isEnabled` is the column.
-  test("stores sendOnceIn24Hours and isActive on creation", async () => {
-    await createInstagramAutomatedReply({
-      orgId: "org-1",
-      name: "A",
-      matchData: {},
-      sendOnceIn24Hours: true,
-      isActive: false,
-    });
-
-    const data = db.waAutomatedReply.create.mock.calls[0][0].data;
-    expect(data.sendOnceIn24Hours).toBe(true);
-    expect(data.isEnabled).toBe(false);
-  });
-
-  test("leaves both undefined when unspecified, so the column defaults apply", async () => {
+  // The enable toggle and the once-per-24h guard moved to Rule (Rule.isActive and
+  // Rule.options.sendOncePerDay). Neither column exists on WaAutomatedReply any more,
+  // so creation must not try to write them.
+  test("writes no isEnabled or sendOnceIn24Hours column", async () => {
     await createInstagramAutomatedReply({ orgId: "org-1", name: "A", matchData: {} });
 
     const data = db.waAutomatedReply.create.mock.calls[0][0].data;
-    expect(data.sendOnceIn24Hours).toBeUndefined();
-    expect(data.isEnabled).toBeUndefined();
+    expect(data).not.toHaveProperty("sendOnceIn24Hours");
+    expect(data).not.toHaveProperty("isEnabled");
   });
 
   test("logs and rethrows when creation fails", async () => {
@@ -191,16 +177,13 @@ describe("updateInstagramAutomatedReply", () => {
     });
   });
 
-  test("stores isActive on update, same as creation", async () => {
-    await updateInstagramAutomatedReply("ig-auto-1", { isActive: false });
+  // Same as creation: both toggles live on Rule now, so the update must not touch them.
+  test("writes no isEnabled or sendOnceIn24Hours column", async () => {
+    await updateInstagramAutomatedReply("ig-auto-1", { name: "Renamed" });
 
-    expect(db.waAutomatedReply.update.mock.calls[0][0].data.isEnabled).toBe(false);
-  });
-
-  test("stores sendOnceIn24Hours on update, same as creation", async () => {
-    await updateInstagramAutomatedReply("ig-auto-1", { sendOnceIn24Hours: true });
-
-    expect(db.waAutomatedReply.update.mock.calls[0][0].data.sendOnceIn24Hours).toBe(true);
+    const data = db.waAutomatedReply.update.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty("sendOnceIn24Hours");
+    expect(data).not.toHaveProperty("isEnabled");
   });
 
   test("leaves unmentioned fields undefined so Prisma skips them", async () => {
@@ -208,7 +191,7 @@ describe("updateInstagramAutomatedReply", () => {
 
     const data = db.waAutomatedReply.update.mock.calls[0][0].data;
     expect(data.matchData).toBeUndefined();
-    expect(data.isEnabled).toBeUndefined();
+    expect(data.whatsappSettingsPhoneId).toBeUndefined();
   });
 
   test("logs and rethrows when the update fails", async () => {
@@ -384,42 +367,5 @@ describe("createOrUpdateInstagramAutomationMessage", () => {
     db.waAutomatedReplyMessage.create.mockRejectedValue(new Error("db down"));
 
     await expect(createOrUpdateInstagramAutomationMessage(params)).rejects.toThrow("db down");
-  });
-});
-
-describe("wasInstagramAutomationSentRecently", () => {
-  test("reports true when this automation reached the user within a day", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue({ id: "msg-1" });
-
-    await expect(wasInstagramAutomationSentRecently("igs-1", "ig-auto-1", "org-1")).resolves.toBe(
-      true,
-    );
-  });
-
-  test("reports false when nothing was sent recently", async () => {
-    await expect(wasInstagramAutomationSentRecently("igs-1", "ig-auto-1", "org-1")).resolves.toBe(
-      false,
-    );
-  });
-
-  test("only counts the last day", async () => {
-    const before = Date.now();
-
-    await wasInstagramAutomationSentRecently("igs-1", "ig-auto-1", "org-1");
-
-    const cutoff: Date = db.waAutomatedReplyMessage.findFirst.mock.calls[0][0].where.createdAt.gte;
-    const hoursBack = (before - cutoff.getTime()) / (60 * 60 * 1000);
-    expect(hoursBack).toBeGreaterThanOrEqual(24);
-    expect(hoursBack).toBeLessThan(24.01);
-  });
-
-  // A failure here must not resend: reporting false would let the automation fire again.
-  test("reports false when the check itself fails", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockRejectedValue(new Error("db down"));
-
-    await expect(wasInstagramAutomationSentRecently("igs-1", "ig-auto-1", "org-1")).resolves.toBe(
-      false,
-    );
-    expect(log.error).toHaveBeenCalled();
   });
 });

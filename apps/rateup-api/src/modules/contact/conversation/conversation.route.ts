@@ -91,12 +91,6 @@ export async function conversationRoutes(server: FastifyInstance) {
     getStaffConverSationMetricsHandler,
   );
   server.get("/quick-stats", getOverAllQuickStatsOfConversationsHandler);
-  // `querystring: statsQuerySchema` — every other stats route on this server
-  // declares it, and it is what supplies `days` and coerces it to a number.
-  // Without it `request.query.days` was undefined,
-  // `sinceDate.setDate(sinceDate.getDate() - undefined)` yielded NaN, and
-  // `sinceDate.toISOString()` inside the SQL threw a RangeError before the query
-  // was even issued. See issues.txt 18.40.
   server.get(
     "/staff-detailed-analytics/:staffId",
     {
@@ -116,9 +110,6 @@ export async function conversationRoutes(server: FastifyInstance) {
     },
     getTeamOverviewHandler,
   );
-  // Same gap. getTeamDetailedMetrics has no toISOString, so its Invalid Date was
-  // bound into the query and postgres rejected it — also a 500.
-  // See issues.txt 18.40.
   server.get(
     "/team-metrics/:teamId",
     {

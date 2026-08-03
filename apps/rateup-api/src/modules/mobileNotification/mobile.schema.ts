@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-// The send path used to filter on `token.startsWith("ExponentPushToken")`,
-// which is looser than what the route accepts — so anything stored by a path
-// that does not go through this schema passed the filter and was handed to
-// Expo, which rejects it in a response body nothing read. One predicate now,
-// shared by both. See issues.txt 42.4.
 const EXPO_TOKEN_PATTERN = /^ExponentPushToken\[(.+)\]$/;
 const EXPO_TOKEN_MIN_LENGTH = 20;
 

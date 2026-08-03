@@ -293,8 +293,8 @@ describe("calculatePointsForPurchase — which rule wins", () => {
   // The guard used to end `&& customer.currentTierId`, so a customer with no tier
   // matched EVERY tier-exclusive rule, including the platinum ones — the same
   // shape as the redemption validator's tier bypass. And because new accounts were
-  // created untiered whenever the entry-tier lookup missed (issues.txt 20.11),
-  // that was the default state, not an edge case. See issues.txt 20.6.
+  // created untiered whenever the entry-tier lookup missed,
+  // that was the default state, not an edge case.
   test("a customer with no tier does not match a tier-exclusive rule", async () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue(account({ currentTierId: null }));
     db.loyaltyEarningRule.findMany.mockResolvedValue([
@@ -337,7 +337,7 @@ describe("calculatePointsForPurchase — the default rule", () => {
   //
   // It was also redundant: if the default rule is active and eligible the loop has
   // already matched it, so the fallback could only fire for a rule that had just
-  // been REJECTED — and then ignore the reason. See issues.txt 20.10.
+  // been REJECTED — and then ignore the reason.
   test("a deactivated default rule does not price anything", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([]);
 
@@ -443,7 +443,7 @@ describe("calculatePointsForPurchase — the usage counter", () => {
   // The counter used to be bumped unconditionally, before the caller had written
   // the points or the ledger row and outside any transaction — so a purchase that
   // earned nothing, and a purchase that failed afterwards, both consumed one of a
-  // limited promotion's slots. See issues.txt 20.10.
+  // limited promotion's slots.
   test("burns no use for a purchase that earns nothing", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ pointsPerUnit: 0, bonusPoints: 0 })]);
 
@@ -454,7 +454,7 @@ describe("calculatePointsForPurchase — the usage counter", () => {
   });
 
   // The count goes through the caller's client, so awardPoints can enrol it in the
-  // same transaction as the balance and the ledger row. See issues.txt 20.10 and
+  // same transaction as the balance and the ledger row.and
   // 20.17.
   test("counts the use through the client it is given", async () => {
     const tx = { loyaltyEarningRule: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
@@ -469,7 +469,7 @@ describe("calculatePointsForPurchase — the usage counter", () => {
   // function while the increment was a separate unconditional statement, so two
   // concurrent purchases both saw the same count and both proceeded — a promotion
   // limited to N uses could exceed N. The cap is part of the write's own condition
-  // now. See issues.txt 20.10.
+  // now.
   test("makes the cap part of the write's own condition", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([
       rule({ maxTotalUses: 5, currentTotalUses: 0 }),
@@ -700,7 +700,7 @@ describe("checkAndUpgradeTier", () => {
   // and congratulated them for it.
   //
   // The move and the direction are separate answers now: the write still happens,
-  // and only a genuine promotion is an upgrade. See issues.txt 20.12.
+  // and only a genuine promotion is an upgrade.
   test("moves the customer DOWN a tier without calling it an upgrade", async () => {
     withTiers(
       [
@@ -770,14 +770,13 @@ describe("generateReferralCode", () => {
 
   // A referral code earns its owner the program's referral bonus every time
   // someone signs up with it, and the public enrolment route accepts one without a
-  // session (issues.txt 20.13) — so it is a credential, not a label.
+  // session — so it is a credential, not a label.
   //
   // It used to be the name plus FOUR Math.random characters, never checked against
   // the table: derived from something an attacker can read off the customer, with
   // a search space of about 1.6 million per known name, and the two findings
   // composed into a points-minting loop. The name part stays because customers
   // recognise their own code, but the entropy no longer depends on it.
-  // See issues.txt 20.9.
   test("does not repeat itself, even with Math.random pinned", async () => {
     const spy = vi.spyOn(Math, "random").mockReturnValue(0.123456789);
 

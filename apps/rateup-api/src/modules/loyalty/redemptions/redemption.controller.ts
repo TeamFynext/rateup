@@ -32,13 +32,6 @@ export async function redeemRewardHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    // The redemption path writes three unique columns — CustomerReward's
-    // (rewardId, accountId) pair, CustomerReward.shortCode and
-    // LoyaltyRedemption.redemptionCode — and only the first of them means the
-    // customer already holds this reward. Reporting all three as "already
-    // redeemed" told a customer they had taken a reward they had not taken and
-    // hid the real cause, which for the two code columns is a collision
-    // (issues.txt 20.9). See issues.txt 20.44.
     if (typeof e === "object" && e !== null && "code" in e && e.code === "P2002") {
       const target = (e as { meta?: { target?: unknown } }).meta?.target;
       const fields = Array.isArray(target) ? target.map(String) : [String(target ?? "")];
@@ -202,10 +195,6 @@ export async function getTransactionsHandler(
           ]);
         });
 
-        // Quoted and formula-neutralised. This used to be a bare
-        // `rows.map((row) => row.join(","))`, the same defect as issues.txt 20.24
-        // one module over: a description or a customer name containing a comma
-        // shifted every later column on its row. See issues.txt 20.45.
         const csv = toCsv(rows);
 
         reply.header("Content-Type", "text/csv");

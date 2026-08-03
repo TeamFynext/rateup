@@ -97,9 +97,6 @@ export async function zapierAuthenticationHandler(
 
     const user = { orgId, role: Role.SUPER_ADMIN };
     request.user = user;
-    // Registered as a preHandler on the whole tree (issues.txt 26.1). Replying here
-    // for the /auth probe ends the lifecycle, so its route handler never runs;
-    // every other route continues with request.user set.
     if (request.url.includes("/auth")) return reply.send({ user: user });
   } catch (e) {
     log.error({ err: e }, "Error checking session");

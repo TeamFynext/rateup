@@ -14,17 +14,6 @@ import { getSubscription } from "../subscription/subscription.service.js";
 
 export const AI_API_URL = `${process.env.CHATBOT_API_URL}/api`;
 
-/**
- * The AI service's base url, read per call rather than baked into a module-level
- * const at import time.
- *
- * Every call used to interpolate `process.env.CHATBOT_API_URL` into a string and
- * hand that to axios, so an unset variable produced the literal base
- * "undefined/api/chatbot" and failed at the network layer — except
- * getUploadedSources, which parsed it with `new URL` and failed earlier with a
- * bare "Invalid URL". One misconfiguration, two unrelated symptoms.
- * Now every call fails the same way, naming the variable. See issues.txt 21.9.
- */
 function aiApiBaseUrl(): string {
   const base = process.env.CHATBOT_API_URL;
   if (!base) {
@@ -36,12 +25,6 @@ function aiApiBaseUrl(): string {
 const chatbotBaseUrl = () => `${aiApiBaseUrl()}/api/chatbot`;
 const chatbotPublicBaseUrl = () => `${aiApiBaseUrl()}/api/public/chatbot`;
 
-/**
- * Raised when the org cannot be billed for an AI call: no subscription, a plan
- * that describes no AI feature, or an allowance that is already spent. Separate
- * from a generic failure so the handlers can answer 403 with a message that says
- * which of those it is, rather than a blanket 500. See issues.txt 21.1.
- */
 export class AiAllowanceError extends Error {
   constructor(message: string) {
     super(message);
@@ -162,12 +145,6 @@ export async function getPublicAIResponseForQuery(data: publicMessageInput) {
     },
   );
   const { message, tokenUsage } = res.data;
-  // Guarded and awaited, like the authenticated variant. Unguarded, the
-  // `tokenUsage.promptTokens` read happened while BUILDING the update argument —
-  // synchronously — so an answer that arrived without a usage block threw a
-  // TypeError and the answer the org had already paid for was discarded. Unawaited,
-  // a slow or failed write lost the billing record with nothing to catch its
-  // rejection. See issues.txt 21.2.
   if (tokenUsage)
     await prisma.usageStats.update({
       where: {
@@ -197,9 +174,6 @@ export async function uploadFileForAIEmbed(data: FormData, jwtToken: string) {
 }
 
 export async function getUploadedSources(jwtToken: string, chatbotId?: string) {
-  // Built by concatenation like every sibling call rather than parsed with
-  // `new URL`, so a misconfigured CHATBOT_API_URL fails the same way here as
-  // everywhere else. See issues.txt 21.9.
   const query = chatbotId ? `?${new URLSearchParams({ chatbotId })}` : "";
 
   const res = await axios.get(`${chatbotBaseUrl()}${query}`, {
@@ -249,11 +223,6 @@ export async function deletePublicChatHistory(userId: string) {
 }
 
 export async function createChatbot(orgId: string, name: string) {
-  // shortUrlId is @unique and the id was minted once, so a collision surfaced as a
-  // raw P2002 and the create failed. The retry helper mints a fresh id and tries
-  // again — every other short-id writer in the codebase uses it. The id has to be
-  // minted INSIDE the retried function, or the retry would reuse the colliding one.
-  // See issues.txt 21.7.
   return await shortIdUniqueConstraintErrHandler(() =>
     prisma.chatbot.create({
       data: {
@@ -265,18 +234,6 @@ export async function createChatbot(orgId: string, name: string) {
   );
 }
 
-/**
- * One chatbot in an org.
- *
- * `chatbotId` is optional and several callers (createContact, the WhatsApp inbox)
- * pass only an org, to answer "does this org have AI chat switched on". Prisma
- * DROPS `id: undefined` from a where clause rather than matching nothing
- * (strictUndefinedChecks is off — see issues.txt 12.x), so those callers get
- * whichever row the database happened to return first, and in an org with several
- * chatbots that could change between two calls. The order is fixed here so the
- * fallback is at least the SAME chatbot every time: the oldest row wins.
- * Chatbot has no createdAt column, so the ordering is by id. See issues.txt 21.4.
- */
 export async function getChatbotDetails(orgId: string, chatbotId?: string, onlyEnabled = false) {
   return await prisma.chatbot.findFirst({
     where: {
@@ -296,16 +253,6 @@ export async function getAllChatbot(orgId: string) {
   });
 }
 
-/**
- * Updates one chatbot and returns the updated row.
- *
- * This was an upsert whose create branch wrote only `{ shortUrlId, orgId }` — the
- * caller's data was discarded — so a PUT against an id that did not exist (a stale
- * tab, a deleted chatbot, a typo) silently created an empty "Default Chatbot",
- * threw away every setting just submitted, and answered as though it had saved
- * them. It is an update now: a missing row raises P2025 and the handler answers
- * 404. See issues.txt 21.5.
- */
 export async function updateChatbotDetails(
   data: updateChatbotInput,
   orgId: string,
@@ -326,12 +273,6 @@ export async function updateChatbotDetails(
     },
   });
 
-  // The sweep used to fire whenever the key was present, even when the value had
-  // not changed, and it covered EVERY contact in the org — so one chatbot's toggle
-  // rewrote the AI flag for contacts talking to a different chatbot. It now runs
-  // only on a real change, and leaves contacts bound to another chatbot alone
-  // (Contact.chatbotId is stamped when a WhatsApp AI session starts, and is "" for
-  // contacts that have never had one). See issues.txt 21.5.
   if (data.enableAllWaChat !== undefined && data.enableAllWaChat !== before?.enableAllWaChat) {
     await prisma.contact.updateMany({
       where: {
@@ -362,8 +303,6 @@ export async function getTextSummaryByAI(
   usedTokens: { aiCompletionTokensCount: number; aiPromptTokensCount: number } | null,
 ) {
   try {
-    // getAxiosAIClient throws now (issues.txt 21.6), so a client that could not be
-    // built arrives here as an error rather than as `undefined.post`.
     const axiosAIClient = await getAxiosAIClient(request);
     const res = await axiosAIClient.post(`/chatbot/summarize`, {
       texts,
@@ -389,15 +328,6 @@ interface ChatHistoryEntry {
   [key: string]: unknown;
 }
 
-/**
- * The AI service's chat history for one chatbot, with each entry's user resolved
- * to a name.
- *
- * The ids come back from a service this module does not control, and both lookups
- * used to resolve them against the WHOLE User and Contact tables while selecting
- * `email` and `phone` — so an id from outside the caller's org would have returned
- * that person's contact details. Both are scoped to the org now. See issues.txt 21.8.
- */
 export async function getChatBotHistory(client: AxiosInstance, orgId: string, chatbotId?: string) {
   const res = await client.get<ChatHistoryEntry[]>(`/chatbot/chathistory`, {
     params: chatbotId ? { chatbotId } : {},
@@ -436,8 +366,6 @@ export async function getChatBotHistory(client: AxiosInstance, orgId: string, ch
     ...hist,
     user: userDetails?.find((u) => u.id === hist.userId) ||
       contactUserDetails?.find((c) => c.id === hist.userId) || {
-        // Guarded: an entry with no user id used to take the whole listing down
-        // with a TypeError rather than degrading to "Anonymous". issues.txt 21.8.
         name: `Anonymous_${hist.userId ? hist.userId.slice(-4) : "unknown"}`,
       },
   }));

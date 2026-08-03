@@ -119,11 +119,6 @@ export async function updateShopifyIntegrationByShopHandler(
         .code(409)
         .send({ message: "Disconnect the current Shopify store before linking another" });
     }
-    // Only an UNOWNED row can be claimed — the state the OAuth callback leaves it
-    // in. This used to re-parent whatever row held the named shop, so a shop domain
-    // (public information) was the entire authorisation and any authenticated user
-    // could take another org's store, and its Admin API session token, with one
-    // PUT. See issues.txt 26.3.
     const claimed = await claimUnownedShopifyIntegration(shop, orgId);
     if (!claimed.count) {
       return reply.code(409).send({ message: "This store is already linked to an organisation" });
@@ -327,10 +322,6 @@ export async function deleteIntegrationByShopHandler(
     reply.code(500).send(e);
   }
 }
-
-// testShopifyCronActionFnHandler used to live here behind GET /shopify/test, running
-// the platform-wide Shopify survey cron on demand for any authenticated member.
-// Removed with its route. See issues.txt 26.18.
 
 export async function getFulfillmentOrdersHandler(
   request: FastifyRequest<{ Params: { id: string } }>,

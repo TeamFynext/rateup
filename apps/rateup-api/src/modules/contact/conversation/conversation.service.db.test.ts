@@ -413,7 +413,7 @@ describe("getConversationById / deleteConversation", () => {
   // conversation belongs to a contact and a contact to an org, which is how
   // getConversationsByContactId in the same file already scoped — with a comment
   // explaining why it goes through Contact rather than the denormalised
-  // Conversation.orgId. See issues.txt 18.35.
+  // Conversation.orgId.
   test("a read is scoped through the contact's org", async () => {
     await getConversationById("conv-1", ORG);
 
@@ -664,7 +664,7 @@ describe("getConversationOverview", () => {
   // NOTE: with no date range both bounds are bound as undefined. The counts use
   // COALESCE and survive, but the two averages are filtered on a bare
   // `BETWEEN startDate AND endDate`, so they come back null whenever the caller
-  // did not supply a window. See issues.txt 18.36.
+  // did not supply a window.
   test("binds both window bounds as undefined when no range is given", async () => {
     db.$queryRaw.mockResolvedValue([{}]);
 
@@ -686,7 +686,7 @@ describe("getConversationOverview", () => {
   // Fixed: the fallback now checks `res.length` (an array is always truthy, so
   // the old `res ? res[0] : {...}` check could never take the fallback branch)
   // and returns zeroed counters instead of nulls, matching the non-nullable
-  // `number` fields in the declared return type. See issues.txt 18.37.
+  // `number` fields in the declared return type.
   test("returns the zeroed fallback for an empty result", async () => {
     db.$queryRaw.mockResolvedValue([]);
 
@@ -736,7 +736,7 @@ describe("getAvargeResponseTimeofTodyaInEveryHour", () => {
   // `[0]` and `[1]` off it unconditionally — so postgres was handed two Invalid
   // Dates and answered 500, for a call the querystring schema says is valid
   // (dateRange is optional). Its three sibling analytics functions all guard with
-  // `if (dateRange.length)`; this one now does too. See issues.txt 18.38.
+  // `if (dateRange.length)`; this one now does too.
   test("binds a usable window when the caller supplied no range", async () => {
     await getAvargeResponseTimeofTodyaInEveryHour(ORG, "today", []);
 
@@ -813,7 +813,6 @@ describe("getOverAllQuickStatsOfConversations", () => {
   // resulting -Infinity serialises to null in the JSON response — so the
   // dashboard's trend arrow was blank rather than zero, with no error anywhere.
   // The guard above it only checked `totalConversation`, not the difference.
-  // See issues.txt 18.39.
   test("reports a zero difference when every conversation was created today", async () => {
     db.$queryRaw.mockResolvedValue([
       { ...row, totalConversation: 2, conversationCreatedToday: 2, resolvedThisWeek: 0 },
@@ -841,7 +840,7 @@ describe("getStaffDetailedConversationAnalytics", () => {
     });
   });
 
-  // NOTE: the controller now defaults an omitted `days` to 30 (issues.txt
+  // NOTE: the controller now defaults an omitted `days` to 30 (
   // 18.40), so this can no longer happen through a real caller — exercised
   // here directly against the service (with a call-site cast, since the
   // real signature requires a number) to document what the service itself
@@ -872,7 +871,6 @@ describe("getTeamDetailedMetrics", () => {
 
   // NOTE: a missing day count makes the since-date invalid; here it reaches
   // postgres as a bound parameter rather than throwing first.
-  // See issues.txt 18.40.
   test("binds an Invalid Date when the caller supplied no day count", async () => {
     db.$queryRaw.mockResolvedValue([{}]);
 

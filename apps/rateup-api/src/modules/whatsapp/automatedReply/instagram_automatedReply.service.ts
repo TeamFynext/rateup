@@ -57,8 +57,6 @@ export async function createInstagramAutomatedReply(data: {
   name: string;
   matchData: WaAutomatedReplyMatchData;
   whatsappSettingsPhoneId?: string;
-  sendOnceIn24Hours?: boolean;
-  isActive?: boolean;
 }) {
   try {
     const automation = await prisma.waAutomatedReply.create({
@@ -68,9 +66,6 @@ export async function createInstagramAutomatedReply(data: {
         matchData: data.matchData,
         platform: PlatformType.INSTAGRAM,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-        sendOnceIn24Hours: data.sendOnceIn24Hours,
-        // `isActive` is the name the API uses; `isEnabled` is the column.
-        isEnabled: data.isActive,
       },
     });
 
@@ -95,8 +90,6 @@ export async function updateInstagramAutomatedReply(
     name?: string;
     matchData?: WaAutomatedReplyMatchData;
     whatsappSettingsPhoneId?: string;
-    sendOnceIn24Hours?: boolean;
-    isActive?: boolean;
   },
 ) {
   try {
@@ -109,9 +102,6 @@ export async function updateInstagramAutomatedReply(
         name: data.name,
         matchData: data.matchData,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-        sendOnceIn24Hours: data.sendOnceIn24Hours,
-        // `isActive` is the name the API uses; `isEnabled` is the column.
-        isEnabled: data.isActive,
       },
     });
 
@@ -260,32 +250,5 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
   } catch (error) {
     log.error({ err: error }, `[Instagram Automation] Error creating/updating automation message`);
     throw error;
-  }
-}
-
-/**
- * Check if automation was sent in the last 24 hours
- */
-export async function wasInstagramAutomationSentRecently(
-  igsId: string,
-  automationId: string,
-  orgId: string,
-): Promise<boolean> {
-  try {
-    const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const recentMessage = await prisma.waAutomatedReplyMessage.findFirst({
-      where: {
-        phone: igsId,
-        waAutomatedReplyId: automationId,
-        orgId,
-        createdAt: { gte: cutoffTime },
-      },
-    });
-
-    return !!recentMessage;
-  } catch (error) {
-    log.error({ err: error }, `[Instagram Automation] Error checking recent automation`);
-    return false;
   }
 }

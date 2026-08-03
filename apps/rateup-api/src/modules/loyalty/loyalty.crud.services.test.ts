@@ -37,7 +37,7 @@ vi.mock("../../utils/prisma.js", () => ({
     loyaltyTransaction: { createMany: vi.fn() },
     customerLoyaltyAccount: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     // resetProgramPoints writes its reversing ledger rows and its wipe in one
-    // transaction now. See issues.txt 20.30.
+    // transaction now.
     $transaction: vi.fn(),
   },
 }));
@@ -146,7 +146,7 @@ describe("getLoyaltyProgramByOrg", () => {
   // reading the relation saw nothing with no way to tell that from a program with
   // no rewards. The earningRules include on the next line uses the lower-case
   // value the earning-rule schema actually writes, so only one of the two was
-  // wrong, which is why it went unnoticed. See issues.txt 20.29.
+  // wrong, which is why it went unnoticed.
   test("includes rewards under the status value rewards are actually written with", async () => {
     await getLoyaltyProgramByOrg(ORG);
 
@@ -193,7 +193,7 @@ describe("updateLoyaltyProgram / deleteLoyaltyProgram", () => {
   // NOTE: `force` overrides the guard entirely — a program with customers is
   // deleted, and CustomerLoyaltyAccount cascades from it, so every balance and
   // every ledger row goes with it. Nothing about this is reversible and nothing
-  // records who did it. See issues.txt 20.30.
+  // records who did it.
   test("force deletes a program together with all its customers", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(42);
 
@@ -242,7 +242,7 @@ describe("resetProgramPoints", () => {
   // notify nobody — so the ledger and the balances disagreed from that moment on
   // and replaying it could not account for the missing points at all. For a points
   // programme with real liability attached, "reset everyone to zero" is exactly the
-  // operation that needs a trail. See issues.txt 20.30.
+  // operation that needs a trail.
   test("writes a reversing ledger entry for every balance it destroys", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       { id: "acct-1", currentPoints: 500 },
@@ -278,7 +278,7 @@ describe("resetProgramPoints", () => {
   });
 
   // The reversal and the wipe are one transaction, so a partial reset cannot leave
-  // some balances zeroed and unexplained. See issues.txt 20.30.
+  // some balances zeroed and unexplained.
   test("reverses and wipes in a single transaction", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1", currentPoints: 500 }]);
 
@@ -312,9 +312,9 @@ describe("resetProgramPoints", () => {
 
 describe("createLoyaltyTier", () => {
   // NOTE: pins current behaviour. The FIRST tier of a program is created with
-  // priority 0. createCustomerAccount looks for the entry tier at `priority: 1`
-  // (issues.txt 20.11), so a program with a single tier enrols every customer
-  // with no tier at all. See issues.txt 20.11.
+  // priority 0. createCustomerAccount looks for the entry tier at `priority: 1`,
+  // so a program with a single tier enrols every customer
+  // with no tier at all.
   test("gives a program's first tier priority zero", async () => {
     db.loyaltyTier.findFirst.mockResolvedValue(null);
 
@@ -333,7 +333,7 @@ describe("createLoyaltyTier", () => {
 
   // NOTE: tier.schema declares `priority: z.number().default(1)`, but the service
   // computes its own and never reads the caller's. The field is accepted by the
-  // API and silently discarded. See issues.txt 20.11.
+  // API and silently discarded.
   test("ignores a priority supplied by the caller", async () => {
     db.loyaltyTier.findFirst.mockResolvedValue({ priority: 3 });
 
@@ -417,7 +417,7 @@ describe("updateLoyaltyTier / deleteLoyaltyTier", () => {
 
   // NOTE: the move and the delete are separate statements with no transaction, so
   // a failure between them leaves customers pointing at a tier that is about to
-  // disappear — or at one that no longer exists. See issues.txt 20.17.
+  // disappear — or at one that no longer exists.
   test("moves the customers and deletes the tier without a transaction", async () => {
     db.customerLoyaltyAccount.findMany.mockResolvedValue([{ id: "acct-1" }]);
     db.loyaltyTier.findUnique.mockResolvedValue({ programId: PROGRAM, priority: 3 });
@@ -545,7 +545,7 @@ describe("earning rules", () => {
   // prices purchases sorts DESCENDING and takes the first match — so anything
   // built on this list (a preview, an admin list, a future simulator) saw the
   // rules in the opposite order to the one that decides the points, and the rule
-  // shown first was the one that would apply last. See issues.txt 20.31.
+  // shown first was the one that would apply last.
   test("the active list orders by priority the same way the engine does", async () => {
     await getActiveLoyaltyEarningRules(PROGRAM);
 

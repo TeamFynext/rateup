@@ -28,13 +28,6 @@ export async function verifyColumnAccess(
   }
 }
 
-/**
- * The access check for the column routes that name their target in the BODY.
- *
- * POST /columns/create and PUT /columns/reorder carried no preHandler, so any
- * authenticated user could add a column to any board on the platform, or shuffle
- * another team's board into unusability. See issues.txt 29.1.
- */
 export async function verifyBoardAccessFromBody(
   request: FastifyRequest<{ Body: { ticketBoardId?: string } }>,
   reply: FastifyReply,
@@ -48,7 +41,6 @@ export async function verifyBoardAccessFromBody(
   }
 }
 
-/** Every column in a reorder must belong to a board the caller is on. issues.txt 29.1. */
 export async function verifyColumnsReorderAccess(
   request: FastifyRequest<{ Body: { columns?: { id: string }[] } }>,
   reply: FastifyReply,

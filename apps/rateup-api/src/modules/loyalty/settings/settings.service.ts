@@ -40,14 +40,6 @@ export async function createLoyaltyWaCommand(data: LoyaltyTemplateInput & { orgI
   });
 }
 
-/**
- * A WhatsApp command, within an org.
- *
- * This, updateLoyaltyWaCommand and deleteLoyaltyWaCommandById were all keyed on
- * the command id alone, while the list and the by-type lookup sitting beside them
- * were org-scoped — so the reads that enumerate were guarded and the ones that
- * fetch and write were not. See issues.txt 20.33.
- */
 export async function getLoyaltyWaCommand(id: string, orgId: string) {
   return await prisma.loyaltyWaCommand.findFirst({
     where: {
@@ -341,20 +333,6 @@ async function handleRewardConfirmation(
       return;
     }
 
-    // This goes through redeemReward — the same path the API uses.
-    //
-    // It used to call assignRewardToCustomer and then a local handleDeduction,
-    // which made it a FOURTH redemption path, and the one customers actually
-    // reach. It wrote no LoyaltyRedemption row, and EVERY quantity rule in
-    // redemptionValidator — one_time_use, max_redemptions_per_customer, _per_day,
-    // _per_week, _per_month and the cooldown — is evaluated by counting those
-    // rows. So none of those limits could ever be tripped by a WhatsApp
-    // redemption: a "once per customer" reward could be taken repeatedly, subject
-    // only to the balance and the reward-already-assigned check. It never touched
-    // stockRedeemed either, so an inventory-limited reward was unlimited here.
-    // Its deduction was also untransacted and wrote balanceAfter from a
-    // pre-deduction read, and labelled every reward "point" regardless of type.
-    // See issues.txt 20.34.
     const result = await redeemReward(customer.programId, {
       customerId: customer.id,
       rewardId,
@@ -474,14 +452,6 @@ export function replacedContentByDynamicVariable(
     : typeof content === "string"
       ? []
       : (content?.content ?? []);
-  // A DEEP copy. `[...contentArray]` copies the outer array and nothing else, and
-  // the loop below assigns `content.text = …` on the nested nodes — which were the
-  // caller's objects. Rendering therefore destroyed the placeholders in the source
-  // document, so a LoyaltyWaCommand row read once and rendered for two customers
-  // gave the SECOND customer the FIRST one's name and balance: by then there were
-  // no placeholders left to substitute. Whether that happened depended on whether
-  // the row object was reused across sends, and this function offered no
-  // protection either way. See issues.txt 20.35.
   const contentCopy = structuredClone(contentArray);
   for (const para of contentCopy) {
     const contents = para.content;
@@ -548,13 +518,6 @@ export async function handleCustomerRemovalFromLoyalty(
   }
 }
 
-// Event Trigger CRUD Services
-/**
- * `programId` is the CALLER's program, resolved from their session by the handler.
- * It used to be whatever the request body carried, which meant a trigger could be
- * created against another org's program — and it would then fire on that org's
- * customers, sending whatever template it named. See issues.txt 20.33.
- */
 export async function createEventTrigger(data: EventTriggerInput, programId: string) {
   return await prisma.loyaltyEventTrigger.create({
     data: {
@@ -598,18 +561,6 @@ export async function getEventTrigger(id: string, programId: string) {
   });
 }
 
-/**
- * `programId` is REQUIRED.
- *
- * It used to be optional, and the where clause was
- * `programId ? { programId } : undefined` — which prisma reads as "no filter at
- * all". The handler passed `request.query.programId` straight through and that
- * query parameter is optional, so `GET /api/loyalty/settings/event-triggers` with
- * no programId returned EVERY organisation's event triggers, each with its
- * `program` relation included: other orgs' programme ids, names and WhatsApp
- * settings ids, in one request, from an ordinary authenticated session.
- * See issues.txt 20.33.
- */
 export async function getAllEventTriggers(programId: string) {
   return await prisma.loyaltyEventTrigger.findMany({
     where: { programId },

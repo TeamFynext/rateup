@@ -111,7 +111,6 @@ describe("reorderQuestions", () => {
   // reachable by ordinary use, not just by abuse: a client computing the order
   // from a stale view of the questions sends a short array and truncates the
   // survey. The questions column IS the survey; there is no soft delete.
-  // See issues.txt 39.1.
   test("a partial order is refused rather than dropping the questions it omits", async () => {
     await expect(reorderQuestions(SURVEY, ["a"])).rejects.toBeInstanceOf(QuestionOrderError);
 
@@ -129,7 +128,7 @@ describe("reorderQuestions", () => {
   // so the corrupt array was already persisted when the request failed, the
   // survey variables were never rewritten, and the caller got a 500 that read
   // like nothing had happened. Nothing is written unless the whole order
-  // resolves. See issues.txt 39.1.
+  // resolves.
   test("an unknown id is refused before anything is written", async () => {
     await expect(reorderQuestions(SURVEY, ["a", "does-not-exist", "b"])).rejects.toBeInstanceOf(
       QuestionOrderError,
@@ -190,7 +189,7 @@ describe("replaceQuestionsHandler", () => {
   // The route was registered with no schema at all, so the body was unvalidated
   // — and an absent `questions` key was `undefined`, which Prisma writes as a
   // JSON null over the ENTIRE question set. The most destructive endpoint in the
-  // module was the only one that validated nothing. See issues.txt 39.2.
+  // module was the only one that validated nothing.
   test("the body schema refuses an absent questions key", () => {
     expect(replaceQuestionsRequestSchema.safeParse({}).success).toBe(false);
     expect(replaceQuestionsRequestSchema.safeParse({ questions: null }).success).toBe(false);
@@ -244,7 +243,6 @@ describe("the reply completion", () => {
   // held the connection until something timed it out. The delete was the worst
   // case: NEITHER branch sent, so it never responded even when it succeeded, and
   // a client retrying on timeout deletes the next thing it names.
-  // See issues.txt 39.3.
   test("the delete answers 200 on the success path", async () => {
     const rep = reply();
 
@@ -367,7 +365,7 @@ describe("updateQuestionsOnSurvey", () => {
 
   // The flag used to be written by a SECOND prisma.survey.update issued after the
   // first, so a failure between them left the questions written and the flag not.
-  // It rides along with the questions now. See issues.txt 39.4.
+  // It rides along with the questions now.
   test("a ticketIssue switches tickets on in the same update as the questions", async () => {
     await updateQuestionsOnSurvey(SURVEY, [q("a", { ticketIssue: "something" })] as never);
 
@@ -390,7 +388,7 @@ describe("updateQuestionsOnSurvey", () => {
     expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
   });
 
-  // STILL OPEN (issues.txt 39.4): the flag is only ever set TRUE here. Removing
+  // STILL OPEN: the flag is only ever set TRUE here. Removing
   // the last question with a ticket issue leaves the survey raising tickets for
   // responses that no longer have a rule behind them. Setting it both ways would
   // silently override the operator's own toggle — enableTickets is also a field
@@ -449,7 +447,7 @@ describe("createQuestion", () => {
   // `if (!position)` treated an explicit 0 — the front of the survey, the
   // question respondents see first — as "not given", so the question was
   // appended, with a 201 and no indication the position was ignored. The bounds
-  // check two lines below explicitly allows 0. See issues.txt 39.5.
+  // check two lines below explicitly allows 0.
   test("an explicit position of zero prepends", async () => {
     const created = await createQuestion(SURVEY, {
       position: 0,
@@ -522,7 +520,6 @@ describe("deleteQuestionById", () => {
   // conditions array, so one malformed entry threw a TypeError — by which point
   // the questions had already been rewritten and the survey variables updated,
   // leaving the survey half-migrated with the flow untouched.
-  // See issues.txt 39.7.
   test("a logic jump entry with no conditions is kept rather than throwing", async () => {
     db.waFlow.findFirst.mockResolvedValueOnce({
       dbFlowId: "flow-1",
@@ -577,7 +574,7 @@ describe("getAllowedEmailsFromFile", () => {
   // The whole import was abandoned on the first row that failed the pattern,
   // with a bare "Invalid Email" — no row number, no count, no partial result — so
   // finding the offending row in a few thousand addresses meant bisecting the
-  // spreadsheet by hand. See issues.txt 39.6.
+  // spreadsheet by hand.
   test("a bad row is reported with its row number", async () => {
     await expect(
       getAllowedEmailsFromFile(csv("email\nann@example.test\nnot-an-email") as never),

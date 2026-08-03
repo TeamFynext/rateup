@@ -186,7 +186,7 @@ describe("updateShopifyIntegrationByShopHandler", () => {
   // The shop came from the path and the org from the session, and the two were never
   // checked against each other: whoever called this last owned the store, along with
   // the Admin API token in its credential. Only an UNOWNED row — the state the OAuth
-  // callback leaves it in — can be claimed now. See issues.txt 26.3.
+  // callback leaves it in — can be claimed now.
   test("claims a shop that no org owns yet", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
     db.integration.updateMany.mockResolvedValueOnce({ count: 1 });
@@ -237,7 +237,7 @@ describe("updateShopifyIntegrationByShopHandler", () => {
 
   // An org that already held a different Shopify store had that integration DELETED
   // first, so one request both dropped the caller's own store and claimed someone
-  // else's. Disconnecting is an explicit action now. See issues.txt 26.3.
+  // else's. Disconnecting is an explicit action now.
   test("refuses rather than dropping the store the caller already has", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({
       credential: { session: { shop: "own-store.myshopify.com" } },
@@ -312,7 +312,6 @@ describe("registerWebhookByTopic", () => {
   // The template literal used to be `${API_URL}${WEBHOOK_API_ROUTE} ` — every
   // webhook registered through this function pointed at a URL this API does not
   // serve, app-uninstall and subscription-update deliveries included.
-  // See issues.txt 26.8.
   test("registers the callback URL with no trailing space", async () => {
     const client = { request: vi.fn(async (_query: string, _opts?: any) => ({ data: {} })) };
     const shopify = (await import("./shopify.config.js")).default as any;
@@ -432,7 +431,7 @@ describe("handleShopifyAppUnistalled", () => {
   // Integration.orgId is nullable and the OAuth callback creates the row before any
   // org is linked, so a store that installed and uninstalled without linking has no
   // org — and org.createdAt used to be read unguarded, so the job threw, the
-  // uninstall was never recorded and BullMQ retried it forever. See issues.txt 26.14.
+  // uninstall was never recorded and BullMQ retried it forever.
   test("deactivates rather than throwing when the shop was never linked to an org", async () => {
     db.integration.findFirst.mockResolvedValueOnce({
       orgId: null,
@@ -680,7 +679,7 @@ describe("shopifyRoutes", () => {
 
   // GET /test used to run the platform-wide Shopify survey cron — messaging other
   // organisations' customers on their quota — from an ordinary member's session, as
-  // often as they liked. Removed. See issues.txt 26.18.
+  // often as they liked. Removed.
   test("no longer exposes a route that runs the platform-wide cron", async () => {
     const { srv, routes } = server();
 

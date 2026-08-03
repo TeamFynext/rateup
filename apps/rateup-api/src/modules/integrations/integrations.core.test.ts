@@ -118,7 +118,7 @@ describe("the integration readers", () => {
   // where and no select, behind GET /all, so any authenticated user of any org read
   // every organisation's credential column — OAuth refresh tokens, Shopify session
   // tokens, Zoho tokens and secrets, every org's Zapier key hash. Function and route
-  // are both gone. See issues.txt 26.2.
+  // are both gone.
   test("the module exports no unscoped integration reader", async () => {
     const service = await import("./integrations.service.js");
 
@@ -232,7 +232,7 @@ describe("updateIntegrationByName", () => {
   // `const { ...rest } = data` was a copy, not a destructure, so every key the body
   // schema accepted reached the Prisma update — orgId included, which let a PUT
   // re-parent the caller's own integration row, credential and all, into another
-  // organisation. See issues.txt 26.4.
+  // organisation.
   test("cannot be told to re-parent the row, because orgId is gone from the schema", async () => {
     await updateIntegrationByName(ORG, "googlesheet", {
       credential: { a: 1 },
@@ -254,7 +254,7 @@ describe("updateIntegrationByName", () => {
 
   // updateKey is a control flag, not a column, and it used to be forwarded into the
   // update data, where Prisma rejects unknown arguments — so the documented way to
-  // rotate a leaked Zapier key always 500'd. See issues.txt 26.5.
+  // rotate a leaked Zapier key always 500'd.
   test("keeps the updateKey control flag out of the update data", async () => {
     await updateIntegrationByName(ORG, "zapier", { credential: {}, updateKey: true });
 
@@ -331,7 +331,6 @@ describe("deleteZapierTriggerHooks", () => {
   // axios.delete — no allowlist, no scheme check and no comparison against the
   // subscriptions the org actually holds, so an authenticated caller made the server
   // issue a DELETE to any address reachable from inside the network.
-  // See issues.txt 26.6.
   test("refuses to call a URL the org never subscribed", async () => {
     db.integration.findUnique.mockResolvedValue(
       integration([{ hookUrl: "https://hooks.zapier.com/1", active: true }]),
@@ -394,7 +393,7 @@ describe("deleteZapierTriggerHooks", () => {
   });
 
   // The outbound DELETE used to fire BEFORE the org's own subscriptions were read,
-  // so the request went out even for a URL belonging to nobody. See issues.txt 26.6.
+  // so the request went out even for a URL belonging to nobody.
   test("reads what the org subscribed before calling anything", async () => {
     const order: string[] = [];
     (axios.delete as unknown as Mock).mockImplementationOnce(async () => {

@@ -2,24 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import connection from "./redisConnection.js";
 import { log } from "./logger.js";
 
-/**
- * A fixed-window per-IP limiter, for the routes that are open to the internet.
- *
- * Written for the two public marketing forms, which carried no limit of any kind
- * while the demo form queued TWO emails per request — so a loop against it floods
- * the sales inbox, fills the notification queue, and burns the sending domain's
- * reputation, with nothing to show it happening beyond the mail volume.
- * See issues.txt 16.2.
- *
- * Counted in Redis rather than in process memory, because the API runs more than
- * one instance and a per-instance counter would multiply the real limit by the
- * instance count.
- *
- * Fails OPEN: if Redis is unreachable the request is allowed through. A limiter
- * that rejects everything when its own backing store is down would turn a Redis
- * outage into an outage of every public form, which is a worse failure than the
- * one it is defending against.
- */
 export interface RateLimitOptions {
   /** How many requests one IP may make inside the window. */
   max: number;

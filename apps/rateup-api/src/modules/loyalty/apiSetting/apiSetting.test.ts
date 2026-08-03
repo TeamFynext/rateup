@@ -134,7 +134,7 @@ describe("the api-setting service", () => {
   // The read and the create were both org-scoped and the update was not: it took
   // the setting id alone, and its handler never read `request.user` at all, so an
   // API setting belonging to another org could be repointed at a different action
-  // or reward. See issues.txt 20.43.
+  // or reward.
   test("an update is scoped to the caller's org", async () => {
     await updateLoyaltyApiSetting("api-other-org", { feature: "action", actionId: "act-1" }, ORG);
 
@@ -146,7 +146,6 @@ describe("the api-setting service", () => {
 
   // NOTE: `...(data as any)` spreads the whole request body into prisma, so any
   // column the schema does not mention still reaches the write.
-  // See issues.txt 20.43.
   test("spreads the whole body into the create", async () => {
     await createLoyaltyApiSetting({ name: "POS", somethingElse: "x" } as any, ORG);
 
@@ -194,7 +193,7 @@ describe("the api-setting controller", () => {
   });
 
   // The handler used to never read `request.user` at all, so the org was not even
-  // available to the update it called. See issues.txt 20.43.
+  // available to the update it called.
   test("takes the org from the session and scopes the update with it", async () => {
     const rep = reply();
 
@@ -214,7 +213,7 @@ describe("the api-setting controller", () => {
   // object itself. An Error has no enumerable own properties, so that serialises
   // to `{}` — the client got a 500 with an empty body and no message, and could
   // not tell a validation failure from a database outage. The rest of the module
-  // sends `{ error: e.message }`. See issues.txt 20.43.
+  // sends `{ error: e.message }`.
   test("answers a failure with the message, not an empty object", async () => {
     db.loyaltyApiSettings.findMany.mockRejectedValue(new Error("connection lost"));
     const rep = reply();

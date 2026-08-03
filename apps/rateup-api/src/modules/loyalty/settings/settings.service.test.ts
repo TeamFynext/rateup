@@ -212,7 +212,6 @@ describe("the WhatsApp command CRUD", () => {
   // Fetch-by-id, update and delete used to take the command id alone, while the
   // list and the by-type lookup beside them were org-scoped — so the reads that
   // enumerate were guarded and the ones that fetch and write were not.
-  // See issues.txt 20.33.
   test("fetch, update and delete are all scoped to the org", async () => {
     await getLoyaltyWaCommand("cmd-other-org", ORG);
     await updateLoyaltyWaCommand("cmd-other-org", { content: "x" }, ORG);
@@ -332,7 +331,6 @@ describe("handleLoyaltyPointsCommand", () => {
   // NOTE: "spent" is lifetimePoints - currentPoints, so any path that credits
   // currentPoints without crediting lifetimePoints — the approvals deduction
   // branch, for one — makes this number wrong, and it can go negative.
-  // See issues.txt 20.33.
   test("reports negative spend when the balance exceeds the lifetime total", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(
       customer({ currentPoints: 900, lifetimePoints: 500 }),
@@ -364,7 +362,7 @@ describe("handleCustomerRemovalFromLoyalty", () => {
   });
 
   // NOTE: this writes the lower-case "inactive" while the approvals path writes
-  // "SUSPENDED"/"ACTIVE". See issues.txt 20.27.
+  // "SUSPENDED"/"ACTIVE".
   test("deactivates with the lower-case status the schema uses", async () => {
     await handleCustomerRemovalFromLoyalty(PHONE, command() as any);
 
@@ -504,7 +502,6 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
   // Fixed: validateRedemption returns `{ valid, violations, reward, customer }` — there
   // is no `message` key, so the old `validation.message || ...` fallback always won and
   // the customer never learned which rule they broke. Now reads `violations` directly.
-  // See issues.txt 20.34.
   test("tells the customer which rule refused the redemption", async () => {
     (validateRedemption as Mock).mockResolvedValue({
       valid: false,
@@ -530,7 +527,7 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
   // `redemptionType: "point"` whatever the reward actually was.
   //
   // All of that is redeemReward's job, and this path does not reimplement any of
-  // it any more. See issues.txt 20.34.
+  // it any more.
   test("goes through the one redemption path, so the rules can count it", async () => {
     await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
 
@@ -579,7 +576,6 @@ describe("replacedContentByDynamicVariable", () => {
   // command row read once and rendered for two customers had its placeholders
   // destroyed by the first render, and the second customer received the FIRST
   // customer's name and balance — there was nothing left to substitute by then.
-  // See issues.txt 20.35.
   test("leaves the caller's document untouched", () => {
     const original = doc();
 
@@ -627,7 +623,6 @@ describe("the event-trigger CRUD", () => {
   // on that org's customers, sending whatever template it named. It is the
   // caller's own program now, resolved from their session by the handler and
   // passed as a separate argument so the body cannot reach it.
-  // See issues.txt 20.33.
   test("writes the caller's program, not one named in the input", async () => {
     await createEventTrigger(
       { programId: "prog-other-org", eventType: "BIRTHDAY" } as any,
@@ -670,7 +665,7 @@ describe("the event-trigger CRUD", () => {
   // request. The controller passed `request.query.programId` straight through and
   // that query parameter is optional, so the enumeration needed no more than
   // leaving it off. It is a required argument now, and TypeScript refuses the
-  // no-argument call this test used to make. See issues.txt 20.33.
+  // no-argument call this test used to make.
   test("cannot be asked for more than one program's triggers", async () => {
     await getAllEventTriggers(PROGRAM);
 

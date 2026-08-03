@@ -37,9 +37,6 @@ export async function completeReferralHandler(
   reply: FastifyReply,
 ) {
   try {
-    // The referral is resolved within the caller's program. It used to complete
-    // whichever referral id it was given, with no org check at all.
-    // See issues.txt 20.41.
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {
       return reply.code(404).send({ error: "Loyalty program not found" });

@@ -16,14 +16,6 @@ const MONTH_LABELS = [
   "Dec",
 ];
 
-/**
- * Percentage change, or null when there is no baseline to compare against.
- *
- * Growth from an empty month used to be reported as exactly +100%, which is
- * indistinguishable on the card from a genuine doubling — the same shape as
- * issues.txt 19.5. There is no percentage change from zero, so it answers null and
- * the client shows the figure without a delta. See issues.txt 20.42.
- */
 function calcChangePercent(current: number, previous: number): number | null {
   if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 1000) / 10;
@@ -199,12 +191,6 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
       )
       SELECT
         m.month,
-        -- LOWER() because the approvals path wrote "REDEEM" and "ADJUST" in upper
-        -- case until issues.txt 20.27, and those rows are still in the table. An
-        -- exact match meant every approved redemption was simply absent from this
-        -- chart, so an org routing redemptions through approvals saw a series that
-        -- under-reported them with no indication anything was missing.
-        -- See issues.txt 20.42.
         COALESCE(SUM(CASE WHEN LOWER(t."transactionType") = 'earn' THEN t.points ELSE 0 END), 0) AS issued,
         COALESCE(SUM(CASE WHEN LOWER(t."transactionType") = 'redeem' THEN ABS(t.points) ELSE 0 END), 0) AS redeemed
       FROM months m
@@ -271,10 +257,6 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
     redeemed?: number | bigint | string | null;
   }
 
-  // Process monthly member growth
-  // Labels carry the year. A six-month window crossing a year boundary used to
-  // produce two identical labels — "Jan" for both Januaries — and a chart with two
-  // points labelled the same cannot be read. See issues.txt 20.42.
   const memberGrowth = (rawMemberGrowth as MemberGrowthRow[]).map((row) => ({
     month: monthLabel(row.month),
     members: Number(row.total_members || 0),
@@ -296,14 +278,6 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
     expire: "expired",
     refund: "refunded",
   };
-  // The lookup folds case. Every writer of `transactionType` uses lower case now
-  // (issues.txt 20.27), but rows written before that fix hold "REDEEM" and
-  // "ADJUST" from the approvals path — and an unmatched key fell through to the
-  // raw column value, so the feed read "Ann REDEEM Free coffee". The chart above
-  // has the same history: it filters and matches on the lower-case values, so
-  // every approved redemption and every manual adjustment written before the fix
-  // is missing from it, with nothing to indicate anything is absent.
-  // See issues.txt 20.42.
   const recentActivity = recentTransactions.map((t) => ({
     user: t.account.contact.name || "Unknown",
     action: actionMap[t.transactionType?.toLowerCase()] ?? t.transactionType,

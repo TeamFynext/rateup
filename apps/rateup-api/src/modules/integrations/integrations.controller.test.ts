@@ -95,7 +95,7 @@ describe("the integration listings", () => {
   // getAllIntegrationsHandler used to live here, behind GET /all: it consulted no
   // org at all and answered every organisation's integration row — credential
   // column unredacted — to any authenticated user of any org. Handler, route and
-  // service function are all gone. See issues.txt 26.2.
+  // service function are all gone.
   test("the module exports no cross-org listing handler", async () => {
     const controller = await import("./integrations.controller.js");
 
@@ -178,7 +178,7 @@ describe("the write handlers", () => {
   });
 
   // The success body used to be `!data`, i.e. the boolean `false`, which a client
-  // cannot tell from a failure flag. See issues.txt 26.16.
+  // cannot tell from a failure flag.
   test("a successful payment-config create answers 201 with a message", async () => {
     const rep = reply();
 
@@ -222,7 +222,6 @@ describe("createGoogleSheetAuthToken", () => {
 
   // Google returns the granted scopes SPACE-delimited; splitting on a comma stored
   // one element holding the entire string, so any later scope check matched nothing.
-  // See issues.txt 26.15.
   test("splits the granted scopes on a space", async () => {
     await createGoogleSheetAuthToken(
       { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
@@ -445,7 +444,7 @@ describe("route registration", () => {
     expect(hooks[0].fn).toBe(checkSession);
   });
 
-  // The cross-org listing this tree used to expose. See issues.txt 26.2.
+  // The cross-org listing this tree used to expose.
   test("no longer registers a cross-org listing route", async () => {
     const { srv, routes } = server();
 
@@ -457,7 +456,6 @@ describe("route registration", () => {
   // The role check on the Google OAuth route was bypassable by construction: any
   // member could POST the same credential-bearing row through the generic create
   // route beside it. Every credential-writing route carries the gate now.
-  // See issues.txt 26.17.
   test("role-gates every credential-writing route, not just the OAuth one", async () => {
     const { srv, routes } = server();
 
@@ -472,7 +470,7 @@ describe("route registration", () => {
 
   // The body used to be cast `as any` by the handler and its hookUrl chose the
   // address the server called out to; every other route in the file declares a
-  // schema. See issues.txt 26.6.
+  // schema.
   test("the zapier-hook route declares a body schema", async () => {
     const { srv, routes } = server();
 

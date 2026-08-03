@@ -31,21 +31,6 @@ function getErrorResponse(e: unknown): unknown {
 /** A guard against a broken cursor looping forever; ~100 x 100 templates. */
 const MAX_TEMPLATE_PAGES = 100;
 
-/**
- * Every template Meta holds for the account, following the paging cursor.
- *
- * Two things changed here (issues.txt 14.2 and 14.6):
- *
- *  - It no longer catches. It used to swallow EVERY failure — no settings, an
- *    expired token, a Meta outage — and return [], which syncTemplates then walked
- *    to report { success: true, created: 0, updated: 0 }. That is indistinguishable
- *    from an org genuinely already in sync, so "Sync templates" — the button a user
- *    presses when their templates look wrong — reported success while doing nothing.
- *  - It follows `paging.next`. Only the first page was ever read, so an account
- *    with more templates than Meta's page size silently synced a prefix of them.
- *    This also matters for 14.6's deletion reconciliation: "missing from Meta" is
- *    only meaningful once the read is known to be complete.
- */
 export async function fetchTemplates(
   orgId: string,
   whatsappSettingsPhoneId?: string,
@@ -182,15 +167,6 @@ export async function getTemplateByNameAndOrgId(name: string, orgId: string) {
   });
   return template as templateData | null;
 }
-/**
- * A template by id, scoped to the org asking.
- *
- * orgId is REQUIRED. This keyed on the id alone, and while updateTemplateHandler
- * and deleteTemplateHandler each compared orgId themselves afterwards,
- * saveTemplateAsDraftHandler did not — so naming another org's template id in the
- * body rewrote their template into a draft, replacing its components and status.
- * See issues.txt 14.3.
- */
 export async function getDbTemplate(templateId: string, orgId: string) {
   try {
     const res = await prisma.waTemplate.findFirst({
@@ -284,9 +260,6 @@ export async function saveTemplate(
     log.trace("Template saved to db %o", res);
     return res;
   } catch (e) {
-    // Rethrown. This used to log to console.log and resolve to undefined, so
-    // createTemplateHandler answered 200 "template created" having stored
-    // nothing. See issues.txt 14.2 and 14.4.
     log.error({ err: e }, "Error saving template");
     throw e;
   }
@@ -303,10 +276,6 @@ export async function deleteTemplate(
   orgId: string,
   templateId: string,
   templateName: string,
-  // The number the template actually lives on. Without it this always resolved the
-  // org's DEFAULT settings, unlike every neighbouring function — so deleting a
-  // template on a second WhatsApp number was attempted against the first number's
-  // business account, and Meta refused. See issues.txt 14.6.
   whatsappSettingsPhoneId?: string,
 ) {
   log.trace("Sending Delete req %o", { templateId, templateName });
@@ -334,9 +303,6 @@ export async function deleteTemplate(
  * @returns
  */
 export async function deleteTemplateFromDb(templateId: string, orgId: string) {
-  // Deliberately NOT caught. This used to swallow its own database failure to
-  // console.log and resolve to undefined, so no caller could tell a deleted
-  // template from one that is still there. See issues.txt 14.2 and 14.3.
   return await prisma.waTemplate.delete({
     where: {
       id: templateId,
@@ -355,10 +321,6 @@ export async function updateTemplateInDb(
   whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId, data: template });
-  // Deliberately NOT caught, and scoped. It used to swallow its own failure and
-  // resolve to undefined, which updateTemplateHandler then reported as "You can
-  // only edit an active template once in 24 hours" — see 14.10.
-  // See issues.txt 14.2 and 14.3.
   return await prisma.waTemplate.update({
     where: {
       id: templateId,
@@ -420,9 +382,6 @@ export async function updateTemplate(
   orgId: string,
   data: CreateWaTemplateInput,
 ) {
-  // Guarded: this used to read template.orgId off the result with no null check,
-  // and getDbTemplate returns null for a template the org does not own — so an
-  // unknown or foreign id gave a bare TypeError. See issues.txt 14.5.
   const template = await getDbTemplate(templateId, orgId);
   if (!template) {
     return null;
@@ -637,12 +596,6 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
       }
     }
 
-    // Templates Meta no longer has are MARKED, not deleted. Campaigns can point at
-    // a waTemplate row, so deleting one during a sync would break them — and a
-    // partial read (before the cursor fix above) would have made every template
-    // past the first page look deleted. Marking is reversible; the next sync that
-    // does see the template clears the flag by updating it.
-    // See issues.txt 14.6.
     const missingAtMeta = dbTemplates.filter(
       (dbTemplate) => dbTemplate?.data?.id && !seenWaTemplateIds.has(dbTemplate.data.id),
     );
@@ -662,7 +615,6 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
     log.trace("Templates synced");
     return { success: true, created, updated, missingAtMeta: missingAtMeta.length };
   } catch (e) {
-    // Reports the failure rather than a clean sync. See issues.txt 14.2.
     log.error({ err: e }, "Error syncing templates \n%o");
     return {
       success: false,
@@ -674,15 +626,6 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
   }
 }
 
-/**
- * NOTE (issues.txt 14.6, still open): what this returns is RAW Meta templates —
- * flat objects with id/name/components — while registerTemplatesInDb and its
- * request schema expect `{ data, acceptButton }`. So GET /unregistered's output
- * cannot be fed straight to POST /register; the client has to re-wrap it, and
- * nothing says so. registerTemplatesInDb also records neither templateType nor
- * whatsappSettingsPhoneId, unlike saveTemplate. Agreeing one shape between the two
- * endpoints is a contract change and was left alone.
- */
 export async function getUnregisteredTemplates(orgId: string) {
   const waTemplates = await fetchTemplates(orgId);
   const dbTemplates = await getTemplatesByOrgId(orgId);
@@ -730,8 +673,6 @@ export async function uploadFileToWaTemplate(
   if (!accessToken || !appId) {
     throw new Error("AccessToken and AppId should be present in whatsapp settings");
   }
-  // Token as the accessToken argument, not a query param. The second call below
-  // already used an OAuth header; only this one leaked. See issues.txt 14.15.
   const sessionRes = await callMetaApi(
     `/${appId}/uploads`,
     "POST",

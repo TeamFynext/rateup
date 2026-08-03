@@ -58,10 +58,6 @@ export async function createWaSettings(
     data.phone = display_phone_number?.replace(/\s+/g, "");
   }
 
-  // Encrypted on BOTH branches. This used to encrypt only when a phoneId was
-  // present, so every Instagram- and Facebook-only channel wrote its token
-  // verbatim into a column the schema comments as "// encrypted".
-  // See issues.txt 13.5.
   const encryptedToken = aes_encrypt(accessToken, getEncryptionKey());
 
   return await prisma.whatsappSettings.create({
@@ -74,7 +70,6 @@ export async function createWaSettings(
       conversionData,
       accessToken: encryptedToken.encryptedData,
       accessToken_iv: encryptedToken.iv,
-      // pageAccessToken was never encrypted on either branch. See issues.txt 13.5.
       pageAccessToken: data.pageAccessToken ? encryptInlineToken(data.pageAccessToken) : undefined,
     },
   });
@@ -95,15 +90,6 @@ export async function getWaSettings(orgId: string, whatsappSettingsPhoneId?: str
   return getWaSettingsWithAccessTokenDecrypted(res);
 }
 
-/**
- * A channel by id, scoped to the org asking.
- *
- * orgId is REQUIRED. Every endpoint reaching here takes whatsappSettingsId off a
- * request path or query, and none of them compared the row's orgId to the
- * caller's — so any authenticated user could read, rewrite or sync another org's
- * channel, and getMetaAssetsHandler handed out that org's working Facebook page
- * access tokens. See issues.txt 13.1.
- */
 export async function getWaSettingsById(whatsappSettingsId: string, orgId: string) {
   const res = await prisma.whatsappSettings.findFirst({
     where: {
@@ -116,7 +102,6 @@ export async function getWaSettingsById(whatsappSettingsId: string, orgId: strin
     return null;
   }
 
-  // No `res.wabaId ?` guard any more — the decrypt is total. See issues.txt 13.4.
   return getWaSettingsWithAccessTokenDecrypted(res);
 }
 
@@ -242,20 +227,6 @@ function decryptInlineToken(value: string | null): string | null {
   }
 }
 
-/**
- * Reads a settings row with its tokens in plain form.
- *
- * TOTAL, deliberately. This used to throw a TypeError whenever `accessToken_iv`
- * was null, and createWaSettings only ever set that column on the phoneId branch
- * — so a Facebook- or Instagram-only channel could not be read at all. Two
- * callers worked around it with a `res.wabaId ? ... : res` guard and six did not,
- * which meant one page-only channel took down the entire Facebook webhook
- * (getWaSettingsByPageId is its first call) and emptied every channel picker in
- * the dashboard. See issues.txt 13.4.
- *
- * A row with no IV is returned with its token as stored, which is exactly what
- * those rows hold: plain text (13.5).
- */
 export function getWaSettingsWithAccessTokenDecrypted(
   waSettings: WhatsappSettings,
 ): Omit<WhatsappSettings, "accessToken_iv"> {
@@ -350,9 +321,6 @@ export async function updateWaSettingsById(
     instagramPersistentMenu: jsonOrDbNull(data.instagramPersistentMenu),
     conversionData: jsonOrDbNull(data.conversionData),
   };
-  // Encrypted here too. This path wrote whatever it was handed, verbatim, while
-  // its sibling updateWaSettings encrypted — so a token written through
-  // PUT /:whatsappSettingsId was stored in plain text. See issues.txt 13.5.
   if (data.accessToken) {
     const encryptedToken = aes_encrypt(data.accessToken, getEncryptionKey());
     dataToBeUpdated.accessToken = encryptedToken.encryptedData;
@@ -364,8 +332,6 @@ export async function updateWaSettingsById(
 
   return await prisma.whatsappSettings.update({
     where: {
-      // Scoped: the id came straight off the request path and nothing compared
-      // the row's org to the caller's. See issues.txt 13.1.
       id: whatsappSettingsId,
       orgId,
     },
@@ -395,10 +361,6 @@ export async function upsertWaSettings(
         "message_reactions",
       ]);
       const { accessToken } = getWaSettingsWithAccessTokenDecrypted(existingSettings);
-      // Tokens passed as callMetaApi's accessToken argument, which sends them as
-      // an Authorization header. Interpolated into the URL they landed in the
-      // trace log of config.url and in the full axios-config dump wa_axios.ts
-      // writes on any non-2xx. See issues.txt 13.3.
       if (data.ibaId) {
         const igData = await callMetaApi(`/${data.ibaId}?fields=username`, "GET", accessToken);
         data.igUserName = igData.data.username;
@@ -467,19 +429,8 @@ export async function updateContactTag(orgId: string, body: ContactTagSchema) {
   return res;
 }
 
-/**
- * Paged WhatsApp logs.
- *
- * `page` is ZERO-BASED — page 0 is the first page. That was already true (skip is
- * `page * limit`) but was stated nowhere and the schema left the field optional
- * with no default; it now defaults to 0 there. See issues.txt 13.6.
- */
 export async function getWaLogs(orgId: string, query: PaginationQuery) {
   const { page, limit, desc = "desc", phone } = query;
-  // One where clause for both queries. The count used to filter on orgId alone
-  // while the rows were also filtered by phone, so a search matching three logs
-  // out of ten thousand reported totalCount 10000 and the client's pager offered
-  // pages that came back empty. Same off-by-one family as issues.txt 8.2.
   const where = {
     orgId,
     phone: phone ? { contains: phone } : undefined,
@@ -527,11 +478,6 @@ export async function getFbPagesFromWa(
   const { accessToken } = settings;
   const url = `/me/accounts?fields=id,name,access_token,instagram_business_account`;
   const res = await callMetaApi(url, "GET", accessToken);
-  // This response carries `access_token` for EVERY page. It used to be logged in
-  // full at info — a level that is on in production — so a working page token for
-  // every connected Facebook page was written to the log on every page sync, and
-  // those tokens do not expire on their own. Only the ids and names are logged
-  // now, and at trace. See issues.txt 13.3.
   log.trace(
     { pages: (res?.data?.data as MetaGraphPage[] | undefined)?.map((page) => page.id) },
     "Pages fetched from meta",
@@ -564,7 +510,6 @@ export async function getAdAccountsFromWa(
   const { accessToken } = settings;
   const res = await callMetaApi(`/me/adaccounts?fields=id,name`, "GET", accessToken);
   const adAccounts: MetaGraphAdAccount[] = [...(res.data?.data || [])];
-  // NOTE: one Meta call per ad account. Fine for a handful; see issues.txt 13.11.
   for (const acc of adAccounts) {
     const ads = await callMetaApi(`/${acc?.id}/ads?fields=id,name`, "GET", accessToken);
     acc.ads = ads.data.data;
@@ -585,9 +530,6 @@ export async function getMetaDatasetsFromWa(
   let datasets: MetaGraphDataset[] = [];
 
   try {
-    // The four console.log calls that were here are gone — one of them printed the
-    // whole axios response object, whose config.url carried the access token.
-    // See issues.txt 13.3.
     const businessesRes = await callMetaApi(`/me/businesses?fields=id,name`, "GET", accessToken);
     const businesses = businessesRes.data?.data || [];
 
@@ -739,17 +681,6 @@ export interface MetaAsset {
   }[];
 }
 
-/**
- * The synced Meta assets for a channel, scoped to the org asking.
- *
- * This is the one that leaked credentials: the stored blob holds
- * pages[].access_token (see MetaAsset above), and getMetaAssetsHandler returns it
- * verbatim — so an unscoped read handed any authenticated user working Facebook
- * page access tokens for another org. See issues.txt 13.1.
- *
- * Returns null for a channel the org does not own, and for one that has never
- * been synced — callers must handle both (issues.txt 13.10).
- */
 export async function getMetaAssets(
   whatsappSettingsId: string,
   orgId: string,

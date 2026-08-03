@@ -14,7 +14,6 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("./instagram_automatedReply.service.js", () => ({
   createOrUpdateInstagramAutomationMessage: vi.fn(),
   logInstagramAutomationAction: vi.fn(),
-  wasInstagramAutomationSentRecently: vi.fn(),
 }));
 
 vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
@@ -43,7 +42,6 @@ import prisma from "../../../utils/prisma.js";
 import {
   createOrUpdateInstagramAutomationMessage,
   logInstagramAutomationAction,
-  wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import {
   sendInstagramGenericTemplate,
@@ -70,7 +68,6 @@ const db = prisma as unknown as {
 const m = {
   track: createOrUpdateInstagramAutomationMessage as unknown as Mock,
   logAction: logInstagramAutomationAction as unknown as Mock,
-  sentRecently: wasInstagramAutomationSentRecently as unknown as Mock,
   sendText: sendInstagramTextMessage as unknown as Mock,
   sendImage: sendInstagramImage as unknown as Mock,
   sendQuickReply: sendInstagramQuickReply as unknown as Mock,
@@ -114,7 +111,6 @@ beforeEach(() => {
   db.waAutomatedReplyMessage.updateMany.mockResolvedValue({ count: 1 });
   m.track.mockResolvedValue({ id: "msg-1" });
   m.logAction.mockResolvedValue({});
-  m.sentRecently.mockResolvedValue(false);
 });
 
 describe("startInstagramAutomationFlow", () => {
@@ -153,9 +149,11 @@ describe("startInstagramAutomationFlow", () => {
     expect(log.error).toHaveBeenCalled();
   });
 
-  test("stays silent when a once-a-day automation already reached this user", async () => {
-    m.sentRecently.mockResolvedValue(true);
-
+  // The once-per-24h guard moved to the rules engine (Rule.options.sendOncePerDay,
+  // enforced in validateRuleConditions before the flow is ever started, keyed on the
+  // igsId the rule context passes as `phone`). Starting a flow no longer consults any
+  // per-automation recency state of its own.
+  test("runs even when a stale sendOnceIn24Hours flag is still on the row", async () => {
     await startInstagramAutomationFlow(
       IGS_ID,
       flow([START], [], { sendOnceIn24Hours: true }),
@@ -163,13 +161,7 @@ describe("startInstagramAutomationFlow", () => {
       IBA_ID,
     );
 
-    expect(m.track).not.toHaveBeenCalled();
-  });
-
-  test("does not consult the recent-send log unless the option is set", async () => {
-    await startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID);
-
-    expect(m.sentRecently).not.toHaveBeenCalled();
+    expect(m.track).toHaveBeenCalled();
   });
 
   // Still not rethrown — one broken automation must not disturb the webhook that

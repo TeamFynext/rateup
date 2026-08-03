@@ -82,7 +82,7 @@ describe("instagramWebhookEventHandler - the happy path", () => {
   // Processed BEFORE acknowledging. The 200 used to go out first, so `reply.sent`
   // was already true by the time anything threw and the catch could only log —
   // Meta, which retries only on a non-2xx, treated a lost message as delivered.
-  // Matches the Facebook webhook (issues.txt 10.6). See issues.txt 12.2.
+  // Matches the Facebook webhook.
   test("processes before it acknowledges, so a failure can still be reported", async () => {
     await instagramWebhookEventHandler(makeRequest(IG_EVENT), makeReply());
 
@@ -94,7 +94,6 @@ describe("instagramWebhookEventHandler - the happy path", () => {
   // posted here is processed as Instagram, against an entry id looked up as an
   // Instagram business account. Harmless in practice (the lookup finds nothing and
   // the entry is skipped) but the two endpoints overlap for no stated reason.
-  // See issues.txt 12.16.
   test("also accepts a Facebook page event", async () => {
     await instagramWebhookEventHandler(makeRequest({ object: "page", entry: [] }), makeReply());
 
@@ -145,8 +144,7 @@ describe("instagramWebhookEventHandler - failures", () => {
   // The 200 used to go out before processing, so a failure — including the
   // batch-abandoning throws that were pinned in instagram.service.test.ts — left
   // Meta believing the event was handled. Meta only retries on a non-2xx, so
-  // those events were lost for good. Same shape as issues.txt 10.6.
-  // See issues.txt 12.2.
+  // those events were lost for good.
   test("answers non-2xx when some events in the batch failed, so Meta retries", async () => {
     handleWebhookMock.mockResolvedValue({ processed: 1, failed: 1 });
     const rep = makeReply();
@@ -168,11 +166,10 @@ describe("instagramWebhookEventHandler - failures", () => {
 });
 
 describe("instagramWebhookEventHandler - who is allowed to post here", () => {
-  // NOTE: pins current behaviour, the same gap as issues.txt 10.8. The route is
+  // NOTE: pins current behaviour. The route is
   // unauthenticated and nothing checks x-hub-signature-256, so anyone who knows a
   // connected Instagram business account id can post fabricated inbound messages
   // and comments into that org's inbox — and those run the org's automated replies.
-  // See issues.txt 12.17.
   test("processes an event that carries no signature header", async () => {
     await instagramWebhookEventHandler(makeRequest(IG_EVENT, {}), makeReply());
 

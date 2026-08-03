@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // No dayjs.extend(utc) here any more: the service's only use of the utc plugin was
 // inside the last-login backfill, which is gone with 23.3/23.4, so the module no
-// longer depends on a plugin another module happens to register. See issues.txt 23.7.
+// longer depends on a plugin another module happens to register.
 
 vi.mock("../../utils/prisma.js", () => ({
   default: { $queryRaw: vi.fn(), team: { findFirst: vi.fn() } },
@@ -121,7 +121,7 @@ describe("getOverallStats", () => {
   // a table migration 20260120044921_new_loyalty dropped in the loyalty rewrite.
   // Postgres resolves relations for the whole statement before executing any of
   // it, so `relation "LoyaltyCustomer" does not exist` took every tile on the
-  // dashboard down together, not just the loyalty one. See issues.txt 23.1.
+  // dashboard down together, not just the loyalty one.
   test("counts loyalty customers through the table the rewrite left behind", async () => {
     await getOverallStats(ORG, USER);
 
@@ -139,7 +139,7 @@ describe("getOverallStats", () => {
 
   // An aggregate of scalar sub-selects always returns exactly one row, so the
   // fallback is unreachable today — but nothing guarded it and the declared return
-  // type promised an object. See issues.txt 23.6.
+  // type promised an object.
   test("returns a zeroed shape rather than undefined for an empty result", async () => {
     db.$queryRaw.mockResolvedValue([]);
 
@@ -194,7 +194,7 @@ describe("getActiveSurveyStats", () => {
   // ordering what it selected from it. Postgres does not guarantee a subquery's
   // ordering survives into the outer query, so "the ten most recent of each type"
   // held only by accident of the plan. Each branch orders alongside its own LIMIT
-  // now. See issues.txt 23.5.
+  // now.
   test("orders inside each branch of the union, next to its LIMIT", async () => {
     await getActiveSurveyStats(USER);
 
@@ -212,7 +212,7 @@ describe("getTeamMemberStats", () => {
   // The query used to filter on the path's team id ALONE — no org in this function,
   // its handler or its route — so a team id was enough for a user of any
   // organisation to read that team's roster: names, EMAIL ADDRESSES, roles,
-  // last-login times, workloads and who was online. See issues.txt 23.2.
+  // last-login times, workloads and who was online.
   test("filters on the org as well as the team", async () => {
     await getTeamMemberStats(TEAM, ORG);
 
@@ -270,7 +270,7 @@ describe("getTeamMemberStats", () => {
 
   // The declared return type is `(TeamMember & { isOnline: boolean })[] | null`, so
   // the rows describe themselves and these tests no longer have to cast past an
-  // intersection-with-an-array. See issues.txt 23.6.
+  // intersection-with-an-array.
   test("hands back rows the declared return type describes", async () => {
     db.$queryRaw.mockResolvedValue([member()]);
 
@@ -284,7 +284,7 @@ describe("getTeamMemberStats", () => {
   // session-list call per member plus one per handle plus a prisma write, all
   // sequential, repeated on every page load — and the write NULLED the timestamp of
   // any member whose sessions had expired, destroying the only record of when they
-  // were last active. The endpoint is read-only now. See issues.txt 23.3 and 23.4.
+  // were last active. The endpoint is read-only now.
   test("reports the stored last-login as it is, old or absent", async () => {
     db.$queryRaw.mockResolvedValue([
       member({ id: "u1", lastLoggedInAt: "2019-05-01T00:00:00.000Z" }),
@@ -310,7 +310,7 @@ describe("getTeamMemberStats", () => {
 
   // The backfill was the module's only use of the dayjs utc plugin, which it never
   // registered — it worked only because survey.service.ts and response.service.ts
-  // happened to extend the shared singleton first. Both are gone. issues.txt 23.7.
+  // happened to extend the shared singleton first. Both are gone.
   test("no longer depends on a dayjs plugin another module registers", async () => {
     const source = await import("node:fs/promises").then((fs) =>
       fs.readFile("src/modules/dashboard/dashboard.service.ts", "utf8"),
@@ -347,7 +347,6 @@ describe("the dashboard handlers", () => {
 
   // The handler used to read only the path parameter — request.user was never
   // touched — so nothing in the request path tied the team to the caller.
-  // See issues.txt 23.2.
   test("team stats answer 404 for a team the caller's org does not own", async () => {
     db.team.findFirst.mockResolvedValue(null);
     const rep = reply();
@@ -370,7 +369,7 @@ describe("the dashboard handlers", () => {
   // All three catches used to do `reply.code(500).send(e)` with the Error object.
   // An Error has no enumerable own properties, so it serialised to `{}` — a 500
   // with an empty body, which is very likely why 23.1's breakage went unnoticed
-  // for six months. See issues.txt 23.6.
+  // for six months.
   test("every handler answers a failure with a message", async () => {
     db.$queryRaw.mockRejectedValue(new Error(`relation "LoyaltyCustomer" does not exist`));
 

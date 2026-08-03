@@ -71,11 +71,3 @@ export const getImgUrl = (str: string | null | undefined) => {
   }
   return resultStr;
 };
-
-// NOTE: getChooseBgRadioValue, convertBgObjToReqStructure and
-// verifyAndConvertSurveyThemeObj used to live here. They were the theme-JSON
-// converter behind a root-org migration endpoint that was already a no-op, and
-// they dereferenced `welcomeTheme.logo` and `thankyouTheme` — pages the current
-// defaultTheme does not contain, so the migration would have aborted on the
-// first theme created since that default changed. Deleted with the endpoint.
-// See issues.txt 33.6.

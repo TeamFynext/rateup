@@ -176,10 +176,6 @@ export enum WaTemplateStatus {
   REJECTED = "REJECTED",
   DRAFT = "DRAFT",
   PENDING_DELETION = "PENDING_DELETION",
-  // Set by syncTemplates on a template Meta no longer has. Marked rather than
-  // deleted, because campaigns can point at the row. See issues.txt 14.6.
-  // Stored inside WaTemplate.data (a Json column), not a Prisma enum — no
-  // migration.
   DELETED = "DELETED",
 }
 export enum WaFlowStatus {

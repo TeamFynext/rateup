@@ -20,7 +20,7 @@ vi.mock("../../utils/checkRoleHandler.js", () => ({
 }));
 
 // The verification fetch now resolves the host before issuing anything, so the
-// resolver is part of what these tests drive. See issues.txt 34.1.
+// resolver is part of what these tests drive.
 vi.mock("node:dns/promises", () => ({ lookup: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
@@ -127,7 +127,7 @@ describe("verifyWebhookUrl", () => {
   // There was no allowlist and no host or address check: an authenticated user
   // could make the server issue a GET to any host from inside the network, and
   // the 200/400 answer plus the 5-second timeout separated "reachable and
-  // echoed" from "refused" from "hung". See issues.txt 34.1.
+  // echoed" from "refused" from "hung".
   test("refuses a host that resolves to a private address", async () => {
     dns.mockResolvedValueOnce([{ address: "10.0.0.5", family: 4 }]);
 
@@ -208,7 +208,7 @@ describe("verifyWebhookUrl", () => {
   // The challenge was concatenated as `${url}?challenge=...`, so a registered
   // URL that already carried a query received two question marks and the
   // receiver saw one parameter whose value was `1?challenge=TOKEN` — rejecting an
-  // otherwise correct configuration and blaming the receiver. See issues.txt 34.5.
+  // otherwise correct configuration and blaming the receiver.
   test("sets the challenge on a URL that already has a query", async () => {
     await verifyWebhookUrl("https://x.test/hook?tenant=1", TOKEN);
 
@@ -224,7 +224,7 @@ describe("the verify token", () => {
   // The field was `.optional()`, which the contract advertised and the behaviour
   // did not honour: `encodeURIComponent(undefined)` sent the literal string
   // "undefined" as the challenge, and the echo was compared against undefined,
-  // which no string satisfies. See issues.txt 34.4.
+  // which no string satisfies.
   test("the schema requires it", () => {
     expect(
       saveWebhookSchema.safeParse({ url: "https://x.test", events: ["message_status"] }).success,
@@ -304,7 +304,7 @@ describe("saveWebhookHandler", () => {
 
   // orgId is @unique on the model, so an org has exactly one webhook and saving
   // a second silently replaces the first — which is why the route now requires
-  // an admin role. See issues.txt 34.7.
+  // an admin role.
   test("a second save replaces the org's existing webhook", async () => {
     await saveWebhookHandler({ user: { orgId: ORG }, body } as never, reply());
     await saveWebhookHandler(
@@ -345,7 +345,7 @@ describe("saveWebhookSchema", () => {
 
   // events was an unconstrained string array, so subscribing to "order.created"
   // or a misspelled "mesage_status" was accepted and simply never fired, with
-  // nothing to indicate the name matched nothing. See issues.txt 34.7.
+  // nothing to indicate the name matched nothing.
   test("rejects an event name the platform does not emit", () => {
     expect(
       saveWebhookSchema.safeParse({
@@ -426,7 +426,6 @@ describe("deleteWebhookHandler", () => {
   // prisma.delete raises P2025 when there is no row and nothing catches it, so
   // DELETE /api/webhook was not idempotent: the first call succeeded and the
   // second was a 500. deleteMany succeeds with a count of zero.
-  // See issues.txt 34.6.
   test("deleting when none exists is an idempotent success", async () => {
     db.webhook.deleteMany.mockResolvedValueOnce({ count: 0 });
     const rep = reply();
@@ -462,7 +461,7 @@ describe("enqueueWebhookDispatch", () => {
   // Neither the job nor the queue set `attempts` (redisConnection.ts constructs
   // it with only a connection), so BullMQ's default of a single attempt applied
   // — the worker's throw on a non-2xx requested a retry that never happened, and
-  // a receiver that was briefly redeploying lost the event. See issues.txt 34.3.
+  // a receiver that was briefly redeploying lost the event.
   test("sets a retry policy with exponential backoff", async () => {
     await enqueueWebhookDispatch("phone-1", "message_status", {});
 
@@ -505,7 +504,7 @@ describe("the service writers", () => {
     expect(arg.update).not.toHaveProperty("orgId");
   });
 
-  // STILL OPEN (issues.txt 34.2): the model carries no secret column, so nothing
+  // STILL OPEN: the model carries no secret column, so nothing
   // is stored that a delivery could be signed with — a receiver cannot tell a
   // genuine delivery from a POST by anyone who knows the URL. Closing it needs a
   // schema change and a signing contract receivers must implement.
@@ -583,7 +582,7 @@ describe("webhookRoutes", () => {
 
   // The tree carried checkSession and no role check, so the lowest-privileged
   // member could redirect the org's outgoing event stream to an address they
-  // control, or delete it, with nothing recording the change. See issues.txt 34.7.
+  // control, or delete it, with nothing recording the change.
   test("the two writers require an admin role, and the read does not", async () => {
     const { srv, routes } = fakeServer();
 

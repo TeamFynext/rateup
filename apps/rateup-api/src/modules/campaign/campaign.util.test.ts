@@ -63,11 +63,11 @@ describe("verifyCampaignMaxLimit", () => {
     expect(rep.send.mock.calls[0][0].message).toBe("Subscription not found");
   });
 
-  // The third copy of the same defect, after issues.txt 11.7 (flows) and 14.7
+  // The third copy of the same defect, after(flows) and 14.7
   // (templates) — and a fourth in the automated-replies gate. All four share
   // enforceWhatsappCountLimit now. A plan that states no maximum means no limit,
   // and saying so explicitly is what stops the next reader taking
-  // `count >= undefined` for a check. See issues.txt 17.2.
+  // `count >= undefined` for a check.
   test("enforces no limit when the plan does not state one, without counting", async () => {
     const rep = reply();
 
@@ -80,7 +80,7 @@ describe("verifyCampaignMaxLimit", () => {
   // The count query sat inside the try, so a database outage was answered as a 403
   // carrying the raw error text with displayMessageInClient set — an infrastructure
   // failure dressed up as a permission refusal, shown to the user. It is outside
-  // any catch now, so it surfaces as a 500. See issues.txt 17.2.
+  // any catch now, so it surfaces as a 500.
   test("lets a database failure surface rather than calling it a refusal", async () => {
     countMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();

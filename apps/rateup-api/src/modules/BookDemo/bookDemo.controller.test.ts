@@ -141,7 +141,6 @@ describe("bookDemoHandler - the record it keeps", () => {
   // A demo request used to exist only as an email: bookDemoHandler queued two and
   // returned, never touching the database, while createBookDemo sat with no callers
   // and the BookDemo table sat empty. A dropped queue job lost the lead outright.
-  // See issues.txt 16.3.
   test("records the request before queueing anything", async () => {
     await bookDemoHandler(request(demoBody()), reply());
 
@@ -212,7 +211,7 @@ describe("bookDemoHandler - the confirmation to the requester", () => {
   // convention — read inside the API, and it was interpolated into an UNQUOTED src
   // attribute. On an instance without it set, the src rendered as the literal
   // string "undefined/images/...". There is no image worth rendering without a
-  // host, so the block is omitted rather than emitted broken. See issues.txt 16.5.
+  // host, so the block is omitted rather than emitted broken.
   test("omits the social icons rather than writing undefined into their urls", async () => {
     delete process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL;
 
@@ -230,7 +229,6 @@ describe("bookDemoHandler - the confirmation to the requester", () => {
   });
 
   // A client that prefers text/plain used to be shown a blank message.
-  // See issues.txt 16.8.
   test("sends a plain-text alternative that carries the booking details", async () => {
     await bookDemoHandler(request(demoBody()), reply());
 
@@ -272,7 +270,7 @@ describe("bookDemoHandler - what the caller is told", () => {
   // The internal notification is queued first, so a failure queueing the
   // requester's own confirmation used to answer 500 — telling them their booking
   // failed — while the sales team had already been sent the lead and would contact
-  // them. It is best-effort now, and logged. See issues.txt 16.4.
+  // them. It is best-effort now, and logged.
   test("still confirms the booking when only the confirmation fails to queue", async () => {
     queueAdd.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("redis is down"));
     const rep = reply();
@@ -288,7 +286,7 @@ describe("bookDemoHandler - what a submitter can put in the email", () => {
   // The serious one. Every field was interpolated into an HTML email body with no
   // escaping, and POST /api/bookdemo carries no checkSession — so anyone on the
   // internet could put arbitrary markup into an email landing in the sales team's
-  // inbox. See issues.txt 16.1.
+  // inbox.
   test("escapes markup from the name in the internal email", async () => {
     await bookDemoHandler(
       request(demoBody({ name: '<a href="https://evil.example/login">Reset your password</a>' })),
@@ -303,7 +301,7 @@ describe("bookDemoHandler - what a submitter can put in the email", () => {
   // The worse half: the recipient is an address the submitter chose, the branding
   // is RateUp's, and the body carried their markup — an unauthenticated way to send
   // convincing RateUp-branded mail with attacker-chosen content to any address,
-  // from RateUp's own sending domain. See issues.txt 16.1.
+  // from RateUp's own sending domain.
   test("escapes markup from the message in the RateUp-branded confirmation", async () => {
     await bookDemoHandler(
       request(
@@ -332,7 +330,7 @@ describe("bookDemoHandler - what a submitter can put in the email", () => {
 
   // The schema set a minimum length on message and no maximum, so a single request
   // could push an arbitrarily large payload through the queue and duplicate it into
-  // both emails. The route is rate limited per IP as well. See issues.txt 16.2.
+  // both emails. The route is rate limited per IP as well.
   test("caps the length of the free-text message", async () => {
     const { createBookDemoInputSchema } = await import("./bookDemo.schema.js");
 
@@ -414,7 +412,7 @@ describe("partnerDataHandler", () => {
 
   // The same unescaped interpolation as the demo form, on an equally
   // unauthenticated route. This one only reaches the internal inbox, since there is
-  // no confirmation email. See issues.txt 16.1.
+  // no confirmation email.
   test("escapes markup from the company name", async () => {
     await partnerDataHandler(
       request(partnerBody({ companyName: "<script>alert(1)</script>" })),
@@ -428,7 +426,7 @@ describe("partnerDataHandler", () => {
 
   // services was joined without a guard. The route schema requires an array, so
   // this was only reachable by a caller bypassing validation — but the handler is
-  // exported and had no guard of its own. See issues.txt 16.5.
+  // exported and had no guard of its own.
   test("copes with services that are not a list", async () => {
     const rep = reply();
 

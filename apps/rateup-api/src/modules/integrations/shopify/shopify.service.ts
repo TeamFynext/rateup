@@ -146,16 +146,6 @@ export async function updateShopifyIntegrationByShop(
   });
 }
 
-/**
- * Claims an unowned Shopify row for an org.
- *
- * The OAuth callback creates the Integration row before any org is linked, so an
- * unowned row is the one state in which claiming a shop is legitimate. The claim
- * used to be `updateMany({ where: { shop } , data: { orgId } })` with no check on
- * the current owner, so any authenticated user could PUT a shop domain — public
- * information — and re-parent that store's Admin API session token to their own
- * organisation. See issues.txt 26.3.
- */
 export async function claimUnownedShopifyIntegration(shop: string, orgId: string) {
   return await prisma.integration.updateMany({
     where: {
@@ -779,9 +769,6 @@ export async function registerWebhookByTopic(topic: string, session: Session) {
       variables: {
         topic,
         webhookSubscription: {
-          // The trailing space here meant every webhook registered through this
-          // function pointed at a URL this API does not serve — app-uninstall and
-          // subscription-update deliveries among them. See issues.txt 26.8.
           callbackUrl: `${API_URL}${WEBHOOK_API_ROUTE}`,
           format: "JSON",
         },
@@ -1469,11 +1456,6 @@ export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
   const { shop } = webhook;
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) return;
-  // Integration.orgId is nullable and the OAuth callback creates the row before any
-  // org is linked, so a store that installed without completing the link has no org
-  // at all — reading org.createdAt threw a TypeError, the uninstall was never
-  // recorded, and BullMQ retried the same failing job forever. An unlinked install
-  // simply deactivates. See issues.txt 26.14.
   if (!shopifyInfo.org || !shopifyInfo.orgId) {
     await updateShopifyIntegrationByShop(shop, { active: false });
     return;
@@ -1609,10 +1591,6 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         const { timeDelay, schedules = [], repeatInterval } = abandonedCheckoutConfig;
         const shopifySurveys = [...credential.shopifySurveys];
 
-        // `.map(async ...)` on a list of promises nobody awaited: the integration was
-        // written back before any of this had run. Both loops are awaited now — this
-        // one has no awaits of its own, so it is a plain forEach.
-        // See issues.txt 26.9(c).
         lastCheckouts.forEach((checkout) => {
           const phone = validateAndParseCheckoutPhone(checkout);
 
@@ -1663,10 +1641,6 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
                 });
             });
         }
-        // Awaited: the send results — SENT, FAILED, sentAt — were computed into an
-        // array nobody persisted, because the write-back below ran first. Without
-        // that record every run re-sent to the same customers on a metered channel.
-        // See issues.txt 26.9(c).
         await Promise.all(
           sentNowCheckoutList.map(async (checkout) => {
             const res = await sendTemplateToUserCore(

@@ -4,10 +4,6 @@ import {
   UpdateTestimonialCollectionInput,
 } from "./testimonialCollection.schema.js";
 
-/**
- * Raised when a collection, a team or a testimonial named in a request does not
- * belong to the caller's organisation. See issues.txt 31.1, 31.2, 31.3.
- */
 export class CollectionAccessError extends Error {
   readonly status: 403 | 404;
 
@@ -40,13 +36,6 @@ async function assertTeamIsTheOrgs(teamId: string, orgId: string) {
   }
 }
 
-/**
- * Testimonials reach an org through SurveyResponse -> SurveyTeamMap -> Team, the
- * same join the by-org listing in testimonial.service.ts uses. A collection may
- * only hold testimonials the caller's own organisation collected — without this
- * an attacker could republish another org's respondent-authored content at the
- * public widget URL. See issues.txt 31.1.
- */
 async function assertTestimonialsAreTheOrgs(testimonialIds: string[], orgId: string) {
   const wanted = [...new Set(testimonialIds)];
   if (!wanted.length) return;
@@ -70,8 +59,6 @@ export async function createTestimonialCollection(
   testimonialCollection: CreateTestimonialCollectionInput,
   orgId: string,
 ) {
-  // teamId is a body field, so without this a user could plant a collection
-  // inside any team on the platform. See issues.txt 31.3.
   await assertTeamIsTheOrgs(testimonialCollection.teamId, orgId);
 
   const collection = await prisma.testimonialCollection.create({
@@ -96,12 +83,6 @@ export async function updateTestimonialCollection(
     await assertTestimonialsAreTheOrgs(testimonialIds, orgId);
   }
 
-  // The three writes used to run unwrapped, so a failure between the clear and
-  // the rewrite left the published widget with no testimonials at all and
-  // nothing recording what it had held. The guard was also `?.length`, which
-  // made an empty array indistinguishable from an omitted one — there was no
-  // way to empty a collection through this endpoint. `!== undefined` is the
-  // distinction: an explicit [] clears. See issues.txt 31.5.
   const collection = await prisma.$transaction(async (tx) => {
     if (testimonialIds) {
       await tx.testimonialCollectionMap.deleteMany({ where: { collectionId } });
@@ -122,16 +103,6 @@ export async function updateTestimonialCollection(
   return collection;
 }
 
-/**
- * The public widget read (/api/public/testimonials/:id) — deliberately
- * unauthenticated, since a collection is embedded on the customer's own site.
- *
- * Returns null rather than a spread of null for a miss: `{ ...collection }` over
- * null yielded `{}`, a truthy object the handler answered 200 for, so a deleted
- * collection rendered as an empty wall instead of failing visibly and every id
- * probed returned 200. The projection also drops teamId, which used to travel to
- * every visitor of the embedding page. See issues.txt 31.4.
- */
 export async function getTestimonialCollectionById(collectionId: string) {
   const collection = await prisma.testimonialCollection.findUnique({
     where: {
@@ -179,9 +150,6 @@ export async function getTestimonialCollectionsByTeamId(teamId: string, orgId: s
   const collection = await prisma.testimonialCollection.findMany({
     where: {
       teamId,
-      // Naming a team in the query string used to take this branch, which
-      // filtered on teamId alone — so the org-scoped listing beside it was
-      // opt-out. See issues.txt 31.3.
       team: {
         orgId,
       },
@@ -198,8 +166,6 @@ export async function getTestimonialCollectionsByTeamId(teamId: string, orgId: s
 }
 
 export async function deleteTestimonialCollection(collectionId: string, orgId: string) {
-  // A miss — a foreign collection or none — raises P2025, which the handler
-  // answers 404 for. See issues.txt 31.2.
   return await prisma.testimonialCollection.delete({
     where: {
       id: collectionId,
@@ -215,9 +181,6 @@ export async function addMultipleTestimonialToCollection(
   testimonialIds: string[],
   orgId: string,
 ) {
-  // Neither side of the join used to be resolved to an owner, which made this
-  // the write half of "republish another org's testimonials at a public URL".
-  // See issues.txt 31.1.
   await assertCollectionIsTheOrgs(collectionId, orgId);
   await assertTestimonialsAreTheOrgs(testimonialIds, orgId);
 
@@ -245,8 +208,6 @@ export async function deleteMultipleTestimonialFromCollection(
   testimonialIds: string[],
   orgId: string,
 ) {
-  // The destructive direction of the same hole: without this, a collection id
-  // was enough to empty another org's live widget. See issues.txt 31.1.
   await assertCollectionIsTheOrgs(collectionId, orgId);
 
   return await prisma.testimonialCollectionMap.deleteMany({

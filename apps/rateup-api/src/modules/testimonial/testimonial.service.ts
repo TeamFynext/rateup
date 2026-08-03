@@ -13,12 +13,6 @@ export async function createTestimonial(responseData: CreateResponseInput, respo
     (res) => res.type == QuestionType.Testimonial,
   );
 
-  // The answer object is indexed by the question-type string, so a payload
-  // shaped differently used to write a row where every field was undefined — a
-  // testimonial with no text, stored rather than rejected, which then appeared
-  // as an empty card in the by-org listing and in any published collection. The
-  // schema describing exactly this shape was written and never wired up; it is
-  // now the filter. See issues.txt 32.3.
   const rows = testimonialRes.flatMap((tr) => {
     const candidate = {
       responseId,
@@ -59,11 +53,6 @@ export async function getAllTestimonialBySurveyId(surveyId: string, orgId: strin
       surveyResponse: {
         surveyTeamMap: {
           surveyId,
-          // The join stopped at the survey, so a survey id — which is not secret,
-          // it appears in survey URLs — was enough for any authenticated user of
-          // any org to read that survey's testimonials in full, ids included.
-          // getAllTestimonialByOrgId below already walked this one relation
-          // further. See issues.txt 32.1.
           team: {
             orgId,
           },
@@ -108,10 +97,6 @@ export async function getAllTestimonialByOrgId(orgId: string) {
       },
     },
   });
-  // SurveyTeamMap cascades from both Survey and Team, so a testimonial whose
-  // response has lost its mapping yields null here — and the destructure below
-  // used to throw a TypeError for it, making the whole org-wide listing 500 with
-  // no indication which row was at fault. See issues.txt 32.5.
   return testimonials
     .filter((t) => t.surveyResponse?.surveyTeamMap?.survey && t.surveyResponse.surveyTeamMap.team)
     .map(

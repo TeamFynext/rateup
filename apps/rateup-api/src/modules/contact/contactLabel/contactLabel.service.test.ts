@@ -39,7 +39,7 @@ const ORG = "11111111-1111-4111-8111-111111111111";
 beforeEach(() => {
   vi.clearAllMocks();
   // Both assigners resolve the contact against the caller's org before touching
-  // anything. See issues.txt 18.32.
+  // anything.
   db.contact.findFirst.mockResolvedValue({ id: "c1" });
   db.contact.findUnique.mockResolvedValue(null);
   db.contact.findMany.mockResolvedValue([{ id: "c1" }, { id: "c2" }]);
@@ -142,7 +142,6 @@ describe("assignLabelsToContact", () => {
   // delete ran first and unconditionally — so a contact id from another org had
   // its labels wiped before the function discovered it could not read it back, and
   // the caller got a 404 for their trouble. Destructive, silent, not undoable.
-  // See issues.txt 18.32.
   test("touches nothing for a contact belonging to another org", async () => {
     db.contact.findFirst.mockResolvedValue(null);
 
@@ -210,7 +209,6 @@ describe("assignLabelsToContacts", () => {
 
   // The sharper half of 18.32: this takes an ARRAY, so one request could strip the
   // labels off an arbitrary list of contacts across any number of orgs.
-  // See issues.txt 18.32.
   test("touches nothing for contacts belonging to another org", async () => {
     db.contact.findMany.mockResolvedValue([]);
 
@@ -239,7 +237,7 @@ describe("assignLabelsToContacts", () => {
 
   // It returned nothing, so the handler that sends its result always answered with
   // an empty body — the caller could not tell which contacts were updated or
-  // whether any id was rejected. See issues.txt 18.33.
+  // whether any id was rejected.
   test("reports what it did", async () => {
     db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
     db.contactLabel.findMany.mockResolvedValue([{ id: "l1" }]);

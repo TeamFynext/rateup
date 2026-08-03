@@ -233,18 +233,6 @@ const updateQuestionRequestSchema = z.object({
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
 
-/**
- * The replace endpoint was registered as `server.put("/replace", handler)` — two
- * arguments, so no options object, no body schema and no params schema, while
- * every other route in the file declared one. It is the most destructive
- * endpoint in the module: whatever the body carries becomes the survey's
- * questions, and when the `questions` key was simply ABSENT that was `undefined`,
- * which Prisma writes as a JSON null over the entire question set.
- *
- * `looseObject` keeps the passthrough the flow builder needs — a question is a
- * PrismaJson type with a large and evolving shape — while requiring the array to
- * be an array of objects that each carry an id. See issues.txt 39.2.
- */
 const replaceQuestionsRequestSchema = z.object({
   questions: z.array(z.looseObject({ id: z.string().min(1) })).max(500),
   screenId: z.string().min(1).optional(),

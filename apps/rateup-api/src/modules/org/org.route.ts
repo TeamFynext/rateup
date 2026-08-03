@@ -101,8 +101,6 @@ export async function orgRoutes(server: FastifyInstance) {
       },
       preHandler: assertRootOrg,
     },
-    // A distinct handler now: the self-service route above deletes the session
-    // org, this one deletes the org the path names. See issues.txt 41.1.
     deleteOrgAdminHandler,
   );
 

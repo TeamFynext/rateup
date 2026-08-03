@@ -34,8 +34,6 @@ async function getLinktreeWithShortId(
   if (linktreeWithShortUrlId) {
     rep.code(200).send(linktreeWithShortUrlId);
   } else {
-    // Was a bare string, where every other error in the module is an object.
-    // See issues.txt 45.6.
     rep.code(404).send(notFoundBody);
   }
 }
@@ -45,12 +43,6 @@ async function getPublicLinktreeWithShortId(
   rep: FastifyReply,
 ) {
   const linktreeWithShortUrlId = await getPublicLinktreeWithShortIdFromDB(req);
-  // The public read used to send the service's null with a 200, so a client had
-  // to test the body rather than the status, and anything treating a 2xx as
-  // success read a deleted page as a live one. It is also the response for an
-  // unpublished draft now (45.2) — deliberately indistinguishable from a page
-  // that does not exist, so the endpoint does not report drafts into existence.
-  // See issues.txt 45.6.
   if (!linktreeWithShortUrlId) {
     rep.code(404).send(notFoundBody);
     return;
@@ -103,12 +95,6 @@ enum ResourceToBeUpdated {
   LinkClick = "link-click",
   PageVisit = "page-visit",
 }
-// One visit (or one click on a given link) per address per page per day. The
-// counters are unauthenticated by design — a visitor has no session — so
-// without this anyone holding an eight-character short id could raise another
-// organisation's visitor count and any link's click count without bound, and
-// they are the only measure the product offers of whether a link page worked.
-// Fails open: a Redis outage should not stop counting. See issues.txt 45.3.
 async function alreadyCountedToday(ip: string, shortUrlId: string, what: string) {
   try {
     const key = `linktree:${what}:${shortUrlId}:${ip}`;

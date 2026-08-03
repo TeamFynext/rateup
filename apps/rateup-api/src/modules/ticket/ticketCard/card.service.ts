@@ -43,15 +43,6 @@ export class TicketReferenceError extends Error {
   }
 }
 
-/**
- * Refuses a contact that is not the caller's org's.
- *
- * updateCard used to write `contactId` straight through, while the labelIds two
- * lines above it WERE checked against the card's board — so a user could link a
- * contact from any organisation to a card on their own board and then GET the card,
- * which returns that contact's name, phone, consent flag and last-message time. A
- * read primitive for the Contact table needing only an id. See issues.txt 29.2.
- */
 async function assertContactIsTheOrgs(contactId: string | null | undefined, orgId: string) {
   if (!contactId) return;
   const contact = await prisma.contact.findFirst({
@@ -63,14 +54,6 @@ async function assertContactIsTheOrgs(contactId: string | null | undefined, orgI
   }
 }
 
-/**
- * Refuses assignees who are not on one of the board's teams.
- *
- * Any user id used to be accepted and written, and on update the newly assigned
- * users were looked up and sent a ticket-assigned email and WhatsApp message — so
- * assigning a stranger delivered mail to them, from the assigner's org, about a
- * board they cannot open. See issues.txt 29.5.
- */
 async function assertAssigneesAreBoardMembers(
   assigneeIds: string[] | undefined,
   boardId: string | undefined,
@@ -109,8 +92,6 @@ export async function createCard(data: CardInput) {
     where: { id: data.ticketColumnId },
     select: { ticketBoardId: true, title: true },
   });
-  // Returned undefined, which the handler sent as a 201 with an empty body — the
-  // caller was told a card had been created that does not exist. See issues.txt 29.8.
   if (!column) {
     throw new TicketReferenceError("That column does not exist");
   }
@@ -850,10 +831,6 @@ export async function moveCard(
 
   if (!currentCard) return null;
 
-  // verifyCardAccess resolves the board the card is CURRENTLY on; the destination
-  // used to be written with no lookup at all, so a card — with its checklists,
-  // attachments, comment thread and linked contact — could be moved onto any board
-  // on the platform, and out of sight of everyone working on it. See issues.txt 29.3.
   if (ticketColumnId !== currentCard.ticketColumnId) {
     const destinationBoardId = await getBoardIdByColumnId(ticketColumnId);
     if (!destinationBoardId) {

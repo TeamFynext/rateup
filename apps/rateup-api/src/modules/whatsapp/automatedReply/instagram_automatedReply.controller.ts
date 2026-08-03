@@ -87,8 +87,6 @@ export async function createInstagramAutomationHandler(
       name: string;
       matchData: WaAutomatedReplyMatchData;
       whatsappSettingsPhoneId?: string;
-      sendOnceIn24Hours?: boolean;
-      isActive?: boolean;
     };
   }>,
   reply: FastifyReply,
@@ -102,8 +100,6 @@ export async function createInstagramAutomationHandler(
       name: body.name,
       matchData: body.matchData,
       whatsappSettingsPhoneId: body.whatsappSettingsPhoneId,
-      sendOnceIn24Hours: body.sendOnceIn24Hours,
-      isActive: body.isActive,
     });
 
     log.info(`[Instagram Automation Controller] Created automation ${automation.id}`);
@@ -131,8 +127,6 @@ export async function updateInstagramAutomationHandler(
       name?: string;
       matchData?: WaAutomatedReplyMatchData;
       whatsappSettingsPhoneId?: string;
-      sendOnceIn24Hours?: boolean;
-      isActive?: boolean;
     };
   }>,
   reply: FastifyReply,

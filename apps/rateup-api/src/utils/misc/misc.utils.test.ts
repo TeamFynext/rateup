@@ -96,7 +96,7 @@ describe("generateRewardShortCode", () => {
   // one, drawing from a 36-character alphabet that included all four, and a
   // private copy inside redemption.service.ts drawing from the 32-character one —
   // so two codes minted by the same feature could not be told apart by their
-  // shape and only one of them was safe to dictate. See issues.txt 20.9.
+  // shape and only one of them was safe to dictate.
   test("excludes the characters that are confusable when read aloud", () => {
     const sample = Array.from({ length: 200 }, () => generateRewardShortCode()).join("");
 
@@ -104,7 +104,7 @@ describe("generateRewardShortCode", () => {
   });
 
   // A short code is what a customer presents to collect a reward, so it does not
-  // come from Math.random, which is seeded predictably. See issues.txt 20.9.
+  // come from Math.random, which is seeded predictably.
   test("does not depend on Math.random", () => {
     const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 

@@ -10,14 +10,6 @@ import { PaginationQuery } from "../../contact/contact.schema.js";
 import { CampaignParticipant, Prisma } from "../../../../generated/prisma/client.js";
 import { CampaignNotFoundError } from "../campaign.errors.js";
 
-/**
- * Confirms the campaign is the caller's, and reports its id.
- *
- * Every function in this file used to key on an id alone. Given a campaign id, a
- * caller of any org could pull contacts, groups and whole participant lists into
- * it — and the next send then messaged those people from the caller's number.
- * See issues.txt 17.3.
- */
 async function assertCampaignInOrg(campaignId: string, orgId: string) {
   const campaign = await prisma.campaign.findFirst({
     where: { id: campaignId, team: { orgId } },
@@ -33,10 +25,6 @@ export async function createCampaignParticipantsFromGroup(
   data: CreateCampaignParticipantsFromGroupsInput,
 ) {
   await assertCampaignInOrg(campaignId, orgId);
-  // A contact group belongs to a team, and a team to an org — the group ids came
-  // straight off the request body with nothing checking whose they were, so a
-  // caller could pull another org's contacts into their own campaign.
-  // See issues.txt 17.3.
   const contactGroupMaps = await prisma.contactGroupMap.findMany({
     where: {
       contactGroupId: {
@@ -66,9 +54,6 @@ export async function createCampaignParticipantsFromContacts(
   data: CreateCampaignParticipantsFromContactsInput,
 ) {
   await assertCampaignInOrg(campaignId, orgId);
-  // Contact ids were written straight through, so any contact id the caller could
-  // name became a participant — whoever owned it. Contact carries orgId directly.
-  // See issues.txt 17.3.
   const contacts = await prisma.contact.findMany({
     where: { id: { in: data.contactIds }, orgId },
     select: { id: true },
@@ -95,8 +80,6 @@ export async function createCampaignParticipantsFromAnotherCampaign(
       campaignId: {
         in: data.campaignIds,
       },
-      // The source campaigns were read by id alone, so a whole participant list
-      // could be copied out of another org's campaign. See issues.txt 17.3.
       campaign: { team: { orgId } },
     },
     include: {
@@ -123,9 +106,6 @@ export async function createCampaignParticipantsFromAnotherCampaign(
   const campaignParticipants = await prisma.campaignParticipant.createMany({
     data: campaignParticipantsOld
       ?.filter((participant) => statusValues.includes(participant.status.toUpperCase()))
-      // The original source is carried through. Every copied participant used to
-      // be labelled GROUP, including one added individually that carries no
-      // contactGroupId at all. See issues.txt 17.8.
       ?.map(({ contactId, contactGroupId, source }) => ({
         campaignId,
         contactId: contactId,
@@ -208,14 +188,6 @@ export async function getCampaignParticipantsByCampaignId(campaignId: string, _e
   return campaignParticipants;
 }
 
-/**
- * One page of a campaign's participants.
- *
- * `page` is ZERO-based — `skip` is `page * limit` — the same unstated convention
- * as issues.txt 8.2 and 13.6. Left as it is, because the dashboard's pager is
- * built on it; stated here and defaulted in the schema so it is no longer
- * unstated. See issues.txt 17.9.
- */
 export async function getCampaignParticipantsByCampaignIdPaginated(
   campaignId: string,
   orgId: string,

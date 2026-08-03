@@ -54,7 +54,7 @@ describe("createBookDemo - whether anything reaches it", () => {
   // it: bookDemoHandler queued two emails and returned, never touching the
   // database. A demo request existed only as an email, so a dropped queue job lost
   // the lead with no record anywhere — after the requester had been told "we'll
-  // contact you soon". The handler records it first now. See issues.txt 16.3.
+  // contact you soon". The handler records it first now.
   test("is what the handler that receives demo requests calls", async () => {
     const service = await import("./bookDemo.service.js");
     const controllerSource = await import("./bookDemo.controller.js");
@@ -67,7 +67,7 @@ describe("createBookDemo - whether anything reaches it", () => {
   // offered: it required firstName, lastName, phoneNumber, companyName, teamSize,
   // preferredTime, primaryUseCase and additionalInfo, while the route collects a
   // single `name`, a `businessName`, a `phone` and an optional `message`.
-  // workEmail was the only field the two had in common. See issues.txt 16.3.
+  // workEmail was the only field the two had in common.
   test("wants exactly the fields the demo route collects", async () => {
     const accepted = Object.keys(createBookDemoInputSchema.shape);
 

@@ -238,7 +238,7 @@ describe("the super-admin gate on the three settings write paths", () => {
   // deleteWaSettingsHandler all require SUPER_ADMIN. updateWaSettingsByIdHandler —
   // PUT /:whatsappSettingsId, which writes the same row and more (fbPageId, ibaId,
   // pageAccessToken, encryption keys) — checked no role at all, so any
-  // authenticated user of the org reached it. See issues.txt 13.2.
+  // authenticated user of the org reached it.
   test("the by-id update path refuses a non super admin, like its siblings", async () => {
     m.getOrgIdAndRole.mockResolvedValue({ orgId: ORG_A, role: "AGENT" });
     const rep = reply();
@@ -289,7 +289,7 @@ describe("getWaSettingsHandler", () => {
   // every channel — to the browser of any authenticated member of the org, at any
   // role, since this route carries only checkSession. That system token sends
   // messages as the org, reads its whole message history and manages its templates
-  // and phone numbers. See issues.txt 13.2.
+  // and phone numbers.
   test("never sends an access token to the client", async () => {
     const rep = reply();
 
@@ -335,7 +335,6 @@ describe("updateWaSettingsByIdHandler", () => {
   // subscribePageToApp put the page access token in the query string, and the two
   // profile lookups put the org's decrypted WhatsApp token there too — and
   // callMetaApi trace-logs the url and dumps the whole response on any non-2xx.
-  // See issues.txt 13.3.
   test("passes every token as an auth header, never in a query string", async () => {
     await updateWaSettingsByIdHandler(
       request({
@@ -354,7 +353,7 @@ describe("updateWaSettingsByIdHandler", () => {
 
   // The dashboard no longer receives pageAccessToken in the channel list (13.2),
   // so it cannot send one back for a page it did not just pick. The stored token
-  // is used instead of refusing. See issues.txt 13.2.
+  // is used instead of refusing.
   test("falls back to the stored page token when the client sends none", async () => {
     m.getWaSettingsById.mockResolvedValue(settingsRow({ pageAccessToken: "stored-page-token" }));
 
@@ -399,7 +398,7 @@ describe("updateWaSettingsByIdHandler", () => {
     expect(m.callMetaApi).not.toHaveBeenCalled();
   });
 
-  // 404, not the 500 this used to fall through to. See issues.txt 13.7.
+  // 404, not the 500 this used to fall through to.
   test("answers 404 when the channel does not exist", async () => {
     m.getWaSettingsById.mockResolvedValue(null);
     const rep = reply();
@@ -417,7 +416,6 @@ describe("updateWaSettingsByIdHandler", () => {
   // so an authenticated user of any org could rewrite another org's channel —
   // including pointing its fbPageId, ibaId and pageAccessToken at a page they
   // control, which redirects that org's inbound Facebook and Instagram traffic.
-  // See issues.txt 13.1.
   test("answers 404 for a channel belonging to another org", async () => {
     m.getWaSettingsById.mockResolvedValue(null);
     const rep = reply();
@@ -554,7 +552,7 @@ describe("the Meta sync handlers", () => {
   // whatsappSettingsId from the path or query and never loads the row to compare
   // its orgId to request.user.orgId. The sync ones then call Meta with the VICTIM
   // org's access token, so this both reads their assets and spends their rate
-  // limit. Same IDOR family as issues.txt 1.1, 11.1 and 12.15. See issues.txt 13.1.
+  // limit. Same IDOR family as
   test.each([
     [
       "the page sync",
@@ -579,7 +577,7 @@ describe("the Meta sync handlers", () => {
     // Each of these now passes orgId down to the service, which resolves the
     // channel with it. They used to call Meta with the VICTIM org's access token,
     // reading its pages, ad accounts, ads, lead forms and pixels and spending its
-    // rate limit. See issues.txt 13.1.
+    // rate limit.
     const scoped = [
       ...m.getFbPagesFromWa.mock.calls,
       ...m.getAdAccountsFromWa.mock.calls,
@@ -615,7 +613,6 @@ describe("getMetaAssetsHandler", () => {
   // sent the blob verbatim. Any authenticated user with another org's channel id
   // got working page tokens for that org's Facebook pages. getMetaAssets is
   // org-scoped now and reports null for a channel the caller does not own.
-  // See issues.txt 13.1.
   test("answers 404 for another org's channel, sending no tokens", async () => {
     m.getMetaAssets.mockResolvedValue(null);
     const rep = reply();

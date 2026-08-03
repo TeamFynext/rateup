@@ -52,12 +52,6 @@ import {
 } from "../../utils/spreadsheet.js";
 import { write, type CellValue } from "hucre";
 import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
-//used in zapier
-/**
- * A contact that is not the caller's answers 404, indistinguishable from one that
- * never existed. Prisma's P2025 — raised when an extended `where` matched nothing —
- * means the same thing on this module's writes. See issues.txt 18.5 and 18.10.
- */
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
   if (error instanceof ContactNotFoundError) {
     return reply.code(404).send({ error: error.message });
@@ -125,12 +119,11 @@ export async function createContactHandler(
     // match no inner condition, and leave the handler returning having sent
     // nothing — which fastify's async wrapper turns into an empty 200. A
     // foreign-key violation was reported to the client as success with no body.
-    // Same shape as issues.txt 3.2. See issues.txt 18.17.
     //
     // The loyalty branch above answers 201 BEFORE it looks up and dispatches the
     // welcome message, deliberately — the user should not wait on Meta. So a
     // failure after that point must not try to reply again: `reply.sent` guards
-    // the FST_ERR_REP_ALREADY_SENT this used to raise. See issues.txt 18.18.
+    // the FST_ERR_REP_ALREADY_SENT this used to raise.
     log.error(error);
     if (reply.sent) return;
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -184,8 +177,6 @@ export async function getContactByIdHandler(
 ) {
   try {
     const contact = await getContactById(request.params.contactId, request.user.orgId);
-    // A contact another org owns reports as absent, and absent is a 404 — the two
-    // are indistinguishable from outside. See issues.txt 18.5.
     if (!contact) return reply.code(404).send({ error: "Contact not found" });
     return reply.code(200).send(contact);
   } catch (error) {
@@ -221,8 +212,6 @@ export async function updateContactByIdHandler(
     );
     return reply.code(200).send(contact);
   } catch (error) {
-    // See issues.txt 18.17 — the inner branch had no else, so any other prisma
-    // error left the reply unsent and fastify answered an empty 200.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return reply.code(400).send({ error: "Contact already exist" });
     }
@@ -255,8 +244,6 @@ export async function deleteManyContactsHandler(
 ) {
   try {
     const { contactIds } = request.body;
-    // `DELETE /api/contact` takes an arbitrary id array; without the org it
-    // deleted every one of them, whoever they belonged to. See issues.txt 18.5.
     const res = await deleteManyContacts(contactIds, request.user.orgId);
     return reply.code(200).send(res);
   } catch (error) {
@@ -305,10 +292,6 @@ export async function importCSVContactsHandler(request: FastifyRequest, reply: F
       }
     }
     const res = await importCSVContacts(file, orgId, tags, update, undefined, hasHeaderRow);
-    // A file where nothing at all could be imported is a 400. A file where SOME
-    // rows imported is a 200 carrying both halves: the valid rows were written,
-    // and telling the user "validation failed" invited them to fix one row and
-    // re-upload, which duplicated the work. See issues.txt 18.13 and 18.19.
     if (res.status === "error") {
       return reply
         .code(400)

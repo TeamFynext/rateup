@@ -750,16 +750,6 @@ export async function getTeamIdsByUserId(userId: string) {
 
   return teams.map(({ teamId }) => teamId) || [];
 }
-/**
- * The teams behind a set of survey-team-map ids, restricted to teams the caller
- * belongs to.
- *
- * This used to be a bare `findMany({ where: { id: { in: mapId } } })` with no
- * user or org condition, and its one caller — the bulk response export — took
- * the map ids straight from the request body. So a caller could name another
- * organisation's map ids and resolve them to that organisation's teams.
- * See issues.txt 37.1.
- */
 export async function getTeamIdsBySurveyMapId(mapId: string[], userId: string) {
   const teams = await prisma.surveyTeamMap.findMany({
     where: {

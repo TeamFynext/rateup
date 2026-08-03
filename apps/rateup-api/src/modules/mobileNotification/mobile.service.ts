@@ -50,11 +50,6 @@ export async function getTokensByOrgId(orgId: string): Promise<string[]> {
   return tokens.map((token) => token.expoToken);
 }
 
-// The listing route used getTokensByOrgId, which is the org-wide read the
-// server-side senders need — so `GET /api/mobilenotification` handed every
-// device address in the organisation to any member who asked. An Expo push
-// token is a send credential and a durable device identifier, and no client
-// needs another device's. See issues.txt 42.1.
 export async function getTokensByUserId(userId: string, orgId: string): Promise<string[]> {
   if (!userId || !orgId) {
     throw new Error("Missing userId or orgId");
@@ -82,9 +77,6 @@ export async function deleteTokenByUserId(userId: string, expoToken: string) {
 
 const expoPushUrl = process.env.EXPO_PUSH_URL;
 
-// Expo caps a push request at 100 messages. The whole org's token list used to
-// go in one request, so an organisation past that size had its notifications
-// rejected wholesale — silently, by the swallow below. See issues.txt 42.2.
 const EXPO_BATCH_SIZE = 100;
 
 interface ExpoTicket {
@@ -104,8 +96,6 @@ export async function sendPushNotification(
     return;
   }
 
-  // The same predicate the route schema enforces, rather than a looser
-  // startsWith. See issues.txt 42.4.
   const validTokens = expoPushTokens.filter(isExpoPushToken);
 
   if (validTokens.length === 0) {

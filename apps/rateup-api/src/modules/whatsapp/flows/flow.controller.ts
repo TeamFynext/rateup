@@ -70,10 +70,6 @@ export async function getFlowsHandler(
     const flows = await getFlowsFromDb(orgId, userId!);
     res.send(flows);
   } else {
-    // Unreachable through the route today (the querystring schema is an enum
-    // defaulting to "wa"), but leaving the reply untouched made fastify send a
-    // bare 200 that a client could not tell from a real answer.
-    // See issues.txt 11.13.
     res.status(400).send({ message: `Unknown flow source: ${req.query.source}` });
   }
 }
@@ -84,8 +80,6 @@ export async function getFlowHandler(
   }>,
   res: FastifyReply,
 ) {
-  // NOTE: the route declares this param as ":waFlowId" but it is our own
-  // dbFlowId — getFlowFromDb queries by dbFlowId. See issues.txt 11.16.
   const { waFlowId } = req.params;
   const { orgId } = req.user;
 
@@ -150,9 +144,6 @@ export async function importFlowsHandler(
 ) {
   const { orgId } = req.user;
   const { waFlowIds, mapData } = req.body;
-  // TODO: convert to prisma transaction. STILL OPEN — a failure partway through
-  // leaves the earlier flows imported and the caller cannot tell which.
-  // See issues.txt 11.14.
   log.trace("Importing flows: %o", waFlowIds);
   for (const waFlowId of waFlowIds) {
     log.trace("fetching flow from wa %s", waFlowId);
@@ -181,8 +172,6 @@ export async function importFlowsHandler(
     });
   }
   log.trace("Imported flows successfully!");
-  // Sends its own 201 rather than leaving fastify to fall back to a bare 200.
-  // See issues.txt 11.13.
   res.status(201).send();
 }
 
@@ -232,9 +221,6 @@ export async function createFlowHandler(
   } catch (error) {
     log.error({ err: error }, "Error creating flow");
     if (createdFlowId) {
-      // The Meta flow is created first, so every failure after that point used
-      // to leave one behind that nothing in our database pointed at.
-      // See issues.txt 11.14.
       await deleteOrphanedMetaFlow(orgId, createdFlowId);
     }
     if (error instanceof GraphApiError) {
@@ -257,10 +243,6 @@ export async function updateFlowHandler(
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
 
-  // Wrapped, consistent with the rest of the file. This handler had no
-  // try/catch at all, so a service failure escaped to fastify's default error
-  // handler and a flow id matching nothing answered 500 rather than 404.
-  // See issues.txt 11.4.
   try {
     log.trace("updating flow %o", req.body);
     const previousFlow = await getFlowFromDb(dbFlowId, orgId);
@@ -343,9 +325,6 @@ export async function updateFlowMetaDataHandler(
     if (!waSettings) {
       throw new Error(`WhatsApp settings not found for org: ${orgId}`);
     }
-    // Meta first, then our copy. The other order left the local row carrying the
-    // new name while WhatsApp still had the old one whenever Meta refused, with
-    // nothing to tell the caller which half took. See issues.txt 11.14.
     const { data } = await callMetaApi(
       `/${previousFlow.flowId}`,
       "POST",
@@ -360,8 +339,6 @@ export async function updateFlowMetaDataHandler(
     res.status(204).send();
   } catch (error) {
     log.error({ err: error }, "Error Updating flow meta data");
-    // send(error.message), not send(error): an Error's own properties are
-    // non-enumerable, so the client used to receive {}. See issues.txt 11.14.
     res.status(500).send({ message: error instanceof Error ? error.message : "Unknown error" });
   }
 }
@@ -424,8 +401,6 @@ export async function cloneFlowHandler(
     });
     let waFlow = await cloneFlow(previousFlow, flowId, userId!, teamId);
     if (typeof waFlow === "string") {
-      // The Meta clone already exists at this point, so it is deleted rather
-      // than left behind with nothing pointing at it. See issues.txt 11.14.
       await deleteOrphanedMetaFlow(orgId, flowId);
       return res.status(400).send({ message: waFlow });
     }
@@ -475,9 +450,6 @@ export async function deleteFlowHandler(
     return res.status(404).send({ message: "Flow not found" });
   }
   if (flow.status === WaFlowStatus.PUBLISHED) {
-    // 409, not a bare `throw`: this is a legitimate refusal with an explanation
-    // the caller can act on, and it used to arrive as an opaque 500.
-    // See issues.txt 11.4.
     return res.status(409).send({
       message: "Cannot delete a published flow. Deprecate it instead.",
     });
@@ -516,7 +488,6 @@ export async function deprecateFlowHandler(
     return res.status(404).send({ message: "Flow not found" });
   }
   if (flow.status === WaFlowStatus.DRAFT) {
-    // See the note in deleteFlowHandler. issues.txt 11.4.
     return res.status(409).send({
       message: "Cannot deprecate a draft flow. Delete it instead.",
     });
@@ -540,8 +511,6 @@ export async function deprecateFlowHandler(
     await deleteFlowInDb(dbFlowId, orgId);
   }
 
-  // Sends its own 204, matching deleteFlowHandler. Leaving the reply untouched
-  // made fastify fall back to a bare 200. See issues.txt 11.13.
   res.status(204).send();
 }
 
@@ -565,8 +534,6 @@ export async function publishFlowHandler(
   await publishFlowInWa(orgId, flow.flowId);
   await updateFlowInDb(orgId, dbFlowId, { status: WaFlowStatus.PUBLISHED });
 
-  // Sends its own 204 rather than leaving fastify to fall back to a bare 200.
-  // See issues.txt 11.13.
   res.status(204).send();
 }
 
@@ -589,15 +556,8 @@ export async function sendFlowHandler(
       whatsappSettingsPhoneId,
     };
     if (orgId) {
-      // Awaited: an unawaited failure here became an unhandled promise
-      // rejection rather than a failed request. See issues.txt 11.15.
       await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     }
-    // Both the session and the flow now come from the path dbFlowId. The session
-    // used to be set up from body.flowId (Meta's id) with nothing checking the
-    // two named the same flow, so a mismatched pair opened a session against one
-    // survey and sent a different flow — answers landed on the wrong survey.
-    // See issues.txt 11.15.
     const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(dbFlowId, orgId);
     if (!dbFlow) {
       return reply.status(404).send({ message: "Flow not found" });
@@ -616,9 +576,6 @@ export async function sendFlowHandler(
         language: dbFlow?.survey?.languages[0],
       });
     }
-    // sendFlow catches its own failures and reports false. Discarding that told
-    // the user the flow went out when WhatsApp had rejected it.
-    // See issues.txt 11.4.
     const sent = await sendFlow(serviceParam);
     if (!sent) {
       return reply.status(502).send({ message: "The flow could not be sent to WhatsApp" });

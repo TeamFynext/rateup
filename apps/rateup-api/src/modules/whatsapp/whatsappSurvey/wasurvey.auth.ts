@@ -53,16 +53,6 @@ function readWhatsappConversationMax(features: unknown): number | undefined {
   return typeof count.max === "number" ? count.max : undefined;
 }
 
-// Returns true when the org is still WITHIN its conversation allowance.
-// Monthly plans cap at `conversation.count.max` per month; annual (pooled) plans
-// cap at `max * 12` across the year. Both branches now measure conversations.
-//
-// Renamed from checkConversationLimitExceeded, which said the opposite of what it
-// returns. Every caller was already negating it correctly, so the logic never
-// broke — but the next one to read the name and write
-// `if (await checkConversationLimitExceeded(orgId)) return` would have blocked
-// every org within its limit and let through every org over it.
-// See issues.txt 17.7.
 export async function checkConversationLimitAvailable(orgId: string) {
   const usage = await prisma.usageStats.findUnique({
     where: {

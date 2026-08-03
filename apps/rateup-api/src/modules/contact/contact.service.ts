@@ -99,14 +99,6 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
       skipDuplicates: true,
     });
   }
-  // Awaited. All three of these used to be launched without `await` while
-  // everything around them was awaited, so createContact returned — and the
-  // handler answered 201 — before the group memberships and the inbox assignment
-  // had been written. A client that created a contact with groups and assignees
-  // and immediately re-read it saw neither, and a rejection in any of the three
-  // was an unhandled promise rejection that never reached the handler's catch, so
-  // the request still reported success. Same shape as issues.txt 17.4.
-  // See issues.txt 18.2.
   if (contactGroupIds?.length) {
     await addExistingContactsToMultipleGroups([user.id], contactGroupIds, user.orgId);
   }
@@ -191,15 +183,6 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
   if (user) return user;
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
-  // The same four relation fields createContact strips. This variant used to strip
-  // only customFields, so labels, contactGroupIds and assignedUserIds stayed in
-  // `rest` and were spread straight into prisma.contact.create — a validation
-  // error rather than a contact for any caller that supplied them. Two functions
-  // taking the same input type and disagreeing about it is the trap; today's
-  // callers happen not to pass them. They are dropped rather than honoured,
-  // because this is the "get or create" path and an existing contact would ignore
-  // them anyway — honouring them only on the create branch would be worse.
-  // See issues.txt 18.3.
   const {
     customFields,
     labels: _labels,
@@ -261,10 +244,6 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
       skipDuplicates: true,
       data: batch,
     });
-    // `for..of`, not `batchCreated.forEach(async ...)`. forEach does not await its
-    // callback, so every label, group and assignee write below was fire-and-forget:
-    // the function could return before they ran, and a rejection was unhandled.
-    // See issues.txt 18.4.
     for (const contact of batchCreated) {
       const inputData = contacts.find((c) => contact.phone === c.phone);
       if (!inputData) continue;
@@ -321,14 +300,6 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
       });
     }
 
-    // Rows whose contact was NOT created are skipped rather than written with an
-    // empty contactId. createManyAndReturn runs with skipDuplicates, so a contact
-    // whose phone is already in the org does not come back — and the old
-    // `?.id || ""` fallback put an empty string into a createMany against a uuid
-    // foreign key. One such row failed the whole custom-field batch on a
-    // foreign-key violation, so NONE of the custom fields landed, including the
-    // ones belonging to contacts that were created successfully.
-    // See issues.txt 18.4.
     const customFieldValues = contacts.flatMap((contact) => {
       const created = createdContacts.find((c) => c.phone === contact.phone);
       if (!created) return [];
@@ -394,15 +365,6 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
   return createdContacts;
 }
 
-/**
- * One contact, scoped to the org asking for it.
- *
- * Every by-id entry point in this module used to take an id from the request and
- * hand it to prisma with no org in the where clause — so a contact id was enough
- * to read a full customer record (phone, email, notes, labels), rewrite it, delete
- * it, or bulk-close it. This is the instance of that family that reaches customer
- * PII most directly. See issues.txt 18.5.
- */
 export async function getContactById(contactId: string, orgId: string) {
   const user = await prisma.contact.findFirst({
     where: {
@@ -424,12 +386,6 @@ export async function getContactById(contactId: string, orgId: string) {
   });
   return user;
 }
-/**
- * A contact by id with NO org filter, for webhook paths where the caller is a
- * platform rather than a user — there is no requester org to scope against, so
- * this is not the IDOR that getContactById was. Named so that it cannot be
- * reached for by accident from a request handler. See issues.txt 18.5.
- */
 export async function getContactByIdForWebhook(contactId: string) {
   return await prisma.contact.findUnique({ where: { id: contactId } });
 }
@@ -440,9 +396,6 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     limit = 500,
     search = "",
     sort = "createdAt",
-    // `desc` was declared by the schema, passed by the route, left sitting in
-    // `filter` and never read — so the orderBy was hard-coded descending and
-    // ascending sort was impossible, with no error. See issues.txt 18.8.
     desc = "desc",
     // type = ContactGroupType.NORMAL,
     ...filter
@@ -469,12 +422,6 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
           });
           break;
         }
-        // createdAt used to share the case above, so it was built as
-        // `{ contains, mode }` — prisma has no `contains` for a DateTime and
-        // rejects `mode` on non-strings, so filtering the contact list by created
-        // date raised a validation error and the handler answered 500. It has
-        // never worked. A calendar date means the whole of that day.
-        // See issues.txt 18.7.
         case "createdAt": {
           const day = new Date(value);
           if (!Number.isNaN(day.getTime())) {
@@ -539,10 +486,6 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     }
   }
   if (search?.length > 0) {
-    // The search term's two alternatives are the one thing that genuinely ORs — a
-    // match on either the name or the phone. Nested inside the AND below, so
-    // adding a search term to an active filter narrows the result set instead of
-    // widening it. See issues.txt 18.6.
     filterData.push({
       OR: [
         { name: { contains: search, mode: "insensitive" } },
@@ -550,29 +493,12 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
       ],
     });
   }
-  // Define the search condition
-  // `query?.type`, not `query.type`. The destructure above has a `query ?? {...}`
-  // default, so a missing query is handled — and eleven lines later this read the
-  // parameter directly, defeating it. See issues.txt 18.9.
-  //
-  // The loyalty restriction is pushed onto the SAME array as the filters rather
-  // than spread alongside them as its own `AND`. It used to be a separate key,
-  // which was harmless while the filters lived under `OR` — and would silently
-  // overwrite them now that both want `AND`.
   if (query?.type === ContactGroupType.LOYALTY) {
     // Contact -> CustomerLoyaltyAccount is a list relation (`loyaltyAccounts`);
     // "is a loyalty member" is therefore `some`, not `isNot: null`.
     filterData.push({ loyaltyAccounts: { some: {} } });
   }
 
-  // AND, not OR. Every filter — name, phone, email, consent, group, source,
-  // lifecycle, label — was pushed onto one array and that array became
-  // `OR: filterData`, so filters did the opposite of what a filter is for: asking
-  // for "named ann AND who consented" returned everyone named ann PLUS everyone
-  // who consented, and adding a search term widened the set again. Any workflow
-  // that builds a segment by narrowing on several attributes produced a list that
-  // was wrong in the dangerous direction — too many people — and that list is what
-  // picks campaign recipients. See issues.txt 18.6.
   const searchCondition: Prisma.ContactWhereInput =
     filterData?.length > 0 ? { orgId, AND: filterData } : { orgId };
   // Count total matching contacts
@@ -654,9 +580,6 @@ export async function getContactByPhoneNumberAndOrgId(phone: string, orgId: stri
 
 //used in zapier controller also
 export async function deleteContactById(contactId: string, orgId: string) {
-  // Extended `where` — unique id plus the org filter — so Prisma raises P2025
-  // rather than deleting when the contact is not the caller's.
-  // See issues.txt 18.5.
   const user = await prisma.contact.delete({
     where: {
       id: contactId,
@@ -712,17 +635,9 @@ export async function updateContactById(
         orgId,
       },
     }));
-  // Reports a typed not-found, which the handler answers as a 404. It used to read
-  // `contactRecord.waMessageAssignStatus` off a findUnique result that is null for
-  // an unknown id — a 500 "Something went wrong" for a stale id, while a valid id
-  // from another org succeeded. See issues.txt 18.5 and 18.10.
   if (!contactRecord) {
     throw new ContactNotFoundError(`Contact ${contactId} not found`);
   }
-  // Guarded on presence, not on length. `labels: []` used to fall straight through
-  // this block, so removing a contact's last label through this endpoint silently
-  // did nothing and a reload brought them back — while the two blocks below it
-  // (groups, assignees) handle the empty case correctly. See issues.txt 18.11.
   if (contact.labels) {
     await prisma.contactLabelMap.deleteMany({
       where: {
@@ -1219,13 +1134,6 @@ export async function getOrCreateContactByPhone(
       return { contact, conversation };
     }
   } catch (e) {
-    // Rethrown, as getOrCreateContactByPsid already does. Both of these used to
-    // swallow their failure into log.error and resolve to undefined, while every
-    // caller destructures `{ contact, conversation }` from the result — so a
-    // transient database error during an inbound message became "Cannot
-    // destructure property 'contact' of undefined" several frames away, and the
-    // message was dropped with a misleading log. The same operation retried on one
-    // platform and silently dropped on two others. See issues.txt 18.16.
     log.error({ err: e }, "Error in getOrCreateContactByPhone");
     throw e;
   }
@@ -1306,7 +1214,6 @@ export async function getOrCreateContactByIgsId(
       return { contact, conversation };
     }
   } catch (e) {
-    // See issues.txt 18.16.
     log.error({ err: e }, "Error in getOrCreateContactByIgsId");
     throw e;
   }
@@ -1417,8 +1324,6 @@ export async function getOrCreateContactByPsid(
 }
 
 export async function deleteManyContacts(contactIds: Array<string>, orgId: string) {
-  // `DELETE /api/contact` takes an arbitrary id array. Without the org filter it
-  // deleted every one of them, whoever they belonged to. See issues.txt 18.5.
   const contacts = await prisma.contact.findMany({
     where: {
       id: {
@@ -1566,11 +1471,6 @@ export async function importCSVContacts(
     data = rowsToObjects(rows, noHeaderColumnOrder(tags));
   }
 
-  // An empty or header-only file used to return undefined (a bare `return`), and
-  // both callers immediately read `res.status` — so the user was shown
-  // `Cannot read properties of undefined (reading 'status')` in place of "the file
-  // was empty", passed through verbatim, which also leaked the shape of the
-  // internal code. See issues.txt 18.19.
   if (data.length === 0) {
     log.info("No data rows available");
     return { data: [], status: "error", message: "The file contained no contacts." };
@@ -1587,11 +1487,6 @@ export async function importCSVContacts(
 
   const res = await createContactsFromCsv(contacts, orgId, tags, updateExisting, contactGroupId);
 
-  // A partly-valid file is a PARTIAL success, not a failure. It used to import the
-  // valid rows and then report `status: "error"`, so a file with 500 good rows and
-  // one bad one imported all 500 and told the user the upload failed validation —
-  // and the natural response, fixing the one row and re-uploading, either
-  // duplicated the work or tripped "Contact already exist". See issues.txt 18.13.
   if (errorContact.length > 0) {
     return {
       data: res,
@@ -1685,14 +1580,6 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
             orgId,
           },
         },
-        // The same field set the create writes, minus the identity keys. It used
-        // to set exactly `{ name, aiWaChat }` while the create spread the whole
-        // row — so the stated purpose of the update-existing toggle, refreshing
-        // contacts from a corrected spreadsheet, refreshed only the name. A
-        // corrected email or a changed source was silently discarded and the
-        // import still reported success. Only the fields the row actually carries
-        // are written, so a sparse spreadsheet does not blank what is already
-        // stored. See issues.txt 18.14.
         update: {
           aiWaChat,
           ...Object.fromEntries(
@@ -1811,10 +1698,6 @@ export const handleContactConsent = async (orgId: string, phone: string, consent
       orgId,
     },
   });
-  // A consent callback for a number the org does not have is a no-op, not a
-  // failure — it used to read `.consent` off null and become a TypeError, and
-  // later a thrown Error, on a webhook path where neither is actionable.
-  // See issues.txt 18.15.
   if (!contact_consent) {
     log.info({ orgId }, "Consent callback for a phone number this org does not have");
     return false;
@@ -1880,10 +1763,6 @@ export async function updateLifecycleStageofContacts(
   orgId: string,
   contactIds: string[],
 ) {
-  // Validated BEFORE the write, and against the caller's org. The updateMany ran
-  // first and the lookup afterwards, with `if (!lifecycle) return` — so an unknown
-  // id left the contacts pointing at a lifecycle that does not exist and skipped
-  // the CRM mirror, with nothing reported to the caller. See issues.txt 18.12.
   const lifecycle = await prisma.lifecycle.findFirst({
     where: {
       id: lifecycleId,
@@ -1979,10 +1858,6 @@ export async function bulkUpdateWaMessageAssignStatus(
   // tickets underneath it simply close.
   const markingSpam = requestedStatus === WaMessageAssignStatus.SPAM;
   const waMessageAssignStatus = markingSpam ? WaMessageAssignStatus.CLOSED : requestedStatus;
-  // Org-filtered on the read AND the write. Without it a mixed-org id list was
-  // written wholesale, and the inbox-counter movement below was then posted
-  // against `contacts[0].orgId` — one org's tab counts corrupted by another org's
-  // request. See issues.txt 18.5.
   const contacts = await prisma.contact.findMany({
     where: {
       id: { in: contactIds },
@@ -2060,10 +1935,6 @@ export async function bulkUpdateWaMessageAssignStatus(
     }
   });
 
-  // Was `contacts[0].orgId` — the whole inbox-counter movement was posted against
-  // whichever org happened to own the first contact in a mixed-org id list. The
-  // read above is org-filtered now, so the caller's org IS every contact's org.
-  // See issues.txt 18.5.
   const newField = mapStatusToField(waMessageAssignStatus);
   const transitions: Partial<Record<StatsField, number>> = {};
 

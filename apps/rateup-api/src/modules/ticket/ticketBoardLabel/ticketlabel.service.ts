@@ -9,15 +9,6 @@ function isDuplicateName(error: unknown): boolean {
   );
 }
 
-/**
- * Creates a label, letting the database decide uniqueness.
- *
- * This used to read the row first and throw its own 409, with the create in a
- * separate statement and no transaction — so two concurrent creates of the same
- * name both passed the pre-check and the loser tripped the real constraint, whose
- * uncaught P2002 reached the global handler as a 500: the opposite of the 409
- * written a few lines above it. See issues.txt 28.6.
- */
 export async function createLabel(ticketBoardId: string, data: CreateLabelSchema) {
   try {
     return await prisma.ticketBoardLabel.create({
@@ -42,13 +33,6 @@ export async function getLabels(ticketBoardId: string) {
   });
 }
 
-/**
- * Renames or recolours a label.
- *
- * Same shape as createLabel: the uniqueness pre-check raced, and a label that did
- * not exist skipped the check entirely and then failed at the update with a raw
- * P2025 rather than a 404. See issues.txt 28.6.
- */
 export async function updateLabel(id: string, data: UpdateLabelSchema) {
   try {
     return await prisma.ticketBoardLabel.update({

@@ -110,7 +110,7 @@ describe("getEmailBodyTemplate", () => {
   // The switch had no default, so an unrecognised purpose returned undefined and
   // became `html: undefined` on the outgoing message — an email delivered with no
   // body, answered 200. `purpose` is a z.enum on the schemas now, and this throw
-  // covers any other caller. See issues.txt 25.9.
+  // covers any other caller.
   test("throws for an unrecognised purpose rather than rendering nothing", () => {
     expect(() => getEmailBodyTemplate("PasswordReset", { otp: "1" })).toThrow(/No email template/);
   });
@@ -141,7 +141,7 @@ describe("getEmailBodyTemplate", () => {
 
 describe("createGeneralEmailBodyTemaple", () => {
   // Every value used to be interpolated raw, which is what made 25.1's relay a
-  // phishing tool rather than merely a spam tool. See issues.txt 25.12.
+  // phishing tool rather than merely a spam tool.
   test("escapes the body", () => {
     const html = createGeneralEmailBodyTemaple(
       "<img src=x onerror=alert(1)>",
@@ -227,7 +227,6 @@ describe("createEmailBodyOTPGeneration", () => {
   // NOTE: surveyName still comes from the caller-supplied `data` blob on a public
   // route and nothing checks it against the survey the userId belongs to — but it
   // is escaped, so it can no longer bring markup into the message.
-  // See issues.txt 25.12.
   test("escapes the survey name", () => {
     const html = createEmailBodyOTPGeneration({
       otp: "1",

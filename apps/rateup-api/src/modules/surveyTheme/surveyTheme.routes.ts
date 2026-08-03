@@ -25,11 +25,6 @@ const publicRouteOptions: CustomRouteShortHandOptions = {
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    // The hook used to ASSIGN rather than append, so any preHandler a route
-    // declared for itself was silently discarded. Nothing in this file declares
-    // one today, but this hook is what the whole module's authentication rests
-    // on and the next person to add one would find it removed without a warning.
-    // See issues.txt 33.5.
     const declared = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler
       : routeOptions.preHandler
@@ -67,10 +62,4 @@ export async function surveyThemeRoutes(server: FastifyInstance) {
   );
 
   server.delete("/:webSurveyThemeId", { schema: { params: themeIdParamsSchema } }, deleteTheme);
-
-  // REMOVED: POST /updateWebSurveyThemes — a root-org endpoint that claimed to
-  // migrate every theme in the database and was a no-op reporting success, whose
-  // one real statement had been commented out. Re-enabling it would have read
-  // every row and rewritten it in one unbatched transaction, aborting on the
-  // first row seeded from the current defaultTheme. See issues.txt 33.6.
 }

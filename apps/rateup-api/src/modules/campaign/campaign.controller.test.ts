@@ -133,7 +133,6 @@ describe("createCampaignHandler", () => {
   // be planted under another org's team, which then owned it for every other
   // endpoint in this module, and every send built on it ran as that org.
   // createCampaign resolves the team against the caller's org now.
-  // See issues.txt 17.3.
   test("refuses to create a campaign under a team belonging to another org", async () => {
     m.create.mockRejectedValue(new CampaignNotFoundError("Team not found"));
     const rep = reply();
@@ -149,7 +148,7 @@ describe("createCampaignHandler", () => {
 
   // No try/catch, unlike sendCampaignHandler in the same file — a service failure
   // escaped to fastify's default handler rather than becoming a reply. Same family
-  // as issues.txt 3.5. See issues.txt 17.6.
+  // as
   test("answers 500 for a creation failure, rather than letting it escape", async () => {
     m.create.mockRejectedValue(new Error("db down"));
     const rep = reply();
@@ -197,7 +196,7 @@ describe("getCampaignsHandler", () => {
   // that campaign whoever owned it — template body included — and naming a team id
   // returned that team's campaigns. Both branches carry the caller's org now, and a
   // campaign the org does not own reports as absent: 404, indistinguishable from
-  // one that never existed. See issues.txt 17.3.
+  // one that never existed.
   test("answers 404 for a campaign belonging to another org", async () => {
     m.byId.mockResolvedValue(undefined);
     const rep = reply();
@@ -238,7 +237,6 @@ describe("updateCampaignByIdHandler and deleteCampaignByIdHandler", () => {
 
   // Neither handler read request.user, so neither could be checking ownership — a
   // campaign id was all it took to rewrite or delete another org's campaign.
-  // See issues.txt 17.3.
   test("both handlers carry the caller's org", async () => {
     await updateCampaignByIdHandler(request({ body: {} }), reply());
     await deleteCampaignByIdHandler(request(), reply());
@@ -249,7 +247,7 @@ describe("updateCampaignByIdHandler and deleteCampaignByIdHandler", () => {
 
   // The service uses an extended `where` — unique id plus the org filter — so
   // Prisma raises P2025 rather than writing when the campaign is not the caller's.
-  // That becomes a 404, not a 500. See issues.txt 17.3.
+  // That becomes a 404, not a 500.
   test.each([
     ["update", (rep: any) => updateCampaignByIdHandler(request({ body: {} }), rep)],
     ["delete", (rep: any) => deleteCampaignByIdHandler(request(), rep)],
@@ -264,7 +262,7 @@ describe("updateCampaignByIdHandler and deleteCampaignByIdHandler", () => {
     expect(rep.status).toHaveBeenCalledWith(404);
   });
 
-  // No try/catch on either. See issues.txt 17.6.
+  // No try/catch on either.
   test("answers 500 for a delete failure, rather than letting it escape", async () => {
     m.delete.mockRejectedValue(new Error("db down"));
     const rep = reply();
@@ -393,7 +391,7 @@ describe("sendCampaignHandler", () => {
   // INACTIVE branches never fetched the campaign at all. A campaign id was enough
   // to fire another org's campaign at their contacts, from their WhatsApp number,
   // on their bill. The campaign is resolved once, up front, and every branch works
-  // from it. See issues.txt 17.3.
+  // from it.
   test("refuses to fire a campaign belonging to another org", async () => {
     m.byId.mockResolvedValue(undefined);
     const rep = reply();
@@ -427,7 +425,7 @@ describe("sendCampaignHandler", () => {
 
   // enqueueCampaignMessage reports { status, message } and the handler discarded
   // it, answering "request accepted" either way — while the campaign row was
-  // already marked QUEUING, so the UI showed it queued forever. See issues.txt 17.4.
+  // already marked QUEUING, so the UI showed it queued forever.
   test("reports a failed enqueue, and rolls the campaign back", async () => {
     m.enqueue.mockResolvedValue({ status: false, message: "Campaign not scheduled" });
     const rep = reply();
@@ -455,7 +453,7 @@ describe("sendCampaignHandler", () => {
   // The campaign was marked DEQUEUING and the dequeue requested before anything
   // checked whether a queue or dequeue was already in progress — that guard sat
   // below, after the INACTIVE branch had already returned, so it could not protect
-  // the cancel path. It is above every branch now. See issues.txt 17.6.
+  // the cancel path. It is above every branch now.
   test("refuses to switch a campaign off while it is mid-queue", async () => {
     m.byId.mockResolvedValue({ id: CAMPAIGN_ID, status: CampaignStatus.QUEUING });
     const rep = reply();
@@ -536,7 +534,7 @@ describe("the reporting handlers", () => {
   // The one that leaked customer data: the export carries every participant's name
   // and phone number, and neither handler read request.user — a campaign id was all
   // it took to download another org's contact list, and the same for the survey
-  // responses beside it. See issues.txt 17.3.
+  // responses beside it.
   test("both reporting handlers carry the caller's org", async () => {
     await getResponseExcelByCampaignByIdHandler(request({ query: {} }), reply());
     await getResponseByCampaignByIdHandler(request(), reply());
@@ -556,7 +554,7 @@ describe("the reporting handlers", () => {
 
   // Both error paths sent the caught Error itself. Its own properties are
   // non-enumerable, so the client received {} — no message, no code, nothing to
-  // show or log. Same shape as issues.txt 11.14. See issues.txt 17.6.
+  // show or log.
   test("sends a failure as a body that names what went wrong", async () => {
     m.stats.mockRejectedValue(new Error("db down"));
     const rep = reply();

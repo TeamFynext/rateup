@@ -14,14 +14,6 @@ export async function addExpoToken(
     reply.status(401).send({ error: "Missing user" });
     return;
   }
-  // This was the one handler in the file with no try/catch, so a failed connect
-  // — a user or org row that has since gone — escaped to the global error
-  // handler and the client got a different error shape from this route than
-  // from its two neighbours. It also answered with the whole stored row, so the
-  // token and the internal ids were echoed back to the device that had just
-  // sent them, putting the token in a second set of logs and captures.
-  // The `if (!expoToken)` guard that used to sit above is gone: the route
-  // schema requires the field, so it was unreachable. See issues.txt 42.5.
   try {
     await addToken(expoToken, userId, orgId);
     reply.status(201).send({ ok: "Token registered" });
@@ -38,8 +30,6 @@ export async function getExpoTokens(request: FastifyRequest, reply: FastifyReply
     return;
   }
   try {
-    // Was getTokensByOrgId, which returned every device address registered
-    // against the organisation to any member who asked. See issues.txt 42.1.
     const tokens = await getTokensByUserId(userId, orgId);
     return tokens;
   } catch {

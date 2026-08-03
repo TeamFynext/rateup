@@ -10,16 +10,6 @@ import {
 } from "./email.schema.js";
 import { rateLimit } from "../../utils/rateLimit.js";
 
-/**
- * Three unauthenticated POSTs at /api/email.
- *
- * The per-IP limits below are a bound, not a fix. /send-email will still deliver a
- * caller-composed message from the verified hello@rateup.app to any address it is
- * given (issues.txt 25.1) — closing that means putting it behind checkSession,
- * which breaks whatever frontend calls it today and is left for an explicit
- * decision. The OTP limits blunt 25.4's free guessing: 10^6 codes cannot be walked
- * at 30 attempts an hour per address, though a distributed caller is only slowed.
- */
 export async function emailPublicRoutes(server: FastifyInstance) {
   server.post<{ Body: SendEmailInput }>(
     "/send-email",

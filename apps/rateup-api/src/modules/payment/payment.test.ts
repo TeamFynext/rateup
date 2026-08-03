@@ -177,7 +177,6 @@ describe("updateSubscriptionOrderHandler", () => {
   // `prisma.order.update({ where: { id: orderId }, data })` with no org
   // condition, `data` being the request body typed Partial<Order>. So every
   // column of any organisation's order was writable by anyone with a session.
-  // See issues.txt 40.1.
   test("writes only the status, and only within the caller's org", async () => {
     await updateSubscriptionOrderHandler(
       req({ status: "COMPLETE", paymentStatus: "SUCCESS", amount: 0 }),
@@ -279,7 +278,7 @@ describe("updateSubscriptionOrderHandler", () => {
 
   // Registered as `server.put("/order/:orderId", handler)` — two arguments, so
   // no role check and no body schema, on the one route in either payment tree
-  // that changes what an organisation is entitled to. See issues.txt 40.1.
+  // that changes what an organisation is entitled to.
   test("the route requires SUPER_ADMIN and validates its body", async () => {
     const { routes } = await collectPaymentRoutes();
 
@@ -341,7 +340,7 @@ describe("the Stripe product routes", () => {
   // tree gated only the subscription cancellation, and on role rather than on the
   // platform org — so any authenticated user of any organisation could delete or
   // rename products in the PLATFORM's Stripe account, and read every
-  // subscription on it. See issues.txt 40.2.
+  // subscription on it.
   test("the five catalogue and listing routes carry the root-org check", async () => {
     const { routes } = await collectStripeRoutes();
 
@@ -392,7 +391,7 @@ describe("the Stripe product routes", () => {
 
   // sync-plans was the one Razorpay administrative route without it — a
   // platform-wide catalogue resync any authenticated user could trigger, hitting
-  // Razorpay's API on every call. See issues.txt 40.5.
+  // Razorpay's API on every call.
   test("the Razorpay plan sync is gated too", async () => {
     const { routes } = await collectPaymentRoutes();
 
@@ -413,7 +412,6 @@ describe("getSessionStatusHandler", () => {
   // buyer's session id returned that person's email address and whether they
   // paid. Session ids are not secret: the module's own return_url puts each one
   // in the buyer's browser history and in anything that logs query strings.
-  // See issues.txt 40.3.
   test("resolves the session through an order in the caller's own org", async () => {
     const rep = reply();
 
@@ -484,9 +482,8 @@ describe("createCheckoutSessionHandler (stripe)", () => {
 
   // Only updateOrder used to be inside a try, so a Stripe failure escaped the
   // handler with the Order row already written — carrying a rateupPlanId and no
-  // session, which is exactly the artefact issues.txt 40.1 fed on, and it could
+  // session, which is exactly the artefactfed on, and it could
   // be produced deliberately by sending a price id that does not exist.
-  // See issues.txt 40.4.
   test("a Stripe failure removes the order and answers rather than escaping", async () => {
     stripeStub.checkout.sessions.create.mockRejectedValueOnce(new Error("No such price"));
     const rep = reply();
@@ -517,7 +514,7 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     expect(arg.subscription_data.metadata).toEqual({ rateupOrderId: "order-1" });
   });
 
-  // CORRECTION to issues.txt 40.4: the entry read "embedded_page" against
+  // CORRECTION to: the entry read "embedded_page" against
   // Stripe's public docs ("embedded", "hosted", "custom") and hedged both ways.
   // The installed SDK settles it — Stripe.Checkout.SessionCreateParams.UiMode is
   // 'elements' | 'embedded_page' | 'form' | 'hosted_page' for this API version —
@@ -634,7 +631,6 @@ describe("the Stripe webhook", () => {
   // branch was unreachable and every request to the tree took the else path,
   // hand-parsing the body instead of letting Fastify do it. It also read as
   // though raw-body preservation were configured for a webhook in this tree.
-  // See issues.txt 40.6.
   test("the authenticated tree registers no content-type parser of its own", async () => {
     const { routes, parsers } = await collectStripeRoutes();
 

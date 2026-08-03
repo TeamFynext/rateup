@@ -224,7 +224,6 @@ describe("createCard", () => {
   // Assignees used not to be checked the way labels are: any user id was written,
   // and on update the newly assigned users were emailed and messaged about a board
   // they cannot open. They must be on one of the board's teams now.
-  // See issues.txt 29.5.
   test("refuses an assignee who is not on one of the board's teams", async () => {
     db.teamMember.findMany.mockResolvedValueOnce([]);
 
@@ -298,7 +297,7 @@ describe("createCard", () => {
 
   // A column that does not exist used to make the service resolve undefined, which
   // the handler sent as a 201 with an empty body — the caller was told a card had
-  // been created that does not exist. See issues.txt 29.8.
+  // been created that does not exist.
   test("answers 400 for a column that does not exist", async () => {
     db.ticketColumn.findUnique.mockResolvedValueOnce(null);
     const rep = reply();
@@ -335,7 +334,7 @@ describe("updateCard", () => {
   // contactId used to be written straight through, while the labelIds beside it were
   // checked against the card's board — so a user could link a contact from any
   // organisation to a card on their own board and read that contact's name, phone,
-  // consent and last-message timestamp back out of the card. See issues.txt 29.2.
+  // consent and last-message timestamp back out of the card.
   test("refuses a contact from another organisation", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce(previous());
     db.contact.findFirst.mockResolvedValueOnce(null);
@@ -399,7 +398,7 @@ describe("updateCard", () => {
   });
 
   // Assignees were replaced wholesale with no membership check, and the newly
-  // assigned were then emailed and messaged. See issues.txt 29.5.
+  // assigned were then emailed and messaged.
   test("refuses assignees who are not on the board's teams", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce(previous());
     db.teamMember.findMany.mockResolvedValueOnce([]);
@@ -478,7 +477,6 @@ describe("moveCard", () => {
   // verifyCardAccess checks the board the card is CURRENTLY on; the destination used
   // to be written with no lookup, so a card — with its checklists, attachments,
   // comments and linked contact — could be moved onto any board on the platform.
-  // See issues.txt 29.3.
   test("refuses a destination board the caller is not on", async () => {
     db.ticketColumn.findUnique.mockResolvedValueOnce({ ticketBoardId: VICTIM_BOARD });
     db.ticketBoard.findUnique.mockResolvedValueOnce({ teams: [{ teamId: "victim-team" }] });
@@ -521,7 +519,6 @@ describe("moveCard", () => {
   // Only the first statement used to cast its bound column id to ::uuid; the other
   // three relied on the driver inferring the type of a uuid comparison, and the one
   // explicit cast is evidence somebody hit that and fixed it in one place.
-  // See issues.txt 29.7.
   test("every raw statement casts its bound id", async () => {
     await moveCard(CARD, VICTIM_COLUMN, USER, ORG, 2);
 
@@ -698,7 +695,7 @@ describe("verifyCardAccess", () => {
   });
 
   // NOTE: it reads request.userId, which checkSession does set — the correct
-  // property, unlike the label controller (issues.txt 28.1).
+  // property, unlike the label controller.
   test("reads the session property that exists", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce({ ticketColumnId: OWN_COLUMN });
     db.ticketColumn.findUnique.mockResolvedValueOnce({ ticketBoardId: BOARD });
@@ -735,7 +732,7 @@ describe("the cards-by-column route", () => {
 
   // The path used to bind ":columnId" while the schema, the handler and
   // verifyColumnAccess all expect "ticketColumnId", so every request to this route
-  // failed validation before reaching any of them. See issues.txt 29.4.
+  // failed validation before reaching any of them.
   test("the route binds the parameter name the schema and handler use", async () => {
     const { srv, routes } = fakeServer();
 
@@ -793,7 +790,7 @@ describe("cardRoutes", () => {
 
   // Create and reorder take their target from the BODY, and used to be exactly the
   // two routes with no access check — so any authenticated user could add a card to
-  // any column on the platform, or shuffle any board. See issues.txt 29.1.
+  // any column on the platform, or shuffle any board.
   test("guards create and reorder from the body instead", async () => {
     const { srv, routes } = fakeServer();
 

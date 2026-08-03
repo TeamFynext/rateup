@@ -9,8 +9,6 @@ export async function saveWebhookHandler(
   const { orgId } = req.user;
   const { url, events, verifyToken } = req.body;
 
-  // verifyToken is required by the schema now (issues.txt 34.4), so this guard
-  // only catches a caller reaching the handler without validation.
   if (!verifyToken) {
     return rep.code(400).send({ message: "verifyToken is required" });
   }

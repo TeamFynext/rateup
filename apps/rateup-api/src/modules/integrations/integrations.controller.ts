@@ -74,10 +74,6 @@ export const getIntegrationByNameHandler = async (
   }
 };
 
-// getAllIntegrationsHandler used to live here, behind GET /all: it answered every
-// organisation's integration row, credential column and all, to any authenticated
-// user. Removed with its route and its service function. See issues.txt 26.2.
-
 export const getWaPaymentConfigurationsHandler = async (
   request: FastifyRequest<{ Querystring: { whatsappSettingsId?: string } }>,
   reply: FastifyReply,
@@ -132,8 +128,6 @@ export const createWaPaymentConfigurationsHandler = async (
   try {
     const { orgId } = request.user;
     const data = await createWaPaymentConfigurations(orgId, request.body);
-    // The success body used to be `!data`, i.e. the boolean `false`, which a client
-    // cannot tell from a failure flag. See issues.txt 26.16.
     if (!data) {
       reply.code(400).send({ message: "Error in creating whatsapp payment" });
       return;
@@ -246,8 +240,6 @@ export async function createGoogleSheetAuthToken(
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: tokens.expiry_date,
-        // Google returns the granted scopes space-delimited, not comma-delimited, so
-        // this used to store one element holding the whole string. issues.txt 26.15.
         scopes: tokens.scope ? tokens.scope.split(" ") : [],
         userEmail: email,
         driveFolderId,
@@ -300,9 +292,6 @@ export async function deleteZapierTriggerHookHandler(
   reply: FastifyReply,
 ) {
   try {
-    // The body is validated by the route now, and the service resolves the URL from
-    // the org's own stored subscriptions rather than calling whatever arrived here.
-    // See issues.txt 26.6.
     const res = await deleteZapierTriggerHooks(
       request.body as Parameters<typeof deleteZapierTriggerHooks>[0],
       request.user.orgId,

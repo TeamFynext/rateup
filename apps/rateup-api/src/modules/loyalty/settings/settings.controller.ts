@@ -24,14 +24,6 @@ import {
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
-/**
- * Resolves the caller's loyalty program, or answers 404.
- *
- * Every event-trigger handler goes through this. They used to take the program id
- * from the query string or the request body instead, which is what made the list
- * return every org's triggers and let a trigger be created against another org's
- * program. See issues.txt 20.33.
- */
 async function requireProgramId(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -185,10 +177,6 @@ export async function getAllEventTriggersHandler(
   reply: FastifyReply,
 ) {
   try {
-    // The query's programId is IGNORED — the caller's own program is the only one
-    // they may list. It used to be passed straight through, and it is optional, so
-    // a request that simply omitted it enumerated every org's triggers.
-    // See issues.txt 20.33.
     const programId = await requireProgramId(request, reply);
     if (!programId) return;
     const res = await getAllEventTriggers(programId);

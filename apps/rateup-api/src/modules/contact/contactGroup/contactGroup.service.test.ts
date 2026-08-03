@@ -72,7 +72,7 @@ beforeEach(() => {
   db.contact.findUnique.mockResolvedValue(null);
   db.contact.count.mockResolvedValue(0);
   // Every group read is scoped through `team: { orgId }` now, so it is findFirst
-  // rather than findUnique. See issues.txt 18.24.
+  // rather than findUnique.
   db.contactGroup.findFirst.mockResolvedValue({ id: "g1", name: "VIPs" });
   db.contactGroup.findUnique.mockResolvedValue({ id: "g1", name: "VIPs" });
   db.team.findFirst.mockResolvedValue({ id: "t1" });
@@ -89,7 +89,7 @@ beforeEach(() => {
 describe("getContactGroupById", () => {
   // The lookup was by id alone, with nothing tying the group to the caller's org
   // — and a group is the unit campaigns send to, so reading one hands over the
-  // names and phone numbers it holds. See issues.txt 18.24.
+  // names and phone numbers it holds.
   test("fetches by id within the caller's org, including the member count", async () => {
     await getContactGroupById("g1", ORG);
 
@@ -108,7 +108,6 @@ describe("getContactGroupById", () => {
 describe("getContactGroupsByTeamId", () => {
   // The team id came straight off the query string and was never checked against
   // the caller's org, so one team id enumerated that team's groups.
-  // See issues.txt 18.24.
   test("lists a team's normal groups only within the caller's org", async () => {
     await getContactGroupsByTeamId("t1", ORG);
 
@@ -158,7 +157,7 @@ describe("getContactsByContactGroupId", () => {
 
   // Fixed: an id that matches no group used to return null and crash reading
   // `.contacts` off it. Now throws a clear, descriptive error instead of a
-  // bare TypeError. See issues.txt 18.25.
+  // bare TypeError.
   test("throws for a group id that does not exist", async () => {
     db.contactGroup.findFirst.mockResolvedValue(null);
 
@@ -235,7 +234,7 @@ describe("getContactsByContactGroupIdWithPagination", () => {
   // two or more filters the table showed the union and the number above it
   // reported the intersection — more rows than the count claimed existed, and
   // paging past `totalCount / limit` silently dropped the remainder. One condition
-  // now, and it ANDs: a filter is meant to narrow. See issues.txt 18.6 and 18.27.
+  // now, and it ANDs: a filter is meant to narrow.
   test("the page and the total count use the same condition, ANDed", async () => {
     await getContactsByContactGroupIdWithPagination("g1", ORG, {
       name: "ann",
@@ -286,7 +285,7 @@ describe("getContactsByContactGroupIdWithPagination", () => {
 describe("createContactGroup", () => {
   // The teamId comes from the request body and was written unchecked, so a group
   // could be created inside another org's team — where it then appears in that
-  // org's UI and can be sent to. See issues.txt 18.24.
+  // org's UI and can be sent to.
   test("writes the fields it was given once the team is the caller's", async () => {
     await createContactGroup(
       { name: "VIPs", icon: "star", teamId: "t1", type: "NORMAL", tags: ["a"] } as any,
@@ -375,7 +374,7 @@ describe("addNewContactsToGroup", () => {
   // It ended after the trigger loop with no return, so the endpoint answered 200
   // with an empty body and the caller could not tell how many contacts were
   // actually added — the interesting number, since rows with an invalid phone are
-  // dropped silently. See issues.txt 18.28.
+  // dropped silently.
   test("reports how many it added and how many phones were not real", async () => {
     db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
     db.contactGroupMap.createManyAndReturn.mockResolvedValue([{ contactId: "c1" }]);
@@ -405,7 +404,7 @@ describe("addExistingContactsToGroup", () => {
   // The sharpest instance of 18.24. The source carried a bare `TODO: check if
   // contactIds belong to the same team? / FIXME:` and wrote the ids straight into
   // the join table, so contacts could be pushed across the org boundary into a
-  // list that would later be messaged. See issues.txt 18.24.
+  // list that would later be messaged.
   test("writes only the contact ids the caller's org owns", async () => {
     db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
 
@@ -451,7 +450,7 @@ describe("addExistingContactsToMultipleGroups", () => {
     expect(db.contactGroupMap.createManyAndReturn).toHaveBeenCalledTimes(2);
   });
 
-  // Every group id came straight off the request body. See issues.txt 18.24.
+  // Every group id came straight off the request body.
   test("writes only into groups the caller's org owns", async () => {
     db.contactGroup.findMany.mockResolvedValue([{ id: "g1" }]);
 
@@ -479,7 +478,7 @@ describe("addExistingContactsToMultipleGroups", () => {
   // atomic: two concurrent requests adding the same contact to the same group both
   // saw it as absent, and the second raised a unique-constraint error that failed
   // the whole request — which, because createContact calls this without awaiting
-  // it (18.2), surfaced as an unhandled rejection. See issues.txt 18.29.
+  // it (18.2), surfaced as an unhandled rejection.
   test("relies on skipDuplicates rather than a read-then-write", async () => {
     await addExistingContactsToMultipleGroups(["c1"], ["g1"], ORG);
 
@@ -491,7 +490,6 @@ describe("addExistingContactsToMultipleGroups", () => {
 describe("updateContactGroup / deleteContactGroup / deleteManyContactGroups", () => {
   // All three took ids straight from the request with no org restriction, so a
   // group id was enough to rename or delete another org's group.
-  // See issues.txt 18.24.
   test("an update is scoped to the caller's org", async () => {
     await updateContactGroup("g1", ORG, { name: "New" } as any);
 

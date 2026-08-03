@@ -36,11 +36,6 @@ import { createMultipleContacts, importCSVContacts } from "../contact.service.js
 import { getMultipartFieldValue } from "../../../utils/upload/validate.js";
 import { PaginationQuery } from "../contact.schema.js";
 
-/**
- * A group that is not the caller's answers 404, indistinguishable from one that
- * never existed. Prisma's P2025 — raised when an extended `where` matched nothing —
- * means the same thing on this module's writes. See issues.txt 18.24 and 18.25.
- */
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
   if (error instanceof ContactGroupNotFoundError) {
     return reply.code(404).send({ error: error.message });
@@ -59,9 +54,6 @@ export async function getContactGroupsHandler(
   reply: FastifyReply,
 ) {
   try {
-    // The org check used to sit AFTER the first two branches, so a contactGroupId
-    // or a teamId in the query short-circuited straight to an unscoped lookup and
-    // never reached it. See issues.txt 18.24.
     if (!request?.user?.orgId) {
       return reply.code(403).send({
         message: "Not authorized",
@@ -115,11 +107,6 @@ export async function createContactGroupHandler(
     const contactGroup = await createContactGroup(request.body, request.user.orgId);
     reply.code(201).send(contactGroup);
   } catch (error) {
-    // The P2002 branch had no `return` and the generic 500 sat outside the `if`, so
-    // BOTH ran: the useful message went first and the second send raised
-    // FST_ERR_REP_ALREADY_SENT, filling the log on an ordinary user mistake. It
-    // also answered 500 for a name clash, where the label controller beside it
-    // uses 409. See issues.txt 18.30.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return reply.code(409).send({
         error: "Contact group with this name already exist in the provided team",
@@ -164,8 +151,6 @@ export async function addNewContactsToGroupHandler(
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);
-    // See issues.txt 18.17 — the inner branch had no else, so any other prisma
-    // error left the reply unsent and fastify answered an empty 200.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       reply.code(400).send({ error: "Contact already exist" });
     } else {
@@ -270,10 +255,6 @@ export async function addNewContactsfromCSVToGroupHandler(
       return reply.code(400).send({ error: "This file type is not permitted." });
     const tags: string[] = [];
     let update = false;
-    // hasHeaderRow was never parsed here, so it fell to importCSVContacts's
-    // `= true` default and a headerless file uploaded into a group always lost its
-    // first contact — while the same file through the top-level importer, which
-    // does forward the field, imported correctly. See issues.txt 18.31.
     let hasHeaderRow = true;
     for (const key in file?.fields) {
       const value = getMultipartFieldValue(file?.fields?.[key]);

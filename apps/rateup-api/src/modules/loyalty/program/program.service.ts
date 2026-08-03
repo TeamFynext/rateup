@@ -57,14 +57,6 @@ export async function getLoyaltyProgramByOrg(orgId: string) {
         where: { status: "active" },
         orderBy: { priority: "desc" },
       },
-      // LoyaltyRewardStatus.ACTIVE, which is "ACTIVE". This filter used to read
-      // `status: "active"` in lower case, and rewards are written with the enum —
-      // so `program.rewards` came back EMPTY for every org, always, and every
-      // caller of this function that read the relation saw nothing with no way to
-      // tell that from a program with no rewards. The earningRules include on the
-      // line above uses the lower-case value the earning-rule schema actually
-      // writes, so only one of the two was wrong, which is why it went unnoticed.
-      // See issues.txt 20.29.
       rewards: {
         where: { status: LoyaltyRewardStatus.ACTIVE },
       },
@@ -72,14 +64,6 @@ export async function getLoyaltyProgramByOrg(orgId: string) {
   });
 }
 
-/**
- * `orgId` is part of the where clause.
- *
- * The program id used to come from the path and the session org was never
- * consulted, so one org could rewrite another's program settings — including its
- * signup and referral bonuses, which decide what points get minted. Same family as
- * issues.txt 20.18; the pinning test for it lives with the program controller.
- */
 export async function updateLoyaltyProgram(
   programId: string,
   data: LoyaltyProgramUpdateInput,
@@ -113,21 +97,6 @@ export async function deleteLoyaltyProgram(
   });
 }
 
-/**
- * Zeroes every account in a program, and writes a reversing ledger entry for each
- * one so the destruction is on the record.
- *
- * This used to be a single `updateMany` setting currentPoints, lifetimePoints and
- * totalSpend to zero for every customer — no LoyaltyTransaction rows, no record of
- * who ran it, and no notification to the customers whose balances vanished. For a
- * points programme with real liability attached, "reset everyone to zero" is
- * exactly the operation that needs a trail, and replaying the ledger afterwards
- * could not account for the missing points at all.
- *
- * `actorId` is stamped on every row it writes. The reversal is per account and the
- * whole thing is one transaction, so a partial reset cannot leave some balances
- * zeroed and unexplained. See issues.txt 20.30.
- */
 export async function resetProgramPoints(programId: string, orgId: string, actorId?: string) {
   const program = await prisma.loyaltyProgram.findFirst({
     where: { id: programId, orgId },

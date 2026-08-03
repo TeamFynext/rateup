@@ -22,9 +22,6 @@ enum sortOrder {
 }
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
 const paginationQuery = z.object({
-  // ZERO-BASED: page 0 is the first page. getWaLogs computes skip as page * limit,
-  // which was already the convention but was stated nowhere and defaulted to
-  // nothing. See issues.txt 13.6.
   page: z.coerce.number().int().min(0).optional().default(0),
   limit: z.coerce.number().int().positive().optional(),
   search: z.string().optional(),

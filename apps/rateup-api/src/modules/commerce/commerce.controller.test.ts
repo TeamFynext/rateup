@@ -150,7 +150,6 @@ describe("the read handlers", () => {
 
 describe("error handling", () => {
   // Decided by CLASS now, not by substring-matching the error's own message.
-  // See issues.txt 19.10.
   test("an unknown channel is a 400 carrying the reason", async () => {
     (getCommerceOverview as Mock).mockRejectedValue(new ChannelNotFoundError());
     const rep = reply();
@@ -211,7 +210,7 @@ describe("error handling", () => {
   // errors naming the catalogId argument do, was reported to the client as a 400
   // AND leaked its raw text. The client was told its request was bad when the
   // server had broken, monitoring keyed on 5xx never saw it, and the body carried
-  // internal query structure. See issues.txt 19.10.
+  // internal query structure.
   test("a prisma error naming catalogId is a 500 with a generic message", async () => {
     (getCommerceOrders as Mock).mockRejectedValue(
       new Error("Invalid `prisma.waCatalogOrder.count()` invocation: Unknown argument `catalogId`"),
@@ -380,7 +379,7 @@ describe("exportCommerceOverviewHandler", () => {
 
   // The schema's own comment says exports "reuse the page's own filters so the
   // file matches what's on screen", and this sheet never did: the count was
-  // hard-coded to 20 here while the widget defaults to 5. See issues.txt 19.11.
+  // hard-coded to 20 here while the widget defaults to 5.
   test("uses the top-products limit the page asked for", async () => {
     await exportCommerceOverviewHandler(
       request({ body: { format: "xlsx", interval: "day", limit: 12 } }),

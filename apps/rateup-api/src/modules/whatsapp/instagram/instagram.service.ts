@@ -14,11 +14,6 @@ export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
   const { pageAccessToken } = waSettings;
-  // Token passed as callMetaApi's accessToken argument, which sends it as an
-  // Authorization header. Interpolated into the URL it ended up in the trace log
-  // of config.url, and in the full axios-config dump wa_axios.ts writes on any
-  // non-2xx — so a page token leaked to the logs on every failed profile fetch.
-  // See issues.txt 12.7.
   const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user`;
   const res = await callMetaApi(url, "GET", pageAccessToken);
   // trace, not info: this is the customer's whole Instagram profile.
@@ -34,24 +29,6 @@ export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
   };
 }
 
-/**
- * Processes a webhook batch, returning a per-event outcome.
- *
- * Two things this shape exists for, both learned the hard way (issues.txt 12.1
- * and 12.2):
- *
- *  - Every handler reads `data.entry[0].messaging[0]`, so passing the whole body
- *    into a loop over `entry.messaging` processed the FIRST event once per event
- *    and never saw the rest. A single-event body is rebuilt per iteration, as
- *    handleFacebookWebhook does.
- *  - Both loops are guarded per item. There was no try/catch around either, so
- *    one transient failure — a settings lookup, a malformed event — dropped every
- *    remaining event in the batch.
- *
- * The result drives the controller's status code. A thrown error here means
- * nothing was processed at all, which is a different thing from some events
- * failing.
- */
 export async function handleInstagramWebhook(
   data: InstagramWebhookBody,
 ): Promise<{ processed: number; failed: number }> {
@@ -161,11 +138,6 @@ export async function handleInstagramComment(
   const { id: commentId, text, from, created_time } = comment;
   const igsId = from.id;
 
-  // The business's own comments come back through the webhook like anyone
-  // else's. Without this they were stored as inbound and ran the
-  // INSTAGRAM_COMMENT rules, so a rule that replies to comments answered
-  // itself — with nothing in this path to break the cycle. The DM handlers
-  // guard the equivalent case with message.is_echo. See issues.txt 12.4.
   if (igsId === ibaId) {
     log.trace("[Instagram] Skipping the business's own comment %s", commentId);
     return;
@@ -317,10 +289,6 @@ export async function handleInstagramPostback(
     return;
   }
 
-  // Guarded: the catch below used to log `sender.id`, so an event with no sender
-  // threw a second TypeError out of the error handler itself — which escaped and
-  // abandoned the rest of the batch. Identical to the Facebook case in 10.2.
-  // See issues.txt 12.3.
   if (!sender?.id) {
     log.warn("[Instagram] Postback event with no sender; skipping");
     return;
@@ -424,13 +392,6 @@ export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {
     log.warn("[Instagram] Message-seen event with no read receipt payload; skipping");
     return;
   }
-  // read.mid is optional on the wire. Passed through undefined it produced
-  // `where: { messageId: undefined }` — and Prisma DROPS an undefined filter
-  // rather than matching null, so the findFirst behind updateWaMessageByMessageId
-  // became an unfiltered query over the whole WaMessage table and stamped `read`
-  // onto whichever row came back first, in any org. updateWaMessageByMessageId
-  // now refuses an empty id as well, since every caller is exposed to the same
-  // Prisma behaviour. See issues.txt 12.8.
   if (!read.mid) {
     log.warn("[Instagram] Read receipt carries no message id; skipping");
     return;
@@ -441,9 +402,6 @@ export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {
       read: seentime,
     },
   });
-  // NOTE: only the single named message is marked. Instagram's `watermark` — every
-  // message at or before that timestamp is read — is still not applied, so read
-  // state lags on the messages before this one. See issues.txt 12.8.
 }
 
 export async function handleInstagramMessageReaction(
@@ -453,9 +411,6 @@ export async function handleInstagramMessageReaction(
   const messaginObj = data.entry[0].messaging[0];
   const { sender, reaction } = messaginObj;
   const { orgId, ibaId } = waSettings;
-  // reaction.mid names the message that was reacted to. It used to be dropped —
-  // no message id was passed at all — so a redelivered reaction was stored twice
-  // and nothing linked it to the message it belonged to. See issues.txt 12.8.
   await handleWaMessages(
     "receive",
     messaginObj,
@@ -472,8 +427,6 @@ interface MetaFbPage {
   id: string;
   name: string;
   access_token: string;
-  // Meta omits this for a page with no linked Instagram account. Optional, and
-  // such pages are filtered out below. See issues.txt 12.9.
   instagram_business_account?: { id: string };
 }
 
@@ -483,21 +436,11 @@ export async function getFbPages(settingsId: string, orgId: string) {
     throw new Error(`No WhatsApp settings found for id ${settingsId}`);
   }
   const { accessToken } = waSettings;
-  // Token passed as callMetaApi's accessToken argument rather than interpolated
-  // into the URL, where it landed in the trace log and in the axios-config dump
-  // wa_axios.ts writes on any non-2xx. This one is the org's long-lived USER
-  // token — it grants access to every page the org connected, not one page.
-  // See issues.txt 12.7.
   const res = await callMetaApi(
     `/me/accounts?fields=id,name,access_token,instagram_business_account`,
     "GET",
     accessToken,
   );
-  // Pages with no Instagram account attached are skipped rather than read
-  // unguarded. This runs during Instagram onboarding, where having some pages
-  // unconnected is entirely normal — one such page used to throw and the user
-  // was shown no pages at all instead of the ones that would work.
-  // See issues.txt 12.9.
   return (res.data.data as MetaFbPage[])
     .filter((i) => Boolean(i.instagram_business_account?.id))
     .map((i) => ({

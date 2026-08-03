@@ -10,7 +10,6 @@ import prisma from "../../../utils/prisma.js";
 import {
   createOrUpdateInstagramAutomationMessage,
   logInstagramAutomationAction,
-  wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import { parseToWhatsAppFormat } from "../whatsappSurvey/wasurvey.utils.js";
 import {
@@ -62,7 +61,6 @@ export interface InstagramAutomation {
   orgId: string;
   name: string;
   matchData: WaAutomatedReplyMatchData;
-  sendOnceIn24Hours?: boolean;
   whatsappSettingsPhoneId?: string | null;
 }
 
@@ -79,17 +77,11 @@ export async function startInstagramAutomationFlow(
   try {
     log.info(`[Instagram Automation] Starting flow ${automation.id} for igsId ${igsId}`);
 
-    // Check if automation should only run once in 24 hours
-    if (automation.sendOnceIn24Hours) {
-      const wasSentRecently = await wasInstagramAutomationSentRecently(igsId, automation.id, orgId);
-
-      if (wasSentRecently) {
-        log.info(
-          `[Instagram Automation] Skipping automation ${automation.id} - already sent in last 24 hours`,
-        );
-        return;
-      }
-    }
+    // No once-per-24h check here: the rules engine owns that guard now
+    // (Rule.options.sendOncePerDay in validateRuleConditions), keyed on the igsId
+    // that the rule execution context passes through as `phone`. The manual-trigger
+    // controller path has no rule and is a deliberate operator action, so it is
+    // intentionally unguarded.
 
     // Find the start node
     const startNode = automation.matchData?.json?.nodes?.find((node) => node.type === "startNode");

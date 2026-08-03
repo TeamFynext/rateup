@@ -355,7 +355,7 @@ describe("incrementNoOfScansInDB", () => {
 
   // Was a bare update, so P2025 escaped and asyncErrHandler turned an ordinary
   // client condition — a code that has since been deleted — into a 500 with a
-  // stack trace in the log. See issues.txt 44.4.
+  // stack trace in the log.
   test("an unknown short id reports a miss rather than rejecting", async () => {
     db.generateQr.updateMany.mockResolvedValueOnce({ count: 0 });
 
@@ -439,7 +439,6 @@ describe("controllers", () => {
   // The public read used to send the service's null with a 200, so anything
   // treating a 2xx as success read a dead QR code as a working one. Its
   // authenticated twin already answered 404 for the same condition.
-  // See issues.txt 44.3.
   test("the public read answers 404 for an unknown short id", async () => {
     db.generateQr.findFirst.mockResolvedValueOnce(null);
     const rep = reply();
@@ -522,7 +521,7 @@ describe("controllers", () => {
   // Anyone who knew an eight-character short id could raise another
   // organisation's scan count without bound, and noOfScans is the only measure
   // the product offers of whether a printed campaign worked. One scan per
-  // address per code per day now. See issues.txt 44.2.
+  // address per code per day now.
   test("a repeat scan from the same address is not counted again", async () => {
     (connection.set as unknown as Mock).mockResolvedValueOnce(null);
     const rep = reply();
@@ -564,7 +563,7 @@ describe("controllers", () => {
   });
 
   // Was a 500 from an unauthenticated endpoint for the ordinary case of a
-  // deleted code. See issues.txt 44.4.
+  // deleted code.
   test("an unknown short id answers 404 rather than escaping as a 500", async () => {
     db.generateQr.updateMany.mockResolvedValueOnce({ count: 0 });
     const rep = reply();
@@ -649,7 +648,7 @@ describe("routes", () => {
   // Both branches used to ASSIGN, so a role check written into a route's own
   // options would have been discarded with no error and nothing in the route
   // table to show it — and a public route could not carry the rate limiter
-  // 44.2 needs. See issues.txt 44.5.
+  // 44.2 needs.
   test("the hook keeps a preHandler a route declared for itself", async () => {
     const { srv, hooks } = fakeServer();
     await linkRoutes(srv);
@@ -711,7 +710,7 @@ describe("routes", () => {
     for (const o of privateOnes) expect((o as any).config).toBeUndefined();
   });
 
-  // STILL OPEN (issues.txt 44.5): the module has no role gating at all — any
+  // STILL OPEN: the module has no role gating at all — any
   // member can create, edit, repoint and delete any of the organisation's QR
   // codes. What is fixed is that adding a gate would now take effect.
   test("no authenticated route declares a role requirement", async () => {
@@ -767,7 +766,7 @@ describe("schemas", () => {
 
   // link is what the public endpoint hands to a scanner's browser, and it was a
   // bare z.string() — so `javascript:`, `data:` and the empty string were all
-  // accepted and served. See issues.txt 44.1.
+  // accepted and served.
   test("the link must be an http or https URL", () => {
     for (const link of [
       "javascript:alert(1)",

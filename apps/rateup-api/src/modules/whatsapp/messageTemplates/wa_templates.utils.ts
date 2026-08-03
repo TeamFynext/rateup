@@ -74,9 +74,6 @@ export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplate
         });
       }
 
-      // Optional-chained like every other card field. A carousel card saved
-      // without a buttons array used to throw here instead of producing a
-      // button-less card. See issues.txt 14.8.
       if (card.buttons?.length) {
         cardComponents.push({
           type: WaTemplateComponentType.BUTTONS,
@@ -300,10 +297,6 @@ export async function getTemplateQuery(
                 }
                 return {
                   type: component?.type.toLowerCase(),
-                  // `parameters`, not `paramteters` — the link this branch had just
-                  // resolved was never actually sent. Latent (nothing calls
-                  // getTemplateQuery today; sendTemplateToUserCore builds its own
-                  // components) but wrong. See issues.txt 14.9.
                   parameters: [
                     {
                       type: component?.format.toLowerCase(),
@@ -323,15 +316,8 @@ export async function getTemplateQuery(
   return commonQuery;
 }
 
-// Defined in src/utils/waTemplateComponents.ts and re-exported here, so the copy
-// that lived in campaign.service.ts and the one that lived here are one function.
-// See issues.txt 17.8.
 export { getFlowIdFromTemplateComponents } from "../../../utils/waTemplateComponents.js";
 
-/**
- * See issues.txt 14.7 and 17.2 — one of four copies of the same gate, now sharing
- * enforceWhatsappCountLimit.
- */
 export async function verifyTemplateSubscriptionLimit(
   request: FastifyRequest,
   reply: FastifyReply,

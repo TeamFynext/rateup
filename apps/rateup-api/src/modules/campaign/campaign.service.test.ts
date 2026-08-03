@@ -259,7 +259,7 @@ describe("reading campaigns", () => {
   // only lookup behind GET /api/campaign?campaignId=, which the handler did not
   // scope either. The row it returns carries the whole template body.
   // getCampaignsByOrgId, right beside it, was already scoped; this is the same
-  // shape. See issues.txt 17.3.
+  // shape.
   test("scopes a campaign lookup to the org asking", async () => {
     await getCampaignById(CAMPAIGN_ID, ORG_A);
 
@@ -268,7 +268,7 @@ describe("reading campaigns", () => {
     expect(bound).toEqual([CAMPAIGN_ID, ORG_A]);
   });
 
-  // Same gap, reached by team id. See issues.txt 17.3.
+  // Same gap, reached by team id.
   test("lists a team's campaigns only when the team is the caller's", async () => {
     await getCampaignsByTeamId("another-orgs-team", ORG_A);
 
@@ -322,7 +322,7 @@ describe("createCampaign", () => {
 
   // teamId arrived in the request body and was written straight through, so a
   // campaign could be planted under another org's team — and every send built on it
-  // then ran as that org. See issues.txt 17.3.
+  // then ran as that org.
   test("refuses a team belonging to another org", async () => {
     db.team.findFirst.mockResolvedValue(null);
 
@@ -347,7 +347,6 @@ describe("createCampaign", () => {
 
   // The flow was looked up by Meta flow id alone, with no org filter, so a flow id
   // belonging to another org was accepted and attached to the campaign.
-  // See issues.txt 17.3.
   test("throws for a flow id that matches nothing", async () => {
     db.waFlow.findFirst.mockResolvedValue(null);
 
@@ -363,7 +362,7 @@ describe("updateCampaign", () => {
 
     // The extended `where` — unique id plus a non-unique filter — makes Prisma raise
     // P2025 rather than writing, so a campaign belonging to another org cannot be
-    // rewritten by naming its id. See issues.txt 17.3.
+    // rewritten by naming its id.
     expect(db.campaign.update.mock.calls[0][0]).toEqual({
       where: { id: CAMPAIGN_ID, team: { orgId: ORG_A } },
       data: { name: "Renamed" },
@@ -443,7 +442,6 @@ describe("updateCampaign", () => {
   // A drip stage named by id was updated on its id alone — nothing checked it
   // belonged to the campaign being edited, let alone to the caller's org. So naming
   // another campaign's stage id rewrote that stage's template and delay.
-  // See issues.txt 17.3.
   test("cannot rewrite a drip stage that belongs to a different campaign", async () => {
     db.campaignDripStage.findMany.mockResolvedValue([]);
 
@@ -457,7 +455,7 @@ describe("updateCampaign", () => {
     });
   });
 
-  // Same gap on the delete. See issues.txt 17.3.
+  // Same gap on the delete.
   test("scopes the delete to the caller's org", async () => {
     await deleteCampaign(CAMPAIGN_ID, ORG_A);
 
@@ -498,7 +496,7 @@ describe("sendCampaign", () => {
   // It used to fall through to the send when the campaign's org could not be
   // determined, skipping the conversation limit entirely — a campaign whose team or
   // org had been removed sent unmetered. A campaign with no resolvable org is a
-  // campaign that should not send. See issues.txt 17.3.
+  // campaign that should not send.
   test("refuses when the campaign's org cannot be determined", async () => {
     db.campaign.findUnique.mockResolvedValue(null);
 
@@ -512,7 +510,7 @@ describe("sendCampaign", () => {
   // It was called checkConversationLimitExceeded, which said the opposite of what
   // it returns; every caller was already negating it correctly, so nothing broke,
   // but the next one to trust the name would have blocked every org within its
-  // limit and let through every org over it. See issues.txt 17.7.
+  // limit and let through every org over it.
   test("treats a true answer from the limit check as permission to send", async () => {
     limitExceededMock.mockResolvedValue(true);
 
@@ -552,8 +550,7 @@ describe("sendCampaignCronAction", () => {
   // The loop had no per-campaign guard, so one campaign that threw — a missing
   // template, a database hiccup — abandoned every campaign scheduled behind it in
   // the same run, silently, until the next cron tick. The log line reporting how
-  // many were sent never ran either. Same shape as issues.txt 3.4.
-  // See issues.txt 17.5.
+  // many were sent never ran either.
   test("sends the campaigns behind one that fails", async () => {
     db.campaign.findMany.mockResolvedValue([
       { id: "camp-1", scheduledStatuses: [] },
@@ -588,7 +585,7 @@ describe("enqueueCampaignMessage", () => {
   // asynchronous failure: the function reported success while the add was still in
   // flight, and a rejection — Redis down, queue full — became an unhandled promise
   // rejection. The campaign row was already marked QUEUING, so the UI showed it
-  // queued forever. See issues.txt 17.4.
+  // queued forever.
   test("reports the failure of an enqueue that rejects", async () => {
     enqueueAdd.mockRejectedValue(new Error("redis is down"));
 
@@ -611,7 +608,6 @@ describe("enqueueCampaignMessage", () => {
 
   // The dequeue side had the same shape — the add was not awaited and the function
   // returned undefined, so a cancellation could not be known to have been accepted.
-  // See issues.txt 17.4.
   test("waits to hear a dequeue was accepted", async () => {
     await expect(deleteCampaignParticipantsByCampaignId(CAMPAIGN_ID)).resolves.toEqual({
       status: true,
@@ -749,7 +745,7 @@ describe("getCampaginStatsById", () => {
   // The empty-stats replies omitted queueCount entirely while the populated ones
   // included it, and the per-stage reply omitted the three schedule fields the
   // all-stages reply carried — three shapes from one endpoint, so a client could
-  // not read the same keys off every response. See issues.txt 17.8.
+  // not read the same keys off every response.
   test("answers with one shape whichever branch it took", async () => {
     const keys = (value: object) => Object.keys(value).sort();
 
@@ -776,7 +772,7 @@ describe("getCampaginStatsById", () => {
 
   // The drip stage was fetched by its own id with no campaign filter, so a stage id
   // belonging to another campaign — in any org — was reported under whatever
-  // campaignId the caller named. See issues.txt 17.3.
+  // campaignId the caller named.
   test("reports nothing for a drip stage that belongs to another campaign", async () => {
     db.campaignDripStage.findFirst.mockResolvedValue(null);
 
@@ -820,7 +816,7 @@ describe("getResponseExcelByCampaignById", () => {
   // The drip-stage export filtered on the stage id alone — the campaign id the
   // caller passed was used only to look up the workbook title. So naming another
   // campaign's stage id exported that campaign's participants, names and phone
-  // numbers included, under your own campaign's name. See issues.txt 17.3.
+  // numbers included, under your own campaign's name.
   test("ties the drip-stage export to the campaign it was asked about", async () => {
     db.$queryRaw.mockResolvedValueOnce([]).mockResolvedValue([]);
 
@@ -833,7 +829,7 @@ describe("getResponseExcelByCampaignById", () => {
   });
 
   // This export carries every participant's NAME and PHONE NUMBER, which makes it
-  // the unscoped read with the most to give away. See issues.txt 17.3.
+  // the unscoped read with the most to give away.
   test("refuses a campaign belonging to another org", async () => {
     db.campaign.findFirst.mockResolvedValue(null);
 
@@ -921,7 +917,7 @@ describe("getFlowIdFromTemplateComponents", () => {
   // importing the other. It lives in src/utils/waTemplateComponents.ts now and both
   // re-export it; it sits there rather than in the templates module because
   // importing that module here would drag its whole dependency graph, and its
-  // Prisma client, behind it. See issues.txt 17.8.
+  // Prisma client, behind it.
   test("stringifies a numeric flow id", () => {
     const components: any = [{ type: "BUTTONS", buttons: [{ type: "FLOW", flow_id: 7 }] }];
 

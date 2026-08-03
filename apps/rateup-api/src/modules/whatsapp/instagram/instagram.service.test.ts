@@ -107,7 +107,6 @@ describe("getIgUserDetailsFromMeta", () => {
 
   // The token used to be interpolated into the URL, which callMetaApi trace-logs
   // and dumps in full on any non-2xx. Same shape as the Facebook case in
-  // issues.txt 10.4. See issues.txt 12.7.
   test("passes the page access token as the auth header, not in the query string", async () => {
     await getIgUserDetailsFromMeta(IGS_ID, IBA_ID);
 
@@ -247,7 +246,6 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
   // handler reads data.entry[0].messaging[0]. So the first event was processed
   // once per event in the batch and the rest were never seen. A single-event body
   // is now rebuilt per iteration, as handleFacebookWebhook does.
-  // See issues.txt 12.1.
   test("processes every message in the batch, each exactly once", async () => {
     await handleInstagramWebhook(
       webhook(
@@ -261,7 +259,7 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
     expect(waMessageCall(1).messageId).toBe("mid-2");
   });
 
-  // Same root cause (issues.txt 12.1): the read receipt was classified first and
+  // Same root cause: the read receipt was classified first and
   // handled correctly, then the message event re-read messaging[0] — the read
   // receipt — and found no `message` to store.
   test("handles a read receipt and a message in the same batch as two events", async () => {
@@ -280,7 +278,7 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
 
   // There was no per-entry guard, so a database failure looking one account up
   // abandoned every entry after it — and Meta, already answered 200, retried
-  // nothing. Same shape as issues.txt 10.3. See issues.txt 12.2.
+  // nothing.
   test("carries on to the next entry when one account lookup fails", async () => {
     getSettingsByIbaIdMock.mockRejectedValueOnce(new Error("db down")).mockResolvedValue(SETTINGS);
 
@@ -299,7 +297,6 @@ describe("handleInstagramWebhook - a batch carrying more than one event", () => 
   // handleWaMessages sat OUTSIDE the try in handleInstagramMessages — only the
   // rule execution was guarded — so a failed write aborted the batch instead of
   // being counted and stepped over. The comment handler already got this right.
-  // See issues.txt 12.2.
   test("counts a failed write and carries on to the next event", async () => {
     handleWaMessagesMock.mockRejectedValue(new Error("write failed"));
 
@@ -445,7 +442,7 @@ describe("handleInstagramComment", () => {
   // business posted on its own post came back through the webhook, was stored as
   // an inbound message, and ran the INSTAGRAM_COMMENT rules — a rule that replies
   // to comments answered itself, with nothing to break the cycle. The DM handlers
-  // guard this with message.is_echo. See issues.txt 12.4.
+  // guard this with message.is_echo.
   test("skips a comment the business made on its own post", async () => {
     await handleInstagramComment(
       comment({ from: { id: IBA_ID, username: "the-business" } }),
@@ -486,8 +483,7 @@ describe("handleInstagramPostback", () => {
 
   // There was no `sender?.id` guard and the catch logged `sender.id` — the
   // expression that threw — so the error handler threw a second TypeError out of
-  // itself, which escaped and abandoned the batch. Same shape as issues.txt 10.2.
-  // See issues.txt 12.3.
+  // itself, which escaped and abandoned the batch.
   test("skips an event with no sender rather than throwing out of its own catch", async () => {
     const body: any = {
       object: "instagram",
@@ -544,7 +540,7 @@ describe("handleInstagramReferral", () => {
     expect(handleWaMessagesMock).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour, the other half of issues.txt 12.5. The stored
+  // NOTE: pins current behaviour. The stored
   // body carries the referral and nothing else — the text the customer typed
   // alongside their ad click never reaches the inbox or the rule match.
   test("drops the message text that arrived with the referral", async () => {
@@ -575,7 +571,7 @@ describe("handleInstagramMessageSeen", () => {
   // NOTE: pins current behaviour. The read time is taken from the messaging
   // event's own timestamp rather than anything on the receipt, which is close
   // enough — but note there is no watermark handling at all, so only the single
-  // named message is marked, never the ones before it. See issues.txt 12.8.
+  // named message is marked, never the ones before it.
   test("marks only the one named message, ignoring everything before it", async () => {
     await handleInstagramMessageSeen(webhook(messaging({ read: { mid: "mid-5", watermark: 1 } })));
 
@@ -588,7 +584,7 @@ describe("handleInstagramMessageSeen", () => {
   // `where: { messageId: undefined }`. Prisma DROPS an undefined filter rather
   // than matching null, so the findFirst behind it became an unfiltered query over
   // the whole WaMessage table and stamped `read` onto whichever row came back
-  // first, in any org. See issues.txt 12.8.
+  // first, in any org.
   test("does nothing when the receipt carries no message id", async () => {
     await handleInstagramMessageSeen(webhook(messaging({ read: { watermark: 1 } })));
 
@@ -596,7 +592,7 @@ describe("handleInstagramMessageSeen", () => {
   });
 
   // NOTE: there is no try/catch here either, so a failed update unwinds
-  // handleInstagramWebhook and abandons the rest of the batch. See issues.txt 12.2.
+  // handleInstagramWebhook and abandons the rest of the batch.
   test("abandons the work when the update fails", async () => {
     updateByMessageIdMock.mockRejectedValue(new Error("db down"));
 
@@ -622,7 +618,7 @@ describe("handleInstagramMessageReaction", () => {
   // No message id used to be passed, so the reaction was stored with nothing to
   // deduplicate on — a redelivered webhook stored it twice — and nothing linked it
   // back to the message it reacted to, even though reaction.mid names that
-  // message. Every sibling handler passes an id. See issues.txt 12.8.
+  // message. Every sibling handler passes an id.
   test("stores the reaction against the message it reacted to", async () => {
     await handleInstagramMessageReaction(
       webhook(messaging({ reaction: { mid: "mid-1", action: "react", emoji: "❤️" } })),
@@ -636,7 +632,7 @@ describe("handleInstagramMessageReaction", () => {
   // this handler through the webhook at all — see instagram.util.test.ts's
   // "declines an echo of the business's own message". Called directly it still
   // stores, which is why the guard belongs in classification rather than repeated
-  // in each of the five handlers. See issues.txt 12.6.
+  // in each of the five handlers.
   test("stores a reaction handed to it directly, echo or not", async () => {
     await handleInstagramMessageReaction(
       webhook(
@@ -688,7 +684,7 @@ describe("getFbPages", () => {
   // Facebook page with no Instagram account attached simply has no such field. One
   // unconnected page in the list therefore threw and the user saw no pages at all
   // rather than the ones that do work — during Instagram onboarding, where having
-  // an unconnected page is entirely normal. See issues.txt 12.9.
+  // an unconnected page is entirely normal.
   test("skips a page with no Instagram account and returns the rest", async () => {
     callMetaApiMock.mockResolvedValue({
       data: {
@@ -716,7 +712,7 @@ describe("getFbPages", () => {
 
   // Same token-in-the-url shape as getIgUserDetailsFromMeta above, but with the
   // org's long-lived USER access token rather than a page token — the one that
-  // grants access to every page the org connected. See issues.txt 12.7.
+  // grants access to every page the org connected.
   test("passes the user access token as the auth header, not in the query string", async () => {
     await getFbPages("settings-1", ORG_ID);
 

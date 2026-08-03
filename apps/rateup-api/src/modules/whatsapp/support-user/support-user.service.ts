@@ -8,11 +8,6 @@ import { WaMessageBody } from "../../../types/whatsapp.types.js";
 
 export async function handleSupportUserWebhook(data: WaMessageBody) {
   for (const entry of data.entry) {
-    // NOTE: `entry.id` is the Instagram business account id on every other
-    // webhook in the codebase, and the log line below says so — but it is being
-    // used here as a Contact primary key. That mismatch is recorded as
-    // issues.txt 18.42 rather than changed blind; what is fixed here is only that
-    // the lookup no longer goes through the now-org-scoped getContactById.
     const contact = await getContactByIdForWebhook(entry.id);
     if (!contact) {
       log.trace("No contact found for instagram business account id: %s", entry.id);

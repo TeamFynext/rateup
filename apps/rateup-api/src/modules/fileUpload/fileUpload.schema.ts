@@ -32,12 +32,6 @@ export const dataExtractFileMimeTypes = [
   ODS_MIMETYPE,
 ];
 
-// uploadFileSchema used to live here: `z.any().refine(value =>
-// allowedMimeTypes.includes(value))`, which compared the file VALUE against a list
-// of mimetypes and so could never pass. No route used it, and it read as though
-// upload validation were declarative when the real check is validateFile.
-// Deleted. See issues.txt 24.8.
-
 const fileDeleteInputSchema = z.object({
   fileKeyArray: z
     .array(

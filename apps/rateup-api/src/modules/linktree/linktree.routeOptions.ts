@@ -62,9 +62,6 @@ const updateLinktreeWithShortIdRouteOptions = {
 };
 
 const deleteLinktreeByIdRouteOptions = {
-  // Was `schema: {}`, so :id reached prisma.linktree.delete unvalidated and a
-  // non-uuid produced a Prisma validation error and a 500 rather than a 400
-  // naming the field. See issues.txt 45.6.
   schema: {
     params: byIdParams,
   },
@@ -92,9 +89,6 @@ const updatePageVisitsOrLinkClicksOptions = {
     params: updatePageVisitsOrLinkClicksReqParams,
   },
   config: { isPublic: true },
-  // Per-address ceiling on top of the per-page daily dedup in the handler.
-  // Reaches the route only because the onRoute hook now appends rather than
-  // assigns. See issues.txt 45.3 and 45.7.
   preHandler: [rateLimit({ max: 240, windowSeconds: 3600, key: "linktreeCount" })],
   handler: asyncErrHandler(updatePageVisitsOrLinkClicks),
 };

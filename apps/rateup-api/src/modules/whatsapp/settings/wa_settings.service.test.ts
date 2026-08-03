@@ -162,7 +162,6 @@ describe("createWaSettings", () => {
   // Only the phoneId branch used to encrypt, so a channel created without one —
   // the Instagram and Facebook-page shape — was written with whatever token it was
   // handed, verbatim, into a column the schema comments as "// encrypted".
-  // See issues.txt 13.5.
   test("encrypts the token for a channel with no phone id too", async () => {
     await createWaSettings(ORG_A, {
       accessToken: "plain-token",
@@ -179,7 +178,6 @@ describe("createWaSettings", () => {
   // grants messaging on behalf of the Facebook page AND the connected Instagram
   // account. It has no IV column of its own, so the IV is stored inline as
   // `<iv>:<ciphertext>` — self-describing, so no schema change and no backfill.
-  // See issues.txt 13.5.
   test("encrypts the page access token, with its iv inline", async () => {
     await createWaSettings(ORG_A, {
       accessToken: "plain-token",
@@ -249,7 +247,6 @@ describe("reading a channel", () => {
   // A row with no IV holds a plaintext token (13.5), so it is returned as stored
   // rather than decrypted. Two callers guarded this with `res.wabaId ? ... : res`
   // and six did not — the guard is gone because the decrypt itself is now total.
-  // See issues.txt 13.4.
   test("returns the token as stored for a channel that was never encrypted", async () => {
     db.whatsappSettings.findFirst.mockResolvedValue(
       row({ wabaId: null, accessToken_iv: null, accessToken: "plain-token" }),
@@ -275,7 +272,7 @@ describe("reading a channel", () => {
   // not — and aes_decrypt does Buffer.from(iv, "hex") on a null iv, which throws.
   // A Facebook-page-only channel therefore broke the whole inbound Facebook
   // webhook (getWaSettingsByPageId is its first call) and the dashboard's channel
-  // list. See issues.txt 13.4.
+  // list.
   test("reads a page-only channel by page id without throwing", async () => {
     db.whatsappSettings.findFirst.mockResolvedValue(
       row({ wabaId: null, accessToken_iv: null, accessToken: "plain-token" }),
@@ -287,7 +284,7 @@ describe("reading a channel", () => {
   });
 
   // Same gap, reached through the channel list the dashboard loads on every page.
-  // One unencrypted row used to take the whole list down. See issues.txt 13.4.
+  // One unencrypted row used to take the whole list down.
   test("returns the whole channel list when one channel has no WhatsApp account", async () => {
     db.whatsappSettings.findMany.mockResolvedValue([
       row(),
@@ -312,7 +309,7 @@ describe("reading a channel", () => {
   // getWaSettingsById keyed on the id alone and took no org, and the sync and
   // meta-asset handlers calling it never checked ownership afterwards — which is
   // how getMetaAssetsHandler came to hand out another org's Facebook page access
-  // tokens. See issues.txt 13.1.
+  // tokens.
   test("scopes a channel lookup by id to the org asking", async () => {
     await getWaSettingsById(SETTINGS_ID, ORG_A);
 
@@ -425,7 +422,7 @@ describe("updating a channel", () => {
   // updateWaSettingsById keyed on the id alone, took no org, and — unlike
   // updateWaSettings — did not encrypt a replacement token either, so a token
   // written through PUT /:whatsappSettingsId was stored in plain text and then
-  // failed to decrypt on the way back out. See issues.txt 13.1 and 13.5.
+  // failed to decrypt on the way back out.
   test("scopes the update to the caller's org and encrypts the token", async () => {
     await updateWaSettingsById(SETTINGS_ID, ORG_A, { accessToken: "new-plain" } as any);
 
@@ -520,7 +517,6 @@ describe("upsertWaSettings", () => {
   // The org's decrypted WhatsApp token used to be interpolated into the URL rather
   // than passed as callMetaApi's third argument, and callMetaApi trace-logs the url
   // and dumps the whole response — config included — on any non-2xx. Same shape as
-  // issues.txt 10.4 and 12.7. See issues.txt 13.3.
   test("passes the org's access token as the auth header on both lookups", async () => {
     await upsertWaSettings(ORG_A, PHONE_ID, {
       fbPageId: "page-1",
@@ -602,7 +598,6 @@ describe("getWaLogs", () => {
   // The count query used to filter on orgId only, while the rows were also
   // filtered by phone — so a search matching three logs out of ten thousand
   // reported totalCount 10000 and the client's pager offered empty pages.
-  // See issues.txt 13.6.
   test("counts only the logs the filter actually matches", async () => {
     await getWaLogs(ORG_A, { page: 0, limit: 50, phone: "5550" } as any);
 
@@ -615,10 +610,10 @@ describe("getWaLogs", () => {
     );
   });
 
-  // NOTE: pins current behaviour, the same off-by-one shape as issues.txt 8.2.
+  // NOTE: pins current behaviour, the same off-by-one shape as
   // skip is page * limit, so pages are zero-based — page 1 is the second page.
   // The schema leaves page optional with no default, so the convention is stated
-  // nowhere. See issues.txt 13.6.
+  // nowhere.
   test("treats the page number as zero-based", async () => {
     await getWaLogs(ORG_A, { page: 1, limit: 50 } as any);
 
@@ -641,7 +636,7 @@ describe("reading Meta assets for onboarding", () => {
     await expect(getFbPagesFromWa(SETTINGS_ID, ORG_A)).rejects.toThrow("accesstoken not found");
   });
 
-  // Fixed as part of the TS strict-mode migration (see issues.txt 13.7): all four of
+  // Fixed as part of the TS strict-mode migration: all four of
   // these used to destructure getWaSettingsById's result before checking it, and that
   // function returns null for an id that matches nothing. An unknown — or another
   // org's, since nothing is scoped — settings id gave a bare TypeError rather than the
@@ -663,7 +658,7 @@ describe("reading Meta assets for onboarding", () => {
   // every page, and the whole response body was then logged at INFO — a level that
   // IS on in production — so a working page token for every connected Facebook
   // page was written to the log on every sync, and those tokens do not expire on
-  // their own. Only the page ids are logged now, at trace. See issues.txt 13.3.
+  // their own. Only the page ids are logged now, at trace.
   test("never logs a page access token", async () => {
     callMetaApiMock.mockResolvedValue({
       data: { data: [{ id: "page-1", name: "The Shop", access_token: "page-token-secret" }] },

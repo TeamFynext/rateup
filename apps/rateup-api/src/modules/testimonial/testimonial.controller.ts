@@ -3,8 +3,6 @@ import { log } from "../../utils/logger.js";
 import { getAllTestimonialByOrgId, getAllTestimonialBySurveyId } from "./testimonial.service.js";
 import { BySurveyIdParamsInput } from "./testimonial.schema.js";
 
-// Both handlers answered 201 for a read, and both sent `"Failed" + error` — the
-// raw Prisma message, unspaced, with nothing logged. See issues.txt 32.4.
 export async function getAllTestimonialBySurveyIdHandler(
   request: FastifyRequest<{
     Params: BySurveyIdParamsInput;

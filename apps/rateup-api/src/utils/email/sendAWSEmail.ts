@@ -30,19 +30,6 @@ export interface EmailParams {
   attachments?: [{ filename: string; path: string }];
 }
 
-/**
- * Sends one message through SES. Returns whether it went out.
- *
- * It used to swallow the transport error and resolve with nothing, so every caller
- * was told the mail had been sent: a respondent who never received an OTP saw a
- * success screen, and an SES throttle, a suppression-list hit and a bad address all
- * presented identically to a delivery. See issues.txt 25.7.
- *
- * A boolean rather than a throw on purpose: several callers (the Stripe hooks, the
- * subscription-expiry mailers) fire this without awaiting it, and turning those
- * into unhandled rejections would be a worse failure than the one being fixed.
- * Callers that care — sendEmailService does — check the result.
- */
 export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> => {
   const { to, subject, text, html, attachments } = emailParams;
   try {

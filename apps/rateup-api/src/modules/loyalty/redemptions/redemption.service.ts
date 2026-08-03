@@ -12,32 +12,12 @@ import { LoyaltyEventType } from "../../../types/enums.js";
  */
 type Tx = Prisma.TransactionClient;
 
-/** The most transactions one export may cover. See issues.txt 20.22. */
 const EXPORT_LIMIT = 50_000;
 
 function isRecordNotFound(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2025";
 }
 
-/**
- * Moves an account's balance by `delta`, but only if it still holds at least
- * `cost` points, and returns the row as it now stands.
- *
- * The guard is the WRITE's own condition rather than a read taken beforehand. It
- * used to be the latter: `customer.currentPoints < reward.pointsCost` was checked
- * at the top of redeemReward and the write underneath was an unconditional
- * `decrement`, with no row lock and no transaction. Two redemptions racing on one
- * account both passed the check and both deducted, so the balance went negative
- * and the reward was issued twice. Postgres will not apply two conflicting
- * updates to one row concurrently, so making the balance part of the condition is
- * what actually settles the race.
- *
- * `update` with a non-unique filter alongside the id raises P2025 when nothing
- * matches, which is the same shape used for the org guards elsewhere in this
- * codebase. Returning the updated row is also what makes `balanceAfter` truthful:
- * it is read from the write's result rather than recomputed from a stale read.
- * See issues.txt 20.17 and 20.15.
- */
 async function moveBalance(tx: Tx, accountId: string, cost: number, delta: number) {
   try {
     return await tx.customerLoyaltyAccount.update({
@@ -53,11 +33,6 @@ async function moveBalance(tx: Tx, accountId: string, cost: number, delta: numbe
 }
 
 export async function redeemReward(programId: string, data: RedeemRewardInput) {
-  // Both subjects are resolved WITHIN the caller's program. The program comes from
-  // the session in redeemRewardHandler, so this is the org guard: an account id or
-  // a reward id belonging to another org reads as absent rather than as forbidden,
-  // which is how the rest of the codebase answers the same question.
-  // See issues.txt 20.20.
   const customer = await prisma.customerLoyaltyAccount.findFirst({
     where: { id: data.customerId, programId },
     include: {
@@ -100,17 +75,9 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   if (reward.rewardType === "point") {
     const pointsToAdd = Number((reward.rewardValue as { points?: number })?.points) || 0;
 
-    // The code used to be `"INSTANT_" + Date.now().toString(36)`: fully
-    // predictable, and two point redemptions in the same millisecond collided on a
-    // unique column. See issues.txt 20.9.
     const instantRedemptionCode = await generateRedemptionCode();
 
     const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
-      // The balance moves first, so the ledger row can record where it landed
-      // rather than where it was assumed to land. The old row recorded
-      // `currentPoints - pointsCost` while the balance actually moved by
-      // `pointsToAdd - pointsCost`, understating by exactly the points the
-      // redemption had just granted. See issues.txt 20.15.
       const account = await moveBalance(
         tx,
         customer.id,
@@ -280,27 +247,6 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
   const status = requiresApproval ? "PENDING" : "APPROVED";
 
-  // Both branches now write a LoyaltyRedemption, and the customer's assignment is
-  // resolved BEFORE anything is deducted. What used to happen:
-  //
-  //   (a) When the reward required approval, the branch wrote a zero-point ledger
-  //       row and nothing else — the LoyaltyRedemption create sat in the `else`.
-  //       The function still handed the caller a redemptionCode, but that code
-  //       existed nowhere: verifyRedemption answered "Redemption not found",
-  //       applyRedemption could not find it, and the approvals queue — which lists
-  //       by `account.programId` and joins `redemption` — had no request to act on.
-  //       A pending redemption of a regular reward was silently lost.
-  //
-  //   (b) When it did not, the points were taken and the ledger row written, and
-  //       only THEN did it call `customerReward.update({ rewardId_accountId })` —
-  //       a row that exists only if the reward had been assigned to that customer
-  //       beforehand. For a regular reward that never was, prisma raised P2025
-  //       there, leaving the customer charged for a reward they did not receive,
-  //       with no redemption record to trace it and nothing to roll it back.
-  //
-  // The upsert covers both shapes this path is asked to handle: a reward already
-  // assigned to the customer (the "assigned" type) and one being taken for the
-  // first time. See issues.txt 20.19.
   const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
     await tx.customerReward.upsert({
       where: {
@@ -418,15 +364,6 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   };
 }
 
-/**
- * Counts one unit of a reward's stock against it, if it tracks stock at all.
- *
- * It is called ONCE per redemption, here — at the point the redemption is
- * approved, which is also the point the validator checked the stock. It used to be
- * called a second time by applyRedemption when the cashier presented the code, so
- * every reward that was redeemed and then presented consumed two units and a
- * reward limited to 100 sold out after 50. See issues.txt 20.21.
- */
 async function burnStock(tx: Tx, reward: { id: string; stockQuantity: number | null }) {
   if (reward.stockQuantity === null) return;
 
@@ -440,18 +377,6 @@ async function burnStock(tx: Tx, reward: { id: string; stockQuantity: number | n
   });
 }
 
-/**
- * The org filter on the three lookups below.
- *
- * A redemption code is a bearer token for a discount, and these lookups used to
- * take one on its own authority: a cashier in any org could verify — and then mark
- * USED — a redemption belonging to any other, consuming that customer's reward and
- * a unit of that org's stock. With the entropy the codes used to carry
- * (issues.txt 20.9) they did not have to be leaked to be found.
- *
- * The path is the same one getRewardByShortCode already scopes through.
- * See issues.txt 20.20.
- */
 function ownedByOrg(orgId: string) {
   return { account: { program: { orgId } } };
 }
@@ -506,14 +431,6 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
     throw new Error("Redemption already applied");
   }
 
-  // Stock is NOT touched here. redeemReward already counted this redemption
-  // against the reward when it approved it — incrementing again at the till was
-  // what made every redeemed-then-presented reward consume two units of stock.
-  // See issues.txt 20.21.
-  //
-  // `usedAt: null` is part of the write's own condition rather than only the read
-  // above it, so two cashiers scanning the same short code at the same moment
-  // cannot both get past the already-applied check. See issues.txt 20.17.
   const updated = await prisma.$transaction(async (tx) => {
     let used;
     try {
@@ -640,17 +557,6 @@ export async function getTransactions(
     }
   }
 
-  // Paging here is ONE-based, deliberately and now explicitly: page 1 is the first
-  // page. That is this module's convention in both of its list endpoints, and it
-  // is the one its clients already send.
-  //
-  // What was wrong was not the convention but the silence at this layer.
-  // `filters.page || 1` swallowed a page of 0 rather than surfacing it, so a
-  // zero-based caller asking for page 0 and page 1 received the SAME first page
-  // and could never reach the last one. Over HTTP the schema already refuses
-  // anything below 1 (redemption.schema.ts), which is where a client learns it is
-  // using the wrong convention; this clamp is the backstop for direct callers.
-  // See issues.txt 20.22.
   const page = Math.max(1, filters.page || 1);
   const limit = filters.limit || 20;
   const skip = (page - 1) * limit;
@@ -730,12 +636,6 @@ export async function getTransactionsForExport(
     }
   }
 
-  // Bounded. An unfiltered export used to materialise a program's entire ledger —
-  // every transaction ever written for every customer — into memory and then into
-  // a spreadsheet, which is the same shape as issues.txt 18.20 and 19.6. The cap is
-  // deliberately far above any plausible real export and far below "the whole
-  // table"; a caller that hits it is told, rather than silently handed a truncated
-  // file. See issues.txt 20.22.
   const rows = await prisma.loyaltyTransaction.findMany({
     where,
     include: {

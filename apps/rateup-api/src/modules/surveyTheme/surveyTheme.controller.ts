@@ -36,11 +36,6 @@ export async function getSurveyThemeByIdHandler(
 ) {
   const { webSurveyThemeId } = request.params;
   const surveyTheme = await getSurveyThemeById(webSurveyThemeId);
-  // This route is public — the survey renderer needs the theme without a
-  // session. The destructure used to be unguarded, so an id that resolved to
-  // nothing threw a TypeError, which the module's error handler turned into a
-  // 500: every unknown id answered 500 rather than 404, and the log filled with
-  // destructuring errors from anyone probing. See issues.txt 33.3.
   if (!surveyTheme) {
     return reply.code(404).send({ success: false, message: "Theme not found" });
   }

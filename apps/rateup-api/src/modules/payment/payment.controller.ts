@@ -316,25 +316,6 @@ export async function sendEmailPlanSelectionDetailsHandler(
   }
 }
 
-/**
- * Marks an order complete.
- *
- * This was the only route in either payment tree with neither a role check nor a
- * root-org check, and it is the one that changes what an organisation is
- * entitled to: `PUT /api/payment/order/<any order id>` with `{"status":
- * "COMPLETE"}` upgraded the CALLER's organisation to that order's plan, with the
- * plan's entire feature set. Nothing on the path consulted a payment, a Stripe
- * session, a Razorpay signature or the order's own orgId. And obtaining a usable
- * order id needed no guessing — the Stripe checkout writes an Order row with the
- * chosen plan before Stripe is called (40.4), so a caller created an order for
- * the most expensive plan, abandoned the checkout, and PUT it complete.
- *
- * Three things changed. The update is scoped to the caller's org and writes only
- * `status` (see updateOrder). The route requires SUPER_ADMIN. And the
- * subscription is granted from the order's OWN paymentStatus — set by the
- * signature-verified webhooks — rather than from the status the client sent.
- * See issues.txt 40.1.
- */
 export async function updateSubscriptionOrderHandler(
   request: FastifyRequest<{
     Params: { orderId: string };

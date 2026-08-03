@@ -58,19 +58,6 @@ const DEFAULT_RANGE_DAYS = 7;
 /** A calendar date carrying no time. `new Date` reads these as UTC midnight. */
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
-/**
- * The window every panel on the analytics screen looks at.
- *
- * This block used to be copied into all six functions in this file, and the copies
- * had drifted: two defaulted to the last seven days while four left the range null
- * for the SQL to coalesce to 1970 — so a summary card counting a week sat beside a
- * trend chart plotting all history, on one screen, from one request. Resolving it
- * once is what makes those numbers reconcilable. See issues.txt 15.1 and 15.8.
- *
- * A range that does not parse is treated as absent. The querystring schema refuses
- * those with a 400 before they reach here; this is the backstop that keeps a bad
- * range from reaching Postgres as an Invalid Date.
- */
 export function resolveDateRange(dateRange: string[] | null | undefined): {
   rangeStart: Date;
   rangeEnd: Date;
@@ -89,12 +76,6 @@ export function resolveDateRange(dateRange: string[] | null | undefined): {
   return { rangeStart, rangeEnd };
 }
 
-/**
- * A user who picks "the 1st to the 7th" means the whole of the 7th. Parsed as UTC
- * midnight and used verbatim in `BETWEEN start AND end`, the range ended the
- * instant its last day began, so everything sent that day was missing from every
- * panel — and a single-day selection returned nothing at all. See issues.txt 15.3.
- */
 function endOfDayIfDateOnly(value: string): Date {
   const parsed = new Date(value);
   if (DATE_ONLY.test(value.trim())) parsed.setUTCHours(23, 59, 59, 999);
@@ -114,22 +95,10 @@ function apiTypeFilterFor(apiType: string | null | undefined) {
   return Prisma.sql``;
 }
 
-/**
- * Rounded in one place, so the overview card and the per-template table report the
- * same figure the same way. Tests for null rather than falsiness: an average of
- * exactly zero — everything delivered within the second it was sent — is a real
- * measurement, not "no data". See issues.txt 15.6.
- */
 function roundSeconds(value: number | null | undefined): number | null {
   return value === null || value === undefined ? null : Number(value.toFixed(2));
 }
 
-/**
- * Renamed from `getWaMessageOverviewByTeamAndOrg`, which took `(teamId, orgId, …)`
- * while every other function in this file takes `(orgId, teamId, …)`. Both are
- * strings, so a transposition would have compiled; renaming alongside the reorder
- * is what turns a missed call site into a compile error. See issues.txt 15.9.
- */
 export async function getWaMessageOverview(
   orgId: string,
   teamId: string | undefined,
@@ -383,12 +352,6 @@ export async function getTemplateCategoryOverview(
     totalTemplates += r.count;
   }
 
-  // Our enum first, so the breakdown keeps a stable shape and a category nobody
-  // used still shows a zero — then anything Meta returned that the enum does not
-  // carry. Those used to be dropped from the breakdown AND from the total, which
-  // was recomputed from the filtered list rather than taken from the query: a pie
-  // chart adding to 100% while under-reporting what was actually sent. Meta has
-  // added template categories before. See issues.txt 15.4(a).
   const known = new Set<string>(Object.values(WaTemplateCategory));
   const categories = [
     ...Object.values(WaTemplateCategory),
@@ -497,27 +460,12 @@ export async function getTemplatePerformanceStats(
   });
 }
 
-/**
- * Every team in the org with what it sent, including the teams that sent nothing.
- *
- * This counts every mapped message, not just template and campaign sends — which
- * is deliberate, and matches the overview card it sits beside. The two template
- * panels filter to `motm."type" IN ('TEMPLATE', 'CAMPAIGN')` because they break
- * their numbers down BY template, so a non-template send has nothing to appear
- * under. Their totals cannot agree with this one and should not be read as though
- * they measure the same population. See issues.txt 15.4(b).
- */
 export async function getTeamPerformanceStats(
   orgId: string,
   dateRange: string[] | null | undefined,
   apiType: string,
 ): Promise<TeamPerformanceStat[]> {
   const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
-  // Into the JOIN's ON condition, not the WHERE clause. A WHERE predicate on the
-  // right-hand table of a LEFT JOIN discards exactly the unmatched rows the LEFT
-  // JOIN exists to keep — motm."externalApi" is NULL for a team that sent nothing,
-  // and `NULL = true` is not true — so filtering by API type used to make every
-  // idle team vanish from the table rather than show a zero. See issues.txt 15.2.
   const apiJoinFilter = apiTypeFilterFor(apiType);
 
   const rows = await prisma.$queryRaw<

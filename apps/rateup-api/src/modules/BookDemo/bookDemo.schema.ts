@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * Both these forms are open to the internet, and the demo form turns one request
- * into TWO queued emails. Every free-text field used to carry a minimum length and
- * no maximum, so a single request could push an arbitrarily large body through the
- * queue and duplicate it into both emails. See issues.txt 16.2.
- */
-/** Long enough for a real message, short enough that one request is not a payload. */
 const MAX_MESSAGE = 2000;
 /** Names, companies, countries and the rest of the short answers. */
 const MAX_SHORT = 200;

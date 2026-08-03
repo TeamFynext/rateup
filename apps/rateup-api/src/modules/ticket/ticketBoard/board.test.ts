@@ -105,7 +105,7 @@ describe("createBoard", () => {
   // NOTE: STILL OPEN. The signature takes a userId and only uses it for the team
   // check — TicketBoard has no creator column and no orgId, so there is still no
   // record of who made a board or which tenant it belongs to. Adding one is a
-  // schema change. See issues.txt 28.5.
+  // schema change.
   test("records no creator on the row", async () => {
     await createBoard({ title: "Support", teamIds: [OWN_TEAM], userId: USER });
 
@@ -113,7 +113,7 @@ describe("createBoard", () => {
   });
 
   // The route's team check was commented out and the service did not look the ids
-  // up either, so any uuid was accepted and linked. See issues.txt 28.2.
+  // up either, so any uuid was accepted and linked.
   test("refuses a team the caller does not belong to", async () => {
     await expect(
       createBoard({ title: "x", teamIds: [VICTIM_TEAM, OWN_TEAM], userId: USER }),
@@ -150,7 +150,7 @@ describe("createBoard", () => {
 
   // The column used to be a second, separate write in the handler, so a failure
   // there left a committed board with no columns while the caller was told the
-  // creation had failed. See issues.txt 28.4.
+  // creation had failed.
   test("seeds the To Do column as part of the board write, not after it", async () => {
     await createBoardHandler(request({ body: { title: "x", teamIds: [OWN_TEAM] } }), reply());
 
@@ -393,7 +393,6 @@ describe("updateBoard", () => {
   // Nothing used to check the incoming team ids against the caller, so a member of
   // a board could attach any other team to it — keeping their own in the list to
   // retain access — and read everything on the board from then on.
-  // See issues.txt 28.2.
   test("refuses to attach an arbitrary team alongside the caller's own", async () => {
     db.teamMember.findMany.mockResolvedValueOnce([{ teamId: OWN_TEAM }]);
 
@@ -404,7 +403,6 @@ describe("updateBoard", () => {
   });
 
   // An empty list used to detach every team, leaving a board nothing can list.
-  // See issues.txt 28.3.
   test("refuses an update that would leave the board with no teams", async () => {
     await expect(updateBoard(BOARD, { teamIds: [] }, USER)).rejects.toThrow(
       /only attach teams you belong to/,
@@ -463,7 +461,7 @@ describe("updateBoard", () => {
 
   // The `if (!updatedBoard)` 404 that used to sit in the handler could never run:
   // prisma.update resolves a row or throws P2025. verifyBoardAccess 403s first for a
-  // board the caller cannot see, which is the right outcome. See issues.txt 28.7.
+  // board the caller cannot see, which is the right outcome.
   test("answers 200 for an update that succeeds", async () => {
     const rep = reply();
 
@@ -541,7 +539,7 @@ describe("getBoardTeamMembersById", () => {
   });
 
   // NOTE: id, name and profilePhoto only — no email, unlike the team roster in
-  // the dashboard module (issues.txt 23.2).
+  // the dashboard module.
   test("selects no email address", async () => {
     await getBoardTeamMembersById(BOARD);
 
@@ -558,7 +556,7 @@ describe("getBoardTeamMembersById", () => {
   });
 
   // $queryRaw resolves with an array, which is always truthy, so the 404 branch that
-  // used to sit beside this could never run either. See issues.txt 28.7.
+  // used to sit beside this could never run either.
   test("answers 200 with an empty list", async () => {
     const rep = reply();
 
@@ -589,7 +587,7 @@ function fakeServer() {
 describe("boardRoutes", () => {
   // The parent ticketRoutes already adds checkSession, and this subtree used to add
   // it again — so every board request resolved the session twice and wrote two audit
-  // entries for one action. See issues.txt 28.7.
+  // entries for one action.
   test("does not add a second checkSession on top of the parent's", async () => {
     const { srv, hooks } = fakeServer();
 

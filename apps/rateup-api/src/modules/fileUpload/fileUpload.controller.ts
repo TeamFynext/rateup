@@ -16,13 +16,6 @@ ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const bucket = () => process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads";
 
-/**
- * An object key for an upload.
- *
- * The timestamp used to be the only thing distinguishing two uploads, so two files
- * of the same name in the same millisecond overwrote each other silently. A short
- * random component removes the collision. See issues.txt 24.8.
- */
 function objectKey(filename: string) {
   const safeName = filename.replace(/[^a-zA-Z0-9-.]/g, "");
   return `${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
@@ -36,12 +29,6 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
   if (!data) {
     return reply.code(400).send({ message: "No file uploaded." });
   }
-  // `allowAll` used to be read from a caller-supplied `metadata` form field and
-  // passed into validateFile, whose first statement returns `{ valid: true }` for
-  // it — ahead of the type and size checks. On an unauthenticated endpoint that is
-  // the uploader switching off the allowlist. Nothing server-side ever set the
-  // flag, so the field is simply not read any more; the unguarded JSON.parse that
-  // read it (24.5) goes with it. See issues.txt 24.1.
   const validation = validateFile({ data });
   if (!validation.valid) {
     data.file.resume();
@@ -59,10 +46,6 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
 
   try {
-    // The transcode used to sit OUTSIDE this try, so an ffmpeg failure escaped the
-    // handler as an unhandled rejection instead of a 500 — and left both temp files
-    // behind, because the finally keyed its cleanup off params.ContentType, which is
-    // only reassigned after a SUCCESSFUL convert. See issues.txt 24.4.
     if (
       data.mimetype === "audio/mp4" ||
       data.mimetype === "audio/mpeg" ||
@@ -86,9 +69,6 @@ export async function uploadController(req: FastifyRequest, reply: FastifyReply)
         mimetype = "audio/mp4";
       }
 
-      // fs/promises: the synchronous read blocked the event loop for the whole
-      // process, on a file that can be as large as the multipart limit allows.
-      // See issues.txt 24.6.
       const finalBuffer = await fsp.readFile(tempOutputPath);
       params = {
         Bucket: bucket(),
@@ -168,9 +148,6 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
-  // This endpoint accepted every type validateFile permits — PDFs and videos
-  // included — and handed the bytes straight to sharp, which threw
-  // "unsupported image format" outside any try/catch. See issues.txt 24.7.
   if (!THUMBNAILABLE.includes(data.mimetype)) {
     data.file.resume();
     return reply.code(400).send({ message: "This endpoint accepts images only." });
@@ -180,9 +157,6 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
   const thumbnailFilename = "thumb300x200-" + uniqueFilename;
 
   try {
-    // Still buffered: both the original and the thumbnail need the same bytes, so
-    // one of the two has to be materialised. The type check above bounds what can
-    // reach it. See issues.txt 24.6.
     const buffer = await data.toBuffer();
     const params: PutObjectCommandInput = {
       Bucket: bucket(),
@@ -203,9 +177,6 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
       Bucket: bucket(),
       Key: thumbnailFilename,
       Body: resizedImage,
-      // The thumbnail is webp bytes; it used to be labelled with the ORIGINAL
-      // file's type, so a JPEG upload stored webp served as image/jpeg.
-      // See issues.txt 24.7.
       ContentType: "image/webp",
     };
 

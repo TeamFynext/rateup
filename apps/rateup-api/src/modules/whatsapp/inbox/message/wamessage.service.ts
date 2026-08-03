@@ -1828,11 +1828,6 @@ export async function updateWaMessageByMessageId(
   data: Prisma.WaMessageUncheckedUpdateInput,
   id?: string,
 ) {
-  // Neither key may be empty. Prisma DROPS an undefined filter rather than
-  // matching null, so `{ messageId: undefined }` became an unfiltered query over
-  // the whole table and the update landed on whichever row came back first — any
-  // org's. The guard lives here rather than in each caller because every caller
-  // is exposed to the same behaviour. See issues.txt 12.8.
   if (!id && !messageId) {
     log.warn("updateWaMessageByMessageId called with no id and no messageId; refusing");
     return null;

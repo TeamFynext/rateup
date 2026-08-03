@@ -1,14 +1,5 @@
 import z from "zod";
 
-/**
- * The querystring shapes these four endpoints accept.
- *
- * All three filters used to be plain optional strings, so `dateRange=garbage,more`
- * reached `new Date(...)` as an Invalid Date and `teamId=abc` reached `::uuid` —
- * both failing at query time as a 500 rather than being refused as a 400.
- * See issues.txt 15.7.
- */
-
 /** Two comma-separated ends, each one something `new Date` can read. */
 const dateRangeSchema = z
   .string()

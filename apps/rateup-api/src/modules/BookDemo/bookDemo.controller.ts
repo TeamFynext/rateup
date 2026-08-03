@@ -6,14 +6,6 @@ import { escapeHtml } from "../../utils/html.js";
 import { log } from "../../utils/logger.js";
 import { createBookDemo } from "./bookDemo.service.js";
 
-/**
- * The social icons in the email footer.
- *
- * The host used to be interpolated straight into an UNQUOTED src attribute, so an
- * API instance without the variable set rendered `src=undefined/images/...`. When
- * there is no host there is no image worth rendering, so the block is omitted
- * rather than emitted broken. See issues.txt 16.5.
- */
 function footerSocialHtml(): string {
   const base = webImagesBaseUrl();
   if (!base) return "";
@@ -43,8 +35,6 @@ export async function bookDemoHandler(
   try {
     const { name, businessName, phone, message, workEmail } = request.body;
 
-    // Every field below reaches an HTML email body. Escaped at the point of use,
-    // because the plain-text alternative wants the raw values. See issues.txt 16.1.
     const safe = {
       name: escapeHtml(name),
       businessName: escapeHtml(businessName),
@@ -73,10 +63,6 @@ Work Email: ${workEmail}
   <p><strong>Work Email:</strong> ${safe.workEmail}</p>
 `;
 
-    // Recorded before anything is queued, so the lead survives a queue that drops
-    // the job or a Redis that is down. A failure to record is logged and does not
-    // stop the emails — the notification is still the faster path to the sales
-    // team. See issues.txt 16.3.
     let recorded = false;
     try {
       await createBookDemo({ name, workEmail, businessName, phone, message });
@@ -95,8 +81,6 @@ Work Email: ${workEmail}
     });
 
     const emailForClient = {
-      // A client that prefers text/plain used to be shown a blank message.
-      // See issues.txt 16.8.
       text: `Hello, ${name}
 
 We’ve received your demo request. We will contact you soon.
@@ -337,9 +321,6 @@ Team RateUp
 </html>
 `,
     };
-    // Best-effort. The sales team has already been told and the request is already
-    // recorded, so failing here would tell the requester their booking failed while
-    // someone is on their way to contact them. See issues.txt 16.4.
     try {
       await notificationQueue.add("notification", {
         emailData: {
@@ -389,8 +370,6 @@ export async function partnerDataHandler(
       canOnboard,
     } = request.body;
 
-    // The route schema requires an array, but this handler is exported and had no
-    // guard of its own. See issues.txt 16.5.
     const serviceList = Array.isArray(services) ? services.join(", ") : String(services ?? "");
 
     const subject = `New Partner Inquiry from ${fullName}`;

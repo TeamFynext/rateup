@@ -218,17 +218,6 @@ export async function setInboxStatus(
   return result;
 }
 
-/**
- * A conversation belongs to a contact, and a contact to an org, so every scope
- * here goes through `contact: { orgId }` — exactly as getConversationsByContactId
- * further down already did, with its own comment explaining why it scopes through
- * Contact rather than the denormalised Conversation.orgId.
- *
- * Without it, `PUT /conversations/:conversationId` let an authenticated user of
- * any org rewrite any ticket's status, subject, description, close stamp and
- * resolution result. Reopening another org's closed ticket put it back in their
- * agents' Open tab. See issues.txt 18.35.
- */
 export async function updateConversation(
   conversationId: string,
   orgId: string,
@@ -704,11 +693,6 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
   dateKey: string,
   dateRange: string[],
 ) {
-  // Guarded, as the three sibling analytics functions in this file already are.
-  // The controller defaults a missing dateRange to `[]`, and reading `[0]`/`[1]`
-  // off that produced two Invalid Dates which were then bound as positional
-  // parameters to $queryRawUnsafe — a 500 for a call the querystring schema says
-  // is valid, since dateRange is optional. See issues.txt 18.38.
   const hasRange = dateRange?.length === 2;
   const startDate = hasRange ? new Date(dateRange[0]) : new Date(0);
   const endDate = hasRange ? new Date(dateRange[1]) : new Date();
@@ -867,11 +851,6 @@ WHERE ct."orgId" = ${orgId}::uuid;
   const thisWeekResolvedRate = totalConversation
     ? Math.round(((resolvedThisWeek / totalConversation) * 100 + Number.EPSILON) * 100) / 100
     : 0;
-  // The denominator is guarded, not just `totalConversation`. A young org whose
-  // every conversation was created today divided by zero; the result was
-  // +/-Infinity, which JSON.stringify writes as null, so the dashboard's trend
-  // arrow was blank rather than zero with no error anywhere.
-  // See issues.txt 18.39.
   const lastWeekTotal = totalConversation - conversationCreatedToday;
   const lastWeekResolvedRate =
     lastWeekTotal > 0
@@ -1629,12 +1608,6 @@ export async function getTeamDetailedMetrics(
 
   SELECT
     ${teamId}::uuid AS "teamId",
-    -- The metrics themselves are properly scoped (team_convos joins Contact on
-    -- the caller's orgId), but these three header columns are separate scalar
-    -- subqueries and carried no org condition — so passing another org's team id
-    -- returned zeroed metrics, correctly, alongside that team's real name and
-    -- colour. Low value on its own; it confirms a team id is valid, which is the
-    -- first step of enumerating one. See issues.txt 18.41.
     (SELECT "name" FROM "Team" WHERE id = ${teamId}::uuid AND "orgId" = ${orgId}::uuid) AS "teamName",
     (SELECT "color" FROM "Team" WHERE id = ${teamId}::uuid AND "orgId" = ${orgId}::uuid) AS "teamColor",
     AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt IS NOT NULL) AS "averageResponseTime",

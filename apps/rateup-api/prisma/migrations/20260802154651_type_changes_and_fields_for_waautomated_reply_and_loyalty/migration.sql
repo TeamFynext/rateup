@@ -27,9 +27,5 @@ ALTER COLUMN "additionalInfo" DROP NOT NULL;
 ALTER TABLE "CustomerLoyaltyAccount" ADD COLUMN     "lastBirthdayGreetedAt" TIMESTAMP(3),
 ADD COLUMN     "lastInactivityReminderAt" TIMESTAMP(3);
 
--- AlterTable
-ALTER TABLE "WaAutomatedReply" ADD COLUMN     "isEnabled" BOOLEAN NOT NULL DEFAULT true,
-ADD COLUMN     "sendOnceIn24Hours" BOOLEAN NOT NULL DEFAULT false;
-
 -- CreateIndex
 CREATE INDEX "BookDemo_createdAt_idx" ON "BookDemo"("createdAt");

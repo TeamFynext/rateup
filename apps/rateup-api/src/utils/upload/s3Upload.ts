@@ -18,14 +18,6 @@ export const s3 =
       })
     : new S3Client({ region: process.env.AWS_S3_REGION });
 
-/**
- * Both helpers used to be written not to throw — uploadFile caught, logged and
- * RESOLVED to undefined; deleteFile caught and resolved WITH the error object — so
- * every caller's own try/catch was dead code and a failure was reported to the
- * client as a success. A failed upload answered 200 with `fileUrl: undefined`, and
- * that key was then saved into a survey or a message as a broken reference.
- * Both propagate now. See issues.txt 24.3.
- */
 export async function uploadFile(params: PutObjectCommandInput) {
   const parallelUploads3 = new Upload({
     client: s3,

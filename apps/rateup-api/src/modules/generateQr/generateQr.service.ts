@@ -120,12 +120,6 @@ async function deleteGenerateQrRecordInDB(
   return deletedGenerateQrRecord;
 }
 
-// Was a bare update, which raises P2025 when the row is absent — the ordinary
-// case for a QR code that has since been deleted — and nothing caught it, so an
-// unauthenticated caller could make the API answer 500 (and write a stack trace
-// through asyncErrHandler's console.log) by POSTing a short id that does not
-// exist. updateMany treats the miss as a miss; the count it returns lets the
-// controller answer 404 instead. See issues.txt 44.4.
 async function incrementNoOfScansInDB(
   req: FastifyRequest<{ Params: GetGenerateQrRecordWithShortIdParams }>,
 ): Promise<boolean> {

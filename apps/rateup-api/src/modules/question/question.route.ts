@@ -107,9 +107,6 @@ export async function questionRoutes(server: FastifyInstance) {
     updateQuestionHandler,
   );
 
-  // Was `server.put("/replace", handler)` — two arguments, so the most
-  // destructive endpoint in the module was the only one that validated nothing.
-  // See issues.txt 39.2.
   server.put<{ Body: ReplaceQuestionsInput; Params: QuestionsRouteParams }>(
     "/replace",
     {

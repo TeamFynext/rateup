@@ -16,7 +16,7 @@ vi.mock("../../../utils/prisma.js", () => ({
     loyaltyReward: { findUnique: vi.fn(), findFirst: vi.fn() },
     loyaltyTransaction: { create: vi.fn() },
     // awardPoints does its pricing, its balance write, its ledger row and the
-    // rule's usage count in one transaction now. See issues.txt 20.17.
+    // rule's usage count in one transaction now.
     $transaction: vi.fn(),
   },
 }));
@@ -231,7 +231,6 @@ describe("createCustomerAccount — the signup bonus", () => {
   // zero. The ledger and the balance disagreed from the very first row. The
   // referee bonus WAS credited, which is what made this an omission rather than a
   // design. It goes into the opening balance now, in the same create.
-  // See issues.txt 20.14.
   test("credits the signup bonus into the opening balance", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ signupBonus: 500 }));
 
@@ -294,7 +293,7 @@ describe("createCustomerAccount — referrals", () => {
   // a code the customer types in by hand — and trackReferral minted codes that
   // were not upper-cased while signup minted codes that were, so a customer
   // entering their own code in caps was simply not found and the referrer earned
-  // nothing. See issues.txt 20.40.
+  // nothing.
   test("looks the referral code up inside the same program, ignoring case", async () => {
     await createCustomerAccount({ ...signupInput, referCode: "ann-ab12" }, PROGRAM, ORG);
 
@@ -348,7 +347,6 @@ describe("createCustomerAccount — referrals", () => {
   // refereeBonusPoints` while the signup bonus was never credited (20.14), so the
   // recorded balance overstated the real one by exactly the signup bonus. Now
   // that both bonuses are in the opening balance, the row is simply true.
-  // See issues.txt 20.14 and 20.15.
   test("the referee's ledger row matches the balance it actually has", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ refereeBonus: 25, signupBonus: 500 }));
     db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
@@ -368,7 +366,7 @@ describe("createCustomerAccount — referrals", () => {
   // rather than from the update's result — so any other write landing on that
   // account in between left the ledger recording a balance it never held, and two
   // referrals arriving together both recorded the same pre-increment figure.
-  // It comes from the write's own returned row now. See issues.txt 20.15.
+  // It comes from the write's own returned row now.
   test("the referrer's ledger balance comes from the write, not from a stale read", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
     db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
@@ -417,13 +415,13 @@ describe("createCustomerAccount — the opening tier", () => {
   // New accounts used to be placed in the tier whose `priority` was exactly 1 —
   // but createLoyaltyTier numbers a program's FIRST tier 0 and increments from
   // there, so a single-tier program never matched and every new account was
-  // created untiered, which then opened the tier bypass of issues.txt 20.6. A
+  // created untiered, which then opened. A
   // program with two or more tiers enrolled new customers into the SECOND tier
   // created rather than the first.
   //
   // The entry tier is the one with the lowest threshold — the tier a customer
   // holding nothing is already in — which is how resetProgramPoints has always
-  // picked it. See issues.txt 20.11.
+  // picked it.
   test("takes the entry tier to be the lowest threshold, not a priority number", async () => {
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
@@ -509,7 +507,7 @@ describe("awardPoints", () => {
   // awardPoints now destructures `{ points, rule: appliedRule }` to match —
   // previously it destructured a nonexistent `appliedRule` key, so every
   // purchase transaction recorded `appliedRuleId: undefined` regardless of
-  // which rule actually priced it. See issues.txt 20.16.
+  // which rule actually priced it.
   test("records which earning rule priced the purchase", async () => {
     (calculatePointsForPurchase as Mock).mockResolvedValue({
       points: 100,
@@ -575,7 +573,6 @@ describe("awardPoints", () => {
   // NOTE: the balance write, the ledger row and the tier move are three separate
   // statements with no transaction around them. A failure after the first leaves
   // points credited with no ledger entry explaining them.
-  // See issues.txt 20.17.
   test("credits the balance before the ledger row is written, untransacted", async () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
@@ -660,7 +657,6 @@ describe("updateCustomerAccount", () => {
   // the caller's program or org — an account id was enough to suspend or close
   // another org's customer. The program is part of the where clause now, so prisma
   // raises P2025 rather than updating a row the caller cannot see.
-  // See issues.txt 20.18.
   test("scopes the write to the caller's program", async () => {
     await updateCustomerAccount("acct-other-org", { status: "closed" } as any, PROGRAM);
 
@@ -744,7 +740,7 @@ describe("assignRewardToCustomer", () => {
   // The account and the reward used to be fetched independently and their
   // programs never compared, so a reward id and an account id from different
   // programs were enough to assign a reward across the tenant boundary. The
-  // reward is looked up WITHIN the account's program now. See issues.txt 20.18.
+  // reward is looked up WITHIN the account's program now.
   test("looks the reward up inside the account's own program", async () => {
     await assignRewardToCustomer("acct-1", "rwd-other-program");
 
@@ -798,7 +794,6 @@ describe("getRewardByShortCode", () => {
   // exploited through HTTP — it was a loaded footgun for the next caller, and the
   // next caller is the one who would not know to look. It is required now, and
   // TypeScript refuses the one-argument call this test used to make.
-  // See issues.txt 20.18.
   test("the check cannot be skipped, because the org is not optional", async () => {
     db.customerReward.findUnique.mockResolvedValue({
       ...issued,
@@ -838,7 +833,7 @@ describe("markRewardAsRedeemed", () => {
   // The guard used to be a read followed by an unconditional write with nothing in
   // between, so two cashiers scanning the same code at the same moment both passed
   // it and the reward was handed over twice. The status is part of the write's own
-  // condition now. See issues.txt 20.17.
+  // condition now.
   test("guards against double redemption in the write itself", async () => {
     db.customerReward.findUnique.mockResolvedValue(issued);
     db.customerReward.update.mockResolvedValue({ id: "cr-1" });

@@ -12,7 +12,6 @@ import { describe, expect, test } from "vitest";
 // Every route these dead gates guarded sends through sendMessage, so all three are
 // already metered — see wasurvey.auth.test.ts for its coverage.
 //
-// See issues.txt 14.1(a) and 17.1.
 describe("the message-limit preHandlers", () => {
   test("no longer exist", async () => {
     const authModule = await import("./wa_templates.auth.js");

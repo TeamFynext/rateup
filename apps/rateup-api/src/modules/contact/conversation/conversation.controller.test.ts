@@ -92,7 +92,7 @@ describe("updateConversationHandler", () => {
   // into the call — `request.user` was not touched — so any authenticated user
   // could rewrite any ticket's status, subject, description, close stamp and
   // resolution result. Reopening another org's closed ticket put it back in their
-  // agents' Open tab. See issues.txt 18.35.
+  // agents' Open tab.
   test("updates the conversation within the caller's org", async () => {
     (updateConversation as Mock).mockResolvedValue({ id: "conv-1" });
     const rep = reply();
@@ -191,7 +191,7 @@ describe("getAverageConversationResponseTimeHandler", () => {
 
   // NOTE: the range is still required by the query this backs, but the handler
   // happily forwards an empty one, which becomes two Invalid Dates.
-  // See issues.txt 18.38. (`dateKey` itself now defaults to `""` rather than
+  // (`dateKey` itself now defaults to `""` rather than
   // `undefined` — a type-safety fix, not a behaviour change: `"" !== "today"`
   // and `"" !== "yesterday"` match `undefined`'s comparisons exactly.)
   test("forwards an empty range rather than refusing the request", async () => {
@@ -296,7 +296,7 @@ describe("getStaffDetailedConversationAnalyticsHandler", () => {
 
   // Fixed: an omitted `days` used to be forwarded as `undefined`, which the
   // service turned into an Invalid Date. The handler now defaults it to a
-  // 30-day window instead. See issues.txt 18.40.
+  // 30-day window instead.
   test("defaults an undefined day count to a 30-day window", async () => {
     (getStaffDetailedConversationAnalytics as Mock).mockResolvedValue({});
 
@@ -347,7 +347,6 @@ describe("getTeamDetailedMetricsHandler", () => {
   // NOTE: the team id comes from the path. The metrics query does scope its
   // conversations through Contact.orgId, but the team's own name and colour are
   // read by id alone, so another org's team name comes back.
-  // See issues.txt 18.41.
   test("passes the path team id straight through alongside the caller's org", async () => {
     (getTeamDetailedMetrics as Mock).mockResolvedValue({});
 

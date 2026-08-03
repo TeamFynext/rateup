@@ -45,9 +45,6 @@ export function generateFlowMessageData({
 
   let message: Partial<WaSendMessageBody["interactive"]> = {};
 
-  // Defaulted before destructuring: the comment below says rows predating
-  // templateMessage exist, but such a row raised a TypeError here before it
-  // could ever reach those defaults. See issues.txt 11.8.
   let { body, header, cta, footer, headerImage } = dbFlow.templateMessage ?? {};
 
   // setting defaults for old waFlow
@@ -261,9 +258,6 @@ export function parseFlowResponse({
     case qt.DDSS: {
       const el = getElementJson(flowJson, elementName);
       if (!el?.["data-source"]) {
-        // Previously crashed with a raw TypeError (`el` / `data-source` used
-        // unchecked) instead of reporting the same "choice not found" case
-        // handled just below. See issues.txt.
         log.error("Element or data-source not found for %s", elementName);
         return undefined;
       }
@@ -286,10 +280,6 @@ export function parseFlowResponse({
       return choices.map((c) => ({ value: c.title }));
     }
     default:
-      // Reports "no answer" rather than handing back Meta's raw payload, which
-      // the caller then stored verbatim as the survey answer. The caller skips
-      // an unresolved answer instead of recording one it cannot read.
-      // See issues.txt 11.11.
       log.error(`Unhandled question type ${qType}`);
       return undefined;
   }
@@ -300,13 +290,6 @@ export function parseFlowResponseV2(
   // string[] for CheckboxGroup) — discriminated below by the switch, same as
   // the untyped param this replaces.
   response: WaFlowRawResponse,
-  // Callers only ever call this for question types that carry choices when a
-  // data-source actually exists on the element; intentionally required
-  // (not optional, unlike Question2["data-source"]) so a caller passing an
-  // element with none still surfaces as a crash rather than silently
-  // resolving to `undefined` — see issues.txt (pinned by
-  // flow.utils.test.ts's "throws when the element it is resolving against
-  // has no options").
   dataSource: Array<{ title: string; id: string }>,
 ) {
   log.trace({ response }, "Parsing response for element %s\nresponse => %o");
@@ -805,8 +788,6 @@ export function generateDataSourceFromQuestion(q: Question) {
  * These ids must be removed before sending the flowJson to whatsapp
  */
 export function injectIdToFlowJson(json: WaFlowJson) {
-  // Works on a copy: this returns a json and so reads as though it built a new
-  // one. See issues.txt 11.10.
   const copy: WaFlowJson = JSON.parse(JSON.stringify(json));
   const ids = [];
   for (const element of waFlowFormElementIterator({
@@ -828,9 +809,6 @@ export function injectIdToFlowJson(json: WaFlowJson) {
  * Removes auto-generated (by us for internal use) ids from flowJson
  */
 export function removeIdFromFlowJson(json: WaFlowJson) {
-  // Works on a copy. updateFlowJsonInWa calls this on the json it was handed;
-  // stripping in place took the ids off whatever the caller still held.
-  // See issues.txt 11.10.
   const copy: WaFlowJson = JSON.parse(JSON.stringify(json));
   for (const element of waFlowFormElementIterator({
     flowJson: copy,
@@ -850,14 +828,6 @@ export function getFlowFormElementNameFromQuestionId(qId: string, map: unknown) 
     if (value?.questionId === qId) return key;
   }
 }
-
-// validateFlowLogic used to live here. It answered false for four of the six
-// LogicConditions (IncludesAnyOf fell through to `default`, and IncludesNoneOf,
-// IncludesAllOf and Submitted had no case at all) while reading like a working
-// logic evaluator, and nothing called it. Deleted rather than completed: the
-// flow paths use validateLogic / validateLogicV2 in question.utils.ts, which
-// handle all six, and a third copy would only have to be kept in step with
-// those two. See issues.txt 11.6.
 
 export function parseResponseFromCurrentScreenResponse(
   dbFlow: WaFlow,
@@ -880,9 +850,6 @@ export function parseResponseFromCurrentScreenResponse(
     if (!rawResponse) continue;
     const question = getQuestionFromFlowElementId(elementName, flowJson, questions, flowMap);
     if (!question) {
-      // Previously crashed with a raw TypeError (`question.id`/`question.type`
-      // used unchecked below) instead of skipping the unresolved answer. See
-      // issues.txt.
       log.error("Question not found for flow element %s", elementName);
       continue;
     }
@@ -894,8 +861,6 @@ export function parseResponseFromCurrentScreenResponse(
       response: rawResponse,
     });
     if (parsedResponse === undefined) {
-      // An unhandled question type or a choice that resolved to nothing. Skipped
-      // rather than stored as an empty answer. See issues.txt 11.11.
       log.error("Could not parse the answer for flow element %s", elementName);
       continue;
     }
@@ -938,20 +903,6 @@ export function parseResponseFromCurrentScreenResponseV2(
   return responses;
 }
 
-/**
- * Strips our internal-only fields off every element of a screen before the json
- * is uploaded to Meta.
- *
- * Walks nested children too. It used to stop at screen.layout.children, so
- * anything inside a Form kept its id, metaType, enableNpsAnalytics and
- * googleReview. That reached nothing today — only the v2 path calls this, and
- * v2 elements sit directly under layout.children — but it was silently wrong
- * for the v1 shape. See issues.txt 11.12.
- *
- * NOTE: waFlowFormElementIterator is NOT reused here (as the issue suggested):
- * it yields only elements *inside* a Form, so it would skip the top-level
- * children this function exists to clean.
- */
 export function sanitizeScreenData(data: WaFlowJson) {
   data.screens.forEach((screen) => {
     sanitizeScreenChildren(screen.layout.children);
@@ -975,15 +926,6 @@ function sanitizeScreenChildren(children: WaFlowForm[] | undefined) {
     sanitizeScreenChildren(child.children);
   });
 }
-// Recursively strips empty fields from a v2 flow-json object tree — genuinely
-// dynamic, arbitrarily-shaped JSON discriminated only by `typeof` at runtime.
-//
-// "Empty" means null, undefined or "". It deliberately does NOT mean falsy: the
-// old `!value` test deleted `required: false`, `markdown: false` and
-// `min-chars: 0`, so any setting a user turned off never reached WhatsApp. This
-// is the last thing that touches the json before it is uploaded, which is why
-// `visible` was already spared by name — the exception is no longer needed now
-// that `false` survives on its own. See issues.txt 11.5.
 export function removeEmptyStrings(obj: object) {
   if (Array.isArray(obj)) {
     // Arrays are filtered, not `delete`d into: deleting an index leaves a hole,
@@ -1103,10 +1045,6 @@ export function transformFlowAndLogicJumps(
                 return `(\${form.${condition.field}} ${condition.operator} ${value})`;
               })
               .join(" && "),
-            // `then`/`else` are optional in the underlying shape (a jump
-            // missing either previously crashed here with a raw TypeError
-            // instead of just contributing no branches — see issues.txt).
-            // eslint-disable-next-line unicorn/no-thenable
             then: (element.then ?? [])
               .map((action) => {
                 const childIndex = screenChildren.findIndex((child) => child.id === action);
@@ -1145,12 +1083,6 @@ export function transformFlowAndLogicJumps(
   }
 }
 
-/**
- * See issues.txt 11.7 and 17.2: this gate, the templates gate, the campaigns gate
- * and the automated-replies gate were four copies of the same code carrying the
- * same two defects. enforceWhatsappCountLimit is the one copy; its header records
- * what they were.
- */
 export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply: FastifyReply) {
   return await enforceWhatsappCountLimit(request, reply, {
     label: "Flows",

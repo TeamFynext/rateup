@@ -73,10 +73,6 @@ export async function getApprovalRequestByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    // Every mutation below resolves its subject through the caller's own program.
-    // Only the LIST used to be scoped, so an approval id was enough for a reviewer
-    // in any org to approve another org's points adjustment — which mints points
-    // into that org's programme. See issues.txt 20.26.
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {
       return reply.code(404).send({ error: "Loyalty program not found" });
@@ -176,9 +172,6 @@ export async function cancelApprovalRequestHandler(
 
     const data: CancelRequestInput = {
       approvalId: request.params.approvalId,
-      // Who cancelled it, and it is recorded. Cancel used to write no reviewer at
-      // all while reject wrote both, so a cancelled request could not be
-      // attributed to anyone. See issues.txt 20.25.
       reviewerId: request.body.reviewerId,
       reviewerName: request.body.reviewerName,
       reason: request.body.reason,

@@ -10,16 +10,6 @@ import type { ByIdParams, CreateReferralInput, TrackVisitInput } from "./referra
 import connection from "../../utils/redisConnection.js";
 import { log } from "../../utils/logger.js";
 
-/**
- * One visit per IP per code per day.
- *
- * The endpoint is unauthenticated and counted every call with no deduplication,
- * so the figure the module exists to produce was directly writable — without
- * limit — by the people it measures. A per-IP rate limit bounds the RATE; this
- * bounds the TOTAL a single source can contribute. Fails OPEN for the same
- * reason the rate limiter does: a Redis outage should not stop legitimate visits
- * being counted. See issues.txt 38.1.
- */
 async function alreadyCountedToday(ip: string, code: string) {
   try {
     const key = `referral:visit:${code}:${ip}`;
@@ -45,10 +35,6 @@ export async function trackVisitHandler(
       await updateReferral(code, "visit");
     }
 
-    // The same answer whether or not the code resolved. It used to 404 for an
-    // unknown code, which made the code space enumerable through an endpoint
-    // that needs no credential — and 38.2 made that a small space for any known
-    // influencer name. See issues.txt 38.5.
     return reply.code(200).send({ success: true, message: "Visit tracked successfully" });
   } catch (error) {
     request.log.error(error, "Failed to track referral visit");
@@ -65,8 +51,6 @@ export async function deleteReferralHandler(
     if (!id) {
       return reply.code(400).send({ message: "id is required" });
     }
-    // deleteMany, so a row that is already gone is an idempotent success rather
-    // than a 500. See issues.txt 38.6.
     await deleteReferral(id);
     return reply.code(200).send({ success: true, message: "Referral deleted successfully" });
   } catch (error) {
@@ -107,12 +91,6 @@ export async function createReferralHandler(
     if (error instanceof ReferralCodeError) {
       return reply.code(500).send({ message: error.message });
     }
-    // Referral has TWO unique columns — referral_code and email — and this branch
-    // did not look at which one the error named, so a code collision was reported
-    // as a duplicate email. The operator would change the email, retry, and hit
-    // the same collision, because the code is regenerated from the same name by
-    // the same generator. Prisma carries meta.target; it was available and
-    // discarded. See issues.txt 38.3.
     if ((error as { code?: string } | null)?.code === "P2002") {
       const target = (error as { meta?: { target?: unknown } }).meta?.target;
       const fields = Array.isArray(target) ? target.map(String) : [String(target ?? "")];
