@@ -153,7 +153,10 @@ describe("startInstagramAutomationFlow", () => {
     expect(log.error).toHaveBeenCalled();
   });
 
-  test("stays silent when a once-a-day automation already reached this user", async () => {
+  // The once-a-day throttle moved to rules with the sendOnceIn24Hours column, so the
+  // flow engine no longer consults the recent-send log at all — not even when a caller
+  // still passes the old flag.
+  test("never consults the recent-send log", async () => {
     m.sentRecently.mockResolvedValue(true);
 
     await startInstagramAutomationFlow(
@@ -163,18 +166,15 @@ describe("startInstagramAutomationFlow", () => {
       IBA_ID,
     );
 
-    expect(m.track).not.toHaveBeenCalled();
-  });
-
-  test("does not consult the recent-send log unless the option is set", async () => {
-    await startInstagramAutomationFlow(IGS_ID, flow([START]), ORG_ID, IBA_ID);
-
     expect(m.sentRecently).not.toHaveBeenCalled();
+    expect(m.track).toHaveBeenCalled();
   });
 
   // Still not rethrown — one broken automation must not disturb the webhook that
-  // triggered it — but the tracking row is marked failed so the flow is queryable.
-  test("marks the tracking row failed rather than only logging", async () => {
+  // triggered it — but the tracking row is marked so the flow is queryable. The marker
+  // is `paused`: WaAutomationProgressStatus has no `failed` value, so a crash is told
+  // apart from a deliberate wait for input by the accompanying error log.
+  test("marks the tracking row paused rather than only logging", async () => {
     const automation = flow([START]);
     m.track.mockRejectedValue(new Error("db down"));
 
@@ -184,12 +184,12 @@ describe("startInstagramAutomationFlow", () => {
     expect(log.error).toHaveBeenCalled();
     expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
       where: { phone: IGS_ID, waAutomatedReplyId: automation.id },
-      data: { status: "failed" },
+      data: { status: "paused" },
     });
   });
 
   // The marker is best-effort: failing to write it must not mask the original error.
-  test("does not throw when the failure marker itself cannot be written", async () => {
+  test("does not throw when the stopped marker itself cannot be written", async () => {
     m.track.mockRejectedValue(new Error("db down"));
     db.waAutomatedReplyMessage.updateMany.mockRejectedValue(new Error("db still down"));
 
@@ -272,8 +272,8 @@ describe("processNextInstagramNode - walking the flow", () => {
   });
 
   // A flow that half-ran is no longer indistinguishable from one that finished: the
-  // failure is still not rethrown, but the tracking row is marked failed.
-  test("marks the tracking row failed when a node fails mid-flow", async () => {
+  // failure is still not rethrown, but the tracking row is marked paused.
+  test("marks the tracking row paused when a node fails mid-flow", async () => {
     const automation = flow([textNode("t1")]);
     m.logAction.mockRejectedValue(new Error("db down"));
 
@@ -281,11 +281,11 @@ describe("processNextInstagramNode - walking the flow", () => {
     expect(log.error).toHaveBeenCalled();
     expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
       where: { phone: IGS_ID, waAutomatedReplyId: automation.id },
-      data: { status: "failed" },
+      data: { status: "paused" },
     });
   });
 
-  test("still does not throw when the failure marker cannot be written either", async () => {
+  test("still does not throw when the stopped marker cannot be written either", async () => {
     m.logAction.mockRejectedValue(new Error("db down"));
     db.waAutomatedReplyMessage.updateMany.mockRejectedValue(new Error("db down"));
 

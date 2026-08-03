@@ -14,10 +14,7 @@ import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  findRecentAutomation,
-  logAutomationAction,
-} from "../whatsappSurvey/automation-logger.utils.js";
+import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.js";
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
@@ -85,8 +82,6 @@ export interface automationProps {
   orgId: string | null;
   whatsappSettingsPhoneId: string | null;
   whatsappSettingsPhoneIds: string[];
-  isEnabled: boolean;
-  sendOnceIn24Hours: boolean;
 }
 // Helper to check substring match while preserving optional case sensitivity
 export function includesWholePhrase(text: string, phrase: string, caseSensitive = false) {
@@ -106,15 +101,6 @@ export async function validateAutomationMatchCondition(
   phone?: string,
 ): Promise<boolean> {
   const { matchType, matchData, commands } = automation;
-  // findRecentAutomation requires a real phone/orgId to scope its lookup -
-  // without both, there's nothing to dedupe against, so skip the check
-  // rather than passing undefined through to the query.
-  if (automation.sendOnceIn24Hours && phone && orgId) {
-    const recentActivity = await findRecentAutomation(phone, orgId, {
-      timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-    });
-    if (recentActivity) return false;
-  }
   // First validate the message matching logic (existing logic)
   let messageMatches = false;
 

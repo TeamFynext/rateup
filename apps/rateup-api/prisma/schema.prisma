@@ -1757,8 +1757,6 @@ model WaAutomatedReply {
   org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
   platform                String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
-  sendOnceIn24Hours       Boolean  @default(false)
-  isEnabled               Boolean  @default(true)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
@@ -1797,7 +1795,6 @@ enum WaAutomationProgressStatus {
   inProgress
   paused
   completed
-  failed
 }
 
 model WaAutomatedReplyMessage {
@@ -2625,23 +2622,17 @@ model NotificationSetting {
 /// confirmed the table is empty.
 model BookDemo {
   id             String   @id @default(cuid())
-  name           String
+  firstName      String
+  lastName       String
   workEmail      String
-  businessName   String
-  phone          String
-  message        String?
-  firstName      String?
-  lastName       String?
-  phoneNumber    String?
-  companyName    String?
-  teamSize       String?
-  preferredTime  String?
-  primaryUseCase String?
-  additionalInfo String?
+  phoneNumber    String
+  companyName    String
+  teamSize       String
+  preferredTime  String
+  primaryUseCase String
+  additionalInfo String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  @@index([createdAt])
 }
 
 model AuditLog {
@@ -2776,13 +2767,13 @@ model Conversation {
   createdAt              DateTime                          @default(now())
   updatedAt              DateTime?                         @updatedAt
 
+  @@unique([orgId, number], name: "conversation_org_id_number_unique")
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
   @@index([orgId, status])
   @@index([orgId, createdAt])
   @@index([orgId, lastMessageAt(sort: Desc)])
-  @@unique([orgId, number], name: "conversation_org_id_number_unique")
   @@index([orgId, isFavorite])
 }
 

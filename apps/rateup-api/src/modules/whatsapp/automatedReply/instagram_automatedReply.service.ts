@@ -57,8 +57,6 @@ export async function createInstagramAutomatedReply(data: {
   name: string;
   matchData: WaAutomatedReplyMatchData;
   whatsappSettingsPhoneId?: string;
-  sendOnceIn24Hours?: boolean;
-  isActive?: boolean;
 }) {
   try {
     const automation = await prisma.waAutomatedReply.create({
@@ -68,9 +66,6 @@ export async function createInstagramAutomatedReply(data: {
         matchData: data.matchData,
         platform: PlatformType.INSTAGRAM,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-        sendOnceIn24Hours: data.sendOnceIn24Hours,
-        // `isActive` is the name the API uses; `isEnabled` is the column.
-        isEnabled: data.isActive,
       },
     });
 
@@ -95,8 +90,6 @@ export async function updateInstagramAutomatedReply(
     name?: string;
     matchData?: WaAutomatedReplyMatchData;
     whatsappSettingsPhoneId?: string;
-    sendOnceIn24Hours?: boolean;
-    isActive?: boolean;
   },
 ) {
   try {
@@ -109,9 +102,6 @@ export async function updateInstagramAutomatedReply(
         name: data.name,
         matchData: data.matchData,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-        sendOnceIn24Hours: data.sendOnceIn24Hours,
-        // `isActive` is the name the API uses; `isEnabled` is the column.
-        isEnabled: data.isActive,
       },
     });
 

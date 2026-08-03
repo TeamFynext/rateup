@@ -123,7 +123,6 @@ function automation(overrides: Record<string, unknown> = {}) {
     commands: ["hello"],
     matchType: WaAutomatedReplyMatchType.Exact,
     matchData: {},
-    sendOnceIn24Hours: false,
     businessHour: null,
     ...overrides,
   } as any;
@@ -232,26 +231,15 @@ describe("validateAutomationMatchCondition - contains matching", () => {
   });
 });
 
-describe("validateAutomationMatchCondition - the once-a-day guard", () => {
-  test("stays silent when this automation already fired in the last day", async () => {
+// The once-a-day guard is gone from automations along with the sendOnceIn24Hours column;
+// rules own that throttle now, via the redis sendOncePerDay key. An automation matches on
+// its conditions alone, however recently it last fired.
+describe("validateAutomationMatchCondition - no once-a-day guard", () => {
+  test("fires even when this automation already fired in the last day", async () => {
     findRecentAutomationMock.mockResolvedValue({ id: "log-1" });
 
     const result = await validateAutomationMatchCondition(
-      automation({ sendOnceIn24Hours: true }),
-      "hello",
-      "org-1",
-      "15550001",
-    );
-
-    expect(result).toBe(false);
-    expect(findRecentAutomationMock).toHaveBeenCalledWith("15550001", "org-1", {
-      timeWindow: 24 * 60 * 60 * 1000,
-    });
-  });
-
-  test("fires when nothing was sent in the last day", async () => {
-    const result = await validateAutomationMatchCondition(
-      automation({ sendOnceIn24Hours: true }),
+      automation(),
       "hello",
       "org-1",
       "15550001",
@@ -260,8 +248,13 @@ describe("validateAutomationMatchCondition - the once-a-day guard", () => {
     expect(result).toBe(true);
   });
 
-  test("does not consult the log when the option is off", async () => {
-    await validateAutomationMatchCondition(automation(), "hello", "org-1", "15550001");
+  test("never consults the recent-automation log, whatever the caller passes", async () => {
+    await validateAutomationMatchCondition(
+      automation({ sendOnceIn24Hours: true }),
+      "hello",
+      "org-1",
+      "15550001",
+    );
 
     expect(findRecentAutomationMock).not.toHaveBeenCalled();
   });

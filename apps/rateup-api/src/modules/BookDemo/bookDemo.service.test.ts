@@ -2,76 +2,81 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: { bookDemo: { create: vi.fn() } },
-  excludeFields: vi.fn(),
 }));
 
 import prisma from "../../utils/prisma.js";
-import { createBookDemo, type BookDemoInput } from "./bookDemo.service.js";
-import { createBookDemoInputSchema } from "./bookDemo.schema.js";
+import { createBookDemo, BookDemoInput } from "./bookDemo.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const createMock = (prisma as unknown as { bookDemo: { create: Mock } }).bookDemo.create;
+const db = prisma as unknown as { bookDemo: Record<string, Mock> };
 
-/** A demo request, as the public form actually collects it. */
-const INPUT: BookDemoInput = {
-  name: "Ada Lovelace",
-  workEmail: "ada@example.com",
-  businessName: "Analytical Engines Ltd",
-  phone: "15550001234",
-  message: "Keen to see the WhatsApp inbox",
+/** The nine columns BookDemo requires. All of them are non-null in the schema. */
+const input: BookDemoInput = {
+  firstName: "Ann",
+  lastName: "Smith",
+  workEmail: "ann@example.test",
+  phoneNumber: "15550001234",
+  companyName: "Example Co",
+  teamSize: "11-50",
+  preferredTime: "Weekday mornings",
+  primaryUseCase: "Collecting reviews",
+  additionalInfo: "None",
 };
+
+const created = { id: "demo-1", ...input, createdAt: new Date(0), updatedAt: new Date(0) };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  createMock.mockResolvedValue({ id: "demo-1", ...INPUT });
+  db.bookDemo.create.mockResolvedValue(created);
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("createBookDemo", () => {
-  test("stores the request and returns the row", async () => {
-    await expect(createBookDemo(INPUT)).resolves.toEqual({ id: "demo-1", ...INPUT });
-    expect(createMock.mock.calls[0][0]).toEqual({ data: INPUT });
+  test("stores the submission exactly as given", async () => {
+    await createBookDemo(input);
+
+    expect(db.bookDemo.create).toHaveBeenCalledWith({ data: input });
   });
 
-  // It used to swallow the failure into `{ success: false }` and console.error, so
-  // no caller could tell a stored request from a lost one and the structured logs
-  // never saw it. The caller decides what a failure to record means.
-  test("reports a failed write to its caller", async () => {
-    createMock.mockRejectedValue(new Error("db down"));
+  // `data` is passed straight through, so anything the caller adds reaches Prisma. The
+  // route never calls this function, so the zod body schema is not a guard here — a
+  // future caller is the only thing standing between an extra key and a Prisma error.
+  test("passes the caller's object through untouched, extra keys and all", async () => {
+    await createBookDemo({ ...input, source: "landing-page" } as BookDemoInput);
 
-    await expect(createBookDemo(INPUT)).rejects.toThrow("db down");
+    expect(db.bookDemo.create.mock.calls[0][0].data).toHaveProperty("source", "landing-page");
   });
 
-  test("stores a request that carried no message", async () => {
-    await createBookDemo({ ...INPUT, message: undefined });
-
-    expect(createMock.mock.calls[0][0].data.message).toBeUndefined();
-  });
-});
-
-describe("createBookDemo - whether anything reaches it", () => {
-  // createBookDemo was the only thing in bookDemo.service.ts and nothing imported
-  // it: bookDemoHandler queued two emails and returned, never touching the
-  // database. A demo request existed only as an email, so a dropped queue job lost
-  // the lead with no record anywhere — after the requester had been told "we'll
-  // contact you soon". The handler records it first now. See issues.txt 16.3.
-  test("is what the handler that receives demo requests calls", async () => {
-    const service = await import("./bookDemo.service.js");
-    const controllerSource = await import("./bookDemo.controller.js");
-
-    expect(typeof service.createBookDemo).toBe("function");
-    expect(Object.keys(controllerSource)).toContain("bookDemoHandler");
+  test("returns the created row on success", async () => {
+    await expect(createBookDemo(input)).resolves.toEqual({ success: true, data: created });
   });
 
-  // The service and the table used to describe a booking form the API no longer
-  // offered: it required firstName, lastName, phoneNumber, companyName, teamSize,
-  // preferredTime, primaryUseCase and additionalInfo, while the route collects a
-  // single `name`, a `businessName`, a `phone` and an optional `message`.
-  // workEmail was the only field the two had in common. See issues.txt 16.3.
-  test("wants exactly the fields the demo route collects", async () => {
-    const accepted = Object.keys(createBookDemoInputSchema.shape);
+  // A failure is swallowed into a result object rather than thrown, so a caller that
+  // ignores `success` cannot tell a stored demo from a lost one.
+  test("reports failure instead of throwing when the insert fails", async () => {
+    db.bookDemo.create.mockRejectedValue(new Error("db down"));
 
-    expect(accepted).toEqual(["name", "workEmail", "businessName", "phone", "message"]);
-    expect(Object.keys(INPUT).every((field) => accepted.includes(field))).toBe(true);
+    await expect(createBookDemo(input)).resolves.toEqual({
+      success: false,
+      error: "Failed to create BookDemo entry",
+    });
+  });
+
+  test("carries no data field on the failure result", async () => {
+    db.bookDemo.create.mockRejectedValue(new Error("db down"));
+
+    const result = await createBookDemo(input);
+
+    expect(result).not.toHaveProperty("data");
+  });
+
+  test("logs the underlying error so the lost submission is traceable", async () => {
+    const cause = new Error("db down");
+    db.bookDemo.create.mockRejectedValue(cause);
+
+    await createBookDemo(input);
+
+    expect(console.error).toHaveBeenCalledWith("Error creating BookDemo:", cause);
   });
 });
