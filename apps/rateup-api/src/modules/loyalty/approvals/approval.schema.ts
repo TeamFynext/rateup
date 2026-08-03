@@ -76,8 +76,6 @@ export const expireRequestSchema = z.object({
 export type ExpireRequestInput = z.infer<typeof expireRequestSchema>;
 export const cancelRequestSchema = z.object({
   approvalId: z.uuid(),
-  // The reviewer, as on rejectRequestSchema. Cancel used to record neither who
-  // did it nor when. See issues.txt 20.25.
   reviewerId: z.string().min(1),
   reviewerName: z.string().min(1),
   reason: z.string().min(1),

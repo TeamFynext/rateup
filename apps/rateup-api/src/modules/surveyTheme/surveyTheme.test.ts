@@ -104,10 +104,6 @@ describe("updateSurveyThemeActiveSurveyThemeInDB", () => {
     ...over,
   });
 
-  // The theme id came from the path, the survey id from the body, and neither
-  // was resolved to an org — so a theme id was enough for any authenticated user
-  // to replace another organisation's theme JSON. getAllThemesOfUserOrgFromDB in
-  // the same file already filtered on orgId. See issues.txt 33.1.
   test("selects the theme within the caller's org", async () => {
     await updateSurveyThemeActiveSurveyThemeInDB(req());
 
@@ -151,10 +147,6 @@ describe("updateSurveyThemeActiveSurveyThemeInDB", () => {
     expect((defaultWebSurveyPagesTheme as any).languageTheme.title.title).toContain("<h3");
   });
 
-  // defaultTheme — the value createAndApplyThemeToSurvey writes — holds only
-  // surveyTheme, while the deleted converter dereferenced welcomeTheme.logo and
-  // thankyouTheme. That mismatch is why the migration endpoint went rather than
-  // being re-enabled. See issues.txt 33.6.
   test("the theme new rows are seeded with has only the survey page", () => {
     expect(Object.keys(defaultTheme)).toEqual(["surveyTheme"]);
     expect(Object.keys(defaultThemeOld)).toContain("welcomeTheme");
@@ -266,10 +258,6 @@ describe("renameThemeInDB", () => {
     });
   });
 
-  // `data: { ...body }` with no body schema on the route made PATCH a write to
-  // any column of WebSurveyTheme: an orgId stole the theme into the attacker's
-  // org, a theme was 33.1 through an endpoint without even the Default Theme
-  // check, and a createdAt rewrote the audit timestamp. See issues.txt 33.2.
   test("writes the name and nothing else", async () => {
     await renameThemeInDB({
       params: { webSurveyThemeId: VICTIM_THEME },
@@ -327,9 +315,6 @@ describe("renameThemeInDB", () => {
 // ===========================================================================
 
 describe("deleteThemeInDB", () => {
-  // Any authenticated user could delete any organisation's theme by id, and the
-  // endpoint reported "theme deleted successfully" to whoever asked — the
-  // surveys using it lose their appearance. See issues.txt 33.3.
   test("scopes the delete to the caller's org", async () => {
     await deleteThemeInDB({ params: { webSurveyThemeId: VICTIM_THEME }, user: { orgId: ORG } });
 
@@ -397,10 +382,6 @@ describe("getSurveyThemeById", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { surveyTheme: {} } });
   });
 
-  // The destructure had no null guard, so an id that resolved to nothing threw a
-  // TypeError on a public route — the module's error handler turned that into a
-  // 500, so every unknown id answered 500 rather than 404 and the log filled
-  // with destructuring errors from anyone probing. See issues.txt 33.3.
   test("an id that does not resolve answers 404", async () => {
     const rep = reply();
 
@@ -468,9 +449,6 @@ describe("the scoped paths", () => {
     });
   });
 
-  // The theme was created in the caller's org and then applied to whatever
-  // survey the body named — a narrower version of 33.1 that did not even need an
-  // existing theme id. See issues.txt 33.7.
   test("create refuses a survey outside the caller's org", async () => {
     db.survey.findFirst.mockResolvedValueOnce(null);
 
@@ -492,9 +470,6 @@ describe("the scoped paths", () => {
     expect(db.$transaction).toHaveBeenCalledOnce();
   });
 
-  // The transaction always ran survey.update, so a create with no surveyId
-  // failed inside it and rolled the new theme back — the optional parameter the
-  // controller advertised could not actually be omitted. See issues.txt 33.7.
   test("a create with no surveyId keeps the theme and touches no survey", async () => {
     const theme = await createAndApplyThemeToSurvey({
       user: { orgId: ORG },
@@ -601,9 +576,6 @@ describe("surveyThemeRoutes", () => {
     return { srv, routes: resolved, onRoute };
   }
 
-  // The seventh registration, POST /updateWebSurveyThemes, is gone — a root-org
-  // endpoint that claimed to migrate every theme and was a no-op reporting
-  // success. See issues.txt 33.6.
   test("registers six routes", async () => {
     const { routes } = await collect();
 
@@ -633,9 +605,6 @@ describe("surveyThemeRoutes", () => {
     }
   });
 
-  // The hook used to ASSIGN to routeOptions.preHandler, so any preHandler a
-  // route declared for itself was silently discarded — the mechanism the whole
-  // module's authentication rests on. See issues.txt 33.5.
   test("the hook appends to a route's own preHandler rather than replacing it", async () => {
     const { onRoute } = await collect();
 
@@ -656,9 +625,6 @@ describe("surveyThemeRoutes", () => {
     expect(routeOptions.preHandler).toEqual([own]);
   });
 
-  // Not one route declared a body or params schema, and the module's own
-  // surveyTheme.schema.ts was not imported by the route file at all.
-  // See issues.txt 33.4.
   test("every route validates its params, and every writer its body", async () => {
     const { routes } = await collect();
 
@@ -670,11 +636,6 @@ describe("surveyThemeRoutes", () => {
     expect(byUrl["DELETE /:webSurveyThemeId"].params).toBe(themeIdParamsSchema);
   });
 
-  // STILL OPEN (issues.txt 33.4): the theme body is declared but open. The four
-  // page schemas in surveyTheme.schema.ts describe the LEGACY shape —
-  // `bg.desktopbg` as a string — while defaultTheme.ts seeds `bg.desktopBg` as an
-  // object, so attaching them would reject every real request. Reconciling them
-  // needs the renderer's actual payload.
   test("the update body constrains the survey id but not the theme's shape", () => {
     expect(updateActiveThemeBodySchema.safeParse({ surveyId: "nope", theme: {} }).success).toBe(
       false,

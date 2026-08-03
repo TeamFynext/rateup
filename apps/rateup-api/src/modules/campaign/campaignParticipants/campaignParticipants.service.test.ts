@@ -72,8 +72,6 @@ const ORG_A = "org-a";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Every function in this file resolves the campaign against the caller's org
-  // first. See issues.txt 17.3.
   db.campaign.findFirst.mockResolvedValue({ id: CAMPAIGN_ID });
   db.contact.findMany.mockResolvedValue([]);
   db.contactGroupMap.findMany.mockResolvedValue([]);
@@ -120,10 +118,6 @@ describe("createCampaignParticipantsFromContacts", () => {
     });
   });
 
-  // The contact ids went from the request body into createMany with nothing in
-  // between — no lookup, no org check. So naming another org's contact ids added
-  // their customers to your campaign, and the next send messaged those people from
-  // your WhatsApp number. Contact carries orgId directly. See issues.txt 17.3.
   test("adds nothing for a contact id belonging to another org", async () => {
     db.contact.findMany.mockResolvedValue([]);
 
@@ -181,9 +175,6 @@ describe("createCampaignParticipantsFromGroup", () => {
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([]);
   });
 
-  // Same gap as above, and worse in effect — one group id pulls in every contact
-  // that group holds, and the lookup filtered on contactGroupId alone. A contact
-  // group belongs to a team, and a team to an org. See issues.txt 17.3.
   test("reads a contact group only when it is the caller's", async () => {
     await createCampaignParticipantsFromGroup(CAMPAIGN_ID, ORG_A, {
       groupIds: ["another-orgs-group"],
@@ -230,9 +221,6 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
     );
   });
 
-  // The source campaigns were read by id alone, so naming another org's campaign id
-  // copied their entire participant list — every contact they were about to message
-  // — into your campaign. See issues.txt 17.3.
   test("copies only from campaigns the caller's org owns", async () => {
     await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, ORG_A, {
       campaignIds: ["another-orgs-campaign"],
@@ -244,9 +232,6 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
     });
   });
 
-  // Every copied participant was marked as having come from a GROUP, even one added
-  // individually with no contactGroupId at all — so the source label lied for
-  // anything but a group-sourced participant. See issues.txt 17.8.
   test("carries an individually-added participant's own source through", async () => {
     db.campaignParticipant.findMany.mockResolvedValue([
       {
@@ -433,12 +418,6 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     expect(db.campaignParticipant.findMany.mock.calls[0][0].orderBy).toEqual({ sentAt: "desc" });
   });
 
-  // NOTE: previously the clause built for createdAt, status and sentAt used
-  // `{ [key]: { equal: value, mode: "insensitive" } }` — Prisma's operator is
-  // `equals`, not `equal`, so this filter never actually worked (Prisma rejects
-  // unknown arguments, raising a validation error rather than filtering). Fixed to
-  // use `equals`, and `mode` (string-only) is no longer applied to the createdAt /
-  // sentAt DateTime fields. See issues.txt 17.9.
   test("builds a status filter using Prisma's equals operator", async () => {
     await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
@@ -451,9 +430,6 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The page number is multiplied by the limit, so
-  // pages are zero-based — the same convention issues.txt 8.2 and 13.6 record
-  // elsewhere, still unstated. See issues.txt 17.9.
   test("treats the page number as zero-based", async () => {
     await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 1,
@@ -493,12 +469,6 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     expect(result.participants[0].dripStageId).toBeNull();
   });
 
-  // NOTE: previously the status was read as `CampaignParticipantDripStage?.[0].status`
-  // — the optional chain guarded the property being absent, but not the array being
-  // EMPTY. Selecting a drip stage that a participant has no row for gave
-  // `undefined.status` and a TypeError, taking the whole page listing down rather
-  // than that one participant. Fixed to fall back to the participant's own fields
-  // when it has no row for the selected drip stage. See issues.txt 17.9.
   test("falls back to the participant's own fields when it has no row for the selected drip stage", async () => {
     db.campaignParticipant.findMany.mockResolvedValue([
       { ...PARTICIPANT, CampaignParticipantDripStage: [] },
@@ -535,11 +505,6 @@ describe("reading and writing one participant", () => {
     });
   });
 
-  // None of these took a campaign, let alone an org — an id was the whole
-  // authorisation, and getCampaignParticipantByIdHandler and
-  // deleteCampaignParticipantByIdHandler passed the path parameter straight in.
-  // A participant belongs to a campaign, a campaign to a team, a team to an org.
-  // See issues.txt 17.3.
   test.each([
     [
       "reads",
@@ -560,10 +525,6 @@ describe("reading and writing one participant", () => {
     });
   });
 
-  // updateCampaignParticipant is called only by the dispatcher, which is already
-  // working inside one campaign it resolved itself — there is no request org to
-  // scope it by. Left as it is, and recorded so the next reader does not take its
-  // absence from the list above for an oversight. See issues.txt 17.3.
   test("updates a participant by id, as the dispatcher calls it", async () => {
     await updateCampaignParticipant("p-1", { status: "SENT" } as any);
 
@@ -596,11 +557,6 @@ describe("addWaMessageCampaignParticipantMap", () => {
     });
   });
 
-  // NOTE: previously the message lookup was optional-chained but the create was not
-  // guarded, so a message id that matches nothing produced a link row pointing at no
-  // message — and the participant's delivery status could never be resolved from it
-  // afterwards. Fixed to throw a clear error instead of writing a dangling link.
-  // See issues.txt 17.9.
   test("throws instead of creating a link to nothing when the message cannot be found", async () => {
     db.waMessage.findFirst.mockResolvedValue(null);
 
@@ -611,8 +567,6 @@ describe("addWaMessageCampaignParticipantMap", () => {
     expect(db.waMessageCampaginParticipantMap.create).not.toHaveBeenCalled();
   });
 
-  // NOTE: the message is looked up by its WhatsApp id alone, across every org.
-  // See issues.txt 17.3.
   test("finds the message across every org", async () => {
     await addWaMessageCampaignParticipantMap("p-1", "wamid-1");
 

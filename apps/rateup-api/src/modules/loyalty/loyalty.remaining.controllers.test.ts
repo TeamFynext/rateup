@@ -165,14 +165,6 @@ describe("the redemption controller", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Loyalty program not found" } });
   });
 
-  // The 400 branch keys on a prisma P2002 (unique constraint), and it used to
-  // report EVERY such failure as "Reward already redeemed". The redemption path
-  // writes three unique columns — CustomerReward's (rewardId, accountId) pair, its
-  // shortCode, and LoyaltyRedemption.redemptionCode — and only the first of them
-  // means the customer already holds the reward. A code collision (issues.txt
-  // 20.9) told them they had taken a reward they had not taken, and hid the real
-  // cause. The constraint that actually failed decides the answer now.
-  // See issues.txt 20.44.
   test("reports an already-redeemed reward only when that is the constraint that failed", async () => {
     (redeemReward as Mock).mockRejectedValue(
       Object.assign(new Error("Unique constraint failed"), {
@@ -228,12 +220,6 @@ describe("the redemption controller", () => {
     });
   });
 
-  // Verify, apply and the per-customer list used to pass the code or the account
-  // id on its own, with nothing carrying the caller's org into the query — so a
-  // cashier in any org could verify, and then mark USED, another org's redemption.
-  // They resolve no PROGRAM, which is fine: the service scopes through
-  // `account.program.orgId` directly, and the org is what the guard needs.
-  // See issues.txt 20.20.
   test("verify, apply and the customer list all carry the caller's org", async () => {
     await verifyRedemptionHandler(request({ body: { redemptionCode: "RU-ABC123" } }), reply());
     await applyRedemptionHandler(
@@ -308,9 +294,6 @@ describe("the redemption controller", () => {
     expect(rep.header).toHaveBeenCalledWith("Content-Type", "text/csv");
   });
 
-  // NOTE: the same hand-rolled `row.join(",")` as the customer export — no
-  // quoting and no escaping, so a comma anywhere in a customer name or a
-  // transaction description shifts every later column. See issues.txt 20.24.
   test("a comma in a description breaks the csv column alignment", async () => {
     (getTransactionsForExport as Mock).mockResolvedValue([
       {
@@ -406,10 +389,6 @@ describe("the approval controller", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Approval request not found" } });
   });
 
-  // None of approve, reject, cancel or get-by-id used to resolve the caller's
-  // program — the approval id from the path went straight to a service that did
-  // not scope either, and approving another org's points adjustment MINTS points
-  // into their programme. Only the LIST was scoped. See issues.txt 20.26.
   test("approve, reject, cancel and read all carry the caller's program", async () => {
     await getApprovalRequestByIdHandler(request({ params: { approvalId: "apr-other" } }), reply());
     await approveApprovalRequestHandler(
@@ -485,9 +464,6 @@ describe("the settings controller — WhatsApp commands", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // Fetch-by-id and update used to take the command id from the path and never
-  // touch the session, while the list beside them was org-scoped.
-  // See issues.txt 20.33.
   test("fetching and updating a command both carry the session org", async () => {
     await getLoyaltyTemplateHandler(request({ params: { id: "cmd-other" } }), reply());
     await updateLoyaltyTemplateHandler(
@@ -511,10 +487,6 @@ describe("the settings controller — WhatsApp commands", () => {
 });
 
 describe("the settings controller — event triggers", () => {
-  // The programId used to come from the request BODY, with the handler never
-  // resolving the caller's own program — so a trigger could be attached to another
-  // org's loyalty programme, and it would then fire on that org's customers,
-  // sending whatever template it named. See issues.txt 20.33.
   test("creates a trigger against the caller's own program, ignoring the body", async () => {
     const rep = reply();
 
@@ -541,12 +513,6 @@ describe("the settings controller — event triggers", () => {
     expect(deleteEventTrigger).toHaveBeenCalledWith("trg-other", PROGRAM);
   });
 
-  // This was the widest read in the file. The programId query parameter is
-  // optional; when it was omitted the handler passed undefined, getAllEventTriggers
-  // dropped its where clause entirely, and the response was EVERY org's event
-  // triggers with their `program` relations included — a one-request enumeration
-  // of the tenant list from an ordinary authenticated session. The query parameter
-  // is ignored now; a caller only ever lists their own. See issues.txt 20.33.
   test("ignores the query's programId and lists only the caller's own", async () => {
     const rep = reply();
 

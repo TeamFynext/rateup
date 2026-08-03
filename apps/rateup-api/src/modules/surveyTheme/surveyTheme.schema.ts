@@ -131,14 +131,6 @@ const surveyThemeSchemaCore = z.object({
   thankyouTheme: thankyouThemeSchema.optional(),
 });
 
-// Not one route in this module declared a schema — the theme JSON written by the
-// update endpoint and the body spread by the rename endpoint were both entirely
-// unconstrained. The four page schemas above describe the theme's SHAPE, but
-// they describe the LEGACY shape: they expect `bg.desktopbg` as a string, while
-// defaultTheme.ts seeds `bg.desktopBg` as an object. Attaching them would reject
-// every real request, so the theme body stays a declared-but-open object and the
-// stale page schemas are left for whoever reconciles them with the renderer's
-// actual payload. See issues.txt 33.4.
 const themeIdParamsSchema = z.object({
   webSurveyThemeId: z.uuid(),
 });

@@ -274,12 +274,6 @@ export enum ReplyComponentType {
   AiBot = "AiBot",
 }
 
-/**
- * See issues.txt 17.2 — one of four copies of the same gate, now sharing
- * enforceWhatsappCountLimit. Automated replies are unlimited by design: no plan in
- * subscription.data.ts states a whatsapp count. A plan that does name one is still
- * capped.
- */
 export async function verifyAutomationLimit(request: FastifyRequest, reply: FastifyReply) {
   return await enforceWhatsappCountLimit(request, reply, {
     label: "automated replies",

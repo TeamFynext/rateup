@@ -130,10 +130,6 @@ describe("adding participants", () => {
     expect(m.create).toHaveBeenCalled();
   });
 
-  // None of the three add handlers read request.user — the campaign id came from
-  // the path and the contact, group and campaign ids from the body, all unchecked.
-  // Combined with the unscoped lookups in the service, that is how another org's
-  // contacts ended up on a campaign that would message them. See issues.txt 17.3.
   test("all three add handlers carry the caller's org", async () => {
     await createCampaignParticipantsFromContactsHandler(
       request({ body: { contactIds: ["c-1"] } }),
@@ -162,8 +158,6 @@ describe("adding participants", () => {
     expect(rep.status).toHaveBeenCalledWith(404);
   });
 
-  // No try/catch on any of the three, so a service failure escaped to fastify's
-  // default handler rather than becoming a reply. See issues.txt 17.6.
   test("answers 500 for a failure adding contacts, rather than letting it escape", async () => {
     m.fromContacts.mockRejectedValue(new Error("db down"));
     const rep = reply();
@@ -206,9 +200,6 @@ describe("listing participants", () => {
     expect(sent(rep)).toEqual({ id: "p-1" });
   });
 
-  // The participant lookup took the id from the path and nothing else, so a
-  // participant id was enough to read another org's contact name and number.
-  // See issues.txt 17.3.
   test("answers 404 for a participant belonging to another org", async () => {
     m.byId.mockResolvedValue(null);
     const rep = reply();
@@ -245,10 +236,6 @@ describe("removing participants", () => {
     expect(sent(rep)).toEqual({ count: 2 });
   });
 
-  // The bulk delete caught its failure and sent the caught Error as the response
-  // body — with no status code, so fastify answered 200 with a body whose own
-  // properties are non-enumerable, i.e. `{}`. The caller was told the delete
-  // succeeded. See issues.txt 17.6.
   test("answers a failed bulk delete as a failure, naming what went wrong", async () => {
     m.multiDelete.mockRejectedValue(new Error("db down"));
     const rep = reply();
@@ -262,10 +249,6 @@ describe("removing participants", () => {
     });
   });
 
-  // The ids came straight from the body with no ownership check, so a list of
-  // another org's participant ids removed them from their campaign. The deleteMany
-  // is org-filtered now, so a foreign id simply matches nothing.
-  // See issues.txt 17.3.
   test("carries the caller's org into the bulk delete", async () => {
     await multipleDeleteCampaignParticipantHandler(
       request({ body: { ids: ["another-orgs-participant"] } }),

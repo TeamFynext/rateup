@@ -149,8 +149,6 @@ describe("handleWebSocketConnection", () => {
     expect(s.close).toHaveBeenCalledOnce();
   });
 
-  // The role used to come from the query string — the client declared its own
-  // role, and the subscriber below filters deliveries on it. See issues.txt 41.5.
   test("tags the socket with the role from the session, not the query string", async () => {
     const s = socket();
 
@@ -207,11 +205,6 @@ describe("handleWebSocketConnection", () => {
     );
   });
 
-  // The room was keyed on the caller-supplied browser id, so a second
-  // connection reusing an existing id replaced the first entry: that socket
-  // stayed open, reported no error and silently stopped receiving inbox
-  // events. It is keyed on a server-issued id per socket now, so a reused
-  // browser id displaces nothing. See issues.txt 41.6.
   test("a repeated browser id no longer displaces the previous socket", async () => {
     const first = socket();
     const second = socket();
@@ -303,9 +296,6 @@ describe("checkMobileId", () => {
     });
   });
 
-  // A bearer token in a query string is recorded everywhere a URL is. The
-  // Authorization header is preferred now; the query string still works so the
-  // mobile app can migrate, and its use is logged. See issues.txt 41.3.
   test("prefers the Authorization header", async () => {
     const request: any = {
       query: { accessToken: "from-query" },
@@ -386,10 +376,6 @@ describe("checkMobileId", () => {
 // ===========================================================================
 
 describe("orgWsAuthCheckHandler", () => {
-  // The minted id used to be pushed onto a process-local array keyed by org
-  // that nothing read and nothing pruned, inside a class whose other three
-  // methods had no callers at all. Both are gone; the endpoint still answers
-  // with a 128-bit id so existing clients are unaffected. See issues.txt 41.4.
   test("answers with a 128-bit random id", async () => {
     const rep = reply();
 

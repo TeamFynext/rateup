@@ -147,10 +147,6 @@ describe("fetchTemplates", () => {
     expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_A, "phone-2");
   });
 
-  // Every failure — no settings, an expired token, a Meta outage — used to be
-  // caught and turned into an empty list, which is indistinguishable from an org
-  // that genuinely has no templates. syncTemplates then walked that empty list and
-  // reported a clean sync. See issues.txt 14.2.
   test("lets a Meta failure reach the caller", async () => {
     callMetaApiMock.mockRejectedValue(new Error("graph is down"));
 
@@ -163,11 +159,6 @@ describe("fetchTemplates", () => {
     await expect(fetchTemplates(ORG_A)).rejects.toThrow("No WhatsApp settings found");
   });
 
-  // Only res.data.data was read; the paging cursor Meta returns alongside it was
-  // never followed, so an account with more templates than one page silently
-  // synced a prefix of them. That also mattered for 14.6's reconciliation:
-  // "missing from Meta" is only meaningful once the read is complete.
-  // See issues.txt 14.6.
   test("follows the paging cursor to the end", async () => {
     callMetaApiMock
       .mockResolvedValueOnce({
@@ -237,10 +228,6 @@ describe("reading templates from our own database", () => {
     });
   });
 
-  // getDbTemplate keyed on the id alone and took no org. updateTemplateHandler and
-  // deleteTemplateHandler each compared orgId themselves afterwards, but
-  // saveTemplateAsDraftHandler did not — so naming another org's template id in the
-  // body rewrote their template into a draft. See issues.txt 14.3.
   test("scopes a template lookup by id to the org asking", async () => {
     await getDbTemplate(TEMPLATE_ID, ORG_A);
 
@@ -255,9 +242,6 @@ describe("reading templates from our own database", () => {
     await expect(getDbTemplate(TEMPLATE_ID, ORG_B)).resolves.toBeNull();
   });
 
-  // NOTE: same gap, reached from the Meta template id — this one searches every
-  // org's templates by design, since it is used to resolve webhook status updates.
-  // Worth knowing it is unscoped before reusing it. See issues.txt 14.3.
   test("finds a template by its Meta id across every org", async () => {
     await getTemplateWithHSMId("wa-tpl-1");
 
@@ -304,11 +288,6 @@ describe("createTemplate", () => {
     );
   });
 
-  // NOTE: pins current behaviour. callMetaApi already throws GraphApiError for any
-  // non-2xx, so this branch only fires for a 2xx that is not exactly 200 — and when
-  // it does, the specific reason Meta gave is logged and replaced by a bare
-  // "Error creating template in whatsapp". Marked TODO in the source.
-  // See issues.txt 14.10.
   test("replaces Meta's reason with a generic message on a non-200 success", async () => {
     callMetaApiMock.mockResolvedValue({ status: 201, data: { error: "name already exists" } });
 
@@ -352,10 +331,6 @@ describe("saving and deleting templates in our database", () => {
     expect(db.update.mock.calls[0][0].data.defaultValues).toBeUndefined();
   });
 
-  // All three used to swallow their failure — two of them to console.log rather
-  // than the logger — and resolve to undefined, so no caller could tell a stored
-  // template from a lost one, and createTemplateHandler replied 200 "template
-  // created" either way. Same family as issues.txt 3.1. See issues.txt 14.2.
   test.each([
     ["saving", () => saveTemplate({ name: "n" }, ORG_A)],
     ["updating", () => updateTemplateInDb(TEMPLATE_ID, ORG_A, { name: "n" })],
@@ -368,8 +343,6 @@ describe("saving and deleting templates in our database", () => {
     await expect(run()).rejects.toThrow("db down");
   });
 
-  // Neither took an org, so the id alone decided which template was written or
-  // removed. See issues.txt 14.3.
   test("scopes the delete to the caller's org", async () => {
     await deleteTemplateFromDb(TEMPLATE_ID, ORG_A);
 
@@ -393,10 +366,6 @@ describe("deleteTemplate", () => {
     await expect(deleteTemplate(ORG_A, "wa-tpl-1", "order_update")).resolves.toBe(false);
   });
 
-  // It ignored the connected number and always resolved the org's DEFAULT
-  // settings, unlike every neighbouring function — so deleting a template that
-  // lives on a second WhatsApp number was attempted against the first number's
-  // business account, and Meta refused. See issues.txt 14.6.
   test("deletes against the number the template actually lives on", async () => {
     await deleteTemplate(ORG_A, "wa-tpl-1", "order_update", "phone-2");
 
@@ -459,10 +428,6 @@ describe("updateTemplate", () => {
     expect(db.update.mock.calls[0][0].data.data.components).toEqual([{ type: "body", text: "hi" }]);
   });
 
-  // getDbTemplate reports null for an id that matches nothing OR for a template
-  // the caller's org does not own. updateTemplate used to read template.orgId
-  // straight off that result, so both cases gave a bare TypeError.
-  // See issues.txt 14.5.
   test("reports nothing for a template that does not exist", async () => {
     db.findFirst.mockResolvedValue(null);
 
@@ -473,10 +438,6 @@ describe("updateTemplate", () => {
     ).resolves.toBeNull();
   });
 
-  // The local-only branches never read the template they loaded, so an id that
-  // matched nothing used to walk straight into updateTemplateInDb — which was
-  // itself unscoped and swallowed the resulting failure. Now every branch is past
-  // the same guard. See issues.txt 14.3 and 14.5.
   test("writes nothing for a local template type when the template is not the caller's", async () => {
     db.findFirst.mockResolvedValue(null);
 
@@ -562,11 +523,6 @@ describe("syncTemplates", () => {
     });
   });
 
-  // The visible half of 14.2. fetchTemplates turned a Meta outage into an empty
-  // list, so the loop had nothing to do and the function reported success with
-  // zero changes — exactly what a genuinely up-to-date org looks like — and
-  // syncTemplatesHandler answered 200. "Sync templates" is the button a user
-  // presses when their templates look wrong. See issues.txt 14.2.
   test("reports the failure when Meta could not be reached at all", async () => {
     callMetaApiMock.mockRejectedValue(new Error("graph is down"));
 
@@ -576,11 +532,6 @@ describe("syncTemplates", () => {
     });
   });
 
-  // The sync only created and updated, so a template deleted at Meta stayed in our
-  // database forever and campaigns could still be pointed at it. It is now MARKED,
-  // not deleted — campaigns reference these rows, and a partial read (before the
-  // paging fix) would have made every template past the first page look gone.
-  // See issues.txt 14.6.
   test("marks a template that no longer exists at Meta, without deleting it", async () => {
     db.findMany.mockResolvedValue([row()]);
     callMetaApiMock.mockResolvedValue({ data: { data: [] } });
@@ -638,13 +589,6 @@ describe("getUnregisteredTemplates and registerTemplatesInDb", () => {
     ]);
   });
 
-  // NOTE: pins current behaviour. getUnregisteredTemplates returns RAW Meta
-  // templates — flat objects with id/name/components — while registerTemplatesInDb
-  // and its request schema expect { data, acceptButton }. So the output of
-  // GET /unregistered cannot be fed to POST /register without the client
-  // re-wrapping it, and nothing says so. registerTemplatesInDb also records neither
-  // templateType nor whatsappSettingsPhoneId, unlike saveTemplate.
-  // See issues.txt 14.6.
   test("stores nothing usable when handed a raw Meta template", async () => {
     await registerTemplatesInDb(
       // Deliberately the raw Meta shape, not the { data } wrapper the function
@@ -722,11 +666,6 @@ describe("uploadFileToWaTemplate", () => {
     );
   });
 
-  // The session call used to pass undefined as callMetaApi's accessToken argument
-  // and put the token in the query params instead, so it ended up in the URL
-  // callMetaApi trace-logs and dumps on failure. The second call always got this
-  // right, via an OAuth header. Same family as issues.txt 13.3.
-  // See issues.txt 14.15.
   test("passes the access token as the auth argument when opening the session", async () => {
     await uploadFileToWaTemplate(file, 1024, ORG_A);
 
@@ -858,9 +797,6 @@ describe("sendTemplateToPhone", () => {
     await expect(sendTemplateToPhone(args())).rejects.toThrow("Team not found in survey");
   });
 
-  // NOTE: pins current behaviour, identical to issues.txt 11.9. The flow token is
-  // the recipient's phone number, which Meta echoes back on every endpoint request
-  // and which the session lookup keys off. See issues.txt 14.11.
   test("uses the recipient's phone number as the flow token", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
@@ -875,10 +811,6 @@ describe("sendTemplateToPhone", () => {
     expect(flowButton.parameters[0].action.flow_token).toBe("15550001");
   });
 
-  // NOTE: pins current behaviour. The session is deleted and recreated BEFORE the
-  // send, and the send is not guarded — so a template that Meta refuses leaves the
-  // customer with a session pointing at a flow they were never sent, and any flow
-  // they had open is gone. See issues.txt 14.11.
   test("has already replaced the customer's session when the send fails", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({

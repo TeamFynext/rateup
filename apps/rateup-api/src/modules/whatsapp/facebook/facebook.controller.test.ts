@@ -163,12 +163,6 @@ describe("facebookWebhookEventHandler - failures", () => {
 });
 
 describe("facebookWebhookEventHandler - who is allowed to post here", () => {
-  // NOTE: pins current behaviour. The route is unauthenticated and the handler
-  // never looks at x-hub-signature-256, so anyone who knows a connected page id
-  // can post fabricated inbound messages into that org's inbox — and those
-  // messages run the org's automated replies. isRequestSignatureValid exists in
-  // wa_encryption.utils.ts but is stubbed to `return true` and is not called from
-  // here anyway. See issues.txt 10.8.
   test("processes an event that carries no signature header", async () => {
     await facebookWebhookEventHandler(makeRequest(PAGE_EVENT, {}), makeReply());
 

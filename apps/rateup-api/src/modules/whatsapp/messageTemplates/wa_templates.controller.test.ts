@@ -315,11 +315,6 @@ describe("createTemplateHandler", () => {
     expect(sent(rep)).toBe("Meta says no");
   });
 
-  // templateType is optional in the request schema, and a request that omitted it
-  // fell through the switch with fetchedTemplate still undefined — so saveTemplate
-  // was called with no template at all, swallowed the resulting database failure,
-  // and the handler answered 200 "template created" having stored nothing.
-  // See issues.txt 14.4.
   test("refuses a request with no template type, storing nothing", async () => {
     const rep = reply();
 
@@ -330,11 +325,6 @@ describe("createTemplateHandler", () => {
     expect(sent(rep).message).toContain("templateType");
   });
 
-  // NOTE: pins current behaviour, and the source says so — "TODO: restrict access
-  // to super admin and admin?". syncTemplatesHandler in the same file DOES gate on
-  // role. Creating a template submits it to Meta for approval under the org's
-  // business account, where a rejected template counts against the org's quality
-  // rating. See issues.txt 14.4.
   test("lets any role create a template", async () => {
     const rep = reply();
 
@@ -379,10 +369,6 @@ describe("saveTemplateAsDraftHandler", () => {
     });
   });
 
-  // NOTE: pins current behaviour. getDbTemplate is unscoped and the handler never
-  // compares orgId, so naming another org's template id in the body rewrites their
-  // template into a draft — replacing its components and status. The sibling
-  // updateTemplateHandler DOES check. See issues.txt 14.3.
   test("rewrites a draft belonging to another org", async () => {
     m.getDbTemplate.mockResolvedValue(row({ orgId: ORG_B }));
 
@@ -395,9 +381,6 @@ describe("saveTemplateAsDraftHandler", () => {
     expect(m.updateTemplateInDb.mock.calls[0][0]).toBe(TEMPLATE_ID);
   });
 
-  // NOTE: the success path calls reply.code(200) and never sends, so fastify falls
-  // back to an empty 200 with no body — unlike every sibling handler, which sends.
-  // See issues.txt 14.10.
   test("sets a status but sends no body on success", async () => {
     const rep = reply();
 
@@ -428,12 +411,6 @@ describe("updateTemplateHandler", () => {
     expect(m.updateTemplate).not.toHaveBeenCalled();
   });
 
-  // getDbTemplate is org-scoped now, so a foreign template reports as absent and
-  // the handler's own orgId comparison is gone as redundant. See issues.txt 14.3.
-  // getDbTemplate is org-scoped now, so a foreign template reports as absent and
-  // the handler's own orgId comparison is gone as redundant. 404 rather than 403:
-  // a template another org owns is indistinguishable from one that never existed.
-  // See issues.txt 14.3.
   test("refuses a template belonging to another org", async () => {
     m.getDbTemplate.mockResolvedValue(null);
     const rep = reply();
@@ -444,10 +421,6 @@ describe("updateTemplateHandler", () => {
     expect(m.updateTemplate).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. updateTemplate resolves to undefined for several
-  // distinct reasons — Meta refused the edit, or updateTemplateInDb swallowed a
-  // database failure — and all of them are reported to the user as the 24-hour
-  // edit cooldown. See issues.txt 14.10.
   test("blames the 24-hour cooldown for every kind of failure", async () => {
     m.updateTemplate.mockResolvedValue(undefined);
     const rep = reply();
@@ -479,10 +452,6 @@ describe("deleteTemplateHandler", () => {
     expect(m.deleteTemplateFromDb).toHaveBeenCalled();
   });
 
-  // getDbTemplate is org-scoped now, so a foreign template reports as absent and
-  // the handler's own orgId comparison is gone as redundant. 404 rather than 403:
-  // a template another org owns is indistinguishable from one that never existed.
-  // See issues.txt 14.3.
   test("refuses a template belonging to another org", async () => {
     m.getDbTemplate.mockResolvedValue(null);
     const rep = reply();
@@ -504,10 +473,6 @@ describe("deleteTemplateHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // deleteTemplate reports false when Meta refused, and the handler used to ignore
-  // that and remove our copy anyway — so the template survived at Meta with nothing
-  // pointing at it, still counting against the org's template quota.
-  // See issues.txt 14.10.
   test("keeps our copy when Meta refused to delete its own", async () => {
     m.deleteTemplate.mockResolvedValue(false);
     const rep = reply();
@@ -619,10 +584,6 @@ describe("uploadHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(400);
   });
 
-  // The size used to come from a multipart form field the client set, not from the
-  // bytes actually received, defaulting to 0 when absent — so Meta was told a
-  // length the client chose, which need not match the upload.
-  // See issues.txt 14.10.
   test("measures the size from the bytes received, not from the client", async () => {
     await uploadHandler(fileRequest({ size: { type: "field", value: "999999" } }), reply());
 
@@ -708,9 +669,6 @@ describe("sendTemplateToUserCore - what it sends", () => {
     expect(templateQuery().components).toEqual([]);
   });
 
-  // The by-id branch now guards the null result the same way the by-name branch always
-  // did, so an unknown or another org's template id reports a failure instead of
-  // crashing with a TypeError (was issues.txt 14.5).
   test("reports a failure for a template id the caller's org does not own", async () => {
     m.getTemplateByIdAndOrgId.mockResolvedValue(null);
 
@@ -771,12 +729,6 @@ describe("sendTemplateToUserCore - the order-details total", () => {
     );
   });
 
-  // The one that showed the customer the wrong number. Every other amount in the
-  // payload is multiplied by 100 to match `offset: 100` — sub_total, shipping, tax,
-  // each item's amount — but total_amount was sent unmultiplied. With sub_total
-  // 200, shipping 20 and tax 30 the true total is 250, which WhatsApp must be told
-  // is 25000; it was told 250 and rendered ₹2.50, contradicting the line items
-  // right beside it. See issues.txt 14.1(c).
   test("sends the grand total in the same minor units as its line items", async () => {
     const details = await sendOrder();
 
@@ -784,9 +736,6 @@ describe("sendTemplateToUserCore - the order-details total", () => {
     expect(details.order.sub_total.value).toBe(20000);
   });
 
-  // The tax and discount blocks spelled the field `discription`, so whatever the
-  // merchant wrote to explain the tax never reached the customer's payment prompt.
-  // See issues.txt 14.9.
   test("sends the tax description under the name Meta expects", async () => {
     const details = await sendOrder();
 
@@ -794,8 +743,6 @@ describe("sendTemplateToUserCore - the order-details total", () => {
     expect(details.order.tax).not.toHaveProperty("discription");
   });
 
-  // NOTE: the currency and both country codes are hard-coded to India. Fine while
-  // that is the only market; it is not stated anywhere. See issues.txt 14.10.
   test("hard-codes the currency and country to India", async () => {
     const details = await sendOrder({ ...ORDER, productType: "physical-goods" });
 
@@ -855,9 +802,6 @@ describe("sendTemplatesToContactsHandler", () => {
     expect(m.sendTemplateToPhone.mock.calls[0][0].phone).toBe("15550001");
   });
 
-  // A failed send is now reported per contact rather than taking the whole request
-  // down: the caller learns which contacts were reached and which were not.
-  // See issues.txt 14.10.
   test("reports the contacts it could not reach, rather than failing outright", async () => {
     m.sendTemplateToPhone.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
@@ -871,12 +815,6 @@ describe("sendTemplatesToContactsHandler", () => {
     expect(sent(rep)).toMatchObject({ sent: 0, failed: ["c-1"] });
   });
 
-  // The worst thing in this file. The contact lookup filtered on the ids alone
-  // with NO orgId — unlike the template lookup one line above it, which is scoped.
-  // A caller who named another org's contact ids got that org's customers
-  // messaged, from the caller's own WhatsApp number and template, with the caller
-  // billed. This handler is mounted on the API-key-authenticated external API.
-  // See issues.txt 14.1(b).
   test("cannot send to contacts belonging to another org", async () => {
     db.contact.findMany.mockResolvedValue([]);
     const rep = reply();
@@ -894,9 +832,6 @@ describe("sendTemplatesToContactsHandler", () => {
     expect(sent(rep)).toMatchObject({ sent: 0, skipped: 1 });
   });
 
-  // The success path never touched the reply, so fastify fell back to an empty 200
-  // and the caller learned nothing about how many contacts were reached.
-  // See issues.txt 14.10.
   test("reports how many contacts it reached", async () => {
     const rep = reply();
 
@@ -957,9 +892,6 @@ describe("getMessageStatusByIdHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // The lookup filtered on messageId alone with no orgId, so any caller holding a
-  // WhatsApp message id learned that message's delivery state and, if it failed,
-  // the reason — whichever org sent it. See issues.txt 14.3.
   test("scopes the lookup to the caller's org", async () => {
     db.waMessage.findFirst.mockResolvedValue(null);
     const rep = reply();
@@ -976,10 +908,6 @@ describe("getMessageStatusByIdHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // getLatestStatus tested read and delivered before failed, so a message WhatsApp
-  // delivered and then failed (a block, a deleted account) reported "delivered" and
-  // its reason was dropped — which is exactly the case a caller polls this endpoint
-  // to find out about. See issues.txt 14.10.
   test("reports the failure of a message that was delivered first", async () => {
     db.waMessage.findFirst.mockResolvedValue({
       messageId: "wamid-1",

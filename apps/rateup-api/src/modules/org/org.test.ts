@@ -114,12 +114,6 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("deleteOrgHandler", () => {
-  // The handler passed request.params.orgId straight to deleteOrg and never
-  // read request.user. The route's only gate, checkRoleHandler(["SUPER_ADMIN"]),
-  // establishes that the caller is an owner — of their own organisation — so
-  // the owner of any org could delete any other by naming its id, and the
-  // deletion cascades to teams, members, surveys, contacts, integrations,
-  // webhooks and subscriptions. See issues.txt 41.1.
   test("refuses to delete an org other than the session's", async () => {
     const rep = reply();
 
@@ -194,9 +188,6 @@ describe("deleteOrgHandler", () => {
 // ===========================================================================
 
 describe("pauseOrgHandler", () => {
-  // The same shape as 41.1: any SUPER_ADMIN could suspend any organisation on
-  // the platform, which is a full service interruption for that tenant's staff
-  // and its customer-facing surveys. See issues.txt 41.2.
   test("refuses to pause an org other than the session's", async () => {
     const rep = reply();
 
@@ -331,11 +322,6 @@ describe("updateRoleController", () => {
     });
   });
 
-  // OrgMember.role is a Prisma enum of SUPER_ADMIN, ADMIN and MEMBER
-  // (prisma/schema.prisma:20-27, :592), but the body schema was a bare
-  // z.string(), so an unknown role passed validation and was rejected by
-  // Postgres instead — a 500 telling the operator the server broke.
-  // See issues.txt 41.7.
   test("the role schema accepts only the three real roles", () => {
     for (const role of ["SUPER_ADMIN", "ADMIN", "MEMBER"]) {
       expect(updateRoleSchema.safeParse({ role }).success).toBe(true);

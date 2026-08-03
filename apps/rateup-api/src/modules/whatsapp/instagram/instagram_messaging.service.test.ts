@@ -131,12 +131,6 @@ describe("sendInstagramTextMessage", () => {
 });
 
 describe("the conversation limit, across every kind of message", () => {
-  // Only the text and image senders used to call assertWithinConversationLimit.
-  // Video, file, quick reply, generic template, product template, story reply and
-  // private reply all skipped it, so an org past its limit — or on a plan that
-  // does not include the channel — could keep sending by using any other message
-  // type. The automated-reply engine sends several of these directly, so this was
-  // a billing and plan-enforcement gap. See issues.txt 12.10.
   test.each([
     ["a video", () => sendInstagramVideo(IGS_ID, "https://cdn/v.mp4", ORG_ID, IBA_ID)],
     ["a file", () => sendInstagramFile(IGS_ID, "https://cdn/f.pdf", ORG_ID, IBA_ID)],
@@ -184,10 +178,6 @@ describe("the conversation limit, across every kind of message", () => {
     expect(callMetaApiMock).not.toHaveBeenCalled();
   });
 
-  // sendInstagramImage's orgId and ibaId were optional and the check was
-  // `if (orgId)`, so a caller that simply omitted the org skipped the gate. Every
-  // sibling required orgId; these now do too, which is why there is no longer an
-  // "image sent without an org" case to test. See issues.txt 12.10.
   test("requires an org for an image, like every other sender", async () => {
     await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID);
 
@@ -213,10 +203,6 @@ describe("sendInstagramImage", () => {
     expect(assertLimitMock).toHaveBeenCalledWith(ORG_ID);
   });
 
-  // A caption goes out as a second, separate text message. That is NOT the bug and
-  // was not changed: Instagram's send API takes either `text` or `attachment` on a
-  // message, not both, so there is no captioned image to attach it to.
-  // See issues.txt 12.11.
   test("sends a caption as a second message, which is all Instagram allows", async () => {
     await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID, "Our new arrival");
 
@@ -227,10 +213,6 @@ describe("sendInstagramImage", () => {
     });
   });
 
-  // The caption send used to sit inside the same try, so its failure was reported
-  // as "Error sending image" and rethrown — even though the image had already gone
-  // out. The caller could not tell a total failure from a half-sent one, and a
-  // retry sent the image twice. See issues.txt 12.11.
   test("reports the image as sent and the caption as failed, separately", async () => {
     callMetaApiMock
       .mockResolvedValueOnce({ data: { message_id: "mid-out-1" } })
@@ -408,11 +390,6 @@ describe("ice breakers", () => {
     );
   });
 
-  // callInstagramMessengerProfileApi already returns response.data, and this used
-  // to return `response.data` again — one unwrap too many, so it resolved to
-  // undefined and the sync endpoint answered { success: true, data: undefined }.
-  // setInstagramPersistentMenu, which does the same job, was already correct.
-  // See issues.txt 12.12.
   test("reports what Meta answered, unwrapped exactly once", async () => {
     callMetaApiMock.mockResolvedValue({ data: { result: "success" } });
 
@@ -421,10 +398,6 @@ describe("ice breakers", () => {
     ).resolves.toEqual({ result: "success" });
   });
 
-  // The cache was filled from `response.ice_breakers`, but Meta's messenger_profile
-  // GET nests the requested fields under `data`. The top-level read found nothing,
-  // `[]` was cached, and every later call took the cached branch and reported no
-  // ice breakers at all — even though Meta had them. See issues.txt 12.12.
   test("caches what Meta actually returned, out of the nested envelope", async () => {
     const ICE = [{ question: "Hours?", payload: "HOURS" }];
     callMetaApiMock.mockResolvedValue({ data: { data: [{ ice_breakers: ICE }] } });
@@ -437,10 +410,6 @@ describe("ice breakers", () => {
     expect(first).toEqual({ ice_breakers: ICE });
   });
 
-  // Both branches return the same shape now. They used to differ —
-  // { ice_breakers } when cached, Meta's raw envelope when not — which
-  // normalizeIceBreakers in the controller papered over, which is why the
-  // empty-cache bug went unnoticed. See issues.txt 12.12.
   test("returns the same shape whether or not the answer came from the cache", async () => {
     const ICE = [{ question: "Hours?", payload: "HOURS" }];
     callMetaApiMock.mockResolvedValue({ data: { data: [{ ice_breakers: ICE }] } });
@@ -505,7 +474,6 @@ describe("the persistent menu", () => {
     });
   });
 
-  // Same caching gap as the ice breakers above. See issues.txt 12.12.
   test("caches the menu Meta actually returned, out of the nested envelope", async () => {
     callMetaApiMock.mockResolvedValue({ data: { data: [{ persistent_menu: MENU }] } });
 

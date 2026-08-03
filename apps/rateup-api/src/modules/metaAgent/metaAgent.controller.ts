@@ -20,12 +20,6 @@ import {
   WebsiteBody,
 } from "./metaAgent.schema.js";
 
-// Meta's status used to be relayed as this API's own, so a 429 from Meta became
-// a 429 from RateUp and a client's retry logic reacted to the wrong service's
-// rate limit — likewise a 401, which says nothing about the caller's session.
-// The message and detail are still relayed, since an operator configuring the
-// agent wants to read what Meta objected to; only the status is mapped.
-// See issues.txt 43.5.
 function statusFromMeta(status: number | undefined): number {
   if (!status) return 502;
   // The caller's own input was rejected — the one class worth relaying as a 4xx.
@@ -66,7 +60,6 @@ const wrap =
 // ---- record ----
 export const getMetaBusinessAgentHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>
-  // A read, not a read-or-create. See issues.txt 43.3.
 >((req, orgId) => service.getAgentRecord(orgId, req.params.whatsappSettingsId));
 
 // ---- onboard ----

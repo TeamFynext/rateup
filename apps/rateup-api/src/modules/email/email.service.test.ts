@@ -80,8 +80,6 @@ describe("sendEmailService", () => {
     expect(send.mock.calls[0][0].html).toContain("hello");
   });
 
-  // The caller's markup used to reach the html body untouched, which is what made
-  // 25.1's relay a phishing tool rather than a spam tool. See issues.txt 25.12.
   test("escapes the caller's markup on the way into the html body", async () => {
     await sendEmailService({
       ...params,
@@ -95,9 +93,6 @@ describe("sendEmailService", () => {
     expect(html).toContain(`href="https://evil.test/login"`);
   });
 
-  // An unmatched purpose used to make getEmailBodyTemplate return undefined, and
-  // the message went out anyway with no html part at all — a delivered, empty
-  // email, answered 200. See issues.txt 25.9.
   test("refuses to send when the purpose matches no template", async () => {
     await expect(
       sendEmailService({ ...params, purpose: "NoSuchTemplate" } as never),
@@ -133,10 +128,6 @@ describe("sendEmailService", () => {
     await expect(sendEmailService(params as never)).resolves.toBeUndefined();
   });
 
-  // sendAWSEmail used to swallow the transport failure and resolve with nothing, so
-  // every caller was told the mail had been sent — an SES throttle, a suppression
-  // hit and a bad address all presented as a delivery. It reports now, and a failed
-  // send is an error here rather than a silent 200. See issues.txt 25.7.
   test("fails when the transport reports the message was not sent", async () => {
     send.mockResolvedValueOnce(false);
 
@@ -149,8 +140,6 @@ describe("sendEmailService", () => {
     await expect(sendEmailService(params as never)).rejects.toThrow("SES rejected");
   });
 
-  // The OTP handler used to inject the code by assigning onto request.body.data.
-  // The payload is passed separately now. See issues.txt 25.10.
   test("renders the payload it is given rather than the body's data", async () => {
     await sendEmailService(
       { ...params, data: { body: "from the body" } } as never,
@@ -299,9 +288,6 @@ describe("validateOtp", () => {
     await expect(validateOtp("123456", "user-1", "survey-1")).resolves.toBe(true);
   });
 
-  // Nothing used to consume the code on success: it kept working for the rest of
-  // its ten minutes, for anyone holding it, as many times as they liked — and the
-  // row was never cleaned up. It is spent on first use now. See issues.txt 25.5.
   test("consumes the code on a successful check", async () => {
     db.otpStore.findUnique.mockResolvedValue(stored());
 
@@ -333,10 +319,6 @@ describe("validateOtp", () => {
     expect(db.otpStore.delete).not.toHaveBeenCalled();
   });
 
-  // NOTE: STILL OPEN. A wrong guess costs the attacker nothing here — no counter,
-  // no lockout, no invalidation of the live code. Counting attempts needs a column
-  // on OtpStore, so the mitigation for now is the per-IP limit on /otp/validate
-  // (30/hour), which is a bound rather than a fix. See issues.txt 25.4.
   test("a wrong guess neither clears the code nor records the attempt", async () => {
     db.otpStore.findUnique.mockResolvedValue(null);
 

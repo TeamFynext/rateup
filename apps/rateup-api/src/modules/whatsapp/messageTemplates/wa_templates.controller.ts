@@ -142,11 +142,6 @@ export async function createTemplateHandler(
         };
         break;
       default:
-        // An unrecognised (or absent) templateType used to fall through here with
-        // `fetchedTemplate` still undefined, so saveTemplate was called with no
-        // template at all — and saveTemplate swallowed the resulting database
-        // failure, so the handler still answered 200 "template created" having
-        // stored nothing. See issues.txt 14.4.
         return reply.code(400).send({
           message: `templateType is required and must be one of ${Object.values(TemplateType).join(", ")}`,
         });
@@ -204,10 +199,6 @@ export async function saveTemplateAsDraftHandler(
       });
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
-      // Scoped to the caller's org. This handler never compared orgId itself,
-      // unlike its update and delete siblings, so naming another org's template id
-      // in the body rewrote their template into a draft — replacing its components
-      // and status. See issues.txt 14.3.
       const template = await getDbTemplate(request.body.id, orgId);
       if (!template) {
         reply.code(404).send({ message: "Template not found" });
@@ -270,9 +261,6 @@ export async function updateTemplateHandler(
       log.trace("Template not found");
       return;
     }
-    // The separate orgId comparison that used to sit here is redundant now that
-    // getDbTemplate is org-scoped — a foreign template already answered 404 above.
-    // See issues.txt 14.3.
     const updatedTemplate = await updateTemplate(
       request.params.templateId,
       orgAndRole.orgId,
@@ -281,12 +269,6 @@ export async function updateTemplateHandler(
     if (updatedTemplate) {
       reply.status(200).send(updatedTemplate);
     } else {
-      // Only reached when Meta genuinely refused the edit. Every other falsy
-      // result — a swallowed database failure, a template that vanished — used to
-      // land here too and be reported as the 24-hour cooldown, which was the one
-      // explanation that had nothing to do with what actually went wrong.
-      // updateTemplateInDb now throws instead of swallowing (14.2), so those
-      // reach the catch below. See issues.txt 14.10.
       reply.status(400).send("You can only edit an active template once in 24 hours.");
     }
   } catch (e) {
@@ -313,8 +295,6 @@ export async function deleteTemplateHandler(
       return;
     }
     const orgId = orgAndRole.orgId;
-    // The lookup is org-scoped now, so the separate orgId comparison that used to
-    // follow it is redundant. See issues.txt 14.3.
     const dbTemplate = await getDbTemplate(templateId, orgId);
     if (!dbTemplate) {
       reply.code(404);
@@ -323,9 +303,6 @@ export async function deleteTemplateHandler(
     const { data: template } = dbTemplate;
     const { id, name } = template;
     if (id) {
-      // deleteTemplate reports false when Meta refused. Our copy used to be
-      // removed anyway, leaving the template alive at Meta with nothing pointing
-      // at it — and counting against the org's template quota. See issues.txt 14.10.
       const deletedAtMeta = await deleteTemplate(orgId, id, name);
       if (!deletedAtMeta) {
         reply.code(502).send({ message: "WhatsApp refused to delete this template" });
@@ -415,10 +392,6 @@ export async function uploadHandler(request: FastifyRequest, reply: FastifyReply
       data.file.resume();
       return reply.code(403).send({ message: "User is not a member of any org" });
     }
-    // The size is measured from the bytes actually received. It used to be taken
-    // from a client-supplied `size` form field, defaulting to 0 when absent — so
-    // Meta was told a length the client chose, which need not match the upload.
-    // See issues.txt 14.10.
     const buffer = await data.toBuffer();
     const size = buffer.length;
     const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
@@ -815,9 +788,6 @@ export async function sendTemplateToUserCore(
                         },
                         tax: {
                           offset: 100,
-                          // `description`, not `discription` — the merchant's
-                          // explanation of the tax never reached the customer's
-                          // payment prompt. See issues.txt 14.9.
                           description: defaultValues?.orderDetails?.taxDescription,
                           value: Number(defaultValues?.orderDetails?.tax) * 100,
                         },
@@ -843,12 +813,6 @@ export async function sendTemplateToUserCore(
                       },
                       total_amount: {
                         offset: 100,
-                        // × 100 like every sibling amount above. `offset: 100`
-                        // tells WhatsApp the value is in minor units, so an
-                        // unmultiplied total rendered a hundred times too small:
-                        // a true total of 250 was shown to the customer as ₹2.50,
-                        // contradicting the line items right beside it.
-                        // See issues.txt 14.1(c).
                         value: total_amount * 100,
                       },
                     },
@@ -1314,12 +1278,6 @@ export async function sendTemplatesToContactsHandler(
         id: {
           in: req.body.contactIds,
         },
-        // orgId, like the template lookup one line above. Without it, a caller who
-        // named another org's contact ids got that org's customers messaged — from
-        // the caller's own WhatsApp number and template, with the caller billed and
-        // the receiving org's customers hearing from a business they never
-        // contacted. This handler is mounted on the API-key-authenticated external
-        // API. See issues.txt 14.1(b).
         orgId,
       },
       select: {
@@ -1328,9 +1286,6 @@ export async function sendTemplatesToContactsHandler(
       },
     });
 
-    // Per-contact outcomes, so the caller learns how many were actually reached.
-    // The handler used to set no status and send no body at all, so fastify fell
-    // back to an empty 200 that said nothing. See issues.txt 14.10.
     let sent = 0;
     const failed: string[] = [];
     for (const contact of contacts) {
@@ -1368,11 +1323,6 @@ const getLatestStatus = (statusObjInput: unknown) => {
     failed?: unknown;
     sent?: unknown;
   } | null;
-  // `failed` is tested FIRST. WhatsApp can mark a message delivered and then fail
-  // it (a block, a deleted account); read/delivered were tested first, so such a
-  // message reported "delivered" and its failure reason was dropped — which is
-  // exactly the case a caller polls this endpoint to find out about.
-  // See issues.txt 14.10.
   if (statusObj?.failed) return "failed";
   if (statusObj?.read) return "read";
   if (statusObj?.delivered) return "delivered";
@@ -1389,9 +1339,6 @@ export async function getMessageStatusByIdHandler(
     const { messageId } = request.params;
     const { orgId } = request.user;
     const messageStatus = await prisma.waMessage.findFirst({
-      // orgId: this filtered on messageId alone, so any caller holding a WhatsApp
-      // message id learned that message's delivery state and, if it failed, the
-      // reason — whichever org sent it. See issues.txt 14.3.
       where: { messageId, orgId },
       select: {
         messageId: true,

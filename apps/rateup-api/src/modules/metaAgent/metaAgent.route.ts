@@ -36,13 +36,6 @@ export async function metaAgentRoutes(server: FastifyInstance) {
 
   const p = "/:whatsappSettingsId";
 
-  // The tree carried checkSession and nothing else, so the lowest-privileged
-  // member of an organisation could register the credentials the agent uses to
-  // call the business's own back-end systems — an API key, an OAuth client id
-  // and secret, or a certificate and its private key — and could create and
-  // delete the connectors those credentials belong to. Comparable configuration
-  // surfaces in this codebase are gated; this one was not. Reads stay open.
-  // See issues.txt 43.2.
   const adminOnly = [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])];
 
   server.get(

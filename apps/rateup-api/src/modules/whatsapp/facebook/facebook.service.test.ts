@@ -327,8 +327,6 @@ describe("handleFacebookWebhook - one bad event in a batch", () => {
     const result = await handleFacebookWebhook(body);
 
     expect(handleWaMessagesMock).toHaveBeenCalledTimes(2);
-    // handleFacebookMessages swallows its own storage failure, so the batch sees both
-    // events as handled — see 10.6's remaining note in issues.txt.
     expect(result).toEqual({ processed: 2, failed: 0 });
   });
 
@@ -407,9 +405,6 @@ describe("handleFacebookMessages", () => {
     expect(handleWaMessagesMock).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. A failed write is indistinguishable from a
-  // successful one to the caller, and the inbound message is lost with only a log
-  // line to show for it. Same family as issues.txt 3.1. See issues.txt 10.6.
   test("swallows a storage failure and reports nothing", async () => {
     handleWaMessagesMock.mockRejectedValue(new Error("write failed"));
 

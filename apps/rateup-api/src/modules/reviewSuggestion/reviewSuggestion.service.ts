@@ -66,13 +66,6 @@ export async function updateReviewSuggestion(
     where: {
       id: reviewSuggestionId,
     },
-    // Named fields, not `data: data`. The route declared no body schema, so the
-    // request body reached Prisma verbatim against a model of
-    // `{ id, teamId, review, language }` — a PUT carrying another team's id moved
-    // the suggestion into it, AFTER the in-handler check had passed against the
-    // row's original teamId. The route carries updateReviewSuggestionSchema now
-    // as well, so a teamId is stripped before the handler sees it.
-    // See issues.txt 36.2.
     data: {
       review: data.review,
       language: data.language,

@@ -55,16 +55,9 @@ export async function createLifecycleHandler(
 ) {
   try {
     const { orgId } = request.user;
-    // 201 with the created row: this used to answer 200 with nothing, so a client
-    // had to re-list to learn the new stage's id. See issues.txt 27.6.
     const res = await createLifecycle(orgId, request.body);
     reply.code(201).send(res);
   } catch (e) {
-    // NOTE: the Lifecycle model declares no @@unique, so Prisma cannot raise P2002
-    // for it and this branch is unreachable — two stages of the same name in the
-    // same org are created without complaint. Adding the constraint is a schema
-    // change against live data and is left for an explicit decision, so the branch
-    // stays, ready for it. See issues.txt 27.5.
     if (hasErrorCode(e, "P2002")) {
       return reply.code(409).send({ message: "Lifecycle already exists" });
     }
@@ -83,8 +76,6 @@ export async function updateLifecycleHandler(
   try {
     const id = request.params.lifecycleId;
     const { orgId } = request.user;
-    // The session's org, not the path id alone: a stage id used to be enough to
-    // rewrite any organisation's stage. See issues.txt 27.1.
     const res = await updateLifecycle(id, orgId, request.body);
     reply.code(200).send(res);
   } catch (e) {
@@ -109,9 +100,6 @@ export async function deleteLifecycleByIdHandler(
     const res = await deleteLifecycleById(lifecycleId, orgId);
     reply.code(200).send(res);
   } catch (e) {
-    // A stage still holding contacts is refused rather than silently NULLing their
-    // lifecycleId, and a stage another org owns is indistinguishable from one that
-    // does not exist. See issues.txt 27.2.
     if (e instanceof LifecycleInUseError) {
       return reply.code(409).send({ message: e.message });
     }

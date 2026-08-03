@@ -121,11 +121,6 @@ export async function createCatalogProductsBatch(
         base_price: formatMoney(base_price, currencyCode),
       };
     }
-    // `type` may in principle be any CatalogProductTypes member (FLIGHT,
-    // DESTINATION, HOME_LISTING, VEHICLE), none of which are handled above —
-    // previously `input` silently stayed `undefined` and the code below threw
-    // a confusing "Cannot destructure property 'id' of undefined". Fail with
-    // a clear message instead. See issues.txt.
     if (!input) {
       throw new Error(`Unsupported catalog product type: ${type}`);
     }
@@ -141,9 +136,6 @@ export async function createCatalogProductsBatch(
       type,
       retailer_id: id ?? undefined,
       hotel_id,
-      // DB column is `hotel_ratailer_id` (a pre-existing typo baked into the
-      // Prisma schema); the DTO/API field is correctly spelled
-      // `hotel_retailer_id`. See issues.txt — BUG (fixed).
       hotel_ratailer_id: hotel_retailer_id,
       hotel_room_id,
       shopifyVariantId: shopifyVariantId ?? undefined,
@@ -507,10 +499,6 @@ export async function updateCatalogProducts(
       const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } =
         data as Partial<CatalogHotelInput>;
       const tagInputs: Record<string, string | number> = {};
-      // `tags`/`numbertags` are optional under Partial (an update need not
-      // touch them); previously this threw "Cannot read properties of
-      // undefined (reading 'map')" whenever an update omitted them. See
-      // issues.txt — BUG (fixed).
       (tags ?? []).map((tag, index) => {
         tagInputs[`custom_label_${index}`] = tag;
       });
@@ -553,11 +541,6 @@ export async function updateCatalogProducts(
   for (const product of newProducts) {
     const { retailer_id, type, hotel_id, hotel_retailer_id, hotel_room_id, ...rest } = product;
     if (type === CatalogProductTypes.PRODUCT_ITEM) {
-      // An update payload is a Partial — `retailer_id` (Meta's `id`) could in
-      // principle be omitted. It's the only way to locate the row, so fail
-      // clearly rather than sending `undefined` into the compound unique
-      // filter below (which Prisma would reject with a much less clear
-      // error). See issues.txt.
       if (!retailer_id) {
         throw new Error("Cannot update a PRODUCT_ITEM catalog product without a retailer_id");
       }
@@ -597,13 +580,6 @@ export async function updateCatalogProducts(
         where: {
           catalog_hotel_room_id_unique: {
             catalogId,
-            // DB column is `hotel_ratailer_id` (pre-existing typo in the
-            // Prisma schema); `hotel_retailer_id` above is the correctly
-            // spelled DTO field. Previously this destructured a
-            // `hotel_ratailer_id` variable that never matched any key on
-            // `product`, so it was always `undefined` here — the compound
-            // unique filter could never match a HOTEL_ROOM row. See
-            // issues.txt — BUG (fixed).
             hotel_ratailer_id: hotel_retailer_id,
             hotel_room_id,
           },

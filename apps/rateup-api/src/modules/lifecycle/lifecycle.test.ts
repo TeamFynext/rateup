@@ -140,9 +140,6 @@ describe("the readers", () => {
 // ===========================================================================
 
 describe("updateLifecycle", () => {
-  // The where used to be the bare id, so a stage id was enough for a user of any
-  // organisation to rewrite that stage — reorderLabels in the same file has always
-  // added orgId, with a comment saying why. See issues.txt 27.1.
   test("selects the row by id and org together", async () => {
     await updateLifecycle(STAGE, ORG, body() as never);
 
@@ -203,9 +200,6 @@ describe("updateLifecycle", () => {
     expect(answer(rep)).toEqual({ code: 409, body: { message: "Lifecycle already exists" } });
   });
 
-  // P2025 is what a missing row raises — and, now that the where carries the org,
-  // also what a stage belonging to another org raises. It used to fall through to
-  // the generic 500. See issues.txt 27.1 and 27.6.
   test("a missing or foreign stage answers 404", async () => {
     db.lifecycle.update.mockRejectedValueOnce(
       Object.assign(new Error("Record to update not found"), { code: "P2025" }),
@@ -220,8 +214,6 @@ describe("updateLifecycle", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { message: "Lifecycle not found" } });
   });
 
-  // The service used to await the update and return nothing, so the handler sent
-  // undefined and the caller learned only that it had not failed. issues.txt 27.6.
   test("answers 200 with the updated row", async () => {
     db.lifecycle.update.mockResolvedValueOnce({ id: STAGE, name: "Engaged Lead" });
     const rep = reply();
@@ -240,7 +232,6 @@ describe("updateLifecycle", () => {
 // ===========================================================================
 
 describe("deleteLifecycleById", () => {
-  // The delete used to be by bare id — any org's stage, by id. See issues.txt 27.2.
   test("deletes by id and org together", async () => {
     await deleteLifecycleById(STAGE, ORG);
 
@@ -256,10 +247,6 @@ describe("deleteLifecycleById", () => {
     expect(db.lifecycle.delete).toHaveBeenCalledWith({ where: { id: STAGE, orgId: ORG } });
   });
 
-  // Contact.lifecycleId is optional with no onDelete declared, so Prisma's default
-  // for an optional relation is SetNull — the delete used to succeed and silently
-  // unassign every contact in the stage, with nothing storing what they had been in.
-  // It is refused while the stage still holds contacts. See issues.txt 27.2.
   test("refuses while contacts still reference the stage", async () => {
     db.contact.count.mockResolvedValueOnce(4);
 
@@ -345,8 +332,6 @@ describe("createLifecycle", () => {
     expect(db.lifecycle.create.mock.calls[0][0].data.orgId).toBe(ORG);
   });
 
-  // The service used to return nothing, so a successful create answered 200 with an
-  // empty body and the caller could not learn the new stage's id. See issues.txt 27.6.
   test("answers 201 with the created row", async () => {
     db.lifecycle.create.mockResolvedValueOnce({ id: STAGE, name: "Engaged Lead" });
     const rep = reply();
@@ -356,11 +341,6 @@ describe("createLifecycle", () => {
     expect(answer(rep)).toEqual({ code: 201, body: { id: STAGE, name: "Engaged Lead" } });
   });
 
-  // NOTE: STILL OPEN. The Lifecycle model declares no @@unique, so Prisma cannot
-  // raise P2002 for it and this branch is unreachable — two stages of the same name
-  // in one org are created without complaint. Adding @@unique([orgId, name]) is a
-  // schema change against live data that may already hold duplicates, so it is left
-  // for an explicit decision. See issues.txt 27.5.
   test("the unreachable 409 branch is duplicated here too", async () => {
     db.lifecycle.create.mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }));
     const rep = reply();
@@ -385,10 +365,6 @@ describe("createLifecycle", () => {
 // ===========================================================================
 
 describe("lifecycleBodySchema", () => {
-  // Lifecycle.emoji and Lifecycle.description are non-null String columns with no
-  // default, and both used to be .optional() here — so a body the schema accepted
-  // reached Prisma missing two required columns and failed as a generic 500.
-  // See issues.txt 27.4.
   test("rejects a body with no emoji and no description", () => {
     const parsed = lifecycleBodySchema.safeParse({
       name: "Engaged Lead",
@@ -478,11 +454,6 @@ describe("reorderLabels", () => {
     expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.ordering)).toEqual([2, 5]);
   });
 
-  // isDefault used to be `ordering === 0`, while the seeder writes the starting
-  // stages one-based — so a client sending back the orderings it was given cleared
-  // isDefault on every stage, and nothing else in the product can set it back. The
-  // first entry of the list is the default now, whatever numbering is used.
-  // See issues.txt 27.3.
   test("marks the first entry default whatever numbering the client uses", async () => {
     await reorderLabels(ORG, {
       lifecycles: [

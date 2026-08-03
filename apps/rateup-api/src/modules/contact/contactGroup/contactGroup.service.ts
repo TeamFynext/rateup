@@ -23,15 +23,6 @@ import {
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
 
-/**
- * A group is the unit campaigns send to, so an unscoped read of one hands over the
- * names and phone numbers it holds. Every entry point in this file used to key on
- * an id alone; they all scope through `team: { orgId }` now — a group belongs to a
- * team, and a team to an org. The one writer that already did this right was
- * updateContactGroupsForContact at the bottom of the file.
- * See issues.txt 18.24.
- */
-
 export async function getContactGroupById(contactGroupId: string, orgId: string) {
   const contactGroup = await prisma.contactGroup.findFirst({
     where: {
@@ -58,8 +49,6 @@ export async function getContactGroupsByTeamId(teamId: string, orgId: string) {
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       teamId,
-      // A team id from the query string used to be enough to enumerate that team's
-      // groups, whichever org owned it. See issues.txt 18.24.
       team: { orgId },
       type: "NORMAL",
     },
@@ -103,11 +92,6 @@ export async function getContactGroupsByOrgId(orgId: string, type?: ContactGroup
   });
   return contactGroups;
 }
-/**
- * The teamId comes from the request body. Without the check below a caller could
- * create a group inside another org's team, where it then appears in that org's
- * UI and can be sent to. See issues.txt 18.24.
- */
 export async function createContactGroup(contactGroup: CreateContactGroupInput, orgId: string) {
   const team = await prisma.team.findFirst({
     where: { id: contactGroup.teamId, orgId },
@@ -216,10 +200,6 @@ export async function getContactsByContactGroupIdWithPagination(
     }
   }
   if (search?.length > 0) {
-    // The search term's two alternatives are the ONE thing that genuinely ORs — a
-    // match on either the name or the phone. It stays an OR, nested inside the AND,
-    // so adding a search term narrows the result set instead of widening it.
-    // See issues.txt 18.6 and 18.27.
     filterData.push({
       OR: [
         { name: { contains: search, mode: "insensitive" } },
@@ -228,13 +208,6 @@ export async function getContactsByContactGroupIdWithPagination(
     });
   }
 
-  // One condition, used for both the page and the count. They used to disagree:
-  // the rows were filtered with `OR: filterData` and the count with
-  // `AND: filterData`, so with two or more filters the table showed the union
-  // while the total above it reported the intersection — more rows than the count
-  // claimed existed, and paging past `totalCount / limit` silently dropped the
-  // remainder. AND is the right one: a filter is meant to narrow.
-  // See issues.txt 18.6 and 18.27.
   const searchCondition: Prisma.ContactWhereInput =
     filterData?.length > 0 ? { AND: filterData } : {};
 
@@ -285,9 +258,6 @@ export async function getContactsByContactGroupIdWithPagination(
       },
     },
   });
-  // A stale group link used to read `group.contacts` off null. It reports a typed
-  // not-found now, which the handler answers as a 404 rather than a 500.
-  // See issues.txt 18.25.
   if (!group) {
     throw new ContactGroupNotFoundError(`Contact group ${contactGroupId} not found`);
   }
@@ -347,10 +317,6 @@ export async function addNewContactsToGroup(
     );
   }
 
-  // It used to end here with no return, so the endpoint answered 200 with an empty
-  // body and the caller could not tell how many contacts were actually added —
-  // the interesting number, since rows with an invalid phone are dropped silently
-  // above. See issues.txt 18.28.
   return { added: newMembers.length, invalidPhones };
 }
 
@@ -365,11 +331,6 @@ export async function addExistingContactsToGroup(
   if (!contactGroup) {
     throw new ContactGroupNotFoundError("Contact group not found");
   }
-  // The sharpest instance of issues.txt 18.24: this wrote arbitrary contact ids
-  // into a group with no lookup at all — the source even carried a bare
-  // "TODO: check if contactIds belong to the same team? / FIXME:". So contacts
-  // could be pushed across the org boundary into a list that would later be
-  // messaged. Resolved against the org first; anything else is dropped.
   const owned = await prisma.contact.findMany({
     where: { id: { in: contactIds }, orgId },
     select: { id: true },
@@ -397,8 +358,6 @@ export async function updateContactGroup(
   orgId: string,
   data: UpdateContactGroupInput,
 ) {
-  // Extended `where` — unique id plus a non-unique filter — so Prisma raises P2025
-  // rather than writing when the group is not the caller's. See issues.txt 18.24.
   return await prisma.contactGroup.update({
     where: {
       id: contactGroupId,
@@ -439,7 +398,6 @@ export async function addExistingContactsToMultipleGroups(
   contactGroupIds: Array<string>,
   orgId: string,
 ) {
-  // Only the groups the caller's org owns. See issues.txt 18.24.
   const ownedGroups = await prisma.contactGroup.findMany({
     where: { id: { in: contactGroupIds }, team: { orgId } },
     select: { id: true },
@@ -447,11 +405,6 @@ export async function addExistingContactsToMultipleGroups(
 
   return await Promise.all(
     ownedGroups.map(async ({ id: contactGroupId }) => {
-      // `skipDuplicates`, rather than reading the existing memberships and
-      // filtering them out. The read-then-write was not atomic: two concurrent
-      // requests adding the same contact to the same group both saw it as absent,
-      // and the second raised a unique-constraint error that failed the whole
-      // request. Its two siblings above already did this. See issues.txt 18.29.
       const newMembers = await prisma.contactGroupMap.createManyAndReturn({
         skipDuplicates: true,
         data: contactIds.map((contactId) => ({

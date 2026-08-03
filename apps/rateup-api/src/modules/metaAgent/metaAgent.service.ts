@@ -42,13 +42,6 @@ async function getEntityContext(orgId: string, whatsappSettingsId: string) {
   return { entityId: settings.phoneId, accessToken };
 }
 
-// The GET used to be handled by getOrCreateAgentRecord, so merely opening the
-// agent page for a channel that had never been onboarded inserted a row — and
-// with no unique constraint and no transaction behind the read-then-create, two
-// concurrent page loads both inserted. requireAgentRecord uses findFirstOrThrow,
-// so which duplicate later writes landed on was undefined. The read is a read
-// now; the row is created by the two explicit POSTs (eligibility check and
-// onboarding), which is where it belongs. See issues.txt 43.3.
 export async function getAgentRecord(orgId: string, whatsappSettingsId: string) {
   return prisma.metaBusinessAgent.findFirst({ where: { orgId, whatsappSettingsId } });
 }

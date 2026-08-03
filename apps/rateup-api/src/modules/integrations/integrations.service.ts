@@ -348,17 +348,6 @@ export const updateIntegrationByName = async (
     data.credential.accessToken = hash;
     apikey = key;
   }
-  // `const { ...rest } = data` was a COPY, not a destructure: nothing was stripped,
-  // so two fields the caller controls went into the Prisma update.
-  //  - `orgId` was an accepted body field, so a PUT could re-parent the caller's own
-  //    integration row — credential and all — into another organisation, which is
-  //    how a planted connection would work. It is gone from the schema, so it can no
-  //    longer arrive at all (issues.txt 26.4).
-  //  - `updateKey` is a control flag, not a column, and Prisma rejects unknown
-  //    arguments — so the documented way to rotate a leaked Zapier key always 500'd
-  //    (issues.txt 26.5).
-  // `orgId` is stripped here as well as being gone from the schema: the schema stops
-  // it arriving over HTTP, this stops any internal caller passing one.
   const {
     updateKey: _ignoredUpdateKey,
     orgId: _ignoredOrgId,
@@ -563,16 +552,6 @@ export async function sendWaTemplateOnPetpoojaOrder(
   });
 }
 
-/**
- * Removes one Zapier trigger subscription and tells the subscriber it is gone.
- *
- * The outbound DELETE used to go to `data.hookUrl` — a URL taken straight from the
- * request body, before anything was read from the database. That is an SSRF
- * primitive: an authenticated caller chose any address and the server issued a
- * DELETE to it from inside the network, cloud metadata and internal admin
- * endpoints included. The call now goes only to a hookUrl this org actually
- * subscribed, looked up first. See issues.txt 26.6.
- */
 export async function deleteZapierTriggerHooks(
   data: ZapierIntegration["credential"]["triggerSubscriptions"][0],
   orgId: string,

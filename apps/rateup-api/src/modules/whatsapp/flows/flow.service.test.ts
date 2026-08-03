@@ -164,11 +164,6 @@ beforeEach(() => {
 });
 
 describe("reading a flow - who is allowed to see it", () => {
-  // Every handler starting from a path :dbFlowId goes through getFlowFromDb —
-  // get, update, delete, deprecate, publish, clone, preview, push-to-wa — and all
-  // those routes sit behind checkSession, so an unscoped lookup handed one org's
-  // flow to any authenticated user of another. Same family as issues.txt 1.1.
-  // See issues.txt 11.1.
   test("scopes the lookup to the org asking", async () => {
     await getFlowFromDb(DB_FLOW_ID, ORG_A);
 
@@ -200,8 +195,6 @@ describe("reading a flow - who is allowed to see it", () => {
     expect(where.survey.teams.some.teamId).toEqual({ in: ["team-1"] });
   });
 
-  // Same gap, reached from a different direction — campaign, response and survey
-  // all call this by survey id. See issues.txt 11.1.
   test("scopes a lookup by survey id to the caller's org", async () => {
     await getFlowBySurveyId("survey-1", ORG_A);
 
@@ -241,9 +234,6 @@ describe("updateFlowInDb", () => {
     expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  // The first parameter was named orgId and never read, so the update was keyed on
-  // dbFlowId alone and the caller's org was accepted in good faith and thrown
-  // away. Identical to the `_orgId` case in issues.txt 1.2. See issues.txt 11.1.
   test("scopes the update to the org it is handed", async () => {
     await updateFlowInDb(ORG_A, DB_FLOW_ID, { name: "Renamed" });
 
@@ -253,7 +243,6 @@ describe("updateFlowInDb", () => {
     });
   });
 
-  // Same gap on the delete side. See issues.txt 11.1.
   test("scopes the delete to the caller's org", async () => {
     await deleteFlowInDb(DB_FLOW_ID, ORG_A);
 
@@ -280,11 +269,6 @@ describe("syncLocalFlowToWhatsapp", () => {
     });
   });
 
-  // This is the one that cost a user their work. updateFlowJsonInWa used to catch
-  // the upload failure, log it at TRACE — the level that is off in production —
-  // and return normally; the flow was then published and marked PUBLISHED with
-  // pendingSave cleared, so the editor showed no unsaved changes while WhatsApp
-  // still served the previous json. See issues.txt 11.2.
   test("neither publishes nor marks the flow saved when the upload to Meta failed", async () => {
     axiosMock.post.mockRejectedValue(new Error("meta rejected the asset"));
 
@@ -296,9 +280,6 @@ describe("syncLocalFlowToWhatsapp", () => {
     expect(db.waFlow.update).not.toHaveBeenCalled();
   });
 
-  // Same gap as getFlowFromDb — the row used to be fetched by dbFlowId with no
-  // org, so the orgId argument only picked whose credentials to publish with.
-  // See issues.txt 11.1.
   test("loads the flow to sync scoped to the org syncing it", async () => {
     await syncLocalFlowToWhatsapp(ORG_A, DB_FLOW_ID);
 
@@ -325,9 +306,6 @@ describe("updateFlowJsonInWa", () => {
     expect(config.headers.Authorization).toBe("Bearer token-abc");
   });
 
-  // The failure used to be caught, logged at TRACE and returned from as though
-  // the upload had succeeded, with no return value for a caller to check.
-  // See issues.txt 11.2.
   test("lets a rejected upload reach the caller", async () => {
     axiosMock.post.mockRejectedValue(new Error("meta rejected the asset"));
 
@@ -396,10 +374,6 @@ describe("cloneFlow", () => {
     });
   });
 
-  // The copy-number query used to filter on the title prefix alone, so the number
-  // was chosen by reading every org's survey titles: another org's titles leaked,
-  // and a first copy in your own org could come out "Feedback Copy 7" because a
-  // stranger had six. See issues.txt 11.3.
   test("counts existing copies only within the survey's own org", async () => {
     await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
 
@@ -409,7 +383,6 @@ describe("cloneFlow", () => {
     });
   });
 
-  // Same gap on the read that starts the clone. See issues.txt 11.1.
   test("scopes the survey it clones to the flow's own org", async () => {
     await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
 
@@ -535,10 +508,6 @@ describe("getFlowPreview", () => {
     await expect(getFlowPreview(ORG_A, DB_FLOW_ID)).resolves.toEqual({ url: "fresh" });
   });
 
-  // getFlowPreviewFromDb is dead code (nothing calls it today — getFlowPreview
-  // does the same job properly), but it used to read `flow.preview` with no
-  // null check, so an id that matches nothing raised a TypeError instead of
-  // reporting nothing. Fixed to resolve `undefined` instead. See issues.txt.
   test("reports nothing for a flow id that matches nothing", async () => {
     db.waFlow.findFirst.mockResolvedValue(null);
 
@@ -615,10 +584,6 @@ describe("removeDuplicateResponses", () => {
     expect(removeDuplicateResponses([])).toEqual([]);
   });
 
-  // `responses.reverse()` used to reverse the caller's own array rather than a
-  // copy. Both callers overwrite what they passed in immediately, so nothing was
-  // visibly broken — but anything else reading its own array found it silently
-  // reordered. See issues.txt 11.10.
   test("leaves the array it was handed in the order it arrived", () => {
     const input: any = [
       { questionId: "q1", response: "a" },

@@ -90,12 +90,6 @@ describe("getInstagramWebhookEvent - what it declines to classify", () => {
     expect(event).toBe(InstagramEvent.MESSAGE);
   });
 
-  // There was no is_echo branch here, unlike the Facebook equivalent. Echoes were
-  // caught further down in handleInstagramMessages and
-  // handleInstagramStoryMentionRule — but NOT in the reaction, postback or
-  // referral handlers, so an echo carrying any of those was stored as if the
-  // customer had sent it. Dropping them here gives every handler the guard.
-  // See issues.txt 12.6.
   test("declines an echo of the business's own message", () => {
     const event = getInstagramWebhookEvent(
       messaging({ message: { mid: "mid-1", text: "hi", is_echo: true } }),
@@ -112,10 +106,6 @@ describe("getInstagramWebhookEvent - what it declines to classify", () => {
     expect(event).toBeNull();
   });
 
-  // Unlike getFacebookWebhookEvent there was no try/catch, so a malformed entry
-  // threw out of the classification step — and handleInstagramWebhook called this
-  // inside its then-unguarded loop, taking the rest of the batch with it.
-  // See issues.txt 12.2.
   test("reports nothing rather than throwing when handed nothing at all", () => {
     expect(getInstagramWebhookEvent(undefined as any)).toBeNull();
   });
@@ -130,13 +120,6 @@ describe("getInstagramWebhookEvent - which check wins when several could match",
     expect(event).toBe(InstagramEvent.POSTBACK);
   });
 
-  // A customer who taps a click-to-message ad and types in the same event sends
-  // one event carrying both. The referral check used to come first, routing it to
-  // handleInstagramReferral — which stores { type, referral, timestamp, sender }
-  // and never looks at message.text — so the first message of a paid-acquisition
-  // conversation reached the inbox as a bare referral marker. Classified as a
-  // MESSAGE the whole object is stored, so the referral survives alongside the
-  // text. See issues.txt 12.5.
   test("a referral that arrives with text is a message, so the text survives", () => {
     const event = getInstagramWebhookEvent(
       messaging({

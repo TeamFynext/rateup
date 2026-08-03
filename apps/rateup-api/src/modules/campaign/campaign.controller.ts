@@ -32,19 +32,6 @@ import {
   SpreadsheetExportFormat,
 } from "../../utils/spreadsheet.js";
 
-/**
- * Turns a service failure into a controlled reply.
- *
- * Ten of the sixteen handlers across the two campaign controllers had no
- * try/catch, so a service failure escaped to fastify's default error handler
- * rather than becoming a reply — inconsistent with sendCampaignHandler beside
- * them, which did catch. Three of the ones that did catch sent the caught Error
- * as the body, whose own properties are non-enumerable, so the client received
- * `{}`. See issues.txt 17.6.
- *
- * A CampaignNotFoundError becomes a 404: a campaign another org owns should be
- * indistinguishable from one that never existed. See issues.txt 17.3.
- */
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
   if (error instanceof CampaignNotFoundError) {
     return reply.status(404).send({ message: error.message, code: "CAMPAIGN_NOT_FOUND" });
@@ -148,20 +135,11 @@ export async function sendCampaignHandler(
   const { orgId } = request.user;
 
   try {
-    // The campaign is resolved ONCE, up front, and every branch below works from
-    // it. sendCampaignHandler used to fetch it only to read its status, and the
-    // DRIP and INACTIVE branches never fetched it at all — so a campaign id was
-    // enough to fire another org's campaign at their contacts, from their WhatsApp
-    // number, on their bill. See issues.txt 17.3.
     const campaign = await getCampaignById(campaignId, orgId);
     if (!campaign) {
       return reply.status(404).send({ message: "Campaign not found", code: "CAMPAIGN_NOT_FOUND" });
     }
 
-    // Above the INACTIVE branch, not below it. The guard sat after the cancel path,
-    // so it could not protect it: an INACTIVE request marked the campaign DEQUEUING
-    // and asked for the dequeue while a queue or dequeue was already running.
-    // See issues.txt 17.6.
     const inProgressStatuses: string[] = [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING];
     if (inProgressStatuses.includes(campaign.status)) {
       return reply.status(400).send({
@@ -265,12 +243,6 @@ export async function sendCampaignHandler(
   }
 }
 
-/**
- * The handler used to discard enqueueCampaignMessage's result entirely and answer
- * ENQUEUE_REQUEST_ACCEPTED regardless — while the campaign row was already marked
- * QUEUING, so the UI showed it queued forever. Rolling the status back is what
- * lets the user try again. See issues.txt 17.4.
- */
 async function reportEnqueueFailure(
   campaignId: string,
   orgId: string,

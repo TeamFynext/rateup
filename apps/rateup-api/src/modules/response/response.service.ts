@@ -113,12 +113,6 @@ export async function getAllResponses(
         }
       : {};
 
-  // An EXPLICIT list scopes, even when it is empty — `teamIds.length > 0` used to
-  // drop the team condition for an empty array, so a caller who belongs to no
-  // team, or who named only map ids that resolve to none of their teams, got
-  // every team's responses for the survey. `undefined` still means unscoped,
-  // which is what the two internal callers in this file pass.
-  // See issues.txt 37.1.
   let whereCondtion = teamIds
     ? {
         surveyId: surveyId,
@@ -724,14 +718,6 @@ export async function resetResponsesStats(surveyId: string) {
   return `Deleted ${deleteResponses.count} responses for surveyId: ${surveyId}`;
 }
 
-/**
- * The route is `DELETE /:surveyTeamMapId/delete/:id`, and verifyAccess checks the
- * MAP. Nothing compared the response to it, so a caller supplied a map id they
- * legitimately held and a response id belonging to any survey on the platform:
- * the check passed on the first, the delete acted on the second. Both ids have
- * to agree now, and a mismatch is P2025 rather than a silent cross-tenant
- * deletion. See issues.txt 37.2.
- */
 export async function deleteResponse(id: string, surveyTeamMapId: string) {
   const deleteResponse = await prisma.surveyResponse.delete({
     where: {

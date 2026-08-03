@@ -105,11 +105,6 @@ export type SkillBody = z.infer<typeof skillBodySchema>;
 export const connectorBodySchema = z.object({
   name: z.string(),
   description: z.string(),
-  // base_url is the address Meta calls on the business's behalf when the agent
-  // invokes a connector tool. As a bare z.string() an unparseable value was
-  // accepted here and rejected by Meta later, so the failure surfaced as a Meta
-  // API error at connector-creation time rather than as a 400 naming the field.
-  // See issues.txt 43.4.
   base_url: z
     .url()
     .max(2048)

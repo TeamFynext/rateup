@@ -104,11 +104,6 @@ export {
   orgPlanEmailSchema,
 };
 
-/**
- * The order-status update. The route used to declare no body schema at all and
- * the handler typed the body Partial<Order>, so every column of Order reached
- * Prisma unchanged. See issues.txt 40.1.
- */
 export const orderIdParamsSchema = z.object({
   orderId: z.uuid(),
 });

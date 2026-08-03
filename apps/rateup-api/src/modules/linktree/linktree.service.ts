@@ -75,13 +75,6 @@ async function getLinktreeWithShortIdFromDB(
   return linktree;
 }
 
-// isPublished was in the select list but not in the where, so a draft was
-// fully readable by anyone holding the short id — its name, its theme and every
-// link on it. The short id is minted at creation, so it resolves from the
-// moment the row exists; a campaign prepared ahead of a launch was visible to
-// anyone who learned it early. The flag was returned to the client, which puts
-// the decision in the component that cannot enforce it: the API has already
-// sent the content. See issues.txt 45.2.
 async function getPublicLinktreeWithShortIdFromDB(
   req: FastifyRequest<{ Params: GetLinktreeWithShortIdParams }>,
 ) {
@@ -134,21 +127,6 @@ async function deleteLinktreeInDB(req: FastifyRequest<{ Params: { id: string } }
   return deletedLinktree;
 }
 
-// This used to walk the org outwards — org -> members -> user -> surveys —
-// with no `where` at any level below the org. Survey has no required org: it
-// hangs off createdBy, a User, and a User may be a member of any number of
-// organisations (OrgMember is unique on (userId, orgId), not on userId). So
-// `user.surveys` was every survey that person had ever created, in any
-// organisation, and the dropdown handed a member of org A the survey ids and
-// titles belonging to org B along with the name and tags of every team each was
-// mapped to. Anyone in two organisations at once — an agency operator, a
-// consultant, someone who moved between customers and was never removed —
-// triggered it just by opening the page.
-//
-// Surveys are queried through teams here, the way getSurveysByUserId does
-// (survey.service.ts), with the survey's own orgId accepted as well because
-// Survey.orgId is nullable and older rows carry it on the teams alone.
-// See issues.txt 45.1.
 const linkTypeDropdownSurveySelect = {
   id: true,
   title: true,
@@ -189,8 +167,6 @@ async function generateAndGetOptionsFromDB(req: FastifyRequest<{ Params: { linkT
 
   const surveyType = LINK_TYPE_TO_SURVEY_TYPE[linkType];
   if (!surveyType) {
-    // Was silently an empty array, which made a typo indistinguishable from
-    // "this organisation has no surveys". See issues.txt 45.6.
     throw new UnknownLinkTypeError(linkType);
   }
 
@@ -213,19 +189,6 @@ async function generateAndGetOptionsFromDB(req: FastifyRequest<{ Params: { linkT
   return resultArr;
 }
 
-// The click counter reads the whole links array, increments one entry and
-// writes the array back. Two consequences: concurrent clicks both read N and
-// both write N+1, so the pair registers as one; and, worse, the write is the
-// array as it was a moment earlier, so a click overlapping an owner's
-// `PUT /api/linktrees` — which also writes links wholesale — reverted that
-// edit, with no error to either party. The click path is unauthenticated, so
-// the timing is not something the organisation controls.
-//
-// The write is conditional on the array still being what was read, and retried
-// when it is not. That makes a lost click a retried click, and makes an
-// overlapping owner edit win rather than be silently undone. Moving click
-// counts out of the JSON column is the real fix and needs a schema change.
-// See issues.txt 45.4.
 const CLICK_WRITE_ATTEMPTS = 3;
 
 async function updatePageVisitOrLinkClickInDB(
@@ -239,10 +202,6 @@ async function updatePageVisitOrLinkClickInDB(
     body: { resourceToBeUpdated, linkId },
   } = req;
   if (resourceToBeUpdated === "page-visit") {
-    // Was a bare update, which raises P2025 for a short id that does not exist
-    // — the ordinary case for a page that has since been deleted — and nothing
-    // caught it, so an unauthenticated caller could make the API answer 500.
-    // See issues.txt 45.5.
     const { count } = await prisma.linktree.updateMany({
       where: {
         shortUrlId,
@@ -276,9 +235,6 @@ async function updatePageVisitOrLinkClickInDB(
       // The editor writes extra presentation fields per link; LinktreeLink names only what
       // the server touches (see the index signature) and carries the rest through.
       const links = linktreeRecord.links;
-      // Array.isArray rather than a truthiness test: links is Json, so a
-      // non-array value can reach here and `.find` would throw a TypeError that
-      // asyncErrHandler reports as a 500. See issues.txt 45.5.
       if (!Array.isArray(links) || !links.some((linkObj) => linkObj?.id === linkId)) {
         return null;
       }

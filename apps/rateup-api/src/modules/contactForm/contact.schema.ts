@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-// Upper bounds as well as lower ones: an unauthenticated form used to accept a
-// message of any size, store it in an unbounded text column and put it into an
-// email. See issues.txt 22.7.
 const createContactMessageInputSchema = z.object({
   name: z
     .string()

@@ -92,10 +92,6 @@ export async function createOrder(data: CreateStripeCheckoutInput, userId: strin
   return order;
 }
 
-/**
- * A checkout session is only readable by the organisation whose order created it.
- * checkoutRefId is @unique on Order, so this is a single row. See issues.txt 40.3.
- */
 export async function findOrderByCheckoutRef(checkoutRefId: string, orgId: string) {
   return prisma.order.findFirst({
     where: { checkoutRefId, orgId },
@@ -103,11 +99,6 @@ export async function findOrderByCheckoutRef(checkoutRefId: string, orgId: strin
   });
 }
 
-/**
- * Removes an order whose Stripe checkout session could not be created, so a
- * failed checkout does not leave the artefact issues.txt 40.1 fed on.
- * See issues.txt 40.4.
- */
 export async function deleteOrder(id: string) {
   return prisma.order.deleteMany({ where: { id } });
 }

@@ -263,9 +263,6 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
       flow.logicJumps,
     );
   }
-  // updateFlowJsonInWa throws when Meta rejects the upload, so nothing below
-  // runs: the flow is neither published nor marked saved, and the editor keeps
-  // showing the unsaved changes it still has. See issues.txt 11.2.
   const response = await updateFlowJsonInWa(orgId, flow.flowId, jsonWithTitle as WaFlowJson);
   await publishFlowInWa(orgId, flow.flowId);
 
@@ -374,9 +371,6 @@ export async function cloneFlow(
 
   const existingSurveys = await prisma.survey.findMany({
     where: {
-      // orgId matters here: without it the next copy number is chosen by reading
-      // every org's survey titles, so a first copy could come out "Feedback
-      // Copy 7" because a stranger has six. See issues.txt 11.3.
       orgId: survey.orgId,
       title: {
         startsWith: survey.title,
@@ -604,9 +598,6 @@ export async function cloneFlowInWa(
 export async function updateFlowInDb(orgId: string, dbFlowId: string, data: UpdateFlowInput) {
   const updatedFlow = await prisma.waFlow.update({
     where: {
-      // orgId was previously accepted and never read, so the update was keyed on
-      // dbFlowId alone. Prisma raises P2025 when the pair matches nothing, which
-      // is what a caller editing another org's flow now gets. See issues.txt 11.1.
       dbFlowId: dbFlowId,
       orgId,
     },
@@ -677,10 +668,6 @@ export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: 
   formData.append("asset_type", "FLOW_JSON");
   formData.append("name", "flow.json");
 
-  // Deliberately not caught: the caller (syncLocalFlowToWhatsapp) publishes the
-  // flow and clears pendingSave straight after, so swallowing a failure here
-  // reported the user's work as saved while WhatsApp kept serving the previous
-  // json. See issues.txt 11.2.
   const { data } = await axios.post(
     graphUrl(`/${waFlowId}/assets`),
     formData, // Upload the FormData
@@ -836,11 +823,6 @@ export const handleDecryptedFlowRequest = async (
         const question = questions.find((data) => data.type === QuestionType.Date);
         if (!question?.waAppName) return noSlot;
 
-        // getIntegrationByName returns a single Integration (findUnique), not a
-        // list — this branch previously read `.length`/`[0]` as if it were an
-        // array, so it never detected a missing integration and always called
-        // getWaAmeliaTimeSlot with undefined credentials. Fixed to treat it as
-        // the single record it actually is. See issues.txt.
         const integration = (await getIntegrationByName(
           session.orgId,
           question.waAppName,
@@ -1192,8 +1174,6 @@ export function removeDuplicateResponses<T extends { questionId: string }>(respo
 
   const uniqueQIds = [...new Set(qIds)];
 
-  // toReversed, not reverse: reverse() would reorder the caller's own array.
-  // See issues.txt 11.10.
   const reversedRes = responses.toReversed();
 
   // Every id in uniqueQIds came from responses itself, so `.find` always

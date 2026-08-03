@@ -21,20 +21,6 @@ import {
 } from "./commerce.service.js";
 import { ChannelNotFoundError } from "./commerce.errors.js";
 
-/**
- * resolveChannelCatalogId throws on an unknown or foreign channel — that is a 400,
- * not a 500.
- *
- * Decided by CLASS, not by substring-matching the error's own message text. It
- * used to be `message.includes("Channel") || message.includes("catalog")`, and
- * the matched text was then echoed to the client verbatim — so any internal
- * failure whose message happened to contain "catalog" was misreported as a 400
- * AND leaked its raw text. Prisma is the obvious source: a validation error naming
- * the `catalogId` argument, or a connection error mentioning a catalog table, both
- * matched. The client was told its request was bad when the server had broken,
- * monitoring keyed on 5xx never saw it, and the body carried internal query
- * structure. All seven handlers route through here. See issues.txt 19.10.
- */
 function sendError(reply: FastifyReply, error: unknown, context: string) {
   if (error instanceof ChannelNotFoundError) {
     return reply.code(400).send({ error: error.message });
@@ -173,10 +159,6 @@ export async function exportCommerceOverviewHandler(
     const [overview, timeseries, topProducts] = await Promise.all([
       getCommerceOverview(orgId, filter),
       getCommerceTimeseries(orgId, { ...filter, interval }),
-      // The page's own limit, not a hard-coded 20. exportOverviewSchema's comment
-      // says "Exports reuse the page's own filters so the file matches what's on
-      // screen", and this sheet never did: the export always had 20 rows where the
-      // chart had 5. See issues.txt 19.11.
       getCommerceTopProducts(orgId, { ...filter, limit: request.body.limit ?? 5 }),
     ]);
 

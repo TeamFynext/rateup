@@ -154,9 +154,6 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
   };
 }
 
-// The predicate behind assertRootOrg, exported so handlers that need a
-// platform-operator escape hatch inside their own body (rather than as a route
-// gate) can ask the same question. See issues.txt 41.2.
 export function isRootOrg(request: FastifyRequest): boolean {
   return Boolean(request.user?.orgId) && request.user.orgId === process.env.ROOT_ORG;
 }

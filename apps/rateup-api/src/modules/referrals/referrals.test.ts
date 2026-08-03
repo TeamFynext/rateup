@@ -21,7 +21,6 @@ vi.mock("../../utils/logger.js", () => ({
 vi.mock("../../utils/rateLimit.js", () => ({
   rateLimit: vi.fn((opts) => Object.assign(vi.fn(), { opts })),
 }));
-// The visit dedup keeps a per-IP-per-code key in Redis. See issues.txt 38.1.
 vi.mock("../../utils/redisConnection.js", () => ({ default: { set: vi.fn() } }));
 
 import prisma from "../../utils/prisma.js";
@@ -123,10 +122,6 @@ describe("referralRoutes", () => {
     }
   });
 
-  // Registered as post(url, handler) — two arguments, so no options object, no
-  // preHandler and no schema — while it increments a counter an influencer may be
-  // paid on. It stays unauthenticated (a visit happens before anyone signs in)
-  // and is rate limited instead. See issues.txt 38.1.
   test("track-visit stays session-free but is rate limited and validated", async () => {
     const { srv, routes } = fakeServer();
 
@@ -140,8 +135,6 @@ describe("referralRoutes", () => {
     expect(track.opts.schema.body).toBe(trackVisitSchema);
   });
 
-  // The module had no schema file at all, which is why the only validation was
-  // three truthiness checks in the handlers. See issues.txt 38.4.
   test("the writing routes declare schemas", async () => {
     const { srv, routes } = fakeServer();
 
@@ -190,9 +183,6 @@ describe("trackVisitHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // The handler read nothing but the body — no session, no IP, no fingerprint —
-  // so nothing recorded who asked or could tell two visits apart. It keys the
-  // dedup on the client IP now. See issues.txt 38.1.
   test("keys the deduplication on the caller's IP and the code", async () => {
     await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), reply());
 
@@ -248,10 +238,6 @@ describe("trackVisitHandler", () => {
     expect(db.referral.findUnique).not.toHaveBeenCalled();
   });
 
-  // A known code and an unknown one used to be distinguishable — 200 against 404
-  // — so the code space was enumerable through an endpoint that needs no
-  // credential, and 38.2 made that a small space for any known influencer name.
-  // See issues.txt 38.5.
   test("a known and an unknown code answer identically", async () => {
     const known = reply();
     await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), known);
@@ -303,9 +289,6 @@ describe("updateReferral", () => {
     });
   });
 
-  // Threw "Referral not found", which the track-visit handler mapped to a 404 by
-  // comparing the message string — fragile in itself, and the thing that made the
-  // code space enumerable. See issues.txt 38.5.
   test("returns null for a code that does not resolve", async () => {
     await expect(updateReferral(CODE, "visit")).resolves.toBeNull();
     expect(db.referral.update).not.toHaveBeenCalled();
@@ -345,10 +328,6 @@ describe("createReferral", () => {
     expect(code.slice(0, 15)).toBe("annmarieosulliv");
   });
 
-  // The suffix was Math.floor(100 + Math.random() * 900) — 900 possible codes for
-  // a given name, drawn from a generator that is not a CSPRNG — while 38.1 makes
-  // knowing a code the entire requirement for inflating its counters.
-  // See issues.txt 38.2.
   test("does not draw the suffix from Math.random", async () => {
     const spy = vi.spyOn(Math, "random");
 
@@ -456,19 +435,12 @@ describe("createReferralHandler", () => {
     expect(answer(b)).toEqual({ code: 400, body: { message: "email is required" } });
   });
 
-  // The only check on the email used to be that it is truthy; the route schema
-  // rejects a non-email before the handler is reached. See issues.txt 38.4.
   test("the schema, not the handler, is what rejects a non-email", () => {
     expect(createReferralSchema.safeParse({ name: "Ann", email: "not-an-email" }).success).toBe(
       false,
     );
   });
 
-  // Referral has unique constraints on BOTH email and referral_code, and every
-  // P2002 was reported as a duplicate email — so an operator hitting a code
-  // collision would change the email, retry, and hit the same collision, because
-  // the code is regenerated from the same name. Prisma carries meta.target.
-  // See issues.txt 38.3.
   test("reports a referral-code collision as a code collision", async () => {
     db.referral.create.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed on the fields: (`referral_code`)"), {
@@ -568,10 +540,6 @@ describe("deleteReferralHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { message: "id is required" } });
   });
 
-  // `delete` raised P2025 for a row that is not there and the catch answered a
-  // fixed 500, so a double-click in the admin UI reported a fault for an
-  // operation that had already succeeded. deleteMany succeeds with a count of
-  // zero. See issues.txt 38.6.
   test("deleting an already-deleted referral is an idempotent success", async () => {
     db.referral.deleteMany.mockResolvedValueOnce({ count: 0 });
     const rep = reply();
@@ -584,10 +552,6 @@ describe("deleteReferralHandler", () => {
     });
   });
 
-  // STILL OPEN (issues.txt 38.6): visit_count and signup_count still go with the
-  // row — there is no archive table and no soft delete, so removing an influencer
-  // destroys the record of what they were owed. The totals are logged first,
-  // which leaves something recoverable but is not an archive.
   test("logs the counters before removing the row", async () => {
     db.referral.findUnique.mockResolvedValueOnce({
       id: "r-1",

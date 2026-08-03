@@ -176,10 +176,6 @@ describe("getAIResponseForQuery", () => {
     expect(db.usageStats.update).not.toHaveBeenCalled();
   });
 
-  // The allowance was read as `subscription.features.ai.count` with no guard, so an
-  // org with no subscription row threw a bare TypeError before the query was sent.
-  // It is a named AiAllowanceError now, which the handlers answer 403 to rather than
-  // a blanket 500. See issues.txt 21.1.
   test("refuses an org with no subscription", async () => {
     (getSubscription as Mock).mockResolvedValue(null);
 
@@ -204,10 +200,6 @@ describe("getAIResponseForQuery", () => {
     await expect(getAIResponseForQuery(input, JWT)).rejects.toThrow(/not active/);
   });
 
-  // The allowance and the usage used to be passed to the AI service as ADVICE —
-  // nothing here compared them, so a bug or an outage in the remote service's
-  // enforcement meant unlimited billable usage. They are compared here now.
-  // See issues.txt 21.1.
   test("refuses locally once the allowance is spent, before the query is sent", async () => {
     db.usageStats.findUnique.mockResolvedValue({
       aiPromptTokensCount: 9_000_000,
@@ -287,11 +279,6 @@ describe("getPublicAIResponseForQuery", () => {
     expect(http.post).not.toHaveBeenCalled();
   });
 
-  // The usage write used to be unguarded here while the authenticated variant
-  // guarded it: `increment: tokenUsage.promptTokens` was evaluated SYNCHRONOUSLY
-  // while building the update argument, so an answer without a usage block threw a
-  // TypeError and the answer the org had already paid for was discarded.
-  // See issues.txt 21.2.
   test("keeps an answer that arrives without a token-usage block", async () => {
     http.post.mockResolvedValue({ data: { message: "the answer" } });
 
@@ -307,9 +294,6 @@ describe("getPublicAIResponseForQuery", () => {
     ).resolves.toBe("the answer");
   });
 
-  // The write used to be fired and not awaited, so the answer was returned before
-  // the tokens were recorded and a failed write lost the billing record with its
-  // rejection unhandled. See issues.txt 21.2.
   test("does not return until the usage write has settled", async () => {
     let settle: (() => void) | undefined;
     db.usageStats.update.mockReturnValue(
@@ -373,12 +357,6 @@ describe("the proxied chatbot-service calls", () => {
     expect(http.get.mock.calls[0][0]).not.toContain("chatbotId");
   });
 
-  // This used to be the only call that parsed the base URL rather than passing it
-  // to axios as a string: with CHATBOT_API_URL unset the base became the literal
-  // "undefined/api/chatbot", and `new URL` rejected it with a bare "Invalid URL"
-  // while every sibling failed later, at the network layer, with a different
-  // message — one misconfiguration presenting as two unrelated symptoms. Every
-  // call now fails the same way, naming the variable. See issues.txt 21.9.
   test("every call fails the same way, naming the variable, when the base url is unset", async () => {
     const original = process.env.CHATBOT_API_URL;
     process.env.CHATBOT_API_URL = "";
@@ -416,8 +394,6 @@ describe("the proxied chatbot-service calls", () => {
     expect(http.delete.mock.calls[0][1].headers.Authorization).toBe(`Bearer ${JWT}`);
   });
 
-  // NOTE: the public variant identifies the history to delete by a bare userId
-  // in the path and sends no credential at all. See issues.txt 21.3.
   test("clearing public chat history sends no credential", async () => {
     await deletePublicChatHistory("anon-1");
 
@@ -458,9 +434,6 @@ describe("getTextSummaryByAI", () => {
     );
   });
 
-  // getAxiosAIClient used to swallow its own failure and resolve `undefined`, which
-  // fell through to a bare `.post` property read several frames from the cause. It
-  // throws now, and the failure arrives here with its own message. issues.txt 21.6.
   test("reports the client-construction failure rather than a property read", async () => {
     (getAxiosAIClient as Mock).mockRejectedValue(new Error("no signing key"));
 
@@ -483,9 +456,6 @@ describe("createChatbot", () => {
     });
   });
 
-  // shortUrlId is @unique and the id used to be minted once, so a collision
-  // surfaced as a raw P2002 and the create failed. It retries now, minting a fresh
-  // id — the helper every other short-id writer uses. See issues.txt 21.7.
   test("retries with a fresh id when the short url id collides", async () => {
     const { getShortUrlId } = await import("../../utils/commonUtils.js");
     db.chatbot.create.mockRejectedValueOnce(
@@ -524,11 +494,6 @@ describe("getChatbotDetails", () => {
     });
   });
 
-  // strictUndefinedChecks is not enabled in prisma/schema.prisma, so `id: undefined`
-  // is dropped from the where clause rather than matching nothing — callers that
-  // pass only an org (createContact, the WhatsApp inbox) match the whole org. That
-  // is still true; what changed is that the row they get is no longer arbitrary.
-  // See issues.txt 21.4.
   test("drops the id filter when no chatbot is named, but orders the fallback", async () => {
     await getChatbotDetails(ORG);
 
@@ -565,10 +530,6 @@ describe("updateChatbotDetails", () => {
     expect(db.chatbot.update.mock.calls[0][0].data).toEqual({ waPrompt: "be brief" });
   });
 
-  // This was an upsert whose create branch wrote only `{ shortUrlId, orgId }`, so a
-  // PUT against an id that did not exist created an empty "Default Chatbot" and
-  // threw away every setting submitted with it. It is an update now, and a missing
-  // row raises P2025 for the handler to answer 404 to. See issues.txt 21.5.
   test("never creates a chatbot on the update path", async () => {
     await updateChatbotDetails({ waPrompt: "be brief", enableWaChat: true }, ORG, "bot-new");
 
@@ -584,8 +545,6 @@ describe("updateChatbotDetails", () => {
     });
   });
 
-  // It used to return nothing, so the handler's reply carried an empty body and the
-  // client could not read back what had been saved. See issues.txt 21.5.
   test("returns the updated row", async () => {
     expect(await updateChatbotDetails({ waPrompt: "x" }, ORG, "bot-1")).toEqual({
       id: "bot-1",
@@ -602,9 +561,6 @@ describe("updateChatbotDetails", () => {
     });
   });
 
-  // The sweep used to cover every contact in the org, so one chatbot's toggle
-  // overwrote the AI flag for contacts talking to a different chatbot. Contacts
-  // bound to another chatbot are left alone now. See issues.txt 21.5.
   test("leaves contacts bound to another chatbot alone", async () => {
     await updateChatbotDetails({ enableAllWaChat: true }, ORG, "bot-1");
 
@@ -619,8 +575,6 @@ describe("updateChatbotDetails", () => {
     expect(db.contact.updateMany.mock.calls[0][0].data).toEqual({ aiWaChat: false });
   });
 
-  // It used to fire whenever the key was present, even when the value had not
-  // changed — an org-wide write on a no-op save. See issues.txt 21.5.
   test("does not sweep when the flag is submitted unchanged", async () => {
     db.chatbot.findFirst.mockResolvedValue({ enableAllWaChat: true });
 
@@ -708,11 +662,6 @@ describe("getChatBotHistory", () => {
     expect(res[0]).toMatchObject({ userId: "x", messages: [1, 2], at: "now" });
   });
 
-  // Both lookups used to resolve the ids the AI service returned against the WHOLE
-  // User and Contact tables while selecting email and phone, so an id from outside
-  // the caller's org would have come back with that person's contact details. The
-  // module does not control what the remote service returns; it scopes what it
-  // resolves. See issues.txt 21.8.
   test("resolves the ids only within the caller's org", async () => {
     await getChatBotHistory(client([{ userId: "u1", messages: [] }]), ORG);
 
@@ -732,8 +681,6 @@ describe("getChatBotHistory", () => {
     expect(res[0].user).toEqual({ name: "Anonymous_9876" });
   });
 
-  // The anonymous fallback read `hist.userId.slice(-4)` unguarded, so one entry
-  // with no user id took the whole listing down. See issues.txt 21.8.
   test("degrades to Anonymous for an entry that carries no user id", async () => {
     const res = await getChatBotHistory(client([{ messages: [] }]), ORG);
 

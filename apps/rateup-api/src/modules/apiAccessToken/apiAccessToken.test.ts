@@ -109,10 +109,6 @@ afterEach(() => {
 // ===========================================================================
 
 describe("generateApiKey", () => {
-  // The key used to be 128 characters drawn from Math.random, one call per
-  // character — V8's xorshift128+, seeded once per context, so its real ceiling
-  // was 128 bits of recoverable generator state rather than the ~730 bits its
-  // length suggested. See issues.txt 46.1.
   test("the key does not come from Math.random", async () => {
     const spy = vi.spyOn(Math, "random");
 
@@ -138,9 +134,6 @@ describe("generateApiKey", () => {
     expect(a.key).not.toBe(b.key);
   });
 
-  // 32 bytes base64url-encoded is 43 characters carrying a full 256 bits —
-  // and, unlike the 128-character key, it fits inside bcrypt's 72-byte window,
-  // so every character of it is checked. See issues.txt 46.3.
   test("generateApiKey returns the plaintext beside its hash", async () => {
     const { key, hash } = await generateApiKey();
 
@@ -165,8 +158,6 @@ describe("generateApiKey", () => {
     expect(hash.split("$")[2]).toBe("05");
   });
 
-  // bcrypt still truncates at 72 bytes — that is bcrypt, not this module. What
-  // changed is that the key no longer runs past it. See issues.txt 46.3.
   test("bcrypt itself still truncates at 72 bytes", async () => {
     const key = "A".repeat(72) + "B".repeat(56);
     const differentTail = "A".repeat(72) + "C".repeat(56);
@@ -207,9 +198,6 @@ describe("createApiKey", () => {
     expect(db.apiAccessToken.findUnique).not.toHaveBeenCalled();
   });
 
-  // prisma/schema.prisma:1802 — orgId is @unique, so there is one key per org,
-  // and a second create used to raise a bare P2002 that the handler turned into
-  // "something went wrong". See issues.txt 46.9.
   test("a second key for the same org is refused in terms the handler can use", async () => {
     db.apiAccessToken.create.mockRejectedValueOnce(
       new FakeKnownError("P2002", { target: ["orgId"] }),
@@ -297,10 +285,6 @@ describe("deleteApiKey and getApiKeyCreatedAt", () => {
 });
 
 describe("regenerateApiKey", () => {
-  // Was `deleteApiKey` then `createApiKey` — two statements, no transaction and
-  // nothing to roll back, so a create that failed after the delete committed
-  // left the organisation with no key at all and a caller with no indication
-  // their old one was already gone. See issues.txt 46.6.
   test("replaces the row in one statement", async () => {
     await regenerateApiKey(ORG);
 
@@ -445,10 +429,6 @@ describe("verifyApiAccessTokenHook", () => {
     expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({ where: { orgId: OTHER_ORG } });
   });
 
-  // The inner catch had no return, unlike the `if (!org)` branch six lines
-  // above it, so a request that had already been refused fell through to the
-  // token check, the key comparison and the assignment of request.user.
-  // See issues.txt 46.4.
   test("a lookup failure on the org replies 404 and stops", async () => {
     orgById.mockRejectedValueOnce(new Error("invalid uuid"));
     const { key, hash } = await generateApiKey();
@@ -469,9 +449,6 @@ describe("verifyApiAccessTokenHook", () => {
     expect(request.user).toBeUndefined();
   });
 
-  // One request, one reply. The fall-through used to send the 404 and then
-  // reach a second reply.code(...).send(...), which Fastify answers with
-  // FST_ERR_REP_ALREADY_SENT. See issues.txt 46.4.
   test("one refused request produces exactly one reply", async () => {
     orgById.mockRejectedValueOnce(new Error("invalid uuid"));
     const rep = reply();
@@ -528,10 +505,6 @@ describe("verifyApiAccessTokenHook", () => {
     expect(request.user).toBeUndefined();
   });
 
-  // Every refusal used to log request.headers, which carries
-  // `authorization: "Bearer <the key>"` — so a key that failed verification was
-  // recorded verbatim at error level, along with the cookies of a request that
-  // also carried a session. See issues.txt 46.5.
   test("no refusal writes the request headers to the log", async () => {
     const { key } = await generateApiKey();
     db.apiAccessToken.findUnique.mockResolvedValue({ orgId: ORG, accessToken: "$2b$05$notahash" });
@@ -614,9 +587,6 @@ describe("controllers", () => {
     expect(rep.code).toHaveBeenCalledWith(201);
   });
 
-  // Pressing "create" twice used to answer "something went wrong". The correct
-  // action in that state is regenerate, and the response now says so.
-  // See issues.txt 46.9.
   test("a duplicate create answers 409 and names the remedy", async () => {
     db.apiAccessToken.create.mockRejectedValueOnce(
       new FakeKnownError("P2002", { target: ["orgId"] }),
@@ -629,10 +599,6 @@ describe("controllers", () => {
     expect(rep.send.mock.calls[0][0].error).toContain("regenerate");
   });
 
-  // The handler used to await the delete and return without replying, so the
-  // request hung until a timeout while the key was already gone — and the
-  // client's natural retry then hit P2025 and escaped as a 500.
-  // See issues.txt 46.7.
   test("delete answers 204", async () => {
     const rep = reply();
 
@@ -643,9 +609,6 @@ describe("controllers", () => {
     expect(db.apiAccessToken.delete).toHaveBeenCalledWith({ where: { orgId: ORG } });
   });
 
-  // `{ createdAt: undefined }` serialised as `{}`, so a client could not tell
-  // "no key" from a serialisation quirk — which is the decision the UI makes
-  // when it chooses between create and regenerate. See issues.txt 46.9.
   test("the created-at read reports both the timestamp and that a key exists", async () => {
     const rep = reply();
 
@@ -712,11 +675,6 @@ describe("routes", () => {
     ]);
   });
 
-  // The four routes carried checkSession and nothing else, so the
-  // lowest-privileged member could mint a key and present it to
-  // /api/external/v1 as an owner — the hook sets role: SUPER_ADMIN as a
-  // constant — and could delete or regenerate the org's key, breaking every
-  // existing integration. See issues.txt 46.2.
   test("minting, deleting and regenerating require SUPER_ADMIN", async () => {
     const { srv, routes } = fakeServer();
 

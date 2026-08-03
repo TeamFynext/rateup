@@ -178,12 +178,6 @@ describe("redeemReward — preconditions", () => {
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
   });
 
-  // The balance used to be read at the top, compared, and then written with an
-  // unconditional `decrement` — no `where: { currentPoints: { gte: cost } }`, no
-  // transaction, no row lock. Two redemptions racing on the same account both
-  // passed the check and both deducted, taking the balance negative and issuing
-  // the reward twice. The balance is now part of the write's own condition, which
-  // is what actually settles the race. See issues.txt 20.17.
   test("guards the deduction on the balance in the write itself", async () => {
     await redeemReward(PROGRAM, input);
 
@@ -207,8 +201,6 @@ describe("redeemReward — preconditions", () => {
     expect(db.$transaction).toHaveBeenCalledTimes(1);
   });
 
-  // Both subjects are resolved within the caller's program, so an account or a
-  // reward belonging to another org reads as absent. See issues.txt 20.20.
   test("resolves the account and the reward within the caller's program", async () => {
     await redeemReward(PROGRAM, input);
 
@@ -273,11 +265,6 @@ describe("redeemReward — point rewards", () => {
     });
   });
 
-  // The ledger row used to record `balanceAfter: currentPoints - pointsCost`
-  // while the balance actually moved by `pointsToAdd - pointsCost`, so every
-  // point-reward redemption left an entry understating the real balance by the
-  // points it had just granted. balanceAfter is now read from the write's own
-  // returned row, which cannot disagree with it. See issues.txt 20.15.
   test("the ledger row records the balance the write actually produced", async () => {
     db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", currentPoints: 700 });
 
@@ -289,10 +276,6 @@ describe("redeemReward — point rewards", () => {
     });
   });
 
-  // The code used to be `"INSTANT_" + Date.now().toString(36)`: entirely
-  // predictable, and two point redemptions in the same millisecond collided on a
-  // unique column. It comes from the same generator as every other redemption
-  // code now. See issues.txt 20.9.
   test("takes its code from the shared generator, not the clock", async () => {
     const res: any = await redeemReward(PROGRAM, input);
 
@@ -421,11 +404,6 @@ describe("redeemReward — regular rewards", () => {
     expect(res.shortCode).toMatch(/^[A-Z2-9]{8}$/);
   });
 
-  // Both codes are returned in both branches now. The short code is what the
-  // customer presents at the till and the redemption code is what resolves the
-  // record; withholding either one depending on the branch was how a pending
-  // redemption ended up holding a code that pointed at nothing.
-  // See issues.txt 20.19.
   test("returns both codes", async () => {
     const res: any = await redeemReward(PROGRAM, input);
 
@@ -433,12 +411,6 @@ describe("redeemReward — regular rewards", () => {
     expect(res.shortCode).toMatch(/^[A-Z2-9]{8}$/);
   });
 
-  // The assignment is resolved with an UPSERT, before anything is deducted. It
-  // used to be a plain update keyed on `rewardId_accountId`, run AFTER the points
-  // had been taken and the ledger row written — a row that exists only if the
-  // reward had been assigned to the customer beforehand. For a regular reward
-  // that never was, prisma raised P2025 there and the customer was left charged
-  // for a reward they did not receive. See issues.txt 20.19.
   test("resolves the assignment before charging, creating it if there is none", async () => {
     await redeemReward(PROGRAM, input);
 
@@ -466,14 +438,6 @@ describe("redeemReward — regular rewards", () => {
     expect(data.usedContext.shortCode).toMatch(/^[A-Z2-9]{8}$/);
   });
 
-  // The sharpest defect in this file. When the reward required approval, the
-  // branch wrote a zero-point ledger row and NOTHING else — the LoyaltyRedemption
-  // create sat in the `else`. The function still handed the caller a
-  // redemptionCode, but that code existed nowhere: verifyRedemption answered
-  // "Redemption not found", applyRedemption could not resolve it, and the
-  // approvals queue — which lists by account.programId and joins `redemption` —
-  // had no request to act on. The pending redemption was simply lost, and the
-  // customer held a code that would never work. See issues.txt 20.19.
   test("records the pending redemption, so there is something to approve", async () => {
     db.loyaltyReward.findFirst.mockResolvedValue(
       reward({
@@ -512,9 +476,6 @@ describe("redeemReward — regular rewards", () => {
     expect(db.customerReward.upsert.mock.calls[0][0].create.status).toBe("ISSUED");
   });
 
-  // The whole path is one transaction, so a failure part-way through leaves no
-  // charge behind. It used to be six separate writes with nothing around them.
-  // See issues.txt 20.17 and 20.19.
   test("writes the charge and the record in a single transaction", async () => {
     await redeemReward(PROGRAM, input);
 
@@ -573,11 +534,6 @@ describe("verifyRedemption", () => {
     expect((await verifyRedemption("RU-ABC123", ORG)).valid).toBe(false);
   });
 
-  // The lookup used to be by code alone, with nothing tying it to the caller's
-  // org — so a cashier in any org could verify, and then apply, another org's
-  // redemption code. Combined with the entropy those codes used to carry
-  // (issues.txt 20.9) it was guessable rather than merely reachable.
-  // See issues.txt 20.20.
   test("resolves a code only within the caller's org", async () => {
     db.loyaltyRedemption.findFirst.mockResolvedValue({
       status: "APPROVED",
@@ -685,13 +641,6 @@ describe("applyRedemption", () => {
     expect(db.customerReward.update).not.toHaveBeenCalled();
   });
 
-  // redeemReward already counted this redemption against the reward when it
-  // approved it, at the same moment the validator checked the stock. Incrementing
-  // again at the till meant every reward that was redeemed and then presented
-  // consumed TWO units, so a reward limited to 100 sold out after 50 — and an
-  // operator who had deliberately configured inventory got one that was wrong by
-  // a factor of two, which is worse than one that is simply not enforced.
-  // The till no longer touches stock at all. See issues.txt 20.21.
   test("does not touch the stock a second time at the till", async () => {
     await applyRedemption(applyInput, ORG);
 
@@ -717,10 +666,6 @@ describe("applyRedemption", () => {
     });
   });
 
-  // The already-applied check used to be a read followed by an unconditional
-  // write, so two cashiers scanning the same short code at the same moment both
-  // got past it. `usedAt: null` is part of the write's own condition now.
-  // See issues.txt 20.17.
   test("guards the apply on usedAt in the write itself", async () => {
     await applyRedemption(applyInput, ORG);
 
@@ -742,9 +687,6 @@ describe("applyRedemption", () => {
 // ===========================================================================
 
 describe("getRedemptionsByCustomer", () => {
-  // It used to be scoped to the account id alone, with no program or org filter —
-  // an account id was enough to read another org's customer's redemption history.
-  // See issues.txt 20.20.
   test("lists an account's redemptions newest first, within the caller's org", async () => {
     await getRedemptionsByCustomer("acct-1", ORG);
 
@@ -812,12 +754,6 @@ describe("getTransactions", () => {
     expect(res.pagination).toEqual({ page: 1, limit: 20, total: 45, totalPages: 3 });
   });
 
-  // Paging here is ONE-based, and that is now deliberate rather than accidental:
-  // it is this module's convention in both of its list endpoints and it is what
-  // its clients already send. What was wrong was the silence — over HTTP the
-  // schema refuses a page below 1 (redemption.schema.ts), so a zero-based client
-  // is told rather than handed the same first page twice, and this clamp is the
-  // backstop for direct callers. See issues.txt 20.22.
   test("pages one-based, and clamps anything below the first page", async () => {
     await getTransactions(PROGRAM, { page: 1, limit: 20 });
     await getTransactions(PROGRAM, { page: 0, limit: 20 });
@@ -845,10 +781,6 @@ describe("getTransactionsForExport", () => {
     });
   });
 
-  // There used to be no `take` at all, so an unfiltered export materialised the
-  // program's entire ledger — every transaction ever written for every customer —
-  // into memory and then into a spreadsheet. Same shape as issues.txt 18.20 and
-  // 19.6. See issues.txt 20.22.
   test("reads at most one row beyond the cap, so it can tell it was hit", async () => {
     await getTransactionsForExport(PROGRAM, {});
 

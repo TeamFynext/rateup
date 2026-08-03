@@ -77,9 +77,6 @@ function approval(over: Record<string, unknown> = {}) {
     reason: "Customer asked",
     requestData: {},
     expiresAt: null,
-    // `currentTier` is included by getApprovalRequestById, and the tier-override
-    // notification reads the OLD tier from here — after the update the account's
-    // currentTier is the new one. See issues.txt 20.28.
     account: {
       contact: { name: "Ann", phone: "919000000001", orgId: ORG },
       currentTier: { id: "tier-1", name: "Bronze" },
@@ -189,10 +186,6 @@ describe("getApprovalRequests", () => {
     });
   });
 
-  // The `status` filter used to be commented out in the source, so the queue could
-  // not be narrowed to PENDING — every reviewed, rejected and expired request came
-  // back with the live ones, which is an approvals queue mixed with its own
-  // history. See issues.txt 20.25.
   test("filters by status", async () => {
     await getApprovalRequests(PROGRAM, { status: "PENDING" } as any);
 
@@ -236,11 +229,6 @@ describe("getApprovalRequestById", () => {
     );
   });
 
-  // The lookup used to be by id alone — and every mutating entry point in this
-  // file (approve, reject, cancel) goes through it, while only the LIST was
-  // scoped. So with an approval id a reviewer in any org could approve another
-  // org's points adjustment, which MINTS points into that org's programme, or its
-  // tier override, suspension or reactivation. See issues.txt 20.26.
   test("resolves an approval id only within the caller's program", async () => {
     await getApprovalRequestById("apr-from-another-org", PROGRAM);
 
@@ -329,13 +317,6 @@ describe("approveApprovalRequest — redemptions", () => {
     expect(db.$transaction).toHaveBeenCalledTimes(1);
   });
 
-  // This path used to write `transactionType: "REDEEM"` while redeemReward writes
-  // "redeem" and awardPoints writes "earn". getTransactions filters that column on
-  // an exact string match, so filtering the ledger by type returned roughly half
-  // the rows — and which half depended on whether the redemption had needed
-  // approval. The dashboard's chart and its activity feed read the lower-case
-  // values too, so approval-written rows were invisible there (issues.txt 20.42).
-  // See issues.txt 20.27.
   test("writes the same transaction type as every other writer of the column", async () => {
     await approveApprovalRequest(input, PROGRAM);
 
@@ -408,7 +389,6 @@ describe("approveApprovalRequest — points adjustments", () => {
     await approveApprovalRequest({ ...input, reviewerName: "Reviewer" }, PROGRAM);
 
     expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
-      // Lower case, like every other writer. See issues.txt 20.27.
       transactionType: "adjust",
       points: 250,
       balanceAfter: 750,
@@ -450,10 +430,6 @@ describe("approveApprovalRequest — tier overrides", () => {
     });
   });
 
-  // The notification used to send the new tier's raw UUID where the old tier's
-  // NAME was sent on the line beneath, so the customer received a WhatsApp message
-  // reading "upgraded from Bronze to 9f3c…". awardPoints' equivalent dispatch has
-  // always used the name. See issues.txt 20.28.
   test("announces both tiers by name", async () => {
     await approveApprovalRequest(input, PROGRAM);
 
@@ -468,12 +444,6 @@ describe("approveApprovalRequest — tier overrides", () => {
 describe("approveApprovalRequest — account status", () => {
   const input = { approvalId: "apr-1", reviewerId: "user-1" } as any;
 
-  // These two used to write "SUSPENDED" / "ACTIVE" in upper case, while the update
-  // endpoint's schema only accepts lower-case values and createCustomerAccount
-  // tests for the lower-case "inactive". So an account suspended through an
-  // approval held a status the reactivation path could never match — re-enrolling
-  // that customer threw "Customer account already exists" instead of reactivating
-  // them. See issues.txt 20.27.
   test("suspends with the lower-case status the rest of the module uses", async () => {
     db.approvalRequest.findFirst.mockResolvedValue(
       approval({ requestType: "ACCOUNT_SUSPENSION", redemptionId: null }),
@@ -496,12 +466,6 @@ describe("approveApprovalRequest — account status", () => {
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toEqual({ status: "active" });
   });
 
-  // The bulk branch used to mark the request APPROVED and do nothing else — its
-  // own comment said the processing "would be triggered separately", and nothing
-  // in the module triggers it, so a reviewer approving one would reasonably assume
-  // something had happened to the customers it named. It refuses now, which leaves
-  // the request PENDING: the truthful state for a decision the system cannot carry
-  // out. See issues.txt 20.25.
   test("a bulk operation is refused rather than approved into nothing", async () => {
     db.approvalRequest.findFirst.mockResolvedValue(
       approval({ requestType: "BULK_OPERATION", redemptionId: null }),
@@ -561,10 +525,6 @@ describe("rejectApprovalRequest", () => {
     expect(db.loyaltyRedemption.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: a rejected redemption is never refunded here — but nothing was
-  // deducted either, because the points are only taken at approval time. The
-  // exception is the regular-reward path, which deducts BEFORE approval when
-  // approval is not required (issues.txt 20.19).
   test("does not move any points when rejecting", async () => {
     await rejectApprovalRequest(input, PROGRAM);
 
@@ -597,8 +557,6 @@ describe("cancelApprovalRequest", () => {
     });
   });
 
-  // Cancel used to record no reviewer and no reviewedAt, while reject wrote both —
-  // so a cancelled request could not be attributed to anyone. See issues.txt 20.25.
   test("records who cancelled it and when", async () => {
     await cancelApprovalRequest({ ...input, reviewerId: "user-1" }, PROGRAM);
 

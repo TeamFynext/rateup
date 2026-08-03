@@ -104,11 +104,6 @@ describe("validateRedemption — subjects", () => {
     expect(res.violations).toEqual([]);
   });
 
-  // Both lookups used to be by id alone, with nothing checking that the reward and
-  // the account belonged to the same loyalty program, let alone the same org. This
-  // is the one function whose whole job is to decide whether a redemption is
-  // allowed, and "do these two things belong together" was the precondition it
-  // never established. See issues.txt 20.1 and 20.20.
   test("looks the reward up through the account's program", async () => {
     await validateRedemption(CUSTOMER, REWARD, {} as any);
 
@@ -278,14 +273,6 @@ describe("validateRedemption — time restrictions", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  // Days and time ranges used to be read off the SERVER's clock — `getDay()` and
-  // `toTimeString()` — while blackout dates in the same function were compared
-  // against the UTC date. Near midnight the two halves actively disagreed: a
-  // reward could be inside its allowed local day and inside its UTC blackout at
-  // the same time, and the whole restriction set shifted if the API moved region.
-  // All three read UTC now. It is not the right timezone — that is the merchant's,
-  // and nothing in the codebase carries one — but it is a consistent one.
-  // See issues.txt 20.2.
   test("blackout dates are matched on the same UTC clock as days and hours", async () => {
     vi.useFakeTimers();
     // 23:30 UTC on the 15th. Under the old split this same instant was the 16th
@@ -396,14 +383,6 @@ describe("validateRedemption — quantity restrictions", () => {
     );
   });
 
-  // The day limit counted from local midnight (a calendar day), the week limit
-  // counted back seven days from now (rolling), and the month limit used
-  // `setMonth(getMonth() - 1)` — rolling, and subject to JS's month-length
-  // roll-forward, so on the 31st of a month 31 March became 3 March and the
-  // "monthly" window silently became 28 days. Three limits on one reward therefore
-  // applied three different notions of a period, and neither the week nor the
-  // month ever reset on a boundary a customer could predict. All three are
-  // calendar windows in UTC now. See issues.txt 20.3.
   test("the weekly limit is a calendar week, not a rolling seven days", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-15T14:30:00.000Z")); // Thursday
@@ -488,12 +467,6 @@ describe("validateRedemption — cooldown", () => {
     expect(db.loyaltyRedemption.findFirst.mock.calls[0][0].orderBy).toEqual({ createdAt: "desc" });
   });
 
-  // `period_hours` used to be read with a non-null assertion over a value the
-  // rules JSON need not contain, and every comparison against undefined is false,
-  // so `hoursSince < undefined` never fired: the rule looked active in the admin
-  // UI and enforced nothing. A cooldown that cannot be evaluated is a
-  // configuration error, and the safe reading of one is to refuse.
-  // See issues.txt 20.4.
   test("a cooldown enabled without a period is a configuration error, not a pass", async () => {
     withCooldown({});
 
@@ -538,13 +511,6 @@ describe("validateRedemption — spend requirements", () => {
     ).toBe(true);
   });
 
-  // The check used to be guarded by
-  // `rules.spend_requirements?.enabled && context.purchase_amount`, which let the
-  // CALLER decide whether the rule applied: omitting the amount, or sending 0,
-  // skipped it entirely rather than failing it. redeemReward builds its context as
-  // `{ locationId }` and never sets purchase_amount at all, so the minimum-spend
-  // rule was not enforced on any redemption made through the only path that
-  // exists. See issues.txt 20.5.
   test("omitting the purchase amount fails the minimum-spend rule", async () => {
     withSpend(500);
 
@@ -583,12 +549,6 @@ describe("validateRedemption — tier restrictions", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  // The guard used to end `&& customerTierId`, so a customer with NO tier fell
-  // straight through and was granted every tier-exclusive reward, including the
-  // top one. That was not an edge case: new accounts were created untiered
-  // whenever the entry-tier lookup missed, which it did for every single-tier
-  // program (issues.txt 20.11). A null tier is not in any list, so it does not
-  // match one. See issues.txt 20.6.
   test("a customer with no tier does not satisfy a tier restriction", async () => {
     withTiers(["tier-platinum"]);
     db.customerLoyaltyAccount.findUnique.mockResolvedValue(customer({ currentTierId: null }));
@@ -644,13 +604,6 @@ describe("validateRedemption — stock", () => {
     expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
   });
 
-  // The stock check used to run only when the rules JSON opted in with
-  // `inventory.enabled`, while stockQuantity and stockRedeemed live on the reward
-  // row and are set from the reward form — so the two halves of one feature were
-  // gated by different switches. A reward carrying a real quantity but no
-  // inventory block oversold without limit, while the redemption service still
-  // incremented stockRedeemed past it and nothing acted on the number.
-  // See issues.txt 20.7.
   test("a sold-out reward is refused whether or not an inventory block is present", async () => {
     db.loyaltyReward.findFirst.mockResolvedValue(
       reward({ stockQuantity: 10, stockRedeemed: 10, redemptionRules: {} }),
@@ -663,12 +616,6 @@ describe("validateRedemption — stock", () => {
 });
 
 describe("validateRedemption — the rules column itself", () => {
-  // `redemptionRules` is nullable on LoyaltyReward and used to be read as
-  // `reward.redemptionRules as LoyaltyRedemptionRules` with no fallback, so the
-  // first `rules.time_restrictions` access threw a TypeError — while the
-  // redemption service guarded the very same column with `?.`. Two files
-  // disagreeing about one nullable column is the kind of thing that changes
-  // behaviour on a data migration. See issues.txt 20.8.
   test("a reward whose rules column is null simply has no rules", async () => {
     db.loyaltyReward.findFirst.mockResolvedValue(reward({ redemptionRules: null }));
 
@@ -681,12 +628,6 @@ describe("validateRedemption — the rules column itself", () => {
 // ===========================================================================
 
 describe("generateRedemptionCode", () => {
-  // A redemption code is a bearer token for a discount. It used to be
-  // `"RU-" + Math.random().toString(36).substring(2, 8).toUpperCase()`:
-  // non-cryptographic, never compared against the table, and length-dependent on
-  // the value it happened to draw — `(0.5).toString(36)` is "0.i", so the code
-  // became "RU-I", and a draw of exactly 0 yielded a bare "RU-".
-  // See issues.txt 20.9.
   test("is a fixed-length code from the unambiguous alphabet", async () => {
     expect(await generateRedemptionCode()).toMatch(/^RU-[A-HJ-NP-Z2-9]{10}$/);
   });

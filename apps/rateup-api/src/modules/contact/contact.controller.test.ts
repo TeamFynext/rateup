@@ -245,10 +245,6 @@ describe("createContactHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // Only P2002 was answered; any other prisma error code fell off the end of the
-  // handler having sent nothing, and fastify's async wrapper turns that into an
-  // empty 200 — so a foreign-key violation read as success. Same shape as
-  // issues.txt 3.2. See issues.txt 18.17.
   test("answers a non-duplicate prisma error with a 500", async () => {
     (createContact as Mock).mockRejectedValue(new FakePrismaKnownError("P2003"));
     const rep = reply();
@@ -258,12 +254,6 @@ describe("createContactHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // The 201 is sent before the welcome message is attempted — deliberately, so the
-  // user does not wait on Meta. A failure after that point used to reply a SECOND
-  // time on an already-sent reply, which fastify rejects as
-  // FST_ERR_REP_ALREADY_SENT; the client kept its 201 and never learned the
-  // welcome message had failed either way. The catch checks `reply.sent` now, so
-  // the failure is logged and nothing is sent twice. See issues.txt 18.18.
   test("does not reply a second time when the loyalty welcome message fails", async () => {
     (createLCustomer as Mock).mockResolvedValue({ id: "c1", name: "Ann", phone: "919876543210" });
     (getLoyaltyWaCommandByType as Mock).mockRejectedValue(new Error("meta down"));
@@ -350,8 +340,6 @@ describe("getAllContactsHandler", () => {
 });
 
 describe("getContactByIdHandler", () => {
-  // The caller's org never reached the lookup — only the path id did — so a
-  // contact id was enough to read a full customer record. See issues.txt 18.5.
   test("fetches within the caller's org", async () => {
     (getContactById as Mock).mockResolvedValue({ id: "c1" });
     const rep = reply();
@@ -385,8 +373,6 @@ describe("deleteContactByIdHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // The service uses an extended `where`, so Prisma raises P2025 rather than
-  // deleting when the contact is not the caller's. See issues.txt 18.5.
   test("answers 404 when the delete matched no contact of the caller's", async () => {
     (deleteContactById as Mock).mockRejectedValue(new FakePrismaKnownError("P2025"));
     const rep = reply();
@@ -429,9 +415,6 @@ describe("updateContactByIdHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { error: "Contact already exist" } });
   });
 
-  // A P2025 fell off the end of the handler having sent nothing, so fastify
-  // answered an empty 200 — and on this endpoint P2025 is exactly "the contact is
-  // not yours". See issues.txt 18.17.
   test("answers a missing-row prisma error with a 404", async () => {
     (updateContactById as Mock).mockRejectedValue(new FakePrismaKnownError("P2025"));
     const rep = reply();
@@ -580,10 +563,6 @@ describe("importCSVContactsHandler", () => {
     });
   });
 
-  // An empty spreadsheet used to make importCSVContacts return undefined and both
-  // callers read `.status` off it — the user saw "Cannot read properties of
-  // undefined (reading 'status')" in place of "the file was empty". It reports a
-  // shaped error now. See issues.txt 18.19.
   test("reports an empty spreadsheet as a validation error", async () => {
     (importCSVContacts as Mock).mockResolvedValue({
       data: [],
@@ -604,9 +583,6 @@ describe("importCSVContactsHandler", () => {
     });
   });
 
-  // A file where SOME rows imported is a 200 carrying both halves. It used to be
-  // a 400, which invited the user to fix one row and re-upload the whole file.
-  // See issues.txt 18.13.
   test("answers a partly-valid file as a 200 carrying both halves", async () => {
     (importCSVContacts as Mock).mockResolvedValue({
       status: "partial",
@@ -838,9 +814,6 @@ describe("exportContactHandler", () => {
     ]);
   });
 
-  // NOTE: this is the only handler in the module with no try/catch, so a failure
-  // anywhere in the paging loop escapes as an unhandled rejection rather than a
-  // 500 with a message. See issues.txt 18.20.
   test("lets a database failure escape the handler", async () => {
     db.contact.findMany.mockRejectedValue(new Error("connection lost"));
 
@@ -877,13 +850,9 @@ describe("updateLifecycleStageofContactsHandler", () => {
       rep,
     );
 
-    // The handler goes through the module's shared replyForError now, so every
-    // failure in this file answers the same shape. See issues.txt 18.17.
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // A lifecycle the caller's org does not own reports as absent, and the write no
-  // longer happens first. See issues.txt 18.12.
   test("answers 404 for a lifecycle the org does not have", async () => {
     (updateLifecycleStageofContacts as Mock).mockRejectedValue(
       new ContactNotFoundError("Lifecycle lc-1 not found"),

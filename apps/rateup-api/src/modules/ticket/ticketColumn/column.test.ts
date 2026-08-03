@@ -463,8 +463,6 @@ describe("columnRoutes", () => {
     expect(byBoard.opts.preHandler).toEqual([verifyBoardAccess]);
   });
 
-  // Same two shapes as the card subfolder: the routes that take their target from
-  // the body used to be the routes with no access check. See issues.txt 29.1.
   test("guards create and reorder from the body instead", async () => {
     const { srv, routes } = fakeServer();
 

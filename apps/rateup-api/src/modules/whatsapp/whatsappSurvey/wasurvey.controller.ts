@@ -1179,8 +1179,6 @@ export async function processNextNode(
           log.error("templateNode has no associated template id");
           break;
         }
-        // See issues.txt 14.1(a) — the conversation limit inside sendMessage is
-        // what enforces the plan now.
         await sendTemplateToUserCore(
           orgId,
           node.data.template.id,
@@ -2018,22 +2016,6 @@ async function _sendCampaignToParticipants(
   } else {
     log.trace("No flow button identified in template");
   }
-
-  // The monthly/annual MESSAGE limit that stood here is gone.
-  //
-  // It read `subscription.features.whatsapp.count.monthlyMessageLimit`, a legacy
-  // field the current SubscriptionFeatures shape does not carry — so it resolved to
-  // undefined and fell back to 0, which made `used + newMessages > 0` true for
-  // every send with a participant in it. Read literally, this branch marked every
-  // campaign INACTIVE with "You have reached the maximum monthly limit of
-  // messages." It is the same dead meter deleted in issues.txt 14.1(a) and 17.1,
-  // and the product owner's ruling settled it: "we dont have the message limit
-  // anymore, we have conversation limit".
-  //
-  // The live meter is untouched and still covers this path twice over:
-  // sendCampaign checks checkConversationLimitAvailable before it gets here, and
-  // sendMessage calls assertWithinConversationLimit per recipient.
-  // See issues.txt 17.10.
 
   for (const participant of campaign.campaignParticipants) {
     const { contact, id } = participant;

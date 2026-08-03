@@ -91,10 +91,6 @@ export async function triggerConversionsApiForContact(
     };
 
     const res = await callMetaApi(`/${datasetId}/events`, "POST", waSettings.accessToken, payload);
-    // callMetaApi is built with `validateStatus: () => true`, so a 400 or a 401 is an
-    // ordinary resolution: a rejected event, an expired token and a deleted dataset
-    // all used to log as "sent successfully" and never reach the admin-notification
-    // path below, which only runs on a throw. See issues.txt 26.12.
     if (res.status < 200 || res.status >= 300) {
       throw new Error(
         `Meta Conversions API rejected the event with status ${res.status}: ${JSON.stringify(res.data)}`,

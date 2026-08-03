@@ -47,14 +47,6 @@ export function getLatestStatus(participant: CampaignParticipantMessageMapping[]
   return latestStatus;
 }
 
-/**
- * One campaign, scoped to the org asking for it.
- *
- * Reports undefined for a campaign another org owns, which is what makes every
- * handler built on it answer 404 rather than handing the row over. The campaign's
- * org is its team's org — Campaign carries no orgId of its own.
- * See issues.txt 17.3.
- */
 export async function getCampaignById(campaignId: string, orgId: string) {
   const campaign = await prisma.$queryRaw<
     Array<
@@ -89,8 +81,6 @@ export async function getCampaignsByTeamId(teamId: string, orgId: string) {
   const campaigns = await prisma.campaign.findMany({
     where: {
       teamId,
-      // A team id from the query string decided which campaigns came back, with
-      // nothing checking whose team it was. See issues.txt 17.3.
       team: { orgId },
     },
     include: {
@@ -133,9 +123,6 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
 }
 
 export async function createCampaign(data: CreateCampaignInput, orgId: string) {
-  // teamId arrives in the request body with nothing checking whose team it is, so
-  // a campaign could be planted under another org's team — and every send built on
-  // that campaign then runs as that org. See issues.txt 17.3.
   const team = await prisma.team.findFirst({
     where: { id: data.teamId, orgId },
     select: { id: true },
@@ -235,9 +222,6 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
     // DB column is a non-nullable String[] — null means "set to empty", not "no-op".
     ...(scheduledStatuses !== undefined ? { scheduledStatuses: scheduledStatuses ?? [] } : {}),
   };
-  // The extended `where` — unique id plus a non-unique filter — makes Prisma raise
-  // P2025 rather than writing, so a campaign belonging to another org cannot be
-  // rewritten by naming its id. See issues.txt 17.3.
   const updatedCampaign = await prisma.campaign.update({
     where: {
       id: campaignId,
@@ -259,9 +243,6 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
     // Process each drip step
     for (const step of dripStages) {
       if (step.id) {
-        // Keyed on the stage id ALONE before, so a request could rewrite a drip
-        // stage belonging to a different campaign — including another org's — by
-        // naming its id in the body. See issues.txt 17.3.
         await prisma.campaignDripStage.update({
           where: { id: step.id, campaignId },
           data: {
@@ -392,10 +373,6 @@ export async function sendCampaignCronAction() {
   });
   if (campaignsToBeSent?.length === 0) return;
 
-  // Guarded per campaign. One that throws — a deleted template, a database hiccup —
-  // used to abandon every campaign scheduled behind it in the same run, and the
-  // count below never printed, so the failure showed only as campaigns that
-  // quietly did not go out. Same shape as issues.txt 3.4. See issues.txt 17.5.
   let sent = 0;
   const failed: string[] = [];
   for (const campaign of campaignsToBeSent) {
@@ -498,8 +475,6 @@ export const getResponseExcelByCampaignById = async (
     sentAt: Date;
     campaign: { name: string };
   }> = [];
-  // This export carries every participant's NAME and PHONE NUMBER, so it is the
-  // one unscoped read with the most to give away. See issues.txt 17.3.
   const campaign = await prisma.campaign.findFirst({
     where: { id, team: { orgId } },
     select: { name: true },
@@ -655,15 +630,6 @@ const EMPTY_CAMPAIGN_SCHEDULE_INFO: CampaignScheduleInfo = {
   nextBatchCount: 0,
 };
 
-/**
- * The one shape getCampaginStatsById answers with.
- *
- * It used to answer with three: the populated all-stages reply carried queueCount
- * and the three schedule fields, the empty reply carried the schedule fields but
- * not queueCount, and the per-stage reply carried queueCount but none of the
- * schedule fields — so a client could not read the same keys off every response.
- * See issues.txt 17.8.
- */
 const EMPTY_CAMPAIGN_STATS = {
   countRead: 0,
   countSent: 0,
@@ -748,9 +714,6 @@ export async function getCampaginStatsById(
       ...schedule,
     };
   } else {
-    // Keyed on the stage id alone before, so naming any drip stage id reported on
-    // it — whichever campaign, and whichever org, it belonged to.
-    // See issues.txt 17.3.
     const stats = await prisma.campaignDripStage.findFirst({
       where: {
         id: selectedDripStage,
@@ -802,10 +765,6 @@ export async function enqueueCampaignMessage(
   dailySendLimit?: number,
 ): Promise<{ status: boolean; message: string }> {
   try {
-    // Awaited. Without it the try/catch could only see a synchronous throw, so an
-    // asynchronous rejection — Redis down, queue full — escaped as an unhandled
-    // promise rejection while the caller had already been told it worked, and the
-    // campaign row sat at QUEUING forever. See issues.txt 17.4.
     await waCampaignEnqueue.add(
       campaignId,
       {
@@ -830,19 +789,8 @@ export async function enqueueCampaignMessage(
   }
 }
 
-/**
- * Re-exported rather than reimplemented: this was a line-for-line copy of the
- * function of the same name in wa_templates.utils.ts, and neither imported the
- * other. See issues.txt 17.8.
- */
 export { getFlowIdFromTemplateComponents } from "../../utils/waTemplateComponents.js";
 
-/**
- * Asks the dispatcher to drop a campaign's queued messages.
- *
- * The add was not awaited and nothing was returned, so a cancellation could not be
- * known to have been accepted. See issues.txt 17.4.
- */
 export const deleteCampaignParticipantsByCampaignId = async (
   campaignId: string,
 ): Promise<{ status: boolean; message: string }> => {

@@ -1,22 +1,6 @@
 import { describe, expect, test } from "vitest";
 
 describe("campaign.auth.ts", () => {
-  // verifyMessageMonthlyLimitRestrictionForCampaign is gone: its body was commented
-  // out behind a "TODO: re-check", exactly like its two siblings in
-  // wa_templates.auth.ts, so it enforced nothing on the campaign send route while
-  // reading like a plan gate. The product has a CONVERSATION limit, not a message
-  // limit, and sendMessage enforces that on every outbound path.
-  //
-  // getUsageStats and getSubscription went with it. issues.txt 17.1 kept them on
-  // the grounds that they were exported and harmless, but their last remaining
-  // caller was the dead message-limit block inside the campaign dispatcher, removed
-  // under issues.txt 17.10 — so nothing reads them now.
-  //
-  // getCampaignParticipants went too: private, never called, and it looked a
-  // participant up by id with no campaign or org filter, which is exactly the shape
-  // issues.txt 17.3 is about. Better deleted than left waiting for a caller.
-  //
-  // See issues.txt 14.1(a), 17.1 and 17.10.
   test("exports nothing — every piece of the dead message limit is gone", async () => {
     const auth = await import("./campaign.auth.js");
 

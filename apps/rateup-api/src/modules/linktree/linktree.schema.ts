@@ -47,9 +47,6 @@ const updatePageVisitsOrLinkClicksReqParams = z.object({
   shortUrlId: z.string(),
 });
 
-// The delete's :id is a @db.Uuid column, and the dropdown's :linkType is mapped
-// against a fixed pair. Both routes declared `schema: {}`.
-// See issues.txt 45.6.
 const byIdParams = z.object({
   // z.guid() rather than z.uuid(): the latter also enforces the RFC version and
   // variant nibbles, which Postgres's uuid type does not, so a legacy id that

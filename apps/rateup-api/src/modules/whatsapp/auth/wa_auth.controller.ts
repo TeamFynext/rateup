@@ -141,10 +141,6 @@ export async function getUserAccessTokenHanlder(
       code,
       encodeURIComponent(`${process.env.FRONTEND_URL}/${process.env.wa_user_redirect_uri}`),
     );
-    // Token as the accessToken argument, not in the URL, and only the page ids
-    // logged, at trace. This response carries `access_token` for every page and
-    // was logged in full at info — the same leak as issues.txt 13.3, in a second
-    // file. Found while scoping getMetaAssets.
     const res = await callMetaApi(
       `/me/accounts?fields=id,name,access_token,instagram_business_account`,
       "GET",

@@ -148,8 +148,6 @@ describe("reviewSuggestionRoutes", () => {
     expect(put.opts.preHandler).toEqual([checkSession]);
   });
 
-  // The delete carried no preHandler key at all — not even checkSession — while
-  // every other write in the file carried at least one. See issues.txt 36.1.
   test("the delete route carries the session check", async () => {
     const { srv, routes } = fakeServer();
 
@@ -159,10 +157,6 @@ describe("reviewSuggestionRoutes", () => {
     expect(del.opts.preHandler).toEqual([checkSession]);
   });
 
-  // Still unauthenticated — respondents read this at the end of a survey — but
-  // metered now, because a survey mapping id is in the survey's own public URL
-  // and the ids this returns are what made 36.1 straightforward.
-  // See issues.txt 36.5.
   test("the public read stays session-free but is rate limited", async () => {
     const { srv, routes } = fakeServer();
 
@@ -177,8 +171,6 @@ describe("reviewSuggestionRoutes", () => {
     expect(pub.opts.schema.querystring).toBe(publicReviewsQuerySchema);
   });
 
-  // The create route validated its body; the update route did not, even though
-  // updateReviewSuggestionSchema existed for exactly that. See issues.txt 36.2.
   test("both writers declare a body schema", async () => {
     const { srv, routes } = fakeServer();
 
@@ -219,10 +211,6 @@ describe("deleteReviewSuggestion", () => {
     expect(db.reviewSuggestion.delete).toHaveBeenCalledWith({ where: { id: VICTIM_REVIEW } });
   });
 
-  // The handler resolved nothing about the caller, because the route never
-  // established a session. It now runs the same ownership check the update does:
-  // the review is resolved to its team and the caller must belong to it.
-  // See issues.txt 36.1.
   test("resolves the review's team and refuses a caller outside it", async () => {
     db.reviewSuggestion.findUnique.mockResolvedValueOnce({
       id: VICTIM_REVIEW,
@@ -277,10 +265,6 @@ describe("deleteReviewSuggestion", () => {
     expect(rep.send.mock.calls[0][0].teamId).toBe(OWN_TEAM);
   });
 
-  // A missing row used to reach prisma.delete and raise P2025, which the module
-  // error handler turned into a 500 — so a probe could not be told apart from a
-  // server failure. The access check answers 404 before the delete is reached.
-  // See issues.txt 36.4.
   test("a missing row answers 404 and never reaches the delete", async () => {
     const rep = reply();
 
@@ -317,10 +301,6 @@ describe("updateReviewSuggestion", () => {
     });
   });
 
-  // The service did `data: data` with the request body verbatim, against a model
-  // of `{ id, teamId, review, language }` — so a PUT carrying another team's id
-  // moved the suggestion into it, AFTER the in-handler check had passed against
-  // the row's ORIGINAL teamId. A one-request transfer. See issues.txt 36.2.
   test("a teamId in the body does not reach the update", async () => {
     await updateReviewSuggestion(VICTIM_REVIEW, {
       review: "x",
@@ -381,11 +361,6 @@ describe("updateReviewSuggestion", () => {
     expect(hasAccessToTeam).toHaveBeenCalledWith(VICTIM_TEAM, USER);
   });
 
-  // The refusal used to be `reply.code(403); return;` — reply.code sets the
-  // status and returns the reply for chaining, it does not send — and Fastify
-  // treats an async handler that resolves undefined without a sent reply as a
-  // promise to answer later, so the denial held the connection open until
-  // something timed it out. See issues.txt 36.3.
   test("a caller outside the team is refused, with a completed reply", async () => {
     db.reviewSuggestion.findUnique.mockResolvedValueOnce({
       id: VICTIM_REVIEW,
@@ -425,10 +400,6 @@ describe("updateReviewSuggestion", () => {
     expect(rep.send).toHaveBeenCalledOnce();
   });
 
-  // hasAccessToReview threw "Review not found" rather than returning for an id
-  // that resolves to nothing, and the handler did not catch it — so an unknown
-  // id reached the module's error handler and answered a fixed 500. The helper
-  // reports the three outcomes as values now. See issues.txt 36.4.
   test("an unknown review answers 404", async () => {
     await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("not-found");
 
@@ -574,9 +545,6 @@ describe("createReviewSuggestions", () => {
     ).toBe(true);
   });
 
-  // One authenticated request could insert an unbounded number of rows — five
-  // thousand entries at a kilobyte each is a five megabyte body and five
-  // thousand inserts in one statement. See issues.txt 36.6.
   test("the create schema caps how many reviews one request may create", () => {
     expect(
       createReviewSuggestionsSchema.safeParse({
@@ -592,9 +560,6 @@ describe("createReviewSuggestions", () => {
     ).toBe(true);
   });
 
-  // STILL OPEN (issues.txt 36.5): the language filter is bounded in shape now
-  // but is not checked against the languages the team actually has, so a typo in
-  // the survey renderer still shows the respondent nothing with no error.
   test("the public query schema bounds the language without knowing the team's", () => {
     expect(publicReviewsQuerySchema.safeParse({}).success).toBe(true);
     expect(publicReviewsQuerySchema.safeParse({ language: "e" }).success).toBe(false);

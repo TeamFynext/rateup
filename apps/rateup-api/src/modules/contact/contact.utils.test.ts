@@ -60,12 +60,6 @@ beforeEach(() => {
 });
 
 describe("verifyLCustomerMaxCountRestrictionHandler", () => {
-  // The whole body was commented out behind a "TODO: re-check", so this was an
-  // empty async function registered as a preHandler — a gate that read like a plan
-  // limit and enforced nothing, while the working implementation sat directly
-  // beneath it with no callers. Wired up rather than deleted: unlike the four dead
-  // MESSAGE-limit gates (issues.txt 14.1a, 17.1, 17.10) this is a different meter
-  // and was not superseded. See issues.txt 18.21.
   test("refuses a registration once the org is at its cap", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(5);
     const rep = reply();
@@ -171,21 +165,12 @@ describe("verifyLCustomerMaxCountRestriction", () => {
     expect(db.usageStats.update).not.toHaveBeenCalled();
   });
 
-  // A plan that names no maximum means NO LIMIT — the same reading as
-  // enforceWhatsappCountLimit, which is the shared version of this gate for flows,
-  // templates, campaigns and automated replies (issues.txt 11.7, 14.7, 17.2). It
-  // used to arrive at the same answer by accident, via `count >= undefined`, which
-  // is always false and read like a check. See issues.txt 18.22.
   test("grants an unlimited allowance when the plan states no maximum", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(999999);
 
     expect(await verifyLCustomerMaxCountRestriction(ORG, subscription(undefined))).toBe(true);
   });
 
-  // getNestedProperty returns undefined for a plan with no whatsapp feature at
-  // all, and `.count.max` used to be read off it unguarded — a TypeError. A plan
-  // with no whatsapp feature states no maximum, which means no limit.
-  // See issues.txt 18.22.
   test("enforces nothing for a plan with no whatsapp feature", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(999999);
 
@@ -194,10 +179,6 @@ describe("verifyLCustomerMaxCountRestriction", () => {
     ).resolves.toBe(true);
   });
 
-  // An org with no UsageStats row yet made findUnique return null and the
-  // destructure on the next line threw — harmless while nothing called this
-  // function (18.21), and a 500 on every registration the moment it was wired up.
-  // See issues.txt 18.22.
   test("copes with an org that has no usage stats row", async () => {
     db.usageStats.findUnique.mockResolvedValue(null);
 
@@ -240,11 +221,6 @@ describe("createLCustomer", () => {
     expect(db.contact.upsert.mock.calls[0][0].create.dob).toBeNull();
   });
 
-  // An existing contact's registration used to overwrite its stored name, email
-  // and external id with whatever the registration form carried — including
-  // undefined, when the form omitted them. The registration form is the least
-  // trustworthy source of contact data in the system and it won over everything
-  // already known. See issues.txt 18.23.
   test("leaves a stored field alone when the registration payload omits it", async () => {
     await createLCustomer({ ...input, name: undefined, email: undefined });
 
@@ -312,8 +288,6 @@ describe("createLCustomer", () => {
 });
 
 describe("handlePostRegisterAction", () => {
-  // NOTE: the whole body is commented out, so nothing configured as a
-  // post-registration action ever runs. See issues.txt 18.21.
   test("is a no-op", async () => {
     expect(await handlePostRegisterAction(ORG, "c1")).toBeUndefined();
   });
@@ -351,10 +325,6 @@ describe("handleSendTemplate", () => {
     );
   });
 
-  // The verifyTemplateMessageLimit call that stood here is gone. It was entirely
-  // commented out, so it metered nothing — and the product has a CONVERSATION
-  // limit, not a message limit. sendMessage, which sendTemplateToUserCore reaches,
-  // enforces that one. See issues.txt 14.1(a).
   test("sends without consulting a per-message allowance", async () => {
     await handleSendTemplate("t1", ORG, "919000000001", ["Ann"]);
 

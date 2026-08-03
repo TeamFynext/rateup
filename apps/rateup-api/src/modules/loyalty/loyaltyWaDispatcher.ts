@@ -98,14 +98,6 @@ export async function dispatchLoyaltyNotification(
     } else {
       templateId = payload.rewardWaTemplateId || null;
     }
-    // The parameter array is built by POSITION, with an empty string standing in
-    // for anything missing.
-    //
-    // It used to push each value only when it was present, so a missing one
-    // shifted every later placeholder up a slot: a customer with no stored name
-    // received a template where {{1}} rendered the points and {{2}} the balance,
-    // silently one place out — and a template is a fixed document, so there is no
-    // way for it to notice. See issues.txt 20.32.
     const text = (value: string | number | undefined) =>
       value === undefined || value === null ? "" : String(value);
 
@@ -133,11 +125,6 @@ export async function dispatchLoyaltyNotification(
     log.trace(`[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`);
     await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
   } catch (error) {
-    // Deliberately swallowed: a notification must never roll back the points or
-    // the redemption it is announcing. The cost is that a template which is wrong
-    // for EVERY customer fails invisibly forever, so the failure is logged at
-    // error level with the event and the org on it — that is the signal an
-    // operator has. See issues.txt 20.32.
     log.error(
       { err: error, commandKey, orgId },
       `[LoyaltyWaDispatcher] Error dispatching ${commandKey}`,

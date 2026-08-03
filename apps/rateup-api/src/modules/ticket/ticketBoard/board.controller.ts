@@ -19,8 +19,6 @@ export async function createBoardHandler(
   try {
     const { title, description, teamIds } = request.body;
     const userId = request.userId;
-    // The board and its "To Do" column are one write now (issues.txt 28.4), and the
-    // teams are checked against the caller's own memberships (issues.txt 28.2).
     const board = await createBoard({ title, description, teamIds, userId });
 
     return reply.code(201).send(board);
@@ -75,9 +73,6 @@ export async function updateBoardHandler(
   try {
     const { id } = request.params;
 
-    // The `if (!updatedBoard)` 404 that used to sit here could never fire — prisma's
-    // update resolves a row or throws P2025 — and verifyBoardAccess 403s first for a
-    // board the caller cannot see, which is the right outcome. See issues.txt 28.7.
     const updatedBoard = await updateBoard(id, request.body, request.userId);
 
     return reply.code(200).send(updatedBoard);
@@ -116,8 +111,6 @@ export async function getBoardTeamMembersHandler(
 ) {
   try {
     const { id } = request.params;
-    // The `if (!members)` 404 that used to sit here could never fire either: a raw
-    // query resolves an array, and an empty array is truthy. See issues.txt 28.7.
     const members = await getBoardTeamMembersById(id);
 
     return reply.code(200).send(members);

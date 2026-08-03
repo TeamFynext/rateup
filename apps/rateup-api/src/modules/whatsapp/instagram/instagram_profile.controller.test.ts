@@ -175,10 +175,6 @@ describe("getInstagramProfileHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // resolveInstagramSettings raises a named, actionable error for a channel with
-  // no Instagram account attached, and every catch used to flatten it into a
-  // generic 500 — so the user was shown a server error for a setup step they
-  // simply had not done. See issues.txt 12.14.
   test("reports an unconnected Instagram account as a 409, with the reason", async () => {
     m.getSettingsById.mockResolvedValue(settings({ ibaId: null }));
     const rep = reply();
@@ -251,9 +247,6 @@ describe("setInstagramIceBreakersHandler", () => {
     expect(m.updateSettings).not.toHaveBeenCalled();
   });
 
-  // When syncWithMeta was not asked for the response still carried
-  // `meta: { saved: true }`, which reads as though Meta had been updated when
-  // nothing was sent to Meta at all. See issues.txt 12.14.
   test("says plainly that Meta was not contacted", async () => {
     const rep = reply();
 
@@ -277,11 +270,6 @@ describe("setInstagramIceBreakersHandler", () => {
     });
   });
 
-  // The local draft used to be written before the Meta push, so a Meta refusal
-  // answered 500 with our copy already changed — the UI showed the new ice
-  // breakers while Instagram still served the old ones, and nothing reconciled
-  // them. setInstagramIceBreakers writes our copy itself once Meta accepts, so the
-  // handler no longer writes it up front. See issues.txt 12.13.
   test("leaves our copy alone when the push to Meta fails", async () => {
     m.setIceBreakers.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
@@ -297,8 +285,6 @@ describe("setInstagramIceBreakersHandler", () => {
 });
 
 describe("deleteInstagramIceBreakersHandler", () => {
-  // deleteInstagramIceBreakers clears our copy itself once Meta accepts, so the
-  // handler no longer clears it up front. See issues.txt 12.13.
   test("clears Meta's copy, which clears ours with it", async () => {
     const rep = reply();
 
@@ -318,9 +304,6 @@ describe("deleteInstagramIceBreakersHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // Same ordering as the setter. Our copy used to be emptied before Meta was
-  // asked, so a refusal left the UI blank while Instagram still served the old
-  // list. See issues.txt 12.13.
   test("leaves our copy alone when Meta refuses the delete", async () => {
     m.deleteIceBreakers.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
@@ -333,8 +316,6 @@ describe("deleteInstagramIceBreakersHandler", () => {
 });
 
 describe("the persistent menu handlers", () => {
-  // setInstagramPersistentMenu writes our copy itself once Meta accepts.
-  // See issues.txt 12.13.
   test("pushes the menu to Meta, which saves our copy with it", async () => {
     const rep = reply();
 
@@ -379,8 +360,6 @@ describe("the persistent menu handlers", () => {
     expect(m.updateSettings).not.toHaveBeenCalled();
   });
 
-  // Unlike the ice breakers, the menu handler applied no size or shape check at
-  // all before storing whatever the body carried. See issues.txt 12.14.
   test("refuses a menu with more than one entry for the same locale", async () => {
     const duplicated = [MENU[0], MENU[0]];
     const rep = reply();
@@ -455,11 +434,6 @@ describe("the sync handlers", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // NOTE: pins current behaviour. setInstagramIceBreakers unwraps Meta's answer one
-  // time too many and resolves to undefined (see
-  // instagram_messaging.service.test.ts), and the handler hands that straight back
-  // as its `data`. The menu sync, which is otherwise identical, returns Meta's
-  // answer. See issues.txt 12.12.
   test("reports success with nothing in it after an ice-breaker sync", async () => {
     m.setIceBreakers.mockResolvedValue(undefined);
     const rep = reply();
@@ -498,17 +472,6 @@ describe("reading the account's own posts and stories", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // This was the serious one in this file. Both handlers took the Instagram
-  // account id straight from the path and passed it to the service, which looks
-  // that account's page token up by id alone — neither called the ownership check
-  // the other seven handlers here all perform. The route is authenticated but was
-  // not scoped, so any logged-in user who knew or guessed another org's Instagram
-  // business account id got that account's last 50 posts and its live stories,
-  // fetched with the victim's own page token. Same IDOR family as issues.txt 1.1
-  // and 11.1. See issues.txt 12.15.
-  //
-  // 404, not 403: an account another org owns is indistinguishable from one that
-  // does not exist, so this cannot be used to probe for account ids.
   test("answers 404 for another org's media, fetching nothing", async () => {
     m.getSettingsByIbaId.mockResolvedValue(settings({ orgId: ORG_A }));
     const rep = reply();
@@ -522,7 +485,6 @@ describe("reading the account's own posts and stories", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // Same gap, same handler pair. See issues.txt 12.15.
   test("answers 404 for another org's stories, fetching nothing", async () => {
     m.getSettingsByIbaId.mockResolvedValue(settings({ orgId: ORG_A }));
     const rep = reply();

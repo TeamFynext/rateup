@@ -23,12 +23,6 @@ function prismaCode(error: unknown) {
   return error && typeof error === "object" ? (error as { code?: string }).code : undefined;
 }
 
-/**
- * The five shapes every handler in this file shares. Two of them used to
- * interpolate the caught value into the response body — Prisma's message names
- * the model and the failing field, which on endpoints that accept arbitrary ids
- * is a working existence oracle. See issues.txt 31.6.
- */
 function sendFailure(reply: FastifyReply, error: unknown, context: string) {
   log.error({ err: error }, context);
   if (error instanceof CollectionAccessError) {
@@ -51,9 +45,6 @@ export async function createTestimonialCollectionHandler(
     );
     reply.code(201).send(testimonialCollection);
   } catch (error) {
-    // (name, teamId) is unique on the model, so a repeated name is P2002 — the
-    // information needed to say "that name is taken" was being discarded and
-    // reported as a server error. See issues.txt 31.7.
     if (prismaCode(error) === "P2002") {
       return reply.code(409).send({ error: "A collection with that name already exists" });
     }
@@ -74,8 +65,6 @@ export async function updateTestimonialCollectionHandler(
       request.params.id,
       request.user.orgId,
     );
-    // Left at 201 — a 200 would be more accurate for an update, but no entry in
-    // issues.txt covers it and clients may key on the status.
     reply.code(201).send(testimonialCollection);
   } catch (error) {
     if (prismaCode(error) === "P2002") {

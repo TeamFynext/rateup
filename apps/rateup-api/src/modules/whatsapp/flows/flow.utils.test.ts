@@ -151,21 +151,12 @@ describe("generateFlowMessageData", () => {
     ).toThrow("Flow has no screens");
   });
 
-  // NOTE: pins current behaviour. Meta treats flow_token as an opaque identifier it
-  // echoes back on every endpoint request and on the final reply, and the session
-  // lookup keys off it (handleDecryptedFlowRequest -> getSession(orgId, flow_token)).
-  // Using the raw phone number makes it both guessable and a piece of PII that
-  // travels through Meta. See issues.txt 11.9.
   test("uses the recipient's phone number as the flow token", () => {
     const message = generateFlowMessageData({ to: "15550001", dbFlow: dbFlow() });
 
     expect(params(message).flow_token).toBe("15550001");
   });
 
-  // The source comment "setting defaults for old waFlow" says rows predating
-  // templateMessage exist, but the destructure used to happen before any guard,
-  // so such a row raised a TypeError instead of picking up those defaults —
-  // sendFlow then swallowed it and the send did nothing. See issues.txt 11.8.
   test("falls back to the defaults when the flow has no template message at all", () => {
     const message = generateFlowMessageData({
       to: "1",
@@ -202,10 +193,6 @@ describe("removeEmptyStrings", () => {
     expect(obj).toEqual({ visible: false });
   });
 
-  // The guard used to be `obj[key] === "" || !obj[key]`, so every falsy value
-  // went with the empty strings and only `visible` was spared, by name. This runs
-  // on the v2 flow json immediately before it is uploaded, so every setting a
-  // user had deliberately turned off never reached WhatsApp. See issues.txt 11.5.
   test("keeps false and zero, which are settings and not absences", () => {
     const obj: any = { required: false, markdown: false, "min-chars": 0, label: "Name" };
 
@@ -222,9 +209,6 @@ describe("removeEmptyStrings", () => {
     expect(obj).toEqual({ d: "keep" });
   });
 
-  // `delete` on an array index left a hole rather than shortening the array, and
-  // JSON.stringify — which is exactly what updateFlowJsonInWa does next — renders
-  // a hole as null, so Meta received ["a", null, "b"]. See issues.txt 11.5.
   test("shortens an array rather than leaving a hole in it", () => {
     const obj: any = { list: ["a", "", "b"] };
 
@@ -289,9 +273,6 @@ describe("injectIdToFlowJson / removeIdFromFlowJson", () => {
     expect(elements(result)[1]).not.toHaveProperty("id");
   });
 
-  // Both used to work on the object they were handed rather than a copy, so
-  // removeIdFromFlowJson inside updateFlowJsonInWa stripped the ids off whatever
-  // the caller still held a reference to. See issues.txt 11.10.
   test("both leave the json they were handed untouched", () => {
     const original = json();
 
@@ -304,13 +285,6 @@ describe("injectIdToFlowJson / removeIdFromFlowJson", () => {
     expect(elements(injected)[0].id).toBe("abc123");
   });
 });
-
-// validateFlowLogic was tested here. It answered false for four of the six
-// LogicConditions (IncludesAnyOf fell through to `default`, and IncludesNoneOf,
-// IncludesAllOf and Submitted had no case at all) while reading like a working
-// logic evaluator, and nothing called it. Deleted rather than completed — the
-// flow paths use validateLogic / validateLogicV2 in question.utils.ts, which
-// cover all six and are tested there. See issues.txt 11.6.
 
 describe("generateDataSourceFromQuestion", () => {
   test("offers five stars, most first, and maps each back to its score", () => {
@@ -453,10 +427,6 @@ describe("parseFlowResponse", () => {
     expect(parse(QuestionType.MCQ, "99")).toBeUndefined();
   });
 
-  // An unmapped question type used to fall through to the default branch, which
-  // logged an error and handed the raw Meta payload straight into the stored
-  // response — an unreadable blob recorded as a survey answer. It now reports
-  // nothing, and the caller skips it. See issues.txt 11.11.
   test("reports nothing for a question type it does not know", () => {
     expect(parse(QuestionType.Contact, ["some", "shape"])).toBeUndefined();
   });
@@ -504,10 +474,6 @@ describe("parseFlowResponseV2", () => {
     expect(parseFlowResponseV2(WaQuestions.Dropdown, "99", dataSource)).toBeUndefined();
   });
 
-  // NOTE: pins current behaviour. A choice question whose element carries no
-  // data-source — which is what removeEmptyStrings can leave behind, and what an
-  // element built without options looks like — throws instead of reporting the
-  // answer it could not resolve. See issues.txt 11.11.
   test("throws when the element it is resolving against has no options", () => {
     expect(() =>
       parseFlowResponseV2(WaQuestions.Dropdown, "0", undefined as unknown as typeof dataSource),
@@ -665,10 +631,6 @@ describe("sanitizeScreenData", () => {
     });
   });
 
-  // It used to walk only screen.layout.children, so anything nested inside a Form
-  // kept its internal ids and metaType when uploaded to Meta. That reached nothing
-  // today — v2 flows put elements directly under layout.children — but it was
-  // silently wrong for the v1 shape. See issues.txt 11.12.
   test("reaches elements nested inside a form", () => {
     const data: any = {
       screens: [
@@ -781,10 +743,6 @@ describe("verifyFlowSubscriptionLimit", () => {
     expect(rep.send.mock.calls[0][0].message).toBe("Subscription not found");
   });
 
-  // A plan stating no maximum means no limit. That was already the effect, but by
-  // accident: `flowCount >= undefined` is always false, which read like a check
-  // and was not one. It is now an explicit early return, and the count query is
-  // not even run. Same shape as issues.txt 2.2. See issues.txt 11.7.
   test("enforces no limit when the plan does not state one", async () => {
     flowCountMock.mockResolvedValue(9999);
     const rep = reply();
@@ -795,10 +753,6 @@ describe("verifyFlowSubscriptionLimit", () => {
     expect(flowCountMock).not.toHaveBeenCalled();
   });
 
-  // The try used to wrap the count query too, so a database failure reached the
-  // user as a 403 carrying the raw error text with displayMessageInClient set —
-  // an infrastructure failure dressed up as a permission refusal. It now escapes
-  // to fastify and becomes a 500. See issues.txt 11.7.
   test("lets a database failure surface rather than calling it a refusal", async () => {
     flowCountMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();

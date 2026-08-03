@@ -87,10 +87,6 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
       },
     };
 
-    // The status filter used to be commented out, so this list could not be
-    // narrowed to PENDING — an approvals queue that cannot show only the things
-    // awaiting a decision is an approvals queue mixed with its own history.
-    // See issues.txt 20.25.
     if (status) {
       where.status = status;
     }
@@ -133,8 +129,6 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
         orderBy: {
           createdAt: "desc",
         },
-        // One-based, like the transactions list beside it and like the clients
-        // that call both. See issues.txt 20.22.
         skip: (Math.max(1, page) - 1) * limit,
         take: limit,
       }),
@@ -158,16 +152,6 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
 
 /**
  * Get a single approval request by ID
- */
-/**
- * An approval request, within a program.
- *
- * `programId` is REQUIRED, and every mutation resolves its subject through this
- * function. It used to look up by id alone while only the LIST was scoped — the
- * same asymmetry as issues.txt 20.18 — so with an approval id a reviewer in any
- * org could approve another org's points adjustment, which MINTS points into that
- * org's programme, or its tier override, suspension or reactivation.
- * See issues.txt 20.26.
  */
 export async function getApprovalRequestById(approvalId: string, programId: string) {
   try {
@@ -312,9 +296,6 @@ export async function cancelApprovalRequest(data: CancelRequestInput, programId:
         where: { id: data.approvalId },
         data: {
           status: "CANCELLED",
-          // Cancel used to write the status and the notes and nothing else, while
-          // reject wrote both `reviewedBy` and `reviewedAt` — so a cancelled
-          // request could not be attributed to anyone. See issues.txt 20.25.
           reviewedBy: data.reviewerId,
           reviewedByName: data.reviewerName,
           reviewedAt: new Date(),
@@ -387,14 +368,6 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
         program: {
           connect: { id: customer.programId },
         },
-        // Lower case, like every other writer of this column. The account and
-        // redemption services write "earn" and "redeem"; this file used to write
-        // "REDEEM" and "ADJUST". getTransactions filters transactionType with an
-        // exact string match, so filtering the ledger by type returned roughly
-        // half the rows — and WHICH half depended on whether the redemption had
-        // needed approval. The dashboard's chart and verb map read the lower-case
-        // values too, which is why approval-written rows were invisible there
-        // (issues.txt 20.42). See issues.txt 20.27.
         transactionType: "redeem",
         points: -redemption.reward.pointsCost,
         balanceAfter: customer.currentPoints - redemption.reward.pointsCost,
@@ -599,12 +572,6 @@ async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveR
   return await prisma.$transaction(async (tx) => {
     const requestData = approval.requestData;
 
-    // Update customer tier. `currentTier` is included so the notification below
-    // can name the tier the customer is now IN — it used to send
-    // `requestData.newTierId`, a raw UUID, while naming the old tier properly on
-    // the line beneath, so the customer received "upgraded from Bronze to 9f3c…".
-    // awardPoints' equivalent dispatch has always used the name.
-    // See issues.txt 20.28.
     const customer = await tx.customerLoyaltyAccount.update({
       where: { id: approval.accountId },
       data: {
@@ -671,11 +638,6 @@ async function approveAccountSuspension(approval: ApprovalWithAccount, data: App
     await tx.customerLoyaltyAccount.update({
       where: { id: approval.accountId },
       data: {
-        // Lower case, like the update schema accepts and like createCustomerAccount
-        // tests for. An account suspended through an approval used to hold
-        // "SUSPENDED", which `existing.status === "inactive"` never matches — so
-        // re-enrolling that customer threw "Customer account already exists"
-        // instead of reactivating them. See issues.txt 20.27.
         status: "suspended",
       },
     });
@@ -746,20 +708,6 @@ async function approveAccountReactivation(
   });
 }
 
-/**
- * BULK_OPERATION approval is not implemented, and this says so rather than
- * pretending otherwise.
- *
- * It used to mark the request APPROVED and do nothing else — its own comment said
- * the processing "would be triggered separately", and nothing in the module
- * triggers it. A reviewer approving one would reasonably assume something had
- * happened to the customers it named. Refusing leaves the request PENDING, which
- * is the truthful state for a decision the system cannot carry out.
- *
- * Nothing in the module creates a BULK_OPERATION request today, so this closes a
- * path with no callers rather than removing a working feature.
- * See issues.txt 20.25.
- */
 async function approveBulkOperation(approval: ApprovalWithAccount, _data: ApproveRequestInput) {
   log.warn(
     { approvalId: approval.id },

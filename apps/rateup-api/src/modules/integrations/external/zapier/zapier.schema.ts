@@ -98,10 +98,6 @@ const contactSearchSchema = z
   .extend({
     orgId: z.string().optional(),
   })
-  // The predicate used to be the inverse of its own message — it passed only when
-  // BOTH values were empty and failed whenever either was supplied, so the search
-  // and delete actions of the published Zapier app rejected every real request.
-  // See issues.txt 26.13.
   .refine((data) => Boolean(data?.contactId?.length || data?.phone?.length), {
     message: "Either contactId or phone number should be provided",
   });
@@ -109,8 +105,6 @@ const contactSearchSchema = z
 const contactLabelSchema = z.object({
   contactId: z.string(),
   lifecycleId: z.string(),
-  // The zapier routes carry the calling org in the payload; every contact write
-  // behind them is org-scoped now. See issues.txt 18.5.
   orgId: z.string(),
 });
 

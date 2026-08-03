@@ -43,12 +43,6 @@ function normalizePersistentMenu(data: unknown): InstagramPersistentMenuEntry[] 
   return [];
 }
 
-/**
- * Raised when the channel exists and belongs to the caller but has no Instagram
- * account attached. A distinct type so the handlers can answer 409 with the
- * message rather than folding a setup step the user simply has not done into a
- * generic 500. See issues.txt 12.14.
- */
 class InstagramNotConnectedError extends Error {
   constructor() {
     super("Instagram account is not connected for this channel");
@@ -102,13 +96,6 @@ async function resolveInstagramSettings(
   return { ...settings, ibaId };
 }
 
-/**
- * The org-scoped counterpart for the routes that are keyed on a raw Instagram
- * business account id rather than a channel id.
- *
- * getWaSettingsByIbaId is not org-scoped, so handing it a path parameter let any
- * logged-in user read another org's account. See issues.txt 12.15.
- */
 async function resolveInstagramSettingsByIbaId(ibaId: string, orgId: string) {
   const settings = await getWaSettingsByIbaId(ibaId);
   if (!settings || settings.orgId !== orgId) {
@@ -181,13 +168,6 @@ export async function setInstagramIceBreakersHandler(
       });
     }
 
-    // Meta first. Writing our copy first meant a Meta refusal answered 500 with
-    // the UI already showing the new ice breakers while Instagram still served
-    // the old ones, and nothing reconciled the two. Same shape as issues.txt
-    // 11.14. See issues.txt 12.13.
-    //
-    // setInstagramIceBreakers writes our copy itself, so the local write below
-    // only runs when Meta was not contacted at all.
     if (request.body.syncWithMeta) {
       const metaResult = await setInstagramIceBreakers(
         request.body.iceBreakers,
@@ -207,8 +187,6 @@ export async function setInstagramIceBreakersHandler(
       instagramIceBreakers: request.body.iceBreakers,
     });
 
-    // `meta` used to read `{ saved: true }` here, which looks like a Meta result
-    // for a request that never contacted Meta. See issues.txt 12.14.
     return reply.code(200).send({
       success: true,
       data: {
@@ -237,9 +215,6 @@ export async function deleteInstagramIceBreakersHandler(
       });
     }
 
-    // deleteInstagramIceBreakers clears our copy itself once Meta accepts, so
-    // this no longer clears it up front — Meta refusing used to leave the UI
-    // empty while Instagram still served the old list. See issues.txt 12.13.
     const data = await deleteInstagramIceBreakers(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
@@ -278,15 +253,11 @@ export async function setInstagramPersistentMenuHandler(
       });
     }
 
-    // The menu was stored at any size and any shape, while its ice-breaker
-    // sibling enforced Instagram's limit. See issues.txt 12.14.
     const menuError = validatePersistentMenu(request.body.persistentMenu);
     if (menuError) {
       return reply.code(400).send({ success: false, message: menuError });
     }
 
-    // Meta first — see the note in setInstagramIceBreakersHandler.
-    // See issues.txt 12.13.
     if (request.body.syncWithMeta) {
       const metaResult = await setInstagramPersistentMenu(
         request.body.persistentMenu,
@@ -334,7 +305,6 @@ export async function deleteInstagramPersistentMenuHandler(
       });
     }
 
-    // See the note in deleteInstagramIceBreakersHandler. issues.txt 12.13.
     const data = await deleteInstagramPersistentMenu(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
@@ -392,17 +362,6 @@ export async function syncInstagramPersistentMenuHandler(
   }
 }
 
-/**
- * These two used to hand the path ibaId straight to the service, which looked the
- * account's page token up by id alone — no ownership check, unlike the seven
- * handlers above. The route is authenticated but was not scoped, so any logged-in
- * user who knew another org's Instagram business account id got that account's
- * last 50 posts and its live stories, fetched with the victim's own page token.
- * Same IDOR family as issues 1.1, 11.1 and 8.1. See issues.txt 12.15.
- *
- * 404, not 403: an account another org owns is indistinguishable from one that
- * does not exist, so this cannot be used to probe for account ids.
- */
 export async function getInstagramMediaHandler(
   request: FastifyRequest<{ Params: { ibaId: string } }>,
   reply: FastifyReply,

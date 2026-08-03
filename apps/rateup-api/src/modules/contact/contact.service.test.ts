@@ -364,12 +364,6 @@ describe("createContact", () => {
     expect(jobs.mock.calls[0][1].data.Lead_Status).toBe("Qualified");
   });
 
-  // The group write, the inbox assignment and the rule trigger were all launched
-  // without `await` while everything around them was awaited — so createContact
-  // resolved, and the handler answered 201, before any of them had been written. A
-  // client that created a contact with groups and immediately re-read it saw none
-  // of them, and a rejection in any of the three was an unhandled promise
-  // rejection that never reached the handler's catch. See issues.txt 18.2.
   test("waits for the group membership write", async () => {
     let settled = false;
     (addExistingContactsToMultipleGroups as Mock).mockImplementation(async () => {
@@ -430,11 +424,6 @@ describe("getOrcreateContact", () => {
     expect(integrationTriggerQueue.add).toHaveBeenCalledWith("zoho-lead-create", expect.anything());
   });
 
-  // Unlike createContact this path kept `labels`, `contactGroupIds` and
-  // `assignedUserIds` in `rest` and handed them to prisma as if they were columns
-  // — a validation error rather than a contact for any caller that supplied them.
-  // Only `customFields` was stripped. Two functions taking the same input type and
-  // disagreeing about it is the trap. See issues.txt 18.3.
   test("strips the relation inputs prisma has no columns for", async () => {
     await getOrcreateContact({
       ...base,
@@ -513,12 +502,6 @@ describe("createMultipleContacts", () => {
     });
   });
 
-  // `skipDuplicates` means an already-present phone never comes back from
-  // createManyAndReturn, so the lookup by phone missed and the row was written
-  // with an EMPTY contactId — into a createMany against a uuid foreign key. One
-  // such row failed the whole custom-field batch, so importing a file where some
-  // contacts already exist landed NONE of the custom fields, including the ones
-  // for contacts that were created successfully. See issues.txt 18.4.
   test("skips a custom field whose contact was not created", async () => {
     db.contact.createManyAndReturn.mockResolvedValue([{ id: "c1", phone: "9190001" }]);
 
@@ -568,9 +551,6 @@ describe("createMultipleContacts", () => {
 // ===========================================================================
 
 describe("getContactById", () => {
-  // The lookup was by id alone, and neither the query nor the calling handler
-  // restricted it to the caller's org — so a contact id was enough to read a full
-  // customer record: phone, email, notes and labels. See issues.txt 18.5.
   test("looks a contact up within the caller's org", async () => {
     await getContactById("c1", ORG);
 
@@ -616,9 +596,6 @@ describe("getContactsByOrgId", () => {
     expect(db.contact.count.mock.calls[0][0].where).toEqual(where());
   });
 
-  // The search term's two alternatives are the one thing that genuinely ORs — a
-  // match on either the name or the phone — so they stay an OR, nested inside the
-  // AND. See issues.txt 18.6.
   test("searching matches either the name or the phone", async () => {
     await getContactsByOrgId(ORG, { search: "ann" } as any);
 
@@ -673,12 +650,6 @@ describe("getContactsByOrgId", () => {
     expect(where().AND).toEqual([{ ContactLabelMap: { some: { labelId: "l1" } } }]);
   });
 
-  // Every filter was pushed into one OR array, so combining filters WIDENED the
-  // result set instead of narrowing it: asking for "named ann AND consented"
-  // returned everyone named ann plus everyone who consented. Any workflow that
-  // builds a segment by narrowing on several attributes produced a list that was
-  // wrong in the dangerous direction — too many people — and that list is what
-  // picks campaign recipients. See issues.txt 18.6.
   test("combining two filters ANDs them together", async () => {
     await getContactsByOrgId(ORG, { name: "ann", consent: "true" } as any);
 
@@ -689,10 +660,6 @@ describe("getContactsByOrgId", () => {
     expect(where().OR).toBeUndefined();
   });
 
-  // createdAt is a DateTime column but shared the string case, so it was filtered
-  // with `contains` and a text `mode` — both of which prisma rejects for a
-  // DateTime. The filter answered 500 and had never worked. A calendar date means
-  // the whole of that day. See issues.txt 18.7.
   test("a createdAt filter covers the whole of the day it names", async () => {
     await getContactsByOrgId(ORG, { createdAt: "2026-01-01" } as any);
 
@@ -771,10 +738,6 @@ describe("getContactsByOrgId", () => {
     ]);
   });
 
-  // `desc` was declared by the querystring schema, passed by the route, left
-  // sitting in `filter` and never read — so the order was hard-coded descending
-  // and ascending sort was impossible, with no error. The group member listing
-  // beside it did honour it. See issues.txt 18.8.
   test("the desc query parameter chooses the sort direction", async () => {
     await getContactsByOrgId(ORG, { sort: "createdAt", desc: "asc" } as any);
 
@@ -834,9 +797,6 @@ describe("deleteContactById", () => {
 });
 
 describe("deleteManyContacts", () => {
-  // Neither the read nor the delete was org-scoped, and the ids come straight from
-  // the request body — so `DELETE /api/contact` deleted every id it was handed,
-  // whoever they belonged to. See issues.txt 18.5.
   test("deletes only the ids the caller's org owns", async () => {
     db.contact.findMany.mockResolvedValue([]);
 
@@ -937,8 +897,6 @@ describe("updateContactById", () => {
     expect(db.contact.findFirst).toHaveBeenCalledWith({ where: { id: "c1", orgId: ORG } });
   });
 
-  // NOTE: an id that matches nothing produces `undefined` here and the very next
-  // line reads `.waMessageAssignStatus` off it. See issues.txt 18.10.
   test("throws a named error when the contact does not exist", async () => {
     db.contact.findFirst.mockResolvedValue(null);
 
@@ -960,11 +918,6 @@ describe("updateContactById", () => {
     });
   });
 
-  // The block was guarded on `labels && labels.length > 0`, so `labels: []` fell
-  // straight through and the delete never ran — there was no way to remove a
-  // contact's last label through this endpoint, and a reload brought them back.
-  // The group and assignee blocks below it guard on presence, which is the shape
-  // this now matches. See issues.txt 18.11.
   test("an empty label array clears the contact's labels", async () => {
     db.contact.update.mockResolvedValue(updated());
 
@@ -1377,11 +1330,6 @@ describe("updateLifecycleStageofContacts", () => {
     });
   });
 
-  // The updateMany ran first and the lifecycle lookup afterwards, with a bare
-  // `if (!lifecycle) return` — so an unknown id left the contacts pointing at a
-  // lifecycle that does not exist AND skipped the CRM mirror, with nothing
-  // reported to the caller. The two systems then disagreed silently.
-  // See issues.txt 18.12.
   test("writes nothing when the lifecycle does not exist", async () => {
     db.lifecycle.findFirst.mockResolvedValue(null);
 
@@ -1441,10 +1389,6 @@ describe("importCSVContacts", () => {
     expect(readSpreadsheetObjects).not.toHaveBeenCalled();
   });
 
-  // An empty or header-only file used to return undefined (a bare `return`), and
-  // both callers immediately read `res.status` — so the user was shown
-  // "Cannot read properties of undefined (reading 'status')" in place of "the file
-  // was empty", passed through verbatim. See issues.txt 18.19.
   test("reports an empty file as an error the caller can render", async () => {
     (readSpreadsheetObjects as Mock).mockResolvedValue({ data: [] });
 
@@ -1507,11 +1451,6 @@ describe("importCSVContacts", () => {
     expect(rows[0].phone).toBe("919876543210");
   });
 
-  // Valid rows were created first and only then was `status: "error"` returned, so
-  // a file with 500 good rows and one bad one imported all 500 and told the user
-  // the upload failed validation. The natural response — fix the one row and
-  // re-upload — either duplicated the work or tripped "Contact already exist".
-  // See issues.txt 18.13.
   test("reports a partly-valid file as a partial success, naming both halves", async () => {
     (readSpreadsheetObjects as Mock).mockResolvedValue({
       data: [
@@ -1648,10 +1587,6 @@ describe("updateMulitplceContacts", () => {
     });
   });
 
-  // Only name and aiWaChat were written on update, so re-importing a file with a
-  // corrected email or a changed source silently kept the old values — while the
-  // stated purpose of the update-existing toggle is exactly that refresh, and the
-  // import still reported success. See issues.txt 18.14.
   test("an update refreshes every field the row carries", async () => {
     await updateMulitplceContacts(
       [{ name: "Ann", phone: "9190001", email: "a@b.c", source: "CSV IMPORT" } as any],
@@ -1723,10 +1658,6 @@ describe("handleContactConsent", () => {
     expect(db.contact.update).not.toHaveBeenCalled();
   });
 
-  // A consent callback for a number the org does not have is a no-op, not a
-  // failure — it used to read `.consent` off null and become a TypeError, and
-  // later a thrown Error, on a webhook path where neither is actionable.
-  // See issues.txt 18.15.
   test("does nothing for a phone number that is not in the org", async () => {
     db.contact.findFirst.mockResolvedValue(null);
 
@@ -1844,13 +1775,6 @@ describe("getOrCreateContactByPhone", () => {
     expect(createConversation).toHaveBeenCalledWith({ contactId: "c1", orgId: ORG });
   });
 
-  // The whole body was wrapped in try/catch and the catch only logged, so a
-  // database failure resolved to undefined — and every caller destructures
-  // `{ contact, conversation }` from the result, so the real failure surfaced as
-  // "Cannot destructure property 'contact' of undefined" several frames away, with
-  // the message dropped and a misleading log. The messenger variant already
-  // rethrew, so the same operation retried on one platform and silently dropped on
-  // two others. See issues.txt 18.16.
   test("rethrows a database failure instead of swallowing it", async () => {
     db.contact.findFirst.mockRejectedValue(new Error("connection lost"));
 
@@ -1879,7 +1803,6 @@ describe("getOrCreateContactByIgsId", () => {
     expect(res).toEqual({ contact: { id: "c1", orgId: ORG }, conversation: undefined });
   });
 
-  // See issues.txt 18.16.
   test("rethrows a database failure instead of swallowing it", async () => {
     db.contact.findUnique.mockRejectedValue(new Error("boom"));
 
@@ -2010,11 +1933,6 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
     expect(transitionInboxStat).not.toHaveBeenCalled();
   });
 
-  // The ids were not org-scoped anywhere, and the counter movement was then
-  // attributed to `contacts[0].orgId` — so a mixed-org id list wrote one org's
-  // contacts and moved another org's tab counts. Both the read and the write are
-  // org-filtered now, so the caller's org IS every contact's org.
-  // See issues.txt 18.5.
   test("attributes the inbox counters to the caller's org", async () => {
     db.contact.findMany.mockResolvedValue([
       contact({ id: "c1", orgId: ORG }),

@@ -271,9 +271,6 @@ describe("the org-scoped reads and writes", () => {
 // ===========================================================================
 
 describe("getPublicLinktreeWithShortIdFromDB", () => {
-  // isPublished was in the select list but not in the where, so a draft — its
-  // name, its theme and every link on it — was fully readable by anyone holding
-  // the short id, which exists from the moment the row does. See issues.txt 45.2.
   test("the query restricts it to published linktrees", async () => {
     await getPublicLinktreeWithShortIdFromDB(req({ params: { shortUrlId: SHORT } }));
 
@@ -323,13 +320,6 @@ function survey(over: Record<string, unknown> = {}) {
 }
 
 describe("generateAndGetOptionsFromDB", () => {
-  // This used to walk org -> members -> user -> surveys with no `where` below
-  // the org. Survey hangs off createdBy, a User, and a User may belong to any
-  // number of organisations — so `user.surveys` was every survey that person
-  // had ever created anywhere, and the dropdown handed a member of org A the
-  // ids and titles of org B's surveys plus the name and tags of every team each
-  // was mapped to. Surveys are queried through teams now, scoped to the session
-  // org, the way getSurveysByUserId does. See issues.txt 45.1.
   test("queries surveys scoped to the session org, not through members", async () => {
     await generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } }));
 
@@ -380,8 +370,6 @@ describe("generateAndGetOptionsFromDB", () => {
     expect(options[0].teams).toEqual([{ team: { name: "Front of house", tags: ["vip"] } }]);
   });
 
-  // Was silently an empty array, so a typo was indistinguishable from "this
-  // organisation has no surveys". See issues.txt 45.6.
   test("an unrecognised link type is refused rather than answered empty", async () => {
     await expect(
       generateAndGetOptionsFromDB(req({ params: { linkType: "websurvey" } })),
@@ -410,9 +398,6 @@ describe("updatePageVisitOrLinkClickInDB — page visits", () => {
     });
   });
 
-  // Was a bare update, so P2025 escaped and asyncErrHandler reported an
-  // ordinary client condition — a page that has since been deleted — as a 500
-  // from an unauthenticated endpoint. See issues.txt 45.5.
   test("an unknown short id reports a miss rather than rejecting", async () => {
     db.linktree.updateMany.mockResolvedValueOnce({ count: 0 });
 
@@ -451,10 +436,6 @@ describe("updatePageVisitOrLinkClickInDB — link clicks", () => {
     ]);
   });
 
-  // The write is still the whole array — that is what a JSON column costs — but
-  // it is now conditional on the array still being the one that was read, so a
-  // click that overlaps an owner's edit no longer silently reverts it.
-  // See issues.txt 45.4.
   test("the write is conditional on the array it read", async () => {
     const read = links();
     db.linktree.findFirst.mockResolvedValueOnce({ links: read });
@@ -516,9 +497,6 @@ describe("updatePageVisitOrLinkClickInDB — link clicks", () => {
     await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1", "nope"))).resolves.toBeNull();
   });
 
-  // links is a Json column, so a non-array value can be stored by a path that
-  // skips the route schema, and `.find` on it threw a TypeError that
-  // asyncErrHandler reported as a 500. See issues.txt 45.5.
   test("a links value that is not an array is refused rather than throwing", async () => {
     db.linktree.findFirst.mockResolvedValueOnce({ links: "not an array" });
 
@@ -574,9 +552,6 @@ describe("controllers", () => {
     expect(answer(rep)).toEqual({ code: 200, body: [row()] });
   });
 
-  // The authenticated 404 was a bare string where every other error in the
-  // module is an object, and the public read reported the same condition as a
-  // 200 with a null body. Both answer the same thing now. See issues.txt 45.6.
   test("the two reads answer a missing page the same way", async () => {
     db.linktree.findFirst.mockResolvedValue(null);
     const privateRep = reply();
@@ -593,9 +568,6 @@ describe("controllers", () => {
     expect(answer(publicRep)).toEqual(expected);
   });
 
-  // An unpublished draft is deliberately indistinguishable from a page that
-  // does not exist, so the endpoint does not report drafts into existence.
-  // See issues.txt 45.2.
   test("the public read answers 404 for an unpublished draft", async () => {
     db.linktree.findFirst.mockResolvedValueOnce(null);
     const rep = reply();
@@ -650,8 +622,6 @@ describe("controllers", () => {
     expect(answer(rep).body).toHaveLength(1);
   });
 
-  // An unmapped :linkType used to read as "this organisation has no surveys".
-  // See issues.txt 45.6.
   test("an unrecognised link type answers 400 rather than an empty list", async () => {
     const rep = reply();
 
@@ -807,10 +777,6 @@ describe("routes", () => {
     expect(opts.preHandler).toEqual([]);
   });
 
-  // Both branches used to ASSIGN, so a role check written into a route's own
-  // options would have been discarded with no error and nothing in the route
-  // table to show it — and a public route could not carry the rate limiter 45.3
-  // needs. See issues.txt 45.7.
   test("the hook keeps a preHandler a route declared for itself", async () => {
     // NOTE: it assigns rather than appends, in both branches.
     const { srv, hooks } = fakeServer();
@@ -876,10 +842,6 @@ describe("routes", () => {
     }
   });
 
-  // STILL OPEN (issues.txt 45.7): the module has no role gating at all — any
-  // member can create, edit, publish, unpublish and delete any of the
-  // organisation's link pages. What is fixed is that adding a gate would now
-  // take effect.
   test("no authenticated route declares a role requirement", async () => {
     const authenticated = [
       createLinktreeRouteOptions,
@@ -902,9 +864,6 @@ describe("routes", () => {
     expect(limiter.opts).toEqual({ max: 240, windowSeconds: 3600, key: "linktreeCount" });
   });
 
-  // All three used to declare `schema: {}` — so the delete's :id reached
-  // prisma.linktree.delete unvalidated on a @db.Uuid column, and :linkType
-  // reached a service that mapped only two values. See issues.txt 45.6.
   test("the three schema-less routes now declare their params", async () => {
     expect(deleteLinktreeByIdRouteOptions.schema).toHaveProperty("params");
     expect(getLinkTypeDropdownOptionsRouteOptions.schema).toHaveProperty("params");

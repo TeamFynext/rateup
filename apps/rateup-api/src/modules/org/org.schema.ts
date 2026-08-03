@@ -21,10 +21,6 @@ const idParamRequestSchema = z.object({
   id: z.string(),
 });
 
-// OrgMember.role is a Prisma enum with exactly three values, so a bare
-// z.string() let a typo through to Postgres, which rejected it — and the
-// operator was told the server broke (500) rather than that the role was
-// unknown (400). See issues.txt 41.7.
 const updateRoleSchema = z.object({
   role: z.enum(["SUPER_ADMIN", "ADMIN", "MEMBER"]),
 });

@@ -17,18 +17,9 @@ export async function getWebhook(orgId: string) {
 }
 
 export async function deleteWebhook(orgId: string) {
-  // deleteMany, not delete: `delete` raises P2025 when there is no row, and no
-  // handler in this module has a try/catch — so DELETE /api/webhook was not
-  // idempotent, and a settings page that clears the field on save produced a 500
-  // for an operation that had already achieved its goal. See issues.txt 34.6.
   return prisma.webhook.deleteMany({ where: { orgId } });
 }
 
-/**
- * Addresses the server must never be made to fetch on a caller's behalf:
- * loopback, link-local (including the cloud metadata endpoint at
- * 169.254.169.254), and the RFC1918 / unique-local ranges. See issues.txt 34.1.
- */
 function isPrivateAddress(address: string): boolean {
   if (isIP(address) === 6) {
     const ip = address.toLowerCase();
@@ -78,17 +69,10 @@ async function assertPublicUrl(rawUrl: string) {
 export async function verifyWebhookUrl(url: string, verifyToken: string): Promise<boolean> {
   try {
     const target = await assertPublicUrl(url);
-    // Was string concatenation, so a registered URL that already carried a query
-    // received two question marks and the receiver saw one parameter whose value
-    // was `1?challenge=TOKEN` — rejecting an otherwise correct configuration and
-    // blaming the receiver. See issues.txt 34.5.
     target.searchParams.set("challenge", verifyToken);
 
     const res = await fetch(target, {
       signal: AbortSignal.timeout(5000),
-      // fetch defaults to "follow", so the https rule only ever governed the
-      // first hop: a caller could register their own host and have it answer 302
-      // to http://169.254.169.254/. See issues.txt 34.1.
       redirect: "manual",
     });
     if (!res.ok) return false;
@@ -119,11 +103,6 @@ export async function enqueueWebhookDispatch(
       payload,
     } satisfies OutgoingWebhookJobData,
     {
-      // The worker throws on a non-2xx, which is how a BullMQ processor asks for
-      // a retry — but neither the job nor the queue set `attempts`, so BullMQ's
-      // default of one applied and the throw produced a log line and nothing
-      // else. A receiver that was redeploying lost the event permanently.
-      // See issues.txt 34.3.
       attempts: 5,
       backoff: { type: "exponential", delay: 5_000 },
       removeOnComplete: { count: 1 },

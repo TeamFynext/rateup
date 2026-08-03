@@ -237,11 +237,6 @@ describe("the event payload", () => {
 // ===========================================================================
 
 describe("the response handling", () => {
-  // callMetaApi is built with validateStatus: () => true, so it resolves for every
-  // status. Nothing used to inspect res.status, so a rejected event was logged as
-  // sent and the module's careful admin-notification path — which only runs on a
-  // throw — could never see the one class of failure it was built for.
-  // See issues.txt 26.12.
   test("treats a rejected event as a failure, not a send", async () => {
     (callMetaApi as unknown as Mock).mockResolvedValueOnce({
       status: 400,

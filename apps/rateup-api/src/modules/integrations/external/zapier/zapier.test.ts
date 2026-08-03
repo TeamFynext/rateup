@@ -128,11 +128,6 @@ describe("route registration", () => {
     return { srv, routes, hooks };
   }
 
-  // zapierAuthenticationHandler sets request.user and only replies when the url
-  // contains "/auth" — the shape of a preHandler — but it was registered as the
-  // HANDLER of POST /auth and nowhere else, so every other route in this tree ran
-  // unauthenticated while taking its organisation from the query string.
-  // See issues.txt 26.1.
   test("authenticates the whole tree with a preHandler hook", async () => {
     const { srv, routes, hooks } = server();
 
@@ -394,12 +389,6 @@ describe("the unauthenticated handlers take their org from the query string", ()
     expect(getContactsByPhoneNumberAndOrgId).toHaveBeenCalledWith("98765", VICTIM_ORG);
   });
 
-  // by-id reads go through the contact module's getContactById, which used to
-  // take no org at all (issues.txt 18.5) — so a contact id alone was enough. It
-  // now carries the org named in the query, the same one the by-phone branch
-  // beside it already used. (These zapier handlers taking their org from the
-  // request rather than a session is a separate, pre-existing concern, recorded
-  // by the surrounding describe.)
   test("contact search by id carries the named org", async () => {
     (getContactById as unknown as Mock).mockResolvedValueOnce({ id: "c-1", name: "Ann" });
     const rep = reply();
@@ -475,10 +464,6 @@ describe("the unauthenticated handlers take their org from the query string", ()
 // ===========================================================================
 
 describe("contactSearchSchema", () => {
-  // The refine used to read `!data?.contactId?.length && !data?.phone?.length`, so
-  // it passed only when BOTH were empty — the inverse of its own message — and the
-  // search and delete actions of the published Zapier app rejected every real
-  // request. See issues.txt 26.13.
   test("accepts a search that supplies a contactId", () => {
     expect(contactSearchSchema.safeParse({ contactId: "c-1", phone: "" }).success).toBe(true);
   });

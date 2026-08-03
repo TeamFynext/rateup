@@ -50,17 +50,6 @@ beforeEach(() => {
 // util.ts
 // ===========================================================================
 
-/*
- * `requireLoyaltyProgram` used to live in util.ts and is gone, along with the
- * tests that covered it: a Fastify preHandler, written, exported and documented,
- * and registered on NO route — every controller in the module resolves the program
- * inline instead. It is deleted rather than adopted, because a route that picked
- * it up would have got behaviour nothing else in the module relies on: the program
- * attached to `request.loyaltyProgram` rather than resolved where it is used, and
- * a 400 for a missing org where every handler answers 404 for a missing program.
- * See issues.txt 20.32.
- */
-
 describe("parsePhoneforWa", () => {
   test("strips a single leading plus", () => {
     expect(parsePhoneforWa("+919000000001")).toBe("919000000001");
@@ -75,9 +64,6 @@ describe("parsePhoneforWa", () => {
     expect(parsePhoneforWa(undefined as any)).toBeUndefined();
   });
 
-  // Only the FIRST plus used to be removed — `slice(1)` — so a number typed as
-  // "++91…" survived with a plus still on the front and every downstream lookup on
-  // that number missed. See issues.txt 20.32.
   test("removes every leading plus", () => {
     expect(parsePhoneforWa("++919000000001")).toBe("919000000001");
   });
@@ -160,12 +146,6 @@ describe("dispatchLoyaltyNotification — the gates", () => {
     expect(handleSendTemplate).not.toHaveBeenCalled();
   });
 
-  // The whole body is wrapped in try/catch and the catch only logs, so a failed
-  // notification never reaches the caller. That is deliberate and stays: a
-  // notification must never roll back the points or the redemption it announces.
-  // The cost is that a template which is wrong for EVERY customer fails invisibly,
-  // so the failure is logged at error level with the event and the org on it —
-  // that is the signal an operator has. See issues.txt 20.32.
   test("swallows the failure rather than blocking the caller", async () => {
     (handleSendTemplate as Mock).mockRejectedValue(new Error("meta rejected the template"));
 
@@ -250,12 +230,6 @@ describe("dispatchLoyaltyNotification — the template parameters", () => {
     expect(params()).toEqual(["Ann", "Gold"]);
   });
 
-  // Every parameter used to be appended only when its value was present, so a
-  // customer with no stored name shifted every later placeholder up by one: {{1}}
-  // rendered the points and {{2}} the balance, silently one place out, and a
-  // template is a fixed document with no way to notice. The array is built by
-  // POSITION now, with an empty string standing in for anything missing.
-  // See issues.txt 20.32.
   test("a missing name leaves its slot empty rather than shifting the rest", async () => {
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
       customerPhone: "919000000001",

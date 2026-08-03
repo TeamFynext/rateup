@@ -7,12 +7,6 @@ const getShortUrlId = () => {
   return customAlphabet(nolookalikesSafe, 8)();
 };
 
-// A short id is eight characters of nolookalikesSafe, so a collision is rare
-// and a second attempt all but certainly clears it. An unbounded retry is the
-// wrong shape all the same: if the constraint were ever violated for a reason
-// the retry cannot change — a mistaken unique index, a caller passing a fixed
-// id — this would spin against the database forever rather than failing.
-// See issues.txt 44.6 and 45.8.
 const MAX_SHORT_ID_ATTEMPTS = 5;
 
 const shortIdUniqueConstraintErrHandler = async <R>(

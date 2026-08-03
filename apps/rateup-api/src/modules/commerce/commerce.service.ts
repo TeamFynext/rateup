@@ -1,8 +1,6 @@
 import { ChannelNotFoundError } from "./commerce.errors.js";
 export { ChannelNotFoundError };
 import dayjs from "dayjs";
-// The chart buckets in UTC rather than in whatever timezone the API happens to
-// run in. See issues.txt 19.9.
 import utc from "dayjs/plugin/utc.js";
 
 dayjs.extend(utc);
@@ -34,18 +32,6 @@ function lineItems(products: unknown): OrderLineItem[] {
   return Array.isArray(products) ? (products as OrderLineItem[]) : [];
 }
 
-/**
- * A line item's number, or 0 if it is not one.
- *
- * `products` is an unschema'd Json column written from Meta's order webhook, and
- * the old `Number(item?.price ?? 0)` covered null and undefined but not a value
- * that is PRESENT and non-numeric: `Number("1,200")` is NaN, and NaN propagates
- * through every subsequent `+`. So one malformed line item did not corrupt just
- * its own order — it corrupted the reduce it was summed into, and getCommerceOverview's
- * totalSales, paidSales and avgOrderValue all became NaN for the whole period.
- * JSON.stringify writes NaN as null, so the dashboard showed blank tiles with no
- * error anywhere. See issues.txt 19.1.
- */
 function money(value: unknown): number {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -72,21 +58,6 @@ export function orderCurrency(products: unknown): string | undefined {
   return lineItems(products).find((item) => item?.currency)?.currency;
 }
 
-/**
- * Every distinct currency the line items name, in the order first seen.
- *
- * orderCurrency reports the FIRST one and discards the rest, and the totals are
- * added up with no currency awareness and no conversion — so an org selling in
- * more than one currency gets a totalSales that is a sum of unlike units
- * (100 USD + 100 INR reported as 200), labelled with whichever currency happened
- * to be first in the array. That number is not wrong by a little; it is
- * meaningless, and it is the headline figure on the page.
- *
- * Converting is not something this module can do — there are no rates anywhere in
- * the system, and picking one silently would be worse than the sum. So the
- * responses now SAY which currencies went into the figure, and the client can
- * refuse to render a single total when there is more than one. See issues.txt 19.2.
- */
 export function orderCurrencies(products: unknown): string[] {
   const seen = new Set<string>();
   for (const item of lineItems(products)) {
@@ -111,12 +82,6 @@ export async function resolveChannelCatalogId(
       where: { whatsappSettingsPhoneId: filter.phoneId },
       select: { catalogId: true },
     });
-    // The same message as the ownership failure below. The pair used to be
-    // distinguishable — "No catalog is connected to that channel" versus "Channel
-    // not found for this organization" — which made them an existence oracle: a
-    // caller could tell whether an arbitrary phoneId was connected to a catalog
-    // somewhere in the system. The access check itself was always correct.
-    // See issues.txt 19.3.
     if (!map) throw new ChannelNotFoundError();
     catalogId = map.catalogId;
   }
@@ -142,11 +107,6 @@ function buildOrderWhere(
     ...(catalogId && { catalogId }),
   };
 
-  // Half-open: `gte from, lt to`. The requested window used to be closed at both
-  // ends while the comparison window below was half-open, so the two covered
-  // different durations by one instant and the period-over-period percentages were
-  // computed against a window that was not the same length as the current one.
-  // See issues.txt 19.4.
   if (filter.from || filter.to) {
     where.createdAt = {
       ...(filter.from && { gte: filter.from }),
@@ -243,11 +203,6 @@ async function sumPeriod(where: Prisma.WaCatalogOrderWhereInput) {
     .filter((order) => order.paymentStatus?.toUpperCase() === "PAID")
     .reduce((sum, order) => sum + orderTotal(order.products, order.deliveryOption), 0);
 
-  // Which currencies went into that figure. The totals are added with no currency
-  // awareness and no conversion, so for an org selling in more than one they are a
-  // sum of unlike units. There are no exchange rates anywhere in this system, so
-  // converting is not something this module can do; what it can do is stop
-  // presenting the sum as if the question did not arise. See issues.txt 19.2.
   const currencies = new Set<string>();
   for (const order of orders) {
     for (const currency of orderCurrencies(order.products)) currencies.add(currency);
@@ -261,14 +216,6 @@ async function sumPeriod(where: Prisma.WaCatalogOrderWhereInput) {
   };
 }
 
-/**
- * Null when there is no baseline to compare against.
- *
- * It used to report +100% for any growth from zero — which is also the honest
- * answer for a genuine doubling, so "0 to 50,000" and "25,000 to 50,000" rendered
- * identically. Null lets the UI say "no prior data" instead of asserting a
- * percentage it cannot know. See issues.txt 19.5.
- */
 function pctChange(current: number, previous: number): number | null {
   if (!previous) return null;
   return Number((((current - previous) / previous) * 100).toFixed(1));
@@ -309,8 +256,6 @@ export async function getCommerceOverview(orgId: string, filter: CommerceFilter)
     paidSales: current.paidSales,
     orderCount: current.orderCount,
     avgOrderValue,
-    // The currencies the three money figures above are a sum of. More than one
-    // means they cannot be read as money — see issues.txt 19.2.
     currencies: current.currencies,
     mixedCurrency: current.currencies.length > 1,
     productsLive,
@@ -322,12 +267,6 @@ export async function getCommerceOverview(orgId: string, filter: CommerceFilter)
   };
 }
 
-/**
- * How many empty buckets the fill loop will produce before it stops. Enough for
- * five years of daily points, which is more than any chart renders, and small
- * enough that a hostile `from` cannot turn one request into a large response.
- * See issues.txt 19.7.
- */
 const MAX_BUCKETS = 2000;
 
 /** Sales/orders bucketed over time, with empty buckets filled so charts don't gap. */
@@ -345,20 +284,6 @@ export async function getCommerceTimeseries(orgId: string, filter: CommerceTimes
   const start = filter.from ?? orders[0]?.createdAt;
   const end = filter.to ?? new Date();
   if (start) {
-    // Bucketed in UTC. Both the boundary and the label used to be computed in the
-    // process's LOCAL timezone while `from`/`to` were compared by postgres against
-    // a UTC column — so an order placed at 23:30 UTC landed in the next day's
-    // bucket on any server east of UTC+00:30 and the previous day's west of it,
-    // and a redeploy to another region silently redrew every historical chart.
-    // The module had no timezone handling at all, which is how this survived.
-    // See issues.txt 19.9.
-    //
-    // The loop is also bounded. `from` comes straight off the querystring with no
-    // span limit and `to` defaults to now, so `?from=1900-01-01&interval=day`
-    // asked for ~46,000 buckets — each with a dayjs format call — from one cheap
-    // parameter. And an invalid dayjs never reports itself as after anything, so
-    // an unparseable bound would have spun forever; the route's z.coerce.date()
-    // is what kept that unreachable, not the loop. See issues.txt 19.7.
     let cursor = dayjs.utc(start).startOf(unit);
     const last = dayjs.utc(end);
     for (
@@ -413,13 +338,6 @@ export async function getCommerceTopProducts(orgId: string, filter: CommerceTopP
         units: 0,
         revenue: 0,
       };
-      // The name and image are still first-seen — a leaderboard has to label the
-      // row somehow, and either is as good as any other. The PRICE is not: it used
-      // to be captured from the first line item and never updated, while units and
-      // revenue kept accumulating across all of them, so a product whose price
-      // changed during the period was listed at its older price beside a revenue
-      // figure computed from both. price x units did not equal revenue and nothing
-      // said why. It is derived below instead. See issues.txt 19.8.
       entry.units += money(item?.quantity);
       entry.revenue += money(item?.price) * money(item?.quantity);
       totals.set(retailerId, entry);
@@ -431,9 +349,6 @@ export async function getCommerceTopProducts(orgId: string, filter: CommerceTopP
 
   return top.map((entry) => ({
     ...entry,
-    // Derived, not frozen at first sight: the average price actually realised over
-    // the period. price x units now equals revenue by construction, which is what
-    // the frozen first-seen price could not promise. See issues.txt 19.8.
     price: entry.units ? Number((entry.revenue / entry.units).toFixed(2)) : 0,
     // Share of the top seller's revenue — the bar width the overview renders.
     share: Math.round((entry.revenue / maxRevenue) * 100),

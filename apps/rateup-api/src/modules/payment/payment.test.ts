@@ -172,12 +172,6 @@ describe("updateSubscriptionOrderHandler", () => {
   const req = (body: Record<string, unknown>, orderId = VICTIM_ORDER) =>
     ({ params: { orderId }, body, user: { orgId: ORG }, userId: USER }) as never;
 
-  // The route was PUT /api/payment/order/:orderId with checkSession only — no
-  // role check and no body schema — and updateOrder was
-  // `prisma.order.update({ where: { id: orderId }, data })` with no org
-  // condition, `data` being the request body typed Partial<Order>. So every
-  // column of any organisation's order was writable by anyone with a session.
-  // See issues.txt 40.1.
   test("writes only the status, and only within the caller's org", async () => {
     await updateSubscriptionOrderHandler(
       req({ status: "COMPLETE", paymentStatus: "SUCCESS", amount: 0 }),
@@ -277,9 +271,6 @@ describe("updateSubscriptionOrderHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { message: "Updating order failed" } });
   });
 
-  // Registered as `server.put("/order/:orderId", handler)` — two arguments, so
-  // no role check and no body schema, on the one route in either payment tree
-  // that changes what an organisation is entitled to. See issues.txt 40.1.
   test("the route requires SUPER_ADMIN and validates its body", async () => {
     const { routes } = await collectPaymentRoutes();
 
@@ -337,11 +328,6 @@ describe("the Stripe product routes", () => {
     expect(answer(rep).body[0].customer_email).toBe("someone@othercompany.test");
   });
 
-  // The Razorpay tree gates every catalogue route on assertRootOrg; the Stripe
-  // tree gated only the subscription cancellation, and on role rather than on the
-  // platform org — so any authenticated user of any organisation could delete or
-  // rename products in the PLATFORM's Stripe account, and read every
-  // subscription on it. See issues.txt 40.2.
   test("the five catalogue and listing routes carry the root-org check", async () => {
     const { routes } = await collectStripeRoutes();
 
@@ -390,9 +376,6 @@ describe("the Stripe product routes", () => {
     ]);
   });
 
-  // sync-plans was the one Razorpay administrative route without it — a
-  // platform-wide catalogue resync any authenticated user could trigger, hitting
-  // Razorpay's API on every call. See issues.txt 40.5.
   test("the Razorpay plan sync is gated too", async () => {
     const { routes } = await collectPaymentRoutes();
 
@@ -408,12 +391,6 @@ describe("the Stripe product routes", () => {
 describe("getSessionStatusHandler", () => {
   const req = (session_id: string) => ({ query: { session_id }, user: { orgId: ORG } }) as never;
 
-  // The session id came from the query string and was retrieved from Stripe
-  // directly, with nothing tying it to the caller's org — so handing it another
-  // buyer's session id returned that person's email address and whether they
-  // paid. Session ids are not secret: the module's own return_url puts each one
-  // in the buyer's browser history and in anything that logs query strings.
-  // See issues.txt 40.3.
   test("resolves the session through an order in the caller's own org", async () => {
     const rep = reply();
 
@@ -482,11 +459,6 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     expect(order).toEqual(["order", "stripe"]);
   });
 
-  // Only updateOrder used to be inside a try, so a Stripe failure escaped the
-  // handler with the Order row already written — carrying a rateupPlanId and no
-  // session, which is exactly the artefact issues.txt 40.1 fed on, and it could
-  // be produced deliberately by sending a price id that does not exist.
-  // See issues.txt 40.4.
   test("a Stripe failure removes the order and answers rather than escaping", async () => {
     stripeStub.checkout.sessions.create.mockRejectedValueOnce(new Error("No such price"));
     const rep = reply();
@@ -517,11 +489,6 @@ describe("createCheckoutSessionHandler (stripe)", () => {
     expect(arg.subscription_data.metadata).toEqual({ rateupOrderId: "order-1" });
   });
 
-  // CORRECTION to issues.txt 40.4: the entry read "embedded_page" against
-  // Stripe's public docs ("embedded", "hosted", "custom") and hedged both ways.
-  // The installed SDK settles it — Stripe.Checkout.SessionCreateParams.UiMode is
-  // 'elements' | 'embedded_page' | 'form' | 'hosted_page' for this API version —
-  // so the literal is valid and is left as it was.
   test("requests the ui_mode this API version documents", async () => {
     await createCheckoutSessionHandler({ body } as never, reply());
 
@@ -629,12 +596,6 @@ describe("the Stripe webhook", () => {
     expect(done2).toHaveBeenCalledWith(null, { a: 1 });
   });
 
-  // The authenticated Stripe tree used to register a copy of the same parser
-  // keyed on "/api/payment/webhook" — a route that tree does not have — so the
-  // branch was unreachable and every request to the tree took the else path,
-  // hand-parsing the body instead of letting Fastify do it. It also read as
-  // though raw-body preservation were configured for a webhook in this tree.
-  // See issues.txt 40.6.
   test("the authenticated tree registers no content-type parser of its own", async () => {
     const { routes, parsers } = await collectStripeRoutes();
 

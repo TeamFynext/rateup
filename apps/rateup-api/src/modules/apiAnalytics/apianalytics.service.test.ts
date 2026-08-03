@@ -159,12 +159,6 @@ describe("getWaMessageOverview - the numbers it reports", () => {
     expect(result.totalMessagesChange).toBe(0);
   });
 
-  // Fixed as part of the strict-mode migration (was issues.txt 15.5): percentChange
-  // used a `curr!` non-null assertion, so a null current value fell through to
-  // `(null - prev) / prev` — JS coerces `null` to `0`, reporting a period with no
-  // deliveries as a 100% *improvement* instead of "no data". percentChange now
-  // returns null for a null current value, matching avgDeliveryTimeChange's
-  // nullable type.
   test("reports a period with no deliveries as having no change to report", async () => {
     queryRawMock
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: null }])
@@ -176,10 +170,6 @@ describe("getWaMessageOverview - the numbers it reports", () => {
     expect(result.avgDeliveryTimeChange).toBeNull();
   });
 
-  // The average used to be passed through exactly as Postgres returned it, while
-  // getTemplatePerformanceStats rounded the same figure to two decimals — so the
-  // overview card and the per-template table disagreed on how precise a delivery
-  // time is. Both round through one helper now. See issues.txt 15.6.
   test("rounds the average delivery time the same way the template table does", async () => {
     queryRawMock.mockResolvedValue([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: 4.123456789 }]);
 
@@ -216,10 +206,6 @@ describe("getWaMessageOverview - the window it looks at", () => {
     expect(prevStart.toISOString()).toBe("2026-02-28T23:59:59.999Z");
   });
 
-  // A calendar date with no time parses as UTC midnight, so a range the user picked
-  // as "the 1st to the 7th" used to end the instant the 7th began — every message
-  // sent on the last day of their own selection was left out of every panel, and a
-  // single-day selection returned nothing at all. See issues.txt 15.3.
   test("covers the whole of the last day of a date-only range", async () => {
     await getWaMessageOverview(ORG, TEAM, ["2026-03-01", "2026-03-07"], "all");
 
@@ -236,9 +222,6 @@ describe("getWaMessageOverview - the window it looks at", () => {
     expect(end.toISOString()).toBe("2026-03-07T09:30:00.000Z");
   });
 
-  // The querystring schema refuses this with a 400 before it reaches the service;
-  // the fallback is what keeps an Invalid Date from reaching Postgres if anything
-  // ever calls in past the schema. See issues.txt 15.7.
   test("falls back to the default window for a range that does not parse", async () => {
     await getWaMessageOverview(ORG, TEAM, ["not-a-date", "also-not"], "all");
 
@@ -334,12 +317,6 @@ describe("getDeliveredFailedTrend", () => {
     await expect(getDeliveredFailedTrend(ORG, TEAM, "day", null, "all")).resolves.toEqual([]);
   });
 
-  // The one the dashboard showed. This function used to leave an absent range null
-  // for the SQL to coalesce to 1970, while getWaMessageOverview and
-  // getDeliveredFailedWeekTrend both defaulted to the last seven days — so the
-  // trend chart covered all history while the summary card beside it covered a
-  // week, both filled from one request with one query string. Every panel resolves
-  // its window through resolveDateRange now. See issues.txt 15.1.
   test("defaults to the same seven days every other panel does", async () => {
     await getDeliveredFailedTrend(ORG, TEAM, "day", null, "all");
 
@@ -437,12 +414,6 @@ describe("getTemplateCategoryOverview", () => {
     expect(queryAt(0).sql).toContain("'TEMPLATE', 'CAMPAIGN'");
   });
 
-  // The reply used to be built by walking OUR enum and looking each name up in the
-  // query result, so a category Meta returns that the enum does not carry was
-  // dropped — from the breakdown, and from totalTemplates, which was recomputed
-  // from the filtered list rather than taken from the query. A pie chart of those
-  // numbers added to 100% while under-reporting what was actually sent. Meta has
-  // added template categories before. See issues.txt 15.4(a).
   test("keeps a category the enum does not list, and counts it in the total", async () => {
     queryRawMock.mockResolvedValue([
       { category: WaTemplateCategory.MARKETING, count: 30 },
@@ -473,8 +444,6 @@ describe("getTemplateCategoryOverview", () => {
     ]);
   });
 
-  // Same all-of-history default as the trend above, on the same screen as an
-  // overview card that defaulted to a week. See issues.txt 15.1.
   test("defaults to the same seven days every other panel does", async () => {
     await getTemplateCategoryOverview(ORG, "all", null, "all");
 
@@ -546,9 +515,6 @@ describe("getTemplatePerformanceStats", () => {
     expect(queryAt(0).sql).toContain("ORDER BY total_sent DESC");
   });
 
-  // An average delivery time of exactly zero — every message delivered in the same
-  // second it was sent — is falsy, so the old ternary reported it as "no data"
-  // rather than as 0. roundSeconds tests for null instead. See issues.txt 15.6.
   test("reports an average of exactly zero as zero, not as no data", async () => {
     queryRawMock.mockResolvedValue([{ ...ROW, avg_delivery_time_seconds: 0 }]);
 
@@ -557,9 +523,6 @@ describe("getTemplatePerformanceStats", () => {
     expect(stat.avgDeliveryTimeSeconds).toBe(0);
   });
 
-  // TemplatePerformanceStat used to list seven fields while the function returned
-  // nine; templateCategory and lastUsed are both declared now, so the return type
-  // describes what callers actually receive. See issues.txt 15.6.
   test("returns the category and the last-used time its declared type promises", async () => {
     queryRawMock.mockResolvedValue([ROW]);
 
@@ -616,15 +579,6 @@ describe("getTeamPerformanceStats", () => {
     expect(sql).toContain("ORDER BY total_sent DESC");
   });
 
-  // This one changed what the panel showed. The query lists teams with a LEFT JOIN
-  // so a team that sent nothing still appears with a zero, but the api-type filter
-  // was spliced into the WHERE clause, after `WHERE t."orgId" = ...`, rather than
-  // into the JOIN's ON condition — and a WHERE predicate on the right-hand table of
-  // a LEFT JOIN discards exactly the unmatched rows the LEFT JOIN exists to keep,
-  // because motm."externalApi" is NULL for them and `NULL = true` is not true. So
-  // switching the API selector away from "all" made every idle team vanish rather
-  // than show a zero. The variable was already named `apiJoinFilter`.
-  // See issues.txt 15.2.
   test.each(["external", "whatsapp"])(
     "puts the %s filter in the join condition, so idle teams survive it",
     async (apiType) => {
@@ -639,11 +593,6 @@ describe("getTeamPerformanceStats", () => {
     },
   );
 
-  // Unlike getTemplateCategoryOverview and getTemplatePerformanceStats, this query
-  // has no `motm."type" IN ('TEMPLATE', 'CAMPAIGN')` filter — deliberately. It
-  // matches the overview card it sits beside; the template panels filter because
-  // they break their numbers down BY template, so a non-template send has nothing
-  // to appear under. See issues.txt 15.4(b).
   test("counts every mapped message, not just template and campaign sends", async () => {
     await getTeamPerformanceStats(ORG, null, "all");
 

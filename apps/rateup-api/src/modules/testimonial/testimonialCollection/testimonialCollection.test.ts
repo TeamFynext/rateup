@@ -119,10 +119,6 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("addMultipleTestimonialToCollection", () => {
-  // The collection id came from the path and the testimonial ids from the body,
-  // and neither was resolved to a team or an org before the join rows were
-  // written — which, with the public by-id read below, turned any testimonial id
-  // into a page the attacker controls. See issues.txt 31.1.
   test("resolves the collection through its team to the caller's org", async () => {
     await addMultipleTestimonialToCollection(OWN_COLLECTION, [OWN_TESTIMONIAL], ORG);
 
@@ -247,10 +243,6 @@ describe("deleteMultipleTestimonialFromCollection", () => {
     expect(db.testimonialCollectionMap.deleteMany).not.toHaveBeenCalled();
   });
 
-  // Both "multiple" handlers used to interpolate the caught error into the
-  // response body — Prisma's message names the model and the failing field,
-  // which on an endpoint accepting arbitrary ids is an existence oracle. The
-  // other five handlers already sent a fixed string. See issues.txt 31.6.
   test("a database failure answers a fixed 500", async () => {
     db.testimonialCollectionMap.deleteMany.mockRejectedValueOnce(
       new Error("Invalid `prisma.testimonialCollectionMap.deleteMany()` invocation"),
@@ -301,9 +293,6 @@ describe("updateTestimonialCollection", () => {
     });
   });
 
-  // A collection id used to be enough for any authenticated user to rename
-  // another org's published widget, replace its theme or replace its whole
-  // membership — all visible on the victim's own website. See issues.txt 31.2.
   test("refuses a collection that is not the caller's", async () => {
     db.testimonialCollection.findFirst.mockResolvedValueOnce(null);
 
@@ -338,9 +327,6 @@ describe("updateTestimonialCollection", () => {
     expect(db.testimonialCollectionMap.deleteMany).not.toHaveBeenCalled();
   });
 
-  // The clear and the rewrite used to run unwrapped, so a failure between them
-  // left the published widget with no testimonials and nothing recording what it
-  // had held. See issues.txt 31.5.
   test("replaces the membership inside one transaction", async () => {
     await updateTestimonialCollection({ testimonialIds: [OWN_TESTIMONIAL] }, OWN_COLLECTION, ORG);
 
@@ -403,9 +389,6 @@ describe("deleteTestimonialCollection", () => {
     });
   });
 
-  // Deleting cascades TestimonialCollectionMap and leaves the embedded widget
-  // with nothing to serve, so the unscoped version was defacement of a page the
-  // victim's visitors see. See issues.txt 31.2.
   test("a foreign or missing collection answers 404, not 500", async () => {
     db.testimonialCollection.delete.mockRejectedValueOnce(
       Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
@@ -427,9 +410,6 @@ describe("deleteTestimonialCollection", () => {
 // ===========================================================================
 
 describe("createTestimonialCollection", () => {
-  // teamId is a required body field and nothing checked it against the caller's
-  // org, so a collection could be planted inside any team on the platform, where
-  // it would appear in that team's own listing. See issues.txt 31.3.
   test("refuses a team outside the caller's org", async () => {
     db.team.findFirst.mockResolvedValueOnce(null);
 
@@ -477,8 +457,6 @@ describe("createTestimonialCollection", () => {
     ).toBe(true);
   });
 
-  // (name, teamId) is unique on the model, so a repeated name is P2002 — which
-  // used to be reported as a generic server error. See issues.txt 31.7.
   test("a duplicate name in the same team answers 409", async () => {
     db.testimonialCollection.create.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
@@ -510,9 +488,6 @@ describe("getTestimonialCollections", () => {
     });
   });
 
-  // Naming any team in the query string used to take a branch that filtered on
-  // teamId alone, so the module's one scoped read was opt-out.
-  // See issues.txt 31.3.
   test("a teamId in the query stays inside the caller's org", async () => {
     await getTestimonialCollections(
       { query: { teamId: VICTIM_TEAM }, user: { orgId: ORG } } as never,
@@ -554,9 +529,6 @@ describe("getTestimonialCollections", () => {
 // ===========================================================================
 
 describe("getTestimonialCollectionById", () => {
-  // Spreading null yielded {}, a truthy object the handler answered 200 for — so
-  // a deleted collection rendered as an empty wall rather than failing visibly,
-  // and every id probed came back 200. See issues.txt 31.4.
   test("answers 404 for an id that does not exist", async () => {
     const rep = reply();
 

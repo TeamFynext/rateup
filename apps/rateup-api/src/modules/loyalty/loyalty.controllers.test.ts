@@ -191,9 +191,6 @@ describe("the program controller", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // An org with no program used to get an empty ARRAY where every other response
-  // from this endpoint is an object, so every client had to handle two shapes from
-  // one route to tell "no program" from "a program". See issues.txt 20.39.
   test("answers 404 when the org has no program", async () => {
     (getLoyaltyProgramByOrg as Mock).mockResolvedValue(null);
     const rep = reply();
@@ -203,11 +200,6 @@ describe("the program controller", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Loyalty program not found" } });
   });
 
-  // The program id comes from the path and the session org used to never be
-  // consulted at all, so one org could rewrite another's program settings —
-  // including its signup and referral bonuses, which decide what points get
-  // minted. The org is part of the where clause now. Same family as
-  // issues.txt 20.18.
   test("carries the caller's org into the update", async () => {
     (updateLoyaltyProgram as Mock).mockResolvedValue({ id: "prog-other" });
 
@@ -228,9 +220,6 @@ describe("the program controller", () => {
     expect(answer(rep).code).toBe(204);
   });
 
-  // NOTE: `force` is taken from the query string and passed straight into the
-  // guard-skipping delete, so `?force=true` destroys a populated program and
-  // every balance in it over a plain HTTP request. See issues.txt 20.30.
   test("passes a force flag from the query string straight through", async () => {
     await deleteLoyaltyProgramHandler(
       request({ params: { programId: PROGRAM }, query: { force: true } }),
@@ -251,10 +240,6 @@ describe("the program controller", () => {
     expect(answer(rep).code).toBe(500);
   });
 
-  // Resetting every balance in a program used to be a plain path-id call with no
-  // org check and no record of who ran it. The caller's org scopes it and their
-  // user id is stamped on every reversing ledger row it writes.
-  // See issues.txt 20.30.
   test("resets a program's points within the caller's org, recording the actor", async () => {
     const rep = reply();
 
@@ -549,10 +534,6 @@ describe("the dashboard controller", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { programExists: true } });
   });
 
-  // This was the only handler in the module that logged with console.log rather
-  // than the shared logger — so the dashboard's failures never reached the
-  // structured logs at all — and answered with a bare string where every other
-  // endpoint sends `{ error }`. See issues.txt 20.39.
   test("answers a failure with an error object, like every other endpoint", async () => {
     (getLoyaltyDashboardStats as Mock).mockRejectedValue(new Error("boom"));
     const rep = reply();

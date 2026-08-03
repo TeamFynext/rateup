@@ -99,9 +99,6 @@ describe("getFacebookWebhookEvent - what it declines to classify", () => {
     expect(event).toBe(FacebookEvent.MESSAGE_REACTION);
   });
 
-  // STILL OPEN: FacebookEvent.OPT_IN exists in the enum and is never produced by
-  // anything, so an opt-in event is dropped. Left as-is because opt-ins are not
-  // currently subscribed to on the Meta app — see issues.txt 10.5.
   test("never reports an opt-in, even though the enum has one", () => {
     const event = getFacebookWebhookEvent(messaging({ optin: { ref: "promo" } }));
 

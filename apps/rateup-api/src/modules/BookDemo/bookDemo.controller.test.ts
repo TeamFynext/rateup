@@ -195,9 +195,6 @@ describe("bookDemoHandler — the reply", () => {
   });
 });
 
-// A demo request exists only as two emails: nothing writes it to BookDemo, so a dropped
-// queue job loses the lead outright. createBookDemo exists but has no caller. This test
-// pins that gap rather than endorsing it — see issues.txt 16.3.
 describe("bookDemoHandler — persistence", () => {
   test("does not store the request anywhere", async () => {
     await bookDemoHandler(makeRequest(demo), makeReply());

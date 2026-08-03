@@ -191,11 +191,6 @@ describe("verifyAccess", () => {
     });
   });
 
-  // The hook used to exempt TWO routes by comparing the registered URL string.
-  // /generate has assertRootOrg of its own and names no survey to resolve — it
-  // creates them — so it stays exempt. /download-response was exempt beside it
-  // while carrying nothing but checkSession, and its handler takes surveyId
-  // straight from the body. See issues.txt 37.1.
   test("returns without checking anything only for /generate", async () => {
     await verifyAccess(
       req({ routeOptions: { url: "/api/response/generate" }, params: {} }),
@@ -264,9 +259,6 @@ describe("verifyAccess", () => {
 // ===========================================================================
 
 describe("downloadExcelResponseHandler", () => {
-  // The survey id comes from the body. The hook checks it now (see the block
-  // above); the handler itself still reads it verbatim, which is why the hook is
-  // the load-bearing part. See issues.txt 37.1.
   test("exports the survey id the body names, after the hook has checked it", async () => {
     await downloadExcelResponseHandler(
       { body: xlsxBody(), userId: USER, user: { orgId: ORG } } as never,
@@ -276,11 +268,6 @@ describe("downloadExcelResponseHandler", () => {
     expect(svc.getAllResponses.mock.calls[0][0]).toBe(VICTIM_SURVEY);
   });
 
-  // filterTeams is a list of survey-team-map ids taken from the body, and
-  // getTeamIdsBySurveyMapId used to resolve them with no user or org condition —
-  // so another organisation's map ids resolved to that organisation's teams. It
-  // takes the caller's userId now and filters on team membership.
-  // See issues.txt 37.1.
   test("resolves the team filter from map ids, restricted to the caller's teams", async () => {
     (getTeamIdsBySurveyMapId as unknown as Mock).mockResolvedValueOnce(["own-team"]);
 
@@ -310,12 +297,6 @@ describe("downloadExcelResponseHandler", () => {
     expect(svc.getAllResponses.mock.calls[0][1]).toEqual(["own-team"]);
   });
 
-  // An empty team list used to DROP the team condition rather than match nothing,
-  // so a caller belonging to no team — or one whose named map ids resolved to
-  // none of their teams — received every team's responses for the survey. The
-  // handler still passes the empty array; what changed is that getAllResponses
-  // now treats an explicit array as a scope. See issues.txt 37.1 and the
-  // getAllResponses block below.
   test("an empty team list is still passed through, and now scopes", async () => {
     await downloadExcelResponseHandler(
       { body: xlsxBody(), userId: USER, user: { orgId: ORG } } as never,
@@ -348,11 +329,6 @@ describe("downloadExcelResponseHandler", () => {
 // ===========================================================================
 
 describe("deleteResponseHandler", () => {
-  // The route binds :surveyTeamMapId and :id. verifyAccess resolves the survey
-  // from the MAP, the handler deleted by the ID, and the two were never compared
-  // — a textbook confused deputy: authorise one object, operate on another. Both
-  // ids are passed on now, and the service requires them to agree.
-  // See issues.txt 37.2.
   test("passes both path parameters, so the delete must match the checked map", async () => {
     await deleteResponseHandler(
       { params: { surveyTeamMapId: OWN_MAP, id: VICTIM_RESPONSE } } as never,
@@ -435,9 +411,6 @@ describe("createResponseHandler", () => {
     svc.sendResponseToWebhook.mockResolvedValue(undefined);
   });
 
-  // NOTE: the 201 is sent immediately after the row is created and BEFORE the
-  // post-processing block runs. This corrects issues.txt 32.2, which described
-  // the respondent receiving a 500.
   test("answers 201 before any post-processing runs", async () => {
     const order: string[] = [];
     const rep: any = {
@@ -467,10 +440,6 @@ describe("createResponseHandler", () => {
     expect(rep.send.mock.calls[0][0]).toBeUndefined();
   });
 
-  // A rejection inside the Promise.all used to reach the catch, which tried to
-  // send a second reply on a request that had already been answered. With
-  // allSettled the batch cannot reject, so the failure is logged instead.
-  // See issues.txt 32.2.
   test("a post-processing failure does not attempt a second send", async () => {
     (createTestimonial as unknown as Mock).mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
@@ -572,11 +541,6 @@ describe("getAllResponsesHandler", () => {
     expect(svc.getAllResponses).toHaveBeenCalledWith(VICTIM_SURVEY, ["own-team"]);
   });
 
-  // The empty branch sent a 404 and then fell through to the 200 — the `if` had
-  // no return and no else — so an empty result produced a delivered 404, a
-  // refused 200 and a duplicate-send warning, which every survey does on its
-  // first day. A survey that exists with no responses is an empty collection.
-  // See issues.txt 37.5.
   test("an empty result sends a single 200 with the empty list", async () => {
     const rep = reply();
 
@@ -621,11 +585,6 @@ describe("syncResponseToGoogleSheetHandler", () => {
     expect(answer(rep).code).toBe(201);
   });
 
-  // The catch used to read `e.response.data.error` with no guard, so any failure
-  // that was neither a Prisma known-request error nor an axios rejection made the
-  // CATCH throw a TypeError and escape to the global handler. It is guarded with
-  // axios.isAxiosError, and the fallback sends a fixed message rather than the
-  // raw Error object. See issues.txt 37.4.
   test("an ordinary error is answered with a fixed 500", async () => {
     svc.syncResponseToGoogleSheet.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
@@ -699,10 +658,6 @@ describe("responseRoutes", () => {
     }
   });
 
-  // export-contacts turns survey respondents into Contact rows, changing who the
-  // org's campaigns will subsequently message; summarize spends the org's AI
-  // token allowance. Both were registered with no role requirement — export
-  // without an options object at all. See issues.txt 37.6.
   test("role-gates the export and summarize routes too", async () => {
     const { srv, routes } = fakeServer();
 

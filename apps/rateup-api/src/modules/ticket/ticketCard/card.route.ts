@@ -30,8 +30,6 @@ export async function cardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   // Tickets are a free feature — no subscription gate.
 
-  // Create card. The target column comes from the body, so the access check has to
-  // resolve it from there — this route used to have none at all. issues.txt 29.1.
   server.post(
     "/create",
     {
@@ -46,9 +44,6 @@ export async function cardRoutes(server: FastifyInstance) {
     createCardHandler,
   );
 
-  // Get all cards for a column. The path used to bind ":columnId" while the params
-  // schema, the handler and verifyColumnAccess all expect "ticketColumnId", so every
-  // request to it failed validation before reaching any of them. See issues.txt 29.4.
   server.get<{ Params: { ticketColumnId: string } }>(
     "/column/:ticketColumnId",
     {
@@ -108,8 +103,6 @@ export async function cardRoutes(server: FastifyInstance) {
     moveCardHandler,
   );
 
-  // Reorder cards (bulk update of card orders). Targets come from the body.
-  // See issues.txt 29.1.
   server.put(
     "/reorder",
     {

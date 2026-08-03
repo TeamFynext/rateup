@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * The module had no schema file at all — every other module in this codebase
- * declares Zod schemas on its routes, which is why the only validation here had
- * ended up in the handlers as three truthiness checks. See issues.txt 38.4.
- */
 const createReferralSchema = z.object({
   name: z.string().trim().min(1).max(120),
   // Was any non-empty value, written to a column the operator later uses to

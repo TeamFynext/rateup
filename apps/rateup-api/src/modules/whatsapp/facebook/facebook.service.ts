@@ -184,12 +184,6 @@ export async function handleFacebookMessages(
     return;
   }
 
-  // Since the controller now answers non-2xx on failure (see 10.6), Meta retries the
-  // whole batch — including the events that already succeeded. addNewWaMessage does a
-  // plain create() and WaMessage.messageId has no unique index, so without this a retry
-  // would insert the same message again and it would appear twice in the inbox.
-  // Advisory, not airtight: two concurrent deliveries of the same mid could still race
-  // past this. A unique index on messageId is the real fix — recorded in issues.txt.
   if (message?.mid) {
     const existing = await prisma.waMessage.findFirst({
       where: { messageId: message.mid },

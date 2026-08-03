@@ -32,11 +32,6 @@ export async function createContactLabelHandler(
     reply.code(201).send(label);
   } catch (error) {
     log.error(error);
-    // A prisma error with any code OTHER than the one named took the outer branch,
-    // matched no inner condition, and the handler returned having sent nothing —
-    // so fastify's async wrapper answered an empty 200 and the client read a
-    // foreign-key violation as success. Same shape as issues.txt 3.2.
-    // See issues.txt 18.17.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       reply.code(409).send({ error: "Label with this name already exists" });
     } else {
@@ -90,7 +85,6 @@ export async function updateContactLabelHandler(
     reply.code(200).send(label);
   } catch (error) {
     log.error(error);
-    // See issues.txt 18.17.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       reply.code(409).send({ error: "Label with this name already exists" });
     } else if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
@@ -112,7 +106,6 @@ export async function deleteContactLabelHandler(
     reply.code(200).send(label);
   } catch (error) {
     log.error(error);
-    // See issues.txt 18.17.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
       reply.code(404).send({ error: "Label not found" });
     } else {
@@ -174,9 +167,6 @@ export async function assignLabelsToContactsHandler(
   try {
     const { orgId } = request.user;
     const { labelIds, contactIds } = request.body;
-    // Reports what it did. It used to send the function's undefined return, so the
-    // caller got an empty 200 and could not tell which contacts were updated or
-    // whether any id was rejected by the org filter. See issues.txt 18.33.
     const result = await assignLabelsToContacts(contactIds, labelIds, orgId);
     reply.code(200).send(result);
   } catch (error) {

@@ -69,11 +69,6 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("getAllTestimonialBySurveyId", () => {
-  // The filter used to walk surveyResponse -> surveyTeamMap -> surveyId and stop
-  // there, so a survey id — which appears in survey URLs and other API responses
-  // — was enough for any authenticated user of any org to read that survey's
-  // testimonials in full. getAllTestimonialByOrgId, below, already walked one
-  // relation further to team.orgId. See issues.txt 32.1.
   test("joins through the team to the caller's org", async () => {
     await getAllTestimonialBySurveyId(VICTIM_SURVEY, ORG);
 
@@ -93,9 +88,6 @@ describe("getAllTestimonialBySurveyId", () => {
     ).toBe(ORG);
   });
 
-  // There was no select, so every scalar came back — including responseId and
-  // the testimonial id, which is the value issues.txt 31.1 needed to republish
-  // another org's testimonials at a public URL.
   test("projects the fields the caller needs rather than the whole row", async () => {
     db.testimonial.findMany.mockResolvedValueOnce([
       { id: "t-1", createdAt: new Date(2026, 0, 1), testimonial: { name: "Ann" } },
@@ -201,10 +193,6 @@ describe("getAllTestimonialByOrgId", () => {
     });
   });
 
-  // The destructure reached surveyResponse.surveyTeamMap unguarded, so one
-  // orphaned row made the entire org-wide listing 500 with no indication which
-  // row was at fault. SurveyTeamMap cascades from both Survey and Team.
-  // See issues.txt 32.5.
   test("skips a row with no survey mapping rather than throwing", async () => {
     db.testimonial.findMany.mockResolvedValueOnce([
       { id: "t-1", createdAt: new Date(), testimonial: {}, surveyResponse: null },
@@ -269,10 +257,6 @@ describe("createTestimonial", () => {
     });
   });
 
-  // The answer is read as response[type]. Nothing validated that key existed, so
-  // a payload shaped differently wrote a row whose every field was undefined —
-  // a testimonial with no text, which then appeared as an empty card in the
-  // by-org listing and in any published collection. See issues.txt 32.3.
   test("skips an answer shaped differently rather than storing a hollow row", async () => {
     await createTestimonial(
       { responses: [{ questionId: "q-1", type: QuestionType.Testimonial, response: {} }] } as never,
@@ -317,11 +301,6 @@ describe("createTestimonial", () => {
     ).toBe(false);
   });
 
-  // STILL OPEN (issues.txt 32.3): the schema requires a non-empty string but
-  // puts no length bound on the text and no scheme check on the photo, both of
-  // which come verbatim from a public survey respondent. Bounding them would
-  // silently discard a legitimate long testimonial, so the limits are a product
-  // decision rather than a safe default.
   test("puts no bound on the respondent-supplied text or photo", async () => {
     await createTestimonial(
       {
@@ -344,10 +323,6 @@ describe("createTestimonial", () => {
     expect(stored.photo).toBe("javascript:alert(1)");
   });
 
-  // (testimonial, responseId) is unique on the model, so a survey with two
-  // testimonial questions answered identically produced two rows the constraint
-  // forbids — and the rejection, inside the caller's Promise.all, abandoned the
-  // rest of the post-response work. See issues.txt 32.2.
   test("skips duplicates", async () => {
     await createTestimonial({ responses: [testimonialAnswer()] } as never, RESPONSE);
 
@@ -377,8 +352,6 @@ describe("createTestimonial", () => {
 // ===========================================================================
 
 describe("the handlers", () => {
-  // Both reads used to answer 201 Created, which misleads any client or proxy
-  // keying on the status — neither is a create. See issues.txt 32.4.
   test("both GETs answer 200", async () => {
     const a = reply();
     const b = reply();

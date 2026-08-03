@@ -136,11 +136,6 @@ describe("getLoyaltyDashboardStats — the summary", () => {
     expect(res.summary.totalMembersChange).toBeNull();
   });
 
-  // Growth from an empty previous month used to be reported as exactly +100%,
-  // which is also the honest answer for a genuine doubling — the two were
-  // indistinguishable on the card. There is no percentage change from zero, so it
-  // answers null and the client shows the figure without a delta. Same shape as
-  // issues.txt 19.5. See issues.txt 20.42.
   test("reports no percentage at all when there is nothing to compare against", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValueOnce(500).mockResolvedValueOnce(0);
 
@@ -157,11 +152,6 @@ describe("getLoyaltyDashboardStats — the summary", () => {
     expect(res.summary.totalMembersChange).toBe(100);
   });
 
-  // NOTE: pins current behaviour. "Points issued" filters transactionType on the
-  // lower-case "earn" and the monthly SQL filters 'earn'/'redeem' the same way,
-  // but the approvals path writes "REDEEM" and "ADJUST" in upper case
-  // (issues.txt 20.27). Every approved redemption and every manual adjustment is
-  // therefore invisible to this dashboard. See issues.txt 20.42.
   test("counts only lower-case transaction types", async () => {
     await getLoyaltyDashboardStats(ORG);
 
@@ -232,10 +222,6 @@ describe("getLoyaltyDashboardStats — the breakdowns", () => {
     ]);
   });
 
-  // The label used to be the month name alone, with no year, over a six-month
-  // window — so a window crossing a year boundary produced two identical labels
-  // and a chart with two points labelled the same cannot be read.
-  // See issues.txt 20.42.
   test("labels months with their year, so a year boundary is legible", async () => {
     db.$queryRaw.mockResolvedValueOnce([
       { month: new Date(2025, 0, 1), total_members: 5n, active_members: 1n },
@@ -310,11 +296,6 @@ describe("getLoyaltyDashboardStats — recent activity", () => {
     ]);
   });
 
-  // The verb map used to be keyed on the lower-case types only, so a transaction
-  // written by the approvals path showed the raw column value and the feed read
-  // "Ann REDEEM Free coffee". Every writer uses lower case now (issues.txt 20.27),
-  // but rows written before that fix are still in the table, so the lookup folds
-  // case. See issues.txt 20.42.
   test("reads an approval-written transaction the same as any other", async () => {
     db.loyaltyTransaction.findMany.mockResolvedValue([
       txn({ transactionType: "REDEEM" }),

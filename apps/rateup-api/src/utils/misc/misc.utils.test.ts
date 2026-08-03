@@ -91,20 +91,12 @@ describe("generateRewardShortCode", () => {
     expect(generateRewardShortCode(10)).toHaveLength(10);
   });
 
-  // These codes are read aloud and typed in by hand at a till, so I, O, 0 and 1
-  // are excluded. There used to be two implementations of this function — this
-  // one, drawing from a 36-character alphabet that included all four, and a
-  // private copy inside redemption.service.ts drawing from the 32-character one —
-  // so two codes minted by the same feature could not be told apart by their
-  // shape and only one of them was safe to dictate. See issues.txt 20.9.
   test("excludes the characters that are confusable when read aloud", () => {
     const sample = Array.from({ length: 200 }, () => generateRewardShortCode()).join("");
 
     expect(sample).toMatch(/^[A-HJ-NP-Z2-9]+$/);
   });
 
-  // A short code is what a customer presents to collect a reward, so it does not
-  // come from Math.random, which is seeded predictably. See issues.txt 20.9.
   test("does not depend on Math.random", () => {
     const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 

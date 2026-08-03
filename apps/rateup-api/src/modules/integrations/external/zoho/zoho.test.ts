@@ -96,9 +96,6 @@ describe("zohoRoutes", () => {
     return { srv, routes, hooks };
   }
 
-  // zoho attaches checkSession per route. The unsubscribe route used to be the one
-  // operator route without it, so an unauthenticated request could kill any org's
-  // CRM sync by naming its id in the path. See issues.txt 26.7.
   test("guards every operator route with checkSession", async () => {
     const { srv, routes } = server();
 
@@ -141,9 +138,6 @@ describe("disconnectZohoIntegrationHandler", () => {
     biginWebhook: { channelId: "chan-bigin" },
   };
 
-  // The org used to come from the path and nothing else — no session, no secret, no
-  // signature — so anyone could disconnect anyone. It comes from the session now,
-  // and the path parameter is ignored. See issues.txt 26.7.
   test("acts on the caller's own org, not the one the path names", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
     const rep = reply();

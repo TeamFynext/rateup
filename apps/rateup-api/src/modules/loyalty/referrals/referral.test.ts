@@ -134,32 +134,6 @@ beforeEach(() => {
 // trackReferral
 // ===========================================================================
 
-/*
- * trackReferral no longer opens the referee's account itself — createCustomerAccount
- * does, and these tests assert the delegation rather than a second implementation
- * of it.
- *
- * It had drifted into a THIRD account-creation path that disagreed with the other
- * two on nearly every point, and each disagreement was its own defect:
- *
- *   - It paid the referrer TWICE. createCustomerAccount guards the points credit
- *     with `referralBonusType === "points"`; here the gift branch and the points
- *     branch were two independent `if`s, so a program configured for a gift bonus
- *     that also carried a non-zero `referralBonus` paid the gift AND the points,
- *     every time.
- *   - It never set `referredById`, so the referee's own row did not record who
- *     referred them and anything reading the account rather than the
- *     LoyaltyReferral table saw no referrer.
- *   - It never set `currentTierId`, so the referee started untiered — which opened
- *     the tier bypass of issues.txt 20.6.
- *   - It minted its own referral-code format, un-upper-cased, so codes from here
- *     read "Bobb-4RI82" while signup codes read "BOBBY-AB12", against a lookup
- *     that was an exact case-sensitive match.
- *
- * All four followed from it being a second implementation of one operation.
- * See issues.txt 20.40.
- */
-
 describe("trackReferral — preconditions", () => {
   test("refuses a referral code that matches nothing in the program", async () => {
     (findAccountByReferralCode as Mock).mockResolvedValue(null);
@@ -169,8 +143,6 @@ describe("trackReferral — preconditions", () => {
     );
   });
 
-  // The lookup folds case, because it is a code the customer types in by hand and
-  // the two paths used to mint it in two different cases. See issues.txt 20.40.
   test("looks the code up inside the program, ignoring case", async () => {
     await trackReferral(PROGRAM, "ann-ab12", "contact-1");
 
@@ -219,10 +191,6 @@ describe("trackReferral — the account it opens", () => {
     expect(db.customerLoyaltyAccount.create).not.toHaveBeenCalled();
   });
 
-  // The referrer's OWN code is passed on, not the string the caller typed, so the
-  // referee's account records the referrer, receives the referee bonus and lands
-  // in the entry tier — all of which createCustomerAccount does and this path
-  // used to do none of. See issues.txt 20.40.
   test("passes the referrer's canonical code, so the bonuses and tier are applied", async () => {
     await trackReferral(PROGRAM, "ann-ab12", "contact-1");
 
@@ -269,10 +237,6 @@ describe("trackReferral — the account it opens", () => {
     });
   });
 
-  // Every bonus — the referrer's points or gift, the referee's points or gift — is
-  // createCustomerAccount's to pay, and it pays exactly one of each. This path
-  // used to pay them itself, from two independent `if`s, so a gift-configured
-  // program with a non-zero points number paid both. See issues.txt 20.40.
   test("pays no bonus of its own, in any configuration", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(
       program({ referralBonusType: "gift", referralRewardId: "rwd-1", referralBonus: 50 }),
@@ -310,16 +274,6 @@ describe("completeReferral", () => {
     expect(db.loyaltyReferral.update.mock.calls[0][0].data.completedAt).toBeInstanceOf(Date);
   });
 
-  // Completing a referral awards nothing to anyone: the whole bonus is paid up
-  // front at trackReferral time, so the pending -> completed lifecycle has no
-  // financial meaning and anything reading the status as "has this been earned" is
-  // reading it wrong.
-  //
-  // The `purchaseAmount` parameter is GONE. It was accepted on the schema, passed
-  // through the controller, named `_purchaseAmount` in the service and never read
-  // — a signature promising a purchase-triggered reward the code does not
-  // implement. Paying on completion instead is the better design and is a product
-  // decision, recorded as outstanding in issues.txt 20.41.
   test("awards nothing on completion", async () => {
     db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-1", status: "pending" });
 
@@ -329,8 +283,6 @@ describe("completeReferral", () => {
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
-  // It used to be keyed on the referral id alone, with no program or org check.
-  // See issues.txt 20.41.
   test("resolves the referral within the caller's program", async () => {
     db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-other", status: "pending" });
 
@@ -405,8 +357,6 @@ describe("the referral controller", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Invalid referral code" } });
   });
 
-  // Completing used to resolve no program at all, so it completed whichever
-  // referral id it was given. See issues.txt 20.41.
   test("completing a referral resolves the caller's program", async () => {
     db.loyaltyReferral.findFirst.mockResolvedValue({ id: "ref-1", status: "pending" });
     const rep = reply();

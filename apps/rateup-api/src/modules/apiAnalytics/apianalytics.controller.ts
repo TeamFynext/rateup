@@ -10,26 +10,11 @@ import {
 } from "./apianalytics.service.js";
 import { StatsQuerySchema, TrendQuerySchema } from "./apianalytics.schema.js";
 
-/**
- * The two ends of the range, or undefined when the caller named none.
- *
- * Every handler parses it the same way now. Two of them used to pass `[]` and two
- * `undefined` for an absent range; that made no difference on its own, but it was
- * the surface of a real split — the services behind them defaulted an absent range
- * differently. See issues.txt 15.1.
- */
 function parseDateRange(dateRange: string | undefined): [string, string] | undefined {
   const parts = dateRange?.split(",") ?? [];
   return parts.length === 2 ? [parts[0], parts[1]] : undefined;
 }
 
-/**
- * teamId is a filter the caller picks, not a boundary the server enforces, and
- * these routes carry `checkSession` and nothing else. That is deliberate and
- * matches the policy stated in wa_channel_access.ts: team scoping "drives what the
- * dashboard shows, not what the API allows". Every query below still filters on
- * the caller's own orgId, so this is never cross-tenant. See issues.txt 15.7.
- */
 export async function getApiAnalyticsHandler(
   request: FastifyRequest<{
     Querystring: StatsQuerySchema;

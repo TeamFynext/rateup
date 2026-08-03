@@ -35,13 +35,6 @@ export async function fileUploadPublicRoutes(server: FastifyInstance) {
     uploadWithThumbnailsController,
   );
 
-  /**
-   * STILL PUBLIC, and still the module's worst hole: an anonymous caller can hand
-   * this endpoint any array of keys and have them deleted from the shared bucket.
-   * Adding checkSession here is the fix, but it would break any anonymous client
-   * that deletes its own upload, so it is left for an explicit decision — see
-   * issues.txt 24.2. The per-IP limit below bounds the bulk of it in the meantime.
-   */
   server.put<{ Body: fileDeleteInput }>(
     "/file/delete",
     {

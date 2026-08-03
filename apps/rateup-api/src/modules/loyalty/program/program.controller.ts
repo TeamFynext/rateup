@@ -31,10 +31,6 @@ export async function getLoyaltyProgramHandler(request: FastifyRequest, reply: F
   try {
     const result = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!result) {
-      // 404, not an empty ARRAY. An org with no program used to get `[]` from an
-      // endpoint that otherwise answers an object, so every client had to handle
-      // two shapes from one route to tell "no program" from "a program".
-      // See issues.txt 20.39.
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
     reply.code(200).send(result);
@@ -86,8 +82,6 @@ export async function resetProgramPointsHandler(
   reply: FastifyReply,
 ) {
   try {
-    // The actor is recorded on every reversing ledger row the reset writes.
-    // See issues.txt 20.30.
     await resetProgramPoints(request.params.programId, request.user.orgId, request.user.id);
     reply.code(200).send({ message: "Points reset successfully" });
   } catch (e) {

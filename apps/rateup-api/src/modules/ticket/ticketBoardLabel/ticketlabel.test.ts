@@ -233,11 +233,6 @@ describe("createLabel", () => {
     });
   });
 
-  // Uniqueness used to be pre-checked with a findUnique and then written in a
-  // separate statement with no transaction, so two concurrent creates of the same
-  // name both passed the check and the loser tripped the real constraint — whose
-  // uncaught P2002 became a 500, the opposite of the 409 written above it. The
-  // constraint itself is now the check. See issues.txt 28.6.
   test("refuses a name already used on the board, from the constraint itself", async () => {
     db.ticketBoardLabel.create.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
@@ -296,8 +291,6 @@ describe("the label readers and writers", () => {
     });
   });
 
-  // Renames had the same racing pre-check as create, and the constraint decides now.
-  // See issues.txt 28.6.
   test("a rename onto another label's name is refused as a 409", async () => {
     db.ticketBoardLabel.update.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
@@ -312,8 +305,6 @@ describe("the label readers and writers", () => {
     await expect(updateLabel(LABEL, { name: "Bug" })).resolves.toBeDefined();
   });
 
-  // A label that did not exist used to skip the check silently and then fail at the
-  // update with a raw P2025 rather than a 404. See issues.txt 28.6.
   test("a missing label answers 404", async () => {
     db.ticketBoardLabel.update.mockRejectedValueOnce(
       Object.assign(new Error("Record to update not found"), { code: "P2025" }),

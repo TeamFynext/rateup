@@ -20,9 +20,6 @@ export async function createCommentHandler(
     if (e instanceof TicketCommentAccessError) {
       return reply.code(403).send({ status: "failed", message: e.message });
     }
-    // A fixed message: the raw one was Prisma's, which named the model, the column
-    // and the constraint — and told a caller whether a card id exists.
-    // See issues.txt 30.3.
     log.error({ err: e }, "Error creating ticket comment");
     reply.code(500).send({ status: "failed", message: "Something went wrong" });
   }
@@ -39,9 +36,6 @@ export async function deleteCommentHandler(
     await deleteComment(id, userId);
     reply.code(204).send();
   } catch (e) {
-    // deleteComment is scoped to the author (`where: { id, createdById }`), so a
-    // miss is P2025 — somebody else's comment, or none. 404 either way.
-    // See issues.txt 30.3.
     if (e && typeof e === "object" && (e as { code?: string }).code === "P2025") {
       return reply.code(404).send({ status: "failed", message: "Comment not found" });
     }

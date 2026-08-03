@@ -86,8 +86,6 @@ describe("getTokensByOrgId", () => {
     });
   });
 
-  // The org-wide read stays — it is what the server-side senders need. What
-  // changed is that the route no longer uses it. See issues.txt 42.1.
   test("is still the org-wide read the senders use", async () => {
     await getTokensByOrgId(ORG);
 
@@ -115,11 +113,6 @@ describe("getTokensByOrgId", () => {
     expect(db.expoPushToken.findMany).not.toHaveBeenCalled();
   });
 
-  // GET /api/mobilenotification used to hand the raw token strings for every
-  // device in the organisation to any member with a session. An Expo push token
-  // is a send credential and a durable device identifier, and no client needs
-  // another device's — both real senders (notification.service.ts:162 and
-  // wasurvey.controller.ts:554) read them server-side. See issues.txt 42.1.
   test("the handler returns only the caller's own tokens", async () => {
     db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: TOKEN }]);
 
@@ -174,11 +167,6 @@ describe("addToken", () => {
     });
   });
 
-  // STILL OPEN (issues.txt 42.3): ExpoPushToken declares two indexes and no
-  // unique constraint (prisma/schema.prisma:2432-2444), so the read-then-create
-  // has nothing behind it — two concurrent registrations both find nothing and
-  // both write. Closing it needs @@unique([expoToken, userId, orgId]), which
-  // needs existing duplicates collapsed first.
   test("nothing prevents a second row for the same device", async () => {
     db.expoPushToken.findFirst.mockResolvedValue(null);
 
@@ -194,9 +182,6 @@ describe("addToken", () => {
     await expect(addToken(TOKEN, USER, "")).rejects.toThrow();
   });
 
-  // This was the one handler in the file with no try/catch, so a failed connect
-  // escaped to the global error handler and the client got a different error
-  // shape from this route than from its two neighbours. See issues.txt 42.5.
   test("a write failure answers a 500 in the module's own shape", async () => {
     db.expoPushToken.create.mockRejectedValueOnce(new Error("Foreign key constraint failed"));
     const rep = reply();
@@ -316,10 +301,6 @@ describe("sendPushNotification", () => {
     expect((axios.post as unknown as Mock).mock.calls[0][1]).toHaveLength(1);
   });
 
-  // The send path used to accept any string beginning with the prefix while the
-  // route schema required the full ExponentPushToken[...] form, so a value
-  // stored by a path that skipped the schema was handed to Expo and rejected in
-  // a response body nothing read. One predicate now. See issues.txt 42.4.
   test("the send filter agrees with the schema that guards the route", async () => {
     await sendPushNotification(["ExponentPushTokenWITHOUT-BRACKETS"], "t", "b");
 
@@ -337,9 +318,6 @@ describe("sendPushNotification", () => {
     expect(isExpoPushToken(TOKEN)).toBe(true);
   });
 
-  // Every failure used to be caught and logged, so no caller could tell a
-  // delivered batch from a rejected one. The only caller is a BullMQ processor,
-  // which is where a retry belongs. See issues.txt 42.2.
   test("a transport failure propagates", async () => {
     (axios.post as unknown as Mock).mockRejectedValueOnce(new Error("ECONNRESET"));
 

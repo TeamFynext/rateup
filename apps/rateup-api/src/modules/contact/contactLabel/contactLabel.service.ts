@@ -76,17 +76,6 @@ export async function deleteContactLabel(labelId: string, orgId: string) {
   return label;
 }
 
-/**
- * Replaces a contact's labels with the ones named.
- *
- * The delete used to be unconditional and ran BEFORE anything checked whose
- * contact it was — the org was used, carefully, to filter which LABELS could be
- * written, but the CONTACT was never checked at all. So `PUT /labels/assign/:id`
- * accepted a contact id from any org and stripped every label off it, and the
- * caller got a 404 for their trouble because the read-back at the end could not
- * find it either. Destructive, silent, and not undoable — labels drive inbox
- * filtering and segment selection. See issues.txt 18.32.
- */
 export async function assignLabelsToContact(contactId: string, labelIds: string[], orgId: string) {
   const owned = await prisma.contact.findFirst({
     where: { id: contactId, orgId },
@@ -170,16 +159,6 @@ export async function getContactsWithLabels(orgId: string, labelIds?: string[]) 
   return contacts;
 }
 
-/**
- * The bulk form of assignLabelsToContact, and the sharper half of issues.txt
- * 18.32: it takes an ARRAY of contact ids, so one request could clear the labels
- * of an arbitrary list of contacts across any number of orgs. The ids are resolved
- * against the caller's org first now, and anything else is simply not touched.
- *
- * It also returned nothing, so the endpoint answered 200 with an empty body and
- * the caller could not tell which contacts were updated or whether any label was
- * rejected by the org filter. See issues.txt 18.33.
- */
 export async function assignLabelsToContacts(
   contactIds: string[],
   labelIds: string[],

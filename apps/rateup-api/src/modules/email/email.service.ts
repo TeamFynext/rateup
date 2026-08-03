@@ -4,18 +4,6 @@ import { SendEmailInput } from "./email.schema.js";
 import { getEmailBodyTemplate } from "./email.util.js";
 import crypto from "node:crypto";
 
-/**
- * Renders and sends one message.
- *
- * `data` is passed separately rather than read off the request body: the OTP
- * handler used to mutate `request.body.data` to inject the code, which threw when a
- * caller sent `data: null` — after the code had already been stored.
- * See issues.txt 25.10.
- *
- * sendAWSEmail swallowed its transport error and resolved with nothing, so the
- * handlers answered 200 whether or not anything was delivered; it reports now, and
- * a failed send is an error here rather than a silent success. See issues.txt 25.7.
- */
 export async function sendEmailService(
   emailParams: SendEmailInput,
   data: EmailTemplateData | undefined = emailParams?.data,
@@ -65,11 +53,6 @@ export async function validateOtp(otp: string, userId: string, surveyId?: string
 
   if (storedOtp) {
     if (parseInt(storedOtp.expiryDate) > Date.now()) {
-      // Consumed on success. A code that had done its job used to keep working for
-      // the rest of its ten minutes, for as many checks as anyone cared to make —
-      // so one that leaked (a forwarded mail, a lock-screen preview) stayed usable
-      // instead of being spent on first use. It also meant rows accumulated after a
-      // successful check with nothing to sweep them. See issues.txt 25.5.
       await prisma.otpStore.delete({ where: { userId, surveyId, otp: hashedOtp } });
       return true;
     } else {

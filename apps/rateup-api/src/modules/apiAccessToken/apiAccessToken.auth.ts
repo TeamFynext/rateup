@@ -20,16 +20,6 @@ export const verifyApiAccessTokenHook = async (request: FastifyRequest, reply: F
     const params = mayCarryOrgId(request.params) ? request.params : {};
     const query = mayCarryOrgId(request.query) ? request.query : {};
     const orgId = params.orgId ? params.orgId : query.orgId;
-    // Every refusal below used to log `request.headers`, which carries
-    // `authorization: "Bearer <the key>"` — so a key that failed verification
-    // was recorded verbatim at error level, along with every other header
-    // including the cookies of a request that also carried a session. "Failed
-    // verification" includes a key that was just rotated and one typed against
-    // the wrong org, both of which will work again shortly. The log is a
-    // lower-trust store than the database: shipped to an aggregator, retained
-    // on a different schedule, readable by people never granted the credential.
-    // The org id and the reason are enough to diagnose any of these.
-    // See issues.txt 46.5.
     if (!orgId) {
       log.warn({ url: request.url }, "No orgId found in request");
       reply.code(404).send({ message: "Not found" });
@@ -51,12 +41,6 @@ export const verifyApiAccessTokenHook = async (request: FastifyRequest, reply: F
         message: "Not found",
         error: `Org with orgId='${orgId}' not found`,
       });
-      // The branch above returns; this one did not, so a request that had
-      // already been refused fell through to the bearer-token check, the key
-      // comparison and the assignment of request.user — producing a second
-      // reply for one request (FST_ERR_REP_ALREADY_SENT), and, when the key
-      // happened to be valid, an authenticated request against an org that
-      // could not be loaded. See issues.txt 46.4.
       return;
     }
 
@@ -87,14 +71,6 @@ export const verifyApiAccessTokenHook = async (request: FastifyRequest, reply: F
       return;
     }
 
-    // since most of the *.service.ts functions fetches user from request object
-    //
-    // STILL OPEN (issues.txt 46.2, 46.8): the role is a constant, so every key
-    // authenticates as an owner whatever its minter's membership says, and the
-    // identity carries no userId — a service reading request.user.userId gets
-    // undefined, which Prisma drops from a `where` rather than rejecting.
-    // Closing either needs the minting member recorded on the ApiAccessToken
-    // row, which is a schema change. Minting is at least owner-only now.
     request.user = { orgId, role: Role.SUPER_ADMIN };
   } catch (err) {
     log.error({ err }, "Error checking session");

@@ -117,10 +117,6 @@ describe("createComment", () => {
     });
   });
 
-  // The route is POST /:id/comment, but nothing reads request.params.id — the
-  // target card is request.body.ticketCardId, so the path parameter is inert and an
-  // access check on the route could not have covered it. The check resolves the
-  // board from the BODY's card id. See issues.txt 30.1.
   test("resolves the board from the body's card id, not the path's", async () => {
     const rep = reply();
 
@@ -137,10 +133,6 @@ describe("createComment", () => {
     expect(answer(rep).code).toBe(201);
   });
 
-  // The route's access check used to be a comment, and there was nothing else — no
-  // board lookup, no membership test — so any authenticated user could plant a
-  // comment on any card on the platform, rendered over their real name and email.
-  // See issues.txt 30.1.
   test("refuses a card on a board the caller is not a member of", async () => {
     (isBoardMember as unknown as Mock).mockResolvedValueOnce(false);
 
@@ -180,8 +172,6 @@ describe("createComment", () => {
     expect(db.ticketComment.create.mock.calls[0][0].data.createdById).toBe(USER);
   });
 
-  // msg was a bare z.string(), so a comment could be empty or arbitrarily large —
-  // a way to fill another org's board with text. See issues.txt 30.1.
   test("the body schema bounds the message", () => {
     expect(createCommentRequestSchema.safeParse({ ticketCardId: OWN_CARD, msg: "" }).success).toBe(
       false,
@@ -201,9 +191,6 @@ describe("createComment", () => {
     ).toBe(true);
   });
 
-  // The raw driver message used to go back to the caller, naming the model, the
-  // column and the constraint — and telling them whether a card id exists.
-  // See issues.txt 30.3.
   test("a database failure answers 500 with a fixed message", async () => {
     db.ticketComment.create.mockRejectedValueOnce(
       new Error("Foreign key constraint failed on the field: `ticketCardId`"),
@@ -249,10 +236,6 @@ describe("deleteComment", () => {
     expect(answer(rep)).toEqual({ code: 204, body: undefined });
   });
 
-  // createdById is not part of any unique constraint, so it rides along as a filter
-  // and a miss raises P2025 — which used to become a 500 carrying Prisma's own
-  // message. 404 covers both "not yours" and "does not exist", which is the right
-  // answer for either. See issues.txt 30.3.
   test("someone else's comment answers 404, with no driver message", async () => {
     db.ticketComment.delete.mockRejectedValueOnce(
       Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
@@ -308,10 +291,6 @@ describe("the WhatsApp ticket notifications", () => {
     expect(sendTextMessage).not.toHaveBeenCalled();
   });
 
-  // lastReceivedMessageTimeStamp records when the org last received a message FROM
-  // that number — the dashboard counts it as the active 24-hour window. The guard
-  // used to abort while that window was OPEN and proceed once it had CLOSED, which
-  // is the inverse of the WhatsApp free-form rule. See issues.txt 30.2.
   test("sends inside the twenty-four hour window", async () => {
     (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
       contact({ lastReceivedMessageTimeStamp: new Date(NOW - 2 * 60 * 60 * 1000) }),
@@ -385,9 +364,6 @@ describe("the WhatsApp ticket notifications", () => {
     }
   });
 
-  // The WhatsApp body used to carry a hardcoded rateup.app URL while the email built
-  // its link from FRONTEND_URL, so outside production the two pointed at different
-  // environments. See issues.txt 30.5.
   test("both links come from FRONTEND_URL", async () => {
     (getContactByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValueOnce(
       contact({ lastReceivedMessageTimeStamp: new Date(NOW - 60 * 60 * 1000) }),
@@ -426,8 +402,6 @@ describe("the email ticket notifications", () => {
     );
   });
 
-  // The plain-text part of the created-ticket mail used to say the ticket had been
-  // assigned to the recipient, which is not what happened. See issues.txt 30.6.
   test("the created-ticket text part says the ticket was created", async () => {
     await sendTicketCreateEmail({ ...notify, email: "staff@example.test" });
 
@@ -436,8 +410,6 @@ describe("the email ticket notifications", () => {
     expect(text).toContain("has been created");
   });
 
-  // A queue failure used to be rethrown with the error concatenated onto a string,
-  // discarding the original stack — the same shape as issues.txt 22.4.
   test("a queue failure keeps the original error as its cause", async () => {
     const cause = new Error("redis down");
     (notificationQueue.add as unknown as Mock).mockRejectedValueOnce(cause);
@@ -473,12 +445,6 @@ describe("ticket.schema", () => {
     expect(schemas).toEqual([createCommentRequestSchema]);
   });
 
-  // Six schemas describing a ticket with a status, a teamId, an assignedToId and a
-  // deadline used to live in this file with no importer anywhere in src — the
-  // feature the module was originally going to be, rather than the kanban cards it
-  // stores. One declared `role` as a REQUEST BODY field, i.e. the caller stating
-  // their own role; the comment left in ticket.schema.ts records it so it is not
-  // restored as written. See issues.txt 30.4.
   test("the file exports only the two schemas that are wired up", async () => {
     const schema = await import("./ticket.schema.js");
 

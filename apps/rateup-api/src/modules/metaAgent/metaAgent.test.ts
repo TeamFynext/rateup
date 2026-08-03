@@ -213,11 +213,6 @@ describe("the org scoping", () => {
 // ===========================================================================
 
 describe("the agent record read", () => {
-  // The GET route used to be handled by getOrCreateAgentRecord, so merely
-  // opening the agent page for a channel that had never been onboarded inserted
-  // a row — and, with no unique constraint and no transaction behind the
-  // read-then-create, two concurrent page loads both inserted.
-  // See issues.txt 43.3.
   test("the read endpoint no longer creates a row", async () => {
     db.metaBusinessAgent.findFirst.mockResolvedValueOnce(null);
     const rep = reply();
@@ -284,10 +279,6 @@ describe("callMetaAgentApi", () => {
     expect(config.headers["X-API-Version"]).toBe("2.0.0");
   });
 
-  // NOTE: validateStatus is disabled so every response resolves, and the
-  // status is then checked explicitly and a non-2xx thrown. That is the
-  // opposite of issues.txt 26.12, where the same disabled validation is never
-  // followed by a check.
   test("accepts every status and then checks it itself", async () => {
     const config = () => (axios as unknown as Mock).mock.calls[0][0];
 
@@ -364,10 +355,6 @@ describe("metaAgentWebhookEventHandler", () => {
     } as never;
   }
 
-  // Nothing used to read a signature header or consult a secret, so the
-  // endpoint was an unauthenticated write into the application log: anyone
-  // could POST arbitrary JSON and have it recorded verbatim at info level, as
-  // often as they liked. See issues.txt 43.1.
   test("refuses a payload with no signature of any kind", async () => {
     const rep = reply();
 
@@ -416,11 +403,6 @@ describe("metaAgentWebhookEventHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: "EVENT_RECEIVED" });
   });
 
-  // STILL OPEN (issues.txt 43.1): the file's own comment describes this as the
-  // entry point for thread-control and agent-event notifications, and a
-  // verified event is still only logged. A thread-control hand-back is the
-  // signal that this app should resume answering the customer, and nothing
-  // observes it.
   test("does nothing with the event beyond logging it", async () => {
     await metaAgentWebhookEventHandler(signed(body), reply());
 
@@ -500,10 +482,6 @@ describe("metaAgentWebhookEventHandler", () => {
 // ===========================================================================
 
 describe("the error handler", () => {
-  // Meta's status used to become this API's own, so a 429 from Meta read as a
-  // RateUp rate limit and a client's retry logic reacted to the wrong service.
-  // The text is still relayed — an operator wants to read what Meta objected to
-  // — and Meta's own status is named separately. See issues.txt 43.5.
   async function failWith(status: number, detail = "Agent not onboarded") {
     db.metaAgentFaq.findMany.mockRejectedValueOnce(
       new MetaAgentApiError({ status, data: { detail } } as never),
@@ -573,10 +551,6 @@ describe("the error handler", () => {
 // ===========================================================================
 
 describe("the connector schema", () => {
-  // base_url is the address Meta calls on the business's behalf, and it was a
-  // bare z.string() — so an unparseable value was accepted here and rejected by
-  // Meta later, surfacing as a Meta API error at connector-creation time rather
-  // than as a 400 naming the field. See issues.txt 43.4.
   const connector = (base_url: string) => ({
     name: "n",
     description: "d",
@@ -649,9 +623,6 @@ describe("metaAgentRoutes", () => {
     }
   });
 
-  // The tree carried checkSession and nothing else, so the lowest-privileged
-  // member could register the credentials the agent uses to call the business's
-  // own back-end systems. See issues.txt 43.2.
   test("the credential routes require an admin", async () => {
     const { routes } = await collect();
 
@@ -693,8 +664,6 @@ describe("metaAgentRoutes", () => {
     }
   });
 
-  // STILL OPEN (issues.txt 43.2): the knowledge, skills and settings writes
-  // that shape what the agent tells customers are still ungated.
   test("no subscription or feature gate anywhere", async () => {
     const { routes } = await collect();
 

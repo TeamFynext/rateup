@@ -94,10 +94,6 @@ describe("the resource switch", () => {
     OR: [{ orgId: ORG }, { teams: { some: { team: { orgId: ORG } } } }],
   };
 
-  // The survey queries carried no org condition, and the whole tenancy of that
-  // path was the hook's `resourceName === "survey"` string comparison — a
-  // coincidence of two files agreeing rather than a check. The generateQr branch
-  // beside it already scoped itself. See issues.txt 35.1.
   test("the survey read is scoped to the caller's org", async () => {
     await getShareSettings("survey", SURVEY, req());
 
@@ -174,10 +170,6 @@ describe("preHandlerHook", () => {
     expect(verifySurveyAccess).not.toHaveBeenCalled();
   });
 
-  // checkSession answers 401 by calling reply.send and returning rather than
-  // throwing, and the hook used to carry on to verifySurveyAccess regardless —
-  // producing a duplicate-send warning on every rejected request.
-  // See issues.txt 35.5.
   test("stops once the session check has answered", async () => {
     (checkSession as unknown as Mock).mockImplementationOnce(async (_r: any, rep: any) => {
       rep.code(401);
@@ -288,11 +280,6 @@ describe("updateSettings", () => {
     expect(deleteFile).toHaveBeenCalledOnce();
   });
 
-  // uploadFileToS3 used to yield null when the upload returned no key, and the
-  // controller wrote it through a template literal — storing the four-character
-  // string "null", a truthy value the read turned into `https://cdn/null` and the
-  // NEXT update handed to S3 as a key to delete. Nothing distinguished it from a
-  // real key, so the state was sticky. See issues.txt 35.2.
   test("a failed upload fails the save rather than storing the string null", async () => {
     (uploadFile as unknown as Mock).mockResolvedValueOnce(undefined);
 
@@ -310,10 +297,6 @@ describe("updateSettings", () => {
     );
   });
 
-  // The delete calls used to float, so a rejection inside deleteFileFromS3 would
-  // surface as an unhandled rejection rather than a failed request. They are
-  // awaited now, and the helper still swallows the failure so cleanup cannot
-  // fail the save. See issues.txt 35.4.
   test("a delete failure does not disturb the save", async () => {
     db.survey.findFirst.mockResolvedValueOnce({
       shareSettings: settings({ logoFile: "old-key.png" }),
@@ -382,11 +365,6 @@ describe("onFile", () => {
       ...over,
     }) as any;
 
-  // The content type came from the part's own header and the extension from the
-  // last dot-segment of a caller-supplied filename — neither checked against an
-  // allowlist, both written onto an object served from CloudFront, so text/html
-  // with a .html extension was accepted as readily as image/png. And a filename
-  // with no dot became its own extension. See issues.txt 35.3.
   test("derives the extension from the allowlisted type, not the filename", async () => {
     const p = part();
 
@@ -454,9 +432,6 @@ describe("bodySchema", () => {
     expect((parsed as any).data.logoSize).toBe(40);
   });
 
-  // z.coerce.boolean() makes every non-empty string true, and multipart sends
-  // booleans as strings — so a form posting `isLogoEnabled=false` stored true
-  // and turning the logo off did not turn it off. See issues.txt 35.6.
   test("reads the literal strings multipart sends", () => {
     expect(
       (bodySchema.safeParse(settings({ isLogoEnabled: "false" })) as any).data.isLogoEnabled,
@@ -526,8 +501,6 @@ describe("shareSettingsRoutes", () => {
     expect(registered[0].opts).toMatchObject({ attachFieldsToBody: "keyValues", onFile });
   });
 
-  // No limits were passed to the multipart plugin — no fileSize, no files, no
-  // fieldSize. See issues.txt 35.3.
   test("bounds the multipart request", async () => {
     const { srv, registered } = fakeServer();
 

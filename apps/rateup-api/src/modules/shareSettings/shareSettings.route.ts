@@ -6,10 +6,6 @@ import { bodySchema, paramsSchema, responseSchema } from "./shareSettings.schema
 import { FastifyInstance } from "fastify";
 
 async function routes(fastify: FastifyInstance) {
-  // The plugin was registered with no `limits`, so no fileSize, files or
-  // fieldSize bound applied and the part was fully buffered in memory before
-  // anything looked at it — a large upload was an allocation of that size per
-  // request. See issues.txt 35.3.
   fastify.register(multipart, {
     attachFieldsToBody: "keyValues",
     onFile,

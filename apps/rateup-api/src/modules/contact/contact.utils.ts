@@ -9,22 +9,6 @@ import { parsePhoneforWa } from "../loyalty/util.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
 import { sendTemplateToUserCore } from "../whatsapp/messageTemplates/wa_templates.controller.js";
 
-/**
- * The loyalty registration cap, on POST /api/contact.
- *
- * Its entire body was commented out behind a "TODO: re-check", so it was an empty
- * async function registered as a preHandler — a gate that looked like a plan limit
- * and enforced nothing, while the working implementation sat directly beneath it
- * with no callers. See issues.txt 18.21.
- *
- * Wired up rather than deleted, unlike the four dead MESSAGE-limit gates
- * (issues.txt 14.1a, 17.1, 17.10). This is a different meter — the plan's maximum
- * number of loyalty customers — and it was not superseded by anything. Enabling it
- * changes nothing today, because no plan in subscription.data.ts states a
- * `whatsapp.count.max`, so verifyLCustomerMaxCountRestriction reports "no limit"
- * for every real subscription; a plan that DOES name one is enforced the moment it
- * exists.
- */
 export async function verifyLCustomerMaxCountRestrictionHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -58,10 +42,6 @@ export async function verifyLCustomerMaxCountRestriction(
     },
   });
 
-  // An org with no usage row yet has simply never had one written; the counter is
-  // refreshed below either way. This used to throw a TypeError — which was fine
-  // while nothing called the function (18.21) and would have been a 500 on every
-  // registration the moment it was wired up. See issues.txt 18.22.
   const usageStats = await prisma.usageStats.findUnique({
     where: {
       orgId,
@@ -81,12 +61,6 @@ export async function verifyLCustomerMaxCountRestriction(
       },
     });
 
-  // A plan that names no maximum means NO LIMIT — the same reading as
-  // enforceWhatsappCountLimit, which is the shared version of the same gate for
-  // flows, templates, campaigns and automated replies (issues.txt 11.7, 14.7,
-  // 17.2). A plan with no whatsapp feature at all means the same thing; reading
-  // `.count.max` off that undefined used to be a TypeError.
-  // See issues.txt 18.22.
   const whatsappFeature = getNestedProperty<{ count?: { max?: number } }>(
     subscription.features as unknown as object,
     SubscriptionFeaturePathName.Whatsapp,
@@ -124,13 +98,6 @@ export async function createLCustomer(input: CreateLCustomerInput) {
         orgId: input.orgId,
       },
     },
-    // Only the fields the payload actually carries. name, email and external_id
-    // used to be assigned unconditionally, so an existing contact who registered
-    // again through a form that omits email had their stored email overwritten
-    // with undefined — and the registration form is the least trustworthy source
-    // of contact data in the system. dob keeps its `?? null` because clearing a
-    // date of birth is a thing a re-registration legitimately does.
-    // See issues.txt 18.23.
     update: {
       source: ContactGroupType.LOYALTY,
       ...(input.name !== undefined ? { name: input.name } : {}),
@@ -192,17 +159,6 @@ export async function createLCustomer(input: CreateLCustomerInput) {
   };
 }
 
-/**
- * Post-registration actions — award points, send a follow-up — are NOT implemented.
- *
- * This was a fully commented-out body, so a loyalty program configured with
- * register actions ran none of them and reported success. Left as an explicit
- * no-op with this note rather than as commented code, because the commented
- * version referenced a `handleLCustomerAction` and a `registerActions` that do not
- * exist in the codebase — it was never a working implementation waiting to be
- * switched on, and pretending otherwise hides a missing feature.
- * See issues.txt 18.21.
- */
 export async function handlePostRegisterAction(_orgId: string, _customerId: string) {
   return;
 }
@@ -225,9 +181,6 @@ export async function handleSendTemplate(
       text: data,
     })),
   });
-  // The dead per-message limit check that stood here is gone; sendMessage, which
-  // sendTemplateToUserCore reaches, enforces the live conversation limit.
-  // See issues.txt 14.1(a).
   await sendTemplateToUserCore(
     orgId,
     waTemplateId,

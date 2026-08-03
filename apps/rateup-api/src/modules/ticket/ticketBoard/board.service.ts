@@ -1,16 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import { CreateBoardRequestSchema, UpdateBoardRequestSchema } from "./board.schema.js";
 
-/**
- * The subset of `teamIds` the user actually belongs to.
- *
- * Neither create nor update used to look the ids up at all — the create route's
- * `verifyTeamAccess` preHandler was commented out — so a caller could attach any
- * team on the platform to a board: outward, planting a board in a victim team's
- * listing; inward, attaching their own team to a board and reading its cards,
- * comments and the linked contacts' names and phone numbers. TicketBoard has no
- * orgId, so nothing downstream could notice. See issues.txt 28.2.
- */
 export async function filterTeamsUserBelongsTo(teamIds: string[], userId: string) {
   if (!teamIds.length) return [];
   const memberships = await prisma.teamMember.findMany({
@@ -20,7 +10,6 @@ export async function filterTeamsUserBelongsTo(teamIds: string[], userId: string
   return memberships.map((m) => m.teamId);
 }
 
-/** Raised when a write names teams the caller does not belong to. issues.txt 28.2. */
 export class TeamAccessError extends Error {
   constructor(public readonly teamIds: string[]) {
     super("You can only attach teams you belong to");
@@ -36,10 +25,6 @@ async function assertTeamsAreTheCallers(teamIds: string[], userId: string) {
 
 export async function createBoard(data: CreateBoardRequestSchema & { userId: string }) {
   await assertTeamsAreTheCallers(data.teamIds, data.userId);
-  // The board and its first column are one write: the column used to be a second,
-  // separate await in the handler, so a failure there left a committed board with
-  // no columns while the caller was told the creation had failed — a state no other
-  // path produces, and one that each retry adds to. See issues.txt 28.4.
   return prisma.ticketBoard.create({
     data: {
       title: data.title,
@@ -168,15 +153,9 @@ export async function getBoardById(id: string) {
 
 export async function updateBoard(id: string, data: UpdateBoardRequestSchema, userId: string) {
   if (data.teamIds !== undefined) {
-    // An empty list detached every team, leaving a board nothing can list — team
-    // membership is the only way to reach a board, so that is unrecoverable from
-    // the application. See issues.txt 28.3.
     if (!data.teamIds.length) {
       throw new TeamAccessError([]);
     }
-    // Same check as create: verifyBoardAccess only asks whether the caller is on the
-    // board, not whether they belong to the teams they are attaching to it.
-    // See issues.txt 28.2.
     await assertTeamsAreTheCallers(data.teamIds, userId);
   }
   return prisma.ticketBoard.update({

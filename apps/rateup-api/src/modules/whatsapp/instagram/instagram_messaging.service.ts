@@ -9,13 +9,6 @@ import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 
-/**
- * The messenger_profile endpoint is `/me/messenger_profile` — it resolves to
- * whichever account the token belongs to, so there is no id to pass. This took
- * an `ibaId` first parameter that it never used, which read as though the call
- * were scoped by id when it is scoped by which token you hold. Dropped.
- * See issues.txt 12.18.
- */
 async function callInstagramMessengerProfileApi(
   pageAccessToken: string,
   method: "GET" | "POST" | "DELETE",
@@ -131,9 +124,6 @@ export async function sendInstagramTextMessage(
 export async function sendInstagramImage(
   igsId: string,
   imageUrl: string,
-  // orgId and ibaId are REQUIRED, as they are on every sibling. They used to be
-  // optional and the limit check was conditional on `if (orgId)`, so a caller
-  // that simply omitted the org skipped the gate. See issues.txt 12.10.
   orgId: string,
   ibaId: string,
   caption?: string,
@@ -173,13 +163,6 @@ export async function sendInstagramImage(
       return { image: response.data };
     }
 
-    // The caption goes as its own message: Instagram's send API takes either
-    // `text` or `attachment` on a message, not both, so there is no captioned
-    // image to attach it to. What DID need fixing is the reporting — the caption
-    // send used to sit inside the outer try, so a caption failure was reported as
-    // "Error sending image" and rethrown, telling the caller a half-succeeded
-    // send failed outright. A retry then sent the image twice.
-    // See issues.txt 12.11.
     try {
       await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
       return { image: response.data, caption: { sent: true } };
@@ -449,19 +432,12 @@ export async function setInstagramIceBreakers(
 
     const response = await callInstagramMessengerProfileApi(pageAccessToken, "POST", payload);
 
-    // waSettings above is the same row; it used to be looked up a second time
-    // here for no reason. See issues.txt 12.19.
     await updateWaSettingsById(waSettings.id, waSettings.orgId, {
       instagramIceBreakers: iceBreakers,
     });
 
     log.info(`[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`);
 
-    // `response`, not `response.data`: callInstagramMessengerProfileApi already
-    // returns response.data, so unwrapping again resolved to undefined and the
-    // sync endpoint answered { success: true, data: undefined }.
-    // setInstagramPersistentMenu, which does the same job, was already correct.
-    // See issues.txt 12.12.
     return response;
   } catch (error) {
     log.error(
@@ -501,22 +477,9 @@ export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
     instagramIceBreakers: iceBreakers,
   });
 
-  // Both branches return the same shape. They used to differ — { ice_breakers }
-  // when cached, Meta's raw envelope when not — which normalizeIceBreakers in the
-  // controller papered over, which is why the empty-cache bug went unnoticed.
-  // See issues.txt 12.12.
   return { ice_breakers: iceBreakers };
 }
 
-/**
- * Meta's messenger_profile GET nests the requested fields one level down, under
- * `data`, as `{ data: [ { ice_breakers: [...] } ] }`. Reading the field off the
- * top level found nothing, so `[]` was cached on the very first read and every
- * later call took the cached branch and reported no ice breakers at all.
- *
- * Both shapes are accepted: the documented envelope, and a bare top-level field
- * in case Meta answers that way. See issues.txt 12.12.
- */
 function unwrapMessengerProfileField<T>(response: unknown, field: string): T[] {
   const body = response as
     | { data?: Array<Record<string, unknown>> | Record<string, unknown>; [k: string]: unknown }
@@ -608,7 +571,6 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
     fields: "persistent_menu",
   });
 
-  // Same nesting as the ice breakers above. See issues.txt 12.12.
   const persistentMenu = unwrapMessengerProfileField<InstagramPersistentMenuEntry>(
     response,
     "persistent_menu",

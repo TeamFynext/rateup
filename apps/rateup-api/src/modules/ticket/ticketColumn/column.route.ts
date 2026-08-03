@@ -27,8 +27,6 @@ export async function columnRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   // Tickets are a free feature — no subscription gate.
 
-  // Create column. The target board comes from the body, so the check resolves it
-  // from there — this route used to have none at all. See issues.txt 29.1.
   server.post(
     "/create",
     {
@@ -92,8 +90,6 @@ export async function columnRoutes(server: FastifyInstance) {
     deleteColumnHandler,
   );
 
-  // Reorder columns (bulk update of column orders). Targets come from the body.
-  // See issues.txt 29.1.
   server.put(
     "/reorder",
     {

@@ -166,12 +166,6 @@ describe("uploadController — what it accepts", () => {
     });
   });
 
-  // `allowAll` used to be read from a `metadata` FORM FIELD the uploader controls,
-  // and validateFile returns `{ valid: true }` as its very first statement when it
-  // is set — before the type check and before the size check. On an unauthenticated
-  // endpoint that was the uploader switching the allowlist off, so anything up to
-  // the 100 MB multipart limit went into the company's bucket. The field is not
-  // read at all now. See issues.txt 24.1.
   test("ignores an uploader's attempt to switch off the checks", async () => {
     const part = upload({
       mimetype: "text/html",
@@ -186,9 +180,6 @@ describe("uploadController — what it accepts", () => {
     expect(s3.uploadFile).not.toHaveBeenCalled();
   });
 
-  // The parse of that field was unguarded and ran before the handler's try/catch,
-  // so a malformed value escaped as an unhandled rejection rather than a 400.
-  // There is no parse left to fail. See issues.txt 24.5.
   test("ignores malformed metadata rather than crashing on it", async () => {
     const part = upload({ fields: { metadata: { value: "{not json" } } });
     const rep = reply();
@@ -268,11 +259,6 @@ describe("uploadController — audio conversion", () => {
     expect(fspMock.unlink).toHaveBeenCalledTimes(2);
   });
 
-  // The conversion — the pump to disk and the ffmpeg run — used to sit OUTSIDE the
-  // try/catch, so a transcode failure escaped the handler as an unhandled rejection
-  // instead of a 500; and because the cleanup keyed off params.ContentType, which is
-  // only reassigned after a SUCCESSFUL convert, both temp files were left behind.
-  // Every failed audio upload leaked two files on a public endpoint. issues.txt 24.4.
   test("answers 500 and removes both temp files when the transcode fails", async () => {
     chain.__shouldFail = true;
     const rep = reply();
@@ -293,9 +279,6 @@ describe("uploadController — audio conversion", () => {
     expect(answer(rep).code).toBe(500);
   });
 
-  // The converted file was read with readFileSync and the temp files removed with
-  // unlinkSync — synchronous calls on a file as large as the multipart limit allows,
-  // blocking the event loop for every other request. See issues.txt 24.6.
   test("reads and removes the converted file asynchronously", async () => {
     await uploadController(request(audio("audio/ogg")), reply());
 
@@ -310,11 +293,6 @@ describe("uploadController — audio conversion", () => {
 // ===========================================================================
 
 describe("uploadController — what it reports", () => {
-  // s3Upload.uploadFile used to swallow its own errors — `catch (e) {
-  // console.log(e) }` with no rethrow — and resolve to undefined, so the
-  // controller's try/catch could never fire for an S3 failure: it answered 200
-  // "File uploaded successfully" with `fileUrl: undefined`, and the client saved
-  // that key as a broken reference. The helper propagates now. See issues.txt 24.3.
   test("answers 500 with a message when the S3 upload fails", async () => {
     s3.uploadFile.mockRejectedValue(new Error("network down"));
     const rep = reply();
@@ -381,10 +359,6 @@ describe("uploadWithThumbnailsController", () => {
     expect(s3.uploadFile).not.toHaveBeenCalled();
   });
 
-  // The endpoint used to accept every type validateFile permits — PDFs and videos
-  // included — and hand the bytes straight to sharp, which threw "unsupported image
-  // format" outside any try/catch. It refuses non-images up front now, which also
-  // bounds what the buffering below can hold. See issues.txt 24.7.
   test("refuses a non-image before sharp ever sees it", async () => {
     const part = upload({ mimetype: "application/pdf", filename: "doc.pdf" });
     const rep = reply();
@@ -410,8 +384,6 @@ describe("uploadWithThumbnailsController", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
   });
 
-  // The thumbnail is webp bytes; it used to be stored with the ORIGINAL file's
-  // mimetype, so a JPEG upload produced webp served as image/jpeg. See issues.txt 24.7.
   test("labels the webp thumbnail as webp", async () => {
     await uploadWithThumbnailsController(
       request(upload({ mimetype: "image/jpeg", filename: "photo.jpg" })),
@@ -424,9 +396,6 @@ describe("uploadWithThumbnailsController", () => {
     expect(s3.uploadFile.mock.calls[1][0].ContentType).toBe("image/jpeg");
   });
 
-  // NOTE: still buffered. Both the original and the thumbnail need the same bytes,
-  // so one of the two has to be materialised; the image-only check above is what
-  // bounds it. See issues.txt 24.6.
   test("buffers the whole upload into memory first", async () => {
     const part = upload();
 
@@ -465,13 +434,6 @@ describe("deleteUploadedFileController", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { message: "File delete successfully" } });
   });
 
-  // NOTE: STILL OPEN — the most serious finding in the module. The route is PUT
-  // /api/public/upload/file/delete and carries no checkSession, so an anonymous
-  // caller can hand it any array of keys and have them deleted from the shared
-  // bucket. It is rate limited per IP now, which bounds the bulk of it, but closing
-  // it means authenticating the route (and org-scoping the keys, which are
-  // `${Date.now()}-${uuid}-${filename}` and carry no owner) — a decision about what
-  // the widget is allowed to do. See issues.txt 24.2.
   test("deletes any key it is handed, in bulk, with no ownership check", async () => {
     const rep = reply();
 
@@ -491,10 +453,6 @@ describe("deleteUploadedFileController", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // s3Upload.deleteFile used to RETURN its caught error rather than throw
-  // (`catch (err) { return err }`), so the controller's try/catch never fired and
-  // every delete — including one S3 refused — answered 200 "File delete
-  // successfully". See issues.txt 24.3.
   test("answers 500 with a message when the delete fails", async () => {
     s3.deleteFile.mockRejectedValue(new Error("AccessDenied"));
     const rep = reply();

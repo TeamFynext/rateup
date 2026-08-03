@@ -120,10 +120,6 @@ describe("createCustomerAccountHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { error: "orgId is required" } });
   });
 
-  // The module's widest exposure. The org was taken from the REQUEST BODY first —
-  // `request.body.orgId || request.user.orgId` — with orgId a required field on
-  // the schema, so on the authenticated route any org could enrol customers into
-  // another org's program by changing one field. See issues.txt 20.13.
   test("ignores the org in the request body and uses the session's", async () => {
     (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
 
@@ -148,12 +144,6 @@ describe("createCustomerAccountHandler", () => {
     expect(createCustomerAccount).not.toHaveBeenCalled();
   });
 
-  // The unauthenticated route has no session to take an org from, so it HAS to
-  // read the body — which is why it is now its own handler rather than sharing
-  // this one. The remaining exposure (anyone knowing an org's UUID can enrol into
-  // it, and supply a referCode that mints referral bonuses) is bounded by a
-  // per-IP rate limit on the route and recorded as outstanding in issues.txt
-  // 20.13: the real fix is a signed link token.
   test("the public handler takes the org from the body, as it must", async () => {
     (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
     const rep = reply();
@@ -178,9 +168,6 @@ describe("createCustomerAccountHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { error: "orgId is required" } });
   });
 
-  // NOTE: the handler passes only three arguments, so `sourceIdentifier` is
-  // undefined and the welcome/join-link messages in createCustomerAccount are
-  // never sent from either route. See issues.txt 20.13.
   test("never supplies a sending number, so no welcome message is sent", async () => {
     (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
 
@@ -225,11 +212,6 @@ describe("getCustomerAccountsHandler", () => {
 });
 
 describe("getCustomerAccountByIdHandler", () => {
-  // This was the only handler in the file that never resolved the caller's
-  // program — the path id went straight to the service, and the reply carries the
-  // account's points, tier, transaction history, redemptions and referrals. An
-  // account id was enough for a user of any org to read another org's customer.
-  // See issues.txt 20.18.
   test("resolves the caller's program and fetches within it", async () => {
     (getCustomerAccountById as Mock).mockResolvedValue({ id: "acct-1" });
     const rep = reply();
@@ -376,17 +358,6 @@ describe("getCustomerAccountByPhoneHandler", () => {
     expect(answer(rep).body.availableRewards).toEqual([]);
   });
 
-  // This gate used to compare against the tier's NAME while the redemption
-  // validator compares against its ID — two different columns holding two
-  // different kinds of value, so a reward could be listed as available here and
-  // then refused at redemption, or the reverse, depending on whether the operator
-  // had populated `availableForTiers` with names or the rules JSON with ids.
-  // Renaming a tier silently changed which rewards appeared.
-  //
-  // Ids are the answer. The name is still accepted because existing rows hold
-  // names, and dropping it would hide every reward an operator has already
-  // configured — but both readers agree on the id, which is the point.
-  // See issues.txt 20.23.
   test("matches the tier restriction on the tier's id, and still on its name", async () => {
     (getActiveLoyaltyRewards as Mock).mockResolvedValue([
       { id: "coupon-1", rewardType: "coupon", availableForTiers: ["Gold"] },
@@ -446,9 +417,6 @@ describe("updateCustomerAccountHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // The same gap as the by-id read, with a write on the end of it: an account id
-  // was enough to suspend or close another org's customer, and this handler never
-  // resolved a program at all. See issues.txt 20.18.
   test("resolves the caller's program before writing", async () => {
     (updateCustomerAccount as Mock).mockResolvedValue({});
 
@@ -635,12 +603,6 @@ describe("exportCustomerAccountsHandler", () => {
     expect(rep.send.mock.calls[0][0]).toContain("N/A");
   });
 
-  // The CSV used to be built with a bare `row.join(",")` — no quoting, no
-  // escaping. A customer whose name contained a comma shifted every later column
-  // on their row, so tier, points and referral code all landed in the wrong field
-  // and nothing signalled it. Names come from the signup form, which is reachable
-  // without a session (issues.txt 20.13), so the attacker chooses the contents.
-  // See issues.txt 20.24.
   test("a comma in a customer's name is quoted, keeping the columns aligned", async () => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([
       customer({ contact: { name: "Smith, Ann", phone: "919000000001", email: "a@b.c" } }),
@@ -653,9 +615,6 @@ describe("exportCustomerAccountsHandler", () => {
     expect(row).toBe('"Smith, Ann",919000000001,a@b.c,Gold,500,900,ANN-AB12');
   });
 
-  // An unescaped leading `=` makes the cell a live formula when an operator opens
-  // the file in Excel or Sheets. It is prefixed with a quote so the spreadsheet
-  // treats it as text. See issues.txt 20.24.
   test("a name beginning with = is neutralised before it reaches the file", async () => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([
       customer({

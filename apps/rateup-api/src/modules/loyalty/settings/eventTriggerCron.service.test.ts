@@ -14,8 +14,6 @@ vi.mock("../../../utils/prisma.js", () => ({
     loyaltyReward: { findUnique: vi.fn() },
     loyaltyTransaction: { create: vi.fn(), createMany: vi.fn() },
     $queryRaw: vi.fn(),
-    // The expiry writes its ledger rows and its one balance update together now.
-    // See issues.txt 20.38.
     $transaction: vi.fn(),
   },
 }));
@@ -25,8 +23,6 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 vi.mock("../../contact/contact.utils.js", () => ({ handleSendTemplate: vi.fn() }));
-// issueRewardToCustomer goes through assignRewardToCustomer now, rather than
-// being a third short-code generator of its own. See issues.txt 20.36.
 vi.mock("../accounts/account.service.js", () => ({ assignRewardToCustomer: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
@@ -156,8 +152,6 @@ describe("checkBirthdayEventTriggers", () => {
     ]);
   });
 
-  // The month and day are matched in SQL, so a customer whose birthday is not
-  // today is never loaded at all. See issues.txt 20.36.
   test("ignores a customer whose birthday is another day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
@@ -216,12 +210,6 @@ describe("checkBirthdayEventTriggers", () => {
     expect((handleSendTemplate as Mock).mock.calls).toHaveLength(2);
   });
 
-  // The inactivity cron claims each customer with a conditional updateMany before
-  // sending, precisely so an overlapping run cannot double-send. This cron used to
-  // have no such guard and record nothing per customer, so a second run on the
-  // same day — a redeploy, a retry, two instances — greeted every birthday
-  // customer again. The claim is written to its own column, not to lastActivityAt.
-  // See issues.txt 20.36 and 20.37.
   test("claims each customer before sending, so a second run greets nobody twice", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
@@ -254,9 +242,6 @@ describe("checkBirthdayEventTriggers", () => {
     expect(handleSendTemplate).not.toHaveBeenCalled();
   });
 
-  // Every active customer with a date of birth used to be loaded for each trigger
-  // and filtered in JavaScript, so the whole membership was materialised daily,
-  // per trigger, to find the handful with a birthday. See issues.txt 20.36.
   test("matches the month and day in SQL rather than in memory", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
@@ -356,12 +341,6 @@ describe("checkInactivityEventTriggers", () => {
     expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1");
   });
 
-  // The claim used to write `lastActivityAt = now` — the same column this cron
-  // SELECTS on, and the one the points-expiry alert reads. So reminding a dormant
-  // customer marked them as active today: their inactivity clock restarted, they
-  // would not be reminded again for another full window, and the reminder
-  // cancelled its own follow-up. The record also claimed activity the customer had
-  // not performed. It writes its own column now. See issues.txt 20.37.
   test("the claim does not pretend the customer did something", async () => {
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger({ triggerDays: 30 })]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
@@ -388,12 +367,6 @@ describe("issuing a reward from a trigger", () => {
     ]);
   });
 
-  // The assignment goes through assignRewardToCustomer, which loops until it finds
-  // a free short code and checks the reward exists. This used to be a THIRD
-  // short-code generator with its own alphabet that did NOT loop — shortCode is
-  // @unique, so a collision threw, and the catch below swallowed it: the customer
-  // received the birthday message promising "a special reward" and silently got
-  // nothing. See issues.txt 20.36 and 20.9.
   test("issues the reward through the shared assignment path", async () => {
     await checkBirthdayEventTriggers();
 
@@ -474,12 +447,6 @@ describe("checkPointsExpiryAlerts", () => {
     expect(params[2]).toMatch(/^\d{2} \w{3} \d{4}$/);
   });
 
-  // The alert used to select customers by `lastActivityAt` while the expiration
-  // cron below expires individual EARN TRANSACTIONS by their own createdAt — two
-  // different clocks for one event. A customer could be warned about an expiry
-  // that never arrived, or lose points with no warning at all, depending on which
-  // of the two had moved most recently. It selects on the clock that actually
-  // decides now. See issues.txt 20.37.
   test("selects on the same clock the expiry itself uses", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
       { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
@@ -558,20 +525,6 @@ describe("checkPointsExpiration", () => {
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentPoints).toBe(0);
   });
 
-  // The sharpest defect in this file. `pointsToExpire = Math.min(totalExpiredPoints,
-  // account.currentPoints)` was computed under the comment "Don't expire more
-  // points than the customer currently has" — and then used ONLY for the log line
-  // and the running total. The loop underneath wrote an expire row for each stale
-  // earning's FULL value while the balance was separately clamped, so a customer
-  // with 150 points of stale earnings against a 30-point balance (having spent the
-  // rest) got expire rows totalling -150 while their balance fell by 30. Replaying
-  // the ledger stopped reconciling with currentPoints, and the "points expired"
-  // figure the cron reports was inflated for everyone who had ever redeemed.
-  //
-  // The allocation walks the stale earnings oldest-first and stops at the cap.
-  // Earnings past that point still get a row, with zero points — the row is what
-  // the NOT EXISTS keys on, so without it they would be re-examined forever.
-  // See issues.txt 20.38.
   test("expires against the cap, and writes exactly what it took", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account({ currentPoints: 30 })]);
@@ -602,10 +555,6 @@ describe("checkPointsExpiration", () => {
     expect(rows.map((r: { referenceId: string }) => r.referenceId)).toEqual(["txn-a", "txn-b"]);
   });
 
-  // Expiring points used to write `lastActivityAt = now` — the very column the
-  // expiry-alert cron used to decide who to warn next — so losing points pushed
-  // the customer's next warning out by a full window even though they had done
-  // nothing. See issues.txt 20.37.
   test("expiring points does not mark the account as active", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
@@ -618,9 +567,6 @@ describe("checkPointsExpiration", () => {
     );
   });
 
-  // The balance used to be re-read from the database once per expired transaction,
-  // inside the loop, with each row written on its own and nothing around any of
-  // it — an N+1 read for every customer with stale earnings. See issues.txt 20.38.
   test("reads the balance once and writes once, in one transaction", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);

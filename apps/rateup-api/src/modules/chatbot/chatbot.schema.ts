@@ -32,9 +32,6 @@ export const byChatbotIdSchema = z.object({
   chatbotId: z.string(),
 });
 
-// The create route declared no body schema, so `name` was whatever arrived —
-// including undefined, which prisma filled from the column default.
-// See issues.txt 21.13.
 export const createChatbotSchema = z.object({
   name: z.string().trim().min(1).max(100),
 });

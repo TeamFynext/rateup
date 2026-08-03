@@ -184,7 +184,6 @@ const m = {
 
 const CONTACT = {
   id: "contact-1",
-  // Every contact write on this path is org-scoped now. See issues.txt 18.5.
   orgId: "org-1",
   phone: "15550001",
   isSpam: false,
@@ -572,7 +571,6 @@ describe("handleWaMessages - outbound bookkeeping", () => {
 
     await callHandleWaMessages({ type: "send", userId: "user-1" });
 
-    // (conversationId, orgId, data) — the orgId was threaded in for issues.txt 18.35.
     const [, , data] = m.updateConversation.mock.calls[0];
     expect(data.firstRespondedAt).toBeInstanceOf(Date);
     expect(data.firstRespondedByUserAt).toBeInstanceOf(Date);

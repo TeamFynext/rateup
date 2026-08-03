@@ -13,13 +13,6 @@ import {
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    // Both branches used to ASSIGN, discarding whatever the route declared for
-    // itself. No route relied on that yet, which is exactly the danger: a role
-    // check written into deleteLinktreeByIdRouteOptions would have been
-    // overwritten here and the route would have stayed open to every member,
-    // with no error and nothing in the route table to show it — and a public
-    // route could not carry the rate limiter 45.3 needs.
-    // See issues.txt 45.7.
     const declared = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler
       : routeOptions.preHandler

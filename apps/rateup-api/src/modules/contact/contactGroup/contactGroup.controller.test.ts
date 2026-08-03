@@ -114,9 +114,6 @@ describe("getContactGroupsHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { id: "g1" } });
   });
 
-  // Neither of the first two branches involved the caller's org — the org check
-  // sat AFTER them, so a contactGroupId or a teamId in the query short-circuited
-  // straight to an unscoped lookup and never reached it. See issues.txt 18.24.
   test("a teamId in the query is scoped to the caller's org", async () => {
     (getContactGroupsByTeamId as Mock).mockResolvedValue([]);
 
@@ -216,11 +213,6 @@ describe("createContactGroupHandler", () => {
     expect(answer(rep)).toEqual({ code: 201, body: { id: "g1" } });
   });
 
-  // The duplicate branch had no `return` and the generic 500 sat outside the `if`,
-  // so a name clash sent the helpful message and then a second, generic 500 on the
-  // same reply — which fastify rejects as FST_ERR_REP_ALREADY_SENT, filling the log
-  // on an ordinary user mistake. It also answered 500 for a name clash where the
-  // label controller beside it uses 409. See issues.txt 18.30.
   test("answers a duplicate group name once, as a 409", async () => {
     (createContactGroup as Mock).mockRejectedValue(new FakePrismaKnownError("P2002"));
     const rep = reply();
@@ -314,8 +306,6 @@ describe("addExistingContactsToGroupHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // A group that is not the caller's reports as absent, and absent is a 404 —
-  // indistinguishable from one that never existed. See issues.txt 18.24 and 18.25.
   test("reports a missing group as a 404", async () => {
     (addExistingContactsToGroup as Mock).mockRejectedValue(
       new ContactGroupNotFoundError("Contact group not found"),
@@ -345,9 +335,6 @@ describe("addNewContactsToGroupHandler", () => {
     expect(addNewContactsToGroup).toHaveBeenCalledWith("g1", body, ORG);
   });
 
-  // addNewContactsToGroup returned nothing, so the success answer was always an
-  // empty body — the caller could not tell how many contacts were actually added.
-  // See issues.txt 18.28.
   test("answers 200 with what was added", async () => {
     (createMultipleContacts as Mock).mockResolvedValue([]);
     (addNewContactsToGroup as Mock).mockResolvedValue({ added: 2, invalidPhones: 1 });
@@ -482,10 +469,6 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // Unlike the top-level importer this variant never forwarded the hasHeaderRow
-  // flag, so it fell to importCSVContacts's `= true` default and a headerless file
-  // uploaded into a group always lost its first contact — while the same file
-  // through the other endpoint imported correctly. See issues.txt 18.31.
   test("forwards the has-header-row flag", async () => {
     (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
 
