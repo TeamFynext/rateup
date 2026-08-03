@@ -1,12 +1,16 @@
 import { preHandlerHook } from "./shareSettings.hooks.js";
 import { getSettings, updateSettings } from "./shareSettings.controller.js";
-import { onFile } from "./utils.js";
+import { MAX_LOGO_BYTES, onFile } from "./utils.js";
 import multipart from "@fastify/multipart";
 import { bodySchema, paramsSchema, responseSchema } from "./shareSettings.schema.js";
 import { FastifyInstance } from "fastify";
 
 async function routes(fastify: FastifyInstance) {
-  fastify.register(multipart, { attachFieldsToBody: "keyValues", onFile });
+  fastify.register(multipart, {
+    attachFieldsToBody: "keyValues",
+    onFile,
+    limits: { fileSize: MAX_LOGO_BYTES, files: 1, fields: 16, fieldSize: 4096 },
+  });
   fastify.addHook("preHandler", preHandlerHook);
 
   fastify.get(

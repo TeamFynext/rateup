@@ -63,32 +63,22 @@ describe("verifyCampaignMaxLimit", () => {
     expect(rep.send.mock.calls[0][0].message).toBe("Subscription not found");
   });
 
-  // NOTE: pins current behaviour — the third copy of the same defect, after
-  // issues.txt 11.7 (flows) and 14.7 (templates). Comparing a count against an
-  // undefined max is always false, so a plan that states no campaign maximum
-  // grants unlimited campaigns. See issues.txt 17.2.
-  test("enforces no limit when the plan does not state one", async () => {
-    countMock.mockResolvedValue(9999);
+  test("enforces no limit when the plan does not state one, without counting", async () => {
     const rep = reply();
 
     await verifyCampaignMaxLimit(request({ whatsapp: { active: true } }), rep);
 
     expect(rep.code).not.toHaveBeenCalled();
+    expect(countMock).not.toHaveBeenCalled();
   });
 
-  // NOTE: the count query sits inside the try, so a database failure is reported to
-  // the user as a permission refusal carrying the raw error text.
-  // See issues.txt 17.2.
-  test("reports a database failure to the user as a refusal", async () => {
+  test("lets a database failure surface rather than calling it a refusal", async () => {
     countMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();
 
-    await verifyCampaignMaxLimit(request(), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(rep.send.mock.calls[0][0]).toEqual({
-      message: "connection terminated unexpectedly",
-      displayMessageInClient: true,
-    });
+    await expect(verifyCampaignMaxLimit(request(), rep)).rejects.toThrow(
+      "connection terminated unexpectedly",
+    );
+    expect(rep.code).not.toHaveBeenCalled();
   });
 });

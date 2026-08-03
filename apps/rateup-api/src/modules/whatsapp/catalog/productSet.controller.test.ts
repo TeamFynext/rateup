@@ -186,22 +186,22 @@ describe("getProductSetsByCatalogHandler", () => {
 
     await getProductSetsByCatalogHandler(makeRequest({ params: { catalogId: "cat-1" } }), reply);
 
-    expect(m.listByCatalog).toHaveBeenCalledWith("cat-1");
+    expect(m.listByCatalog).toHaveBeenCalledWith("cat-1", "org-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
-  // NOTE: no ownership check at all — the catalog id from the path is used directly,
-  // so another org's product sets are returned.
-  test("returns another org's product sets given its catalog id", async () => {
-    const reply = makeReply();
-
+  // The caller's own org is passed to the service, which filters on it, so a guessed
+  // catalog id cannot reach another org's sets or their product id lists.
+  test("scopes the listing to the caller's org, not the catalog id in the path", async () => {
     await getProductSetsByCatalogHandler(
-      makeRequest({ params: { catalogId: "cat-victim" } }),
-      reply,
+      makeRequest({
+        params: { catalogId: "cat-victim" },
+        user: { orgId: "org-attacker", userId: "user-1" },
+      }),
+      makeReply(),
     );
 
-    expect(m.listByCatalog).toHaveBeenCalledWith("cat-victim");
-    expect(reply.code).not.toHaveBeenCalledWith(403);
+    expect(m.listByCatalog).toHaveBeenCalledWith("cat-victim", "org-attacker");
   });
 
   test("returns 500 when the listing fails", async () => {
@@ -220,19 +220,36 @@ describe("getProductSetByIdHandler", () => {
 
     await getProductSetByIdHandler(makeRequest({ params: { productSetId: "set-1" } }), reply);
 
-    expect(m.getById).toHaveBeenCalledWith("set-1");
+    expect(m.getById).toHaveBeenCalledWith("set-1", "org-1");
     expect(reply.payload).toEqual({ productSetId: "set-1" });
   });
 
-  // NOTE: answers 200 with null rather than 404, and performs no ownership check.
-  test("answers 200 with null for a set that does not exist", async () => {
+  // 404 rather than 200-with-null, so the client can tell "no such set" from "a set
+  // with no content" — and a set belonging to another org gives the same answer as one
+  // that never existed.
+  test("answers 404 for a set that does not exist", async () => {
     m.getById.mockResolvedValue(null);
     const reply = makeReply();
 
     await getProductSetByIdHandler(makeRequest({ params: { productSetId: "missing" } }), reply);
 
-    expect(reply.code).toHaveBeenCalledWith(200);
-    expect(reply.payload).toBeNull();
+    expect(reply.code).toHaveBeenCalledWith(404);
+  });
+
+  test("answers 404 for a set belonging to another org", async () => {
+    m.getById.mockResolvedValue(null);
+    const reply = makeReply();
+
+    await getProductSetByIdHandler(
+      makeRequest({
+        params: { productSetId: "set-victim" },
+        user: { orgId: "org-attacker", userId: "user-1" },
+      }),
+      reply,
+    );
+
+    expect(m.getById).toHaveBeenCalledWith("set-victim", "org-attacker");
+    expect(reply.code).toHaveBeenCalledWith(404);
   });
 
   test("returns 500 when the lookup fails", async () => {

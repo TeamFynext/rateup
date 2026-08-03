@@ -13,18 +13,12 @@ import {
   deleteBoardHandler,
   getBoardTeamMembersHandler,
 } from "./board.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import { verifyBoardAccess } from "./board.auth.js";
 
 export async function boardRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
-  // Tickets are a free feature — no subscription gate.
-
-  // Create board
   server.post(
     "/create",
     {
-      // preHandler: [verifyTeamAccess],
       schema: {
         body: createBoardRequestSchema,
       },

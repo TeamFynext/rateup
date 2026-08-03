@@ -6,8 +6,8 @@ import {
   updateBoard,
   deleteBoard,
   getBoardTeamMembersById,
+  TeamAccessError,
 } from "./board.service.js";
-import { createColumn } from "../ticketColumn/column.service.js";
 import { CreateBoardRequestSchema, UpdateBoardRequestSchema } from "./board.schema.js";
 
 export async function createBoardHandler(
@@ -20,14 +20,12 @@ export async function createBoardHandler(
     const { title, description, teamIds } = request.body;
     const userId = request.userId;
     const board = await createBoard({ title, description, teamIds, userId });
-    await createColumn({
-      title: "To Do",
-      ticketBoardId: board.id,
-      order: 0,
-    });
 
     return reply.code(201).send(board);
   } catch (error) {
+    if (error instanceof TeamAccessError) {
+      return reply.code(403).send({ message: error.message });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error creating board" });
   }
@@ -75,14 +73,15 @@ export async function updateBoardHandler(
   try {
     const { id } = request.params;
 
-    const updatedBoard = await updateBoard(id, request.body);
-
-    if (!updatedBoard) {
-      return reply.code(404).send({ message: "Board not found" });
-    }
+    const updatedBoard = await updateBoard(id, request.body, request.userId);
 
     return reply.code(200).send(updatedBoard);
   } catch (error) {
+    if (error instanceof TeamAccessError) {
+      return reply.code(403).send({
+        message: error.teamIds.length ? error.message : "A board must keep at least one team",
+      });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error updating board" });
   }
@@ -113,10 +112,6 @@ export async function getBoardTeamMembersHandler(
   try {
     const { id } = request.params;
     const members = await getBoardTeamMembersById(id);
-
-    if (!members) {
-      return reply.code(404).send({ message: "Members not found" });
-    }
 
     return reply.code(200).send(members);
   } catch (error) {

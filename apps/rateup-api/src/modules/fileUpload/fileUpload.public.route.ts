@@ -5,7 +5,8 @@ import {
   uploadWithThumbnailsController,
 } from "./fileUpload.controller.js";
 import FastifyMultipart from "@fastify/multipart";
-import { fileDeleteInputSchema } from "./fileUpload.schema.js";
+import { fileDeleteInputSchema, fileDeleteInput } from "./fileUpload.schema.js";
+import { rateLimit } from "../../utils/rateLimit.js";
 
 export async function fileUploadPublicRoutes(server: FastifyInstance) {
   server.register(FastifyMultipart, {
@@ -34,9 +35,10 @@ export async function fileUploadPublicRoutes(server: FastifyInstance) {
     uploadWithThumbnailsController,
   );
 
-  server.put(
+  server.put<{ Body: fileDeleteInput }>(
     "/file/delete",
     {
+      preHandler: [rateLimit({ max: 60, windowSeconds: 60 * 60, key: "fileDelete" })],
       schema: {
         body: fileDeleteInputSchema,
       },

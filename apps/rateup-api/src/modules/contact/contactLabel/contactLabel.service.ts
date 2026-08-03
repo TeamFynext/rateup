@@ -77,6 +77,12 @@ export async function deleteContactLabel(labelId: string, orgId: string) {
 }
 
 export async function assignLabelsToContact(contactId: string, labelIds: string[], orgId: string) {
+  const owned = await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    select: { id: true },
+  });
+  if (!owned) return null;
+
   // First, remove all existing labels for this contact
   await prisma.contactLabelMap.deleteMany({
     where: {
@@ -108,8 +114,8 @@ export async function assignLabelsToContact(contactId: string, labelIds: string[
   }
 
   // Return updated contact with labels
-  const contact = await prisma.contact.findUnique({
-    where: { id: contactId },
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
     include: {
       ContactLabelMap: {
         include: {
@@ -158,11 +164,19 @@ export async function assignLabelsToContacts(
   labelIds: string[],
   orgId: string,
 ) {
+  const owned = await prisma.contact.findMany({
+    where: { id: { in: contactIds }, orgId },
+    select: { id: true },
+  });
+  const ownedIds = owned.map((contact) => contact.id);
+  const skipped = contactIds.length - ownedIds.length;
+  if (ownedIds.length === 0) return { updated: 0, skipped, labelsApplied: 0 };
+
   // First, remove all existing labels for this contacts
   await prisma.contactLabelMap.deleteMany({
     where: {
       contactId: {
-        in: contactIds,
+        in: ownedIds,
       },
     },
   });
@@ -181,13 +195,16 @@ export async function assignLabelsToContacts(
     const validLabelIds = validLabels.map((label) => label.id);
 
     if (validLabelIds.length > 0) {
-      const data = contactIds.flatMap((contactId) =>
+      const data = ownedIds.flatMap((contactId) =>
         validLabelIds.map((labelId) => ({ contactId, labelId })),
       );
       await prisma.contactLabelMap.createMany({
         data,
         skipDuplicates: true,
       });
+      return { updated: ownedIds.length, skipped, labelsApplied: validLabelIds.length };
     }
   }
+
+  return { updated: ownedIds.length, skipped, labelsApplied: 0 };
 }

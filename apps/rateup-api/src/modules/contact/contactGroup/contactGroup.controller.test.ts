@@ -56,6 +56,7 @@ import {
   updateContactGroupsForContact,
 } from "./contactGroup.service.js";
 import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
+import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 import {
   addExistingContactsToGroupHandler,
   addExistingContactsToMultipleGroupsHandler,
@@ -108,20 +109,36 @@ describe("getContactGroupsHandler", () => {
 
     await getContactGroupsHandler(request({ query: { contactGroupId: "g1", teamId: "t1" } }), rep);
 
-    expect(getContactGroupById).toHaveBeenCalledWith("g1");
+    expect(getContactGroupById).toHaveBeenCalledWith("g1", ORG);
     expect(getContactGroupsByTeamId).not.toHaveBeenCalled();
     expect(answer(rep)).toEqual({ code: 200, body: { id: "g1" } });
   });
 
-  // NOTE: neither of the first two branches involves the caller's org — the org
-  // is only consulted on the fallback. A group id or a team id from any org is
-  // answered in full. See issues.txt 18.24.
-  test("a teamId in the query is used without checking the caller's org", async () => {
+  test("a teamId in the query is scoped to the caller's org", async () => {
     (getContactGroupsByTeamId as Mock).mockResolvedValue([]);
 
     await getContactGroupsHandler(request({ query: { teamId: "t-other-org" } }), reply());
 
-    expect(getContactGroupsByTeamId).toHaveBeenCalledWith("t-other-org");
+    expect(getContactGroupsByTeamId).toHaveBeenCalledWith("t-other-org", ORG);
+  });
+
+  test("answers 404 for a group belonging to another org", async () => {
+    (getContactGroupById as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await getContactGroupsHandler(request({ query: { contactGroupId: "g-other-org" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact group not found" } });
+  });
+
+  // The org check now runs before every branch, not just the fallback.
+  test("refuses a by-id lookup when the session carries no org", async () => {
+    const rep = reply();
+
+    await getContactGroupsHandler(request({ user: {}, query: { contactGroupId: "g1" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 403, body: { message: "Not authorized" } });
+    expect(getContactGroupById).not.toHaveBeenCalled();
   });
 
   test("falls back to listing the caller's own org", async () => {
@@ -165,7 +182,9 @@ describe("getContactsByContactGroupIdHandler", () => {
       rep,
     );
 
-    expect(getContactsByContactGroupIdWithPagination).toHaveBeenCalledWith("g1", { page: 1 });
+    expect(getContactsByContactGroupIdWithPagination).toHaveBeenCalledWith("g1", ORG, {
+      page: 1,
+    });
     expect(answer(rep).code).toBe(200);
   });
 
@@ -190,23 +209,21 @@ describe("createContactGroupHandler", () => {
 
     await createContactGroupHandler(request({ body: { name: "VIPs", teamId: "t1" } }), rep);
 
-    expect(createContactGroup).toHaveBeenCalledWith({ name: "VIPs", teamId: "t1" });
+    expect(createContactGroup).toHaveBeenCalledWith({ name: "VIPs", teamId: "t1" }, ORG);
     expect(answer(rep)).toEqual({ code: 201, body: { id: "g1" } });
   });
 
-  // NOTE: the duplicate branch has no `return`, so a name clash sends the helpful
-  // message and then immediately sends a second, generic 500 on the same reply —
-  // which fastify rejects as an already-sent reply. See issues.txt 18.30.
-  test("replies twice when the group name is already taken", async () => {
+  test("answers a duplicate group name once, as a 409", async () => {
     (createContactGroup as Mock).mockRejectedValue(new FakePrismaKnownError("P2002"));
     const rep = reply();
 
     await createContactGroupHandler(request({ body: { name: "VIPs" } }), rep);
 
-    expect(rep.send.mock.calls.map((c: any[]) => c[0])).toEqual([
-      { error: "Contact group with this name already exist in the provided team" },
-      { error: "Something went wrong" },
-    ]);
+    expect(rep.send).toHaveBeenCalledTimes(1);
+    expect(answer(rep)).toEqual({
+      code: 409,
+      body: { error: "Contact group with this name already exist in the provided team" },
+    });
   });
 
   test("reports any other failure as a single 500", async () => {
@@ -230,7 +247,7 @@ describe("updateContactGroupHandler", () => {
       rep,
     );
 
-    expect(updateContactGroup).toHaveBeenCalledWith("g1", { name: "New" });
+    expect(updateContactGroup).toHaveBeenCalledWith("g1", ORG, { name: "New" });
     expect(answer(rep).code).toBe(200);
   });
 
@@ -251,7 +268,7 @@ describe("deleteContactGroupHandler", () => {
 
     await deleteContactGroupHandler(request({ params: { contactGroupId: "g1" } }), rep);
 
-    expect(deleteContactGroup).toHaveBeenCalledWith("g1");
+    expect(deleteContactGroup).toHaveBeenCalledWith("g1", ORG);
     expect(answer(rep).code).toBe(200);
   });
 });
@@ -263,7 +280,7 @@ describe("deleteManyContactGroupsHandler", () => {
 
     await deleteManyContactGroupsHandler(request({ body: { contactGroupIds: ["g1", "g2"] } }), rep);
 
-    expect(deleteManyContactGroups).toHaveBeenCalledWith(["g1", "g2"]);
+    expect(deleteManyContactGroups).toHaveBeenCalledWith(["g1", "g2"], ORG);
     expect(answer(rep)).toEqual({ code: 200, body: { count: 2 } });
   });
 });
@@ -289,13 +306,15 @@ describe("addExistingContactsToGroupHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  test("reports a missing group as a 500", async () => {
-    (addExistingContactsToGroup as Mock).mockRejectedValue(new Error("Contact group not found"));
+  test("reports a missing group as a 404", async () => {
+    (addExistingContactsToGroup as Mock).mockRejectedValue(
+      new ContactGroupNotFoundError("Contact group not found"),
+    );
     const rep = reply();
 
     await addExistingContactsToGroupHandler(request({ params: { contactGroupId: "g1" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Contact group not found" } });
   });
 });
 
@@ -316,11 +335,9 @@ describe("addNewContactsToGroupHandler", () => {
     expect(addNewContactsToGroup).toHaveBeenCalledWith("g1", body, ORG);
   });
 
-  // NOTE: addNewContactsToGroup returns nothing (issues.txt 18.28), so the
-  // success answer is always an empty body. See issues.txt 18.28.
-  test("answers 200 with an empty body on success", async () => {
+  test("answers 200 with what was added", async () => {
     (createMultipleContacts as Mock).mockResolvedValue([]);
-    (addNewContactsToGroup as Mock).mockResolvedValue(undefined);
+    (addNewContactsToGroup as Mock).mockResolvedValue({ added: 2, invalidPhones: 1 });
     const rep = reply();
 
     await addNewContactsToGroupHandler(
@@ -328,7 +345,7 @@ describe("addNewContactsToGroupHandler", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 200, body: undefined });
+    expect(answer(rep)).toEqual({ code: 200, body: { added: 2, invalidPhones: 1 } });
   });
 
   test("reports a duplicate phone as a 400", async () => {
@@ -366,18 +383,19 @@ describe("removeContactsFromGroupHandler", () => {
       rep,
     );
 
-    expect(removeContactsFromGroup).toHaveBeenCalledWith("g1", ["c1"]);
+    expect(removeContactsFromGroup).toHaveBeenCalledWith("g1", ORG, ["c1"]);
     expect(answer(rep)).toEqual({ code: 200, body: { count: 1 } });
   });
 
-  // This is the one handler in the module that leaks the raw error text.
-  test("puts the raw error into the 500 body", async () => {
+  // It used to be the one handler in the module that put the raw error text into
+  // the response body. It goes through the shared replyForError now, like the rest.
+  test("reports a failure without leaking the error text", async () => {
     (removeContactsFromGroup as Mock).mockRejectedValue(new Error("connection lost"));
     const rep = reply();
 
     await removeContactsFromGroupHandler(request({ params: { contactGroupId: "g1" } }), rep);
 
-    expect(answer(rep).body.error).toContain("connection lost");
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 });
 
@@ -440,14 +458,18 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
       rep,
     );
 
-    expect(importCSVContacts).toHaveBeenCalledWith(expect.anything(), ORG, ["tier"], false, "g1");
+    expect(importCSVContacts).toHaveBeenCalledWith(
+      expect.anything(),
+      ORG,
+      ["tier"],
+      false,
+      "g1",
+      true,
+    );
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: unlike the top-level importer this variant never forwards the
-  // hasHeaderRow flag, so a headerless file uploaded into a group is always
-  // parsed as if its first row were a header. See issues.txt 18.31.
-  test("never forwards the has-header-row flag", async () => {
+  test("forwards the has-header-row flag", async () => {
     (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
 
     await addNewContactsfromCSVToGroupHandler(
@@ -458,7 +480,7 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
       reply(),
     );
 
-    expect((importCSVContacts as Mock).mock.calls[0]).toHaveLength(5);
+    expect((importCSVContacts as Mock).mock.calls[0][5]).toBe(false);
   });
 
   test("turns a validation result into a 400 carrying the bad rows", async () => {

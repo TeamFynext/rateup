@@ -23,14 +23,23 @@ export function getFacebookWebhookEvent(
       return FacebookEvent.MESSAGE_READ;
     }
 
+    // Reactions are a distinct event, as they are on Instagram. Without this branch a
+    // reaction classified as null and was dropped entirely, so a customer reacting to a
+    // message left no trace in the inbox — and the same gesture behaved differently on
+    // Facebook and Instagram.
+    if (messagingObject.reaction) {
+      return FacebookEvent.MESSAGE_REACTION;
+    }
+
+    // Postback is checked BEFORE the general message check: below it, a payload carrying
+    // both classified as a plain MESSAGE and the postback payload was lost.
+    if (messagingObject.postback) {
+      return FacebookEvent.POSTBACK;
+    }
+
     // General message check (catch-all for regular messages)
     if (messagingObject.message) {
       return FacebookEvent.MESSAGE;
-    }
-
-    // Other event types
-    if (messagingObject.postback) {
-      return FacebookEvent.POSTBACK;
     }
 
     return null;

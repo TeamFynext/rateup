@@ -91,6 +91,11 @@ export async function triggerConversionsApiForContact(
     };
 
     const res = await callMetaApi(`/${datasetId}/events`, "POST", waSettings.accessToken, payload);
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(
+        `Meta Conversions API rejected the event with status ${res.status}: ${JSON.stringify(res.data)}`,
+      );
+    }
     log.info(`Meta Conversions API event sent successfully`);
     return res.data;
   } catch (error) {

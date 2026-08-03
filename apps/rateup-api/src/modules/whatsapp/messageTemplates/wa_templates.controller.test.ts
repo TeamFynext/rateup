@@ -220,7 +220,7 @@ beforeEach(() => {
   m.sendTemplateToPhone.mockResolvedValue(undefined);
   m.getFileUrlFromKey.mockImplementation((k: string) => `https://cdn/${k}`);
   m.getGraphApiErrorMessage.mockReturnValue("Meta says no");
-  db.contact.findMany.mockResolvedValue([{ phone: "15550001" }]);
+  db.contact.findMany.mockResolvedValue([{ id: "c-1", phone: "15550001" }]);
   db.waMessage.findFirst.mockResolvedValue(null);
   db.waLogs.findMany.mockResolvedValue([]);
 });
@@ -315,27 +315,16 @@ describe("createTemplateHandler", () => {
     expect(sent(rep)).toBe("Meta says no");
   });
 
-  // NOTE: pins current behaviour. templateType is optional in the request schema,
-  // and a request that omits it falls through the switch with fetchedTemplate still
-  // undefined — so saveTemplate is called with no template at all. saveTemplate
-  // swallows the resulting database failure (see wa_templates.service.test.ts) and
-  // the handler still answers 200 "template created". Nothing was stored.
-  // See issues.txt 14.4.
-  test("answers 200 for a request with no template type, having stored nothing", async () => {
+  test("refuses a request with no template type, storing nothing", async () => {
     const rep = reply();
 
     await createTemplateHandler(request({ body }), rep);
 
-    expect(m.saveTemplate.mock.calls[0][0]).toBeUndefined();
-    expect(rep.code).toHaveBeenCalledWith(200);
-    expect(sent(rep)).toBe("template created");
+    expect(m.saveTemplate).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(sent(rep).message).toContain("templateType");
   });
 
-  // NOTE: pins current behaviour, and the source says so — "TODO: restrict access
-  // to super admin and admin?". syncTemplatesHandler in the same file DOES gate on
-  // role. Creating a template submits it to Meta for approval under the org's
-  // business account, where a rejected template counts against the org's quality
-  // rating. See issues.txt 14.4.
   test("lets any role create a template", async () => {
     const rep = reply();
 
@@ -372,17 +361,14 @@ describe("saveTemplateAsDraftHandler", () => {
       reply(),
     );
 
-    expect(m.updateTemplateInDb.mock.calls[0][1]).toMatchObject({
+    expect(m.updateTemplateInDb.mock.calls[0][1]).toBe(ORG_A);
+    expect(m.updateTemplateInDb.mock.calls[0][2]).toMatchObject({
       name: "renamed",
       status: "DRAFT",
       components: [{ type: "body" }],
     });
   });
 
-  // NOTE: pins current behaviour. getDbTemplate is unscoped and the handler never
-  // compares orgId, so naming another org's template id in the body rewrites their
-  // template into a draft — replacing its components and status. The sibling
-  // updateTemplateHandler DOES check. See issues.txt 14.3.
   test("rewrites a draft belonging to another org", async () => {
     m.getDbTemplate.mockResolvedValue(row({ orgId: ORG_B }));
 
@@ -395,9 +381,6 @@ describe("saveTemplateAsDraftHandler", () => {
     expect(m.updateTemplateInDb.mock.calls[0][0]).toBe(TEMPLATE_ID);
   });
 
-  // NOTE: the success path calls reply.code(200) and never sends, so fastify falls
-  // back to an empty 200 with no body — unlike every sibling handler, which sends.
-  // See issues.txt 14.10.
   test("sets a status but sends no body on success", async () => {
     const rep = reply();
 
@@ -414,7 +397,7 @@ describe("updateTemplateHandler", () => {
 
     await updateTemplateHandler(request({ params: { templateId: TEMPLATE_ID }, body: {} }), rep);
 
-    expect(m.updateTemplate).toHaveBeenCalledWith(TEMPLATE_ID, {});
+    expect(m.updateTemplate).toHaveBeenCalledWith(TEMPLATE_ID, ORG_A, {});
     expect(rep.status).toHaveBeenCalledWith(200);
   });
 
@@ -429,19 +412,15 @@ describe("updateTemplateHandler", () => {
   });
 
   test("refuses a template belonging to another org", async () => {
-    m.getDbTemplate.mockResolvedValue(row({ orgId: ORG_B }));
+    m.getDbTemplate.mockResolvedValue(null);
     const rep = reply();
 
     await updateTemplateHandler(request({ params: { templateId: TEMPLATE_ID }, body: {} }), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(403);
+    expect(rep.status).toHaveBeenCalledWith(404);
     expect(m.updateTemplate).not.toHaveBeenCalled();
   });
 
-  // NOTE: pins current behaviour. updateTemplate resolves to undefined for several
-  // distinct reasons — Meta refused the edit, or updateTemplateInDb swallowed a
-  // database failure — and all of them are reported to the user as the 24-hour
-  // edit cooldown. See issues.txt 14.10.
   test("blames the 24-hour cooldown for every kind of failure", async () => {
     m.updateTemplate.mockResolvedValue(undefined);
     const rep = reply();
@@ -460,7 +439,7 @@ describe("deleteTemplateHandler", () => {
     await deleteTemplateHandler(request({ params: { templateId: TEMPLATE_ID } }), rep);
 
     expect(m.deleteTemplate).toHaveBeenCalledWith(ORG_A, "wa-tpl-1", "order_update");
-    expect(m.deleteTemplateFromDb).toHaveBeenCalledWith(TEMPLATE_ID);
+    expect(m.deleteTemplateFromDb).toHaveBeenCalledWith(TEMPLATE_ID, ORG_A);
     expect(rep.code).toHaveBeenCalledWith(204);
   });
 
@@ -474,12 +453,12 @@ describe("deleteTemplateHandler", () => {
   });
 
   test("refuses a template belonging to another org", async () => {
-    m.getDbTemplate.mockResolvedValue(row({ orgId: ORG_B }));
+    m.getDbTemplate.mockResolvedValue(null);
     const rep = reply();
 
     await deleteTemplateHandler(request({ params: { templateId: TEMPLATE_ID } }), rep);
 
-    expect(rep.code).toHaveBeenCalledWith(403);
+    expect(rep.code).toHaveBeenCalledWith(404);
     expect(m.deleteTemplateFromDb).not.toHaveBeenCalled();
   });
 
@@ -494,18 +473,14 @@ describe("deleteTemplateHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: pins current behaviour. deleteTemplate resolves false when Meta refused
-  // (see wa_templates.service.test.ts) and the handler ignores that, removing our
-  // copy anyway — so the template survives at Meta with nothing pointing at it.
-  // See issues.txt 14.10.
-  test("removes our copy even when Meta refused to delete its own", async () => {
+  test("keeps our copy when Meta refused to delete its own", async () => {
     m.deleteTemplate.mockResolvedValue(false);
     const rep = reply();
 
     await deleteTemplateHandler(request({ params: { templateId: TEMPLATE_ID } }), rep);
 
-    expect(m.deleteTemplateFromDb).toHaveBeenCalled();
-    expect(rep.code).toHaveBeenCalledWith(204);
+    expect(m.deleteTemplateFromDb).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(502);
   });
 });
 
@@ -575,6 +550,8 @@ describe("uploadHandler", () => {
         mimetype: "image/png",
         fields,
         file: { resume: vi.fn() },
+        // The handler measures the real length from the received bytes.
+        toBuffer: vi.fn().mockResolvedValue(Buffer.alloc(2048)),
       }),
     });
   }
@@ -607,13 +584,10 @@ describe("uploadHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(400);
   });
 
-  // NOTE: pins current behaviour. The size comes from a multipart form field the
-  // client sets, not from the bytes actually received, and defaults to 0 when it is
-  // missing — so Meta is told to expect a zero-length file. See issues.txt 14.10.
-  test("trusts the size the client declared, defaulting to zero", async () => {
-    await uploadHandler(fileRequest({}), reply());
+  test("measures the size from the bytes received, not from the client", async () => {
+    await uploadHandler(fileRequest({ size: { type: "field", value: "999999" } }), reply());
 
-    expect(m.uploadFileToWaTemplate.mock.calls[0][1]).toBe(0);
+    expect(m.uploadFileToWaTemplate.mock.calls[0][1]).toBe(2048);
   });
 });
 
@@ -695,9 +669,6 @@ describe("sendTemplateToUserCore - what it sends", () => {
     expect(templateQuery().components).toEqual([]);
   });
 
-  // The by-id branch now guards the null result the same way the by-name branch always
-  // did, so an unknown or another org's template id reports a failure instead of
-  // crashing with a TypeError (was issues.txt 14.5).
   test("reports a failure for a template id the caller's org does not own", async () => {
     m.getTemplateByIdAndOrgId.mockResolvedValue(null);
 
@@ -758,32 +729,20 @@ describe("sendTemplateToUserCore - the order-details total", () => {
     );
   });
 
-  // NOTE: pins current behaviour, and this is the one that shows the customer the
-  // wrong number. Every other amount in the payload is multiplied by 100 to match
-  // `offset: 100` — sub_total, shipping, tax, each item's amount — but total_amount
-  // is sent unmultiplied. With sub_total 200, shipping 20 and tax 30 the true total
-  // is 250, which WhatsApp should be told is 25000; it is told 250, and renders
-  // ₹2.50. See issues.txt 14.1.
-  test("sends the grand total a hundred times too small", async () => {
+  test("sends the grand total in the same minor units as its line items", async () => {
     const details = await sendOrder();
 
-    expect(details.total_amount).toEqual({ offset: 100, value: 250 });
-    expect(details.total_amount.value).not.toBe(25000);
+    expect(details.total_amount).toEqual({ offset: 100, value: 25000 });
     expect(details.order.sub_total.value).toBe(20000);
   });
 
-  // NOTE: pins current behaviour. The tax and discount blocks spell the field
-  // `discription`, so whatever the merchant wrote to explain the tax never reaches
-  // the customer's payment prompt. See issues.txt 14.9.
-  test("misspells the tax description, so it never reaches the customer", async () => {
+  test("sends the tax description under the name Meta expects", async () => {
     const details = await sendOrder();
 
-    expect(details.order.tax).toHaveProperty("discription");
-    expect(details.order.tax).not.toHaveProperty("description");
+    expect(details.order.tax).toHaveProperty("description");
+    expect(details.order.tax).not.toHaveProperty("discription");
   });
 
-  // NOTE: the currency and both country codes are hard-coded to India. Fine while
-  // that is the only market; it is not stated anywhere. See issues.txt 14.10.
   test("hard-codes the currency and country to India", async () => {
     const details = await sendOrder({ ...ORDER, productType: "physical-goods" });
 
@@ -826,7 +785,10 @@ describe("sendTemplateToUserHandler", () => {
 
 describe("sendTemplatesToContactsHandler", () => {
   test("sends the template to each contact named", async () => {
-    db.contact.findMany.mockResolvedValue([{ phone: "15550001" }, { phone: "15550002" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: "c-1", phone: "15550001" },
+      { id: "c-2", phone: "15550002" },
+    ]);
 
     await sendTemplatesToContactsHandler(
       request({
@@ -840,7 +802,7 @@ describe("sendTemplatesToContactsHandler", () => {
     expect(m.sendTemplateToPhone.mock.calls[0][0].phone).toBe("15550001");
   });
 
-  test("answers 500 when a send fails", async () => {
+  test("reports the contacts it could not reach, rather than failing outright", async () => {
     m.sendTemplateToPhone.mockRejectedValue(new Error("graph is down"));
     const rep = reply();
 
@@ -849,35 +811,28 @@ describe("sendTemplatesToContactsHandler", () => {
       rep,
     );
 
-    expect(rep.code).toHaveBeenCalledWith(500);
+    expect(rep.code).toHaveBeenCalledWith(200);
+    expect(sent(rep)).toMatchObject({ sent: 0, failed: ["c-1"] });
   });
 
-  // NOTE: pins current behaviour, and this is the worst thing in this file. The
-  // contact lookup filters on the ids alone with NO orgId — unlike the template
-  // lookup one line above it, which is scoped. So a caller who names another org's
-  // contact ids gets that org's customers messaged, from the caller's own WhatsApp
-  // number, using the caller's own template. This handler is mounted on the
-  // API-key-authenticated external API (wa_templates.external.route.ts:109).
-  // See issues.txt 14.1.
-  test("sends to contacts belonging to another org", async () => {
-    db.contact.findMany.mockResolvedValue([{ phone: "15559999" }]);
+  test("cannot send to contacts belonging to another org", async () => {
+    db.contact.findMany.mockResolvedValue([]);
+    const rep = reply();
 
     await sendTemplatesToContactsHandler(
       request({ params: { templateId: TEMPLATE_ID }, body: { contactIds: ["another-orgs-id"] } }),
-      reply(),
+      rep,
     );
 
     expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
       id: { in: ["another-orgs-id"] },
+      orgId: ORG_A,
     });
-    expect(JSON.stringify(db.contact.findMany.mock.calls[0][0].where)).not.toContain("orgId");
-    expect(m.sendTemplateToPhone.mock.calls[0][0].phone).toBe("15559999");
+    expect(m.sendTemplateToPhone).not.toHaveBeenCalled();
+    expect(sent(rep)).toMatchObject({ sent: 0, skipped: 1 });
   });
 
-  // NOTE: the success path never touches the reply, so fastify falls back to an
-  // empty 200 — the caller learns nothing about how many contacts were reached, or
-  // whether any were. See issues.txt 14.10.
-  test("sends no response of its own on success", async () => {
+  test("reports how many contacts it reached", async () => {
     const rep = reply();
 
     await sendTemplatesToContactsHandler(
@@ -885,8 +840,8 @@ describe("sendTemplatesToContactsHandler", () => {
       rep,
     );
 
-    expect(rep.code).not.toHaveBeenCalled();
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(200);
+    expect(sent(rep)).toEqual({ sent: 1, failed: [], skipped: 0 });
   });
 });
 
@@ -937,12 +892,8 @@ describe("getMessageStatusByIdHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: pins current behaviour. The lookup filters on messageId alone with no
-  // orgId, so any caller holding a WhatsApp message id learns that message's
-  // delivery state and, if it failed, the reason — whichever org sent it.
-  // See issues.txt 14.3.
-  test("reports on a message belonging to another org", async () => {
-    db.waMessage.findFirst.mockResolvedValue({ messageId: "wamid-1", stats: { read: "t" } });
+  test("scopes the lookup to the caller's org", async () => {
+    db.waMessage.findFirst.mockResolvedValue(null);
     const rep = reply();
 
     await getMessageStatusByIdHandler(
@@ -950,14 +901,14 @@ describe("getMessageStatusByIdHandler", () => {
       rep,
     );
 
-    expect(db.waMessage.findFirst.mock.calls[0][0].where).toEqual({ messageId: "wamid-1" });
-    expect(sent(rep).status).toBe("read");
+    expect(db.waMessage.findFirst.mock.calls[0][0].where).toEqual({
+      messageId: "wamid-1",
+      orgId: ORG_B,
+    });
+    expect(rep.code).toHaveBeenCalledWith(404);
   });
 
-  // NOTE: getLatestStatus tests read before failed, so a message that failed after
-  // being delivered reports "delivered" and the error is dropped from the response.
-  // See issues.txt 14.10.
-  test("hides the failure of a message that was delivered first", async () => {
+  test("reports the failure of a message that was delivered first", async () => {
     db.waMessage.findFirst.mockResolvedValue({
       messageId: "wamid-1",
       stats: { delivered: "t", failed: "t" },
@@ -967,8 +918,7 @@ describe("getMessageStatusByIdHandler", () => {
 
     await getMessageStatusByIdHandler(request({ params: { messageId: "wamid-1" } }), rep);
 
-    expect(sent(rep).status).toBe("delivered");
-    expect(sent(rep)).not.toHaveProperty("errorMessage");
+    expect(sent(rep).status).toBe("failed");
   });
 });
 

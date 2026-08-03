@@ -1,9 +1,14 @@
 import { hasAccessToTeam } from "../../utils/auth.js";
 import { getReviewById } from "./reviewSuggestion.service.js";
 
-export async function hasAccessToReview(userId: string, reviewSuggestionId: string) {
-  const review = await getReviewById(reviewSuggestionId);
-  if (!review) throw new Error("Review not found");
+export type ReviewAccess = "not-found" | "forbidden" | "allowed";
 
-  return await hasAccessToTeam(review.teamId, userId);
+export async function hasAccessToReview(
+  userId: string,
+  reviewSuggestionId: string,
+): Promise<ReviewAccess> {
+  const review = await getReviewById(reviewSuggestionId);
+  if (!review) return "not-found";
+
+  return (await hasAccessToTeam(review.teamId, userId)) ? "allowed" : "forbidden";
 }

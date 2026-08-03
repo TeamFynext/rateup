@@ -34,6 +34,7 @@ import {
   getAllowedEmailsFromFile,
   getQuestionById,
   getQuestionsBySurveyId,
+  QuestionOrderError,
   reorderQuestions,
   updateQuestion,
   updateQuestionsOnSurvey,
@@ -49,6 +50,8 @@ import {
 import { verifySurveyAccess } from "./question.auth.js";
 import { questionRoutes } from "./question.route.js";
 import {
+  questionsRouteParamsSchema,
+  replaceQuestionsRequestSchema,
   updateQuestionRequestSchema,
   updateQuestionsOrderRequestSchema,
 } from "./question.schema.js";
@@ -103,65 +106,55 @@ describe("reorderQuestions", () => {
     expect(written.map((x: any) => x.id)).toEqual(["c", "a", "b"]);
   });
 
-  // NOTE: the new order is mapped over, not merged — anything absent from the
-  // array is not carried across, so a short list deletes the rest.
-  test("a partial order silently drops every question it omits", async () => {
-    await reorderQuestions(SURVEY, ["a"]);
+  test("a partial order is refused rather than dropping the questions it omits", async () => {
+    await expect(reorderQuestions(SURVEY, ["a"])).rejects.toBeInstanceOf(QuestionOrderError);
 
-    const written = db.survey.update.mock.calls[0][0].data.questions;
-    expect(written.map((x: any) => x.id)).toEqual(["a"]);
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  test("an empty order empties the survey", async () => {
-    await reorderQuestions(SURVEY, []);
+  test("an empty order no longer empties the survey", async () => {
+    await expect(reorderQuestions(SURVEY, [])).rejects.toBeInstanceOf(QuestionOrderError);
 
-    expect(db.survey.update.mock.calls[0][0].data.questions).toEqual([]);
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: an id that matches nothing becomes undefined in the array. The write
-  // happens FIRST (question.service.ts:144) and the ticket-flag loop below it
-  // then dereferences that undefined — so the corrupt array is persisted and
-  // the function throws afterwards.
-  test("an unknown id is persisted as an undefined entry and then throws", async () => {
-    await expect(reorderQuestions(SURVEY, ["a", "does-not-exist", "b"])).rejects.toThrow(TypeError);
+  test("an unknown id is refused before anything is written", async () => {
+    await expect(reorderQuestions(SURVEY, ["a", "does-not-exist", "b"])).rejects.toBeInstanceOf(
+      QuestionOrderError,
+    );
 
-    const written = db.survey.update.mock.calls[0][0].data.questions;
-    expect(written).toHaveLength(3);
-    expect(written[1]).toBeUndefined();
-  });
-
-  test("and the survey variables are never rewritten after that throw", async () => {
-    await reorderQuestions(SURVEY, ["a", "does-not-exist"]).catch(() => {});
-
-    expect(db.survey.update).toHaveBeenCalledOnce();
+    expect(db.survey.update).not.toHaveBeenCalled();
     expect(updateSurveyVariables).not.toHaveBeenCalled();
   });
 
-  test("a duplicated id is stored twice", async () => {
-    await reorderQuestions(SURVEY, ["a", "a"]);
+  test("a duplicated id is refused", async () => {
+    await expect(reorderQuestions(SURVEY, ["a", "a"])).rejects.toBeInstanceOf(QuestionOrderError);
 
-    const written = db.survey.update.mock.calls[0][0].data.questions;
-    expect(written.map((x: any) => x.id)).toEqual(["a", "a"]);
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: the body schema is a bare array of strings — nothing requires it to
-  // be a permutation of the survey's current question ids.
-  test("the body schema accepts any array of strings, including empty", () => {
+  // The body schema is still a bare array of strings — being a permutation of
+  // the survey's current ids is not a shape the schema can express, so the
+  // service checks it.
+  test("the body schema accepts any array of strings; the service is the check", () => {
     expect(updateQuestionsOrderRequestSchema.safeParse([]).success).toBe(true);
     expect(updateQuestionsOrderRequestSchema.safeParse(["not-an-id"]).success).toBe(true);
     expect(updateQuestionsOrderRequestSchema.safeParse(["a", "a"]).success).toBe(true);
   });
 
-  test("the survey variables are rewritten from the same truncated list", async () => {
-    await reorderQuestions(SURVEY, ["a"]);
+  test("the survey variables are rewritten from the full list", async () => {
+    await reorderQuestions(SURVEY, ["c", "a", "b"]);
 
-    expect((updateSurveyVariables as unknown as Mock).mock.calls[0][1]).toHaveLength(1);
+    expect((updateSurveyVariables as unknown as Mock).mock.calls[0][1]).toHaveLength(3);
   });
 
-  test("the handler passes the body straight through", async () => {
-    await reorderQuestionsHandler({ params: { surveyId: SURVEY }, body: [] } as never, reply());
+  test("the handler answers 400 for an order that is not a permutation", async () => {
+    const rep = reply();
 
-    expect(db.survey.update.mock.calls[0][0].data.questions).toEqual([]);
+    await reorderQuestionsHandler({ params: { surveyId: SURVEY }, body: [] } as never, rep);
+
+    expect(answer(rep).code).toBe(400);
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 });
 
@@ -182,22 +175,31 @@ describe("replaceQuestionsHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: the route is registered with no schema, so the body is unvalidated —
-  // an absent questions key writes undefined over the survey's questions.
-  test("an absent questions key is written through as undefined", async () => {
-    await replaceQuestionsHandler({ params: { surveyId: SURVEY }, body: {} } as never, reply());
-
-    expect(db.survey.update.mock.calls[0][0].data.questions).toBeUndefined();
+  test("the body schema refuses an absent questions key", () => {
+    expect(replaceQuestionsRequestSchema.safeParse({}).success).toBe(false);
+    expect(replaceQuestionsRequestSchema.safeParse({ questions: null }).success).toBe(false);
+    expect(replaceQuestionsRequestSchema.safeParse({ questions: [null] }).success).toBe(false);
+    expect(replaceQuestionsRequestSchema.safeParse({ questions: [{}] }).success).toBe(false);
+    expect(replaceQuestionsRequestSchema.safeParse({ questions: [] }).success).toBe(true);
   });
 
-  test("the route declares neither a body nor a params schema", async () => {
+  // looseObject, so the flow builder's evolving question shape passes through —
+  // what is required is that each entry is an object carrying an id.
+  test("the body schema keeps the question fields it does not know about", () => {
+    const parsed = replaceQuestionsRequestSchema.parse({
+      questions: [{ id: "z", type: "Text", title: { English: "Hi" } }],
+    });
+
+    expect(parsed.questions[0]).toMatchObject({ id: "z", type: "Text" });
+  });
+
+  test("the route declares both a body and a params schema", async () => {
     const { routes } = await collectRoutes();
 
     const replace = routes.find((r) => r.url === "/replace");
-    // Registered as put(url, handler) — no options object, so nowhere a schema
-    // could be declared.
-    expect(replace.opts).toBe(replaceQuestionsHandler);
-    expect(replace.handler).toBeUndefined();
+    expect(replace.handler).toBe(replaceQuestionsHandler);
+    expect(replace.opts.schema.body).toBe(replaceQuestionsRequestSchema);
+    expect(replace.opts.schema.params).toBe(questionsRouteParamsSchema);
   });
 
   test("a screenId additionally rewrites the flow's logic jumps", async () => {
@@ -220,34 +222,29 @@ describe("replaceQuestionsHandler", () => {
 // ===========================================================================
 
 describe("the reply completion", () => {
-  // NOTE: reply.code() sets the status and returns the reply; it does not send.
-  // These handlers then resolve undefined.
-  test("the delete answers nothing on the success path", async () => {
+  test("the delete answers 200 on the success path", async () => {
     const rep = reply();
 
     await deleteQuestionByIdHandler({ params: { surveyId: SURVEY, id: "a" } } as never, rep);
 
     expect(db.survey.update).toHaveBeenCalled();
-    expect(rep.send).not.toHaveBeenCalled();
-    expect(rep.code).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 200, body: { success: true } });
   });
 
-  test("the delete answers nothing for a question that does not exist either", async () => {
+  test("the delete answers 404 for a question that does not exist", async () => {
     const rep = reply();
 
     await deleteQuestionByIdHandler({ params: { surveyId: SURVEY, id: "missing" } } as never, rep);
 
-    expect(rep.code).toHaveBeenCalledWith(404);
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Question not found" } });
   });
 
-  test("the by-id read sets 404 without sending", async () => {
+  test("the by-id read sends its 404", async () => {
     const rep = reply();
 
     await getQuestionByIdHandler({ params: { surveyId: SURVEY, id: "missing" } } as never, rep);
 
-    expect(rep.code).toHaveBeenCalledWith(404);
-    expect(rep.send).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Question not found" } });
   });
 
   test("the by-id read does send when the question exists", async () => {
@@ -258,7 +255,7 @@ describe("the reply completion", () => {
     expect(rep.send).toHaveBeenCalledOnce();
   });
 
-  test("every error path sets 500 without sending", async () => {
+  test("every error path sends its 500", async () => {
     db.survey.findUnique.mockResolvedValue(null);
 
     for (const [handler, req] of [
@@ -270,8 +267,7 @@ describe("the reply completion", () => {
 
       await (handler as any)(req, rep);
 
-      expect(rep.code).toHaveBeenCalledWith(500);
-      expect(rep.send).not.toHaveBeenCalled();
+      expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
     }
   });
 
@@ -346,30 +342,42 @@ describe("updateQuestionsOnSurvey", () => {
     });
   });
 
-  // NOTE: any question carrying a ticketIssue key turns enableTickets on, and
-  // nothing anywhere turns it off — removing the question leaves the survey
-  // raising tickets.
-  test("a ticketIssue key switches tickets on", async () => {
+  test("a ticketIssue switches tickets on in the same update as the questions", async () => {
     await updateQuestionsOnSurvey(SURVEY, [q("a", { ticketIssue: "something" })] as never);
 
-    expect(db.survey.update).toHaveBeenCalledTimes(2);
-    expect(db.survey.update.mock.calls[1][0].data).toEqual({ enableTickets: true });
+    expect(db.survey.update).toHaveBeenCalledOnce();
+    expect(db.survey.update.mock.calls[0][0].data).toEqual({
+      questions: [q("a", { ticketIssue: "something" })],
+      enableTickets: true,
+    });
   });
 
-  test("removing the last such question does not switch it back", async () => {
-    await updateQuestionsOnSurvey(SURVEY, [q("a")] as never);
+  // The condition was `!== undefined`, so a question carrying `ticketIssue: null`
+  // — which is what the editor writes when the field is cleared — switched ticket
+  // creation on.
+  test("a null or absent ticketIssue does not switch it on", async () => {
+    await updateQuestionsOnSurvey(SURVEY, [q("a", { ticketIssue: null })] as never);
+    expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
 
-    expect(db.survey.update).toHaveBeenCalledOnce();
+    db.survey.update.mockClear();
+    await updateQuestionsOnSurvey(SURVEY, [q("a")] as never);
     expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
   });
 
-  test("the switch fires once however many questions carry the key", async () => {
+  test("removing the last such question still does not switch it back", async () => {
+    await updateQuestionsOnSurvey(SURVEY, [q("a")] as never);
+
+    expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
+  });
+
+  test("the flag is written once however many questions carry the key", async () => {
     await updateQuestionsOnSurvey(SURVEY, [
       q("a", { ticketIssue: "x" }),
       q("b", { ticketIssue: "y" }),
     ] as never);
 
-    expect(db.survey.update).toHaveBeenCalledTimes(2);
+    expect(db.survey.update).toHaveBeenCalledOnce();
+    expect(db.survey.update.mock.calls[0][0].data.enableTickets).toBe(true);
   });
 });
 
@@ -405,14 +413,15 @@ describe("createQuestion", () => {
     );
   });
 
-  // NOTE: position 0 is falsy, so an explicit 0 is replaced by the append
-  // position rather than inserting at the front.
-  test("an explicit position of zero appends instead of prepending", async () => {
-    await createQuestion(SURVEY, { position: 0, title: { English: "New" } } as never);
+  test("an explicit position of zero prepends", async () => {
+    const created = await createQuestion(SURVEY, {
+      position: 0,
+      title: { English: "New" },
+    } as never);
 
     const written = db.survey.update.mock.calls[0][0].data.questions;
-    expect(written[0].id).toBe("a");
-    expect(written).toHaveLength(4);
+    expect(written[0].id).toBe(created.id);
+    expect(written.map((x: any) => x.id).slice(1)).toEqual(["a", "b", "c"]);
   });
 
   test("gives the new question a random uuid", async () => {
@@ -472,15 +481,24 @@ describe("deleteQuestionById", () => {
     });
   });
 
-  // NOTE: the pruning loop assumes every value is an array of objects each
-  // carrying a conditions array.
-  test("a logic jump entry with no conditions throws", async () => {
+  test("a logic jump entry with no conditions is kept rather than throwing", async () => {
     db.waFlow.findFirst.mockResolvedValueOnce({
       dbFlowId: "flow-1",
-      logicJumps: { "screen-1": [{}] },
+      logicJumps: { "screen-1": [{}, { conditions: [{ questionId: "b" }] }] },
     });
 
-    await expect(deleteQuestionById(SURVEY, "b")).rejects.toThrow(TypeError);
+    await expect(deleteQuestionById(SURVEY, "b")).resolves.toBeUndefined();
+    expect(db.waFlow.update.mock.calls[0][0].data.logicJumps).toEqual({ "screen-1": [{}] });
+  });
+
+  test("a logicJumps value that is not an array is left alone", async () => {
+    db.waFlow.findFirst.mockResolvedValueOnce({
+      dbFlowId: "flow-1",
+      logicJumps: { "screen-1": null },
+    });
+
+    await expect(deleteQuestionById(SURVEY, "b")).resolves.toBeUndefined();
+    expect(db.waFlow.update.mock.calls[0][0].data.logicJumps).toEqual({ "screen-1": null });
   });
 
   test("no flow means no pruning", async () => {
@@ -514,12 +532,16 @@ describe("getAllowedEmailsFromFile", () => {
     expect(emails).toEqual(["ann@example.test"]);
   });
 
-  // NOTE: the whole import is abandoned on the first row that fails the
-  // pattern — there is no per-row reporting and no partial result.
-  test("one bad row discards the entire file", async () => {
+  test("a bad row is reported with its row number", async () => {
     await expect(
       getAllowedEmailsFromFile(csv("email\nann@example.test\nnot-an-email") as never),
-    ).rejects.toThrow("Invalid Email");
+    ).rejects.toThrow(/row 3 \(not-an-email\)/);
+  });
+
+  test("every bad row is collected rather than only the first", async () => {
+    await expect(
+      getAllowedEmailsFromFile(csv("email\nnope\nann@example.test\nalso-nope") as never),
+    ).rejects.toThrow(/row 2 \(nope\), row 4 \(also-nope\)/);
   });
 
   test("a file with no usable rows is refused", async () => {
@@ -528,9 +550,12 @@ describe("getAllowedEmailsFromFile", () => {
     );
   });
 
-  test("a missing email column fails on the first row", async () => {
+  // A file with no `email` column used to fail on its first row with the same
+  // "Invalid Email" as a genuinely malformed address — two different problems
+  // that looked identical to the person uploading.
+  test("a missing email column says so", async () => {
     await expect(getAllowedEmailsFromFile(csv("name\nAnn") as never)).rejects.toThrow(
-      "Invalid Email",
+      "The file has no 'email' column",
     );
   });
 });

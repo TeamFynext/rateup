@@ -136,10 +136,9 @@ describe("shortIdUniqueConstraintErrHandler", () => {
     expect(create).toHaveBeenCalledTimes(2);
   });
 
-  // NOTE: the retry calls the wrapped function without forwarding `...args`, so the
-  // second attempt runs with no arguments at all. Whatever the first call was given
-  // is lost the moment a short id collides.
-  test("loses the arguments on the retry", async () => {
+  // The retry forwards `...args`, so the second attempt recreates the same row rather
+  // than running with undefined inputs.
+  test("keeps the arguments on the retry", async () => {
     const create = vi
       .fn()
       .mockRejectedValueOnce(shortUrlCollision())
@@ -148,7 +147,20 @@ describe("shortIdUniqueConstraintErrHandler", () => {
     await shortIdUniqueConstraintErrHandler(create, "first-arg", "second-arg");
 
     expect(create.mock.calls[0]).toEqual(["first-arg", "second-arg"]);
-    expect(create.mock.calls[1]).toEqual([]);
+    expect(create.mock.calls[1]).toEqual(["first-arg", "second-arg"]);
+  });
+
+  test("keeps them across more than one collision", async () => {
+    const create = vi
+      .fn()
+      .mockRejectedValueOnce(shortUrlCollision())
+      .mockRejectedValueOnce(shortUrlCollision())
+      .mockResolvedValueOnce({ id: "row-1" });
+
+    await shortIdUniqueConstraintErrHandler(create, "first-arg");
+
+    expect(create).toHaveBeenCalledTimes(3);
+    expect(create.mock.calls[2]).toEqual(["first-arg"]);
   });
 
   test("rethrows a unique-constraint error on some other column", async () => {

@@ -17,14 +17,8 @@ type ShareSettingsRequest = FastifyRequest<{
   Body: z.infer<typeof bodySchema>;
 }>;
 
-/**
- * A logo sent as a file arrives as the object onFile attached to the part. The
- * fields are optional because nothing validates the part beyond it being an
- * object — the same check the code has always made. (The original also compared
- * the object against the string "null", which can never match.)
- */
 const isFilePart = (value: unknown): value is Partial<UploadedFilePart> =>
-  typeof value === "object";
+  typeof value === "object" && value !== null;
 
 const getSettings = async (req: ShareSettingsRequest, _res: FastifyReply) => {
   const { resourceName, id } = req.params;
@@ -49,13 +43,10 @@ const updateSettings = async (req: ShareSettingsRequest, _res: FastifyReply) => 
 
   if (isFilePart(logoFile)) {
     const { fileBuffer, mimetype, fileExtension } = logoFile;
-    // filename and key both are same in s3 bucket.
-    const key = await uploadFileToS3(fileBuffer!, mimetype!, fileExtension!);
-    settingsObj.logoFile = `${key}`;
+    settingsObj.logoFile = await uploadFileToS3(fileBuffer!, mimetype!, fileExtension!);
 
-    // delete old file if present.
     if (oldLogoFile) {
-      deleteFileFromS3([{ Key: oldLogoFile }]);
+      await deleteFileFromS3([{ Key: oldLogoFile }]);
     }
   } else {
     if (oldLogoFile && logoFile !== "null") {
@@ -63,7 +54,7 @@ const updateSettings = async (req: ShareSettingsRequest, _res: FastifyReply) => 
     } else {
       settingsObj.logoFile = null;
       if (oldLogoFile) {
-        deleteFileFromS3([{ Key: oldLogoFile }]);
+        await deleteFileFromS3([{ Key: oldLogoFile }]);
       }
     }
   }

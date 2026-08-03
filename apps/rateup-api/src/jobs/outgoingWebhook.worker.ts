@@ -30,6 +30,7 @@ new Worker(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ event, ...payload }),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) {
       throw new Error(

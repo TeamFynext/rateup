@@ -14,18 +14,25 @@ const getGenerateQrRecordWithShortIdParams = z.object({
   shortUrlId: z.string(),
 });
 
+const targetLink = z
+  .url()
+  .max(2048)
+  .refine((value) => value.startsWith("http://") || value.startsWith("https://"), {
+    error: "link must be an http or https URL",
+  });
+
 const createGenerateQrRecordReqBody = z.object({
-  name: z.string(),
-  link: z.string(),
+  name: z.string().min(1).max(200),
+  link: targetLink,
 });
 
 const getAllGenerateQrRecordsResponse = z.array(generateQrBaseSchema);
 
 const updateGenerateQrRecordReqBody = z.object({
   shortUrlId: z.string(),
-  name: z.string().optional(),
+  name: z.string().min(1).max(200).optional(),
   shareSettings: z.any().optional(),
-  link: z.string().optional(),
+  link: targetLink.optional(),
 });
 
 type CreateGenerateQrRecordReqBody = z.infer<typeof createGenerateQrRecordReqBody>;

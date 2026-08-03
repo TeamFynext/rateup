@@ -59,6 +59,7 @@ beforeEach(() => {
   trace = [];
   handleWebhookMock.mockImplementation(async () => {
     trace.push("process");
+    return { processed: 1, failed: 0 };
   });
 });
 
@@ -78,10 +79,12 @@ describe("facebookWebhookEventHandler - the happy path", () => {
     expect(handleWebhookMock).toHaveBeenCalledWith(PAGE_EVENT);
   });
 
-  test("acknowledges before it starts processing, so Meta is not kept waiting", async () => {
+  // Processing happens BEFORE the acknowledgement now, so a failure can be reported to
+  // Meta and retried. Meta allows ~20s for a webhook response.
+  test("processes before it acknowledges, so a failure can still be reported", async () => {
     await facebookWebhookEventHandler(makeRequest(PAGE_EVENT), makeReply());
 
-    expect(trace).toEqual(["send", "process"]);
+    expect(trace).toEqual(["process", "send"]);
   });
 });
 
@@ -115,40 +118,51 @@ describe("facebookWebhookEventHandler - failures", () => {
     expect(handleWebhookMock).not.toHaveBeenCalled();
   });
 
-  test("does not attempt a second reply after it has already acknowledged", async () => {
+  test("answers a single 500 when processing throws outright", async () => {
     handleWebhookMock.mockRejectedValue(new Error("processing blew up"));
     const reply = makeReply();
 
     await facebookWebhookEventHandler(makeRequest(PAGE_EVENT), reply);
 
-    expect(reply.code).not.toHaveBeenCalledWith(500);
+    expect(reply.code).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledTimes(1);
   });
 
-  // NOTE: pins current behaviour. The 200 goes out before processing, so a
-  // processing failure leaves Meta believing the event was handled. Meta only
-  // retries on a non-2xx, so the event is dropped for good with one log line to
-  // show for it. See issues.txt 10.6.
-  test("leaves Meta with a 200 even when processing the event failed", async () => {
+  // Meta only retries on a non-2xx, so a processing failure must NOT be acknowledged —
+  // otherwise the event is dropped for good with one log line to show for it.
+  test("answers non-2xx when processing the event failed, so Meta retries", async () => {
     handleWebhookMock.mockRejectedValue(new Error("processing blew up"));
     const reply = makeReply();
 
-    await expect(
-      facebookWebhookEventHandler(makeRequest(PAGE_EVENT), reply),
-    ).resolves.toBeUndefined();
+    await facebookWebhookEventHandler(makeRequest(PAGE_EVENT), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.code).not.toHaveBeenCalledWith(200);
+  });
+
+  // A batch can partly succeed. Any failure still asks Meta to retry the batch;
+  // handleFacebookMessages guards on the Meta message id so the events that already
+  // succeeded are not stored twice.
+  test("answers non-2xx when only some events in the batch failed", async () => {
+    handleWebhookMock.mockResolvedValue({ processed: 2, failed: 1 });
+    const reply = makeReply();
+
+    await facebookWebhookEventHandler(makeRequest(PAGE_EVENT), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+  });
+
+  test("acknowledges when every event in the batch succeeded", async () => {
+    handleWebhookMock.mockResolvedValue({ processed: 3, failed: 0 });
+    const reply = makeReply();
+
+    await facebookWebhookEventHandler(makeRequest(PAGE_EVENT), reply);
 
     expect(reply.code).toHaveBeenCalledWith(200);
-    expect(reply.code).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("facebookWebhookEventHandler - who is allowed to post here", () => {
-  // NOTE: pins current behaviour. The route is unauthenticated and the handler
-  // never looks at x-hub-signature-256, so anyone who knows a connected page id
-  // can post fabricated inbound messages into that org's inbox — and those
-  // messages run the org's automated replies. isRequestSignatureValid exists in
-  // wa_encryption.utils.ts but is stubbed to `return true` and is not called from
-  // here anyway. See issues.txt 10.8.
   test("processes an event that carries no signature header", async () => {
     await facebookWebhookEventHandler(makeRequest(PAGE_EVENT, {}), makeReply());
 

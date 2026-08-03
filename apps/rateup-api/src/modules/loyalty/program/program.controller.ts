@@ -31,7 +31,7 @@ export async function getLoyaltyProgramHandler(request: FastifyRequest, reply: F
   try {
     const result = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!result) {
-      return reply.code(200).send([]);
+      return reply.code(404).send({ error: "Loyalty program not found" });
     }
     reply.code(200).send(result);
   } catch (e) {
@@ -48,7 +48,11 @@ export async function updateLoyaltyProgramHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyProgram(request.params.programId, request.body);
+    const result = await updateLoyaltyProgram(
+      request.params.programId,
+      request.body,
+      request.user.orgId,
+    );
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -65,7 +69,7 @@ export async function deleteLoyaltyProgramHandler(
 ) {
   try {
     const { force } = request.query;
-    await deleteLoyaltyProgram(request.params.programId, force);
+    await deleteLoyaltyProgram(request.params.programId, request.user.orgId, force);
     reply.code(204).send();
   } catch (e) {
     log.error(e);
@@ -78,7 +82,7 @@ export async function resetProgramPointsHandler(
   reply: FastifyReply,
 ) {
   try {
-    await resetProgramPoints(request.params.programId);
+    await resetProgramPoints(request.params.programId, request.user.orgId, request.user.id);
     reply.code(200).send({ message: "Points reset successfully" });
   } catch (e) {
     log.error(e);

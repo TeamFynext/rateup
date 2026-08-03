@@ -420,7 +420,10 @@ export async function completeInvite(token: string) {
       await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
       let id = signUpResult.user.id;
       let email = updatedInvitation.email;
-      let recipeName = getUserRecipeName(signUpResult.user.loginMethods[0].recipeId);
+      let recipeName = getUserRecipeName(
+        signUpResult.user.loginMethods[0].recipeId,
+        signUpResult.user.loginMethods[0].thirdParty?.id,
+      );
       if (!recipeName) {
         throw new Error(`Unsupported auth recipe: ${signUpResult.user.loginMethods[0].recipeId}`);
       }
@@ -447,7 +450,7 @@ export async function completeInvite(token: string) {
 
       //Create Team member
       if (orgMember && updatedInvitation.teamId) {
-        createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id);
+        await createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id);
       }
 
       const linkResponse = await EmailPassword.createResetPasswordLink(
@@ -485,8 +488,11 @@ export async function completeInvite(token: string) {
       });
     }
 
+    // Scoped to the inviting org. Keyed on userId alone, a user who already belonged to
+    // any other org looked like an existing member here, so accepting an invite to a
+    // second org silently did not add them to it.
     let orgMember = await prisma.orgMember.findFirst({
-      where: { userId: user.id },
+      where: { userId: user.id, orgId: updatedInvitation.orgId },
       select: {
         orgId: true,
         role: true,
@@ -513,7 +519,7 @@ export async function completeInvite(token: string) {
       await createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
     }
 
-    redirectLink = `${process.env.FRONTEND_URL}/login}`;
+    redirectLink = `${process.env.FRONTEND_URL}/login`;
   }
 
   return { ...updatedInvitation, isUser: isUser, redirectLink };
@@ -744,11 +750,18 @@ export async function getTeamIdsByUserId(userId: string) {
 
   return teams.map(({ teamId }) => teamId) || [];
 }
-export async function getTeamIdsBySurveyMapId(mapId: string[]) {
+export async function getTeamIdsBySurveyMapId(mapId: string[], userId: string) {
   const teams = await prisma.surveyTeamMap.findMany({
     where: {
       id: {
         in: mapId,
+      },
+      team: {
+        members: {
+          some: {
+            userId,
+          },
+        },
       },
     },
     select: {

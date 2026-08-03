@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 const createReviewSuggestionsSchema = z.object({
-  reviews: z.array(z.string().min(1).max(1000)).min(1),
-  language: z.string().min(2),
+  reviews: z.array(z.string().min(1).max(1000)).min(1).max(200),
+  language: z.string().min(2).max(35),
+});
+
+const publicReviewsQuerySchema = z.object({
+  language: z.string().min(2).max(35).optional(),
 });
 
 const updateReviewSuggestionSchema = z.object({
@@ -19,4 +23,9 @@ export type createReviewSuggestionsSchema = z.infer<typeof createReviewSuggestio
 export type updateReviewSuggestionSchema = z.infer<typeof updateReviewSuggestionSchema>;
 
 // Auto-exported after fastify-zod migration
-export { updateReviewSuggestionSchema, byReviewSuggestionIdSchema, createReviewSuggestionsSchema };
+export {
+  updateReviewSuggestionSchema,
+  byReviewSuggestionIdSchema,
+  createReviewSuggestionsSchema,
+  publicReviewsQuerySchema,
+};

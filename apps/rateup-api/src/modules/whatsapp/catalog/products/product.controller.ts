@@ -42,7 +42,7 @@ export async function createCatalogProductsBatchHandler(
     const { type } = request.body;
     const { catalogId } = request.params;
     const { orgId } = request.user;
-    const catalogInfo = await getWaCatalog(catalogId);
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
@@ -64,6 +64,10 @@ export async function syncCatalogProductsHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
     const res = await syncCatalogProducts(orgId, catalogId, request.body);
     reply.code(200).send(res);
   } catch (e) {
@@ -77,8 +81,15 @@ export async function getCatalogProductsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { catalogId } = request.params;
-    const res = await getCatalogProducts(catalogId, request.query);
+    // Ownership check, like every other handler here: getWaCatalog is scoped to the org,
+    // so another org's catalog comes back null and is answered 404.
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
+    const res = await getCatalogProducts(catalogId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -115,6 +126,14 @@ export async function updateCatalogProductsHandler(
     const { orgId } = request.user;
     const { type } = request.body;
     const { catalogId } = request.params;
+    // The per-product writes below are keyed on { catalogId, ... } so they cannot stray
+    // into another catalog, but nothing confirmed the CATALOG belongs to the caller —
+    // so a known catalogId let one org rewrite another's products, at Meta as well as
+    // locally.
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
     const res = await updateCatalogProducts(
       orgId,
       catalogId,
@@ -135,7 +154,7 @@ export async function getShopifyAvailableProductsHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const catalogInfo = await getWaCatalog(catalogId);
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
@@ -154,7 +173,7 @@ export async function importShopifyProductsHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const catalogInfo = await getWaCatalog(catalogId);
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
@@ -184,6 +203,13 @@ export async function createShopifyProductHandler(
     const { orgId } = request.user;
     const { catalogId } = request.params;
     const { title, description, brand, price, currencyCode, imageUrl } = request.body;
+
+    // Checked BEFORE the Shopify write: creating first meant a bad or foreign catalogId
+    // left an orphaned product in Shopify that nothing here would ever import.
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
 
     // Step 1: Create the product in Shopify
     const shopifyProduct = await createShopifyProduct(orgId, request.body);
@@ -233,7 +259,7 @@ export async function syncShopifyProductsFromShopifyHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const catalogInfo = await getWaCatalog(catalogId);
+    const catalogInfo = await getWaCatalog(catalogId, orgId);
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }

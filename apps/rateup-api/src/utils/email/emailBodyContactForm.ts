@@ -1,3 +1,5 @@
+import { escapeHtml } from "../html.js";
+
 export function emailBodyContactForm(name: string, email: string, message: string) {
   const body = `
     <html>
@@ -35,9 +37,9 @@ export function emailBodyContactForm(name: string, email: string, message: strin
         <p>Hello,</p>
         <p>You have received a new message in Rateup website contact form :</p>
         <ul>
-          <li><strong>Name:</strong> ${name}</li>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Message:</strong> ${message}</li>
+          <li><strong>Name:</strong> ${escapeHtml(name)}</li>
+          <li><strong>Email:</strong> ${escapeHtml(email)}</li>
+          <li><strong>Message:</strong> ${escapeHtml(message)}</li>
         </ul>
         <p>Please respond to this inquiry as soon as possible.</p>
         <p>Best regards,</p>

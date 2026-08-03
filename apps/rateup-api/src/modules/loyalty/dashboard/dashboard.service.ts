@@ -17,8 +17,13 @@ const MONTH_LABELS = [
 ];
 
 function calcChangePercent(current: number, previous: number): number | null {
-  if (previous === 0) return current > 0 ? 100 : null;
+  if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+function monthLabel(value: string | Date): string {
+  const date = new Date(value);
+  return `${MONTH_LABELS[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 export const getLoyaltyDashboardStats = async (orgId: string) => {
@@ -186,8 +191,8 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
       )
       SELECT
         m.month,
-        COALESCE(SUM(CASE WHEN t."transactionType" = 'earn' THEN t.points ELSE 0 END), 0) AS issued,
-        COALESCE(SUM(CASE WHEN t."transactionType" = 'redeem' THEN ABS(t.points) ELSE 0 END), 0) AS redeemed
+        COALESCE(SUM(CASE WHEN LOWER(t."transactionType") = 'earn' THEN t.points ELSE 0 END), 0) AS issued,
+        COALESCE(SUM(CASE WHEN LOWER(t."transactionType") = 'redeem' THEN ABS(t.points) ELSE 0 END), 0) AS redeemed
       FROM months m
       LEFT JOIN "LoyaltyTransaction" t
         ON t."programId" = ${program.id}::uuid
@@ -252,16 +257,15 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
     redeemed?: number | bigint | string | null;
   }
 
-  // Process monthly member growth
   const memberGrowth = (rawMemberGrowth as MemberGrowthRow[]).map((row) => ({
-    month: MONTH_LABELS[new Date(row.month).getMonth()],
+    month: monthLabel(row.month),
     members: Number(row.total_members || 0),
     active: Number(row.active_members || 0),
   }));
 
   // Process monthly points activity
   const pointsActivity = (rawPointsActivity as PointsActivityRow[]).map((row) => ({
-    month: MONTH_LABELS[new Date(row.month).getMonth()],
+    month: monthLabel(row.month),
     issued: Number(row.issued || 0),
     redeemed: Number(row.redeemed || 0),
   }));
@@ -276,7 +280,7 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
   };
   const recentActivity = recentTransactions.map((t) => ({
     user: t.account.contact.name || "Unknown",
-    action: actionMap[t.transactionType] ?? t.transactionType,
+    action: actionMap[t.transactionType?.toLowerCase()] ?? t.transactionType,
     item: t.reward?.name ?? t.description ?? t.source,
     points: t.points,
     createdAt: t.createdAt,

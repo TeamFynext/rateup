@@ -236,7 +236,7 @@ export async function handleWaMessages(
       // of resurfacing in the inbox. (Was a SPAM *status* check before spam moved
       // onto the contact.)
       if (!contact.isSpam && WaMessageClosedStatus.includes(contact.waMessageAssignStatus)) {
-        contact = await updateContactById(contact.id, {
+        contact = await updateContactById(contact.id, contact.orgId, {
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
         });
       }
@@ -309,7 +309,7 @@ export async function handleWaMessages(
         waMessage.id,
       );
       if (isFirstSendMessage) {
-        await updateConversation(conversation.id, {
+        await updateConversation(conversation.id, contact.orgId, {
           firstRespondedAt: new Date(),
           firstRespondedByUserAt: userId ? new Date() : undefined,
         });
@@ -319,7 +319,7 @@ export async function handleWaMessages(
           waMessage.id,
         );
         if (isFirstUserSendMessage) {
-          await updateConversation(conversation.id, {
+          await updateConversation(conversation.id, contact.orgId, {
             firstRespondedByUserAt: new Date(),
           });
         }
@@ -361,7 +361,11 @@ export async function handleWaMessages(
 
     return waMessage;
   } catch (error) {
+    // Logged and rethrown, not swallowed: this is the entry point for every inbound and
+    // outbound message, and returning undefined made a lost message indistinguishable
+    // from a stored one to every caller.
     log.error({ err: error }, "Error in handleWaMessages");
+    throw error;
   }
 }
 
@@ -380,7 +384,7 @@ export async function sendNewWaMessageHandler(
       reply.status(401).send("User not found on request");
       return;
     }
-    const contact = await getContactById(contactId);
+    const contact = await getContactById(contactId, orgId);
     if (!contact) {
       log.error("Contact not found with id %s", contactId);
       reply.status(404).send("Contact not found");
@@ -404,14 +408,20 @@ export async function sendNewWaMessageHandler(
       case "text": {
         const media = request.body.media;
         if (media?.length) {
-          if (!contact.phone) {
-            throw new Error(`Contact ${contact.id} has no phone number for a media send`);
+          // `to` is the platform-resolved address (igsId / psid / other / phone). This
+          // used to send captioned media to contact.phone while the bare-media branch
+          // below used `to`, so on Instagram and Facebook the same image reached a
+          // different address depending on whether it carried a caption.
+          if (!to) {
+            throw new Error(
+              `No destination address found for contact ${contact.id} on ${platform}`,
+            );
           }
           const text = request.body.text?.body;
           const caption = typeof text === "string" ? text : parseToWhatsAppFormat(text);
           await sendMediaMessages(
             media,
-            contact.phone,
+            to,
             orgId,
             userId,
             platform as PlatformType,
@@ -644,11 +654,16 @@ export async function reopenConversationHandler(
 }
 
 export async function generateChatFilterDataHandler(request: FastifyRequest, reply: FastifyReply) {
-  const orgId = request.user.orgId;
-  const chatFilters = await generateChatFilterData(orgId);
-  if (chatFilters) {
-    reply.status(200).send(chatFilters);
-  } else {
+  try {
+    const orgId = request.user.orgId;
+    const chatFilters = await generateChatFilterData(orgId);
+    if (chatFilters) {
+      reply.status(200).send(chatFilters);
+    } else {
+      reply.status(500).send("Internal Server Error");
+    }
+  } catch (error) {
+    log.error({ err: error }, "Error in generateChatFilterDataHandler");
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -774,9 +789,14 @@ export async function assignWaMessageHandler(
   request: FastifyRequest<{ Body: WaMessageAssignBody }>,
   reply: FastifyReply,
 ) {
-  const res = await assignWaMessageToUser(request.body, request.user.orgId, request.user.userId);
+  try {
+    const res = await assignWaMessageToUser(request.body, request.user.orgId, request.user.userId);
 
-  return reply.send(res);
+    return reply.send(res);
+  } catch (error) {
+    log.error({ err: error }, "Error in assignWaMessageHandler");
+    return reply.status(500).send("Internal Server Error");
+  }
 }
 
 export async function getAssignedUserForContactHandler(
@@ -962,26 +982,42 @@ export async function bulkAssignWaMessageHandler(
   try {
     const { contactIds, assignee, assignIfOnline, messageId } = request.body;
 
+    // Guarded per contact so one failure does not abandon the rest: the caller gets a
+    // per-contact outcome and can tell which conversations were actually assigned.
     const results = [];
+    const failures = [];
 
     for (const contactId of contactIds) {
-      const res = await assignWaMessageToUser(
-        {
-          contactId,
-          assignees: [assignee],
-          assignIfOnline: assignIfOnline ?? false,
-          messageId,
-        },
-        request.user.orgId,
-        request.userId,
-      );
+      try {
+        const res = await assignWaMessageToUser(
+          {
+            contactId,
+            assignees: [assignee],
+            assignIfOnline: assignIfOnline ?? false,
+            messageId,
+          },
+          request.user.orgId,
+          request.userId,
+        );
 
-      results.push(res);
+        results.push({ contactId, success: true, result: res });
+      } catch (e) {
+        log.error({ err: e, contactId }, "Error assigning chat in bulk assign");
+        results.push({
+          contactId,
+          success: false,
+          error: e instanceof Error ? e.message : "Something went wrong",
+        });
+        failures.push(contactId);
+      }
     }
 
     return reply.code(200).send({
-      message: "Chats assigned successfully",
-      assignedCount: results.length,
+      message: failures.length
+        ? `Assigned ${results.length - failures.length} of ${results.length} chats`
+        : "Chats assigned successfully",
+      assignedCount: results.length - failures.length,
+      failedCount: failures.length,
       results,
     });
   } catch (error) {

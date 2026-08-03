@@ -233,14 +233,21 @@ const updateQuestionRequestSchema = z.object({
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
 
+const replaceQuestionsRequestSchema = z.object({
+  questions: z.array(z.looseObject({ id: z.string().min(1) })).max(500),
+  screenId: z.string().min(1).optional(),
+});
+
 export type CreateQuestionInput = z.infer<typeof createQuestionRequestSchema>;
 export type UpdateQuestionsOrderInput = z.infer<typeof updateQuestionsOrderRequestSchema>;
+export type ReplaceQuestionsInput = z.infer<typeof replaceQuestionsRequestSchema>;
 export type UpdateQuestionInput = z.infer<typeof updateQuestionRequestSchema>;
 export type QuestionRouteParams = z.infer<typeof questionRouteParamsSchema>;
 export type QuestionsRouteParams = z.infer<typeof questionsRouteParamsSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
+  replaceQuestionsRequestSchema,
   createQuestionRequestSchema,
   createQuestionResponseSchema,
   updateQuestionsOrderRequestSchema,

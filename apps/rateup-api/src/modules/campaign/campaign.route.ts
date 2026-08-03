@@ -15,7 +15,6 @@ import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../utils/permissions.js";
-import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth.js";
 import { verifyCampaignMaxLimit } from "./campaign.util.js";
 import {
   byCampaignIdParamsSchema,
@@ -78,7 +77,6 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/:campaignId/send",
     {
-      preHandler: verifyMessageMonthlyLimitRestrictionForCampaign,
       schema: {
         params: byCampaignIdParamsSchema,
       },

@@ -32,13 +32,6 @@ export const dataExtractFileMimeTypes = [
   ODS_MIMETYPE,
 ];
 
-const uploadFileSchema = z.object({
-  file: z.any().refine((value) => allowedMimeTypes.includes(value), {
-    path: ["file"],
-    error: "Invalid file format",
-  }),
-});
-
 const fileDeleteInputSchema = z.object({
   fileKeyArray: z
     .array(
@@ -49,9 +42,7 @@ const fileDeleteInputSchema = z.object({
     .min(1),
 });
 
-export type UploadFileInput = z.infer<typeof uploadFileSchema>;
-
 export type fileDeleteInput = z.infer<typeof fileDeleteInputSchema>;
 
 // Auto-exported after fastify-zod migration
-export { uploadFileSchema, fileDeleteInputSchema };
+export { fileDeleteInputSchema };

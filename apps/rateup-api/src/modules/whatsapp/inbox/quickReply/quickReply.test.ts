@@ -5,7 +5,7 @@ vi.mock("../../../../utils/prisma.js", () => ({
     whatsappQuickReply: {
       create: vi.fn(),
       findMany: vi.fn(),
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
       delete: vi.fn(),
       update: vi.fn(),
     },
@@ -87,7 +87,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.create.mockResolvedValue(QUICK_REPLY);
   db.findMany.mockResolvedValue([QUICK_REPLY]);
-  db.findUnique.mockResolvedValue(QUICK_REPLY);
+  db.findFirst.mockResolvedValue(QUICK_REPLY);
   db.delete.mockResolvedValue(QUICK_REPLY);
   db.update.mockResolvedValue(QUICK_REPLY);
 });
@@ -106,25 +106,51 @@ describe("quick reply service", () => {
     expect(result).toEqual([QUICK_REPLY]);
   });
 
-  test("getWaQuickReplyById looks the reply up by its id", async () => {
-    await getWaQuickReplyById("qr-1");
+  test("getWaQuickReplyById looks the reply up by id and org", async () => {
+    await getWaQuickReplyById("qr-1", "org-1");
 
-    expect(db.findUnique).toHaveBeenCalledWith({ where: { id: "qr-1" } });
+    expect(db.findFirst).toHaveBeenCalledWith({ where: { id: "qr-1", orgId: "org-1" } });
   });
 
-  test("deleteWaQuickReplyById removes the reply by its id", async () => {
-    await deleteWaQuickReplyById("qr-1");
+  test("deleteWaQuickReplyById confirms ownership before removing the reply", async () => {
+    await deleteWaQuickReplyById("qr-1", "org-1");
 
+    expect(db.findFirst).toHaveBeenCalledWith({
+      where: { id: "qr-1", orgId: "org-1" },
+      select: { id: true },
+    });
     expect(db.delete).toHaveBeenCalledWith({ where: { id: "qr-1" } });
   });
 
-  test("updateWaQuickReplyById applies a partial change", async () => {
-    await updateWaQuickReplyById("qr-1", { text: "Updated text" });
+  test("deleteWaQuickReplyById refuses a reply the org does not own", async () => {
+    db.findFirst.mockResolvedValue(null);
 
+    await expect(deleteWaQuickReplyById("qr-victim", "org-attacker")).rejects.toThrow(
+      "Quick reply not found",
+    );
+    expect(db.delete).not.toHaveBeenCalled();
+  });
+
+  test("updateWaQuickReplyById applies a partial change to its own org's reply", async () => {
+    await updateWaQuickReplyById("qr-1", "org-1", { text: "Updated text" });
+
+    expect(db.findFirst).toHaveBeenCalledWith({
+      where: { id: "qr-1", orgId: "org-1" },
+      select: { id: true },
+    });
     expect(db.update).toHaveBeenCalledWith({
       where: { id: "qr-1" },
       data: { text: "Updated text" },
     });
+  });
+
+  test("updateWaQuickReplyById refuses a reply the org does not own", async () => {
+    db.findFirst.mockResolvedValue(null);
+
+    await expect(
+      updateWaQuickReplyById("qr-victim", "org-attacker", { text: "overwritten" }),
+    ).rejects.toThrow("Quick reply not found");
+    expect(db.update).not.toHaveBeenCalled();
   });
 });
 
@@ -195,24 +221,21 @@ describe("getWaQuickReplyByIdHandler", () => {
 
     await getWaQuickReplyByIdHandler(makeRequest({ params: { quickReplyId: "qr-1" } }), reply);
 
-    expect(db.findUnique).toHaveBeenCalledWith({ where: { id: "qr-1" } });
+    expect(db.findFirst).toHaveBeenCalledWith({ where: { id: "qr-1", orgId: "org-1" } });
     expect(reply.payload).toEqual(QUICK_REPLY);
   });
 
-  // NOTE: a missing reply is answered 200 with a null body rather than 404, so the
-  // client cannot tell "no such reply" from "a reply with no content".
-  test("answers 200 with null for a reply that does not exist", async () => {
-    db.findUnique.mockResolvedValue(null);
+  test("answers 404 for a reply that does not exist", async () => {
+    db.findFirst.mockResolvedValue(null);
     const reply = makeReply();
 
     await getWaQuickReplyByIdHandler(makeRequest({ params: { quickReplyId: "missing" } }), reply);
 
-    expect(reply.code).toHaveBeenCalledWith(200);
-    expect(reply.payload).toBeNull();
+    expect(reply.code).toHaveBeenCalledWith(404);
   });
 
   test("returns 500 when the lookup throws", async () => {
-    db.findUnique.mockRejectedValue(new Error("db down"));
+    db.findFirst.mockRejectedValue(new Error("db down"));
     const reply = makeReply();
 
     await getWaQuickReplyByIdHandler(makeRequest({ params: { quickReplyId: "qr-1" } }), reply);
@@ -287,13 +310,12 @@ describe("updateWaQuickReplyByIdHandler", () => {
   });
 });
 
-// NOTE: create and list are scoped to the caller's org, but the by-id routes are not.
-// Nothing in the query or the handler ties the row to request.user.orgId, so an
-// authenticated user of one org can read, change or delete another org's quick reply
-// by its id alone. These tests pin the missing scoping, not endorse it.
+// Every by-id route is scoped to request.user.orgId, so another org's reply is
+// indistinguishable from one that never existed: the lookup is filtered by org and
+// the answer is a 404.
 describe("cross-org access to a reply by id", () => {
-  test("reads another org's reply without checking who owns it", async () => {
-    db.findUnique.mockResolvedValue({ ...QUICK_REPLY, orgId: "org-victim" });
+  test("refuses to read another org's reply", async () => {
+    db.findFirst.mockResolvedValue(null);
     const reply = makeReply();
 
     await getWaQuickReplyByIdHandler(
@@ -301,11 +323,14 @@ describe("cross-org access to a reply by id", () => {
       reply,
     );
 
-    expect(db.findUnique).toHaveBeenCalledWith({ where: { id: "qr-victim" } });
-    expect(reply.payload).toMatchObject({ orgId: "org-victim" });
+    expect(db.findFirst).toHaveBeenCalledWith({
+      where: { id: "qr-victim", orgId: "org-attacker" },
+    });
+    expect(reply.code).toHaveBeenCalledWith(404);
   });
 
-  test("deletes another org's reply without checking who owns it", async () => {
+  test("refuses to delete another org's reply", async () => {
+    db.findFirst.mockResolvedValue(null);
     const reply = makeReply();
 
     await deleteWaQuickReplyByIdHandler(
@@ -313,20 +338,24 @@ describe("cross-org access to a reply by id", () => {
       reply,
     );
 
-    expect(db.delete).toHaveBeenCalledWith({ where: { id: "qr-victim" } });
-    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(db.delete).not.toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(404);
   });
 
-  test("updates another org's reply without checking who owns it", async () => {
+  test("refuses to update another org's reply", async () => {
+    db.findFirst.mockResolvedValue(null);
+    const reply = makeReply();
+
     await updateWaQuickReplyByIdHandler(
       makeRequest({
         params: { quickReplyId: "qr-victim" },
         body: { text: "overwritten" },
         user: { orgId: "org-attacker" },
       }),
-      makeReply(),
+      reply,
     );
 
-    expect(db.update.mock.calls[0][0].where).toEqual({ id: "qr-victim" });
+    expect(db.update).not.toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(404);
   });
 });

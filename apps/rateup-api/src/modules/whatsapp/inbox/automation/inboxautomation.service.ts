@@ -119,6 +119,7 @@ export async function runInboxAutomationCron() {
       },
       select: {
         id: true,
+        orgId: true,
       },
     });
 
@@ -126,6 +127,7 @@ export async function runInboxAutomationCron() {
       try {
         await updateContactById(
           contact.id,
+          contact.orgId,
           {
             waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
           },

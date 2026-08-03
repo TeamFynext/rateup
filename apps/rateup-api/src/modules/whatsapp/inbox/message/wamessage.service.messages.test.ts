@@ -557,9 +557,6 @@ describe("sendMediaMessages", () => {
     expect(sendMessageMock).not.toHaveBeenCalled();
   });
 
-  // An unrecognised media type used to leave messageBody undefined and still call
-  // send() with it (see issues.txt). Fixed to skip the item and log instead of
-  // forwarding an undefined message body to the WhatsApp send path.
   test("skips a media type it cannot build instead of sending an empty message", async () => {
     await sendMediaMessages(
       [{ type: "sticker" as any, url: "https://f/1", name: "f" }],

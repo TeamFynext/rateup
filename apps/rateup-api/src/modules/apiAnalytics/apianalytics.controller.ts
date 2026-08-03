@@ -6,9 +6,14 @@ import {
   getTeamPerformanceStats,
   getTemplateCategoryOverview,
   getTemplatePerformanceStats,
-  getWaMessageOverviewByTeamAndOrg,
+  getWaMessageOverview,
 } from "./apianalytics.service.js";
 import { StatsQuerySchema, TrendQuerySchema } from "./apianalytics.schema.js";
+
+function parseDateRange(dateRange: string | undefined): [string, string] | undefined {
+  const parts = dateRange?.split(",") ?? [];
+  return parts.length === 2 ? [parts[0], parts[1]] : undefined;
+}
 
 export async function getApiAnalyticsHandler(
   request: FastifyRequest<{
@@ -17,11 +22,11 @@ export async function getApiAnalyticsHandler(
   reply: FastifyReply,
 ) {
   const { orgId } = request.user;
-  const dateRange = request.query.dateRange?.split(",") || [];
+  const dateRange = parseDateRange(request.query.dateRange);
   const teamId = request.query?.teamId;
   const apiType = request.query?.apiType ?? "all";
   try {
-    const res = await getWaMessageOverviewByTeamAndOrg(teamId, orgId, dateRange, apiType);
+    const res = await getWaMessageOverview(orgId, teamId, dateRange, apiType);
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching api analytics");
@@ -39,11 +44,7 @@ export async function getDeliveredFailedTrendHandler(
   const apiType = request.query?.apiType ?? "all";
   const teamId = request.query.teamId ?? "all";
   const granularity = request.query.granularity === "hour" ? "hour" : "day";
-
-  const dateRange =
-    request.query.dateRange?.split(",").length === 2
-      ? (request.query.dateRange.split(",") as [string, string])
-      : undefined;
+  const dateRange = parseDateRange(request.query.dateRange);
 
   try {
     const [trend, weekTrend] = await Promise.all([
@@ -71,7 +72,7 @@ export async function getTemplateCategoryHandler(
 ) {
   const { orgId } = request.user;
   const apiType = request.query?.apiType ?? "all";
-  const dateRange = request.query.dateRange?.split(",") || [];
+  const dateRange = parseDateRange(request.query.dateRange);
   const teamId = request.query?.teamId || "all";
 
   try {
@@ -100,7 +101,7 @@ export async function getTeamPerformanceStatsHandler(
 ) {
   const { orgId } = request.user;
   const apiType = request.query?.apiType ?? "all";
-  const dateRange = request.query.dateRange?.split(",") || [];
+  const dateRange = parseDateRange(request.query.dateRange);
   try {
     const res = await getTeamPerformanceStats(orgId, dateRange, apiType);
     reply.send(res);

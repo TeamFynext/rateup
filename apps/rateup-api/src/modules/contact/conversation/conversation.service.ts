@@ -218,7 +218,11 @@ export async function setInboxStatus(
   return result;
 }
 
-export async function updateConversation(conversationId: string, data: UpdateConversationSchema) {
+export async function updateConversation(
+  conversationId: string,
+  orgId: string,
+  data: UpdateConversationSchema,
+) {
   // A bare `status` write here would leave the close stamps as they were — a
   // closed ticket carrying a live status, which is exactly what put closed
   // tickets back in the Open tab. Any status change is expanded through the same
@@ -228,6 +232,7 @@ export async function updateConversation(conversationId: string, data: UpdateCon
   return await prisma.conversation.update({
     where: {
       id: conversationId,
+      contact: { orgId },
     },
     data: status
       ? { ...conversationStatusData(status, resolveInboxActor(rest.closedBy)), ...rest }
@@ -260,18 +265,20 @@ export async function setConversationSubjectIfBlank(conversationId: string, subj
   return true;
 }
 
-export async function getConversationById(conversationId: string) {
-  return await prisma.conversation.findUnique({
+export async function getConversationById(conversationId: string, orgId: string) {
+  return await prisma.conversation.findFirst({
     where: {
       id: conversationId,
+      contact: { orgId },
     },
   });
 }
 
-export async function deleteConversation(conversationId: string) {
+export async function deleteConversation(conversationId: string, orgId: string) {
   return await prisma.conversation.delete({
     where: {
       id: conversationId,
+      contact: { orgId },
     },
   });
 }
@@ -546,9 +553,9 @@ export async function getConversationOverview(
   )
   SELECT 
    (COUNT(*) FILTER (WHERE c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())))::INTEGER AS "totalConversations",
-   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
+   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW()))
    AS "averageResponseTime",
-   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
+   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW()))
    AS "averageResponseTimeByAgent",
    CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) = 0 THEN 0
         ELSE ( 
@@ -686,8 +693,9 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
   dateKey: string,
   dateRange: string[],
 ) {
-  const startDate = new Date(dateRange[0]);
-  const endDate = new Date(dateRange[1]);
+  const hasRange = dateRange?.length === 2;
+  const startDate = hasRange ? new Date(dateRange[0]) : new Date(0);
+  const endDate = hasRange ? new Date(dateRange[1]) : new Date();
 
   const groupByHour = dateKey === "today" || dateKey === "yesterday";
   const periodColumn = groupByHour
@@ -843,13 +851,11 @@ WHERE ct."orgId" = ${orgId}::uuid;
   const thisWeekResolvedRate = totalConversation
     ? Math.round(((resolvedThisWeek / totalConversation) * 100 + Number.EPSILON) * 100) / 100
     : 0;
-  const lastWeekResolvedRate = totalConversation
-    ? Math.round(
-        ((resolvedLastWeek / (totalConversation - conversationCreatedToday)) * 100 +
-          Number.EPSILON) *
-          100,
-      ) / 100
-    : 0;
+  const lastWeekTotal = totalConversation - conversationCreatedToday;
+  const lastWeekResolvedRate =
+    lastWeekTotal > 0
+      ? Math.round(((resolvedLastWeek / lastWeekTotal) * 100 + Number.EPSILON) * 100) / 100
+      : 0;
   const resolvedRateDifference = thisWeekResolvedRate - lastWeekResolvedRate;
   return { ...rest, resolvedRateDifference };
 }
@@ -1602,8 +1608,8 @@ export async function getTeamDetailedMetrics(
 
   SELECT
     ${teamId}::uuid AS "teamId",
-    (SELECT "name" FROM "Team" WHERE id = ${teamId}::uuid) AS "teamName",
-    (SELECT "color" FROM "Team" WHERE id = ${teamId}::uuid) AS "teamColor",
+    (SELECT "name" FROM "Team" WHERE id = ${teamId}::uuid AND "orgId" = ${orgId}::uuid) AS "teamName",
+    (SELECT "color" FROM "Team" WHERE id = ${teamId}::uuid AND "orgId" = ${orgId}::uuid) AS "teamColor",
     AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt IS NOT NULL) AS "averageResponseTime",
     COUNT(*) FILTER (WHERE tc."status"::text = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "activeChats",
     CASE WHEN COUNT(*) = 0 THEN 0

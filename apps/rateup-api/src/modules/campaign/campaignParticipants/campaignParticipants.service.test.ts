@@ -2,12 +2,15 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
+    campaign: { findFirst: vi.fn() },
+    contact: { findMany: vi.fn() },
     contactGroupMap: { findMany: vi.fn() },
     campaignParticipant: {
       count: vi.fn(),
       createMany: vi.fn(),
       delete: vi.fn(),
       deleteMany: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -43,9 +46,18 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
+  campaign: { findFirst: Mock };
+  contact: { findMany: Mock };
   contactGroupMap: { findMany: Mock };
   campaignParticipant: Record<
-    "count" | "createMany" | "delete" | "deleteMany" | "findMany" | "findUnique" | "update",
+    | "count"
+    | "createMany"
+    | "delete"
+    | "deleteMany"
+    | "findFirst"
+    | "findMany"
+    | "findUnique"
+    | "update",
     Mock
   >;
   campaignDripStage: { findMany: Mock };
@@ -56,10 +68,14 @@ const db = prisma as unknown as {
 const mapStatusesMock = mapStatuses as unknown as Mock;
 
 const CAMPAIGN_ID = "camp-1";
+const ORG_A = "org-a";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  db.campaign.findFirst.mockResolvedValue({ id: CAMPAIGN_ID });
+  db.contact.findMany.mockResolvedValue([]);
   db.contactGroupMap.findMany.mockResolvedValue([]);
+  db.campaignParticipant.findFirst.mockResolvedValue(null);
   db.campaignParticipant.createMany.mockResolvedValue({ count: 0 });
   db.campaignParticipant.findMany.mockResolvedValue([]);
   db.campaignParticipant.findUnique.mockResolvedValue(null);
@@ -77,7 +93,11 @@ beforeEach(() => {
 
 describe("createCampaignParticipantsFromContacts", () => {
   test("adds one pending participant per contact", async () => {
-    await createCampaignParticipantsFromContacts(CAMPAIGN_ID, { contactIds: ["c-1", "c-2"] });
+    db.contact.findMany.mockResolvedValue([{ id: "c-1" }, { id: "c-2" }]);
+
+    await createCampaignParticipantsFromContacts(CAMPAIGN_ID, ORG_A, {
+      contactIds: ["c-1", "c-2"],
+    });
 
     expect(db.campaignParticipant.createMany.mock.calls[0][0]).toEqual({
       data: [
@@ -98,18 +118,27 @@ describe("createCampaignParticipantsFromContacts", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The contact ids go from the request body into
-  // createMany with nothing in between — no lookup, no org check. So naming another
-  // org's contact ids adds their customers to your campaign, and the next send
-  // messages them from your WhatsApp number. See issues.txt 17.3.
-  test("adds any contact id it is handed, whoever owns it", async () => {
-    await createCampaignParticipantsFromContacts(CAMPAIGN_ID, {
+  test("adds nothing for a contact id belonging to another org", async () => {
+    db.contact.findMany.mockResolvedValue([]);
+
+    await createCampaignParticipantsFromContacts(CAMPAIGN_ID, ORG_A, {
       contactIds: ["another-orgs-contact"],
     });
 
-    expect(db.campaignParticipant.createMany.mock.calls[0][0].data[0].contactId).toBe(
-      "another-orgs-contact",
-    );
+    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
+      id: { in: ["another-orgs-contact"] },
+      orgId: ORG_A,
+    });
+    expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([]);
+  });
+
+  test("refuses a campaign belonging to another org", async () => {
+    db.campaign.findFirst.mockResolvedValue(null);
+
+    await expect(
+      createCampaignParticipantsFromContacts(CAMPAIGN_ID, ORG_A, { contactIds: ["c-1"] }),
+    ).rejects.toThrow("Campaign not found");
+    expect(db.campaignParticipant.createMany).not.toHaveBeenCalled();
   });
 });
 
@@ -120,7 +149,7 @@ describe("createCampaignParticipantsFromGroup", () => {
       { contactId: "c-2", contactGroupId: "g-1" },
     ]);
 
-    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, { groupIds: ["g-1"] });
+    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, ORG_A, { groupIds: ["g-1"] });
 
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([
       {
@@ -141,21 +170,21 @@ describe("createCampaignParticipantsFromGroup", () => {
   });
 
   test("adds nothing for a group that holds no contacts", async () => {
-    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, { groupIds: ["g-empty"] });
+    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, ORG_A, { groupIds: ["g-empty"] });
 
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([]);
   });
 
-  // NOTE: same gap as above, and worse in effect — one group id pulls in every
-  // contact that group holds. The lookup filters on contactGroupId alone.
-  // See issues.txt 17.3.
-  test("reads a contact group without checking whose it is", async () => {
-    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, {
+  test("reads a contact group only when it is the caller's", async () => {
+    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, ORG_A, {
       groupIds: ["another-orgs-group"],
     });
 
     expect(db.contactGroupMap.findMany.mock.calls[0][0]).toEqual({
-      where: { contactGroupId: { in: ["another-orgs-group"] } },
+      where: {
+        contactGroupId: { in: ["another-orgs-group"] },
+        contactGroup: { team: { orgId: ORG_A } },
+      },
     });
   });
 });
@@ -168,7 +197,7 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
       { contactId: "c-2", contactGroupId: null, status: "failed" },
     ]);
 
-    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, {
+    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, ORG_A, {
       campaignIds: ["camp-old"],
       status: ["SENT"],
     } as any);
@@ -183,7 +212,7 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
       { contactId: "c-1", contactGroupId: null, status: "pending" },
     ]);
 
-    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, {
+    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, ORG_A, {
       campaignIds: ["camp-old"],
     } as any);
 
@@ -192,41 +221,63 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
     );
   });
 
-  // NOTE: pins current behaviour. The source campaigns are read by id alone. So
-  // naming another org's campaign id copies their entire participant list — every
-  // contact they were about to message — into your campaign. See issues.txt 17.3.
-  test("copies from any campaign id it is handed", async () => {
-    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, {
+  test("copies only from campaigns the caller's org owns", async () => {
+    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, ORG_A, {
       campaignIds: ["another-orgs-campaign"],
     } as any);
 
     expect(db.campaignParticipant.findMany.mock.calls[0][0].where).toEqual({
       campaignId: { in: ["another-orgs-campaign"] },
+      campaign: { team: { orgId: ORG_A } },
     });
   });
 
-  // NOTE: every copied participant is marked as having come from a GROUP, even one
-  // that was added individually and has no contactGroupId. The source is wrong for
-  // anything but a group-sourced participant. See issues.txt 17.8.
-  test("marks an individually-added participant as group-sourced", async () => {
+  test("carries an individually-added participant's own source through", async () => {
     db.campaignParticipant.findMany.mockResolvedValue([
-      { contactId: "c-1", contactGroupId: null, status: "pending" },
+      {
+        contactId: "c-1",
+        contactGroupId: null,
+        status: "pending",
+        source: CampaignParticipantSource.INDIVIDUAL,
+      },
     ]);
 
-    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, {
+    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, ORG_A, {
+      campaignIds: ["camp-old"],
+    } as any);
+
+    expect(db.campaignParticipant.createMany.mock.calls[0][0].data[0]).toMatchObject({
+      source: CampaignParticipantSource.INDIVIDUAL,
+      contactGroupId: null,
+    });
+  });
+
+  test("carries a group-sourced participant's source through too", async () => {
+    db.campaignParticipant.findMany.mockResolvedValue([
+      {
+        contactId: "c-1",
+        contactGroupId: "g-1",
+        status: "pending",
+        source: CampaignParticipantSource.GROUP,
+      },
+    ]);
+
+    await createCampaignParticipantsFromAnotherCampaign(CAMPAIGN_ID, ORG_A, {
       campaignIds: ["camp-old"],
     } as any);
 
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data[0]).toMatchObject({
       source: CampaignParticipantSource.GROUP,
-      contactGroupId: null,
+      contactGroupId: "g-1",
     });
   });
 });
 
 describe("createCampaignParticipants", () => {
   test("draws from contacts, groups and other campaigns at once", async () => {
-    await createCampaignParticipants(CAMPAIGN_ID, {
+    db.contact.findMany.mockResolvedValue([{ id: "c-1" }]);
+
+    await createCampaignParticipants(CAMPAIGN_ID, ORG_A, {
       contactIds: ["c-1"],
       groupIds: ["g-1"],
       campaignIds: ["camp-old"],
@@ -242,7 +293,7 @@ describe("createCampaignParticipants", () => {
     ]);
     db.campaignDripStage.findMany.mockResolvedValue([{ id: "s-1" }, { id: "s-2" }]);
 
-    await createCampaignParticipants(CAMPAIGN_ID, {
+    await createCampaignParticipants(CAMPAIGN_ID, ORG_A, {
       contactIds: [],
       groupIds: [],
     } as any);
@@ -255,7 +306,7 @@ describe("createCampaignParticipants", () => {
   test("skips the drip mapping for a campaign with no stages", async () => {
     db.campaignParticipant.findMany.mockResolvedValue([{ id: "p-1", status: "PENDING" }]);
 
-    await createCampaignParticipants(CAMPAIGN_ID, { contactIds: [], groupIds: [] } as any);
+    await createCampaignParticipants(CAMPAIGN_ID, ORG_A, { contactIds: [], groupIds: [] } as any);
 
     expect(db.campaignParticipantDripStage.createMany).not.toHaveBeenCalled();
   });
@@ -264,7 +315,7 @@ describe("createCampaignParticipants", () => {
     db.campaignParticipant.createMany.mockResolvedValue({ count: 2 });
 
     await expect(
-      createCampaignParticipants(CAMPAIGN_ID, { contactIds: [], groupIds: [] } as any),
+      createCampaignParticipants(CAMPAIGN_ID, ORG_A, { contactIds: [], groupIds: [] } as any),
     ).resolves.toEqual({
       fromContacts: { count: 2 },
       fromGroups: { count: 2 },
@@ -294,7 +345,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("returns the page alongside the total and the filtered total", async () => {
-    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
     } as any);
@@ -305,7 +356,10 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("brings each participant's contact details back with them", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, { page: 0, limit: 50 } as any);
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
+      page: 0,
+      limit: 50,
+    } as any);
 
     expect(db.campaignParticipant.findMany.mock.calls[0][0].include.contact.select).toEqual({
       name: true,
@@ -315,7 +369,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("searches names and numbers when a search term is given", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       search: "ada",
@@ -331,7 +385,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   test("counts the search separately from the total", async () => {
     db.campaignParticipant.count.mockResolvedValueOnce(100).mockResolvedValueOnce(3);
 
-    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       search: "ada",
@@ -342,7 +396,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("filters on a contact's consent flag", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       consent: "true",
@@ -354,7 +408,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("sorts by the column asked for", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       sort: "sentAt",
@@ -364,14 +418,8 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     expect(db.campaignParticipant.findMany.mock.calls[0][0].orderBy).toEqual({ sentAt: "desc" });
   });
 
-  // NOTE: previously the clause built for createdAt, status and sentAt used
-  // `{ [key]: { equal: value, mode: "insensitive" } }` — Prisma's operator is
-  // `equals`, not `equal`, so this filter never actually worked (Prisma rejects
-  // unknown arguments, raising a validation error rather than filtering). Fixed to
-  // use `equals`, and `mode` (string-only) is no longer applied to the createdAt /
-  // sentAt DateTime fields. See issues.txt 17.9.
   test("builds a status filter using Prisma's equals operator", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       status: "SENT",
@@ -382,11 +430,8 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The page number is multiplied by the limit, so
-  // pages are zero-based — the same convention issues.txt 8.2 and 13.6 record
-  // elsewhere, still unstated. See issues.txt 17.9.
   test("treats the page number as zero-based", async () => {
-    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 1,
       limit: 50,
     } as any);
@@ -404,7 +449,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
       },
     ]);
 
-    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       selectedDripStage: "s-1",
@@ -415,7 +460,7 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
   });
 
   test("falls back to the participant's own status when no stage is selected", async () => {
-    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
     } as any);
@@ -424,18 +469,12 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
     expect(result.participants[0].dripStageId).toBeNull();
   });
 
-  // NOTE: previously the status was read as `CampaignParticipantDripStage?.[0].status`
-  // — the optional chain guarded the property being absent, but not the array being
-  // EMPTY. Selecting a drip stage that a participant has no row for gave
-  // `undefined.status` and a TypeError, taking the whole page listing down rather
-  // than that one participant. Fixed to fall back to the participant's own fields
-  // when it has no row for the selected drip stage. See issues.txt 17.9.
   test("falls back to the participant's own fields when it has no row for the selected drip stage", async () => {
     db.campaignParticipant.findMany.mockResolvedValue([
       { ...PARTICIPANT, CampaignParticipantDripStage: [] },
     ]);
 
-    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, {
+    const result = await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
       page: 0,
       limit: 50,
       selectedDripStage: "s-1",
@@ -466,29 +505,37 @@ describe("reading and writing one participant", () => {
     });
   });
 
-  // NOTE: none of these five take a campaign, let alone an org — an id is the whole
-  // authorisation. getCampaignParticipantByIdHandler and
-  // deleteCampaignParticipantByIdHandler pass the path parameter straight in.
-  // See issues.txt 17.3.
   test.each([
-    ["reads", () => getCampaignParticipantById("p-1"), () => db.campaignParticipant.findUnique],
-    ["deletes", () => deleteCampaignParticipantById("p-1"), () => db.campaignParticipant.delete],
     [
-      "updates",
-      () => updateCampaignParticipant("p-1", { status: "SENT" } as any),
-      () => db.campaignParticipant.update,
+      "reads",
+      () => getCampaignParticipantById("p-1", ORG_A),
+      () => db.campaignParticipant.findFirst,
     ],
-  ])("%s a participant by id alone", async (_label, run, model) => {
+    [
+      "deletes",
+      () => deleteCampaignParticipantById("p-1", ORG_A),
+      () => db.campaignParticipant.delete,
+    ],
+  ])("scopes a %s of one participant to the caller's org", async (_label, run, model) => {
     await run();
 
-    expect(model().mock.calls[0][0].where).toEqual({ id: "p-1" });
+    expect(model().mock.calls[0][0].where).toEqual({
+      id: "p-1",
+      campaign: { team: { orgId: ORG_A } },
+    });
   });
 
-  test("deletes several participants by id alone", async () => {
-    await multipleDeleteCampaignParticipant(["p-1", "p-2"]);
+  test("updates a participant by id, as the dispatcher calls it", async () => {
+    await updateCampaignParticipant("p-1", { status: "SENT" } as any);
+
+    expect(db.campaignParticipant.update.mock.calls[0][0].where).toEqual({ id: "p-1" });
+  });
+
+  test("scopes a bulk delete to the caller's org", async () => {
+    await multipleDeleteCampaignParticipant(["p-1", "p-2"], ORG_A);
 
     expect(db.campaignParticipant.deleteMany.mock.calls[0][0]).toEqual({
-      where: { id: { in: ["p-1", "p-2"] } },
+      where: { id: { in: ["p-1", "p-2"] }, campaign: { team: { orgId: ORG_A } } },
     });
   });
 
@@ -510,11 +557,6 @@ describe("addWaMessageCampaignParticipantMap", () => {
     });
   });
 
-  // NOTE: previously the message lookup was optional-chained but the create was not
-  // guarded, so a message id that matches nothing produced a link row pointing at no
-  // message — and the participant's delivery status could never be resolved from it
-  // afterwards. Fixed to throw a clear error instead of writing a dangling link.
-  // See issues.txt 17.9.
   test("throws instead of creating a link to nothing when the message cannot be found", async () => {
     db.waMessage.findFirst.mockResolvedValue(null);
 
@@ -525,8 +567,6 @@ describe("addWaMessageCampaignParticipantMap", () => {
     expect(db.waMessageCampaginParticipantMap.create).not.toHaveBeenCalled();
   });
 
-  // NOTE: the message is looked up by its WhatsApp id alone, across every org.
-  // See issues.txt 17.3.
   test("finds the message across every org", async () => {
     await addWaMessageCampaignParticipantMap("p-1", "wamid-1");
 

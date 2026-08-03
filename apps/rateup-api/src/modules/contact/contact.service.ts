@@ -1,6 +1,8 @@
 import { Contact, ContactGroupType, Prisma } from "../../../generated/prisma/client.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
+import { ContactNotFoundError } from "./contact.errors.js";
+export { ContactNotFoundError };
 import {
   ContactCore,
   createMultipleContactInput,
@@ -98,7 +100,7 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
     });
   }
   if (contactGroupIds?.length) {
-    addExistingContactsToMultipleGroups([user.id], contactGroupIds, user.orgId);
+    await addExistingContactsToMultipleGroups([user.id], contactGroupIds, user.orgId);
   }
   if (assignedUserIds?.length) {
     const assignees: { teamId: string; userId: string }[] = await prisma.$queryRaw`
@@ -109,9 +111,9 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
           AND t."orgId" = ${user.orgId}::uuid
         ORDER BY tm."userId", tm.id ASC;
       `;
-    assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
+    await assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
   }
-  checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
+  await checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
     phone: contact?.phone,
     platform: "ALL",
@@ -181,7 +183,13 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
   if (user) return user;
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
-  const { customFields, ...rest } = contact;
+  const {
+    customFields,
+    labels: _labels,
+    contactGroupIds: _contactGroupIds,
+    assignedUserIds: _assignedUserIds,
+    ...rest
+  } = contact;
   user = await prisma.contact.create({
     data: rest,
   });
@@ -236,9 +244,9 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
       skipDuplicates: true,
       data: batch,
     });
-    batchCreated.forEach(async (contact) => {
+    for (const contact of batchCreated) {
       const inputData = contacts.find((c) => contact.phone === c.phone);
-      if (!inputData) return;
+      if (!inputData) continue;
       if (inputData.labels && inputData.labels.length > 0) {
         await prisma.contactLabelMap.createMany({
           data: inputData.labels.map((labelId) => ({
@@ -275,7 +283,7 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
           skipDuplicates: true,
         });
       }
-    });
+    }
     createdContacts = createdContacts.concat(batchCreated);
   }
 
@@ -292,15 +300,13 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
       });
     }
 
-    // Prepare custom field values
-    const customFieldValues = contacts.flatMap((contact) =>
-      (contact.customFields ?? []).map((field) =>
-        toContactCustomFieldValueInput(
-          field,
-          createdContacts.find((c) => c.phone === contact.phone)?.id || "",
-        ),
-      ),
-    );
+    const customFieldValues = contacts.flatMap((contact) => {
+      const created = createdContacts.find((c) => c.phone === contact.phone);
+      if (!created) return [];
+      return (contact.customFields ?? []).map((field) =>
+        toContactCustomFieldValueInput(field, created.id),
+      );
+    });
 
     // Batch create custom field values
     for (let i = 0; i < customFieldValues.length; i += BATCH_SIZE) {
@@ -359,10 +365,11 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
   return createdContacts;
 }
 
-export async function getContactById(contactId: string) {
-  const user = await prisma.contact.findUnique({
+export async function getContactById(contactId: string, orgId: string) {
+  const user = await prisma.contact.findFirst({
     where: {
       id: contactId,
+      orgId,
     },
     include: {
       ContactLabelMap: {
@@ -379,12 +386,17 @@ export async function getContactById(contactId: string) {
   });
   return user;
 }
+export async function getContactByIdForWebhook(contactId: string) {
+  return await prisma.contact.findUnique({ where: { id: contactId } });
+}
+
 export async function getContactsByOrgId(orgId: string, query?: PaginationQuery) {
   const {
     page = 0,
     limit = 500,
     search = "",
     sort = "createdAt",
+    desc = "desc",
     // type = ContactGroupType.NORMAL,
     ...filter
   } = query ?? {
@@ -401,14 +413,22 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
       switch (key) {
         case "name":
         case "phone":
-        case "email":
-        case "createdAt": {
+        case "email": {
           filterData.push({
             [key]: {
               contains: value,
               mode: "insensitive" as const,
             },
           });
+          break;
+        }
+        case "createdAt": {
+          const day = new Date(value);
+          if (!Number.isNaN(day.getTime())) {
+            const nextDay = new Date(day);
+            nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+            filterData.push({ createdAt: { gte: day, lt: nextDay } });
+          }
           break;
         }
         case "consent": {
@@ -466,45 +486,21 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     }
   }
   if (search?.length > 0) {
-    filterData.push(
-      {
-        name: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
-      {
-        phone: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
-    );
+    filterData.push({
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+      ],
+    });
   }
-  // Define the search condition
-  let groupTypeCondition: Prisma.ContactWhereInput =
-    query?.type === ContactGroupType.LOYALTY
-      ? {
-          // Contact -> CustomerLoyaltyAccount is a list relation (`loyaltyAccounts`);
-          // "is a loyalty member" is therefore `some`, not `isNot: null`.
-          AND: {
-            loyaltyAccounts: {
-              some: {},
-            },
-          },
-        }
-      : {};
+  if (query?.type === ContactGroupType.LOYALTY) {
+    // Contact -> CustomerLoyaltyAccount is a list relation (`loyaltyAccounts`);
+    // "is a loyalty member" is therefore `some`, not `isNot: null`.
+    filterData.push({ loyaltyAccounts: { some: {} } });
+  }
+
   const searchCondition: Prisma.ContactWhereInput =
-    filterData?.length > 0
-      ? {
-          orgId,
-          OR: filterData,
-          ...groupTypeCondition,
-        }
-      : {
-          orgId,
-          ...groupTypeCondition,
-        };
+    filterData?.length > 0 ? { orgId, AND: filterData } : { orgId };
   // Count total matching contacts
   const totalCount = await prisma.contact.count({
     where: searchCondition,
@@ -557,7 +553,10 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
     include: includeCondition,
     skip: pageNo * Number(limit),
     take: Number(limit),
-    orderBy: [{ [sort]: "desc" }, ...(sort === "name" ? [] : [{ name: "asc" as const }])],
+    orderBy: [
+      { [sort]: desc === "asc" ? "asc" : "desc" },
+      ...(sort === "name" ? [] : [{ name: "asc" as const }]),
+    ],
   });
 
   // Return the result
@@ -580,10 +579,11 @@ export async function getContactByPhoneNumberAndOrgId(phone: string, orgId: stri
 }
 
 //used in zapier controller also
-export async function deleteContactById(contactId: string) {
+export async function deleteContactById(contactId: string, orgId: string) {
   const user = await prisma.contact.delete({
     where: {
       id: contactId,
+      orgId,
     },
   });
   await addZapierTriggerToQueue(
@@ -615,6 +615,7 @@ export async function deleteContactById(contactId: string) {
 //used in zapier controller also
 export async function updateContactById(
   contactId: string,
+  orgId: string,
   contact: updateContactSchema,
   userId?: string,
   // Only the four fields the inbox-stat transitions below read are required; callers pass
@@ -628,27 +629,30 @@ export async function updateContactById(
   // Use provided existing contact if available, otherwise fetch
   const contactRecord =
     existing ||
-    (await prisma.contact.findUnique({
+    (await prisma.contact.findFirst({
       where: {
         id: contactId,
+        orgId,
       },
     }));
   if (!contactRecord) {
-    throw new Error(`Contact ${contactId} not found`);
+    throw new ContactNotFoundError(`Contact ${contactId} not found`);
   }
-  if (contact.labels && contact.labels.length > 0) {
+  if (contact.labels) {
     await prisma.contactLabelMap.deleteMany({
       where: {
         contactId,
       },
     });
-    await prisma.contactLabelMap.createMany({
-      data: contact.labels.map((labelId) => ({
-        contactId,
-        labelId,
-      })),
-      skipDuplicates: true,
-    });
+    if (contact.labels.length > 0) {
+      await prisma.contactLabelMap.createMany({
+        data: contact.labels.map((labelId) => ({
+          contactId,
+          labelId,
+        })),
+        skipDuplicates: true,
+      });
+    }
   }
   if (contact.customFields?.length) {
     await prisma.contactCustomFieldValue.deleteMany({
@@ -682,6 +686,7 @@ export async function updateContactById(
     const updated = await tx.contact.update({
       where: {
         id: contactId,
+        orgId,
       },
       data: {
         name: contact.name,
@@ -968,10 +973,15 @@ export async function updateContactById(
   return updatedContact;
 }
 
-export async function updateContactLabelsById(contactId: string, lifecycleId: string) {
+export async function updateContactLabelsById(
+  contactId: string,
+  orgId: string,
+  lifecycleId: string,
+) {
   const contact = await prisma.contact.update({
     where: {
       id: contactId,
+      orgId,
     },
     data: {
       lifecycleId,
@@ -1124,7 +1134,8 @@ export async function getOrCreateContactByPhone(
       return { contact, conversation };
     }
   } catch (e) {
-    log.error(e);
+    log.error({ err: e }, "Error in getOrCreateContactByPhone");
+    throw e;
   }
 }
 
@@ -1203,7 +1214,8 @@ export async function getOrCreateContactByIgsId(
       return { contact, conversation };
     }
   } catch (e) {
-    log.error(e);
+    log.error({ err: e }, "Error in getOrCreateContactByIgsId");
+    throw e;
   }
 }
 
@@ -1311,12 +1323,13 @@ export async function getOrCreateContactByPsid(
   }
 }
 
-export async function deleteManyContacts(contactIds: Array<string>) {
+export async function deleteManyContacts(contactIds: Array<string>, orgId: string) {
   const contacts = await prisma.contact.findMany({
     where: {
       id: {
         in: contactIds,
       },
+      orgId,
     },
   });
   const res = await prisma.contact.deleteMany({
@@ -1324,6 +1337,7 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       id: {
         in: contactIds,
       },
+      orgId,
     },
   });
   for (const contact of contacts) {
@@ -1459,20 +1473,30 @@ export async function importCSVContacts(
 
   if (data.length === 0) {
     log.info("No data rows available");
-    return;
+    return { data: [], status: "error", message: "The file contained no contacts." };
   }
   data.forEach(processContact);
 
-  if (contacts.length === 0 && errorContact.length > 0) {
-    return { data: errorContact, status: "error" };
-  } else if (contacts.length > 0) {
-    const res = await createContactsFromCsv(contacts, orgId, tags, updateExisting, contactGroupId);
-    if (errorContact.length > 0) {
-      return { data: errorContact, status: "error" };
-    }
-    return { data: res, status: "success" };
+  if (contacts.length === 0) {
+    return {
+      data: errorContact,
+      status: "error",
+      message: "No valid contacts were found in the file.",
+    };
   }
-  throw new Error("No contacts found");
+
+  const res = await createContactsFromCsv(contacts, orgId, tags, updateExisting, contactGroupId);
+
+  if (errorContact.length > 0) {
+    return {
+      data: res,
+      rejected: errorContact,
+      imported: contacts.length,
+      status: "partial",
+      message: `${contacts.length} contacts imported, ${errorContact.length} rejected.`,
+    };
+  }
+  return { data: res, imported: contacts.length, status: "success" };
 }
 
 export async function createContactsFromCsv(
@@ -1557,8 +1581,12 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
           },
         },
         update: {
-          name: contact.name,
           aiWaChat,
+          ...Object.fromEntries(
+            Object.entries(contactData).filter(
+              ([key, value]) => value !== undefined && key !== "phone" && key !== "orgId",
+            ),
+          ),
         },
         create: {
           ...contactData,
@@ -1671,7 +1699,8 @@ export const handleContactConsent = async (orgId: string, phone: string, consent
     },
   });
   if (!contact_consent) {
-    throw new Error(`Contact not found for phone ${phone}`);
+    log.info({ orgId }, "Consent callback for a phone number this org does not have");
+    return false;
   }
   if (contact_consent.consent === consent) return false;
   await prisma.contact.update({
@@ -1729,34 +1758,43 @@ export async function deleteCustomField(orgId: string, fieldId: string) {
   return field;
 }
 
-export async function updateLifecycleStageofContacts(lifecycleId: string, contactIds: string[]) {
-  await prisma.contact.updateMany({
-    where: {
-      id: {
-        in: contactIds,
-      },
-    },
-    data: {
-      lifecycleId,
-    },
-  });
-
-  const lifecycle = await prisma.lifecycle.findUnique({
+export async function updateLifecycleStageofContacts(
+  lifecycleId: string,
+  orgId: string,
+  contactIds: string[],
+) {
+  const lifecycle = await prisma.lifecycle.findFirst({
     where: {
       id: lifecycleId,
+      orgId,
     },
     select: {
       name: true,
     },
   });
 
-  if (!lifecycle) return;
+  if (!lifecycle) {
+    throw new ContactNotFoundError(`Lifecycle ${lifecycleId} not found`);
+  }
+
+  await prisma.contact.updateMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+      orgId,
+    },
+    data: {
+      lifecycleId,
+    },
+  });
 
   const contacts = await prisma.contact.findMany({
     where: {
       id: {
         in: contactIds,
       },
+      orgId,
     },
     select: {
       id: true,
@@ -1810,6 +1848,7 @@ export async function updateLifecycleStageofContacts(lifecycleId: string, contac
 
 export async function bulkUpdateWaMessageAssignStatus(
   contactIds: string[],
+  orgId: string,
   requestedStatus: WaMessageAssignStatus,
   userId?: string,
   messageId?: string,
@@ -1822,6 +1861,7 @@ export async function bulkUpdateWaMessageAssignStatus(
   const contacts = await prisma.contact.findMany({
     where: {
       id: { in: contactIds },
+      orgId,
     },
     select: {
       id: true,
@@ -1846,6 +1886,7 @@ export async function bulkUpdateWaMessageAssignStatus(
     await tx.contact.updateMany({
       where: {
         id: { in: contactIds },
+        orgId,
       },
       data: {
         waMessageAssignStatus,
@@ -1894,7 +1935,6 @@ export async function bulkUpdateWaMessageAssignStatus(
     }
   });
 
-  const orgId = contacts[0].orgId;
   const newField = mapStatusToField(waMessageAssignStatus);
   const transitions: Partial<Record<StatsField, number>> = {};
 

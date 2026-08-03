@@ -20,7 +20,6 @@ import {
   updateFlowMetaDataHandler,
 } from "./flow.controller.js";
 import { log } from "../../../utils/logger.js";
-import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_templates.auth.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
@@ -205,7 +204,6 @@ export async function flowRoutes(server: FastifyInstance) {
   server.post<{ Body: SendFlowBody; Params: ByDbFlowIdParams }>(
     "/:dbFlowId/send",
     {
-      preHandler: verifyMessageMonthlyLimitRestriction,
       schema: {
         body: sendFlowBodySchema,
         params: byDbFlowIdParams,

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { getNestedProperty } from "./obj.utils.js";
 import {
   generateRandomAlphaId,
@@ -83,18 +83,27 @@ describe("getUniqueRandomAlphaId", () => {
 });
 
 describe("generateRewardShortCode", () => {
-  test("defaults to six characters", () => {
-    expect(generateRewardShortCode()).toHaveLength(6);
+  test("defaults to eight characters", () => {
+    expect(generateRewardShortCode()).toHaveLength(8);
   });
 
   test("honours a requested length", () => {
     expect(generateRewardShortCode(10)).toHaveLength(10);
   });
 
-  test("uses only upper-case letters and digits", () => {
+  test("excludes the characters that are confusable when read aloud", () => {
     const sample = Array.from({ length: 200 }, () => generateRewardShortCode()).join("");
 
-    expect(sample).toMatch(/^[A-Z0-9]+$/);
+    expect(sample).toMatch(/^[A-HJ-NP-Z2-9]+$/);
+  });
+
+  test("does not depend on Math.random", () => {
+    const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+
+    const codes = new Set(Array.from({ length: 50 }, () => generateRewardShortCode()));
+    expect(codes.size).toBe(50);
+
+    spy.mockRestore();
   });
 
   test("does not repeat itself across calls", () => {

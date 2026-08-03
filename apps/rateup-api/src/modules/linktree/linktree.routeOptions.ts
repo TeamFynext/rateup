@@ -1,4 +1,5 @@
 import { asyncErrHandler } from "../../utils/commonUtils.js";
+import { rateLimit } from "../../utils/rateLimit.js";
 import {
   createLinktree,
   deleteLinktreeById,
@@ -10,9 +11,11 @@ import {
   updatePageVisitsOrLinkClicks,
 } from "./linktree.controllers.js";
 import {
+  byIdParams,
   createLinktreeReqBody,
   getLinktreesResponse,
   getLinktreeWithShortIdParams,
+  linkTypeParams,
   linktreeBaseSchema,
   updateLinktreeReqBody,
   updatePageVisitsOrLinkClicksReqBody,
@@ -59,17 +62,23 @@ const updateLinktreeWithShortIdRouteOptions = {
 };
 
 const deleteLinktreeByIdRouteOptions = {
-  schema: {},
+  schema: {
+    params: byIdParams,
+  },
   handler: asyncErrHandler(deleteLinktreeById),
 };
 
 const getLinkTypeDropdownOptionsRouteOptions = {
-  schema: {},
+  schema: {
+    params: linkTypeParams,
+  },
   handler: asyncErrHandler(getLinkTypeDropdownOptions),
 };
 
 const getPublicLinktreeWithShortIdRouteOptions = {
-  schema: {},
+  schema: {
+    params: getLinktreeWithShortIdParams,
+  },
   config: { isPublic: true },
   handler: asyncErrHandler(getPublicLinktreeWithShortId),
 };
@@ -80,6 +89,7 @@ const updatePageVisitsOrLinkClicksOptions = {
     params: updatePageVisitsOrLinkClicksReqParams,
   },
   config: { isPublic: true },
+  preHandler: [rateLimit({ max: 240, windowSeconds: 3600, key: "linktreeCount" })],
   handler: asyncErrHandler(updatePageVisitsOrLinkClicks),
 };
 

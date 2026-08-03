@@ -28,12 +28,16 @@ import {
   updateRateUpPlanSchema,
   updateRateUpPlanInput,
   UpdatePlanInput,
+  orderIdParamsSchema,
+  updateOrderStatusSchema,
+  type OrderIdParamsInput,
+  type UpdateOrderStatusInput,
 } from "./payment.schema.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
-  server.post("/sync-plans", syncPaymentPlansHandler);
+  server.post("/sync-plans", { preHandler: [assertRootOrg] }, syncPaymentPlansHandler);
 
   server.get(
     "/plans",
@@ -129,5 +133,15 @@ export async function paymentRoutes(server: FastifyInstance) {
     deletePaymentPlanHandler,
   );
 
-  server.put("/order/:orderId", updateSubscriptionOrderHandler);
+  server.put<{ Params: OrderIdParamsInput; Body: UpdateOrderStatusInput }>(
+    "/order/:orderId",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: orderIdParamsSchema,
+        body: updateOrderStatusSchema,
+      },
+    },
+    updateSubscriptionOrderHandler,
+  );
 }

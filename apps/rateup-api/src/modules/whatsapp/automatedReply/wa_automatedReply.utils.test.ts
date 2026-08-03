@@ -77,12 +77,26 @@ import {
   verifyAutomationLimit,
 } from "./wa_automatedReply.utils.js";
 
-// The module parses "HH:mm" strings with dayjs but never extends customParseFormat
-// itself — in the running app another module happens to have done it first. Extend it
-// here so the unit under test behaves the way it does in production.
-dayjs.extend(customParseFormat);
-
+// No dayjs.extend here on purpose: the module under test registers customParseFormat
+// itself now. This file used to have to do it, which meant the tests passed while the
+// module in isolation did not.
 type Mock = ReturnType<typeof vi.fn>;
+
+// dayjs is a singleton and this module imports wasurvey.utils.js (which also extends
+// customParseFormat), so passing time-window tests do not prove the module registers the
+// plugin itself. Assert the registration directly: without it, dropping the wasurvey
+// import would make every time-slot comparison silently return false and automations
+// would stop firing during business hours with no error anywhere.
+describe("dayjs plugin registration", () => {
+  test("registers customParseFormat itself rather than relying on wasurvey.utils", async () => {
+    const source = await import("node:fs/promises").then((fs) =>
+      fs.readFile("src/modules/whatsapp/automatedReply/wa_automatedReply.utils.ts", "utf8"),
+    );
+
+    expect(source).toContain('import customParseFormat from "dayjs/plugin/customParseFormat.js"');
+    expect(source).toContain("dayjs.extend(customParseFormat)");
+  });
+});
 
 const db = prisma as unknown as {
   waAutomatedReply: { count: Mock };
@@ -109,7 +123,6 @@ function automation(overrides: Record<string, unknown> = {}) {
     commands: ["hello"],
     matchType: WaAutomatedReplyMatchType.Exact,
     matchData: {},
-    sendOnceIn24Hours: false,
     businessHour: null,
     ...overrides,
   } as any;
@@ -218,26 +231,15 @@ describe("validateAutomationMatchCondition - contains matching", () => {
   });
 });
 
-describe("validateAutomationMatchCondition - the once-a-day guard", () => {
-  test("stays silent when this automation already fired in the last day", async () => {
+// The once-a-day guard is gone from automations along with the sendOnceIn24Hours column;
+// rules own that throttle now, via the redis sendOncePerDay key. An automation matches on
+// its conditions alone, however recently it last fired.
+describe("validateAutomationMatchCondition - no once-a-day guard", () => {
+  test("fires even when this automation already fired in the last day", async () => {
     findRecentAutomationMock.mockResolvedValue({ id: "log-1" });
 
     const result = await validateAutomationMatchCondition(
-      automation({ sendOnceIn24Hours: true }),
-      "hello",
-      "org-1",
-      "15550001",
-    );
-
-    expect(result).toBe(false);
-    expect(findRecentAutomationMock).toHaveBeenCalledWith("15550001", "org-1", {
-      timeWindow: 24 * 60 * 60 * 1000,
-    });
-  });
-
-  test("fires when nothing was sent in the last day", async () => {
-    const result = await validateAutomationMatchCondition(
-      automation({ sendOnceIn24Hours: true }),
+      automation(),
       "hello",
       "org-1",
       "15550001",
@@ -246,8 +248,13 @@ describe("validateAutomationMatchCondition - the once-a-day guard", () => {
     expect(result).toBe(true);
   });
 
-  test("does not consult the log when the option is off", async () => {
-    await validateAutomationMatchCondition(automation(), "hello", "org-1", "15550001");
+  test("never consults the recent-automation log, whatever the caller passes", async () => {
+    await validateAutomationMatchCondition(
+      automation({ sendOnceIn24Hours: true }),
+      "hello",
+      "org-1",
+      "15550001",
+    );
 
     expect(findRecentAutomationMock).not.toHaveBeenCalled();
   });
@@ -888,15 +895,34 @@ describe("verifyAutomationLimit", () => {
     expect(reply.payload).toMatchObject({ message: "Subscription not found" });
   });
 
-  // NOTE: a plan with no whatsapp count compares against undefined, which is never
-  // true, so the limit is silently unenforced rather than defaulting to something.
-  test("enforces no limit when the plan does not state one", async () => {
+  // Automated replies are unlimited by design — no plan in subscription.data.ts states a
+  // whatsapp count. That outcome is unchanged, but it is now a deliberate early return
+  // rather than an accident of comparing against undefined.
+  test("allows unlimited replies when the plan does not state a count", async () => {
     db.waAutomatedReply.count.mockResolvedValue(9999);
     const reply = makeReply();
 
     await verifyAutomationLimit(request({ subscription: { features: {} } }), reply);
 
     expect(reply.code).not.toHaveBeenCalled();
+  });
+
+  test("does not bother counting when the plan states no limit", async () => {
+    await verifyAutomationLimit(request({ subscription: { features: {} } }), makeReply());
+
+    expect(db.waAutomatedReply.count).not.toHaveBeenCalled();
+  });
+
+  test("still enforces a limit the plan does state", async () => {
+    db.waAutomatedReply.count.mockResolvedValue(5);
+    const reply = makeReply();
+
+    await verifyAutomationLimit(request({ subscription: subscription(5) }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(403);
+    expect(reply.payload).toMatchObject({
+      message: "You have reached the maximum limit of 5 automated replies.",
+    });
   });
 });
 

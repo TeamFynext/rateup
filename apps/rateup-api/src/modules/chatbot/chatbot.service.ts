@@ -5,19 +5,86 @@ import {
   deleteManyContentInput,
   updateChatbotInput,
 } from "./chatbot.schema.js";
-import { getShortUrlId } from "../../utils/commonUtils.js";
+import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
 import prisma from "../../utils/prisma.js";
 import { FastifyRequest } from "fastify";
 import { getAxiosAIClient } from "./chatbot.controller.js";
 import { log } from "../../utils/logger.js";
 import { getSubscription } from "../subscription/subscription.service.js";
 
-const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
-const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;
 export const AI_API_URL = `${process.env.CHATBOT_API_URL}/api`;
 
+function aiApiBaseUrl(): string {
+  const base = process.env.CHATBOT_API_URL;
+  if (!base) {
+    throw new Error("CHATBOT_API_URL is not configured");
+  }
+  return base.replace(/\/+$/, "");
+}
+
+const chatbotBaseUrl = () => `${aiApiBaseUrl()}/api/chatbot`;
+const chatbotPublicBaseUrl = () => `${aiApiBaseUrl()}/api/public/chatbot`;
+
+export class AiAllowanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AiAllowanceError";
+  }
+}
+
+/**
+ * The org's AI allowance and what it has spent so far.
+ *
+ * Both were previously read as `subscription.features.ai.count` with no guard —
+ * an org with no subscription row, or on a plan describing no `ai` feature, got a
+ * TypeError before the query was sent. And neither caller compared the two: the
+ * numbers were passed to the AI service as ADVICE, so an outage or a bug in the
+ * remote service's enforcement meant unlimited billable usage with nothing on
+ * this side to stop it. Both are checked here now.
+ */
+async function getAiAllowance(orgId: string) {
+  const subscription = await getSubscription(orgId);
+  if (!subscription) {
+    throw new AiAllowanceError(`No subscription found for org ${orgId}`);
+  }
+
+  const aiFeature = subscription.features?.ai;
+  if (!aiFeature || !aiFeature.count) {
+    throw new AiAllowanceError(`The plan for org ${orgId} does not include the AI feature`);
+  }
+  if (aiFeature.active === false) {
+    throw new AiAllowanceError(`The AI feature is not active on the plan for org ${orgId}`);
+  }
+
+  const allowedTokens = aiFeature.count;
+  const usedTokens = await prisma.usageStats.findUnique({
+    where: {
+      orgId,
+    },
+    select: {
+      aiCompletionTokensCount: true,
+      aiPromptTokensCount: true,
+    },
+  });
+
+  // A malformed allowance (a plan that stores something other than a number) is
+  // left to the remote service rather than turned into a refusal here — refusing
+  // on a shape this module does not own would take working chatbots down.
+  if (
+    usedTokens &&
+    ((Number.isFinite(allowedTokens.promptTokens) &&
+      usedTokens.aiPromptTokensCount >= allowedTokens.promptTokens) ||
+      (Number.isFinite(allowedTokens.completionTokens) &&
+        usedTokens.aiCompletionTokensCount >= allowedTokens.completionTokens))
+  ) {
+    throw new AiAllowanceError(`The AI token allowance for org ${orgId} is exhausted`);
+  }
+
+  return { allowedTokens, usedTokens };
+}
+
 export async function uploadSourceForEmbed(data: dataSourceUploadInput, jwtToken: string) {
-  return await axios.post(`${CHATBOT_BASEURL}/embed-doc`, data, {
+  return await axios.post(`${chatbotBaseUrl()}/embed-doc`, data, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${jwtToken}`,
@@ -32,23 +99,9 @@ interface messageInput {
   customPrompt?: string;
 }
 export async function getAIResponseForQuery(data: messageInput, jwtToken: string) {
-  const subscription = await getSubscription(data.orgId);
-  if (!subscription) {
-    throw new Error(`No subscription found for org ${data.orgId}`);
-  }
-
-  const allowedTokens = subscription.features.ai.count;
-  const usedTokens = await prisma.usageStats.findUnique({
-    where: {
-      orgId: data.orgId,
-    },
-    select: {
-      aiCompletionTokensCount: true,
-      aiPromptTokensCount: true,
-    },
-  });
+  const { allowedTokens, usedTokens } = await getAiAllowance(data.orgId);
   const res = await axios.post(
-    CHATBOT_BASEURL,
+    chatbotBaseUrl(),
     { ...data, allowedTokens, usedTokens },
     {
       headers: {
@@ -81,22 +134,9 @@ interface publicMessageInput {
   orgId: string;
 }
 export async function getPublicAIResponseForQuery(data: publicMessageInput) {
-  const subscription = await getSubscription(data.orgId);
-  if (!subscription) {
-    throw new Error(`No subscription found for org ${data.orgId}`);
-  }
-  const allowedTokens = subscription.features.ai.count;
-  const usedTokens = await prisma.usageStats.findUnique({
-    where: {
-      orgId: data.orgId,
-    },
-    select: {
-      aiCompletionTokensCount: true,
-      aiPromptTokensCount: true,
-    },
-  });
+  const { allowedTokens, usedTokens } = await getAiAllowance(data.orgId);
   const res = await axios.post(
-    CHATBOT_PUBLIC_BASEURL,
+    chatbotPublicBaseUrl(),
     { ...data, allowedTokens, usedTokens },
     {
       headers: {
@@ -105,26 +145,27 @@ export async function getPublicAIResponseForQuery(data: publicMessageInput) {
     },
   );
   const { message, tokenUsage } = res.data;
-  prisma.usageStats.update({
-    where: {
-      orgId: data.orgId,
-    },
-    data: {
-      aiPromptTokensCount: {
-        increment: tokenUsage.promptTokens,
+  if (tokenUsage)
+    await prisma.usageStats.update({
+      where: {
+        orgId: data.orgId,
       },
-      aiCompletionTokensCount: {
-        increment: tokenUsage.completionTokens,
+      data: {
+        aiPromptTokensCount: {
+          increment: tokenUsage.promptTokens,
+        },
+        aiCompletionTokensCount: {
+          increment: tokenUsage.completionTokens,
+        },
       },
-    },
-  });
+    });
   return message;
 }
 
 export async function uploadFileForAIEmbed(data: FormData, jwtToken: string) {
   console.log("uploadFileForAIEmbed data : ", data);
 
-  return await axios.post(`${CHATBOT_BASEURL}/embed-doc/file`, data, {
+  return await axios.post(`${chatbotBaseUrl()}/embed-doc/file`, data, {
     headers: {
       "Content-Type": "multipart/form-data",
       Authorization: `Bearer ${jwtToken}`,
@@ -133,12 +174,9 @@ export async function uploadFileForAIEmbed(data: FormData, jwtToken: string) {
 }
 
 export async function getUploadedSources(jwtToken: string, chatbotId?: string) {
-  const url = new URL(CHATBOT_BASEURL);
-  if (chatbotId) {
-    url.searchParams.append("chatbotId", chatbotId); // Append chatbotId to the query params
-  }
+  const query = chatbotId ? `?${new URLSearchParams({ chatbotId })}` : "";
 
-  const res = await axios.get(url.toString(), {
+  const res = await axios.get(`${chatbotBaseUrl()}${query}`, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${jwtToken}`,
@@ -148,7 +186,7 @@ export async function getUploadedSources(jwtToken: string, chatbotId?: string) {
 }
 
 export async function deleteEmbeddedSource(data: deleteContentInput, jwtToken: string) {
-  return await axios.delete(`${CHATBOT_BASEURL}/delete-source`, {
+  return await axios.delete(`${chatbotBaseUrl()}/delete-source`, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${jwtToken}`,
@@ -158,7 +196,7 @@ export async function deleteEmbeddedSource(data: deleteContentInput, jwtToken: s
 }
 
 export async function deleteManyEmbeddedSource(data: deleteManyContentInput, jwtToken: string) {
-  return await axios.delete(`${CHATBOT_BASEURL}/delete-many-sources`, {
+  return await axios.delete(`${chatbotBaseUrl()}/delete-many-sources`, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${jwtToken}`,
@@ -168,7 +206,7 @@ export async function deleteManyEmbeddedSource(data: deleteManyContentInput, jwt
 }
 
 export async function deleteChatHistory(jwtToken: string) {
-  return await axios.delete(`${CHATBOT_BASEURL}/delete-chat-history`, {
+  return await axios.delete(`${chatbotBaseUrl()}/delete-chat-history`, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${jwtToken}`,
@@ -177,7 +215,7 @@ export async function deleteChatHistory(jwtToken: string) {
 }
 
 export async function deletePublicChatHistory(userId: string) {
-  return await axios.delete(`${CHATBOT_PUBLIC_BASEURL}/${userId}`, {
+  return await axios.delete(`${chatbotPublicBaseUrl()}/${userId}`, {
     headers: {
       Accept: "application/json",
     },
@@ -185,13 +223,15 @@ export async function deletePublicChatHistory(userId: string) {
 }
 
 export async function createChatbot(orgId: string, name: string) {
-  return await prisma.chatbot.create({
-    data: {
-      orgId,
-      name,
-      shortUrlId: getShortUrlId(),
-    },
-  });
+  return await shortIdUniqueConstraintErrHandler(() =>
+    prisma.chatbot.create({
+      data: {
+        orgId,
+        name,
+        shortUrlId: getShortUrlId(),
+      },
+    }),
+  );
 }
 
 export async function getChatbotDetails(orgId: string, chatbotId?: string, onlyEnabled = false) {
@@ -201,6 +241,7 @@ export async function getChatbotDetails(orgId: string, chatbotId?: string, onlyE
       orgId,
       ...(onlyEnabled && { enableAllWaChat: true, enableWaChat: true }),
     },
+    orderBy: { id: "asc" },
   });
 }
 
@@ -217,29 +258,34 @@ export async function updateChatbotDetails(
   orgId: string,
   chatbotId: string,
 ) {
-  const res = await prisma.chatbot.upsert({
+  const before = await prisma.chatbot.findFirst({
+    where: { id: chatbotId, orgId },
+    select: { enableAllWaChat: true },
+  });
+
+  const res = await prisma.chatbot.update({
     where: {
       orgId,
       id: chatbotId,
     },
-    create: {
-      shortUrlId: getShortUrlId(),
-      orgId,
-    },
-    update: {
+    data: {
       ...data,
     },
   });
-  if ("enableAllWaChat" in data) {
+
+  if (data.enableAllWaChat !== undefined && data.enableAllWaChat !== before?.enableAllWaChat) {
     await prisma.contact.updateMany({
       where: {
         orgId: res.orgId,
+        chatbotId: { in: ["", chatbotId] },
       },
       data: {
         aiWaChat: data.enableAllWaChat,
       },
     });
   }
+
+  return res;
 }
 
 export async function getChatbotDetailsByShortUrlId(shortUrlId: string) {
@@ -258,11 +304,6 @@ export async function getTextSummaryByAI(
 ) {
   try {
     const axiosAIClient = await getAxiosAIClient(request);
-    // getAxiosAIClient() swallows its own construction failure and resolves undefined -
-    // guard here instead of letting `.post` crash with a cryptic property-read error.
-    if (!axiosAIClient) {
-      throw new Error("Unable to initialize AI client for text summary request");
-    }
     const res = await axiosAIClient.post(`/chatbot/summarize`, {
       texts,
       allowedTokens,
@@ -287,15 +328,18 @@ interface ChatHistoryEntry {
   [key: string]: unknown;
 }
 
-export async function getChatBotHistory(client: AxiosInstance, chatbotId?: string) {
+export async function getChatBotHistory(client: AxiosInstance, orgId: string, chatbotId?: string) {
   const res = await client.get<ChatHistoryEntry[]>(`/chatbot/chathistory`, {
     params: chatbotId ? { chatbotId } : {},
   });
-  const userIds = res.data.map((hist) => hist.userId);
+  const userIds = res.data.map((hist) => hist.userId).filter(Boolean);
   const userDetails = await prisma.user.findMany({
     where: {
       id: {
         in: userIds,
+      },
+      orgMember: {
+        some: { orgId },
       },
     },
     select: {
@@ -309,6 +353,7 @@ export async function getChatBotHistory(client: AxiosInstance, chatbotId?: strin
       id: {
         in: userIds,
       },
+      orgId,
     },
     select: {
       id: true,
@@ -321,7 +366,7 @@ export async function getChatBotHistory(client: AxiosInstance, chatbotId?: strin
     ...hist,
     user: userDetails?.find((u) => u.id === hist.userId) ||
       contactUserDetails?.find((c) => c.id === hist.userId) || {
-        name: `Anonymous_${hist.userId.slice(-4)}`,
+        name: `Anonymous_${hist.userId ? hist.userId.slice(-4) : "unknown"}`,
       },
   }));
 }

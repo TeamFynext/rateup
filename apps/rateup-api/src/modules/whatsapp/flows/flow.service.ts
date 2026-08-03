@@ -108,17 +108,18 @@ export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
 // NOTE: dead code — nothing in the codebase calls this today (getFlowPreview,
 // below, does the same job properly). Kept null-safe rather than throwing on
 // a missing flow, matching the rest of this file's "report nothing" style.
-export async function getFlowPreviewFromDb(dbFlowId: string) {
+export async function getFlowPreviewFromDb(dbFlowId: string, orgId: string) {
   const flow = await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
+      orgId,
     },
   });
   return flow?.preview;
 }
 
 export async function getFlowPreview(orgId: string, dbFlowId: string) {
-  const flow = await getFlowFromDb(dbFlowId);
+  const flow = await getFlowFromDb(dbFlowId, orgId);
   if (!flow) {
     throw new Error(`Flow not found: ${dbFlowId}`);
   }
@@ -132,6 +133,7 @@ export async function getFlowPreview(orgId: string, dbFlowId: string) {
     await prisma.waFlow.update({
       where: {
         dbFlowId,
+        orgId,
       },
       data: {
         preview,
@@ -190,14 +192,20 @@ export async function getFlowsFromDb(orgId: string, userId: string) {
 /**
  * Get flow from our database.
  *
- * @param orgId
+ * orgId is required: dbFlowId comes straight off a request path on every route
+ * that reaches here, so a lookup that ignores the caller's org hands one org's
+ * flow — json, question map and logic jumps — to any authenticated user of
+ * another. A flow belonging to another org reports as absent.
+ *
  * @param dbFlowId
+ * @param orgId
  * @returns
  */
-export async function getFlowFromDb(dbFlowId: string) {
+export async function getFlowFromDb(dbFlowId: string, orgId: string) {
   const flow = await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
+      orgId,
     },
   });
   return flow;
@@ -208,6 +216,7 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
   const flow = await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
+      orgId,
     },
     include: {
       survey: true,
@@ -295,10 +304,11 @@ export async function getFlowWithSurveyTeamMapIds(orgId: string, flowId: string)
     },
   });
 }
-export async function getFlowWithSurveyTeamMapIdsWithDbFlowId(dbFlowId: string) {
+export async function getFlowWithSurveyTeamMapIdsWithDbFlowId(dbFlowId: string, orgId: string) {
   return await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
+      orgId,
     },
     select: {
       survey: {
@@ -330,13 +340,14 @@ export async function updateFlowIdAndStatusInDb(
   dbFlowId: string,
   flowId: string,
   surveyId: string,
+  orgId: string,
 ) {
   await prisma.waFlow.update({
-    where: { dbFlowId },
+    where: { dbFlowId, orgId },
     data: { flowId, status: WaFlowStatus.DRAFT },
   });
   await prisma.survey.update({
-    where: { id: surveyId },
+    where: { id: surveyId, orgId },
     data: { isPublished: false },
   });
 }
@@ -348,9 +359,10 @@ export async function cloneFlow(
   teamId: string,
 ) {
   const surveyId = previousFlow.surveyId;
-  const survey = await prisma.survey.findUnique({
+  const survey = await prisma.survey.findFirst({
     where: {
       id: surveyId,
+      orgId: previousFlow.orgId,
     },
   });
 
@@ -359,13 +371,10 @@ export async function cloneFlow(
 
   const existingSurveys = await prisma.survey.findMany({
     where: {
-      AND: [
-        {
-          title: {
-            startsWith: survey.title,
-          },
-        },
-      ],
+      orgId: survey.orgId,
+      title: {
+        startsWith: survey.title,
+      },
     },
     orderBy: {
       title: "asc",
@@ -379,12 +388,8 @@ export async function cloneFlow(
     if (suffix.startsWith(" Copy ")) {
       const copyNumberStr = suffix.slice(" Copy ".length);
       const copyNumber = parseInt(copyNumberStr, 10);
-      console.log(
-        `Suffix: '${suffix}', Copy number string: ${copyNumberStr}, Copy number: ${copyNumber}`,
-      );
       if (!isNaN(copyNumber)) {
         maxCopyNumber = Math.max(maxCopyNumber, copyNumber);
-        console.log("Found a valid copy number: ", maxCopyNumber);
       }
     }
   });
@@ -482,7 +487,7 @@ export async function sendFlow({
 }: sendFlowProps) {
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
-    const dbFlow = await getFlowFromDb(dbFlowId);
+    const dbFlow = await getFlowFromDb(dbFlowId, orgId);
     if (!dbFlow) {
       throw new Error(`Flow not found: ${dbFlowId}`);
     }
@@ -594,6 +599,7 @@ export async function updateFlowInDb(orgId: string, dbFlowId: string, data: Upda
   const updatedFlow = await prisma.waFlow.update({
     where: {
       dbFlowId: dbFlowId,
+      orgId,
     },
     data: {
       ...data,
@@ -613,6 +619,7 @@ export async function updateFlowInDb(orgId: string, dbFlowId: string, data: Upda
     await prisma.survey.update({
       where: {
         id: updatedFlow.surveyId,
+        orgId,
       },
       data: updateData,
     });
@@ -661,21 +668,18 @@ export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: 
   formData.append("asset_type", "FLOW_JSON");
   formData.append("name", "flow.json");
 
-  try {
-    await axios.post(
-      graphUrl(`/${waFlowId}/assets`),
-      formData, // Upload the FormData
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          ...formData.getHeaders(), // Add the form-data headers
-        },
+  const { data } = await axios.post(
+    graphUrl(`/${waFlowId}/assets`),
+    formData, // Upload the FormData
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ...formData.getHeaders(), // Add the form-data headers
       },
-    );
-    log.trace("Updated flow json in wa %s", waFlowId);
-  } catch (e) {
-    log.trace({ e }, "Failed to update flow json in wa");
-  }
+    },
+  );
+  log.trace("Updated flow json in wa %s", waFlowId);
+  return data;
 }
 
 export async function deleteFlowInWa(orgId: string, waFlowId: string) {
@@ -688,10 +692,11 @@ export async function deleteFlowInWa(orgId: string, waFlowId: string) {
   return res.data;
 }
 
-export async function deleteFlowInDb(dbFlowId: string) {
+export async function deleteFlowInDb(dbFlowId: string, orgId: string) {
   return prisma.waFlow.delete({
     where: {
       dbFlowId,
+      orgId,
     },
   });
 }
@@ -715,10 +720,11 @@ export async function publishFlowInWa(orgId: string, waFlowId: string) {
   const res = await callMetaApi(`/${waFlowId}/publish`, "POST", accessToken);
   return res.data;
 }
-export async function getFlowBySurveyId(surveyId: string) {
+export async function getFlowBySurveyId(surveyId: string, orgId: string) {
   return prisma.waFlow.findFirst({
     where: {
       surveyId,
+      orgId,
     },
   });
 }
@@ -817,11 +823,6 @@ export const handleDecryptedFlowRequest = async (
         const question = questions.find((data) => data.type === QuestionType.Date);
         if (!question?.waAppName) return noSlot;
 
-        // getIntegrationByName returns a single Integration (findUnique), not a
-        // list — this branch previously read `.length`/`[0]` as if it were an
-        // array, so it never detected a missing integration and always called
-        // getWaAmeliaTimeSlot with undefined credentials. Fixed to treat it as
-        // the single record it actually is. See issues.txt.
         const integration = (await getIntegrationByName(
           session.orgId,
           question.waAppName,
@@ -1087,7 +1088,7 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
     return;
   }
   const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
-  const flow = await getFlowFromDb(dbFlowId);
+  const flow = await getFlowFromDb(dbFlowId, session.orgId);
   if (!flow) {
     log.error("Flow not found: %s", dbFlowId);
     return;
@@ -1173,7 +1174,7 @@ export function removeDuplicateResponses<T extends { questionId: string }>(respo
 
   const uniqueQIds = [...new Set(qIds)];
 
-  const reversedRes = responses.reverse();
+  const reversedRes = responses.toReversed();
 
   // Every id in uniqueQIds came from responses itself, so `.find` always
   // matches here — the filter only exists to prove that to the type system.

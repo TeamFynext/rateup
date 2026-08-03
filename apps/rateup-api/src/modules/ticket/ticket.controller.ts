@@ -1,7 +1,7 @@
 import { CreateCommentInput, IdParamsSchema } from "./ticket.schema.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createComment, deleteComment } from "./ticket.service.js";
-import { errorMessage } from "../../utils/commonUtils.js";
+import { createComment, deleteComment, TicketCommentAccessError } from "./ticket.service.js";
+import { log } from "../../utils/logger.js";
 
 export async function createCommentHandler(
   request: FastifyRequest<{
@@ -17,8 +17,11 @@ export async function createCommentHandler(
     comment = await createComment(body, userId);
     reply.code(201).send(comment);
   } catch (e) {
-    console.error(e);
-    reply.code(500).send({ status: "failed", message: errorMessage(e) });
+    if (e instanceof TicketCommentAccessError) {
+      return reply.code(403).send({ status: "failed", message: e.message });
+    }
+    log.error({ err: e }, "Error creating ticket comment");
+    reply.code(500).send({ status: "failed", message: "Something went wrong" });
   }
 }
 export async function deleteCommentHandler(
@@ -33,7 +36,10 @@ export async function deleteCommentHandler(
     await deleteComment(id, userId);
     reply.code(204).send();
   } catch (e) {
-    console.error(e);
-    reply.code(500).send({ status: "failed", message: errorMessage(e) });
+    if (e && typeof e === "object" && (e as { code?: string }).code === "P2025") {
+      return reply.code(404).send({ status: "failed", message: "Comment not found" });
+    }
+    log.error({ err: e }, "Error deleting ticket comment");
+    reply.code(500).send({ status: "failed", message: "Something went wrong" });
   }
 }

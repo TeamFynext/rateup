@@ -1,5 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.schema.js";
+import { LoyaltyRewardStatus } from "../rewards/reward.schema.js";
 
 export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: string) {
   // Check if program already exists
@@ -57,15 +58,19 @@ export async function getLoyaltyProgramByOrg(orgId: string) {
         orderBy: { priority: "desc" },
       },
       rewards: {
-        where: { status: "active" },
+        where: { status: LoyaltyRewardStatus.ACTIVE },
       },
     },
   });
 }
 
-export async function updateLoyaltyProgram(programId: string, data: LoyaltyProgramUpdateInput) {
+export async function updateLoyaltyProgram(
+  programId: string,
+  data: LoyaltyProgramUpdateInput,
+  orgId: string,
+) {
   return await prisma.loyaltyProgram.update({
-    where: { id: programId },
+    where: { id: programId, orgId },
     data,
     include: {
       tiers: true,
@@ -73,7 +78,11 @@ export async function updateLoyaltyProgram(programId: string, data: LoyaltyProgr
   });
 }
 
-export async function deleteLoyaltyProgram(programId: string, force: boolean = false) {
+export async function deleteLoyaltyProgram(
+  programId: string,
+  orgId: string,
+  force: boolean = false,
+) {
   // Check if there are any customers
   const customerCount = await prisma.customerLoyaltyAccount.count({
     where: { programId },
@@ -84,25 +93,58 @@ export async function deleteLoyaltyProgram(programId: string, force: boolean = f
   }
 
   return await prisma.loyaltyProgram.delete({
-    where: { id: programId },
+    where: { id: programId, orgId },
   });
 }
 
-export async function resetProgramPoints(programId: string) {
+export async function resetProgramPoints(programId: string, orgId: string, actorId?: string) {
+  const program = await prisma.loyaltyProgram.findFirst({
+    where: { id: programId, orgId },
+    select: { id: true },
+  });
+
+  if (!program) {
+    throw new Error("Loyalty program not found");
+  }
+
   // Find the first (lowest threshold) tier for the program
   const firstTier = await prisma.loyaltyTier.findFirst({
     where: { programId },
     orderBy: { threshold: "asc" },
   });
 
-  // Reset all customer points, spend, and tier
-  await prisma.customerLoyaltyAccount.updateMany({
+  const accounts = await prisma.customerLoyaltyAccount.findMany({
     where: { programId },
-    data: {
-      currentPoints: 0,
-      lifetimePoints: 0,
-      totalSpend: 0,
-      currentTierId: firstTier?.id ?? null,
-    },
+    select: { id: true, currentPoints: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    const spent = accounts.filter((account) => account.currentPoints !== 0);
+
+    if (spent.length > 0) {
+      await tx.loyaltyTransaction.createMany({
+        data: spent.map((account) => ({
+          accountId: account.id,
+          programId,
+          transactionType: "adjust",
+          source: "program_reset",
+          points: -account.currentPoints,
+          balanceAfter: 0,
+          description: "Programme points reset",
+          metadata: { resetBy: actorId ?? null, pointsBefore: account.currentPoints },
+        })),
+      });
+    }
+
+    // Reset all customer points, spend, and tier
+    await tx.customerLoyaltyAccount.updateMany({
+      where: { programId },
+      data: {
+        currentPoints: 0,
+        lifetimePoints: 0,
+        totalSpend: 0,
+        currentTierId: firstTier?.id ?? null,
+      },
+    });
   });
 }

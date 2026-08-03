@@ -165,16 +165,11 @@ describe("the redemption controller", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Loyalty program not found" } });
   });
 
-  // NOTE: the 400 branch keys on a prisma P2002 (unique constraint) and reports
-  // EVERY such failure as "Reward already redeemed". The redemption path writes
-  // three unique columns — CustomerReward.rewardId_accountId, its shortCode and
-  // LoyaltyRedemption.redemptionCode — so a random code collision (issues.txt
-  // 20.9) is reported to the user as though they had already taken the reward.
-  // See issues.txt 20.44.
-  test("reports any unique-constraint failure as an already-redeemed reward", async () => {
+  test("reports an already-redeemed reward only when that is the constraint that failed", async () => {
     (redeemReward as Mock).mockRejectedValue(
-      Object.assign(new Error("Unique constraint failed on the fields: (`redemptionCode`)"), {
+      Object.assign(new Error("Unique constraint failed"), {
         code: "P2002",
+        meta: { target: ["rewardId", "accountId"] },
       }),
     );
     const rep = reply();
@@ -182,6 +177,33 @@ describe("the redemption controller", () => {
     await redeemRewardHandler(request({ body: {} }), rep);
 
     expect(answer(rep)).toEqual({ code: 400, body: { error: "Reward already redeemed" } });
+  });
+
+  test("reports a code collision as a collision, not as an already-taken reward", async () => {
+    (redeemReward as Mock).mockRejectedValue(
+      Object.assign(new Error("Unique constraint failed"), {
+        code: "P2002",
+        meta: { target: ["redemptionCode"] },
+      }),
+    );
+    const rep = reply();
+
+    await redeemRewardHandler(request({ body: {} }), rep);
+
+    const res = answer(rep);
+    expect(res.code).toBe(409);
+    expect(res.body.error).toContain("code collision");
+  });
+
+  test("a P2002 with no target at all is not read as an already-taken reward", async () => {
+    (redeemReward as Mock).mockRejectedValue(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
+    );
+    const rep = reply();
+
+    await redeemRewardHandler(request({ body: {} }), rep);
+
+    expect(answer(rep).code).toBe(409);
   });
 
   test("passes any other failure through with its message", async () => {
@@ -198,9 +220,7 @@ describe("the redemption controller", () => {
     });
   });
 
-  // NOTE: verify, apply and the per-customer list all resolve no program, so the
-  // caller's org never reaches the query. Same gap as issues.txt 20.20.
-  test("verify, apply and the customer list never resolve a program", async () => {
+  test("verify, apply and the customer list all carry the caller's org", async () => {
     await verifyRedemptionHandler(request({ body: { redemptionCode: "RU-ABC123" } }), reply());
     await applyRedemptionHandler(
       request({ body: { redemptionCode: "RU-ABC123", appliedBy: "cashier-1" } }),
@@ -208,9 +228,12 @@ describe("the redemption controller", () => {
     );
     await getRedemptionsByCustomerHandler(request({ params: { customerId: "acct-1" } }), reply());
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect(verifyRedemption).toHaveBeenCalledWith("RU-ABC123");
-    expect(getRedemptionsByCustomer).toHaveBeenCalledWith("acct-1");
+    expect(verifyRedemption).toHaveBeenCalledWith("RU-ABC123", ORG);
+    expect(applyRedemption).toHaveBeenCalledWith(
+      { redemptionCode: "RU-ABC123", appliedBy: "cashier-1" },
+      ORG,
+    );
+    expect(getRedemptionsByCustomer).toHaveBeenCalledWith("acct-1", ORG);
   });
 
   test("lists transactions for the caller's program with the query's filters", async () => {
@@ -271,9 +294,6 @@ describe("the redemption controller", () => {
     expect(rep.header).toHaveBeenCalledWith("Content-Type", "text/csv");
   });
 
-  // NOTE: the same hand-rolled `row.join(",")` as the customer export — no
-  // quoting and no escaping, so a comma anywhere in a customer name or a
-  // transaction description shifts every later column. See issues.txt 20.24.
   test("a comma in a description breaks the csv column alignment", async () => {
     (getTransactionsForExport as Mock).mockResolvedValue([
       {
@@ -369,11 +389,7 @@ describe("the approval controller", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Approval request not found" } });
   });
 
-  // NOTE: none of approve, reject, cancel or get-by-id resolves the caller's
-  // program — the approval id from the path goes straight to a service that does
-  // not scope either. Approving another org's points adjustment mints points into
-  // their programme. See issues.txt 20.26.
-  test("approve, reject, cancel and read never resolve a program", async () => {
+  test("approve, reject, cancel and read all carry the caller's program", async () => {
     await getApprovalRequestByIdHandler(request({ params: { approvalId: "apr-other" } }), reply());
     await approveApprovalRequestHandler(
       request({ params: { approvalId: "apr-other" }, body: {} }),
@@ -388,10 +404,23 @@ describe("the approval controller", () => {
       reply(),
     );
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect((approveApprovalRequest as Mock).mock.calls[0][0].approvalId).toBe("apr-other");
-    expect((rejectApprovalRequest as Mock).mock.calls[0][0].approvalId).toBe("apr-other");
-    expect((cancelApprovalRequest as Mock).mock.calls[0][0].approvalId).toBe("apr-other");
+    expect(getApprovalRequestById).toHaveBeenCalledWith("apr-other", PROGRAM);
+    expect((approveApprovalRequest as Mock).mock.calls[0][1]).toBe(PROGRAM);
+    expect((rejectApprovalRequest as Mock).mock.calls[0][1]).toBe(PROGRAM);
+    expect((cancelApprovalRequest as Mock).mock.calls[0][1]).toBe(PROGRAM);
+  });
+
+  test("an org with no program cannot act on an approval at all", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await approveApprovalRequestHandler(
+      request({ params: { approvalId: "apr-other" }, body: {} }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Loyalty program not found" } });
+    expect(approveApprovalRequest).not.toHaveBeenCalled();
   });
 
   test("passes a refusal through with its message", async () => {
@@ -435,17 +464,15 @@ describe("the settings controller — WhatsApp commands", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: fetch-by-id and update take the command id from the path and never
-  // touch the session. See issues.txt 20.33.
-  test("fetching and updating a command never consult the session org", async () => {
+  test("fetching and updating a command both carry the session org", async () => {
     await getLoyaltyTemplateHandler(request({ params: { id: "cmd-other" } }), reply());
     await updateLoyaltyTemplateHandler(
       request({ params: { id: "cmd-other" }, body: { content: "x" } }),
       reply(),
     );
 
-    expect(getLoyaltyWaCommand).toHaveBeenCalledWith("cmd-other");
-    expect((updateLoyaltyWaCommand as Mock).mock.calls[0][0]).toBe("cmd-other");
+    expect(getLoyaltyWaCommand).toHaveBeenCalledWith("cmd-other", ORG);
+    expect((updateLoyaltyWaCommand as Mock).mock.calls[0][2]).toBe(ORG);
   });
 
   test("answers a failure with the bare Error object", async () => {
@@ -460,11 +487,7 @@ describe("the settings controller — WhatsApp commands", () => {
 });
 
 describe("the settings controller — event triggers", () => {
-  // NOTE: the programId comes from the request BODY and the handler never
-  // resolves the caller's own program, so a trigger can be attached to another
-  // org's loyalty programme — and it will then fire on that org's customers.
-  // See issues.txt 20.33.
-  test("creates a trigger against whatever programId the body names", async () => {
+  test("creates a trigger against the caller's own program, ignoring the body", async () => {
     const rep = reply();
 
     await createEventTriggerHandler(
@@ -472,12 +495,12 @@ describe("the settings controller — event triggers", () => {
       rep,
     );
 
-    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
-    expect((createEventTrigger as Mock).mock.calls[0][0].programId).toBe("prog-other-org");
+    expect(getLoyaltyProgramByOrg).toHaveBeenCalledWith(ORG);
+    expect((createEventTrigger as Mock).mock.calls[0][1]).toBe(PROGRAM);
     expect(answer(rep).code).toBe(201);
   });
 
-  test("fetch, update and delete take the trigger id from the path alone", async () => {
+  test("fetch, update and delete are all scoped to the caller's program", async () => {
     await getEventTriggerHandler(request({ params: { id: "trg-other" } }), reply());
     await updateEventTriggerHandler(
       request({ params: { id: "trg-other" }, body: { enabled: false } }),
@@ -485,31 +508,36 @@ describe("the settings controller — event triggers", () => {
     );
     await deleteEventTriggerHandler(request({ params: { id: "trg-other" } }), reply());
 
-    expect(getEventTrigger).toHaveBeenCalledWith("trg-other");
-    expect((updateEventTrigger as Mock).mock.calls[0][0]).toBe("trg-other");
-    expect(deleteEventTrigger).toHaveBeenCalledWith("trg-other");
+    expect(getEventTrigger).toHaveBeenCalledWith("trg-other", PROGRAM);
+    expect((updateEventTrigger as Mock).mock.calls[0][2]).toBe(PROGRAM);
+    expect(deleteEventTrigger).toHaveBeenCalledWith("trg-other", PROGRAM);
   });
 
-  test("lists a program's triggers when the query names one", async () => {
+  test("ignores the query's programId and lists only the caller's own", async () => {
     const rep = reply();
 
-    await getAllEventTriggersHandler(request({ query: { programId: PROGRAM } }), rep);
+    await getAllEventTriggersHandler(request({ query: { programId: "prog-other-org" } }), rep);
 
     expect(getAllEventTriggers).toHaveBeenCalledWith(PROGRAM);
     expect(answer(rep).code).toBe(200);
   });
 
-  // NOTE: pins current behaviour, and this is the widest read in the file. The
-  // programId query parameter is optional; when it is omitted the handler passes
-  // undefined, getAllEventTriggers drops its where clause entirely, and the
-  // response is EVERY org's event triggers with their programs included.
-  // See issues.txt 20.33.
-  test("returns every org's triggers when the query names no program", async () => {
+  test("omitting the query parameter lists the caller's own, not everyone's", async () => {
     const rep = reply();
 
     await getAllEventTriggersHandler(request({ query: {} }), rep);
 
-    expect(getAllEventTriggers).toHaveBeenCalledWith(undefined);
+    expect(getAllEventTriggers).toHaveBeenCalledWith(PROGRAM);
     expect(answer(rep).code).toBe(200);
+  });
+
+  test("an org with no program lists nothing at all", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await getAllEventTriggersHandler(request({ query: {} }), rep);
+
+    expect(getAllEventTriggers).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Loyalty program not found" } });
   });
 });

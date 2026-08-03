@@ -12,6 +12,7 @@ import {
   CustomFieldSchema,
   BulkUpdateContactStatusSchema,
 } from "./contact.schema.js";
+import { ContactNotFoundError } from "./contact.errors.js";
 import { log } from "../../utils/logger.js";
 import {
   addCustomField,
@@ -52,6 +53,17 @@ import {
 import { write, type CellValue } from "hucre";
 import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 //used in zapier
+function replyForError(reply: FastifyReply, error: unknown, context: string) {
+  if (error instanceof ContactNotFoundError) {
+    return reply.code(404).send({ error: error.message });
+  }
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    return reply.code(404).send({ error: "Contact not found" });
+  }
+  log.error({ err: error }, context);
+  return reply.code(500).send({ error: "Something went wrong" });
+}
+
 export async function createContactHandler(
   request: FastifyRequest<{
     Body: ContactCore;
@@ -105,10 +117,9 @@ export async function createContactHandler(
     }
   } catch (error) {
     log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(400).send({ error: "Contact already exist" });
-      }
+    if (reply.sent) return;
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      reply.code(400).send({ error: "Contact already exist" });
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
@@ -157,11 +168,11 @@ export async function getContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await getContactById(request.params.contactId);
+    const contact = await getContactById(request.params.contactId, request.user.orgId);
+    if (!contact) return reply.code(404).send({ error: "Contact not found" });
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error reading a contact");
   }
 }
 
@@ -170,11 +181,10 @@ export async function deleteContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await deleteContactById(request.params.contactId);
+    const contact = await deleteContactById(request.params.contactId, request.user.orgId);
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error deleting a contact");
   }
 }
 
@@ -186,17 +196,18 @@ export async function updateContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await updateContactById(request.params.contactId, request.body, request.userId);
+    const contact = await updateContactById(
+      request.params.contactId,
+      request.user.orgId,
+      request.body,
+      request.userId,
+    );
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(400).send({ error: "Contact already exist" });
-      }
-    } else {
-      reply.code(500).send({ error: "Something went wrong" });
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return reply.code(400).send({ error: "Contact already exist" });
     }
+    return replyForError(reply, error, "Error updating a contact");
   }
 }
 
@@ -210,12 +221,12 @@ export async function updateContactLabelsByIdHandler(
   try {
     const contact = await updateContactLabelsById(
       request.params.contactId,
+      request.user.orgId,
       request.body?.lifecycleId,
     );
     return reply.code(200).send(contact);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error updating a contact lifecycle");
   }
 }
 
@@ -225,11 +236,10 @@ export async function deleteManyContactsHandler(
 ) {
   try {
     const { contactIds } = request.body;
-    const res = await deleteManyContacts(contactIds);
+    const res = await deleteManyContacts(contactIds, request.user.orgId);
     return reply.code(200).send(res);
   } catch (error) {
-    log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+    return replyForError(reply, error, "Error deleting contacts");
   }
 }
 
@@ -274,14 +284,10 @@ export async function importCSVContactsHandler(request: FastifyRequest, reply: F
       }
     }
     const res = await importCSVContacts(file, orgId, tags, update, undefined, hasHeaderRow);
-    // `importCSVContacts` returns nothing for an empty spreadsheet (no data
-    // rows) rather than a shaped error — answer that plainly instead of
-    // reading `.status` off `undefined`.
-    if (!res) {
-      return reply.code(400).send({ error: "No contacts found in the uploaded file." });
-    }
     if (res.status === "error") {
-      return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
+      return reply
+        .code(400)
+        .send({ error: "VALIDATION_ERR", data: res.data, message: res.message });
     }
     reply.code(200).send(res);
   } catch (e) {
@@ -499,12 +505,12 @@ export async function updateLifecycleStageofContactsHandler(
   try {
     const res = await updateLifecycleStageofContacts(
       request.params.lifecycleId,
+      request.user.orgId,
       request.body.contactIds,
     );
     reply.send(res);
   } catch (e) {
-    log.error(e);
-    reply.code(500).send({ message: "Error updating lifecycle stage of contacts" });
+    return replyForError(reply, e, "Error updating lifecycle stage of contacts");
   }
 }
 
@@ -519,6 +525,7 @@ export async function bulkUpdateWaMessageAssignStatusHandler(
 
     const contacts = await bulkUpdateWaMessageAssignStatus(
       contactIds,
+      request.user.orgId,
       waMessageAssignStatus,
       request.userId,
       messageId,

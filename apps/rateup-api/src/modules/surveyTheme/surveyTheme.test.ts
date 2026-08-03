@@ -10,7 +10,7 @@ vi.mock("../../utils/prisma.js", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
-    survey: { update: vi.fn() },
+    survey: { update: vi.fn(), findFirst: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -20,12 +20,10 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { checkSession } from "../../utils/checkSession.js";
-import { assertRootOrg } from "../../utils/auth.js";
 import { defaultTheme, defaultThemeOld, defaultWebSurveyPagesTheme } from "./defaultTheme.js";
 import {
   createAndApplyThemeToSurvey,
@@ -33,6 +31,7 @@ import {
   getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
   renameThemeInDB,
+  ThemeAccessError,
   updateSurveyThemeActiveSurveyThemeInDB,
 } from "./surveyTheme.service.js";
 import {
@@ -42,11 +41,16 @@ import {
   getAllThemesOfUserOrg,
   getSurveyThemeByIdHandler,
   renameTheme,
-  updateAllWebSurveyThemesJson,
   updateSurveyThemeHandler,
 } from "./surveyTheme.controller.js";
 import { surveyThemeRoutes } from "./surveyTheme.routes.js";
-import { getImgUrl, verifyAndConvertSurveyThemeObj } from "./utils.js";
+import { getImgUrl } from "./utils.js";
+import {
+  createThemeBodySchema,
+  renameThemeBodySchema,
+  themeIdParamsSchema,
+  updateActiveThemeBodySchema,
+} from "./surveyTheme.schema.js";
 import type { FastifyError } from "fastify";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -78,12 +82,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   // clearAllMocks keeps implementations but drops queued values.
   db.webSurveyTheme.create.mockResolvedValue({ id: "theme-1", name: "New" });
-  db.webSurveyTheme.findFirst.mockResolvedValue(null);
+  db.webSurveyTheme.findFirst.mockResolvedValue({ name: "Brand" });
   db.webSurveyTheme.findMany.mockResolvedValue([]);
   db.webSurveyTheme.findUnique.mockResolvedValue(null);
   db.webSurveyTheme.update.mockResolvedValue({ id: VICTIM_THEME });
   db.webSurveyTheme.delete.mockResolvedValue({ id: VICTIM_THEME });
   db.survey.update.mockResolvedValue({ id: VICTIM_SURVEY });
+  db.survey.findFirst.mockResolvedValue({ id: VICTIM_SURVEY });
   db.$transaction.mockImplementation(async (fn: any) => fn(db));
 });
 
@@ -99,22 +104,34 @@ describe("updateSurveyThemeActiveSurveyThemeInDB", () => {
     ...over,
   });
 
-  // NOTE: the theme id comes from the path, the survey id from the body, and
-  // neither is resolved to an org. getAllThemesOfUserOrgFromDB in the same file
-  // filters on orgId, so the scoped read exists and is not used here.
-  test("writes the theme selected by id alone", async () => {
-    db.webSurveyTheme.findFirst.mockResolvedValueOnce({ name: "Brand" });
-
+  test("selects the theme within the caller's org", async () => {
     await updateSurveyThemeActiveSurveyThemeInDB(req());
 
-    expect(db.webSurveyTheme.update.mock.calls[0][0].where).toEqual({ id: VICTIM_THEME });
+    expect(db.webSurveyTheme.findFirst.mock.calls[0][0].where).toEqual({
+      id: VICTIM_THEME,
+      orgId: ORG,
+    });
+    expect(db.webSurveyTheme.update.mock.calls[0][0].where).toEqual({
+      id: VICTIM_THEME,
+      orgId: ORG,
+    });
   });
 
-  // NOTE: theme titles are stored as raw HTML — defaultTheme.ts:64, :88 and :96
-  // hold `<h3 ...>Welcome</h3><p ...>` — so the theme JSON is markup that the
-  // public survey page renders.
+  test("refuses a theme belonging to another org", async () => {
+    db.webSurveyTheme.findFirst.mockResolvedValueOnce(null);
+
+    await expect(updateSurveyThemeActiveSurveyThemeInDB(req())).rejects.toBeInstanceOf(
+      ThemeAccessError,
+    );
+    expect(db.webSurveyTheme.update).not.toHaveBeenCalled();
+    expect(db.survey.update).not.toHaveBeenCalled();
+  });
+
+  // Theme titles are stored as raw HTML — defaultTheme.ts holds
+  // `<h3 ...>Welcome</h3><p ...>` — so the theme JSON is markup that the public
+  // survey page renders. The tenancy check is what stops it being another org's
+  // page; the shape of the JSON itself is still unconstrained (33.4).
   test("stores whatever JSON the body carried, markup included", async () => {
-    db.webSurveyTheme.findFirst.mockResolvedValueOnce({ name: "Brand" });
     const theme = {
       surveyTheme: { title: { title: `<img src=x onerror="fetch('https://evil.test')">` } },
     };
@@ -130,45 +147,64 @@ describe("updateSurveyThemeActiveSurveyThemeInDB", () => {
     expect((defaultWebSurveyPagesTheme as any).languageTheme.title.title).toContain("<h3");
   });
 
-  // NOTE: defaultTheme — the value createAndApplyThemeToSurvey writes — holds
-  // only surveyTheme. The welcome, thankyou and language pages live in
-  // defaultThemeOld, so a newly created theme has a different shape from the
-  // one verifyAndConvertSurveyThemeObj expects to read.
   test("the theme new rows are seeded with has only the survey page", () => {
     expect(Object.keys(defaultTheme)).toEqual(["surveyTheme"]);
     expect(Object.keys(defaultThemeOld)).toContain("welcomeTheme");
   });
 
-  test("the converter dereferences a page the seeded theme does not have", () => {
-    expect(() => verifyAndConvertSurveyThemeObj(defaultTheme)).toThrow(TypeError);
-  });
-
-  // NOTE: the survey update runs unconditionally and is keyed on the body's
-  // surveyId with no org condition, so any survey can be pointed at any theme.
-  test("applies the theme to whatever survey the body names", async () => {
+  // The survey update ran unconditionally and was keyed on the body's surveyId
+  // with no org condition, so any survey could be pointed at any theme.
+  test("applies the theme only to a survey in the caller's org", async () => {
     await updateSurveyThemeActiveSurveyThemeInDB(req());
 
+    expect(db.survey.findFirst.mock.calls[0][0].where).toEqual({
+      id: VICTIM_SURVEY,
+      OR: [{ orgId: ORG }, { teams: { some: { team: { orgId: ORG } } } }],
+    });
     expect(db.survey.update).toHaveBeenCalledWith({
       where: { id: VICTIM_SURVEY },
       data: { webSurveyThemeId: VICTIM_THEME },
     });
   });
 
-  test("the handler never consults the session org", async () => {
-    const request: any = {
-      params: { webSurveyThemeId: VICTIM_THEME },
-      body: { surveyId: VICTIM_SURVEY, theme: {} },
-      get user() {
-        throw new Error("request.user was read");
-      },
-    };
+  test("refuses a survey belonging to another org", async () => {
+    db.survey.findFirst.mockResolvedValueOnce(null);
 
-    await expect(updateSurveyThemeHandler(request, reply())).resolves.toBeUndefined();
-    expect(db.survey.update).toHaveBeenCalledOnce();
+    await expect(updateSurveyThemeActiveSurveyThemeInDB(req())).rejects.toMatchObject({
+      status: 404,
+    });
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  // NOTE: the only thing standing between a caller and overwriting a theme is
-  // a comparison against the display name "Default Theme".
+  test("the handler takes the org from the session and answers 404", async () => {
+    db.webSurveyTheme.findFirst.mockResolvedValueOnce(null);
+    const rep = reply();
+
+    await updateSurveyThemeHandler(
+      {
+        params: { webSurveyThemeId: VICTIM_THEME },
+        body: { surveyId: VICTIM_SURVEY, theme: {} },
+        user: { orgId: ORG },
+      } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { success: false, message: "Theme not found" },
+    });
+  });
+
+  test("a request with no session org is refused rather than run unscoped", async () => {
+    await expect(updateSurveyThemeActiveSurveyThemeInDB(req({ user: {} }))).rejects.toMatchObject({
+      status: 403,
+    });
+    expect(db.webSurveyTheme.findFirst).not.toHaveBeenCalled();
+  });
+
+  // The only thing standing between a caller and overwriting a theme used to be
+  // this comparison against the display name — and the rename endpoint was the
+  // way past it (33.2). It is now a second line, behind the org check.
   test("a theme named Default Theme is left alone", async () => {
     db.webSurveyTheme.findFirst.mockResolvedValueOnce({ name: "Default Theme" });
 
@@ -186,95 +222,91 @@ describe("updateSurveyThemeActiveSurveyThemeInDB", () => {
     expect(db.webSurveyTheme.update).toHaveBeenCalledOnce();
   });
 
-  // NOTE: a theme id that resolves to nothing skips the theme write but still
-  // repoints the survey.
-  test("an unknown theme id still repoints the survey", async () => {
-    await updateSurveyThemeActiveSurveyThemeInDB(req());
+  // An unknown theme id used to skip the theme write but still repoint the
+  // survey; now it is a refusal before either write.
+  test("an unknown theme id repoints nothing", async () => {
+    db.webSurveyTheme.findFirst.mockResolvedValueOnce(null);
 
-    expect(db.webSurveyTheme.update).not.toHaveBeenCalled();
-    expect(db.survey.update).toHaveBeenCalledOnce();
+    await expect(updateSurveyThemeActiveSurveyThemeInDB(req())).rejects.toBeInstanceOf(
+      ThemeAccessError,
+    );
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  test("the two writes are not in a transaction", async () => {
-    db.webSurveyTheme.findFirst.mockResolvedValueOnce({ name: "Brand" });
-
+  test("the two writes share one transaction", async () => {
     await updateSurveyThemeActiveSurveyThemeInDB(req());
 
-    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(db.$transaction).toHaveBeenCalledOnce();
   });
 });
 
 // ===========================================================================
-// renameThemeInDB — the update body is spread wholesale
+// renameThemeInDB — the update body used to be spread wholesale
 // ===========================================================================
 
 describe("renameThemeInDB", () => {
-  test("selects the theme by id alone", async () => {
+  test("selects the theme within the caller's org", async () => {
     await renameThemeInDB({
       params: { webSurveyThemeId: VICTIM_THEME },
       body: { name: "Renamed" },
+      user: { orgId: ORG },
     });
 
-    expect(db.webSurveyTheme.update.mock.calls[0][0].where).toEqual({ id: VICTIM_THEME });
+    expect(db.webSurveyTheme.update.mock.calls[0][0].where).toEqual({
+      id: VICTIM_THEME,
+      orgId: ORG,
+    });
   });
 
-  // NOTE: `data: { ...body }` with no body schema on the route — every column
-  // of WebSurveyTheme is reachable, not just name.
-  test("spreads the whole request body into the update", async () => {
+  test("writes the name and nothing else", async () => {
     await renameThemeInDB({
       params: { webSurveyThemeId: VICTIM_THEME },
-      body: { name: "Renamed", orgId: VICTIM_ORG, theme: { injected: true } },
+      body: { name: "Renamed", orgId: VICTIM_ORG, theme: { injected: true } } as never,
+      user: { orgId: ORG },
     });
 
-    expect(db.webSurveyTheme.update.mock.calls[0][0].data).toEqual({
-      name: "Renamed",
-      orgId: VICTIM_ORG,
-      theme: { injected: true },
-    });
+    expect(db.webSurveyTheme.update.mock.calls[0][0].data).toEqual({ name: "Renamed" });
   });
 
-  test("an orgId in the body re-parents the theme", async () => {
-    await renameThemeInDB({
-      params: { webSurveyThemeId: VICTIM_THEME },
-      body: { name: "x", orgId: VICTIM_ORG },
-    });
-
-    expect(db.webSurveyTheme.update.mock.calls[0][0].data.orgId).toBe(VICTIM_ORG);
+  // Zod strips unknown keys rather than rejecting, which is what the route wants:
+  // an orgId in the body never reaches the handler at all.
+  test("the body schema strips any field but the name", () => {
+    expect(renameThemeBodySchema.parse({ name: "x", orgId: VICTIM_ORG })).toEqual({ name: "x" });
+    expect(renameThemeBodySchema.safeParse({ name: "" }).success).toBe(false);
+    expect(renameThemeBodySchema.safeParse({}).success).toBe(false);
   });
 
-  // NOTE: renaming away from "Default Theme" is what unlocks the write guard in
-  // updateSurveyThemeActiveSurveyThemeInDB.
-  test("renaming is the way past the Default Theme guard", async () => {
-    await renameThemeInDB({
-      params: { webSurveyThemeId: VICTIM_THEME },
-      body: { name: "Not Default Any More" },
-    });
-
-    expect(db.webSurveyTheme.update.mock.calls[0][0].data.name).toBe("Not Default Any More");
-  });
-
-  test("the handler only checks that a name is present", async () => {
+  test("the handler still requires a name", async () => {
     const rep = reply();
 
-    await renameTheme({ params: { webSurveyThemeId: VICTIM_THEME }, body: {} } as never, rep);
+    await renameTheme(
+      { params: { webSurveyThemeId: VICTIM_THEME }, body: {}, user: { orgId: ORG } } as never,
+      rep,
+    );
 
     expect(answer(rep).code).toBe(400);
     expect(db.webSurveyTheme.update).not.toHaveBeenCalled();
   });
 
-  test("any non-empty name lets the rest of the body through", async () => {
+  test("a foreign theme answers 404", async () => {
+    db.webSurveyTheme.update.mockRejectedValueOnce(
+      Object.assign(new Error("Record to update not found."), { code: "P2025" }),
+    );
     const rep = reply();
 
     await renameTheme(
       {
         params: { webSurveyThemeId: VICTIM_THEME },
-        body: { name: "x", orgId: VICTIM_ORG },
+        body: { name: "x" },
+        user: { orgId: ORG },
       } as never,
       rep,
     );
 
-    expect(db.webSurveyTheme.update.mock.calls[0][0].data.orgId).toBe(VICTIM_ORG);
-    expect(answer(rep).code).toBe(200);
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { success: false, message: "Theme not found" },
+    });
   });
 });
 
@@ -283,22 +315,38 @@ describe("renameThemeInDB", () => {
 // ===========================================================================
 
 describe("deleteThemeInDB", () => {
-  test("deletes by id alone", async () => {
-    await deleteThemeInDB({ params: { webSurveyThemeId: VICTIM_THEME } });
+  test("scopes the delete to the caller's org", async () => {
+    await deleteThemeInDB({ params: { webSurveyThemeId: VICTIM_THEME }, user: { orgId: ORG } });
 
-    expect(db.webSurveyTheme.delete).toHaveBeenCalledWith({ where: { id: VICTIM_THEME } });
+    expect(db.webSurveyTheme.delete).toHaveBeenCalledWith({
+      where: { id: VICTIM_THEME, orgId: ORG },
+    });
   });
 
-  test("the handler reports success without reading the session", async () => {
-    const request: any = {
-      params: { webSurveyThemeId: VICTIM_THEME },
-      get user() {
-        throw new Error("request.user was read");
-      },
-    };
+  test("a foreign theme answers 404 rather than success", async () => {
+    db.webSurveyTheme.delete.mockRejectedValueOnce(
+      Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
+    );
     const rep = reply();
 
-    await deleteTheme(request, rep);
+    await deleteTheme(
+      { params: { webSurveyThemeId: VICTIM_THEME }, user: { orgId: ORG } } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { success: false, message: "Theme not found" },
+    });
+  });
+
+  test("a delete inside the org still reports success", async () => {
+    const rep = reply();
+
+    await deleteTheme(
+      { params: { webSurveyThemeId: VICTIM_THEME }, user: { orgId: ORG } } as never,
+      rep,
+    );
 
     expect(answer(rep)).toEqual({
       code: 200,
@@ -312,6 +360,8 @@ describe("deleteThemeInDB", () => {
 // ===========================================================================
 
 describe("getSurveyThemeById", () => {
+  // Deliberately unauthenticated — the survey renderer needs the theme without a
+  // session — so it stays keyed on the id alone.
   test("selects by id with no org condition", async () => {
     await getSurveyThemeById(VICTIM_THEME);
 
@@ -332,15 +382,18 @@ describe("getSurveyThemeById", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { surveyTheme: {} } });
   });
 
-  // NOTE: the destructure has no null guard, so an id that resolves to nothing
-  // throws — on a route that is registered as public.
-  test("throws on an id that does not resolve", async () => {
-    await expect(
-      getSurveyThemeByIdHandler({ params: { webSurveyThemeId: VICTIM_THEME } } as never, reply()),
-    ).rejects.toThrow(TypeError);
+  test("an id that does not resolve answers 404", async () => {
+    const rep = reply();
+
+    await getSurveyThemeByIdHandler({ params: { webSurveyThemeId: VICTIM_THEME } } as never, rep);
+
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { success: false, message: "Theme not found" },
+    });
   });
 
-  test("the module's error handler turns that into a fixed 500", () => {
+  test("the module's error handler sends a fixed 500", () => {
     const rep = reply();
 
     errorHandler(new TypeError("Cannot destructure") as FastifyError, {} as never, rep);
@@ -396,15 +449,16 @@ describe("the scoped paths", () => {
     });
   });
 
-  // NOTE: the theme is created in the caller's org, then applied to whatever
-  // survey the body names — the survey update carries no org condition.
-  test("create applies the new theme to any survey the body names", async () => {
-    await createAndApplyThemeToSurvey({
-      user: { orgId: ORG },
-      body: { themeName: "Brand", surveyId: VICTIM_SURVEY },
-    });
+  test("create refuses a survey outside the caller's org", async () => {
+    db.survey.findFirst.mockResolvedValueOnce(null);
 
-    expect(db.survey.update.mock.calls[0][0].where).toEqual({ id: VICTIM_SURVEY });
+    await expect(
+      createAndApplyThemeToSurvey({
+        user: { orgId: ORG },
+        body: { themeName: "Brand", surveyId: VICTIM_SURVEY },
+      }),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(db.webSurveyTheme.create).not.toHaveBeenCalled();
   });
 
   test("both writes share one transaction", async () => {
@@ -416,18 +470,16 @@ describe("the scoped paths", () => {
     expect(db.$transaction).toHaveBeenCalledOnce();
   });
 
-  // NOTE: the controller types surveyId as optional, but the transaction
-  // always runs survey.update — so a create with no survey rolls the new theme
-  // back too.
-  test("a create with no surveyId rolls the theme back", async () => {
-    db.survey.update.mockRejectedValueOnce(
-      Object.assign(new Error("Argument `where` needs at least one argument"), { code: "P2025" }),
-    );
+  test("a create with no surveyId keeps the theme and touches no survey", async () => {
+    const theme = await createAndApplyThemeToSurvey({
+      user: { orgId: ORG },
+      body: { themeName: "Brand" },
+    });
 
-    await expect(
-      createAndApplyThemeToSurvey({ user: { orgId: ORG }, body: { themeName: "Brand" } }),
-    ).rejects.toThrow();
     expect(db.webSurveyTheme.create).toHaveBeenCalledOnce();
+    expect(db.survey.update).not.toHaveBeenCalled();
+    expect(db.survey.findFirst).not.toHaveBeenCalled();
+    expect(theme).toEqual({ id: "theme-1", name: "New" });
   });
 
   test("a duplicate theme name in the org answers 400", async () => {
@@ -456,25 +508,6 @@ describe("the scoped paths", () => {
         reply(),
       ),
     ).rejects.toThrow("db down");
-  });
-});
-
-// ===========================================================================
-// The migration endpoint
-// ===========================================================================
-
-describe("updateAllWebSurveyThemesJson", () => {
-  // NOTE: the call is commented out (surveyTheme.controller.ts:97), so the
-  // endpoint answers success without doing anything.
-  test("answers 200 without touching the database", async () => {
-    const rep = reply();
-
-    await updateAllWebSurveyThemesJson({} as never, rep);
-
-    expect(db.webSurveyTheme.findMany).not.toHaveBeenCalled();
-    expect(db.$transaction).not.toHaveBeenCalled();
-    expect(answer(rep).code).toBe(200);
-    expect(answer(rep).body.message).toContain("No Json changes needed");
   });
 });
 
@@ -540,10 +573,10 @@ describe("surveyThemeRoutes", () => {
       onRoute(routeOptions);
       return { ...r, preHandler: routeOptions.preHandler };
     });
-    return { srv, routes: resolved };
+    return { srv, routes: resolved, onRoute };
   }
 
-  test("registers seven routes", async () => {
+  test("registers six routes", async () => {
     const { routes } = await collect();
 
     expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual([
@@ -553,12 +586,11 @@ describe("surveyThemeRoutes", () => {
       "PUT /:webSurveyThemeId",
       "PATCH /:webSurveyThemeId",
       "DELETE /:webSurveyThemeId",
-      "POST /updateWebSurveyThemes",
     ]);
   });
 
-  // NOTE: the by-id read is declared public, so the hook clears its preHandler
-  // list entirely.
+  // The by-id read is declared public, so the hook leaves its preHandler list
+  // empty — the survey renderer has no session.
   test("leaves the by-id read unauthenticated", async () => {
     const { routes } = await collect();
 
@@ -573,47 +605,52 @@ describe("surveyThemeRoutes", () => {
     }
   });
 
-  test("adds the root-org check only to the migration route", async () => {
-    const { routes } = await collect();
-
-    const gated = routes.filter((r) => r.preHandler?.includes(assertRootOrg));
-    expect(gated.map((r) => r.url)).toEqual(["/updateWebSurveyThemes"]);
-  });
-
-  // NOTE: the hook assigns to routeOptions.preHandler rather than appending, so
-  // any preHandler a route declared for itself would be discarded.
-  test("the hook replaces a route's own preHandler rather than appending", async () => {
-    const { routes } = await collect();
-    let onRoute: any;
-    const srv: any = {
-      addHook: vi.fn((name, fn) => {
-        if (name === "onRoute") onRoute = fn;
-      }),
-      setErrorHandler: vi.fn(),
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      patch: vi.fn(),
-      delete: vi.fn(),
-    };
-    await surveyThemeRoutes(srv);
+  test("the hook appends to a route's own preHandler rather than replacing it", async () => {
+    const { onRoute } = await collect();
 
     const own = vi.fn();
     const routeOptions: any = { preHandler: [own], config: {} };
     onRoute(routeOptions);
 
-    expect(routeOptions.preHandler).toEqual([checkSession]);
-    expect(routes).toHaveLength(7);
+    expect(routeOptions.preHandler).toEqual([checkSession, own]);
   });
 
-  // NOTE: not one route declares a body or params schema, and the module's own
-  // surveyTheme.schema.ts is not imported by the route file at all.
-  test("no route validates anything", async () => {
+  test("a public route keeps its own preHandler too", async () => {
+    const { onRoute } = await collect();
+
+    const own = vi.fn();
+    const routeOptions: any = { preHandler: own, config: { isPublic: true } };
+    onRoute(routeOptions);
+
+    expect(routeOptions.preHandler).toEqual([own]);
+  });
+
+  test("every route validates its params, and every writer its body", async () => {
     const { routes } = await collect();
 
-    for (const r of routes) {
-      expect(r.opts?.schema).toBeUndefined();
-    }
+    const byUrl = Object.fromEntries(routes.map((r) => [`${r.method} ${r.url}`, r.opts?.schema]));
+    expect(byUrl["GET /:webSurveyThemeId"].params).toBe(themeIdParamsSchema);
+    expect(byUrl["POST /"].body).toBe(createThemeBodySchema);
+    expect(byUrl["PUT /:webSurveyThemeId"].body).toBe(updateActiveThemeBodySchema);
+    expect(byUrl["PATCH /:webSurveyThemeId"].body).toBe(renameThemeBodySchema);
+    expect(byUrl["DELETE /:webSurveyThemeId"].params).toBe(themeIdParamsSchema);
+  });
+
+  test("the update body constrains the survey id but not the theme's shape", () => {
+    expect(updateActiveThemeBodySchema.safeParse({ surveyId: "nope", theme: {} }).success).toBe(
+      false,
+    );
+    expect(
+      updateActiveThemeBodySchema.safeParse({
+        surveyId: VICTIM_SURVEY,
+        theme: { anything: "at all" },
+      }).success,
+    ).toBe(true);
+  });
+
+  test("the params schema requires a uuid", () => {
+    expect(themeIdParamsSchema.safeParse({ webSurveyThemeId: "not-a-uuid" }).success).toBe(false);
+    expect(themeIdParamsSchema.safeParse({ webSurveyThemeId: VICTIM_THEME }).success).toBe(true);
   });
 
   test("installs the module's own error handler", async () => {

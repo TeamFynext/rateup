@@ -17,8 +17,10 @@ vi.mock("../../../utils/prisma.js", () => ({
   excludeFields: vi.fn(),
 }));
 
-vi.mock("../../stats/stats.service.js", () => ({ getUsageStat: vi.fn() }));
 vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
+vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
+  checkConversationLimitAvailable: vi.fn(),
+}));
 vi.mock("./wa_automatedReply.utils.js", () => ({
   selectAutomationByBusinessHours: vi.fn((list: unknown[]) => list[0]),
 }));
@@ -27,8 +29,8 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import prisma from "../../../utils/prisma.js";
-import { getUsageStat } from "../../stats/stats.service.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
+import { checkConversationLimitAvailable } from "../whatsappSurvey/wasurvey.auth.js";
 import {
   type automationProps,
   selectAutomationByBusinessHours,
@@ -64,8 +66,8 @@ const db = prisma as unknown as {
   usageStats: { update: Mock };
 };
 
-const getUsageStatMock = getUsageStat as unknown as Mock;
 const getSubscriptionMock = getSubscription as unknown as Mock;
+const checkConversationLimitMock = checkConversationLimitAvailable as unknown as Mock;
 const selectByHoursMock = selectAutomationByBusinessHours as unknown as Mock;
 
 const AUTOMATION = { id: "auto-1", name: "Greeting", orgId: "org-1" };
@@ -77,15 +79,18 @@ beforeEach(() => {
     ...AUTOMATION,
     WaAutomatedReplyCommands: [{ command: "hello", businessHourId: "bh-1" }],
   });
-  db.waAutomatedReply.findFirst.mockResolvedValue(AUTOMATION);
+  db.waAutomatedReply.findFirst.mockResolvedValue({
+    ...AUTOMATION,
+    WaAutomatedReplyCommands: [{ command: "hello", businessHourId: "bh-1" }],
+  });
   db.waAutomatedReply.create.mockResolvedValue(AUTOMATION);
   db.waAutomatedReply.update.mockResolvedValue(AUTOMATION);
   db.waAutomatedReply.delete.mockResolvedValue(AUTOMATION);
   db.waAutomatedReplyMessage.findMany.mockResolvedValue([]);
   db.waAutomatedReplyCommands.findMany.mockResolvedValue([]);
   db.usageStats.update.mockResolvedValue({});
-  getUsageStatMock.mockResolvedValue({ waAutomationCount: 3 });
   getSubscriptionMock.mockResolvedValue({ features: { whatsapp: { active: true } } });
+  checkConversationLimitMock.mockResolvedValue(true);
   selectByHoursMock.mockImplementation((list: unknown[]) => list[0]);
 });
 
@@ -122,7 +127,7 @@ describe("getAutomatedRepliesByOrgId", () => {
 
 describe("getAutomatedReplyById", () => {
   test("flattens the stored commands into a plain keyword list", async () => {
-    db.waAutomatedReply.findUnique.mockResolvedValue({
+    db.waAutomatedReply.findFirst.mockResolvedValue({
       ...AUTOMATION,
       WaAutomatedReplyCommands: [
         { command: "hello", businessHourId: "bh-1" },
@@ -130,39 +135,55 @@ describe("getAutomatedReplyById", () => {
       ],
     });
 
-    const result = await getAutomatedReplyById("auto-1");
+    const result = await getAutomatedReplyById("auto-1", "org-1");
 
-    expect(result.commands).toEqual(["hello", "hi"]);
+    expect(result?.commands).toEqual(["hello", "hi"]);
     expect(result).not.toHaveProperty("WaAutomatedReplyCommands");
   });
 
-  test("lifts the business hours off the first command", async () => {
-    const result = await getAutomatedReplyById("auto-1");
+  test("scopes the lookup to the caller's org", async () => {
+    await getAutomatedReplyById("auto-1", "org-1");
 
-    expect(result.businessHourId).toBe("bh-1");
+    expect(db.waAutomatedReply.findFirst.mock.calls[0][0].where).toEqual({
+      id: "auto-1",
+      orgId: "org-1",
+    });
+  });
+
+  test("lifts the business hours off the first command", async () => {
+    const result = await getAutomatedReplyById("auto-1", "org-1");
+
+    expect(result?.businessHourId).toBe("bh-1");
   });
 
   test("reports no business hours when the automation has no commands", async () => {
-    db.waAutomatedReply.findUnique.mockResolvedValue({
+    db.waAutomatedReply.findFirst.mockResolvedValue({
       ...AUTOMATION,
       WaAutomatedReplyCommands: [],
     });
 
-    const result = await getAutomatedReplyById("auto-1");
+    const result = await getAutomatedReplyById("auto-1", "org-1");
 
-    expect(result.commands).toEqual([]);
-    expect(result.businessHourId).toBeUndefined();
+    expect(result?.commands).toEqual([]);
+    expect(result?.businessHourId).toBeUndefined();
   });
 
   // Previously this destructured the result with no null check, throwing a bare
-  // TypeError for an unknown id instead of a clear message. It now throws a descriptive
-  // Error before the destructure.
-  test("throws a clear error rather than reporting nothing for an unknown id", async () => {
-    db.waAutomatedReply.findUnique.mockResolvedValue(null);
+  // TypeError for an unknown id. It now returns null, which the controller answers 404.
+  test("returns null rather than throwing for an unknown id", async () => {
+    db.waAutomatedReply.findFirst.mockResolvedValue(null);
 
-    await expect(getAutomatedReplyById("missing")).rejects.toThrow(
-      "Automated reply missing not found",
-    );
+    await expect(getAutomatedReplyById("missing", "org-1")).resolves.toBeNull();
+  });
+
+  test("returns null for an automation belonging to another org", async () => {
+    db.waAutomatedReply.findFirst.mockResolvedValue(null);
+
+    await expect(getAutomatedReplyById("auto-victim", "org-attacker")).resolves.toBeNull();
+    expect(db.waAutomatedReply.findFirst.mock.calls[0][0].where).toEqual({
+      id: "auto-victim",
+      orgId: "org-attacker",
+    });
   });
 });
 
@@ -312,27 +333,43 @@ describe("updateAutomatedReply", () => {
     expect(db.waAutomatedReply.update.mock.calls[0][0].data.platform).toBe(PlatformType.INSTAGRAM);
   });
 
-  // NOTE: the org is accepted as a parameter but never used — the update is keyed on
-  // the id alone, so another org's automation can be rewritten given its id.
-  test("does not scope the update to the org it is handed", async () => {
-    await updateAutomatedReply("auto-victim", { name: "hijacked" }, "org-attacker");
+  test("confirms the org owns the automation before writing", async () => {
+    await updateAutomatedReply("auto-1", { name: "Renamed" }, "org-1");
 
-    expect(db.waAutomatedReply.update.mock.calls[0][0].where).toEqual({ id: "auto-victim" });
+    expect(db.waAutomatedReply.findFirst).toHaveBeenCalledWith({
+      where: { id: "auto-1", orgId: "org-1" },
+      select: { id: true },
+    });
+  });
+
+  test("refuses to rewrite another org's automation", async () => {
+    db.waAutomatedReply.findFirst.mockResolvedValue(null);
+
+    await expect(
+      updateAutomatedReply("auto-victim", { name: "hijacked" }, "org-attacker"),
+    ).rejects.toThrow("Automated reply not found");
+    expect(db.waAutomatedReply.update).not.toHaveBeenCalled();
   });
 });
 
 describe("deleteAutomatedReply", () => {
-  test("deletes the named automation", async () => {
-    await deleteAutomatedReply("auto-1");
+  test("deletes the named automation once the org is confirmed to own it", async () => {
+    await deleteAutomatedReply("auto-1", "org-1");
 
+    expect(db.waAutomatedReply.findFirst).toHaveBeenCalledWith({
+      where: { id: "auto-1", orgId: "org-1" },
+      select: { id: true },
+    });
     expect(db.waAutomatedReply.delete).toHaveBeenCalledWith({ where: { id: "auto-1" } });
   });
 
-  // NOTE: no org is taken at all, so the id alone decides what is deleted.
-  test("takes no org to scope the delete by", async () => {
-    await deleteAutomatedReply("auto-victim");
+  test("refuses to delete another org's automation", async () => {
+    db.waAutomatedReply.findFirst.mockResolvedValue(null);
 
-    expect(db.waAutomatedReply.delete.mock.calls[0][0].where).toEqual({ id: "auto-victim" });
+    await expect(deleteAutomatedReply("auto-victim", "org-attacker")).rejects.toThrow(
+      "Automated reply not found",
+    );
+    expect(db.waAutomatedReply.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -387,20 +424,41 @@ describe("verifyAutomationTriggerLimit", () => {
     expect(log.error).toHaveBeenCalled();
   });
 
-  // NOTE: despite the name, no limit is checked. Usage stats are fetched and then
-  // never read — only the whatsapp feature flag decides the answer.
-  test("allows an org that is far past any plausible usage limit", async () => {
-    getUsageStatMock.mockResolvedValue({ waAutomationCount: 999_999 });
+  // The limit enforced is the conversation allowance the plans actually define
+  // (whatsapp.conversation.count.max), checked via checkConversationLimitAvailable —
+  // which answers true while the org is still within it.
+  test("blocks an org that has used up its conversation allowance", async () => {
+    checkConversationLimitMock.mockResolvedValue(false);
 
-    await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(true);
+    await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(false);
+  });
+
+  test("checks the allowance for the org it was handed", async () => {
+    await verifyAutomationTriggerLimit("org-7");
+
+    expect(checkConversationLimitMock).toHaveBeenCalledWith("org-7");
+  });
+
+  test("does not bother checking the allowance once WhatsApp is switched off", async () => {
+    getSubscriptionMock.mockResolvedValue({ features: { whatsapp: { active: false } } });
+
+    await verifyAutomationTriggerLimit("org-1");
+
+    expect(checkConversationLimitMock).not.toHaveBeenCalled();
   });
 
   // Previously this crashed with a TypeError reading `.features` off a null subscription;
   // it's now treated the same as an inactive WhatsApp feature and blocks cleanly instead.
-  test("blocks rather than throwing when the org has no subscription to read the flag from", async () => {
+  test("refuses rather than throwing when the org has no subscription", async () => {
     getSubscriptionMock.mockResolvedValue(null);
 
     await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(false);
     expect(log.error).toHaveBeenCalled();
+  });
+
+  test("refuses rather than throwing when the plan has no whatsapp feature at all", async () => {
+    getSubscriptionMock.mockResolvedValue({ features: {} });
+
+    await expect(verifyAutomationTriggerLimit("org-1")).resolves.toBe(false);
   });
 });

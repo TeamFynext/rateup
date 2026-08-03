@@ -25,13 +25,38 @@ import {
   SearchQueryInput,
 } from "./account.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
+import { toCsv } from "../../../utils/spreadsheet.js";
+
+export async function createPublicCustomerAccountHandler(
+  request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.body.orgId;
+    if (!orgId) {
+      return reply.code(400).send({ error: "orgId is required" });
+    }
+    const program = await getLoyaltyProgramByOrg(orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    if (program.status !== "active") {
+      return reply.code(400).send({ error: "Loyalty program is not active" });
+    }
+    const result = await createCustomerAccount(request.body, program.id, orgId);
+    reply.code(201).send(result);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
 
 export async function createCustomerAccountHandler(
   request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
   reply: FastifyReply,
 ) {
   try {
-    const orgId = request.body.orgId || request.user.orgId;
+    const orgId = request.user?.orgId;
     if (!orgId) {
       return reply.code(400).send({ error: "orgId is required" });
     }
@@ -73,7 +98,11 @@ export async function getCustomerAccountByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getCustomerAccountById(request.params.customerId);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    const result = await getCustomerAccountById(request.params.customerId, program.id);
     if (!result) {
       return reply.code(404).send({ error: "Customer account not found" });
     }
@@ -163,13 +192,13 @@ export async function getCustomerAccountByPhoneHandler(
       return false;
     });
 
-    // Further filter by tier eligibility
     const eligibleRewards = availableRewards.filter((reward) => {
-      // Check if reward is restricted to specific tiers
       if (reward.availableForTiers && reward.availableForTiers.length > 0) {
-        if (!account.currentTier || !reward.availableForTiers.includes(account.currentTier.name)) {
-          return false;
-        }
+        if (!account.currentTier) return false;
+        const allowed =
+          reward.availableForTiers.includes(account.currentTier.id) ||
+          reward.availableForTiers.includes(account.currentTier.name);
+        if (!allowed) return false;
       }
       return true;
     });
@@ -207,10 +236,17 @@ export async function updateCustomerAccountHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateCustomerAccount(request.params.customerId, request.body);
+    const program = await getLoyaltyProgramByOrg(request.user.orgId);
+    if (!program) {
+      return reply.code(404).send({ error: "Loyalty program not found" });
+    }
+    const result = await updateCustomerAccount(request.params.customerId, request.body, program.id);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
+    if (typeof e === "object" && e !== null && "code" in e && e.code === "P2025") {
+      return reply.code(404).send({ error: "Customer account not found" });
+    }
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
@@ -317,7 +353,7 @@ export async function exportCustomerAccountsHandler(
         ]);
       });
 
-      const csv = rows.map((row) => row.join(",")).join("\n");
+      const csv = toCsv(rows);
 
       reply.header("Content-Type", "text/csv");
       reply.header(
@@ -343,6 +379,7 @@ export async function assignRewardToCustomerHandler(
       request.body.rewardId,
       request.body.notes,
     );
+
     reply.code(201).send({
       message: "Reward assigned successfully",
       assignment: result,
@@ -362,6 +399,9 @@ export async function getRewardByShortCodeHandler(
 ) {
   try {
     const orgId = request.user?.orgId;
+    if (!orgId) {
+      return reply.code(400).send({ error: "orgId is required" });
+    }
     const result = await getRewardByShortCode(request.params.shortCode, orgId);
     reply.send(result);
   } catch (e) {
@@ -375,6 +415,9 @@ export async function redeemRewardByShortCodeHandler(
 ) {
   try {
     const orgId = request.user?.orgId;
+    if (!orgId) {
+      return reply.code(400).send({ error: "orgId is required" });
+    }
     const result = await markRewardAsRedeemed(request.params.shortCode, orgId);
     reply.send(result);
   } catch (e) {

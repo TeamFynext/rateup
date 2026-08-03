@@ -26,6 +26,7 @@ import {
   getCommerceTimeseries,
   getCommerceTopProducts,
 } from "./commerce.service.js";
+import { ChannelNotFoundError } from "./commerce.errors.js";
 import {
   exportCommerceOrdersHandler,
   exportCommerceOverviewHandler,
@@ -149,23 +150,16 @@ describe("the read handlers", () => {
 
 describe("error handling", () => {
   test("an unknown channel is a 400 carrying the reason", async () => {
-    (getCommerceOverview as Mock).mockRejectedValue(
-      new Error("Channel not found for this organization"),
-    );
+    (getCommerceOverview as Mock).mockRejectedValue(new ChannelNotFoundError());
     const rep = reply();
 
     await getCommerceOverviewHandler(request(), rep);
 
-    expect(answer(rep)).toEqual({
-      code: 400,
-      body: { error: "Channel not found for this organization" },
-    });
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "Channel not found" } });
   });
 
   test("an unmapped channel is also a 400", async () => {
-    (getCommerceTimeseries as Mock).mockRejectedValue(
-      new Error("No catalog is connected to that channel"),
-    );
+    (getCommerceTimeseries as Mock).mockRejectedValue(new ChannelNotFoundError());
     const rep = reply();
 
     await getCommerceTimeseriesHandler(request(), rep);
@@ -182,12 +176,22 @@ describe("error handling", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  test("every failure is logged with its context", async () => {
+  test("an unexpected failure is logged with its context", async () => {
     (getCommerceTopProducts as Mock).mockRejectedValue(new Error("boom"));
 
     await getCommerceTopProductsHandler(request(), reply());
 
     expect((log.error as Mock).mock.calls[0][1]).toBe("Failed to load top products");
+  });
+
+  // A refused channel is the caller's mistake, not a server fault — it does not
+  // belong in the error log with the genuine failures.
+  test("a refused channel is not logged as a server failure", async () => {
+    (getCommerceOverview as Mock).mockRejectedValue(new ChannelNotFoundError());
+
+    await getCommerceOverviewHandler(request(), reply());
+
+    expect(log.error).not.toHaveBeenCalled();
   });
 
   test("a thrown non-Error is a 500", async () => {
@@ -199,12 +203,7 @@ describe("error handling", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // NOTE: pins current behaviour. The 400-vs-500 decision is a substring match on
-  // the error's own message, so any internal failure whose text happens to
-  // contain "catalog" — which prisma validation errors naming the catalogId
-  // column do — is reported to the client as a 400 with the raw message.
-  // See issues.txt 19.10.
-  test("a prisma error naming catalogId is answered as a 400 with the raw text", async () => {
+  test("a prisma error naming catalogId is a 500 with a generic message", async () => {
     (getCommerceOrders as Mock).mockRejectedValue(
       new Error("Invalid `prisma.waCatalogOrder.count()` invocation: Unknown argument `catalogId`"),
     );
@@ -212,11 +211,10 @@ describe("error handling", () => {
 
     await getCommerceOrdersHandler(request(), rep);
 
-    expect(answer(rep).code).toBe(400);
-    expect(answer(rep).body.error).toContain("prisma.waCatalogOrder.count()");
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  test("the same misclassification applies to the export handlers", async () => {
+  test("the export handlers classify the same way", async () => {
     (getAllCommerceOrders as Mock).mockRejectedValue(
       new Error("connection to catalog database lost"),
     );
@@ -224,7 +222,7 @@ describe("error handling", () => {
 
     await exportCommerceOrdersHandler(request({ body: { format: "xlsx" } }), rep);
 
-    expect(answer(rep).code).toBe(400);
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 });
 
@@ -371,17 +369,22 @@ describe("exportCommerceOverviewHandler", () => {
     });
   });
 
-  // NOTE: the schema comment says exports "reuse the page's own filters so the
-  // file matches what's on screen", but the top-products count is hard-coded to
-  // 20 here while the widget defaults to 5 and accepts up to 50. The exported
-  // sheet never matches the chart. See issues.txt 19.11.
-  test("hard-codes twenty top products regardless of what the page shows", async () => {
+  test("uses the top-products limit the page asked for", async () => {
     await exportCommerceOverviewHandler(
-      request({ body: { format: "xlsx", interval: "day", limit: 5 } }),
+      request({ body: { format: "xlsx", interval: "day", limit: 12 } }),
       reply(),
     );
 
-    expect((getCommerceTopProducts as Mock).mock.calls[0][1].limit).toBe(20);
+    expect((getCommerceTopProducts as Mock).mock.calls[0][1].limit).toBe(12);
+  });
+
+  test("falls back to the widget's own default when the body names none", async () => {
+    await exportCommerceOverviewHandler(
+      request({ body: { format: "xlsx", interval: "day" } }),
+      reply(),
+    );
+
+    expect((getCommerceTopProducts as Mock).mock.calls[0][1].limit).toBe(5);
   });
 
   test("writes one workbook with the three named sheets", async () => {

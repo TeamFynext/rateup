@@ -28,7 +28,9 @@ export async function fetchLocationFromCoordinates(latitude: number, longitude: 
 // Callers pass the stored `SurveyResponse.location.coordinates`, which is optional.
 export async function fetchLocation(coords?: { latitude: number; longitude: number }) {
   let location = null;
-  if (!coords || !coords.latitude) {
+  // Checked for absence, not falsiness: latitude 0 is the equator, a real place, and
+  // `!coords.latitude` silently dropped it.
+  if (!coords || coords.latitude === null || coords.latitude === undefined) {
     return null;
   } else {
     location = await fetchLocationFromCoordinates(coords.latitude, coords.longitude);

@@ -30,9 +30,9 @@ export interface EmailParams {
   attachments?: [{ filename: string; path: string }];
 }
 
-export const sendAWSEmail = async (emailParams: EmailParams) => {
+export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> => {
+  const { to, subject, text, html, attachments } = emailParams;
   try {
-    const { to, subject, text, html, attachments } = emailParams;
     const from = "RateUp.app <hello@rateup.app>"; // replace with your verified email address
 
     await transporter.sendMail({
@@ -45,7 +45,9 @@ export const sendAWSEmail = async (emailParams: EmailParams) => {
     });
 
     log.debug("Email sent successfully to %s", to);
+    return true;
   } catch (error) {
-    log.error("Email sent failed\n" + JSON.stringify(error));
+    log.error({ err: error, to, subject }, "Email send failed");
+    return false;
   }
 };

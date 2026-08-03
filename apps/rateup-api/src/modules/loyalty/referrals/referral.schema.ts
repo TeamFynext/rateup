@@ -7,7 +7,6 @@ export const trackReferralSchema = z.object({
 
 export const completeReferralSchema = z.object({
   referralId: z.string().min(1),
-  purchaseAmount: z.number().min(0),
 });
 
 export const referrerIdParamSchema = z.object({

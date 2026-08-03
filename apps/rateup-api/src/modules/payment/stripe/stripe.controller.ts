@@ -4,7 +4,9 @@ import {
   cancelStripeSubscription,
   createOrder,
   createStripePayment,
+  deleteOrder,
   deleteStripeProduct,
+  findOrderByCheckoutRef,
   getAllStripeSubscriptions,
   getStripeProducts,
   handleInvoicePaymentFailed,
@@ -22,6 +24,7 @@ import {
   CreateStripeCheckoutInput,
 } from "./stripe.schema.js";
 import Stripe from "stripe";
+import { log } from "../../../utils/logger.js";
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
@@ -65,27 +68,36 @@ export async function createCheckoutSessionHandler(
 
   let newOrder = await createOrder(data, userId);
 
-  const session = await stripe.checkout.sessions.create({
-    ui_mode: "embedded_page",
-    line_items: [
-      {
-        // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-        price: data.priceId, //"price_1PIE1ASEU5WPzKjq5wA24XhE",
-        quantity: 1,
-      },
-    ],
-    mode: "subscription",
-    return_url: `${process.env.FRONTEND_URL}/dashboard/payment/summary?session_id={CHECKOUT_SESSION_ID}`,
-    metadata: {
-      rateupOrderId: newOrder.id,
-    },
-    customer_email: data.email,
-    subscription_data: {
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      ui_mode: "embedded_page",
+      line_items: [
+        {
+          // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+          price: data.priceId, //"price_1PIE1ASEU5WPzKjq5wA24XhE",
+          quantity: 1,
+        },
+      ],
+      mode: "subscription",
+      return_url: `${process.env.FRONTEND_URL}/dashboard/payment/summary?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         rateupOrderId: newOrder.id,
       },
-    },
-  });
+      customer_email: data.email,
+      subscription_data: {
+        metadata: {
+          rateupOrderId: newOrder.id,
+        },
+      },
+    });
+  } catch (e) {
+    log.error({ err: e, orderId: newOrder.id }, "Stripe checkout session could not be created");
+    await deleteOrder(newOrder.id).catch((err) =>
+      log.error({ err, orderId: newOrder.id }, "Could not clean up the orphaned order"),
+    );
+    return reply.code(502).send({ message: "The checkout session could not be created" });
+  }
 
   const sessionId = session.id;
 
@@ -94,8 +106,8 @@ export async function createCheckoutSessionHandler(
 
     reply.send({ clientSecret: session.client_secret });
   } catch (e) {
-    console.error(e);
-    reply.code(500).send(e);
+    log.error({ err: e, orderId: newOrder.id }, "Could not record the checkout session");
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
@@ -103,11 +115,18 @@ export async function getSessionStatusHandler(
   request: FastifyRequest<{ Querystring: GetSessionStatusQuery }>,
   reply: FastifyReply,
 ) {
+  const order = await findOrderByCheckoutRef(request.query.session_id, request.user.orgId);
+  if (!order) {
+    return reply.code(404).send({ message: "Checkout session not found" });
+  }
+
   const session = await stripe.checkout.sessions.retrieve(request.query.session_id);
 
   reply.send({
     status: session.status,
     payment_status: session.payment_status,
+    // customer_details was already dereferenced optionally here; an abandoned
+    // checkout has none.
     customer_email: session.customer_details?.email ?? null,
   });
 }
