@@ -15,25 +15,12 @@ export async function facebookWebhookEventHandler(request: FastifyRequest, reply
       return reply.code(200).send();
     }
 
-    // Processed BEFORE acknowledging, so a failure can be reported to Meta and retried.
-    // This used to send 200 first and process afterwards: `reply.sent` was already true
-    // by the time anything threw, so the catch could only log, and Meta — which retries
-    // only on a non-2xx — treated a lost message as delivered.
-    const data = body as FacebookWebhookBody;
-    const { processed, failed } = await handleFacebookWebhook(data);
-
-    if (failed > 0) {
-      // Meta retries the whole batch, so events that already succeeded are seen again.
-      // handleFacebookMessages guards on the Meta message id to avoid storing those
-      // twice — see the note there; it is advisory until messageId has a unique index.
-      log.error(
-        { processed, failed },
-        "[Facebook] Some webhook events failed; answering non-2xx so Meta retries",
-      );
-      return reply.code(500).send();
-    }
-
+    // Acknowledge the webhook immediately
     reply.code(200).send();
+
+    // Process the webhook asynchronously
+    const data = body as FacebookWebhookBody;
+    await handleFacebookWebhook(data);
   } catch (e) {
     log.error({ err: e }, "[Facebook] Error in webhook event handler");
     if (!reply.sent) {

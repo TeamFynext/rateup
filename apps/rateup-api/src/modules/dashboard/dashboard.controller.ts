@@ -10,7 +10,7 @@ export async function getOverallStatsHandler(request: FastifyRequest, reply: Fas
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: "Something went wrong" });
+    reply.code(500).send(e);
   }
 }
 
@@ -21,7 +21,7 @@ export async function getActiveSurveyStatsHandler(request: FastifyRequest, reply
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: "Something went wrong" });
+    reply.code(500).send(e);
   }
 }
 
@@ -31,15 +31,10 @@ export async function getTeamMemberStatsHandler(
 ) {
   try {
     const { teamId } = request.params;
-    const { orgId } = request.user;
-    const res = await getTeamMemberStats(teamId, orgId);
-    if (!res) {
-      reply.code(404).send({ message: "Team not found" });
-      return;
-    }
+    const res = await getTeamMemberStats(teamId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: "Something went wrong" });
+    reply.code(500).send(e);
   }
 }

@@ -1,11 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
 import { log } from "../../../utils/logger.js";
-import {
-  getWaSettingsByIbaId,
-  getWaSettingsById,
-  updateWaSettingsById,
-} from "../settings/wa_settings.service.js";
+import { getWaSettingsById, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
@@ -43,46 +39,11 @@ function normalizePersistentMenu(data: unknown): InstagramPersistentMenuEntry[] 
   return [];
 }
 
-class InstagramNotConnectedError extends Error {
-  constructor() {
-    super("Instagram account is not connected for this channel");
-    this.name = "InstagramNotConnectedError";
-  }
-}
-
-/** Turns a caught error into the reply it deserves; 500 unless it is the above. */
-function replyForError(reply: FastifyReply, error: unknown, fallbackMessage: string) {
-  if (error instanceof InstagramNotConnectedError) {
-    return reply.code(409).send({ success: false, message: error.message });
-  }
-  return reply.code(500).send({ success: false, message: fallbackMessage });
-}
-
-/** Instagram allows one persistent menu per locale, each with up to 3 actions. */
-function validatePersistentMenu(
-  menus: Array<{ locale: string; call_to_actions: Array<{ title: string }> }>,
-): string | null {
-  if (menus.length === 0) return null;
-  if (!menus.some((menu) => menu.locale === "default")) {
-    return "A persistent menu must include an entry with locale 'default'";
-  }
-  const locales = menus.map((menu) => menu.locale);
-  if (new Set(locales).size !== locales.length) {
-    return "A persistent menu may only have one entry per locale";
-  }
-  for (const menu of menus) {
-    if (menu.call_to_actions.length > 3) {
-      return "Instagram supports up to 3 menu items per locale";
-    }
-  }
-  return null;
-}
-
 async function resolveInstagramSettings(
   whatsappSettingsId: string,
   orgId: string,
 ): Promise<InstagramWaSettings | null> {
-  const settings = await getWaSettingsById(whatsappSettingsId, orgId);
+  const settings = await getWaSettingsById(whatsappSettingsId);
 
   if (!settings || settings.orgId !== orgId) {
     return null;
@@ -90,18 +51,10 @@ async function resolveInstagramSettings(
 
   const { ibaId } = settings;
   if (!ibaId) {
-    throw new InstagramNotConnectedError();
+    throw new Error("Instagram account is not connected for this channel");
   }
 
   return { ...settings, ibaId };
-}
-
-async function resolveInstagramSettingsByIbaId(ibaId: string, orgId: string) {
-  const settings = await getWaSettingsByIbaId(ibaId);
-  if (!settings || settings.orgId !== orgId) {
-    return null;
-  }
-  return settings;
 }
 
 export async function getInstagramProfileHandler(
@@ -136,7 +89,10 @@ export async function getInstagramProfileHandler(
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error fetching profile settings");
-    return replyForError(reply, error, "Failed to fetch Instagram profile settings");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to fetch Instagram profile settings",
+    });
   }
 }
 
@@ -168,35 +124,28 @@ export async function setInstagramIceBreakersHandler(
       });
     }
 
-    if (request.body.syncWithMeta) {
-      const metaResult = await setInstagramIceBreakers(
-        request.body.iceBreakers,
-        orgId,
-        settings.ibaId,
-      );
-      return reply.code(200).send({
-        success: true,
-        data: {
-          saved: request.body.iceBreakers,
-          meta: { syncedWithMeta: true, result: metaResult },
-        },
-      });
-    }
-
-    await updateWaSettingsById(settings.id, orgId, {
+    await updateWaSettingsById(settings.id, {
       instagramIceBreakers: request.body.iceBreakers,
     });
+
+    let metaResult: unknown = { saved: true };
+    if (request.body.syncWithMeta) {
+      metaResult = await setInstagramIceBreakers(request.body.iceBreakers, orgId, settings.ibaId);
+    }
 
     return reply.code(200).send({
       success: true,
       data: {
         saved: request.body.iceBreakers,
-        meta: { syncedWithMeta: false },
+        meta: metaResult,
       },
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error setting ice breakers");
-    return replyForError(reply, error, "Failed to set Instagram ice breakers");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to set Instagram ice breakers",
+    });
   }
 }
 
@@ -215,12 +164,19 @@ export async function deleteInstagramIceBreakersHandler(
       });
     }
 
+    await updateWaSettingsById(settings.id, {
+      instagramIceBreakers: [],
+    });
+
     const data = await deleteInstagramIceBreakers(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error deleting ice breakers");
-    return replyForError(reply, error, "Failed to delete Instagram ice breakers");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to delete Instagram ice breakers",
+    });
   }
 }
 
@@ -253,40 +209,32 @@ export async function setInstagramPersistentMenuHandler(
       });
     }
 
-    const menuError = validatePersistentMenu(request.body.persistentMenu);
-    if (menuError) {
-      return reply.code(400).send({ success: false, message: menuError });
-    }
+    await updateWaSettingsById(settings.id, {
+      instagramPersistentMenu: request.body.persistentMenu,
+    });
 
+    let metaResult: unknown = { saved: true };
     if (request.body.syncWithMeta) {
-      const metaResult = await setInstagramPersistentMenu(
+      metaResult = await setInstagramPersistentMenu(
         request.body.persistentMenu,
         orgId,
         settings.ibaId,
       );
-      return reply.code(200).send({
-        success: true,
-        data: {
-          saved: request.body.persistentMenu,
-          meta: { syncedWithMeta: true, result: metaResult },
-        },
-      });
     }
-
-    await updateWaSettingsById(settings.id, orgId, {
-      instagramPersistentMenu: request.body.persistentMenu,
-    });
 
     return reply.code(200).send({
       success: true,
       data: {
         saved: request.body.persistentMenu,
-        meta: { syncedWithMeta: false },
+        meta: metaResult,
       },
     });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error setting persistent menu");
-    return replyForError(reply, error, "Failed to set Instagram persistent menu");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to set Instagram persistent menu",
+    });
   }
 }
 
@@ -305,12 +253,19 @@ export async function deleteInstagramPersistentMenuHandler(
       });
     }
 
+    await updateWaSettingsById(settings.id, {
+      instagramPersistentMenu: [],
+    });
+
     const data = await deleteInstagramPersistentMenu(orgId, settings.ibaId);
 
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error deleting persistent menu");
-    return replyForError(reply, error, "Failed to delete Instagram persistent menu");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to delete Instagram persistent menu",
+    });
   }
 }
 
@@ -334,7 +289,10 @@ export async function syncInstagramIceBreakersHandler(
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error syncing ice breakers");
-    return replyForError(reply, error, "Failed to sync Instagram ice breakers to Meta");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to sync Instagram ice breakers to Meta",
+    });
   }
 }
 
@@ -358,7 +316,10 @@ export async function syncInstagramPersistentMenuHandler(
     return reply.code(200).send({ success: true, data });
   } catch (error) {
     log.error({ err: error }, "[Instagram Profile] Error syncing persistent menu");
-    return replyForError(reply, error, "Failed to sync Instagram persistent menu to Meta");
+    return reply.code(500).send({
+      success: false,
+      message: "Failed to sync Instagram persistent menu to Meta",
+    });
   }
 }
 
@@ -367,12 +328,6 @@ export async function getInstagramMediaHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const settings = await resolveInstagramSettingsByIbaId(request.params.ibaId, orgId);
-    if (!settings) {
-      return reply.code(404).send({ success: false, message: "Instagram settings not found" });
-    }
-
     const data = await getInstagramMediaPosts(request.params.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {
@@ -386,12 +341,6 @@ export async function getInstagramStoriesHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const settings = await resolveInstagramSettingsByIbaId(request.params.ibaId, orgId);
-    if (!settings) {
-      return reply.code(404).send({ success: false, message: "Instagram settings not found" });
-    }
-
     const data = await getInstagramStories(request.params.ibaId);
     return reply.code(200).send({ success: true, data });
   } catch (error) {

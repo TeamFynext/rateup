@@ -136,20 +136,12 @@ describe("getLoyaltyDashboardStats — the summary", () => {
     expect(res.summary.totalMembersChange).toBeNull();
   });
 
-  // Growth from an empty previous month used to be reported as exactly +100%,
-  // which is also the honest answer for a genuine doubling — the two were
-  // indistinguishable on the card. There is no percentage change from zero, so it
-  // answers null and the client shows the figure without a delta. Same shape as
-  test("reports no percentage at all when there is nothing to compare against", async () => {
+  // NOTE: growth from an empty previous month is reported as exactly +100%, which
+  // is also the honest answer for a genuine doubling — the two are
+  // indistinguishable on the dashboard. Same shape as issues.txt 19.5.
+  // See issues.txt 20.42.
+  test("reports growth from nothing as +100%", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValueOnce(500).mockResolvedValueOnce(0);
-
-    const res = await getLoyaltyDashboardStats(ORG);
-
-    expect(res.summary.totalMembersChange).toBeNull();
-  });
-
-  test("a genuine doubling is still +100%", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValueOnce(500).mockResolvedValueOnce(250);
 
     const res = await getLoyaltyDashboardStats(ORG);
 
@@ -158,9 +150,9 @@ describe("getLoyaltyDashboardStats — the summary", () => {
 
   // NOTE: pins current behaviour. "Points issued" filters transactionType on the
   // lower-case "earn" and the monthly SQL filters 'earn'/'redeem' the same way,
-  // but the approvals path writes "REDEEM" and "ADJUST" in upper case.
-  // Every approved redemption and every manual adjustment is
-  // therefore invisible to this dashboard.
+  // but the approvals path writes "REDEEM" and "ADJUST" in upper case
+  // (issues.txt 20.27). Every approved redemption and every manual adjustment is
+  // therefore invisible to this dashboard. See issues.txt 20.42.
   test("counts only lower-case transaction types", async () => {
     await getLoyaltyDashboardStats(ORG);
 
@@ -226,15 +218,15 @@ describe("getLoyaltyDashboardStats — the breakdowns", () => {
     const res = await getLoyaltyDashboardStats(ORG);
 
     expect(res.memberGrowth).toEqual([
-      { month: "Jan 2026", members: 10, active: 4 },
-      { month: "Feb 2026", members: 25, active: 9 },
+      { month: "Jan", members: 10, active: 4 },
+      { month: "Feb", members: 25, active: 9 },
     ]);
   });
 
-  // The label used to be the month name alone, with no year, over a six-month
-  // window — so a window crossing a year boundary produced two identical labels
-  // and a chart with two points labelled the same cannot be read.
-  test("labels months with their year, so a year boundary is legible", async () => {
+  // NOTE: the label is the month name alone, with no year, and the window is six
+  // months — so a window that crosses a year boundary produces two identical
+  // labels and the chart cannot tell them apart. See issues.txt 20.42.
+  test("labels months without a year, so a year boundary repeats a label", async () => {
     db.$queryRaw.mockResolvedValueOnce([
       { month: new Date(2025, 0, 1), total_members: 5n, active_members: 1n },
       { month: new Date(2026, 0, 1), total_members: 50n, active_members: 20n },
@@ -242,7 +234,7 @@ describe("getLoyaltyDashboardStats — the breakdowns", () => {
 
     const res = await getLoyaltyDashboardStats(ORG);
 
-    expect(res.memberGrowth.map((m) => m.month)).toEqual(["Jan 2025", "Jan 2026"]);
+    expect(res.memberGrowth.map((m) => m.month)).toEqual(["Jan", "Jan"]);
   });
 
   test("turns each points-activity row into issued and redeemed totals", async () => {
@@ -252,7 +244,7 @@ describe("getLoyaltyDashboardStats — the breakdowns", () => {
 
     const res = await getLoyaltyDashboardStats(ORG);
 
-    expect(res.pointsActivity).toEqual([{ month: "Mar 2026", issued: 900, redeemed: 300 }]);
+    expect(res.pointsActivity).toEqual([{ month: "Mar", issued: 900, redeemed: 300 }]);
   });
 });
 
@@ -308,12 +300,10 @@ describe("getLoyaltyDashboardStats — recent activity", () => {
     ]);
   });
 
-  // The verb map used to be keyed on the lower-case types only, so a transaction
-  // written by the approvals path showed the raw column value and the feed read
-  // "Ann REDEEM Free coffee". Every writer uses lower case now,
-  // but rows written before that fix are still in the table, so the lookup folds
-  // case.
-  test("reads an approval-written transaction the same as any other", async () => {
+  // NOTE: the verb map is keyed on the lower-case types only, so a transaction
+  // written by the approvals path shows the raw column value — the activity feed
+  // reads "Ann REDEEM Free coffee". See issues.txt 20.42.
+  test("shows the raw type for an approval-written transaction", async () => {
     db.loyaltyTransaction.findMany.mockResolvedValue([
       txn({ transactionType: "REDEEM" }),
       txn({ transactionType: "ADJUST" }),
@@ -321,7 +311,7 @@ describe("getLoyaltyDashboardStats — recent activity", () => {
 
     const res = await getLoyaltyDashboardStats(ORG);
 
-    expect(res.recentActivity.map((a) => a.action)).toEqual(["redeemed", "adjusted"]);
+    expect(res.recentActivity.map((a) => a.action)).toEqual(["REDEEM", "ADJUST"]);
   });
 
   test("prefers the reward's name, then the description, then the source", async () => {

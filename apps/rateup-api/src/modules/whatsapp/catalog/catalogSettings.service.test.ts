@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
-    whatsappCatalog: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    whatsappCatalog: { findUnique: vi.fn(), update: vi.fn() },
     waFlow: { findFirst: vi.fn(), update: vi.fn() },
     contact: { findUnique: vi.fn() },
     whatsappSettings: { findUnique: vi.fn(), findFirst: vi.fn() },
@@ -58,10 +58,8 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
-  whatsappCatalog: { findUnique: Mock; findFirst: Mock; update: Mock };
+  whatsappCatalog: { findUnique: Mock; update: Mock };
 };
-
-const ORG_ID = "org-1";
 
 const CATALOG_SETTINGS: {
   catalogId: string;
@@ -90,7 +88,6 @@ const CATALOG_SETTINGS: {
 beforeEach(() => {
   vi.clearAllMocks();
   db.whatsappCatalog.findUnique.mockResolvedValue({ ...CATALOG_SETTINGS });
-  db.whatsappCatalog.findFirst.mockResolvedValue({ ...CATALOG_SETTINGS });
   db.whatsappCatalog.update.mockResolvedValue({ ...CATALOG_SETTINGS });
 });
 
@@ -175,10 +172,7 @@ describe("calculateOrderTotal", () => {
 
   // NOTE: quantity is parsed with parseInt, so a fractional quantity is truncated —
   // 1.5kg of something priced per kg would be charged as 1.
-  // parseInt is deliberate: WhatsApp catalog orders arrive from Meta with whole-unit
-  // quantities, so a fraction cannot currently reach here. Pinned so that switching to
-  // parseFloat — a change to order totals, i.e. to money — is a visible decision.
-  test("truncates a fractional quantity, since quantities are whole units", () => {
+  test("truncates a fractional quantity", () => {
     expect(calculateOrderTotal([{ price: "10", quantity: "1.5" }])).toBe(10);
   });
 
@@ -189,58 +183,44 @@ describe("calculateOrderTotal", () => {
 
 describe("getCatalogSettings", () => {
   test("returns the catalog's commerce settings", async () => {
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
-    expect(db.whatsappCatalog.findFirst.mock.calls[0][0].where).toEqual({
-      catalogId: "cat-1",
-      orgId: ORG_ID,
-    });
+    expect(db.whatsappCatalog.findUnique.mock.calls[0][0].where).toEqual({ catalogId: "cat-1" });
     expect(result).toMatchObject({ catalogId: "cat-1", storeType: "NATIVE" });
   });
 
-  // Same message whether the id does not exist or belongs to another org — the handler
-  // turns it into a 404, so the endpoint cannot be used to probe for catalog ids.
   test("refuses a catalog that does not exist", async () => {
-    db.whatsappCatalog.findFirst.mockResolvedValue(null);
+    db.whatsappCatalog.findUnique.mockResolvedValue(null);
 
-    await expect(getCatalogSettings("missing", ORG_ID)).rejects.toThrow("Catalog not found");
-  });
-
-  test("refuses a catalog belonging to another org", async () => {
-    db.whatsappCatalog.findFirst.mockResolvedValue(null);
-
-    await expect(getCatalogSettings("cat-victim", "org-attacker")).rejects.toThrow(
-      "Catalog not found",
-    );
-    expect(db.whatsappCatalog.findFirst.mock.calls[0][0].where.orgId).toBe("org-attacker");
+    await expect(getCatalogSettings("missing")).rejects.toThrow("Catalog missing not found");
   });
 
   test("falls back to the default address fields when none are configured", async () => {
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
     expect(result.addressFlowFields).toEqual(DEFAULT_ADDRESS_FIELDS);
   });
 
   test("keeps the configured address fields when there are some", async () => {
     const custom = [{ id: "first_name", label: "Name", enabled: true }];
-    db.whatsappCatalog.findFirst.mockResolvedValue({
+    db.whatsappCatalog.findUnique.mockResolvedValue({
       ...CATALOG_SETTINGS,
       addressFlowFields: custom,
     });
 
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
     expect(result.addressFlowFields).toBe(custom);
   });
 
   test("reports no delivery options rather than null", async () => {
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
     expect(result.deliveryOptions).toEqual([]);
   });
 
   test("does not consult Meta for a flow that is not awaiting review", async () => {
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
     expect(result.addressFlowStatus).toBe(CatalogAddressFlowStatus.IDLE);
   });
@@ -249,26 +229,26 @@ describe("getCatalogSettings", () => {
     ["under review", CatalogAddressFlowStatus.REVIEW],
     ["still submitting", CatalogAddressFlowStatus.SUBMITTING],
   ])("checks Meta for a flow that is %s", async (_name, status) => {
-    db.whatsappCatalog.findFirst.mockResolvedValue({
+    db.whatsappCatalog.findUnique.mockResolvedValue({
       ...CATALOG_SETTINGS,
       addressFlowId: "flow-1",
       addressFlowStatus: status,
     });
 
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
     // The Meta check is best-effort and returns null here, so the stored status stands.
     expect(result.addressFlowStatus).toBe(status);
   });
 
   test("does not check Meta when there is no flow to check", async () => {
-    db.whatsappCatalog.findFirst.mockResolvedValue({
+    db.whatsappCatalog.findUnique.mockResolvedValue({
       ...CATALOG_SETTINGS,
       addressFlowId: null,
       addressFlowStatus: CatalogAddressFlowStatus.REVIEW,
     });
 
-    const result = await getCatalogSettings("cat-1", ORG_ID);
+    const result = await getCatalogSettings("cat-1");
 
     expect(result.addressFlowStatus).toBe(CatalogAddressFlowStatus.REVIEW);
   });
@@ -276,7 +256,7 @@ describe("getCatalogSettings", () => {
 
 describe("updateCatalogSettings", () => {
   test("applies only the settings the caller actually sent", async () => {
-    await updateCatalogSettings("cat-1", ORG_ID, { paymentMethod: "PREPAID" } as any);
+    await updateCatalogSettings("cat-1", { paymentMethod: "PREPAID" } as any);
 
     expect(db.whatsappCatalog.update).toHaveBeenCalledWith({
       where: { catalogId: "cat-1" },
@@ -285,7 +265,7 @@ describe("updateCatalogSettings", () => {
   });
 
   test("issues an empty update when the caller sent nothing", async () => {
-    await updateCatalogSettings("cat-1", ORG_ID, {} as any);
+    await updateCatalogSettings("cat-1", {} as any);
 
     expect(db.whatsappCatalog.update.mock.calls[0][0].data).toEqual({});
   });
@@ -298,20 +278,20 @@ describe("updateCatalogSettings", () => {
     ["fixedDeliveryCharge", true],
     ["fixedDeliveryAmount", 40],
   ])("carries %s through", async (key, value) => {
-    await updateCatalogSettings("cat-1", ORG_ID, { [key]: value } as any);
+    await updateCatalogSettings("cat-1", { [key]: value } as any);
 
     expect(db.whatsappCatalog.update.mock.calls[0][0].data).toEqual({ [key]: value });
   });
 
   // `!== undefined` rather than truthiness, so switching a flag off actually persists.
   test("persists a flag being switched off", async () => {
-    await updateCatalogSettings("cat-1", ORG_ID, { collectAddress: false } as any);
+    await updateCatalogSettings("cat-1", { collectAddress: false } as any);
 
     expect(db.whatsappCatalog.update.mock.calls[0][0].data).toEqual({ collectAddress: false });
   });
 
   test("persists a delivery amount of zero", async () => {
-    await updateCatalogSettings("cat-1", ORG_ID, { fixedDeliveryAmount: 0 } as any);
+    await updateCatalogSettings("cat-1", { fixedDeliveryAmount: 0 } as any);
 
     expect(db.whatsappCatalog.update.mock.calls[0][0].data).toEqual({ fixedDeliveryAmount: 0 });
   });
@@ -319,35 +299,21 @@ describe("updateCatalogSettings", () => {
   test("replaces the delivery options wholesale", async () => {
     const options = [{ id: "std", label: "Standard", charge: 40 }];
 
-    await updateCatalogSettings("cat-1", ORG_ID, { deliveryOptions: options } as any);
+    await updateCatalogSettings("cat-1", { deliveryOptions: options } as any);
 
     expect(db.whatsappCatalog.update.mock.calls[0][0].data.deliveryOptions).toBe(options);
   });
 
   test("can clear the delivery options with an empty list", async () => {
-    await updateCatalogSettings("cat-1", ORG_ID, { deliveryOptions: [] } as any);
+    await updateCatalogSettings("cat-1", { deliveryOptions: [] } as any);
 
     expect(db.whatsappCatalog.update.mock.calls[0][0].data.deliveryOptions).toEqual([]);
   });
 
-  // Ownership is confirmed before the write. These are commerce settings — payment
-  // method, delivery charges, address collection — so another org rewriting them is a
-  // real change to how that org takes money.
-  test("confirms the org owns the catalog before writing", async () => {
-    await updateCatalogSettings("cat-1", ORG_ID, { paymentMethod: "COD" } as any);
+  // NOTE: no org scoping — the catalog id alone decides which settings are rewritten.
+  test("does not scope the update to an org", async () => {
+    await updateCatalogSettings("cat-victim", { paymentMethod: "COD" } as any);
 
-    expect(db.whatsappCatalog.findFirst).toHaveBeenCalledWith({
-      where: { catalogId: "cat-1", orgId: ORG_ID },
-      select: { catalogId: true },
-    });
-  });
-
-  test("refuses to rewrite another org's settings", async () => {
-    db.whatsappCatalog.findFirst.mockResolvedValue(null);
-
-    await expect(
-      updateCatalogSettings("cat-victim", "org-attacker", { paymentMethod: "COD" } as any),
-    ).rejects.toThrow("Catalog not found");
-    expect(db.whatsappCatalog.update).not.toHaveBeenCalled();
+    expect(db.whatsappCatalog.update.mock.calls[0][0].where).toEqual({ catalogId: "cat-victim" });
   });
 });

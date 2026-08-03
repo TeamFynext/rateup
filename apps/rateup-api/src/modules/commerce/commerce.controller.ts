@@ -19,13 +19,14 @@ import {
   getCommerceTimeseries,
   getCommerceTopProducts,
 } from "./commerce.service.js";
-import { ChannelNotFoundError } from "./commerce.errors.js";
 
+/** resolveChannelCatalogId throws on an unknown/foreign channel — that's a 400, not a 500. */
 function sendError(reply: FastifyReply, error: unknown, context: string) {
-  if (error instanceof ChannelNotFoundError) {
-    return reply.code(400).send({ error: error.message });
-  }
   log.error({ err: error }, context);
+  const message = error instanceof Error ? error.message : "Unexpected error";
+  if (message.includes("Channel") || message.includes("catalog")) {
+    return reply.code(400).send({ error: message });
+  }
   return reply.code(500).send({ error: "Something went wrong" });
 }
 
@@ -159,7 +160,7 @@ export async function exportCommerceOverviewHandler(
     const [overview, timeseries, topProducts] = await Promise.all([
       getCommerceOverview(orgId, filter),
       getCommerceTimeseries(orgId, { ...filter, interval }),
-      getCommerceTopProducts(orgId, { ...filter, limit: request.body.limit ?? 5 }),
+      getCommerceTopProducts(orgId, { ...filter, limit: 20 }),
     ]);
 
     const buffer = await write({

@@ -8,7 +8,7 @@ vi.mock("../../../utils/prisma.js", () => {
   return {
     default: {
       __tx: tx,
-      rule: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn() },
+      rule: { findMany: vi.fn(), findUnique: vi.fn() },
       ruleMessageBodyLock: { findFirst: vi.fn() },
       ruleAction: { findMany: vi.fn() },
       $transaction: vi.fn(async (cb: (client: unknown) => Promise<unknown>) => cb(tx)),
@@ -37,7 +37,7 @@ const db = prisma as unknown as {
     rule: { create: Mock; findUnique: Mock; update: Mock; delete: Mock };
     ruleMessageBodyLock: { createMany: Mock; deleteMany: Mock };
   };
-  rule: { findMany: Mock; findUnique: Mock; findFirst: Mock };
+  rule: { findMany: Mock; findUnique: Mock };
   ruleMessageBodyLock: { findFirst: Mock };
   ruleAction: { findMany: Mock };
   $transaction: Mock;
@@ -81,7 +81,6 @@ beforeEach(() => {
   db.ruleMessageBodyLock.findFirst.mockResolvedValue(null);
   db.rule.findMany.mockResolvedValue([]);
   db.rule.findUnique.mockResolvedValue(null);
-  db.rule.findFirst.mockResolvedValue(null);
   db.ruleAction.findMany.mockResolvedValue([]);
   tx.rule.create.mockResolvedValue(CREATED_RULE);
   tx.rule.update.mockResolvedValue(CREATED_RULE);
@@ -440,35 +439,22 @@ describe("reading rules", () => {
     expect(result).toEqual([CREATED_RULE]);
   });
 
-  // orgId is required and the where clause is unconditional, so the filter can no
-  // longer be dropped by omitting the argument.
-  test("always filters by org, so no caller can list every org's rules", async () => {
-    await getAllRules("org-1");
+  // NOTE: called with no orgId the filter is dropped and every org's rules come back.
+  test("lists rules across all orgs when no org is named", async () => {
+    await getAllRules();
 
-    expect(db.rule.findMany.mock.calls[0][0].where).toEqual({ orgId: "org-1" });
+    expect(db.rule.findMany.mock.calls[0][0].where).toBeUndefined();
   });
 
-  test("fetches one rule with everything attached, scoped to its org", async () => {
-    db.rule.findFirst.mockResolvedValue(CREATED_RULE);
+  test("fetches one rule with everything attached", async () => {
+    db.rule.findUnique.mockResolvedValue(CREATED_RULE);
 
-    await expect(getRuleById("rule-1", "org-1")).resolves.toBe(CREATED_RULE);
-    expect(db.rule.findFirst.mock.calls[0][0].where).toEqual({ id: "rule-1", orgId: "org-1" });
+    await expect(getRuleById("rule-1")).resolves.toBe(CREATED_RULE);
+    expect(db.rule.findUnique.mock.calls[0][0].where).toEqual({ id: "rule-1" });
   });
 
   test("returns null for a rule that does not exist", async () => {
-    db.rule.findFirst.mockResolvedValue(null);
-
-    await expect(getRuleById("missing", "org-1")).resolves.toBeNull();
-  });
-
-  test("returns null for a rule that belongs to another org", async () => {
-    db.rule.findFirst.mockResolvedValue(null);
-
-    await expect(getRuleById("rule-victim", "org-attacker")).resolves.toBeNull();
-    expect(db.rule.findFirst.mock.calls[0][0].where).toEqual({
-      id: "rule-victim",
-      orgId: "org-attacker",
-    });
+    await expect(getRuleById("missing")).resolves.toBeNull();
   });
 });
 

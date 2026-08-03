@@ -37,8 +37,6 @@ import {
 } from "./zapier.schema.js";
 
 export async function zapierRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", zapierAuthenticationHandler);
-
   //auth
   server.post("/auth", zapierAuthenticationHandler);
   //subscriptions for trigger

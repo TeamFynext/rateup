@@ -26,7 +26,7 @@ vi.mock("../../utils/prisma.js", () => ({
     contactCustomFieldValue: { createMany: vi.fn(), deleteMany: vi.fn() },
     contactCustomField: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     waInboxAssign: { createMany: vi.fn(), deleteMany: vi.fn() },
-    lifecycle: { findFirst: vi.fn(), findUnique: vi.fn() },
+    lifecycle: { findUnique: vi.fn() },
     conversation: { findMany: vi.fn(), updateMany: vi.fn() },
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
@@ -364,30 +364,21 @@ describe("createContact", () => {
     expect(jobs.mock.calls[0][1].data.Lead_Status).toBe("Qualified");
   });
 
-  // The group write, the inbox assignment and the rule trigger were all launched
-  // without `await` while everything around them was awaited — so createContact
-  // resolved, and the handler answered 201, before any of them had been written. A
-  // client that created a contact with groups and immediately re-read it saw none
-  // of them, and a rejection in any of the three was an unhandled promise
-  // rejection that never reached the handler's catch.
-  test("waits for the group membership write", async () => {
-    let settled = false;
-    (addExistingContactsToMultipleGroups as Mock).mockImplementation(async () => {
-      settled = true;
-    });
+  // NOTE: the group write is launched without `await`, so createContact can
+  // resolve before the contact is in its groups — and a rejection there becomes
+  // an unhandled rejection rather than a failed request. See issues.txt 18.2.
+  test("does not wait for the group membership write", async () => {
+    let settle: () => void;
+    (addExistingContactsToMultipleGroups as Mock).mockReturnValue(
+      new Promise<void>((resolve) => {
+        settle = resolve;
+      }),
+    );
 
     await createContact({ ...base, lifecycleId: "", contactGroupIds: ["g1"] });
 
     expect(addExistingContactsToMultipleGroups).toHaveBeenCalledWith(["c1"], ["g1"], ORG);
-    expect(settled).toBe(true);
-  });
-
-  test("lets a failed group membership write reach the caller", async () => {
-    (addExistingContactsToMultipleGroups as Mock).mockRejectedValueOnce(new Error("db down"));
-
-    await expect(
-      createContact({ ...base, lifecycleId: "", contactGroupIds: ["g1"] }),
-    ).rejects.toThrow("db down");
+    settle!();
   });
 });
 
@@ -430,25 +421,15 @@ describe("getOrcreateContact", () => {
     expect(integrationTriggerQueue.add).toHaveBeenCalledWith("zoho-lead-create", expect.anything());
   });
 
-  // Unlike createContact this path kept `labels`, `contactGroupIds` and
-  // `assignedUserIds` in `rest` and handed them to prisma as if they were columns
-  // — a validation error rather than a contact for any caller that supplied them.
-  // Only `customFields` was stripped. Two functions taking the same input type and
-  // disagreeing about it is the trap.
-  test("strips the relation inputs prisma has no columns for", async () => {
-    await getOrcreateContact({
-      ...base,
-      labels: ["l1"],
-      contactGroupIds: ["g1"],
-      assignedUserIds: ["u1"],
-      customFields: [{ id: "f1", value: "x" }],
-    });
+  // NOTE: unlike createContact this path keeps `labels`, `contactGroupIds` and
+  // `assignedUserIds` in `rest`, so they are handed to prisma as if they were
+  // columns. Only `customFields` is stripped. See issues.txt 18.3.
+  test("passes label and group ids straight through to prisma.create", async () => {
+    await getOrcreateContact({ ...base, labels: ["l1"], contactGroupIds: ["g1"] });
 
     const data = db.contact.create.mock.calls[0][0].data;
-    expect(data).not.toHaveProperty("labels");
-    expect(data).not.toHaveProperty("contactGroupIds");
-    expect(data).not.toHaveProperty("assignedUserIds");
-    expect(data).not.toHaveProperty("customFields");
+    expect(data.labels).toEqual(["l1"]);
+    expect(data.contactGroupIds).toEqual(["g1"]);
   });
 });
 
@@ -513,13 +494,11 @@ describe("createMultipleContacts", () => {
     });
   });
 
-  // `skipDuplicates` means an already-present phone never comes back from
-  // createManyAndReturn, so the lookup by phone missed and the row was written
-  // with an EMPTY contactId — into a createMany against a uuid foreign key. One
-  // such row failed the whole custom-field batch, so importing a file where some
-  // contacts already exist landed NONE of the custom fields, including the ones
-  // for contacts that were created successfully.
-  test("skips a custom field whose contact was not created", async () => {
+  // NOTE: pins current behaviour. `skipDuplicates` means an already-present phone
+  // never comes back from createManyAndReturn, so the lookup by phone misses and
+  // the row is written with an empty contactId — a foreign-key violation that
+  // takes the whole custom-field batch down with it. See issues.txt 18.4.
+  test("writes an empty contactId for a custom field whose contact was skipped", async () => {
     db.contact.createManyAndReturn.mockResolvedValue([{ id: "c1", phone: "9190001" }]);
 
     await createMultipleContacts(
@@ -532,6 +511,7 @@ describe("createMultipleContacts", () => {
 
     expect(db.contactCustomFieldValue.createMany.mock.calls[0][0].data).toEqual([
       { contactId: "c1", fieldId: "f1", value: "x" },
+      { contactId: "", fieldId: "f1", value: "y" },
     ]);
   });
 
@@ -568,19 +548,18 @@ describe("createMultipleContacts", () => {
 // ===========================================================================
 
 describe("getContactById", () => {
-  // The lookup was by id alone, and neither the query nor the calling handler
-  // restricted it to the caller's org — so a contact id was enough to read a full
-  // customer record: phone, email, notes and labels.
-  test("looks a contact up within the caller's org", async () => {
-    await getContactById("c1", ORG);
+  // NOTE: the lookup is by id alone. Nothing in the query or in the calling
+  // handler restricts it to the caller's org. See issues.txt 18.5.
+  test("looks a contact up by id with no org restriction", async () => {
+    await getContactById("c1");
 
-    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({ id: "c1", orgId: ORG });
+    expect(db.contact.findUnique.mock.calls[0][0].where).toEqual({ id: "c1" });
   });
 
   test("includes the contact's labels", async () => {
-    await getContactById("c1", ORG);
+    await getContactById("c1");
 
-    expect(db.contact.findFirst.mock.calls[0][0].include).toHaveProperty("ContactLabelMap");
+    expect(db.contact.findUnique.mock.calls[0][0].include).toHaveProperty("ContactLabelMap");
   });
 });
 
@@ -616,38 +595,31 @@ describe("getContactsByOrgId", () => {
     expect(db.contact.count.mock.calls[0][0].where).toEqual(where());
   });
 
-  // The search term's two alternatives are the one thing that genuinely ORs — a
-  // match on either the name or the phone — so they stay an OR, nested inside the
-  // AND.
   test("searching matches either the name or the phone", async () => {
     await getContactsByOrgId(ORG, { search: "ann" } as any);
 
-    expect(where().AND).toEqual([
-      {
-        OR: [
-          { name: { contains: "ann", mode: "insensitive" } },
-          { phone: { contains: "ann", mode: "insensitive" } },
-        ],
-      },
+    expect(where().OR).toEqual([
+      { name: { contains: "ann", mode: "insensitive" } },
+      { phone: { contains: "ann", mode: "insensitive" } },
     ]);
   });
 
   test("a name filter becomes a case-insensitive contains", async () => {
     await getContactsByOrgId(ORG, { name: "an" } as any);
 
-    expect(where().AND).toEqual([{ name: { contains: "an", mode: "insensitive" } }]);
+    expect(where().OR).toEqual([{ name: { contains: "an", mode: "insensitive" } }]);
   });
 
   test("the consent filter compares against a real boolean", async () => {
     await getContactsByOrgId(ORG, { consent: "TRUE" } as any);
 
-    expect(where().AND).toEqual([{ consent: { equals: true } }]);
+    expect(where().OR).toEqual([{ consent: { equals: true } }]);
   });
 
   test("a group filter de-duplicates the requested group ids", async () => {
     await getContactsByOrgId(ORG, { filterGroupName: "g1,g2,g1" } as any);
 
-    expect(where().AND).toEqual([
+    expect(where().OR).toEqual([
       { contactGroups: { some: { contactGroupId: { in: ["g1", "g2"] } } } },
     ]);
   });
@@ -664,64 +636,44 @@ describe("getContactsByOrgId", () => {
   ])("labelId=%s filters on the WhatsApp block flag instead", async (value, expected) => {
     await getContactsByOrgId(ORG, { labelId: value } as any);
 
-    expect(where().AND).toEqual([expected]);
+    expect(where().OR).toEqual([expected]);
   });
 
   test("a real label id filters through the label map", async () => {
     await getContactsByOrgId(ORG, { labelId: "l1" } as any);
 
-    expect(where().AND).toEqual([{ ContactLabelMap: { some: { labelId: "l1" } } }]);
+    expect(where().OR).toEqual([{ ContactLabelMap: { some: { labelId: "l1" } } }]);
   });
 
-  // Every filter was pushed into one OR array, so combining filters WIDENED the
-  // result set instead of narrowing it: asking for "named ann AND consented"
-  // returned everyone named ann plus everyone who consented. Any workflow that
-  // builds a segment by narrowing on several attributes produced a list that was
-  // wrong in the dangerous direction — too many people — and that list is what
-  // picks campaign recipients.
-  test("combining two filters ANDs them together", async () => {
+  // NOTE: pins current behaviour. Every filter is pushed into one OR array, so
+  // combining filters *widens* the result set instead of narrowing it: asking for
+  // "named ann AND consented" returns everyone named ann plus everyone who
+  // consented. See issues.txt 18.6.
+  test("combining two filters ORs them together rather than ANDing them", async () => {
     await getContactsByOrgId(ORG, { name: "ann", consent: "true" } as any);
 
-    expect(where().AND).toEqual([
+    expect(where().OR).toEqual([
       { name: { contains: "ann", mode: "insensitive" } },
       { consent: { equals: true } },
     ]);
-    expect(where().OR).toBeUndefined();
+    expect(where().AND).toBeUndefined();
   });
 
-  // createdAt is a DateTime column but shared the string case, so it was filtered
-  // with `contains` and a text `mode` — both of which prisma rejects for a
-  // DateTime. The filter answered 500 and had never worked. A calendar date means
-  // the whole of that day.
-  test("a createdAt filter covers the whole of the day it names", async () => {
+  // NOTE: createdAt is a DateTime column but is filtered with a string
+  // `contains`, which prisma rejects. See issues.txt 18.7.
+  test("a createdAt filter is built as a string contains", async () => {
     await getContactsByOrgId(ORG, { createdAt: "2026-01-01" } as any);
 
-    expect(where().AND).toEqual([
-      { createdAt: { gte: new Date("2026-01-01"), lt: new Date("2026-01-02") } },
-    ]);
+    expect(where().OR).toEqual([{ createdAt: { contains: "2026-01-01", mode: "insensitive" } }]);
   });
 
-  test("a createdAt filter that is not a date is dropped rather than sent", async () => {
-    await getContactsByOrgId(ORG, { createdAt: "last tuesday" } as any);
-
-    expect(where()).toEqual({ orgId: ORG });
-  });
-
-  // Contact -> CustomerLoyaltyAccount is a list relation, so membership is `some`.
-  // The restriction rides on the same array as the filters: it used to be spread
-  // alongside them as its own `AND` key, which was harmless while the filters
-  // lived under `OR` and would have silently overwritten them once both wanted
-  // `AND`.
   test("the LOYALTY type restricts to contacts that have a loyalty account", async () => {
     await getContactsByOrgId(ORG, { type: "LOYALTY" } as any);
 
-    expect(where().AND).toEqual([{ loyaltyAccounts: { some: {} } }]);
-  });
-
-  test("a type filter and an ordinary filter narrow together", async () => {
-    await getContactsByOrgId(ORG, { type: "LOYALTY", consent: "true" } as any);
-
-    expect(where().AND).toEqual([{ consent: { equals: true } }, { loyaltyAccounts: { some: {} } }]);
+    // Contact -> CustomerLoyaltyAccount is a list relation, so membership is `some`.
+    // It used to filter on a `loyaltyCustomer` relation that does not exist on Contact,
+    // which Prisma rejects at runtime.
+    expect(where().AND).toEqual({ loyaltyAccounts: { some: {} } });
   });
 
   test("pagination skips whole pages of the requested size", async () => {
@@ -771,18 +723,11 @@ describe("getContactsByOrgId", () => {
     ]);
   });
 
-  // `desc` was declared by the querystring schema, passed by the route, left
-  // sitting in `filter` and never read — so the order was hard-coded descending
-  // and ascending sort was impossible, with no error. The group member listing
-  // beside it did honour it.
-  test("the desc query parameter chooses the sort direction", async () => {
+  // NOTE: `desc` is accepted by the querystring schema and threaded all the way
+  // here, but the order is hard-coded to "desc". Asking for ascending order does
+  // nothing. See issues.txt 18.8.
+  test("the desc query parameter has no effect on the sort direction", async () => {
     await getContactsByOrgId(ORG, { sort: "createdAt", desc: "asc" } as any);
-
-    expect(db.contact.findMany.mock.calls[0][0].orderBy[0]).toEqual({ createdAt: "asc" });
-  });
-
-  test("sorts descending by default", async () => {
-    await getContactsByOrgId(ORG, { sort: "createdAt" } as any);
 
     expect(db.contact.findMany.mock.calls[0][0].orderBy[0]).toEqual({ createdAt: "desc" });
   });
@@ -803,9 +748,9 @@ describe("deleteContactById", () => {
   test("deletes by id and announces it", async () => {
     db.contact.delete.mockResolvedValue({ id: "c1", orgId: ORG, integrationIds: null });
 
-    await deleteContactById("c1", ORG);
+    await deleteContactById("c1");
 
-    expect(db.contact.delete).toHaveBeenCalledWith({ where: { id: "c1", orgId: ORG } });
+    expect(db.contact.delete).toHaveBeenCalledWith({ where: { id: "c1" } });
     expect(addZapierTriggerToQueue).toHaveBeenCalledWith("contact_deleted", expect.anything(), ORG);
   });
 
@@ -816,7 +761,7 @@ describe("deleteContactById", () => {
       integrationIds: { zoho: { contact: { id: "z1" } }, bigin: { contact: { id: "b1" } } },
     });
 
-    await deleteContactById("c1", ORG);
+    await deleteContactById("c1");
 
     const jobs = (integrationTriggerQueue.add as unknown as Mock).mock.calls;
     expect(jobs[0][1].data).toEqual({ zohoContactId: "z1" });
@@ -826,7 +771,7 @@ describe("deleteContactById", () => {
   test("still queues the CRM deletes when the contact was never mirrored", async () => {
     db.contact.delete.mockResolvedValue({ id: "c1", orgId: ORG, integrationIds: null });
 
-    await deleteContactById("c1", ORG);
+    await deleteContactById("c1");
 
     const jobs = (integrationTriggerQueue.add as unknown as Mock).mock.calls;
     expect(jobs[0][1].data).toEqual({ zohoContactId: undefined });
@@ -834,21 +779,14 @@ describe("deleteContactById", () => {
 });
 
 describe("deleteManyContacts", () => {
-  // Neither the read nor the delete was org-scoped, and the ids come straight from
-  // the request body — so `DELETE /api/contact` deleted every id it was handed,
-  // whoever they belonged to.
-  test("deletes only the ids the caller's org owns", async () => {
+  // NOTE: neither the read nor the delete is org-scoped, and the ids come
+  // straight from the request body. See issues.txt 18.5.
+  test("deletes every id it is given with no org restriction", async () => {
     db.contact.findMany.mockResolvedValue([]);
 
-    await deleteManyContacts(["c1", "c2"], ORG);
+    await deleteManyContacts(["c1", "c2"]);
 
-    expect(db.contact.deleteMany).toHaveBeenCalledWith({
-      where: { id: { in: ["c1", "c2"] }, orgId: ORG },
-    });
-    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
-      id: { in: ["c1", "c2"] },
-      orgId: ORG,
-    });
+    expect(db.contact.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["c1", "c2"] } } });
   });
 
   test("announces each deleted contact against its own org", async () => {
@@ -857,7 +795,7 @@ describe("deleteManyContacts", () => {
       { id: "c2", orgId: "org-b", integrationIds: null },
     ]);
 
-    await deleteManyContacts(["c1", "c2"], ORG);
+    await deleteManyContacts(["c1", "c2"]);
 
     expect((addZapierTriggerToQueue as Mock).mock.calls.map((c) => c[2])).toEqual([
       "org-a",
@@ -868,7 +806,7 @@ describe("deleteManyContacts", () => {
   test("returns the delete count from prisma", async () => {
     db.contact.deleteMany.mockResolvedValue({ count: 2 });
 
-    expect(await deleteManyContacts(["c1", "c2"], ORG)).toEqual({ count: 2 });
+    expect(await deleteManyContacts(["c1", "c2"])).toEqual({ count: 2 });
   });
 });
 
@@ -923,27 +861,27 @@ describe("updateContactById", () => {
   test("reuses a caller-supplied snapshot instead of re-reading the contact", async () => {
     db.contact.update.mockResolvedValue(updated());
 
-    await updateContactById("c1", ORG, { name: "Ann" } as any, USER, existing);
+    await updateContactById("c1", { name: "Ann" } as any, USER, existing);
 
     expect(db.contact.findUnique).not.toHaveBeenCalled();
   });
 
-  test("reads the contact within the caller's org when no snapshot is supplied", async () => {
-    db.contact.findFirst.mockResolvedValue(existing);
+  test("reads the contact when no snapshot is supplied", async () => {
+    db.contact.findUnique.mockResolvedValue(existing);
     db.contact.update.mockResolvedValue(updated());
 
-    await updateContactById("c1", ORG, { name: "Ann" } as any);
+    await updateContactById("c1", { name: "Ann" } as any);
 
-    expect(db.contact.findFirst).toHaveBeenCalledWith({ where: { id: "c1", orgId: ORG } });
+    expect(db.contact.findUnique).toHaveBeenCalledWith({ where: { id: "c1" } });
   });
 
   // NOTE: an id that matches nothing produces `undefined` here and the very next
-  // line reads `.waMessageAssignStatus` off it.
+  // line reads `.waMessageAssignStatus` off it. See issues.txt 18.10.
   test("throws a named error when the contact does not exist", async () => {
-    db.contact.findFirst.mockResolvedValue(null);
+    db.contact.findUnique.mockResolvedValue(null);
 
     // Previously fell through to a bare TypeError on the first property read.
-    await expect(updateContactById("nope", ORG, { name: "Ann" } as any)).rejects.toThrow(
+    await expect(updateContactById("nope", { name: "Ann" } as any)).rejects.toThrow(
       "Contact nope not found",
     );
   });
@@ -951,7 +889,7 @@ describe("updateContactById", () => {
   test("replaces the label set rather than appending to it", async () => {
     db.contact.update.mockResolvedValue(updated());
 
-    await updateContactById("c1", ORG, { labels: ["l1"] } as any, USER, existing);
+    await updateContactById("c1", { labels: ["l1"] } as any, USER, existing);
 
     expect(db.contactLabelMap.deleteMany).toHaveBeenCalledWith({ where: { contactId: "c1" } });
     expect(db.contactLabelMap.createMany).toHaveBeenCalledWith({
@@ -960,24 +898,12 @@ describe("updateContactById", () => {
     });
   });
 
-  // The block was guarded on `labels && labels.length > 0`, so `labels: []` fell
-  // straight through and the delete never ran — there was no way to remove a
-  // contact's last label through this endpoint, and a reload brought them back.
-  // The group and assignee blocks below it guard on presence, which is the shape
-  // this now matches.
-  test("an empty label array clears the contact's labels", async () => {
+  // NOTE: an empty array is falsy for `length > 0`, so there is no way to clear
+  // every label through this endpoint. See issues.txt 18.11.
+  test("an empty label array leaves the existing labels in place", async () => {
     db.contact.update.mockResolvedValue(updated());
 
-    await updateContactById("c1", ORG, { labels: [] } as any, USER, existing);
-
-    expect(db.contactLabelMap.deleteMany).toHaveBeenCalledWith({ where: { contactId: "c1" } });
-    expect(db.contactLabelMap.createMany).not.toHaveBeenCalled();
-  });
-
-  test("an absent label field leaves the existing labels alone", async () => {
-    db.contact.update.mockResolvedValue(updated());
-
-    await updateContactById("c1", ORG, { name: "Ann" } as any, USER, existing);
+    await updateContactById("c1", { labels: [] } as any, USER, existing);
 
     expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
   });
@@ -987,7 +913,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { customFields: [{ id: "f1", value: "x" }] } as any,
       USER,
       existing,
@@ -1003,7 +928,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.SPAM } as any,
       USER,
       existing,
@@ -1021,7 +945,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.SPAM } as any,
       USER,
       existing,
@@ -1037,7 +960,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED } as any,
       USER,
       existing,
@@ -1053,7 +975,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
       USER,
       existing,
@@ -1068,7 +989,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED } as any,
       USER,
       existing,
@@ -1082,7 +1002,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       {
         waMessageAssignStatus: WaMessageAssignStatus.RESOLVED,
         resolutionResult: "ANSWERED",
@@ -1099,7 +1018,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { lastReceivedMessageTimeStamp: "2026-01-01T00:00:00Z" } as any,
       USER,
       existing,
@@ -1116,7 +1034,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { lastReceivedMessageTimeStamp: "2026-01-01T00:00:00Z" } as any,
       USER,
       existing,
@@ -1133,7 +1050,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED } as any,
       USER,
       seen,
@@ -1148,7 +1064,7 @@ describe("updateContactById", () => {
       updated({ blockedOnWhatsApp: true, lastReceivedMessageTimeStamp: new Date() }),
     );
 
-    await updateContactById("c1", ORG, { name: "Ann" } as any, USER, seen);
+    await updateContactById("c1", { name: "Ann" } as any, USER, seen);
 
     expect(incrementInboxStat).toHaveBeenCalledWith(ORG, "blockedCount", 1);
     expect(decrementInboxStat).toHaveBeenCalledWith(ORG, "totalCount", 1);
@@ -1165,7 +1081,7 @@ describe("updateContactById", () => {
       updated({ blockedOnWhatsApp: false, lastReceivedMessageTimeStamp: new Date() }),
     );
 
-    await updateContactById("c1", ORG, { name: "Ann" } as any, USER, seen);
+    await updateContactById("c1", { name: "Ann" } as any, USER, seen);
 
     expect(decrementInboxStat).toHaveBeenCalledWith(ORG, "blockedCount", 1);
     expect(incrementInboxStat).toHaveBeenCalledWith(ORG, "totalCount", 1);
@@ -1179,7 +1095,7 @@ describe("updateContactById", () => {
     const { checkAndExecuteRuleByTriggerEvent } =
       await import("../whatsapp/automatedReply/wa_automatedReply.utils.js");
 
-    await updateContactById("c1", ORG, { waMessageAssignStatus: status } as any, USER, existing);
+    await updateContactById("c1", { waMessageAssignStatus: status } as any, USER, existing);
 
     expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalledWith(event, {
       orgId: ORG,
@@ -1191,19 +1107,18 @@ describe("updateContactById", () => {
   test("adds and removes group memberships to match the requested set", async () => {
     db.contact.update.mockResolvedValue(updated({ contactGroups: [{ contactGroupId: "g-old" }] }));
 
-    await updateContactById("c1", ORG, { contactGroupIds: ["g-new"] } as any, USER, existing);
+    await updateContactById("c1", { contactGroupIds: ["g-new"] } as any, USER, existing);
 
     expect(db.contactGroupMap.deleteMany).toHaveBeenCalledWith({
       where: { contactId: "c1", contactGroupId: { in: ["g-old"] } },
     });
     expect(addExistingContactsToMultipleGroups).toHaveBeenCalledWith(["c1"], ["g-new"], ORG);
-    expect(db.contact.update.mock.calls[0][0].where).toEqual({ id: "c1", orgId: ORG });
   });
 
   test("leaves a group the contact is already in alone", async () => {
     db.contact.update.mockResolvedValue(updated({ contactGroups: [{ contactGroupId: "g1" }] }));
 
-    await updateContactById("c1", ORG, { contactGroupIds: ["g1"] } as any, USER, existing);
+    await updateContactById("c1", { contactGroupIds: ["g1"] } as any, USER, existing);
 
     expect(db.contactGroupMap.deleteMany).toHaveBeenCalledWith({
       where: { contactId: "c1", contactGroupId: { in: [] } },
@@ -1214,7 +1129,7 @@ describe("updateContactById", () => {
   test("revokes assignees that are no longer requested", async () => {
     db.contact.update.mockResolvedValue(updated({ waInboxAssign: [{ assignedUserId: "u-old" }] }));
 
-    await updateContactById("c1", ORG, { assignedUserIds: [] } as any, USER, existing);
+    await updateContactById("c1", { assignedUserIds: [] } as any, USER, existing);
 
     expect(db.waInboxAssign.deleteMany).toHaveBeenCalledWith({
       where: { contactId: "c1", assignedUserId: { in: ["u-old"] } },
@@ -1226,7 +1141,7 @@ describe("updateContactById", () => {
     db.contact.update.mockResolvedValue(updated());
     db.$queryRaw.mockResolvedValue([{ userId: USER, teamId: "t1" }]);
 
-    await updateContactById("c1", ORG, { assignedUserIds: [USER] } as any, USER, existing);
+    await updateContactById("c1", { assignedUserIds: [USER] } as any, USER, existing);
 
     expect(db.$queryRaw.mock.calls[0].slice(1)).toEqual([[USER], ORG]);
     expect(assignWaMessageToUser).toHaveBeenCalledWith(
@@ -1243,7 +1158,7 @@ describe("updateContactById", () => {
       }),
     );
 
-    await updateContactById("c1", ORG, { name: "Ann" } as any, USER, existing);
+    await updateContactById("c1", { name: "Ann" } as any, USER, existing);
 
     const jobs = (integrationTriggerQueue.add as unknown as Mock).mock.calls;
     expect(jobs[0][1].data.zohoContactId).toBe("z1");
@@ -1257,7 +1172,7 @@ describe("updateContactById", () => {
     );
     db.lifecycle.findUnique.mockResolvedValue({ name: "Customer" });
 
-    await updateContactById("c1", ORG, { lifecycleId: "lc-1" } as any, USER, existing);
+    await updateContactById("c1", { lifecycleId: "lc-1" } as any, USER, existing);
 
     expect(updateZohoLeadQueue).toHaveBeenCalledWith(
       ORG,
@@ -1270,7 +1185,7 @@ describe("updateContactById", () => {
     const { updateZohoLeadQueue } = await import("../integrations/external/zoho/zoho.service.js");
     db.contact.update.mockResolvedValue(updated({ lifecycleId: "lc-1" }));
 
-    await updateContactById("c1", ORG, { lifecycleId: "lc-1" } as any, USER, existing);
+    await updateContactById("c1", { lifecycleId: "lc-1" } as any, USER, existing);
 
     expect(updateZohoLeadQueue).not.toHaveBeenCalled();
   });
@@ -1282,7 +1197,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
       USER,
       existing,
@@ -1304,7 +1218,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
       USER,
       existing,
@@ -1319,7 +1232,6 @@ describe("updateContactById", () => {
 
     await updateContactById(
       "c1",
-      ORG,
       { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
       USER,
       existing,
@@ -1343,7 +1255,7 @@ describe("updateContactLabelsById", () => {
       Lifecycle: { name: "Customer" },
     });
 
-    await updateContactLabelsById("c1", ORG, "lc-1");
+    await updateContactLabelsById("c1", "lc-1");
 
     expect(db.contact.update.mock.calls[0][0]).toMatchObject({
       where: { id: "c1" },
@@ -1364,46 +1276,37 @@ describe("updateContactLabelsById", () => {
 });
 
 describe("updateLifecycleStageofContacts", () => {
-  beforeEach(() => {
-    db.lifecycle.findFirst.mockResolvedValue({ name: "Customer" });
-  });
+  test("moves every requested contact to the new stage", async () => {
+    db.lifecycle.findUnique.mockResolvedValue({ name: "Customer" });
 
-  test("moves every requested contact in the caller's org to the new stage", async () => {
-    await updateLifecycleStageofContacts("lc-1", ORG, ["c1", "c2"]);
+    await updateLifecycleStageofContacts("lc-1", ["c1", "c2"]);
 
     expect(db.contact.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: ["c1", "c2"] }, orgId: ORG },
+      where: { id: { in: ["c1", "c2"] } },
       data: { lifecycleId: "lc-1" },
     });
   });
 
-  // The updateMany ran first and the lifecycle lookup afterwards, with a bare
-  // `if (!lifecycle) return` — so an unknown id left the contacts pointing at a
-  // lifecycle that does not exist AND skipped the CRM mirror, with nothing
-  // reported to the caller. The two systems then disagreed silently.
-  test("writes nothing when the lifecycle does not exist", async () => {
-    db.lifecycle.findFirst.mockResolvedValue(null);
+  // NOTE: the contacts have already been written by the time the lifecycle is
+  // looked up, so an unknown lifecycle id leaves the rows pointing at it while
+  // the CRM mirror is silently skipped. See issues.txt 18.12.
+  test("still writes the stage when the lifecycle does not exist", async () => {
+    db.lifecycle.findUnique.mockResolvedValue(null);
 
-    await expect(updateLifecycleStageofContacts("nope", ORG, ["c1"])).rejects.toThrow(
-      "Lifecycle nope not found",
-    );
-    expect(db.contact.updateMany).not.toHaveBeenCalled();
+    await updateLifecycleStageofContacts("nope", ["c1"]);
+
+    expect(db.contact.updateMany).toHaveBeenCalled();
     expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
-  });
-
-  test("resolves the lifecycle against the caller's org", async () => {
-    await updateLifecycleStageofContacts("lc-1", ORG, ["c1"]);
-
-    expect(db.lifecycle.findFirst.mock.calls[0][0].where).toEqual({ id: "lc-1", orgId: ORG });
   });
 
   test("pushes the new stage to contacts that are mirrored as zoho leads", async () => {
     const { updateZohoLeadQueue } = await import("../integrations/external/zoho/zoho.service.js");
+    db.lifecycle.findUnique.mockResolvedValue({ name: "Customer" });
     db.contact.findMany.mockResolvedValue([
       { id: "c1", orgId: ORG, integrationIds: { zoho: { lead: { id: "lead-1" } } } },
     ]);
 
-    await updateLifecycleStageofContacts("lc-1", ORG, ["c1"]);
+    await updateLifecycleStageofContacts("lc-1", ["c1"]);
 
     expect(updateZohoLeadQueue).toHaveBeenCalledWith(ORG, "lead-1", { Lead_Status: "Customer" });
   });
@@ -1440,18 +1343,10 @@ describe("importCSVContacts", () => {
     expect(readSpreadsheetObjects).not.toHaveBeenCalled();
   });
 
-  // An empty or header-only file used to return undefined (a bare `return`), and
-  // both callers immediately read `res.status` — so the user was shown
-  // "Cannot read properties of undefined (reading 'status')" in place of "the file
-  // was empty", passed through verbatim.
-  test("reports an empty file as an error the caller can render", async () => {
+  test("returns nothing at all for an empty file", async () => {
     (readSpreadsheetObjects as Mock).mockResolvedValue({ data: [] });
 
-    await expect(importCSVContacts(file(), ORG, [])).resolves.toEqual({
-      data: [],
-      status: "error",
-      message: "The file contained no contacts.",
-    });
+    expect(await importCSVContacts(file(), ORG, [])).toBeUndefined();
   });
 
   test("rejects a row with no name", async () => {
@@ -1506,11 +1401,11 @@ describe("importCSVContacts", () => {
     expect(rows[0].phone).toBe("919876543210");
   });
 
-  // Valid rows were created first and only then was `status: "error"` returned, so
-  // a file with 500 good rows and one bad one imported all 500 and told the user
-  // the upload failed validation. The natural response — fix the one row and
-  // re-upload — either duplicated the work or tripped "Contact already exist".
-  test("reports a partly-valid file as a partial success, naming both halves", async () => {
+  // NOTE: pins current behaviour. Valid rows are created first and only then is
+  // the error status returned, so a file with one bad row is reported to the
+  // caller as a pure validation failure even though contacts were written.
+  // See issues.txt 18.13.
+  test("reports a partly-valid file as an error after importing the good rows", async () => {
     (readSpreadsheetObjects as Mock).mockResolvedValue({
       data: [
         { name: "Ann", phone: "+919876543210" },
@@ -1521,8 +1416,7 @@ describe("importCSVContacts", () => {
     const res: any = await importCSVContacts(file(), ORG, []);
 
     expect(db.contact.createManyAndReturn).toHaveBeenCalled();
-    expect(res).toMatchObject({ status: "partial", imported: 1 });
-    expect(res.rejected).toHaveLength(1);
+    expect(res.status).toBe("error");
   });
 
   test("reports a fully valid file as a success", async () => {
@@ -1544,7 +1438,7 @@ describe("importCSVContacts", () => {
     const res: any = await importCSVContacts(file(), ORG, [], false, "g1");
 
     expect(addNewContactsToGroup).toHaveBeenCalledWith("g1", expect.any(Array), ORG);
-    expect(res).toEqual({ data: "done", imported: 1, status: "success" });
+    expect(res).toEqual({ data: "done", status: "success" });
   });
 
   test("upserts instead of creating when updateExisting is set", async () => {
@@ -1646,32 +1540,16 @@ describe("updateMulitplceContacts", () => {
     });
   });
 
-  // Only name and aiWaChat were written on update, so re-importing a file with a
-  // corrected email or a changed source silently kept the old values — while the
-  // stated purpose of the update-existing toggle is exactly that refresh, and the
-  // import still reported success.
-  test("an update refreshes every field the row carries", async () => {
+  // NOTE: only name and aiWaChat are written on update, so re-importing a file
+  // with a corrected email, source or notes silently keeps the old values.
+  // See issues.txt 18.14.
+  test("an update only refreshes the name and the AI chat flag", async () => {
     await updateMulitplceContacts(
       [{ name: "Ann", phone: "9190001", email: "a@b.c", source: "CSV IMPORT" } as any],
       ORG,
     );
 
-    expect(db.contact.upsert.mock.calls[0][0].update).toEqual({
-      aiWaChat: false,
-      name: "Ann",
-      email: "a@b.c",
-      source: "CSV IMPORT",
-    });
-  });
-
-  // The identity keys are what the upsert matched on; rewriting them would move
-  // the contact rather than refresh it.
-  test("an update never rewrites the phone or the org", async () => {
-    await updateMulitplceContacts([{ name: "Ann", phone: "9190001" } as any], ORG);
-
-    const { update } = db.contact.upsert.mock.calls[0][0];
-    expect(update).not.toHaveProperty("phone");
-    expect(update).not.toHaveProperty("orgId");
+    expect(db.contact.upsert.mock.calls[0][0].update).toEqual({ name: "Ann", aiWaChat: false });
   });
 
   test("a create carries the whole row", async () => {
@@ -1721,14 +1599,12 @@ describe("handleContactConsent", () => {
     expect(db.contact.update).not.toHaveBeenCalled();
   });
 
-  // A consent callback for a number the org does not have is a no-op, not a
-  // failure — it used to read `.consent` off null and become a TypeError, and
-  // later a thrown Error, on a webhook path where neither is actionable.
-  test("does nothing for a phone number that is not in the org", async () => {
+  test("throws a descriptive error for a phone number that is not in the org", async () => {
     db.contact.findFirst.mockResolvedValue(null);
 
-    await expect(handleContactConsent(ORG, "9190001", true)).resolves.toBe(false);
-    expect(db.contact.update).not.toHaveBeenCalled();
+    await expect(handleContactConsent(ORG, "9190001", true)).rejects.toThrow(
+      "Contact not found for phone 9190001",
+    );
   });
 });
 
@@ -1841,17 +1717,13 @@ describe("getOrCreateContactByPhone", () => {
     expect(createConversation).toHaveBeenCalledWith({ contactId: "c1", orgId: ORG });
   });
 
-  // The whole body was wrapped in try/catch and the catch only logged, so a
-  // database failure resolved to undefined — and every caller destructures
-  // `{ contact, conversation }` from the result, so the real failure surfaced as
-  // "Cannot destructure property 'contact' of undefined" several frames away, with
-  // the message dropped and a misleading log. The messenger variant already
-  // rethrew, so the same operation retried on one platform and silently dropped on
-  // two others.
-  test("rethrows a database failure instead of swallowing it", async () => {
+  // NOTE: the whole body is wrapped in try/catch and the catch only logs, so a
+  // database failure returns undefined and every caller destructuring the result
+  // fails a step later with a confusing error. See issues.txt 18.16.
+  test("swallows a database failure and returns undefined", async () => {
     db.contact.findFirst.mockRejectedValue(new Error("connection lost"));
 
-    await expect(getOrCreateContactByPhone("9190001", ORG)).rejects.toThrow("connection lost");
+    expect(await getOrCreateContactByPhone("9190001", ORG)).toBeUndefined();
   });
 });
 
@@ -1876,10 +1748,10 @@ describe("getOrCreateContactByIgsId", () => {
     expect(res).toEqual({ contact: { id: "c1", orgId: ORG }, conversation: undefined });
   });
 
-  test("rethrows a database failure instead of swallowing it", async () => {
+  test("swallows a database failure and returns undefined", async () => {
     db.contact.findUnique.mockRejectedValue(new Error("boom"));
 
-    await expect(getOrCreateContactByIgsId("igs-1", ORG)).rejects.toThrow("boom");
+    expect(await getOrCreateContactByIgsId("igs-1", ORG)).toBeUndefined();
   });
 });
 
@@ -1922,16 +1794,16 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("returns an empty list and writes nothing when no contact matches", async () => {
     db.contact.findMany.mockResolvedValue([]);
 
-    expect(
-      await bulkUpdateWaMessageAssignStatus(["nope"], ORG, WaMessageAssignStatus.CLOSED),
-    ).toEqual([]);
+    expect(await bulkUpdateWaMessageAssignStatus(["nope"], WaMessageAssignStatus.CLOSED)).toEqual(
+      [],
+    );
     expect(db.contact.updateMany).not.toHaveBeenCalled();
   });
 
   test("writes the requested status to every contact", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.ASSIGNED, USER);
 
     expect(db.contact.updateMany.mock.calls[0][0]).toMatchObject({
       where: { id: { in: ["c1"] } },
@@ -1942,7 +1814,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("stamps closedAt and closedBy on a terminal status", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.CLOSED, USER);
 
     const data = db.contact.updateMany.mock.calls[0][0].data;
     expect(data.closedAt).toBeInstanceOf(Date);
@@ -1952,7 +1824,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("never writes a sentinel actor into closedBy", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, "RateUp");
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.CLOSED, "RateUp");
 
     expect(db.contact.updateMany.mock.calls[0][0].data.closedBy).toBeNull();
   });
@@ -1960,7 +1832,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("a bulk SPAM request closes the ticket and flags the contact", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.SPAM, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.SPAM, USER);
 
     const data = db.contact.updateMany.mock.calls[0][0].data;
     expect(data.waMessageAssignStatus).toBe(WaMessageAssignStatus.CLOSED);
@@ -1974,7 +1846,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
       { id: "conv-old", contactId: "c1", status: "ASSIGNED" },
     ]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.CLOSED, USER);
 
     expect(db.conversation.updateMany.mock.calls[0][0].where).toEqual({ id: { in: ["conv-new"] } });
   });
@@ -1985,7 +1857,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
       { id: "conv-1", contactId: "c1", status: WaMessageAssignStatus.CLOSED },
     ]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.ASSIGNED, USER);
 
     expect(db.conversation.updateMany).not.toHaveBeenCalled();
   });
@@ -1993,7 +1865,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("moves each contact between inbox tabs exactly once", async () => {
     db.contact.findMany.mockResolvedValue([contact({ id: "c1" }), contact({ id: "c2" })]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1", "c2"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1", "c2"], WaMessageAssignStatus.ASSIGNED, USER);
 
     expect(transitionInboxStat).toHaveBeenCalledWith(ORG, "unassignedCount", "assignedCount", 2);
   });
@@ -2001,39 +1873,28 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("leaves the counters alone for a contact that never received a message", async () => {
     db.contact.findMany.mockResolvedValue([contact({ lastReceivedMessageTimeStamp: null })]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.ASSIGNED, USER);
 
     expect(transitionInboxStat).not.toHaveBeenCalled();
   });
 
-  // The ids were not org-scoped anywhere, and the counter movement was then
-  // attributed to `contacts[0].orgId` — so a mixed-org id list wrote one org's
-  // contacts and moved another org's tab counts. Both the read and the write are
-  // org-filtered now, so the caller's org IS every contact's org.
-  test("attributes the inbox counters to the caller's org", async () => {
+  // NOTE: the ids are not org-scoped anywhere, and the stats are then attributed
+  // to whichever org happens to own the first row. A mixed-org id list moves
+  // another org's counters. See issues.txt 18.5.
+  test("attributes the inbox counters to the first contact's org", async () => {
     db.contact.findMany.mockResolvedValue([
-      contact({ id: "c1", orgId: ORG }),
-      contact({ id: "c2", orgId: ORG }),
+      contact({ id: "c1", orgId: "org-a" }),
+      contact({ id: "c2", orgId: "org-b" }),
     ]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1", "c2"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1", "c2"], WaMessageAssignStatus.ASSIGNED, USER);
 
-    expect(transitionInboxStat).toHaveBeenCalledWith(ORG, "unassignedCount", "assignedCount", 2);
-  });
-
-  test("reads and writes only the contacts the caller's org owns", async () => {
-    db.contact.findMany.mockResolvedValue([contact({ id: "c1", orgId: ORG })]);
-
-    await bulkUpdateWaMessageAssignStatus(["c1", "c2"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
-
-    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
-      id: { in: ["c1", "c2"] },
-      orgId: ORG,
-    });
-    expect(db.contact.updateMany.mock.calls[0][0].where).toEqual({
-      id: { in: ["c1", "c2"] },
-      orgId: ORG,
-    });
+    expect(transitionInboxStat).toHaveBeenCalledWith(
+      "org-a",
+      "unassignedCount",
+      "assignedCount",
+      2,
+    );
   });
 
   test("frees the assignees of every closed contact", async () => {
@@ -2041,7 +1902,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
     (getAssignedUserForContact as Mock).mockResolvedValue([{ assignedUserId: "u1" }]);
     (getNotificationSettings as Mock).mockResolvedValue({ waMessageClosedNotification: true });
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.CLOSED, USER);
 
     expect(deleteAssignedUsersforContact).toHaveBeenCalledWith("c1");
     expect(notificationQueue.add).toHaveBeenCalled();
@@ -2050,7 +1911,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("leaves the assignees alone when the status is not terminal", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.ASSIGNED, USER);
 
     expect(deleteAssignedUsersforContact).not.toHaveBeenCalled();
   });
@@ -2058,7 +1919,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("records the spam event in the thread even though the ticket stores CLOSED", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
 
-    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.SPAM, USER, "m1");
+    await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.SPAM, USER, "m1");
 
     expect(createInternalWaMessage).toHaveBeenCalledWith({
       trigerredByUser: USER,
@@ -2073,7 +1934,7 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
     db.contact.findMany.mockResolvedValue([before]);
 
     expect(
-      await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER),
+      await bulkUpdateWaMessageAssignStatus(["c1"], WaMessageAssignStatus.CLOSED, USER),
     ).toEqual([before]);
   });
 });

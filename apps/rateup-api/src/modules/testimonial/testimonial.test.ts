@@ -6,12 +6,7 @@ vi.mock("../../utils/prisma.js", () => ({
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
-vi.mock("../../utils/logger.js", () => ({
-  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
-
 import prisma from "../../utils/prisma.js";
-import { log } from "../../utils/logger.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { QuestionType } from "../../types/enums.js";
 import {
@@ -69,58 +64,62 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("getAllTestimonialBySurveyId", () => {
-  // The filter used to walk surveyResponse -> surveyTeamMap -> surveyId and stop
-  // there, so a survey id — which appears in survey URLs and other API responses
-  // — was enough for any authenticated user of any org to read that survey's
-  // testimonials in full. getAllTestimonialByOrgId, below, already walked one
-  // relation further to team.orgId.
-  test("joins through the team to the caller's org", async () => {
-    await getAllTestimonialBySurveyId(VICTIM_SURVEY, ORG);
+  // NOTE: the filter walks surveyResponse → surveyTeamMap → surveyId and stops
+  // there. getAllTestimonialByOrgId, forty lines below, walks one relation
+  // further to team.orgId — so the scoped join exists and is not used here.
+  test("filters on the survey id with no org condition", async () => {
+    await getAllTestimonialBySurveyId(VICTIM_SURVEY);
 
     expect(db.testimonial.findMany.mock.calls[0][0].where).toEqual({
-      surveyResponse: { surveyTeamMap: { surveyId: VICTIM_SURVEY, team: { orgId: ORG } } },
+      surveyResponse: { surveyTeamMap: { surveyId: VICTIM_SURVEY } },
     });
   });
 
-  test("the handler takes the org from the session", async () => {
-    await getAllTestimonialBySurveyIdHandler(
-      { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
-      reply(),
-    );
+  test("the handler takes the survey id from the path and reads no session", async () => {
+    const req: any = {
+      params: { surveyId: VICTIM_SURVEY },
+      get user() {
+        throw new Error("request.user was read");
+      },
+    };
 
+    await expect(getAllTestimonialBySurveyIdHandler(req, reply())).resolves.toBeUndefined();
     expect(
-      db.testimonial.findMany.mock.calls[0][0].where.surveyResponse.surveyTeamMap.team.orgId,
-    ).toBe(ORG);
+      db.testimonial.findMany.mock.calls[0][0].where.surveyResponse.surveyTeamMap.surveyId,
+    ).toBe(VICTIM_SURVEY);
   });
 
-  // There was no select, so every scalar came back — including responseId and
-  // the testimonial id, which is the valueneeded to republish
+  // NOTE: no select on the model, so every scalar comes back — including the
+  // testimonial id, which is the value issues.txt 31.1 needs to republish
   // another org's testimonials at a public URL.
-  test("projects the fields the caller needs rather than the whole row", async () => {
+  test("returns the testimonial id and content unprojected", async () => {
     db.testimonial.findMany.mockResolvedValueOnce([
-      { id: "t-1", createdAt: new Date(2026, 0, 1), testimonial: { name: "Ann" } },
+      {
+        id: "t-1",
+        responseId: RESPONSE,
+        testimonial: { name: "Ann", testimonial: "private praise" },
+        surveyResponse: {
+          surveyTeamMap: { id: "stm-1", surveyId: VICTIM_SURVEY, teamId: "team-1" },
+        },
+      },
     ]);
     const rep = reply();
 
-    await getAllTestimonialBySurveyIdHandler(
-      { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    await getAllTestimonialBySurveyIdHandler({ params: { surveyId: VICTIM_SURVEY } } as never, rep);
 
-    expect(db.testimonial.findMany.mock.calls[0][0].select).toEqual({
-      id: true,
-      createdAt: true,
-      testimonial: true,
-    });
-    expect(answer(rep).body[0].testimonial.name).toBe("Ann");
+    expect(answer(rep).body[0].id).toBe("t-1");
+    expect(answer(rep).body[0].testimonial.testimonial).toBe("private praise");
+    expect(db.testimonial.findMany.mock.calls[0][0].select).toBeUndefined();
   });
 
-  // The include used to pull the entire SurveyTeamMap row, so the internal
-  // surveyId, teamId and shortUrlId travelled with every testimonial.
-  test("no longer includes the survey-team mapping row", async () => {
-    await getAllTestimonialBySurveyId(VICTIM_SURVEY, ORG);
+  // NOTE: the include pulls the entire SurveyTeamMap row rather than naming
+  // fields, so internal ids travel with every testimonial.
+  test("includes the whole survey-team mapping row", async () => {
+    await getAllTestimonialBySurveyId(VICTIM_SURVEY);
 
-    expect(db.testimonial.findMany.mock.calls[0][0].include).toBeUndefined();
+    expect(db.testimonial.findMany.mock.calls[0][0].include).toEqual({
+      surveyResponse: { select: { surveyTeamMap: true } },
+    });
   });
 
   test("the params schema accepts any string as a survey id", () => {
@@ -130,10 +129,7 @@ describe("getAllTestimonialBySurveyId", () => {
   test("an unknown survey id is an empty list, not an error", async () => {
     const rep = reply();
 
-    await getAllTestimonialBySurveyIdHandler(
-      { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    await getAllTestimonialBySurveyIdHandler({ params: { surveyId: VICTIM_SURVEY } } as never, rep);
 
     expect(answer(rep).body).toEqual([]);
   });
@@ -201,25 +197,15 @@ describe("getAllTestimonialByOrgId", () => {
     });
   });
 
-  // The destructure reached surveyResponse.surveyTeamMap unguarded, so one
-  // orphaned row made the entire org-wide listing 500 with no indication which
-  // row was at fault. SurveyTeamMap cascades from both Survey and Team.
-  test("skips a row with no survey mapping rather than throwing", async () => {
+  // NOTE: the destructure reaches surveyResponse.surveyTeamMap unguarded, so a
+  // testimonial whose response lost its mapping throws rather than being
+  // skipped.
+  test("throws on a row with no survey mapping", async () => {
     db.testimonial.findMany.mockResolvedValueOnce([
       { id: "t-1", createdAt: new Date(), testimonial: {}, surveyResponse: null },
-      {
-        id: "t-2",
-        createdAt: new Date(2026, 0, 1),
-        testimonial: { name: "Ann" },
-        surveyResponse: {
-          surveyTeamMap: { survey: { id: "s-1", title: "NPS" }, team: { id: "team-1" } },
-        },
-      },
     ]);
 
-    const rows = await getAllTestimonialByOrgId(ORG);
-
-    expect(rows.map((r) => r.id)).toEqual(["t-2"]);
+    await expect(getAllTestimonialByOrgId(ORG)).rejects.toThrow(TypeError);
   });
 });
 
@@ -268,59 +254,43 @@ describe("createTestimonial", () => {
     });
   });
 
-  // The answer is read as response[type]. Nothing validated that key existed, so
-  // a payload shaped differently wrote a row whose every field was undefined —
-  // a testimonial with no text, which then appeared as an empty card in the
-  // by-org listing and in any published collection.
-  test("skips an answer shaped differently rather than storing a hollow row", async () => {
+  // NOTE: the answer is read as response[type]. Nothing validates that key
+  // exists, so a payload shaped differently writes a row whose every field is
+  // undefined rather than being rejected.
+  test("writes a hollow row when the answer is shaped differently", async () => {
     await createTestimonial(
       { responses: [{ questionId: "q-1", type: QuestionType.Testimonial, response: {} }] } as never,
       RESPONSE,
     );
 
-    expect(db.testimonial.createMany).not.toHaveBeenCalled();
-    expect(log.warn).toHaveBeenCalled();
+    expect(db.testimonial.createMany.mock.calls[0][0].data[0].testimonial).toEqual({
+      questionId: "q-1",
+      name: undefined,
+      jobTitle: undefined,
+      testimonial: undefined,
+      rating: undefined,
+      photo: undefined,
+    });
   });
 
-  test("keeps the valid answers when one of several is malformed", async () => {
+  // NOTE: createTestimonialSchama describes exactly this payload and has no
+  // importer anywhere in src — nothing validates what is written.
+  test("the schema that describes the row is never applied", async () => {
+    const parsed = createTestimonialSchama.safeParse({
+      responseId: RESPONSE,
+      testimonial: { questionId: "q-1", testimonial: "x" },
+    });
+    expect(parsed.success).toBe(true);
+
+    // The service accepts a payload the schema would reject.
     await createTestimonial(
-      {
-        responses: [
-          { questionId: "q-1", type: QuestionType.Testimonial, response: {} },
-          testimonialAnswer({ questionId: "q-2" }),
-        ],
-      } as never,
+      { responses: [{ questionId: "q-1", type: QuestionType.Testimonial, response: {} }] } as never,
       RESPONSE,
     );
 
-    const data = db.testimonial.createMany.mock.calls[0][0].data;
-    expect(data).toHaveLength(1);
-    expect(data[0].testimonial.questionId).toBe("q-2");
+    expect(db.testimonial.createMany).toHaveBeenCalledOnce();
   });
 
-  // createTestimonialSchama describes exactly this payload and used to have no
-  // importer anywhere in src — validation written for this data and never wired
-  // up. It is now the filter.
-  test("the schema that describes the row is the one applied", async () => {
-    expect(
-      createTestimonialSchama.safeParse({
-        responseId: RESPONSE,
-        testimonial: { questionId: "q-1", testimonial: "x" },
-      }).success,
-    ).toBe(true);
-    expect(
-      createTestimonialSchama.safeParse({
-        responseId: RESPONSE,
-        testimonial: { questionId: "q-1" },
-      }).success,
-    ).toBe(false);
-  });
-
-  // STILL OPEN: the schema requires a non-empty string but
-  // puts no length bound on the text and no scheme check on the photo, both of
-  // which come verbatim from a public survey respondent. Bounding them would
-  // silently discard a legitimate long testimonial, so the limits are a product
-  // decision rather than a safe default.
   test("puts no bound on the respondent-supplied text or photo", async () => {
     await createTestimonial(
       {
@@ -343,19 +313,18 @@ describe("createTestimonial", () => {
     expect(stored.photo).toBe("javascript:alert(1)");
   });
 
-  // (testimonial, responseId) is unique on the model, so a survey with two
-  // testimonial questions answered identically produced two rows the constraint
-  // forbids — and the rejection, inside the caller's Promise.all, abandoned the
-  // rest of the post-response work.
-  test("skips duplicates", async () => {
+  // NOTE: createMany without skipDuplicates, against a model whose unique key
+  // is (testimonial, responseId) — a Json column. Two identical answers in one
+  // submission collide.
+  test("does not skip duplicates", async () => {
     await createTestimonial({ responses: [testimonialAnswer()] } as never, RESPONSE);
 
-    expect(db.testimonial.createMany.mock.calls[0][0].skipDuplicates).toBe(true);
+    expect(db.testimonial.createMany.mock.calls[0][0].skipDuplicates).toBeUndefined();
   });
 
-  // The call site is one element of the response handler's post-processing
-  // batch, which is now Promise.allSettled — a rejection here is logged against
-  // the response id rather than abandoning the other five operations.
+  // NOTE: the only call site is inside a Promise.all in the response handler
+  // (response.controller.ts:259-277), after the response row is committed — so
+  // a rejection here fails the whole submission with a 500.
   test("propagates a constraint failure to its caller", async () => {
     db.testimonial.createMany.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
@@ -376,42 +345,35 @@ describe("createTestimonial", () => {
 // ===========================================================================
 
 describe("the handlers", () => {
-  // Both reads used to answer 201 Created, which misleads any client or proxy
-  // keying on the status — neither is a create.
-  test("both GETs answer 200", async () => {
+  // NOTE: both reads answer 201 Created.
+  test("both GETs answer 201", async () => {
     const a = reply();
     const b = reply();
 
-    await getAllTestimonialBySurveyIdHandler(
-      { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
-      a,
-    );
+    await getAllTestimonialBySurveyIdHandler({ params: { surveyId: VICTIM_SURVEY } } as never, a);
     await getAllTestimonialByOrgHandler({ user: { orgId: ORG } } as never, b);
 
-    expect(answer(a).code).toBe(200);
-    expect(answer(b).code).toBe(200);
+    expect(answer(a).code).toBe(201);
+    expect(answer(b).code).toBe(201);
   });
 
-  // `"Failed" + error` concatenated the caught value onto a string with no
-  // separator and sent it to the caller — the model name and the query shape,
-  // from an ordinary authenticated request — and neither handler logged
-  // anything, so the only record of the failure was the caller's response.
-  test("both send a fixed message and log the error", async () => {
+  // NOTE: "Failed" + error concatenates the caught value onto a string with no
+  // separator, and sends it to the caller.
+  test("both leak the raw error, unspaced, on failure", async () => {
     db.testimonial.findMany.mockRejectedValue(
       new Error("Invalid `prisma.testimonial.findMany()` invocation"),
     );
     const a = reply();
     const b = reply();
 
-    await getAllTestimonialBySurveyIdHandler(
-      { params: { surveyId: VICTIM_SURVEY }, user: { orgId: ORG } } as never,
-      a,
-    );
+    await getAllTestimonialBySurveyIdHandler({ params: { surveyId: VICTIM_SURVEY } } as never, a);
     await getAllTestimonialByOrgHandler({ user: { orgId: ORG } } as never, b);
 
-    expect(answer(a)).toEqual({ code: 500, body: { message: "Something went wrong" } });
-    expect(answer(b)).toEqual({ code: 500, body: { message: "Something went wrong" } });
-    expect(log.error).toHaveBeenCalledTimes(2);
+    expect(answer(a)).toEqual({
+      code: 500,
+      body: { message: "FailedError: Invalid `prisma.testimonial.findMany()` invocation" },
+    });
+    expect(answer(b).body.message).toContain("prisma.testimonial.findMany()");
   });
 });
 

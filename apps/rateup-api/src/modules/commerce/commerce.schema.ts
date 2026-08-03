@@ -48,6 +48,5 @@ export type ExportOrdersInput = z.infer<typeof exportOrdersSchema>;
 export const exportOverviewSchema = commerceFilterSchema.extend({
   format: spreadsheetExportFormatSchema.default("xlsx"),
   interval: z.enum(["day", "week", "month"]).default("day"),
-  limit: z.coerce.number().min(1).max(50).default(5),
 });
 export type ExportOverviewInput = z.infer<typeof exportOverviewSchema>;

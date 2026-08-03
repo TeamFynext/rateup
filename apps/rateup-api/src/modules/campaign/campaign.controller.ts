@@ -6,7 +6,6 @@ import {
   SendCampaignInput,
   UpdateCampaignInput,
 } from "./campaign.schema.js";
-import { CampaignNotFoundError } from "./campaign.errors.js";
 import {
   createCampaign,
   deleteCampaign,
@@ -32,56 +31,32 @@ import {
   SpreadsheetExportFormat,
 } from "../../utils/spreadsheet.js";
 
-function replyForError(reply: FastifyReply, error: unknown, context: string) {
-  if (error instanceof CampaignNotFoundError) {
-    return reply.status(404).send({ message: error.message, code: "CAMPAIGN_NOT_FOUND" });
-  }
-  // Prisma raises P2025 when an extended `where` matched nothing — which, on this
-  // module's writes, means the campaign is not the caller's.
-  if (error && typeof error === "object" && (error as { code?: string }).code === "P2025") {
-    return reply.status(404).send({ message: "Campaign not found", code: "CAMPAIGN_NOT_FOUND" });
-  }
-  log.error({ err: error }, context);
-  return reply.status(500).send({
-    message: error instanceof Error ? error.message : "Internal server error",
-    code: "INTERNAL_SERVER_ERROR",
-  });
-}
-
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
   reply: FastifyReply,
 ) {
-  try {
-    const campaign = await createCampaign({ ...request.body }, request.user.orgId);
-    return reply.status(201).send(campaign);
-  } catch (error) {
-    return replyForError(reply, error, "Error while creating a campaign");
-  }
+  const campaign = await createCampaign({
+    ...request.body,
+  });
+  return reply.status(201).send(campaign);
 }
 
 export async function getCampaignsHandler(
   request: FastifyRequest<{ Querystring: GetCampaignsQuery }>,
   reply: FastifyReply,
 ) {
-  const { orgId } = request.user;
-  try {
-    if (request.query.campaignId) {
-      const campaign = await getCampaignById(request.query.campaignId, orgId);
-      if (!campaign) {
-        return reply
-          .status(404)
-          .send({ message: "Campaign not found", code: "CAMPAIGN_NOT_FOUND" });
-      }
-      return reply.code(200).send(campaign);
-    }
-    if (request.query.teamId) {
-      return reply.code(200).send(await getCampaignsByTeamId(request.query.teamId, orgId));
-    }
-    return reply.code(200).send(await getCampaignsByOrgId(orgId, request.query?.type));
-  } catch (error) {
-    return replyForError(reply, error, "Error while listing campaigns");
+  let res = null;
+  if (request.query.campaignId) {
+    // get individual contact group by id
+    res = await getCampaignById(request.query.campaignId);
+  } else if (request.query.teamId) {
+    // get all contact groups for a specific team
+    res = await getCampaignsByTeamId(request.query.teamId);
+  } else {
+    // get all contact groups for all teams
+    res = await getCampaignsByOrgId(request.user.orgId, request.query?.type);
   }
+  return reply.code(200).send(res);
 }
 
 export async function updateCampaignByIdHandler(
@@ -91,28 +66,16 @@ export async function updateCampaignByIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  try {
-    const campaign = await updateCampaign(
-      request.params.campaignId,
-      request.user.orgId,
-      request.body,
-    );
-    return reply.status(200).send(campaign);
-  } catch (error) {
-    return replyForError(reply, error, "Error while updating a campaign");
-  }
+  const campaign = await updateCampaign(request.params.campaignId, request.body);
+  return reply.status(200).send(campaign);
 }
 
 export async function deleteCampaignByIdHandler(
   request: FastifyRequest<{ Params: ByCampaignIdParams }>,
   reply: FastifyReply,
 ) {
-  try {
-    const campaign = await deleteCampaign(request.params.campaignId, request.user.orgId);
-    return reply.status(200).send(campaign);
-  } catch (error) {
-    return replyForError(reply, error, "Error while deleting a campaign");
-  }
+  const campaign = await deleteCampaign(request.params.campaignId);
+  return reply.status(200).send(campaign);
 }
 
 export async function sendCampaignHandler(
@@ -132,22 +95,8 @@ export async function sendCampaignHandler(
     dailySendLimit,
   } = request.body;
   const { campaignId } = request.params;
-  const { orgId } = request.user;
 
   try {
-    const campaign = await getCampaignById(campaignId, orgId);
-    if (!campaign) {
-      return reply.status(404).send({ message: "Campaign not found", code: "CAMPAIGN_NOT_FOUND" });
-    }
-
-    const inProgressStatuses: string[] = [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING];
-    if (inProgressStatuses.includes(campaign.status)) {
-      return reply.status(400).send({
-        message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
-        code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",
-      });
-    }
-
     if (type === CampaignType.DRIP) {
       if (!status) {
         return reply.status(400).send({
@@ -155,7 +104,7 @@ export async function sendCampaignHandler(
           code: "STATUS_REQUIRED",
         });
       }
-      await updateCampaign(campaignId, orgId, {
+      await updateCampaign(campaignId, {
         status,
         campaignSentAt: null,
         scheduledStatuses: [],
@@ -167,24 +116,26 @@ export async function sendCampaignHandler(
       });
     }
     if (status === CampaignStatus.INACTIVE) {
-      await updateCampaign(campaignId, orgId, {
+      await updateCampaign(campaignId, {
         status: CampaignStatus.DEQUEUING,
         campaignSentAt: null,
         scheduledStatuses: [],
       });
-      const dequeue = await deleteCampaignParticipantsByCampaignId(campaignId);
-      if (!dequeue.status) {
-        return reply.status(502).send({
-          message: dequeue.message,
-          code: "MSG_SCHEDULE_CANCEL_FAILED",
-        });
-      }
+      await deleteCampaignParticipantsByCampaignId(campaignId);
       return reply.status(200).send({
         message: "Campaign schedule cancellation requested",
         code: "MSG_SCHEDULE_CANCEL_REQUESTED",
       });
     }
-    const count = await getCampaignParticipantCountByStatuses(campaignId, orgId, sendToStatuses);
+    const campaign = await getCampaignById(campaignId);
+    const inProgressStatuses: string[] = [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING];
+    if (inProgressStatuses.includes(campaign.status)) {
+      return reply.status(400).send({
+        message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
+        code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",
+      });
+    }
+    const count = await getCampaignParticipantCountByStatuses(campaignId, sendToStatuses);
     if (count === 0) {
       return reply.status(400).send({
         message: `No participants with the specified statuses to send the campaign to.`,
@@ -198,13 +149,13 @@ export async function sendCampaignHandler(
     const effectiveDailySendLimit = participantId ? undefined : (dailySendLimit ?? undefined);
 
     if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
-      await updateCampaign(campaignId, orgId, {
+      await updateCampaign(campaignId, {
         status: CampaignStatus.QUEUING,
         campaignSentAt,
         scheduledStatuses: [],
         dailySendLimit: dailySendLimit ?? null,
       });
-      const scheduled = await enqueueCampaignMessage(
+      await enqueueCampaignMessage(
         campaignId,
         sendToStatuses,
         undefined,
@@ -212,20 +163,19 @@ export async function sendCampaignHandler(
         undefined,
         effectiveDailySendLimit,
       );
-      if (!scheduled.status) return await reportEnqueueFailure(campaignId, orgId, reply, scheduled);
       return reply.status(200).send({
         message: "Campaign scheduling requested",
         code: "MSG_SCHEDULE_REQUESTED",
       });
     }
-    await updateCampaign(campaignId, orgId, {
+    await updateCampaign(campaignId, {
       status: CampaignStatus.QUEUING,
       campaignSentAt: null,
       scheduledStatuses: [],
       ...(participantId ? {} : { dailySendLimit: dailySendLimit ?? null }),
     });
 
-    const enqueued = await enqueueCampaignMessage(
+    await enqueueCampaignMessage(
       campaignId,
       sendToStatuses,
       participantId,
@@ -233,28 +183,17 @@ export async function sendCampaignHandler(
       undefined,
       effectiveDailySendLimit,
     );
-    if (!enqueued.status) return await reportEnqueueFailure(campaignId, orgId, reply, enqueued);
     return reply.status(200).send({
       message: "Campaign enqueue request accepted. Processing will occur asynchronously.",
       code: "ENQUEUE_REQUEST_ACCEPTED",
     });
   } catch (error) {
-    return replyForError(reply, error, "Error while handling sendCampaignHandler");
+    log.error({ err: error }, "Error while handling sendCampaignHandler");
+    return reply.code(500).send({
+      message: "Internal server error",
+      code: "INTERNAL_SERVER_ERROR",
+    });
   }
-}
-
-async function reportEnqueueFailure(
-  campaignId: string,
-  orgId: string,
-  reply: FastifyReply,
-  result: { status: boolean; message: string },
-) {
-  try {
-    await updateCampaign(campaignId, orgId, { status: CampaignStatus.INACTIVE });
-  } catch (error) {
-    log.error({ err: error, campaignId }, "Could not roll a campaign back after a failed enqueue");
-  }
-  return reply.status(502).send({ message: result.message, code: "ENQUEUE_FAILED" });
 }
 
 export async function getCampaignFilterForFlowsHandler(
@@ -264,7 +203,7 @@ export async function getCampaignFilterForFlowsHandler(
   if (!request.query.surveyId) {
     return reply.status(400).send("surveyId is required");
   }
-  const result = await getCampaignFilterForFlows(request.query.surveyId, request.user.orgId);
+  const result = await getCampaignFilterForFlows(request.query.surveyId);
   return reply.status(200).send(result);
 }
 
@@ -275,10 +214,11 @@ export async function getResponseByCampaignByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getResponseByCampaignById(request.params.campaignId, request.user.orgId);
+    const res = await getResponseByCampaignById(request.params.campaignId);
     return reply.status(200).send(res);
   } catch (error) {
-    return replyForError(reply, error, "Error while handling getResponseByCampaignById");
+    log.error({ err: error }, "Error while handling getResponseByCampaignById");
+    return reply.code(500).send(error);
   }
 }
 
@@ -297,7 +237,6 @@ export async function getResponseExcelByCampaignByIdHandler(
     const format = parsedFormat.data;
     const { title, data } = await getResponseExcelByCampaignById(
       request.params.campaignId,
-      request.user.orgId,
       request.query.selectedDripStage,
       format,
     );
@@ -305,7 +244,8 @@ export async function getResponseExcelByCampaignByIdHandler(
     reply.header("Access-Control-Expose-Headers", "filename");
     reply.status(200).type(getSpreadsheetContentType(format)).send(data);
   } catch (error) {
-    return replyForError(reply, error, "Error while handling getResponseExcelByCampaignById");
+    log.error({ err: error }, "Error while handling getResponseExcelByCampaignById");
+    return reply.code(500).send(error);
   }
 }
 
@@ -319,11 +259,11 @@ export async function getCampaignStatsHandler(
   try {
     const stats = await getCampaginStatsById(
       request.params.campaignId,
-      request.user.orgId,
       request.query.selectedDripStage,
     );
     reply.code(200).send(stats);
   } catch (e) {
-    return replyForError(reply, e, "Error in getting campain stats");
+    log.error({ err: e }, "Error in getting campain stats");
+    return reply.code(500).send(e);
   }
 }

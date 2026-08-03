@@ -3,104 +3,96 @@ import { deleteFile, uploadFile } from "../../utils/upload/s3Upload.js";
 import { fileDeleteInput } from "./fileUpload.schema.js";
 import sharp from "sharp";
 import fs from "node:fs";
-import fsp from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
 import path from "node:path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { validateFile } from "../../utils/upload/validate.js";
-import { log } from "../../utils/logger.js";
 import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-
-const bucket = () => process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads";
-
-function objectKey(filename: string) {
-  const safeName = filename.replace(/[^a-zA-Z0-9-.]/g, "");
-  return `${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
-}
-
-/** The types the thumbnail endpoint can actually hand to sharp. */
-const THUMBNAILABLE = ["image/jpeg", "image/png", "image/webp"];
 
 export async function uploadController(req: FastifyRequest, reply: FastifyReply) {
   const data = await req.file();
   if (!data) {
     return reply.code(400).send({ message: "No file uploaded." });
   }
-  const validation = validateFile({ data });
+  const metadataField = data.fields.metadata;
+  const metadataValue =
+    metadataField && !Array.isArray(metadataField) && "value" in metadataField
+      ? metadataField.value
+      : undefined;
+  const metadata =
+    metadataValue !== undefined ? JSON.parse(String(metadataValue)) : { allowAll: false };
+  const validation = validateFile({
+    data,
+    allowAll: metadata?.allowAll || false,
+  });
   if (!validation.valid) {
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
-  const uniqueFilename = objectKey(filename);
+  const uniqueFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9-.]/g, "")}`;
 
   let params: PutObjectCommandInput = {
-    Bucket: bucket(),
+    Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Key: uniqueFilename,
     Body: file,
     ContentType: data.mimetype,
   };
   let tempRawPath: string | undefined, tempOutputPath: string | undefined;
+  if (
+    data.mimetype === "audio/mp4" ||
+    data.mimetype === "audio/mpeg" ||
+    data.mimetype === "audio/ogg"
+  ) {
+    const tmpDir = path.join(".", "tmp");
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+    tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
+    tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.m4a`);
 
-  try {
-    if (
-      data.mimetype === "audio/mp4" ||
-      data.mimetype === "audio/mpeg" ||
-      data.mimetype === "audio/ogg"
-    ) {
-      const tmpDir = path.join(".", "tmp");
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
-      }
-      tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-      tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.m4a`);
+    await pumpToFile(file, tempRawPath);
 
-      await pumpToFile(file, tempRawPath);
-
-      let mimetype: string;
-      if (data.mimetype === "audio/ogg") {
-        await convertToWhatsAppCompatibleOGG(tempRawPath, tempOutputPath);
-        mimetype = "audio/ogg";
-      } else {
-        await convertToM4A(tempRawPath, tempOutputPath);
-        mimetype = "audio/mp4";
-      }
-
-      const finalBuffer = await fsp.readFile(tempOutputPath);
-      params = {
-        Bucket: bucket(),
-        Key: uniqueFilename,
-        Body: finalBuffer,
-        ContentType: mimetype,
-      };
+    let finalBuffer: Buffer;
+    let mimetype: string;
+    if (data.mimetype === "audio/ogg") {
+      await convertToWhatsAppCompatibleOGG(tempRawPath, tempOutputPath);
+      mimetype = "audio/ogg";
+    } else {
+      await convertToM4A(tempRawPath, tempOutputPath);
+      mimetype = "audio/mp4";
     }
 
-    const fileUrl = await uploadFile(params);
-    reply.code(200).send({
-      message: "File uploaded successfully",
-      data: { fileUrl, key: uniqueFilename },
-    });
-  } catch (err) {
-    log.error({ err }, "File upload failed");
-    reply.code(500).send({ message: "Something went wrong" });
-  } finally {
-    // Keyed off the temp paths themselves rather than off params.ContentType, so a
-    // failed transcode cleans up too, and unlinked with a catch so a file that is
-    // already gone cannot throw from a finally and mask the real error.
-    await removeTempFiles(tempRawPath, tempOutputPath);
+    finalBuffer = fs.readFileSync(tempOutputPath);
+    params = {
+      Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
+      Key: uniqueFilename,
+      Body: finalBuffer,
+      ContentType: mimetype,
+    };
   }
-}
 
-async function removeTempFiles(...paths: (string | undefined)[]) {
-  for (const filePath of paths) {
-    if (!filePath) continue;
-    try {
-      await fsp.unlink(filePath);
-    } catch (err) {
-      log.warn({ err, filePath }, "Could not remove a temporary upload file");
+  try {
+    const fileUrl = await uploadFile(params);
+    const data = {
+      fileUrl,
+      key: uniqueFilename,
+    };
+    reply.code(200).send({ message: "File uploaded successfully", data });
+  } catch (err) {
+    reply.code(500).send(err);
+  } finally {
+    if (
+      tempRawPath &&
+      tempOutputPath &&
+      params.ContentType &&
+      ["audio/mp4", "audio/ogg"].includes(params.ContentType)
+    ) {
+      fs.unlinkSync(tempRawPath);
+      fs.unlinkSync(tempOutputPath);
     }
   }
 }
@@ -148,55 +140,49 @@ export async function uploadWithThumbnailsController(req: FastifyRequest, reply:
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
-  if (!THUMBNAILABLE.includes(data.mimetype)) {
-    data.file.resume();
-    return reply.code(400).send({ message: "This endpoint accepts images only." });
-  }
   const { filename } = data;
-  const uniqueFilename = objectKey(filename);
+  const uniqueFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9-.]/g, "")}`;
   const thumbnailFilename = "thumb300x200-" + uniqueFilename;
 
+  const buffer = await data.toBuffer();
+  const params: PutObjectCommandInput = {
+    Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
+    Key: uniqueFilename,
+    Body: buffer,
+    ContentType: data.mimetype,
+  };
+  const resizedImage = await sharp(buffer)
+    .resize({
+      fit: "inside",
+      width: 300,
+      height: 200,
+    })
+    .webp()
+    .toBuffer();
+
+  const paramsThumb: PutObjectCommandInput = {
+    Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
+    Key: thumbnailFilename,
+    Body: resizedImage,
+    ContentType: data.mimetype,
+  };
+
   try {
-    const buffer = await data.toBuffer();
-    const params: PutObjectCommandInput = {
-      Bucket: bucket(),
-      Key: uniqueFilename,
-      Body: buffer,
-      ContentType: data.mimetype,
-    };
-    const resizedImage = await sharp(buffer)
-      .resize({
-        fit: "inside",
-        width: 300,
-        height: 200,
-      })
-      .webp()
-      .toBuffer();
-
-    const paramsThumb: PutObjectCommandInput = {
-      Bucket: bucket(),
-      Key: thumbnailFilename,
-      Body: resizedImage,
-      ContentType: "image/webp",
-    };
-
     const [fileThumbUrl, fileUrl] = await Promise.all([
       uploadFile(paramsThumb),
       uploadFile(params),
     ]);
 
-    reply.code(200).send({
-      message: "File uploaded successfully",
-      data: {
-        fileUrl,
-        key: uniqueFilename,
-        fileThumbUrl,
-        thumbKey: thumbnailFilename,
-      },
-    });
+    const data = {
+      fileUrl,
+      key: uniqueFilename,
+      fileThumbUrl,
+      thumbKey: thumbnailFilename,
+    };
+
+    reply.code(200).send({ message: "File uploaded successfully", data });
   } catch (err) {
-    log.error({ err }, "File upload with thumbnail failed");
-    reply.code(500).send({ message: "Something went wrong" });
+    reply.code(500).send(err);
   }
 }
 
@@ -204,9 +190,9 @@ export async function deleteUploadedFileController(
   req: FastifyRequest<{ Body: fileDeleteInput }>,
   reply: FastifyReply,
 ) {
-  const { fileKeyArray } = req.body;
+  let { fileKeyArray } = req.body;
   const params = {
-    Bucket: bucket(),
+    Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",
     Delete: {
       Objects: fileKeyArray,
     },
@@ -215,7 +201,6 @@ export async function deleteUploadedFileController(
     await deleteFile(params);
     reply.code(200).send({ message: "File delete successfully" });
   } catch (err) {
-    log.error({ err }, "File delete failed");
-    reply.code(500).send({ message: "Something went wrong" });
+    reply.code(500).send(err);
   }
 }

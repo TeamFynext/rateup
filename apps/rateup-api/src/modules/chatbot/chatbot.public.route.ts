@@ -4,20 +4,12 @@ import {
   getChatbotPublicPageStatusHandler,
   publicChatbotMessageHandler,
 } from "./chatbot.controller.js";
-import {
-  publicMessageSchema,
-  byUserIdSchema,
-  byChatbotIdSchema,
-  publicMessageInput,
-  UserIdInput,
-} from "./chatbot.schema.js";
-import { rateLimit } from "../../utils/rateLimit.js";
+import { publicMessageSchema, byUserIdSchema, byChatbotIdSchema } from "./chatbot.schema.js";
 
 export async function chatbotPublicRoute(server: FastifyInstance) {
-  server.post<{ Body: publicMessageInput }>(
+  server.post(
     "/",
     {
-      preHandler: rateLimit({ max: 60, windowSeconds: 60 * 60, key: "publicChatbotMessage" }),
       schema: {
         body: publicMessageSchema,
       },
@@ -25,10 +17,9 @@ export async function chatbotPublicRoute(server: FastifyInstance) {
     publicChatbotMessageHandler,
   );
 
-  server.delete<{ Params: UserIdInput }>(
+  server.delete(
     "/:userId",
     {
-      preHandler: rateLimit({ max: 20, windowSeconds: 60 * 60, key: "publicChatbotHistoryDelete" }),
       schema: {
         params: byUserIdSchema,
       },

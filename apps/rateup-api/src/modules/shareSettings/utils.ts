@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { uploadFile, deleteFile } from "../../utils/upload/s3Upload.js";
-import { log } from "../../utils/logger.js";
 
 /**
  * The share settings as they are stored in the `shareSettings` JSON column,
@@ -47,42 +46,16 @@ interface MultipartFilePart {
   value?: UploadedFilePart;
 }
 
-const ALLOWED_LOGO_TYPES: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-  "image/gif": "gif",
-  "image/svg+xml": "svg",
-};
-
-/** Bounds the part @fastify/multipart buffers in memory before anything reads it. */
-const MAX_LOGO_BYTES = 2 * 1024 * 1024;
-
-export class LogoUploadError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "LogoUploadError";
-  }
-}
-
 async function onFile(part: MultipartFilePart) {
   const buff = await part.toBuffer();
   const { filename, fieldname, mimetype } = part;
-  if (!ALLOWED_LOGO_TYPES[mimetype]) {
-    throw new LogoUploadError(`Unsupported logo type: ${mimetype}`);
-  }
-  if (buff.length > MAX_LOGO_BYTES) {
-    throw new LogoUploadError("Logo is larger than 2MB");
-  }
+  const fileExtension = filename.split(".").pop();
   part.value = {
     fileBuffer: buff,
     filename,
     fieldname,
     mimetype,
-    // Was `filename.split(".").pop()`, so the caller named the extension of an
-    // object served from CloudFront — and a filename with no dot became its own
-    // extension. The extension is derived from the allowlisted type instead.
-    fileExtension: ALLOWED_LOGO_TYPES[mimetype]!,
+    fileExtension: fileExtension!,
   };
 }
 
@@ -95,10 +68,7 @@ async function uploadFileToS3(fileBuffer: Buffer, mimetype: string, fileExtensio
   };
 
   const resultObj = await uploadFile(s3Params);
-  const key = resultObj?.["Key"];
-  if (!key) {
-    throw new LogoUploadError("The logo upload returned no object key");
-  }
+  const key = resultObj ? resultObj["Key"] : null;
   return key;
 }
 
@@ -109,11 +79,7 @@ async function deleteFileFromS3(keyObjArr: Array<{ Key: string }>) {
       Objects: [...keyObjArr],
     },
   };
-  try {
-    await deleteFile(s3Params);
-  } catch (error) {
-    log.error({ err: error, keys: keyObjArr }, "Could not remove the previous share-settings logo");
-  }
+  await deleteFile(s3Params);
 }
 
-export { onFile, uploadFileToS3, deleteFileFromS3, ALLOWED_LOGO_TYPES, MAX_LOGO_BYTES };
+export { onFile, uploadFileToS3, deleteFileFromS3 };

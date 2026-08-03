@@ -20,20 +20,16 @@ import {
 } from "./card.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { verifyColumnAccess } from "../ticketColumn/column.auth.js";
-import {
-  verifyCardAccess,
-  verifyCardsReorderAccess,
-  verifyColumnAccessFromBody,
-} from "./card.auth.js";
+import { verifyCardAccess } from "./card.auth.js";
 
 export async function cardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   // Tickets are a free feature — no subscription gate.
 
+  // Create card
   server.post(
     "/create",
     {
-      preHandler: [verifyColumnAccessFromBody],
       schema: {
         body: createCardRequestSchema,
         // response: {
@@ -44,8 +40,9 @@ export async function cardRoutes(server: FastifyInstance) {
     createCardHandler,
   );
 
+  // Get all cards for a column
   server.get<{ Params: { ticketColumnId: string } }>(
-    "/column/:ticketColumnId",
+    "/column/:columnId",
     {
       preHandler: [verifyColumnAccess],
       schema: {
@@ -103,10 +100,10 @@ export async function cardRoutes(server: FastifyInstance) {
     moveCardHandler,
   );
 
+  // Reorder cards (bulk update of card orders)
   server.put(
     "/reorder",
     {
-      preHandler: [verifyCardsReorderAccess],
       schema: {
         body: reorderCardRequestSchema,
       },

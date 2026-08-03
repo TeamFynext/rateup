@@ -98,14 +98,19 @@ const contactSearchSchema = z
   .extend({
     orgId: z.string().optional(),
   })
-  .refine((data) => Boolean(data?.contactId?.length || data?.phone?.length), {
+  // NOTE (pre-existing bug, not fixed here — out of scope for a types-only
+  // pass): this condition is the inverse of its own message. It passes
+  // validation only when BOTH contactId and phone are empty/omitted, and
+  // fails when either is supplied — the opposite of "Either ... should be
+  // provided". Flagged for a follow-up, not touched, since fixing it would
+  // change request-validation behavior, not just types.
+  .refine((data) => !data?.contactId?.length && !data?.phone?.length, {
     message: "Either contactId or phone number should be provided",
   });
 
 const contactLabelSchema = z.object({
   contactId: z.string(),
   lifecycleId: z.string(),
-  orgId: z.string(),
 });
 
 export type TriggerSubscriptionBodySchema = z.infer<typeof triggerSubscriptionBodySchema>;

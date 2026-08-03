@@ -8,7 +8,6 @@ vi.mock("../../utils/prisma.js", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
-    contact: { count: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -45,7 +44,6 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
   lifecycle: Record<string, Mock>;
-  contact: Record<string, Mock>;
   $transaction: Mock;
 };
 
@@ -78,7 +76,6 @@ beforeEach(() => {
   db.lifecycle.create.mockResolvedValue({ id: STAGE });
   db.lifecycle.update.mockResolvedValue({ id: STAGE });
   db.lifecycle.delete.mockResolvedValue({ id: STAGE });
-  db.contact.count.mockResolvedValue(0);
   db.$transaction.mockImplementation(async (ops: unknown[]) => ops);
 });
 
@@ -140,34 +137,35 @@ describe("the readers", () => {
 // ===========================================================================
 
 describe("updateLifecycle", () => {
-  // The where used to be the bare id, so a stage id was enough for a user of any
-  // organisation to rewrite that stage — reorderLabels in the same file has always
-  // added orgId, with a comment saying why.
-  test("selects the row by id and org together", async () => {
-    await updateLifecycle(STAGE, ORG, body() as never);
+  // NOTE: the where is the bare id. reorderLabels in the same file adds orgId
+  // to its where and comments that it does so deliberately; this one does not.
+  test("selects the row by id alone, with no org condition", async () => {
+    await updateLifecycle(STAGE, body() as never);
 
-    expect(db.lifecycle.update.mock.calls[0][0].where).toEqual({ id: STAGE, orgId: ORG });
+    expect(db.lifecycle.update.mock.calls[0][0].where).toEqual({ id: STAGE });
   });
 
   test("writes the request body through unchanged", async () => {
     const data = body({ isWon: true, isDefault: true, ordering: 9 });
 
-    await updateLifecycle(STAGE, ORG, data as never);
+    await updateLifecycle(STAGE, data as never);
 
     expect(db.lifecycle.update.mock.calls[0][0].data).toEqual(data);
   });
 
-  test("the handler takes the org from the session", async () => {
-    await updateLifecycleHandler(
-      {
-        params: { lifecycleId: STAGE },
-        body: body({ name: "Renamed" }),
-        user: { orgId: ORG },
-      } as never,
-      reply(),
-    );
+  // NOTE: the handler passes request.params.lifecycleId and never touches
+  // request.user, so a stage id from any organisation is accepted as given.
+  test("the handler never consults the session org", async () => {
+    const req: any = {
+      params: { lifecycleId: STAGE },
+      body: body({ name: "Renamed by another tenant" }),
+      get user() {
+        throw new Error("request.user was read");
+      },
+    };
 
-    expect(db.lifecycle.update.mock.calls[0][0].where).toEqual({ id: STAGE, orgId: ORG });
+    await expect(updateLifecycleHandler(req, reply())).resolves.toBeUndefined();
+    expect(db.lifecycle.update.mock.calls[0][0].where).toEqual({ id: STAGE });
   });
 
   // NOTE: isWon is what conversions.service.ts:38 reads to decide whether a
@@ -203,10 +201,10 @@ describe("updateLifecycle", () => {
     expect(answer(rep)).toEqual({ code: 409, body: { message: "Lifecycle already exists" } });
   });
 
-  // P2025 is what a missing row raises — and, now that the where carries the org,
-  // also what a stage belonging to another org raises. It used to fall through to
-  // the generic 500.
-  test("a missing or foreign stage answers 404", async () => {
+  // NOTE: P2025 is what a missing row actually raises, and it falls through to
+  // the generic 500 — so updating a stage that does not exist reads as an
+  // outage rather than a 404.
+  test("a missing row answers 500 rather than 404", async () => {
     db.lifecycle.update.mockRejectedValueOnce(
       Object.assign(new Error("Record to update not found"), { code: "P2025" }),
     );
@@ -217,13 +215,12 @@ describe("updateLifecycle", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Lifecycle not found" } });
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Error updating lifecycle " } });
   });
 
-  // The service used to await the update and return nothing, so the handler sent
-  // undefined and the caller learned only that it had not failed.
-  test("answers 200 with the updated row", async () => {
-    db.lifecycle.update.mockResolvedValueOnce({ id: STAGE, name: "Engaged Lead" });
+  // NOTE: the service awaits the update and returns nothing, so the handler
+  // sends undefined — the caller learns only that it did not fail.
+  test("answers 200 with an empty body", async () => {
     const rep = reply();
 
     await updateLifecycleHandler(
@@ -231,7 +228,7 @@ describe("updateLifecycle", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 200, body: { id: STAGE, name: "Engaged Lead" } });
+    expect(answer(rep)).toEqual({ code: 200, body: undefined });
   });
 });
 
@@ -240,75 +237,52 @@ describe("updateLifecycle", () => {
 // ===========================================================================
 
 describe("deleteLifecycleById", () => {
-  // The delete used to be by bare id — any org's stage, by id.
-  test("deletes by id and org together", async () => {
-    await deleteLifecycleById(STAGE, ORG);
+  test("deletes by id alone, with no org condition", async () => {
+    await deleteLifecycleById(STAGE);
 
-    expect(db.lifecycle.delete.mock.calls[0][0]).toEqual({ where: { id: STAGE, orgId: ORG } });
+    expect(db.lifecycle.delete.mock.calls[0][0]).toEqual({ where: { id: STAGE } });
   });
 
-  test("the handler takes the org from the session", async () => {
-    await deleteLifecycleByIdHandler(
-      { params: { lifecycleId: STAGE }, user: { orgId: ORG } } as never,
-      reply(),
-    );
+  test("the handler passes the path id straight through", async () => {
+    const req: any = {
+      params: { lifecycleId: STAGE },
+      get user() {
+        throw new Error("request.user was read");
+      },
+    };
 
-    expect(db.lifecycle.delete).toHaveBeenCalledWith({ where: { id: STAGE, orgId: ORG } });
+    await expect(deleteLifecycleByIdHandler(req, reply())).resolves.toBeUndefined();
+    expect(db.lifecycle.delete).toHaveBeenCalledWith({ where: { id: STAGE } });
   });
 
-  // Contact.lifecycleId is optional with no onDelete declared, so Prisma's default
-  // for an optional relation is SetNull — the delete used to succeed and silently
-  // unassign every contact in the stage, with nothing storing what they had been in.
-  // It is refused while the stage still holds contacts.
-  test("refuses while contacts still reference the stage", async () => {
-    db.contact.count.mockResolvedValueOnce(4);
+  // NOTE: Contact.lifecycleId is optional with no onDelete declared
+  // (prisma/schema.prisma:876-877), so Prisma's default for an optional
+  // relation is SetNull — the delete succeeds and every contact in the stage
+  // is silently unassigned rather than the delete being refused.
+  test("nothing checks whether contacts still reference the stage", async () => {
+    await deleteLifecycleById(STAGE);
 
-    await expect(deleteLifecycleById(STAGE, ORG)).rejects.toThrow(/still holds 4 contact/);
-    expect(db.lifecycle.delete).not.toHaveBeenCalled();
+    expect(db.lifecycle.findMany).not.toHaveBeenCalled();
+    expect(db.lifecycle.delete).toHaveBeenCalledOnce();
   });
 
-  test("counts only the caller's own org's contacts in that stage", async () => {
-    await deleteLifecycleById(STAGE, ORG);
-
-    expect(db.contact.count).toHaveBeenCalledWith({ where: { lifecycleId: STAGE, orgId: ORG } });
-  });
-
-  test("the handler answers 409 for a stage that still holds contacts", async () => {
-    db.contact.count.mockResolvedValueOnce(2);
-    const rep = reply();
-
-    await deleteLifecycleByIdHandler(
-      { params: { lifecycleId: STAGE }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(409);
-  });
-
-  test("a missing or foreign stage answers 404", async () => {
+  test("a missing row answers 500 rather than 404", async () => {
     db.lifecycle.delete.mockRejectedValueOnce(
       Object.assign(new Error("Record to delete does not exist"), { code: "P2025" }),
     );
     const rep = reply();
 
-    await deleteLifecycleByIdHandler(
-      { params: { lifecycleId: STAGE }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    await deleteLifecycleByIdHandler({ params: { lifecycleId: STAGE } } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Lifecycle not found" } });
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Error deleting lifecycle" } });
   });
 
-  test("answers 200 with the deleted row", async () => {
-    db.lifecycle.delete.mockResolvedValueOnce({ id: STAGE });
+  test("answers 200 with an empty body", async () => {
     const rep = reply();
 
-    await deleteLifecycleByIdHandler(
-      { params: { lifecycleId: STAGE }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    await deleteLifecycleByIdHandler({ params: { lifecycleId: STAGE } } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 200, body: { id: STAGE } });
+    expect(answer(rep)).toEqual({ code: 200, body: undefined });
   });
 });
 
@@ -345,22 +319,17 @@ describe("createLifecycle", () => {
     expect(db.lifecycle.create.mock.calls[0][0].data.orgId).toBe(ORG);
   });
 
-  // The service used to return nothing, so a successful create answered 200 with an
-  // empty body and the caller could not learn the new stage's id.
-  test("answers 201 with the created row", async () => {
+  // NOTE: the service returns nothing, so a successful create answers 200 with
+  // an empty body. The caller cannot learn the id of the stage it just made.
+  test("answers 200 with no id and no 201", async () => {
     db.lifecycle.create.mockResolvedValueOnce({ id: STAGE, name: "Engaged Lead" });
     const rep = reply();
 
     await createLifecycleHandler({ user: { orgId: ORG }, body: body() } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 201, body: { id: STAGE, name: "Engaged Lead" } });
+    expect(answer(rep)).toEqual({ code: 200, body: undefined });
   });
 
-  // NOTE: STILL OPEN. The Lifecycle model declares no @@unique, so Prisma cannot
-  // raise P2002 for it and this branch is unreachable — two stages of the same name
-  // in one org are created without complaint. Adding @@unique([orgId, name]) is a
-  // schema change against live data that may already hold duplicates, so it is left
-  // for an explicit decision.
   test("the unreachable 409 branch is duplicated here too", async () => {
     db.lifecycle.create.mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }));
     const rep = reply();
@@ -385,41 +354,47 @@ describe("createLifecycle", () => {
 // ===========================================================================
 
 describe("lifecycleBodySchema", () => {
-  // Lifecycle.emoji and Lifecycle.description are non-null String columns with no
-  // default, and both used to be .optional() here — so a body the schema accepted
-  // reached Prisma missing two required columns and failed as a generic 500.
-  test("rejects a body with no emoji and no description", () => {
+  // NOTE: Lifecycle.emoji and Lifecycle.description are non-null String columns
+  // with no default (prisma/schema.prisma:273-274), but both are .optional()
+  // here — so a body this schema accepts cannot be written.
+  test("accepts a body with no emoji and no description", () => {
     const parsed = lifecycleBodySchema.safeParse({
       name: "Engaged Lead",
       category: "active",
       color: null,
-    });
-
-    expect(parsed.success).toBe(false);
-  });
-
-  test("accepts one that carries both", () => {
-    const parsed = lifecycleBodySchema.safeParse({
-      name: "Engaged Lead",
-      category: "active",
-      color: null,
-      emoji: "🔥",
-      description: "Warm",
     });
 
     expect(parsed.success).toBe(true);
+    expect((parsed as any).data.emoji).toBeUndefined();
+    expect((parsed as any).data.description).toBeUndefined();
   });
 
-  // color is nullable in the database, and used to be the one field a caller had to
-  // send — the inverse of the two the database actually requires.
-  test("no longer requires color, which the database does not", () => {
+  test("that body reaches Prisma with both columns absent", async () => {
+    await createLifecycle(ORG, { name: "Engaged Lead", category: "active", color: null } as never);
+
+    const data = db.lifecycle.create.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty("emoji");
+    expect(data).not.toHaveProperty("description");
+  });
+
+  test("and the resulting failure is reported as a generic 500", async () => {
+    db.lifecycle.create.mockRejectedValueOnce(new Error("Argument `emoji` is missing" as string));
+    const rep = reply();
+
+    await createLifecycleHandler(
+      { user: { orgId: ORG }, body: { name: "x", category: "active", color: null } } as never,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Error creating lifecycle" } });
+  });
+
+  // NOTE: color is .nullable() but not .optional(), so it is the one field a
+  // caller must always send — the inverse of the two the database requires.
+  test("requires color while the database does not", () => {
+    expect(lifecycleBodySchema.safeParse({ name: "x", category: "active" }).success).toBe(false);
     expect(
-      lifecycleBodySchema.safeParse({
-        name: "x",
-        category: "active",
-        emoji: "🔥",
-        description: "d",
-      }).success,
+      lifecycleBodySchema.safeParse({ name: "x", category: "active", color: null }).success,
     ).toBe(true);
   });
 
@@ -477,11 +452,11 @@ describe("reorderLabels", () => {
     expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.ordering)).toEqual([2, 5]);
   });
 
-  // isDefault used to be `ordering === 0`, while the seeder writes the starting
-  // stages one-based — so a client sending back the orderings it was given cleared
-  // isDefault on every stage, and nothing else in the product can set it back. The
-  // first entry of the list is the default now, whatever numbering is used.
-  test("marks the first entry default whatever numbering the client uses", async () => {
+  // NOTE: the seeder writes 1-based orderings — the five default stages are
+  // 1,1,2,3,4 and "New Lead" is the default at ordering 1 (update.controller.ts
+  // :140-195). This derives isDefault from `ordering === 0`, so the first
+  // reorder of a freshly seeded org clears isDefault on every stage.
+  test("makes nothing default when the orderings are one-based", async () => {
     await reorderLabels(ORG, {
       lifecycles: [
         item({ id: "a", ordering: 1 }),
@@ -490,14 +465,10 @@ describe("reorderLabels", () => {
       ],
     } as never);
 
-    expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.isDefault)).toEqual([
-      true,
-      false,
-      false,
-    ]);
+    expect(db.lifecycle.update.mock.calls.every((c) => c[0].data.isDefault === false)).toBe(true);
   });
 
-  test("zero-based orderings behave the same way", async () => {
+  test("only position zero is treated as the default", async () => {
     await reorderLabels(ORG, {
       lifecycles: [item({ id: "a", ordering: 0 }), item({ id: "b", ordering: 1 })],
     } as never);
@@ -505,21 +476,22 @@ describe("reorderLabels", () => {
     expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.isDefault)).toEqual([true, false]);
   });
 
-  // Duplicate orderings used to make two stages default at once.
-  test("exactly one stage is default even when orderings are duplicated", async () => {
+  // NOTE: nothing rejects two entries claiming the same position, so a client
+  // that sends duplicates makes two stages default at once.
+  test("two entries at position zero both become default", async () => {
     await reorderLabels(ORG, {
       lifecycles: [item({ id: "a", ordering: 0 }), item({ id: "b", ordering: 0 })],
     } as never);
 
-    expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.isDefault)).toEqual([true, false]);
+    expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.isDefault)).toEqual([true, true]);
   });
 
-  test("a lost stage is never made default, even first in the list", async () => {
+  test("a lost stage at position zero is never made default", async () => {
     await reorderLabels(ORG, {
-      lifecycles: [item({ id: "a", ordering: 0, category: "lost" }), item({ id: "b" })],
+      lifecycles: [item({ id: "a", ordering: 0, category: "lost" })],
     } as never);
 
-    expect(db.lifecycle.update.mock.calls.map((c) => c[0].data.isDefault)).toEqual([false, true]);
+    expect(db.lifecycle.update.mock.calls[0][0].data.isDefault).toBe(false);
   });
 
   // NOTE: the client's category is honoured only when it is "lost"; otherwise

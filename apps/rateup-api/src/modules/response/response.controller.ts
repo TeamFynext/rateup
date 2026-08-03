@@ -79,6 +79,7 @@ export async function getAllResponsesHandler(
     const surveyId = request.params.surveyId;
     const teamIds = await getTeamIdsByUserId(request.userId);
     const responses = await getAllResponses(surveyId, teamIds);
+    if (responses.length === 0) reply.code(404).send({ message: "No responses found" });
     reply.code(200).send(responses);
   } catch (e) {
     console.error(e);
@@ -123,7 +124,7 @@ export async function downloadExcelResponseHandler(
   try {
     const teamIds =
       request.body.filterTeams?.length > 0
-        ? await getTeamIdsBySurveyMapId(request.body.filterTeams, request.userId)
+        ? await getTeamIdsBySurveyMapId(request.body.filterTeams)
         : await getTeamIdsByUserId(request.userId);
     const campaignParticipantIds = await prisma.campaignParticipant.findMany({
       where: {
@@ -145,7 +146,7 @@ export async function downloadExcelResponseHandler(
 
     let question;
     if (request.body.dbFlowId) {
-      let flow = await getFlowFromDb(request.body.dbFlowId, request.user.orgId);
+      let flow = await getFlowFromDb(request.body.dbFlowId);
       // WaFlowScreen.layout.children is declared as WaFlowForm[], but at runtime (for the
       // flattened question list used here) these are actually flow form elements — same
       // dynamic-shape cast pattern used for this exact "flow screens -> questions" flattening
@@ -219,8 +220,8 @@ export async function deleteResponseHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { id, surveyTeamMapId } = request.params;
-    const deleteRes = await deleteResponse(id, surveyTeamMapId);
+    const id = request.params.id;
+    const deleteRes = await deleteResponse(id);
     reply.code(201).send({ success: true, data: deleteRes });
   } catch (e) {
     console.error(e);
@@ -269,7 +270,7 @@ export async function createResponseHandler(
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
-      const sideEffects = await Promise.allSettled([
+      await Promise.all([
         saveResponseToGoogleSheet({
           surveyTeamMapId,
           responses,
@@ -288,14 +289,6 @@ export async function createResponseHandler(
           response.surveyTeamMap.team.orgId,
         ),
       ]);
-      for (const [index, result] of sideEffects.entries()) {
-        if (result.status === "rejected") {
-          log.error(
-            { err: result.reason, responseId: response.id, index },
-            "Post-response side effect failed",
-          );
-        }
-      }
     }
   } catch (e) {
     console.error(e);
@@ -335,7 +328,7 @@ export async function syncResponseToGoogleSheetHandler(
     if (e instanceof PrismaClientKnownRequestError) reply.code(400).send("Survey Not Found");
     else if (axios.isAxiosError(e) && e.response?.data?.error)
       reply.code(500).send({ error: e.response.data.error });
-    else reply.code(500).send({ message: "Something went wrong" });
+    else reply.code(500).send(e);
   }
 }
 

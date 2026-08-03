@@ -62,13 +62,6 @@ export async function createReviewSuggestionsHandler(
   reply.send(reviews);
 }
 
-function refuse(reply: FastifyReply, access: "not-found" | "forbidden") {
-  if (access === "not-found") {
-    return reply.code(404).send({ message: "Review suggestion not found" });
-  }
-  return reply.code(403).send({ message: "You don't have access to this review suggestion" });
-}
-
 export async function updateReviewSuggestionHandler(
   request: FastifyRequest<{
     Params: byReviewSuggestionIdSchema;
@@ -77,9 +70,10 @@ export async function updateReviewSuggestionHandler(
   reply: FastifyReply,
 ) {
   const { reviewSuggestionId } = request.params;
-  const access = await hasAccessToReview(request.userId, reviewSuggestionId);
-  if (access !== "allowed") return refuse(reply, access);
-
+  if (!(await hasAccessToReview(request.userId, reviewSuggestionId))) {
+    reply.code(403);
+    return;
+  }
   const updatedReview = await updateReviewSuggestion(reviewSuggestionId, request.body);
   reply.send(updatedReview);
 }
@@ -89,9 +83,6 @@ export async function deleteReviewSuggestionHandler(
   reply: FastifyReply,
 ) {
   const { reviewSuggestionId } = request.params;
-  const access = await hasAccessToReview(request.userId, reviewSuggestionId);
-  if (access !== "allowed") return refuse(reply, access);
-
   const reviews = await deleteReviewSuggestion(reviewSuggestionId);
   reply.send(reviews);
 }

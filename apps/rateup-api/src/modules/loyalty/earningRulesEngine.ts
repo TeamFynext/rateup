@@ -3,21 +3,14 @@
  * Handles calculation of points based on multiple conditional earning rules
  */
 
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc.js";
 import prisma from "../../utils/prisma.js";
-import { randomCode } from "../../utils/misc/random.utils.js";
-import type { LoyaltyTier, Prisma } from "../../../generated/prisma/client.js";
+import type { LoyaltyTier } from "../../../generated/prisma/client.js";
 import {
   EarningContext,
   PointsCalculationResult,
   LoyaltyEarningRuleConditions,
   DayOfWeek,
 } from "../../types/loyalty.js";
-
-dayjs.extend(utc);
-
-type Db = Prisma.TransactionClient | typeof prisma;
 
 export class EarningRulesEngine {
   /**
@@ -28,7 +21,6 @@ export class EarningRulesEngine {
     customerId: string,
     purchaseAmount: number,
     context: EarningContext,
-    db: Db = prisma,
   ): Promise<PointsCalculationResult> {
     // 1. Get all active earning rules for the program (ordered by priority DESC)
     const rules = await prisma.loyaltyEarningRule.findMany({
@@ -91,8 +83,9 @@ export class EarningRulesEngine {
         continue;
       }
 
-      if (rule.applicableToTiers && rule.applicableToTiers.length > 0) {
-        if (!customer.currentTierId || !rule.applicableToTiers.includes(customer.currentTierId)) {
+      // Check tier eligibility
+      if (rule.applicableToTiers && rule.applicableToTiers.length > 0 && customer.currentTierId) {
+        if (!rule.applicableToTiers.includes(customer.currentTierId)) {
           continue;
         }
       }
@@ -129,6 +122,16 @@ export class EarningRulesEngine {
       break;
     }
 
+    // 4. Fallback to default rule if no match
+    if (!matchedRule) {
+      matchedRule = await prisma.loyaltyEarningRule.findFirst({
+        where: {
+          programId,
+          isDefault: true,
+        },
+      });
+    }
+
     if (!matchedRule) {
       throw new Error("No earning rule found for this program");
     }
@@ -139,24 +142,15 @@ export class EarningRulesEngine {
     const bonusAdded = ruleMultiplied + (matchedRule.bonusPoints || 0);
     const finalPoints = Math.floor(bonusAdded * Number(tierMultiplier));
 
-    if (finalPoints > 0) {
-      const capped = matchedRule.maxTotalUses
-        ? { currentTotalUses: { lt: matchedRule.maxTotalUses } }
-        : {};
-
-      const { count } = await db.loyaltyEarningRule.updateMany({
-        where: { id: matchedRule.id, ...capped },
-        data: {
-          currentTotalUses: {
-            increment: 1,
-          },
+    // 6. Update rule usage counter
+    await prisma.loyaltyEarningRule.update({
+      where: { id: matchedRule.id },
+      data: {
+        currentTotalUses: {
+          increment: 1,
         },
-      });
-
-      if (count === 0) {
-        throw new Error("This earning rule has reached its usage limit");
-      }
-    }
+      },
+    });
 
     return {
       points: finalPoints,
@@ -249,14 +243,14 @@ export class EarningRulesEngine {
       DayOfWeek.FRIDAY,
       DayOfWeek.SATURDAY,
     ];
-    return days[date.getUTCDay()];
+    return days[date.getDay()];
   }
 
   /**
-   * Get time string in HH:mm format, in UTC
+   * Get time string in HH:mm format
    */
   private getTimeString(date: Date): string {
-    return dayjs.utc(date).format("HH:mm");
+    return date.toTimeString().slice(0, 5);
   }
 
   /**
@@ -265,7 +259,7 @@ export class EarningRulesEngine {
   async checkAndUpgradeTier(
     customerId: string,
     totalSpend: number,
-  ): Promise<{ upgraded: boolean; direction: TierMoveDirection; newTier?: LoyaltyTier }> {
+  ): Promise<{ upgraded: boolean; newTier?: LoyaltyTier }> {
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
       include: {
@@ -283,7 +277,7 @@ export class EarningRulesEngine {
     });
 
     if (!customer?.program.tiersEnabled) {
-      return { upgraded: false, direction: "none" };
+      return { upgraded: false };
     }
 
     // Find the highest tier that the customer qualifies for
@@ -292,20 +286,15 @@ export class EarningRulesEngine {
     );
 
     if (!qualifiedTier) {
-      return { upgraded: false, direction: "none" };
+      return { upgraded: false };
     }
 
     // Check if it's a different tier
     if (customer.currentTierId === qualifiedTier.id) {
-      return { upgraded: false, direction: "none" };
+      return { upgraded: false };
     }
 
-    const direction: TierMoveDirection = !customer.currentTier
-      ? "up"
-      : Number(qualifiedTier.threshold) > Number(customer.currentTier.threshold)
-        ? "up"
-        : "down";
-
+    // Upgrade the customer
     await prisma.customerLoyaltyAccount.update({
       where: { id: customerId },
       data: {
@@ -313,31 +302,20 @@ export class EarningRulesEngine {
       },
     });
 
-    return { upgraded: direction === "up", direction, newTier: qualifiedTier };
+    return { upgraded: true, newTier: qualifiedTier };
   }
 
-  async generateReferralCode(customerName: string, _customerPhone: string): Promise<string> {
+  /**
+   * Generate a unique referral code for a customer
+   */
+  generateReferralCode(customerName: string, _customerPhone: string): string {
     const namePart = customerName
       ? customerName.substring(0, 6).toUpperCase().replace(/\s/g, "")
       : "USER";
-
-    for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
-      const candidate = `${namePart}-${randomCode(10)}`;
-      const existing = await prisma.customerLoyaltyAccount.findUnique({
-        where: { referralCode: candidate },
-        select: { id: true },
-      });
-      if (!existing) return candidate;
-    }
-
-    throw new Error("Could not generate a unique referral code");
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${namePart}-${randomPart}`;
   }
 }
-
-export type TierMoveDirection = "up" | "down" | "none";
-
-/** How many times to redraw a referral code before giving up. */
-const CODE_ATTEMPTS = 5;
 
 export const earningRulesEngine = new EarningRulesEngine();
 

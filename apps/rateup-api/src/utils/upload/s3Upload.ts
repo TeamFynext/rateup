@@ -19,24 +19,38 @@ export const s3 =
     : new S3Client({ region: process.env.AWS_S3_REGION });
 
 export async function uploadFile(params: PutObjectCommandInput) {
-  const parallelUploads3 = new Upload({
-    client: s3,
-    params: params,
+  try {
+    const parallelUploads3 = new Upload({
+      client: s3,
+      params: params,
 
-    tags: [
-      /*...*/
-    ], // optional tags
-    queueSize: 4, // optional concurrency configuration
-    partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
-    leavePartsOnError: false, // optional manually handle dropped parts
-  });
+      tags: [
+        /*...*/
+      ], // optional tags
+      queueSize: 4, // optional concurrency configuration
+      partSize: 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
+      leavePartsOnError: false, // optional manually handle dropped parts
+    });
 
-  return await parallelUploads3.done();
+    parallelUploads3.on("httpUploadProgress", (progress) => {
+      console.log(progress);
+    });
+
+    const dataObj = await parallelUploads3.done();
+    return dataObj;
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 export async function deleteFile(params: DeleteObjectsCommandInput) {
   const command = new DeleteObjectsCommand(params);
-  return await s3.send(command);
+  try {
+    const response = await s3.send(command);
+    return response;
+  } catch (err) {
+    return err;
+  }
 }
 
 export const getAWSObject = async (key: string) => {

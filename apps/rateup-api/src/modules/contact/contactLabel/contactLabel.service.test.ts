@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
-    contact: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
+    contact: { findUnique: vi.fn(), findMany: vi.fn() },
     contactLabel: {
       create: vi.fn(),
       findMany: vi.fn(),
@@ -38,11 +38,8 @@ const ORG = "11111111-1111-4111-8111-111111111111";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Both assigners resolve the contact against the caller's org before touching
-  // anything.
-  db.contact.findFirst.mockResolvedValue({ id: "c1" });
   db.contact.findUnique.mockResolvedValue(null);
-  db.contact.findMany.mockResolvedValue([{ id: "c1" }, { id: "c2" }]);
+  db.contact.findMany.mockResolvedValue([]);
   db.contactLabel.findMany.mockResolvedValue([]);
   db.contactLabel.findFirst.mockResolvedValue(null);
 });
@@ -138,33 +135,26 @@ describe("assignLabelsToContact", () => {
     expect(db.contactLabelMap.createMany).not.toHaveBeenCalled();
   });
 
-  // The labels were validated against the org but the CONTACT was not, and the
-  // delete ran first and unconditionally — so a contact id from another org had
-  // its labels wiped before the function discovered it could not read it back, and
-  // the caller got a 404 for their trouble. Destructive, silent, not undoable.
-  test("touches nothing for a contact belonging to another org", async () => {
-    db.contact.findFirst.mockResolvedValue(null);
+  // NOTE: the labels are validated against the org but the *contact* is not. The
+  // delete runs first and unconditionally, so a contact id from another org has
+  // its labels wiped before the function discovers it cannot read it back.
+  // See issues.txt 18.32.
+  test("wipes the labels of a contact it cannot even read back", async () => {
+    db.contact.findUnique.mockResolvedValue(null);
 
     const res = await assignLabelsToContact("c-other-org", [], ORG);
 
-    expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
-    expect(db.contactLabelMap.createMany).not.toHaveBeenCalled();
+    expect(db.contactLabelMap.deleteMany).toHaveBeenCalledWith({
+      where: { contactId: "c-other-org" },
+    });
     expect(res).toBeNull();
   });
 
-  test("resolves the contact against the caller's org first", async () => {
-    await assignLabelsToContact("c1", [], ORG);
-
-    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({ id: "c1", orgId: ORG });
-  });
-
   test("returns the contact with its new labels attached", async () => {
-    db.contact.findFirst
-      .mockResolvedValueOnce({ id: "c1" })
-      .mockResolvedValueOnce({ id: "c1", ContactLabelMap: [] });
+    db.contact.findUnique.mockResolvedValue({ id: "c1", ContactLabelMap: [] });
 
     expect(await assignLabelsToContact("c1", [], ORG)).toEqual({ id: "c1", ContactLabelMap: [] });
-    expect(db.contact.findFirst.mock.calls[1][0].where).toEqual({ id: "c1", orgId: ORG });
+    expect(db.contact.findUnique.mock.calls[0][0].where).toEqual({ id: "c1" });
   });
 });
 
@@ -207,56 +197,22 @@ describe("assignLabelsToContacts", () => {
     expect(db.contactLabelMap.createMany).not.toHaveBeenCalled();
   });
 
-  // The sharper half of 18.32: this takes an ARRAY, so one request could strip the
-  // labels off an arbitrary list of contacts across any number of orgs.
-  test("touches nothing for contacts belonging to another org", async () => {
-    db.contact.findMany.mockResolvedValue([]);
-
+  // NOTE: same gap as the single-contact version, but bulk — the contact ids are
+  // never checked against the org and the delete is unconditional, so one request
+  // can strip the labels off any list of contacts in any org.
+  // See issues.txt 18.32.
+  test("clears the labels of contacts from any org", async () => {
     await assignLabelsToContacts(["c-other-org"], [], ORG);
 
-    expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
-  });
-
-  test("acts only on the ids the caller's org actually owns", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
-    db.contactLabel.findMany.mockResolvedValue([{ id: "l1" }]);
-
-    await assignLabelsToContacts(["c1", "c-other-org"], ["l1"], ORG);
-
-    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
-      id: { in: ["c1", "c-other-org"] },
-      orgId: ORG,
-    });
     expect(db.contactLabelMap.deleteMany).toHaveBeenCalledWith({
-      where: { contactId: { in: ["c1"] } },
-    });
-    expect(db.contactLabelMap.createMany.mock.calls[0][0].data).toEqual([
-      { contactId: "c1", labelId: "l1" },
-    ]);
-  });
-
-  // It returned nothing, so the handler that sends its result always answered with
-  // an empty body — the caller could not tell which contacts were updated or
-  // whether any id was rejected.
-  test("reports what it did", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
-    db.contactLabel.findMany.mockResolvedValue([{ id: "l1" }]);
-
-    await expect(assignLabelsToContacts(["c1", "c-other-org"], ["l1"], ORG)).resolves.toEqual({
-      updated: 1,
-      skipped: 1,
-      labelsApplied: 1,
+      where: { contactId: { in: ["c-other-org"] } },
     });
   });
 
-  test("reports a clear with no labels applied", async () => {
-    db.contact.findMany.mockResolvedValue([{ id: "c1" }]);
-
-    await expect(assignLabelsToContacts(["c1"], [], ORG)).resolves.toEqual({
-      updated: 1,
-      skipped: 0,
-      labelsApplied: 0,
-    });
+  // NOTE: it returns nothing, so the handler that sends its result always
+  // answers with an empty body. See issues.txt 18.33.
+  test("returns nothing at all", async () => {
+    expect(await assignLabelsToContacts(["c1"], [], ORG)).toBeUndefined();
   });
 });
 

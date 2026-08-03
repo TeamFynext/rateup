@@ -11,7 +11,6 @@ import {
 } from "./chatbot.schema.js";
 import {
   AI_API_URL,
-  AiAllowanceError,
   createChatbot,
   deleteChatbotFromDatabase,
   deleteChatHistory,
@@ -32,18 +31,6 @@ import {
 import { createJWT } from "../../utils/jwt.js";
 import axios from "axios";
 import { log } from "../../utils/logger.js";
-import { ChatbotPublicPageStatus } from "../../types/enums.js";
-
-/**
- * Prisma raises P2025 when an extended `where` matched nothing — which, on this
- * module's writes, means the chatbot is either gone or another org's. Both answer
- * 404, so one is indistinguishable from the other.
- */
-function isRecordNotFound(error: unknown): boolean {
-  return (
-    Boolean(error) && typeof error === "object" && (error as { code?: string }).code === "P2025"
-  );
-}
 
 export async function uploadSourceForEmbedHandler(
   request: FastifyRequest<{
@@ -54,7 +41,7 @@ export async function uploadSourceForEmbedHandler(
   try {
     const jwtToken = await createJWT(request.user);
     const res = await uploadSourceForEmbed(request.body, jwtToken);
-    reply.code(200).send(res.data);
+    reply.code(200).send(res);
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "Something went wrong" });
@@ -71,10 +58,6 @@ export async function uploadFileForAIEmbedHandler(request: FastifyRequest, reply
     const parts = request.parts();
     for await (const part of parts) {
       if (part.type === "file") {
-        if (filePart) {
-          reply.code(400).send({ message: "Only one file may be uploaded at a time." });
-          return;
-        }
         filePart = part;
 
         if (!["application/pdf", "application/epub+zip"].includes(part.mimetype)) {
@@ -121,20 +104,10 @@ export async function chatbotMessageHandler(
     const orgId = request.user.orgId;
     const chatbotId = request.body.chatbotId;
     const { query } = request.body;
-    const chatbot = await getChatbotDetails(orgId, chatbotId);
-    if (!chatbot) {
-      reply.code(404).send({ message: "Chatbot not found" });
-      return;
-    }
     const jwtToken = await createJWT(request.user);
     const res = await getAIResponseForQuery({ query, userId, orgId, chatbotId }, jwtToken);
     reply.code(200).send({ message: res });
   } catch (e) {
-    if (e instanceof AiAllowanceError) {
-      log.error(e);
-      reply.code(403).send({ message: e.message });
-      return;
-    }
     console.log(e);
     reply.code(500).send({ message: "Something went wrong!" });
   }
@@ -153,18 +126,9 @@ export async function publicChatbotMessageHandler(
       reply.code(404).send({ message: "Chatbot not found" });
       return;
     }
-    if (chatbot.publicPageStatus !== ChatbotPublicPageStatus.ACTIVE) {
-      reply.code(403).send({ message: "This chatbot's public page is not active" });
-      return;
-    }
     const res = await getPublicAIResponseForQuery({ query, orgId: chatbot.orgId, userId });
     reply.code(200).send({ message: res });
   } catch (e) {
-    if (e instanceof AiAllowanceError) {
-      log.error(e);
-      reply.code(403).send({ message: "This chatbot is unavailable" });
-      return;
-    }
     console.log(e);
     reply.code(500).send({ message: "Something went wrong!" });
   }
@@ -177,12 +141,8 @@ export async function getUploadedSourceHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { chatbotId } = request.query;
-    if (chatbotId && !(await getChatbotDetails(request.user.orgId, chatbotId))) {
-      reply.code(404).send({ message: "Chatbot not found" });
-      return;
-    }
     const jwtToken = await createJWT(request.user);
+    const { chatbotId } = request.query;
 
     const uploadedSources = await getUploadedSources(jwtToken, chatbotId);
     reply.code(200).send(uploadedSources);
@@ -213,7 +173,7 @@ export async function deleteManyEmbeddedSourcesHandler(
   try {
     const jwtToken = await createJWT(request.user);
     const res = await deleteManyEmbeddedSource(request.body, jwtToken);
-    reply.code(200).send(res.data);
+    reply.code(200).send(res);
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "something went wrong" });
@@ -224,7 +184,7 @@ export async function deleteChatHistoryHandler(request: FastifyRequest, reply: F
   try {
     const jwtToken = await createJWT(request.user);
     const res = await deleteChatHistory(jwtToken);
-    reply.code(200).send(res.data);
+    reply.code(200).send(res);
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "something went wrong" });
@@ -237,7 +197,7 @@ export async function deletePublicChatHistoryHandler(
 ) {
   try {
     const res = await deletePublicChatHistory(request.params.userId);
-    reply.code(200).send(res.data);
+    reply.code(200).send(res);
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "something went wrong" });
@@ -310,27 +270,28 @@ export async function updateChatbotDetailsHanlder(
     const { orgId } = request.user;
     const { chatbotId } = request.params;
     const res = await updateChatbotDetails(request.body, orgId, chatbotId);
-    reply.code(200).send(res);
+    reply.code(201).send(res);
   } catch (error) {
-    if (isRecordNotFound(error)) {
-      reply.code(404).send({ message: "Chatbot not found" });
-      return;
-    }
     console.error(error);
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
 
 export async function getAxiosAIClient(request: FastifyRequest) {
-  const jwtToken = await createJWT(request.user);
-  return axios.create({
-    baseURL: AI_API_URL,
-    timeout: 60000,
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${jwtToken}`,
-    },
-  });
+  try {
+    const jwtToken = await createJWT(request.user);
+    const axiosAIClient = axios.create({
+      baseURL: AI_API_URL,
+      timeout: 60000,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
+    return axiosAIClient;
+  } catch (e) {
+    console.error("Error getting axios ai client", e);
+  }
 }
 
 export async function getChatHitoryByOrgHandler(
@@ -338,18 +299,17 @@ export async function getChatHitoryByOrgHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const { chatbotId } = request.params;
-    if (!(await getChatbotDetails(orgId, chatbotId))) {
-      reply.code(404).send({ message: "Chatbot not found" });
+    const axiosAIClient = await getAxiosAIClient(request);
+    if (!axiosAIClient) {
+      reply.code(500).send({ message: "Unable to initialize AI client" });
       return;
     }
-    const axiosAIClient = await getAxiosAIClient(request);
-    const res = await getChatBotHistory(axiosAIClient, orgId, chatbotId);
+    const { chatbotId } = request.params;
+    const res = await getChatBotHistory(axiosAIClient, chatbotId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: "Something went wrong" });
+    reply.code(500).send(e);
   }
 }
 
@@ -360,17 +320,8 @@ export async function deleteSelectedChatbotHandler(
   const { orgId } = request.user;
   const { chatbotId } = request.params;
 
-  try {
-    await deleteChatbotFromDatabase({ chatbotId, orgId });
-  } catch (error) {
-    if (isRecordNotFound(error)) {
-      reply.code(404).send({ message: "Chatbot not found" });
-      return;
-    }
-    log.error(error);
-    reply.code(500).send({ message: "Something went wrong" });
-    return;
-  }
+  // perform deletion logic here
+  await deleteChatbotFromDatabase({ chatbotId, orgId });
 
-  reply.code(200).send({ success: true });
+  reply.send({ success: true });
 }

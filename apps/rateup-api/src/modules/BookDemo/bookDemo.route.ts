@@ -1,30 +1,20 @@
 import { FastifyInstance } from "fastify";
 import { bookDemoHandler, partnerDataHandler } from "./bookDemo.controller.js";
-import {
-  createBookDemoInputSchema,
-  createPartnerDataInputSchema,
-  type CreateBookDemoInput,
-  type CreatePartnerDataInput,
-} from "./bookDemo.schema.js";
-import { rateLimit } from "../../utils/rateLimit.js";
-
-const publicFormLimit = { max: 5, windowSeconds: 60 * 60 };
+import { createBookDemoInputSchema, createPartnerDataInputSchema } from "./bookDemo.schema.js";
 
 export async function bookDemoRoutes(server: FastifyInstance) {
-  server.post<{ Body: CreateBookDemoInput }>(
+  server.post(
     "/",
     {
-      preHandler: rateLimit({ ...publicFormLimit, key: "bookDemo" }),
       schema: {
         body: createBookDemoInputSchema,
       },
     },
     bookDemoHandler,
   );
-  server.post<{ Body: CreatePartnerDataInput }>(
+  server.post(
     "/partner",
     {
-      preHandler: rateLimit({ ...publicFormLimit, key: "bookDemoPartner" }),
       schema: {
         body: createPartnerDataInputSchema,
       },

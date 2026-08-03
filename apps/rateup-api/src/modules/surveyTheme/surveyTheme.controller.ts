@@ -6,40 +6,19 @@ import {
   getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
   renameThemeInDB,
-  ThemeAccessError,
   updateSurveyThemeActiveSurveyThemeInDB,
   type RenameThemeRequest,
   type ThemeIdParams,
   type UpdateActiveThemeRequest,
 } from "./surveyTheme.service.js";
 
-/**
- * ThemeAccessError and Prisma's P2025 both mean "not yours, or not there" — the
- * scoped where clauses cannot tell those apart, and neither should the response.
- */
-function sendAccessFailure(reply: FastifyReply, error: unknown, context: string) {
-  if (error instanceof ThemeAccessError) {
-    reply.code(error.status).send({ success: false, message: error.message });
-    return true;
-  }
-  if (error && typeof error === "object" && (error as { code?: string }).code === "P2025") {
-    reply.code(404).send({ success: false, message: "Theme not found" });
-    return true;
-  }
-  log.error({ err: error }, context);
-  return false;
-}
-
 export async function getSurveyThemeByIdHandler(
   request: FastifyRequest<{ Params: { webSurveyThemeId: string } }>,
   reply: FastifyReply,
 ) {
   const { webSurveyThemeId } = request.params;
-  const surveyTheme = await getSurveyThemeById(webSurveyThemeId);
-  if (!surveyTheme) {
-    return reply.code(404).send({ success: false, message: "Theme not found" });
-  }
-  reply.code(200).send(surveyTheme.theme);
+  const { theme } = (await getSurveyThemeById(webSurveyThemeId))!;
+  reply.code(200).send(theme);
 }
 
 export async function getAllThemesOfUserOrg(request: FastifyRequest, reply: FastifyReply) {
@@ -71,13 +50,8 @@ export async function updateSurveyThemeHandler(
   }>,
   reply: FastifyReply,
 ) {
-  try {
-    const surveyTheme = await updateSurveyThemeActiveSurveyThemeInDB(request);
-    reply.send(surveyTheme);
-  } catch (err) {
-    if (sendAccessFailure(reply, err, "Error updating survey theme")) return;
-    throw err;
-  }
+  const surveyTheme = await updateSurveyThemeActiveSurveyThemeInDB(request);
+  reply.send(surveyTheme);
 }
 
 export async function createNewTheme(
@@ -93,6 +67,7 @@ export async function createNewTheme(
     const newThemeObj = await createAndApplyThemeToSurvey(request);
     reply.code(201).send(newThemeObj);
   } catch (err) {
+    console.log(err);
     // Intentionally broad: any error-like object carrying a P2002 "code" is
     // reported as a duplicate name.
     if (typeof err === "object" && err !== null && "code" in err && err.code === "P2002") {
@@ -100,10 +75,7 @@ export async function createNewTheme(
         success: false,
         message: "A theme with the same name already exists.",
       });
-    } else if (err instanceof ThemeAccessError) {
-      reply.code(err.status).send({ success: false, message: err.message });
     } else {
-      log.error({ err }, "Error creating survey theme");
       throw err;
     }
   }
@@ -120,33 +92,34 @@ export async function renameTheme(
     });
     return;
   }
-  try {
-    const updatedTheme = await renameThemeInDB(request);
-    reply.code(200).send(updatedTheme);
-  } catch (err) {
-    if (typeof err === "object" && err !== null && "code" in err && err.code === "P2002") {
-      return reply
-        .code(400)
-        .send({ success: false, message: "A theme with the same name already exists." });
-    }
-    if (sendAccessFailure(reply, err, "Error renaming survey theme")) return;
-    throw err;
-  }
+  const updatedTheme = await renameThemeInDB(request);
+  reply.code(200).send(updatedTheme);
 }
 
 export async function deleteTheme(
   request: FastifyRequest<{ Params: ThemeIdParams }>,
   reply: FastifyReply,
 ) {
+  await deleteThemeInDB(request);
+  reply.code(200).send({
+    success: true,
+    message: "theme deleted successfully",
+  });
+}
+
+// This function is used only, when there is a change in web survey theme json structure,
+// to update theme json of all rows of webSurveyTheme table to the new Structure.
+export async function updateAllWebSurveyThemesJson(request: FastifyRequest, reply: FastifyReply) {
   try {
-    await deleteThemeInDB(request);
+    // const allThemes = await updateAllWebSurveyThemesInDB(reply);
     reply.code(200).send({
       success: true,
-      message: "theme deleted successfully",
+      message:
+        "No Json changes needed for now, if there is a need for json change check endpoint code",
     });
   } catch (err) {
-    if (sendAccessFailure(reply, err, "Error deleting survey theme")) return;
-    throw err;
+    console.log(err);
+    reply.status(500).send({ message: "Something went wrong" });
   }
 }
 

@@ -59,12 +59,15 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import { checkAndExecuteRuleByTriggerEvent } from "./wa_automatedReply.utils.js";
 
-// No dayjs.extend here on purpose — see wa_automatedReply.utils.test.ts.
+dayjs.extend(customParseFormat);
+
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {

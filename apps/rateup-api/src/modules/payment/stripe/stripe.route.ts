@@ -11,18 +11,32 @@ import {
 } from "./stripe.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
-import { assertRootOrg } from "../../../utils/auth.js";
 import {
   createStripeCheckoutSchema,
   getSessionStatus,
   productIdParamsSchema,
   updateProductSchema,
-  type productIdParamsInput,
-  type updateProductInput,
 } from "./stripe.schema.js";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+
+  server.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    function (request, body, done) {
+      if (request.url === "/api/payment/webhook") {
+        done(null, body);
+      } else {
+        // For other routes, parse the body as JSON
+        try {
+          done(null, JSON.parse(body.toString()));
+        } catch (err) {
+          done(err instanceof Error ? err : new Error(String(err)), null);
+        }
+      }
+    },
+  );
 
   server.post(
     "/create-checkout-session",
@@ -44,9 +58,9 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     getSessionStatusHandler,
   );
 
-  server.get("/products", { preHandler: [assertRootOrg] }, getStripeProductsHandler);
+  server.get("/products", {}, getStripeProductsHandler);
 
-  server.get("/subscriptions", { preHandler: [assertRootOrg] }, getAllStripeSubscriptionsHandler);
+  server.get("/subscriptions", {}, getAllStripeSubscriptionsHandler);
 
   server.put(
     "/subscriptions/cancel",
@@ -56,21 +70,19 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     cancelStripeSubscriptionHandler,
   );
 
-  server.post("/sync-products", { preHandler: [assertRootOrg] }, syncStripeProductsHandler);
-  server.put<{ Body: updateProductInput }>(
+  server.post("/sync-products", {}, syncStripeProductsHandler);
+  server.put(
     "/product",
     {
-      preHandler: [assertRootOrg],
       schema: {
         body: updateProductSchema,
       },
     },
     updateStripeProductsHandler,
   );
-  server.delete<{ Params: productIdParamsInput }>(
+  server.delete(
     "/product/:productId",
     {
-      preHandler: [assertRootOrg],
       schema: {
         params: productIdParamsSchema,
       },

@@ -1,30 +1,7 @@
 import prisma from "../../../utils/prisma.js";
 import { CreateBoardRequestSchema, UpdateBoardRequestSchema } from "./board.schema.js";
 
-export async function filterTeamsUserBelongsTo(teamIds: string[], userId: string) {
-  if (!teamIds.length) return [];
-  const memberships = await prisma.teamMember.findMany({
-    where: { userId, teamId: { in: teamIds } },
-    select: { teamId: true },
-  });
-  return memberships.map((m) => m.teamId);
-}
-
-export class TeamAccessError extends Error {
-  constructor(public readonly teamIds: string[]) {
-    super("You can only attach teams you belong to");
-    this.name = "TeamAccessError";
-  }
-}
-
-async function assertTeamsAreTheCallers(teamIds: string[], userId: string) {
-  const allowed = new Set(await filterTeamsUserBelongsTo(teamIds, userId));
-  const foreign = teamIds.filter((id) => !allowed.has(id));
-  if (foreign.length) throw new TeamAccessError(foreign);
-}
-
 export async function createBoard(data: CreateBoardRequestSchema & { userId: string }) {
-  await assertTeamsAreTheCallers(data.teamIds, data.userId);
   return prisma.ticketBoard.create({
     data: {
       title: data.title,
@@ -35,12 +12,6 @@ export async function createBoard(data: CreateBoardRequestSchema & { userId: str
           data: data.teamIds.map((teamId) => ({
             teamId,
           })),
-        },
-      },
-      ticketColumns: {
-        create: {
-          title: "To Do",
-          order: 0,
         },
       },
     },
@@ -151,13 +122,7 @@ export async function getBoardById(id: string) {
   };
 }
 
-export async function updateBoard(id: string, data: UpdateBoardRequestSchema, userId: string) {
-  if (data.teamIds !== undefined) {
-    if (!data.teamIds.length) {
-      throw new TeamAccessError([]);
-    }
-    await assertTeamsAreTheCallers(data.teamIds, userId);
-  }
+export async function updateBoard(id: string, data: UpdateBoardRequestSchema) {
   return prisma.ticketBoard.update({
     where: { id },
     data: {

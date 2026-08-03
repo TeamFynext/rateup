@@ -159,26 +159,29 @@ describe("createWaSettings", () => {
     expect(getPhoneDetailsMock).not.toHaveBeenCalled();
   });
 
-  // Only the phoneId branch used to encrypt, so a channel created without one —
-  // the Instagram and Facebook-page shape — was written with whatever token it was
-  // handed, verbatim, into a column the schema comments as "// encrypted".
-  test("encrypts the token for a channel with no phone id too", async () => {
+  // NOTE: pins current behaviour. Only the phoneId branch encrypts. A channel
+  // created without one — the Instagram and Facebook-page shape, which carries a
+  // pageAccessToken and no WhatsApp number — is written with whatever token it was
+  // handed, verbatim. The column comment in prisma/schema.prisma:292 says
+  // "// encrypted". See issues.txt 13.5.
+  test("stores the token in plain text for a channel with no phone id", async () => {
     await createWaSettings(ORG_A, {
       accessToken: "plain-token",
       pageAccessToken: "page-token",
     } as any);
 
-    expect(encryptMock).toHaveBeenCalledWith("plain-token", expect.anything());
-    const { data } = db.whatsappSettings.create.mock.calls[0][0];
-    expect(data.accessToken).not.toBe("plain-token");
-    expect(data.accessToken_iv).toBeTruthy();
+    expect(encryptMock).not.toHaveBeenCalled();
+    expect(db.whatsappSettings.create.mock.calls[0][0].data).toMatchObject({
+      accessToken: "plain-token",
+      pageAccessToken: "page-token",
+    });
   });
 
-  // pageAccessToken was never encrypted on either branch, and it is the token that
-  // grants messaging on behalf of the Facebook page AND the connected Instagram
-  // account. It has no IV column of its own, so the IV is stored inline as
-  // `<iv>:<ciphertext>` — self-describing, so no schema change and no backfill.
-  test("encrypts the page access token, with its iv inline", async () => {
+  // NOTE: pins current behaviour. pageAccessToken is never encrypted on either
+  // branch, and the schema does not mark it encrypted either. It is the token that
+  // grants messaging on behalf of the Facebook page and the Instagram account.
+  // See issues.txt 13.5.
+  test("stores the page access token in plain text even on the encrypting branch", async () => {
     await createWaSettings(ORG_A, {
       accessToken: "plain-token",
       phoneId: PHONE_ID,
@@ -186,17 +189,7 @@ describe("createWaSettings", () => {
       pageAccessToken: "page-token",
     } as any);
 
-    // aes_encrypt is mocked, so the ciphertext is a stand-in; what matters is that
-    // the stored value is the `<iv>:<ciphertext>` form and not the raw token.
-    const stored = db.whatsappSettings.create.mock.calls[0][0].data.pageAccessToken;
-    expect(stored).not.toBe("page-token");
-    expect(stored).toBe("iv-hex:cipher-text");
-  });
-
-  test("leaves a channel with no page token alone", async () => {
-    await createWaSettings(ORG_A, { accessToken: "plain-token" } as any);
-
-    expect(db.whatsappSettings.create.mock.calls[0][0].data.pageAccessToken).toBeUndefined();
+    expect(db.whatsappSettings.create.mock.calls[0][0].data.pageAccessToken).toBe("page-token");
   });
 });
 
@@ -244,21 +237,15 @@ describe("reading a channel", () => {
     await expect(getAllWaSettings(ORG_A)).resolves.toEqual([]);
   });
 
-  // A row with no IV holds a plaintext token (13.5), so it is returned as stored
-  // rather than decrypted. Two callers guarded this with `res.wabaId ? ... : res`
-  // and six did not — the guard is gone because the decrypt itself is now total.
-  test("returns the token as stored for a channel that was never encrypted", async () => {
-    db.whatsappSettings.findFirst.mockResolvedValue(
-      row({ wabaId: null, accessToken_iv: null, accessToken: "plain-token" }),
-    );
+  test("skips decryption for a channel that has no WhatsApp account behind it", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(row({ wabaId: null, accessToken_iv: null }));
 
-    const result = await getWaSettingsById(SETTINGS_ID, ORG_A);
+    await getWaSettingsById(SETTINGS_ID);
 
     expect(decryptMock).not.toHaveBeenCalled();
-    expect(result!.accessToken).toBe("plain-token");
   });
 
-  test("does the same when looking a channel up by Instagram account", async () => {
+  test("applies the same guard when looking a channel up by Instagram account", async () => {
     db.whatsappSettings.findFirst.mockResolvedValue(row({ wabaId: null, accessToken_iv: null }));
 
     await getWaSettingsByIbaId("iba-1");
@@ -266,62 +253,49 @@ describe("reading a channel", () => {
     expect(decryptMock).not.toHaveBeenCalled();
   });
 
-  // getWaSettingsById and getWaSettingsByIbaId guarded the decrypt with
-  // `res.wabaId ?`; getWaSettingsByPageId, getWaSettings, getAllWaSettings,
-  // getAccessibleWaSettings, getWaSettingsByPhoneId and getWaSettingsByWaBaId did
-  // not — and aes_decrypt does Buffer.from(iv, "hex") on a null iv, which throws.
-  // A Facebook-page-only channel therefore broke the whole inbound Facebook
-  // webhook (getWaSettingsByPageId is its first call) and the dashboard's channel
-  // list.
-  test("reads a page-only channel by page id without throwing", async () => {
-    db.whatsappSettings.findFirst.mockResolvedValue(
-      row({ wabaId: null, accessToken_iv: null, accessToken: "plain-token" }),
-    );
-
-    await expect(getWaSettingsByPageId("page-1")).resolves.toMatchObject({
-      accessToken: "plain-token",
+  // NOTE: pins current behaviour. getWaSettingsById and getWaSettingsByIbaId guard
+  // the decrypt with `res.wabaId ?`; getWaSettingsByPageId, getWaSettings,
+  // getAllWaSettings, getAccessibleWaSettings, getWaSettingsByPhoneId and
+  // getWaSettingsByWaBaId do not. aes_decrypt does Buffer.from(iv, "hex") on a null
+  // iv, which throws. So a Facebook-page-only channel breaks the whole inbound
+  // Facebook webhook (getWaSettingsByPageId is its first call — see section 10) and
+  // the dashboard's channel list. See issues.txt 13.4.
+  test("throws for a page-only channel when looking it up by page id", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(row({ wabaId: null, accessToken_iv: null }));
+    decryptMock.mockImplementation(() => {
+      throw new TypeError("The first argument must be of type string");
     });
+
+    await expect(getWaSettingsByPageId("page-1")).rejects.toThrow(TypeError);
   });
 
-  // Same gap, reached through the channel list the dashboard loads on every page.
-  // One unencrypted row used to take the whole list down.
-  test("returns the whole channel list when one channel has no WhatsApp account", async () => {
+  // NOTE: same gap, reached through the channel list the dashboard loads on every
+  // page. One unencrypted row takes the whole list down. See issues.txt 13.4.
+  test("throws for the whole channel list when one channel has no WhatsApp account", async () => {
     db.whatsappSettings.findMany.mockResolvedValue([
       row(),
       row({ id: "settings-2", wabaId: null, accessToken_iv: null }),
     ]);
-
-    await expect(getAllWaSettings(ORG_A)).resolves.toHaveLength(2);
-  });
-
-  // A decrypt that fails on a row that DOES have an iv is logged and the stored
-  // value returned, rather than taking the caller down with it.
-  test("survives a token it cannot decrypt", async () => {
-    decryptMock.mockImplementation(() => {
-      throw new Error("bad key");
+    decryptMock.mockImplementation((_token: string, _key: unknown, iv: string) => {
+      if (!iv) throw new TypeError("The first argument must be of type string");
+      return "plain-token";
     });
-    db.whatsappSettings.findMany.mockResolvedValue([row()]);
 
-    await expect(getAllWaSettings(ORG_A)).resolves.toHaveLength(1);
-    expect(logMock.error).toHaveBeenCalled();
+    await expect(getAllWaSettings(ORG_A)).rejects.toThrow(TypeError);
   });
 
-  // getWaSettingsById keyed on the id alone and took no org, and the sync and
-  // meta-asset handlers calling it never checked ownership afterwards — which is
-  // how getMetaAssetsHandler came to hand out another org's Facebook page access
-  // tokens.
-  test("scopes a channel lookup by id to the org asking", async () => {
-    await getWaSettingsById(SETTINGS_ID, ORG_A);
+  // NOTE: pins current behaviour. getWaSettingsById keys on the id alone and takes
+  // no org, and the sync/meta-asset handlers that call it never check ownership
+  // afterwards. See issues.txt 13.1.
+  test("returns a channel by id without being told which org is asking", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(row({ orgId: ORG_B }));
 
-    expect(db.whatsappSettings.findFirst.mock.calls[0][0]).toEqual({
-      where: { id: SETTINGS_ID, orgId: ORG_A },
+    const result = await getWaSettingsById(SETTINGS_ID);
+
+    expect(result!.orgId).toBe(ORG_B);
+    expect(db.whatsappSettings.findUnique.mock.calls[0][0]).toEqual({
+      where: { id: SETTINGS_ID },
     });
-  });
-
-  test("reports nothing for a channel belonging to another org", async () => {
-    db.whatsappSettings.findFirst.mockResolvedValue(null);
-
-    await expect(getWaSettingsById(SETTINGS_ID, ORG_B)).resolves.toBeNull();
   });
 });
 
@@ -419,26 +393,18 @@ describe("updating a channel", () => {
     });
   });
 
-  // updateWaSettingsById keyed on the id alone, took no org, and — unlike
-  // updateWaSettings — did not encrypt a replacement token either, so a token
-  // written through PUT /:whatsappSettingsId was stored in plain text and then
-  // failed to decrypt on the way back out.
-  test("scopes the update to the caller's org and encrypts the token", async () => {
-    await updateWaSettingsById(SETTINGS_ID, ORG_A, { accessToken: "new-plain" } as any);
+  // NOTE: pins current behaviour. updateWaSettingsById keys on the id alone, takes
+  // no org, and — unlike updateWaSettings — does not encrypt a replacement access
+  // token either, so a token written through this path is stored in plain text and
+  // then fails to decrypt on the way back out. See issues.txt 13.1 and 13.5.
+  test("takes no org to scope the update by, and does not encrypt", async () => {
+    await updateWaSettingsById(SETTINGS_ID, { accessToken: "new-plain" } as any);
 
-    const call = db.whatsappSettings.update.mock.calls[0][0];
-    expect(call.where).toEqual({ id: SETTINGS_ID, orgId: ORG_A });
-    expect(call.data.accessToken).not.toBe("new-plain");
-    expect(call.data.accessToken_iv).toBeTruthy();
-    expect(encryptMock).toHaveBeenCalledWith("new-plain", expect.anything());
-  });
-
-  test("encrypts a replacement page access token too", async () => {
-    await updateWaSettingsById(SETTINGS_ID, ORG_A, { pageAccessToken: "page-token" } as any);
-
-    expect(db.whatsappSettings.update.mock.calls[0][0].data.pageAccessToken).toBe(
-      "iv-hex:cipher-text",
-    );
+    expect(db.whatsappSettings.update.mock.calls[0][0]).toEqual({
+      where: { id: SETTINGS_ID },
+      data: { accessToken: "new-plain" },
+    });
+    expect(encryptMock).not.toHaveBeenCalled();
   });
 
   test("sets a channel's status by its number", async () => {
@@ -514,10 +480,11 @@ describe("upsertWaSettings", () => {
     });
   });
 
-  // The org's decrypted WhatsApp token used to be interpolated into the URL rather
-  // than passed as callMetaApi's third argument, and callMetaApi trace-logs the url
-  // and dumps the whole response — config included — on any non-2xx. Same shape as
-  test("passes the org's access token as the auth header on both lookups", async () => {
+  // NOTE: pins current behaviour, the same shape as issues.txt 10.4 and 12.7. The
+  // org's decrypted WhatsApp token is interpolated into the URL rather than passed
+  // as callMetaApi's third argument, and callMetaApi trace-logs the url and dumps
+  // the whole response — config included — on any non-2xx. See issues.txt 13.3.
+  test("puts the org's access token in the query string of both lookups", async () => {
     await upsertWaSettings(ORG_A, PHONE_ID, {
       fbPageId: "page-1",
       ibaId: "iba-1",
@@ -525,8 +492,8 @@ describe("upsertWaSettings", () => {
     } as any);
 
     for (const [url, , token] of callMetaApiMock.mock.calls) {
-      expect(url).not.toContain("access_token=");
-      expect(token).toBe("plain-token");
+      expect(url).toContain("access_token=plain-token");
+      expect(token).toBeUndefined();
     }
   });
 });
@@ -595,25 +562,21 @@ describe("getWaLogs", () => {
     ]);
   });
 
-  // The count query used to filter on orgId only, while the rows were also
-  // filtered by phone — so a search matching three logs out of ten thousand
-  // reported totalCount 10000 and the client's pager offered empty pages.
-  test("counts only the logs the filter actually matches", async () => {
+  // NOTE: pins current behaviour. The count query filters on orgId only — the phone
+  // filter is applied to the rows but not to the total. So a search that matches
+  // three logs out of ten thousand reports totalCount 10000, and the client's
+  // pager offers pages that come back empty. See issues.txt 13.6.
+  test("counts every log in the org, ignoring the phone filter it applied to the rows", async () => {
     await getWaLogs(ORG_A, { page: 0, limit: 50, phone: "5550" } as any);
 
-    expect(db.waLogs.count.mock.calls[0][0].where).toEqual({
-      orgId: ORG_A,
-      phone: { contains: "5550" },
-    });
-    expect(db.waLogs.count.mock.calls[0][0].where).toEqual(
-      db.waLogs.findMany.mock.calls[0][0].where,
-    );
+    expect(db.waLogs.count.mock.calls[0][0]).toEqual({ where: { orgId: ORG_A } });
+    expect(db.waLogs.count.mock.calls[0][0].where.phone).toBeUndefined();
   });
 
-  // NOTE: pins current behaviour, the same off-by-one shape as
+  // NOTE: pins current behaviour, the same off-by-one shape as issues.txt 8.2.
   // skip is page * limit, so pages are zero-based — page 1 is the second page.
   // The schema leaves page optional with no default, so the convention is stated
-  // nowhere.
+  // nowhere. See issues.txt 13.6.
   test("treats the page number as zero-based", async () => {
     await getWaLogs(ORG_A, { page: 1, limit: 50 } as any);
 
@@ -625,18 +588,18 @@ describe("reading Meta assets for onboarding", () => {
   test("lists the Facebook pages the org's token can reach", async () => {
     callMetaApiMock.mockResolvedValue({ data: { data: [{ id: "page-1", name: "The Shop" }] } });
 
-    await expect(getFbPagesFromWa(SETTINGS_ID, ORG_A)).resolves.toEqual([
+    await expect(getFbPagesFromWa(SETTINGS_ID)).resolves.toEqual([
       { id: "page-1", name: "The Shop" },
     ]);
   });
 
   test("refuses when the channel has no access token", async () => {
-    db.whatsappSettings.findFirst.mockResolvedValue(row({ wabaId: null, accessToken: null }));
+    db.whatsappSettings.findUnique.mockResolvedValue(row({ wabaId: null, accessToken: null }));
 
-    await expect(getFbPagesFromWa(SETTINGS_ID, ORG_A)).rejects.toThrow("accesstoken not found");
+    await expect(getFbPagesFromWa(SETTINGS_ID)).rejects.toThrow("accesstoken not found");
   });
 
-  // Fixed as part of the TS strict-mode migration: all four of
+  // Fixed as part of the TS strict-mode migration (see issues.txt 13.7): all four of
   // these used to destructure getWaSettingsById's result before checking it, and that
   // function returns null for an id that matches nothing. An unknown — or another
   // org's, since nothing is scoped — settings id gave a bare TypeError rather than the
@@ -644,44 +607,36 @@ describe("reading Meta assets for onboarding", () => {
   // answered a generic 500. Both null-shaped inputs (missing row, row with no
   // accessToken) now fail the same explicit way.
   test.each([
-    ["the page list", () => getFbPagesFromWa(SETTINGS_ID, ORG_A)],
-    ["the ad list", () => getAdsFromWa(SETTINGS_ID, "act-1", ORG_A)],
-    ["the ad-account list", () => getAdAccountsFromWa(SETTINGS_ID, ORG_A)],
-    ["the dataset list", () => getMetaDatasetsFromWa(SETTINGS_ID, ORG_A)],
+    ["the page list", () => getFbPagesFromWa(SETTINGS_ID)],
+    ["the ad list", () => getAdsFromWa(SETTINGS_ID, "act-1")],
+    ["the ad-account list", () => getAdAccountsFromWa(SETTINGS_ID)],
+    ["the dataset list", () => getMetaDatasetsFromWa(SETTINGS_ID)],
   ])("throws the same clear error from %s for a channel that does not exist", async (_l, read) => {
-    db.whatsappSettings.findFirst.mockResolvedValue(null);
+    db.whatsappSettings.findUnique.mockResolvedValue(null);
 
     await expect(read()).rejects.toThrow("accesstoken not found");
   });
 
-  // The worst of the logging cases. The request asks Meta for `access_token` on
-  // every page, and the whole response body was then logged at INFO — a level that
-  // IS on in production — so a working page token for every connected Facebook
-  // page was written to the log on every sync, and those tokens do not expire on
-  // their own. Only the page ids are logged now, at trace.
-  test("never logs a page access token", async () => {
+  // NOTE: pins current behaviour, and this is the worst of the logging cases. The
+  // request asks Meta for `access_token` on every page, and line 335 then logs the
+  // whole response body at INFO — a level that IS on in production. So a page
+  // access token for every connected Facebook page is written to the log on every
+  // sync. Those tokens send messages as the page and never expire on their own.
+  // See issues.txt 13.3.
+  test("logs every page's access token at info level", async () => {
     callMetaApiMock.mockResolvedValue({
       data: { data: [{ id: "page-1", name: "The Shop", access_token: "page-token-secret" }] },
     });
 
-    await getFbPagesFromWa(SETTINGS_ID, ORG_A);
+    await getFbPagesFromWa(SETTINGS_ID);
 
-    expect(JSON.stringify(logMock.info.mock.calls)).not.toContain("page-token-secret");
-    expect(JSON.stringify(logMock.trace.mock.calls)).not.toContain("page-token-secret");
-  });
-
-  test("passes the org token as the auth header, not in the query string", async () => {
-    await getFbPagesFromWa(SETTINGS_ID, ORG_A);
-
-    const [url, , token] = callMetaApiMock.mock.calls[0];
-    expect(url).not.toContain("access_token=");
-    expect(token).toBe("plain-token");
+    expect(JSON.stringify(logMock.info.mock.calls)).toContain("page-token-secret");
   });
 
   test("lists the ads on one ad account", async () => {
     callMetaApiMock.mockResolvedValue({ data: { data: [{ id: "ad-1" }] } });
 
-    await expect(getAdsFromWa(SETTINGS_ID, "act-1", ORG_A)).resolves.toEqual([{ id: "ad-1" }]);
+    await expect(getAdsFromWa(SETTINGS_ID, "act-1")).resolves.toEqual([{ id: "ad-1" }]);
     expect(callMetaApiMock.mock.calls[0][0]).toContain("/act-1/ads");
   });
 
@@ -691,7 +646,7 @@ describe("reading Meta assets for onboarding", () => {
       .mockResolvedValueOnce({ data: { data: [{ id: "ad-1" }] } })
       .mockResolvedValueOnce({ data: { data: [{ id: "ad-2" }] } });
 
-    const result = await getAdAccountsFromWa(SETTINGS_ID, ORG_A);
+    const result = await getAdAccountsFromWa(SETTINGS_ID);
 
     expect(result).toEqual([
       { id: "act-1", ads: [{ id: "ad-1" }] },
@@ -714,7 +669,7 @@ describe("reading Meta assets for onboarding", () => {
         },
       });
 
-    await expect(getMetaDatasetsFromWa(SETTINGS_ID, ORG_A)).resolves.toEqual([
+    await expect(getMetaDatasetsFromWa(SETTINGS_ID)).resolves.toEqual([
       { id: "pixel-1", name: "Main" },
       { id: "pixel-2", name: "Other" },
     ]);
@@ -726,13 +681,13 @@ describe("reading Meta assets for onboarding", () => {
       .mockResolvedValueOnce({ data: { data: [{ id: "act-1" }] } })
       .mockResolvedValueOnce({ data: { data: [{ id: "pixel-1" }] } });
 
-    await expect(getMetaDatasetsFromWa(SETTINGS_ID, ORG_A)).resolves.toEqual([{ id: "pixel-1" }]);
+    await expect(getMetaDatasetsFromWa(SETTINGS_ID)).resolves.toEqual([{ id: "pixel-1" }]);
   });
 
   test("reports an empty list when both halves fail", async () => {
     callMetaApiMock.mockRejectedValue(new Error("graph is down"));
 
-    await expect(getMetaDatasetsFromWa(SETTINGS_ID, ORG_A)).resolves.toEqual([]);
+    await expect(getMetaDatasetsFromWa(SETTINGS_ID)).resolves.toEqual([]);
   });
 });
 

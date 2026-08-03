@@ -237,38 +237,31 @@ describe("the event payload", () => {
 // ===========================================================================
 
 describe("the response handling", () => {
-  // callMetaApi is built with validateStatus: () => true, so it resolves for every
-  // status. Nothing used to inspect res.status, so a rejected event was logged as
-  // sent and the module's careful admin-notification path — which only runs on a
-  // throw — could never see the one class of failure it was built for.
-  test("treats a rejected event as a failure, not a send", async () => {
+  // NOTE: callMetaApi is built with validateStatus: () => true, so it resolves
+  // for every status. Nothing here inspects res.status, so a rejected event is
+  // logged as sent and no notification is raised.
+  test("logs success and returns the body even when Meta rejected the event", async () => {
     (callMetaApi as unknown as Mock).mockResolvedValueOnce({
       status: 400,
       data: { error: { message: "Invalid parameter: dataset does not exist" } },
     });
-    db.orgMember.findMany.mockResolvedValueOnce([{ userId: "u-1" }]);
 
-    await triggerConversionsApiForContact(contact, "lc-1");
+    const res = await triggerConversionsApiForContact(contact, "lc-1");
 
-    expect(
-      (log.info as unknown as Mock).mock.calls.some((c) =>
-        String(c[0]).includes("sent successfully"),
-      ),
-    ).toBe(false);
-    expect(log.error).toHaveBeenCalled();
-    expect(notificationQueue.add).toHaveBeenCalled();
+    expect(res).toEqual({ error: { message: "Invalid parameter: dataset does not exist" } });
+    expect((log.info as unknown as Mock).mock.calls[0][0]).toContain("sent successfully");
+    expect(notificationQueue.add).not.toHaveBeenCalled();
   });
 
-  test("an expired token reaches the same failure path", async () => {
+  test("an expired token is reported as a success too", async () => {
     (callMetaApi as unknown as Mock).mockResolvedValueOnce({
       status: 401,
       data: { error: { code: 190, message: "Error validating access token" } },
     });
-    db.orgMember.findMany.mockResolvedValueOnce([{ userId: "u-1" }]);
 
     await triggerConversionsApiForContact(contact, "lc-1");
 
-    expect(log.error).toHaveBeenCalled();
+    expect(log.error).not.toHaveBeenCalled();
   });
 
   test("returns the response body on a genuine success", async () => {

@@ -10,10 +10,10 @@ const lifecycleBodySchema = z.object({
   ordering: z.number().int().optional(),
   isDefault: z.boolean().optional(),
   category: z.enum(StageCategory),
-  description: z.string(),
-  emoji: z.string(),
+  description: z.string().optional(),
+  emoji: z.string().optional(),
   isWon: z.boolean().optional(),
-  color: z.string().nullable().optional(),
+  color: z.string().nullable(),
 });
 
 const lifecycleReorderSchema = z.object({
@@ -21,14 +21,23 @@ const lifecycleReorderSchema = z.object({
     z.object({
       id: z.string(),
       ordering: z.number().int(),
-      category: z.enum(StageCategory).optional(),
+      category: z.enum(StageCategory),
       isWon: z.boolean(),
     }),
   ),
 });
 
 export type LifecycleIdParamSchema = z.infer<typeof lifecycleIdParamSchema>;
-export type LifecycleBodySchema = z.infer<typeof lifecycleBodySchema>;
+export interface LifecycleBodySchema {
+  name: string;
+  ordering: number;
+  isDefault: boolean;
+  emoji: string;
+  isWon: boolean;
+  description: string;
+  category: StageCategory;
+  color: string;
+}
 export type LifecycleReorderSchema = z.infer<typeof lifecycleReorderSchema>;
 
 // Auto-exported after fastify-zod migration

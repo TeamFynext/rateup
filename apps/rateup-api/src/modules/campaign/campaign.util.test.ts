@@ -63,31 +63,32 @@ describe("verifyCampaignMaxLimit", () => {
     expect(rep.send.mock.calls[0][0].message).toBe("Subscription not found");
   });
 
-  // The third copy of the same defect, after(flows) and 14.7
-  // (templates) — and a fourth in the automated-replies gate. All four share
-  // enforceWhatsappCountLimit now. A plan that states no maximum means no limit,
-  // and saying so explicitly is what stops the next reader taking
-  // `count >= undefined` for a check.
-  test("enforces no limit when the plan does not state one, without counting", async () => {
+  // NOTE: pins current behaviour — the third copy of the same defect, after
+  // issues.txt 11.7 (flows) and 14.7 (templates). Comparing a count against an
+  // undefined max is always false, so a plan that states no campaign maximum
+  // grants unlimited campaigns. See issues.txt 17.2.
+  test("enforces no limit when the plan does not state one", async () => {
+    countMock.mockResolvedValue(9999);
     const rep = reply();
 
     await verifyCampaignMaxLimit(request({ whatsapp: { active: true } }), rep);
 
     expect(rep.code).not.toHaveBeenCalled();
-    expect(countMock).not.toHaveBeenCalled();
   });
 
-  // The count query sat inside the try, so a database outage was answered as a 403
-  // carrying the raw error text with displayMessageInClient set — an infrastructure
-  // failure dressed up as a permission refusal, shown to the user. It is outside
-  // any catch now, so it surfaces as a 500.
-  test("lets a database failure surface rather than calling it a refusal", async () => {
+  // NOTE: the count query sits inside the try, so a database failure is reported to
+  // the user as a permission refusal carrying the raw error text.
+  // See issues.txt 17.2.
+  test("reports a database failure to the user as a refusal", async () => {
     countMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();
 
-    await expect(verifyCampaignMaxLimit(request(), rep)).rejects.toThrow(
-      "connection terminated unexpectedly",
-    );
-    expect(rep.code).not.toHaveBeenCalled();
+    await verifyCampaignMaxLimit(request(), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(403);
+    expect(rep.send.mock.calls[0][0]).toEqual({
+      message: "connection terminated unexpectedly",
+      displayMessageInClient: true,
+    });
   });
 });

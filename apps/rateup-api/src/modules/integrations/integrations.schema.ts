@@ -41,12 +41,9 @@ const integrationSchema = z.object({
 
 const updateIntgrationSchema = z.object({
   credential: z.record(z.string(), z.any()).optional(),
+  orgId: z.string().optional(),
   active: z.boolean().optional(),
   updateKey: z.boolean().optional(),
-});
-
-const deleteZapierHookSchema = z.object({
-  hookUrl: z.string().min(1),
 });
 
 export type ByNameParams = z.infer<typeof byNameSchema>;
@@ -59,8 +56,6 @@ export type UpdateIntgrationInput = z.infer<typeof updateIntgrationSchema>;
 
 export type WaPaymentCreateSchema = z.infer<typeof waPaymentCreateSchema>;
 
-export type DeleteZapierHookInput = z.infer<typeof deleteZapierHookSchema>;
-
 // Auto-exported after fastify-zod migration
 export {
   byNameSchema,
@@ -68,5 +63,4 @@ export {
   integrationSchema,
   updateIntgrationSchema,
   waPaymentCreateSchema,
-  deleteZapierHookSchema,
 };

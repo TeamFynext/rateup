@@ -1,7 +1,4 @@
 import prisma from "../../utils/prisma.js";
-import { getColumnIdByCardId } from "./ticketCard/card.service.js";
-import { getBoardIdByColumnId } from "./ticketColumn/column.service.js";
-import { isBoardMember } from "./ticketBoard/board.service.js";
 import { CreateCommentInput } from "./ticket.schema.js";
 import {
   createEmailBodyTicketAssigned,
@@ -29,17 +26,18 @@ export async function sendTicketAssignedWaMessage(data: {
   }
   const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
   const { orgId } = data;
-  const withinServiceWindow =
-    Boolean(contact?.lastReceivedMessageTimeStamp) &&
-    dayjs().diff(dayjs(contact!.lastReceivedMessageTimeStamp), "hour") < 24;
-  if (!contact || !withinServiceWindow) {
+  if (
+    !contact ||
+    (contact.lastReceivedMessageTimeStamp &&
+      dayjs().diff(dayjs(contact.lastReceivedMessageTimeStamp), "hour") < 24)
+  ) {
     log.trace(
-      "Aborting...contact not found or outside the 24 hour service window for phone: %s",
+      "Aborting...contact not found or message sent within the last 24 hours for phone: %s",
       phone,
     );
     return;
   }
-  const message = `A ticket has been assigned to you on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: ${process.env.FRONTEND_URL}/dashboard/tickets/${data.id}`;
+  const message = `A ticket has been assigned to you on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
   // Ticket notifications are system messages — exempt from the conversation limit.
   await sendTextMessage({ phone, orgId }, null, message, true);
 }
@@ -69,8 +67,8 @@ export async function sendTicketAssignedEmail(data: {
       emailData: msg,
     });
   } catch (error) {
-    log.error({ err: error }, "Ticket notification email could not be queued");
-    throw new Error("Email sending failed", { cause: error });
+    console.error(error);
+    throw new Error("Email sending failed. E:" + error);
   }
 }
 
@@ -89,17 +87,18 @@ export async function sendTicketCreateWaMessage(data: {
   }
   const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
   const { orgId } = data;
-  const withinServiceWindow =
-    Boolean(contact?.lastReceivedMessageTimeStamp) &&
-    dayjs().diff(dayjs(contact!.lastReceivedMessageTimeStamp), "hour") < 24;
-  if (!contact || !withinServiceWindow) {
+  if (
+    !contact ||
+    (contact.lastReceivedMessageTimeStamp &&
+      dayjs().diff(dayjs(contact.lastReceivedMessageTimeStamp), "hour") < 24)
+  ) {
     log.trace(
-      "Aborting...contact not found or outside the 24 hour service window for phone: %s",
+      "Aborting...contact not found or message sent within the last 24 hours for phone: %s",
       phone,
     );
     return;
   }
-  const message = `A new ticket has been created on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: ${process.env.FRONTEND_URL}/dashboard/tickets/${data.id}`;
+  const message = `A new ticket has been created on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
   // Ticket notifications are system messages — exempt from the conversation limit.
   await sendTextMessage({ phone, orgId }, null, message, true);
 }
@@ -116,7 +115,7 @@ export async function sendTicketCreateEmail(data: {
   const msg = {
     to: data.email,
     subject: `Ticket Created`,
-    text: `A ticket has been created on Rateup.app`,
+    text: `A ticket has been assigned to you on Rateup.app`,
     html: createEmailBodyTicketCreated({
       ticket_link,
       ticket_no: data.ticketId,
@@ -129,29 +128,13 @@ export async function sendTicketCreateEmail(data: {
       emailData: msg,
     });
   } catch (error) {
-    log.error({ err: error }, "Ticket notification email could not be queued");
-    throw new Error("Email sending failed", { cause: error });
-  }
-}
-
-export class TicketCommentAccessError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TicketCommentAccessError";
+    console.error(error);
+    throw new Error("Email sending failed. E:" + error);
   }
 }
 
 export async function createComment(input: CreateCommentInput, userId: string) {
   const { ticketCardId, msg } = input;
-
-  const columnId = await getColumnIdByCardId(ticketCardId);
-  const boardId = columnId ? await getBoardIdByColumnId(columnId) : undefined;
-  if (!boardId) {
-    throw new TicketCommentAccessError("Card not found");
-  }
-  if (!(await isBoardMember(boardId, userId))) {
-    throw new TicketCommentAccessError("You don't have access to this card");
-  }
 
   const newComment = await prisma.ticketComment.create({
     data: {

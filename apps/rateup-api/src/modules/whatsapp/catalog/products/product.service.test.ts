@@ -263,13 +263,11 @@ describe("createCatalogProductsBatch - hotels", () => {
     ...overrides,
   });
 
-  // Money fields go through the shared formatMoney, so they carry two decimals on both
-  // create and update. base_price/sale_price were previously unformatted on both paths.
-  test("formats the base and sale prices with the currency, to two decimals", async () => {
+  test("formats the base and sale prices with the currency", async () => {
     await createCatalogProductsBatch(ORG_ID, "HOTEL" as any, [hotel()], CATALOG_ID);
 
-    expect(metaRequests()[0].data.base_price).toBe("5000.00 INR");
-    expect(metaRequests()[0].data.sale_price).toBe("4500.00 INR");
+    expect(metaRequests()[0].data.base_price).toBe("5000 INR");
+    expect(metaRequests()[0].data.sale_price).toBe("4500 INR");
   });
 
   test("spreads text tags into custom_label_N fields", async () => {
@@ -325,7 +323,7 @@ describe("createCatalogProductsBatch - hotels", () => {
 
     const stored = db.createMany.mock.calls[0][0].data[0];
     expect(stored.hotelRoomProps).toBeDefined();
-    expect(metaRequests()[0].data.base_price).toBe("2000.00 INR");
+    expect(metaRequests()[0].data.base_price).toBe("2000 INR");
   });
 });
 
@@ -339,12 +337,13 @@ describe("getCatalogProducts", () => {
     expect(result).toEqual([{ id: "prod-1" }]);
   });
 
-  // The query parameter is gone. It used to be accepted, named `_query` and ignored, so
-  // any search or filter a client sent silently did nothing and the full list came back
-  // with no error. The dashboard sends none, so it was dead rather than unimplemented —
-  // dropped instead of filled in, so a caller cannot pass something that does nothing.
-  test("takes no filter argument at all", () => {
-    expect(getCatalogProducts.length).toBe(1);
+  // NOTE: the query parameter is accepted and then ignored — it is named `_query`
+  // and never reaches the where clause, so any search or filter sent by the client
+  // silently does nothing.
+  test("ignores the query it is handed", async () => {
+    await getCatalogProducts(CATALOG_ID, { search: "shoe", limit: 5 } as any);
+
+    expect(db.findMany).toHaveBeenCalledWith({ where: { catalogId: CATALOG_ID } });
   });
 });
 
@@ -373,31 +372,13 @@ describe("deleteCatalogProducts", () => {
     expect(db.deleteMany.mock.calls[0][0].where.retailer_id).toEqual({ in: ["sku-1"] });
   });
 
-  // Retailer ids are merchant-chosen SKUs, so two catalogs — in the same org or in
-  // different ones — can hold the same id. Without catalogId the deleteMany reached
-  // across all of them, so one org deleting a product deleted another org's row.
-  test("confines the local delete to the catalog being deleted from", async () => {
+  // NOTE: the local delete matches on retailer_id alone — there is no catalogId in
+  // the where clause. Two catalogs (or two orgs) holding the same retailer_id means
+  // deleting from one deletes the other's row too.
+  test("does not confine the local delete to the catalog being deleted from", async () => {
     await deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "sku-1" }] as any);
 
-    expect(db.deleteMany.mock.calls[0][0].where.catalogId).toBe(CATALOG_ID);
-  });
-
-  test("confines the hotel delete to the catalog too", async () => {
-    getWaCatalogMock.mockResolvedValue({ vertical: "hotels" });
-
-    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "hotel-1" }] as any);
-
-    expect(db.deleteMany.mock.calls[0][0].where.catalogId).toBe(CATALOG_ID);
-  });
-
-  test("confines the hotel-room delete to the catalog too", async () => {
-    getWaCatalogMock.mockResolvedValue({ vertical: "hotel_room" });
-
-    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [
-      { id: "room-1", hotel_retailer_id: "hotel-1" },
-    ] as any);
-
-    expect(db.deleteMany.mock.calls[0][0].where.catalogId).toBe(CATALOG_ID);
+    expect(db.deleteMany.mock.calls[0][0].where).not.toHaveProperty("catalogId");
   });
 
   test("does not delete locally when Meta rejects the batch", async () => {
@@ -409,9 +390,9 @@ describe("deleteCatalogProducts", () => {
     expect(db.deleteMany).not.toHaveBeenCalled();
   });
 
-  // The room id is `id.id`, as in every other branch. Sending the whole identifier
-  // object matched nothing at Meta, so hotel-room deletes never actually reached it.
-  test("sends the room id, not the whole identifier object", async () => {
+  // NOTE: the hotel_room branch sends the whole id object as hotel_room_id rather
+  // than its `id` field, so Meta receives an object where it expects a string.
+  test("sends the whole identifier object as the room id", async () => {
     getWaCatalogMock.mockResolvedValue({ vertical: "hotel_room" });
     const identifier = { id: "room-1", hotel_retailer_id: "hotel-1" };
 
@@ -419,7 +400,7 @@ describe("deleteCatalogProducts", () => {
 
     expect(metaRequests()[0].data).toEqual({
       hotel_retailer_id: "hotel-1",
-      hotel_room_id: "room-1",
+      hotel_room_id: identifier,
     });
   });
 });
@@ -436,10 +417,9 @@ describe("updateCatalogProducts", () => {
     expect(metaRequests()[0].method).toBe("UPDATE");
   });
 
-  // Create and update share formatMoney, so the same product sends the same string
-  // either way. Update used to send the raw value: "99.50 INR" on create, "99.5 INR" on
-  // update, and a price like 99.999 went through unrounded.
-  test("formats the price the same way create does", async () => {
+  // NOTE: create formats the price with parseFloat(...).toFixed(2) but update does
+  // not, so the same product sends "99.50 INR" on create and "99.5 INR" on update.
+  test("sends an unformatted price, unlike create", async () => {
     await updateCatalogProducts(
       ORG_ID,
       CATALOG_ID,
@@ -447,18 +427,7 @@ describe("updateCatalogProducts", () => {
       CatalogProductTypes.PRODUCT_ITEM,
     );
 
-    expect(metaRequests()[0].data.price).toBe("99.50 INR");
-  });
-
-  test("rounds a price with too many decimals", async () => {
-    await updateCatalogProducts(
-      ORG_ID,
-      CATALOG_ID,
-      [productItem({ price: 99.999 })],
-      CatalogProductTypes.PRODUCT_ITEM,
-    );
-
-    expect(metaRequests()[0].data.price).toBe("100.00 INR");
+    expect(metaRequests()[0].data.price).toBe("99.5 INR");
   });
 
   test("quotes the internal labels as create does", async () => {

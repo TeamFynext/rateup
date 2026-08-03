@@ -144,7 +144,7 @@ export async function redeemCouponExternalController(
   reply: FastifyReply,
 ) {
   try {
-    const result = await applyRedemption(request.body, request.user.orgId);
+    const result = await applyRedemption(request.body);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);

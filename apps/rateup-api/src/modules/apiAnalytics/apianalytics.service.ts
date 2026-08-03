@@ -53,67 +53,42 @@ interface TeamPerformanceStat {
   successPercentage: number;
 }
 
-const DEFAULT_RANGE_DAYS = 7;
-
-/** A calendar date carrying no time. `new Date` reads these as UTC midnight. */
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
-
-export function resolveDateRange(dateRange: string[] | null | undefined): {
-  rangeStart: Date;
-  rangeEnd: Date;
-} {
-  if (dateRange?.length === 2) {
-    const rangeStart = new Date(dateRange[0]);
-    const rangeEnd = endOfDayIfDateOnly(dateRange[1]);
-    if (!Number.isNaN(rangeStart.getTime()) && !Number.isNaN(rangeEnd.getTime())) {
-      return { rangeStart, rangeEnd };
-    }
-  }
-
-  const rangeEnd = new Date();
-  const rangeStart = new Date(rangeEnd);
-  rangeStart.setDate(rangeEnd.getDate() - (DEFAULT_RANGE_DAYS - 1));
-  return { rangeStart, rangeEnd };
-}
-
-function endOfDayIfDateOnly(value: string): Date {
-  const parsed = new Date(value);
-  if (DATE_ONLY.test(value.trim())) parsed.setUTCHours(23, 59, 59, 999);
-  return parsed;
-}
-
-/** "all", "null", and absent all mean every team. */
-function teamFilterFor(teamId: string | null | undefined) {
-  return !teamId || teamId === "all" || teamId === "null"
-    ? Prisma.sql``
-    : Prisma.sql`AND motm."teamId" = ${teamId}::uuid`;
-}
-
-function apiTypeFilterFor(apiType: string | null | undefined) {
-  if (apiType === "external") return Prisma.sql`AND motm."externalApi" = true`;
-  if (apiType === "whatsapp") return Prisma.sql`AND motm."externalApi" = false`;
-  return Prisma.sql``;
-}
-
-function roundSeconds(value: number | null | undefined): number | null {
-  return value === null || value === undefined ? null : Number(value.toFixed(2));
-}
-
-export async function getWaMessageOverview(
-  orgId: string,
+export async function getWaMessageOverviewByTeamAndOrg(
   teamId: string | undefined,
+  orgId: string,
   dateRange: string[] | null | undefined,
   apiType: string | undefined,
 ): Promise<WaMessageOverview> {
-  const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  } else {
+    // default last 7 days
+    rangeEnd = new Date();
+    rangeStart = new Date();
+    rangeStart.setDate(rangeEnd.getDate() - 6);
+  }
 
   //Calculate previous period
   const diffMs = rangeEnd.getTime() - rangeStart.getTime();
   const prevEnd = new Date(rangeStart.getTime() - 1);
   const prevStart = new Date(prevEnd.getTime() - diffMs);
 
-  const teamFilter = teamFilterFor(teamId);
-  const apiTypeFilter = apiTypeFilterFor(apiType);
+  const teamFilter =
+    !teamId || teamId === "all" || teamId === "null"
+      ? Prisma.sql``
+      : Prisma.sql`AND motm."teamId" = ${teamId}::uuid`;
+
+  let apiTypeFilter = Prisma.sql``;
+
+  if (apiType === "external") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = true`;
+  } else if (apiType === "whatsapp") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = false`;
+  }
 
   interface DeliveryStatsRow {
     total_messages: number;
@@ -192,7 +167,7 @@ export async function getWaMessageOverview(
     failedMessages,
     failedPercentage,
 
-    avgDeliveryTimeSeconds: roundSeconds(avgDeliveryTime),
+    avgDeliveryTimeSeconds: avgDeliveryTime,
     avgDeliveryTimeChange: percentChange(avgDeliveryTime, previous.avg_delivery_time_seconds),
   };
 }
@@ -204,15 +179,31 @@ export async function getDeliveredFailedTrend(
   dateRange: string[] | null | undefined,
   apiType: string,
 ): Promise<MessageDeliveryTrendPoint[]> {
-  const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  }
 
   const timeBucket =
     granularity === "hour"
       ? Prisma.sql`DATE_TRUNC('hour', wm."createdAt")`
       : Prisma.sql`DATE_TRUNC('day', wm."createdAt")`;
 
-  const teamFilter = teamFilterFor(teamId);
-  const apiTypeFilter = apiTypeFilterFor(apiType);
+  const teamFilter =
+    !teamId || teamId === "all" || teamId === "null"
+      ? Prisma.sql``
+      : Prisma.sql`AND motm."teamId" = ${teamId}::uuid`;
+
+  let apiTypeFilter = Prisma.sql``;
+
+  if (apiType === "external") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = true`;
+  } else if (apiType === "whatsapp") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = false`;
+  }
 
   const result = await prisma.$queryRaw<
     {
@@ -245,7 +236,9 @@ export async function getDeliveredFailedTrend(
     WHERE motm."orgId" = ${orgId}::uuid
       ${teamFilter}
       ${apiTypeFilter}
-      AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}
+      AND wm."createdAt" BETWEEN
+        COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+        AND COALESCE(${rangeEnd}, NOW())
 
     GROUP BY time_bucket
     ORDER BY time_bucket ASC
@@ -265,9 +258,29 @@ export async function getDeliveredFailedWeekTrend(
   dateRange: string[] | null | undefined,
   apiType: string,
 ): Promise<MessageDeliveryTrendPoint[]> {
-  const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
-  const teamFilter = teamFilterFor(teamId);
-  const apiTypeFilter = apiTypeFilterFor(apiType);
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  } else {
+    rangeEnd = new Date();
+    rangeStart = new Date();
+    rangeStart.setDate(rangeEnd.getDate() - 6); // last 7 days
+  }
+  const teamFilter =
+    !teamId || teamId === "all" || teamId === "null"
+      ? Prisma.sql``
+      : Prisma.sql`AND motm."teamId" = ${teamId}::uuid`;
+
+  let apiTypeFilter = Prisma.sql``;
+
+  if (apiType === "external") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = true`;
+  } else if (apiType === "whatsapp") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = false`;
+  }
 
   const result = await prisma.$queryRaw<
     {
@@ -299,7 +312,9 @@ export async function getDeliveredFailedWeekTrend(
     WHERE motm."orgId" = ${orgId}::uuid
       ${teamFilter}
       ${apiTypeFilter}
-      AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}
+      AND wm."createdAt" BETWEEN
+        COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+        AND COALESCE(${rangeEnd}, NOW())
 
     GROUP BY day
     ORDER BY day ASC
@@ -319,9 +334,26 @@ export async function getTemplateCategoryOverview(
   dateRange: string[] | null | undefined,
   apiType: string,
 ): Promise<TemplateCategoryOverview> {
-  const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
-  const teamFilter = teamFilterFor(teamId);
-  const apiTypeFilter = apiTypeFilterFor(apiType);
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  }
+
+  const teamFilter =
+    !teamId || teamId === "all" || teamId === "null"
+      ? Prisma.sql``
+      : Prisma.sql`AND motm."teamId" = ${teamId}::uuid`;
+
+  let apiTypeFilter = Prisma.sql``;
+
+  if (apiType === "external") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = true`;
+  } else if (apiType === "whatsapp") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = false`;
+  }
 
   const rows = await prisma.$queryRaw<
     {
@@ -341,27 +373,26 @@ export async function getTemplateCategoryOverview(
       AND wm."messageBody"->>'exchangeProcess' = 'send'
       AND wm."messageBody"->'send'->>'type' = 'template'
       AND wm."messageBody"->'send'->'template'->>'category' IS NOT NULL
-      AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}
+      AND wm."createdAt" BETWEEN
+        COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+        AND COALESCE(${rangeEnd}, NOW())
     GROUP BY category
   `;
 
+  // Convert DB result to map
   const countMap = new Map<string, number>();
-  let totalTemplates = 0;
-  for (const r of rows) {
-    countMap.set(r.category, (countMap.get(r.category) ?? 0) + r.count);
-    totalTemplates += r.count;
-  }
+  rows.forEach((r) => countMap.set(r.category, r.count));
 
-  const known = new Set<string>(Object.values(WaTemplateCategory));
-  const categories = [
-    ...Object.values(WaTemplateCategory),
-    ...[...countMap.keys()].filter((category) => !known.has(category)),
-  ];
+  // All possible categories (from enum)
+  const allCategories = Object.values(WaTemplateCategory);
 
-  const byCategory = categories.map((category) => ({
+  // Build full list with 0 defaults
+  const byCategory = allCategories.map((category) => ({
     category,
     count: countMap.get(category) ?? 0,
   }));
+
+  const totalTemplates = byCategory.reduce((sum, r) => sum + r.count, 0);
 
   return {
     totalTemplates,
@@ -379,9 +410,26 @@ export async function getTemplatePerformanceStats(
   dateRange: string[] | null | undefined,
   apiType: string,
 ): Promise<TemplatePerformanceStat[]> {
-  const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
-  const teamFilter = teamFilterFor(teamId);
-  const apiTypeFilter = apiTypeFilterFor(apiType);
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  }
+
+  const teamFilter =
+    !teamId || teamId === "all" || teamId === "null"
+      ? Prisma.sql``
+      : Prisma.sql`AND motm."teamId" = ${teamId}::uuid`;
+
+  let apiTypeFilter = Prisma.sql``;
+
+  if (apiType === "external") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = true`;
+  } else if (apiType === "whatsapp") {
+    apiTypeFilter = Prisma.sql`AND motm."externalApi" = false`;
+  }
 
   const rows = await prisma.$queryRaw<
     {
@@ -433,7 +481,9 @@ export async function getTemplatePerformanceStats(
       AND wm."messageBody"->>'exchangeProcess' = 'send'
       AND wm."messageBody"->'send'->>'type' = 'template'
       AND wm."messageBody"->'send'->'template'->>'name' IS NOT NULL
-      AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}
+      AND wm."createdAt" BETWEEN
+        COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+        AND COALESCE(${rangeEnd}, NOW())
 
     GROUP BY template_name, template_category
     ORDER BY total_sent DESC
@@ -454,7 +504,9 @@ export async function getTemplatePerformanceStats(
       failedCount: r.failed_count,
       successPercentage,
       failurePercentage,
-      avgDeliveryTimeSeconds: roundSeconds(r.avg_delivery_time_seconds),
+      avgDeliveryTimeSeconds: r.avg_delivery_time_seconds
+        ? Number(r.avg_delivery_time_seconds.toFixed(2))
+        : null,
       lastUsed: r.last_used ? r.last_used.toISOString() : null,
     };
   });
@@ -465,8 +517,20 @@ export async function getTeamPerformanceStats(
   dateRange: string[] | null | undefined,
   apiType: string,
 ): Promise<TeamPerformanceStat[]> {
-  const { rangeStart, rangeEnd } = resolveDateRange(dateRange);
-  const apiJoinFilter = apiTypeFilterFor(apiType);
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  }
+
+  const apiJoinFilter =
+    apiType === "external"
+      ? Prisma.sql`AND motm."externalApi" = true`
+      : apiType === "whatsapp"
+        ? Prisma.sql`AND motm."externalApi" = false`
+        : Prisma.sql``;
 
   const rows = await prisma.$queryRaw<
     {
@@ -500,13 +564,15 @@ export async function getTeamPerformanceStats(
     LEFT JOIN "WaMessageOrgTeamMap" motm
       ON motm."teamId" = t.id
       AND motm."orgId" = ${orgId}::uuid
-      ${apiJoinFilter}
 
     LEFT JOIN "WaMessage" wm
       ON wm.id = motm."messageId"
-      AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}
+      AND wm."createdAt" BETWEEN
+        COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+        AND COALESCE(${rangeEnd}, NOW())
 
     WHERE t."orgId" = ${orgId}::uuid
+    ${apiJoinFilter}
 
     GROUP BY t.id, t.name, t.color
     ORDER BY total_sent DESC

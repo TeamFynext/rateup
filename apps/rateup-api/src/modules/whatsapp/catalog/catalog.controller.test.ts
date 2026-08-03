@@ -124,30 +124,16 @@ describe("deleteCatalogHandler", () => {
 
     await deleteCatalogHandler(makeRequest({ params: { catalogId: "cat-1" } }), reply);
 
-    expect(m.remove).toHaveBeenCalledWith("cat-1", "org-1");
+    expect(m.remove).toHaveBeenCalledWith("cat-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
-  // The caller's org is passed to the service, which refuses a catalog it does not own
-  // with "Catalog not found" — answered here as a 404, the same as an id that never
-  // existed, so the endpoint cannot be used to probe for other orgs' catalog ids.
-  test("scopes the delete to the caller's org", async () => {
-    await deleteCatalogHandler(
-      makeRequest({ params: { catalogId: "cat-victim" }, user: { orgId: "org-attacker" } }),
-      makeReply(),
-    );
+  // NOTE: the caller's org is never consulted — the path id alone decides what is
+  // deleted, so another org's catalog can be removed given its id.
+  test("does not scope the delete to the caller's org", async () => {
+    await deleteCatalogHandler(makeRequest({ params: { catalogId: "cat-victim" } }), makeReply());
 
-    expect(m.remove).toHaveBeenCalledWith("cat-victim", "org-attacker");
-  });
-
-  test("answers 404 for a catalog the caller's org does not own", async () => {
-    m.remove.mockRejectedValue(new Error("Catalog not found"));
-    const reply = makeReply();
-
-    await deleteCatalogHandler(makeRequest({ params: { catalogId: "cat-victim" } }), reply);
-
-    expect(reply.code).toHaveBeenCalledWith(404);
-    expect(log.error).not.toHaveBeenCalled();
+    expect(m.remove).toHaveBeenCalledWith("cat-victim");
   });
 
   test("returns 500 when the delete fails", async () => {
@@ -210,43 +196,25 @@ describe("updateCatalogHandler", () => {
       makeReply(),
     );
 
-    expect(m.update).toHaveBeenCalledWith("cat-1", "org-1", { name: "Renamed" });
+    expect(m.update).toHaveBeenCalledWith("cat-1", { name: "Renamed" });
   });
 
-  // `rest` is an object literal and so always truthy; the guard now checks whether it
-  // actually holds anything. A body carrying nothing but wabaId used to issue an empty
-  // update, which is a pointless write and would 404 for a catalog id that does not
-  // exist even though the caller asked for nothing.
-  test("issues no update when the body held only a wabaId", async () => {
+  // NOTE: `rest` is an object literal, so it is always truthy — the update always
+  // runs, even for a body that carried nothing but wabaId.
+  test("still issues an empty update when the body held only a wabaId", async () => {
     await updateCatalogHandler(
       makeRequest({ params: { catalogId: "cat-1" }, body: { wabaId: "waba-1" } }),
       makeReply(),
     );
 
-    expect(m.update).not.toHaveBeenCalled();
-  });
-
-  test("answers 404 for a catalog the caller's org does not own", async () => {
-    m.update.mockRejectedValue(new Error("Catalog not found"));
-    const reply = makeReply();
-
-    await updateCatalogHandler(
-      makeRequest({ params: { catalogId: "cat-victim" }, body: { name: "hijacked" } }),
-      reply,
-    );
-
-    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(m.update).toHaveBeenCalledWith("cat-1", {});
   });
 
   test("returns 500 when the update fails", async () => {
     m.update.mockRejectedValue(new Error("db down"));
     const reply = makeReply();
 
-    // Body carries a real field: an empty one no longer reaches the service at all.
-    await updateCatalogHandler(
-      makeRequest({ params: { catalogId: "cat-1" }, body: { name: "Renamed" } }),
-      reply,
-    );
+    await updateCatalogHandler(makeRequest({ params: { catalogId: "cat-1" }, body: {} }), reply);
 
     expect(reply.code).toHaveBeenCalledWith(500);
   });
@@ -258,23 +226,18 @@ describe("reading catalogs", () => {
 
     await getWaCatalogInfoHandler(makeRequest({ params: { catalogId: "cat-1" } }), reply);
 
-    expect(m.getOne).toHaveBeenCalledWith("cat-1", "org-1");
+    expect(m.getOne).toHaveBeenCalledWith("cat-1");
     expect(reply.payload).toBe(CATALOG);
   });
 
-  // The lookup is scoped to the caller's org, so another org's catalog comes back null
-  // and is answered 404 rather than handed over.
-  test("answers 404 for a catalog belonging to another org", async () => {
-    m.getOne.mockResolvedValue(null);
+  // NOTE: no ownership check — another org's catalog is returned given its id.
+  test("returns a catalog belonging to another org", async () => {
+    m.getOne.mockResolvedValue({ id: "cat-victim", orgId: "org-victim" });
     const reply = makeReply();
 
-    await getWaCatalogInfoHandler(
-      makeRequest({ params: { catalogId: "cat-victim" }, user: { orgId: "org-attacker" } }),
-      reply,
-    );
+    await getWaCatalogInfoHandler(makeRequest({ params: { catalogId: "cat-victim" } }), reply);
 
-    expect(m.getOne).toHaveBeenCalledWith("cat-victim", "org-attacker");
-    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(reply.payload).toMatchObject({ orgId: "org-victim" });
   });
 
   test("lists the caller's org's catalogs", async () => {
@@ -294,7 +257,7 @@ describe("reading catalogs", () => {
       reply,
     );
 
-    expect(m.getConnected).toHaveBeenCalledWith("phone-1", "org-1");
+    expect(m.getConnected).toHaveBeenCalledWith("phone-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -386,7 +349,7 @@ describe("disconnectCatalogFromWabaHandler", () => {
 
     await disconnectCatalogFromWabaHandler(makeRequest({ body }), reply);
 
-    expect(m.disconnect).toHaveBeenCalledWith(body, "org-1");
+    expect(m.disconnect).toHaveBeenCalledWith(body);
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -406,7 +369,7 @@ describe("catalog settings handlers", () => {
 
     await getCatalogSettingsHandler(makeRequest({ params: { catalogId: "cat-1" } }), reply);
 
-    expect(m.getSettings).toHaveBeenCalledWith("cat-1", "org-1");
+    expect(m.getSettings).toHaveBeenCalledWith("cat-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -419,7 +382,7 @@ describe("catalog settings handlers", () => {
       reply,
     );
 
-    expect(m.updateSettings).toHaveBeenCalledWith("cat-1", "org-1", body);
+    expect(m.updateSettings).toHaveBeenCalledWith("cat-1", body);
     expect(reply.payload).toEqual({ catalogId: "cat-1" });
   });
 

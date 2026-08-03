@@ -184,8 +184,6 @@ const m = {
 
 const CONTACT = {
   id: "contact-1",
-  // Every contact write on this path is org-scoped now.
-  orgId: "org-1",
   phone: "15550001",
   isSpam: false,
   waMessageAssignStatus: "OPEN",
@@ -425,7 +423,7 @@ describe("handleWaMessages - reopening a closed chat", () => {
 
     await callHandleWaMessages({ type: "receive" });
 
-    expect(m.updateContact).toHaveBeenCalledWith("contact-1", "org-1", {
+    expect(m.updateContact).toHaveBeenCalledWith("contact-1", {
       waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
     });
   });
@@ -572,8 +570,7 @@ describe("handleWaMessages - outbound bookkeeping", () => {
 
     await callHandleWaMessages({ type: "send", userId: "user-1" });
 
-    // (conversationId, orgId, data) — the orgId was threaded in for
-    const [, , data] = m.updateConversation.mock.calls[0];
+    const [, data] = m.updateConversation.mock.calls[0];
     expect(data.firstRespondedAt).toBeInstanceOf(Date);
     expect(data.firstRespondedByUserAt).toBeInstanceOf(Date);
   });
@@ -592,7 +589,7 @@ describe("handleWaMessages - outbound bookkeeping", () => {
 
     await callHandleWaMessages({ type: "send", userId: "user-1" });
 
-    expect(m.updateConversation).toHaveBeenCalledWith("conv-1", "org-1", {
+    expect(m.updateConversation).toHaveBeenCalledWith("conv-1", {
       firstRespondedByUserAt: expect.any(Date),
     });
   });
@@ -660,12 +657,12 @@ describe("handleWaMessages - fanning out", () => {
     await expect(callHandleWaMessages()).resolves.toEqual(WA_MESSAGE);
   });
 
-  // A storage failure is logged and rethrown, so the caller can tell the message was
-  // never stored rather than receiving undefined and treating it as a success.
-  test("reports a storage failure rather than swallowing it", async () => {
+  // NOTE: every failure is swallowed here — the webhook caller cannot tell that the
+  // message was never stored, because the function logs and returns undefined.
+  test("swallows a storage failure and returns nothing", async () => {
     m.addNewWaMessage.mockRejectedValue(new Error("db down"));
 
-    await expect(callHandleWaMessages()).rejects.toThrow("db down");
+    await expect(callHandleWaMessages()).resolves.toBeUndefined();
     expect(m.sendViaWs).not.toHaveBeenCalled();
   });
 });

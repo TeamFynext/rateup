@@ -97,7 +97,7 @@ export async function zapierAuthenticationHandler(
 
     const user = { orgId, role: Role.SUPER_ADMIN };
     request.user = user;
-    if (request.url.includes("/auth")) return reply.send({ user: user });
+    if (request.url.includes("/auth")) reply.send({ user: user });
   } catch (e) {
     log.error({ err: e }, "Error checking session");
     reply.code(401).send({ message: "Not authorized" });
@@ -219,7 +219,6 @@ export async function updateContactLabelsByIdHandler(
   try {
     const contact = await updateContactLabelsById(
       request.body.contactId,
-      request.body.orgId,
       request.body?.lifecycleId,
     );
     return reply.code(201).send({
@@ -251,13 +250,13 @@ export async function getSampleDataForTriggerHandler(
 
 export async function updateContactHandler(
   request: FastifyRequest<{
-    Body: { contactId: string; orgId: string; waMessageAssignStatus: WaMessageAssignStatus };
+    Body: { contactId: string; waMessageAssignStatus: WaMessageAssignStatus };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { contactId, orgId, ...rest } = request.body;
-    const data = await updateContactById(contactId, orgId, rest);
+    const { contactId, ...rest } = request.body;
+    const data = await updateContactById(contactId, rest);
     reply.send(data);
   } catch (e) {
     log.error(e);
@@ -278,7 +277,7 @@ export async function getContactHandler(
     const { contactId, phone, orgId } = request.query;
     let contact;
     if (contactId) {
-      const res = await getContactById(contactId, orgId);
+      const res = await getContactById(contactId);
       contact = res ? [res] : [];
     } else {
       contact = await getContactsByPhoneNumberAndOrgId(phone, orgId);
@@ -304,7 +303,7 @@ export async function deleteContactHandler(
     const { orgId } = request.query;
     const { contactId, phone } = request.body;
     if (contactId) {
-      await deleteContactById(contactId, orgId);
+      await deleteContactById(contactId);
     } else {
       if (!phone) throw new Error("Either contactId or phone must be provided");
       await deleteContactByPhoneNumberAndOrgId(orgId, phone);
@@ -392,7 +391,7 @@ export async function getContactGroupsHandler(
       const data = await getContactGroupsByOrgId(request.query.orgId);
       groups = data.map((g) => ({ id: g.id, name: g.name }));
     } else {
-      const data = await getContactGroupsByTeamId(request.query.teamId, request.query.orgId);
+      const data = await getContactGroupsByTeamId(request.query.teamId);
       groups = data.map((g) => ({ id: g.id, name: g.name }));
     }
     reply.send(groups);

@@ -30,22 +30,17 @@ export async function getLifeCyclesWithContactCount(orgId: string) {
   });
 }
 
-export async function updateLifecycle(
-  lifecycleId: string,
-  orgId: string,
-  data: LifecycleBodySchema,
-) {
-  return await prisma.lifecycle.update({
+export async function updateLifecycle(lifecycleId: string, data: LifecycleBodySchema) {
+  await prisma.lifecycle.update({
     where: {
       id: lifecycleId,
-      orgId,
     },
     data,
   });
 }
 
 export async function createLifecycle(orgId: string, data: LifecycleBodySchema) {
-  return await prisma.lifecycle.create({
+  await prisma.lifecycle.create({
     data: {
       orgId,
       ...data,
@@ -53,29 +48,15 @@ export async function createLifecycle(orgId: string, data: LifecycleBodySchema) 
   });
 }
 
-export async function deleteLifecycleById(id: string, orgId: string) {
-  const contactsInStage = await prisma.contact.count({ where: { lifecycleId: id, orgId } });
-  if (contactsInStage > 0) {
-    throw new LifecycleInUseError(contactsInStage);
-  }
-  return await prisma.lifecycle.delete({
+export async function deleteLifecycleById(id: string) {
+  await prisma.lifecycle.delete({
     where: {
       id,
-      orgId,
     },
   });
 }
 
-/** Raised when a stage still holds contacts; the handler answers 409. */
-export class LifecycleInUseError extends Error {
-  constructor(public readonly contactCount: number) {
-    super(`This stage still holds ${contactCount} contact(s)`);
-    this.name = "LifecycleInUseError";
-  }
-}
-
 export async function reorderLabels(orgId: string, data: LifecycleReorderSchema) {
-  const defaultId = data.lifecycles.find((lifecycle) => lifecycle.category !== "lost")?.id;
   return await prisma.$transaction(
     data.lifecycles.map((lifecycle) =>
       prisma.lifecycle.update({
@@ -85,7 +66,7 @@ export async function reorderLabels(orgId: string, data: LifecycleReorderSchema)
         },
         data: {
           ordering: lifecycle.ordering,
-          isDefault: lifecycle.id === defaultId,
+          isDefault: lifecycle.ordering === 0 && lifecycle.category !== "lost",
           isWon: lifecycle.isWon,
           category: lifecycle.category === "lost" ? "lost" : lifecycle.isWon ? "won" : "active",
         },

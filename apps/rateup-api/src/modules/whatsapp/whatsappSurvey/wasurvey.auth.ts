@@ -30,7 +30,7 @@ export class ConversationLimitError extends Error {
 // conversation allowance. Never call this on the inbound path — receiving customer
 // messages and creating/counting conversations must never be blocked.
 export async function assertWithinConversationLimit(orgId: string) {
-  const withinLimit = await checkConversationLimitAvailable(orgId);
+  const withinLimit = await checkConversationLimitExceeded(orgId);
   if (!withinLimit) {
     throw new ConversationLimitError();
   }
@@ -53,7 +53,10 @@ function readWhatsappConversationMax(features: unknown): number | undefined {
   return typeof count.max === "number" ? count.max : undefined;
 }
 
-export async function checkConversationLimitAvailable(orgId: string) {
+// Returns true when the org is still WITHIN its conversation allowance.
+// Monthly plans cap at `conversation.count.max` per month; annual (pooled) plans
+// cap at `max * 12` across the year. Both branches now measure conversations.
+export async function checkConversationLimitExceeded(orgId: string) {
   const usage = await prisma.usageStats.findUnique({
     where: {
       orgId: orgId,

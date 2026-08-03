@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { CreateContactMessageInput } from "./contact.schema.js";
 import { createMsg } from "./contact.service.js";
-import { log } from "../../utils/logger.js";
+import { errorMessage } from "../../utils/commonUtils.js";
 
 export async function createContactMsgHandler(
   request: FastifyRequest<{
@@ -9,13 +9,16 @@ export async function createContactMsgHandler(
   }>,
   reply: FastifyReply,
 ) {
+  const body = request.body;
+  let contactMsg;
+
   try {
-    await createMsg(request.body);
+    contactMsg = await createMsg(body);
   } catch (e) {
-    log.error(e);
-    reply.code(500).send({ success: false, message: "Something went wrong" });
+    console.error(e);
+    reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
-  reply.code(201).send({ success: true });
+  reply.code(201).send({ success: true, data: contactMsg });
 }

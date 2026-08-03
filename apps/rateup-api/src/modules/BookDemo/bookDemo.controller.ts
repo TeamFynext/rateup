@@ -1,32 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { rateupLogo, webImagesBaseUrl } from "../../utils/constants/constants.js";
+import { rateupLogo } from "../../utils/constants/constants.js";
 import { CreateBookDemoInput, CreatePartnerDataInput } from "./bookDemo.schema.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
-import { escapeHtml } from "../../utils/html.js";
-import { log } from "../../utils/logger.js";
-import { createBookDemo } from "./bookDemo.service.js";
-
-function footerSocialHtml(): string {
-  const base = webImagesBaseUrl();
-  if (!base) return "";
-  const icons = [
-    ["https://rateup.app", "website_logo.png", "Website"],
-    ["https://www.linkedin.com/company/rateup", "linkedin_logo.png", "LinkedIn"],
-    [
-      "https://play.google.com/store/apps/details?id=com.rateupapp.rateup",
-      "playstore_logo.png",
-      "Play Store",
-    ],
-  ];
-  return icons
-    .map(
-      ([href, file, alt]) => `
-          <a href="${href}" target="_blank">
-            <img src="${base}/images/email/${file}" alt="${alt}" />
-          </a>`,
-    )
-    .join("");
-}
 
 export async function bookDemoHandler(
   request: FastifyRequest<{ Body: CreateBookDemoInput }>,
@@ -34,14 +9,6 @@ export async function bookDemoHandler(
 ) {
   try {
     const { name, businessName, phone, message, workEmail } = request.body;
-
-    const safe = {
-      name: escapeHtml(name),
-      businessName: escapeHtml(businessName),
-      phone: escapeHtml(phone),
-      message: escapeHtml(message || "N/A"),
-      workEmail: escapeHtml(workEmail),
-    };
 
     const subject = `New Demo Request from ${name}`;
     const text = `
@@ -56,20 +23,12 @@ Work Email: ${workEmail}
 
     const html = `
   <h2>New Demo Request</h2>
-  <p><strong>Name:</strong> ${safe.name}</p>
-  <p><strong>Business:</strong> ${safe.businessName}</p>
-  <p><strong>Phone:</strong> ${safe.phone}</p>
-  <p><strong>Message:</strong> ${safe.message}</p>
-  <p><strong>Work Email:</strong> ${safe.workEmail}</p>
+  <p><strong>Name:</strong> ${name}</p>
+  <p><strong>Business:</strong> ${businessName}</p>
+  <p><strong>Phone:</strong> ${phone}</p>
+  <p><strong>Message:</strong> ${message || "N/A"}</p>
+  <p><strong>Work Email:</strong> ${workEmail}</p>
 `;
-
-    let recorded = false;
-    try {
-      await createBookDemo({ name, workEmail, businessName, phone, message });
-      recorded = true;
-    } catch (err) {
-      log.error({ err }, "Failed to record a demo request; queueing the emails anyway");
-    }
 
     await notificationQueue.add("notification", {
       emailData: {
@@ -81,18 +40,7 @@ Work Email: ${workEmail}
     });
 
     const emailForClient = {
-      text: `Hello, ${name}
-
-We’ve received your demo request. We will contact you soon.
-
-Name: ${name}
-Business: ${businessName}
-Phone: ${phone}
-Message: ${message || "N/A"}
-
-See you soon!
-Team RateUp
-`,
+      text: "",
       subject: "RateUp - Demo Booked Successfully",
       html: `
       
@@ -279,21 +227,21 @@ Team RateUp
         <p class="subtitle">Thank you for your interest in RateUp</p>
 
         <p class="body-text">
-          Hello, ${safe.name} <br />
+          Hello, ${name} <br />
           We’ve received your demo request. We will contact you soon.
           Here are your booking details:
         </p>
 
         <div class="details">
           <h4>Booking Details</h4>
-          <div class="detail-item"><strong>Name:</strong> ${safe.name}</div>
-          <div class="detail-item"><strong>Business:</strong> ${safe.businessName}</div>
-          <div class="detail-item"><strong>Phone:</strong> ${safe.phone}</div>
-          <div class="detail-item"><strong>Message:</strong> ${safe.message}</div>
+          <div class="detail-item"><strong>Name:</strong> ${name}</div>
+          <div class="detail-item"><strong>Business:</strong> ${businessName}</div>
+          <div class="detail-item"><strong>Phone:</strong> ${phone}</div>
+          <div class="detail-item"><strong>Message:</strong> ${message || "N/A"}</div>
         </div>
 
         <div class="cta-row">
-          <a href="https://rateup.app" class="primary-btn" target="_blank">
+          <a href=https://rateup.app class="primary-btn" target="_blank">
             Visit RateUp
           </a>
         </div>
@@ -303,7 +251,16 @@ Team RateUp
 
       <!-- Footer -->
       <div class="footer">
-        <div class="footer-social" style="margin-bottom:10px;">${footerSocialHtml()}
+        <div class="footer-social" style="margin-bottom:10px;">
+          <a href= https://rateup.app target="_blank">
+            <img src=${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/website_logo.png alt="Website" />
+          </a>
+          <a href= https://www.linkedin.com/company/rateup target="_blank">
+            <img src=${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/linkedin_logo.png alt="LinkedIn" />
+          </a>
+          <a href=https://play.google.com/store/apps/details?id=com.rateupapp.rateup target="_blank">
+            <img src=${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/playstore_logo.png alt="Play Store" />
+          </a>
         </div>
 
         <p>
@@ -321,25 +278,21 @@ Team RateUp
 </html>
 `,
     };
-    try {
-      await notificationQueue.add("notification", {
-        emailData: {
-          to: workEmail,
-          subject: emailForClient.subject,
-          html: emailForClient.html,
-          text: emailForClient.text,
-        },
-      });
-    } catch (err) {
-      log.error({ err, recorded }, "Failed to queue the demo booking confirmation");
-    }
+    await notificationQueue.add("notification", {
+      emailData: {
+        to: workEmail,
+        subject: emailForClient.subject,
+        html: emailForClient.html,
+        text: emailForClient.text,
+      },
+    });
 
     return reply.status(200).send({
       success: true,
       message: "Your demo request has been received. We’ll contact you soon!",
     });
   } catch (err) {
-    log.error({ err }, "Error handling demo booking");
+    console.error("Error handling demo booking:", err);
     return reply.status(500).send({
       success: false,
       message: "Something went wrong while booking a demo.",
@@ -370,7 +323,24 @@ export async function partnerDataHandler(
       canOnboard,
     } = request.body;
 
-    const serviceList = Array.isArray(services) ? services.join(", ") : String(services ?? "");
+    // Send email notification
+    // const emailResult = await sendPartnerDataEmail({
+    //   fullName,
+    //   workEmail,
+    //   phone,
+    //   companyName,
+    //   website,
+    //   country,
+    //   businessType,
+    //   companySize,
+    //   yearsInBusiness,
+    //   whyPartner,
+    //   services,
+    //   referralVolume,
+    //   managesClients,
+    //   apiExperience,
+    //   canOnboard,
+    // });
 
     const subject = `New Partner Inquiry from ${fullName}`;
     const text = `
@@ -386,7 +356,7 @@ export async function partnerDataHandler(
       Company Size: ${companySize}
       Years in Business: ${yearsInBusiness}
       Why Partner: ${whyPartner}
-      Services: ${serviceList}
+      Services: ${services.join(", ")}
       Referral Volume: ${referralVolume}
       Manages Clients: ${managesClients}
       API Experience: ${apiExperience}
@@ -395,21 +365,21 @@ export async function partnerDataHandler(
 
     const html = `
       <h2>New Partner Inquiry</h2>
-      <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(workEmail)}</p>
-      <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-      <p><strong>Company:</strong> ${escapeHtml(companyName)}</p>
-      <p><strong>Website:</strong> ${escapeHtml(website)}</p>
-      <p><strong>Country:</strong> ${escapeHtml(country)}</p>
-      <p><strong>Business Type:</strong> ${escapeHtml(businessType)}</p>
-      <p><strong>Company Size:</strong> ${escapeHtml(companySize)}</p>
-      <p><strong>Years in Business:</strong> ${escapeHtml(yearsInBusiness)}</p>
-      <p><strong>Why Partner:</strong> ${escapeHtml(whyPartner)}</p>
-      <p><strong>Services:</strong> ${escapeHtml(serviceList)}</p>
-      <p><strong>Referral Volume:</strong> ${escapeHtml(referralVolume)}</p>
-      <p><strong>Manages Clients:</strong> ${escapeHtml(managesClients)}</p>
-      <p><strong>API Experience:</strong> ${escapeHtml(apiExperience)}</p>
-      <p><strong>Can Onboard:</strong> ${escapeHtml(canOnboard)}</p>
+      <p><strong>Name:</strong> ${fullName}</p>
+      <p><strong>Email:</strong> ${workEmail}</p>
+      <p><strong>Phone:</strong> ${phone}</p>
+      <p><strong>Company:</strong> ${companyName}</p>
+      <p><strong>Website:</strong> ${website}</p>
+      <p><strong>Country:</strong> ${country}</p>
+      <p><strong>Business Type:</strong> ${businessType}</p>
+      <p><strong>Company Size:</strong> ${companySize}</p>
+      <p><strong>Years in Business:</strong> ${yearsInBusiness}</p>
+      <p><strong>Why Partner:</strong> ${whyPartner}</p>
+      <p><strong>Services:</strong> ${services.join(", ")}</p>
+      <p><strong>Referral Volume:</strong> ${referralVolume}</p>
+      <p><strong>Manages Clients:</strong> ${managesClients}</p>
+      <p><strong>API Experience:</strong> ${apiExperience}</p>
+      <p><strong>Can Onboard:</strong> ${canOnboard}</p>
     `;
 
     await notificationQueue.add("notification", {
@@ -426,7 +396,7 @@ export async function partnerDataHandler(
       message: "Partner inquiry submitted successfully",
     });
   } catch (error) {
-    log.error({ err: error }, "Error in partnerDataHandler");
+    console.error("Error in partnerDataHandler:", error);
     return reply.status(500).send({
       success: false,
       message: "Internal server error",

@@ -210,13 +210,12 @@ describe("runInboxAutomationCron", () => {
     db.inboxAutomation.findMany.mockResolvedValue([
       { id: "a1", orgId: "org-1", condition: "ASSIGNED", closeAfterHours: 24 },
     ]);
-    db.contact.findMany.mockResolvedValue([{ id: "contact-1", orgId: "org-1" }]);
+    db.contact.findMany.mockResolvedValue([{ id: "contact-1" }]);
 
     await runInboxAutomationCron();
 
     expect(updateContactMock).toHaveBeenCalledWith(
       "contact-1",
-      "org-1",
       { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
       "RateUp",
       undefined,
@@ -298,10 +297,7 @@ describe("runInboxAutomationCron", () => {
     db.inboxAutomation.findMany.mockResolvedValue([
       { id: "a1", orgId: "org-1", condition: "ASSIGNED", closeAfterHours: 24 },
     ]);
-    db.contact.findMany.mockResolvedValue([
-      { id: "contact-1", orgId: "org-1" },
-      { id: "contact-2", orgId: "org-1" },
-    ]);
+    db.contact.findMany.mockResolvedValue([{ id: "contact-1" }, { id: "contact-2" }]);
     updateContactMock.mockRejectedValueOnce(new Error("row locked"));
 
     await runInboxAutomationCron();
@@ -316,8 +312,8 @@ describe("runInboxAutomationCron", () => {
       { id: "a2", orgId: "org-2", condition: "UNASSIGNED", closeAfterHours: 6 },
     ]);
     db.contact.findMany
-      .mockResolvedValueOnce([{ id: "contact-1", orgId: "org-1" }])
-      .mockResolvedValueOnce([{ id: "contact-2", orgId: "org-1" }]);
+      .mockResolvedValueOnce([{ id: "contact-1" }])
+      .mockResolvedValueOnce([{ id: "contact-2" }]);
 
     await runInboxAutomationCron();
 

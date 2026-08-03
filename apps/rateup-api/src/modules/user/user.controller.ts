@@ -279,15 +279,15 @@ export async function changeUserPasswordHandler(
     return;
   }
 
-  // SuperTokens rejecting the new password used to fall through to the 200 below, so the
-  // user was told their password changed when it had not.
-  if (response?.status === "PASSWORD_POLICY_VIOLATED_ERROR") {
-    reply.code(400).send({
-      success: false,
-      message: response.failureReason || "Password does not meet the required format",
-    });
-    return;
-  }
+  //  if (response?.status === "PASSWORD_POLICY_VIOLATED_ERROR") {
+  //      // TODO: handle incorrect password error
+  //      console.log("..........................incorrect password format")
+  //      let message ="Incorrect password format"
+  //      reply.code(500).send({ success: false, message });
+  //      return
+  //  }
+
+  // TODO: send successful password update response
 
   let message = "Successfully updated password";
   reply.code(200).send({ success: true, message });

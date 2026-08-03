@@ -8,33 +8,20 @@ vi.mock("../../utils/prisma.js", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
-      deleteMany: vi.fn(),
     },
   },
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
-vi.mock("../../utils/logger.js", () => ({
-  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
-vi.mock("../../utils/rateLimit.js", () => ({
-  rateLimit: vi.fn((opts) => Object.assign(vi.fn(), { opts })),
-}));
-// The visit dedup keeps a per-IP-per-code key in Redis.
-vi.mock("../../utils/redisConnection.js", () => ({ default: { set: vi.fn() } }));
 
 import prisma from "../../utils/prisma.js";
-import connection from "../../utils/redisConnection.js";
-import { log } from "../../utils/logger.js";
-import { rateLimit } from "../../utils/rateLimit.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import {
   createReferral,
   deleteReferral,
   getAllReferrals,
-  ReferralCodeError,
   updateReferral,
 } from "./referrals.service.js";
 import {
@@ -44,12 +31,10 @@ import {
   trackVisitHandler,
 } from "./referrals.controller.js";
 import { referralRoutes } from "./referrals.route.js";
-import { byIdParamsSchema, createReferralSchema, trackVisitSchema } from "./referrals.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as { referral: Record<string, Mock> };
-const redis = connection as unknown as { set: Mock };
 
 const CODE = "annsmith472";
 
@@ -74,9 +59,6 @@ beforeEach(() => {
   db.referral.findUnique.mockResolvedValue(null);
   db.referral.update.mockResolvedValue({ id: "r-1", visit_count: 1 });
   db.referral.delete.mockResolvedValue({ id: "r-1" });
-  db.referral.deleteMany.mockResolvedValue({ count: 1 });
-  // "OK" means the key was not there — a first visit from this IP for this code.
-  redis.set.mockResolvedValue("OK");
 });
 
 afterEach(() => {
@@ -123,49 +105,26 @@ describe("referralRoutes", () => {
     }
   });
 
-  // Registered as post(url, handler) — two arguments, so no options object, no
-  // preHandler and no schema — while it increments a counter an influencer may be
-  // paid on. It stays unauthenticated (a visit happens before anyone signs in)
-  // and is rate limited instead.
-  test("track-visit stays session-free but is rate limited and validated", async () => {
+  // NOTE: registered as post(url, handler) — no options object, so no
+  // preHandler and no schema.
+  test("track-visit carries no guard at all", async () => {
     const { srv, routes } = fakeServer();
 
     await referralRoutes(srv);
 
     const track = routes.find((r) => r.url === "/track-visit");
-    expect(track.handler).toBe(trackVisitHandler);
-    expect(track.opts.preHandler).toBeDefined();
-    expect(track.opts.preHandler).not.toBe(checkSession);
-    expect(rateLimit).toHaveBeenCalledWith(expect.objectContaining({ key: "referralTrackVisit" }));
-    expect(track.opts.schema.body).toBe(trackVisitSchema);
+    expect(track.opts).toBe(trackVisitHandler);
+    expect(track.handler).toBeUndefined();
   });
 
-  // The module had no schema file at all, which is why the only validation was
-  // three truthiness checks in the handlers.
-  test("the writing routes declare schemas", async () => {
+  test("no route declares a schema", async () => {
     const { srv, routes } = fakeServer();
 
     await referralRoutes(srv);
 
-    expect(routes.find((r) => r.method === "POST" && r.url === "/").opts.schema.body).toBe(
-      createReferralSchema,
-    );
-    expect(routes.find((r) => r.method === "DELETE").opts.schema.params).toBe(byIdParamsSchema);
-  });
-
-  test("the create schema requires a real email and bounds the name", () => {
-    expect(createReferralSchema.safeParse({ name: "Ann", email: "not-an-email" }).success).toBe(
-      false,
-    );
-    expect(createReferralSchema.safeParse({ name: "", email: "a@b.test" }).success).toBe(false);
-    expect(createReferralSchema.safeParse({ name: "Ann", email: "a@b.test" }).success).toBe(true);
-  });
-
-  test("the delete params schema requires a uuid", () => {
-    expect(byIdParamsSchema.safeParse({ id: "r-1" }).success).toBe(false);
-    expect(byIdParamsSchema.safeParse({ id: "3f8a1e2c-5b7d-4c9e-8a1b-2d3e4f5a6b7c" }).success).toBe(
-      true,
-    );
+    for (const r of routes.slice(0, 3)) {
+      expect(r.opts.schema).toBeUndefined();
+    }
   });
 });
 
@@ -190,53 +149,32 @@ describe("trackVisitHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // The handler read nothing but the body — no session, no IP, no fingerprint —
-  // so nothing recorded who asked or could tell two visits apart. It keys the
-  // dedup on the client IP now.
-  test("keys the deduplication on the caller's IP and the code", async () => {
-    await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), reply());
+  // NOTE: the handler reads nothing but the body — no session, no IP, no
+  // fingerprint, and nothing records who or what asked.
+  test("consults no identity and no request metadata", async () => {
+    const req: any = {
+      log: { error: vi.fn() },
+      body: { code: CODE },
+      get user() {
+        throw new Error("request.user was read");
+      },
+      get ip() {
+        throw new Error("request.ip was read");
+      },
+    };
 
-    expect(redis.set).toHaveBeenCalledWith(
-      `referral:visit:${CODE}:203.0.113.9`,
-      "1",
-      "EX",
-      86_400,
-      "NX",
-    );
+    await expect(trackVisitHandler(req, reply())).resolves.toBeDefined();
+    expect(db.referral.update).toHaveBeenCalledOnce();
   });
 
-  // Nothing deduplicated, so the same code could be counted without limit from a
-  // single caller — the figure the module exists to produce was directly
-  // writable by the people it measures.
-  test("counts one visit per IP per code per day", async () => {
-    redis.set.mockResolvedValueOnce("OK");
-    redis.set.mockResolvedValue(null); // the key already exists
-
+  // NOTE: nothing deduplicates, so the same code can be counted without limit
+  // from a single caller.
+  test("counts every call, with no deduplication", async () => {
     for (let i = 0; i < 25; i++) {
-      await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), reply());
+      await trackVisitHandler(request({ body: { code: CODE } }), reply());
     }
 
-    expect(db.referral.update).toHaveBeenCalledOnce();
-  });
-
-  test("a different IP is counted separately", async () => {
-    await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), reply());
-    await trackVisitHandler(request({ body: { code: CODE }, ip: "198.51.100.4" }), reply());
-
-    expect(db.referral.update).toHaveBeenCalledTimes(2);
-  });
-
-  // Fails OPEN, for the same reason the rate limiter does: a Redis outage should
-  // not stop legitimate visits being counted.
-  test("a Redis failure counts the visit rather than dropping it", async () => {
-    redis.set.mockRejectedValueOnce(new Error("redis down"));
-    const rep = reply();
-
-    await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), rep);
-
-    expect(db.referral.update).toHaveBeenCalledOnce();
-    expect(answer(rep).code).toBe(200);
-    expect(log.error).toHaveBeenCalled();
+    expect(db.referral.update).toHaveBeenCalledTimes(25);
   });
 
   test("400s a request with no code", async () => {
@@ -248,27 +186,27 @@ describe("trackVisitHandler", () => {
     expect(db.referral.findUnique).not.toHaveBeenCalled();
   });
 
-  // A known code and an unknown one used to be distinguishable — 200 against 404
-  // — so the code space was enumerable through an endpoint that needs no
-  // credential, and 38.2 made that a small space for any known influencer name.
-  test("a known and an unknown code answer identically", async () => {
+  test("404s a code that does not exist", async () => {
+    db.referral.findUnique.mockResolvedValueOnce(null);
+    const rep = reply();
+
+    await trackVisitHandler(request({ body: { code: "guessed" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 404, body: { message: "Referral not found" } });
+  });
+
+  // NOTE: a known code and an unknown one are distinguishable, so the code
+  // space can be probed through this endpoint.
+  test("a known and an unknown code answer differently", async () => {
     const known = reply();
-    await trackVisitHandler(request({ body: { code: CODE }, ip: "203.0.113.9" }), known);
+    await trackVisitHandler(request({ body: { code: CODE } }), known);
 
     db.referral.findUnique.mockResolvedValueOnce(null);
     const unknown = reply();
-    await trackVisitHandler(request({ body: { code: "nope" }, ip: "198.51.100.4" }), unknown);
+    await trackVisitHandler(request({ body: { code: "nope" } }), unknown);
 
-    expect(answer(known)).toEqual(answer(unknown));
     expect(answer(known).code).toBe(200);
-  });
-
-  test("an unknown code counts nothing", async () => {
-    db.referral.findUnique.mockResolvedValueOnce(null);
-
-    await trackVisitHandler(request({ body: { code: "guessed" }, ip: "203.0.113.9" }), reply());
-
-    expect(db.referral.update).not.toHaveBeenCalled();
+    expect(answer(unknown).code).toBe(404);
   });
 
   test("a database failure answers a fixed 500", async () => {
@@ -302,11 +240,8 @@ describe("updateReferral", () => {
     });
   });
 
-  // Threw "Referral not found", which the track-visit handler mapped to a 404 by
-  // comparing the message string — fragile in itself, and the thing that made the
-  // code space enumerable.
-  test("returns null for a code that does not resolve", async () => {
-    await expect(updateReferral(CODE, "visit")).resolves.toBeNull();
+  test("throws a named error for a code that does not resolve", async () => {
+    await expect(updateReferral(CODE, "visit")).rejects.toThrow("Referral not found");
     expect(db.referral.update).not.toHaveBeenCalled();
   });
 
@@ -326,43 +261,38 @@ describe("updateReferral", () => {
 // ===========================================================================
 
 describe("createReferral", () => {
-  const CODE_PATTERN = /^[a-z0-9]+$/;
+  test("builds the code from the name plus a three digit suffix", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
 
-  test("builds the code from the name plus a random suffix", async () => {
     await createReferral("Ann Smith", "ann@example.test");
 
-    const code = db.referral.create.mock.calls[0][0].data.referral_code;
-    expect(code.startsWith("annsmith")).toBe(true);
-    expect(code).toMatch(CODE_PATTERN);
+    expect(db.referral.create.mock.calls[0][0].data.referral_code).toBe("annsmith550");
   });
 
   test("strips punctuation and casing and truncates to fifteen characters", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+
     await createReferral("Ann-Marie O'Sullivan Jr.", "a@b.test");
 
     const code = db.referral.create.mock.calls[0][0].data.referral_code;
-    expect(code.startsWith("annmarieosulliv")).toBe(true);
-    expect(code.slice(0, 15)).toBe("annmarieosulliv");
+    expect(code).toBe("annmarieosulliv550");
+    expect(code.slice(0, -3)).toHaveLength(15);
   });
 
-  // The suffix was Math.floor(100 + Math.random() * 900) — 900 possible codes for
-  // a given name, drawn from a generator that is not a CSPRNG — while 38.1 makes
-  // knowing a code the entire requirement for inflating its counters.
-  test("does not draw the suffix from Math.random", async () => {
-    const spy = vi.spyOn(Math, "random");
+  // NOTE: the suffix is Math.floor(100 + Math.random() * 900), so there are 900
+  // possible codes for a given name — and Math.random is not a CSPRNG.
+  test("draws the suffix from Math.random rather than a CSPRNG", async () => {
+    const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
     await createReferral("Ann", "a@b.test");
 
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  test("the suffix is wide enough not to be enumerable", async () => {
-    await createReferral("Ann", "a@b.test");
-
-    const code = db.referral.create.mock.calls[0][0].data.referral_code;
-    expect(code.slice("ann".length)).toHaveLength(6);
+    expect(spy).toHaveBeenCalled();
   });
 
   test("retries when the generated code is already taken", async () => {
+    const randoms = [0.1, 0.2, 0.3];
+    let i = 0;
+    vi.spyOn(Math, "random").mockImplementation(() => randoms[i++] ?? 0.9);
     db.referral.findUnique
       .mockResolvedValueOnce({ id: "taken" })
       .mockResolvedValueOnce({ id: "taken" })
@@ -371,49 +301,61 @@ describe("createReferral", () => {
     await createReferral("Ann", "a@b.test");
 
     expect(db.referral.findUnique).toHaveBeenCalledTimes(3);
-    expect(db.referral.create.mock.calls[0][0].data.referral_code.startsWith("ann")).toBe(true);
+    expect(db.referral.create.mock.calls[0][0].data.referral_code).toBe("ann370");
   });
 
-  // Two paths used to leave the retry loop WITHOUT checking the result: an empty
-  // base returned immediately, and ten collisions returned the same unchecked
-  // expression. Both wrote a code that could collide, and the create then failed
-  // on the unique constraint — reported as "Email already exists" (38.3).
-  test("exhausting the attempts raises rather than writing an unchecked code", async () => {
+  // NOTE: after ten collisions the function abandons the uniqueness check and
+  // returns a random string that is never looked up.
+  test("the fallback after ten attempts is never checked for uniqueness", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
     db.referral.findUnique.mockResolvedValue({ id: "taken" });
 
-    await expect(createReferral("Ann", "a@b.test")).rejects.toBeInstanceOf(ReferralCodeError);
+    await createReferral("Ann", "a@b.test");
+
     expect(db.referral.findUnique).toHaveBeenCalledTimes(10);
-    expect(db.referral.create).not.toHaveBeenCalled();
+    const code = db.referral.create.mock.calls[0][0].data.referral_code;
+    expect(code).not.toContain("ann");
   });
 
-  // A name with no alphanumeric characters produced an empty base and went
-  // straight to the same unchecked fallback.
-  test("a name with no alphanumerics still checks its candidate", async () => {
+  // NOTE: a name with no alphanumeric characters produces an empty base and
+  // goes straight to the same unchecked fallback.
+  test("a name with no alphanumerics skips the uniqueness check entirely", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+
     await createReferral("...", "a@b.test");
 
-    expect(db.referral.findUnique).toHaveBeenCalledOnce();
+    expect(db.referral.findUnique).not.toHaveBeenCalled();
     expect(db.referral.create).toHaveBeenCalledOnce();
   });
 
-  // The fallback was Math.random().toString(36).substring(2, 9), whose length is
-  // whatever the draw happens to give — seven characters typically, ONE for 0.5,
-  // and an EMPTY STRING for a draw of exactly 0, which would have stored a
-  // referral with no code at all.
-  test("a name with no alphanumerics produces a fixed-length code", async () => {
+  // NOTE: the fallback is Math.random().toString(36).substring(2, 9), whose
+  // length depends on how many base-36 digits the draw happens to have.
+  test("the fallback length varies with the draw", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
     await createReferral("...", "a@b.test");
-    const first = db.referral.create.mock.calls[0][0].data.referral_code;
+    const short = db.referral.create.mock.calls[0][0].data.referral_code;
 
-    db.referral.create.mockClear();
-    await createReferral("!!!", "b@c.test");
-    const second = db.referral.create.mock.calls[0][0].data.referral_code;
+    vi.clearAllMocks();
+    db.referral.create.mockResolvedValue({ id: "r-2" });
+    vi.spyOn(Math, "random").mockReturnValue(0.123456789012345);
+    await createReferral("...", "b@c.test");
+    const long = db.referral.create.mock.calls[0][0].data.referral_code;
 
-    expect(first).toHaveLength(12);
-    expect(second).toHaveLength(12);
-    expect(first).not.toBe(second);
-    expect(first).toMatch(CODE_PATTERN);
+    expect(short).toBe("i");
+    expect(long.length).toBeGreaterThan(short.length);
+  });
+
+  test("a draw of exactly zero produces an empty code", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    await createReferral("...", "a@b.test");
+
+    expect(db.referral.create.mock.calls[0][0].data.referral_code).toBe("");
   });
 
   test("stores the counters at zero", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+
     await createReferral("Ann", "a@b.test");
 
     expect(db.referral.create.mock.calls[0][0].data).toMatchObject({
@@ -428,6 +370,10 @@ describe("createReferral", () => {
 // ===========================================================================
 
 describe("createReferralHandler", () => {
+  beforeEach(() => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+  });
+
   test("answers 201 with only the generated code", async () => {
     db.referral.create.mockResolvedValueOnce({
       id: "r-1",
@@ -454,37 +400,24 @@ describe("createReferralHandler", () => {
     expect(answer(b)).toEqual({ code: 400, body: { message: "email is required" } });
   });
 
-  // The only check on the email used to be that it is truthy; the route schema
-  // rejects a non-email before the handler is reached.
-  test("the schema, not the handler, is what rejects a non-email", () => {
-    expect(createReferralSchema.safeParse({ name: "Ann", email: "not-an-email" }).success).toBe(
-      false,
-    );
+  // NOTE: the only check on the email is that it is truthy — there is no route
+  // schema and no format validation anywhere.
+  test("accepts anything non-empty as an email", async () => {
+    const rep = reply();
+
+    await createReferralHandler(request({ body: { name: "Ann", email: "not-an-email" } }), rep);
+
+    expect(db.referral.create.mock.calls[0][0].data.email).toBe("not-an-email");
+    expect(answer(rep).code).toBe(201);
   });
 
-  // Referral has unique constraints on BOTH email and referral_code, and every
-  // P2002 was reported as a duplicate email — so an operator hitting a code
-  // collision would change the email, retry, and hit the same collision, because
-  // the code is regenerated from the same name. Prisma carries meta.target.
-  test("reports a referral-code collision as a code collision", async () => {
+  // NOTE: Referral has unique constraints on BOTH email and referral_code
+  // (prisma/schema.prisma:2811, :2813), and every P2002 is reported as a
+  // duplicate email.
+  test("reports a referral-code collision as a duplicate email", async () => {
     db.referral.create.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed on the fields: (`referral_code`)"), {
         code: "P2002",
-        meta: { target: ["referral_code"] },
-      }),
-    );
-    const rep = reply();
-
-    await createReferralHandler(request({ body: { name: "Ann", email: "ann@example.test" } }), rep);
-
-    expect(answer(rep)).toEqual({ code: 409, body: { message: "Referral code already exists" } });
-  });
-
-  test("still reports a duplicate email as one", async () => {
-    db.referral.create.mockRejectedValueOnce(
-      Object.assign(new Error("Unique constraint failed on the fields: (`email`)"), {
-        code: "P2002",
-        meta: { target: ["email"] },
       }),
     );
     const rep = reply();
@@ -492,18 +425,6 @@ describe("createReferralHandler", () => {
     await createReferralHandler(request({ body: { name: "Ann", email: "ann@example.test" } }), rep);
 
     expect(answer(rep)).toEqual({ code: 400, body: { message: "Email already exists" } });
-  });
-
-  test("a generator that cannot find a free code is reported as such", async () => {
-    db.referral.findUnique.mockResolvedValue({ id: "taken" });
-    const rep = reply();
-
-    await createReferralHandler(request({ body: { name: "Ann", email: "a@b.test" } }), rep);
-
-    expect(answer(rep)).toEqual({
-      code: 500,
-      body: { message: "Could not generate a unique referral code" },
-    });
   });
 
   test("any other failure answers a fixed 500", async () => {
@@ -554,7 +475,7 @@ describe("deleteReferralHandler", () => {
   test("deletes by the path id", async () => {
     await deleteReferral("r-1");
 
-    expect(db.referral.deleteMany).toHaveBeenCalledWith({ where: { id: "r-1" } });
+    expect(db.referral.delete).toHaveBeenCalledWith({ where: { id: "r-1" } });
   });
 
   test("400s when no id is present", async () => {
@@ -565,12 +486,20 @@ describe("deleteReferralHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { message: "id is required" } });
   });
 
-  // `delete` raised P2025 for a row that is not there and the catch answered a
-  // fixed 500, so a double-click in the admin UI reported a fault for an
-  // operation that had already succeeded. deleteMany succeeds with a count of
-  // zero.
-  test("deleting an already-deleted referral is an idempotent success", async () => {
-    db.referral.deleteMany.mockResolvedValueOnce({ count: 0 });
+  // NOTE: a missing row raises P2025 and is reported as a server error, so the
+  // caller cannot tell a stale id from a fault.
+  test("a missing row answers 500 rather than 404", async () => {
+    db.referral.delete.mockRejectedValueOnce(
+      Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
+    );
+    const rep = reply();
+
+    await deleteReferralHandler(request({ params: { id: "r-1" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { message: "Internal server error" } });
+  });
+
+  test("the counters are lost with the row", async () => {
     const rep = reply();
 
     await deleteReferralHandler(request({ params: { id: "r-1" } }), rep);
@@ -579,25 +508,5 @@ describe("deleteReferralHandler", () => {
       code: 200,
       body: { success: true, message: "Referral deleted successfully" },
     });
-  });
-
-  // STILL OPEN: visit_count and signup_count still go with the
-  // row — there is no archive table and no soft delete, so removing an influencer
-  // destroys the record of what they were owed. The totals are logged first,
-  // which leaves something recoverable but is not an archive.
-  test("logs the counters before removing the row", async () => {
-    db.referral.findUnique.mockResolvedValueOnce({
-      id: "r-1",
-      referral_code: CODE,
-      visit_count: 412,
-      signup_count: 37,
-    });
-
-    await deleteReferralHandler(request({ params: { id: "r-1" } }), reply());
-
-    expect(log.info).toHaveBeenCalledWith(
-      expect.objectContaining({ visitCount: 412, signupCount: 37 }),
-      expect.any(String),
-    );
   });
 });

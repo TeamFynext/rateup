@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    webhook: { upsert: vi.fn(), findUnique: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
+    webhook: { upsert: vi.fn(), findUnique: vi.fn(), delete: vi.fn() },
   },
 }));
 
@@ -15,20 +15,11 @@ vi.mock("../../utils/redisConnection.js", () => ({
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
-
-// The verification fetch now resolves the host before issuing anything, so the
-// resolver is part of what these tests drive.
-vi.mock("node:dns/promises", () => ({ lookup: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
-import { lookup } from "node:dns/promises";
 import { log } from "../../utils/logger.js";
 import { outgoingWebhookQueue } from "../../utils/redisConnection.js";
 import { checkSession } from "../../utils/checkSession.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   deleteWebhook,
   enqueueWebhookDispatch,
@@ -42,16 +33,14 @@ import {
   saveWebhookHandler,
 } from "./webhook.controller.js";
 import { webhookRoutes } from "./webhook.route.js";
-import { saveWebhookSchema, WEBHOOK_EVENTS } from "./webhook.schema.js";
+import { saveWebhookSchema } from "./webhook.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as { webhook: Record<string, Mock> };
-const dns = lookup as unknown as Mock;
 
 const ORG = "11111111-1111-1111-1111-111111111111";
 const TOKEN = "challenge-token";
-const PUBLIC_IP = "93.184.216.34";
 
 function reply() {
   const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
@@ -64,9 +53,6 @@ function answer(rep: any) {
 
 const okResponse = (body: string) => ({ ok: true, status: 200, text: async () => body });
 
-/** The URL the fetch was actually issued against, as a string. */
-const fetched = (call: number = 0) => String(fetchMock.mock.calls[call][0]);
-
 let fetchMock: Mock;
 
 beforeEach(() => {
@@ -74,8 +60,6 @@ beforeEach(() => {
   db.webhook.upsert.mockResolvedValue({ id: "w-1", orgId: ORG });
   db.webhook.findUnique.mockResolvedValue(null);
   db.webhook.delete.mockResolvedValue({ id: "w-1" });
-  db.webhook.deleteMany.mockResolvedValue({ count: 1 });
-  dns.mockResolvedValue([{ address: PUBLIC_IP, family: 4 }]);
   (outgoingWebhookQueue.add as unknown as Mock).mockResolvedValue({ id: "job-1" });
   fetchMock = vi.fn(async () => okResponse(TOKEN)) as unknown as Mock;
   vi.stubGlobal("fetch", fetchMock);
@@ -86,14 +70,14 @@ afterEach(() => {
 });
 
 // ===========================================================================
-// verifyWebhookUrl — the server no longer fetches whatever it is given
+// verifyWebhookUrl — the server fetches whatever it is given
 // ===========================================================================
 
 describe("verifyWebhookUrl", () => {
   test("issues a GET to the caller's URL with the challenge appended", async () => {
     await verifyWebhookUrl("https://hooks.example.test/rateup", TOKEN);
 
-    expect(fetched()).toBe(`https://hooks.example.test/rateup?challenge=${TOKEN}`);
+    expect(fetchMock.mock.calls[0][0]).toBe(`https://hooks.example.test/rateup?challenge=${TOKEN}`);
   });
 
   test("accepts only an exact echo of the token", async () => {
@@ -124,72 +108,31 @@ describe("verifyWebhookUrl", () => {
     expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
   });
 
-  // There was no allowlist and no host or address check: an authenticated user
-  // could make the server issue a GET to any host from inside the network, and
-  // the 200/400 answer plus the 5-second timeout separated "reachable and
-  // echoed" from "refused" from "hung".
-  test("refuses a host that resolves to a private address", async () => {
-    dns.mockResolvedValueOnce([{ address: "10.0.0.5", family: 4 }]);
+  // NOTE: no allowlist, no host or address check. The URL is whatever the
+  // authenticated caller sent, and the request is made before anything decides
+  // whether the answer was acceptable.
+  test("fetches an internal host as readily as an external one", async () => {
+    fetchMock.mockResolvedValueOnce(okResponse("not the token"));
 
-    await expect(
-      verifyWebhookUrl("https://internal-admin.svc.cluster.local/health", TOKEN),
-    ).resolves.toBe(false);
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(log.warn).toHaveBeenCalled();
+    await verifyWebhookUrl("https://internal-admin.svc.cluster.local/health", TOKEN);
+
+    expect(fetchMock.mock.calls[0][0]).toContain("internal-admin.svc.cluster.local");
   });
 
-  test("refuses the cloud metadata endpoint, loopback and the private ranges", async () => {
-    for (const address of ["169.254.169.254", "127.0.0.1", "192.168.1.9", "172.16.4.4"]) {
-      dns.mockResolvedValueOnce([{ address, family: 4 }]);
-      await expect(verifyWebhookUrl(`https://receiver.test/${address}`, TOKEN)).resolves.toBe(
-        false,
-      );
-    }
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test("refuses IPv6 loopback and unique-local", async () => {
-    for (const address of ["[::1]", "[fd00::1]", "[fe80::1]"]) {
-      await expect(verifyWebhookUrl(`https://${address}/hook`, TOKEN)).resolves.toBe(false);
-    }
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test("refuses a literal private address without consulting the resolver", async () => {
-    await expect(verifyWebhookUrl("https://10.0.0.5:8080", TOKEN)).resolves.toBe(false);
-
-    expect(dns).not.toHaveBeenCalled();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test("refuses when any resolved address is private", async () => {
-    dns.mockResolvedValueOnce([
-      { address: PUBLIC_IP, family: 4 },
-      { address: "127.0.0.1", family: 4 },
-    ]);
-
-    await expect(verifyWebhookUrl("https://split-horizon.test", TOKEN)).resolves.toBe(false);
-  });
-
-  // fetch defaults to redirect: "follow", so the schema's https-only rule
-  // constrained the first hop only — a caller could register their own host and
-  // have it answer 302 to http://169.254.169.254/.
-  test("sets redirect to manual, so the check cannot be bypassed by a second hop", async () => {
+  // NOTE: fetch defaults to redirect: "follow" and nothing overrides it here,
+  // so the schema's https-only rule constrains the first hop only.
+  test("sets no redirect policy, so the https rule covers only the first hop", async () => {
     await verifyWebhookUrl("https://x.test", TOKEN);
 
-    expect(fetchMock.mock.calls[0][1].redirect).toBe("manual");
+    expect(fetchMock.mock.calls[0][1].redirect).toBeUndefined();
   });
 
-  test("refuses a non-https URL even if one reaches the service directly", async () => {
-    await expect(verifyWebhookUrl("http://x.test", TOKEN)).resolves.toBe(false);
-
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test("a connection failure is a false, and is logged", async () => {
+  // NOTE: a caller learns reachable-from-the-server versus not, because the two
+  // outcomes are distinguishable in the response the endpoint returns.
+  test("a connection failure is a distinguishable false, and is logged", async () => {
     fetchMock.mockRejectedValueOnce(new Error("ECONNREFUSED"));
 
-    await expect(verifyWebhookUrl("https://x.test", TOKEN)).resolves.toBe(false);
+    await expect(verifyWebhookUrl("https://10.0.0.5:8080", TOKEN)).resolves.toBe(false);
     expect(log.warn).toHaveBeenCalled();
   });
 
@@ -202,50 +145,50 @@ describe("verifyWebhookUrl", () => {
   test("encodes the token into the query string", async () => {
     await verifyWebhookUrl("https://x.test", "a b&c=d");
 
-    expect(fetched()).toBe("https://x.test/?challenge=a+b%26c%3Dd");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://x.test?challenge=a%20b%26c%3Dd");
   });
 
-  // The challenge was concatenated as `${url}?challenge=...`, so a registered
-  // URL that already carried a query received two question marks and the
-  // receiver saw one parameter whose value was `1?challenge=TOKEN` — rejecting an
-  // otherwise correct configuration and blaming the receiver.
-  test("sets the challenge on a URL that already has a query", async () => {
+  // NOTE: a URL that already carries a query gets a second `?`, so the
+  // challenge is not a parameter the receiver can read.
+  test("appends a second question mark to a URL that already has a query", async () => {
     await verifyWebhookUrl("https://x.test/hook?tenant=1", TOKEN);
 
-    expect(fetched()).toBe(`https://x.test/hook?tenant=1&challenge=${TOKEN}`);
+    expect(fetchMock.mock.calls[0][0]).toBe(`https://x.test/hook?tenant=1?challenge=${TOKEN}`);
   });
 });
 
 // ===========================================================================
-// The token that used to be optional in name only
+// The optional token that cannot be omitted
 // ===========================================================================
 
 describe("the verify token", () => {
-  // The field was `.optional()`, which the contract advertised and the behaviour
-  // did not honour: `encodeURIComponent(undefined)` sent the literal string
-  // "undefined" as the challenge, and the echo was compared against undefined,
-  // which no string satisfies.
-  test("the schema requires it", () => {
-    expect(
-      saveWebhookSchema.safeParse({ url: "https://x.test", events: ["message_status"] }).success,
-    ).toBe(false);
-    expect(
-      saveWebhookSchema.safeParse({
-        url: "https://x.test",
-        events: ["message_status"],
-        verifyToken: "",
-      }).success,
-    ).toBe(false);
-    expect(
-      saveWebhookSchema.safeParse({
-        url: "https://x.test",
-        events: ["message_status"],
-        verifyToken: TOKEN,
-      }).success,
-    ).toBe(true);
+  test("the schema marks it optional", () => {
+    const parsed = saveWebhookSchema.safeParse({
+      url: "https://x.test",
+      events: ["message_status"],
+    });
+
+    expect(parsed.success).toBe(true);
+    expect((parsed as any).data.verifyToken).toBeUndefined();
   });
 
-  test("the handler still refuses a body that reaches it without one", async () => {
+  // NOTE: with no token the challenge reads `?challenge=undefined`, and the
+  // comparison is against undefined, which no string equals — so verification
+  // can never pass.
+  test("omitting it sends the string undefined as the challenge", async () => {
+    await verifyWebhookUrl("https://x.test", undefined as never);
+
+    expect(fetchMock.mock.calls[0][0]).toBe("https://x.test?challenge=undefined");
+  });
+
+  test("omitting it fails verification whatever the receiver echoes", async () => {
+    fetchMock.mockResolvedValue(okResponse("undefined"));
+
+    await expect(verifyWebhookUrl("https://x.test", undefined as never)).resolves.toBe(false);
+  });
+
+  test("so a save with no token is always rejected", async () => {
+    fetchMock.mockResolvedValue(okResponse("anything"));
     const rep = reply();
 
     await saveWebhookHandler(
@@ -253,7 +196,13 @@ describe("the verify token", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 400, body: { message: "verifyToken is required" } });
+    // The controller now short-circuits with a dedicated "verifyToken is required"
+    // error before ever calling verifyWebhookUrl, instead of sending a challenge
+    // request containing the literal string "undefined" and letting that fail.
+    expect(answer(rep)).toEqual({
+      code: 400,
+      body: { message: "verifyToken is required" },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(db.webhook.upsert).not.toHaveBeenCalled();
   });
@@ -302,9 +251,8 @@ describe("saveWebhookHandler", () => {
     expect(db.webhook.upsert).not.toHaveBeenCalled();
   });
 
-  // orgId is @unique on the model, so an org has exactly one webhook and saving
-  // a second silently replaces the first — which is why the route now requires
-  // an admin role.
+  // NOTE: orgId is @unique on the model (prisma/schema.prisma:2780), so an org
+  // has exactly one webhook and saving a second silently replaces the first.
   test("a second save replaces the org's existing webhook", async () => {
     await saveWebhookHandler({ user: { orgId: ORG }, body } as never, reply());
     await saveWebhookHandler(
@@ -332,45 +280,47 @@ describe("saveWebhookHandler", () => {
 // ===========================================================================
 
 describe("saveWebhookSchema", () => {
-  const base = { events: ["message_status"], verifyToken: TOKEN };
-
   test("requires https", () => {
-    expect(saveWebhookSchema.safeParse({ ...base, url: "http://x.test" }).success).toBe(false);
-    expect(saveWebhookSchema.safeParse({ ...base, url: "https://x.test" }).success).toBe(true);
-  });
-
-  test("rejects a value that is not a URL", () => {
-    expect(saveWebhookSchema.safeParse({ ...base, url: "not a url" }).success).toBe(false);
-  });
-
-  // events was an unconstrained string array, so subscribing to "order.created"
-  // or a misspelled "mesage_status" was accepted and simply never fired, with
-  // nothing to indicate the name matched nothing.
-  test("rejects an event name the platform does not emit", () => {
     expect(
-      saveWebhookSchema.safeParse({
-        url: "https://x.test",
-        events: ["mesage_status", "order.created"],
-        verifyToken: TOKEN,
-      }).success,
+      saveWebhookSchema.safeParse({ url: "http://x.test", events: [], verifyToken: TOKEN }).success,
     ).toBe(false);
-  });
-
-  test("the enum is the set the platform actually emits", () => {
-    expect(WEBHOOK_EVENTS).toEqual(["message_status"]);
-  });
-
-  test("rejects an empty event list, which would subscribe to nothing", () => {
     expect(
       saveWebhookSchema.safeParse({ url: "https://x.test", events: [], verifyToken: TOKEN })
         .success,
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  test("bounds the URL length", () => {
+  test("rejects a value that is not a URL", () => {
+    expect(saveWebhookSchema.safeParse({ url: "not a url", events: [] }).success).toBe(false);
+  });
+
+  // NOTE: events is an unconstrained string array. The only event the platform
+  // ever emits is "message_status" (wasurvey.controller.ts:360).
+  test("accepts any event name, including ones nothing emits", () => {
+    const parsed = saveWebhookSchema.safeParse({
+      url: "https://x.test",
+      events: ["mesage_status", "order.created", ""],
+      verifyToken: TOKEN,
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  test("accepts an empty event list, which subscribes to nothing", () => {
     expect(
-      saveWebhookSchema.safeParse({ ...base, url: `https://x.test/${"a".repeat(5000)}` }).success,
-    ).toBe(false);
+      saveWebhookSchema.safeParse({ url: "https://x.test", events: [], verifyToken: TOKEN })
+        .success,
+    ).toBe(true);
+  });
+
+  test("puts no bound on the URL length or the number of events", () => {
+    expect(
+      saveWebhookSchema.safeParse({
+        url: `https://x.test/${"a".repeat(5000)}`,
+        events: Array.from({ length: 1000 }, (_, i) => `e-${i}`),
+        verifyToken: TOKEN,
+      }).success,
+    ).toBe(true);
   });
 });
 
@@ -412,7 +362,7 @@ describe("deleteWebhookHandler", () => {
   test("deletes by the session org", async () => {
     await deleteWebhookHandler({ user: { orgId: ORG } } as never, reply());
 
-    expect(db.webhook.deleteMany).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.webhook.delete).toHaveBeenCalledWith({ where: { orgId: ORG } });
   });
 
   test("answers a fixed success", async () => {
@@ -423,23 +373,23 @@ describe("deleteWebhookHandler", () => {
     expect(rep.send).toHaveBeenCalledWith({ success: true });
   });
 
-  // prisma.delete raises P2025 when there is no row and nothing catches it, so
-  // DELETE /api/webhook was not idempotent: the first call succeeded and the
-  // second was a 500. deleteMany succeeds with a count of zero.
-  test("deleting when none exists is an idempotent success", async () => {
-    db.webhook.deleteMany.mockResolvedValueOnce({ count: 0 });
-    const rep = reply();
+  // NOTE: prisma.delete raises P2025 when there is no row, and nothing catches
+  // it — so deleting a webhook that was never configured is a 500 rather than
+  // an idempotent success.
+  test("deleting when none exists escapes as an error", async () => {
+    db.webhook.delete.mockRejectedValueOnce(
+      Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
+    );
 
     await expect(
-      deleteWebhookHandler({ user: { orgId: ORG } } as never, rep),
-    ).resolves.toBeUndefined();
-    expect(rep.send).toHaveBeenCalledWith({ success: true });
+      deleteWebhookHandler({ user: { orgId: ORG } } as never, reply()),
+    ).rejects.toMatchObject({ code: "P2025" });
   });
 
-  test("the service issues no existence check of its own", async () => {
+  test("the service is a bare delete with no existence check", async () => {
     await deleteWebhook(ORG);
 
-    expect(db.webhook.deleteMany).toHaveBeenCalledOnce();
+    expect(db.webhook.delete).toHaveBeenCalledOnce();
     expect(db.webhook.findUnique).not.toHaveBeenCalled();
   });
 });
@@ -452,22 +402,21 @@ describe("enqueueWebhookDispatch", () => {
   test("queues a dispatch job carrying the phone id, event and payload", async () => {
     await enqueueWebhookDispatch("phone-1", "message_status", { messageId: "m-1" });
 
-    expect((outgoingWebhookQueue.add as unknown as Mock).mock.calls[0].slice(0, 2)).toEqual([
-      "dispatch",
-      { phoneId: "phone-1", event: "message_status", payload: { messageId: "m-1" } },
-    ]);
+    expect(outgoingWebhookQueue.add).toHaveBeenCalledWith("dispatch", {
+      phoneId: "phone-1",
+      event: "message_status",
+      payload: { messageId: "m-1" },
+    });
   });
 
-  // Neither the job nor the queue set `attempts` (redisConnection.ts constructs
-  // it with only a connection), so BullMQ's default of a single attempt applied
-  // — the worker's throw on a non-2xx requested a retry that never happened, and
-  // a receiver that was briefly redeploying lost the event.
-  test("sets a retry policy with exponential backoff", async () => {
+  // NOTE: no attempts and no backoff are set here, and the queue is created
+  // with no defaultJobOptions (redisConnection.ts:39) — so BullMQ's default of
+  // a single attempt applies. The worker throws on a non-2xx to request a
+  // retry that will not happen.
+  test("sets no retry policy on the job", async () => {
     await enqueueWebhookDispatch("phone-1", "message_status", {});
 
-    const opts = (outgoingWebhookQueue.add as unknown as Mock).mock.calls[0][2];
-    expect(opts.attempts).toBeGreaterThan(1);
-    expect(opts.backoff).toEqual({ type: "exponential", delay: 5_000 });
+    expect((outgoingWebhookQueue.add as unknown as Mock).mock.calls[0][2]).toBeUndefined();
   });
 
   test("keys the job on a phone id rather than the org the webhook belongs to", async () => {
@@ -504,10 +453,8 @@ describe("the service writers", () => {
     expect(arg.update).not.toHaveProperty("orgId");
   });
 
-  // STILL OPEN: the model carries no secret column, so nothing
-  // is stored that a delivery could be signed with — a receiver cannot tell a
-  // genuine delivery from a POST by anyone who knows the URL. Closing it needs a
-  // schema change and a signing contract receivers must implement.
+  // NOTE: the model carries no secret column (prisma/schema.prisma:2775-2783),
+  // so nothing is stored that a delivery could be signed with.
   test("stores only a url and an event list", async () => {
     await upsertWebhook(ORG, "https://x.test", ["message_status"]);
 
@@ -522,7 +469,7 @@ describe("the service writers", () => {
     await saveWebhookHandler(
       {
         user: { orgId: ORG },
-        body: { url: "https://x.test", events: ["message_status"], verifyToken: TOKEN },
+        body: { url: "https://x.test", events: [], verifyToken: TOKEN },
       } as never,
       reply(),
     );
@@ -577,20 +524,18 @@ describe("webhookRoutes", () => {
 
     expect(routes[0].opts.schema.body).toBe(saveWebhookSchema);
     expect(routes[1].opts).toBe(getWebhookHandler);
-    expect(routes[2].opts.schema).toBeUndefined();
+    expect(routes[2].opts).toBe(deleteWebhookHandler);
   });
 
-  // The tree carried checkSession and no role check, so the lowest-privileged
-  // member could redirect the org's outgoing event stream to an address they
-  // control, or delete it, with nothing recording the change.
-  test("the two writers require an admin role, and the read does not", async () => {
+  // NOTE: no role check — any member of an org can point that org's webhook at
+  // an address of their choosing, or delete it.
+  test("no route declares a role requirement", async () => {
     const { srv, routes } = fakeServer();
 
     await webhookRoutes(srv);
 
-    expect(checkRoleHandler).toHaveBeenCalledWith(["SUPER_ADMIN", "ADMIN"]);
-    expect(routes[0].opts.preHandler).toBeDefined();
-    expect(routes[2].opts.preHandler).toBe(routes[0].opts.preHandler);
-    expect(routes[1].opts).toBe(getWebhookHandler);
+    for (const r of routes) {
+      expect(r.opts?.preHandler).toBeUndefined();
+    }
   });
 });

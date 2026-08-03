@@ -10,7 +10,6 @@ import {
   reorderCards,
   getCardTeamMembersById,
 } from "./card.service.js";
-import { TicketReferenceError } from "./card.service.js";
 import { TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
 import { UpdateCardRequest } from "./card.schema.js";
 
@@ -64,9 +63,6 @@ export async function createCardHandler(
     });
     return reply.code(201).send(card);
   } catch (error) {
-    if (error instanceof TicketReferenceError) {
-      return reply.code(400).send({ message: error.message });
-    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error creating card" });
   }
@@ -150,9 +146,6 @@ export async function updateCardHandler(
 
     return reply.code(200).send(updatedCard);
   } catch (error) {
-    if (error instanceof TicketReferenceError) {
-      return reply.code(400).send({ message: error.message });
-    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error updating card" });
   }
@@ -178,9 +171,7 @@ export async function moveCardHandler(
 
     return reply.code(200).send(movedCard);
   } catch (error) {
-    if (error instanceof TicketReferenceError) {
-      return reply.code(403).send({ message: error.message });
-    }
+    console.log("🚀 ~ error:", error);
     request.log.error(error);
     return reply.code(500).send({ message: "Error moving card" });
   }

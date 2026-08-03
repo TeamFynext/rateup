@@ -1,10 +1,7 @@
 import z from "zod";
 
-const SHARE_SETTINGS_RESOURCES = ["survey", "generateQr"] as const;
-export type ShareSettingsResource = (typeof SHARE_SETTINGS_RESOURCES)[number];
-
 const paramsSchema = z.object({
-  resourceName: z.enum(SHARE_SETTINGS_RESOURCES),
+  resourceName: z.string().optional(),
   id: z.string(),
 });
 
@@ -15,10 +12,7 @@ const bodySchema = z.object({
   logoFillType: z.string(),
   logoBorderRadius: z.coerce.number(),
   logoFile: z.union([z.object({}).loose(), z.string()]).optional(),
-  isLogoEnabled: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((v) => v === true || v === "true")
-    .optional(),
+  isLogoEnabled: z.coerce.boolean().optional(),
 });
 
 const responseSchema = z
@@ -33,4 +27,4 @@ const responseSchema = z
   })
   .nullable();
 
-export { paramsSchema, bodySchema, responseSchema, SHARE_SETTINGS_RESOURCES };
+export { paramsSchema, bodySchema, responseSchema };

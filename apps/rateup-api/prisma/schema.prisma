@@ -1758,9 +1758,6 @@ model WaAutomatedReply {
   whatsappSettingsPhoneId String?
   platform                String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
 
-  // The enable/disable toggle and the once-per-24h guard live on Rule now:
-  // Rule.isActive and Rule.options.sendOncePerDay, enforced in validateRuleConditions.
-
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
 }
@@ -1798,7 +1795,6 @@ enum WaAutomationProgressStatus {
   inProgress
   paused
   completed
-  failed
 }
 
 model WaAutomatedReplyMessage {
@@ -2138,9 +2134,6 @@ model CustomerLoyaltyAccount {
   createdAt      DateTime @default(now())
   lastActivityAt DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  lastInactivityReminderAt DateTime?
-  lastBirthdayGreetedAt    DateTime?
 
   // Relations
   transactions        LoyaltyTransaction[]
@@ -2610,23 +2603,17 @@ model NotificationSetting {
 
 model BookDemo {
   id             String   @id @default(cuid())
-  name           String
+  firstName      String
+  lastName       String
   workEmail      String
-  businessName   String
-  phone          String
-  message        String?
-  firstName      String?
-  lastName       String?
-  phoneNumber    String?
-  companyName    String?
-  teamSize       String?
-  preferredTime  String?
-  primaryUseCase String?
-  additionalInfo String?
+  phoneNumber    String
+  companyName    String
+  teamSize       String
+  preferredTime  String
+  primaryUseCase String
+  additionalInfo String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  @@index([createdAt])
 }
 
 model AuditLog {

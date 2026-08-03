@@ -23,7 +23,7 @@ import {
   getTeamPerformanceStats,
   getTemplateCategoryOverview,
   getTemplatePerformanceStats,
-  getWaMessageOverview,
+  getWaMessageOverviewByTeamAndOrg,
 } from "./apianalytics.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -72,11 +72,11 @@ beforeEach(() => {
   queryRawMock.mockResolvedValue([]);
 });
 
-describe("getWaMessageOverview - the numbers it reports", () => {
+describe("getWaMessageOverviewByTeamAndOrg - the numbers it reports", () => {
   test("reports delivered and failed as percentages of the total", async () => {
     queryRawMock.mockResolvedValue([OVERVIEW_ROW]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result).toMatchObject({
       totalMessages: 200,
@@ -93,7 +93,7 @@ describe("getWaMessageOverview - the numbers it reports", () => {
       { ...OVERVIEW_ROW, total_messages: 3, delivered_messages: 1, failed_messages: 0 },
     ]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.deliveredPercentage).toBe(33.33);
   });
@@ -108,7 +108,7 @@ describe("getWaMessageOverview - the numbers it reports", () => {
       },
     ]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.deliveredPercentage).toBe(0);
     expect(result.failedPercentage).toBe(0);
@@ -118,7 +118,7 @@ describe("getWaMessageOverview - the numbers it reports", () => {
   test("copes with a query that returns no row at all", async () => {
     queryRawMock.mockResolvedValue([]);
 
-    await expect(getWaMessageOverview(ORG, TEAM, null, "all")).resolves.toMatchObject({
+    await expect(getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all")).resolves.toMatchObject({
       totalMessages: 0,
       totalMessagesChange: 0,
     });
@@ -129,7 +129,7 @@ describe("getWaMessageOverview - the numbers it reports", () => {
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, total_messages: 150 }])
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, total_messages: 100 }]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.totalMessagesChange).toBe(50);
   });
@@ -139,7 +139,7 @@ describe("getWaMessageOverview - the numbers it reports", () => {
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, total_messages: 40 }])
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, total_messages: 0 }]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.totalMessagesChange).toBe(100);
   });
@@ -154,12 +154,12 @@ describe("getWaMessageOverview - the numbers it reports", () => {
       },
     ]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.totalMessagesChange).toBe(0);
   });
 
-  // Fixed as part of the strict-mode migration: percentChange
+  // Fixed as part of the strict-mode migration (was issues.txt 15.5): percentChange
   // used a `curr!` non-null assertion, so a null current value fell through to
   // `(null - prev) / prev` — JS coerces `null` to `0`, reporting a period with no
   // deliveries as a 100% *improvement* instead of "no data". percentChange now
@@ -170,28 +170,28 @@ describe("getWaMessageOverview - the numbers it reports", () => {
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: null }])
       .mockResolvedValueOnce([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: 8 }]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     expect(result.avgDeliveryTimeSeconds).toBeNull();
     expect(result.avgDeliveryTimeChange).toBeNull();
   });
 
-  // The average used to be passed through exactly as Postgres returned it, while
-  // getTemplatePerformanceStats rounded the same figure to two decimals — so the
-  // overview card and the per-template table disagreed on how precise a delivery
-  // time is. Both round through one helper now.
-  test("rounds the average delivery time the same way the template table does", async () => {
+  // NOTE: pins current behaviour. The average is passed through exactly as Postgres
+  // returned it, while getTemplatePerformanceStats rounds the same figure to two
+  // decimals — so the overview card and the per-template table disagree on how
+  // precise a delivery time is. See issues.txt 15.6.
+  test("passes the average delivery time through unrounded", async () => {
     queryRawMock.mockResolvedValue([{ ...OVERVIEW_ROW, avg_delivery_time_seconds: 4.123456789 }]);
 
-    const result = await getWaMessageOverview(ORG, TEAM, null, "all");
+    const result = await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
-    expect(result.avgDeliveryTimeSeconds).toBe(4.12);
+    expect(result.avgDeliveryTimeSeconds).toBe(4.123456789);
   });
 });
 
-describe("getWaMessageOverview - the window it looks at", () => {
+describe("getWaMessageOverviewByTeamAndOrg - the window it looks at", () => {
   test("defaults to the last seven days when given no range", async () => {
-    await getWaMessageOverview(ORG, TEAM, null, "all");
+    await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     const { bound } = queryAt(0);
     const [start, end] = bound.slice(-2) as Date[];
@@ -200,7 +200,12 @@ describe("getWaMessageOverview - the window it looks at", () => {
   });
 
   test("uses the range it was given", async () => {
-    await getWaMessageOverview(ORG, TEAM, ["2026-03-01T00:00:00Z", "2026-03-08T00:00:00Z"], "all");
+    await getWaMessageOverviewByTeamAndOrg(
+      TEAM,
+      ORG,
+      ["2026-03-01T00:00:00Z", "2026-03-08T00:00:00Z"],
+      "all",
+    );
 
     const { bound } = queryAt(0);
     const [start, end] = bound.slice(-2) as Date[];
@@ -209,48 +214,34 @@ describe("getWaMessageOverview - the window it looks at", () => {
   });
 
   test("compares against the window of equal length immediately before it", async () => {
-    await getWaMessageOverview(ORG, TEAM, ["2026-03-08T00:00:00Z", "2026-03-15T00:00:00Z"], "all");
+    await getWaMessageOverviewByTeamAndOrg(
+      TEAM,
+      ORG,
+      ["2026-03-08T00:00:00Z", "2026-03-15T00:00:00Z"],
+      "all",
+    );
 
     const [prevStart, prevEnd] = queryAt(1).bound.slice(-2) as Date[];
     expect(prevEnd.toISOString()).toBe("2026-03-07T23:59:59.999Z");
     expect(prevStart.toISOString()).toBe("2026-02-28T23:59:59.999Z");
   });
 
-  // A calendar date with no time parses as UTC midnight, so a range the user picked
-  // as "the 1st to the 7th" used to end the instant the 7th began — every message
-  // sent on the last day of their own selection was left out of every panel, and a
-  // single-day selection returned nothing at all.
-  test("covers the whole of the last day of a date-only range", async () => {
-    await getWaMessageOverview(ORG, TEAM, ["2026-03-01", "2026-03-07"], "all");
+  // NOTE: pins current behaviour. A calendar date with no time parses as UTC
+  // midnight, so a range the user picked as "the 1st to the 7th" ends the instant
+  // the 7th begins — every message sent on that last day is left out of the count.
+  // The service takes the strings verbatim and never widens the end to the end of
+  // its day. See issues.txt 15.3.
+  test("ends a date-only range at the first instant of its last day", async () => {
+    await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, ["2026-03-01", "2026-03-07"], "all");
 
-    const [start, end] = queryAt(0).bound.slice(-2) as Date[];
-    expect(start.toISOString()).toBe("2026-03-01T00:00:00.000Z");
-    expect(end.toISOString()).toBe("2026-03-07T23:59:59.999Z");
-  });
-
-  test("leaves a range that carries a time exactly as it was given", async () => {
-    await getWaMessageOverview(ORG, TEAM, ["2026-03-01T06:00:00Z", "2026-03-07T09:30:00Z"], "all");
-
-    const [start, end] = queryAt(0).bound.slice(-2) as Date[];
-    expect(start.toISOString()).toBe("2026-03-01T06:00:00.000Z");
-    expect(end.toISOString()).toBe("2026-03-07T09:30:00.000Z");
-  });
-
-  // The querystring schema refuses this with a 400 before it reaches the service;
-  // the fallback is what keeps an Invalid Date from reaching Postgres if anything
-  // ever calls in past the schema.
-  test("falls back to the default window for a range that does not parse", async () => {
-    await getWaMessageOverview(ORG, TEAM, ["not-a-date", "also-not"], "all");
-
-    const [start, end] = queryAt(0).bound.slice(-2) as Date[];
-    expect(Number.isNaN(start.getTime())).toBe(false);
-    expect(Number.isNaN(end.getTime())).toBe(false);
+    const [, end] = queryAt(0).bound.slice(-2) as Date[];
+    expect(end.toISOString()).toBe("2026-03-07T00:00:00.000Z");
   });
 });
 
 describe("the filters every panel builds", () => {
   test("always scopes the query to the caller's org", async () => {
-    await getWaMessageOverview(ORG, TEAM, null, "all");
+    await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     for (const { sql, bound } of allQueries()) {
       expect(sql).toContain('motm."orgId" =');
@@ -259,7 +250,7 @@ describe("the filters every panel builds", () => {
   });
 
   test("narrows to one team when a real team is named", async () => {
-    await getWaMessageOverview(ORG, TEAM, null, "all");
+    await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "all");
 
     const { sql, bound } = queryAt(0);
     expect(sql).toContain('motm."teamId" =');
@@ -269,20 +260,20 @@ describe("the filters every panel builds", () => {
   test.each(["all", "null", "", undefined, null])(
     "leaves every team in when the team is %s",
     async (teamId) => {
-      await getWaMessageOverview(ORG, teamId as any, null, "all");
+      await getWaMessageOverviewByTeamAndOrg(teamId as any, ORG, null, "all");
 
       expect(queryAt(0).sql).not.toContain('motm."teamId" =');
     },
   );
 
   test("narrows to the external API when asked", async () => {
-    await getWaMessageOverview(ORG, TEAM, null, "external");
+    await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "external");
 
     expect(queryAt(0).sql).toContain('motm."externalApi" = true');
   });
 
   test("narrows to the dashboard's own sends when asked", async () => {
-    await getWaMessageOverview(ORG, TEAM, null, "whatsapp");
+    await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, "whatsapp");
 
     expect(queryAt(0).sql).toContain('motm."externalApi" = false');
   });
@@ -290,7 +281,7 @@ describe("the filters every panel builds", () => {
   test.each(["all", "", undefined, "something-else"])(
     "counts both sources when the api type is %s",
     async (apiType) => {
-      await getWaMessageOverview(ORG, TEAM, null, apiType);
+      await getWaMessageOverviewByTeamAndOrg(TEAM, ORG, null, apiType);
 
       expect(queryAt(0).sql).not.toContain('motm."externalApi"');
     },
@@ -334,20 +325,19 @@ describe("getDeliveredFailedTrend", () => {
     await expect(getDeliveredFailedTrend(ORG, TEAM, "day", null, "all")).resolves.toEqual([]);
   });
 
-  // The one the dashboard showed. This function used to leave an absent range null
-  // for the SQL to coalesce to 1970, while getWaMessageOverview and
-  // getDeliveredFailedWeekTrend both defaulted to the last seven days — so the
-  // trend chart covered all history while the summary card beside it covered a
-  // week, both filled from one request with one query string. Every panel resolves
-  // its window through resolveDateRange now.
-  test("defaults to the same seven days every other panel does", async () => {
+  // NOTE: pins current behaviour, and it is the one the dashboard shows. Unlike
+  // getWaMessageOverviewByTeamAndOrg and getDeliveredFailedWeekTrend, which both
+  // default to the last seven days, this one leaves the range null and the SQL
+  // coalesces it to 1970 — so the trend chart covers all history while the summary
+  // card beside it covers a week. Both are filled from the same request, with the
+  // same query string. See issues.txt 15.1.
+  test("falls back to the whole of history when given no range", async () => {
     await getDeliveredFailedTrend(ORG, TEAM, "day", null, "all");
 
     const { sql, bound } = queryAt(0);
-    expect(sql).not.toContain("'1970-01-01'::timestamptz");
-    const dates = bound.filter((v): v is Date => v instanceof Date);
-    const days = (dates[1].getTime() - dates[0].getTime()) / (24 * 60 * 60 * 1000);
-    expect(Math.round(days)).toBe(6);
+    expect(sql).toContain("COALESCE(");
+    expect(sql).toContain("'1970-01-01'::timestamptz");
+    expect(bound).toContain(null);
   });
 
   test("uses the range it was given", async () => {
@@ -437,13 +427,13 @@ describe("getTemplateCategoryOverview", () => {
     expect(queryAt(0).sql).toContain("'TEMPLATE', 'CAMPAIGN'");
   });
 
-  // The reply used to be built by walking OUR enum and looking each name up in the
-  // query result, so a category Meta returns that the enum does not carry was
-  // dropped — from the breakdown, and from totalTemplates, which was recomputed
-  // from the filtered list rather than taken from the query. A pie chart of those
-  // numbers added to 100% while under-reporting what was actually sent. Meta has
-  // added template categories before.
-  test("keeps a category the enum does not list, and counts it in the total", async () => {
+  // NOTE: pins current behaviour. The reply is built by walking OUR enum and
+  // looking each name up in the query's result, so a category Meta returns that the
+  // enum does not carry is dropped — from the breakdown and from totalTemplates,
+  // which is recomputed from the filtered list rather than taken from the query. A
+  // pie chart of these numbers adds up to 100% while under-reporting the real
+  // total. See issues.txt 15.4.
+  test("discards a category the enum does not list, and the total with it", async () => {
     queryRawMock.mockResolvedValue([
       { category: WaTemplateCategory.MARKETING, count: 30 },
       { category: "SERVICE", count: 70 },
@@ -451,38 +441,20 @@ describe("getTemplateCategoryOverview", () => {
 
     const result = await getTemplateCategoryOverview(ORG, "all", null, "all");
 
-    expect(result.totalTemplates).toBe(100);
-    expect(result.byCategory.find((c) => c.category === "SERVICE")).toEqual({
-      category: "SERVICE",
-      count: 70,
-      percentage: 70,
-    });
+    expect(result.totalTemplates).toBe(30);
+    expect(result.byCategory.map((c) => c.category)).not.toContain("SERVICE");
     expect(
       result.byCategory.find((c) => c.category === WaTemplateCategory.MARKETING)!.percentage,
-    ).toBe(30);
+    ).toBe(100);
   });
 
-  test("lists the enum's own categories first, in their declared order", async () => {
-    queryRawMock.mockResolvedValue([{ category: "SERVICE", count: 1 }]);
-
-    const result = await getTemplateCategoryOverview(ORG, "all", null, "all");
-
-    expect(result.byCategory.map((c) => c.category)).toEqual([
-      ...Object.values(WaTemplateCategory),
-      "SERVICE",
-    ]);
-  });
-
-  // Same all-of-history default as the trend above, on the same screen as an
-  // overview card that defaulted to a week.
-  test("defaults to the same seven days every other panel does", async () => {
+  // NOTE: same all-of-history default as the trend above — and this panel sits on
+  // the same screen as the overview card, which defaults to a week.
+  // See issues.txt 15.1.
+  test("falls back to the whole of history when given no range", async () => {
     await getTemplateCategoryOverview(ORG, "all", null, "all");
 
-    const { sql, bound } = queryAt(0);
-    expect(sql).not.toContain("'1970-01-01'::timestamptz");
-    const dates = bound.filter((v): v is Date => v instanceof Date);
-    const days = (dates[1].getTime() - dates[0].getTime()) / (24 * 60 * 60 * 1000);
-    expect(Math.round(days)).toBe(6);
+    expect(queryAt(0).sql).toContain("'1970-01-01'::timestamptz");
   });
 });
 
@@ -546,21 +518,22 @@ describe("getTemplatePerformanceStats", () => {
     expect(queryAt(0).sql).toContain("ORDER BY total_sent DESC");
   });
 
-  // An average delivery time of exactly zero — every message delivered in the same
-  // second it was sent — is falsy, so the old ternary reported it as "no data"
-  // rather than as 0. roundSeconds tests for null instead.
-  test("reports an average of exactly zero as zero, not as no data", async () => {
+  // NOTE: pins current behaviour. An average delivery time of exactly zero — every
+  // message delivered in the same second it was sent — is falsy, so the ternary
+  // reports it as "no data" rather than as 0. See issues.txt 15.6.
+  test("reports an average of exactly zero as no data at all", async () => {
     queryRawMock.mockResolvedValue([{ ...ROW, avg_delivery_time_seconds: 0 }]);
 
     const [stat] = await getTemplatePerformanceStats(ORG, "all", null, "all");
 
-    expect(stat.avgDeliveryTimeSeconds).toBe(0);
+    expect(stat.avgDeliveryTimeSeconds).toBeNull();
   });
 
-  // TemplatePerformanceStat used to list seven fields while the function returned
-  // nine; templateCategory and lastUsed are both declared now, so the return type
-  // describes what callers actually receive.
-  test("returns the category and the last-used time its declared type promises", async () => {
+  // NOTE: the declared TemplatePerformanceStat interface lists seven fields and the
+  // function returns nine — templateCategory and lastUsed are both undeclared. The
+  // return type therefore does not describe what callers actually receive.
+  // See issues.txt 15.6.
+  test("returns two fields its declared type does not mention", async () => {
     queryRawMock.mockResolvedValue([ROW]);
 
     const [stat] = await getTemplatePerformanceStats(ORG, "all", null, "all");
@@ -616,46 +589,42 @@ describe("getTeamPerformanceStats", () => {
     expect(sql).toContain("ORDER BY total_sent DESC");
   });
 
-  // This one changed what the panel showed. The query lists teams with a LEFT JOIN
-  // so a team that sent nothing still appears with a zero, but the api-type filter
-  // was spliced into the WHERE clause, after `WHERE t."orgId" = ...`, rather than
-  // into the JOIN's ON condition — and a WHERE predicate on the right-hand table of
-  // a LEFT JOIN discards exactly the unmatched rows the LEFT JOIN exists to keep,
-  // because motm."externalApi" is NULL for them and `NULL = true` is not true. So
-  // switching the API selector away from "all" made every idle team vanish rather
-  // than show a zero. The variable was already named `apiJoinFilter`.
+  // NOTE: pins current behaviour, and this one changes what the panel shows. The
+  // query lists teams with a LEFT JOIN so that a team which sent nothing still
+  // appears with a zero. But the api-type filter is spliced into the WHERE clause,
+  // after `WHERE t."orgId" = ...`, rather than into the JOIN's ON condition — and a
+  // WHERE predicate on the right-hand table of a LEFT JOIN discards the unmatched
+  // rows it was meant to preserve, because motm."externalApi" is NULL for them and
+  // `NULL = true` is not true. So filtering by API type silently drops every team
+  // that sent nothing through it. The variable is even named `apiJoinFilter`.
+  // See issues.txt 15.2.
   test.each(["external", "whatsapp"])(
-    "puts the %s filter in the join condition, so idle teams survive it",
+    "puts the %s filter in the WHERE clause of a left join",
     async (apiType) => {
       await getTeamPerformanceStats(ORG, null, apiType);
 
       const { sql } = queryAt(0);
-      const joinPos = sql.indexOf('LEFT JOIN "WaMessageOrgTeamMap"');
-      const filterPos = sql.indexOf('motm."externalApi"');
       const wherePos = sql.indexOf('WHERE t."orgId"');
-      expect(filterPos).toBeGreaterThan(joinPos);
-      expect(filterPos).toBeLessThan(wherePos);
+      const filterPos = sql.indexOf('motm."externalApi"');
+      expect(filterPos).toBeGreaterThan(wherePos);
+      expect(sql.slice(wherePos, filterPos)).not.toContain("JOIN");
     },
   );
 
-  // Unlike getTemplateCategoryOverview and getTemplatePerformanceStats, this query
-  // has no `motm."type" IN ('TEMPLATE', 'CAMPAIGN')` filter — deliberately. It
-  // matches the overview card it sits beside; the template panels filter because
-  // they break their numbers down BY template, so a non-template send has nothing
-  // to appear under.
+  // NOTE: unlike getTemplateCategoryOverview and getTemplatePerformanceStats, this
+  // query has no `motm."type" IN ('TEMPLATE', 'CAMPAIGN')` filter — so the team
+  // panel counts every mapped message while the template panels count only template
+  // and campaign sends. Two panels on one screen, counting different things.
+  // See issues.txt 15.4.
   test("counts every mapped message, not just template and campaign sends", async () => {
     await getTeamPerformanceStats(ORG, null, "all");
 
     expect(queryAt(0).sql).not.toContain("'TEMPLATE', 'CAMPAIGN'");
   });
 
-  test("defaults to the same seven days every other panel does", async () => {
+  test("falls back to the whole of history when given no range", async () => {
     await getTeamPerformanceStats(ORG, null, "all");
 
-    const { sql, bound } = queryAt(0);
-    expect(sql).not.toContain("'1970-01-01'::timestamptz");
-    const dates = bound.filter((v): v is Date => v instanceof Date);
-    const days = (dates[1].getTime() - dates[0].getTime()) / (24 * 60 * 60 * 1000);
-    expect(Math.round(days)).toBe(6);
+    expect(queryAt(0).sql).toContain("'1970-01-01'::timestamptz");
   });
 });

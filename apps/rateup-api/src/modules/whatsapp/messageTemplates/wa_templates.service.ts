@@ -28,33 +28,28 @@ function getErrorResponse(e: unknown): unknown {
   return e && typeof e === "object" && "response" in e ? (e as { response?: unknown }).response : e;
 }
 
-/** A guard against a broken cursor looping forever; ~100 x 100 templates. */
-const MAX_TEMPLATE_PAGES = 100;
-
 export async function fetchTemplates(
   orgId: string,
   whatsappSettingsPhoneId?: string,
 ): Promise<WaMetaTemplate[]> {
-  const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
-  if (!waSettings) {
-    throw new Error("No WhatsApp settings found for orgId " + orgId);
+  try {
+    const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+    if (!waSettings) {
+      throw new Error("No WhatsApp settings found for orgId " + orgId);
+    }
+
+    log.trace("Fetching templates from whatsapp");
+    const res = await callMetaApi(
+      `/${waSettings.wabaId}/message_templates`,
+      "GET",
+      waSettings.accessToken,
+    );
+    log.trace(" Templates fetched from whatsapp: %o", res.data.data.length);
+    return res.data.data;
+  } catch (e) {
+    log.error({ err: getErrorResponse(e) }, "Error getting templates \n%o");
+    return [];
   }
-
-  log.trace("Fetching templates from whatsapp");
-  const templates: WaMetaTemplate[] = [];
-  let url: string | undefined = `/${waSettings.wabaId}/message_templates?limit=100`;
-
-  for (let page = 0; url && page < MAX_TEMPLATE_PAGES; page++) {
-    const res = await callMetaApi(url, "GET", waSettings.accessToken);
-    templates.push(...(res.data?.data ?? []));
-    const next: string | undefined = res.data?.paging?.next;
-    // Meta returns an absolute url; callMetaApi prefixes the graph base, so only
-    // the path and query are handed back to it.
-    url = next ? next.replace(/^https?:\/\/[^/]+\/v\d+(\.\d+)?/, "") : undefined;
-  }
-
-  log.trace(" Templates fetched from whatsapp: %o", templates.length);
-  return templates;
 }
 
 export async function fetchTemplate(
@@ -167,15 +162,14 @@ export async function getTemplateByNameAndOrgId(name: string, orgId: string) {
   });
   return template as templateData | null;
 }
-export async function getDbTemplate(templateId: string, orgId: string) {
+export async function getDbTemplate(templateId: string) {
   try {
-    const res = await prisma.waTemplate.findFirst({
+    const res = await prisma.waTemplate.findUnique({
       where: {
         id: templateId,
-        orgId,
       },
     });
-    return res as unknown as WaTemplateWithTypes | null;
+    return res as unknown as WaTemplateWithTypes;
   } catch (e) {
     log.error({ err: e }, "Error getting template from db \n%o");
     return null;
@@ -260,8 +254,8 @@ export async function saveTemplate(
     log.trace("Template saved to db %o", res);
     return res;
   } catch (e) {
-    log.error({ err: e }, "Error saving template");
-    throw e;
+    log.error("Error saving template");
+    console.log(e);
   }
 }
 
@@ -272,15 +266,10 @@ export async function saveTemplate(
  * @param templateName
  * @returns
  */
-export async function deleteTemplate(
-  orgId: string,
-  templateId: string,
-  templateName: string,
-  whatsappSettingsPhoneId?: string,
-) {
+export async function deleteTemplate(orgId: string, templateId: string, templateName: string) {
   log.trace("Sending Delete req %o", { templateId, templateName });
   try {
-    const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId ?? undefined);
+    const waSettings = await getWaSettings(orgId);
     if (!waSettings) {
       throw new Error("No WhatsApp settings found for orgId " + orgId);
     }
@@ -302,18 +291,22 @@ export async function deleteTemplate(
  * @param templateId
  * @returns
  */
-export async function deleteTemplateFromDb(templateId: string, orgId: string) {
-  return await prisma.waTemplate.delete({
-    where: {
-      id: templateId,
-      orgId,
-    },
-  });
+export async function deleteTemplateFromDb(templateId: string) {
+  try {
+    const res = await prisma.waTemplate.delete({
+      where: {
+        id: templateId,
+      },
+    });
+    return res;
+  } catch (e) {
+    log.error("Error deleting template from db");
+    console.log(e);
+  }
 }
 
 export async function updateTemplateInDb(
   templateId: string,
-  orgId: string,
   template: WaMetaTemplate,
   defaultValues?: WaTemplateDefaultValues,
   templateType?: TemplateType,
@@ -321,19 +314,23 @@ export async function updateTemplateInDb(
   whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId, data: template });
-  return await prisma.waTemplate.update({
-    where: {
-      id: templateId,
-      orgId,
-    },
-    data: {
-      data: template as WaTemplateWithTypes["data"],
-      defaultValues: defaultValues ? defaultValues : undefined,
-      templateType,
-      config,
-      whatsappSettingsPhoneId,
-    },
-  });
+  try {
+    const res = await prisma.waTemplate.update({
+      where: {
+        id: templateId,
+      },
+      data: {
+        data: template as WaTemplateWithTypes["data"],
+        defaultValues: defaultValues ? defaultValues : undefined,
+        templateType,
+        config,
+        whatsappSettingsPhoneId,
+      },
+    });
+    return res;
+  } catch (e) {
+    log.error({ err: e }, "Error updating template in db \n%o");
+  }
 }
 
 /**
@@ -377,15 +374,8 @@ export async function editTemplate(
 /**
  * First updates template in WhatsApp Business API then updates in db
  */
-export async function updateTemplate(
-  templateId: string,
-  orgId: string,
-  data: CreateWaTemplateInput,
-) {
-  const template = await getDbTemplate(templateId, orgId);
-  if (!template) {
-    return null;
-  }
+export async function updateTemplate(templateId: string, data: CreateWaTemplateInput) {
+  const template = await getDbTemplate(templateId);
   const formattedTemplate = generateTemplate(data);
   let res;
   switch (data.templateType) {
@@ -409,7 +399,6 @@ export async function updateTemplate(
         );
         res = await updateTemplateInDb(
           templateId,
-          orgId,
           updatedTemplate,
           data.defaultValues as unknown as WaTemplateDefaultValues,
           data.templateType,
@@ -422,7 +411,6 @@ export async function updateTemplate(
     case TemplateType.ORDER_DETAILS:
       res = await updateTemplateInDb(
         templateId,
-        orgId,
         {
           ...formattedTemplate,
           status: WaTemplateStatus.APPROVED,
@@ -437,7 +425,6 @@ export async function updateTemplate(
     default:
       res = await updateTemplateInDb(
         templateId,
-        orgId,
         {
           ...formattedTemplate,
           components: formattedTemplate.components?.filter(
@@ -543,15 +530,9 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
 
     let created = 0;
     let updated = 0;
-    // Every Meta template id seen across all the numbers synced in this pass, so
-    // the reconciliation below can tell "gone" from "on another number".
-    const seenWaTemplateIds = new Set<string>();
 
     for (const whatsappSettingsPhoneId of phoneIdsToSync) {
       const waTemplates = await fetchTemplates(orgId, whatsappSettingsPhoneId);
-      for (const wt of waTemplates) {
-        if (wt?.id) seenWaTemplateIds.add(wt.id);
-      }
 
       for (const wt of waTemplates) {
         const existingByWaId = wt?.id ? templateByWaId.get(wt.id) : null;
@@ -562,7 +543,6 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
         if (existingTemplate) {
           await updateTemplateInDb(
             existingTemplate.id,
-            orgId,
             wt,
             undefined,
             existingTemplate.templateType,
@@ -596,33 +576,11 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
       }
     }
 
-    const missingAtMeta = dbTemplates.filter(
-      (dbTemplate) => dbTemplate?.data?.id && !seenWaTemplateIds.has(dbTemplate.data.id),
-    );
-    for (const dbTemplate of missingAtMeta) {
-      await prisma.waTemplate.update({
-        where: { id: dbTemplate.id },
-        data: { data: { ...dbTemplate.data, status: WaTemplateStatus.DELETED } },
-      });
-    }
-    if (missingAtMeta.length) {
-      log.warn(
-        { orgId, count: missingAtMeta.length },
-        "Templates marked as deleted: they no longer exist at Meta",
-      );
-    }
-
     log.trace("Templates synced");
-    return { success: true, created, updated, missingAtMeta: missingAtMeta.length };
+    return { success: true, created, updated };
   } catch (e) {
     log.error({ err: e }, "Error syncing templates \n%o");
-    return {
-      success: false,
-      created: 0,
-      updated: 0,
-      missingAtMeta: 0,
-      message: e instanceof Error ? e.message : "Unknown error",
-    };
+    return { success: false, created: 0, updated: 0 };
   }
 }
 
@@ -656,14 +614,7 @@ export async function registerTemplatesInDb(
   });
 }
 
-export async function uploadFileToWaTemplate(
-  file: MultipartFile,
-  size: number,
-  orgId: string,
-  // The already-consumed bytes. The caller reads the stream to measure the real
-  // size (14.10), which drains file.file — so the body has to come from here.
-  body?: Buffer,
-) {
+export async function uploadFileToWaTemplate(file: MultipartFile, size: number, orgId: string) {
   const waSettings = await getWaSettings(orgId);
   if (!waSettings) {
     throw new Error("No WhatsApp settings found for orgId " + orgId);
@@ -676,7 +627,7 @@ export async function uploadFileToWaTemplate(
   const sessionRes = await callMetaApi(
     `/${appId}/uploads`,
     "POST",
-    accessToken,
+    undefined,
     undefined,
     undefined,
     undefined,
@@ -684,6 +635,7 @@ export async function uploadFileToWaTemplate(
       file_name: file.filename,
       file_length: size,
       file_type: file.mimetype,
+      access_token: accessToken,
     },
   );
   const uploadSessionId = sessionRes?.data?.id;
@@ -698,7 +650,7 @@ export async function uploadFileToWaTemplate(
     `/${uploadSessionId}`,
     "POST",
     undefined,
-    body ?? file?.file,
+    file?.file,
     undefined,
     headers,
   );

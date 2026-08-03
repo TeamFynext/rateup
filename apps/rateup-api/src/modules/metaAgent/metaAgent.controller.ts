@@ -20,26 +20,10 @@ import {
   WebsiteBody,
 } from "./metaAgent.schema.js";
 
-function statusFromMeta(status: number | undefined): number {
-  if (!status) return 502;
-  // The caller's own input was rejected — the one class worth relaying as a 4xx.
-  if (status === 400 || status === 422) return 400;
-  // Meta could not find what we named on the business's behalf.
-  if (status === 404) return 404;
-  // Our credentials, Meta's throttle or Meta being down: upstream problems, all
-  // of which are 502 from here.
-  return 502;
-}
-
 function handleError(reply: FastifyReply, error: unknown) {
   if (error instanceof MetaAgentApiError) {
     log.error({ err: error }, "Meta Business Agent API error");
-    return reply.code(statusFromMeta(error.status)).send({
-      message: error.message,
-      detail: error.detail,
-      // Named explicitly so a client can tell an upstream refusal from ours.
-      upstreamStatus: error.status,
-    });
+    return reply.code(error.status || 502).send({ message: error.message, detail: error.detail });
   }
   log.error({ err: error }, "Meta Business Agent handler error");
   return reply.code(500).send({ message: "Something went wrong" });
@@ -60,7 +44,7 @@ const wrap =
 // ---- record ----
 export const getMetaBusinessAgentHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>
->((req, orgId) => service.getAgentRecord(orgId, req.params.whatsappSettingsId));
+>((req, orgId) => service.getOrCreateAgentRecord(orgId, req.params.whatsappSettingsId));
 
 // ---- onboard ----
 export const checkAgentEligibilityHandler = wrap<

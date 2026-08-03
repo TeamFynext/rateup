@@ -15,15 +15,6 @@ import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 
-export async function findAccountByReferralCode(programId: string, referralCode: string) {
-  return await prisma.customerLoyaltyAccount.findFirst({
-    where: {
-      programId,
-      referralCode: { equals: referralCode, mode: "insensitive" },
-    },
-  });
-}
-
 export async function createCustomerAccount(
   data: CustomerLoyaltyAccountInput,
   programId: string,
@@ -109,9 +100,7 @@ export async function createCustomerAccount(
   const tier = await prisma.loyaltyTier.findFirst({
     where: {
       programId: programId,
-    },
-    orderBy: {
-      threshold: "asc",
+      priority: 1,
     },
     select: {
       id: true,
@@ -136,13 +125,19 @@ export async function createCustomerAccount(
   let referrerAccount: { id: string; currentPoints: number } | null = null;
 
   if (data.referCode) {
-    const referredBy = await findAccountByReferralCode(programId, data.referCode);
+    const referredBy = await prisma.customerLoyaltyAccount.findUnique({
+      where: {
+        referralCode: data.referCode,
+        programId,
+      },
+    });
     if (referredBy) {
       referredById = referredBy.id;
       referrerAccount = referredBy;
 
+      // Award referral bonus to referrer (points path)
       if (referralBonusType === "points" && referralBonus > 0) {
-        const updatedReferrer = await prisma.customerLoyaltyAccount.update({
+        await prisma.customerLoyaltyAccount.update({
           where: { id: referredBy.id },
           data: {
             currentPoints: { increment: referralBonus },
@@ -156,7 +151,7 @@ export async function createCustomerAccount(
             transactionType: "earn",
             source: "referral",
             points: referralBonus,
-            balanceAfter: updatedReferrer.currentPoints,
+            balanceAfter: referredBy.currentPoints + referralBonus,
             metadata: { refereeContactId: contactId },
           },
         });
@@ -165,14 +160,14 @@ export async function createCustomerAccount(
     }
   }
 
-  const openingPoints = refereeBonusPoints + signupBonus;
+  // Create account (referee bonus points are included in initial balance)
   const account = await prisma.customerLoyaltyAccount.create({
     data: {
       programId,
       contactId: contactId,
       referralCode,
-      currentPoints: openingPoints,
-      lifetimePoints: openingPoints,
+      currentPoints: refereeBonusPoints,
+      lifetimePoints: refereeBonusPoints,
       referredById,
       currentTierId,
     },
@@ -203,7 +198,7 @@ export async function createCustomerAccount(
           transactionType: "earn",
           source: "referral",
           points: refereeBonusPoints,
-          balanceAfter: openingPoints,
+          balanceAfter: signupBonus + refereeBonusPoints,
           metadata: { referrerAccountId: referredById },
         },
       });
@@ -219,9 +214,7 @@ export async function createCustomerAccount(
         transactionType: "earn",
         source: "signup_bonus",
         points: signupBonus,
-        // The account's balance after this row, not the bonus in isolation — a
-        // referee who also gets a signup bonus holds both.
-        balanceAfter: openingPoints,
+        balanceAfter: signupBonus,
       },
     });
     if (account && sourceIdentifier) {
@@ -250,7 +243,7 @@ You are now registered in our Loyalty Program.
       customerPhone: phone,
       customerName: contact?.name || "Customer",
       points: signupBonus,
-      balanceAfter: openingPoints,
+      balanceAfter: signupBonus,
       reason: "Signup Bonus",
       referralCode, // passing just in case
     });
@@ -326,9 +319,9 @@ export async function getCustomerAccountsForExport(programId: string) {
   });
 }
 
-export async function getCustomerAccountById(customerId: string, programId: string) {
-  return await prisma.customerLoyaltyAccount.findFirst({
-    where: { id: customerId, programId },
+export async function getCustomerAccountById(customerId: string) {
+  return await prisma.customerLoyaltyAccount.findUnique({
+    where: { id: customerId },
     include: {
       currentTier: true,
       transactions: {
@@ -424,10 +417,9 @@ export async function getCustomerAccountByPhone(
 export async function updateCustomerAccount(
   customerId: string,
   data: CustomerLoyaltyAccountUpdateInput,
-  programId: string,
 ) {
   return await prisma.customerLoyaltyAccount.update({
-    where: { id: customerId, programId },
+    where: { id: customerId },
     data,
   });
 }
@@ -470,69 +462,61 @@ export async function awardPoints(
     throw new Error("Customer account not found. Create account first.");
   }
 
-  const { points, updatedCustomer, transaction } = await prisma.$transaction(async (tx) => {
-    const calculated = await calculatePointsForPurchase(
+  // Calculate points using earning rules engine
+  const { points, rule: appliedRule } = await calculatePointsForPurchase(
+    programId,
+    customer.id,
+    purchaseAmount,
+    {
+      purchase_amount: purchaseAmount,
+      location_id: context.locationId,
+      categories: context.productCategories,
+      product_skus: context.productSkus,
+      payment_method: context.paymentMethod,
+      channel:
+        context.channel === "online" ||
+        context.channel === "in_store" ||
+        context.channel === "mobile_app"
+          ? context.channel
+          : undefined,
+      orderId: context.orderId,
+      notes: context.notes,
+    },
+  );
+
+  // Update customer points and total spend
+  const updatedCustomer = await prisma.customerLoyaltyAccount.update({
+    where: { id: customer.id },
+    data: {
+      currentPoints: {
+        increment: points,
+      },
+      lifetimePoints: {
+        increment: points,
+      },
+      totalSpend: {
+        increment: purchaseAmount,
+      },
+    },
+  });
+
+  // Create transaction
+  const transaction = await prisma.loyaltyTransaction.create({
+    data: {
+      accountId: customer.id,
       programId,
-      customer.id,
-      purchaseAmount,
-      {
-        purchase_amount: purchaseAmount,
-        location_id: context.locationId,
-        categories: context.productCategories,
-        product_skus: context.productSkus,
-        payment_method: context.paymentMethod,
-        channel:
-          context.channel === "online" ||
-          context.channel === "in_store" ||
-          context.channel === "mobile_app"
-            ? context.channel
-            : undefined,
+      transactionType: "earn",
+      source: "purchase",
+      points,
+      balanceAfter: updatedCustomer.currentPoints,
+      metadata: {
+        purchaseAmount,
         orderId: context.orderId,
-        notes: context.notes,
+        appliedRuleId: appliedRule?.id,
+        appliedRuleName: appliedRule?.name,
+        ...context,
       },
-      tx,
-    );
-
-    // Update customer points and total spend
-    const account = await tx.customerLoyaltyAccount.update({
-      where: { id: customer.id },
-      data: {
-        currentPoints: {
-          increment: calculated.points,
-        },
-        lifetimePoints: {
-          increment: calculated.points,
-        },
-        totalSpend: {
-          increment: purchaseAmount,
-        },
-      },
-    });
-
-    // Create transaction
-    const ledgerRow = await tx.loyaltyTransaction.create({
-      data: {
-        accountId: customer.id,
-        programId,
-        transactionType: "earn",
-        source: "purchase",
-        points: calculated.points,
-        balanceAfter: account.currentPoints,
-        metadata: {
-          purchaseAmount,
-          orderId: context.orderId,
-          appliedRuleId: calculated.rule?.id,
-          appliedRuleName: calculated.rule?.name,
-          ...context,
-        },
-      },
-    });
-
-    return {
-      points: calculated.points,
-      updatedCustomer: account,
-      transaction: ledgerRow,
-    };
+    },
   });
 
   // Check for tier upgrade
@@ -604,8 +588,9 @@ export async function assignRewardToCustomer(
     throw new Error("Customer account not found");
   }
 
-  const reward = await prisma.loyaltyReward.findFirst({
-    where: { id: rewardId, programId: customer.programId },
+  // Check if reward exists
+  const reward = await prisma.loyaltyReward.findUnique({
+    where: { id: rewardId },
   });
 
   if (!reward) {
@@ -667,7 +652,7 @@ export async function assignRewardToCustomer(
   return assignment;
 }
 
-export async function getRewardByShortCode(shortCode: string, orgId: string) {
+export async function getRewardByShortCode(shortCode: string, orgId?: string) {
   const reward = await prisma.customerReward.findUnique({
     where: { shortCode },
     include: {
@@ -685,31 +670,26 @@ export async function getRewardByShortCode(shortCode: string, orgId: string) {
     throw new Error("Reward not found");
   }
 
-  if (reward.account.program.orgId !== orgId) {
+  if (orgId && reward.account.program.orgId !== orgId) {
     throw new Error("Reward not found");
   }
 
   return reward;
 }
 
-export async function markRewardAsRedeemed(shortCode: string, orgId: string) {
+export async function markRewardAsRedeemed(shortCode: string, orgId?: string) {
   const reward = await getRewardByShortCode(shortCode, orgId);
 
   if (reward.status === "REDEEMED") {
     throw new Error("Reward is already redeemed");
   }
 
-  try {
-    return await prisma.customerReward.update({
-      where: { id: reward.id, status: { not: "REDEEMED" } },
-      data: {
-        status: "REDEEMED",
-      },
-    });
-  } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2025") {
-      throw new Error("Reward is already redeemed");
-    }
-    throw error;
-  }
+  const updated = await prisma.customerReward.update({
+    where: { id: reward.id },
+    data: {
+      status: "REDEEMED",
+    },
+  });
+
+  return updated;
 }

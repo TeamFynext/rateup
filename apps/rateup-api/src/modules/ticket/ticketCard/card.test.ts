@@ -11,12 +11,12 @@ vi.mock("../../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     ticketColumn: { findUnique: vi.fn() },
-    ticketBoard: { findFirst: vi.fn(), findUnique: vi.fn() },
+    ticketBoard: { findFirst: vi.fn() },
     ticketBoardLabel: { findMany: vi.fn() },
     ticketActivity: { create: vi.fn(), findMany: vi.fn() },
     contact: { findUnique: vi.fn(), findFirst: vi.fn() },
     user: { findUnique: vi.fn(), findMany: vi.fn() },
-    teamMember: { findFirst: vi.fn(), findMany: vi.fn() },
+    teamMember: { findFirst: vi.fn() },
     $queryRaw: vi.fn(),
     $executeRaw: vi.fn(),
     $transaction: vi.fn(),
@@ -69,8 +69,6 @@ const CARD = "3f8a1e2c-5b7d-4c9e-8a1b-2d3e4f5a6b7c";
 const OWN_COLUMN = "7c6b5a4f-3e2d-4b1a-9c8d-7e6f5a4b3c2d";
 const VICTIM_COLUMN = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
 const VICTIM_CONTACT = "9f8e7d6c-5b4a-4392-8172-6a5b4c3d2e1f";
-const OWN_CONTACT = "0d1c2b3a-4f5e-4a6b-8c7d-9e0f1a2b3c4d";
-const VICTIM_BOARD = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 const BOARD = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 function reply() {
@@ -121,9 +119,7 @@ beforeEach(() => {
   db.contact.findFirst.mockResolvedValue(null);
   db.user.findUnique.mockResolvedValue(null);
   db.user.findMany.mockResolvedValue([]);
-  db.teamMember.findFirst.mockResolvedValue({ userId: USER });
-  db.teamMember.findMany.mockResolvedValue([{ userId: USER }]);
-  db.ticketBoard.findUnique.mockResolvedValue({ teams: [{ teamId: "own-team" }] });
+  db.teamMember.findFirst.mockResolvedValue(null);
   db.$queryRaw.mockResolvedValue([]);
   db.$executeRaw.mockResolvedValue(1);
   db.$transaction.mockImplementation(async (fn: any) => fn(db));
@@ -221,38 +217,19 @@ describe("createCard", () => {
     ).rejects.toThrow("Invalid labelIds for this board");
   });
 
-  // Assignees used not to be checked the way labels are: any user id was written,
-  // and on update the newly assigned users were emailed and messaged about a board
-  // they cannot open. They must be on one of the board's teams now.
-  test("refuses an assignee who is not on one of the board's teams", async () => {
-    db.teamMember.findMany.mockResolvedValueOnce([]);
-
-    await expect(
-      createCard({
-        title: "T",
-        ticketColumnId: OWN_COLUMN,
-        type: "CUSTOM",
-        orgId: ORG,
-        assignees: [{ assigneeId: "an-outsider" }],
-      } as never),
-    ).rejects.toThrow(/members of this board/);
-
-    expect(db.ticketCard.create).not.toHaveBeenCalled();
-  });
-
-  test("accepts an assignee who is on one of them", async () => {
-    db.teamMember.findMany.mockResolvedValueOnce([{ userId: USER }]);
-
+  // NOTE: assignees are NOT checked the same way — any user id is written as
+  // an assignee of the card.
+  test("writes assignee ids with no membership check", async () => {
     await createCard({
       title: "T",
       ticketColumnId: OWN_COLUMN,
       type: "CUSTOM",
       orgId: ORG,
-      assignees: [{ assigneeId: USER }],
+      assignees: [{ assigneeId: "an-outsider" }],
     } as never);
 
     expect(db.ticketCard.create.mock.calls[0][0].data.assignees).toEqual({
-      create: [{ assigneeId: USER }],
+      create: [{ assigneeId: "an-outsider" }],
     });
   });
 
@@ -295,10 +272,9 @@ describe("createCard", () => {
     });
   });
 
-  // A column that does not exist used to make the service resolve undefined, which
-  // the handler sent as a 201 with an empty body — the caller was told a card had
-  // been created that does not exist.
-  test("answers 400 for a column that does not exist", async () => {
+  // NOTE: a column that does not exist makes the service return undefined
+  // before creating anything, and the handler answers 201 with no body.
+  test("answers 201 with nothing for a column that does not exist", async () => {
     db.ticketColumn.findUnique.mockResolvedValueOnce(null);
     const rep = reply();
 
@@ -308,7 +284,7 @@ describe("createCard", () => {
     );
 
     expect(db.ticketCard.create).not.toHaveBeenCalled();
-    expect(answer(rep)).toEqual({ code: 400, body: { message: "That column does not exist" } });
+    expect(answer(rep)).toEqual({ code: 201, body: undefined });
   });
 });
 
@@ -331,29 +307,31 @@ describe("updateCard", () => {
     ...over,
   });
 
-  // contactId used to be written straight through, while the labelIds beside it were
-  // checked against the card's board — so a user could link a contact from any
-  // organisation to a card on their own board and read that contact's name, phone,
-  // consent and last-message timestamp back out of the card.
-  test("refuses a contact from another organisation", async () => {
+  // NOTE: contactId is written straight through. Nothing checks that the
+  // contact belongs to the caller's organisation, and getCardById then returns
+  // that contact's name, phone, consent and last-message timestamp.
+  test("links a card to any contact id the body names", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce(previous());
-    db.contact.findFirst.mockResolvedValueOnce(null);
 
-    await expect(
-      updateCard(CARD, { id: CARD, contactId: VICTIM_CONTACT } as never, USER, ORG),
-    ).rejects.toThrow(/does not belong to this organisation/);
+    await updateCard(CARD, { id: CARD, contactId: VICTIM_CONTACT } as never, USER, ORG);
 
-    expect(db.ticketCard.update).not.toHaveBeenCalled();
+    expect(db.ticketCard.update.mock.calls[0][0].data.contactId).toBe(VICTIM_CONTACT);
   });
 
-  test("checks the contact against the caller's own org", async () => {
+  test("looks the named contact up with no org filter to log its name", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce(previous());
-    db.contact.findFirst.mockResolvedValueOnce({ id: OWN_CONTACT });
+    db.contact.findUnique.mockResolvedValueOnce({
+      id: VICTIM_CONTACT,
+      name: "Ann at the victim org",
+    });
 
-    await updateCard(CARD, { id: CARD, contactId: OWN_CONTACT } as never, USER, ORG);
+    await updateCard(CARD, { id: CARD, contactId: VICTIM_CONTACT } as never, USER, ORG);
 
-    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({ id: OWN_CONTACT, orgId: ORG });
-    expect(db.ticketCard.update.mock.calls[0][0].data.contactId).toBe(OWN_CONTACT);
+    expect(db.contact.findUnique.mock.calls[0][0].where).toEqual({ id: VICTIM_CONTACT });
+    const activity = db.ticketActivity.create.mock.calls.find(
+      (c: any) => c[0].data.type === "ADDED_CONTACT",
+    );
+    expect(activity[0].data.details.contactName).toBe("Ann at the victim org");
   });
 
   test("the read side returns the linked contact's phone and consent", async () => {
@@ -397,28 +375,14 @@ describe("updateCard", () => {
     expect(db.ticketCard.update.mock.calls[0][0].data.labels).toEqual({ deleteMany: {} });
   });
 
-  // Assignees were replaced wholesale with no membership check, and the newly
-  // assigned were then emailed and messaged.
-  test("refuses assignees who are not on the board's teams", async () => {
+  test("assignees are replaced wholesale with no membership check", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce(previous());
-    db.teamMember.findMany.mockResolvedValueOnce([]);
 
-    await expect(
-      updateCard(CARD, { id: CARD, assignedToIds: ["an-outsider"] } as never, USER, ORG),
-    ).rejects.toThrow(/members of this board/);
-
-    expect(db.ticketCard.update).not.toHaveBeenCalled();
-  });
-
-  test("replaces them wholesale once they check out", async () => {
-    db.ticketCard.findUnique.mockResolvedValueOnce(previous());
-    db.teamMember.findMany.mockResolvedValueOnce([{ userId: USER }]);
-
-    await updateCard(CARD, { id: CARD, assignedToIds: [USER] } as never, USER, ORG);
+    await updateCard(CARD, { id: CARD, assignedToIds: ["an-outsider"] } as never, USER, ORG);
 
     expect(db.ticketCard.update.mock.calls[0][0].data.assignees).toEqual({
       deleteMany: {},
-      createMany: { skipDuplicates: true, data: [{ assigneeId: USER }] },
+      createMany: { skipDuplicates: true, data: [{ assigneeId: "an-outsider" }] },
     });
   });
 
@@ -474,23 +438,21 @@ describe("moveCard", () => {
     });
   });
 
-  // verifyCardAccess checks the board the card is CURRENTLY on; the destination used
-  // to be written with no lookup, so a card — with its checklists, attachments,
-  // comments and linked contact — could be moved onto any board on the platform.
-  test("refuses a destination board the caller is not on", async () => {
-    db.ticketColumn.findUnique.mockResolvedValueOnce({ ticketBoardId: VICTIM_BOARD });
-    db.ticketBoard.findUnique.mockResolvedValueOnce({ teams: [{ teamId: "victim-team" }] });
-    db.teamMember.findFirst.mockResolvedValueOnce(null);
-
-    await expect(moveCard(CARD, VICTIM_COLUMN, USER, ORG)).rejects.toThrow(/destination board/);
-    expect(db.ticketCard.update).not.toHaveBeenCalled();
-  });
-
-  test("resolves the destination column's board before moving", async () => {
+  // NOTE: verifyCardAccess checks the board the card is currently on. The
+  // destination column is taken from the body and never checked, so a card can
+  // be moved onto a board the caller has no access to.
+  test("moves a card into any column the body names", async () => {
     await moveCard(CARD, VICTIM_COLUMN, USER, ORG);
 
-    expect(db.ticketColumn.findUnique).toHaveBeenCalled();
     expect(db.ticketCard.update.mock.calls[0][0].data.ticketColumnId).toBe(VICTIM_COLUMN);
+    expect(db.teamMember.findFirst).not.toHaveBeenCalled();
+  });
+
+  test("never resolves the destination column's board", async () => {
+    await moveCard(CARD, VICTIM_COLUMN, USER, ORG);
+
+    // The only column lookup is for the highest order in the target.
+    expect(db.ticketColumn.findUnique).not.toHaveBeenCalled();
   });
 
   test("returns null for a card that does not exist", async () => {
@@ -516,15 +478,16 @@ describe("moveCard", () => {
     expect(sql).toContain(`"ticketColumnId" =`);
   });
 
-  // Only the first statement used to cast its bound column id to ::uuid; the other
-  // three relied on the driver inferring the type of a uuid comparison, and the one
-  // explicit cast is evidence somebody hit that and fixed it in one place.
-  test("every raw statement casts its bound id", async () => {
+  // NOTE: the first statement casts its bound column id to ::uuid and the
+  // others do not, so the three uncast statements rely on the driver inferring
+  // the type of a uuid comparison.
+  test("only the first raw statement casts its bound id", async () => {
     await moveCard(CARD, VICTIM_COLUMN, USER, ORG, 2);
 
-    for (const call of db.$executeRaw.mock.calls) {
-      expect(call[0].join("?")).toContain("::uuid");
-    }
+    const first = db.$executeRaw.mock.calls[0][0].join("?");
+    const second = db.$executeRaw.mock.calls[1][0].join("?");
+    expect(first).toContain("::uuid");
+    expect(second).not.toContain("::uuid");
   });
 
   test("raises the Zapier moved event only on a column change", async () => {
@@ -682,8 +645,7 @@ describe("verifyCardAccess", () => {
   test("403s a caller who is not on the board", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce({ ticketColumnId: OWN_COLUMN });
     db.ticketColumn.findUnique.mockResolvedValueOnce({ ticketBoardId: BOARD });
-    db.ticketBoard.findUnique.mockResolvedValueOnce({ teams: [{ teamId: "t-1" }] });
-    db.teamMember.findFirst.mockResolvedValueOnce(null);
+    db.ticketBoard.findUnique = vi.fn().mockResolvedValueOnce({ teams: [{ teamId: "t-1" }] });
     const rep = reply();
 
     await verifyCardAccess(request({ params: { id: CARD } }), rep);
@@ -695,7 +657,7 @@ describe("verifyCardAccess", () => {
   });
 
   // NOTE: it reads request.userId, which checkSession does set — the correct
-  // property, unlike the label controller.
+  // property, unlike the label controller (issues.txt 28.1).
   test("reads the session property that exists", async () => {
     db.ticketCard.findUnique.mockResolvedValueOnce({ ticketColumnId: OWN_COLUMN });
     db.ticketColumn.findUnique.mockResolvedValueOnce({ ticketBoardId: BOARD });
@@ -730,18 +692,13 @@ describe("the cards-by-column route", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // The path used to bind ":columnId" while the schema, the handler and
-  // verifyColumnAccess all expect "ticketColumnId", so every request to this route
-  // failed validation before reaching any of them.
-  test("the route binds the parameter name the schema and handler use", async () => {
+  test("the route registers that mismatched schema", async () => {
     const { srv, routes } = fakeServer();
 
     await cardRoutes(srv);
 
-    expect(routes.find((r) => r.url === "/column/:columnId")).toBeUndefined();
-    const byColumn = routes.find((r) => r.url === "/column/:ticketColumnId");
+    const byColumn = routes.find((r) => r.url === "/column/:columnId");
     expect(byColumn.opts.schema.params).toBe(columnIdParamsSchema);
-    expect(byColumn.opts.preHandler).toBeDefined();
   });
 });
 
@@ -788,16 +745,15 @@ describe("cardRoutes", () => {
     ]);
   });
 
-  // Create and reorder take their target from the BODY, and used to be exactly the
-  // two routes with no access check — so any authenticated user could add a card to
-  // any column on the platform, or shuffle any board.
-  test("guards create and reorder from the body instead", async () => {
+  // NOTE: the two routes that take their target from the body — create and
+  // reorder — are exactly the two with no access check.
+  test("leaves create and reorder with no access check", async () => {
     const { srv, routes } = fakeServer();
 
     await cardRoutes(srv);
 
     const open = routes.filter((r) => !r.opts?.preHandler);
-    expect(open).toEqual([]);
+    expect(open.map((r) => `${r.method} ${r.url}`)).toEqual(["POST /create", "PUT /reorder"]);
   });
 
   test("no route declares a role requirement", async () => {

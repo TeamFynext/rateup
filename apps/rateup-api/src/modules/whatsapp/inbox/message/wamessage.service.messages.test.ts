@@ -558,7 +558,7 @@ describe("sendMediaMessages", () => {
   });
 
   // An unrecognised media type used to leave messageBody undefined and still call
-  // send with it. Fixed to skip the item and log instead of
+  // send() with it (see issues.txt). Fixed to skip the item and log instead of
   // forwarding an undefined message body to the WhatsApp send path.
   test("skips a media type it cannot build instead of sending an empty message", async () => {
     await sendMediaMessages(

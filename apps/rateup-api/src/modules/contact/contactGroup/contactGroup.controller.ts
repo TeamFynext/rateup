@@ -29,23 +29,11 @@ import {
   getContactGroupsByContactId,
   updateContactGroupsForContact,
 } from "./contactGroup.service.js";
-import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
 import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
 import { getMultipartFieldValue } from "../../../utils/upload/validate.js";
 import { PaginationQuery } from "../contact.schema.js";
-
-function replyForError(reply: FastifyReply, error: unknown, context: string) {
-  if (error instanceof ContactGroupNotFoundError) {
-    return reply.code(404).send({ error: error.message });
-  }
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-    return reply.code(404).send({ error: "Contact group not found" });
-  }
-  log.error({ err: error }, context);
-  return reply.code(500).send({ error: "Something went wrong" });
-}
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{
@@ -54,29 +42,31 @@ export async function getContactGroupsHandler(
   reply: FastifyReply,
 ) {
   try {
+    if (request.query.contactGroupId) {
+      const res = await getContactGroupById(request.query.contactGroupId);
+      return reply.code(200).send(res);
+    }
+
+    if (request.query.teamId) {
+      const res = await getContactGroupsByTeamId(request.query.teamId);
+      return reply.code(200).send(res);
+    }
+
     if (!request?.user?.orgId) {
       return reply.code(403).send({
         message: "Not authorized",
       });
     }
-    const { orgId } = request.user;
 
-    if (request.query.contactGroupId) {
-      const res = await getContactGroupById(request.query.contactGroupId, orgId);
-      if (!res) return reply.code(404).send({ error: "Contact group not found" });
-      return reply.code(200).send(res);
-    }
-
-    if (request.query.teamId) {
-      const res = await getContactGroupsByTeamId(request.query.teamId, orgId);
-      return reply.code(200).send(res);
-    }
-
-    const res = await getContactGroupsByOrgId(orgId, request.query.type);
+    const res = await getContactGroupsByOrgId(request.user.orgId, request.query.type);
 
     return reply.code(200).send(res);
   } catch (error) {
-    return replyForError(reply, error, "Error listing contact groups");
+    log.error(error);
+
+    return reply.code(500).send({
+      error: "Something went wrong",
+    });
   }
 }
 
@@ -90,12 +80,12 @@ export async function getContactsByContactGroupIdHandler(
   try {
     const contacts = await getContactsByContactGroupIdWithPagination(
       request.params.contactGroupId,
-      request.user.orgId,
       request.query,
     );
     reply.code(200).send(contacts);
   } catch (error) {
-    return replyForError(reply, error, "Error listing a group's contacts");
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
@@ -104,15 +94,18 @@ export async function createContactGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contactGroup = await createContactGroup(request.body, request.user.orgId);
+    const contactGroup = await createContactGroup(request.body);
     reply.code(201).send(contactGroup);
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return reply.code(409).send({
-        error: "Contact group with this name already exist in the provided team",
-      });
+    log.error(error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        reply.code(500).send({
+          error: "Contact group with this name already exist in the provided team",
+        });
+      }
     }
-    return replyForError(reply, error, "Error creating a contact group");
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
@@ -132,7 +125,8 @@ export async function addExistingContactsToGroupHandler(
     );
     reply.code(200).send(contactGroup);
   } catch (error) {
-    return replyForError(reply, error, "Error adding existing contacts to a group");
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
@@ -151,10 +145,12 @@ export async function addNewContactsToGroupHandler(
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      reply.code(400).send({ error: "Contact already exist" });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        reply.code(400).send({ error: "Contact already exist" });
+      }
     } else {
-      return replyForError(reply, error, "Error adding new contacts to a group");
+      reply.code(500).send({ error: "Something went wrong" });
     }
   }
 }
@@ -167,14 +163,11 @@ export async function updateContactGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contactGroup = await updateContactGroup(
-      request.params.contactGroupId,
-      request.user.orgId,
-      request.body,
-    );
+    const contactGroup = await updateContactGroup(request.params.contactGroupId, request.body);
     reply.code(200).send(contactGroup);
   } catch (error) {
-    return replyForError(reply, error, "Error updating a contact group");
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
@@ -183,13 +176,11 @@ export async function deleteContactGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contactGroup = await deleteContactGroup(
-      request.params.contactGroupId,
-      request.user.orgId,
-    );
+    const contactGroup = await deleteContactGroup(request.params.contactGroupId);
     reply.code(200).send(contactGroup);
   } catch (error) {
-    return replyForError(reply, error, "Error deleting a contact group");
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
@@ -201,14 +192,11 @@ export async function removeContactsFromGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contacts = await removeContactsFromGroup(
-      request.params.contactGroupId,
-      request.user.orgId,
-      request.body,
-    );
+    const contacts = await removeContactsFromGroup(request.params.contactGroupId, request.body);
     reply.code(200).send(contacts);
   } catch (error) {
-    return replyForError(reply, error, "Error removing contacts from a group");
+    log.error(error);
+    reply.code(500).send({ error: `Something went wrong: ${error}` });
   }
 }
 
@@ -236,10 +224,11 @@ export async function deleteManyContactGroupsHandler(
 ) {
   try {
     const { contactGroupIds } = request.body;
-    const contactGroup = await deleteManyContactGroups(contactGroupIds, request.user.orgId);
+    const contactGroup = await deleteManyContactGroups(contactGroupIds);
     reply.code(200).send(contactGroup);
   } catch (error) {
-    return replyForError(reply, error, "Error deleting contact groups");
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
@@ -255,18 +244,15 @@ export async function addNewContactsfromCSVToGroupHandler(
       return reply.code(400).send({ error: "This file type is not permitted." });
     const tags: string[] = [];
     let update = false;
-    let hasHeaderRow = true;
     for (const key in file?.fields) {
       const value = getMultipartFieldValue(file?.fields?.[key]);
       if (key.startsWith("tags[")) {
         if (typeof value === "string") tags.push(value);
       } else if (key === "update") {
         update = value === "true";
-      } else if (key === "hasHeaderRow") {
-        hasHeaderRow = value !== "false";
       }
     }
-    const res = await importCSVContacts(file!, orgId, tags, update, contactGroupId, hasHeaderRow);
+    const res = await importCSVContacts(file!, orgId, tags, update, contactGroupId);
     if (res!.status === "error") {
       return reply.code(400).send({ error: "VALIDATION_ERR", data: res!.data });
     }
