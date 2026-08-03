@@ -19,8 +19,6 @@ import FastifyMultipart from "@fastify/multipart";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   chatbotMessageSchema,
-  createChatbotSchema,
-  createChatbotInput,
   dataLoadSchema,
   dataSourceUploadInput,
   deleteContentSchema,
@@ -100,13 +98,10 @@ export async function chatbotRoutes(server: FastifyInstance) {
 
   server.delete("/delete-chat-history", {}, deleteChatHistoryHandler);
 
-  server.post<{ Body: createChatbotInput }>(
+  server.post(
     "/chatbot",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
-      schema: {
-        body: createChatbotSchema,
-      },
     },
     createChatbotHanlder,
   );

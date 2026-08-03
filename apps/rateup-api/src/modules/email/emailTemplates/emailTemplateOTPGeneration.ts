@@ -1,5 +1,4 @@
 import { rateupLogo } from "../../../utils/constants/constants.js";
-import { escapeHtml } from "../../../utils/html.js";
 
 // Only `surveyName` and `otp` are read here.
 export function createEmailBodyOTPGeneration(data: EmailTemplateData | undefined) {
@@ -103,13 +102,13 @@ export function createEmailBodyOTPGeneration(data: EmailTemplateData | undefined
               <tr>
                 <td>
                   <p class="email-body" style="max-width: 500px;">
-                   To continue ${data?.surveyName ? escapeHtml(data.surveyName) + "," : ""} please use the following One Time Password(OTP)
+                   To continue ${data?.surveyName}, please use the following One Time Password(OTP)
                   </p>
                 </td>
               </tr>
               <tr>
                <td style="max-width: 500px; text-align: center; margin: 0 auto;">
-                 <h2 class="otp-text">${escapeHtml(data?.otp)}</h2>
+                 <h2 class="otp-text">${data?.otp}</h2>
                </td>
               </tr>
               <tr><td></td></tr>

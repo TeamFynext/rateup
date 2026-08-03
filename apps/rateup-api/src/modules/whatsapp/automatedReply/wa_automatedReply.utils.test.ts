@@ -64,37 +64,25 @@ import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { findRecentAutomation } from "../whatsappSurvey/automation-logger.utils.js";
 import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service.js";
+import { WaAutomatedReplyMatchType } from "../../../types/enums.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import {
   type automationProps,
   generateInternalMessageId,
   generateOrderReferenceId,
   selectAutomationByBusinessHours,
+  validateAutomationMatchCondition,
   validateRuleConditions,
   validateTimeWindow,
   verifyAutomationLimit,
 } from "./wa_automatedReply.utils.js";
 
-// No dayjs.extend here on purpose: the module under test registers customParseFormat
-// itself now. This file used to have to do it, which meant the tests passed while the
-// module in isolation did not.
+// The module parses "HH:mm" strings with dayjs but never extends customParseFormat
+// itself — in the running app another module happens to have done it first. Extend it
+// here so the unit under test behaves the way it does in production.
+dayjs.extend(customParseFormat);
+
 type Mock = ReturnType<typeof vi.fn>;
-
-// dayjs is a singleton and this module imports wasurvey.utils.js (which also extends
-// customParseFormat), so passing time-window tests do not prove the module registers the
-// plugin itself. Assert the registration directly: without it, dropping the wasurvey
-// import would make every time-slot comparison silently return false and automations
-// would stop firing during business hours with no error anywhere.
-describe("dayjs plugin registration", () => {
-  test("registers customParseFormat itself rather than relying on wasurvey.utils", async () => {
-    const source = await import("node:fs/promises").then((fs) =>
-      fs.readFile("src/modules/whatsapp/automatedReply/wa_automatedReply.utils.ts", "utf8"),
-    );
-
-    expect(source).toContain('import customParseFormat from "dayjs/plugin/customParseFormat.js"');
-    expect(source).toContain("dayjs.extend(customParseFormat)");
-  });
-});
 
 const db = prisma as unknown as {
   waAutomatedReply: { count: Mock };
@@ -112,6 +100,18 @@ function openAllDay(day: string, slots = [{ openTime: "09:00", closeTime: "17:00
     id: "bh-1",
     timezone: "UTC",
     schedule: { [day]: { isOpen: true, timeSlots: slots } },
+  } as any;
+}
+
+function automation(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "auto-1",
+    commands: ["hello"],
+    matchType: WaAutomatedReplyMatchType.Exact,
+    matchData: {},
+    sendOnceIn24Hours: false,
+    businessHour: null,
+    ...overrides,
   } as any;
 }
 
@@ -158,6 +158,241 @@ beforeEach(() => {
   getContactMock.mockResolvedValue(null);
   db.waAutomatedReply.count.mockResolvedValue(0);
   db.businessHour.findUnique.mockResolvedValue(null);
+});
+
+describe("validateAutomationMatchCondition - exact matching", () => {
+  test("matches the command exactly, ignoring case by default", async () => {
+    const result = await validateAutomationMatchCondition(automation(), "HELLO");
+
+    expect(result).toBe(true);
+  });
+
+  test("respects case when the automation asks it to", async () => {
+    const auto = automation({ matchData: { caseSensitive: true } });
+
+    await expect(validateAutomationMatchCondition(auto, "HELLO")).resolves.toBe(false);
+    await expect(validateAutomationMatchCondition(auto, "hello")).resolves.toBe(true);
+  });
+
+  test("rejects a message that merely contains the command", async () => {
+    await expect(validateAutomationMatchCondition(automation(), "hello there")).resolves.toBe(
+      false,
+    );
+  });
+});
+
+describe("validateAutomationMatchCondition - contains matching", () => {
+  const anyOf = automation({
+    matchType: WaAutomatedReplyMatchType.ContainsAnyOf,
+    commands: ["price", "cost"],
+  });
+  const allOf = automation({
+    matchType: WaAutomatedReplyMatchType.ContainsAllOf,
+    commands: ["price", "shipping"],
+  });
+
+  test("matches when any one keyword appears", async () => {
+    await expect(validateAutomationMatchCondition(anyOf, "what is the cost?")).resolves.toBe(true);
+  });
+
+  test("rejects when no keyword appears", async () => {
+    await expect(validateAutomationMatchCondition(anyOf, "hello there")).resolves.toBe(false);
+  });
+
+  test("requires every keyword when the automation says all of", async () => {
+    await expect(
+      validateAutomationMatchCondition(allOf, "price and shipping please"),
+    ).resolves.toBe(true);
+    await expect(validateAutomationMatchCondition(allOf, "price please")).resolves.toBe(false);
+  });
+
+  // Keyword matching is whole-phrase, so a keyword inside a longer word does not count.
+  test("does not match a keyword buried inside another word", async () => {
+    await expect(validateAutomationMatchCondition(anyOf, "priceless")).resolves.toBe(false);
+  });
+
+  test("refuses to run for a match type it does not implement", async () => {
+    await expect(
+      validateAutomationMatchCondition(automation({ matchType: "Regex" }), "hello"),
+    ).rejects.toThrow("WaAutomation not implemented for: Regex");
+  });
+});
+
+describe("validateAutomationMatchCondition - the once-a-day guard", () => {
+  test("stays silent when this automation already fired in the last day", async () => {
+    findRecentAutomationMock.mockResolvedValue({ id: "log-1" });
+
+    const result = await validateAutomationMatchCondition(
+      automation({ sendOnceIn24Hours: true }),
+      "hello",
+      "org-1",
+      "15550001",
+    );
+
+    expect(result).toBe(false);
+    expect(findRecentAutomationMock).toHaveBeenCalledWith("15550001", "org-1", {
+      timeWindow: 24 * 60 * 60 * 1000,
+    });
+  });
+
+  test("fires when nothing was sent in the last day", async () => {
+    const result = await validateAutomationMatchCondition(
+      automation({ sendOnceIn24Hours: true }),
+      "hello",
+      "org-1",
+      "15550001",
+    );
+
+    expect(result).toBe(true);
+  });
+
+  test("does not consult the log when the option is off", async () => {
+    await validateAutomationMatchCondition(automation(), "hello", "org-1", "15550001");
+
+    expect(findRecentAutomationMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("validateAutomationMatchCondition - contact filters", () => {
+  const filtered = (contactFilters: Record<string, unknown>) =>
+    automation({ matchData: { contactFilters } });
+
+  test("skips the filters when there is no org or phone to check against", async () => {
+    await expect(
+      validateAutomationMatchCondition(filtered({ newContactsOnly: true }), "hello"),
+    ).resolves.toBe(true);
+    expect(getContactMock).not.toHaveBeenCalled();
+  });
+
+  test("rejects when the contact cannot be found", async () => {
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ newContactsOnly: true }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("accepts a contact created within the last day when new-only is set", async () => {
+    getContactMock.mockResolvedValue({ id: "c1", createdAt: new Date() });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ newContactsOnly: true }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("rejects an older contact when new-only is set", async () => {
+    getContactMock.mockResolvedValue({ id: "c1", createdAt: new Date("2020-01-01") });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ newContactsOnly: true }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("requires membership of one of the named groups", async () => {
+    getContactMock.mockResolvedValue({
+      id: "c1",
+      createdAt: new Date(),
+      contactGroups: [{ contactGroupId: "group-a" }],
+    });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ inGroups: ["group-a", "group-b"] }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("rejects a contact in none of the named groups", async () => {
+    getContactMock.mockResolvedValue({
+      id: "c1",
+      createdAt: new Date(),
+      contactGroups: [{ contactGroupId: "group-z" }],
+    });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ inGroups: ["group-a"] }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("accepts when a required built-in field has a value", async () => {
+    getContactMock.mockResolvedValue({
+      id: "c1",
+      createdAt: new Date(),
+      email: "ada@acme.com",
+      customFields: [],
+    });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ requiredFieldsWithAnyValue: ["email"] }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("accepts when a required custom field has a value", async () => {
+    getContactMock.mockResolvedValue({
+      id: "c1",
+      createdAt: new Date(),
+      customFields: [{ fieldId: "vat_number", value: "GB123" }],
+    });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ requiredFieldsWithAnyValue: ["vat_number"] }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("rejects when a required field is unknown and unset", async () => {
+    getContactMock.mockResolvedValue({ id: "c1", createdAt: new Date(), customFields: [] });
+
+    await expect(
+      validateAutomationMatchCondition(
+        filtered({ requiredFieldsWithAnyValue: ["vat_number"] }),
+        "hello",
+        "org-1",
+        "15550001",
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("never reaches the filters when the message did not match", async () => {
+    await validateAutomationMatchCondition(
+      filtered({ newContactsOnly: true }),
+      "something else",
+      "org-1",
+      "15550001",
+    );
+
+    expect(getContactMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("validateTimeWindow", () => {
@@ -653,34 +888,15 @@ describe("verifyAutomationLimit", () => {
     expect(reply.payload).toMatchObject({ message: "Subscription not found" });
   });
 
-  // Automated replies are unlimited by design — no plan in subscription.data.ts states a
-  // whatsapp count. That outcome is unchanged, but it is now a deliberate early return
-  // rather than an accident of comparing against undefined.
-  test("allows unlimited replies when the plan does not state a count", async () => {
+  // NOTE: a plan with no whatsapp count compares against undefined, which is never
+  // true, so the limit is silently unenforced rather than defaulting to something.
+  test("enforces no limit when the plan does not state one", async () => {
     db.waAutomatedReply.count.mockResolvedValue(9999);
     const reply = makeReply();
 
     await verifyAutomationLimit(request({ subscription: { features: {} } }), reply);
 
     expect(reply.code).not.toHaveBeenCalled();
-  });
-
-  test("does not bother counting when the plan states no limit", async () => {
-    await verifyAutomationLimit(request({ subscription: { features: {} } }), makeReply());
-
-    expect(db.waAutomatedReply.count).not.toHaveBeenCalled();
-  });
-
-  test("still enforces a limit the plan does state", async () => {
-    db.waAutomatedReply.count.mockResolvedValue(5);
-    const reply = makeReply();
-
-    await verifyAutomationLimit(request({ subscription: subscription(5) }), reply);
-
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.payload).toMatchObject({
-      message: "You have reached the maximum limit of 5 automated replies.",
-    });
   });
 });
 

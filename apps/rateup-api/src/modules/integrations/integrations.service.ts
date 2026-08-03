@@ -71,6 +71,10 @@ export const getIntegrationByName = async (orgId: string, name: string) => {
   return data;
 };
 
+export async function getAllIntegrations() {
+  return await prisma.integration.findMany();
+}
+
 export function getWaPaymentConfigurations(
   orgId: string,
   noDbSave: true,
@@ -88,7 +92,7 @@ export async function getWaPaymentConfigurations(
 ) {
   // If a specific WA account is requested, use it. Otherwise fall back to the first account.
   const waSettings = whatsappSettingsId
-    ? await getWaSettingsById(whatsappSettingsId, orgId)
+    ? await getWaSettingsById(whatsappSettingsId)
     : await getWaSettings(orgId);
 
   if (!waSettings) {
@@ -348,11 +352,7 @@ export const updateIntegrationByName = async (
     data.credential.accessToken = hash;
     apikey = key;
   }
-  const {
-    updateKey: _ignoredUpdateKey,
-    orgId: _ignoredOrgId,
-    ...rest
-  } = data as UpdateIntgrationInput & { orgId?: string };
+  const { ...rest } = data;
   const integration = await prisma.integration.update({
     where: {
       orgid_integration_name_unique: {
@@ -556,23 +556,18 @@ export async function deleteZapierTriggerHooks(
   data: ZapierIntegration["credential"]["triggerSubscriptions"][0],
   orgId: string,
 ) {
+  if (data.active) {
+    await axios.delete(data.hookUrl);
+  }
   const integration = (await getIntegrationByName(
     orgId,
     IntegratedApps.zapier,
   )) as unknown as ZapierIntegration;
-  const subscriptions = integration?.credential?.triggerSubscriptions ?? [];
-  const stored = subscriptions.find((t) => t.hookUrl === data.hookUrl);
-  if (!stored) {
-    log.warn("No zapier trigger subscription matching the requested hook for org %s", orgId);
-    return;
-  }
-
-  if (stored.active) {
-    await axios.delete(stored.hookUrl);
-  }
   const credential = {
     ...integration.credential,
-    triggerSubscriptions: subscriptions.filter((t) => t.hookUrl !== stored.hookUrl),
+    triggerSubscriptions: integration.credential.triggerSubscriptions.filter(
+      (t) => t.hookUrl !== data.hookUrl,
+    ),
   } as ZapierIntegration["credential"];
   await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
 }

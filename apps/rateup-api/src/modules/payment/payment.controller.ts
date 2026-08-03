@@ -29,13 +29,13 @@ import {
   rateupPlanParamInput,
   UpdatePlanInput,
   updateRateUpPlanInput,
-  type UpdateOrderStatusInput,
 } from "./payment.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
 import { log } from "../../utils/logger.js";
 // import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
+import { Order } from "../../../generated/prisma/client.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function createCheckoutSessionHandler(
@@ -319,25 +319,16 @@ export async function sendEmailPlanSelectionDetailsHandler(
 export async function updateSubscriptionOrderHandler(
   request: FastifyRequest<{
     Params: { orderId: string };
-    Body: UpdateOrderStatusInput;
+    Body: Partial<Order>;
   }>,
   reply: FastifyReply,
 ) {
   try {
+    const order = await updateOrder(request.params.orderId, request.body);
     const { status } = request.body;
-    const order = await updateOrder(request.params.orderId, status, request.user.orgId);
-
-    if (status === "COMPLETE") {
-      if (order.paymentStatus !== "SUCCESS") {
-        return reply.code(409).send({
-          message: "This order has not been paid for; its subscription cannot be started",
-        });
-      }
+    if (status && status === "COMPLETE") {
       await updateSubscriptionForTrial(
-        // The order's own org, not the session's. They are the same after the
-        // scoped update above; naming the order's makes that explicit rather
-        // than incidental.
-        order.orgId!,
+        request.user.orgId,
         order.rateupPlanId,
         order.subscriptionId,
         request.userId,
@@ -345,10 +336,7 @@ export async function updateSubscriptionOrderHandler(
     }
     reply.code(200).send();
   } catch (e) {
-    if (e && typeof e === "object" && (e as { code?: string }).code === "P2025") {
-      return reply.code(404).send({ message: "Order not found" });
-    }
     log.error(e);
-    reply.code(500).send({ message: "Updating order failed" });
+    reply.code(500).send("Updating order failed");
   }
 }

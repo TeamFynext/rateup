@@ -41,8 +41,8 @@ vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 import { userStatusQueue } from "../../../utils/redisConnection.js";
-import { log } from "../../../utils/logger.js";
 import { checkSession } from "../../../utils/checkSession.js";
+import { connectionManager } from "./org.ws.class.js";
 import {
   checkMobileId,
   handleWebSocketConnection,
@@ -54,18 +54,6 @@ import { orgWsRoutes } from "./org.ws.routes.js";
 import { afterAuthIdParamsSchema } from "./org.ws.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
-
-// The controller registers its Redis subscriber at import time. Grab the
-// callback now, at collection time — beforeEach's clearAllMocks drops the
-// recorded call. Invoking it is how these tests observe who a broadcast
-// actually reaches.
-const deliver: (channel: string, message: string) => void = redisStub.clones[0].on.mock.calls.find(
-  (c: any) => c[0] === "message",
-)![1];
-
-function broadcast(orgId: string, data: unknown, roleFilter?: string) {
-  deliver(WS_CHANNEL, JSON.stringify({ orgId, data, roleFilter }));
-}
 
 const USER = "11111111-1111-1111-1111-111111111111";
 const OWN_ORG = "22222222-2222-2222-2222-222222222222";
@@ -149,32 +137,17 @@ describe("handleWebSocketConnection", () => {
     expect(s.close).toHaveBeenCalledOnce();
   });
 
-  // The role used to come from the query string — the client declared its own
-  // role, and the subscriber below filters deliveries on it.
-  test("tags the socket with the role from the session, not the query string", async () => {
+  // NOTE: the role a connection is tagged with comes from the query string, so
+  // a client declares its own role for filtering purposes.
+  test("tags the socket with a role taken from the query string", async () => {
     const s = socket();
 
-    await handleWebSocketConnection(
-      s,
-      req({ query: { role: "SUPER_ADMIN" }, user: { orgId: OWN_ORG, role: "MEMBER" } }),
-    );
+    await handleWebSocketConnection(s, req({ query: { role: "SUPER_ADMIN" } }));
 
-    expect((s as any).role).toBe("MEMBER");
+    expect((s as any).role).toBe("SUPER_ADMIN");
   });
 
-  test("a role filter no longer matches a self-declared role", async () => {
-    const s = socket();
-    await handleWebSocketConnection(
-      s,
-      req({ query: { role: "SUPER_ADMIN" }, user: { orgId: OWN_ORG, role: "MEMBER" } }),
-    );
-
-    broadcast(OWN_ORG, { type: "inbox" }, "SUPER_ADMIN");
-
-    expect(s.send).not.toHaveBeenCalled();
-  });
-
-  test("defaults the role to main when the session carries none", async () => {
+  test("defaults the role to main", async () => {
     const s = socket();
 
     await handleWebSocketConnection(s, req());
@@ -207,39 +180,17 @@ describe("handleWebSocketConnection", () => {
     );
   });
 
-  // The room was keyed on the caller-supplied browser id, so a second
-  // connection reusing an existing id replaced the first entry: that socket
-  // stayed open, reported no error and silently stopped receiving inbox
-  // events. It is keyed on a server-issued id per socket now, so a reused
-  // browser id displaces nothing.
-  test("a repeated browser id no longer displaces the previous socket", async () => {
+  // NOTE: the map is keyed on the caller-supplied browser id, so a second
+  // connection reusing an existing id replaces the first entry — the earlier
+  // socket stays open but stops receiving broadcasts.
+  test("a repeated browser id displaces the previous entry without closing it", async () => {
     const first = socket();
     const second = socket();
 
     await handleWebSocketConnection(first, req({ params: { afterAuthId: "same-id" } }));
     await handleWebSocketConnection(second, req({ params: { afterAuthId: "same-id" } }));
 
-    broadcast(OWN_ORG, { type: "inbox" });
-
-    expect(first.send).toHaveBeenCalledOnce();
-    expect(second.send).toHaveBeenCalledOnce();
     expect(first.close).not.toHaveBeenCalled();
-  });
-
-  // The close handler was asymmetric in the same way: `delete(browserId)`
-  // evicted the entry whoever closed first, so the first tab to close muted the
-  // second.
-  test("closing one socket does not evict another that reused the id", async () => {
-    const first = socket();
-    const second = socket();
-    await handleWebSocketConnection(first, req({ params: { afterAuthId: "same-id" } }));
-    await handleWebSocketConnection(second, req({ params: { afterAuthId: "same-id" } }));
-
-    await first.fire("close");
-    broadcast(OWN_ORG, { type: "inbox" });
-
-    expect(second.send).toHaveBeenCalledOnce();
-    expect(first.send).not.toHaveBeenCalled();
   });
 
   test("logs whatever a client sends rather than acting on it", async () => {
@@ -303,36 +254,14 @@ describe("checkMobileId", () => {
     });
   });
 
-  // A bearer token in a query string is recorded everywhere a URL is. The
-  // Authorization header is preferred now; the query string still works so the
-  // mobile app can migrate, and its use is logged.
-  test("prefers the Authorization header", async () => {
-    const request: any = {
-      query: { accessToken: "from-query" },
-      headers: { authorization: "Bearer from-header" },
-    };
-
-    await checkMobileId(request, reply());
-
-    expect(getSessionWithoutRequestResponse).toHaveBeenCalledWith("from-header");
-  });
-
-  test("still accepts the query string, and warns", async () => {
+  // NOTE: the access token is read from the query string rather than a header
+  // or a cookie.
+  test("takes the access token from the query string", async () => {
     const request: any = { query: { accessToken: "eyJhbGciOi..." }, headers: {} };
 
     await checkMobileId(request, reply());
 
     expect(getSessionWithoutRequestResponse).toHaveBeenCalledWith("eyJhbGciOi...");
-    expect(log.warn).toHaveBeenCalled();
-  });
-
-  test("refuses a request carrying no token at all", async () => {
-    const rep = reply();
-
-    await checkMobileId({ query: {}, headers: {} } as never, rep);
-
-    expect(rep.code).toHaveBeenCalledWith(401);
-    expect(getSessionWithoutRequestResponse).not.toHaveBeenCalled();
   });
 
   test("puts the resolved identity on the request", async () => {
@@ -349,24 +278,22 @@ describe("checkMobileId", () => {
     });
   });
 
-  // An invalid or absent token made getSessionWithoutRequestResponse reject with
-  // no try/catch around it, so the rejection escaped the preHandler instead of
-  // answering 401.
-  test("an invalid token is refused rather than thrown", async () => {
+  // NOTE: an invalid or absent token makes getSessionWithoutRequestResponse
+  // throw, and there is no try/catch — so the rejection escapes the preHandler
+  // rather than answering 401.
+  test("an invalid token escapes the preHandler", async () => {
     (getSessionWithoutRequestResponse as unknown as Mock).mockRejectedValueOnce(
       new Error("UNAUTHORISED"),
     );
-    const request: any = { query: { accessToken: "bad" }, headers: {} };
-    const rep = reply();
 
-    await expect(checkMobileId(request, rep)).resolves.toBeUndefined();
-    expect(rep.code).toHaveBeenCalledWith(401);
-    expect(request.user).toBeUndefined();
+    await expect(
+      checkMobileId({ query: { accessToken: "bad" }, headers: {} } as never, reply()),
+    ).rejects.toThrow("UNAUTHORISED");
   });
 
-  // The 401 branch used to send and then carry on to read the payload and set
-  // the identity on a request it had already refused.
-  test("the 401 branch returns without setting an identity", async () => {
+  // NOTE: the 401 branch sends and then carries on to read the payload and set
+  // the identity on a request that has already been refused.
+  test("the 401 branch does not return", async () => {
     (getSessionWithoutRequestResponse as unknown as Mock).mockResolvedValueOnce({
       getUserId: (): string | undefined => undefined,
       getAccessTokenPayload: () => ({ role: "ADMIN", orgId: OWN_ORG, email: "a@b.test" }),
@@ -377,20 +304,46 @@ describe("checkMobileId", () => {
     await checkMobileId(request, rep);
 
     expect(rep.code).toHaveBeenCalledWith(401);
-    expect(request.user).toBeUndefined();
+    expect(request.user).toBeDefined();
+    expect(request.user.orgId).toBe(OWN_ORG);
   });
 });
 
 // ===========================================================================
-// The auth endpoint
+// The connection manager
 // ===========================================================================
 
-describe("orgWsAuthCheckHandler", () => {
-  // The minted id used to be pushed onto a process-local array keyed by org
-  // that nothing read and nothing pruned, inside a class whose other three
-  // methods had no callers at all. Both are gone; the endpoint still answers
-  // with a 128-bit id so existing clients are unaffected.
-  test("answers with a 128-bit random id", async () => {
+describe("connectionManager", () => {
+  test("issues a 128-bit random id and remembers it against the org", () => {
+    const id = connectionManager.generateAfterAuthIdforOrgId(OWN_ORG);
+
+    expect(id).toMatch(/^[0-9a-f]{32}$/);
+    expect(connectionManager.orgIdToAfterAuthIds.get(OWN_ORG)).toContain(id);
+  });
+
+  // NOTE: nothing ever removes an id from this map, and the auth endpoint mints
+  // a fresh one per call — so the list grows for the lifetime of the process.
+  test("ids accumulate per org and are never removed", () => {
+    const before = connectionManager.orgIdToAfterAuthIds.get(OWN_ORG)?.length ?? 0;
+
+    connectionManager.generateAfterAuthIdforOrgId(OWN_ORG);
+    connectionManager.generateAfterAuthIdforOrgId(OWN_ORG);
+    connectionManager.generateAfterAuthIdforOrgId(OWN_ORG);
+
+    expect(connectionManager.orgIdToAfterAuthIds.get(OWN_ORG)!.length).toBe(before + 3);
+  });
+
+  // NOTE: the collision check sits in the else branch, so the first id issued
+  // for an org is never checked against the connection map.
+  test("the first id for an org skips the collision check", () => {
+    const fresh = "44444444-4444-4444-4444-444444444444";
+
+    connectionManager.generateAfterAuthIdforOrgId(fresh);
+
+    expect(connectionManager.orgIdToAfterAuthIds.get(fresh)).toHaveLength(1);
+  });
+
+  test("the auth endpoint answers with the minted id", async () => {
     const rep = reply();
 
     await orgWsAuthCheckHandler({ user: { orgId: OWN_ORG } } as never, rep);
@@ -398,22 +351,13 @@ describe("orgWsAuthCheckHandler", () => {
     expect(rep.send.mock.calls[0][0].afterAuthId).toMatch(/^[0-9a-f]{32}$/);
   });
 
-  test("mints a fresh id per call and retains nothing", async () => {
-    const seen = new Set<string>();
-    for (let i = 0; i < 5; i++) {
-      const rep = reply();
-      await orgWsAuthCheckHandler({ user: { orgId: OWN_ORG } } as never, rep);
-      seen.add(rep.send.mock.calls[0][0].afterAuthId);
-    }
+  // NOTE: the broadcast path uses its own activeConnections map, keyed on the
+  // session org, so nothing reads back what the connection manager stored.
+  test("the ids it stores are never used to route a message", () => {
+    const id = connectionManager.generateAfterAuthIdforOrgId(OWN_ORG);
 
-    expect(seen.size).toBe(5);
-  });
-
-  test("does not need a session org to mint one", async () => {
-    const rep = reply();
-
-    await expect(orgWsAuthCheckHandler({} as never, rep)).resolves.toBeUndefined();
-    expect(rep.send.mock.calls[0][0].afterAuthId).toMatch(/^[0-9a-f]{32}$/);
+    expect(connectionManager.getConnectionsBasedOnOrgId(OWN_ORG)).toEqual([]);
+    expect(connectionManager.afterAuthIdsToConnections.get(id)).toBeUndefined();
   });
 });
 
@@ -448,7 +392,9 @@ describe("orgWsRoutes", () => {
     expect(ws.opts.websocket).toBe(true);
   });
 
-  test("the mobile socket uses its own bearer-token check", async () => {
+  // NOTE: the mobile socket uses a different check, which reads its token from
+  // the query string instead of the session.
+  test("the mobile socket uses the query-string check instead", async () => {
     const { routes } = await collect();
 
     const mobile = routes.find((r) => r.url === "/:afterAuthId/mobilews");

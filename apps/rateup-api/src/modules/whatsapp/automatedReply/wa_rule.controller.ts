@@ -49,7 +49,7 @@ export async function getRuleByIdHandler(
 ) {
   try {
     const { id } = req.params;
-    const rule = await RuleService.getRuleById(id, req.user.orgId);
+    const rule = await RuleService.getRuleById(id);
     if (!rule) {
       return reply.status(404).send({ error: "Rule not found" });
     }

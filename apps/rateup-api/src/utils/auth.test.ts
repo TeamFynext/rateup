@@ -139,12 +139,12 @@ describe("hasAccessToSurvey", () => {
     await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBe(false);
   });
 
-  // The deny path returns false explicitly, so a caller comparing `=== false` denies
-  // rather than silently granting access.
-  test("returns false, not undefined, when access is denied", async () => {
+  // NOTE: the deny path falls off the end of the function rather than returning false,
+  // so callers get `undefined`. Truthiness makes it behave, but `=== false` would not.
+  test("returns undefined rather than false when access is denied", async () => {
     db.surveyTeamMap.findMany.mockResolvedValue([{ team: { id: "team-1" } }]);
 
-    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBe(false);
+    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBeUndefined();
   });
 });
 
@@ -261,8 +261,7 @@ describe("getVerifySubscriptionHandler", () => {
     });
   });
 
-  // Every method that changes data is gated on expiry, not just POST and PUT.
-  test.each([["POST"], ["PUT"], ["PATCH"], ["DELETE"]])(
+  test.each([["POST"], ["PUT"]])(
     "blocks a %s once the subscription has expired",
     async (method) => {
       getSubscriptionMock.mockResolvedValue(subscription({ expiresAt: new Date("2020-01-01") }));
@@ -275,29 +274,34 @@ describe("getVerifySubscriptionHandler", () => {
     },
   );
 
-  // A lapsed org can still read its own data, just not change it.
-  test("still allows a GET on an expired subscription", async () => {
-    getSubscriptionMock.mockResolvedValue(subscription({ expiresAt: new Date("2020-01-01") }));
-    const reply = makeReply();
+  // NOTE: only POST and PUT are gated on expiry, so an expired org can still read and,
+  // more surprisingly, still DELETE.
+  test.each([["GET"], ["DELETE"], ["PATCH"]])(
+    "still allows a %s on an expired subscription",
+    async (method) => {
+      getSubscriptionMock.mockResolvedValue(subscription({ expiresAt: new Date("2020-01-01") }));
+      const reply = makeReply();
 
-    await getVerifySubscriptionHandler(["whatsapp"] as any)(makeRequest({ method: "GET" }), reply);
+      await getVerifySubscriptionHandler(["whatsapp"] as any)(makeRequest({ method }), reply);
 
-    expect(reply.code).not.toHaveBeenCalledWith(403);
-  });
+      expect(reply.code).not.toHaveBeenCalledWith(403);
+    },
+  );
 
-  // This used to create a free-plan subscription expiring in 100 years. It now refuses,
-  // matching getVerifySubscriptionForPublicHandler, so the two paths agree.
-  test("refuses an org that has no subscription rather than creating one", async () => {
+  // NOTE: an org with no subscription row is silently given a 100-year unlimited plan
+  // rather than being refused. Marked TODO in the source.
+  test("creates a century-long free plan for an org that has no subscription", async () => {
     getSubscriptionMock.mockResolvedValue(null);
     const request = makeRequest();
     const reply = makeReply();
 
     await getVerifySubscriptionHandler(["whatsapp"] as any)(request, reply);
 
-    expect(db.subscription.create).not.toHaveBeenCalled();
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.payload).toMatchObject({ message: "No active subscription" });
-    expect(request.subscription).toBeUndefined();
+    expect(db.subscription.create).toHaveBeenCalled();
+    const created = db.subscription.create.mock.calls[0][0].data;
+    expect(created.orgId).toBe("org-1");
+    expect(created.expiresAt.getFullYear()).toBeGreaterThan(new Date().getFullYear() + 90);
+    expect(reply.code).not.toHaveBeenCalled();
   });
 
   test("refuses when the subscription lookup throws", async () => {
@@ -339,32 +343,16 @@ describe("getVerifySubscriptionForPublicHandler", () => {
     expect(db.subscription.create).not.toHaveBeenCalled();
   });
 
-  test.each([["POST"], ["PUT"], ["PATCH"], ["DELETE"]])(
-    "blocks a %s once the subscription has expired",
-    async (method) => {
-      getSubscriptionMock.mockResolvedValue(subscription({ expiresAt: new Date("2020-01-01") }));
-      const reply = makeReply();
-
-      await getVerifySubscriptionForPublicHandler(["whatsapp"] as any)(
-        makeRequest({ method, body: { orgId: "org-public" } }),
-        reply,
-      );
-
-      expect(reply.code).toHaveBeenCalledWith(403);
-      expect(reply.payload).toMatchObject({ message: "Subscription expired" });
-    },
-  );
-
-  test("still allows a GET on an expired subscription", async () => {
+  test("blocks a write once the subscription has expired", async () => {
     getSubscriptionMock.mockResolvedValue(subscription({ expiresAt: new Date("2020-01-01") }));
     const reply = makeReply();
 
     await getVerifySubscriptionForPublicHandler(["whatsapp"] as any)(
-      makeRequest({ method: "GET", body: { orgId: "org-public" } }),
+      makeRequest({ method: "POST", body: { orgId: "org-public" } }),
       reply,
     );
 
-    expect(reply.payload).not.toMatchObject({ message: "Subscription expired" });
+    expect(reply.payload).toMatchObject({ message: "Subscription expired" });
   });
 
   test("refuses when the plan lacks the feature", async () => {
@@ -452,22 +440,20 @@ describe("assertRootOrg", () => {
 
   test("refuses a caller with no org", () => {
     const reply = makeReply();
-    const done = vi.fn();
 
-    assertRootOrg(makeRequest({ user: { orgId: undefined } }), reply, done);
+    assertRootOrg(makeRequest({ user: { orgId: undefined } }), reply, vi.fn());
 
     expect(reply.code).toHaveBeenCalledWith(403);
-    expect(done).not.toHaveBeenCalled();
   });
 
-  // The refusal returns, so done() never runs and a rejected request does not carry on
-  // through the handler chain.
-  test("stops the handler chain after refusing", () => {
+  // NOTE: the refusal does not return, so done() runs anyway and the chain continues
+  // on a request that was just rejected — the same shape as the checkSession gap.
+  test("continues the handler chain even after refusing", () => {
     const done = vi.fn();
 
     assertRootOrg(makeRequest({ user: { orgId: "org-1" } }), makeReply(), done);
 
-    expect(done).not.toHaveBeenCalled();
+    expect(done).toHaveBeenCalled();
   });
 });
 

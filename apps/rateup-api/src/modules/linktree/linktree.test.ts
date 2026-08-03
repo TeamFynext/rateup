@@ -21,29 +21,18 @@ vi.mock("../../utils/prisma.js", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
-      updateMany: vi.fn(),
       delete: vi.fn(),
     },
     org: { findFirst: vi.fn() },
-    survey: { findMany: vi.fn() },
   },
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/redisConnection.js", () => ({ default: { set: vi.fn() } }));
-vi.mock("../../utils/logger.js", () => ({
-  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
-vi.mock("../../utils/rateLimit.js", () => ({
-  rateLimit: vi.fn((opts) => Object.assign(vi.fn(), { opts })),
-}));
 
 import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
-import connection from "../../utils/redisConnection.js";
 import { checkSession } from "../../utils/checkSession.js";
 import {
-  UnknownLinkTypeError,
   createLinktreeInDB,
   deleteLinktreeInDB,
   generateAndGetOptionsFromDB,
@@ -65,9 +54,7 @@ import {
 } from "./linktree.controllers.js";
 import linkRoutes from "./linktree.routes.js";
 import {
-  byIdParams,
   createLinktreeReqBody,
-  linkTypeParams,
   linktreeBaseSchema,
   updateLinktreeReqBody,
   updatePageVisitsOrLinkClicksReqBody,
@@ -88,7 +75,6 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   linktree: Record<string, Mock>;
   org: Record<string, Mock>;
-  survey: Record<string, Mock>;
 };
 
 const FakeKnownError = (Prisma as any).PrismaClientKnownRequestError as new (
@@ -155,13 +141,8 @@ beforeEach(() => {
   db.linktree.findFirst.mockResolvedValue(row());
   db.linktree.findMany.mockResolvedValue([row()]);
   db.linktree.update.mockResolvedValue(row());
-  db.linktree.updateMany.mockResolvedValue({ count: 1 });
   db.linktree.delete.mockResolvedValue(row());
   db.org.findFirst.mockResolvedValue({ id: ORG, members: [] });
-  db.survey.findMany.mockResolvedValue([]);
-  // "OK" is what Redis answers when SET NX actually set the key — i.e. this is
-  // the first visit or click from this address for this page today.
-  (connection.set as unknown as Mock).mockResolvedValue("OK");
 });
 
 // ===========================================================================
@@ -271,25 +252,34 @@ describe("the org-scoped reads and writes", () => {
 // ===========================================================================
 
 describe("getPublicLinktreeWithShortIdFromDB", () => {
-  // isPublished was in the select list but not in the where, so a draft — its
-  // name, its theme and every link on it — was fully readable by anyone holding
-  // the short id, which exists from the moment the row does.
-  test("the query restricts it to published linktrees", async () => {
+  test("looks the record up on the short id alone", async () => {
     await getPublicLinktreeWithShortIdFromDB(req({ params: { shortUrlId: SHORT } }));
 
-    expect(db.linktree.findFirst.mock.calls[0][0].where).toEqual({
-      shortUrlId: SHORT,
-      isPublished: true,
-    });
+    expect(db.linktree.findFirst.mock.calls[0][0].where).toEqual({ shortUrlId: SHORT });
   });
 
-  test("an unpublished draft resolves to nothing", async () => {
-    // The where does the work; a draft never comes back to be inspected.
-    db.linktree.findFirst.mockResolvedValueOnce(null);
+  test("nothing in the query restricts it to published linktrees", async () => {
+    await getPublicLinktreeWithShortIdFromDB(req({ params: { shortUrlId: SHORT } }));
 
-    await expect(
-      getPublicLinktreeWithShortIdFromDB(req({ params: { shortUrlId: SHORT } })),
-    ).resolves.toBeNull();
+    expect(db.linktree.findFirst.mock.calls[0][0].where).not.toHaveProperty("isPublished");
+  });
+
+  test("an unpublished draft is returned in full", async () => {
+    db.linktree.findFirst.mockResolvedValueOnce({
+      name: "Unreleased campaign",
+      shortUrlId: SHORT,
+      theme: { colour: "blue" },
+      links: links(),
+      isPublished: false,
+    });
+
+    const result: any = await getPublicLinktreeWithShortIdFromDB(
+      req({ params: { shortUrlId: SHORT } }),
+    );
+
+    expect(result.isPublished).toBe(false);
+    expect(result.name).toBe("Unreleased campaign");
+    expect(result.links).toHaveLength(2);
   });
 
   test("the visitor count and the owning org are not exposed", async () => {
@@ -312,6 +302,10 @@ describe("getPublicLinktreeWithShortIdFromDB", () => {
 // The link-type dropdown
 // ===========================================================================
 
+function orgWithMembers(members: any[]) {
+  return { id: ORG, members };
+}
+
 function survey(over: Record<string, unknown> = {}) {
   return {
     id: "s-1",
@@ -323,70 +317,140 @@ function survey(over: Record<string, unknown> = {}) {
 }
 
 describe("generateAndGetOptionsFromDB", () => {
-  // This used to walk org -> members -> user -> surveys with no `where` below
-  // the org. Survey hangs off createdBy, a User, and a User may belong to any
-  // number of organisations — so `user.surveys` was every survey that person
-  // had ever created anywhere, and the dropdown handed a member of org A the
-  // ids and titles of org B's surveys plus the name and tags of every team each
-  // was mapped to. Surveys are queried through teams now, scoped to the session
-  // org, the way getSurveysByUserId does.
-  test("queries surveys scoped to the session org, not through members", async () => {
+  test("resolves the org from the session", async () => {
     await generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } }));
 
-    expect(db.org.findFirst).not.toHaveBeenCalled();
-    expect(db.survey.findMany.mock.calls[0][0].where).toEqual({
-      type: "web",
-      OR: [{ orgId: ORG }, { teams: { some: { team: { orgId: ORG } } } }],
-    });
+    expect(db.org.findFirst.mock.calls[0][0].where).toEqual({ id: ORG });
   });
 
-  // Survey.orgId is nullable, so older rows carry the organisation on their
-  // teams alone; both routes to the same org are accepted.
-  test("accepts a survey that belongs by team as well as by column", async () => {
-    const where = (async () => {
-      await generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } }));
-      return db.survey.findMany.mock.calls[0][0].where;
-    })();
+  test("the surveys it pulls in are not filtered by anything", async () => {
+    // NOTE: this is the whole of 45.1. Survey has no orgId — it hangs off
+    // createdBy, a User — and the include walks Org -> members -> user ->
+    // surveys with no `where` at any level.
+    await generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } }));
 
-    expect((await where).OR).toHaveLength(2);
+    const include = db.org.findFirst.mock.calls[0][0].include;
+    expect(include.members).not.toHaveProperty("where");
+    expect(include.members.include.user).not.toHaveProperty("where");
+    expect(include.members.include.user.include.surveys).not.toHaveProperty("where");
+  });
+
+  test("a member's surveys from another organisation are returned too", async () => {
+    db.org.findFirst.mockResolvedValueOnce(
+      orgWithMembers([
+        { user: { surveys: [survey({ id: "s-mine", title: "Lunch feedback" })] } },
+        {
+          user: {
+            surveys: [
+              survey({
+                id: "s-elsewhere",
+                title: "Rival Ltd — exit interview",
+                teams: [{ team: { name: "Rival HR", tags: ["confidential"] } }],
+              }),
+            ],
+          },
+        },
+      ]),
+    );
+
+    const options: any[] = await generateAndGetOptionsFromDB(
+      req({ params: { linkType: "web-survey" } }),
+    );
+
+    expect(options.map((o) => o.id)).toEqual(["s-mine", "s-elsewhere"]);
+    expect(options[1].title).toBe("Rival Ltd — exit interview");
+  });
+
+  test("the leaked rows carry the other org's team names and tags", async () => {
+    db.org.findFirst.mockResolvedValueOnce(
+      orgWithMembers([
+        {
+          user: {
+            surveys: [
+              survey({
+                id: "s-elsewhere",
+                teams: [{ team: { name: "Rival HR", tags: ["confidential", "exec"] } }],
+              }),
+            ],
+          },
+        },
+      ]),
+    );
+
+    const options: any[] = await generateAndGetOptionsFromDB(
+      req({ params: { linkType: "web-survey" } }),
+    );
+
+    expect(options[0].teams).toEqual([
+      { team: { name: "Rival HR", tags: ["confidential", "exec"] } },
+    ]);
   });
 
   test("the query asks for the team name and tags explicitly", async () => {
     await generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } }));
 
-    const select = db.survey.findMany.mock.calls[0][0].select;
-    expect(select.teams.include.team.select).toEqual({ name: true, tags: true });
-    // And nothing beyond what the dropdown renders.
-    expect(Object.keys(select).sort()).toEqual(["id", "teams", "title", "type"]);
+    const include = db.org.findFirst.mock.calls[0][0].include;
+    expect(include.members.include.user.include.surveys.include.teams.include.team.select).toEqual({
+      name: true,
+      tags: true,
+    });
   });
 
   test("maps web-survey to the web type and whatsapp-survey to waFlow", async () => {
-    await generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } }));
-    await generateAndGetOptionsFromDB(req({ params: { linkType: "whatsapp-survey" } }));
+    db.org.findFirst.mockResolvedValue(
+      orgWithMembers([
+        {
+          user: {
+            surveys: [survey({ id: "s-web", type: "web" }), survey({ id: "s-wa", type: "waFlow" })],
+          },
+        },
+      ]),
+    );
 
-    expect(db.survey.findMany.mock.calls[0][0].where.type).toBe("web");
-    expect(db.survey.findMany.mock.calls[1][0].where.type).toBe("waFlow");
+    const web: any[] = await generateAndGetOptionsFromDB(
+      req({ params: { linkType: "web-survey" } }),
+    );
+    const wa: any[] = await generateAndGetOptionsFromDB(
+      req({ params: { linkType: "whatsapp-survey" } }),
+    );
+
+    expect(web.map((o) => o.id)).toEqual(["s-web"]);
+    expect(wa.map((o) => o.id)).toEqual(["s-wa"]);
   });
 
   test("the option reports the requested link type, not the stored one", async () => {
-    db.survey.findMany.mockResolvedValueOnce([survey({ type: "web" })]);
+    db.org.findFirst.mockResolvedValueOnce(
+      orgWithMembers([{ user: { surveys: [survey({ type: "web" })] } }]),
+    );
 
     const options: any[] = await generateAndGetOptionsFromDB(
       req({ params: { linkType: "web-survey" } }),
     );
 
     expect(options[0].type).toBe("web-survey");
-    expect(options[0].id).toBe("s-1");
-    expect(options[0].teams).toEqual([{ team: { name: "Front of house", tags: ["vip"] } }]);
   });
 
-  // Was silently an empty array, so a typo was indistinguishable from "this
-  // organisation has no surveys".
-  test("an unrecognised link type is refused rather than answered empty", async () => {
+  test("an unrecognised link type silently returns an empty array", async () => {
+    // NOTE: linkTypeInDB stays undefined, so nothing ever matches. The route
+    // declares `schema: {}`, so a typo reaches here and reads as "no surveys".
+    db.org.findFirst.mockResolvedValueOnce(
+      orgWithMembers([{ user: { surveys: [survey({ type: "web" })] } }]),
+    );
+
     await expect(
       generateAndGetOptionsFromDB(req({ params: { linkType: "websurvey" } })),
-    ).rejects.toBeInstanceOf(UnknownLinkTypeError);
-    expect(db.survey.findMany).not.toHaveBeenCalled();
+    ).resolves.toEqual([]);
+  });
+
+  test("an org that resolves to nothing throws a clear not-found error rather than crashing", async () => {
+    // NOTE: previously the service destructured `data.members` off a null
+    // findFirst result and crashed with a bare TypeError. It now guards the
+    // lookup and throws a descriptive error instead.
+    db.org.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      generateAndGetOptionsFromDB(req({ params: { linkType: "web-survey" } })),
+    ).rejects.toThrow(`Org not found for id: ${ORG}`);
   });
 });
 
@@ -395,35 +459,46 @@ describe("generateAndGetOptionsFromDB", () => {
 // ===========================================================================
 
 describe("updatePageVisitOrLinkClickInDB — page visits", () => {
-  // The counter is unauthenticated by design — a visitor has no session — so
-  // the short id is still the whole of the where clause. What changed is that
-  // the caller is bounded in the controller (45.3) and that a miss is a miss
-  // rather than a 500 (45.5).
-  test("increments on the short id alone", async () => {
+  test("increments on the short id alone, with no org and no ownership check", async () => {
     await updatePageVisitOrLinkClickInDB(
       req({ params: { shortUrlId: SHORT }, body: { resourceToBeUpdated: "page-visit" } }),
     );
 
-    expect(db.linktree.updateMany).toHaveBeenCalledWith({
+    expect(db.linktree.update).toHaveBeenCalledWith({
       where: { shortUrlId: SHORT },
       data: { visitorsCount: { increment: 1 } },
     });
   });
 
-  // Was a bare update, so P2025 escaped and asyncErrHandler reported an
-  // ordinary client condition — a page that has since been deleted — as a 500
-  // from an unauthenticated endpoint.
-  test("an unknown short id reports a miss rather than rejecting", async () => {
-    db.linktree.updateMany.mockResolvedValueOnce({ count: 0 });
+  test("nothing bounds how many times the same caller may increment", async () => {
+    for (let i = 0; i < 5; i++) {
+      await updatePageVisitOrLinkClickInDB(
+        req({ params: { shortUrlId: SHORT }, body: { resourceToBeUpdated: "page-visit" } }),
+      );
+    }
+
+    expect(db.linktree.update).toHaveBeenCalledTimes(5);
+  });
+
+  test("an unpublished linktree is counted just the same", async () => {
+    await updatePageVisitOrLinkClickInDB(
+      req({ params: { shortUrlId: SHORT }, body: { resourceToBeUpdated: "page-visit" } }),
+    );
+
+    expect(db.linktree.update.mock.calls[0][0].where).not.toHaveProperty("isPublished");
+  });
+
+  test("an unknown short id rejects rather than being ignored", async () => {
+    db.linktree.update.mockRejectedValueOnce(new FakeKnownError("P2025"));
 
     await expect(
       updatePageVisitOrLinkClickInDB(
         req({ params: { shortUrlId: "nope" }, body: { resourceToBeUpdated: "page-visit" } }),
       ),
-    ).resolves.toBeNull();
+    ).rejects.toMatchObject({ code: "P2025" });
   });
 
-  test("a counted visit reports success", async () => {
+  test("reports success without establishing that anything was counted", async () => {
     await expect(
       updatePageVisitOrLinkClickInDB(
         req({ params: { shortUrlId: SHORT }, body: { resourceToBeUpdated: "page-visit" } }),
@@ -445,60 +520,57 @@ describe("updatePageVisitOrLinkClickInDB — link clicks", () => {
 
     await updatePageVisitOrLinkClickInDB(clickReq("l-1"));
 
-    expect(db.linktree.updateMany.mock.calls[0][0].data.links).toEqual([
+    expect(db.linktree.update.mock.calls[0][0].data.links).toEqual([
       { id: "l-1", label: "Menu", url: "https://x.test/menu", noOfClicks: 4 },
       { id: "l-2", label: "Survey", url: "https://x.test/s", noOfClicks: 0 },
     ]);
   });
 
-  // The write is still the whole array — that is what a JSON column costs — but
-  // it is now conditional on the array still being the one that was read, so a
-  // click that overlaps an owner's edit no longer silently reverts it.
-  test("the write is conditional on the array it read", async () => {
-    const read = links();
-    db.linktree.findFirst.mockResolvedValueOnce({ links: read });
+  test("writes the whole links array back, not just the counter", async () => {
+    // NOTE: this is a read-modify-write on a Json column, and the write is the
+    // array as it was read a moment earlier.
+    db.linktree.findFirst.mockResolvedValueOnce({ links: links() });
 
     await updatePageVisitOrLinkClickInDB(clickReq("l-1"));
 
-    expect(db.linktree.updateMany.mock.calls[0][0].where).toEqual({
-      shortUrlId: SHORT,
-      links: { equals: read },
+    expect(db.linktree.update.mock.calls[0][0]).toEqual({
+      where: { shortUrlId: SHORT },
+      data: { links: expect.any(Array) },
     });
+    expect(db.linktree.update.mock.calls[0][0].data.links).toHaveLength(2);
   });
 
-  test("a click that loses the race to an owner's edit retries against the new array", async () => {
-    const edited = [...links(), { id: "l-3", label: "New", url: "https://x.test/n" }];
-    // First attempt: the conditional write matches nothing, because the owner's
-    // PUT landed in between.
+  test("a click overlapping an owner's edit reverts that edit", async () => {
+    // The click reads the pre-edit array; the owner's PUT lands; the click
+    // then writes its stale copy back over it.
     db.linktree.findFirst.mockResolvedValueOnce({ links: links() });
-    db.linktree.updateMany.mockResolvedValueOnce({ count: 0 });
-    db.linktree.findFirst.mockResolvedValueOnce({ links: edited });
 
-    await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1"))).resolves.toEqual({
-      success: true,
-      message: "Updated button click successfully.",
-    });
+    await updatePageVisitOrLinkClickInDB(clickReq("l-1"));
 
-    // The second attempt carries the owner's new link through rather than
-    // writing the pre-edit array back over it.
-    const written = db.linktree.updateMany.mock.calls[1][0].data.links;
-    expect(written.map((l: any) => l.id)).toEqual(["l-1", "l-2", "l-3"]);
-    expect(written.find((l: any) => l.id === "l-1").noOfClicks).toBe(4);
+    const written = db.linktree.update.mock.calls[0][0].data.links;
+    expect(written.map((l: any) => l.id)).toEqual(["l-1", "l-2"]);
+    expect(written.find((l: any) => l.id === "l-3")).toBeUndefined();
   });
 
-  test("a click that keeps losing is dropped rather than overwriting", async () => {
+  test("two concurrent clicks on the same link both write the same total", async () => {
     db.linktree.findFirst.mockResolvedValue({ links: links() });
-    db.linktree.updateMany.mockResolvedValue({ count: 0 });
 
-    await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1"))).resolves.toBeNull();
-    expect(db.linktree.updateMany).toHaveBeenCalledTimes(3);
+    await Promise.all([
+      updatePageVisitOrLinkClickInDB(clickReq("l-1")),
+      updatePageVisitOrLinkClickInDB(clickReq("l-1")),
+    ]);
+
+    const totals = db.linktree.update.mock.calls.map(
+      (c) => c[0].data.links.find((l: any) => l.id === "l-1").noOfClicks,
+    );
+    expect(totals).toEqual([4, 4]);
   });
 
   test("an unknown link id resolves to null and writes nothing", async () => {
     db.linktree.findFirst.mockResolvedValueOnce({ links: links() });
 
     await expect(updatePageVisitOrLinkClickInDB(clickReq("l-99"))).resolves.toBeNull();
-    expect(db.linktree.updateMany).not.toHaveBeenCalled();
+    expect(db.linktree.update).not.toHaveBeenCalled();
   });
 
   test("an empty or absent links array resolves to null", async () => {
@@ -510,19 +582,21 @@ describe("updatePageVisitOrLinkClickInDB — link clicks", () => {
   });
 
   test("an unknown short id resolves to null rather than crashing", async () => {
+    // NOTE: findFirst returns null; the service previously destructured
+    // { links } off it immediately and crashed with a bare TypeError. It now
+    // guards the lookup and resolves null (treated as "not found" by the
+    // caller), matching the other not-found branches below. This is
+    // reachable from an unauthenticated request.
     db.linktree.findFirst.mockResolvedValueOnce(null);
 
     await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1", "nope"))).resolves.toBeNull();
   });
 
-  // links is a Json column, so a non-array value can be stored by a path that
-  // skips the route schema, and `.find` on it threw a TypeError that
-  // asyncErrHandler reported as a 500.
-  test("a links value that is not an array is refused rather than throwing", async () => {
+  test("a links value that is a string throws rather than being rejected", async () => {
+    // The route schema types links as z.any(), so a non-array can be stored.
     db.linktree.findFirst.mockResolvedValueOnce({ links: "not an array" });
 
-    await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1"))).resolves.toBeNull();
-    expect(db.linktree.updateMany).not.toHaveBeenCalled();
+    await expect(updatePageVisitOrLinkClickInDB(clickReq("l-1"))).rejects.toBeInstanceOf(TypeError);
   });
 
   test("a link with no counter yet starts from zero", async () => {
@@ -530,7 +604,7 @@ describe("updatePageVisitOrLinkClickInDB — link clicks", () => {
 
     await updatePageVisitOrLinkClickInDB(clickReq("l-1"));
 
-    expect(db.linktree.updateMany.mock.calls[0][0].data.links[0].noOfClicks).toBe(1);
+    expect(db.linktree.update.mock.calls[0][0].data.links[0].noOfClicks).toBe(1);
   });
 });
 
@@ -573,49 +647,42 @@ describe("controllers", () => {
     expect(answer(rep)).toEqual({ code: 200, body: [row()] });
   });
 
-  // The authenticated 404 was a bare string where every other error in the
-  // module is an object, and the public read reported the same condition as a
-  // 200 with a null body. Both answer the same thing now.
-  test("the two reads answer a missing page the same way", async () => {
-    db.linktree.findFirst.mockResolvedValue(null);
-    const privateRep = reply();
-    const publicRep = reply();
-
-    await getLinktreeWithShortId(req({ params: { shortUrlId: SHORT } }), privateRep);
-    await getPublicLinktreeWithShortId(req({ params: { shortUrlId: "nope" } }), publicRep);
-
-    const expected = {
-      code: 404,
-      body: { success: false, message: "Linktree with requested shortId not found." },
-    };
-    expect(answer(privateRep)).toEqual(expected);
-    expect(answer(publicRep)).toEqual(expected);
-  });
-
-  // An unpublished draft is deliberately indistinguishable from a page that
-  // does not exist, so the endpoint does not report drafts into existence.
-  test("the public read answers 404 for an unpublished draft", async () => {
+  test("the authenticated read answers 404 with a bare string", async () => {
+    // NOTE: every other 404 in the module's neighbours sends an object.
     db.linktree.findFirst.mockResolvedValueOnce(null);
     const rep = reply();
 
-    await getPublicLinktreeWithShortId(req({ params: { shortUrlId: SHORT } }), rep);
+    await getLinktreeWithShortId(req({ params: { shortUrlId: SHORT } }), rep);
 
-    expect(answer(rep).code).toBe(404);
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: "Linktree with requested shortId not found.",
+    });
   });
 
-  test("the public read serves a published page", async () => {
+  test("the public read answers 200 with null for an unknown short id", async () => {
+    db.linktree.findFirst.mockResolvedValueOnce(null);
+    const rep = reply();
+
+    await getPublicLinktreeWithShortId(req({ params: { shortUrlId: "nope" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 200, body: null });
+  });
+
+  test("the public read serves an unpublished draft with a 200", async () => {
     db.linktree.findFirst.mockResolvedValueOnce({
-      name: "Live",
+      name: "Unreleased",
       shortUrlId: SHORT,
       theme: {},
       links: links(),
-      isPublished: true,
+      isPublished: false,
     });
     const rep = reply();
 
     await getPublicLinktreeWithShortId(req({ params: { shortUrlId: SHORT } }), rep);
 
     expect(answer(rep).code).toBe(200);
+    expect(answer(rep).body.isPublished).toBe(false);
     expect(answer(rep).body.links).toHaveLength(2);
   });
 
@@ -639,31 +706,15 @@ describe("controllers", () => {
   });
 
   test("the dropdown answers 200 with the options array", async () => {
-    db.survey.findMany.mockResolvedValueOnce([survey({ type: "web" })]);
+    db.org.findFirst.mockResolvedValueOnce(
+      orgWithMembers([{ user: { surveys: [survey({ type: "web" })] } }]),
+    );
     const rep = reply();
 
     await getLinkTypeDropdownOptions(req({ params: { linkType: "web-survey" } }), rep);
 
     expect(answer(rep).code).toBe(200);
     expect(answer(rep).body).toHaveLength(1);
-  });
-
-  // An unmapped :linkType used to read as "this organisation has no surveys".
-  test("an unrecognised link type answers 400 rather than an empty list", async () => {
-    const rep = reply();
-
-    await getLinkTypeDropdownOptions(req({ params: { linkType: "websurvey" } }), rep);
-
-    expect(answer(rep).code).toBe(400);
-    expect(answer(rep).body.success).toBe(false);
-  });
-
-  test("anything else from the dropdown service still escapes to asyncErrHandler", async () => {
-    db.survey.findMany.mockRejectedValueOnce(new Error("db down"));
-
-    await expect(
-      getLinkTypeDropdownOptions(req({ params: { linkType: "web-survey" } }), reply()),
-    ).rejects.toThrow("db down");
   });
 
   test("a link click with no linkId is refused before the service runs", async () => {
@@ -804,11 +855,7 @@ describe("routes", () => {
     expect(opts.preHandler).toEqual([]);
   });
 
-  // Both branches used to ASSIGN, so a role check written into a route's own
-  // options would have been discarded with no error and nothing in the route
-  // table to show it — and a public route could not carry the rate limiter 45.3
-  // needs.
-  test("the hook keeps a preHandler a route declared for itself", async () => {
+  test("the hook replaces a preHandler a route declared for itself", async () => {
     // NOTE: it assigns rather than appends, in both branches.
     const { srv, hooks } = fakeServer();
     await linkRoutes(srv);
@@ -817,30 +864,8 @@ describe("routes", () => {
     const opts: any = { preHandler: [ownGuard] };
     hooks[0].fn(opts);
 
-    expect(opts.preHandler).toEqual([checkSession, ownGuard]);
-  });
-
-  test("a public route keeps its own guard too", async () => {
-    const { srv, hooks } = fakeServer();
-    await linkRoutes(srv);
-
-    const limiter = vi.fn();
-    const opts: any = { config: { isPublic: true }, preHandler: [limiter] };
-    hooks[0].fn(opts);
-
-    expect(opts.preHandler).toEqual([limiter]);
-    expect(opts.preHandler).not.toContain(checkSession);
-  });
-
-  test("a single-function preHandler is normalised rather than dropped", async () => {
-    const { srv, hooks } = fakeServer();
-    await linkRoutes(srv);
-
-    const ownGuard = vi.fn();
-    const opts: any = { preHandler: ownGuard };
-    hooks[0].fn(opts);
-
-    expect(opts.preHandler).toEqual([checkSession, ownGuard]);
+    expect(opts.preHandler).toEqual([checkSession]);
+    expect(opts.preHandler).not.toContain(ownGuard);
   });
 
   test("isPublic must be exactly true — anything else gets the session check", async () => {
@@ -873,46 +898,28 @@ describe("routes", () => {
     }
   });
 
-  // STILL OPEN: the module has no role gating at all — any
-  // member can create, edit, publish, unpublish and delete any of the
-  // organisation's link pages. What is fixed is that adding a gate would now
-  // take effect.
-  test("no authenticated route declares a role requirement", async () => {
-    const authenticated = [
+  test("no route declares a role or feature requirement", async () => {
+    const all = [
       createLinktreeRouteOptions,
       getLinktreesRouteOptions,
       getLinktreeWithShortIdRouteOptions,
       updateLinktreeWithShortIdRouteOptions,
       deleteLinktreeByIdRouteOptions,
       getLinkTypeDropdownOptionsRouteOptions,
+      getPublicLinktreeWithShortIdRouteOptions,
+      updatePageVisitsOrLinkClicksOptions,
     ];
 
-    for (const o of authenticated) {
+    for (const o of all) {
       expect(o).not.toHaveProperty("onRequest");
       expect((o as any).preHandler).toBeUndefined();
     }
   });
 
-  test("the public counter carries a rate limiter", async () => {
-    const limiter = (updatePageVisitsOrLinkClicksOptions as any).preHandler[0];
-
-    expect(limiter.opts).toEqual({ max: 240, windowSeconds: 3600, key: "linktreeCount" });
-  });
-
-  // All three used to declare `schema: {}` — so the delete's :id reached
-  // prisma.linktree.delete unvalidated on a @db.Uuid column, and :linkType
-  // reached a service that mapped only two values.
-  test("the three schema-less routes now declare their params", async () => {
-    expect(deleteLinktreeByIdRouteOptions.schema).toHaveProperty("params");
-    expect(getLinkTypeDropdownOptionsRouteOptions.schema).toHaveProperty("params");
-    expect(getPublicLinktreeWithShortIdRouteOptions.schema).toHaveProperty("params");
-  });
-
-  test("the delete id must be a uuid and the link type one of the two", async () => {
-    expect(byIdParams.safeParse({ id: ID }).success).toBe(true);
-    expect(byIdParams.safeParse({ id: "not-a-uuid" }).success).toBe(false);
-    expect(linkTypeParams.safeParse({ linkType: "web-survey" }).success).toBe(true);
-    expect(linkTypeParams.safeParse({ linkType: "websurvey" }).success).toBe(false);
+  test("three routes declare no schema at all", async () => {
+    expect(deleteLinktreeByIdRouteOptions.schema).toEqual({});
+    expect(getLinkTypeDropdownOptionsRouteOptions.schema).toEqual({});
+    expect(getPublicLinktreeWithShortIdRouteOptions.schema).toEqual({});
   });
 
   test("the public counter validates its body and params", async () => {

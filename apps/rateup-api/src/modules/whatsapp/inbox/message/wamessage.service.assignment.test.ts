@@ -213,7 +213,7 @@ describe("assignWaMessageToUser - adding people", () => {
       "user-1",
     );
 
-    expect(updateContactMock).toHaveBeenCalledWith("contact-1", "org-1", {
+    expect(updateContactMock).toHaveBeenCalledWith("contact-1", {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
     });
   });
@@ -442,7 +442,7 @@ describe("reopenConversation", () => {
     await reopenConversation("org-1", "user-1", "contact-1", "conv-old");
 
     expect(db.waInboxAssign.createMany).toHaveBeenCalled();
-    expect(updateContactMock).toHaveBeenCalledWith("contact-1", "org-1", {
+    expect(updateContactMock).toHaveBeenCalledWith("contact-1", {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
     });
   });

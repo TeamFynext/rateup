@@ -8,14 +8,10 @@ import {
   getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
   renameTheme,
+  updateAllWebSurveyThemesJson,
 } from "./surveyTheme.controller.js";
 import { CustomRouteShortHandOptions } from "../../types/global.js";
-import {
-  createThemeBodySchema,
-  renameThemeBodySchema,
-  themeIdParamsSchema,
-  updateActiveThemeBodySchema,
-} from "./surveyTheme.schema.js";
+import { assertRootOrg } from "../../utils/auth.js";
 
 const publicRouteOptions: CustomRouteShortHandOptions = {
   config: {
@@ -23,43 +19,38 @@ const publicRouteOptions: CustomRouteShortHandOptions = {
   },
 };
 
+const assertRootOrgRouteOptions: CustomRouteShortHandOptions = {
+  config: {
+    assertRootOrg: true,
+  },
+};
+
 export async function surveyThemeRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    const declared = Array.isArray(routeOptions.preHandler)
-      ? routeOptions.preHandler
-      : routeOptions.preHandler
-        ? [routeOptions.preHandler]
-        : [];
     if (routeOptions.config && routeOptions.config["isPublic"]) {
-      routeOptions.preHandler = declared;
+      routeOptions.preHandler = [];
       return;
+    } else {
+      routeOptions.preHandler = [checkSession];
+      if (routeOptions.config && routeOptions.config["assertRootOrg"]) {
+        routeOptions.preHandler.push(assertRootOrg);
+      }
     }
-    routeOptions.preHandler = [checkSession, ...declared];
   });
 
   server.setErrorHandler(errorHandler);
 
-  server.get(
-    "/:webSurveyThemeId",
-    { ...publicRouteOptions, schema: { params: themeIdParamsSchema } },
-    getSurveyThemeByIdHandler,
-  );
+  server.get("/:webSurveyThemeId", publicRouteOptions, getSurveyThemeByIdHandler);
 
   server.get("/", getAllThemesOfUserOrg);
 
-  server.post("/", { schema: { body: createThemeBodySchema } }, createNewTheme);
+  server.post("/", createNewTheme);
 
-  server.put(
-    "/:webSurveyThemeId",
-    { schema: { params: themeIdParamsSchema, body: updateActiveThemeBodySchema } },
-    updateSurveyThemeHandler,
-  );
+  server.put("/:webSurveyThemeId", updateSurveyThemeHandler);
 
-  server.patch(
-    "/:webSurveyThemeId",
-    { schema: { params: themeIdParamsSchema, body: renameThemeBodySchema } },
-    renameTheme,
-  );
+  server.patch("/:webSurveyThemeId", renameTheme);
 
-  server.delete("/:webSurveyThemeId", { schema: { params: themeIdParamsSchema } }, deleteTheme);
+  server.delete("/:webSurveyThemeId", deleteTheme);
+
+  server.post("/updateWebSurveyThemes", assertRootOrgRouteOptions, updateAllWebSurveyThemesJson);
 }

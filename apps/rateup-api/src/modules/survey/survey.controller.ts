@@ -404,8 +404,8 @@ export async function updateSurveyByIdHandler(
     // TODO: create a separate api to publish flows
     if (survey.type === SurveyType.WaFlow) {
       if (survey.isPublished === false && request.body.isPublished === true) {
+        const flow = await getFlowBySurveyId(request.params.id);
         const { orgId } = request.user;
-        const flow = await getFlowBySurveyId(request.params.id, orgId);
         log.trace("Publishing flow");
         await publishFlowInWa(orgId, flow!.flowId!);
         await updateFlowInDb(orgId, flow!.dbFlowId, {

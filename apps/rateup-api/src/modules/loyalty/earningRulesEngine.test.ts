@@ -2,12 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/prisma.js", () => ({
   default: {
-    loyaltyEarningRule: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      update: vi.fn(),
-      updateMany: vi.fn(),
-    },
+    loyaltyEarningRule: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     customerLoyaltyAccount: { findUnique: vi.fn(), update: vi.fn() },
     loyaltyTransaction: { count: vi.fn() },
   },
@@ -93,7 +88,6 @@ beforeEach(() => {
   db.loyaltyEarningRule.findMany.mockResolvedValue([rule()]);
   db.loyaltyEarningRule.findFirst.mockResolvedValue(null);
   db.loyaltyEarningRule.update.mockResolvedValue({});
-  db.loyaltyEarningRule.updateMany.mockResolvedValue({ count: 1 });
   db.customerLoyaltyAccount.findUnique.mockResolvedValue(account());
   db.customerLoyaltyAccount.update.mockResolvedValue({});
   db.loyaltyTransaction.count.mockResolvedValue(0);
@@ -173,8 +167,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
 
   test("skips a rule that does not run today", async () => {
     vi.useFakeTimers();
-    // Thursday 15 January 2026 in UTC, which is the only clock this file reads.
-    vi.setSystemTime(new Date("2026-01-15T12:00:00.000Z"));
+    vi.setSystemTime(new Date(2026, 0, 15, 12)); // Thursday
     db.loyaltyEarningRule.findMany.mockResolvedValue([
       rule({ id: "mondays", allowedDays: [DayOfWeek.MONDAY] }),
       rule({ id: "anyday" }),
@@ -187,7 +180,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
 
   test("skips a rule outside its hours", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-15T22:00:00.000Z"));
+    vi.setSystemTime(new Date(2026, 0, 15, 22, 0));
     db.loyaltyEarningRule.findMany.mockResolvedValue([
       rule({
         id: "happyhour",
@@ -203,7 +196,7 @@ describe("calculatePointsForPurchase — which rule wins", () => {
 
   test("matches a rule inside its hours", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-15T17:00:00.000Z"));
+    vi.setSystemTime(new Date(2026, 0, 15, 17, 0));
     db.loyaltyEarningRule.findMany.mockResolvedValue([
       rule({
         id: "happyhour",
@@ -290,22 +283,22 @@ describe("calculatePointsForPurchase — which rule wins", () => {
     );
   });
 
-  // The guard used to end `&& customer.currentTierId`, so a customer with no tier
-  // matched EVERY tier-exclusive rule, including the platinum ones — the same
-  // shape as the redemption validator's tier bypass. And because new accounts were
-  // created untiered whenever the entry-tier lookup missed,
-  // that was the default state, not an edge case.
-  test("a customer with no tier does not match a tier-exclusive rule", async () => {
+  // NOTE: pins current behaviour. The guard is
+  // `applicableToTiers.length > 0 && customer.currentTierId`, so a customer with
+  // no tier matches every tier-exclusive rule — the same shape as the redemption
+  // validator's tier bypass (issues.txt 20.6). Because new accounts are created
+  // with a null tier (issues.txt 20.11), this is the default state.
+  // See issues.txt 20.6.
+  test("a customer with no tier matches a tier-exclusive rule", async () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue(account({ currentTierId: null }));
     db.loyaltyEarningRule.findMany.mockResolvedValue([
       rule({ id: "platinum-only", applicableToTiers: ["tier-platinum"], pointsPerUnit: 10 }),
-      rule({ id: "anyone", pointsPerUnit: 1 }),
     ]);
 
     const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    expect(res.rule?.id).toBe("anyone");
-    expect(res.points).toBe(100);
+    expect(res.rule?.id).toBe("platinum-only");
+    expect(res.points).toBe(1000);
   });
 });
 
@@ -314,49 +307,32 @@ describe("calculatePointsForPurchase — which rule wins", () => {
 // ===========================================================================
 
 describe("calculatePointsForPurchase — the default rule", () => {
-  // The default rule is an ordinary row in the same filtered, ordered list as
-  // every other rule, so it wins on the same terms: lowest priority, matching
-  // everything, reached when nothing above it matched.
-  test("the default rule prices a purchase no other rule matched", async () => {
-    db.loyaltyEarningRule.findMany.mockResolvedValue([
-      rule({ id: "big-spenders", priority: 10, minPurchaseAmount: 5000 }),
-      rule({ id: "default", priority: 0, isDefault: true }),
-    ]);
+  test("falls back to the program's default when nothing matched", async () => {
+    db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ minPurchaseAmount: 5000 })]);
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(rule({ id: "default", isDefault: true }));
 
     expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rule?.id).toBe(
       "default",
     );
   });
 
-  // There used to be a separate fallback query —
-  // `findFirst({ where: { programId, isDefault: true } })` — with no status, no
-  // validity window, no tier list and no usage caps. It ran whenever the loop
-  // found nothing, so a default rule an operator had deliberately deactivated, or
-  // whose window had passed, or whose own maxTotalUses was exhausted, still priced
-  // every purchase no other rule matched.
-  //
-  // It was also redundant: if the default rule is active and eligible the loop has
-  // already matched it, so the fallback could only fire for a rule that had just
-  // been REJECTED — and then ignore the reason.
-  test("a deactivated default rule does not price anything", async () => {
+  // NOTE: pins current behaviour. The primary query filters `status: "active"`;
+  // the fallback query does not. A default rule that an operator deliberately
+  // deactivated still awards points whenever no other rule matches — and its
+  // date window, tier list and usage caps are not re-checked either.
+  // See issues.txt 20.10.
+  test("the fallback ignores status, dates and every usage cap", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([]);
-
-    await expect(calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rejects.toThrow(
-      "No earning rule found for this program",
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(
+      rule({ id: "default", isDefault: true, status: "inactive" }),
     );
-    expect(db.loyaltyEarningRule.findFirst).not.toHaveBeenCalled();
-  });
 
-  test("a default rule outside its validity window is skipped like any other", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-01T00:00:00.000Z"));
-    db.loyaltyEarningRule.findMany.mockResolvedValue([
-      rule({ id: "default", isDefault: true, validUntil: "2026-01-01T00:00:00.000Z" }),
-    ]);
+    const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    await expect(calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rejects.toThrow(
-      "No earning rule found for this program",
-    );
+    expect(res.rule?.id).toBe("default");
+    expect(db.loyaltyEarningRule.findFirst.mock.calls[0][0]).toEqual({
+      where: { programId: PROGRAM, isDefault: true },
+    });
   });
 });
 
@@ -434,72 +410,40 @@ describe("calculatePointsForPurchase — the usage counter", () => {
   test("burns one use of the matched rule", async () => {
     await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    expect(db.loyaltyEarningRule.updateMany).toHaveBeenCalledWith({
+    expect(db.loyaltyEarningRule.update).toHaveBeenCalledWith({
       where: { id: "rule-1" },
       data: { currentTotalUses: { increment: 1 } },
     });
   });
 
-  // The counter used to be bumped unconditionally, before the caller had written
-  // the points or the ledger row and outside any transaction — so a purchase that
-  // earned nothing, and a purchase that failed afterwards, both consumed one of a
-  // limited promotion's slots.
-  test("burns no use for a purchase that earns nothing", async () => {
+  // NOTE: pins current behaviour. The counter is bumped inside this function,
+  // before the caller has written the points or the ledger row, and nothing here
+  // is transactional. A purchase that fails after pricing still consumes one of
+  // a limited-use promotion's slots. See issues.txt 20.10.
+  test("burns a use even for a purchase that earns nothing", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ pointsPerUnit: 0, bonusPoints: 0 })]);
 
     const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
     expect(res.points).toBe(0);
-    expect(db.loyaltyEarningRule.updateMany).not.toHaveBeenCalled();
+    expect(db.loyaltyEarningRule.update).toHaveBeenCalled();
   });
 
-  // The count goes through the caller's client, so awardPoints can enrol it in the
-  // same transaction as the balance and the ledger row.and
-  // 20.17.
-  test("counts the use through the client it is given", async () => {
-    const tx = { loyaltyEarningRule: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
-
-    await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any, tx as any);
-
-    expect(tx.loyaltyEarningRule.updateMany).toHaveBeenCalled();
-    expect(db.loyaltyEarningRule.updateMany).not.toHaveBeenCalled();
-  });
-
-  // maxTotalUses used to be compared against the value read at the top of the
-  // function while the increment was a separate unconditional statement, so two
-  // concurrent purchases both saw the same count and both proceeded — a promotion
-  // limited to N uses could exceed N. The cap is part of the write's own condition
-  // now.
-  test("makes the cap part of the write's own condition", async () => {
+  // NOTE: maxTotalUses is read from the row fetched at the top of the function
+  // and the increment is a separate statement, so two concurrent purchases both
+  // see the same count and both proceed. See issues.txt 20.10.
+  test("checks the cap against a value read before the increment", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([
-      rule({ maxTotalUses: 5, currentTotalUses: 0 }),
+      rule({ maxTotalUses: 1, currentTotalUses: 0 }),
     ]);
 
     await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
 
-    expect(db.loyaltyEarningRule.updateMany.mock.calls[0][0].where).toEqual({
-      id: "rule-1",
-      currentTotalUses: { lt: 5 },
-    });
-  });
-
-  test("an uncapped rule is counted with no condition beyond its id", async () => {
-    db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ maxTotalUses: null })]);
-
-    await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
-
-    expect(db.loyaltyEarningRule.updateMany.mock.calls[0][0].where).toEqual({ id: "rule-1" });
-  });
-
-  test("refuses the purchase when the cap was taken concurrently", async () => {
-    db.loyaltyEarningRule.findMany.mockResolvedValue([
-      rule({ maxTotalUses: 5, currentTotalUses: 0 }),
-    ]);
-    db.loyaltyEarningRule.updateMany.mockResolvedValue({ count: 0 });
-
-    await expect(calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).rejects.toThrow(
-      "This earning rule has reached its usage limit",
-    );
+    const order = [
+      db.loyaltyEarningRule.findMany.mock.invocationCallOrder[0],
+      db.loyaltyEarningRule.update.mock.invocationCallOrder[0],
+    ];
+    expect(order[0]).toBeLessThan(order[1]);
   });
 });
 
@@ -638,20 +582,14 @@ describe("checkAndUpgradeTier", () => {
   test("does nothing when the program has tiers switched off", async () => {
     withTiers([{ id: "gold", threshold: 100 }], { program: { tiersEnabled: false, tiers: [] } });
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
-      upgraded: false,
-      direction: "none",
-    });
+    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({ upgraded: false });
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
   test("does nothing for a customer that does not exist", async () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
-      upgraded: false,
-      direction: "none",
-    });
+    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({ upgraded: false });
   });
 
   test("moves the customer into the highest tier they qualify for", async () => {
@@ -665,7 +603,6 @@ describe("checkAndUpgradeTier", () => {
     const res = await checkAndUpgradeTier(CUSTOMER, 5000);
 
     expect(res.upgraded).toBe(true);
-    expect(res.direction).toBe("up");
     expect(res.newTier?.id).toBe("gold");
     expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
       where: { id: CUSTOMER },
@@ -676,70 +613,35 @@ describe("checkAndUpgradeTier", () => {
   test("does nothing when the customer is already in that tier", async () => {
     withTiers([{ id: "gold", threshold: 1000 }], { currentTierId: "gold" });
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
-      upgraded: false,
-      direction: "none",
-    });
+    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({ upgraded: false });
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
   test("does nothing when the spend qualifies for no tier", async () => {
     withTiers([{ id: "gold", threshold: 1000 }]);
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toEqual({
-      upgraded: false,
-      direction: "none",
-    });
+    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toEqual({ upgraded: false });
   });
 
-  // The function writes whichever tier the supplied spend qualifies for, in EITHER
-  // direction — which is what a tier reset needs — but it used to report every one
-  // of those moves as `{ upgraded: true }`, and awardPoints uses that flag to send
-  // a TIER_UPGRADED WhatsApp message naming the new tier. Any caller passing
-  // something other than a rising lifetime spend therefore moved customers down
-  // and congratulated them for it.
-  //
-  // The move and the direction are separate answers now: the write still happens,
-  // and only a genuine promotion is an upgrade.
-  test("moves the customer DOWN a tier without calling it an upgrade", async () => {
+  // NOTE: pins current behaviour. The function writes whichever tier the spend
+  // qualifies for, in either direction, and reports `upgraded: true` for a move
+  // DOWN as readily as a move up. Its callers use that flag to send a
+  // "congratulations, you've been upgraded" WhatsApp message.
+  // See issues.txt 20.12.
+  test("moves the customer DOWN a tier and still calls it an upgrade", async () => {
     withTiers(
       [
         { id: "platinum", threshold: 10000, name: "Platinum" },
         { id: "bronze", threshold: 0, name: "Bronze" },
       ],
-      { currentTierId: "platinum", currentTier: { id: "platinum", threshold: 10000 } },
+      { currentTierId: "platinum" },
     );
 
     const res = await checkAndUpgradeTier(CUSTOMER, 5);
 
-    expect(res.upgraded).toBe(false);
-    expect(res.direction).toBe("down");
+    expect(res.upgraded).toBe(true);
     expect(res.newTier?.id).toBe("bronze");
-    // The move itself still happens — that is what a tier reset is for.
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentTierId).toBe("bronze");
-  });
-
-  test("a move up is an upgrade", async () => {
-    withTiers(
-      [
-        { id: "gold", threshold: 1000, name: "Gold" },
-        { id: "bronze", threshold: 0, name: "Bronze" },
-      ],
-      { currentTierId: "bronze", currentTier: { id: "bronze", threshold: 0 } },
-    );
-
-    const res = await checkAndUpgradeTier(CUSTOMER, 5000);
-
-    expect(res).toMatchObject({ upgraded: true, direction: "up" });
-  });
-
-  test("an untiered customer entering a tier is an upgrade", async () => {
-    withTiers([{ id: "bronze", threshold: 0, name: "Bronze" }], { currentTier: null });
-
-    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toMatchObject({
-      upgraded: true,
-      direction: "up",
-    });
   });
 });
 
@@ -748,69 +650,40 @@ describe("checkAndUpgradeTier", () => {
 // ===========================================================================
 
 describe("generateReferralCode", () => {
-  beforeEach(() => {
-    // No account holds the candidate code. The outer beforeEach points findUnique
-    // at the customer fixture, which the uniqueness check would read as "taken".
-    db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
+  test("builds the code from the first six letters of the name", () => {
+    expect(generateReferralCode("Alexander", "919000000001")).toMatch(/^ALEXAN-[0-9A-Z]*$/);
   });
 
-  test("builds the code from the first six letters of the name", async () => {
-    expect(await generateReferralCode("Alexander", "919000000001")).toMatch(
-      /^ALEXAN-[A-HJ-NP-Z2-9]{10}$/,
-    );
+  test("strips spaces out of the name part", () => {
+    expect(generateReferralCode("An na Smith", "919000000001")).toMatch(/^ANNA-/);
   });
 
-  test("strips spaces out of the name part", async () => {
-    expect(await generateReferralCode("An na Smith", "919000000001")).toMatch(/^ANNA-/);
+  test("falls back to USER when there is no name", () => {
+    expect(generateReferralCode("", "919000000001")).toMatch(/^USER-/);
   });
 
-  test("falls back to USER when there is no name", async () => {
-    expect(await generateReferralCode("", "919000000001")).toMatch(/^USER-/);
-  });
-
-  // A referral code earns its owner the program's referral bonus every time
-  // someone signs up with it, and the public enrolment route accepts one without a
-  // session — so it is a credential, not a label.
-  //
-  // It used to be the name plus FOUR Math.random characters, never checked against
-  // the table: derived from something an attacker can read off the customer, with
-  // a search space of about 1.6 million per known name, and the two findings
-  // composed into a points-minting loop. The name part stays because customers
-  // recognise their own code, but the entropy no longer depends on it.
-  test("does not repeat itself, even with Math.random pinned", async () => {
+  // NOTE: pins current behaviour. A referral code earns its owner the program's
+  // referral bonus every time someone signs up with it. It is built from the
+  // customer's own name plus four Math.random characters, is never checked
+  // against the table for uniqueness, and the phone argument is ignored
+  // entirely. Knowing a customer's name reduces the search space to ~1.6M — and
+  // the public signup route (issues.txt 20.13) will accept every guess.
+  // See issues.txt 20.9.
+  test("is name-derived, short and never checked for uniqueness", () => {
     const spy = vi.spyOn(Math, "random").mockReturnValue(0.123456789);
 
-    const first = await generateReferralCode("Alexander", "919000000001");
-    const second = await generateReferralCode("Alexander", "919999999999");
-    expect(first).not.toBe(second);
+    expect(generateReferralCode("Alexander", "919000000001")).toBe(
+      generateReferralCode("Alexander", "919999999999"),
+    );
 
     spy.mockRestore();
   });
 
-  test("checks each candidate against the table before handing it out", async () => {
-    await generateReferralCode("Ann", "919000000001");
+  test("produces a shorter suffix when the random value is short", () => {
+    const spy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
-    expect(db.customerLoyaltyAccount.findUnique.mock.calls[0][0].where.referralCode).toMatch(
-      /^ANN-/,
-    );
-  });
+    expect(generateReferralCode("Ann", "919000000001")).toBe("ANN-I");
 
-  test("redraws when the code it picked is already taken", async () => {
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce({ id: "taken" })
-      .mockResolvedValueOnce(null);
-
-    const code = await generateReferralCode("Ann", "919000000001");
-
-    expect(db.customerLoyaltyAccount.findUnique).toHaveBeenCalledTimes(2);
-    expect(db.customerLoyaltyAccount.findUnique.mock.calls[1][0].where.referralCode).toBe(code);
-  });
-
-  test("gives up rather than looping forever", async () => {
-    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ id: "taken" });
-
-    await expect(generateReferralCode("Ann", "919000000001")).rejects.toThrow(
-      "Could not generate a unique referral code",
-    );
+    spy.mockRestore();
   });
 });

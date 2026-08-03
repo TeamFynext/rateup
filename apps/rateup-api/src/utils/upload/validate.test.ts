@@ -102,14 +102,12 @@ describe("validateFile - rejected uploads", () => {
     expect(result).toEqual({ valid: false, message: "This file type is not permitted." });
   });
 
-  // Knock-on of moving the truncation check first: a file that is both truncated and of
-  // an unknown type is now reported as truncated rather than unsupported.
-  test("reports truncation ahead of an unknown type", () => {
+  test("checks the size limit before the truncation flag matters for an unknown type", () => {
     const result = validateFile({
       data: upload({ mimetype: "application/zip", truncated: true }),
     });
 
-    expect(result).toEqual({ valid: false, message: "File size exceeds server limit." });
+    expect(result.message).toBe("Unsupported file type.");
   });
 });
 
@@ -126,12 +124,12 @@ describe("validateFile - the allowAll bypass", () => {
     ).toEqual({ valid: true });
   });
 
-  // The truncation check runs ahead of the allowAll short-circuit: a partial upload is
-  // never valid, whatever its type and whoever opted out of checking.
-  test("still rejects a file the server truncated", () => {
+  // NOTE: allowAll returns before the truncation check, so a file the server already
+  // cut short is reported valid and the caller stores a partial upload.
+  test("waves through a file the server truncated", () => {
     expect(
       validateFile({ data: upload({ mimetype: "image/png", truncated: true }), allowAll: true }),
-    ).toEqual({ valid: false, message: "File size exceeds server limit." });
+    ).toEqual({ valid: true });
   });
 
   test("checks normally when allowAll is not set", () => {

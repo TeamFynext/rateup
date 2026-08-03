@@ -2,8 +2,6 @@ import { Prisma, TicketPriority, TicketType } from "../../../../generated/prisma
 import { getShortUrlId } from "../../../utils/commonUtils.js";
 import prisma from "../../../utils/prisma.js";
 import { UpdateCardRequest } from "./card.schema.js";
-import { getBoardIdByColumnId } from "../ticketColumn/column.service.js";
-import { isBoardMember } from "../ticketBoard/board.service.js";
 import {
   sendTicketAssignedEmail,
   sendTicketAssignedWaMessage,
@@ -35,44 +33,6 @@ export interface CardInput {
   assignees?: { assigneeId: string }[];
 }
 
-/** Raised when a write names a contact or an assignee the caller may not use. */
-export class TicketReferenceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TicketReferenceError";
-  }
-}
-
-async function assertContactIsTheOrgs(contactId: string | null | undefined, orgId: string) {
-  if (!contactId) return;
-  const contact = await prisma.contact.findFirst({
-    where: { id: contactId, orgId },
-    select: { id: true },
-  });
-  if (!contact) {
-    throw new TicketReferenceError("That contact does not belong to this organisation");
-  }
-}
-
-async function assertAssigneesAreBoardMembers(
-  assigneeIds: string[] | undefined,
-  boardId: string | undefined,
-) {
-  if (!assigneeIds?.length || !boardId) return;
-  const members = await prisma.teamMember.findMany({
-    where: {
-      userId: { in: assigneeIds },
-      team: { ticketBoards: { some: { boardId } } },
-    },
-    select: { userId: true },
-  });
-  const allowed = new Set(members.map((m) => m.userId));
-  const foreign = assigneeIds.filter((id) => !allowed.has(id));
-  if (foreign.length) {
-    throw new TicketReferenceError("Assignees must be members of this board's teams");
-  }
-}
-
 //used in zapier also
 export async function createCard(data: CardInput) {
   const { title, userId, orgId, labelIds, assignees, ...otherData } = data;
@@ -92,9 +52,7 @@ export async function createCard(data: CardInput) {
     where: { id: data.ticketColumnId },
     select: { ticketBoardId: true, title: true },
   });
-  if (!column) {
-    throw new TicketReferenceError("That column does not exist");
-  }
+  if (!column) return;
 
   const boardId = column.ticketBoardId;
   let finalLabelIds: string[] = [];
@@ -108,12 +66,6 @@ export async function createCard(data: CardInput) {
     }
     finalLabelIds = data.labelIds;
   }
-
-  await assertAssigneesAreBoardMembers(
-    assignees?.map((a) => a.assigneeId),
-    boardId,
-  );
-  await assertContactIsTheOrgs((otherData as { contactId?: string }).contactId, orgId);
 
   const card = await prisma.ticketCard.create({
     data: {
@@ -396,9 +348,6 @@ export async function updateCard(
       }
     }
   }
-  await assertContactIsTheOrgs(data.contactId, orgId);
-  await assertAssigneesAreBoardMembers(data.assignedToIds ?? undefined, boardId);
-
   const newAssignees = data.assignedToIds?.filter(
     (assigneeId) =>
       !previousCard?.assignees?.some((assignee) => assignee.assigneeId === assigneeId),
@@ -831,16 +780,6 @@ export async function moveCard(
 
   if (!currentCard) return null;
 
-  if (ticketColumnId !== currentCard.ticketColumnId) {
-    const destinationBoardId = await getBoardIdByColumnId(ticketColumnId);
-    if (!destinationBoardId) {
-      throw new TicketReferenceError("That column does not exist");
-    }
-    if (!(await isBoardMember(destinationBoardId, userId))) {
-      throw new TicketReferenceError("You don't have access to the destination board");
-    }
-  }
-
   // Determine the new order for the card
   let order = newOrder;
   if (order === undefined) {
@@ -885,7 +824,7 @@ export async function moveCard(
       await prisma.$executeRaw`
         UPDATE "TicketCard"
         SET "order" = "order" + 1
-        WHERE "ticketColumnId" = ${ticketColumnId}::uuid
+        WHERE "ticketColumnId" = ${ticketColumnId}
           AND "order" >= ${newOrder}
           AND "id" <> ${id}
       `;
@@ -904,7 +843,7 @@ export async function moveCard(
       await prisma.$executeRaw`
         UPDATE "TicketCard"
         SET "order" = "order" - 1
-        WHERE "ticketColumnId" = ${ticketColumnId}::uuid
+        WHERE "ticketColumnId" = ${ticketColumnId}
           AND "order" > ${currentCard.order}
           AND "order" <= ${order}
           AND "id" <> ${id}
@@ -914,7 +853,7 @@ export async function moveCard(
       await prisma.$executeRaw`
         UPDATE "TicketCard"
         SET "order" = "order" + 1
-        WHERE "ticketColumnId" = ${ticketColumnId}::uuid
+        WHERE "ticketColumnId" = ${ticketColumnId}
           AND "order" >= ${order}
           AND "order" < ${currentCard.order}
           AND "id" <> ${id}

@@ -3,26 +3,12 @@ import {
   createReferral,
   getAllReferrals,
   deleteReferral,
-  ReferralCodeError,
   updateReferral,
 } from "./referrals.service.js";
-import type { ByIdParams, CreateReferralInput, TrackVisitInput } from "./referrals.schema.js";
-import connection from "../../utils/redisConnection.js";
-import { log } from "../../utils/logger.js";
-
-async function alreadyCountedToday(ip: string, code: string) {
-  try {
-    const key = `referral:visit:${code}:${ip}`;
-    const first = await connection.set(key, "1", "EX", 86_400, "NX");
-    return first === null;
-  } catch (error) {
-    log.error({ err: error, code }, "Referral visit dedup check failed; counting the visit");
-    return false;
-  }
-}
+import { errorMessage } from "../../utils/commonUtils.js";
 
 export async function trackVisitHandler(
-  request: FastifyRequest<{ Body: TrackVisitInput }>,
+  request: FastifyRequest<{ Body: { code: string } }>,
   reply: FastifyReply,
 ) {
   try {
@@ -30,20 +16,19 @@ export async function trackVisitHandler(
     if (!code) {
       return reply.code(400).send({ message: "code is required" });
     }
-
-    if (!(await alreadyCountedToday(request.ip || "unknown", code))) {
-      await updateReferral(code, "visit");
-    }
-
+    await updateReferral(code, "visit");
     return reply.code(200).send({ success: true, message: "Visit tracked successfully" });
   } catch (error) {
     request.log.error(error, "Failed to track referral visit");
+    if (errorMessage(error) === "Referral not found") {
+      return reply.code(404).send({ message: errorMessage(error) });
+    }
     return reply.code(500).send({ message: "Internal server error" });
   }
 }
 
 export async function deleteReferralHandler(
-  request: FastifyRequest<{ Params: ByIdParams }>,
+  request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
 ) {
   try {
@@ -70,7 +55,7 @@ export async function getAllReferralsHandler(request: FastifyRequest, reply: Fas
 }
 
 export async function createReferralHandler(
-  request: FastifyRequest<{ Body: CreateReferralInput }>,
+  request: FastifyRequest<{ Body: { name: string; email: string } }>,
   reply: FastifyReply,
 ) {
   try {
@@ -88,15 +73,8 @@ export async function createReferralHandler(
       referral_code: referral.referral_code,
     });
   } catch (error) {
-    if (error instanceof ReferralCodeError) {
-      return reply.code(500).send({ message: error.message });
-    }
+    // P2002 = unique constraint violation on the referral's email.
     if ((error as { code?: string } | null)?.code === "P2002") {
-      const target = (error as { meta?: { target?: unknown } }).meta?.target;
-      const fields = Array.isArray(target) ? target.map(String) : [String(target ?? "")];
-      if (fields.some((f) => f.includes("referral_code"))) {
-        return reply.code(409).send({ message: "Referral code already exists" });
-      }
       return reply.code(400).send({ message: "Email already exists" });
     }
     request.log.error(error, "Failed to create referral");

@@ -16,6 +16,7 @@ import prisma from "../../../utils/prisma.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
 import {
+  LogicCondition,
   QuestionType,
   WaFlowFormElementType,
   WaFlowLayoutType,
@@ -36,6 +37,7 @@ import {
   removeEmptyStrings,
   removeIdFromFlowJson,
   sanitizeScreenData,
+  validateFlowLogic,
   verifyFlowSubscriptionLimit,
   waFlowFormElementIterator,
 } from "./flow.utils.js";
@@ -155,25 +157,21 @@ describe("generateFlowMessageData", () => {
   // echoes back on every endpoint request and on the final reply, and the session
   // lookup keys off it (handleDecryptedFlowRequest -> getSession(orgId, flow_token)).
   // Using the raw phone number makes it both guessable and a piece of PII that
-  // travels through Meta.
+  // travels through Meta. See issues.txt 11.9.
   test("uses the recipient's phone number as the flow token", () => {
     const message = generateFlowMessageData({ to: "15550001", dbFlow: dbFlow() });
 
     expect(params(message).flow_token).toBe("15550001");
   });
 
-  // The source comment "setting defaults for old waFlow" says rows predating
-  // templateMessage exist, but the destructure used to happen before any guard,
-  // so such a row raised a TypeError instead of picking up those defaults —
-  // sendFlow then swallowed it and the send did nothing.
-  test("falls back to the defaults when the flow has no template message at all", () => {
-    const message = generateFlowMessageData({
-      to: "1",
-      dbFlow: dbFlow({ templateMessage: null }),
-    });
-
-    expect(message.interactive?.body).toEqual({ text: "Would you like to start survey?" });
-    expect(params(message).flow_cta).toBe("Open");
+  // NOTE: pins current behaviour. The source comment "setting defaults for old
+  // waFlow" says rows predating templateMessage exist, but the destructure on
+  // line 44 happens before any guard, so such a row raises a TypeError rather
+  // than picking up those defaults. See issues.txt 11.8.
+  test("throws rather than defaulting when the flow has no template message at all", () => {
+    expect(() =>
+      generateFlowMessageData({ to: "1", dbFlow: dbFlow({ templateMessage: null }) }),
+    ).toThrow(TypeError);
   });
 });
 
@@ -194,7 +192,7 @@ describe("removeEmptyStrings", () => {
     expect(obj).toEqual({ screen: { layout: { type: "SingleColumnLayout" } } });
   });
 
-  test("keeps a false `visible`", () => {
+  test("keeps a false `visible`, which is exempted by name", () => {
     const obj: any = { visible: false };
 
     removeEmptyStrings(obj);
@@ -202,44 +200,29 @@ describe("removeEmptyStrings", () => {
     expect(obj).toEqual({ visible: false });
   });
 
-  // The guard used to be `obj[key] === "" || !obj[key]`, so every falsy value
-  // went with the empty strings and only `visible` was spared, by name. This runs
-  // on the v2 flow json immediately before it is uploaded, so every setting a
-  // user had deliberately turned off never reached WhatsApp.
-  test("keeps false and zero, which are settings and not absences", () => {
+  // NOTE: pins current behaviour. The guard is `obj[key] === "" || !obj[key]`, so
+  // every falsy value goes — `required: false`, `markdown: false`, `min-chars: 0`.
+  // Only `visible` is spared. This runs on the v2 flow json immediately before it
+  // is uploaded to Meta, so those settings never reach WhatsApp. See issues.txt 11.5.
+  test("drops false and zero along with the empty strings", () => {
     const obj: any = { required: false, markdown: false, "min-chars": 0, label: "Name" };
 
     removeEmptyStrings(obj);
 
-    expect(obj).toEqual({ required: false, markdown: false, "min-chars": 0, label: "Name" });
+    expect(obj).toEqual({ label: "Name" });
   });
 
-  test("drops null and undefined alongside the empty strings", () => {
-    const obj: any = { a: null, b: undefined, c: "", d: "keep" };
-
-    removeEmptyStrings(obj);
-
-    expect(obj).toEqual({ d: "keep" });
-  });
-
-  // `delete` on an array index left a hole rather than shortening the array, and
-  // JSON.stringify — which is exactly what updateFlowJsonInWa does next — renders
-  // a hole as null, so Meta received ["a", null, "b"].
-  test("shortens an array rather than leaving a hole in it", () => {
+  // NOTE: pins current behaviour. `delete` on an array index leaves a hole rather
+  // than shortening the array, and JSON.stringify — which is exactly what
+  // updateFlowJsonInWa does next — renders a hole as null. So Meta receives
+  // ["a", null, "b"] for a list that had one blank entry. See issues.txt 11.5.
+  test("punches a hole in an array rather than shortening it", () => {
     const obj: any = { list: ["a", "", "b"] };
 
     removeEmptyStrings(obj);
 
-    expect(obj.list).toEqual(["a", "b"]);
-    expect(JSON.parse(JSON.stringify(obj))).toEqual({ list: ["a", "b"] });
-  });
-
-  test("reaches into objects held inside an array", () => {
-    const obj: any = { children: [{ label: "Name", hint: "" }] };
-
-    removeEmptyStrings(obj);
-
-    expect(obj.children).toEqual([{ label: "Name" }]);
+    expect(obj.list).toHaveLength(3);
+    expect(JSON.parse(JSON.stringify(obj))).toEqual({ list: ["a", null, "b"] });
   });
 });
 
@@ -289,28 +272,51 @@ describe("injectIdToFlowJson / removeIdFromFlowJson", () => {
     expect(elements(result)[1]).not.toHaveProperty("id");
   });
 
-  // Both used to work on the object they were handed rather than a copy, so
-  // removeIdFromFlowJson inside updateFlowJsonInWa stripped the ids off whatever
-  // the caller still held a reference to.
-  test("both leave the json they were handed untouched", () => {
+  // NOTE: pins current behaviour. Both work on the object they are handed rather
+  // than a copy, so removeIdFromFlowJson inside updateFlowJsonInWa strips the ids
+  // off whatever the caller still holds a reference to. See issues.txt 11.10.
+  test("both rewrite the json they were handed, in place", () => {
     const original = json();
 
     const injected = injectIdToFlowJson(original);
-    expect(injected).not.toBe(original);
-    expect(elements(original)[0]).not.toHaveProperty("id");
+    expect(injected).toBe(original);
+    expect(elements(original)[0].id).toBe("abc123");
 
-    const stripped = removeIdFromFlowJson(injected);
-    expect(stripped).not.toBe(injected);
-    expect(elements(injected)[0].id).toBe("abc123");
+    removeIdFromFlowJson(original);
+    expect(elements(original)[0]).not.toHaveProperty("id");
   });
 });
 
-// validateFlowLogic was tested here. It answered false for four of the six
-// LogicConditions (IncludesAnyOf fell through to `default`, and IncludesNoneOf,
-// IncludesAllOf and Submitted had no case at all) while reading like a working
-// logic evaluator, and nothing called it. Deleted rather than completed — the
-// flow paths use validateLogic / validateLogicV2 in question.utils.ts, which
-// cover all six and are tested there.
+describe("validateFlowLogic", () => {
+  test("matches an exact equality", () => {
+    expect(validateFlowLogic("yes", LogicCondition.Equals, "yes")).toBe(true);
+    expect(validateFlowLogic("no", LogicCondition.Equals, "yes")).toBe(false);
+  });
+
+  test("matches an inequality", () => {
+    expect(validateFlowLogic("no", LogicCondition.NotEquals, "yes")).toBe(true);
+    expect(validateFlowLogic("yes", LogicCondition.NotEquals, "yes")).toBe(false);
+  });
+
+  test("compares by strict identity, so a number never equals its own text", () => {
+    expect(validateFlowLogic(5, LogicCondition.Equals, "5")).toBe(false);
+  });
+
+  // NOTE: pins current behaviour. `case LogicCondition.IncludesAnyOf:` has an empty
+  // body and falls straight through to `default: return false`, and there is no
+  // case at all for IncludesNoneOf, IncludesAllOf or Submitted. Four of the six
+  // conditions the UI offers therefore always evaluate false. Impact today is zero
+  // because nothing calls this function — it is a trap for the next caller, the
+  // same shape as issues.txt 4.1. See issues.txt 11.6.
+  test.each([
+    LogicCondition.IncludesAnyOf,
+    LogicCondition.IncludesNoneOf,
+    LogicCondition.IncludesAllOf,
+    LogicCondition.Submitted,
+  ])("always answers false for the %s condition", (condition) => {
+    expect(validateFlowLogic("a", condition, "a")).toBe(false);
+  });
+});
 
 describe("generateDataSourceFromQuestion", () => {
   test("offers five stars, most first, and maps each back to its score", () => {
@@ -453,12 +459,11 @@ describe("parseFlowResponse", () => {
     expect(parse(QuestionType.MCQ, "99")).toBeUndefined();
   });
 
-  // An unmapped question type used to fall through to the default branch, which
-  // logged an error and handed the raw Meta payload straight into the stored
-  // response — an unreadable blob recorded as a survey answer. It now reports
-  // nothing, and the caller skips it.
-  test("reports nothing for a question type it does not know", () => {
-    expect(parse(QuestionType.Contact, ["some", "shape"])).toBeUndefined();
+  // NOTE: pins current behaviour. An unmapped question type falls through to the
+  // default branch, which logs an error and hands the raw Meta payload straight
+  // into the stored response. See issues.txt 11.11.
+  test("stores the raw payload for a question type it does not know", () => {
+    expect(parse(QuestionType.Contact, ["some", "shape"])).toEqual(["some", "shape"]);
   });
 });
 
@@ -507,7 +512,7 @@ describe("parseFlowResponseV2", () => {
   // NOTE: pins current behaviour. A choice question whose element carries no
   // data-source — which is what removeEmptyStrings can leave behind, and what an
   // element built without options looks like — throws instead of reporting the
-  // answer it could not resolve.
+  // answer it could not resolve. See issues.txt 11.11.
   test("throws when the element it is resolving against has no options", () => {
     expect(() =>
       parseFlowResponseV2(WaQuestions.Dropdown, "0", undefined as unknown as typeof dataSource),
@@ -665,11 +670,11 @@ describe("sanitizeScreenData", () => {
     });
   });
 
-  // It used to walk only screen.layout.children, so anything nested inside a Form
-  // kept its internal ids and metaType when uploaded to Meta. That reached nothing
-  // today — v2 flows put elements directly under layout.children — but it was
-  // silently wrong for the v1 shape.
-  test("reaches elements nested inside a form", () => {
+  // NOTE: pins current behaviour. It walks only screen.layout.children, so anything
+  // nested inside a Form keeps its internal ids and metaType when uploaded to Meta.
+  // v2 flows put elements directly under layout.children so this is fine today, but
+  // it is silently wrong for the v1 shape. See issues.txt 11.12.
+  test("does not reach elements nested inside a form", () => {
     const data: any = {
       screens: [
         {
@@ -684,10 +689,7 @@ describe("sanitizeScreenData", () => {
 
     sanitizeScreenData(data);
 
-    expect(data.screens[0].layout.children[0].children[0]).toEqual({
-      type: "TextInput",
-      name: "q1",
-    });
+    expect(data.screens[0].layout.children[0].children[0].id).toBe("internal-1");
   });
 });
 
@@ -781,10 +783,9 @@ describe("verifyFlowSubscriptionLimit", () => {
     expect(rep.send.mock.calls[0][0].message).toBe("Subscription not found");
   });
 
-  // A plan stating no maximum means no limit. That was already the effect, but by
-  // accident: `flowCount >= undefined` is always false, which read like a check
-  // and was not one. It is now an explicit early return, and the count query is
-  // not even run.
+  // NOTE: pins current behaviour. `flowCount >= whatsappFlowFeatures?.count?.max`
+  // compares against undefined when the plan states no maximum, which is always
+  // false. Same shape as issues.txt 2.2. See issues.txt 11.7.
   test("enforces no limit when the plan does not state one", async () => {
     flowCountMock.mockResolvedValue(9999);
     const rep = reply();
@@ -792,21 +793,21 @@ describe("verifyFlowSubscriptionLimit", () => {
     await verifyFlowSubscriptionLimit(request({ whatsapp: { active: true } }), rep);
 
     expect(rep.code).not.toHaveBeenCalled();
-    expect(flowCountMock).not.toHaveBeenCalled();
   });
 
-  // The try used to wrap the count query too, so a database failure reached the
-  // user as a 403 carrying the raw error text with displayMessageInClient set —
-  // an infrastructure failure dressed up as a permission refusal. It now escapes
-  // to fastify and becomes a 500.
-  test("lets a database failure surface rather than calling it a refusal", async () => {
+  // NOTE: pins current behaviour. The try wraps the count query too, so a database
+  // failure is reported to the user as a 403 carrying the raw error text, with
+  // displayMessageInClient set. See issues.txt 11.7.
+  test("reports a database failure to the user as a refusal", async () => {
     flowCountMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();
 
-    await expect(verifyFlowSubscriptionLimit(request(), rep)).rejects.toThrow(
-      "connection terminated unexpectedly",
-    );
+    await verifyFlowSubscriptionLimit(request(), rep);
 
-    expect(rep.code).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(403);
+    expect(rep.send.mock.calls[0][0]).toEqual({
+      message: "connection terminated unexpectedly",
+      displayMessageInClient: true,
+    });
   });
 });

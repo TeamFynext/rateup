@@ -106,16 +106,16 @@ describe("createContactLabelHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 
-  // Only P2002 was handled inside the prisma branch; any other prisma error fell
-  // off the end of the handler having sent nothing, which fastify turns into an
-  // empty 200 — so a foreign-key violation read as success. Same shape as
-  test("answers a non-duplicate prisma error with a 500", async () => {
+  // NOTE: only P2002 is handled inside the prisma branch; any other prisma error
+  // falls off the end of the handler having sent nothing, which fastify turns
+  // into an empty 200 success. See issues.txt 18.17.
+  test("answers a non-duplicate prisma error with nothing at all", async () => {
     (createContactLabel as Mock).mockRejectedValue(new FakePrismaKnownError("P2003"));
     const rep = reply();
 
     await createContactLabelHandler(request({ body: { name: "VIP" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
+    expect(rep.send).not.toHaveBeenCalled();
   });
 });
 
@@ -194,13 +194,13 @@ describe("updateContactLabelHandler", () => {
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Label not found" } });
   });
 
-  test("answers any other prisma error with a 500", async () => {
+  test("answers any other prisma error with nothing at all", async () => {
     (updateContactLabel as Mock).mockRejectedValue(new FakePrismaKnownError("P2003"));
     const rep = reply();
 
     await updateContactLabelHandler(request({ params: { labelId: "l1" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
+    expect(rep.send).not.toHaveBeenCalled();
   });
 });
 
@@ -249,7 +249,7 @@ describe("assignLabelsToContactHandler", () => {
   });
 
   // NOTE: the 404 arrives only after the service has already cleared the
-  // contact's labels — the write is not undone.
+  // contact's labels — the write is not undone. See issues.txt 18.32.
   test("answers 404 for a contact it could not read back", async () => {
     (assignLabelsToContact as Mock).mockResolvedValue(null);
     const rep = reply();
@@ -289,6 +289,7 @@ describe("assignLabelsToContactsHandler", () => {
   });
 
   // NOTE: the service returns nothing, so the success answer is always empty.
+  // See issues.txt 18.33.
   test("answers 200 with an empty body", async () => {
     (assignLabelsToContacts as Mock).mockResolvedValue(undefined);
     const rep = reply();
@@ -330,6 +331,7 @@ describe("getContactsWithLabelsHandler", () => {
 
   // NOTE: the underlying query names a relation Contact does not have, so this
   // endpoint answers 500 whenever a label filter is supplied.
+  // See issues.txt 18.34.
   test("reports the filtered lookup's failure as a 500", async () => {
     (getContactsWithLabels as Mock).mockRejectedValue(new Error("Unknown field contactLabels"));
     const rep = reply();

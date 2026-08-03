@@ -3,7 +3,6 @@ import {
   CreateQuestionInput,
   QuestionRouteParams,
   QuestionsRouteParams,
-  ReplaceQuestionsInput,
   UpdateQuestionInput,
   UpdateQuestionsOrderInput,
 } from "./question.schema.js";
@@ -13,24 +12,12 @@ import {
   getAllowedEmailsFromFile,
   getQuestionById,
   getQuestionsBySurveyId,
-  QuestionOrderError,
   reorderQuestions,
   updateLogicJump,
   updateQuestion,
   updateQuestionsOnSurvey,
 } from "./question.service.js";
 import { getSurveyById } from "../survey/survey.service.js";
-import { log } from "../../utils/logger.js";
-
-function fail(reply: FastifyReply, error: unknown, context: string) {
-  log.error({ err: error }, context);
-  if (error instanceof QuestionOrderError) {
-    return reply.code(400).send({ message: error.message });
-  }
-  return reply.code(500).send({ message: "Something went wrong" });
-}
-
-const notFound = (reply: FastifyReply) => reply.code(404).send({ message: "Question not found" });
 
 export async function createQuestionHandler(
   request: FastifyRequest<{
@@ -45,7 +32,8 @@ export async function createQuestionHandler(
     const question = await createQuestion(surveyId, body);
     reply.code(201).send(question);
   } catch (e) {
-    return fail(reply, e, "Error creating question");
+    console.log(e);
+    reply.code(500);
   }
 }
 
@@ -60,11 +48,13 @@ export async function getQuestionByIdHandler(
     const question = await getQuestionById(surveyId, request.params.id);
 
     if (!question) {
-      return notFound(reply);
+      reply.code(404);
+    } else {
+      reply.send(question);
     }
-    reply.send(question);
   } catch (e) {
-    return fail(reply, e, "Error reading question");
+    console.log(e);
+    reply.code(500);
   }
 }
 
@@ -78,7 +68,8 @@ export async function getQuestionsBySurveyIdHandler(
     const questions = await getQuestionsBySurveyId(request.params.surveyId);
     reply.send(questions);
   } catch (e) {
-    return fail(reply, e, "Error listing questions");
+    console.log(e);
+    reply.code(500);
   }
 }
 
@@ -93,12 +84,13 @@ export async function deleteQuestionByIdHandler(
     const question = await getQuestionById(surveyId, request.params.id);
 
     if (!question) {
-      return notFound(reply);
+      reply.code(404);
+    } else {
+      await deleteQuestionById(surveyId, request.params.id);
     }
-    await deleteQuestionById(surveyId, request.params.id);
-    reply.code(200).send({ success: true });
   } catch (e) {
-    return fail(reply, e, "Error deleting question");
+    console.log(e);
+    reply.code(500);
   }
 }
 
@@ -114,7 +106,8 @@ export async function reorderQuestionsHandler(
     await reorderQuestions(surveyId, request.body);
     reply.code(200).send();
   } catch (e) {
-    return fail(reply, e, "Error reordering questions");
+    console.log(e);
+    reply.code(500);
   }
 }
 
@@ -131,19 +124,21 @@ export async function updateQuestionHandler(
     // check if question exists
     const question = await getQuestionById(surveyId, id);
     if (!question) {
-      return notFound(reply);
+      reply.code(404);
+    } else {
+      // update question
+      await updateQuestion(surveyId, id, request.body);
+      reply.code(200).send();
     }
-    // update question
-    await updateQuestion(surveyId, id, request.body);
-    reply.code(200).send();
   } catch (e) {
-    return fail(reply, e, "Error updating question");
+    console.log(e);
+    reply.code(500);
   }
 }
 
 export async function replaceQuestionsHandler(
   request: FastifyRequest<{
-    Body: ReplaceQuestionsInput;
+    Body: { questions: Array<Question>; screenId?: string };
     Params: QuestionsRouteParams;
   }>,
   reply: FastifyReply,
@@ -151,13 +146,14 @@ export async function replaceQuestionsHandler(
   try {
     const surveyId = request.params.surveyId;
     const { questions, screenId } = request.body;
-    await updateQuestionsOnSurvey(surveyId, questions as unknown as Array<Question>);
+    await updateQuestionsOnSurvey(surveyId, questions);
     if (screenId) {
       await updateLogicJump(screenId, surveyId);
     }
     reply.code(200).send();
   } catch (e) {
-    return fail(reply, e, "Error replacing questions");
+    console.log(e);
+    reply.code(500);
   }
 }
 
@@ -195,7 +191,7 @@ export async function importAllowedEmailIdsHandler(
       }
     }
   } catch (e) {
-    log.error({ err: e }, "Error importing allowed email ids");
+    console.error(e);
     reply
       .code(500)
       .send({ error: (e instanceof Error ? e.message : undefined) || "Something went wrong" });

@@ -66,38 +66,25 @@ interface CatalogProductPropsJson {
   [prop: string]: unknown;
 }
 
-// Every by-catalogId function below takes the caller's org and filters on it, so
-// another org's catalog is indistinguishable from one that never existed. deleteMany /
-// updateMany are used rather than delete / update because the composite { catalogId,
-// orgId } is not a unique index — they simply affect zero rows for a catalog the org
-// does not own, which the callers surface as a 404.
-export async function deleteWaCatalog(catalogId: string, orgId: string) {
-  const { count } = await prisma.whatsappCatalog.deleteMany({
-    where: { catalogId, orgId },
+export async function deleteWaCatalog(catalogId: string) {
+  await prisma.whatsappCatalog.delete({
+    where: { catalogId },
   });
-  if (count === 0) {
-    throw new Error("Catalog not found");
-  }
 }
 
-export async function updateWaCatalog(catalogId: string, orgId: string, data: UpdateCatalogSchema) {
-  const { count } = await prisma.whatsappCatalog.updateMany({
+export async function updateWaCatalog(catalogId: string, data: UpdateCatalogSchema) {
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId,
-      orgId,
     },
     data,
   });
-  if (count === 0) {
-    throw new Error("Catalog not found");
-  }
 }
 
-export async function getWaCatalog(catalogId: string, orgId: string) {
-  return await prisma.whatsappCatalog.findFirst({
+export async function getWaCatalog(catalogId: string) {
+  return await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId,
-      orgId,
     },
     include: {
       connectedWaPhoneIds: true,
@@ -113,25 +100,9 @@ async function getMetaBusinessInfoByWABAId(wabaId: string | null, accessToken: s
   return res.data.on_behalf_of_business_info;
 }
 
-/**
- * Syncs catalogs for every WhatsApp account on the org.
- *
- * Returns a per-account result rather than undefined: each account is still wrapped in
- * its own try/catch so one failure cannot abandon the rest, but a total Meta outage used
- * to be indistinguishable from a clean sync — every account failed, the function returned
- * undefined, and the handler replied 200. Shaped to match syncConnectedCatalog, which the
- * handler already turns into a 200/207.
- */
-export async function syncWaCatalogs(orgId: string): Promise<
-  {
-    wabaId: string | null;
-    synced: boolean;
-    warning?: string;
-  }[]
-> {
+export async function syncWaCatalogs(orgId: string) {
   const waSettings = await getAllWaSettings(orgId);
   const map = new Map();
-  const results: { wabaId: string | null; synced: boolean; warning?: string }[] = [];
   for (const setting of waSettings) {
     try {
       if (
@@ -144,11 +115,6 @@ export async function syncWaCatalogs(orgId: string): Promise<
       map.set(wabaId, true);
       const businessInfo = await getMetaBusinessInfoByWABAId(wabaId, accessToken);
       if (!businessInfo) {
-        results.push({
-          wabaId,
-          synced: false,
-          warning: "Meta returned no business info for this WhatsApp account.",
-        });
         continue;
       }
       const businessId = businessInfo.id;
@@ -278,17 +244,10 @@ export async function syncWaCatalogs(orgId: string): Promise<
           }
         }
       }
-      results.push({ wabaId, synced: true });
     } catch (e) {
       log.error(e);
-      results.push({
-        wabaId: setting.wabaId,
-        synced: false,
-        warning: e instanceof Error ? e.message : "Sync failed for this WhatsApp account.",
-      });
     }
   }
-  return results;
 }
 
 export async function syncConnectedCatalog(orgId: string) {
@@ -387,10 +346,9 @@ export async function getWaCatalogsByOrg(orgId: string) {
   });
 }
 
-export async function getConnectedWaCatalog(whatsappSettingsPhoneId: string, orgId: string) {
+export async function getConnectedWaCatalog(whatsappSettingsPhoneId: string) {
   return await prisma.whatsappCatalog.findFirst({
     where: {
-      orgId,
       connectedWaPhoneIds: {
         some: {
           whatsappSettingsPhoneId: whatsappSettingsPhoneId,
@@ -864,11 +822,11 @@ export async function updateConnectWaCatalog(
   }
 }
 
-export async function disconnectCatalogFromWaba(
-  { whatsappSettingsId, catalogId }: CatalogWhatsappSettingSchema,
-  orgId: string,
-) {
-  const waSettings = await getWaSettingsById(whatsappSettingsId, orgId);
+export async function disconnectCatalogFromWaba({
+  whatsappSettingsId,
+  catalogId,
+}: CatalogWhatsappSettingSchema) {
+  const waSettings = await getWaSettingsById(whatsappSettingsId);
   if (!waSettings) {
     throw new Error(`WhatsApp settings ${whatsappSettingsId} not found`);
   }

@@ -8,7 +8,6 @@ import {
 import {
   createLifecycle,
   deleteLifecycleById,
-  LifecycleInUseError,
   getLifecycles,
   getLifeCyclesWithContactCount,
   reorderLabels,
@@ -56,7 +55,7 @@ export async function createLifecycleHandler(
   try {
     const { orgId } = request.user;
     const res = await createLifecycle(orgId, request.body);
-    reply.code(201).send(res);
+    reply.code(200).send(res);
   } catch (e) {
     if (hasErrorCode(e, "P2002")) {
       return reply.code(409).send({ message: "Lifecycle already exists" });
@@ -75,13 +74,9 @@ export async function updateLifecycleHandler(
 ) {
   try {
     const id = request.params.lifecycleId;
-    const { orgId } = request.user;
-    const res = await updateLifecycle(id, orgId, request.body);
+    const res = await updateLifecycle(id, request.body);
     reply.code(200).send(res);
   } catch (e) {
-    if (hasErrorCode(e, "P2025")) {
-      return reply.code(404).send({ message: "Lifecycle not found" });
-    }
     if (hasErrorCode(e, "P2002")) {
       return reply.code(409).send({ message: "Lifecycle already exists" });
     }
@@ -96,16 +91,9 @@ export async function deleteLifecycleByIdHandler(
 ) {
   try {
     const { lifecycleId } = request.params;
-    const { orgId } = request.user;
-    const res = await deleteLifecycleById(lifecycleId, orgId);
+    const res = await deleteLifecycleById(lifecycleId);
     reply.code(200).send(res);
   } catch (e) {
-    if (e instanceof LifecycleInUseError) {
-      return reply.code(409).send({ message: e.message });
-    }
-    if (hasErrorCode(e, "P2025")) {
-      return reply.code(404).send({ message: "Lifecycle not found" });
-    }
     log.error(e);
     reply.code(500).send({ message: "Error deleting lifecycle" });
   }

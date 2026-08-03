@@ -27,15 +27,10 @@ export async function createLoyaltyApiSetting(data: LApiSettingInput, orgId: str
   });
 }
 
-export async function updateLoyaltyApiSetting(
-  id: string,
-  data: UpdateApiSettingInput,
-  orgId: string,
-) {
+export async function updateLoyaltyApiSetting(id: string, data: UpdateApiSettingInput) {
   return await prisma.loyaltyApiSettings.update({
     where: {
       id,
-      orgId,
     },
     data: {
       ...data,

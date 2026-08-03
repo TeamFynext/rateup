@@ -1,5 +1,7 @@
 import {
   ShopifyEvents,
+  SubscriptionFeaturePathName,
+  WaAutomatedReplyMatchType,
   WaMessageAssignStatus,
   WaTemplateComponentType,
 } from "../../../types/enums.js";
@@ -8,12 +10,15 @@ import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js
 import type { AutomationWithGraph } from "../whatsappSurvey/node-types.js";
 import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
-import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
 import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
+import {
+  findRecentAutomation,
+  logAutomationAction,
+} from "../whatsappSurvey/automation-logger.utils.js";
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
@@ -23,7 +28,6 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
-import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { assignWaMessageToUser } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
@@ -53,11 +57,6 @@ import {
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
-// validateTimeWindow parses "HH:mm" slots, which needs customParseFormat. This module
-// used to get it only as a side effect of importing wasurvey.utils.js for assignChat —
-// so dropping that import would have made every time-slot comparison silently return
-// false, and automations would have stopped firing during business hours with no error.
-dayjs.extend(customParseFormat);
 
 export interface automationProps {
   commands: string[];
@@ -81,6 +80,8 @@ export interface automationProps {
   orgId: string | null;
   whatsappSettingsPhoneId: string | null;
   whatsappSettingsPhoneIds: string[];
+  isEnabled: boolean;
+  sendOnceIn24Hours: boolean;
 }
 // Helper to check substring match while preserving optional case sensitivity
 export function includesWholePhrase(text: string, phrase: string, caseSensitive = false) {
@@ -88,6 +89,72 @@ export function includesWholePhrase(text: string, phrase: string, caseSensitive 
   const flags = caseSensitive ? "" : "i";
 
   return new RegExp(String.raw`(?<!\w)${escapedPhrase}(?!\w)`, flags).test(text);
+}
+
+/**
+ * Enhanced validation for automation match conditions including contact and time filters
+ */
+export async function validateAutomationMatchCondition(
+  automation: automationProps,
+  message: string,
+  orgId?: string,
+  phone?: string,
+): Promise<boolean> {
+  const { matchType, matchData, commands } = automation;
+  // findRecentAutomation requires a real phone/orgId to scope its lookup -
+  // without both, there's nothing to dedupe against, so skip the check
+  // rather than passing undefined through to the query.
+  if (automation.sendOnceIn24Hours && phone && orgId) {
+    const recentActivity = await findRecentAutomation(phone, orgId, {
+      timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+    });
+    if (recentActivity) return false;
+  }
+  // First validate the message matching logic (existing logic)
+  let messageMatches = false;
+
+  if (matchType === WaAutomatedReplyMatchType.Exact) {
+    if (matchData.caseSensitive) {
+      messageMatches = commands?.[0] === message;
+    } else {
+      messageMatches = commands?.[0]?.toLowerCase() === message?.toLowerCase();
+    }
+  } else if (
+    [WaAutomatedReplyMatchType.ContainsAllOf, WaAutomatedReplyMatchType.ContainsAnyOf].includes(
+      matchType as WaAutomatedReplyMatchType,
+    )
+  ) {
+    let comparator: "some" | "every";
+
+    if (WaAutomatedReplyMatchType.ContainsAllOf === matchType) {
+      comparator = "every";
+    } else if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType) {
+      comparator = "some";
+    } else {
+      // Unreachable: the outer `else if` above already restricted matchType
+      // to one of these two values before entering this branch.
+      throw new Error(`WaAutomation not implemented for: ${matchType}`);
+    }
+
+    const caseSensitive = !!matchData.caseSensitive;
+    messageMatches = commands[comparator]((keyword) =>
+      includesWholePhrase(message, keyword, caseSensitive),
+    );
+  } else {
+    throw new Error(`WaAutomation not implemented for: ${matchType}`);
+  }
+
+  // If message doesn't match, return false early
+  if (!messageMatches) return false;
+
+  // If we don't have orgId and phone for additional validations, return message match result
+  if (!orgId || !phone) return messageMatches;
+
+  // Validate contact filters
+  const contactFiltersValid = await validateContactFilters(matchData.contactFilters, orgId, phone);
+  if (!contactFiltersValid) return false;
+
+  return true;
 }
 
 // Example usage:
@@ -217,10 +284,99 @@ export enum ReplyComponentType {
 }
 
 export async function verifyAutomationLimit(request: FastifyRequest, reply: FastifyReply) {
-  return await enforceWhatsappCountLimit(request, reply, {
-    label: "automated replies",
-    count: (orgId) => prisma.waAutomatedReply.count({ where: { orgId } }),
-  });
+  try {
+    let orgId = request.user.orgId;
+    const subscription = request.subscription;
+    if (!subscription) throw new Error("Subscription not found");
+
+    const automatedReplyCount = await prisma.waAutomatedReply.count({
+      where: {
+        orgId: orgId,
+      },
+    });
+
+    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
+    // `conversation.count`, see global.d.ts) - same gap as flow.utils.ts's
+    // whatsappFlowFeatures. Typed via the generic (rather than `as any` on
+    // the input) to describe the shape this code expects without asserting
+    // it's really there.
+    const whatsappAutomationFeature = getNestedProperty<{ count?: { max: number } }>(
+      subscription.features,
+      SubscriptionFeaturePathName.Whatsapp,
+    );
+    if (automatedReplyCount >= (whatsappAutomationFeature?.count?.max ?? Infinity)) {
+      throw new Error(
+        `You have reached the maximum limit of ${whatsappAutomationFeature?.count?.max} automated replies.`,
+      );
+    }
+  } catch (e) {
+    return reply.code(403).send({
+      message: e instanceof Error ? e.message : "Unknown error",
+      displayMessageInClient: true,
+    });
+  }
+}
+
+/**
+ * Validates contact-based filter conditions
+ */
+async function validateContactFilters(
+  contactFilters: WaAutomationContactFilters | null | undefined,
+  orgId: string,
+  phone: string,
+): Promise<boolean> {
+  if (!contactFilters) return true;
+
+  const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+  if (!contact) return false;
+
+  // Check if automation should only trigger for new contacts
+  if (contactFilters.newContactsOnly) {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (contact.createdAt < oneDayAgo) {
+      return false;
+    }
+  }
+
+  // Check if contact is in required groups
+  const requiredGroups = contactFilters.inGroups;
+  if (requiredGroups?.length) {
+    const contactGroups = contact?.contactGroups?.map((g) => g.contactGroupId) || [];
+    return requiredGroups.some((group) => contactGroups.includes(group));
+  }
+
+  // Check if contact has values for required fields
+  const requiredFields = contactFilters.requiredFieldsWithAnyValue;
+  if (requiredFields?.length) {
+    const customFieldsMap = new Map(
+      contact.customFields?.map((cf) => [cf.fieldId, cf.value]) || [],
+    );
+
+    for (const fieldSlug of requiredFields) {
+      const fieldValue = customFieldsMap.get(fieldSlug);
+
+      // Check custom fields first
+      if (fieldValue?.trim()) continue;
+
+      // Check built-in fields
+      switch (fieldSlug.toLowerCase()) {
+        case "email":
+          if (contact?.email?.trim()) continue;
+          break;
+        case "name":
+          if (contact?.name?.trim()) continue;
+          break;
+        case "phone":
+          if (contact?.phone?.trim()) continue;
+          break;
+        default:
+          // Field doesn't have a value
+          return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -840,7 +996,6 @@ async function executeCloseTicketAction(
   // Update the contact to closed status using the main update logic, pass existing contact
   await updateContactById(
     contact.id,
-    contact.orgId,
     {
       waMessageAssignStatus: status,
       messageId: generateInternalMessageId(),

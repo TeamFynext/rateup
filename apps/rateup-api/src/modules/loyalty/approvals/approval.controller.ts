@@ -73,12 +73,7 @@ export async function getApprovalRequestByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const program = await getLoyaltyProgramByOrg(request.user.orgId);
-    if (!program) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
-    }
-
-    const result = await getApprovalRequestById(request.params.approvalId, program.id);
+    const result = await getApprovalRequestById(request.params.approvalId);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error getting approval request:");
@@ -101,11 +96,6 @@ export async function approveApprovalRequestHandler(
   reply: FastifyReply,
 ) {
   try {
-    const program = await getLoyaltyProgramByOrg(request.user.orgId);
-    if (!program) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
-    }
-
     const data: ApproveRequestInput = {
       approvalId: request.params.approvalId,
       reviewerId: request.body.reviewerId,
@@ -113,7 +103,7 @@ export async function approveApprovalRequestHandler(
       notes: request.body.notes,
     };
 
-    const result = await approveApprovalRequest(data, program.id);
+    const result = await approveApprovalRequest(data);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error approving request:");
@@ -133,11 +123,6 @@ export async function rejectApprovalRequestHandler(
   reply: FastifyReply,
 ) {
   try {
-    const program = await getLoyaltyProgramByOrg(request.user.orgId);
-    if (!program) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
-    }
-
     const data: RejectRequestInput = {
       approvalId: request.params.approvalId,
       reviewerId: request.body.reviewerId,
@@ -145,7 +130,7 @@ export async function rejectApprovalRequestHandler(
       reason: request.body.reason,
     };
 
-    const result = await rejectApprovalRequest(data, program.id);
+    const result = await rejectApprovalRequest(data);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error rejecting request:");
@@ -165,19 +150,12 @@ export async function cancelApprovalRequestHandler(
   reply: FastifyReply,
 ) {
   try {
-    const program = await getLoyaltyProgramByOrg(request.user.orgId);
-    if (!program) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
-    }
-
     const data: CancelRequestInput = {
       approvalId: request.params.approvalId,
-      reviewerId: request.body.reviewerId,
-      reviewerName: request.body.reviewerName,
       reason: request.body.reason,
     };
 
-    const result = await cancelApprovalRequest(data, program.id);
+    const result = await cancelApprovalRequest(data);
     reply.code(200).send(result);
   } catch (e) {
     log.error({ err: e }, "Error cancelling request:");

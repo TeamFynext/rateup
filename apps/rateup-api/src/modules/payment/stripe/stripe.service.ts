@@ -92,17 +92,6 @@ export async function createOrder(data: CreateStripeCheckoutInput, userId: strin
   return order;
 }
 
-export async function findOrderByCheckoutRef(checkoutRefId: string, orgId: string) {
-  return prisma.order.findFirst({
-    where: { checkoutRefId, orgId },
-    select: { id: true },
-  });
-}
-
-export async function deleteOrder(id: string) {
-  return prisma.order.deleteMany({ where: { id } });
-}
-
 export async function updateOrder(id: string, priceId: string, sessionId: string) {
   const order = await prisma.order.update({
     where: { id: id },

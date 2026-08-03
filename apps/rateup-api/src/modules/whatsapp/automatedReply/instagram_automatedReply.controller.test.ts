@@ -161,6 +161,8 @@ describe("createInstagramAutomationHandler", () => {
       name: "Comment reply",
       matchData: { keywords: ["price"] },
       whatsappSettingsPhoneId: "phone-1",
+      sendOnceIn24Hours: true,
+      isActive: true,
     };
 
     await createInstagramAutomationHandler(makeRequest({ body }), reply);
@@ -168,21 +170,6 @@ describe("createInstagramAutomationHandler", () => {
     expect(m.create).toHaveBeenCalledWith({ orgId: "org-1", ...body });
     expect(reply.code).toHaveBeenCalledWith(201);
     expect(reply.payload).toEqual({ success: true, data: AUTOMATION });
-  });
-
-  // The enable toggle and the once-per-24h guard belong to Rule now, so the handler
-  // must not forward them even if an old client still sends them.
-  test("drops sendOnceIn24Hours and isActive if a stale client still sends them", async () => {
-    await createInstagramAutomationHandler(
-      makeRequest({
-        body: { name: "A", matchData: {}, sendOnceIn24Hours: true, isActive: false },
-      }),
-      makeReply(),
-    );
-
-    const arg = m.create.mock.calls[0][0];
-    expect(arg).not.toHaveProperty("sendOnceIn24Hours");
-    expect(arg).not.toHaveProperty("isActive");
   });
 
   test("ignores an orgId smuggled into the body", async () => {

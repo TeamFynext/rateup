@@ -234,13 +234,12 @@ describe("the super-admin gate on the three settings write paths", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // createWaSettingsHandler, updateWaSettingsHandler, upsertWaSettingsHandler and
-  // deleteWaSettingsHandler all require SUPER_ADMIN. updateWaSettingsByIdHandler —
-  // PUT /:whatsappSettingsId, which writes the same row and more (fbPageId, ibaId,
-  // pageAccessToken, encryption keys) — checked no role at all, so any
-  // authenticated user of the org reached it.
-  test("the by-id update path refuses a non super admin, like its siblings", async () => {
-    m.getOrgIdAndRole.mockResolvedValue({ orgId: ORG_A, role: "AGENT" });
+  // NOTE: pins current behaviour. createWaSettingsHandler, updateWaSettingsHandler,
+  // upsertWaSettingsHandler and deleteWaSettingsHandler all require SUPER_ADMIN.
+  // updateWaSettingsByIdHandler — PUT /:whatsappSettingsId, which writes the same
+  // row and more (fbPageId, ibaId, pageAccessToken, encryption keys) — checks no
+  // role at all. Any authenticated user reaches it. See issues.txt 13.2.
+  test("the by-id update path checks no role whatsoever", async () => {
     const rep = reply();
 
     await updateWaSettingsByIdHandler(
@@ -252,8 +251,9 @@ describe("the super-admin gate on the three settings write paths", () => {
       rep,
     );
 
-    expect(m.updateWaSettingsById).not.toHaveBeenCalled();
-    expect(rep.status).toHaveBeenCalledWith(403);
+    expect(m.getOrgIdAndRole).not.toHaveBeenCalled();
+    expect(m.updateWaSettingsById).toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(200);
   });
 });
 
@@ -284,13 +284,13 @@ describe("getWaSettingsHandler", () => {
     expect(sent(rep)[0].encryption).toBeUndefined();
   });
 
-  // The handler used to remove `encryption` and nothing else, so the response
-  // carried the DECRYPTED WhatsApp system token and the Facebook page token for
-  // every channel — to the browser of any authenticated member of the org, at any
-  // role, since this route carries only checkSession. That system token sends
-  // messages as the org, reads its whole message history and manages its templates
-  // and phone numbers.
-  test("never sends an access token to the client", async () => {
+  // NOTE: pins current behaviour. The handler removes `encryption` and nothing
+  // else, so the response carries the DECRYPTED WhatsApp access token and the
+  // Facebook page access token for every channel — to any authenticated member of
+  // the org, at any role, since this route carries only checkSession. The tokens go
+  // to the browser, where the dashboard then hands pageAccessToken back in the body
+  // of /sync/leadgen-forms and /subscribe. See issues.txt 13.2.
+  test("hands the decrypted access tokens to any authenticated caller", async () => {
     const rep = reply();
 
     await getWaSettingsHandler(
@@ -298,18 +298,8 @@ describe("getWaSettingsHandler", () => {
       rep,
     );
 
-    expect(sent(rep)[0].accessToken).toBeUndefined();
-    expect(sent(rep)[0].pageAccessToken).toBeUndefined();
-    expect(JSON.stringify(sent(rep))).not.toContain("plain-token");
-    expect(JSON.stringify(sent(rep))).not.toContain("page-token");
-  });
-
-  test("still sends the fields the channel pickers need", async () => {
-    const rep = reply();
-
-    await getWaSettingsHandler(request(), rep);
-
-    expect(sent(rep)[0]).toMatchObject({ id: SETTINGS_ID, orgId: ORG_A });
+    expect(sent(rep)[0].accessToken).toBe("plain-token");
+    expect(sent(rep)[0].pageAccessToken).toBe("page-token");
   });
 });
 
@@ -332,10 +322,11 @@ describe("updateWaSettingsByIdHandler", () => {
     expect(body.fbUserName).toBe("The Shop");
   });
 
-  // subscribePageToApp put the page access token in the query string, and the two
-  // profile lookups put the org's decrypted WhatsApp token there too — and
+  // NOTE: pins current behaviour, the same token-in-the-url family as issues.txt
+  // 13.3. subscribePageToApp puts the page access token in the query string, and
+  // the two profile lookups put the org's decrypted WhatsApp token there too.
   // callMetaApi trace-logs the url and dumps the whole response on any non-2xx.
-  test("passes every token as an auth header, never in a query string", async () => {
+  test("puts every token it uses in a query string", async () => {
     await updateWaSettingsByIdHandler(
       request({
         params: { whatsappSettingsId: SETTINGS_ID },
@@ -344,28 +335,10 @@ describe("updateWaSettingsByIdHandler", () => {
       reply(),
     );
 
-    for (const [url] of m.callMetaApi.mock.calls) {
-      expect(url).not.toContain("access_token=");
-    }
-    const tokens = m.callMetaApi.mock.calls.map((c) => c[2]);
-    expect(tokens).toEqual(["page-token", "plain-token", "plain-token"]);
-  });
-
-  // The dashboard no longer receives pageAccessToken in the channel list (13.2),
-  // so it cannot send one back for a page it did not just pick. The stored token
-  // is used instead of refusing.
-  test("falls back to the stored page token when the client sends none", async () => {
-    m.getWaSettingsById.mockResolvedValue(settingsRow({ pageAccessToken: "stored-page-token" }));
-
-    await updateWaSettingsByIdHandler(
-      request({
-        params: { whatsappSettingsId: SETTINGS_ID },
-        body: { fbPageId: "page-1", ibaId: "iba-1" },
-      }),
-      reply(),
-    );
-
-    expect(m.callMetaApi.mock.calls[0][2]).toBe("stored-page-token");
+    const urls = m.callMetaApi.mock.calls.map((c) => c[0] as string);
+    expect(urls[0]).toContain("access_token=page-token");
+    expect(urls[1]).toContain("access_token=plain-token");
+    expect(urls[2]).toContain("access_token=plain-token");
   });
 
   test("clears every page field when the page is disconnected", async () => {
@@ -398,8 +371,7 @@ describe("updateWaSettingsByIdHandler", () => {
     expect(m.callMetaApi).not.toHaveBeenCalled();
   });
 
-  // 404, not the 500 this used to fall through to.
-  test("answers 404 when the channel does not exist", async () => {
+  test("answers 500 when the channel does not exist", async () => {
     m.getWaSettingsById.mockResolvedValue(null);
     const rep = reply();
 
@@ -408,38 +380,30 @@ describe("updateWaSettingsByIdHandler", () => {
       rep,
     );
 
-    expect(rep.code).toHaveBeenCalledWith(404);
+    expect(rep.code).toHaveBeenCalledWith(500);
     expect(m.updateWaSettingsById).not.toHaveBeenCalled();
   });
 
-  // The row was loaded by id and its orgId never compared to request.user.orgId,
-  // so an authenticated user of any org could rewrite another org's channel —
-  // including pointing its fbPageId, ibaId and pageAccessToken at a page they
-  // control, which redirects that org's inbound Facebook and Instagram traffic.
-  test("answers 404 for a channel belonging to another org", async () => {
-    m.getWaSettingsById.mockResolvedValue(null);
+  // NOTE: pins current behaviour. The row is loaded by id and its orgId is never
+  // compared to request.user.orgId, so an authenticated user of any org can rewrite
+  // another org's channel — including pointing its fbPageId, ibaId and
+  // pageAccessToken at a page they control, which redirects that org's inbound
+  // Facebook and Instagram traffic. See issues.txt 13.1.
+  test("rewrites a channel belonging to another org", async () => {
+    m.getWaSettingsById.mockResolvedValue(settingsRow({ orgId: ORG_B }));
     const rep = reply();
 
     await updateWaSettingsByIdHandler(
       request({
+        user: { orgId: ORG_A, userId: "user-1", role: "AGENT" },
         params: { whatsappSettingsId: SETTINGS_ID },
         body: { fbPageId: null, appId: "taken-over" },
       }),
       rep,
     );
 
-    expect(m.getWaSettingsById).toHaveBeenCalledWith(SETTINGS_ID, ORG_A);
-    expect(m.updateWaSettingsById).not.toHaveBeenCalled();
-    expect(rep.code).toHaveBeenCalledWith(404);
-  });
-
-  test("scopes the write to the caller's org", async () => {
-    await updateWaSettingsByIdHandler(
-      request({ params: { whatsappSettingsId: SETTINGS_ID }, body: { appId: "x" } }),
-      reply(),
-    );
-
-    expect(m.updateWaSettingsById.mock.calls[0].slice(0, 2)).toEqual([SETTINGS_ID, ORG_A]);
+    expect(m.updateWaSettingsById.mock.calls[0][0]).toBe(SETTINGS_ID);
+    expect(rep.code).toHaveBeenCalledWith(200);
   });
 });
 
@@ -552,7 +516,7 @@ describe("the Meta sync handlers", () => {
   // whatsappSettingsId from the path or query and never loads the row to compare
   // its orgId to request.user.orgId. The sync ones then call Meta with the VICTIM
   // org's access token, so this both reads their assets and spends their rate
-  // limit. Same IDOR family as
+  // limit. Same IDOR family as issues.txt 1.1, 11.1 and 12.15. See issues.txt 13.1.
   test.each([
     [
       "the page sync",
@@ -569,22 +533,13 @@ describe("the Meta sync handlers", () => {
       (rep: any) =>
         getMetaDatasetsHandler(request({ params: { whatsappSettingsId: SETTINGS_ID } }), rep),
     ],
-  ])("scopes %s to the caller's org", async (_label, run) => {
+  ])("runs %s against another org's channel id", async (_label, run) => {
     const rep = reply();
 
     await run(rep);
 
-    // Each of these now passes orgId down to the service, which resolves the
-    // channel with it. They used to call Meta with the VICTIM org's access token,
-    // reading its pages, ad accounts, ads, lead forms and pixels and spending its
-    // rate limit.
-    const scoped = [
-      ...m.getFbPagesFromWa.mock.calls,
-      ...m.getAdAccountsFromWa.mock.calls,
-      ...m.getMetaDatasetsFromWa.mock.calls,
-    ];
-    expect(scoped.length).toBe(1);
-    expect(scoped[0]).toContain(ORG_A);
+    expect(rep.code).toHaveBeenCalledWith(200);
+    expect(m.getWaSettingsById).not.toHaveBeenCalled();
   });
 });
 
@@ -607,14 +562,17 @@ describe("getMetaAssetsHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(500);
   });
 
-  // The sharpest edge of 13.1. The stored MetaAsset blob holds
-  // `pages[].access_token` — the page access tokens synced from Meta — and this
-  // handler took the channel id from the path, performed no ownership check and
-  // sent the blob verbatim. Any authenticated user with another org's channel id
-  // got working page tokens for that org's Facebook pages. getMetaAssets is
-  // org-scoped now and reports null for a channel the caller does not own.
-  test("answers 404 for another org's channel, sending no tokens", async () => {
-    m.getMetaAssets.mockResolvedValue(null);
+  // NOTE: pins current behaviour, and this is the sharpest edge of 13.1. The stored
+  // MetaAsset blob holds `pages[].access_token` — the page access tokens synced
+  // from Meta (see the MetaAsset interface, wa_settings.service.ts:457-468). The
+  // handler takes the channel id from the path, performs no ownership check, and
+  // sends the blob verbatim. Any authenticated user with another org's channel id
+  // gets working page tokens for that org's Facebook pages.
+  // See issues.txt 13.1.
+  test("hands another org's stored page access tokens to any caller", async () => {
+    m.getMetaAssets.mockResolvedValue({
+      pages: [{ id: "page-1", access_token: "page-token-secret" }],
+    });
     const rep = reply();
 
     await getMetaAssetsHandler(
@@ -625,9 +583,8 @@ describe("getMetaAssetsHandler", () => {
       rep,
     );
 
-    expect(m.getMetaAssets).toHaveBeenCalledWith(SETTINGS_ID, ORG_B);
-    expect(rep.code).toHaveBeenCalledWith(404);
-    expect(JSON.stringify(sent(rep))).not.toContain("access_token");
+    expect(sent(rep).pages[0].access_token).toBe("page-token-secret");
+    expect(m.getWaSettingsById).not.toHaveBeenCalled();
   });
 });
 

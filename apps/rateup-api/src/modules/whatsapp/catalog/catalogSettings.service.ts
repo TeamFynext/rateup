@@ -150,9 +150,9 @@ async function checkFlowStatusFromMeta(
 }
 
 // ─── Get catalog settings ──────────────────────────────────────────────────────
-export async function getCatalogSettings(catalogId: string, orgId: string) {
-  const catalog = await prisma.whatsappCatalog.findFirst({
-    where: { catalogId, orgId },
+export async function getCatalogSettings(catalogId: string) {
+  const catalog = await prisma.whatsappCatalog.findUnique({
+    where: { catalogId },
     select: {
       catalogId: true,
       orgId: true,
@@ -170,8 +170,7 @@ export async function getCatalogSettings(catalogId: string, orgId: string) {
       deliveryOptions: true,
     },
   });
-  // Same message whether the id does not exist or belongs to another org.
-  if (!catalog) throw new Error("Catalog not found");
+  if (!catalog) throw new Error(`Catalog ${catalogId} not found`);
 
   // ── Auto-sync: if flow is under review or submitting, check Meta for updates ──
   let liveFlowStatus = catalog.addressFlowStatus;
@@ -193,22 +192,7 @@ export async function getCatalogSettings(catalogId: string, orgId: string) {
 }
 
 // Update catalog settings
-export async function updateCatalogSettings(
-  catalogId: string,
-  orgId: string,
-  data: UpdateCatalogSettingsSchema,
-) {
-  // Ownership confirmed before the write: these are commerce settings (payment method,
-  // delivery charges, address collection), so another org rewriting them is a real
-  // change to how that org takes money.
-  const owned = await prisma.whatsappCatalog.findFirst({
-    where: { catalogId, orgId },
-    select: { catalogId: true },
-  });
-  if (!owned) {
-    throw new Error("Catalog not found");
-  }
-
+export async function updateCatalogSettings(catalogId: string, data: UpdateCatalogSettingsSchema) {
   return await prisma.whatsappCatalog.update({
     where: { catalogId },
     data: {
@@ -509,10 +493,6 @@ export function calculateOrderTotal(
 ): number {
   const itemsTotal = products.reduce((sum: number, p) => {
     const price = parseFloat(String(p.price ?? "0")) || 0;
-    // parseInt, not parseFloat, is deliberate: WhatsApp catalog orders arrive from Meta
-    // with whole-unit quantities, so a fraction cannot currently reach here. Switch to
-    // parseFloat only if something is ever sold by weight or length — it changes order
-    // totals, so it is a money-affecting change, not a tidy-up.
     const qty = parseInt(String(p.quantity ?? "1")) || 1;
     return sum + price * qty;
   }, 0);

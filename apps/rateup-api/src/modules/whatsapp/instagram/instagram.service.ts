@@ -14,10 +14,9 @@ export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
   const { pageAccessToken } = waSettings;
-  const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user`;
-  const res = await callMetaApi(url, "GET", pageAccessToken);
-  // trace, not info: this is the customer's whole Instagram profile.
-  log.trace("Instagram user details: %o", res.data);
+  const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user&access_token=${pageAccessToken}`;
+  const res = await callMetaApi(url, "GET");
+  log.info("Instagram user details: %o", res.data);
   return res.data as {
     name: string;
     username: string;
@@ -29,22 +28,9 @@ export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
   };
 }
 
-export async function handleInstagramWebhook(
-  data: InstagramWebhookBody,
-): Promise<{ processed: number; failed: number }> {
-  let processed = 0;
-  let failed = 0;
-
+export async function handleInstagramWebhook(data: InstagramWebhookBody) {
   for (const entry of data.entry) {
-    let waSettings;
-    try {
-      waSettings = await getWaSettingsByIbaId(entry.id);
-    } catch (error) {
-      log.error({ err: error, ibaId: entry.id }, "[Instagram] Failed to load settings for account");
-      failed++;
-      continue;
-    }
-
+    const waSettings = await getWaSettingsByIbaId(entry.id);
     if (!waSettings) {
       log.trace("No instagram settings found for instagram business account id: %s", entry.id);
       continue;
@@ -64,13 +50,7 @@ export async function handleInstagramWebhook(
         if (change.field === "comments" || change.field === "live_comments") {
           const event =
             change.field === "live_comments" ? InstagramEvent.LIVE_COMMENT : InstagramEvent.COMMENT;
-          try {
-            await handleInstagramComment(change.value, event, settings);
-            processed++;
-          } catch (error) {
-            log.error({ err: error, ibaId, event }, "[Instagram] Failed to handle comment");
-            failed++;
-          }
+          await handleInstagramComment(change.value, event, settings);
         }
       }
     }
@@ -84,49 +64,30 @@ export async function handleInstagramWebhook(
       if (!event) {
         continue;
       }
-
-      const currentEventData = {
-        ...data,
-        entry: [
-          {
-            ...entry,
-            messaging: [messaging],
-          },
-        ],
-      } as InstagramWebhookBody;
-
-      try {
-        switch (event) {
-          case InstagramEvent.MESSAGE:
-            await handleInstagramMessages(currentEventData, settings);
-            break;
-          case InstagramEvent.POSTBACK:
-            await handleInstagramPostback(currentEventData, settings);
-            break;
-          case InstagramEvent.REFERRAL:
-            await handleInstagramReferral(currentEventData, settings);
-            break;
-          case InstagramEvent.STORY_MENTION:
-            await handleInstagramStoryMentionRule(messaging, settings);
-            break;
-          case InstagramEvent.MESSAGE_REACTION:
-            await handleInstagramMessageReaction(currentEventData, settings);
-            break;
-          case InstagramEvent.MESSAGE_SEEN:
-            await handleInstagramMessageSeen(currentEventData);
-            break;
-          default:
-            log.warn("Unhandled event: %s", event);
-        }
-        processed++;
-      } catch (error) {
-        log.error({ err: error, ibaId, event }, "[Instagram] Failed to handle event");
-        failed++;
+      switch (event) {
+        case InstagramEvent.MESSAGE:
+          await handleInstagramMessages(data, settings);
+          break;
+        case InstagramEvent.POSTBACK:
+          await handleInstagramPostback(data, settings);
+          break;
+        case InstagramEvent.REFERRAL:
+          await handleInstagramReferral(data, settings);
+          break;
+        case InstagramEvent.STORY_MENTION:
+          await handleInstagramStoryMentionRule(messaging, settings);
+          break;
+        case InstagramEvent.MESSAGE_REACTION:
+          await handleInstagramMessageReaction(data, settings);
+          break;
+        case InstagramEvent.MESSAGE_SEEN:
+          await handleInstagramMessageSeen(data);
+          break;
+        default:
+          log.warn("Unhandled event: %s", event);
       }
     }
   }
-
-  return { processed, failed };
 }
 
 export async function handleInstagramComment(
@@ -137,11 +98,6 @@ export async function handleInstagramComment(
   const { orgId, ibaId } = waSettings;
   const { id: commentId, text, from, created_time } = comment;
   const igsId = from.id;
-
-  if (igsId === ibaId) {
-    log.trace("[Instagram] Skipping the business's own comment %s", commentId);
-    return;
-  }
 
   log.info(
     `[Instagram] Received ${event} from igsId ${igsId} (${from.username}): "${text}" (comment: ${commentId})`,
@@ -239,29 +195,19 @@ export async function handleInstagramMessages(
     return;
   }
   const { mid } = message;
-  // Echoes are already dropped by getInstagramWebhookEvent (12.6); kept as a
-  // second line of defence for direct callers.
   if (message.is_echo) return;
 
-  // Storage guarded separately from the rules, as handleInstagramComment does.
-  // It used to sit outside the try, so a failed write escaped the handler and —
-  // before 12.2 — abandoned the rest of the batch. It is rethrown so the webhook
-  // still counts the event as failed and Meta retries.
-  try {
-    await handleWaMessages(
-      "receive",
-      data.entry[0].messaging[0],
-      sender.id,
-      orgId,
-      PlatformType.INSTAGRAM,
-      ibaId,
-      undefined,
-      mid,
-    );
-  } catch (error) {
-    log.error({ err: error }, "[Instagram] Error storing message");
-    throw error;
-  }
+  // Handle message storage
+  await handleWaMessages(
+    "receive",
+    data.entry[0].messaging[0],
+    sender.id,
+    orgId,
+    PlatformType.INSTAGRAM,
+    ibaId,
+    undefined,
+    mid,
+  );
 
   try {
     await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
@@ -286,11 +232,6 @@ export async function handleInstagramPostback(
 
   if (!postback?.payload) {
     log.warn("No postback payload in Instagram event");
-    return;
-  }
-
-  if (!sender?.id) {
-    log.warn("[Instagram] Postback event with no sender; skipping");
     return;
   }
 
@@ -325,9 +266,7 @@ export async function handleInstagramPostback(
       platform: "INSTAGRAM",
     });
   } catch (error) {
-    // sender.id is safe here — it is guarded above — but the id is captured into
-    // the log context rather than interpolated, so the catch cannot itself throw.
-    log.error({ err: error, senderId: sender?.id }, "[Instagram] Error handling postback");
+    log.error({ err: error }, `[Instagram] Error handling postback from user ${sender.id}`);
   }
 }
 
@@ -381,7 +320,7 @@ export async function handleInstagramReferral(
       platform: "INSTAGRAM",
     });
   } catch (error) {
-    log.error({ err: error, senderId: sender?.id }, "[Instagram] Error handling referral");
+    log.error({ err: error }, `[Instagram] Error handling referral from user ${sender.id}`);
   }
 }
 
@@ -390,10 +329,6 @@ export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {
   const { timestamp, read } = messaginObj;
   if (!read) {
     log.warn("[Instagram] Message-seen event with no read receipt payload; skipping");
-    return;
-  }
-  if (!read.mid) {
-    log.warn("[Instagram] Read receipt carries no message id; skipping");
     return;
   }
   const seentime = new Date(timestamp).toISOString();
@@ -409,44 +344,36 @@ export async function handleInstagramMessageReaction(
   waSettings: { orgId: string; ibaId: string },
 ) {
   const messaginObj = data.entry[0].messaging[0];
-  const { sender, reaction } = messaginObj;
+  const { sender } = messaginObj;
   const { orgId, ibaId } = waSettings;
-  await handleWaMessages(
-    "receive",
-    messaginObj,
-    sender.id,
-    orgId,
-    PlatformType.INSTAGRAM,
-    ibaId,
-    undefined,
-    reaction?.mid,
-  );
+  await handleWaMessages("receive", messaginObj, sender.id, orgId, PlatformType.INSTAGRAM, ibaId);
 }
 
 interface MetaFbPage {
   id: string;
   name: string;
   access_token: string;
-  instagram_business_account?: { id: string };
+  // Real Meta API responses can omit this for a page with no linked Instagram
+  // account, which the existing (unguarded) access below does not handle — see
+  // the "throws when any one page has no Instagram account attached" pinning
+  // test. Not fixed here: purely a type annotation for the current behaviour.
+  instagram_business_account: { id: string };
 }
 
-export async function getFbPages(settingsId: string, orgId: string) {
-  const waSettings = await getWaSettingsById(settingsId, orgId);
+export async function getFbPages(settingsId: string) {
+  const waSettings = await getWaSettingsById(settingsId);
   if (!waSettings) {
     throw new Error(`No WhatsApp settings found for id ${settingsId}`);
   }
   const { accessToken } = waSettings;
   const res = await callMetaApi(
-    `/me/accounts?fields=id,name,access_token,instagram_business_account`,
+    `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`,
     "GET",
-    accessToken,
   );
-  return (res.data.data as MetaFbPage[])
-    .filter((i) => Boolean(i.instagram_business_account?.id))
-    .map((i) => ({
-      fbPageId: i.id,
-      ibaId: i.instagram_business_account!.id,
-      pageAccessToken: i.access_token,
-      fbPageName: i.name,
-    }));
+  return res.data.data.map((i: MetaFbPage) => ({
+    fbPageId: i.id,
+    ibaId: i.instagram_business_account.id,
+    pageAccessToken: i.access_token,
+    fbPageName: i.name,
+  }));
 }

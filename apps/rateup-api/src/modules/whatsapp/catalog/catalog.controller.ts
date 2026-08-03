@@ -24,26 +24,15 @@ import {
   createAddressFlow,
 } from "./catalogSettings.service.js";
 
-/**
- * The services throw "Catalog not found" both for an id that does not exist and for one
- * belonging to another org — the two are deliberately indistinguishable to the caller.
- */
-function isCatalogNotFound(e: unknown): boolean {
-  return e instanceof Error && e.message === "Catalog not found";
-}
-
 export async function deleteCatalogHandler(
   request: FastifyRequest<{ Params: CatalogIdParam }>,
   reply: FastifyReply,
 ) {
   try {
     const { catalogId } = request.params;
-    await deleteWaCatalog(catalogId, request.user.orgId);
+    await deleteWaCatalog(catalogId);
     reply.code(200).send();
   } catch (e) {
-    if (isCatalogNotFound(e)) {
-      return reply.code(404).send({ error: "Catalog not found" });
-    }
     log.error(e);
     reply.code(500).send(e);
   }
@@ -63,18 +52,11 @@ export async function updateCatalogHandler(
     if (wabaId) {
       await updateConnectWaCatalog(wabaId, orgId, catalogId, syncWithMeta !== false);
     }
-    // `rest` is an object literal from destructuring, so it is always truthy — a body
-    // carrying nothing but wabaId used to trigger an empty update, which is a pointless
-    // write and would 404 for a catalog id that does not exist even though the caller
-    // asked for nothing.
-    if (Object.keys(rest).length > 0) {
-      await updateWaCatalog(catalogId, orgId, rest);
+    if (rest) {
+      await updateWaCatalog(catalogId, rest);
     }
     reply.code(200).send();
   } catch (e) {
-    if (isCatalogNotFound(e)) {
-      return reply.code(404).send({ error: "Catalog not found" });
-    }
     log.error(e);
     reply.code(500).send(e);
   }
@@ -86,10 +68,7 @@ export async function getWaCatalogInfoHandler(
 ) {
   try {
     const { catalogId } = request.params;
-    const catalog = await getWaCatalog(catalogId, request.user.orgId);
-    if (!catalog) {
-      return reply.code(404).send({ error: "Catalog not found" });
-    }
+    const catalog = await getWaCatalog(catalogId);
     reply.code(200).send(catalog);
   } catch (e) {
     log.error(e);
@@ -136,10 +115,7 @@ export async function getConnectedWaCatalogHandler(
   reply: FastifyReply,
 ) {
   try {
-    const catalog = await getConnectedWaCatalog(
-      request.params.whatsappSettingsPhoneId,
-      request.user.orgId,
-    );
+    const catalog = await getConnectedWaCatalog(request.params.whatsappSettingsPhoneId);
     reply.code(200).send(catalog);
   } catch (e) {
     log.error(e);
@@ -152,7 +128,7 @@ export async function disconnectCatalogFromWabaHandler(
   reply: FastifyReply,
 ) {
   try {
-    const catalog = await disconnectCatalogFromWaba(request.body, request.user.orgId);
+    const catalog = await disconnectCatalogFromWaba(request.body);
     reply.code(200).send(catalog);
   } catch (e) {
     log.error(e);
@@ -168,12 +144,9 @@ export async function getCatalogSettingsHandler(
 ) {
   try {
     const { catalogId } = request.params;
-    const settings = await getCatalogSettings(catalogId, request.user.orgId);
+    const settings = await getCatalogSettings(catalogId);
     reply.code(200).send(settings);
   } catch (e) {
-    if (isCatalogNotFound(e)) {
-      return reply.code(404).send({ error: "Catalog not found" });
-    }
     log.error(e);
     reply.code(500).send({ error: String(e) });
   }
@@ -188,12 +161,9 @@ export async function updateCatalogSettingsHandler(
 ) {
   try {
     const { catalogId } = request.params;
-    const updated = await updateCatalogSettings(catalogId, request.user.orgId, request.body);
+    const updated = await updateCatalogSettings(catalogId, request.body);
     reply.code(200).send(updated);
   } catch (e) {
-    if (isCatalogNotFound(e)) {
-      return reply.code(404).send({ error: "Catalog not found" });
-    }
     log.error(e);
     reply.code(500).send({ error: String(e) });
   }

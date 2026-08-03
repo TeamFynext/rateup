@@ -2,8 +2,10 @@ import { Survey, WaFlow } from "../../../../generated/prisma/client.js";
 import { WaSendMessageBody } from "../../../types/whatsapp.types.js";
 import {
   LDResponse,
+  LogicCondition,
   QuestionType as qt,
   SmileyResponse,
+  SubscriptionFeaturePathName,
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
@@ -18,8 +20,8 @@ import { log } from "../../../utils/logger.js";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
 import prisma from "../../../utils/prisma.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 
 interface generateFlowMessageDataProps {
   to: string;
@@ -45,7 +47,7 @@ export function generateFlowMessageData({
 
   let message: Partial<WaSendMessageBody["interactive"]> = {};
 
-  let { body, header, cta, footer, headerImage } = dbFlow.templateMessage ?? {};
+  let { body, header, cta, footer, headerImage } = dbFlow.templateMessage;
 
   // setting defaults for old waFlow
   if (!body) {
@@ -258,6 +260,9 @@ export function parseFlowResponse({
     case qt.DDSS: {
       const el = getElementJson(flowJson, elementName);
       if (!el?.["data-source"]) {
+        // Previously crashed with a raw TypeError (`el` / `data-source` used
+        // unchecked) instead of reporting the same "choice not found" case
+        // handled just below. See issues.txt.
         log.error("Element or data-source not found for %s", elementName);
         return undefined;
       }
@@ -281,7 +286,7 @@ export function parseFlowResponse({
     }
     default:
       log.error(`Unhandled question type ${qType}`);
-      return undefined;
+      return response;
   }
 }
 export function parseFlowResponseV2(
@@ -290,6 +295,13 @@ export function parseFlowResponseV2(
   // string[] for CheckboxGroup) — discriminated below by the switch, same as
   // the untyped param this replaces.
   response: WaFlowRawResponse,
+  // Callers only ever call this for question types that carry choices when a
+  // data-source actually exists on the element; intentionally required
+  // (not optional, unlike Question2["data-source"]) so a caller passing an
+  // element with none still surfaces as a crash rather than silently
+  // resolving to `undefined` — see issues.txt (pinned by
+  // flow.utils.test.ts's "throws when the element it is resolving against
+  // has no options").
   dataSource: Array<{ title: string; id: string }>,
 ) {
   log.trace({ response }, "Parsing response for element %s\nresponse => %o");
@@ -788,10 +800,9 @@ export function generateDataSourceFromQuestion(q: Question) {
  * These ids must be removed before sending the flowJson to whatsapp
  */
 export function injectIdToFlowJson(json: WaFlowJson) {
-  const copy: WaFlowJson = JSON.parse(JSON.stringify(json));
   const ids = [];
   for (const element of waFlowFormElementIterator({
-    flowJson: copy,
+    flowJson: json,
     includeFooter: true,
     onlyInteractive: false,
   })) {
@@ -802,16 +813,15 @@ export function injectIdToFlowJson(json: WaFlowJson) {
       ids.push(element.id);
     }
   }
-  return copy;
+  return json;
 }
 
 /**
  * Removes auto-generated (by us for internal use) ids from flowJson
  */
 export function removeIdFromFlowJson(json: WaFlowJson) {
-  const copy: WaFlowJson = JSON.parse(JSON.stringify(json));
   for (const element of waFlowFormElementIterator({
-    flowJson: copy,
+    flowJson: json,
     includeFooter: true,
     onlyInteractive: false,
   })) {
@@ -819,13 +829,35 @@ export function removeIdFromFlowJson(json: WaFlowJson) {
       delete element.id;
     }
   }
-  return copy;
+  return json;
 }
 
 export function getFlowFormElementNameFromQuestionId(qId: string, map: unknown) {
   if (!map || typeof map !== "object") return undefined;
   for (const [key, value] of Object.entries(map as Record<string, { questionId?: string }>)) {
     if (value?.questionId === qId) return key;
+  }
+}
+
+export function validateFlowLogic(
+  userResponse: string | number,
+  condition: LogicCondition,
+  response: string,
+): boolean {
+  try {
+    switch (condition) {
+      case LogicCondition.Equals:
+        return userResponse === response;
+      case LogicCondition.NotEquals:
+        return userResponse !== response;
+      case LogicCondition.IncludesAnyOf:
+
+      default:
+        return false;
+    }
+  } catch (error) {
+    log.info(`Failed to validate logic: ${error}`);
+    return false;
   }
 }
 
@@ -850,6 +882,9 @@ export function parseResponseFromCurrentScreenResponse(
     if (!rawResponse) continue;
     const question = getQuestionFromFlowElementId(elementName, flowJson, questions, flowMap);
     if (!question) {
+      // Previously crashed with a raw TypeError (`question.id`/`question.type`
+      // used unchecked below) instead of skipping the unresolved answer. See
+      // issues.txt.
       log.error("Question not found for flow element %s", elementName);
       continue;
     }
@@ -860,10 +895,6 @@ export function parseResponseFromCurrentScreenResponse(
       elementName,
       response: rawResponse,
     });
-    if (parsedResponse === undefined) {
-      log.error("Could not parse the answer for flow element %s", elementName);
-      continue;
-    }
 
     const questionResponse: QuestionResponse = {
       questionId: question.id,
@@ -905,53 +936,35 @@ export function parseResponseFromCurrentScreenResponseV2(
 
 export function sanitizeScreenData(data: WaFlowJson) {
   data.screens.forEach((screen) => {
-    sanitizeScreenChildren(screen.layout.children);
+    screen.layout.children.forEach((child) => {
+      delete child.id;
+      delete child.metaType;
+      delete child.enableNpsAnalytics;
+      delete child.googleReview;
+      if (child.url) {
+        child["on-click-action"] = {
+          name: "open_url",
+          url: child.url,
+        };
+        delete child.url;
+      }
+    });
   });
   return data;
 }
-
-function sanitizeScreenChildren(children: WaFlowForm[] | undefined) {
-  children?.forEach((child) => {
-    delete child.id;
-    delete child.metaType;
-    delete child.enableNpsAnalytics;
-    delete child.googleReview;
-    if (child.url) {
-      child["on-click-action"] = {
-        name: "open_url",
-        url: child.url,
-      };
-      delete child.url;
-    }
-    sanitizeScreenChildren(child.children);
-  });
-}
+// Recursively strips empty-string/falsy fields (except `visible`) from a
+// legacy v2 flow-json object tree — genuinely dynamic, arbitrarily-shaped
+// JSON discriminated only by `typeof`/truthiness at runtime.
 export function removeEmptyStrings(obj: object) {
-  if (Array.isArray(obj)) {
-    // Arrays are filtered, not `delete`d into: deleting an index leaves a hole,
-    // and JSON.stringify — which updateFlowJsonInWa does next — renders a hole
-    // as null, so ["a", "", "b"] reached Meta as ["a", null, "b"].
-    const kept = obj.filter((entry) => !isEmptyFlowJsonValue(entry));
-    for (const entry of kept) {
-      if (entry && typeof entry === "object") removeEmptyStrings(entry);
-    }
-    obj.length = 0;
-    obj.push(...kept);
-    return;
-  }
   const record = obj as Record<string, unknown>;
   for (const key in record) {
     const value = record[key];
     if (value && typeof value === "object") {
       removeEmptyStrings(value);
-    } else if (isEmptyFlowJsonValue(value)) {
+    } else if ((value === "" || !value) && key !== "visible") {
       delete record[key];
     }
   }
-}
-
-function isEmptyFlowJsonValue(value: unknown) {
-  return value === null || value === undefined || value === "";
 }
 /**
  * Lifts each v2 element's inline `header` out into its own TextBody element,
@@ -1045,6 +1058,10 @@ export function transformFlowAndLogicJumps(
                 return `(\${form.${condition.field}} ${condition.operator} ${value})`;
               })
               .join(" && "),
+            // `then`/`else` are optional in the underlying shape (a jump
+            // missing either previously crashed here with a raw TypeError
+            // instead of just contributing no branches — see issues.txt).
+            // eslint-disable-next-line unicorn/no-thenable
             then: (element.then ?? [])
               .map((action) => {
                 const childIndex = screenChildren.findIndex((child) => child.id === action);
@@ -1084,8 +1101,36 @@ export function transformFlowAndLogicJumps(
 }
 
 export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply: FastifyReply) {
-  return await enforceWhatsappCountLimit(request, reply, {
-    label: "Flows",
-    count: (orgId) => prisma.waFlow.count({ where: { orgId } }),
-  });
+  try {
+    let orgId = request.user.orgId;
+    const subscription = request.subscription;
+    if (!subscription) throw new Error("Subscription not found");
+
+    const flowCount = await prisma.waFlow.count({
+      where: {
+        orgId: orgId,
+      },
+    });
+
+    // SubscriptionFeatures[Whatsapp] has no top-level `count` today (only
+    // `conversation.count`, see subscription.data.ts) — this per-org WhatsApp
+    // Flow count limit was never actually modeled, so this check is
+    // currently always false / a no-op. See issues.txt. Typed via the
+    // generic (rather than an assertion on the input) to describe the shape this
+    // code expects without asserting it's really there.
+    const whatsappFlowFeatures = getNestedProperty<{ count?: { max: number } }>(
+      subscription.features,
+      SubscriptionFeaturePathName.Whatsapp,
+    );
+    if (flowCount >= (whatsappFlowFeatures?.count?.max ?? Infinity)) {
+      throw new Error(
+        `You have reached the maximum limit of ${whatsappFlowFeatures?.count?.max} Flows.`,
+      );
+    }
+  } catch (e) {
+    return reply.code(403).send({
+      message: e instanceof Error ? e.message : String(e),
+      displayMessageInClient: true,
+    });
+  }
 }

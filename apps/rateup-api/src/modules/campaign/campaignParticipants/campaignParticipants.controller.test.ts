@@ -9,11 +9,7 @@ vi.mock("./campaignParticipants.service.js", () => ({
   getCampaignParticipantsByCampaignIdPaginated: vi.fn(),
   multipleDeleteCampaignParticipant: vi.fn(),
 }));
-vi.mock("../../../utils/logger.js", () => ({
-  log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
-}));
 
-import { CampaignNotFoundError } from "../campaign.errors.js";
 import {
   createCampaignParticipants,
   createCampaignParticipantsFromContacts,
@@ -60,7 +56,7 @@ function request(overrides: Record<string, unknown> = {}): any {
 }
 
 function reply() {
-  const rep: any = { code: vi.fn(() => rep), status: vi.fn(() => rep), send: vi.fn(() => rep) };
+  const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
   return rep;
 }
 
@@ -86,7 +82,7 @@ describe("adding participants", () => {
 
     await createCampaignParticipantsFromContactsHandler(request({ body }), rep);
 
-    expect(m.fromContacts).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, body);
+    expect(m.fromContacts).toHaveBeenCalledWith(CAMPAIGN_ID, body);
     expect(sent(rep)).toEqual({ count: 2 });
   });
 
@@ -95,7 +91,7 @@ describe("adding participants", () => {
 
     await createCampaignParticipantsFromGroupHandler(request({ body }), reply());
 
-    expect(m.fromGroup).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, body);
+    expect(m.fromGroup).toHaveBeenCalledWith(CAMPAIGN_ID, body);
   });
 
   test("adds from every source at once on the combined endpoint", async () => {
@@ -108,7 +104,7 @@ describe("adding participants", () => {
 
     await createCampaignParticipantsHandler(request({ body }), reply());
 
-    expect(m.create).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, body);
+    expect(m.create).toHaveBeenCalledWith(CAMPAIGN_ID, body);
   });
 
   test("refuses to copy from another campaign without a status to copy", async () => {
@@ -130,11 +126,12 @@ describe("adding participants", () => {
     expect(m.create).toHaveBeenCalled();
   });
 
-  // None of the three add handlers read request.user — the campaign id came from
-  // the path and the contact, group and campaign ids from the body, all unchecked.
-  // Combined with the unscoped lookups in the service, that is how another org's
-  // contacts ended up on a campaign that would message them.
-  test("all three add handlers carry the caller's org", async () => {
+  // NOTE: pins current behaviour. None of the three add handlers reads
+  // request.user — the campaign id comes from the path and the contact, group and
+  // campaign ids from the body, all unchecked. Combined with the unscoped lookups
+  // in campaignParticipants.service.ts, this is how another org's contacts end up
+  // on a campaign that will message them. See issues.txt 17.3.
+  test("none of the three add handlers consults who is asking", async () => {
     await createCampaignParticipantsFromContactsHandler(
       request({ body: { contactIds: ["c-1"] } }),
       reply(),
@@ -146,35 +143,21 @@ describe("adding participants", () => {
     await createCampaignParticipantsHandler(request({ body: { contactIds: [] } }), reply());
 
     for (const call of [m.fromContacts, m.fromGroup, m.create]) {
-      expect(call.mock.calls[0][1]).toBe(ORG_A);
+      expect(call.mock.calls[0]).not.toContain(ORG_A);
     }
   });
 
-  test("answers 404 when the campaign in the path is not the caller's", async () => {
-    m.fromContacts.mockRejectedValue(new CampaignNotFoundError());
-    const rep = reply();
-
-    await createCampaignParticipantsFromContactsHandler(
-      request({ body: { contactIds: ["c-1"] } }),
-      rep,
-    );
-
-    expect(rep.status).toHaveBeenCalledWith(404);
-  });
-
-  // No try/catch on any of the three, so a service failure escaped to fastify's
-  // default handler rather than becoming a reply.
-  test("answers 500 for a failure adding contacts, rather than letting it escape", async () => {
+  // NOTE: no try/catch on any of the three, so a service failure escapes to
+  // fastify's default handler. See issues.txt 17.6.
+  test("lets a failure adding contacts propagate", async () => {
     m.fromContacts.mockRejectedValue(new Error("db down"));
-    const rep = reply();
 
-    await createCampaignParticipantsFromContactsHandler(
-      request({ body: { contactIds: ["c-1"] } }),
-      rep,
-    );
-
-    expect(rep.status).toHaveBeenCalledWith(500);
-    expect(sent(rep).message).toBe("db down");
+    await expect(
+      createCampaignParticipantsFromContactsHandler(
+        request({ body: { contactIds: ["c-1"] } }),
+        reply(),
+      ),
+    ).rejects.toThrow("db down");
   });
 });
 
@@ -190,7 +173,7 @@ describe("listing participants", () => {
 
     await getCampaignParticipantsByCampaignIdHandler(request({ query }), rep);
 
-    expect(m.paginated).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, query);
+    expect(m.paginated).toHaveBeenCalledWith(CAMPAIGN_ID, query);
     expect(sent(rep).participants).toEqual([{ id: "p-1" }]);
   });
 
@@ -202,23 +185,21 @@ describe("listing participants", () => {
       rep,
     );
 
-    expect(m.byId).toHaveBeenCalledWith("p-1", ORG_A);
+    expect(m.byId).toHaveBeenCalledWith("p-1");
     expect(sent(rep)).toEqual({ id: "p-1" });
   });
 
-  // The participant lookup took the id from the path and nothing else, so a
-  // participant id was enough to read another org's contact name and number.
-  test("answers 404 for a participant belonging to another org", async () => {
-    m.byId.mockResolvedValue(null);
-    const rep = reply();
-
+  // NOTE: the participant lookup takes the id from the path and nothing else, so a
+  // participant id is enough to read another org's contact name and number.
+  // See issues.txt 17.3.
+  test("returns a participant without checking the campaign or the org", async () => {
     await getCampaignParticipantByIdHandler(
       request({ params: { campaignParticipantId: "another-orgs-participant" } }),
-      rep,
+      reply(),
     );
 
-    expect(m.byId).toHaveBeenCalledWith("another-orgs-participant", ORG_A);
-    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.byId).toHaveBeenCalledWith("another-orgs-participant");
+    expect(m.byId.mock.calls[0]).toHaveLength(1);
   });
 });
 
@@ -231,7 +212,7 @@ describe("removing participants", () => {
       rep,
     );
 
-    expect(m.deleteById).toHaveBeenCalledWith("p-1", ORG_A);
+    expect(m.deleteById).toHaveBeenCalledWith("p-1");
     expect(sent(rep)).toEqual({ id: "p-1" });
   });
 
@@ -240,36 +221,33 @@ describe("removing participants", () => {
 
     await multipleDeleteCampaignParticipantHandler(request({ body: { ids: ["p-1", "p-2"] } }), rep);
 
-    expect(m.multiDelete).toHaveBeenCalledWith(["p-1", "p-2"], ORG_A);
+    expect(m.multiDelete).toHaveBeenCalledWith(["p-1", "p-2"]);
     expect(sent(rep)).toEqual({ count: 2 });
   });
 
-  // The bulk delete caught its failure and sent the caught Error as the response
-  // body — with no status code, so fastify answered 200 with a body whose own
-  // properties are non-enumerable, i.e. `{}`. The caller was told the delete
-  // succeeded.
-  test("answers a failed bulk delete as a failure, naming what went wrong", async () => {
+  // NOTE: pins current behaviour. The bulk delete catches its failure and sends the
+  // caught Error as the response body — with no status code, so fastify answers 200
+  // with a body whose own properties are non-enumerable, i.e. {}. The caller is
+  // told the delete succeeded. See issues.txt 17.6.
+  test("answers a failed bulk delete as an empty success", async () => {
     m.multiDelete.mockRejectedValue(new Error("db down"));
     const rep = reply();
 
     await multipleDeleteCampaignParticipantHandler(request({ body: { ids: ["p-1"] } }), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(500);
-    expect(JSON.parse(JSON.stringify(sent(rep)))).toEqual({
-      message: "db down",
-      code: "INTERNAL_SERVER_ERROR",
-    });
+    expect(rep.code).not.toHaveBeenCalled();
+    expect(JSON.stringify(sent(rep))).toBe("{}");
   });
 
-  // The ids came straight from the body with no ownership check, so a list of
-  // another org's participant ids removed them from their campaign. The deleteMany
-  // is org-filtered now, so a foreign id simply matches nothing.
-  test("carries the caller's org into the bulk delete", async () => {
+  // NOTE: the ids come straight from the body with no ownership check, so a list of
+  // another org's participant ids removes them from their campaign.
+  // See issues.txt 17.3.
+  test("deletes any participant ids it is handed", async () => {
     await multipleDeleteCampaignParticipantHandler(
       request({ body: { ids: ["another-orgs-participant"] } }),
       reply(),
     );
 
-    expect(m.multiDelete).toHaveBeenCalledWith(["another-orgs-participant"], ORG_A);
+    expect(m.multiDelete).toHaveBeenCalledWith(["another-orgs-participant"]);
   });
 });

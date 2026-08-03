@@ -47,17 +47,6 @@ const updatePageVisitsOrLinkClicksReqParams = z.object({
   shortUrlId: z.string(),
 });
 
-const byIdParams = z.object({
-  // z.guid() rather than z.uuid(): the latter also enforces the RFC version and
-  // variant nibbles, which Postgres's uuid type does not, so a legacy id that
-  // the database accepts would have been refused here.
-  id: z.guid(),
-});
-
-const linkTypeParams = z.object({
-  linkType: z.enum(["web-survey", "whatsapp-survey"]),
-});
-
 const updatePageVisitsOrLinkClicksReqBody = z.object({
   resourceToBeUpdated: z.enum(["page-visit", "link-click"]),
   linkId: z.string().optional(),
@@ -70,8 +59,6 @@ type UpdatePageVisitsOrLinkClicksReqParams = z.infer<typeof updatePageVisitsOrLi
 type UpdatePageVisitsOrLinkClicksReqBody = z.infer<typeof updatePageVisitsOrLinkClicksReqBody>;
 
 export {
-  byIdParams,
-  linkTypeParams,
   linktreeBaseSchema,
   createLinktreeReqBody,
   getLinktreesResponse,

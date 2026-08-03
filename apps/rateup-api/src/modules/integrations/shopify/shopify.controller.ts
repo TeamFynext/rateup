@@ -10,8 +10,9 @@ import {
   handleShopifyAuthCallback,
   registerShopifyWebhook,
   registerWebhookByTopic,
+  sendShopifySurveyCronAction,
   updateShopifyIntegrationByOrgId,
-  claimUnownedShopifyIntegration,
+  updateShopifyIntegrationByShop,
   getFulfillmentOrders,
   createShopifyFulfillment,
 } from "./shopify.service.js";
@@ -25,7 +26,11 @@ import webhookHandlers, {
 } from "./shopify.handler.js";
 import { FRONTEND_URL } from "../../../utils/constants/constants.js";
 import { log } from "../../../utils/logger.js";
-import { createIntegration, updateIntegrationByName } from "../integrations.service.js";
+import {
+  createIntegration,
+  deleteIntegrationByName,
+  updateIntegrationByName,
+} from "../integrations.service.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { errorMessage } from "../../../utils/commonUtils.js";
 
@@ -111,18 +116,9 @@ export async function updateShopifyIntegrationByShopHandler(
     const integration = await getShopifyInfo(orgId);
     if (integration) {
       if (integration.credential.session.shop === shop) return reply.code(200).send("success");
-      // The org already has a different store connected. This used to delete that
-      // row and then claim the named shop regardless of who owned it; refusing is
-      // the safe order, since a failed claim can no longer drop a working
-      // connection. Disconnecting is an explicit action.
-      return reply
-        .code(409)
-        .send({ message: "Disconnect the current Shopify store before linking another" });
+      else await deleteIntegrationByName(IntegratedApps.shopify, orgId);
     }
-    const claimed = await claimUnownedShopifyIntegration(shop, orgId);
-    if (!claimed.count) {
-      return reply.code(409).send({ message: "This store is already linked to an organisation" });
-    }
+    await updateShopifyIntegrationByShop(shop, { orgId });
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);
@@ -319,6 +315,16 @@ export async function deleteIntegrationByShopHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error({ err: e }, "error deleting integration");
+    reply.code(500).send(e);
+  }
+}
+
+export async function testShopifyCronActionFnHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    await sendShopifySurveyCronAction();
+    reply.send("success");
+  } catch (e) {
+    log.error(e);
     reply.code(500).send(e);
   }
 }

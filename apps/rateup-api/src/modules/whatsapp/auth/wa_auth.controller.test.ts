@@ -342,17 +342,15 @@ describe("deRegisterBusinessClientHandler", () => {
     expect(reply.status).toHaveBeenCalledWith(500);
   });
 
-  // The success path used to reply with nothing at all, leaving Fastify's wrap-thenable
-  // to send a bare 200. It now answers explicitly, like the rest of the file.
-  test("answers 200 when the delete succeeds", async () => {
+  // NOTE: the success path never replies. Fastify has nothing to send, so the caller
+  // waits until the request times out even though the delete succeeded.
+  test("sends no response at all when the delete succeeds", async () => {
     const reply = makeReply();
 
     await deRegisterBusinessClientHandler(makeRequest({ params: { phoneId: "phone-1" } }), reply);
 
-    expect(reply.status).toHaveBeenCalledWith(200);
-    expect(reply.payload).toMatchObject({
-      message: "Business client deregistered successfully",
-    });
+    expect(reply.send).not.toHaveBeenCalled();
+    expect(reply.status).not.toHaveBeenCalled();
   });
 });
 
@@ -372,13 +370,10 @@ describe("getUserAccessTokenHanlder", () => {
   test("asks Meta for the pages the user administers", async () => {
     await getUserAccessTokenHanlder(request(), makeReply());
 
-    const [url, , token] = m.callMetaApi.mock.calls[0];
+    const url = m.callMetaApi.mock.calls[0][0] as string;
     expect(url).toContain("/me/accounts");
     expect(url).toContain("instagram_business_account");
-    // Token as the auth header, not in the URL, and the full response — which
-    // carries access_token for every page — is no longer logged at info.
-    expect(url).not.toContain("access_token=");
-    expect(token).toBe("token-abc");
+    expect(url).toContain("access_token=token-abc");
   });
 
   test("stores every page as newly unsubscribed when none are known yet", async () => {

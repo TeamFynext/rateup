@@ -12,7 +12,7 @@ vi.mock("../../../utils/prisma.js", () => ({
 import prisma from "../../../utils/prisma.js";
 import {
   assertWithinConversationLimit,
-  checkConversationLimitAvailable,
+  checkConversationLimitExceeded,
   ConversationLimitError,
 } from "./wasurvey.auth.js";
 
@@ -59,33 +59,33 @@ describe("ConversationLimitError", () => {
   });
 });
 
-describe("checkConversationLimitAvailable (monthly plan)", () => {
+describe("checkConversationLimitExceeded (monthly plan)", () => {
   test("is within the allowance below the limit", async () => {
     seed({ monthly: 200, max: 500 });
-    expect(await checkConversationLimitAvailable("org")).toBe(true);
+    expect(await checkConversationLimitExceeded("org")).toBe(true);
   });
 
   test("is exceeded exactly at the limit (>= is the cutoff)", async () => {
     seed({ monthly: 500, max: 500 });
-    expect(await checkConversationLimitAvailable("org")).toBe(false);
+    expect(await checkConversationLimitExceeded("org")).toBe(false);
   });
 
   test("is exceeded above the limit", async () => {
     seed({ monthly: 501, max: 500 });
-    expect(await checkConversationLimitAvailable("org")).toBe(false);
+    expect(await checkConversationLimitExceeded("org")).toBe(false);
   });
 });
 
-describe("checkConversationLimitAvailable (annual pooled plan)", () => {
+describe("checkConversationLimitExceeded (annual pooled plan)", () => {
   test("pools at max * 12 and uses the annual counter", async () => {
     // 5000 annual against a 500/mo plan → pool of 6000, still within.
     seed({ annual: 5000, monthly: 999999, max: 500, isAnnual: true });
-    expect(await checkConversationLimitAvailable("org")).toBe(true);
+    expect(await checkConversationLimitExceeded("org")).toBe(true);
   });
 
   test("is exceeded once the annual pool is reached", async () => {
     seed({ annual: 6000, max: 500, isAnnual: true });
-    expect(await checkConversationLimitAvailable("org")).toBe(false);
+    expect(await checkConversationLimitExceeded("org")).toBe(false);
   });
 });
 

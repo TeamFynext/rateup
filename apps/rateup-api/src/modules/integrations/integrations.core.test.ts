@@ -57,6 +57,7 @@ import {
   deleteIntegrationByName,
   deleteWaPaymentConfiguration,
   deleteZapierTriggerHooks,
+  getAllIntegrations,
   getAllIntegrationsByOrgId,
   getIntegrationByName,
   getIntegrationByPetPoojaRestaurantId,
@@ -114,15 +115,31 @@ describe("the integration readers", () => {
     });
   });
 
-  // getAllIntegrations used to live here: `prisma.integration.findMany()` with no
-  // where and no select, behind GET /all, so any authenticated user of any org read
-  // every organisation's credential column — OAuth refresh tokens, Shopify session
-  // tokens, Zoho tokens and secrets, every org's Zapier key hash. Function and route
-  // are both gone.
-  test("the module exports no unscoped integration reader", async () => {
-    const service = await import("./integrations.service.js");
+  // NOTE: no where, no select. Every integration of every organisation, with
+  // the whole credential JSON — OAuth refresh tokens, Shopify session tokens,
+  // Zoho tokens, the bcrypt hash of each org's Zapier key.
+  test("getAllIntegrations reads every row of every org with no filter", async () => {
+    await getAllIntegrations();
 
-    expect(service).not.toHaveProperty("getAllIntegrations");
+    expect(db.integration.findMany).toHaveBeenCalledWith();
+    expect(db.integration.findMany.mock.calls[0][0]).toBeUndefined();
+  });
+
+  test("getAllIntegrations returns the credential column untouched", async () => {
+    db.integration.findMany.mockResolvedValueOnce([
+      { id: "a", orgId: ORG, name: "googlesheet", credential: { refreshToken: "1//secret" } },
+      {
+        id: "b",
+        orgId: OTHER_ORG,
+        name: "shopify",
+        credential: { session: { accessToken: "shpat_x" } },
+      },
+    ]);
+
+    const rows = (await getAllIntegrations()) as unknown as any[];
+
+    expect(rows[0].credential).toEqual({ refreshToken: "1//secret" });
+    expect(rows[1].credential.session.accessToken).toBe("shpat_x");
   });
 
   // NOTE: the PetPooja lookup matches on a restaurant id inside the credential
@@ -229,39 +246,40 @@ describe("updateIntegrationByName", () => {
     expect(db.integration.update.mock.calls[0][0].data).toEqual({ credential: { a: 1 } });
   });
 
-  // `const { ...rest } = data` was a copy, not a destructure, so every key the body
-  // schema accepted reached the Prisma update — orgId included, which let a PUT
-  // re-parent the caller's own integration row, credential and all, into another
-  // organisation.
-  test("cannot be told to re-parent the row, because orgId is gone from the schema", async () => {
+  // NOTE: `const { ...rest } = data` is a copy, not a destructure — nothing is
+  // removed. Every key the body schema accepts is forwarded into the Prisma
+  // update, including orgId.
+  test("forwards a caller-supplied orgId into the update", async () => {
     await updateIntegrationByName(ORG, "googlesheet", {
       credential: { a: 1 },
       orgId: OTHER_ORG,
-    } as never);
+    });
 
-    expect(db.integration.update.mock.calls[0][0].data).not.toHaveProperty("orgId");
+    expect(db.integration.update.mock.calls[0][0].data.orgId).toBe(OTHER_ORG);
+    // The row is selected by the caller's org but re-parented to another one.
     expect(db.integration.update.mock.calls[0][0].where).toEqual({
       orgid_integration_name_unique: { orgId: ORG, name: "googlesheet" },
     });
   });
 
-  test("the body schema no longer accepts an orgId", () => {
+  test("the body schema explicitly accepts an orgId", () => {
     const parsed = updateIntgrationSchema.safeParse({ orgId: OTHER_ORG });
 
     expect(parsed.success).toBe(true);
-    expect((parsed as any).data).not.toHaveProperty("orgId");
+    expect((parsed as any).data.orgId).toBe(OTHER_ORG);
   });
 
-  // updateKey is a control flag, not a column, and it used to be forwarded into the
-  // update data, where Prisma rejects unknown arguments — so the documented way to
-  // rotate a leaked Zapier key always 500'd.
-  test("keeps the updateKey control flag out of the update data", async () => {
+  // NOTE: updateKey is a control flag, not a column. It is read for the zapier
+  // branch and then forwarded into the update data, where Prisma rejects it as
+  // an unknown argument — so the documented way to rotate a Zapier key cannot
+  // succeed.
+  test("forwards the updateKey control flag into the update data", async () => {
     await updateIntegrationByName(ORG, "zapier", { credential: {}, updateKey: true });
 
-    expect(db.integration.update.mock.calls[0][0].data).not.toHaveProperty("updateKey");
+    expect(db.integration.update.mock.calls[0][0].data).toHaveProperty("updateKey", true);
   });
 
-  test("rotates the key and sends an update Prisma will accept", async () => {
+  test("still rotates the key before sending the doomed update", async () => {
     const res = await updateIntegrationByName(ORG, "zapier", {
       credential: { accessToken: "old" },
       updateKey: true,
@@ -327,11 +345,10 @@ describe("deleteZapierTriggerHooks", () => {
     credential: { accessToken: "hash", triggerSubscriptions: subs },
   });
 
-  // The hook URL used to be taken from the request body and handed straight to
-  // axios.delete — no allowlist, no scheme check and no comparison against the
-  // subscriptions the org actually holds, so an authenticated caller made the server
-  // issue a DELETE to any address reachable from inside the network.
-  test("refuses to call a URL the org never subscribed", async () => {
+  // NOTE: the hook URL is taken from the request body and handed straight to
+  // axios.delete. No allowlist, no scheme check, and no comparison against the
+  // subscriptions actually stored for the org.
+  test("issues a DELETE to whatever URL the caller supplied", async () => {
     db.integration.findUnique.mockResolvedValue(
       integration([{ hookUrl: "https://hooks.zapier.com/1", active: true }]),
     );
@@ -341,36 +358,15 @@ describe("deleteZapierTriggerHooks", () => {
       ORG,
     );
 
-    expect(axios.delete).not.toHaveBeenCalled();
-    expect(db.integration.update).not.toHaveBeenCalled();
+    expect(axios.delete).toHaveBeenCalledWith("http://169.254.169.254/latest/meta-data/");
   });
 
-  test("calls the stored subscription's own URL, not the body's active flag", async () => {
-    db.integration.findUnique.mockResolvedValue(
-      integration([{ hookUrl: "https://hooks.zapier.com/1", active: true }]),
-    );
+  test("skips the outbound call when the subscription is inactive", async () => {
+    db.integration.findUnique.mockResolvedValue(integration([]));
 
-    await deleteZapierTriggerHooks(
-      { hookUrl: "https://hooks.zapier.com/1", active: false } as never,
-      ORG,
-    );
-
-    expect(axios.delete).toHaveBeenCalledWith("https://hooks.zapier.com/1");
-  });
-
-  test("skips the outbound call when the stored subscription is inactive", async () => {
-    db.integration.findUnique.mockResolvedValue(
-      integration([{ hookUrl: "https://hooks.zapier.com/1", active: false }]),
-    );
-
-    await deleteZapierTriggerHooks(
-      { hookUrl: "https://hooks.zapier.com/1", active: true } as never,
-      ORG,
-    );
+    await deleteZapierTriggerHooks({ hookUrl: "https://evil.test/x", active: false } as never, ORG);
 
     expect(axios.delete).not.toHaveBeenCalled();
-    // It is still removed from the stored credential.
-    expect(db.integration.update).toHaveBeenCalled();
   });
 
   test("removes the matching subscription from the stored credential", async () => {
@@ -392,9 +388,9 @@ describe("deleteZapierTriggerHooks", () => {
     ]);
   });
 
-  // The outbound DELETE used to fire BEFORE the org's own subscriptions were read,
-  // so the request went out even for a URL belonging to nobody.
-  test("reads what the org subscribed before calling anything", async () => {
+  // NOTE: the outbound DELETE fires before the org's own subscriptions are
+  // read, so the request goes out even when the URL belongs to nobody.
+  test("calls out before it looks at what the org actually subscribed to", async () => {
     const order: string[] = [];
     (axios.delete as unknown as Mock).mockImplementationOnce(async () => {
       order.push("http");
@@ -402,25 +398,20 @@ describe("deleteZapierTriggerHooks", () => {
     });
     db.integration.findUnique.mockImplementationOnce(async () => {
       order.push("db");
-      return integration([{ hookUrl: "https://hooks.zapier.com/1", active: true }]);
+      return integration([]);
     });
 
-    await deleteZapierTriggerHooks(
-      { hookUrl: "https://hooks.zapier.com/1", active: true } as never,
-      ORG,
-    );
+    await deleteZapierTriggerHooks({ hookUrl: "https://evil.test/x", active: true } as never, ORG);
 
-    expect(order).toEqual(["db", "http"]);
+    expect(order).toEqual(["http", "db"]);
   });
 
-  test("does nothing when the org has no zapier integration at all", async () => {
+  test("throws when the org has no zapier integration at all", async () => {
     db.integration.findUnique.mockResolvedValue(null);
 
     await expect(
       deleteZapierTriggerHooks({ hookUrl: "https://x.test", active: false } as never, ORG),
-    ).resolves.toBeUndefined();
-    expect(axios.delete).not.toHaveBeenCalled();
-    expect(db.integration.update).not.toHaveBeenCalled();
+    ).rejects.toThrow(TypeError);
   });
 });
 

@@ -42,10 +42,6 @@ async function getEntityContext(orgId: string, whatsappSettingsId: string) {
   return { entityId: settings.phoneId, accessToken };
 }
 
-export async function getAgentRecord(orgId: string, whatsappSettingsId: string) {
-  return prisma.metaBusinessAgent.findFirst({ where: { orgId, whatsappSettingsId } });
-}
-
 export async function getOrCreateAgentRecord(orgId: string, whatsappSettingsId: string) {
   const existing = await prisma.metaBusinessAgent.findFirst({
     where: { orgId, whatsappSettingsId },

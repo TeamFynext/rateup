@@ -1,11 +1,8 @@
 import { createEmailBodyOTPGeneration } from "./emailTemplates/emailTemplateOTPGeneration.js";
 import { rateupLogo } from "../../utils/constants/constants.js";
-import { escapeHtml } from "../../utils/html.js";
 import crypto from "node:crypto";
 
-/** The templates this module can render. Anything else has no body to send. */
-export const EMAIL_PURPOSES = ["SurveyEmailOTPQuestion", "GeneralTemplate"] as const;
-
+/** `data`'s shape varies by `purpose`; each template reads only the keys it needs. */
 export function getEmailBodyTemplate(
   purpose: string | undefined,
   data: EmailTemplateData | undefined,
@@ -15,8 +12,6 @@ export function getEmailBodyTemplate(
       return createEmailBodyOTPGeneration(data);
     case "GeneralTemplate":
       return createGeneralEmailBodyTemaple(data?.body ?? "", data?.buttonLink ?? "", data?.title);
-    default:
-      throw new Error(`No email template for purpose "${purpose}"`);
   }
 }
 
@@ -27,7 +22,6 @@ export function generateOTP(length: number) {
 }
 
 export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, title?: string) {
-  const safeLink = httpUrlOrNothing(buttonLink);
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -95,7 +89,7 @@ export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, 
           <!-- Header -->
           <tr>
             <td class="header">
-              <h1>${escapeHtml(title ?? "")}</h1>
+              <h1>${title ?? ""}</h1>
             </td>
           </tr>
           <tr>
@@ -113,14 +107,11 @@ export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, 
           <!-- Body -->
           <tr>
             <td class="body" align="center" style="text-align:center;">
-              <p>${escapeHtml(body)}</p>
-              ${
-                safeLink
-                  ? `<a href="${escapeHtml(safeLink)}" class="link-btn" style="color: #e5e5ef">
+              <p>${body}</p>
+              
+              <a href="${buttonLink}" class="link-btn" style="color: #e5e5ef">
                  Visit
-              </a>`
-                  : ""
-              }
+              </a>
               
             </td>
           </tr>
@@ -131,15 +122,4 @@ export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, 
 </body>
 </html>
 `;
-}
-
-/** The link, if it is an ordinary http(s) URL; otherwise nothing. */
-function httpUrlOrNothing(value: string): string | undefined {
-  if (!value) return undefined;
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : undefined;
-  } catch {
-    return undefined;
-  }
 }

@@ -3,10 +3,7 @@
  * Validates reward redemptions against complex rule sets
  */
 
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc.js";
 import prisma from "../../utils/prisma.js";
-import { randomCode } from "../../utils/misc/random.utils.js";
 import type { LoyaltyReward } from "../../../generated/prisma/client.js";
 import {
   RedemptionValidationResult,
@@ -19,11 +16,6 @@ import {
   DayOfWeek,
 } from "../../types/loyalty.js";
 
-dayjs.extend(utc);
-
-/** How many times to redraw a code before giving up on finding a free one. */
-const CODE_ATTEMPTS = 5;
-
 export class RedemptionValidator {
   /**
    * Validate if a customer can redeem a specific reward
@@ -33,7 +25,19 @@ export class RedemptionValidator {
     rewardId: string,
     context: LoyaltyRedemptionContext,
   ): Promise<RedemptionValidationResult> {
+    const reward = await prisma.loyaltyReward.findUnique({
+      where: { id: rewardId },
+    });
     const violations: string[] = [];
+
+    if (!reward) {
+      return {
+        valid: false,
+        violations: ["Reward not found"],
+        reward: null,
+        customer: null,
+      };
+    }
 
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
@@ -46,19 +50,6 @@ export class RedemptionValidator {
       return {
         valid: false,
         violations: ["Customer not found"],
-        reward: null,
-        customer: null,
-      };
-    }
-
-    const reward = await prisma.loyaltyReward.findFirst({
-      where: { id: rewardId, programId: customer.programId },
-    });
-
-    if (!reward) {
-      return {
-        valid: false,
-        violations: ["Reward not found"],
         reward: null,
         customer: null,
       };
@@ -80,7 +71,7 @@ export class RedemptionValidator {
       }
     }
 
-    const rules = (reward.redemptionRules ?? {}) as LoyaltyRedemptionRules;
+    const rules = reward.redemptionRules as LoyaltyRedemptionRules;
 
     // 1. Check points balance (skip for assigned type rewards)
     if (reward.rewardType !== "assigned" && customer.currentPoints < reward.pointsCost) {
@@ -112,17 +103,18 @@ export class RedemptionValidator {
     // 4. Cooldown
     if (rules.cooldown?.enabled) {
       const cooldownViolation = await this.validateCooldown(
-        rules.cooldown.period_hours,
+        rules.cooldown.period_hours!,
         customerId,
         rewardId,
       );
       if (cooldownViolation) violations.push(cooldownViolation);
     }
 
-    if (rules.spend_requirements?.enabled) {
+    // 5. Spend requirements
+    if (rules.spend_requirements?.enabled && context.purchase_amount) {
       const spendViolation = this.validateSpendRequirements(
         rules.spend_requirements,
-        context.purchase_amount ?? 0,
+        context.purchase_amount,
       );
       if (spendViolation) violations.push(spendViolation);
     }
@@ -136,8 +128,11 @@ export class RedemptionValidator {
       if (tierViolation) violations.push(tierViolation);
     }
 
-    const stockViolation = this.validateStock(reward);
-    if (stockViolation) violations.push(stockViolation);
+    // 7. Stock check
+    if (rules.inventory?.enabled) {
+      const stockViolation = this.validateStock(reward);
+      if (stockViolation) violations.push(stockViolation);
+    }
 
     return {
       valid: violations.length === 0,
@@ -186,9 +181,9 @@ export class RedemptionValidator {
       }
     }
 
-    // Check blackout dates — UTC, like the day and hour checks above it
+    // Check blackout dates
     if (restrictions.blackout_dates && restrictions.blackout_dates.length > 0) {
-      const todayDate = dayjs.utc(now).format("YYYY-MM-DD");
+      const todayDate = now.toISOString().split("T")[0];
       if (restrictions.blackout_dates.includes(todayDate)) {
         violations.push("Not available on this date");
       }
@@ -239,16 +234,11 @@ export class RedemptionValidator {
       }
     }
 
-    const windows: Array<[number | undefined, dayjs.OpUnitType, string]> = [
-      [restrictions.max_redemptions_per_day, "day", "Daily redemption limit reached"],
-      [restrictions.max_redemptions_per_week, "week", "Weekly redemption limit reached"],
-      [restrictions.max_redemptions_per_month, "month", "Monthly redemption limit reached"],
-    ];
-
-    for (const [max, unit, message] of windows) {
-      if (!max) continue;
-
-      const used = await prisma.loyaltyRedemption.count({
+    // Max redemptions per day - use createdAt instead of usedAt
+    if (restrictions.max_redemptions_per_day) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayRedemptions = await prisma.loyaltyRedemption.count({
         where: {
           accountId: customerId,
           rewardId,
@@ -256,12 +246,54 @@ export class RedemptionValidator {
             in: ["APPROVED", "PENDING", "USED"],
           },
           createdAt: {
-            gte: dayjs.utc().startOf(unit).toDate(),
+            gte: today,
           },
         },
       });
-      if (used >= max) {
-        violations.push(message);
+      if (todayRedemptions >= restrictions.max_redemptions_per_day) {
+        violations.push("Daily redemption limit reached");
+      }
+    }
+
+    // Max redemptions per week - use createdAt instead of usedAt
+    if (restrictions.max_redemptions_per_week) {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const weekRedemptions = await prisma.loyaltyRedemption.count({
+        where: {
+          accountId: customerId,
+          rewardId,
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
+          createdAt: {
+            gte: weekAgo,
+          },
+        },
+      });
+      if (weekRedemptions >= restrictions.max_redemptions_per_week) {
+        violations.push("Weekly redemption limit reached");
+      }
+    }
+
+    // Max redemptions per month - use createdAt instead of usedAt
+    if (restrictions.max_redemptions_per_month) {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      const monthRedemptions = await prisma.loyaltyRedemption.count({
+        where: {
+          accountId: customerId,
+          rewardId,
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
+          createdAt: {
+            gte: monthAgo,
+          },
+        },
+      });
+      if (monthRedemptions >= restrictions.max_redemptions_per_month) {
+        violations.push("Monthly redemption limit reached");
       }
     }
 
@@ -272,14 +304,10 @@ export class RedemptionValidator {
    * Validate cooldown period
    */
   private async validateCooldown(
-    periodHours: number | undefined,
+    periodHours: number,
     customerId: string,
     rewardId: string,
   ): Promise<string | null> {
-    if (!periodHours || periodHours <= 0) {
-      return "This reward's cooldown is not configured correctly";
-    }
-
     const lastRedemption = await prisma.loyaltyRedemption.findFirst({
       where: {
         accountId: customerId,
@@ -324,8 +352,8 @@ export class RedemptionValidator {
     restrictions: TierRestrictions,
     customerTierId: string | null,
   ): string | null {
-    if (restrictions.allowed_tiers && restrictions.allowed_tiers.length > 0) {
-      if (!customerTierId || !restrictions.allowed_tiers.includes(customerTierId)) {
+    if (restrictions.allowed_tiers && restrictions.allowed_tiers.length > 0 && customerTierId) {
+      if (!restrictions.allowed_tiers.includes(customerTierId)) {
         return "Your tier does not have access to this reward";
       }
     }
@@ -345,7 +373,7 @@ export class RedemptionValidator {
   }
 
   /**
-   * Get day of week in lowercase, in UTC
+   * Get day of week in lowercase
    */
   private getDayOfWeek(date: Date): DayOfWeek {
     const days = [
@@ -357,26 +385,23 @@ export class RedemptionValidator {
       DayOfWeek.FRIDAY,
       DayOfWeek.SATURDAY,
     ];
-    return days[date.getUTCDay()];
+    return days[date.getDay()];
   }
 
   /**
-   * Get time string in HH:mm format, in UTC
+   * Get time string in HH:mm format
    */
   private getTimeString(date: Date): string {
-    return dayjs.utc(date).format("HH:mm");
+    return date.toTimeString().slice(0, 5);
   }
 
-  async generateRedemptionCode(): Promise<string> {
-    for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
-      const candidate = `RU-${randomCode(10)}`;
-      const existing = await prisma.loyaltyRedemption.findUnique({
-        where: { redemptionCode: candidate },
-        select: { id: true },
-      });
-      if (!existing) return candidate;
-    }
-    throw new Error("Could not generate a unique redemption code");
+  /**
+   * Generate a unique redemption code
+   */
+  generateRedemptionCode(): string {
+    const prefix = "RU";
+    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${prefix}-${randomPart}`;
   }
 }
 

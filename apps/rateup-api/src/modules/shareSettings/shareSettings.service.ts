@@ -1,6 +1,5 @@
 import prisma from "../../utils/prisma.js";
 import type { StoredShareSettings } from "./utils.js";
-import type { ShareSettingsResource } from "./shareSettings.schema.js";
 
 // Both services are handed the Fastify request but only read the session org —
 // typing that structurally keeps route handlers and unit tests assignable.
@@ -8,19 +7,15 @@ interface WithUser {
   user?: { orgId?: string };
 }
 
-const surveyOfOrg = (id: string, orgId: string | undefined) => ({
-  id,
-  OR: [{ orgId }, { teams: { some: { team: { orgId } } } }],
-});
-
-const getShareSettings = async (resourceName: ShareSettingsResource, id: string, req: WithUser) => {
-  const orgId = req.user?.orgId;
+const getShareSettings = async (resourceName: string | undefined, id: string, req: WithUser) => {
   let shareSettings;
 
   switch (resourceName) {
     case "survey": {
       shareSettings = await prisma.survey.findFirst({
-        where: surveyOfOrg(id, orgId),
+        where: {
+          id,
+        },
         select: {
           shareSettings: true,
         },
@@ -31,28 +26,28 @@ const getShareSettings = async (resourceName: ShareSettingsResource, id: string,
       shareSettings = await prisma.generateQr.findFirst({
         where: {
           id,
-          ownerOrgId: orgId,
+          ownerOrgId: req.user!.orgId,
         },
       });
-      break;
     }
   }
   return shareSettings;
 };
 
 const saveShareSettings = async (
-  resourceName: ShareSettingsResource,
+  resourceName: string | undefined,
   id: string,
   settingsObj: StoredShareSettings,
   req: WithUser,
 ) => {
-  const orgId = req.user?.orgId;
   let updatedSettings;
 
   switch (resourceName) {
     case "survey": {
       updatedSettings = await prisma.survey.update({
-        where: surveyOfOrg(id, orgId),
+        where: {
+          id,
+        },
         data: {
           shareSettings: settingsObj,
         },
@@ -66,13 +61,12 @@ const saveShareSettings = async (
       updatedSettings = await prisma.generateQr.update({
         where: {
           id,
-          ownerOrgId: orgId,
+          ownerOrgId: req.user!.orgId,
         },
         data: {
           shareSettings: settingsObj,
         },
       });
-      break;
     }
   }
 

@@ -8,7 +8,6 @@ const preHandlerHook = async (
 ) => {
   const { resourceName } = req.params;
   await checkSession(req, rep);
-  if (rep.sent) return;
   if (resourceName === "survey") {
     await verifySurveyAccess(req, rep);
   }

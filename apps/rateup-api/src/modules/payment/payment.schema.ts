@@ -103,14 +103,3 @@ export {
   paymentPlanDeleteSchema,
   orgPlanEmailSchema,
 };
-
-export const orderIdParamsSchema = z.object({
-  orderId: z.uuid(),
-});
-
-export const updateOrderStatusSchema = z.object({
-  status: z.enum(["PENDING", "COMPLETE", "FAILED"]),
-});
-
-export type OrderIdParamsInput = z.infer<typeof orderIdParamsSchema>;
-export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;

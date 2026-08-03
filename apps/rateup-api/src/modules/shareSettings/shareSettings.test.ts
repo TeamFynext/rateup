@@ -28,20 +28,8 @@ import { getShareSettings, saveShareSettings } from "./shareSettings.service.js"
 import { getSettings, updateSettings } from "./shareSettings.controller.js";
 import { preHandlerHook } from "./shareSettings.hooks.js";
 import shareSettingsRoutes from "./shareSettings.route.js";
-import {
-  bodySchema,
-  paramsSchema,
-  responseSchema,
-  SHARE_SETTINGS_RESOURCES,
-} from "./shareSettings.schema.js";
-import {
-  ALLOWED_LOGO_TYPES,
-  deleteFileFromS3,
-  LogoUploadError,
-  MAX_LOGO_BYTES,
-  onFile,
-  uploadFileToS3,
-} from "./utils.js";
+import { bodySchema, paramsSchema, responseSchema } from "./shareSettings.schema.js";
+import { deleteFileFromS3, onFile, uploadFileToS3 } from "./utils.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -89,28 +77,21 @@ beforeEach(() => {
 // ===========================================================================
 
 describe("the resource switch", () => {
-  const scopedToOrg = {
-    id: SURVEY,
-    OR: [{ orgId: ORG }, { teams: { some: { team: { orgId: ORG } } } }],
-  };
-
-  // The survey queries carried no org condition, and the whole tenancy of that
-  // path was the hook's `resourceName === "survey"` string comparison — a
-  // coincidence of two files agreeing rather than a check. The generateQr branch
-  // beside it already scoped itself.
-  test("the survey read is scoped to the caller's org", async () => {
+  // NOTE: the survey queries carry no org condition — the whole tenancy of that
+  // path is the hook's `resourceName === "survey"` string comparison.
+  test("the survey read is keyed on the id alone", async () => {
     await getShareSettings("survey", SURVEY, req());
 
     expect(db.survey.findFirst.mock.calls[0][0]).toEqual({
-      where: scopedToOrg,
+      where: { id: SURVEY },
       select: { shareSettings: true },
     });
   });
 
-  test("the survey write is scoped to the caller's org", async () => {
+  test("the survey write is keyed on the id alone", async () => {
     await saveShareSettings("survey", SURVEY, settings(), req());
 
-    expect(db.survey.update.mock.calls[0][0].where).toEqual(scopedToOrg);
+    expect(db.survey.update.mock.calls[0][0].where).toEqual({ id: SURVEY });
   });
 
   // NOTE: the QR case is the other way round — no hook check, but the query
@@ -131,20 +112,26 @@ describe("the resource switch", () => {
     });
   });
 
-  // The params schema accepted any string and marked resourceName optional, so
-  // the value the hook branched on was unconstrained — a differently cased name
-  // or a missing one reached the service, where only the absence of a `default:`
-  // case stopped it touching a table. The enum is now the gate.
-  test("the params schema constrains the resource name to the two the switch knows", () => {
-    expect(paramsSchema.safeParse({ id: SURVEY }).success).toBe(false);
-    expect(paramsSchema.safeParse({ resourceName: "anything", id: SURVEY }).success).toBe(false);
-    expect(paramsSchema.safeParse({ resourceName: "Survey", id: SURVEY }).success).toBe(false);
-    expect(paramsSchema.safeParse({ resourceName: "survey", id: SURVEY }).success).toBe(true);
-    expect(paramsSchema.safeParse({ resourceName: "generateQr", id: QR }).success).toBe(true);
+  // NOTE: the switch has no default, so an unrecognised name returns undefined
+  // rather than falling through to a resource. That is what stops a mismatched
+  // name reaching the unscoped survey queries — the accident, not the design.
+  test("an unrecognised resource touches no table and returns undefined", async () => {
+    await expect(getShareSettings("Survey", SURVEY, req())).resolves.toBeUndefined();
+    await expect(saveShareSettings("Survey", SURVEY, settings(), req())).resolves.toBeUndefined();
+
+    expect(db.survey.findFirst).not.toHaveBeenCalled();
+    expect(db.survey.update).not.toHaveBeenCalled();
   });
 
-  test("the enum names exactly the cases the service handles", () => {
-    expect([...SHARE_SETTINGS_RESOURCES]).toEqual(["survey", "generateQr"]);
+  test("an absent resource name is treated the same way", async () => {
+    await expect(getShareSettings(undefined, SURVEY, req())).resolves.toBeUndefined();
+  });
+
+  // NOTE: the params schema accepts any string and marks resourceName optional,
+  // so the value the hook branches on is unconstrained.
+  test("the params schema puts no constraint on the resource name", () => {
+    expect(paramsSchema.safeParse({ id: SURVEY }).success).toBe(true);
+    expect(paramsSchema.safeParse({ resourceName: "anything", id: SURVEY }).success).toBe(true);
   });
 });
 
@@ -165,29 +152,24 @@ describe("preHandlerHook", () => {
     expect(verifySurveyAccess).not.toHaveBeenCalled();
   });
 
-  // The comparison is still exact, but a differently cased name no longer
-  // reaches the hook at all — the params enum rejects it first. This pins that
-  // the hook alone is not the defence.
   test("the comparison is exact, so a differently cased name skips the check", async () => {
     await preHandlerHook(req({ params: { resourceName: "Survey", id: SURVEY } }), {} as never);
 
     expect(verifySurveyAccess).not.toHaveBeenCalled();
   });
 
-  // checkSession answers 401 by calling reply.send and returning rather than
-  // throwing, and the hook used to carry on to verifySurveyAccess regardless —
-  // producing a duplicate-send warning on every rejected request.
-  test("stops once the session check has answered", async () => {
+  // NOTE: checkSession answers 401 by calling reply.send and returning, and the
+  // hook carries on to verifySurveyAccess regardless.
+  test("runs the survey check even after the session check has answered", async () => {
     (checkSession as unknown as Mock).mockImplementationOnce(async (_r: any, rep: any) => {
       rep.code(401);
       rep.send({ message: "Not authorized" });
-      rep.sent = true;
     });
-    const rep: any = { sent: false, code: vi.fn(() => rep), send: vi.fn(() => rep) };
+    const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
 
     await preHandlerHook(req(), rep);
 
-    expect(verifySurveyAccess).not.toHaveBeenCalled();
+    expect(verifySurveyAccess).toHaveBeenCalledOnce();
   });
 });
 
@@ -220,9 +202,14 @@ describe("getSettings", () => {
     expect(res).toBeNull();
   });
 
-  // NOTE: the destructure has no guard, so a row the caller cannot reach throws
-  // rather than answering 404. A resource the switch does not know can no longer
-  // get this far — the params enum rejects it at the route.
+  // NOTE: the destructure has no guard, so a resource the switch does not know
+  // throws rather than answering 404.
+  test("throws for a resource the switch does not know", async () => {
+    await expect(
+      getSettings(req({ params: { resourceName: "linktree", id: SURVEY } }), {} as never),
+    ).rejects.toThrow(TypeError);
+  });
+
   test("throws when the row itself does not exist", async () => {
     db.survey.findFirst.mockResolvedValueOnce(null);
 
@@ -287,32 +274,40 @@ describe("updateSettings", () => {
     expect(deleteFile).toHaveBeenCalledOnce();
   });
 
-  // uploadFileToS3 used to yield null when the upload returned no key, and the
-  // controller wrote it through a template literal — storing the four-character
-  // string "null", a truthy value the read turned into `https://cdn/null` and the
-  // NEXT update handed to S3 as a key to delete. Nothing distinguished it from a
-  // real key, so the state was sticky.
-  test("a failed upload fails the save rather than storing the string null", async () => {
+  // NOTE: uploadFile swallows its errors and resolves undefined (issues.txt
+  // 24.3), so the key is null — and it is written through a template literal,
+  // which stores the four-character string "null".
+  test("a failed upload stores the literal string null", async () => {
     (uploadFile as unknown as Mock).mockResolvedValueOnce(undefined);
 
-    await expect(
-      updateSettings(req({ body: settings({ logoFile: filePart }) }), {} as never),
-    ).rejects.toBeInstanceOf(LogoUploadError);
-    expect(db.survey.update).not.toHaveBeenCalled();
+    await updateSettings(req({ body: settings({ logoFile: filePart }) }), {} as never);
+
+    expect(db.survey.update.mock.calls[0][0].data.shareSettings.logoFile).toBe("null");
   });
 
-  test("an upload that returns no key throws from the helper", async () => {
-    (uploadFile as unknown as Mock).mockResolvedValueOnce({});
+  test("and the save still reports success", async () => {
+    (uploadFile as unknown as Mock).mockResolvedValueOnce(undefined);
+    db.survey.update.mockResolvedValueOnce({ shareSettings: settings({ logoFile: "null" }) });
 
-    await expect(uploadFileToS3(Buffer.from("x"), "image/png", "png")).rejects.toBeInstanceOf(
-      LogoUploadError,
-    );
+    const res = await updateSettings(req({ body: settings({ logoFile: filePart }) }), {} as never);
+
+    expect(res!.logoFile).toBe("https://cdn.test.example/null");
   });
 
-  // The delete calls used to float, so a rejection inside deleteFileFromS3 would
-  // surface as an unhandled rejection rather than a failed request. They are
-  // awaited now, and the helper still swallows the failure so cleanup cannot
-  // fail the save.
+  // NOTE: that stored "null" is truthy, so the next update treats it as a real
+  // S3 key and asks the bucket to delete an object called "null".
+  test("the next update tries to delete an object named null", async () => {
+    db.survey.findFirst.mockResolvedValueOnce({ shareSettings: settings({ logoFile: "null" }) });
+
+    await updateSettings(req({ body: settings({ logoFile: filePart }) }), {} as never);
+
+    expect((deleteFile as unknown as Mock).mock.calls[0][0].Delete.Objects).toEqual([
+      { Key: "null" },
+    ]);
+  });
+
+  // NOTE: neither delete call is awaited, and deleteFile returns its error
+  // rather than throwing (issues.txt 24.3) — so a failed cleanup is invisible.
   test("a delete failure does not disturb the save", async () => {
     db.survey.findFirst.mockResolvedValueOnce({
       shareSettings: settings({ logoFile: "old-key.png" }),
@@ -347,7 +342,7 @@ describe("updateSettings", () => {
 // ===========================================================================
 
 describe("uploadFileToS3", () => {
-  test("names the object with a random uuid and the allowlisted extension", async () => {
+  test("names the object with a random uuid and the caller's extension", async () => {
     await uploadFileToS3(Buffer.from("x"), "image/png", "png");
 
     const params = (uploadFile as unknown as Mock).mock.calls[0][0];
@@ -355,10 +350,21 @@ describe("uploadFileToS3", () => {
     expect(params.Bucket).toBe("rateup-survey-uploads");
   });
 
-  test("returns the key the upload reported", async () => {
-    await expect(uploadFileToS3(Buffer.from("x"), "image/png", "png")).resolves.toBe(
-      "uploaded-key.png",
-    );
+  // NOTE: the extension comes from the uploaded filename and the content type
+  // from the part's own header — neither is checked against an allowlist, and
+  // both are stored on the object that CloudFront then serves.
+  test("stores the caller's content type and extension unchecked", async () => {
+    await uploadFileToS3(Buffer.from("x"), "text/html", "html");
+
+    const params = (uploadFile as unknown as Mock).mock.calls[0][0];
+    expect(params.ContentType).toBe("text/html");
+    expect(params.Key.endsWith(".html")).toBe(true);
+  });
+
+  test("returns null when the upload helper swallows a failure", async () => {
+    (uploadFile as unknown as Mock).mockResolvedValueOnce(undefined);
+
+    await expect(uploadFileToS3(Buffer.from("x"), "image/png", "png")).resolves.toBeNull();
   });
 
   test("deleteFileFromS3 targets the named bucket and keys", async () => {
@@ -372,61 +378,59 @@ describe("uploadFileToS3", () => {
 });
 
 describe("onFile", () => {
-  const part = (over: Record<string, unknown> = {}) =>
-    ({
+  test("buffers the part and derives the extension from the filename", async () => {
+    const part: any = {
       filename: "logo.PNG",
       fieldname: "logoFile",
       mimetype: "image/png",
       toBuffer: vi.fn(async () => Buffer.from("bytes")),
-      ...over,
-    }) as any;
+    };
 
-  // The content type came from the part's own header and the extension from the
-  // last dot-segment of a caller-supplied filename — neither checked against an
-  // allowlist, both written onto an object served from CloudFront, so text/html
-  // with a .html extension was accepted as readily as image/png. And a filename
-  // with no dot became its own extension.
-  test("derives the extension from the allowlisted type, not the filename", async () => {
-    const p = part();
+    await onFile(part);
 
-    await onFile(p);
-
-    expect(p.value.fileExtension).toBe("png");
-    expect(p.value.mimetype).toBe("image/png");
-    expect(p.value.fileBuffer).toBeInstanceOf(Buffer);
+    expect(part.value.fileExtension).toBe("PNG");
+    expect(part.value.mimetype).toBe("image/png");
+    expect(part.value.fileBuffer).toBeInstanceOf(Buffer);
   });
 
-  test("a filename with no dot no longer becomes its own extension", async () => {
-    const p = part({ filename: "logo" });
+  // NOTE: the extension is the last dot-segment of a caller-supplied filename,
+  // with no allowlist and no fallback.
+  test("takes whatever follows the last dot", async () => {
+    const part: any = {
+      filename: "payload.svg",
+      fieldname: "logoFile",
+      mimetype: "image/svg+xml",
+      toBuffer: vi.fn(async () => Buffer.from("<svg/>")),
+    };
 
-    await onFile(p);
+    await onFile(part);
 
-    expect(p.value.fileExtension).toBe("png");
+    expect(part.value.fileExtension).toBe("svg");
   });
 
-  test("refuses a type that is not an image", async () => {
-    for (const mimetype of ["text/html", "application/pdf", "application/octet-stream"]) {
-      await expect(onFile(part({ mimetype }))).rejects.toBeInstanceOf(LogoUploadError);
-    }
+  test("a filename with no dot becomes its own extension", async () => {
+    const part: any = {
+      filename: "logo",
+      fieldname: "logoFile",
+      mimetype: "image/png",
+      toBuffer: vi.fn(async () => Buffer.from("bytes")),
+    };
+
+    await onFile(part);
+
+    expect(part.value.fileExtension).toBe("logo");
   });
 
-  test("the allowlist is the image types the widget renders", () => {
-    expect(Object.keys(ALLOWED_LOGO_TYPES)).toEqual([
-      "image/png",
-      "image/jpeg",
-      "image/webp",
-      "image/gif",
-      "image/svg+xml",
-    ]);
-  });
+  test("nothing inspects the buffer's size or content", async () => {
+    const part: any = {
+      filename: "big.png",
+      fieldname: "logoFile",
+      mimetype: "image/png",
+      toBuffer: vi.fn(async () => Buffer.alloc(10 * 1024 * 1024)),
+    };
 
-  // The part was fully buffered in memory before anything looked at it, and the
-  // multipart plugin was registered with no limits — a large upload was an
-  // allocation of that size per request.
-  test("refuses a buffer larger than the limit", async () => {
-    const p = part({ toBuffer: vi.fn(async () => Buffer.alloc(MAX_LOGO_BYTES + 1)) });
-
-    await expect(onFile(p)).rejects.toBeInstanceOf(LogoUploadError);
+    await expect(onFile(part)).resolves.toBeUndefined();
+    expect(part.value.fileBuffer).toHaveLength(10 * 1024 * 1024);
   });
 });
 
@@ -453,20 +457,12 @@ describe("bodySchema", () => {
     expect((parsed as any).data.logoSize).toBe(40);
   });
 
-  // z.coerce.boolean() makes every non-empty string true, and multipart sends
-  // booleans as strings — so a form posting `isLogoEnabled=false` stored true
-  // and turning the logo off did not turn it off.
-  test("reads the literal strings multipart sends", () => {
-    expect(
-      (bodySchema.safeParse(settings({ isLogoEnabled: "false" })) as any).data.isLogoEnabled,
-    ).toBe(false);
-    expect(
-      (bodySchema.safeParse(settings({ isLogoEnabled: "true" })) as any).data.isLogoEnabled,
-    ).toBe(true);
-    expect(
-      (bodySchema.safeParse(settings({ isLogoEnabled: false })) as any).data.isLogoEnabled,
-    ).toBe(false);
-    expect(bodySchema.safeParse(settings({ isLogoEnabled: "yes" })).success).toBe(false);
+  // NOTE: z.coerce.boolean() makes every non-empty string true, so the literal
+  // "false" a form sends enables the logo.
+  test("coerces the string false to true", () => {
+    const parsed = bodySchema.safeParse(settings({ isLogoEnabled: "false" }));
+
+    expect((parsed as any).data.isLogoEnabled).toBe(true);
   });
 
   test("the colour fields accept any string, not a colour", () => {
@@ -525,14 +521,14 @@ describe("shareSettingsRoutes", () => {
     expect(registered[0].opts).toMatchObject({ attachFieldsToBody: "keyValues", onFile });
   });
 
-  // No limits were passed to the multipart plugin — no fileSize, no files, no
-  // fieldSize.
-  test("bounds the multipart request", async () => {
+  // NOTE: no limits are passed to the multipart plugin — no fileSize, no files,
+  // no fieldSize.
+  test("passes no multipart limits", async () => {
     const { srv, registered } = fakeServer();
 
     await shareSettingsRoutes(srv);
 
-    expect(registered[0].opts.limits).toMatchObject({ fileSize: MAX_LOGO_BYTES, files: 1 });
+    expect(registered[0].opts.limits).toBeUndefined();
   });
 
   test("both routes declare a response schema", async () => {

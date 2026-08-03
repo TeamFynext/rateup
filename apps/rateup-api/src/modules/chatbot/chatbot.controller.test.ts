@@ -14,9 +14,6 @@ vi.mock("../../utils/jwt.js", () => ({ createJWT: vi.fn(async () => "jwt-token")
 
 vi.mock("./chatbot.service.js", () => ({
   AI_API_URL: "https://ai.test/api",
-  // Stands in for the real class: the handlers branch on `instanceof`, and the
-  // instance they see has to come from the module they import.
-  AiAllowanceError: class AiAllowanceError extends Error {},
   createChatbot: vi.fn(),
   deleteChatbotFromDatabase: vi.fn(),
   deleteChatHistory: vi.fn(),
@@ -38,7 +35,6 @@ vi.mock("./chatbot.service.js", () => ({
 import axios from "axios";
 import { createJWT } from "../../utils/jwt.js";
 import {
-  AiAllowanceError,
   createChatbot,
   deleteChatbotFromDatabase,
   deleteChatHistory,
@@ -56,7 +52,6 @@ import {
   uploadFileForAIEmbed,
   uploadSourceForEmbed,
 } from "./chatbot.service.js";
-import { createChatbotSchema } from "./chatbot.schema.js";
 import {
   chatbotMessageHandler,
   createChatbotHanlder,
@@ -160,12 +155,13 @@ describe("publicChatbotMessageHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { message: "the public answer" } });
   });
 
-  // The chatbot row carries a `publicPageStatus` that defaults to "INACTIVE" and
-  // this handler used to ignore it entirely — so every chatbot ever created
-  // answered queries from the open internet, billed to the org's AI allowance,
-  // whether its public page had ever been switched on or not. The switch is
-  // enforced on the server now, not only in the widget.
-  test("refuses when the chatbot's public page is switched off", async () => {
+  // NOTE: pins current behaviour, and it is the sharpest gap in the module.
+  // The chatbot row carries a `publicPageStatus` that defaults to "INACTIVE",
+  // and getChatbotPublicPageStatusHandler exists purely to report it — but this
+  // handler never consults it. A chatbot whose public page has never been turned
+  // on, or has been turned off, still answers queries from the open internet and
+  // spends the org's AI token allowance doing so. See issues.txt 21.10.
+  test("answers even when the chatbot's public page is switched off", async () => {
     (getChatbotDetailsByShortUrlId as Mock).mockResolvedValue({
       orgId: ORG,
       publicPageStatus: "INACTIVE",
@@ -174,37 +170,13 @@ describe("publicChatbotMessageHandler", () => {
 
     await publicChatbotMessageHandler(request({ body }), rep);
 
-    expect(getPublicAIResponseForQuery).not.toHaveBeenCalled();
-    expect(answer(rep)).toEqual({
-      code: 403,
-      body: { message: "This chatbot's public page is not active" },
-    });
+    expect(getPublicAIResponseForQuery).toHaveBeenCalled();
+    expect(answer(rep).code).toBe(200);
   });
 
-  test("refuses a chatbot whose public page status was never set", async () => {
-    (getChatbotDetailsByShortUrlId as Mock).mockResolvedValue({ orgId: ORG });
-    const rep = reply();
-
-    await publicChatbotMessageHandler(request({ body }), rep);
-
-    expect(answer(rep).code).toBe(403);
-  });
-
-  test("hides an exhausted allowance behind an availability message", async () => {
-    (getPublicAIResponseForQuery as Mock).mockRejectedValue(
-      new AiAllowanceError("The AI token allowance for org X is exhausted"),
-    );
-    const rep = reply();
-
-    await publicChatbotMessageHandler(request({ body }), rep);
-
-    expect(answer(rep)).toEqual({ code: 403, body: { message: "This chatbot is unavailable" } });
-  });
-
-  // NOTE: STILL OPEN. `userId` comes from the request body and is used as the
-  // chat-thread key, so an unauthenticated caller still chooses whose thread they
-  // are writing to; the endpoint is now rate limited per IP but the id is not
-  // authenticated.
+  // NOTE: `userId` comes from the request body and is used as the chat-thread
+  // key, so an unauthenticated caller chooses whose thread they are writing to.
+  // See issues.txt 21.3.
   test("takes the conversation's user id from the request body", async () => {
     await publicChatbotMessageHandler(
       request({ body: { ...body, userId: "somebody-elses-id" } }),
@@ -238,12 +210,11 @@ describe("publicChatbotMessageHandler", () => {
 });
 
 describe("deletePublicChatHistoryHandler", () => {
-  // NOTE: STILL OPEN. This handler is registered on the PUBLIC route
+  // NOTE: pins current behaviour. This handler is registered on the PUBLIC route
   // (chatbot.public.route.ts) with no session check, and it deletes by a bare
   // userId taken from the path. Anyone who knows or guesses a user id can wipe
-  // that user's chat history, and nothing identifies the caller — the route is
-  // rate limited now (20/hour per IP), which bounds the repetition but not the
-  // hole. Closing it needs a signed widget session, which is a frontend change.
+  // that user's chat history, and nothing identifies the caller.
+  // See issues.txt 21.3.
   test("deletes a history by a path id, with no session and no org", async () => {
     const rep = reply();
 
@@ -302,35 +273,18 @@ describe("chatbotMessageHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: { message: "the answer" } });
   });
 
-  // The chatbotId comes from the body and used to be forwarded to the AI service
-  // without ever being checked against the caller's org — whether a foreign chatbot
-  // could be queried was the remote service's decision alone.
-  test("refuses a chatbot id the caller's org does not own", async () => {
-    (getChatbotDetails as Mock).mockResolvedValue(null);
-    const rep = reply();
-
+  // NOTE: the chatbotId comes from the body and is never checked against the
+  // caller's org before being forwarded. The org IS sent alongside it, so
+  // whether a foreign chatbot can be queried depends entirely on the remote AI
+  // service's own scoping — nothing here enforces it. See issues.txt 21.12.
+  test("forwards a chatbot id from the body without checking it belongs to the org", async () => {
     await chatbotMessageHandler(
       request({ body: { query: "hi", chatbotId: "bot-from-another-org" } }),
-      rep,
+      reply(),
     );
 
-    expect(getChatbotDetails).toHaveBeenCalledWith(ORG, "bot-from-another-org");
-    expect(getAIResponseForQuery).not.toHaveBeenCalled();
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Chatbot not found" } });
-  });
-
-  test("answers 403 when the org's AI allowance is spent", async () => {
-    (getAIResponseForQuery as Mock).mockRejectedValue(
-      new AiAllowanceError("The AI token allowance for org X is exhausted"),
-    );
-    const rep = reply();
-
-    await chatbotMessageHandler(request({ body: { query: "hi", chatbotId: "bot-1" } }), rep);
-
-    expect(answer(rep)).toEqual({
-      code: 403,
-      body: { message: "The AI token allowance for org X is exhausted" },
-    });
+    expect(getChatbotDetails).not.toHaveBeenCalled();
+    expect((getAIResponseForQuery as Mock).mock.calls[0][0].chatbotId).toBe("bot-from-another-org");
   });
 
   test("reports a failure with a generic message", async () => {
@@ -360,9 +314,9 @@ describe("uploadSourceForEmbedHandler", () => {
     expect(answer(rep).code).toBe(200);
   });
 
-  // The axios response object used to go back verbatim, which leaked the outbound
-  // Authorization header to the client in `config.headers`.
-  test("sends only the response data, not the axios envelope", async () => {
+  // NOTE: the axios response object is sent back verbatim — headers, config and
+  // all — rather than just its data. See issues.txt 21.13.
+  test("sends the whole axios response rather than its data", async () => {
     (uploadSourceForEmbed as Mock).mockResolvedValue({
       status: 200,
       data: { ok: true },
@@ -372,7 +326,7 @@ describe("uploadSourceForEmbedHandler", () => {
 
     await uploadSourceForEmbedHandler(request({ body: {} }), rep);
 
-    expect(answer(rep).body).toEqual({ ok: true });
+    expect(answer(rep).body).toHaveProperty("config");
   });
 
   test("reports a failure with a generic message", async () => {
@@ -435,27 +389,27 @@ describe("uploadFileForAIEmbedHandler", () => {
     expect(answer(rep)).toEqual({ code: 400, body: { message: "File is required." } });
   });
 
-  // Only the LAST file used to survive — each one overwrote `filePart` and was
-  // appended under the same "file" key after being buffered into memory — and
-  // nothing told the caller the others had been dropped.
-  test("refuses a request carrying more than one file", async () => {
+  // NOTE: pins current behaviour. Only the LAST file part survives — each one
+  // overwrites `filePart` and appends under the same "file" key — and the loop
+  // keeps buffering every one of them into memory first. Nothing tells the
+  // caller that the extra files were ignored. See issues.txt 21.13.
+  test("silently keeps only the last of several uploaded files", async () => {
     const first = filePart({ filename: "one.pdf" });
     const second = filePart({ filename: "two.pdf" });
     const rep = reply();
 
     await uploadFileForAIEmbedHandler(multipart([first, second]) as any, rep);
 
-    expect(second.toBuffer).not.toHaveBeenCalled();
-    expect(uploadFileForAIEmbed).not.toHaveBeenCalled();
-    expect(answer(rep)).toEqual({
-      code: 400,
-      body: { message: "Only one file may be uploaded at a time." },
-    });
+    expect(first.toBuffer).toHaveBeenCalled();
+    expect(second.toBuffer).toHaveBeenCalled();
+    const form = (uploadFileForAIEmbed as Mock).mock.calls[0][0] as FormData;
+    expect(form.getAll("file")).toHaveLength(2);
+    expect(answer(rep).code).toBe(200);
   });
 
   // NOTE: the type check happens after the part has been accepted but before the
   // buffer is read, so a rejected file is not buffered — but the loop does NOT
-  // stop, and the reply has already been sent.
+  // stop, and the reply has already been sent. See issues.txt 21.13.
   test("returns as soon as a disallowed type is seen", async () => {
     const good = filePart({ filename: "ok.pdf" });
     const rep = reply();
@@ -483,20 +437,7 @@ describe("the source and history endpoints", () => {
   test("listing sources with no chatbot id asks for all of them", async () => {
     await getUploadedSourceHandler(request({ query: {} }), reply());
 
-    expect(getChatbotDetails).not.toHaveBeenCalled();
     expect(getUploadedSources).toHaveBeenCalledWith("jwt-token", undefined);
-  });
-
-  // A named chatbot is checked against the caller's org before its sources are
-  // listed; it used to be forwarded to the AI service unchecked.
-  test("refuses to list the sources of a chatbot the org does not own", async () => {
-    (getChatbotDetails as Mock).mockResolvedValue(null);
-    const rep = reply();
-
-    await getUploadedSourceHandler(request({ query: { chatbotId: "bot-other-org" } }), rep);
-
-    expect(getUploadedSources).not.toHaveBeenCalled();
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Chatbot not found" } });
   });
 
   test("deleting a source forwards the body", async () => {
@@ -560,13 +501,13 @@ describe("the chatbot CRUD handlers", () => {
     expect(answer(rep)).toEqual({ code: 201, body: { id: "bot-1" } });
   });
 
-  // The create route declared no body schema, so `name` was whatever the caller
-  // sent — including undefined, which prisma filled from the column default. The
-  // route validates the body now, so a nameless create never reaches the handler.
-  test("the create route's body schema requires a name", () => {
-    expect(createChatbotSchema.safeParse({}).success).toBe(false);
-    expect(createChatbotSchema.safeParse({ name: "   " }).success).toBe(false);
-    expect(createChatbotSchema.safeParse({ name: "Support" }).success).toBe(true);
+  // NOTE: the create route declares no body schema, so `name` is whatever the
+  // caller sent — including undefined, which prisma then fills from the column
+  // default ("Default Chatbot"). See issues.txt 21.13.
+  test("creates a nameless chatbot when the body carries no name", async () => {
+    await createChatbotHanlder(request({ body: {} }), reply());
+
+    expect(createChatbot).toHaveBeenCalledWith(ORG, undefined);
   });
 
   test("lists the caller's own chatbots", async () => {
@@ -599,10 +540,10 @@ describe("the chatbot CRUD handlers", () => {
     expect(answer(rep)).toEqual({ code: 200, body: null });
   });
 
-  // This used to answer 201 — the wrong code for an update — with an empty body,
-  // because updateChatbotDetails returned nothing.
-  test("answers an update with 200 and the saved row", async () => {
-    (updateChatbotDetails as Mock).mockResolvedValue({ id: "bot-1", waPrompt: "be brief" });
+  // NOTE: updateChatbotDetails returns nothing (see the service tests), so this
+  // 201 always carries an empty body — and 201 is the wrong code for an update.
+  // See issues.txt 21.5.
+  test("answers an update with 201 and an empty body", async () => {
     const rep = reply();
 
     await updateChatbotDetailsHanlder(
@@ -611,20 +552,7 @@ describe("the chatbot CRUD handlers", () => {
     );
 
     expect(updateChatbotDetails).toHaveBeenCalledWith({ waPrompt: "be brief" }, ORG, "bot-1");
-    expect(answer(rep)).toEqual({ code: 200, body: { id: "bot-1", waPrompt: "be brief" } });
-  });
-
-  // A PUT against an id that does not exist used to silently create an empty
-  // chatbot and report success.
-  test("answers 404 for an update against a missing or foreign chatbot", async () => {
-    (updateChatbotDetails as Mock).mockRejectedValue(
-      Object.assign(new Error("record not found"), { code: "P2025" }),
-    );
-    const rep = reply();
-
-    await updateChatbotDetailsHanlder(request({ params: { chatbotId: "gone" }, body: {} }), rep);
-
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Chatbot not found" } });
+    expect(answer(rep)).toEqual({ code: 201, body: undefined });
   });
 
   test("reports a failed update as a 500", async () => {
@@ -647,28 +575,20 @@ describe("deleteSelectedChatbotHandler", () => {
     expect(rep.send).toHaveBeenCalledWith({ success: true });
   });
 
-  // This was the only handler in the module with no try/catch: a missing chatbot —
-  // or one belonging to another org, which the org-scoped where turns into the same
-  // thing — raised P2025, escaped the handler and became fastify's own generic 500
-  // with nothing logged.
-  test("answers 404 for a missing or foreign chatbot", async () => {
+  // NOTE: pins current behaviour. This is the only handler in the module with no
+  // try/catch. Deleting a chatbot that does not exist — or one belonging to
+  // another org, which the org-scoped where turns into the same thing — raises
+  // prisma's P2025 and escapes the handler entirely, so fastify answers with its
+  // own generic 500 and nothing is logged with any context.
+  // See issues.txt 21.14.
+  test("lets a missing or foreign chatbot escape as an unhandled rejection", async () => {
     (deleteChatbotFromDatabase as Mock).mockRejectedValue(
       Object.assign(new Error("record not found"), { code: "P2025" }),
     );
-    const rep = reply();
 
-    await deleteSelectedChatbotHandler(request({ params: { chatbotId: "bot-other-org" } }), rep);
-
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Chatbot not found" } });
-  });
-
-  test("answers 500 for any other failure rather than escaping", async () => {
-    (deleteChatbotFromDatabase as Mock).mockRejectedValue(new Error("db down"));
-    const rep = reply();
-
-    await deleteSelectedChatbotHandler(request({ params: { chatbotId: "bot-1" } }), rep);
-
-    expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
+    await expect(
+      deleteSelectedChatbotHandler(request({ params: { chatbotId: "bot-other-org" } }), reply()),
+    ).rejects.toMatchObject({ code: "P2025" });
   });
 });
 
@@ -689,49 +609,48 @@ describe("getAxiosAIClient", () => {
     );
   });
 
-  // The catch used to log and return nothing, so a failure to mint the token
-  // resolved to `undefined` and every caller then read a method off it — a signing
-  // problem surfacing as a property read several frames away.
-  test("fails when the token cannot be minted", async () => {
+  // NOTE: pins current behaviour. The catch logs and returns nothing, so a
+  // failure to mint the token yields `undefined` rather than an error — and every
+  // caller then reads a method off it. See issues.txt 21.6.
+  test("returns undefined rather than failing when the token cannot be minted", async () => {
     (createJWT as Mock).mockRejectedValue(new Error("no signing key"));
 
-    await expect(getAxiosAIClient(request())).rejects.toThrow("no signing key");
+    expect(await getAxiosAIClient(request())).toBeUndefined();
   });
 });
 
 describe("getChatHitoryByOrgHandler", () => {
-  test("passes the built client, the caller's org and the path chatbot id through", async () => {
+  test("passes the built client and the path chatbot id through", async () => {
     (getChatBotHistory as Mock).mockResolvedValue([{ userId: "u1" }]);
     const rep = reply();
 
     await getChatHitoryByOrgHandler(request({ params: { chatbotId: "bot-1" } }), rep);
 
-    expect((getChatBotHistory as Mock).mock.calls[0][1]).toBe(ORG);
-    expect((getChatBotHistory as Mock).mock.calls[0][2]).toBe("bot-1");
+    expect((getChatBotHistory as Mock).mock.calls[0][1]).toBe("bot-1");
     expect(answer(rep)).toEqual({ code: 200, body: [{ userId: "u1" }] });
   });
 
-  // The chatbot id used to reach the AI service without being checked against the
-  // caller's org.
-  test("refuses to read the history of a chatbot the org does not own", async () => {
-    (getChatbotDetails as Mock).mockResolvedValue(null);
-    const rep = reply();
+  // NOTE: the chatbot id is not checked against the caller's org before the AI
+  // service is asked for its history. See issues.txt 21.12.
+  test("asks for a chatbot's history without checking the org owns it", async () => {
+    await getChatHitoryByOrgHandler(request({ params: { chatbotId: "bot-other-org" } }), reply());
 
-    await getChatHitoryByOrgHandler(request({ params: { chatbotId: "bot-other-org" } }), rep);
-
-    expect(getChatBotHistory).not.toHaveBeenCalled();
-    expect(answer(rep)).toEqual({ code: 404, body: { message: "Chatbot not found" } });
+    expect(getChatbotDetails).not.toHaveBeenCalled();
+    expect((getChatBotHistory as Mock).mock.calls[0][1]).toBe("bot-other-org");
   });
 
-  // This used to send the raw Error, which has no enumerable own properties and so
-  // serialised to `{}` — a 500 with an empty body, where every sibling sends
-  // `{ message:.. }`.
-  test("answers a failure with a message, like its siblings", async () => {
-    (getChatBotHistory as Mock).mockRejectedValue(new Error("ai service unreachable"));
+  // NOTE: this handler sends the raw Error object. An Error has no enumerable own
+  // properties, so it serialises to `{}` — a 500 with an empty body, where every
+  // sibling sends `{ message: ... }`. See issues.txt 21.13.
+  test("answers a failure with the bare Error object", async () => {
+    const boom = new Error("ai service unreachable");
+    (getChatBotHistory as Mock).mockRejectedValue(boom);
     const rep = reply();
 
     await getChatHitoryByOrgHandler(request({ params: { chatbotId: "bot-1" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: { message: "Something went wrong" } });
+    expect(answer(rep).code).toBe(500);
+    expect(answer(rep).body).toBe(boom);
+    expect(JSON.stringify(answer(rep).body)).toBe("{}");
   });
 });

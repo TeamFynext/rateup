@@ -5,7 +5,6 @@ vi.mock("../../../utils/prisma.js", () => ({
     approvalRequest: {
       create: vi.fn(),
       findUnique: vi.fn(),
-      findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
@@ -60,10 +59,7 @@ interface ApprovalFixture {
   reason: string | null;
   requestData: Record<string, unknown>;
   expiresAt: Date | null;
-  account: {
-    contact: { name: string; phone: string; orgId: string };
-    currentTier: { id: string; name: string } | null;
-  };
+  account: { contact: { name: string; phone: string; orgId: string } };
 }
 
 function approval(over: Record<string, unknown> = {}) {
@@ -77,13 +73,7 @@ function approval(over: Record<string, unknown> = {}) {
     reason: "Customer asked",
     requestData: {},
     expiresAt: null,
-    // `currentTier` is included by getApprovalRequestById, and the tier-override
-    // notification reads the OLD tier from here — after the update the account's
-    // currentTier is the new one.
-    account: {
-      contact: { name: "Ann", phone: "919000000001", orgId: ORG },
-      currentTier: { id: "tier-1", name: "Bronze" },
-    },
+    account: { contact: { name: "Ann", phone: "919000000001", orgId: ORG } },
   };
   return { ...base, ...over };
 }
@@ -101,7 +91,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.$transaction.mockImplementation((fn: any) => (typeof fn === "function" ? fn(tx()) : fn));
   db.approvalRequest.create.mockResolvedValue({ id: "apr-1" });
-  db.approvalRequest.findFirst.mockResolvedValue(approval());
+  db.approvalRequest.findUnique.mockResolvedValue(approval());
   db.approvalRequest.findMany.mockResolvedValue([]);
   db.approvalRequest.update.mockResolvedValue({ id: "apr-1", status: "APPROVED" });
   db.approvalRequest.updateMany.mockResolvedValue({ count: 0 });
@@ -189,18 +179,12 @@ describe("getApprovalRequests", () => {
     });
   });
 
-  // The `status` filter used to be commented out in the source, so the queue could
-  // not be narrowed to PENDING — every reviewed, rejected and expired request came
-  // back with the live ones, which is an approvals queue mixed with its own
-  // history.
-  test("filters by status", async () => {
+  // NOTE: pins current behaviour. The `status` filter is commented out in the
+  // source, so an approvals queue cannot be narrowed to PENDING — every reviewed,
+  // rejected and expired request comes back with the live ones.
+  // See issues.txt 20.25.
+  test("cannot filter by status at all", async () => {
     await getApprovalRequests(PROGRAM, { status: "PENDING" } as any);
-
-    expect(db.approvalRequest.findMany.mock.calls[0][0].where.status).toBe("PENDING");
-  });
-
-  test("omitting the status still returns every one of them", async () => {
-    await getApprovalRequests(PROGRAM, {} as any);
 
     expect(db.approvalRequest.findMany.mock.calls[0][0].where).not.toHaveProperty("status");
   });
@@ -222,40 +206,27 @@ describe("getApprovalRequests", () => {
 
 describe("getApprovalRequestById", () => {
   test("returns the request with its account, redemption and transaction", async () => {
-    const res = await getApprovalRequestById("apr-1", PROGRAM);
+    const res = await getApprovalRequestById("apr-1");
 
     expect(res.id).toBe("apr-1");
-    expect(db.approvalRequest.findFirst.mock.calls[0][0].include).toHaveProperty("redemption");
+    expect(db.approvalRequest.findUnique.mock.calls[0][0].include).toHaveProperty("redemption");
   });
 
   test("throws for an id that matches nothing", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(null);
+    db.approvalRequest.findUnique.mockResolvedValue(null);
 
-    await expect(getApprovalRequestById("nope", PROGRAM)).rejects.toThrow(
-      "Approval request not found",
-    );
+    await expect(getApprovalRequestById("nope")).rejects.toThrow("Approval request not found");
   });
 
-  // The lookup used to be by id alone — and every mutating entry point in this
-  // file (approve, reject, cancel) goes through it, while only the LIST was
-  // scoped. So with an approval id a reviewer in any org could approve another
-  // org's points adjustment, which MINTS points into that org's programme, or its
-  // tier override, suspension or reactivation.
-  test("resolves an approval id only within the caller's program", async () => {
-    await getApprovalRequestById("apr-from-another-org", PROGRAM);
+  // NOTE: the lookup is by id alone, and every mutating entry point in this file
+  // (approve, reject, cancel) goes through it. Nothing compares the request's
+  // program or org against the reviewer's. See issues.txt 20.26.
+  test("resolves an approval id with no program or org restriction", async () => {
+    await getApprovalRequestById("apr-from-another-org");
 
-    expect(db.approvalRequest.findFirst.mock.calls[0][0].where).toEqual({
+    expect(db.approvalRequest.findUnique.mock.calls[0][0].where).toEqual({
       id: "apr-from-another-org",
-      account: { programId: PROGRAM },
     });
-  });
-
-  test("another program's approval is not found at all", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(null);
-
-    await expect(getApprovalRequestById("apr-1", "prog-other")).rejects.toThrow(
-      "Approval request not found",
-    );
   });
 });
 
@@ -267,27 +238,25 @@ describe("approveApprovalRequest — redemptions", () => {
   const input = { approvalId: "apr-1", reviewerId: "user-1", reviewerName: "Reviewer" } as any;
 
   test("refuses a request that is not pending", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(approval({ status: "APPROVED" }));
+    db.approvalRequest.findUnique.mockResolvedValue(approval({ status: "APPROVED" }));
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow(
+    await expect(approveApprovalRequest(input)).rejects.toThrow(
       "Approval request is not pending (current status: APPROVED)",
     );
   });
 
   test("refuses a request that has expired", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ expiresAt: new Date("2020-01-01T00:00:00.000Z") }),
     );
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow(
-      "Approval request has expired",
-    );
+    await expect(approveApprovalRequest(input)).rejects.toThrow("Approval request has expired");
   });
 
   test("refuses an unknown request type", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(approval({ requestType: "SOMETHING_ELSE" }));
+    db.approvalRequest.findUnique.mockResolvedValue(approval({ requestType: "SOMETHING_ELSE" }));
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow(
+    await expect(approveApprovalRequest(input)).rejects.toThrow(
       "Unknown approval request type: SOMETHING_ELSE",
     );
   });
@@ -299,13 +268,13 @@ describe("approveApprovalRequest — redemptions", () => {
       currentPoints: 50,
     });
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow(
+    await expect(approveApprovalRequest(input)).rejects.toThrow(
       "Customer does not have enough points",
     );
   });
 
   test("deducts the points, links the ledger row and approves the redemption", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
       points: -100,
@@ -324,25 +293,23 @@ describe("approveApprovalRequest — redemptions", () => {
 
   // Unlike the redemption service, the approvals path does wrap its writes.
   test("does the whole approval inside one transaction", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(db.$transaction).toHaveBeenCalledTimes(1);
   });
 
-  // This path used to write `transactionType: "REDEEM"` while redeemReward writes
-  // "redeem" and awardPoints writes "earn". getTransactions filters that column on
-  // an exact string match, so filtering the ledger by type returned roughly half
-  // the rows — and which half depended on whether the redemption had needed
-  // approval. The dashboard's chart and its activity feed read the lower-case
-  // values too, so approval-written rows were invisible there.
-  test("writes the same transaction type as every other writer of the column", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+  // NOTE: pins current behaviour. This path writes `transactionType: "REDEEM"`
+  // while redeemReward writes `"redeem"` and awardPoints writes `"earn"`. The
+  // transactions list filters on an exact string match, so filtering the ledger
+  // by type silently returns only half the rows. See issues.txt 20.27.
+  test("writes the transaction type in a different case from the redemption service", async () => {
+    await approveApprovalRequest(input);
 
-    expect(db.loyaltyTransaction.create.mock.calls[0][0].data.transactionType).toBe("redeem");
+    expect(db.loyaltyTransaction.create.mock.calls[0][0].data.transactionType).toBe("REDEEM");
   });
 
   test("tells the customer their redemption went through", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
       ORG,
@@ -354,7 +321,7 @@ describe("approveApprovalRequest — redemptions", () => {
   test("refuses when the redemption behind the request has gone", async () => {
     db.loyaltyRedemption.findUnique.mockResolvedValue(null);
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow("Redemption not found");
+    await expect(approveApprovalRequest(input)).rejects.toThrow("Redemption not found");
   });
 });
 
@@ -366,13 +333,13 @@ describe("approveApprovalRequest — points adjustments", () => {
   const input = { approvalId: "apr-1", reviewerId: "user-1" } as any;
 
   beforeEach(() => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "POINTS_ADJUSTMENT", points: 250, redemptionId: null }),
     );
   });
 
   test("credits both balances for an addition", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toEqual({
       currentPoints: { increment: 250 },
@@ -382,11 +349,11 @@ describe("approveApprovalRequest — points adjustments", () => {
 
   // A deduction deliberately leaves lifetimePoints alone — it is a lifetime total.
   test("a deduction moves the balance but not the lifetime total", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "POINTS_ADJUSTMENT", points: -100, redemptionId: null }),
     );
 
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toEqual({
       currentPoints: { decrement: 100 },
@@ -394,21 +361,20 @@ describe("approveApprovalRequest — points adjustments", () => {
   });
 
   test("refuses a deduction the customer cannot cover", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "POINTS_ADJUSTMENT", points: -9999, redemptionId: null }),
     );
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow(
+    await expect(approveApprovalRequest(input)).rejects.toThrow(
       "Customer does not have enough points",
     );
   });
 
   test("records the adjustment with the approver in its metadata", async () => {
-    await approveApprovalRequest({ ...input, reviewerName: "Reviewer" }, PROGRAM);
+    await approveApprovalRequest({ ...input, reviewerName: "Reviewer" });
 
     expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
-      // Lower case, like every other writer.
-      transactionType: "adjust",
+      transactionType: "ADJUST",
       points: 250,
       balanceAfter: 750,
       source: "manual_adjustment",
@@ -417,7 +383,7 @@ describe("approveApprovalRequest — points adjustments", () => {
   });
 
   test("tells the customer their balance moved", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
       ORG,
@@ -431,7 +397,7 @@ describe("approveApprovalRequest — tier overrides", () => {
   const input = { approvalId: "apr-1", reviewerId: "user-1" } as any;
 
   beforeEach(() => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({
         requestType: "TIER_OVERRIDE",
         redemptionId: null,
@@ -441,7 +407,7 @@ describe("approveApprovalRequest — tier overrides", () => {
   });
 
   test("moves the account onto the requested tier", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0]).toMatchObject({
       where: { id: "acct-1" },
@@ -449,17 +415,16 @@ describe("approveApprovalRequest — tier overrides", () => {
     });
   });
 
-  // The notification used to send the new tier's raw UUID where the old tier's
-  // NAME was sent on the line beneath, so the customer received a WhatsApp message
-  // reading "upgraded from Bronze to 9f3c…". awardPoints' equivalent dispatch has
-  // always used the name.
-  test("announces both tiers by name", async () => {
-    await approveApprovalRequest(input, PROGRAM);
+  // NOTE: pins current behaviour. The notification sends the new tier's ID where
+  // the old tier's NAME is sent, so the customer's WhatsApp message reads
+  // "upgraded from Bronze to tier-2". See issues.txt 20.28.
+  test("announces the new tier by its id and the old one by its name", async () => {
+    await approveApprovalRequest(input);
 
     expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
       ORG,
       LoyaltyEventType.TIER_UPGRADED,
-      expect.objectContaining({ newTier: "Silver", oldTier: "Bronze" }),
+      expect.objectContaining({ newTier: "tier-2", oldTier: "Silver" }),
     );
   });
 });
@@ -467,50 +432,44 @@ describe("approveApprovalRequest — tier overrides", () => {
 describe("approveApprovalRequest — account status", () => {
   const input = { approvalId: "apr-1", reviewerId: "user-1" } as any;
 
-  // These two used to write "SUSPENDED" / "ACTIVE" in upper case, while the update
-  // endpoint's schema only accepts lower-case values and createCustomerAccount
-  // tests for the lower-case "inactive". So an account suspended through an
-  // approval held a status the reactivation path could never match — re-enrolling
-  // that customer threw "Customer account already exists" instead of reactivating
-  // them.
-  test("suspends with the lower-case status the rest of the module uses", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+  // NOTE: pins current behaviour. These two write "SUSPENDED" / "ACTIVE" in
+  // upper case, while the update endpoint's schema only accepts lower-case
+  // values and createCustomerAccount tests for the lower-case "inactive". An
+  // account suspended through an approval therefore cannot be matched by the
+  // reactivation path. See issues.txt 20.27.
+  test("suspends with an upper-case status", async () => {
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "ACCOUNT_SUSPENSION", redemptionId: null }),
     );
 
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toEqual({
-      status: "suspended",
+      status: "SUSPENDED",
     });
   });
 
-  test("reactivates with the lower-case status too", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+  test("reactivates with an upper-case status", async () => {
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "ACCOUNT_REACTIVATION", redemptionId: null }),
     );
 
-    await approveApprovalRequest(input, PROGRAM);
+    await approveApprovalRequest(input);
 
-    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toEqual({ status: "active" });
+    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toEqual({ status: "ACTIVE" });
   });
 
-  // The bulk branch used to mark the request APPROVED and do nothing else — its
-  // own comment said the processing "would be triggered separately", and nothing
-  // in the module triggers it, so a reviewer approving one would reasonably assume
-  // something had happened to the customers it named. It refuses now, which leaves
-  // the request PENDING: the truthful state for a decision the system cannot carry
-  // out.
-  test("a bulk operation is refused rather than approved into nothing", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+  // NOTE: the bulk branch marks the request approved and does nothing else — the
+  // comment says the processing "would be triggered separately", and nothing in
+  // the module triggers it. See issues.txt 20.25.
+  test("a bulk operation is approved but never carried out", async () => {
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "BULK_OPERATION", redemptionId: null }),
     );
 
-    await expect(approveApprovalRequest(input, PROGRAM)).rejects.toThrow(
-      "Bulk operations cannot be approved",
-    );
+    await approveApprovalRequest(input);
 
-    expect(db.approvalRequest.update).not.toHaveBeenCalled();
+    expect(db.approvalRequest.update.mock.calls[0][0].data.status).toBe("APPROVED");
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
   });
@@ -524,15 +483,13 @@ describe("rejectApprovalRequest", () => {
   const input = { approvalId: "apr-1", reviewerId: "user-1", reason: "Not eligible" } as any;
 
   test("refuses a request that is not pending", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(approval({ status: "REJECTED" }));
+    db.approvalRequest.findUnique.mockResolvedValue(approval({ status: "REJECTED" }));
 
-    await expect(rejectApprovalRequest(input, PROGRAM)).rejects.toThrow(
-      "Approval request is not pending",
-    );
+    await expect(rejectApprovalRequest(input)).rejects.toThrow("Approval request is not pending");
   });
 
   test("records the reviewer and the reason", async () => {
-    await rejectApprovalRequest(input, PROGRAM);
+    await rejectApprovalRequest(input);
 
     expect(db.approvalRequest.update.mock.calls[0][0].data).toMatchObject({
       status: "REJECTED",
@@ -542,7 +499,7 @@ describe("rejectApprovalRequest", () => {
   });
 
   test("rejects the redemption behind it too", async () => {
-    await rejectApprovalRequest(input, PROGRAM);
+    await rejectApprovalRequest(input);
 
     expect(db.loyaltyRedemption.update).toHaveBeenCalledWith({
       where: { id: "red-1" },
@@ -551,11 +508,11 @@ describe("rejectApprovalRequest", () => {
   });
 
   test("touches no redemption when the request is not about one", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(
+    db.approvalRequest.findUnique.mockResolvedValue(
       approval({ requestType: "POINTS_ADJUSTMENT", redemptionId: null }),
     );
 
-    await rejectApprovalRequest(input, PROGRAM);
+    await rejectApprovalRequest(input);
 
     expect(db.loyaltyRedemption.update).not.toHaveBeenCalled();
   });
@@ -563,9 +520,9 @@ describe("rejectApprovalRequest", () => {
   // NOTE: a rejected redemption is never refunded here — but nothing was
   // deducted either, because the points are only taken at approval time. The
   // exception is the regular-reward path, which deducts BEFORE approval when
-  // approval is not required.
+  // approval is not required (issues.txt 20.19).
   test("does not move any points when rejecting", async () => {
-    await rejectApprovalRequest(input, PROGRAM);
+    await rejectApprovalRequest(input);
 
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
@@ -576,15 +533,13 @@ describe("cancelApprovalRequest", () => {
   const input = { approvalId: "apr-1", reason: "Customer changed their mind" } as any;
 
   test("refuses a request that is not pending", async () => {
-    db.approvalRequest.findFirst.mockResolvedValue(approval({ status: "CANCELLED" }));
+    db.approvalRequest.findUnique.mockResolvedValue(approval({ status: "CANCELLED" }));
 
-    await expect(cancelApprovalRequest(input, PROGRAM)).rejects.toThrow(
-      "Approval request is not pending",
-    );
+    await expect(cancelApprovalRequest(input)).rejects.toThrow("Approval request is not pending");
   });
 
   test("cancels the request and its redemption together", async () => {
-    await cancelApprovalRequest(input, PROGRAM);
+    await cancelApprovalRequest(input);
 
     expect(db.approvalRequest.update.mock.calls[0][0].data).toMatchObject({
       status: "CANCELLED",
@@ -596,14 +551,15 @@ describe("cancelApprovalRequest", () => {
     });
   });
 
-  // Cancel used to record no reviewer and no reviewedAt, while reject wrote both —
-  // so a cancelled request could not be attributed to anyone.
-  test("records who cancelled it and when", async () => {
-    await cancelApprovalRequest({ ...input, reviewerId: "user-1" }, PROGRAM);
+  // NOTE: unlike reject, cancel records no reviewer and no reviewedAt, so the
+  // audit trail cannot say who cancelled a request or when.
+  // See issues.txt 20.25.
+  test("records neither who cancelled it nor when", async () => {
+    await cancelApprovalRequest(input);
 
     const data = db.approvalRequest.update.mock.calls[0][0].data;
-    expect(data.reviewedBy).toBe("user-1");
-    expect(data.reviewedAt).toBeInstanceOf(Date);
+    expect(data).not.toHaveProperty("reviewedBy");
+    expect(data).not.toHaveProperty("reviewedAt");
   });
 });
 

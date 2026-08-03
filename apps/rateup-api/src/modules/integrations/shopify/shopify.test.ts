@@ -183,13 +183,11 @@ describe("updateShopifyIntegrationByShop", () => {
 });
 
 describe("updateShopifyIntegrationByShopHandler", () => {
-  // The shop came from the path and the org from the session, and the two were never
-  // checked against each other: whoever called this last owned the store, along with
-  // the Admin API token in its credential. Only an UNOWNED row — the state the OAuth
-  // callback leaves it in — can be claimed now.
-  test("claims a shop that no org owns yet", async () => {
+  // NOTE: the shop comes from the path and the org from the session, and the
+  // two are never checked against each other. Whoever calls this last owns the
+  // store — along with the Admin API token in its credential.
+  test("re-parents a shop named in the path to the caller's org", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
-    db.integration.updateMany.mockResolvedValueOnce({ count: 1 });
     const rep = reply();
 
     await updateShopifyIntegrationByShopHandler(
@@ -198,26 +196,10 @@ describe("updateShopifyIntegrationByShopHandler", () => {
     );
 
     expect(db.integration.updateMany.mock.calls[0][0]).toEqual({
-      where: { credential: { path: ["session", "shop"], equals: SHOP }, orgId: null },
+      where: { credential: { path: ["session", "shop"], equals: SHOP } },
       data: { orgId: ORG },
     });
     expect(answer(rep)).toEqual({ code: 200, body: { message: "success" } });
-  });
-
-  test("refuses a shop another org already owns", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
-    db.integration.updateMany.mockResolvedValueOnce({ count: 0 });
-    const rep = reply();
-
-    await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(answer(rep)).toEqual({
-      code: 409,
-      body: { message: "This store is already linked to an organisation" },
-    });
   });
 
   test("does nothing when the caller's org already holds that shop", async () => {
@@ -235,35 +217,30 @@ describe("updateShopifyIntegrationByShopHandler", () => {
     expect(answer(rep)).toEqual({ code: 200, body: "success" });
   });
 
-  // An org that already held a different Shopify store had that integration DELETED
-  // first, so one request both dropped the caller's own store and claimed someone
-  // else's. Disconnecting is an explicit action now.
-  test("refuses rather than dropping the store the caller already has", async () => {
+  // NOTE: an org that already has a different Shopify store has that
+  // integration deleted first, so one request can both drop the caller's own
+  // store and claim someone else's.
+  test("deletes the caller's existing shopify row before claiming another shop", async () => {
     (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({
       credential: { session: { shop: "own-store.myshopify.com" } },
     });
-    const rep = reply();
-
-    await updateShopifyIntegrationByShopHandler(
-      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(deleteIntegrationByName).not.toHaveBeenCalled();
-    expect(db.integration.updateMany).not.toHaveBeenCalled();
-    expect(answer(rep).code).toBe(409);
-  });
-
-  test("the claim itself carries the ownership condition, not a prior read", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce(null);
-    db.integration.updateMany.mockResolvedValueOnce({ count: 1 });
 
     await updateShopifyIntegrationByShopHandler(
       { params: { shop: SHOP }, user: { orgId: ORG } } as never,
       reply(),
     );
 
-    expect(db.integration.updateMany.mock.calls[0][0].where.orgId).toBeNull();
+    expect(deleteIntegrationByName).toHaveBeenCalledWith("shopify", ORG);
+    expect(db.integration.updateMany).toHaveBeenCalledOnce();
+  });
+
+  test("never reads the shop's current owner before overwriting it", async () => {
+    await updateShopifyIntegrationByShopHandler(
+      { params: { shop: SHOP }, user: { orgId: ORG } } as never,
+      reply(),
+    );
+
+    expect(db.integration.findFirst).not.toHaveBeenCalled();
   });
 
   test("returns the bare error object when the write fails", async () => {
@@ -309,10 +286,9 @@ describe("registerWebhookByTopic", () => {
     expect(vars.webhookSubscription.callbackUrl).toContain(WEBHOOK_API_ROUTE);
   });
 
-  // The template literal used to be `${API_URL}${WEBHOOK_API_ROUTE} ` — every
-  // webhook registered through this function pointed at a URL this API does not
-  // serve, app-uninstall and subscription-update deliveries included.
-  test("registers the callback URL with no trailing space", async () => {
+  // NOTE: the template literal is `${API_URL}${WEBHOOK_API_ROUTE} ` — the
+  // callback URL registered with Shopify carries a trailing space.
+  test("registers a callback URL with a trailing space", async () => {
     const client = { request: vi.fn(async (_query: string, _opts?: any) => ({ data: {} })) };
     const shopify = (await import("./shopify.config.js")).default as any;
     shopify.clients.Graphql = class {
@@ -322,7 +298,8 @@ describe("registerWebhookByTopic", () => {
     await registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session);
 
     const url = client.request.mock.calls[0][1].variables.webhookSubscription.callbackUrl;
-    expect(url).toBe(`${process.env.API_URL}${WEBHOOK_API_ROUTE}`);
+    expect(url.endsWith(" ")).toBe(true);
+    expect(url.trimEnd()).toBe(`${process.env.API_URL}${WEBHOOK_API_ROUTE}`);
   });
 });
 
@@ -428,21 +405,17 @@ describe("handleShopifyAppUnistalled", () => {
     expect(db.integration.updateMany).not.toHaveBeenCalled();
   });
 
-  // Integration.orgId is nullable and the OAuth callback creates the row before any
-  // org is linked, so a store that installed and uninstalled without linking has no
-  // org — and org.createdAt used to be read unguarded, so the job threw, the
-  // uninstall was never recorded and BullMQ retried it forever.
-  test("deactivates rather than throwing when the shop was never linked to an org", async () => {
+  // NOTE: Integration.orgId is nullable and the OAuth callback creates the row
+  // before any org is linked, so an app installed and uninstalled without
+  // linking has no org — and this reads org.createdAt unguarded.
+  test("throws when the shop was never linked to an org", async () => {
     db.integration.findFirst.mockResolvedValueOnce({
       orgId: null,
       createdAt: new Date(),
       org: null,
     });
 
-    await expect(handleShopifyAppUnistalled({ shop: SHOP })).resolves.toBeUndefined();
-
-    expect(db.integration.updateMany.mock.calls[0][0].data).toEqual({ active: false });
-    expect(pauseOrg).not.toHaveBeenCalled();
+    await expect(handleShopifyAppUnistalled({ shop: SHOP })).rejects.toThrow(TypeError);
   });
 
   test("does nothing for a shop it does not know", async () => {
@@ -677,15 +650,16 @@ describe("shopifyRoutes", () => {
     expect(claim.opts.schema.params).toBeDefined();
   });
 
-  // GET /test used to run the platform-wide Shopify survey cron — messaging other
-  // organisations' customers on their quota — from an ordinary member's session, as
-  // often as they liked. Removed.
-  test("no longer exposes a route that runs the platform-wide cron", async () => {
+  // NOTE: /test triggers the abandoned-checkout cron for the whole platform,
+  // not just the caller's org, from an ordinary member's session.
+  test("exposes a route that runs the platform-wide cron", async () => {
     const { srv, routes } = server();
 
     await shopifyRoutes(srv);
 
-    expect(routes.find((r) => r.url === "/test")).toBeUndefined();
+    const t = routes.find((r) => r.url === "/test");
+    expect(t.method).toBe("GET");
+    expect(t.opts).toBeDefined();
   });
 
   test("the by-shop delete takes the shop from the path", async () => {

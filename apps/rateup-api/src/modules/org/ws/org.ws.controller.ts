@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import crypto from "node:crypto";
+import { connectionManager } from "./org.ws.class.js";
 import { orgWsMessage } from "../../../types/global.js";
 import { log } from "../../../utils/logger.js";
 import baseRedis, { userStatusQueue } from "../../../utils/redisConnection.js";
@@ -98,7 +98,7 @@ export async function handleWebSocketConnection(
 ) {
   const browserId = request.params.afterAuthId;
   const orgId = request.user?.orgId;
-  const role = request.user?.role || "main";
+  const role = request.query.role || "main";
   const userId = request.userId;
 
   if (!orgId || !browserId) {
@@ -111,11 +111,9 @@ export async function handleWebSocketConnection(
     activeConnections.set(orgId, new Map<string, RoleTaggedSocket>());
   }
 
-  const socketKey = crypto.randomUUID();
-
   // Store role alongside connection
   connection.role = role;
-  activeConnections.get(orgId)!.set(socketKey, connection);
+  activeConnections.get(orgId)!.set(browserId, connection);
 
   connection.on("message", (msg) => {
     log.info(`[${orgId} - ${role}] Received message: %s`, msg.toString());
@@ -125,7 +123,7 @@ export async function handleWebSocketConnection(
 
   connection.on("close", async () => {
     try {
-      activeConnections.get(orgId)?.delete(socketKey);
+      activeConnections.get(orgId)?.delete(browserId);
       // Schedule offline status update after 1 minute
       await scheduleOfflineStatus(userId, orgId);
     } catch (err) {
@@ -146,45 +144,25 @@ export async function sendViaWstoOrgHandler(
   }
 }
 
-export async function orgWsAuthCheckHandler(_request: FastifyRequest, reply: FastifyReply) {
-  reply.send({ afterAuthId: crypto.randomBytes(16).toString("hex") });
+export async function orgWsAuthCheckHandler(request: FastifyRequest, reply: FastifyReply) {
+  const { orgId } = request.user;
+  const afterAuthId = connectionManager.generateAfterAuthIdforOrgId(orgId);
+  reply.send({ afterAuthId });
 }
 
 export const checkMobileId = async (
   request: FastifyRequest<{ Querystring: { accessToken?: string } }>,
   reply: FastifyReply,
 ) => {
-  const header = request.headers.authorization;
-  const bearer = header?.startsWith("Bearer ") ? header.slice(7).trim() : undefined;
-  const accessToken = bearer || request.query.accessToken;
-
-  if (!accessToken) {
-    log.error("No accessToken found in header or query\n%o", request.headers);
-    reply.code(401).send({ message: "Not authorized" });
-    return;
+  if (!request.query.accessToken) {
+    log.error("No accessToken found in query\n%o", request.headers);
+    return reply.code(401).send({ message: "Not authorized" });
   }
-  if (!bearer) {
-    log.warn("Mobile socket authenticated with a query-string accessToken (deprecated)");
-  }
-
-  let session;
-  try {
-    // An invalid or absent token made this reject, and the rejection escaped
-    // the preHandler instead of answering 401.
-    session = await getSessionWithoutRequestResponse(accessToken);
-  } catch (err) {
-    log.error({ err }, "Could not resolve mobile socket session");
-    reply.code(401).send({ message: "Not authorized" });
-    return;
-  }
-
-  const userId = session?.getUserId();
+  const session = await getSessionWithoutRequestResponse(request.query.accessToken);
+  const userId = session.getUserId();
   if (!userId) {
     log.error("No userId found in session\n%o", request.headers);
-    // This branch used to send the 401 and then carry on to read the payload
-    // and set request.user on a request it had already refused.
     reply.code(401).send({ message: "Not authorized" });
-    return;
   }
   request.userId = userId;
   const { role, orgId, email } = session.getAccessTokenPayload();

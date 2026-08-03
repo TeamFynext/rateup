@@ -96,7 +96,6 @@ export async function conversationRoutes(server: FastifyInstance) {
     {
       schema: {
         params: staffIdParamsSchema,
-        querystring: statsQuerySchema,
       },
     },
     getStaffDetailedConversationAnalyticsHandler,
@@ -115,7 +114,6 @@ export async function conversationRoutes(server: FastifyInstance) {
     {
       schema: {
         params: teamIdParamsSchema,
-        querystring: statsQuerySchema,
       },
     },
     getTeamDetailedMetricsHandler,

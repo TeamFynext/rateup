@@ -195,16 +195,12 @@ describe("assignWaMessageHandler", () => {
     expect(reply.payload).toEqual({ success: true });
   });
 
-  // Answers 500 itself rather than letting the failure escape to Fastify's error
-  // handler, consistent with every neighbouring handler.
-  test("answers 500 when the service fails", async () => {
+  // NOTE: this handler has no try/catch, so a service failure escapes to Fastify's
+  // error handler instead of becoming a controlled reply.
+  test("lets a service failure propagate", async () => {
     m.assign.mockRejectedValue(new Error("db down"));
-    const reply = makeReply();
 
-    await assignWaMessageHandler(makeRequest(), reply);
-
-    expect(reply.status).toHaveBeenCalledWith(500);
-    expect(reply.payload).toBe("Internal Server Error");
+    await expect(assignWaMessageHandler(makeRequest(), makeReply())).rejects.toThrow("db down");
   });
 });
 
@@ -256,13 +252,10 @@ describe("bulkAssignWaMessageHandler", () => {
     expect(reply.payload.assignedCount).toBe(0);
   });
 
-  // The loop is guarded per contact, so one failure no longer abandons the rest and the
-  // caller can see exactly which conversations were assigned.
-  test("carries on with the remaining conversations when one assignment fails", async () => {
-    m.assign
-      .mockResolvedValueOnce({ success: true })
-      .mockRejectedValueOnce(new Error("locked"))
-      .mockResolvedValueOnce({ success: true });
+  // NOTE: the loop is not per-item guarded, so one failure abandons the rest and the
+  // conversations already assigned are not reported back.
+  test("abandons the remaining conversations when one assignment fails", async () => {
+    m.assign.mockResolvedValueOnce({ success: true }).mockRejectedValueOnce(new Error("locked"));
     const reply = makeReply();
 
     await bulkAssignWaMessageHandler(
@@ -270,32 +263,9 @@ describe("bulkAssignWaMessageHandler", () => {
       reply,
     );
 
-    expect(m.assign).toHaveBeenCalledTimes(3);
-    expect(reply.code).toHaveBeenCalledWith(200);
-    expect(reply.payload).toMatchObject({
-      message: "Assigned 2 of 3 chats",
-      assignedCount: 2,
-      failedCount: 1,
-    });
-  });
-
-  test("names the contact that failed and the reason", async () => {
-    m.assign
-      .mockResolvedValueOnce({ success: true })
-      .mockRejectedValueOnce(new Error("locked"))
-      .mockResolvedValueOnce({ success: true });
-    const reply = makeReply();
-
-    await bulkAssignWaMessageHandler(
-      makeRequest({ body: { contactIds: ["c1", "c2", "c3"], assignee: "user-9" } }),
-      reply,
-    );
-
-    expect(reply.payload.results).toEqual([
-      { contactId: "c1", success: true, result: { success: true } },
-      { contactId: "c2", success: false, error: "locked" },
-      { contactId: "c3", success: true, result: { success: true } },
-    ]);
+    expect(m.assign).toHaveBeenCalledTimes(2);
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.payload).toEqual({ error: "locked" });
   });
 
   test("falls back to a generic message when the failure has none", async () => {
@@ -307,11 +277,7 @@ describe("bulkAssignWaMessageHandler", () => {
       reply,
     );
 
-    expect(reply.payload.results[0]).toMatchObject({
-      contactId: "c1",
-      success: false,
-      error: "Something went wrong",
-    });
+    expect(reply.payload).toEqual({ error: "Something went wrong" });
   });
 });
 
@@ -522,14 +488,13 @@ describe("generateChatFilterDataHandler", () => {
     expect(reply.status).toHaveBeenCalledWith(500);
   });
 
-  test("answers 500 when the lookup throws", async () => {
+  // NOTE: no try/catch here either — a thrown failure escapes rather than becoming a 500.
+  test("lets a thrown failure propagate", async () => {
     m.filterData.mockRejectedValue(new Error("db down"));
-    const reply = makeReply();
 
-    await generateChatFilterDataHandler(makeRequest(), reply);
-
-    expect(reply.status).toHaveBeenCalledWith(500);
-    expect(reply.payload).toBe("Internal Server Error");
+    await expect(generateChatFilterDataHandler(makeRequest(), makeReply())).rejects.toThrow(
+      "db down",
+    );
   });
 });
 

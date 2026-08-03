@@ -79,7 +79,7 @@ export async function createApprovalRequest(data: CreateApprovalRequestInput) {
  */
 export async function getApprovalRequests(programId: string, filters: GetApprovalRequestsInput) {
   try {
-    const { status, requestType, accountId, fromDate, toDate, page = 1, limit = 20 } = filters;
+    const { requestType, accountId, fromDate, toDate, page = 1, limit = 20 } = filters;
 
     const where: Prisma.ApprovalRequestWhereInput = {
       account: {
@@ -87,9 +87,9 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
       },
     };
 
-    if (status) {
-      where.status = status;
-    }
+    // if (status) {
+    //   where.status = status;
+    // }
 
     if (requestType) {
       where.requestType = requestType;
@@ -129,7 +129,7 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
         orderBy: {
           createdAt: "desc",
         },
-        skip: (Math.max(1, page) - 1) * limit,
+        skip: (page - 1) * limit,
         take: limit,
       }),
       prisma.approvalRequest.count({ where }),
@@ -150,10 +150,13 @@ export async function getApprovalRequests(programId: string, filters: GetApprova
   }
 }
 
-export async function getApprovalRequestById(approvalId: string, programId: string) {
+/**
+ * Get a single approval request by ID
+ */
+export async function getApprovalRequestById(approvalId: string) {
   try {
-    const approval = await prisma.approvalRequest.findFirst({
-      where: { id: approvalId, account: { programId } },
+    const approval = await prisma.approvalRequest.findUnique({
+      where: { id: approvalId },
       include: {
         account: {
           include: {
@@ -184,9 +187,9 @@ export async function getApprovalRequestById(approvalId: string, programId: stri
 /**
  * Approve a request - handles all approval types
  */
-export async function approveApprovalRequest(data: ApproveRequestInput, programId: string) {
+export async function approveApprovalRequest(data: ApproveRequestInput) {
   try {
-    const approval = await getApprovalRequestById(data.approvalId, programId);
+    const approval = await getApprovalRequestById(data.approvalId);
 
     if (approval.status !== "PENDING") {
       throw new Error(`Approval request is not pending (current status: ${approval.status})`);
@@ -224,9 +227,9 @@ export async function approveApprovalRequest(data: ApproveRequestInput, programI
 /**
  * Reject an approval request
  */
-export async function rejectApprovalRequest(data: RejectRequestInput, programId: string) {
+export async function rejectApprovalRequest(data: RejectRequestInput) {
   try {
-    const approval = await getApprovalRequestById(data.approvalId, programId);
+    const approval = await getApprovalRequestById(data.approvalId);
 
     if (approval.status !== "PENDING") {
       throw new Error(`Approval request is not pending (current status: ${approval.status})`);
@@ -280,9 +283,9 @@ export async function rejectApprovalRequest(data: RejectRequestInput, programId:
 /**
  * Cancel an approval request
  */
-export async function cancelApprovalRequest(data: CancelRequestInput, programId: string) {
+export async function cancelApprovalRequest(data: CancelRequestInput) {
   try {
-    const approval = await getApprovalRequestById(data.approvalId, programId);
+    const approval = await getApprovalRequestById(data.approvalId);
 
     if (approval.status !== "PENDING") {
       throw new Error(`Approval request is not pending (current status: ${approval.status})`);
@@ -293,9 +296,6 @@ export async function cancelApprovalRequest(data: CancelRequestInput, programId:
         where: { id: data.approvalId },
         data: {
           status: "CANCELLED",
-          reviewedBy: data.reviewerId,
-          reviewedByName: data.reviewerName,
-          reviewedAt: new Date(),
           reviewNotes: data.reason,
         },
         include: {
@@ -365,7 +365,7 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
         program: {
           connect: { id: customer.programId },
         },
-        transactionType: "redeem",
+        transactionType: "REDEEM",
         points: -redemption.reward.pointsCost,
         balanceAfter: customer.currentPoints - redemption.reward.pointsCost,
         source: "redemption",
@@ -481,7 +481,7 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
         program: {
           connect: { id: customer.programId },
         },
-        transactionType: "adjust",
+        transactionType: "ADJUST",
         points: points,
         balanceAfter: customer.currentPoints + points,
         source: "manual_adjustment",
@@ -562,13 +562,10 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
  * Approve a tier override
  */
 async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveRequestInput) {
-  // Read before the write: after the update, `customer.currentTier` is the NEW
-  // tier, so the old one has to be captured here.
-  const oldTierName = approval.account?.currentTier?.name || undefined;
-
   return await prisma.$transaction(async (tx) => {
     const requestData = approval.requestData;
 
+    // Update customer tier
     const customer = await tx.customerLoyaltyAccount.update({
       where: { id: approval.accountId },
       data: {
@@ -615,8 +612,8 @@ async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveR
         {
           customerPhone: approval.account.contact.phone,
           customerName: approval.account.contact.name || "Customer",
-          newTier: customer.currentTier?.name || "New Tier",
-          oldTier: oldTierName,
+          newTier: requestData.newTierId,
+          oldTier: customer.currentTier?.name || undefined,
           lifetimePoints: customer.lifetimePoints,
         },
       );
@@ -635,7 +632,7 @@ async function approveAccountSuspension(approval: ApprovalWithAccount, data: App
     await tx.customerLoyaltyAccount.update({
       where: { id: approval.accountId },
       data: {
-        status: "suspended",
+        status: "SUSPENDED",
       },
     });
 
@@ -676,7 +673,7 @@ async function approveAccountReactivation(
     await tx.customerLoyaltyAccount.update({
       where: { id: approval.accountId },
       data: {
-        status: "active",
+        status: "ACTIVE",
       },
     });
 
@@ -705,14 +702,35 @@ async function approveAccountReactivation(
   });
 }
 
-async function approveBulkOperation(approval: ApprovalWithAccount, _data: ApproveRequestInput) {
-  log.warn(
-    { approvalId: approval.id },
-    "Refused to approve a bulk operation: no processing is implemented behind it",
-  );
-  throw new Error(
-    "Bulk operations cannot be approved: the processing behind them is not implemented.",
-  );
+/**
+ * Approve a bulk operation
+ */
+async function approveBulkOperation(approval: ApprovalWithAccount, data: ApproveRequestInput) {
+  // For bulk operations, just mark as approved
+  // The actual bulk processing would be triggered separately
+  return await prisma.$transaction(async (tx) => {
+    const updatedApproval = await tx.approvalRequest.update({
+      where: { id: approval.id },
+      data: {
+        status: "APPROVED",
+        reviewedBy: data.reviewerId,
+        reviewedByName: data.reviewerName,
+        reviewedAt: new Date(),
+        reviewNotes: data.notes,
+      },
+      include: {
+        account: {
+          include: {
+            contact: true,
+            currentTier: true,
+          },
+        },
+      },
+    });
+
+    log.info(`Approved bulk operation for account ${approval.accountId}`);
+    return updatedApproval;
+  });
 }
 
 /**

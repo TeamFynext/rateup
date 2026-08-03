@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../../../utils/prisma.js", () => {
-  const client = {
+vi.mock("../../../utils/prisma.js", () => ({
+  default: {
     testimonialCollection: {
       create: vi.fn(),
       findMany: vi.fn(),
-      findFirst: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -15,15 +14,8 @@ vi.mock("../../../utils/prisma.js", () => {
       deleteMany: vi.fn(),
       findMany: vi.fn(),
     },
-    testimonial: { findMany: vi.fn() },
-    team: { findFirst: vi.fn() },
-    $transaction: vi.fn(),
-  };
-  // The interactive form: run the callback against the same mocked client, so
-  // what the tests pin is the statements the transaction would issue.
-  client.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(client));
-  return { default: client };
-});
+  },
+}));
 
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
@@ -36,7 +28,6 @@ import { log } from "../../../utils/logger.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import {
   addMultipleTestimonialToCollection,
-  CollectionAccessError,
   createTestimonialCollection,
   deleteMultipleTestimonialFromCollection,
   deleteTestimonialCollection,
@@ -67,9 +58,6 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   testimonialCollection: Record<string, Mock>;
   testimonialCollectionMap: Record<string, Mock>;
-  testimonial: Record<string, Mock>;
-  team: Record<string, Mock>;
-  $transaction: Mock;
 };
 
 const ORG = "11111111-1111-1111-1111-111111111111";
@@ -77,7 +65,6 @@ const OWN_TEAM = "22222222-2222-2222-2222-222222222222";
 const VICTIM_TEAM = "33333333-3333-3333-3333-333333333333";
 const OWN_COLLECTION = "3f8a1e2c-5b7d-4c9e-8a1b-2d3e4f5a6b7c";
 const VICTIM_COLLECTION = "7c6b5a4f-3e2d-4b1a-9c8d-7e6f5a4b3c2d";
-const OWN_TESTIMONIAL = "9d8c7b6a-5f4e-4d3c-2b1a-0f9e8d7c6b5a";
 const VICTIM_TESTIMONIAL = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
 
 function reply() {
@@ -89,20 +76,9 @@ function answer(rep: any) {
   return { code: rep.code.mock.calls[0]?.[0], body: rep.send.mock.calls[0]?.[0] };
 }
 
-/** The caller's own collection and own testimonials resolve; anything else does not. */
-function ownEverything() {
-  db.testimonialCollection.findFirst.mockResolvedValue({ id: OWN_COLLECTION });
-  db.team.findFirst.mockResolvedValue({ id: OWN_TEAM });
-  db.testimonial.findMany.mockImplementation(async ({ where }: any) => {
-    const ids: string[] = where.id?.in ?? [];
-    return ids.filter((id) => id !== VICTIM_TESTIMONIAL).map((id) => ({ id }));
-  });
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
   // clearAllMocks keeps implementations but drops queued values.
-  db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma));
   db.testimonialCollection.create.mockResolvedValue({ id: OWN_COLLECTION, name: "Wall of love" });
   db.testimonialCollection.findMany.mockResolvedValue([]);
   db.testimonialCollection.findUnique.mockResolvedValue(null);
@@ -111,179 +87,145 @@ beforeEach(() => {
   db.testimonialCollectionMap.createMany.mockResolvedValue({ count: 1 });
   db.testimonialCollectionMap.deleteMany.mockResolvedValue({ count: 0 });
   db.testimonialCollectionMap.findMany.mockResolvedValue([]);
-  ownEverything();
 });
 
 // ===========================================================================
-// Adding testimonials — both sides are now resolved to an owner
+// Adding testimonials — neither side is checked
 // ===========================================================================
 
 describe("addMultipleTestimonialToCollection", () => {
-  // The collection id came from the path and the testimonial ids from the body,
-  // and neither was resolved to a team or an org before the join rows were
-  // written — which, with the public by-id read below, turned any testimonial id
-  // into a page the attacker controls.
-  test("resolves the collection through its team to the caller's org", async () => {
-    await addMultipleTestimonialToCollection(OWN_COLLECTION, [OWN_TESTIMONIAL], ORG);
+  // NOTE: the collection id comes from the path and the testimonial ids from
+  // the body. Neither is resolved to a team or an org before the join rows are
+  // written.
+  test("links any testimonial id to any collection id", async () => {
+    await addMultipleTestimonialToCollection(OWN_COLLECTION, [VICTIM_TESTIMONIAL]);
 
-    expect(db.testimonialCollection.findFirst).toHaveBeenCalledWith({
-      where: { id: OWN_COLLECTION, team: { orgId: ORG } },
-      select: { id: true },
-    });
     expect(db.testimonialCollectionMap.createMany).toHaveBeenCalledWith({
-      data: [{ testimonialId: OWN_TESTIMONIAL, collectionId: OWN_COLLECTION }],
+      data: [{ testimonialId: VICTIM_TESTIMONIAL, collectionId: OWN_COLLECTION }],
     });
   });
 
-  test("refuses a collection that is not the caller's", async () => {
-    db.testimonialCollection.findFirst.mockResolvedValueOnce(null);
+  test("reads only the collection's existing links, never its owner", async () => {
+    await addMultipleTestimonialToCollection(OWN_COLLECTION, [VICTIM_TESTIMONIAL]);
 
-    await expect(
-      addMultipleTestimonialToCollection(VICTIM_COLLECTION, [OWN_TESTIMONIAL], ORG),
-    ).rejects.toBeInstanceOf(CollectionAccessError);
-    expect(db.testimonialCollectionMap.createMany).not.toHaveBeenCalled();
-  });
-
-  // The testimonial ids are checked through SurveyResponse -> SurveyTeamMap ->
-  // Team, the same join the by-org listing uses.
-  test("refuses a testimonial belonging to another org", async () => {
-    await expect(
-      addMultipleTestimonialToCollection(OWN_COLLECTION, [VICTIM_TESTIMONIAL], ORG),
-    ).rejects.toMatchObject({ status: 403 });
-    expect(db.testimonialCollectionMap.createMany).not.toHaveBeenCalled();
-  });
-
-  test("checks ownership through the survey response's team", async () => {
-    await addMultipleTestimonialToCollection(OWN_COLLECTION, [OWN_TESTIMONIAL], ORG);
-
-    expect(db.testimonial.findMany.mock.calls[0][0].where).toEqual({
-      id: { in: [OWN_TESTIMONIAL] },
-      surveyResponse: { surveyTeamMap: { team: { orgId: ORG } } },
+    expect(db.testimonialCollectionMap.findMany.mock.calls[0][0]).toEqual({
+      where: { collectionId: OWN_COLLECTION },
+      select: { testimonialId: true },
     });
+    expect(db.testimonialCollection.findUnique).not.toHaveBeenCalled();
   });
 
   test("skips ids the collection already holds", async () => {
     db.testimonialCollectionMap.findMany.mockResolvedValueOnce([
-      { testimonialId: OWN_TESTIMONIAL },
+      { testimonialId: VICTIM_TESTIMONIAL },
     ]);
 
-    await addMultipleTestimonialToCollection(OWN_COLLECTION, [OWN_TESTIMONIAL, "t-2"], ORG);
+    await addMultipleTestimonialToCollection(OWN_COLLECTION, [VICTIM_TESTIMONIAL, "t-2"]);
 
     expect(db.testimonialCollectionMap.createMany.mock.calls[0][0].data).toEqual([
       { testimonialId: "t-2", collectionId: OWN_COLLECTION },
     ]);
   });
 
-  test("the handler takes the org from the session and answers 403 for a foreign id", async () => {
-    const rep = reply();
+  test("the handler never consults the session org", async () => {
+    const req: any = {
+      params: { id: OWN_COLLECTION },
+      body: { testimonialIds: [VICTIM_TESTIMONIAL] },
+      get user() {
+        throw new Error("request.user was read");
+      },
+    };
 
-    await addMultipleTestimonialToCollectionHandler(
-      {
-        params: { id: OWN_COLLECTION },
-        body: { testimonialIds: [VICTIM_TESTIMONIAL] },
-        user: { orgId: ORG },
-      } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(403);
-    expect(db.testimonialCollectionMap.createMany).not.toHaveBeenCalled();
+    await expect(addMultipleTestimonialToCollectionHandler(req, reply())).resolves.toBeUndefined();
+    expect(db.testimonialCollectionMap.createMany).toHaveBeenCalledOnce();
   });
 
-  // The read on the far end is registered on the PUBLIC tree
-  // (testimonialPublic.route.ts, prefix /api/public/testimonials), which is
-  // deliberate — collections are embeddable. That is what made the unchecked add
-  // above publishable.
-  test("the read that follows returns the collection's testimonials", async () => {
+  // NOTE: getTestimonialCollectionById is registered on the PUBLIC route
+  // (testimonialPublic.route.ts:6, prefix /api/public/testimonials), which is
+  // deliberate — collections are embeddable. Combined with the unchecked add
+  // above, that turns an arbitrary testimonial id into a public URL.
+  test("the read that follows returns the full testimonial rows", async () => {
     db.testimonialCollection.findUnique.mockResolvedValueOnce({
       id: OWN_COLLECTION,
-      testimonials: [{ testimonial: { id: OWN_TESTIMONIAL, testimonial: { name: "Ann" } } }],
+      teamId: OWN_TEAM,
+      testimonials: [
+        { testimonial: { id: VICTIM_TESTIMONIAL, testimonial: { name: "Ann", text: "private" } } },
+      ],
     });
 
     const collection = await getTestimonialCollectionById(OWN_COLLECTION);
 
-    expect(collection?.testimonials).toEqual([
-      { id: OWN_TESTIMONIAL, testimonial: { name: "Ann" } },
+    expect(collection.testimonials).toEqual([
+      { id: VICTIM_TESTIMONIAL, testimonial: { name: "Ann", text: "private" } },
     ]);
   });
 
+  test("the by-id read selects the whole testimonial, not a projection", async () => {
+    await getTestimonialCollectionById(OWN_COLLECTION);
+
+    expect(db.testimonialCollection.findUnique.mock.calls[0][0].include).toEqual({
+      testimonials: { select: { testimonial: true } },
+    });
+  });
+
   test("an empty id list writes an empty batch rather than refusing", async () => {
-    await addMultipleTestimonialToCollection(OWN_COLLECTION, [], ORG);
+    await addMultipleTestimonialToCollection(OWN_COLLECTION, []);
 
     expect(db.testimonialCollectionMap.createMany).toHaveBeenCalledWith({ data: [] });
-    expect(db.testimonial.findMany).not.toHaveBeenCalled();
   });
 });
 
 describe("deleteMultipleTestimonialFromCollection", () => {
-  test("removes links only from a collection the caller owns", async () => {
-    await deleteMultipleTestimonialFromCollection(OWN_COLLECTION, [OWN_TESTIMONIAL], ORG);
+  test("removes links by collection and testimonial id alone", async () => {
+    await deleteMultipleTestimonialFromCollection(VICTIM_COLLECTION, [VICTIM_TESTIMONIAL]);
 
-    expect(db.testimonialCollection.findFirst).toHaveBeenCalledWith({
-      where: { id: OWN_COLLECTION, team: { orgId: ORG } },
-      select: { id: true },
-    });
     expect(db.testimonialCollectionMap.deleteMany).toHaveBeenCalledWith({
-      where: { collectionId: OWN_COLLECTION, testimonialId: { in: [OWN_TESTIMONIAL] } },
+      where: { collectionId: VICTIM_COLLECTION, testimonialId: { in: [VICTIM_TESTIMONIAL] } },
     });
   });
 
-  // The destructive direction of 31.1: a collection id used to be enough to
-  // empty another org's live widget.
-  test("refuses to empty another org's collection", async () => {
-    db.testimonialCollection.findFirst.mockResolvedValueOnce(null);
+  test("the handler passes the path and body through with no org check", async () => {
     const rep = reply();
 
     await deleteMultipleTestimonialsFromCollectionHandler(
       {
         params: { id: VICTIM_COLLECTION },
         body: { testimonialIds: [VICTIM_TESTIMONIAL] },
-        user: { orgId: ORG },
       } as never,
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 404, body: { error: "Collection not found" } });
-    expect(db.testimonialCollectionMap.deleteMany).not.toHaveBeenCalled();
+    expect(db.testimonialCollectionMap.deleteMany).toHaveBeenCalledOnce();
+    expect(answer(rep).code).toBe(200);
   });
 
-  // Both "multiple" handlers used to interpolate the caught error into the
-  // response body — Prisma's message names the model and the failing field,
-  // which on an endpoint accepting arbitrary ids is an existence oracle. The
-  // other five handlers already sent a fixed string.
-  test("a database failure answers a fixed 500", async () => {
+  // NOTE: both "multiple" handlers interpolate the caught error into the
+  // response body, unlike the other five which send a fixed string.
+  test("interpolates the raw error into the response", async () => {
     db.testimonialCollectionMap.deleteMany.mockRejectedValueOnce(
       new Error("Invalid `prisma.testimonialCollectionMap.deleteMany()` invocation"),
     );
     const rep = reply();
 
     await deleteMultipleTestimonialsFromCollectionHandler(
-      {
-        params: { id: OWN_COLLECTION },
-        body: { testimonialIds: [] },
-        user: { orgId: ORG },
-      } as never,
+      { params: { id: VICTIM_COLLECTION }, body: { testimonialIds: [] } } as never,
       rep,
     );
 
-    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
-    expect(log.error).toHaveBeenCalled();
+    expect(answer(rep).code).toBe(500);
+    expect(answer(rep).body.error).toContain("prisma.testimonialCollectionMap.deleteMany()");
   });
 
-  test("the add handler sends the same fixed string", async () => {
+  test("the add handler leaks the same way", async () => {
     db.testimonialCollectionMap.findMany.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
     await addMultipleTestimonialToCollectionHandler(
-      {
-        params: { id: OWN_COLLECTION },
-        body: { testimonialIds: [] },
-        user: { orgId: ORG },
-      } as never,
+      { params: { id: OWN_COLLECTION }, body: { testimonialIds: [] } } as never,
       rep,
     );
 
-    expect(answer(rep).body).toEqual({ error: "Something went wrong" });
+    expect(answer(rep).body.error).toContain("db down");
   });
 });
 
@@ -292,96 +234,68 @@ describe("deleteMultipleTestimonialFromCollection", () => {
 // ===========================================================================
 
 describe("updateTestimonialCollection", () => {
-  test("scopes the update to the caller's org", async () => {
-    await updateTestimonialCollection({ name: "Renamed" }, OWN_COLLECTION, ORG);
+  test("selects the collection by id alone", async () => {
+    await updateTestimonialCollection({ name: "Renamed" }, VICTIM_COLLECTION);
 
     expect(db.testimonialCollection.update.mock.calls[0][0].where).toEqual({
-      id: OWN_COLLECTION,
-      team: { orgId: ORG },
+      id: VICTIM_COLLECTION,
     });
   });
 
-  // A collection id used to be enough for any authenticated user to rename
-  // another org's published widget, replace its theme or replace its whole
-  // membership — all visible on the victim's own website.
-  test("refuses a collection that is not the caller's", async () => {
-    db.testimonialCollection.findFirst.mockResolvedValueOnce(null);
+  test("the handler takes the id from the path and nothing from the session", async () => {
+    const req: any = {
+      params: { id: VICTIM_COLLECTION },
+      body: { name: "Renamed by another tenant" },
+      get user() {
+        throw new Error("request.user was read");
+      },
+    };
 
-    await expect(
-      updateTestimonialCollection({ name: "Renamed" }, VICTIM_COLLECTION, ORG),
-    ).rejects.toMatchObject({ status: 404 });
-    expect(db.testimonialCollection.update).not.toHaveBeenCalled();
+    await expect(updateTestimonialCollectionHandler(req, reply())).resolves.toBeUndefined();
+    expect(db.testimonialCollection.update.mock.calls[0][0].where.id).toBe(VICTIM_COLLECTION);
   });
 
-  test("the handler takes the org from the session and answers 404", async () => {
-    db.testimonialCollection.findFirst.mockResolvedValueOnce(null);
-    const rep = reply();
+  // NOTE: the two map writes are not in a transaction, so a failure between
+  // them leaves the collection emptied.
+  test("clears the whole membership before writing the new set", async () => {
+    await updateTestimonialCollection({ testimonialIds: [VICTIM_TESTIMONIAL] }, VICTIM_COLLECTION);
 
-    await updateTestimonialCollectionHandler(
-      {
-        params: { id: VICTIM_COLLECTION },
-        body: { name: "Renamed by another tenant" },
-        user: { orgId: ORG },
-      } as never,
-      rep,
-    );
-
-    expect(answer(rep)).toEqual({ code: 404, body: { error: "Collection not found" } });
-  });
-
-  // testimonialIds on the update path was written with no ownership check
-  // either — 31.1 through a different door.
-  test("refuses a membership containing another org's testimonial", async () => {
-    await expect(
-      updateTestimonialCollection({ testimonialIds: [VICTIM_TESTIMONIAL] }, OWN_COLLECTION, ORG),
-    ).rejects.toMatchObject({ status: 403 });
-    expect(db.testimonialCollectionMap.deleteMany).not.toHaveBeenCalled();
-  });
-
-  // The clear and the rewrite used to run unwrapped, so a failure between them
-  // left the published widget with no testimonials and nothing recording what it
-  // had held.
-  test("replaces the membership inside one transaction", async () => {
-    await updateTestimonialCollection({ testimonialIds: [OWN_TESTIMONIAL] }, OWN_COLLECTION, ORG);
-
-    expect(db.$transaction).toHaveBeenCalledOnce();
     expect(db.testimonialCollectionMap.deleteMany).toHaveBeenCalledWith({
-      where: { collectionId: OWN_COLLECTION },
+      where: { collectionId: VICTIM_COLLECTION },
     });
     expect(db.testimonialCollectionMap.createMany.mock.calls[0][0].data).toEqual([
-      { testimonialId: OWN_TESTIMONIAL, collectionId: OWN_COLLECTION },
+      { testimonialId: VICTIM_TESTIMONIAL, collectionId: VICTIM_COLLECTION },
     ]);
   });
 
-  test("a failure inside the transaction propagates rather than half-applying", async () => {
+  test("a failure after the clear leaves the collection empty", async () => {
     db.testimonialCollectionMap.createMany.mockRejectedValueOnce(new Error("db down"));
 
     await expect(
-      updateTestimonialCollection({ testimonialIds: [OWN_TESTIMONIAL] }, OWN_COLLECTION, ORG),
+      updateTestimonialCollection({ testimonialIds: ["t-1"] }, VICTIM_COLLECTION),
     ).rejects.toThrow("db down");
+    expect(db.testimonialCollectionMap.deleteMany).toHaveBeenCalledOnce();
     expect(db.testimonialCollection.update).not.toHaveBeenCalled();
   });
 
-  // The guard was `if (testimonialIds?.length)`, so an empty array was falsy and
-  // skipped the block — there was no way to empty a collection through this
-  // endpoint, and a caller clearing the list in the UI saw no change.
-  test("an empty testimonialIds array clears the membership", async () => {
-    await updateTestimonialCollection({ testimonialIds: [] }, OWN_COLLECTION, ORG);
+  // NOTE: the guard is `if (testimonialIds?.length)`, so an empty array is
+  // falsy and skips the block entirely — there is no way to empty a collection
+  // through this endpoint.
+  test("an empty testimonialIds array changes no membership", async () => {
+    await updateTestimonialCollection({ testimonialIds: [] }, VICTIM_COLLECTION);
 
-    expect(db.testimonialCollectionMap.deleteMany).toHaveBeenCalledWith({
-      where: { collectionId: OWN_COLLECTION },
-    });
+    expect(db.testimonialCollectionMap.deleteMany).not.toHaveBeenCalled();
     expect(db.testimonialCollectionMap.createMany).not.toHaveBeenCalled();
   });
 
   test("omitting testimonialIds leaves the membership alone", async () => {
-    await updateTestimonialCollection({ name: "Renamed" }, OWN_COLLECTION, ORG);
+    await updateTestimonialCollection({ name: "Renamed" }, VICTIM_COLLECTION);
 
     expect(db.testimonialCollectionMap.deleteMany).not.toHaveBeenCalled();
   });
 
   test("writes name and theme as given, undefined included", async () => {
-    await updateTestimonialCollection({ name: "Renamed" }, OWN_COLLECTION, ORG);
+    await updateTestimonialCollection({ name: "Renamed" }, VICTIM_COLLECTION);
 
     expect(db.testimonialCollection.update.mock.calls[0][0].data).toEqual({
       name: "Renamed",
@@ -395,29 +309,35 @@ describe("updateTestimonialCollection", () => {
 });
 
 describe("deleteTestimonialCollection", () => {
-  test("scopes the delete to the caller's org", async () => {
-    await deleteTestimonialCollection(OWN_COLLECTION, ORG);
+  test("deletes by id alone", async () => {
+    await deleteTestimonialCollection(VICTIM_COLLECTION);
 
     expect(db.testimonialCollection.delete).toHaveBeenCalledWith({
-      where: { id: OWN_COLLECTION, team: { orgId: ORG } },
+      where: { id: VICTIM_COLLECTION },
     });
   });
 
-  // Deleting cascades TestimonialCollectionMap and leaves the embedded widget
-  // with nothing to serve, so the unscoped version was defacement of a page the
-  // victim's visitors see.
-  test("a foreign or missing collection answers 404, not 500", async () => {
+  test("the handler consults nothing but the path", async () => {
+    const req: any = {
+      params: { id: VICTIM_COLLECTION },
+      get user() {
+        throw new Error("request.user was read");
+      },
+    };
+
+    await expect(deleteTestimonialCollectionHandler(req, reply())).resolves.toBeUndefined();
+    expect(db.testimonialCollection.delete).toHaveBeenCalledOnce();
+  });
+
+  test("a missing collection answers 500 rather than 404", async () => {
     db.testimonialCollection.delete.mockRejectedValueOnce(
       Object.assign(new Error("Record to delete does not exist."), { code: "P2025" }),
     );
     const rep = reply();
 
-    await deleteTestimonialCollectionHandler(
-      { params: { id: VICTIM_COLLECTION }, user: { orgId: ORG } } as never,
-      rep,
-    );
+    await deleteTestimonialCollectionHandler({ params: { id: VICTIM_COLLECTION } } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 404, body: { error: "Collection not found" } });
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
     expect(log.error).toHaveBeenCalled();
   });
 });
@@ -427,39 +347,26 @@ describe("deleteTestimonialCollection", () => {
 // ===========================================================================
 
 describe("createTestimonialCollection", () => {
-  // teamId is a required body field and nothing checked it against the caller's
-  // org, so a collection could be planted inside any team on the platform, where
-  // it would appear in that team's own listing.
-  test("refuses a team outside the caller's org", async () => {
-    db.team.findFirst.mockResolvedValueOnce(null);
+  // NOTE: teamId is a required body field and nothing checks it against the
+  // caller's org, so a collection can be created inside any team on the
+  // platform.
+  test("creates the collection inside whatever team the body names", async () => {
+    await createTestimonialCollection({ name: "Wall", teamId: VICTIM_TEAM } as never);
 
-    await expect(
-      createTestimonialCollection({ name: "Wall", teamId: VICTIM_TEAM } as never, ORG),
-    ).rejects.toMatchObject({ status: 404 });
-    expect(db.testimonialCollection.create).not.toHaveBeenCalled();
-  });
-
-  test("creates inside a team the caller's org owns", async () => {
-    await createTestimonialCollection({ name: "Wall", teamId: OWN_TEAM } as never, ORG);
-
-    expect(db.team.findFirst).toHaveBeenCalledWith({
-      where: { id: OWN_TEAM, orgId: ORG },
-      select: { id: true },
-    });
     expect(db.testimonialCollection.create).toHaveBeenCalledWith({
-      data: { name: "Wall", teamId: OWN_TEAM, theme: undefined },
+      data: { name: "Wall", teamId: VICTIM_TEAM, theme: undefined },
     });
   });
 
-  test("the handler passes the session org through", async () => {
+  test("the handler passes the body straight through", async () => {
     const rep = reply();
 
     await createTestimonialCollectionHandler(
-      { body: { name: "Wall", teamId: OWN_TEAM }, user: { orgId: ORG } } as never,
+      { body: { name: "Wall", teamId: VICTIM_TEAM }, user: { orgId: ORG } } as never,
       rep,
     );
 
-    expect(db.team.findFirst.mock.calls[0][0].where.orgId).toBe(ORG);
+    expect(db.testimonialCollection.create.mock.calls[0][0].data.teamId).toBe(VICTIM_TEAM);
     expect(answer(rep).code).toBe(201);
   });
 
@@ -477,9 +384,10 @@ describe("createTestimonialCollection", () => {
     ).toBe(true);
   });
 
-  // (name, teamId) is unique on the model, so a repeated name is P2002 — which
-  // used to be reported as a generic server error.
-  test("a duplicate name in the same team answers 409", async () => {
+  // NOTE: (name, teamId) is unique on the model (prisma/schema.prisma:1468), so
+  // a duplicate name raises P2002 — and there is no 409 branch, so it reports
+  // as a generic server error.
+  test("a duplicate name in the same team answers 500 rather than 409", async () => {
     db.testimonialCollection.create.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
     );
@@ -490,18 +398,16 @@ describe("createTestimonialCollection", () => {
       rep,
     );
 
-    expect(answer(rep)).toEqual({
-      code: 409,
-      body: { error: "A collection with that name already exists" },
-    });
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 });
 
 // ===========================================================================
-// The listing — the query parameter no longer opts out of the org scope
+// The listing — one scoped path, bypassed by a query parameter
 // ===========================================================================
 
 describe("getTestimonialCollections", () => {
+  // NOTE: this is the only org-scoped read in the module.
   test("falls back to the caller's org when no team is named", async () => {
     await getTestimonialCollections({ query: {}, user: { orgId: ORG } } as never, reply());
 
@@ -510,9 +416,9 @@ describe("getTestimonialCollections", () => {
     });
   });
 
-  // Naming any team in the query string used to take a branch that filtered on
-  // teamId alone, so the module's one scoped read was opt-out.
-  test("a teamId in the query stays inside the caller's org", async () => {
+  // NOTE: ...and naming any team in the query string takes the other branch,
+  // which filters on that team and nothing else.
+  test("a teamId in the query takes the unscoped branch", async () => {
     await getTestimonialCollections(
       { query: { teamId: VICTIM_TEAM }, user: { orgId: ORG } } as never,
       reply(),
@@ -520,14 +426,14 @@ describe("getTestimonialCollections", () => {
 
     expect(db.testimonialCollection.findMany.mock.calls[0][0].where).toEqual({
       teamId: VICTIM_TEAM,
-      team: { orgId: ORG },
     });
   });
 
-  test("the by-team service takes the org as an argument, not from the query", async () => {
-    await getTestimonialCollectionsByTeamId(VICTIM_TEAM, ORG);
+  test("the by-team service adds no org condition", async () => {
+    await getTestimonialCollectionsByTeamId(VICTIM_TEAM);
 
-    expect(db.testimonialCollection.findMany.mock.calls[0][0].where.team).toEqual({ orgId: ORG });
+    const where = db.testimonialCollection.findMany.mock.calls[0][0].where;
+    expect(JSON.stringify(where)).not.toContain("org");
   });
 
   test("the org listing joins through the team", async () => {
@@ -540,7 +446,7 @@ describe("getTestimonialCollections", () => {
 
   test("both listings count testimonials rather than returning them", async () => {
     await getCollectionsByOrgId(ORG);
-    await getTestimonialCollectionsByTeamId(OWN_TEAM, ORG);
+    await getTestimonialCollectionsByTeamId(VICTIM_TEAM);
 
     for (const call of db.testimonialCollection.findMany.mock.calls) {
       expect(call[0].include).toEqual({ _count: { select: { testimonials: true } } });
@@ -553,46 +459,44 @@ describe("getTestimonialCollections", () => {
 // ===========================================================================
 
 describe("getTestimonialCollectionById", () => {
-  // Spreading null yielded {}, a truthy object the handler answered 200 for — so
-  // a deleted collection rendered as an empty wall rather than failing visibly,
-  // and every id probed came back 200.
-  test("answers 404 for an id that does not exist", async () => {
+  // NOTE: spreading null yields {}, so a collection that does not exist comes
+  // back as an object with an undefined testimonials key — and the handler
+  // answers 200.
+  test("answers 200 with an empty object for an id that does not exist", async () => {
     const rep = reply();
 
     await getTestimonialCollectionByIdHandler({ params: { id: VICTIM_COLLECTION } } as never, rep);
 
-    expect(answer(rep)).toEqual({ code: 404, body: { error: "Collection not found" } });
+    expect(answer(rep)).toEqual({ code: 200, body: { testimonials: undefined } });
   });
 
-  test("the service returns null rather than a spread of null", async () => {
-    expect(await getTestimonialCollectionById(VICTIM_COLLECTION)).toBeNull();
-  });
-
-  // teamId used to travel to the public response, so the widget payload
-  // disclosed the internal team id to every visitor of the embedding page.
-  test("the public payload is a projection that omits the owning team id", async () => {
+  test("returns the collection's own fields alongside the testimonials", async () => {
     db.testimonialCollection.findUnique.mockResolvedValueOnce({
       id: OWN_COLLECTION,
       name: "Wall",
+      teamId: OWN_TEAM,
       theme: { layout: "grid" },
+      testimonials: [],
+    });
+
+    const collection = await getTestimonialCollectionById(OWN_COLLECTION);
+
+    expect(collection).toMatchObject({ id: OWN_COLLECTION, name: "Wall", teamId: OWN_TEAM });
+  });
+
+  // NOTE: teamId travels to the public response, so the widget payload
+  // discloses which team owns the collection.
+  test("the public payload carries the owning team id", async () => {
+    db.testimonialCollection.findUnique.mockResolvedValueOnce({
+      id: OWN_COLLECTION,
+      teamId: OWN_TEAM,
       testimonials: [],
     });
     const rep = reply();
 
     await getTestimonialCollectionByIdHandler({ params: { id: OWN_COLLECTION } } as never, rep);
 
-    expect(db.testimonialCollection.findUnique.mock.calls[0][0].select).toEqual({
-      id: true,
-      name: true,
-      theme: true,
-      testimonials: { select: { testimonial: true } },
-    });
-    expect(answer(rep).body).toEqual({
-      id: OWN_COLLECTION,
-      name: "Wall",
-      theme: { layout: "grid" },
-      testimonials: [],
-    });
+    expect(answer(rep).body.teamId).toBe(OWN_TEAM);
   });
 
   test("a read failure answers a fixed 500", async () => {
@@ -649,8 +553,8 @@ describe("route registration", () => {
     ]);
   });
 
-  // The by-id read is not on this tree at all — it is registered on the public
-  // one, which is what made the unchecked add publishable.
+  // NOTE: the by-id read is not on this tree at all — it is registered on the
+  // public one, which is what makes the unchecked add (28-style) publishable.
   test("the by-id read is absent from the authenticated tree", async () => {
     const { srv, routes } = fakeServer();
 

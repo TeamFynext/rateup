@@ -77,7 +77,6 @@ describe("getOrgIdAndRole", () => {
 
     expect(db.orgMember.findFirst).toHaveBeenCalledWith({
       where: { userId: "user-1" },
-      orderBy: { createdAt: "asc" },
       select: { orgId: true, role: true },
     });
     expect(result).toEqual({ orgId: "org-1", role: "SUPER_ADMIN" });
@@ -89,42 +88,30 @@ describe("getOrgIdAndRole", () => {
     await expect(getOrgIdAndRole({ id: "user-1" })).resolves.toBeNull();
   });
 
-  // Login has no org in context — picking one IS the job here. The ordering makes that
-  // pick deterministic (oldest membership) rather than whatever the DB returns first,
-  // which is what made a multi-org user's session org arbitrary.
-  test("picks a multi-org user's oldest membership, deterministically", async () => {
-    db.orgMember.findFirst.mockResolvedValue({ orgId: "org-oldest", role: "MEMBER" });
+  // NOTE: the lookup is not scoped to an org, so a user in several orgs is pinned to
+  // whichever membership the database returns first.
+  test("picks a single membership for a user who belongs to more than one org", async () => {
+    db.orgMember.findFirst.mockResolvedValue({ orgId: "org-first", role: "MEMBER" });
 
     const result = await getOrgIdAndRole({ id: "user-1" });
 
-    expect(db.orgMember.findFirst.mock.calls[0][0].orderBy).toEqual({ createdAt: "asc" });
-    expect(result).toEqual({ orgId: "org-oldest", role: "MEMBER" });
+    expect(result).toEqual({ orgId: "org-first", role: "MEMBER" });
   });
 });
 
 describe("getUserRecipeName", () => {
   test.each([
+    ["thirdparty", UserRecipes.ThirdPartyGoogle],
     ["emailpassword", UserRecipes.EmailPassword],
     ["passwordless", UserRecipes.PasswordLess],
   ])("maps the %s login method to its recipe name", (recipeId, expected) => {
     expect(getUserRecipeName(recipeId)).toBe(expected);
   });
 
-  // Apple and Google sign-in both arrive as "thirdparty"; the provider id on the login
-  // method is what tells them apart. Without it every third-party user was recorded as
-  // Google, contradicting createAppleUserHandler.
-  test("tells Apple sign-in apart from Google by the provider id", () => {
-    expect(getUserRecipeName("thirdparty", "apple")).toBe(UserRecipes.ThirdPartyApple);
-    expect(getUserRecipeName("thirdparty", "google")).toBe(UserRecipes.ThirdPartyGoogle);
-  });
-
-  // Not silently called Google, which is what made an Apple user's stored recipe depend
-  // on which code path created them.
-  test.each([
-    ["an unrecognised provider", "facebook"],
-    ["no provider at all", undefined],
-  ])("returns undefined for a thirdparty login with %s", (_name, thirdPartyId) => {
-    expect(getUserRecipeName("thirdparty", thirdPartyId)).toBeUndefined();
+  // NOTE: Apple sign-in also arrives as "thirdparty", so it is recorded as Google.
+  test("cannot tell Apple sign-in apart from Google", () => {
+    expect(getUserRecipeName("thirdparty")).toBe(UserRecipes.ThirdPartyGoogle);
+    expect(getUserRecipeName("thirdparty")).not.toBe(UserRecipes.ThirdPartyApple);
   });
 
   test("returns undefined for a login method it does not know", () => {

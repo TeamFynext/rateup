@@ -113,16 +113,17 @@ export async function getAllResponses(
         }
       : {};
 
-  let whereCondtion = teamIds
-    ? {
-        surveyId: surveyId,
-        teamId: {
-          in: teamIds,
-        },
-      }
-    : {
-        surveyId: surveyId,
-      };
+  let whereCondtion =
+    teamIds && teamIds.length > 0
+      ? {
+          surveyId: surveyId,
+          teamId: {
+            in: teamIds,
+          },
+        }
+      : {
+          surveyId: surveyId,
+        };
   const responsesQuery = await prisma.surveyTeamMap.findMany({
     where: whereCondtion,
     select: {
@@ -718,11 +719,10 @@ export async function resetResponsesStats(surveyId: string) {
   return `Deleted ${deleteResponses.count} responses for surveyId: ${surveyId}`;
 }
 
-export async function deleteResponse(id: string, surveyTeamMapId: string) {
+export async function deleteResponse(id: string) {
   const deleteResponse = await prisma.surveyResponse.delete({
     where: {
       id,
-      surveyTeamMapId,
     },
   });
 
@@ -1021,7 +1021,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
   await doc.loadInfo();
 
   const BATCH_SIZE = 8000; // Tune this based on memory and Google API limits
-  let flow = await getFlowBySurveyId(surveyId, orgId);
+  let flow = await getFlowBySurveyId(surveyId);
   const filteredSecondArray = flow?.json?.screens?.flatMap(
     (screen) => screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
     // The sheet's leading/trailing columns (created-at, respondent, tag, team) are pushed in
@@ -1376,7 +1376,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       };
       resObj["Created At"] = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
 
-      let flow = await getFlowBySurveyId(surveyId, team.orgId);
+      let flow = await getFlowBySurveyId(surveyId);
       const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
         screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
       ) as unknown as Question2[];
@@ -1691,15 +1691,12 @@ export async function exportContactResponseToContacts(surveyId: string, orgId: s
       if (!contacts.length) return;
       let contactGroup = await getContactGroupByNameAndTeam(groupName, teamId);
       if (!contactGroup)
-        contactGroup = await createContactGroup(
-          {
-            name: groupName,
-            teamId,
-            tags: [],
-            type: ContactGroupType.NORMAL,
-          },
-          orgId,
-        );
+        contactGroup = await createContactGroup({
+          name: groupName,
+          teamId,
+          tags: [],
+          type: ContactGroupType.NORMAL,
+        });
       // Ensure each contact has required fields: name, source
       const contactsWithRequired = contacts.map((c) => ({
         ...c,

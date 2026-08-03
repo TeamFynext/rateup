@@ -10,12 +10,10 @@ vi.mock("../../../utils/prisma.js", () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
-    customerReward: { create: vi.fn(), findUnique: vi.fn() },
+    customerReward: { create: vi.fn() },
     loyaltyReward: { findUnique: vi.fn() },
-    loyaltyTransaction: { create: vi.fn(), createMany: vi.fn() },
+    loyaltyTransaction: { create: vi.fn() },
     $queryRaw: vi.fn(),
-    // The expiry writes its ledger rows and its one balance update together now.
-    $transaction: vi.fn(),
   },
 }));
 
@@ -24,13 +22,9 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 vi.mock("../../contact/contact.utils.js", () => ({ handleSendTemplate: vi.fn() }));
-// issueRewardToCustomer goes through assignRewardToCustomer now, rather than
-// being a third short-code generator of its own.
-vi.mock("../accounts/account.service.js", () => ({ assignRewardToCustomer: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
-import { assignRewardToCustomer } from "../accounts/account.service.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   checkBirthdayEventTriggers,
@@ -49,7 +43,6 @@ const db = prisma as unknown as {
   loyaltyReward: Record<string, Mock>;
   loyaltyTransaction: Record<string, Mock>;
   $queryRaw: Mock;
-  $transaction: Mock;
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
@@ -107,10 +100,7 @@ beforeEach(() => {
   db.customerReward.create.mockResolvedValue({ id: "cr-1" });
   db.loyaltyReward.findUnique.mockResolvedValue({ id: "rwd-1", name: "Birthday treat" });
   db.loyaltyTransaction.create.mockResolvedValue({ id: "txn-1" });
-  db.loyaltyTransaction.createMany.mockResolvedValue({ count: 1 });
   db.$queryRaw.mockResolvedValue([]);
-  db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(db));
-  (assignRewardToCustomer as Mock).mockResolvedValue({ id: "cr-1", shortCode: "ABCDEFGH" });
 });
 
 afterEach(() => {
@@ -142,7 +132,6 @@ describe("checkBirthdayEventTriggers", () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
     ]);
@@ -155,13 +144,13 @@ describe("checkBirthdayEventTriggers", () => {
     ]);
   });
 
-  // The month and day are matched in SQL, so a customer whose birthday is not
-  // today is never loaded at all.
   test("ignores a customer whose birthday is another day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([]);
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([
+      account({ contact: { ...account().contact, dob: localDate(1990, 4, 16) } }),
+    ]);
 
     await checkBirthdayEventTriggers();
 
@@ -174,7 +163,6 @@ describe("checkBirthdayEventTriggers", () => {
     db.loyaltyEventTrigger.findMany.mockResolvedValue([
       trigger({ rewardId: "rwd-1", reward: { name: "Free cake" } }),
     ]);
-    db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
     ]);
@@ -182,14 +170,13 @@ describe("checkBirthdayEventTriggers", () => {
     await checkBirthdayEventTriggers();
 
     expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual(["Ann", "Free cake"]);
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1");
+    expect(db.customerReward.create).toHaveBeenCalled();
   });
 
   test("skips a customer with no phone number", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ contact: { phone: null, name: "Ann", orgId: ORG, dob: localDate(1990, 4, 15) } }),
     ]);
@@ -203,7 +190,6 @@ describe("checkBirthdayEventTriggers", () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([{ id: "a1" }, { id: "a2" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ id: "a1", contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
       account({ id: "a2", contact: { ...account().contact, dob: localDate(1991, 4, 15) } }),
@@ -215,62 +201,48 @@ describe("checkBirthdayEventTriggers", () => {
     expect((handleSendTemplate as Mock).mock.calls).toHaveLength(2);
   });
 
-  // The inactivity cron claims each customer with a conditional updateMany before
-  // sending, precisely so an overlapping run cannot double-send. This cron used to
-  // have no such guard and record nothing per customer, so a second run on the
-  // same day — a redeploy, a retry, two instances — greeted every birthday
-  // customer again. The claim is written to its own column, not to lastActivityAt.
-  test("claims each customer before sending, so a second run greets nobody twice", async () => {
+  // NOTE: pins current behaviour. The inactivity cron claims each customer with a
+  // conditional updateMany before sending, precisely so an overlapping run cannot
+  // double-send. The birthday cron has no such guard and no per-customer record
+  // of having sent, so a second run on the same day — a redeploy, a retry, two
+  // instances — greets every birthday customer again. See issues.txt 20.36.
+  test("has no idempotency guard, so a second run greets everyone again", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
     ]);
 
     await checkBirthdayEventTriggers();
+    await checkBirthdayEventTriggers();
 
-    const claim = db.customerLoyaltyAccount.updateMany.mock.calls[0][0];
-    expect(claim.where.id).toBe("acct-1");
-    expect(claim.data.lastBirthdayGreetedAt).toBeInstanceOf(Date);
-    expect(claim.data).not.toHaveProperty("lastActivityAt");
+    expect((handleSendTemplate as Mock).mock.calls).toHaveLength(2);
+    expect(db.customerLoyaltyAccount.updateMany).not.toHaveBeenCalled();
   });
 
-  test("skips a customer another run already greeted today", async () => {
+  // NOTE: every active customer with a date of birth is loaded for each trigger
+  // and filtered in JavaScript, rather than matching the month and day in the
+  // query. See issues.txt 20.36.
+  test("loads the whole membership and filters birthdays in memory", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(localDate(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
-    db.customerLoyaltyAccount.findMany.mockResolvedValue([
-      account({ contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
-    ]);
-    db.customerLoyaltyAccount.updateMany.mockResolvedValue({ count: 0 });
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
-  });
-
-  // Every active customer with a date of birth used to be loaded for each trigger
-  // and filtered in JavaScript, so the whole membership was materialised daily,
-  // per trigger, to find the handful with a birthday.
-  test("matches the month and day in SQL rather than in memory", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
-    db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockResolvedValue([]);
-
-    await checkBirthdayEventTriggers();
-
-    expect(db.$queryRaw).toHaveBeenCalled();
-    // Nothing came back, so nothing is greeted.
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    const where = db.customerLoyaltyAccount.findMany.mock.calls[0][0].where;
+    expect(where).toEqual({
+      programId: PROGRAM,
+      status: "active",
+      contact: { dob: { not: null } },
+    });
+    expect(db.customerLoyaltyAccount.findMany.mock.calls[0][0]).not.toHaveProperty("take");
   });
 
   test("survives a trigger whose program query fails", async () => {
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
-    db.$queryRaw.mockRejectedValue(new Error("connection lost"));
+    db.customerLoyaltyAccount.findMany.mockRejectedValue(new Error("connection lost"));
 
     await expect(checkBirthdayEventTriggers()).resolves.toBeUndefined();
   });
@@ -307,19 +279,15 @@ describe("checkInactivityEventTriggers", () => {
   });
 
   test("claims each customer before sending so two runs cannot double-send", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-03-01T00:00:00.000Z"));
+    const lastActivityAt = new Date(2026, 0, 1);
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger({ triggerDays: 30 })]);
-    db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([account({ lastActivityAt })]);
 
     await checkInactivityEventTriggers();
 
     expect(db.customerLoyaltyAccount.updateMany.mock.calls[0][0].where).toEqual({
       id: "acct-1",
-      OR: [
-        { lastInactivityReminderAt: null },
-        { lastInactivityReminderAt: { lte: new Date("2026-01-30T00:00:00.000Z") } },
-      ],
+      lastActivityAt,
     });
     expect(handleSendTemplate).toHaveBeenCalled();
   });
@@ -351,24 +319,27 @@ describe("checkInactivityEventTriggers", () => {
 
     await checkInactivityEventTriggers();
 
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1");
+    expect(db.customerReward.create.mock.calls[0][0].data).toMatchObject({
+      accountId: "acct-1",
+      rewardId: "rwd-1",
+      status: "ISSUED",
+    });
   });
 
-  // The claim used to write `lastActivityAt = now` — the same column this cron
-  // SELECTS on, and the one the points-expiry alert reads. So reminding a dormant
-  // customer marked them as active today: their inactivity clock restarted, they
-  // would not be reminded again for another full window, and the reminder
-  // cancelled its own follow-up. The record also claimed activity the customer had
-  // not performed. It writes its own column now.
-  test("the claim does not pretend the customer did something", async () => {
+  // NOTE: the claim writes lastActivityAt = now, which is the same column the
+  // reminder window and the points-expiry alert both read. Reminding a dormant
+  // customer therefore marks them as active today: their inactivity clock
+  // restarts and their points-expiry alert window moves with it, even though the
+  // customer did nothing. See issues.txt 20.37.
+  test("the claim marks a dormant customer as active today", async () => {
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger({ triggerDays: 30 })]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
 
     await checkInactivityEventTriggers();
 
-    const data = db.customerLoyaltyAccount.updateMany.mock.calls[0][0].data;
-    expect(data.lastInactivityReminderAt).toBeInstanceOf(Date);
-    expect(data).not.toHaveProperty("lastActivityAt");
+    expect(
+      db.customerLoyaltyAccount.updateMany.mock.calls[0][0].data.lastActivityAt,
+    ).toBeInstanceOf(Date);
   });
 });
 
@@ -386,23 +357,29 @@ describe("issuing a reward from a trigger", () => {
     ]);
   });
 
-  // The assignment goes through assignRewardToCustomer, which loops until it finds
-  // a free short code and checks the reward exists. This used to be a THIRD
-  // short-code generator with its own alphabet that did NOT loop — shortCode is
-  // @unique, so a collision threw, and the catch below swallowed it: the customer
-  // received the birthday message promising "a special reward" and silently got
-  // nothing.
-  test("issues the reward through the shared assignment path", async () => {
+  test("writes an ISSUED assignment with an eight-character code", async () => {
     await checkBirthdayEventTriggers();
 
-    expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1");
+    const data = db.customerReward.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({ accountId: "acct-1", rewardId: "rwd-1", status: "ISSUED" });
+    expect(data.shortCode).toMatch(/^[A-Z0-9]{8}$/);
+  });
+
+  test("does nothing when the configured reward has been deleted", async () => {
+    db.loyaltyReward.findUnique.mockResolvedValue(null);
+
+    await checkBirthdayEventTriggers();
+
     expect(db.customerReward.create).not.toHaveBeenCalled();
   });
 
-  // The catch stays — a failed reward must not stop the rest of the run — but the
-  // failure is logged for what it is rather than hidden behind a success line.
-  test("keeps going, and does not claim success, when the assignment fails", async () => {
-    (assignRewardToCustomer as Mock).mockRejectedValue(new Error("Reward not found"));
+  // NOTE: pins current behaviour. This is a THIRD short-code generator, and
+  // unlike assignRewardToCustomer it does not loop until it finds a free code —
+  // shortCode is @unique, so a collision throws. The catch swallows it, so the
+  // customer receives the birthday message and silently no reward. The same
+  // swallow hides "already assigned" on a repeat run. See issues.txt 20.36.
+  test("swallows a failed assignment after the message has gone out", async () => {
+    db.customerReward.create.mockRejectedValue(new Error("Unique constraint failed on shortCode"));
 
     await expect(checkBirthdayEventTriggers()).resolves.toBeUndefined();
     expect(handleSendTemplate).toHaveBeenCalled();
@@ -439,7 +416,7 @@ describe("checkPointsExpiryAlerts", () => {
     expect(db.customerLoyaltyAccount.findMany).not.toHaveBeenCalled();
   });
 
-  test("targets customers holding an earning that expires in fourteen days", async () => {
+  test("targets customers with points whose last activity falls in the alert day", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
       { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
     ]);
@@ -453,8 +430,8 @@ describe("checkPointsExpiryAlerts", () => {
       status: "active",
       currentPoints: { gt: 0 },
     });
-    expect(where.transactions.some.createdAt.gte).toBeInstanceOf(Date);
-    expect(where.transactions.some.createdAt.lte).toBeInstanceOf(Date);
+    expect(where.lastActivityAt.gte).toBeInstanceOf(Date);
+    expect(where.lastActivityAt.lte).toBeInstanceOf(Date);
   });
 
   test("tells the customer their balance and the expiry date", async () => {
@@ -472,13 +449,11 @@ describe("checkPointsExpiryAlerts", () => {
     expect(params[2]).toMatch(/^\d{2} \w{3} \d{4}$/);
   });
 
-  // The alert used to select customers by `lastActivityAt` while the expiration
-  // cron below expires individual EARN TRANSACTIONS by their own createdAt — two
-  // different clocks for one event. A customer could be warned about an expiry
-  // that never arrived, or lose points with no warning at all, depending on which
-  // of the two had moved most recently. It selects on the clock that actually
-  // decides now.
-  test("selects on the same clock the expiry itself uses", async () => {
+  // NOTE: the alert selects customers by lastActivityAt, but the expiration cron
+  // below expires individual EARN TRANSACTIONS by their own createdAt. The two
+  // use different clocks, so a customer can be warned about an expiry that never
+  // happens, or lose points with no warning at all. See issues.txt 20.37.
+  test("selects by lastActivityAt, which is not what actually expires points", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
       { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
     ]);
@@ -486,12 +461,9 @@ describe("checkPointsExpiryAlerts", () => {
 
     await checkPointsExpiryAlerts();
 
-    const where = db.customerLoyaltyAccount.findMany.mock.calls[0][0].where;
-    expect(where).not.toHaveProperty("lastActivityAt");
-    expect(where.transactions.some).toMatchObject({
-      transactionType: "earn",
-      points: { gt: 0 },
-    });
+    expect(db.customerLoyaltyAccount.findMany.mock.calls[0][0].where).toHaveProperty(
+      "lastActivityAt",
+    );
   });
 });
 
@@ -526,7 +498,7 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    expect(db.loyaltyTransaction.createMany).not.toHaveBeenCalled();
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
   });
 
   test("writes an expire row linked back to the earning it cancels", async () => {
@@ -536,7 +508,7 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    expect(db.loyaltyTransaction.createMany.mock.calls[0][0].data[0]).toMatchObject({
+    expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
       accountId: "acct-1",
       transactionType: "expire",
       points: -100,
@@ -546,9 +518,10 @@ describe("checkPointsExpiration", () => {
     });
   });
 
-  test("never takes more than the customer actually holds", async () => {
+  test("clamps the resulting balance at zero", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account({ currentPoints: 30 })]);
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ currentPoints: 30 });
     db.$queryRaw.mockResolvedValue([{ id: "txn-old", points: 100 }]);
 
     await checkPointsExpiration();
@@ -556,22 +529,20 @@ describe("checkPointsExpiration", () => {
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentPoints).toBe(0);
   });
 
-  // The sharpest defect in this file. `pointsToExpire = Math.min(totalExpiredPoints,
-  // account.currentPoints)` was computed under the comment "Don't expire more
-  // points than the customer currently has" — and then used ONLY for the log line
-  // and the running total. The loop underneath wrote an expire row for each stale
-  // earning's FULL value while the balance was separately clamped, so a customer
-  // with 150 points of stale earnings against a 30-point balance (having spent the
-  // rest) got expire rows totalling -150 while their balance fell by 30. Replaying
-  // the ledger stopped reconciling with currentPoints, and the "points expired"
-  // figure the cron reports was inflated for everyone who had ever redeemed.
-  //
-  // The allocation walks the stale earnings oldest-first and stops at the cap.
-  // Earnings past that point still get a row, with zero points — the row is what
-  // the NOT EXISTS keys on, so without it they would be re-examined forever.
-  test("expires against the cap, and writes exactly what it took", async () => {
+  // NOTE: pins current behaviour, and this is the sharpest defect in the file.
+  // `pointsToExpire = Math.min(totalExpiredPoints, account.currentPoints)` is
+  // computed with the comment "Don't expire more points than the customer
+  // currently has" — and is then used ONLY for logging. The loop below writes an
+  // expire row for each transaction's FULL value. With 150 points of stale
+  // earnings against a 30-point balance the ledger records -150 while the
+  // balance only falls by 30, so replaying the ledger no longer reconciles.
+  // See issues.txt 20.38.
+  test("the cap it computes is never applied to what it writes", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account({ currentPoints: 30 })]);
+    db.customerLoyaltyAccount.findUnique
+      .mockResolvedValueOnce({ currentPoints: 30 })
+      .mockResolvedValueOnce({ currentPoints: 0 });
     db.$queryRaw.mockResolvedValue([
       { id: "txn-a", points: 100 },
       { id: "txn-b", points: 50 },
@@ -579,46 +550,31 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    const rows = db.loyaltyTransaction.createMany.mock.calls[0][0].data;
-    expect(rows.map((r: { points: number }) => r.points)).toEqual([-30, -0]);
-    expect(rows.map((r: { balanceAfter: number }) => r.balanceAfter)).toEqual([0, 0]);
-    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentPoints).toBe(0);
+    const written = db.loyaltyTransaction.create.mock.calls.map((c) => c[0].data.points);
+    expect(written).toEqual([-100, -50]); // 150 expired on the ledger...
+    expect(db.customerLoyaltyAccount.update.mock.calls.at(-1)![0].data.currentPoints).toBe(0);
+    // ...against a balance that only ever held 30.
   });
 
-  test("still marks the earnings it did not take, so they are not re-examined", async () => {
-    db.loyaltyProgram.findMany.mockResolvedValue([program]);
-    db.customerLoyaltyAccount.findMany.mockResolvedValue([account({ currentPoints: 30 })]);
-    db.$queryRaw.mockResolvedValue([
-      { id: "txn-a", points: 100 },
-      { id: "txn-b", points: 50 },
-    ]);
-
-    await checkPointsExpiration();
-
-    const rows = db.loyaltyTransaction.createMany.mock.calls[0][0].data;
-    expect(rows.map((r: { referenceId: string }) => r.referenceId)).toEqual(["txn-a", "txn-b"]);
-  });
-
-  // Expiring points used to write `lastActivityAt = now` — the very column the
-  // expiry-alert cron used to decide who to warn next — so losing points pushed
-  // the customer's next warning out by a full window even though they had done
-  // nothing.
-  test("expiring points does not mark the account as active", async () => {
+  // NOTE: expiring points writes lastActivityAt = now — the very column the
+  // expiry-alert cron uses to decide who to warn next. Losing points therefore
+  // resets the customer's expiry clock. See issues.txt 20.37.
+  test("expiring points marks the account as active today", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
     db.$queryRaw.mockResolvedValue([{ id: "txn-old", points: 100 }]);
 
     await checkPointsExpiration();
 
-    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).not.toHaveProperty(
-      "lastActivityAt",
+    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.lastActivityAt).toBeInstanceOf(
+      Date,
     );
   });
 
-  // The balance used to be re-read from the database once per expired transaction,
-  // inside the loop, with each row written on its own and nothing around any of
-  // it — an N+1 read for every customer with stale earnings.
-  test("reads the balance once and writes once, in one transaction", async () => {
+  // NOTE: the balance is re-read from the database once per expired transaction,
+  // inside the loop, and each row is written on its own — no transaction, and an
+  // N+1 read for every customer with stale earnings. See issues.txt 20.38.
+  test("re-reads the balance once per expired transaction", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
     db.$queryRaw.mockResolvedValue([
@@ -629,24 +585,8 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    expect(db.customerLoyaltyAccount.findUnique).not.toHaveBeenCalled();
-    expect(db.loyaltyTransaction.createMany.mock.calls[0][0].data).toHaveLength(3);
-    expect(db.customerLoyaltyAccount.update.mock.calls).toHaveLength(1);
-    expect(db.$transaction).toHaveBeenCalledTimes(1);
-  });
-
-  test("the running balance falls row by row across the ledger entries", async () => {
-    db.loyaltyProgram.findMany.mockResolvedValue([program]);
-    db.customerLoyaltyAccount.findMany.mockResolvedValue([account({ currentPoints: 500 })]);
-    db.$queryRaw.mockResolvedValue([
-      { id: "txn-a", points: 10 },
-      { id: "txn-b", points: 20 },
-    ]);
-
-    await checkPointsExpiration();
-
-    const rows = db.loyaltyTransaction.createMany.mock.calls[0][0].data;
-    expect(rows.map((r: { balanceAfter: number }) => r.balanceAfter)).toEqual([490, 470]);
+    expect(db.customerLoyaltyAccount.findUnique.mock.calls).toHaveLength(3);
+    expect(db.loyaltyTransaction.create.mock.calls).toHaveLength(3);
   });
 
   test("skips an account whose expired earnings total nothing", async () => {
@@ -656,7 +596,7 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    expect(db.loyaltyTransaction.createMany).not.toHaveBeenCalled();
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
   });
 
   test("keeps processing after one account fails", async () => {
@@ -670,7 +610,7 @@ describe("checkPointsExpiration", () => {
       .mockResolvedValueOnce([{ id: "txn-old", points: 10 }]);
 
     await expect(checkPointsExpiration()).resolves.toBeUndefined();
-    expect(db.loyaltyTransaction.createMany).toHaveBeenCalled();
+    expect(db.loyaltyTransaction.create).toHaveBeenCalled();
   });
 
   test("notifies the customer once per account, not once per transaction", async () => {

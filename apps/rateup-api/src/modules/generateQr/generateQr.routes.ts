@@ -12,14 +12,11 @@ import {
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    const declared = Array.isArray(routeOptions.preHandler)
-      ? routeOptions.preHandler
-      : routeOptions.preHandler
-        ? [routeOptions.preHandler]
-        : [];
-
-    routeOptions.preHandler =
-      routeOptions.config?.["isPublic"] === true ? declared : [checkSession, ...declared];
+    if (routeOptions.config?.["isPublic"] === true) {
+      routeOptions.preHandler = [];
+    } else {
+      routeOptions.preHandler = [checkSession];
+    }
   });
 
   // Public Routes

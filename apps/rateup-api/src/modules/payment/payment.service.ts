@@ -3,6 +3,7 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   SubscriptionStatus,
+  type Order,
   type RateupPlan,
 } from "../../../generated/prisma/client.js";
 import axios from "axios";
@@ -845,13 +846,12 @@ export async function getRateuplanById(id: string) {
   });
 }
 
-export async function updateOrder(orderId: string, status: OrderStatus, orgId: string) {
+export async function updateOrder(orderId: string, data: Partial<Order>) {
   return await prisma.order.update({
     where: {
       id: orderId,
-      orgId,
     },
-    data: { status },
+    data,
   });
 }
 

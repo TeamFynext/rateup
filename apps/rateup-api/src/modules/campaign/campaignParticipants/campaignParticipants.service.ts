@@ -8,29 +8,16 @@ import {
 import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { PaginationQuery } from "../../contact/contact.schema.js";
 import { CampaignParticipant, Prisma } from "../../../../generated/prisma/client.js";
-import { CampaignNotFoundError } from "../campaign.errors.js";
-
-async function assertCampaignInOrg(campaignId: string, orgId: string) {
-  const campaign = await prisma.campaign.findFirst({
-    where: { id: campaignId, team: { orgId } },
-    select: { id: true },
-  });
-  if (!campaign) throw new CampaignNotFoundError();
-  return campaign.id;
-}
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,
-  orgId: string,
   data: CreateCampaignParticipantsFromGroupsInput,
 ) {
-  await assertCampaignInOrg(campaignId, orgId);
   const contactGroupMaps = await prisma.contactGroupMap.findMany({
     where: {
       contactGroupId: {
         in: data.groupIds,
       },
-      contactGroup: { team: { orgId } },
     },
   });
 
@@ -50,18 +37,12 @@ export async function createCampaignParticipantsFromGroup(
 
 export async function createCampaignParticipantsFromContacts(
   campaignId: string,
-  orgId: string,
   data: CreateCampaignParticipantsFromContactsInput,
 ) {
-  await assertCampaignInOrg(campaignId, orgId);
-  const contacts = await prisma.contact.findMany({
-    where: { id: { in: data.contactIds }, orgId },
-    select: { id: true },
-  });
   const campaignParticipants = await prisma.campaignParticipant.createMany({
-    data: contacts.map(({ id }) => ({
+    data: data.contactIds.map((contactId) => ({
       campaignId,
-      contactId: id,
+      contactId: contactId,
       source: CampaignParticipantSource.INDIVIDUAL,
       status: CampaignParticipantStatus.PENDING,
     })),
@@ -71,16 +52,13 @@ export async function createCampaignParticipantsFromContacts(
 }
 export async function createCampaignParticipantsFromAnotherCampaign(
   campaignId: string,
-  orgId: string,
   data: Partial<Omit<CreateCampaignParticipantsInput, "groupIds" | "contactIds">>,
 ) {
-  await assertCampaignInOrg(campaignId, orgId);
   const campaignParticipantsOld = await prisma.campaignParticipant.findMany({
     where: {
       campaignId: {
         in: data.campaignIds,
       },
-      campaign: { team: { orgId } },
     },
     include: {
       campaign: {
@@ -106,10 +84,10 @@ export async function createCampaignParticipantsFromAnotherCampaign(
   const campaignParticipants = await prisma.campaignParticipant.createMany({
     data: campaignParticipantsOld
       ?.filter((participant) => statusValues.includes(participant.status.toUpperCase()))
-      ?.map(({ contactId, contactGroupId, source }) => ({
+      ?.map(({ contactId, contactGroupId }) => ({
         campaignId,
         contactId: contactId,
-        source: source ?? CampaignParticipantSource.INDIVIDUAL,
+        source: CampaignParticipantSource.GROUP,
         contactGroupId: contactGroupId,
         status: CampaignParticipantStatus.PENDING,
       })),
@@ -119,19 +97,17 @@ export async function createCampaignParticipantsFromAnotherCampaign(
 }
 export async function createCampaignParticipants(
   campaignId: string,
-  orgId: string,
   data: CreateCampaignParticipantsInput,
 ) {
-  await assertCampaignInOrg(campaignId, orgId);
   // Create participants from contacts, groups, and other campaigns
   const [fromContacts, fromGroups, fromCampaigns] = await Promise.all([
-    createCampaignParticipantsFromContacts(campaignId, orgId, {
+    createCampaignParticipantsFromContacts(campaignId, {
       contactIds: data.contactIds,
     }),
-    createCampaignParticipantsFromGroup(campaignId, orgId, {
+    createCampaignParticipantsFromGroup(campaignId, {
       groupIds: data.groupIds,
     }),
-    createCampaignParticipantsFromAnotherCampaign(campaignId, orgId, data),
+    createCampaignParticipantsFromAnotherCampaign(campaignId, data),
   ]);
 
   // Fetch all participant IDs for this campaign
@@ -190,12 +166,10 @@ export async function getCampaignParticipantsByCampaignId(campaignId: string, _e
 
 export async function getCampaignParticipantsByCampaignIdPaginated(
   campaignId: string,
-  orgId: string,
   query?: PaginationQuery & {
     selectedDripStage?: string;
   },
 ) {
-  await assertCampaignInOrg(campaignId, orgId);
   const {
     page,
     limit,
@@ -356,11 +330,10 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
   };
 }
 
-export async function getCampaignParticipantById(campaignParticipantId: string, orgId: string) {
-  const campaignParticipant = await prisma.campaignParticipant.findFirst({
+export async function getCampaignParticipantById(campaignParticipantId: string) {
+  const campaignParticipant = await prisma.campaignParticipant.findUnique({
     where: {
       id: campaignParticipantId,
-      campaign: { team: { orgId } },
     },
   });
   return campaignParticipant;
@@ -383,11 +356,10 @@ export async function getCampaignParticipantsByIds(campaignParticipantIds: strin
   return campaignParticipants;
 }
 
-export async function deleteCampaignParticipantById(campaignParticipantId: string, orgId: string) {
+export async function deleteCampaignParticipantById(campaignParticipantId: string) {
   const campaignParticipant = await prisma.campaignParticipant.delete({
     where: {
       id: campaignParticipantId,
-      campaign: { team: { orgId } },
     },
   });
   return campaignParticipant;
@@ -418,16 +390,12 @@ export async function updateDripCampaignParticipant(
   return campaignParticipant;
 }
 
-export async function multipleDeleteCampaignParticipant(
-  campaignParticipantIds: string[],
-  orgId: string,
-) {
+export async function multipleDeleteCampaignParticipant(campaignParticipantIds: string[]) {
   const campaignParticipant = await prisma.campaignParticipant.deleteMany({
     where: {
       id: {
         in: campaignParticipantIds,
       },
-      campaign: { team: { orgId } },
     },
   });
   return campaignParticipant;

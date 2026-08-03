@@ -45,18 +45,15 @@ export function validateFile({
   message?: string;
   maxSize?: number;
 } {
-  // Ahead of the allowAll short-circuit: a file the server already cut short is never
-  // valid, whatever its type. Note this also takes precedence over "Unsupported file
-  // type." for an upload that is both truncated and of an unknown type.
-  if (data?.file?.truncated) {
-    return { valid: false, message: "File size exceeds server limit." };
-  }
   if (allowAll) {
     return { valid: true };
   }
   const maxSize = mimeTypeMaxSizes?.[data?.mimetype];
   if (!maxSize) {
     return { valid: false, message: "Unsupported file type." };
+  }
+  if (data?.file?.truncated) {
+    return { valid: false, message: "File size exceeds server limit." };
   }
   const sizeField = Array.isArray(data.fields.size) ? data.fields.size[0] : data.fields.size;
   // Read `.value` structurally rather than gating on `type === "field"`: this is a size

@@ -18,25 +18,15 @@ export async function getWaQuickReplies(orgId: string) {
   });
 }
 
-export async function getWaQuickReplyById(id: string, orgId: string) {
-  return await prisma.whatsappQuickReply.findFirst({
+export async function getWaQuickReplyById(id: string) {
+  return await prisma.whatsappQuickReply.findUnique({
     where: {
       id,
-      orgId,
     },
   });
 }
 
-export async function deleteWaQuickReplyById(id: string, orgId: string) {
-  const existing = await prisma.whatsappQuickReply.findFirst({
-    where: { id, orgId },
-    select: { id: true },
-  });
-
-  if (!existing) {
-    throw new Error("Quick reply not found");
-  }
-
+export async function deleteWaQuickReplyById(id: string) {
   return await prisma.whatsappQuickReply.delete({
     where: {
       id,
@@ -44,20 +34,7 @@ export async function deleteWaQuickReplyById(id: string, orgId: string) {
   });
 }
 
-export async function updateWaQuickReplyById(
-  id: string,
-  orgId: string,
-  data: UpdateQuickReplyInput,
-) {
-  const existing = await prisma.whatsappQuickReply.findFirst({
-    where: { id, orgId },
-    select: { id: true },
-  });
-
-  if (!existing) {
-    throw new Error("Quick reply not found");
-  }
-
+export async function updateWaQuickReplyById(id: string, data: UpdateQuickReplyInput) {
   return await prisma.whatsappQuickReply.update({
     where: {
       id,

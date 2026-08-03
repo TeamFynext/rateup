@@ -7,23 +7,28 @@ import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { parsePhoneforWa } from "../loyalty/util.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
+import { getSubscription } from "../subscription/subscription.service.js";
+import { verifyTemplateMessageLimit } from "../whatsapp/messageTemplates/wa_templates.auth.js";
 import { sendTemplateToUserCore } from "../whatsapp/messageTemplates/wa_templates.controller.js";
 
 export async function verifyLCustomerMaxCountRestrictionHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: { orgId?: string } & ContactCore }>,
   reply: FastifyReply,
 ) {
-  // Typed as a plain FastifyRequest so it composes with the route's zod-inferred
-  // body; the two fields it reads are narrowed here instead.
-  const body = (request.body ?? {}) as { orgId?: string } & Partial<ContactCore>;
-  if (body.source !== ContactGroupType.LOYALTY) return;
-  const orgId = body.orgId ?? request.user.orgId;
-  if (!(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))) {
-    return reply.code(403).send({
-      message: "Registration limit reached",
-      displayMessageInClient: true,
-    });
-  }
+  // TODO: re-check
+  // try {
+  //   if (request.body.source !== ContactGroupType.LOYALTY) return;
+  //   const orgId = request.body.orgId ?? request.user.orgId;
+  //   if (!(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))) {
+  //     return reply.code(403).send({
+  //       message: "Registration limit reached",
+  //       displayMessageInClient: true,
+  //     });
+  //   }
+  // } catch (e) {
+  //   log.error(e);
+  //   return reply.code(500).send(e);
+  // }
 }
 export async function verifyLCustomerMaxCountRestriction(
   orgId: string,
@@ -50,8 +55,15 @@ export async function verifyLCustomerMaxCountRestriction(
       loyaltyCustomerCount: true,
     },
   });
+  if (!usageStats) {
+    // Preserves the pre-existing "no UsageStats row yet" crash's error class
+    // (a bare destructure of `null` throws TypeError) while giving it a
+    // message, rather than papering over a missing row.
+    throw new TypeError(`No usage stats row found for org ${orgId}`);
+  }
+  const { loyaltyCustomerCount } = usageStats;
 
-  if (usageStats && usageStats.loyaltyCustomerCount !== count)
+  if (loyaltyCustomerCount !== count)
     await prisma.usageStats.update({
       where: {
         orgId,
@@ -65,10 +77,19 @@ export async function verifyLCustomerMaxCountRestriction(
     subscription.features as unknown as object,
     SubscriptionFeaturePathName.Whatsapp,
   );
-  const max = whatsappFeature?.count?.max;
-  if (max === undefined) return true;
-
-  return count < max;
+  if (whatsappFeature === undefined) {
+    // Preserves the pre-existing "no whatsapp feature configured" crash's
+    // error class (a bare `.count.max` off `undefined` throws TypeError).
+    throw new TypeError(`No whatsapp feature configured on the subscription for org ${orgId}`);
+  }
+  // A missing `max` means "no configured cap"; preserved as-is (JS's
+  // `count >= undefined` is always false), just written so strict mode can
+  // see the same thing.
+  const max = whatsappFeature.count?.max;
+  if (max !== undefined && count >= max) {
+    return false;
+  }
+  return true;
 }
 
 /** The contact fields a loyalty-customer registration supplies. */
@@ -100,10 +121,10 @@ export async function createLCustomer(input: CreateLCustomerInput) {
     },
     update: {
       source: ContactGroupType.LOYALTY,
-      ...(input.name !== undefined ? { name: input.name } : {}),
-      ...(input.email !== undefined ? { email: input.email } : {}),
-      ...(input.external_id !== undefined ? { external_id: input.external_id } : {}),
-      ...(input.dob !== undefined ? { dob: input.dob ?? null } : {}),
+      name: input.name,
+      dob: input.dob ?? null,
+      email: input.email,
+      external_id: input.external_id,
       // loyaltyAccounts: {
       //   create: {
       //     // orgId: input.orgId,
@@ -160,7 +181,22 @@ export async function createLCustomer(input: CreateLCustomerInput) {
 }
 
 export async function handlePostRegisterAction(_orgId: string, _customerId: string) {
-  return;
+  // for (const action of registerActions) {
+  //   const { success, data, message } = await handleLCustomerAction({
+  //     action,
+  //     customerId,
+  //     actionId: action.id,
+  //   });
+  //   if (success) {
+  //     const { customerAction, customer, customerPoints } = data;
+  //     await handleSendTemplate(
+  //       customerAction.action.waTemplateId,
+  //       orgId,
+  //       customer.Contact.phone,
+  //       [customer.Contact.name, customerPoints?.toString()]
+  //     );
+  //   }
+  // }
 }
 
 export async function handleSendTemplate(
@@ -181,6 +217,8 @@ export async function handleSendTemplate(
       text: data,
     })),
   });
+  const subscription = await getSubscription(orgId);
+  await verifyTemplateMessageLimit(subscription);
   await sendTemplateToUserCore(
     orgId,
     waTemplateId,

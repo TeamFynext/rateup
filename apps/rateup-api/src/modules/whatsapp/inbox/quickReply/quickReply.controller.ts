@@ -37,10 +37,7 @@ export async function getWaQuickReplyByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getWaQuickReplyById(request.params.quickReplyId, request.user.orgId);
-    if (!res) {
-      return reply.code(404).send("Quick reply not found");
-    }
+    const res = await getWaQuickReplyById(request.params.quickReplyId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -53,12 +50,9 @@ export async function deleteWaQuickReplyByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await deleteWaQuickReplyById(request.params.quickReplyId, request.user.orgId);
+    const res = await deleteWaQuickReplyById(request.params.quickReplyId);
     reply.code(200).send(res);
   } catch (e) {
-    if (e instanceof Error && e.message === "Quick reply not found") {
-      return reply.code(404).send(e.message);
-    }
     log.error(e);
     reply.code(500).send(e);
   }
@@ -72,16 +66,9 @@ export async function updateWaQuickReplyByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await updateWaQuickReplyById(
-      request.params.quickReplyId,
-      request.user.orgId,
-      request.body,
-    );
+    const res = await updateWaQuickReplyById(request.params.quickReplyId, request.body);
     reply.code(200).send(res);
   } catch (e) {
-    if (e instanceof Error && e.message === "Quick reply not found") {
-      return reply.code(404).send(e.message);
-    }
     log.error(e);
     reply.code(500).send(e);
   }

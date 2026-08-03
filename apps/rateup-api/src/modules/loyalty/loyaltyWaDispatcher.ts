@@ -98,36 +98,33 @@ export async function dispatchLoyaltyNotification(
     } else {
       templateId = payload.rewardWaTemplateId || null;
     }
-    const text = (value: string | number | undefined) =>
-      value === undefined || value === null ? "" : String(value);
+    const params: string[] = [];
 
-    const params: string[] = [text(payload.customerName)];
+    // Common: Name is usually first.
+    if (payload.customerName) params.push(payload.customerName);
 
     if (
       commandKey === LoyaltyEventType.POINTS_ISSUED ||
       commandKey === LoyaltyEventType.POINTS_ADJUSTED
     ) {
-      params.push(text(payload.points), text(payload.balanceAfter));
+      if (payload.points !== undefined) params.push(payload.points.toString());
+      if (payload.balanceAfter !== undefined) params.push(payload.balanceAfter.toString());
     } else if (
       commandKey === LoyaltyEventType.REWARD_ISSUED ||
       commandKey === LoyaltyEventType.REWARD_REDEEMED
     ) {
-      params.push(
-        text(payload.rewardName),
-        text(payload.redemptionCode),
-        // Cost
-        text(payload.points === undefined ? undefined : Math.abs(payload.points)),
-      );
+      if (payload.rewardName) params.push(payload.rewardName);
+      if (payload.redemptionCode) params.push(payload.redemptionCode);
+      if (payload.points !== undefined) params.push(Math.abs(payload.points).toString()); // Cost
     } else if (commandKey === LoyaltyEventType.TIER_UPGRADED) {
-      params.push(text(payload.newTier));
+      if (payload.newTier) params.push(payload.newTier);
     }
 
     log.trace(`[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`);
     await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
   } catch (error) {
-    log.error(
-      { err: error, commandKey, orgId },
-      `[LoyaltyWaDispatcher] Error dispatching ${commandKey}`,
-    );
+    console.log("🚀 ~ dispatchLoyaltyNotification ~ error:", error);
+    log.error({ error }, `[LoyaltyWaDispatcher] Error dispatching ${commandKey}`);
+    // Don't throw, silence error to avoid blocking transaction
   }
 }

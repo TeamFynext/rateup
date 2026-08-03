@@ -1,12 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import * as ctrl from "./metaAgent.controller.js";
 import {
-  type ByIdParams,
-  type ByWhatsappSettingsIdParams,
-  type ConnectorBody,
-  type ConnectorToolBody,
   agentEventBodySchema,
   agentSettingsBodySchema,
   agentTestBodySchema,
@@ -35,8 +30,6 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
   const p = "/:whatsappSettingsId";
-
-  const adminOnly = [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])];
 
   server.get(
     p,
@@ -221,17 +214,14 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byWhatsappSettingsIdParamSchema } },
     ctrl.listConnectorsHandler,
   );
-  server.post<{ Params: ByWhatsappSettingsIdParams; Body: ConnectorBody }>(
+  server.post(
     `${p}/connectors`,
-    {
-      preHandler: adminOnly,
-      schema: { params: byWhatsappSettingsIdParamSchema, body: connectorBodySchema },
-    },
+    { schema: { params: byWhatsappSettingsIdParamSchema, body: connectorBodySchema } },
     ctrl.createConnectorHandler,
   );
-  server.delete<{ Params: ByIdParams }>(
+  server.delete(
     `${p}/connectors/:id`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema } },
+    { schema: { params: byIdParamSchema } },
     ctrl.deleteConnectorHandler,
   );
   server.get(
@@ -239,25 +229,19 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byIdParamSchema, querystring: connectorLogsQuerySchema } },
     ctrl.getConnectorLogsHandler,
   );
-  server.post<{ Params: ByIdParams; Body: { api_key: string } }>(
+  server.post(
     `${p}/connectors/:id/upsertApiKey`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema, body: upsertApiKeyBodySchema } },
+    { schema: { params: byIdParamSchema, body: upsertApiKeyBodySchema } },
     ctrl.upsertConnectorApiKeyHandler,
   );
-  server.post<{
-    Params: ByIdParams;
-    Body: { client_id: string; client_secret: string; token_url?: string };
-  }>(
+  server.post(
     `${p}/connectors/:id/upsertOAuth`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema, body: upsertOAuthBodySchema } },
+    { schema: { params: byIdParamSchema, body: upsertOAuthBodySchema } },
     ctrl.upsertConnectorOAuthHandler,
   );
-  server.post<{ Params: ByIdParams; Body: { certificate: string; private_key?: string } }>(
+  server.post(
     `${p}/connectors/:id/upsertCertificate`,
-    {
-      preHandler: adminOnly,
-      schema: { params: byIdParamSchema, body: upsertCertificateBodySchema },
-    },
+    { schema: { params: byIdParamSchema, body: upsertCertificateBodySchema } },
     ctrl.upsertConnectorCertificateHandler,
   );
   server.post(
@@ -272,35 +256,19 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byConnectorIdParamSchema } },
     ctrl.listConnectorToolsHandler,
   );
-  server.post<{
-    Params: { whatsappSettingsId: string; connectorId: string };
-    Body: ConnectorToolBody;
-  }>(
+  server.post(
     `${p}/connectors/:connectorId/tools`,
-    {
-      preHandler: adminOnly,
-      schema: { params: byConnectorIdParamSchema, body: connectorToolBodySchema },
-    },
+    { schema: { params: byConnectorIdParamSchema, body: connectorToolBodySchema } },
     ctrl.createConnectorToolHandler,
   );
-  server.delete<{
-    Params: { whatsappSettingsId: string; connectorId: string; toolId: string };
-  }>(
+  server.delete(
     `${p}/connectors/:connectorId/tools/:toolId`,
-    { preHandler: adminOnly, schema: { params: byConnectorToolIdParamSchema } },
+    { schema: { params: byConnectorToolIdParamSchema } },
     ctrl.deleteConnectorToolHandler,
   );
-  // A tool run is an outbound call to the business's own systems using those
-  // credentials, so it belongs with them rather than with the reads.
-  server.post<{
-    Params: { whatsappSettingsId: string; connectorId: string; toolId: string };
-    Body: { input?: Record<string, unknown> };
-  }>(
+  server.post(
     `${p}/connectors/:connectorId/tools/:toolId/run`,
-    {
-      preHandler: adminOnly,
-      schema: { params: byConnectorToolIdParamSchema, body: connectorToolRunBodySchema },
-    },
+    { schema: { params: byConnectorToolIdParamSchema, body: connectorToolRunBodySchema } },
     ctrl.runConnectorToolHandler,
   );
   server.post(

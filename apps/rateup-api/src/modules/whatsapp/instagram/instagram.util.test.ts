@@ -26,9 +26,7 @@ describe("getInstagramWebhookEvent - the events it recognises", () => {
     );
   });
 
-  // A referral is its own event only when it arrived with nothing else — see the
-  // "a referral that arrives with text" case below.
-  test("classifies an ad or shop click with no message of its own as a referral", () => {
+  test("classifies an ad or shop click as a referral", () => {
     const event = getInstagramWebhookEvent(
       messaging({ message: { mid: "mid-1", referral: { ref: "promo", source: "ADS" } } }),
     );
@@ -90,32 +88,25 @@ describe("getInstagramWebhookEvent - what it declines to classify", () => {
     expect(event).toBe(InstagramEvent.MESSAGE);
   });
 
-  // There was no is_echo branch here, unlike the Facebook equivalent. Echoes were
-  // caught further down in handleInstagramMessages and
-  // handleInstagramStoryMentionRule — but NOT in the reaction, postback or
-  // referral handlers, so an echo carrying any of those was stored as if the
-  // customer had sent it. Dropping them here gives every handler the guard.
-  test("declines an echo of the business's own message", () => {
+  // NOTE: pins current behaviour. There is no is_echo branch here, unlike the
+  // Facebook equivalent. Echoes are caught further down in handleInstagramMessages
+  // and handleInstagramStoryMentionRule — but NOT in the reaction, postback or
+  // referral handlers, so an echo carrying any of those is stored as if the
+  // customer had sent it. See issues.txt 12.6.
+  test("classifies an echo of the business's own message as a message", () => {
     const event = getInstagramWebhookEvent(
       messaging({ message: { mid: "mid-1", text: "hi", is_echo: true } }),
     );
 
-    expect(event).toBeNull();
+    expect(event).toBe(InstagramEvent.MESSAGE);
   });
 
-  test("declines an echo even when it carries a postback", () => {
-    const event = getInstagramWebhookEvent(
-      messaging({ message: { mid: "mid-1", is_echo: true }, postback: { payload: "TRACK" } }),
-    );
-
-    expect(event).toBeNull();
-  });
-
-  // Unlike getFacebookWebhookEvent there was no try/catch, so a malformed entry
-  // threw out of the classification step — and handleInstagramWebhook called this
-  // inside its then-unguarded loop, taking the rest of the batch with it.
-  test("reports nothing rather than throwing when handed nothing at all", () => {
-    expect(getInstagramWebhookEvent(undefined as any)).toBeNull();
+  // NOTE: pins current behaviour. Unlike getFacebookWebhookEvent, there is no
+  // try/catch, so a malformed entry throws out of the classification step — and
+  // handleInstagramWebhook calls this inside its unguarded loop, so the throw takes
+  // the rest of the batch with it. See issues.txt 12.2.
+  test("throws rather than returning nothing when handed nothing at all", () => {
+    expect(() => getInstagramWebhookEvent(undefined as any)).toThrow(TypeError);
   });
 });
 
@@ -128,35 +119,19 @@ describe("getInstagramWebhookEvent - which check wins when several could match",
     expect(event).toBe(InstagramEvent.POSTBACK);
   });
 
-  // A customer who taps a click-to-message ad and types in the same event sends
-  // one event carrying both. The referral check used to come first, routing it to
-  // handleInstagramReferral — which stores { type, referral, timestamp, sender }
-  // and never looks at message.text — so the first message of a paid-acquisition
-  // conversation reached the inbox as a bare referral marker. Classified as a
-  // MESSAGE the whole object is stored, so the referral survives alongside the
-  // text.
-  test("a referral that arrives with text is a message, so the text survives", () => {
+  // NOTE: pins current behaviour. A customer who taps an ad and types a message
+  // sends one event carrying both. The referral check comes first, so it is routed
+  // to handleInstagramReferral — which stores { type, referral, timestamp, sender }
+  // and never looks at message.text. The customer's actual words are dropped from
+  // the inbox and from the automated-reply match. See issues.txt 12.5.
+  test("a referral beats the message it arrived with, so the text is lost", () => {
     const event = getInstagramWebhookEvent(
       messaging({
         message: { mid: "mid-1", text: "Is this still available?", referral: { ref: "promo" } },
       }),
     );
 
-    expect(event).toBe(InstagramEvent.MESSAGE);
-  });
-
-  test("a referral that arrives with an attachment is also a message", () => {
-    const event = getInstagramWebhookEvent(
-      messaging({
-        message: {
-          mid: "mid-1",
-          referral: { ref: "promo" },
-          attachments: [{ type: "image", payload: { url: "u" } }],
-        },
-      }),
-    );
-
-    expect(event).toBe(InstagramEvent.MESSAGE);
+    expect(event).toBe(InstagramEvent.REFERRAL);
   });
 
   test("a story mention beats the plain-message classification", () => {

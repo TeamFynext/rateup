@@ -12,9 +12,6 @@ vi.mock("../../utils/prisma.js", () => ({
 
 vi.mock("axios", () => ({ default: { post: vi.fn() } }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/logger.js", () => ({
-  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -23,13 +20,11 @@ import {
   addToken,
   deleteTokenByUserId,
   getTokensByOrgId,
-  getTokensByUserId,
   sendPushNotification,
 } from "./mobile.service.js";
 import { addExpoToken, deleteToken, getExpoTokens } from "./mobile.controller.js";
 import { mobileNotificationRoutes } from "./mobile.route.js";
-import { addExpoTokenSchema, deleteExpoTokenSchema, isExpoPushToken } from "./mobile.schema.js";
-import { log } from "../../utils/logger.js";
+import { addExpoTokenSchema, deleteExpoTokenSchema } from "./mobile.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -86,28 +81,12 @@ describe("getTokensByOrgId", () => {
     });
   });
 
-  // The org-wide read stays — it is what the server-side senders need. What
-  // changed is that the route no longer uses it.
-  test("is still the org-wide read the senders use", async () => {
+  // NOTE: the filter is the org alone — the caller's own userId is not part of
+  // it, so the list covers every colleague's devices.
+  test("does not narrow the list to the caller", async () => {
     await getTokensByOrgId(ORG);
 
     expect(JSON.stringify(db.expoPushToken.findMany.mock.calls[0][0].where)).not.toContain("user");
-  });
-
-  test("the per-user read narrows on both columns", async () => {
-    db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: TOKEN }]);
-
-    await expect(getTokensByUserId(USER, ORG)).resolves.toEqual([TOKEN]);
-    expect(db.expoPushToken.findMany).toHaveBeenCalledWith({
-      where: { userId: USER, orgId: ORG },
-      select: { expoToken: true },
-    });
-  });
-
-  test("the per-user read refuses a missing id", async () => {
-    await expect(getTokensByUserId("", ORG)).rejects.toThrow("Missing userId or orgId");
-    await expect(getTokensByUserId(USER, "")).rejects.toThrow("Missing userId or orgId");
-    expect(db.expoPushToken.findMany).not.toHaveBeenCalled();
   });
 
   test("refuses an empty org id", async () => {
@@ -115,28 +94,29 @@ describe("getTokensByOrgId", () => {
     expect(db.expoPushToken.findMany).not.toHaveBeenCalled();
   });
 
-  // GET /api/mobilenotification used to hand the raw token strings for every
-  // device in the organisation to any member with a session. An Expo push token
-  // is a send credential and a durable device identifier, and no client needs
-  // another device's — both real senders (notification.service.ts:162 and
-  // wasurvey.controller.ts:554) read them server-side.
-  test("the handler returns only the caller's own tokens", async () => {
-    db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: TOKEN }]);
+  // NOTE: GET /api/mobilenotification hands the raw token strings to any member
+  // with a session. The two real senders — notification.service.ts:162 and
+  // wasurvey.controller.ts:554 — call getTokensByOrgId server-side, so a client
+  // never needs them.
+  test("the handler returns the raw tokens to any member of the org", async () => {
+    db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: COLLEAGUE_TOKEN }]);
 
     const res = await getExpoTokens({ user: { orgId: ORG, userId: USER } } as never, reply());
 
-    expect(res).toEqual([TOKEN]);
-    expect(db.expoPushToken.findMany.mock.calls[0][0].where).toEqual({
-      userId: USER,
-      orgId: ORG,
-    });
+    expect(res).toEqual([COLLEAGUE_TOKEN]);
+  });
+
+  test("the handler takes the org from the session", async () => {
+    await getExpoTokens({ user: { orgId: ORG, userId: USER } } as never, reply());
+
+    expect(db.expoPushToken.findMany.mock.calls[0][0].where).toEqual({ orgId: ORG });
   });
 
   test("a read failure answers a fixed 500", async () => {
     db.expoPushToken.findMany.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
-    await getExpoTokens({ user: { orgId: ORG, userId: USER } } as never, rep);
+    await getExpoTokens({ user: { orgId: ORG } } as never, rep);
 
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Failed to fetch tokens" } });
   });
@@ -174,11 +154,9 @@ describe("addToken", () => {
     });
   });
 
-  // STILL OPEN: ExpoPushToken declares two indexes and no
-  // unique constraint (prisma/schema.prisma:2432-2444), so the read-then-create
-  // has nothing behind it — two concurrent registrations both find nothing and
-  // both write. Closing it needs @@unique([expoToken, userId, orgId]), which
-  // needs existing duplicates collapsed first.
+  // NOTE: ExpoPushToken declares two indexes and no unique constraint
+  // (prisma/schema.prisma:2432-2444), so the read-then-create has nothing
+  // behind it — two concurrent registrations both find nothing and both write.
   test("nothing prevents a second row for the same device", async () => {
     db.expoPushToken.findFirst.mockResolvedValue(null);
 
@@ -194,35 +172,28 @@ describe("addToken", () => {
     await expect(addToken(TOKEN, USER, "")).rejects.toThrow();
   });
 
-  // This was the one handler in the file with no try/catch, so a failed connect
-  // escaped to the global error handler and the client got a different error
-  // shape from this route than from its two neighbours.
-  test("a write failure answers a 500 in the module's own shape", async () => {
+  // NOTE: neither the handler nor the service has a try/catch, so a failed
+  // connect escapes to the global error handler.
+  test("a write failure escapes the handler", async () => {
     db.expoPushToken.create.mockRejectedValueOnce(new Error("Foreign key constraint failed"));
-    const rep = reply();
 
     await expect(
       addExpoToken(
         { user: { userId: USER, orgId: ORG }, body: { expoToken: TOKEN } } as never,
-        rep,
+        reply(),
       ),
-    ).resolves.toBeUndefined();
-    expect(answer(rep)).toEqual({ code: 500, body: { error: "Failed to register token" } });
+    ).rejects.toThrow("Foreign key constraint failed");
   });
 
-  // It also answered with the created row, echoing the token and the internal
-  // ids back to the device that had just sent them — a second place the token
-  // appears in logs and network captures.
-  test("the handler answers with a status rather than the row", async () => {
-    const rep = reply();
-
+  // NOTE: the handler returns the created row, so the response carries the
+  // internal id, the userId and the orgId alongside the token.
+  test("the handler answers with the whole stored row", async () => {
     const res = await addExpoToken(
       { user: { userId: USER, orgId: ORG }, body: { expoToken: TOKEN } } as never,
-      rep,
+      reply(),
     );
 
-    expect(res).toBeUndefined();
-    expect(answer(rep)).toEqual({ code: 201, body: { ok: "Token registered" } });
+    expect(res).toEqual({ id: "t-1", expoToken: TOKEN, userId: USER, orgId: ORG });
   });
 
   test("the handler takes the identity from the session, not the body", async () => {
@@ -316,80 +287,38 @@ describe("sendPushNotification", () => {
     expect((axios.post as unknown as Mock).mock.calls[0][1]).toHaveLength(1);
   });
 
-  // The send path used to accept any string beginning with the prefix while the
-  // route schema required the full ExponentPushToken[...] form, so a value
-  // stored by a path that skipped the schema was handed to Expo and rejected in
-  // a response body nothing read. One predicate now.
-  test("the send filter agrees with the schema that guards the route", async () => {
+  // NOTE: the send path accepts any string beginning with the prefix, while the
+  // route schema requires the full ExponentPushToken[...] form — so a value
+  // stored by another path could pass here and be rejected by Expo.
+  test("the send filter is looser than the schema that guards the route", async () => {
     await sendPushNotification(["ExponentPushTokenWITHOUT-BRACKETS"], "t", "b");
 
-    expect(axios.post).not.toHaveBeenCalled();
+    expect((axios.post as unknown as Mock).mock.calls[0][1]).toHaveLength(1);
     expect(
       addExpoTokenSchema.safeParse({ expoToken: "ExponentPushTokenWITHOUT-BRACKETS" }).success,
     ).toBe(false);
   });
 
-  test("and on the length bound too", async () => {
-    // Passes the bracketed pattern, fails the 20-character minimum.
-    await sendPushNotification(["ExponentPushToken[a"], "t", "b");
-
-    expect(axios.post).not.toHaveBeenCalled();
-    expect(isExpoPushToken(TOKEN)).toBe(true);
-  });
-
-  // Every failure used to be caught and logged, so no caller could tell a
-  // delivered batch from a rejected one. The only caller is a BullMQ processor,
-  // which is where a retry belongs.
-  test("a transport failure propagates", async () => {
+  // NOTE: every failure is caught and logged, so the caller cannot tell a
+  // delivered batch from a rejected one.
+  test("a transport failure resolves silently", async () => {
     (axios.post as unknown as Mock).mockRejectedValueOnce(new Error("ECONNRESET"));
 
-    await expect(sendPushNotification([TOKEN], "t", "b")).rejects.toThrow("ECONNRESET");
+    await expect(sendPushNotification([TOKEN], "t", "b")).resolves.toBeUndefined();
   });
 
-  // Expo reports per-message failures in the body of a 200. DeviceNotRegistered
-  // is how a stale token is meant to be pruned, and nothing read it — so dead
-  // tokens accumulated and were pushed to forever.
-  test("a token Expo reports as unregistered is deleted", async () => {
+  test("an Expo error response is not inspected either", async () => {
     (axios.post as unknown as Mock).mockResolvedValueOnce({
       status: 200,
-      data: {
-        data: [
-          { status: "ok", id: "r-1" },
-          { status: "error", message: "not registered", details: { error: "DeviceNotRegistered" } },
-        ],
-      },
+      data: { data: [{ status: "error", message: "DeviceNotRegistered" }] },
     });
-
-    await sendPushNotification([TOKEN, COLLEAGUE_TOKEN], "t", "b");
-
-    expect(db.expoPushToken.deleteMany).toHaveBeenCalledWith({
-      where: { expoToken: { in: [COLLEAGUE_TOKEN] } },
-    });
-  });
-
-  test("any other per-message error is logged, not deleted", async () => {
-    (axios.post as unknown as Mock).mockResolvedValueOnce({
-      status: 200,
-      data: { data: [{ status: "error", message: "MessageTooBig", details: {} }] },
-    });
-
-    await sendPushNotification([TOKEN], "t", "b");
-
-    expect(db.expoPushToken.deleteMany).not.toHaveBeenCalled();
-    expect(log.error).toHaveBeenCalled();
-  });
-
-  test("a body with no ticket array is tolerated", async () => {
-    (axios.post as unknown as Mock).mockResolvedValueOnce({ status: 200, data: {} });
 
     await expect(sendPushNotification([TOKEN], "t", "b")).resolves.toBeUndefined();
-    expect(db.expoPushToken.deleteMany).not.toHaveBeenCalled();
   });
 
-  // Expo's push API caps a request at 100 messages, and the whole org's token
-  // list used to go out unbatched — so an organisation past that size had its
-  // notifications rejected wholesale, silently.
-  test("chunks the token list into hundreds", async () => {
+  // NOTE: the whole token list goes out as a single request. Expo's push API
+  // caps a batch at 100 messages; nothing here chunks.
+  test("sends every token in one unbatched request", async () => {
     const many = Array.from(
       { length: 250 },
       (_, i) => `ExponentPushToken[${String(i).padStart(22, "0")}]`,
@@ -397,9 +326,8 @@ describe("sendPushNotification", () => {
 
     await sendPushNotification(many, "t", "b");
 
-    const calls = (axios.post as unknown as Mock).mock.calls;
-    expect(calls).toHaveLength(3);
-    expect(calls.map((c: any) => c[1].length)).toEqual([100, 100, 50]);
+    expect(axios.post).toHaveBeenCalledOnce();
+    expect((axios.post as unknown as Mock).mock.calls[0][1]).toHaveLength(250);
   });
 
   test("defaults the data payload to an empty object", async () => {

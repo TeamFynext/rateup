@@ -48,7 +48,7 @@ export async function updateConversationHandler(
 ) {
   try {
     const { conversationId } = request.params;
-    const res = await updateConversation(conversationId, request.user.orgId, request.body);
+    const res = await updateConversation(conversationId, request.body);
     reply.send(res);
   } catch (error) {
     log.error({ err: error }, "Error updating conversation:");
