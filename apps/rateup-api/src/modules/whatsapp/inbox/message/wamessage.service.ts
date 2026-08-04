@@ -98,6 +98,7 @@ interface InboxMessageRow {
   deletedAt: Date | null;
   senderName: string | null;
   senderProfilePhoto: string | null;
+  templateComponentParams: unknown;
 }
 
 /** A message as it is handed back on the inbox list, with its sender flattened. */
@@ -865,6 +866,7 @@ export async function filterChats(
           w."sendBy",
           w."stats",
           w."messageId",
+          w."templateComponentParams",
           -- Seeds the thread on first paint, so it has to carry the revoked flag
           -- too — otherwise a deleted message shows its original text until the
           -- per-contact fetch replaces these rows.
@@ -901,6 +903,7 @@ export async function filterChats(
             : null,
         stats: row.stats,
         messageId: row.messageId,
+        templateComponentParams: row.templateComponentParams,
         deletedAt: row.deletedAt,
       });
       messagesByConversation.set(row.conversationId, list);
