@@ -1,4 +1,12 @@
-import { IconDotsVertical, IconEdit, IconEye, IconSend, IconTrash } from "@tabler/icons-react";
+import {
+  IconDotsVertical,
+  IconEdit,
+  IconEye,
+  IconInbox,
+  IconSend,
+  IconTrash,
+} from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -52,7 +60,12 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
       <DropdownMenuTrigger render={<Button variant="ghost" />}>
         <IconDotsVertical />
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      {/* The popup defaults to `w-(--anchor-width)`, and the anchor here is a bare icon button —
+          every label wrapped. Sized to its content instead, and pinned to the row's right edge. */}
+      <DropdownMenuContent
+        align="end"
+        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
+      >
         <DropdownMenuItem
           onClick={() => {
             setViewDetails(true);
@@ -68,6 +81,14 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
         <DropdownMenuItem onClick={() => setIsSendMessageOpen(true)}>
           <IconSend className="w-4 h-4 mr-2" />
           {translations("Send Message")}
+        </DropdownMenuItem>
+        {/* The inbox resolves `?contactId=` to the contact's thread and selects it, whichever
+            tab is showing, then strips the parameter back out of the URL. */}
+        <DropdownMenuItem
+          render={<Link to="/dashboard/inbox" search={{ tab: "open", contactId: contact.id }} />}
+        >
+          <IconInbox className="w-4 h-4 mr-2" />
+          {translations("Open in Inbox")}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

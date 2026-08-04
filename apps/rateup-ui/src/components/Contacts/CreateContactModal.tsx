@@ -31,14 +31,11 @@ import { Switch } from "../ui/switch.tsx";
 import {
   buildContactSchema,
   type ContactFormValues,
-  contactFormDefaults,
+  type ContactInitialValues,
+  toFormValues,
 } from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
-import type {
-  ContactInitialValues,
-  CreateContactsMutation,
-  MutationCallbacks,
-} from "./CreatOrEditContactModal.tsx";
+import type { CreateContactsMutation, MutationCallbacks } from "./CreatOrEditContactModal.tsx";
 
 /** The caller-supplied CSV/spreadsheet import mutation; it posts a `FormData` body. */
 export interface CsvImportMutation {
@@ -75,7 +72,7 @@ const CreateContactModal = ({
   );
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
-    defaultValues: { ...contactFormDefaults, ...initialValues },
+    defaultValues: toFormValues(initialValues, customFields),
   });
 
   const submitContact = (values: ContactFormValues) => {
@@ -109,6 +106,8 @@ const CreateContactModal = ({
       ...values,
       dob: values.dob ? new Date(values.dob).toISOString() : null,
       external_id: values.external_id || undefined,
+      // "No lifecycle" is "" in the form but a uuid column in the API; null is how it's cleared.
+      lifecycleId: values.lifecycleId || null,
       phone: values.phone?.replace(/^\+/, "") || "",
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
       lastReceivedMessageTimeStamp: undefined as string | undefined,
@@ -161,7 +160,7 @@ const CreateContactModal = ({
 
   useEffect(() => {
     if (initialValues) {
-      form.reset({ ...contactFormDefaults, ...initialValues, phone: "+" + initialValues.phone });
+      form.reset(toFormValues(initialValues, customFields));
     }
     form.setValue("contactType", customFields?.map((field) => field.slug) || []);
   }, [initialValues, customFields, form]);

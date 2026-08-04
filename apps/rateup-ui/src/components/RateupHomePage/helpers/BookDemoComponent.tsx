@@ -101,84 +101,86 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl rounded-xl border-0 p-0 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.42)] max-h-[92vh]">
-        <div className="overflow-y-auto max-h-[92vh] px-7 pb-6 pt-7">
-          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#072554]">
-            <RateupStar className="h-8 w-8" />
+        <div className="overflow-y-auto max-h-[92vh] px-6 pb-5 pt-5">
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-[#072554]">
+            <RateupStar className="h-6 w-6" />
           </div>
 
-          <DialogTitle className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#021B49]">
+          <DialogTitle className="text-center text-xl font-black leading-none tracking-[-0.03em] text-[#021B49]">
             Book a Demo
           </DialogTitle>
 
-          <DialogDescription className="mx-auto mt-1 max-w-[340px] text-center text-xs leading-[1.6] text-slate-600">
+          <DialogDescription className="mx-auto mt-1 max-w-95 text-center text-xs leading-normal text-slate-600">
             See how RateUp turns WhatsApp into your loyalty engine. We'll reach out to schedule a
             quick walkthrough.
           </DialogDescription>
 
-          <form className="mt-2" onSubmit={handleSubmit}>
-            <FieldGroup className="gap-4">
-              <Field data-invalid={!!errors.name}>
-                <FieldLabel htmlFor="demo-name" className="font-bold">
-                  Name
-                </FieldLabel>
-                <Input
-                  id="demo-name"
-                  placeholder="Your full name"
-                  className="rounded-sm px-4"
-                  aria-invalid={!!errors.name}
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                />
-                {errors.name && <FieldError>{errors.name}</FieldError>}
-              </Field>
+          <form className="mt-3" onSubmit={handleSubmit}>
+            <FieldGroup className="gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field data-invalid={!!errors.name}>
+                  <FieldLabel htmlFor="demo-name" className="font-bold">
+                    Name
+                  </FieldLabel>
+                  <Input
+                    id="demo-name"
+                    placeholder="Your full name"
+                    className="rounded-sm px-3"
+                    aria-invalid={!!errors.name}
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                  />
+                  {errors.name && <FieldError>{errors.name}</FieldError>}
+                </Field>
 
-              <Field data-invalid={!!errors.email}>
-                <FieldLabel htmlFor="demo-email" className="font-bold">
-                  Email
-                </FieldLabel>
-                <Input
-                  id="demo-email"
-                  type="email"
-                  placeholder="Email address"
-                  className="rounded-sm px-4"
-                  aria-invalid={!!errors.email}
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                />
-                {errors.email && <FieldError>{errors.email}</FieldError>}
-              </Field>
+                <Field data-invalid={!!errors.email}>
+                  <FieldLabel htmlFor="demo-email" className="font-bold">
+                    Email
+                  </FieldLabel>
+                  <Input
+                    id="demo-email"
+                    type="email"
+                    placeholder="Email address"
+                    className="rounded-sm px-3"
+                    aria-invalid={!!errors.email}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                  />
+                  {errors.email && <FieldError>{errors.email}</FieldError>}
+                </Field>
 
-              <Field data-invalid={!!errors.businessName}>
-                <FieldLabel htmlFor="demo-business" className="font-bold">
-                  Business Name
-                </FieldLabel>
-                <Input
-                  id="demo-business"
-                  placeholder="Your company"
-                  className="rounded-sm px-4"
-                  aria-invalid={!!errors.businessName}
-                  value={formData.businessName}
-                  onChange={(e) => handleInputChange("businessName", e.target.value)}
-                />
-                {errors.businessName && <FieldError>{errors.businessName}</FieldError>}
-              </Field>
+                <Field data-invalid={!!errors.businessName}>
+                  <FieldLabel htmlFor="demo-business" className="font-bold">
+                    Business Name
+                  </FieldLabel>
+                  <Input
+                    id="demo-business"
+                    placeholder="Your company"
+                    className="rounded-sm px-3"
+                    aria-invalid={!!errors.businessName}
+                    value={formData.businessName}
+                    onChange={(e) => handleInputChange("businessName", e.target.value)}
+                  />
+                  {errors.businessName && <FieldError>{errors.businessName}</FieldError>}
+                </Field>
 
-              <Field data-invalid={!!errors.phone}>
-                <FieldLabel htmlFor="demo-phone" className="font-bold">
-                  Phone
-                </FieldLabel>
-                <PhoneInput
-                  id="demo-phone"
-                  defaultCountry="IN"
-                  international
-                  countryCallingCodeEditable={false}
-                  placeholder="Enter phone number"
-                  aria-invalid={!!errors.phone}
-                  value={formData.phone}
-                  onChange={(value) => handleInputChange("phone", value ?? "")}
-                />
-                {errors.phone && <FieldError>{errors.phone}</FieldError>}
-              </Field>
+                <Field data-invalid={!!errors.phone}>
+                  <FieldLabel htmlFor="demo-phone" className="font-bold">
+                    Phone
+                  </FieldLabel>
+                  <PhoneInput
+                    id="demo-phone"
+                    defaultCountry="IN"
+                    international
+                    countryCallingCodeEditable={false}
+                    placeholder="Enter phone number"
+                    aria-invalid={!!errors.phone}
+                    value={formData.phone}
+                    onChange={(value) => handleInputChange("phone", value ?? "")}
+                  />
+                  {errors.phone && <FieldError>{errors.phone}</FieldError>}
+                </Field>
+              </div>
 
               <Field>
                 <FieldLabel htmlFor="demo-message" className="font-bold">
@@ -187,9 +189,9 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
                 </FieldLabel>
                 <Textarea
                   id="demo-message"
-                  rows={3}
+                  rows={2}
                   placeholder="Tell us a bit about what you're looking for..."
-                  className="rounded-sm px-4"
+                  className="rounded-sm px-3"
                   value={formData.message}
                   onChange={(e) => handleInputChange("message", e.target.value)}
                 />
@@ -203,7 +205,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
                 {isPending ? "Booking..." : "Book My Demo"}
               </Button>
 
-              <p className="text-center text-[11px] text-slate-400">
+              <p className="-mt-1 text-center text-[11px] text-slate-400">
                 No credit card required · We'll only use your details to schedule the demo.
               </p>
             </FieldGroup>

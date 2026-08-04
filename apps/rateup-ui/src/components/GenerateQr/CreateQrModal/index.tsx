@@ -32,17 +32,34 @@ function CreateQrModal({
   initialName: string;
 }) {
   const { t: translations } = useTranslation();
-  const formSchema = z.object({
-    name: z
-      .string()
-      .min(3, translations("Name must be at least 3 characters long."))
-      .regex(
-        /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/,
-        translations("Name should be alphanumeric, start with a letter"),
-      ),
+  const formSchema = z
+    .object({
+      name: z
+        .string()
+        .min(3, translations("Name must be at least 3 characters long."))
+        .regex(
+          /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/,
+          translations("Name should be alphanumeric, start with a letter"),
+        ),
 
-    url: z.url(translations("Please enter a valid URL.")),
-  });
+      url: z.string(),
+    })
+    /**
+     * Only the create form renders a URL field. Validating it as a URL unconditionally meant the
+     * rename form failed against its own empty default — on a field that is not on screen — so
+     * `handleSubmit` never reached the update handler and Rename silently did nothing. Checked
+     * here rather than swapping the field's type so the submitted shape stays the same.
+     */
+    .superRefine((values, ctx) => {
+      if (mode !== "create") return;
+      if (!z.url().safeParse(values.url).success) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["url"],
+          message: translations("Please enter a valid URL."),
+        });
+      }
+    });
 
   const form = useForm({
     resolver: zodResolver(formSchema),

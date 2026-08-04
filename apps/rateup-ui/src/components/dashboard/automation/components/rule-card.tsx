@@ -37,8 +37,11 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
       >
         <IconDots size={20} />
       </DropdownMenuTrigger>
+      {/* Same as the campaign card: the popup inherits the icon button's width unless told
+          otherwise, which wraps the labels. */}
       <DropdownMenuContent
         align="end"
+        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -79,12 +82,17 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
           >
             {item.platform}
           </Badge>
-          <Switch
-            checked={item.isActive}
-            onCheckedChange={() => {
-              onToggleActive(!item.isActive);
-            }}
-          />
+          {/* Stopped on the wrapper, not the switch: Base UI renders the hidden input as a
+              sibling of the switch and re-dispatches a bubbling click on it, so the card's
+              onClick fired and navigated into the rule. */}
+          <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+            <Switch
+              checked={item.isActive}
+              onCheckedChange={() => {
+                onToggleActive(!item.isActive);
+              }}
+            />
+          </span>
         </div>
       }
       footerLeft={

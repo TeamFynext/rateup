@@ -4,6 +4,7 @@ import {
   IconPlus,
   IconSearch,
   IconUser,
+  IconUserSearch,
 } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -18,6 +19,14 @@ import type { CustomerPanelCustomer } from "@/components/loyalty/CustomerDetailP
 import { CustomerDetailPanel } from "@/components/loyalty/CustomerDetailPanel.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty.tsx";
 import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { docsPath } from "@/utils/constants.ts";
@@ -271,6 +280,34 @@ export function CashierPage() {
           onClose={handleClearCustomerSearch}
           orgId={orgId}
         />
+      )}
+
+      {/* Everything below the search box is driven by a selected customer, so with none picked
+          the page was a search box over blank space. Say what the portal is waiting for. */}
+      {!panelCustomer && !isLoadingCustomer && !error && (
+        <Empty className="rounded-lg border border-dashed">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <IconUserSearch />
+            </EmptyMedia>
+            <EmptyTitle>No customer selected</EmptyTitle>
+            <EmptyDescription>
+              Search by name or phone number above to see a customer&apos;s points, tier and
+              rewards, and to record a transaction. New to the program? Register them first.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open(`/loyalty/${orgId}/register`, "_blank");
+              }}
+            >
+              <IconPlus className="w-4 h-4 mr-2" />
+              Register Customer
+            </Button>
+          </EmptyContent>
+        </Empty>
       )}
     </div>
   );

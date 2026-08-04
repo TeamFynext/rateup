@@ -168,10 +168,6 @@ export function ContactSettings() {
     setShowEmojiPicker(false);
   };
 
-  const handleAdjustCount = () => {
-    toast.info(t("Contact counts are derived from contact assignments."));
-  };
-
   const handleRenameStage = (id: string, newName: string) => {
     const stage = lifecycles?.find((item) => item.id === id);
     if (!stage || !newName.trim() || newName === stage.name) return;
@@ -402,7 +398,6 @@ export function ContactSettings() {
                         key={stage.id}
                         stage={stage}
                         pct={getPercentage(stage.count)}
-                        onAdjustCount={handleAdjustCount}
                         isLost={false}
                       />
                     ))}
@@ -425,7 +420,6 @@ export function ContactSettings() {
                         key={stage.id}
                         stage={stage}
                         pct={getPercentage(stage.count)}
-                        onAdjustCount={handleAdjustCount}
                         isLost={true}
                       />
                     ))}

@@ -88,7 +88,7 @@ export function DataTableToolbar<TData, TValue>({
             <Button
               size="sm"
               onClick={() => setIsOpenedAddModal(true)}
-              className="gap-2 h-8 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-md"
+              className="gap-2 h-8 shadow-md"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span className="text-sm">Add Members</span>
@@ -141,17 +141,24 @@ const AddContactToGroupDialog = ({
   const createNewContactsFromCSV = useAddNewContactFromCSVMutation(group?.id);
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent>
+      {/* The body is a whole contact form or a paginated table, so the dialog's `sm:max-w-md`
+          default is far too narrow and its content is taller than the viewport. The second grid
+          row is the shrinkable one, which is what lets the body scroll instead of the page. */}
+      <DialogContent className="max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Add Members</DialogTitle>
           <DialogDescription>Select contacts to add to this group</DialogDescription>
         </DialogHeader>
-        <AddCustomerModal
-          close={close}
-          groupId={group?.id}
-          existingContactIds={group?.contacts?.map((c) => c.id)}
-          createNewContactsFromCSV={createNewContactsFromCSV}
-        />
+        {/* Negative margin so the scrollbar sits at the dialog's edge, padding so focus rings
+            and the table card's shadow are not clipped by the scroll container. */}
+        <div className="-mx-6 min-h-0 overflow-y-auto overscroll-contain px-6 py-1">
+          <AddCustomerModal
+            close={close}
+            groupId={group?.id}
+            existingContactIds={group?.contacts?.map((c) => c.id)}
+            createNewContactsFromCSV={createNewContactsFromCSV}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

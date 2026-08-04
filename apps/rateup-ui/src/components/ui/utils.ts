@@ -36,7 +36,7 @@ export const isEmojiName = (name: string): boolean => isEmoji(firstGrapheme(name
  * A name that starts with an emoji is returned as that emoji instead — there is
  * nothing to abbreviate, and the emoji *is* how the contact identifies.
  */
-export const getInitials = (name: string | undefined) => {
+export const getInitials = (name: string | null | undefined) => {
   const trimmed = name?.trim();
   if (!trimmed) return "";
 

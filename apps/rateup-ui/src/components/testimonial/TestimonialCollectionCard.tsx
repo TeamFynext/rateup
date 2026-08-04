@@ -61,10 +61,15 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
 
   const actions = (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+      {/* Both halves stop the click: the card underneath navigates on click, and React bubbles
+          menu events through the React tree even though the popup is portaled. */}
+      <DropdownMenuTrigger
+        onClick={(e) => e.stopPropagation()}
+        render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
+      >
         <IconDotsVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
         <DropdownMenuItem onClick={handleEdit}>
           <IconEdit className="w-4 h-4 mr-2" />
           {translations("Edit")}

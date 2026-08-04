@@ -35,7 +35,10 @@ export function BoardCard({ board, onSelect, onEdit, onDelete }: Readonly<BoardC
       >
         <IconEdit size={16} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      {/* The popup is portaled, but React events bubble through the React tree, so a click on
+          Edit or Delete still reached the card's onClick and opened the board on top of the
+          dialog. Every other card menu in the app stops it here too. */}
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
         <DropdownMenuItem onClick={() => onEdit(board.id)}>
           <IconEdit size={16} className="mr-2" />
           {translations("Edit")}

@@ -203,7 +203,7 @@ const AddCustomerModal = ({
               setFilterByTag={setColumnFilters}
               filterByTag={columnFilters}
             />
-            <div className="flex items-center justify-between gap-2 px-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4">
               <Field orientation="horizontal">
                 <Checkbox
                   id="select-all-contacts"
@@ -220,7 +220,7 @@ const AddCustomerModal = ({
                   {translations("Select All")}
                 </FieldLabel>
               </Field>
-              <div className="relative w-75">
+              <div className="relative w-full sm:w-75">
                 <IconSearch className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <FieldLabel htmlFor="add-customer-search" className="sr-only">
                   {translations("Search Contact")}
