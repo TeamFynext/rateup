@@ -367,7 +367,11 @@ export async function cloneFlow(
   });
 
   if (!survey) return "Survey not found to duplicate";
-  const { spreadSheetId: _spreadSheetId, ...surveyWithoutId } = survey;
+  // `id` has to go, not just `spreadSheetId`: spreading the source row into `survey.create`
+  // carries its primary key over and the insert dies with
+  // "Unique constraint failed on the fields: (`id`)". The clone also must not inherit the
+  // original's export spreadsheet.
+  const { id: _id, spreadSheetId: _spreadSheetId, ...surveyWithoutId } = survey;
 
   const existingSurveys = await prisma.survey.findMany({
     where: {

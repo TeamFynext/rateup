@@ -10,6 +10,17 @@ import {
 } from "./linktree.schema.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 
+/**
+ * `Linktree.links` is a nullable Json column with no default, so a page that has never had a
+ * link saved reads back as `null`. The response schema declares it as an array and every client
+ * treats it as one, so a raw row failed serialization with "Response doesn't match the schema"
+ * and the route answered 500 — which is every freshly created linktree, and any list containing
+ * one. Normalised here so the stored null never reaches the wire.
+ */
+function withLinks<T extends { links: PrismaJson.PLinktreeLinks | null }>(linktree: T) {
+  return { ...linktree, links: linktree.links ?? [] };
+}
+
 /** A :linkType the dropdown does not map, refused rather than answered empty. */
 class UnknownLinkTypeError extends Error {
   constructor(linkType: string) {
@@ -41,7 +52,7 @@ async function createLinktreeInDB(req: FastifyRequest<{ Body: CreateLinktreeReqB
     },
   });
 
-  return newLinktree;
+  return withLinks(newLinktree);
 }
 
 async function getAllLinktreesFromDB(req: FastifyRequest) {
@@ -56,7 +67,7 @@ async function getAllLinktreesFromDB(req: FastifyRequest) {
       createdAt: "desc",
     },
   });
-  return allLinktreesArray;
+  return allLinktreesArray.map(withLinks);
 }
 
 async function getLinktreeWithShortIdFromDB(
@@ -72,7 +83,8 @@ async function getLinktreeWithShortIdFromDB(
       ownerOrgId: orgId,
     },
   });
-  return linktree;
+  // Null here means "not found" — the controller turns that into a 404.
+  return linktree && withLinks(linktree);
 }
 
 async function getPublicLinktreeWithShortIdFromDB(
@@ -111,7 +123,7 @@ async function updateLinktreeWithShortIdInDB(req: FastifyRequest<{ Body: UpdateL
       ...rest,
     },
   });
-  return updatedLinktree;
+  return withLinks(updatedLinktree);
 }
 
 async function deleteLinktreeInDB(req: FastifyRequest<{ Params: { id: string } }>) {
