@@ -9,6 +9,7 @@ import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { PaginationQuery } from "../../contact/contact.schema.js";
 import { CampaignParticipant, Prisma } from "../../../../generated/prisma/client.js";
 import { CampaignNotFoundError } from "../campaign.errors.js";
+import { whatsappContactWhere } from "../../contact/contact.channel.js";
 
 async function assertCampaignInOrg(campaignId: string, orgId: string) {
   const campaign = await prisma.campaign.findFirst({
@@ -31,6 +32,8 @@ export async function createCampaignParticipantsFromGroup(
         in: data.groupIds,
       },
       contactGroup: { team: { orgId } },
+      // A group can hold contacts from any channel; only the WhatsApp ones are reachable by a campaign.
+      contact: whatsappContactWhere,
     },
   });
 
@@ -55,7 +58,7 @@ export async function createCampaignParticipantsFromContacts(
 ) {
   await assertCampaignInOrg(campaignId, orgId);
   const contacts = await prisma.contact.findMany({
-    where: { id: { in: data.contactIds }, orgId },
+    where: { id: { in: data.contactIds }, orgId, ...whatsappContactWhere },
     select: { id: true },
   });
   const campaignParticipants = await prisma.campaignParticipant.createMany({
@@ -81,6 +84,7 @@ export async function createCampaignParticipantsFromAnotherCampaign(
         in: data.campaignIds,
       },
       campaign: { team: { orgId } },
+      contact: whatsappContactWhere,
     },
     include: {
       campaign: {

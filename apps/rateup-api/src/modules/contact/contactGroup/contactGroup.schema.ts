@@ -54,6 +54,8 @@ const getContactGroupsQuerySchema = z.object({
   contactGroupId: z.string().optional(),
   teamId: z.string().optional(),
   type: z.enum(ContactGroupType).optional(),
+  /** With `teamId`: report each group's member count for members reachable on this channel only. */
+  contactChannel: z.string().optional(),
 });
 
 const removeGroupContactsSchema = z.array(z.string());

@@ -128,6 +128,8 @@ describe("createCampaignParticipantsFromContacts", () => {
     expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
       id: { in: ["another-orgs-contact"] },
       orgId: ORG_A,
+      psid: null,
+      igsId: null,
     });
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([]);
   });
@@ -184,6 +186,7 @@ describe("createCampaignParticipantsFromGroup", () => {
       where: {
         contactGroupId: { in: ["another-orgs-group"] },
         contactGroup: { team: { orgId: ORG_A } },
+        contact: { psid: null, igsId: null },
       },
     });
   });
@@ -229,6 +232,7 @@ describe("createCampaignParticipantsFromAnotherCampaign", () => {
     expect(db.campaignParticipant.findMany.mock.calls[0][0].where).toEqual({
       campaignId: { in: ["another-orgs-campaign"] },
       campaign: { team: { orgId: ORG_A } },
+      contact: { psid: null, igsId: null },
     });
   });
 
