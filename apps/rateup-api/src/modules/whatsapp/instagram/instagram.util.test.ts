@@ -1,7 +1,12 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
 import { describe, expect, test } from "vitest";
 
 import { InstagramEvent } from "../../../types/enums.js";
-import { getInstagramWebhookEvent } from "./instagram.util.js";
+import { getInstagramWebhookEvent, resolveCommentTimestampMs } from "./instagram.util.js";
+
+// Only for the expected values below — instagram.util.ts extends utc itself.
+dayjs.extend(utc);
 
 /** One entry in the `messaging` array Meta posts to the Instagram webhook. */
 function messaging(overrides: Record<string, unknown> = {}): any {
@@ -159,5 +164,50 @@ describe("getInstagramWebhookEvent - which check wins when several could match",
     );
 
     expect(event).toBe(InstagramEvent.STORY_MENTION);
+  });
+});
+
+describe("resolveCommentTimestampMs", () => {
+  test("converts the comment's own seconds timestamp to milliseconds", () => {
+    expect(resolveCommentTimestampMs(1_700_000_000, 1_785_917_090)).toBe(1_700_000_000_000);
+  });
+
+  test("falls back to the entry time when the comment carries none", () => {
+    // The shape Meta actually posts: no created_time on the comment value.
+    expect(resolveCommentTimestampMs(undefined, 1_785_917_090)).toBe(1_785_917_090_000);
+  });
+
+  test("leaves an entry time that is already in milliseconds alone", () => {
+    expect(resolveCommentTimestampMs(undefined, 1_785_917_090_000)).toBe(1_785_917_090_000);
+  });
+
+  test("falls back to now when neither time is usable", () => {
+    const before = Date.now();
+    const resolved = resolveCommentTimestampMs(undefined, undefined);
+
+    expect(resolved).toBeGreaterThanOrEqual(before);
+    expect(resolved).toBeLessThanOrEqual(Date.now());
+  });
+
+  test("ignores a non-finite or non-positive time rather than producing an invalid date", () => {
+    expect(resolveCommentTimestampMs(NaN, 1_785_917_090)).toBe(1_785_917_090_000);
+    expect(resolveCommentTimestampMs(0, 1_785_917_090)).toBe(1_785_917_090_000);
+  });
+
+  // Graph API reads (as opposed to webhook deliveries) return created_time as an
+  // ISO string, which is why dayjs parses rather than arithmetic on a number.
+  test("parses the ISO created_time a Graph API read returns", () => {
+    expect(resolveCommentTimestampMs("2026-08-05T13:34:50+0000")).toBe(
+      dayjs.utc("2026-08-05T13:34:50Z").valueOf(),
+    );
+  });
+
+  test("reads a numeric string as an epoch, not a year", () => {
+    expect(resolveCommentTimestampMs("1785917090")).toBe(1_785_917_090_000);
+  });
+
+  test("skips a string that is not a date at all", () => {
+    expect(resolveCommentTimestampMs("not-a-date", 1_785_917_090)).toBe(1_785_917_090_000);
+    expect(resolveCommentTimestampMs("", 1_785_917_090)).toBe(1_785_917_090_000);
   });
 });

@@ -226,6 +226,36 @@ describe("handleInstagramWebhook - routing an event to its handler", () => {
     expect(runRuleMock.mock.calls[0][0]).toBe("INSTAGRAM_COMMENT");
   });
 
+  // Meta's live `comments` delivery has no created_time — the field only comes
+  // back from Graph API reads. Timing it off the entry used to throw RangeError
+  // deep in the timestamp helper and the comment never reached the inbox.
+  test("stores a comment that arrives without a created_time of its own", async () => {
+    const body: any = {
+      object: "instagram",
+      entry: [
+        {
+          id: IBA_ID,
+          time: 1_785_917_090,
+          changes: [
+            {
+              field: "comments",
+              value: {
+                id: "17865799348089039",
+                text: "This is an example.",
+                parent_id: "1231231234",
+                from: { id: IGS_ID, username: "test" },
+                media: { id: "123123123", media_product_type: "FEED" },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    await expect(handleInstagramWebhook(body)).resolves.toEqual({ processed: 1, failed: 0 });
+    expect(waMessageCall().body.timestamp).toBe(1_785_917_090_000);
+  });
+
   test("ignores a change on a field it does not handle", async () => {
     const body: any = {
       object: "instagram",
@@ -376,6 +406,37 @@ describe("handleInstagramComment", () => {
         media_id: "media-1",
       },
     });
+  });
+
+  // Resolved once, on arrival: a comment carries only the media's numeric id and
+  // an instagram.com/p/ URL needs the shortcode, so the inbox cannot build the
+  // link itself.
+  test("stores the link to the post the comment is on", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: { id: "media-1", permalink: "https://www.instagram.com/p/ABC123/" },
+    });
+
+    await handleInstagramComment(comment(), InstagramEvent.COMMENT, SETTINGS);
+
+    expect(waMessageCall().body.message.media_permalink).toBe(
+      "https://www.instagram.com/p/ABC123/",
+    );
+  });
+
+  test("still stores the comment when the post link cannot be resolved", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("Meta is down"));
+
+    await handleInstagramComment(comment(), InstagramEvent.COMMENT, SETTINGS);
+
+    expect(waMessageCall().body.message.text).toBe("how much?");
+    expect(waMessageCall().body.message.media_permalink).toBeUndefined();
+  });
+
+  test("asks for no link at all when the comment names no media", async () => {
+    await handleInstagramComment(comment({ media: undefined }), InstagramEvent.COMMENT, SETTINGS);
+
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+    expect(waMessageCall().body.message.media_permalink).toBeUndefined();
   });
 
   test("converts the comment's seconds timestamp to milliseconds", async () => {

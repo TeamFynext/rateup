@@ -8,6 +8,63 @@ import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+
+/**
+ * File a message we just sent against the contact's ticket.
+ *
+ * Every automated Instagram send funnels through the helpers below, and none of
+ * them used to record what they sent: the reply reached the customer, but the
+ * inbox showed only the customer's half of the conversation. Meta's send
+ * response carries `recipient_id`, which is how a private reply — addressed to a
+ * comment rather than a person — still lands on the right contact.
+ *
+ * Storage failures are logged, not thrown. The message is already delivered;
+ * reporting it as failed would be a worse lie than a missing row.
+ */
+async function recordSentInstagramMessage(
+  igsId: string | undefined,
+  orgId: string,
+  ibaId: string,
+  payload: Record<string, unknown>,
+  responseData: unknown,
+): Promise<void> {
+  const { message_id: messageId, recipient_id: recipientId } =
+    (responseData as { message_id?: string; recipient_id?: string } | undefined) ?? {};
+  const contactId = igsId ?? recipientId;
+
+  if (!contactId) {
+    log.warn(
+      { ibaId, messageId },
+      "[Instagram Messaging] Sent a message with no recipient to file it against",
+    );
+    return;
+  }
+
+  try {
+    await handleWaMessages(
+      "send",
+      payload,
+      contactId,
+      orgId,
+      PlatformType.INSTAGRAM,
+      ibaId,
+      undefined,
+      messageId,
+      undefined,
+      false,
+      null,
+      "AUTOMATED",
+      true,
+    );
+  } catch (error) {
+    log.error(
+      { err: error, igsId: contactId, messageId },
+      "[Instagram Messaging] Message was sent but could not be stored",
+    );
+  }
+}
 
 async function callInstagramMessengerProfileApi(
   pageAccessToken: string,
@@ -38,6 +95,8 @@ export async function sendInstagramPrivateReply(
   text: string,
   ibaId: string,
   orgId: string,
+  /** Known by the automation that triggered this; Meta's response is the fallback. */
+  igsId?: string,
 ): Promise<unknown> {
   try {
     // Outbound — gate on the conversation limit (inbound is never blocked).
@@ -54,14 +113,20 @@ export async function sendInstagramPrivateReply(
       throw new Error(`No Facebook Page ID configured for ibaId ${ibaId}`);
     }
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, {
+    const payload = {
       recipient: { comment_id: commentId },
       message: { text },
-    });
+    };
+
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(
       `[Instagram Messaging] Sent private reply to comment ${commentId}: "${text.substring(0, 50)}..."`,
     );
+
+    // No igsId of our own: a private reply is addressed to the comment, so the
+    // contact it belongs to comes from Meta's `recipient_id`.
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     return response.data;
   } catch (error) {
@@ -111,6 +176,8 @@ export async function sendInstagramTextMessage(
       `[Instagram Messaging] Sent text message to igsId ${igsId}: "${text.substring(0, 50)}..."`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending text message to ${igsId}`);
@@ -158,6 +225,9 @@ export async function sendInstagramImage(
     const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
+
+    // The caption goes out as its own message, and files itself when it does.
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     if (!caption) {
       return { image: response.data };
@@ -241,6 +311,8 @@ export async function sendInstagramGenericTemplate(
       `[Instagram Messaging] Sent generic template to igsId ${igsId} with ${elements.length} elements`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending generic template to ${igsId}`);
@@ -295,6 +367,8 @@ export async function sendInstagramQuickReply(
       `[Instagram Messaging] Sent quick reply to igsId ${igsId} with ${quickReplies.length} options`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending quick reply to ${igsId}`);
@@ -345,6 +419,8 @@ export async function sendInstagramProductTemplate(
       `[Instagram Messaging] Sent product template to igsId ${igsId} for products ${productIds.join(", ")}`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending product template to ${igsId}`);
@@ -391,6 +467,8 @@ export async function sendInstagramStoryReply(
     const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`);
+
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     return response.data;
   } catch (error) {
@@ -641,6 +719,8 @@ export async function sendInstagramVideo(
 
     log.info(`[Instagram Messaging] Sent video to igsId ${igsId}: ${videoUrl}`);
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending video to ${igsId}`);
@@ -687,6 +767,8 @@ export async function sendInstagramFile(
 
     log.info(`[Instagram Messaging] Sent file to igsId ${igsId}: ${fileUrl}`);
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending file to ${igsId}`);
@@ -724,6 +806,34 @@ export async function getInstagramMediaPosts(ibaId: string): Promise<InstagramMe
   );
 
   return (response.data?.data as InstagramMediaItem[]) ?? [];
+}
+
+/**
+ * The public instagram.com URL for one media item.
+ *
+ * A comment webhook only carries the media's numeric id, and there is no way to
+ * build a permalink from it — instagram.com/p/ URLs use an opaque shortcode — so
+ * the link has to be read back from Meta. Permalinks never change, hence the
+ * long cache the callers put in front of this.
+ */
+export async function getInstagramMediaPermalink(
+  mediaId: string,
+  ibaId: string,
+): Promise<string | null> {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+  if (!waSettings?.pageAccessToken) {
+    throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+  }
+
+  const response = await callMetaApi(
+    `/${mediaId}?fields=permalink,media_type`,
+    "GET",
+    waSettings.pageAccessToken,
+  );
+
+  // Deleted media, and media on an account the token no longer covers, answer
+  // 200 with no permalink rather than erroring.
+  return (response.data?.permalink as string | undefined) ?? null;
 }
 
 export async function getInstagramStories(ibaId: string): Promise<InstagramStoryItem[]> {

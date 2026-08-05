@@ -11,6 +11,8 @@ vi.mock("../settings/wa_settings.service.js", () => ({
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
   assertWithinConversationLimit: vi.fn(),
 }));
+// Every send files itself in the inbox; the real one talks to the database.
+vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -18,10 +20,13 @@ vi.mock("../../../utils/logger.js", () => ({
 import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
   deleteInstagramIceBreakers,
   deleteInstagramPersistentMenu,
   getInstagramIceBreakers,
+  getInstagramMediaPermalink,
   getInstagramMediaPosts,
   getInstagramPersistentMenu,
   getInstagramStories,
@@ -44,6 +49,7 @@ const callMetaApiMock = callMetaApi as unknown as Mock;
 const getSettingsMock = getWaSettingsByIbaId as unknown as Mock;
 const updateSettingsMock = updateWaSettingsById as unknown as Mock;
 const assertLimitMock = assertWithinConversationLimit as unknown as Mock;
+const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 
 const IBA_ID = "iba-1";
 const IGS_ID = "igs-1";
@@ -79,6 +85,84 @@ beforeEach(() => {
   updateSettingsMock.mockResolvedValue({});
   assertLimitMock.mockResolvedValue(undefined);
   callMetaApiMock.mockResolvedValue({ data: { message_id: "mid-out-1" } });
+  handleWaMessagesMock.mockResolvedValue(undefined);
+});
+
+/** The positional arguments handleWaMessages was called with. */
+function storedMessage(index = 0) {
+  const [type, body, from, orgId, platform, sourceIdentifier, , messageId, , , , messageType] =
+    handleWaMessagesMock.mock.calls[index];
+  return { type, body, from, orgId, platform, sourceIdentifier, messageId, messageType };
+}
+
+// Before this, an automation's reply reached the customer and then vanished: the
+// send helpers talked to Meta and nothing else, so the ticket showed only the
+// customer's side.
+describe("filing sent messages in the inbox", () => {
+  test("stores a text message against the contact it went to", async () => {
+    await sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID);
+
+    expect(storedMessage()).toMatchObject({
+      type: "send",
+      from: IGS_ID,
+      orgId: ORG_ID,
+      platform: PlatformType.INSTAGRAM,
+      sourceIdentifier: IBA_ID,
+      messageId: "mid-out-1",
+      messageType: "AUTOMATED",
+    });
+    expect(storedMessage().body).toEqual({
+      recipient: { id: IGS_ID },
+      message: { text: "hello" },
+    });
+  });
+
+  // A private reply is addressed to a comment, not a person, so the contact it
+  // belongs to has to come from somewhere else.
+  test("files a private reply against the commenter Meta names", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: { message_id: "mid-out-1", recipient_id: "igs-from-meta" },
+    });
+
+    await sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID);
+
+    expect(storedMessage().from).toBe("igs-from-meta");
+  });
+
+  test("prefers the commenter the caller already knows over Meta's answer", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: { message_id: "mid-out-1", recipient_id: "igs-from-meta" },
+    });
+
+    await sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID, IGS_ID);
+
+    expect(storedMessage().from).toBe(IGS_ID);
+  });
+
+  test("stores nothing when neither the caller nor Meta names a recipient", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { message_id: "mid-out-1" } });
+
+    await sendInstagramPrivateReply("comment-1", "hi", IBA_ID, ORG_ID);
+
+    expect(handleWaMessagesMock).not.toHaveBeenCalled();
+  });
+
+  // The message is already delivered; reporting it as failed would be the worse lie.
+  test("still reports the send as successful when the message cannot be stored", async () => {
+    handleWaMessagesMock.mockRejectedValue(new Error("db down"));
+
+    await expect(sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBeDefined();
+  });
+
+  test("files an image and its caption as the two messages they are", async () => {
+    await sendInstagramImage(IGS_ID, "https://cdn/i.jpg", ORG_ID, IBA_ID, "Our new arrival");
+
+    expect(handleWaMessagesMock).toHaveBeenCalledTimes(2);
+    expect(storedMessage(1).body).toEqual({
+      recipient: { id: IGS_ID },
+      message: { text: "Our new arrival" },
+    });
+  });
 });
 
 describe("sendInstagramTextMessage", () => {
@@ -497,6 +581,29 @@ describe("reading the account's own posts and stories", () => {
     expect(url).toContain("permalink");
     expect(url).toContain("limit=50");
     expect(token).toBe("page-token-abc");
+  });
+
+  // The comment webhook carries only the media's numeric id, and an
+  // instagram.com/p/ URL needs the shortcode, so the link has to come from Meta.
+  test("reads the public permalink for one post", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: { id: "media-1", permalink: "https://www.instagram.com/p/ABC123/" },
+    });
+
+    await expect(getInstagramMediaPermalink("media-1", IBA_ID)).resolves.toBe(
+      "https://www.instagram.com/p/ABC123/",
+    );
+
+    const { url, token } = lastCall();
+    expect(url).toContain("/media-1?");
+    expect(url).toContain("permalink");
+    expect(token).toBe("page-token-abc");
+  });
+
+  test("reports no permalink for a post that has been deleted", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { id: "media-1" } });
+
+    await expect(getInstagramMediaPermalink("media-1", IBA_ID)).resolves.toBeNull();
   });
 
   test("lists the account's live stories", async () => {

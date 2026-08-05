@@ -403,7 +403,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
   test("answers the comment privately rather than messaging the user", async () => {
     await run(flow([textNode("t1", "Thanks!")]), "t1", "comment-1");
 
-    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Thanks!", IBA_ID, ORG_ID);
+    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Thanks!", IBA_ID, ORG_ID, IGS_ID);
     expect(m.sendText).not.toHaveBeenCalled();
   });
 
@@ -425,7 +425,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
 
     await run(flow([node]), "i1", "comment-1");
 
-    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Look", IBA_ID, ORG_ID);
+    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Look", IBA_ID, ORG_ID, IGS_ID);
     expect(m.sendImage).toHaveBeenCalled();
   });
 
@@ -439,6 +439,7 @@ describe("processNextInstagramNode - replying to a comment", () => {
       "Thanks for your comment!",
       IBA_ID,
       ORG_ID,
+      IGS_ID,
     );
   });
 });

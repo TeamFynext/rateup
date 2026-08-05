@@ -1,6 +1,7 @@
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 import { WaReceiveMessageBody } from "../../../../types/whatsapp.types.js";
 import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils.js";
+import { log } from "../../../../utils/logger.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 
@@ -45,9 +46,21 @@ export async function returnAppropriateTimeStamp(
 ) {
   if (messageBody.exchangeProcess === "receive") {
     if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK) {
-      return new Date(
-        (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody).timestamp,
-      ).toISOString();
+      const timestamp = (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody)
+        .timestamp;
+      const parsed = dayjs(timestamp);
+      // A malformed or missing timestamp used to throw RangeError out of here
+      // (new Date(NaN).toISOString()), and the Instagram comment handler
+      // swallowed it — the message was lost while the webhook still answered
+      // 200. dayjs reports the same input as invalid instead of throwing, so it
+      // lands with the time we received it rather than not landing at all.
+      if (!parsed.isValid()) {
+        log.warn({ timestamp, platform }, "Unusable message timestamp; falling back to now");
+        return dayjs().toISOString();
+      }
+      // toISOString(), not .utc().format(): the stored format is the
+      // millisecond-precision Zulu string every other reader already expects.
+      return parsed.toISOString();
     }
     const unixTimeStamp = parseInt(
       (messageBody.receive as WaReceiveMessageBody).messages[0].timestamp,
