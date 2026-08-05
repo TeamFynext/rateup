@@ -50,10 +50,10 @@ export const useContactGroupById = (
   });
 };
 
-export const useContactGroupsByTeamId = (teamId: string) => {
+export const useContactGroupsByTeamId = (teamId: string, contactChannel?: string) => {
   return useQuery({
-    queryKey: contactGroupKeys.byTeam(),
-    queryFn: () => getContactGroupsByTeamId(teamId),
+    queryKey: contactGroupKeys.byTeam(teamId, contactChannel),
+    queryFn: () => getContactGroupsByTeamId(teamId, contactChannel),
   });
 };
 

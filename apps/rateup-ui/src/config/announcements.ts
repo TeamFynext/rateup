@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-05-campaign-whatsapp-participants",
+    title: "Campaigns only pick WhatsApp contacts",
+    summary:
+      "Adding participants to a campaign now lists only WhatsApp contacts — Instagram and Facebook Messenger contacts are left out — and a group's member count reflects the WhatsApp members it holds, so the people you add are the people the campaign can actually message.",
+    publishedAt: "2026-08-05",
+    kinds: ["improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
     id: "2026-08-05-ig-comment-post-link",
     title: "Jump to the post a comment is on",
     summary:

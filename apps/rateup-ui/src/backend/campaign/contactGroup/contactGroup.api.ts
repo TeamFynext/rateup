@@ -26,9 +26,16 @@ export const getContactGroupList = async (type: ContactGroupType) => {
   return contactGroupData?.data;
 };
 
-export const getContactGroupsByTeamId = async (teamId: string) => {
+/**
+ * `contactChannel` scopes each group's `_count.contacts` to the members reachable on that
+ * channel — the campaign picker passes it so counts match what a campaign can actually message.
+ */
+export const getContactGroupsByTeamId = async (teamId: string, contactChannel?: string) => {
+  const channelParam = contactChannel
+    ? `&contactChannel=${encodeURIComponent(contactChannel)}`
+    : "";
   const contactGroupsData: ContactGroupResponse = await axiosClient.get(
-    `${CONTACT_GROUP_BASE_URL}?teamId=${teamId}`,
+    `${CONTACT_GROUP_BASE_URL}?teamId=${teamId}${channelParam}`,
   );
   return contactGroupsData;
 };
