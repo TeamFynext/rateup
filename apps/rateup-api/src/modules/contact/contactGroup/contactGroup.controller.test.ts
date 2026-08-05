@@ -119,7 +119,18 @@ describe("getContactGroupsHandler", () => {
 
     await getContactGroupsHandler(request({ query: { teamId: "t-other-org" } }), reply());
 
-    expect(getContactGroupsByTeamId).toHaveBeenCalledWith("t-other-org", ORG);
+    expect(getContactGroupsByTeamId).toHaveBeenCalledWith("t-other-org", ORG, undefined);
+  });
+
+  test("a contactChannel in the query is passed through to scope the member counts", async () => {
+    (getContactGroupsByTeamId as Mock).mockResolvedValue([]);
+
+    await getContactGroupsHandler(
+      request({ query: { teamId: "t1", contactChannel: "whatsapp" } }),
+      reply(),
+    );
+
+    expect(getContactGroupsByTeamId).toHaveBeenCalledWith("t1", ORG, "whatsapp");
   });
 
   test("answers 404 for a group belonging to another org", async () => {

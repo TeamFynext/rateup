@@ -122,6 +122,22 @@ describe("returnAppropriateTimeStamp", () => {
     expect(result).toBe("2023-11-14T22:13:20.000Z");
   });
 
+  // new Date(NaN).toISOString() throws RangeError, and the Instagram comment
+  // handler catches and swallows that — the message vanished while the webhook
+  // still answered 200. Now it lands, stamped with the receive time.
+  test.each([
+    ["a missing", undefined],
+    ["a NaN", NaN],
+    ["an unparseable", "not-a-date"],
+  ])("falls back to now on %s Meta timestamp instead of throwing", async (_name, timestamp) => {
+    const body = igReceive({ text: "hi" }, { timestamp });
+
+    const result = await returnAppropriateTimeStamp(body, PlatformType.INSTAGRAM);
+
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(Date.parse(result)).toBeGreaterThan(Date.now() - 5000);
+  });
+
   test("stamps outbound messages with the current time", async () => {
     const body = { exchangeProcess: "send", send: {} } as any;
 

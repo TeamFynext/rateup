@@ -18,6 +18,7 @@ import {
 } from "./contactGroup.schema.js";
 import { BATCH_SIZE } from "../../../utils/constants/constants.js";
 import { ContactGroupType } from "../../../../generated/prisma/client.js";
+import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "../contact.channel.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -45,7 +46,15 @@ export async function getContactGroupById(contactGroupId: string, orgId: string)
   return contactGroup;
 }
 //also used in zapier controller
-export async function getContactGroupsByTeamId(teamId: string, orgId: string) {
+export async function getContactGroupsByTeamId(
+  teamId: string,
+  orgId: string,
+  contactChannel?: string,
+) {
+  // Callers that can only reach one channel (the campaign participant picker, which is
+  // WhatsApp-only) pass it here so `_count.contacts` reports the members they can actually use.
+  const contactFilter =
+    contactChannel === WHATSAPP_CONTACT_CHANNEL ? { contact: whatsappContactWhere } : undefined;
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       teamId,
@@ -60,7 +69,7 @@ export async function getContactGroupsByTeamId(teamId: string, orgId: string) {
       },
       _count: {
         select: {
-          contacts: true,
+          contacts: contactFilter ? { where: contactFilter } : true,
         },
       },
     },

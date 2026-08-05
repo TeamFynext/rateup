@@ -2,6 +2,7 @@ import { Contact, ContactGroupType, Prisma } from "../../../generated/prisma/cli
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import { ContactNotFoundError } from "./contact.errors.js";
+import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "./contact.channel.js";
 export { ContactNotFoundError };
 import {
   ContactCore,
@@ -453,7 +454,24 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
           });
           break;
         }
-        case "source":
+        case "source": {
+          // `source` is a free-form column whose writers disagree on casing
+          // ("whatsapp" vs "WEBCHAT" vs "CSV IMPORT"), so match it case-insensitively.
+          if (value !== "all") {
+            filterData.push({
+              source: { equals: value, mode: "insensitive" as const },
+            });
+          }
+          break;
+        }
+        case "channel": {
+          // Unlike `source`, this asks where the contact is actually reachable — see
+          // contact.channel.ts. Only WhatsApp is selectable today; anything else is ignored.
+          if (value === WHATSAPP_CONTACT_CHANNEL) {
+            filterData.push(whatsappContactWhere);
+          }
+          break;
+        }
         case "lifecycleId": {
           if (value !== "all") {
             filterData.push({

@@ -3,7 +3,8 @@ import { getWaSettingsByIbaId, getWaSettingsById } from "../settings/wa_settings
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
-import { getInstagramWebhookEvent } from "./instagram.util.js";
+import { getInstagramWebhookEvent, resolveCommentTimestampMs } from "./instagram.util.js";
+import { getInstagramMediaPermalink } from "./instagram_messaging.service.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
@@ -65,7 +66,7 @@ export async function handleInstagramWebhook(
           const event =
             change.field === "live_comments" ? InstagramEvent.LIVE_COMMENT : InstagramEvent.COMMENT;
           try {
-            await handleInstagramComment(change.value, event, settings);
+            await handleInstagramComment(change.value, event, settings, entry.time);
             processed++;
           } catch (error) {
             log.error({ err: error, ibaId, event }, "[Instagram] Failed to handle comment");
@@ -133,6 +134,7 @@ export async function handleInstagramComment(
   comment: InstagramCommentValue,
   event: InstagramEvent.COMMENT | InstagramEvent.LIVE_COMMENT,
   waSettings: { orgId: string; ibaId: string },
+  entryTime?: number,
 ) {
   const { orgId, ibaId } = waSettings;
   const { id: commentId, text, from, created_time } = comment;
@@ -147,17 +149,35 @@ export async function handleInstagramComment(
     `[Instagram] Received ${event} from igsId ${igsId} (${from.username}): "${text}" (comment: ${commentId})`,
   );
 
+  // Resolved once, here, rather than every time an agent opens the ticket: a
+  // comment carries only the media's numeric id, and an instagram.com/p/ URL
+  // needs the shortcode. Permalinks never change, so the value keeps.
+  let mediaPermalink: string | null = null;
+  if (comment.media?.id) {
+    try {
+      mediaPermalink = await getInstagramMediaPermalink(comment.media.id, ibaId);
+    } catch (error) {
+      // The link is a convenience; the comment is the message. Never lose the
+      // second because Meta would not hand over the first.
+      log.error(
+        { err: error, mediaId: comment.media.id },
+        `[Instagram] Could not resolve the post link for comment ${commentId}`,
+      );
+    }
+  }
+
   try {
     // Store the comment as a received message in the inbox
     const commentBody = {
       sender: { id: igsId },
       recipient: { id: ibaId },
-      timestamp: created_time * 1000,
+      timestamp: resolveCommentTimestampMs(created_time, entryTime),
       message: {
         mid: `ig_comment_${commentId}`,
         text,
         comment_id: commentId,
         media_id: comment.media?.id,
+        media_permalink: mediaPermalink ?? undefined,
       },
     };
 

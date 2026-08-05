@@ -232,7 +232,7 @@ export async function processNextInstagramNode(
             nodeString(node.data?.text) ??
             "";
           const fallbackText = parseToWhatsAppFormat(rawText) || "Thanks for your comment!";
-          await sendInstagramPrivateReply(remainingCommentId, fallbackText, ibaId, orgId);
+          await sendInstagramPrivateReply(remainingCommentId, fallbackText, ibaId, orgId, igsId);
           remainingCommentId = undefined;
         }
         await handleInstagramImageNode(node, igsId, orgId, ibaId);
@@ -357,7 +357,7 @@ async function handleInstagramTextNode(
     const rawText = nodeString(node.data?.body) ?? nodeString(node.data?.text) ?? "Hello!";
     const text = parseToWhatsAppFormat(rawText) || "Hello!";
     if (commentId) {
-      await sendInstagramPrivateReply(commentId, text, ibaId, orgId);
+      await sendInstagramPrivateReply(commentId, text, ibaId, orgId, igsId);
     } else {
       await sendInstagramTextMessage(igsId, text, orgId, ibaId);
     }

@@ -68,7 +68,11 @@ export async function getContactGroupsHandler(
     }
 
     if (request.query.teamId) {
-      const res = await getContactGroupsByTeamId(request.query.teamId, orgId);
+      const res = await getContactGroupsByTeamId(
+        request.query.teamId,
+        orgId,
+        request.query.contactChannel,
+      );
       return reply.code(200).send(res);
     }
 
