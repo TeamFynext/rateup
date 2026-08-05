@@ -7,13 +7,19 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  useColorScheme,
+  Modal,
+  TouchableWithoutFeedback,
+  FlatList,
 } from "react-native";
+import { ChevronDown, Search, Check } from "lucide-react-native";
 import useTemplatesAvailableForTeam from "./templates/team";
 import { useTeamsByUser } from "@/api/teams/teams.query";
 import { useSendWaTemplateToUser } from "@/api/whatsapp/template/whatsapp.query";
-import { WaInboxTemplate } from "../chatBody/messageBubbleTypes";
+import { WaInboxTemplate } from "./templates/TemplateComponents";
 import { AccountSelector } from "./templates/TemplateComponents";
 import { getContactById } from "@/api/inbox/contacts/contacts.api";
+import { Colors } from "@/constants/colors";
 
 const TemplateSending = ({
   onClose,
@@ -34,6 +40,9 @@ const TemplateSending = ({
   const [sending, setSending] = useState(false);
   const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] =
     useState<string>("");
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const teams = useTeamsByUser();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
@@ -63,7 +72,7 @@ const TemplateSending = ({
 
   useEffect(() => {
     setLoadingTemplates(true);
-    const timeout = setTimeout(() => setLoadingTemplates(false), 500); // Simulated delay
+    const timeout = setTimeout(() => setLoadingTemplates(false), 300);
     return () => clearTimeout(timeout);
   }, [teamId, searchTerm]);
 
@@ -105,120 +114,336 @@ const TemplateSending = ({
 
   if (loadingContact || teams.isLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#4ade80" />
-        <Text className="text-black mt-2">Loading contact and teams...</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+          paddingVertical: 40,
+        }}
+      >
+        <ActivityIndicator size="large" color={Colors.brand.blue} />
+        <Text
+          style={{
+            fontFamily: "Nunito_600SemiBold",
+            color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+            marginTop: 10,
+          }}
+        >
+          Loading contact and teams...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View className="p-4">
+    <View style={{ paddingVertical: 10 }}>
       {/* Team selector */}
-      <View className="mb-4">
-        <Text className="mb-1 text-black font-medium">Select Team</Text>
+      <View style={{ marginBottom: 14 }}>
+        <Text
+          style={{
+            fontFamily: "Nunito_600SemiBold",
+            color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+            fontSize: 14,
+            marginBottom: 6,
+          }}
+        >
+          Select Team
+        </Text>
         <TouchableOpacity
           disabled={teams.isLoading}
-          className="border border-gray-300 rounded px-3 py-2 bg-white"
+          style={{
+            height: 42,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+            backgroundColor: isDark ? Colors.dark.surface : "#fff",
+            paddingHorizontal: 12,
+          }}
           onPress={() => setDropdownVisible((prev) => !prev)}
         >
-          <Text className="text-black">
+          <Text
+            style={{
+              fontFamily: "Nunito_600SemiBold",
+              fontSize: 14,
+              color: selectedTeamName
+                ? isDark
+                  ? "#fff"
+                  : Colors.light.textPrimary
+                : isDark
+                ? Colors.dark.textPlaceholder
+                : Colors.light.textPlaceholder,
+            }}
+          >
             {selectedTeamName || "Select a team"}
           </Text>
+          <ChevronDown size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
         </TouchableOpacity>
 
-        {dropdownVisible && (
-          <View className="border border-gray-300 mt-1 rounded bg-white max-h-40">
-            <ScrollView>
-              {teams.data?.data?.map((team: any) => (
-                <TouchableOpacity
-                  key={team.id}
-                  onPress={() => {
-                    setTeamId(team.id);
-                    setSelectedTeamName(team.name);
-                    setDropdownVisible(false);
-                    setSelectedTemplateId(""); // reset template on team change
+        <Modal
+          transparent
+          animationType="fade"
+          visible={dropdownVisible}
+          onRequestClose={() => setDropdownVisible(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
+            <View style={{ flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", paddingHorizontal: 20 }}>
+              <View
+                style={{
+                  backgroundColor: isDark ? Colors.dark.surface : "#fff",
+                  borderRadius: 16,
+                  paddingVertical: 8,
+                  maxHeight: "60%",
+                  borderWidth: 1,
+                  borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+                }}
+              >
+                <FlatList
+                  data={teams.data?.data}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => {
+                    const isSelected = item.id === teamId;
+                    return (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setTeamId(item.id);
+                          setSelectedTeamName(item.name);
+                          setDropdownVisible(false);
+                          setSelectedTemplateId(""); // reset template on team change
+                        }}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          paddingHorizontal: 16,
+                          paddingVertical: 12,
+                          borderBottomWidth: 1,
+                          borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_600SemiBold",
+                            fontSize: 15,
+                            color: isSelected
+                              ? isDark
+                                ? Colors.accent.cyan
+                                : Colors.brand.blue
+                              : isDark
+                              ? "#fff"
+                              : Colors.light.textPrimary,
+                          }}
+                        >
+                          {item.name}
+                        </Text>
+                        {isSelected && (
+                          <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
+                        )}
+                      </TouchableOpacity>
+                    );
                   }}
-                  className="px-3 py-2 border-b border-gray-100"
-                >
-                  <Text className="text-black">{team.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+                  ListEmptyComponent={
+                    <Text
+                      style={{
+                        fontFamily: "Nunito_600SemiBold",
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                        textAlign: "center",
+                      }}
+                    >
+                      No teams found!
+                    </Text>
+                  }
+                />
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
       </View>
 
-      {/* Search input */}
-      {teamId && (
-        <View className="mb-4">
-          <Text className="mb-1 text-black font-medium">Search Templates</Text>
-          <TextInput
-            placeholder="Search templates..."
-            placeholderTextColor="#888"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            className="border border-gray-300 rounded px-3 py-2 text-black bg-white"
-          />
-        </View>
-      )}
-
+      {/* Account Selector */}
       <AccountSelector
         value={whatsappSettingsPhoneId}
         onChange={setWhatsappSettingsPhoneId}
       />
 
+      {/* Search input */}
+      {teamId && (
+        <View style={{ marginBottom: 14 }}>
+          <Text
+            style={{
+              fontFamily: "Nunito_600SemiBold",
+              color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+              fontSize: 14,
+              marginBottom: 6,
+            }}
+          >
+            Search Templates
+          </Text>
+          <View
+            style={{
+              height: 42,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+              backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
+              paddingHorizontal: 12,
+            }}
+          >
+            <Search size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
+            <TextInput
+              placeholder="Search templates..."
+              placeholderTextColor={isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder}
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              style={{
+                flex: 1,
+                fontSize: 14,
+                fontFamily: "Nunito_400Regular",
+                color: isDark ? "#fff" : Colors.light.textPrimary,
+                padding: 0,
+              }}
+            />
+          </View>
+        </View>
+      )}
+
       {/* Templates List */}
+      {teamId && (
+        <Text
+          style={{
+            fontFamily: "Nunito_600SemiBold",
+            color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+            fontSize: 14,
+            marginBottom: 8,
+          }}
+        >
+          Available Templates
+        </Text>
+      )}
+
       {loadingTemplates ? (
-        <ActivityIndicator size="small" color="#4ade80" />
-      ) : filteredTemplates?.length > 0 ? (
-        <ScrollView className="max-h-60 mb-4">
-          {filteredTemplates.map((template) => (
-            <TouchableOpacity
-              key={template.id}
-              onPress={() => setSelectedTemplateId(template.id)}
-              className={`p-3 mb-2 rounded ${
-                selectedTemplateId === template.id
-                  ? "bg-green-100 border border-green-400"
-                  : "bg-gray-100"
-              }`}
-            >
-              <Text className="text-black font-medium">
-                {template.data.name}
-              </Text>
-              <Text className="text-sm text-gray-700">
-                {template.data.language}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <ActivityIndicator size="small" color={Colors.brand.blue} style={{ marginVertical: 10 }} />
+      ) : filteredTemplates && filteredTemplates.length > 0 ? (
+        <ScrollView style={{ maxHeight: 200, marginBottom: 14 }}>
+          {filteredTemplates.map((template) => {
+            const isSelected = selectedTemplateId === template.id;
+            return (
+              <TouchableOpacity
+                key={template.id}
+                onPress={() => setSelectedTemplateId(template.id)}
+                style={{
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
+                  marginBottom: 8,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: isSelected
+                    ? isDark
+                      ? Colors.accent.cyan
+                      : Colors.brand.blue
+                    : "transparent",
+                  backgroundColor: isSelected
+                    ? isDark
+                      ? "rgba(79,195,255,0.15)"
+                      : "rgba(28,81,142,0.08)"
+                    : isDark
+                    ? Colors.dark.surface
+                    : Colors.light.surface,
+                }}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text
+                    style={{
+                      fontFamily: "Nunito_700Bold",
+                      fontSize: 14,
+                      color: isDark ? "#fff" : Colors.light.textPrimary,
+                    }}
+                  >
+                    {template.data.name}
+                  </Text>
+                  {isSelected && (
+                    <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
+                  )}
+                </View>
+                <Text
+                  style={{
+                    fontFamily: "Nunito_400Regular",
+                    fontSize: 11,
+                    color: isDark ? Colors.dark.textSubtle : Colors.light.textSubtle,
+                    marginTop: 2,
+                  }}
+                >
+                  Language: {template.data.language}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       ) : (
         teamId && (
-          <Text className="text-gray-500 italic text-center">
+          <Text
+            style={{
+              fontFamily: "Nunito_400Regular_Italic",
+              color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+              textAlign: "center",
+              marginVertical: 12,
+            }}
+          >
             No approved templates found.
           </Text>
         )
       )}
 
-      <WaInboxTemplate
-        parameters={parameterData}
-        //@ts-ignore
-        templateBody={selectedTemplate?.data}
-      />
+      {/* Selected Template Preview */}
+      {selectedTemplate && (
+        <WaInboxTemplate
+          parameters={parameterData}
+          //@ts-ignore
+          templateBody={selectedTemplate?.data}
+        />
+      )}
 
       {/* Send button */}
       {hasTemplates && (
         <TouchableOpacity
-          className={`mt-4 py-3 rounded bg-green-500 ${
-            sending ? "opacity-60" : ""
-          }`}
+          style={{
+            marginTop: 16,
+            height: 46,
+            borderRadius: 12,
+            backgroundColor: Colors.brand.blue,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: sending ? 0.7 : 1,
+            shadowColor: Colors.brand.blue,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDark ? 0.4 : 0.2,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
           disabled={sending}
           onPress={handleSendTemplate}
         >
           {sending ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-center text-white font-semibold">Send</Text>
+            <Text
+              style={{
+                fontFamily: "Nunito_700Bold",
+                fontSize: 15,
+                color: "#fff",
+              }}
+            >
+              Send Template
+            </Text>
           )}
         </TouchableOpacity>
       )}

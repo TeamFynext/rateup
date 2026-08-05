@@ -5,9 +5,10 @@ import {
   Dimensions,
   TouchableOpacity,
   FlatList,
+  useColorScheme,
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import React, { useRef, useCallback, useMemo } from "react";
+import React, { useRef, useCallback, useMemo, useEffect } from "react";
 import { parseWaMessage_ } from "@/api/inbox/messages/utils";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
@@ -19,10 +20,20 @@ import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { Colors } from "@/constants/colors";
+import { useMessagesStore } from "@/store/inboxStore"; // NEW
 
 const { height: screenHeight } = Dimensions.get("window");
 
+const viewabilityConfig = {
+  itemVisiblePercentThreshold: 50,
+};
+
 const ChatBody = ({ id }: { id: string }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  // The design's thread sits on `--bg-page`, same as the list.
+  const threadBg = isDark ? Colors.dark.bg : Colors.light.bg;
   const {
     data,
     fetchNextPage,
@@ -32,61 +43,66 @@ const ChatBody = ({ id }: { id: string }) => {
     isError,
     error,
   } = useGetMessagesByContactId(id);
-  const queryClient = useQueryClient();
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
-  const messages = data?.pages.flatMap((page) => page.messages) || [];
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const lastVisibleIndex = useRef(0);
-  const prevMessageCount = useRef(messages.length);
-  const messageList = useMemo(() => messages, [messages]);
+
+  // Zustand Store Integration
+  const key = `${id}_all`;
+  const storeMessages = useMessagesStore(state => state.messagesByKey.get(key)?.messages) ?? [];
+  const mergeMessages = useMessagesStore(state => state.mergeMessages);
+
+  // Sync API data to Zustand
+  useEffect(() => {
+    if (!data) return;
+    const apiMessages = data.pages.flatMap((page) => page.messages) || [];
+    if (apiMessages.length > 0) {
+      mergeMessages(key, apiMessages, false);
+    }
+  }, [data, key, mergeMessages]);
+
   const { wsData } = useWsData();
-  React.useEffect(() => {
+
+  // Sync WebSocket data to Zustand
+  useEffect(() => {
     if (
-      messages.length > prevMessageCount.current &&
-      lastVisibleIndex.current < messages.length - 5
+      wsData?.type === "inbox" &&
+      wsData.inbox?.contact?.id == id
+    ) {
+      const msg = wsData.inbox?.message;
+      if (msg) {
+        mergeMessages(key, [msg], false);
+      }
+    }
+  }, [wsData, id, key, mergeMessages]);
+
+  const messageList = storeMessages;
+  const prevMessageCount = useRef(messageList.length);
+
+  useEffect(() => {
+    if (
+      messageList.length > prevMessageCount.current &&
+      lastVisibleIndex.current < messageList.length - 5
     ) {
       setShowScrollToBottom(true);
     }
-    prevMessageCount.current = messages.length;
-  }, [messages.length]);
-
-  React.useEffect(() => {
-    if (
-      wsData?.type === "inbox" &&
-      wsData.inbox?.contact.id === id // only for current chat
-    ) {
-      const isDuplicate = messageList.some(
-        (msg) => msg.id === wsData.inbox?.message.id,
-      );
-      if (!isDuplicate) {
-        queryClient.setQueryData(["wa-messages", id], (oldData: any) => {
-          if (!oldData) return oldData;
-
-          const newPages = [...oldData.pages];
-          newPages[0] = {
-            ...newPages[0],
-            messages: [wsData.inbox?.message, ...newPages[0].messages],
-          };
-
-          return {
-            ...oldData,
-            pages: newPages,
-          };
-        });
-      }
-    }
-  }, [wsData, id, messageList]);
+    prevMessageCount.current = messageList.length;
+  }, [messageList.length]);
 
   const markedAsRead = useRef(new Set<string>());
 
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  };
+  const onViewableItemsChangedHandler = useRef<
+    (({ viewableItems }: { viewableItems: Array<ViewToken> }) => void) | null
+  >(null);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+  useEffect(() => {
+    onViewableItemsChangedHandler.current = ({
+      viewableItems,
+    }: {
+      viewableItems: Array<ViewToken>;
+    }) => {
       viewableItems.forEach(({ item }) => {
         const isReceived = item.messageBody.exchangeProcess === "receive";
         const isUnread = !item.messageBody.readUsers?.includes(userId);
@@ -96,8 +112,15 @@ const ChatBody = ({ id }: { id: string }) => {
           markedAsRead.current.add(item.id);
         }
       });
+    };
+  }, [userId, id, markRead]);
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+      onViewableItemsChangedHandler.current?.({ viewableItems });
     },
-  ).current;
+    [],
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
@@ -113,7 +136,12 @@ const ChatBody = ({ id }: { id: string }) => {
 
       const shouldShowDate = currentDate !== nextDate;
       return (
-        <View className="bg-gray-50 dark:bg-slate-800 px-2">
+        <View
+          style={{
+            backgroundColor: threadBg,
+            paddingHorizontal: 8,
+          }}
+        >
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}
@@ -121,34 +149,49 @@ const ChatBody = ({ id }: { id: string }) => {
           )}
           <MessageBubble
             messageContent={parsed.messageContent}
-            interactive={parsed.interactive} //if it is interactive
+            interactive={parsed.interactive}
             timestamp={time}
-            assignStatus={item.messageBody?.internal?.assignStatus || ""} // for internal
+            assignStatus={item.messageBody?.internal?.assignStatus || ""}
             exchangeProcess={item.messageBody.exchangeProcess}
             senderName={item.sender?.name || ""}
             messageType={parsed.messageType}
-            template={parsed.template} //if it is template
+            template={parsed.template}
             templateComponentParams={item.templateComponentParams}
+            stats={item.stats}
           />
         </View>
       );
     },
-    [messageList],
+    [messageList, isDark],
   );
 
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;
 
-  if (isPending) {
+  if (isPending && messageList.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
-        <ActivityIndicator size="large" color="#009987" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: threadBg,
+        }}
+      >
+        <ActivityIndicator size="large" color={Colors.brand.blue} />
       </View>
     );
   }
 
-  if (isError) {
+  if (isError && messageList.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: threadBg,
+        }}
+      >
         <Text className="text-red-500">
           {error?.message || "Something went wrong"}
         </Text>
@@ -157,19 +200,24 @@ const ChatBody = ({ id }: { id: string }) => {
   }
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-slate-800">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+      }}
+    >
       <FlatList
         inverted
         data={messageList}
         ref={listRef}
         showsVerticalScrollIndicator={false}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => (item.messageId ?? item.id).toString()}
         renderItem={renderItem}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         onScroll={(event) => {
           const offsetY = event.nativeEvent.contentOffset.y;
-          const isAtBottom = offsetY < 20; // smaller threshold
+          const isAtBottom = offsetY < 20;
           setShowScrollToBottom(!isAtBottom);
         }}
         //@ts-ignore
@@ -195,7 +243,11 @@ const ChatBody = ({ id }: { id: string }) => {
           ) : null
         }
         contentContainerStyle={{
-          paddingBottom: dynamicPaddingBottom,
+          // Design: `padding: 18px 16px` around the message column. The list is
+          // inverted, so `paddingTop` is the visual bottom.
+          paddingTop: dynamicPaddingBottom,
+          paddingBottom: 18,
+          paddingHorizontal: 8,
         }}
         updateCellsBatchingPeriod={100}
       />

@@ -3,9 +3,15 @@ export type ContactsWithLastMessageResponse = {
   nextOffset: number | null;
 };
 
+export type ContactLabel = {
+  id: string;
+  name: string;
+  color?: string;
+};
+
 export type ContactsWithLastMessage = {
   id: string;
-  name: string ;
+  name: string;
   phone: string;
   unReadMessageCount: number;
   lastReceivedMessageTimeStamp: any;
@@ -15,9 +21,17 @@ export type ContactsWithLastMessage = {
   assignedUsers: any;
   isSessionActive: boolean;
   whatsappUserName?: string,
-  igsId?:string,
-  platform?:string;
-  lifecycleId?:string;
+  igsId?: string,
+  platform?: string;
+  lifecycleId?: string;
+  /** The ticket this row belongs to. Favouriting is keyed on it, not the contact. */
+  conversationId?: string;
+  /** Ticket identity — `Conversation.number`, rendered as `#RT-<n>`. */
+  ticketNumber?: number;
+  ticketSubject?: string | null;
+  /** Per-ticket star flag (`Conversation.isFavorite`). */
+  isFavorite?: boolean;
+  contactLabels?: ContactLabel[];
 };
 
 export enum WaMessageAssignStatus {
@@ -48,6 +62,7 @@ export interface ICreateContact {
 
 export interface filteredContactCount {
   all: number;
+  total?: number;
   assigned: number;
   assignedToMe: number;
   closed: number;
@@ -161,29 +176,29 @@ export type WaSendMessageBody = {
   recipient_type: "individual";
   to: string; // PHONE_NUMBER type
   type:
-    | "text"
-    | "image"
-    | "interactive"
-    | "audio"
-    | "document"
-    | "contacts"
-    | "sticker"
-    | "location"
-    | "template"
-    | "reaction";
+  | "text"
+  | "image"
+  | "interactive"
+  | "audio"
+  | "document"
+  | "contacts"
+  | "sticker"
+  | "location"
+  | "template"
+  | "reaction";
   text?: {
     preview_url?: boolean;
     body: string;
   };
   interactive?: {
     type:
-      | "button"
-      | "list"
-      | "cta_url"
-      | "flow"
-      | "catalog_message"
-      | "product"
-      | "product_list";
+    | "button"
+    | "list"
+    | "cta_url"
+    | "flow"
+    | "catalog_message"
+    | "product"
+    | "product_list";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars

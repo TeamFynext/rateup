@@ -1,33 +1,25 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import "@/config/superTokens";
-import { useFonts } from "expo-font";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-} from "@react-navigation/native";
-import { useColorScheme } from "react-native";
-import { colors } from "@/constants/constants";
-import { useSubscription } from "@/api/sunscription/subscription.query";
-import { hasFeature } from "@/utils/subscription";
-import { SubscriptionFeaturePathName } from "../../../../enums";
+} from "expo-router/react-navigation";
+import { useColorScheme } from "nativewind";
+import { Colors } from "@/constants/colors";
+import { getInboxHeaderBg } from "@/constants/inboxDesign";
 
 function ProtectedLayout() {
-  const colorScheme = useColorScheme();
-  const { data: sub, isPending } = useSubscription();
-  useFonts({
-    Geist: require("@/assets/fonts/Geist-Regular.ttf"),
-  });
-
-  const hasLoyalty = hasFeature(sub, SubscriptionFeaturePathName.Loyalty);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <NativeTabs
-        tintColor={colors["primary-blue"]}
-        backgroundColor={
-          colorScheme === "dark" ? colors["slate-950"] : colors["gray-50"]
-        }
+        tintColor={isDark ? Colors.brand.blueLight : Colors.brand.blue}
+        // Same `--bg-surface` the inbox header sits on, so the top and bottom
+        // chrome read as one surface.
+        backgroundColor={getInboxHeaderBg(isDark)}
         indicatorColor={"transparent"}
       >
         <NativeTabs.Trigger name="inbox">
@@ -45,12 +37,12 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Web Forms</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        {!isPending && hasLoyalty && (
-          <NativeTabs.Trigger name="loyalty">
-            <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
-            <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
-          </NativeTabs.Trigger>
-        )}
+
+        <NativeTabs.Trigger name="loyalty">
+          <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
+          <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
+        </NativeTabs.Trigger>
+
 
         <NativeTabs.Trigger name="account">
           <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />

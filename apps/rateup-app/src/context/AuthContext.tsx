@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { checkAuth } from "../utils/checkAuth";
 import { loggedUserDetails } from "../api/api";
 
@@ -15,11 +16,11 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   loading: true,
-  setIsAuthenticated: () => {},
+  setIsAuthenticated: () => { },
   userId: null,
-  setUserId: () => {},
+  setUserId: () => { },
   orgId: null,
-  setOrgId: () => {},
+  setOrgId: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -34,11 +35,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const authStatus = await checkAuth();
         setIsAuthenticated(authStatus);
         if (authStatus) {
-          const userDetails = await loggedUserDetails();
-          const userData = userDetails.data;
-          const { userId, orgId } = userData;
-          setUserId(userId);
-          setOrgId(orgId);
+          try {
+            const userDetails = await loggedUserDetails();
+            const userData = userDetails.data;
+            const { userId, orgId } = userData;
+            setUserId(userId);
+            setOrgId(orgId);
+
+            // Cache for offline mode
+            try {
+              await AsyncStorage.setItem("cachedUserId", userId);
+              await AsyncStorage.setItem("cachedOrgId", orgId);
+            } catch (e) {
+              // Ignore cache write errors
+            }
+          } catch (apiError: any) {
+            console.error("Error fetching user details:", apiError);
+            if (apiError.message === "Network Error" || apiError.code === "ERR_NETWORK") {
+              // Fallback to cache
+              const cachedUserId = await AsyncStorage.getItem("cachedUserId");
+              const cachedOrgId = await AsyncStorage.getItem("cachedOrgId");
+              if (cachedUserId && cachedOrgId) {
+                setUserId(cachedUserId);
+                setOrgId(cachedOrgId);
+              } else {
+                // No cache available, we have to log out
+                setIsAuthenticated(false);
+              }
+            } else {
+              setIsAuthenticated(false);
+              setUserId(null);
+              setOrgId(null);
+            }
+          }
         }
       } catch (error) {
         console.error("Error checking authentication:", error);

@@ -1,57 +1,62 @@
 import React, { useEffect } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { Platform, View, useColorScheme } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
 import ChatHeader from "@/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/components/chatDisplay/ChatFooter";
 import ChatBody from "@/components/chatDisplay/ChatBody";
 import {
   useChatAssignStatusStore,
-  useContactIdStore,
+  useSelectedContactStore,
   useSessionActiveStore,
 } from "@/utils/store";
+import { Colors } from "@/constants/colors";
 
 const ChatDisplay = () => {
-  const {
-    id,
-    name,
-    phone,
-    waAssignStatus: initialStatus,
-    lastReceivedMessageTimeStamp,
-    sessionActive,
-  } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+
+  // Pull all details from the global selected contact store instead of URL params
+  const selectedContact = useSelectedContactStore((state) => state.selectedContact);
+
+  const id = Array.isArray(params.id) ? params.id[0] : params.id || selectedContact?.id || "";
+  const name = selectedContact?.name || selectedContact?.whatsappUserName || "";
+  const phone = Number(selectedContact?.phone) || 0;
+  const initialStatus = selectedContact?.waMessageAssignStatus || "";
+  const lastReceivedMessageTimeStamp = selectedContact?.lastReceivedMessageTimeStamp || "";
+  const sessionActive = selectedContact?.sessionActive || false;
 
   const setWaAssignStatus = useChatAssignStatusStore(
     (state) => state.setWaAssignStatus,
-  );
-
-  const setSelectedContactId = useContactIdStore(
-    (state) => state.setSelectedContactId,
   );
 
   const setIsSessionActive = useSessionActiveStore(
     (state) => state.setIsSessionActive,
   );
 
-  // Set contactId and session state immediately
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  // Set session state immediately
   useEffect(() => {
-    //@ts-ignore
-    setSelectedContactId(id);
-    //@ts-ignore
     setIsSessionActive(sessionActive);
-  }, [id, sessionActive]);
+  }, [sessionActive]);
 
   useEffect(() => {
     if (id) {
-      //@ts-ignore
       setWaAssignStatus(initialStatus);
     }
-  }, [id]);
+  }, [id, initialStatus]);
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+      }}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+        behavior={"padding"}
+        keyboardVerticalOffset={20}
         style={{ flex: 1 }}
       >
         <ChatHeader

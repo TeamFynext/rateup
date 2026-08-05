@@ -8,10 +8,13 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
 import { signOut, useUpdateActiveStatusMutation } from "@/api/api";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
+import { getThemePreference, setThemePreference, ThemePreference } from "../../utils/theme";
+import { Colors } from "@/constants/colors";
 
 interface UserProfile {
   email: string;
@@ -23,6 +26,20 @@ interface UserProfile {
   orgId: string;
   userId: string;
 }
+
+const Row = ({ icon, label, value }: any) => (
+  <Pressable className="flex-row items-center justify-between py-4">
+    <View className="flex-row items-center gap-3">
+      <Ionicons name={icon} size={20} color="#6b7280" />
+      <Text className="text-gray-700 dark:text-gray-500">{label}</Text>
+    </View>
+
+    <View className="flex-row items-center gap-2">
+      <Text className="text-gray-500 dark:text-gray-200">{value}</Text>
+      <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+    </View>
+  </Pressable>
+);
 
 const AccountBar = ({
   email,
@@ -36,6 +53,22 @@ const AccountBar = ({
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const { setColorScheme } = useColorScheme();
+  const [themePref, setThemePref] = useState<ThemePreference>("system");
+
+  useEffect(() => {
+    async function loadTheme() {
+      const saved = await getThemePreference();
+      setThemePref(saved);
+    }
+    loadTheme();
+  }, []);
+
+  const handleThemeChange = async (newTheme: ThemePreference) => {
+    setThemePref(newTheme);
+    await setThemePreference(newTheme);
+    setColorScheme(newTheme);
+  };
 
   const updateActiveStatus = useUpdateActiveStatusMutation();
 
@@ -90,20 +123,6 @@ const AccountBar = ({
     });
   };
 
-  const Row = ({ icon, label, value }: any) => (
-    <Pressable className="flex-row items-center justify-between py-4">
-      <View className="flex-row items-center gap-3">
-        <Ionicons name={icon} size={20} color="#6b7280" />
-        <Text className="text-gray-700 dark:text-gray-500">{label}</Text>
-      </View>
-
-      <View className="flex-row items-center gap-2">
-        <Text className="text-gray-500 dark:text-gray-200">{value}</Text>
-        <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
-      </View>
-    </Pressable>
-  );
-
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
       <ScrollView contentContainerStyle={{ padding: 20 }}>
@@ -148,6 +167,48 @@ const AccountBar = ({
           <Row icon="mail-outline" label="Email" value={email} />
           <Row icon="business-outline" label="Organization" value={orgName} />
           <Row icon="call-outline" label="Phone Number" value={orgPhone} />
+        </View>
+
+        {/* Appearance Settings */}
+        <View className="mt-6 bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm">
+          <View className="flex-row items-center gap-3 mb-4">
+            <Ionicons name="color-palette-outline" size={20} color="#6b7280" />
+            <Text className="text-base font-semibold text-gray-700 dark:text-gray-300">Appearance</Text>
+          </View>
+          
+          <View className="flex-row bg-gray-100 dark:bg-slate-800 rounded-xl p-1 gap-1">
+            {(["light", "dark", "system"] as ThemePreference[]).map((t) => {
+              const isActive = themePref === t;
+              const label = t.charAt(0).toUpperCase() + t.slice(1);
+              let iconName: "sunny-outline" | "moon-outline" | "options-outline" = "options-outline";
+              if (t === "light") iconName = "sunny-outline";
+              if (t === "dark") iconName = "moon-outline";
+              
+              return (
+                <Pressable
+                  key={t}
+                  onPress={() => handleThemeChange(t)}
+                  style={isActive ? { backgroundColor: Colors.brand.blue } : undefined}
+                  className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg gap-2 ${
+                    !isActive ? "active:bg-gray-200 dark:active:bg-slate-700" : ""
+                  }`}
+                >
+                  <Ionicons 
+                    name={iconName} 
+                    size={16} 
+                    color={isActive ? "#ffffff" : "#6b7280"} 
+                  />
+                  <Text 
+                    className={`font-semibold text-xs ${
+                      isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Delete Account (NO ROLE RESTRICTION) */}

@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { MessagePlatform } from "@/constants/enums";
 import {
   assignInboxToUser,
   createPrivateMessage,
@@ -27,10 +28,21 @@ export const useGetMessagesByContactId = (contactId: string) => {
   });
 };
 
-export const useSendNewWaMessage = (contactId: string) => {
+export const useSendNewWaMessage = (
+  contactId: string,
+  teamId: string | null,
+  whatsappSettingsPhoneId: string,
+  platform = MessagePlatform.WHATSAPP
+) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (message: any) => sendNewWaMessage(contactId, message),
+    mutationFn: (message: any) =>
+      sendNewWaMessage(contactId, {
+        ...message,
+        whatsappSettingsPhoneId,
+        platform,
+        teamId,
+      }),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
     },

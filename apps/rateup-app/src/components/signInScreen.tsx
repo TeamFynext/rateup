@@ -1,12 +1,10 @@
+import { useColorScheme } from "nativewind";
 import { useState } from "react";
-import {
-  View,
+import { View,
   Text,
   TextInput,
   TouchableOpacity,
-  Keyboard,
-  useColorScheme,
-} from "react-native";
+  Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 import { loggedUserDetails, signIn } from "@/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
@@ -26,7 +24,8 @@ export default function SignInScreen({
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const { setUserId, setOrgId } = useAuth();
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const router = useRouter();
 

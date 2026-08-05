@@ -1,14 +1,20 @@
 import { create } from "zustand";
-import { WaMessageAssignStatus } from "../api/inbox/types";
+import { ContactsWithLastMessage } from "../api/inbox/types";
+import type { SurveyResponseRow } from "../api/response/types";
+import type { DbFlow } from "../api/whatsapp/types";
 import { deleteUploadedFiles } from "./fileUpload";
 
 type ChatState = {
   waAssignStatus: string;
   setWaAssignStatus: (status: string) => void;
 };
+type SelectedContactData = ContactsWithLastMessage & {
+  sessionActive: boolean;
+};
+
 type SelectedContactState = {
-  selectedContactId: string | null;
-  setSelectedContactId: (contactId: string) => void;
+  selectedContact: SelectedContactData | null;
+  setSelectedContact: (contact: SelectedContactData | null) => void;
 };
 type SessionState = {
   isSessionActive: boolean;
@@ -26,21 +32,19 @@ export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
 }));
 
 export const useSelectedTabStore = create<SelectedTabState>((set: any) => ({
-  selectedTab: "New",
+  selectedTab: "Open",
   setSelectedTab: (tab: string) => set({ selectedTab: tab }),
 }));
 
-export const useContactIdStore = create<SelectedContactState>((set: any) => ({
-  selectedContactId: null,
-  setSelectedContactId: (contactId: string) =>
-    set({ selectedContactId: contactId }),
+export const useSelectedContactStore = create<SelectedContactState>((set: any) => ({
+  selectedContact: null,
+  setSelectedContact: (contact: SelectedContactData | null) => set({ selectedContact: contact }),
 }));
 
 export const useSessionActiveStore = create<SessionState>((set: any) => ({
   isSessionActive: true,
   setIsSessionActive: (session: boolean) => set({ isSessionActive: session }),
 }));
-
 
 export type ChatFilter = {
   messageType: "all" | "replied" | "unread" | "usermessages";
@@ -60,9 +64,6 @@ export type ChatFilter = {
   lifecycle?: string;
   assignedUserIds: string[];
 };
-interface Props {
-  setFilterCount: (value: number) => void;
-}
 
 type ChatFilterStore = {
   filter: ChatFilter;
@@ -72,23 +73,8 @@ type ChatFilterStore = {
     tab: string;
     filter: ChatFilter;
   }[];
-  setPreviousFilterForTab: (value:any) => void;
+  setPreviousFilterForTab: (value: any) => void;
 };
-
-// export const useChatFilterStore = create<ChatFilterStore>((set) => ({
-//   filter: {
-//     messageType: "usermessages",
-//     strictFilter: false,
-//     searchTerm: "",
-//     contactGroups: [],
-//     campaigns: [],
-//     tags: [],
-//     waMessageAssignStatus: "New",
-//     blockedUsers: false,
-//     newStatuses: [],
-//   },
-//   setFilter: (value) => set({ filter: value }),
-// }));
 
 const intialValues: ChatFilter = {
   messageType: "usermessages",
@@ -99,9 +85,7 @@ const intialValues: ChatFilter = {
   tags: [],
   waMessageAssignStatus: null,
   blockedUsers: false,
-  status: Object.values(WaMessageAssignStatus).filter(
-    (st) => st !== WaMessageAssignStatus.NEW,
-  ),
+  status: [],
   assignedTeams: [],
   phone: "all",
   labels: [],
@@ -176,7 +160,6 @@ export const useWebFormFilterStore = create<any>((set) => ({
     }),
 }));
 
-
 interface Message {
   id?: string;
   contactId: string;
@@ -195,7 +178,7 @@ interface MessageState {
   messages: Record<string, Message[]>;
   addMessage: (
     contactId: string,
-    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">
+    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">,
   ) => void;
   removeMessage: (contactId: string) => void;
 }
@@ -304,20 +287,18 @@ export const useSearchWebFormStore = create<SearchWebFormState>()((set) => ({
 }));
 
 type FlowResponseDataStore = {
-  data: any[];
-  setData: (newData: any[]) => void;
+  data: SurveyResponseRow[];
+  setData: (newData: SurveyResponseRow[]) => void;
 };
 
-export const useFlowResponseDataStore = create<FlowResponseDataStore>(
-  (set) => ({
-    data: [],
-    setData: (newData) => set({ data: newData }),
-  })
-);
+export const useFlowResponseDataStore = create<FlowResponseDataStore>((set) => ({
+  data: [],
+  setData: (newData) => set({ data: newData }),
+}));
 
 type FlowDataStore = {
-  flowData: any[];
-  setFlowData: (newData: any[]) => void;
+  flowData: DbFlow[];
+  setFlowData: (newData: DbFlow[]) => void;
 };
 
 export const useFlowDataStore = create<FlowDataStore>((set) => ({
@@ -330,28 +311,26 @@ type WebFormResponseDataStore = {
   setData: (newData: any[]) => void;
 };
 
-export const useWebFormResponseDataStore = create<WebFormResponseDataStore>(
-  (set) => ({
-    data: [],
-    setData: (newData) => set({ data: newData }),
-  })
-);
-
+export const useWebFormResponseDataStore = create<WebFormResponseDataStore>((set) => ({
+  data: [],
+  setData: (newData) => set({ data: newData }),
+}));
 
 type WaMedia = {
   type: string;
   url: string;
   name: string;
   key: string;
+  uploading?: boolean;
 };
 
 interface MediaStore {
   media: WaMedia[];
   addMedia: (value: WaMedia) => void;
-  removeMedia: (key) => void;
+  removeMedia: (key: string) => void;
   resetMedia: () => void;
-  selectedMedia: WaMedia;
-  setSelectedMedia: (value) => void;
+  selectedMedia: WaMedia | null;
+  setSelectedMedia: (value: WaMedia | null) => void;
 }
 
 export const useMediaStore = create<MediaStore>((set) => ({

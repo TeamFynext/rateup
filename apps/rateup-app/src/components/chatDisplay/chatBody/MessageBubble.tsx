@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, useColorScheme } from "react-native";
 import React, { memo, useCallback } from "react";
 import WaInboxText, {
   WaInboxAudio,
@@ -12,10 +12,16 @@ import { namePreview } from "@/utils/chatbox_utils";
 import { WaTemplateComponent } from "@/context/type";
 import {
   Lock,
+  CheckCheck,
+  Check,
+  Clock,
+  AlertCircle,
 } from "lucide-react-native";
-import { colors } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
+import LinearGradient from "react-native-linear-gradient";
+import { Colors } from "@/constants/colors";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -27,6 +33,7 @@ type MessageBubbleProps = {
   template: any;
   templateComponentParams?: WaTemplateComponent[];
   assignStatus?: string;
+  stats?: any;
 };
 
 const MessageBubble = ({
@@ -39,6 +46,7 @@ const MessageBubble = ({
   template,
   templateComponentParams,
   assignStatus,
+  stats,
 }: MessageBubbleProps) => {
   const getBgColor = () => {
     if (exchangeProcess === "internal") {
@@ -77,8 +85,8 @@ const MessageBubble = ({
     }
   };
 
-  const getBorder = () =>{
-    switch (exchangeProcess){
+  const getBorder = () => {
+    switch (exchangeProcess) {
       case "send":
       case "privateNote":
         return "rounded-br-md rounded-3xl";
@@ -87,106 +95,379 @@ const MessageBubble = ({
       default:
         return "rounded-bl-md rounded-3xl";
     }
-  }
+  };
 
-  const renderContent = useCallback(() => {
-    switch (messageType) {
-      case "text":
-        return <WaInboxText messageContent={messageContent} />;
-      case "image":
-        return <WaInboxImage messageContent={messageContent} />;
-      case "audio":
-        return (
-          <WaInboxAudio messageContent={messageContent} timestamp={timestamp} />
-        );
-      case "document":
-        return <WaInboxDocument messageContent={messageContent} />;
-      case "video":
-        return <WaInboxVideo messageContent={messageContent} />;
-      case "reaction":
-        return <Text className="text-xl">{messageContent}</Text>;
-      case "button":
-        return <Text>buttons</Text>;
-      case "template":
-        return (
-          <WaInboxTemplate
-            templateBody={template}
-            parameters={templateComponentParams}
-          />
-        );
-      case "interactive":
-        return (
-          <WaInboxInteractive
-            interactiveBody={interactive}
-            messageContent={messageContent}
-          />
-        );
+  const renderContent = useCallback(
+    (textColor?: string) => {
+      switch (messageType) {
+        case "text":
+          return (
+            <WaInboxText
+              messageContent={messageContent}
+              textColor={textColor}
+            />
+          );
+        case "image":
+          return <WaInboxImage messageContent={messageContent} />;
+        case "audio":
+          return (
+            <WaInboxAudio
+              messageContent={messageContent}
+              timestamp={timestamp}
+            />
+          );
+        case "document":
+          return <WaInboxDocument messageContent={messageContent} />;
+        case "video":
+          return <WaInboxVideo messageContent={messageContent} />;
+        case "reaction":
+          return (
+            <Text style={{ fontSize: 20, color: textColor }}>
+              {messageContent}
+            </Text>
+          );
+        case "button":
+          return <Text style={{ color: textColor }}>buttons</Text>;
+        case "template":
+          return (
+            <WaInboxTemplate
+              templateBody={template}
+              parameters={templateComponentParams}
+            />
+          );
+        case "interactive":
+          return (
+            <WaInboxInteractive
+              interactiveBody={interactive}
+              messageContent={messageContent}
+            />
+          );
+        default:
+          let displayContent = messageContent;
+          if (typeof messageContent === "object" && messageContent !== null) {
+            displayContent = JSON.stringify(messageContent);
+          }
+          return (
+            <Text style={{ color: textColor, fontSize: 14 }}>
+              {displayContent}
+            </Text>
+          );
+      }
+    },
+    [messageContent, messageType, timestamp],
+  );
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
+
+  const getInternalStyles = () => {
+    switch (assignStatus) {
+      case WaMessageAssignStatus.RESOLVED:
+        return {
+          bg: isDark ? "rgba(34,197,94,0.12)" : "#f0fdf4",
+          border: isDark ? "rgba(34,197,94,0.25)" : "#dcfce7",
+          text: isDark ? "#4ade80" : "#166534",
+        };
+      case WaMessageAssignStatus.UNRESOLVED:
+        return {
+          bg: isDark ? "rgba(249,149,29,0.12)" : "rgba(249,149,29,0.06)",
+          border: isDark ? "rgba(249,149,29,0.25)" : "rgba(249,149,29,0.15)",
+          text: isDark ? "#fb923c" : "#c2410c",
+        };
+      case WaMessageAssignStatus.CLOSED:
+        return {
+          bg: isDark ? "rgba(28,81,142,0.15)" : "#eff6ff",
+          border: isDark ? "rgba(28,81,142,0.28)" : "#dbeafe",
+          text: isDark ? Colors.accent.cyan : Colors.brand.blue,
+        };
+      case WaMessageAssignStatus.SPAM:
+        return {
+          bg: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2",
+          border: isDark ? "rgba(239,68,68,0.25)" : "#fee2e2",
+          text: isDark ? "#f87171" : "#991b1b",
+        };
       default:
-        return <Text className="text-black text-sm">{messageContent}</Text>;
+        return {
+          bg: isDark ? "rgba(99,102,241,0.12)" : "#e0e7ff",
+          border: isDark ? "rgba(99,102,241,0.25)" : "#e0e7ff",
+          text: isDark ? "#818cf8" : "#3730a3",
+        };
     }
-  }, [messageContent, messageType, timestamp]);
+  };
+
+  // SPECIAL CASE: Internal assignment changes (System Messages) — centered pill with content
+  if (exchangeProcess === "internal") {
+    const styles = getInternalStyles();
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          width: "100%",
+          marginBottom: 10,
+          paddingHorizontal: 8,
+        }}
+      >
+        <View
+          style={{
+            maxWidth: "85%",
+            backgroundColor: styles.bg,
+            borderWidth: 1,
+            borderColor: styles.border,
+            borderRadius: 16,
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 6,
+            }}
+          >
+            {getClosedIcon(assignStatus)}
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Nunito_700Bold",
+                color: styles.text,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
+              {assignStatus}
+            </Text>
+          </View>
+          {renderContent(
+            isDark ? Colors.dark.textPrimary : Colors.light.textPrimary,
+          )}
+          {timestamp ? (
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: "Nunito_400Regular",
+                color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                marginTop: 4,
+              }}
+            >
+              {timestamp}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
 
   // SPECIAL CASE: Received audio message — no bubble
   if (messageType === "audio" && exchangeProcess !== "send") {
     return (
-      <View className="flex-row px-2 w-full mb-2 items-center gap-1 justify-start">
+      <View
+        style={{
+          flexDirection: "row",
+          width: "100%",
+          paddingHorizontal: 8,
+          marginBottom: 10,
+          justifyContent: "flex-start",
+        }}
+      >
         {renderContent()}
       </View>
     );
   }
 
-  return (
-    <View
-      className={`relative flex-row px-2 w-full mb-2 items-center gap-1
-         ${
-        exchangeProcess === "send" || exchangeProcess === "privateNote"
-          ? "justify-end"
-          : exchangeProcess === "internal"
-          ? "justify-center"
-          : "justify-start"
-      }`}
-    >
-      <View
-        className={`flex-col max-w-[75%] px-3 py-2 shadow-md ${getBorder()} ${getBgColor()}`}
-      >
-        {exchangeProcess === "privateNote" && (
-          <View className="flex-row items-center justify-start gap-1">
-            <Lock color={colors["amber-500"]} size={10} />
-            <Text className="text-xs text-amber-500">Private note</Text>
-          </View>
-        )}
-        {(exchangeProcess === "send" || exchangeProcess === "privateNote") && (
-          <Text className="text-primaryBlue opacity-70 p-1 text-sm">{senderName}</Text>
-        )}
-        {exchangeProcess === "internal" && (
-          <View className="flex-row items-center gap-1">
-            {getClosedIcon(assignStatus)}
-            <Text className={`${getTextColor()} opacity-70 p-1`}>
-              {assignStatus}
+  const isSender = exchangeProcess === "send";
+  const isPrivateNote = exchangeProcess === "privateNote";
+  const showAvatar = isSender;
+
+  // The design's internal note: a full-width cream card rather than a bubble.
+  if (isPrivateNote) {
+    return (
+      <View style={{ width: "100%", paddingHorizontal: 8, marginBottom: 10 }}>
+        <View
+          style={{
+            backgroundColor: t.note.bg,
+            borderWidth: 1,
+            borderColor: t.note.border,
+            borderRadius: 12,
+            paddingVertical: 10,
+            paddingHorizontal: 13,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 4,
+            }}
+          >
+            <Lock color={t.note.label} size={11} />
+            <Text
+              style={{
+                fontSize: 9,
+                fontFamily: "Nunito_800ExtraBold",
+                letterSpacing: 0.54,
+                textTransform: "uppercase",
+                color: t.note.label,
+              }}
+            >
+              {senderName
+                ? `Internal note · ${senderName}${timestamp ? ` · ${timestamp}` : ""}`
+                : "Internal note"}
             </Text>
           </View>
-        )}
-        {renderContent()}
-        {messageType !== "audio" && (
-          <Text className="text-sm text-gray-500 text-right mt-1">
-            {timestamp}
-          </Text>
-        )}
+          {renderContent(t.note.text)}
+        </View>
       </View>
+    );
+  }
 
-      {exchangeProcess === "send" && (
-        <View className="w-8 h-8 rounded-full bg-chatAvatarBlue flex items-center justify-center">
-          <Text className="text-white font-bold text-md">
-            {namePreview(senderName)}
-          </Text>
+  const bubbleBgColor = isSender ? Colors.brand.blue : t.surface;
+
+  const bubbleTextColor = isSender ? "#fff" : t.fg1;
+
+  const timestampColor = t.fg4;
+
+  const borderStyle = isSender
+    ? {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 4,
+      }
+    : {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderBottomRightRadius: 16,
+        borderBottomLeftRadius: 4,
+      };
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: isSender ? "flex-end" : "flex-start",
+        alignItems: "flex-end",
+        gap: showAvatar ? 8 : 0,
+        width: "100%",
+        marginBottom: 10,
+        paddingHorizontal: 8,
+      }}
+    >
+      {!isSender && (
+        // Design: max-width 80%, `--bg-surface` with a `--border-1` hairline,
+        // 9px/13px padding, time underneath at 10px.
+        <View style={{ maxWidth: "80%" }}>
+          <View
+            style={{
+              backgroundColor: bubbleBgColor,
+              borderWidth: 1,
+              borderColor: t.border1,
+              ...borderStyle,
+              paddingVertical: 9,
+              paddingHorizontal: 13,
+            }}
+          >
+            {renderContent(bubbleTextColor)}
+            {timestamp ? (
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontFamily: "Nunito_400Regular",
+                  color: timestampColor,
+                  marginTop: 3,
+                }}
+              >
+                {timestamp}
+              </Text>
+            ) : null}
+          </View>
         </View>
       )}
-      {exchangeProcess === "privateNote" && (
-        <View className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center">
-          <Text className="text-primaryBlue opacity-70 font-bold text-md">
+
+      {isSender && (
+        // Design: author label above at 9px/800, blue bubble, time below.
+        <View style={{ maxWidth: "80%", alignItems: "flex-end", gap: 3 }}>
+          {senderName ? (
+            <Text
+              style={{
+                fontSize: 9,
+                fontFamily: "Nunito_800ExtraBold",
+                color: t.fg4,
+                textAlign: "right",
+              }}
+            >
+              {senderName}
+            </Text>
+          ) : null}
+
+          <View
+            style={{
+              backgroundColor: bubbleBgColor,
+              ...borderStyle,
+              paddingVertical: 9,
+              paddingHorizontal: 13,
+            }}
+          >
+            {renderContent(bubbleTextColor)}
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: "Nunito_400Regular",
+                color: timestampColor,
+                textAlign: "right",
+              }}
+            >
+              {timestamp}
+            </Text>
+            <View>
+              {(() => {
+                if (stats?.read)
+                  return <CheckCheck size={12} color={t.brand} />;
+                if (stats?.delivered)
+                  return <CheckCheck size={12} color={timestampColor} />;
+                if (stats?.failed || stats?.error)
+                  return <AlertCircle size={12} color={t.danger} />;
+                if (stats?.sent)
+                  return <Check size={12} color={timestampColor} />;
+                return <Clock size={11} color={timestampColor} />;
+              })()}
+            </View>
+          </View>
+        </View>
+      )}
+
+      {isSender && (
+        <LinearGradient
+          colors={[Colors.brand.blue, Colors.brand.blueLight] as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Nunito_900Black",
+              fontSize: 10,
+              color: "#fff",
+            }}
+          >
             {namePreview(senderName)}
           </Text>
-        </View>
+        </LinearGradient>
       )}
     </View>
   );

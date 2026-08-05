@@ -1,4 +1,3 @@
-import React from "react";
 import FiltersScreen from "@/components/inbox/Filters";
 
 const filters = () => {

@@ -1,21 +1,8 @@
-import {
-  View,
-  TouchableOpacity,
-  Text,
-  Pressable,
-  useColorScheme,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { useColorScheme } from "nativewind";
+import { View, Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { EllipsisVertical, Filter, RefreshCcw } from "lucide-react-native";
-import { colors } from "@/constants/constants";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { Filter } from "lucide-react-native";
+import { getInboxHeaderBg, getInboxRowTheme } from "@/constants/inboxDesign";
 
 const InboxButtons = ({
   activeFilterCount = 0,
@@ -23,98 +10,54 @@ const InboxButtons = ({
   activeFilterCount?: number;
 }) => {
   const router = useRouter();
-  const refreshRotation = useSharedValue(0);
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const textColor = isDark ? "white" : colors["slate-950"];
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-    refreshRotation.value = 0;
-    refreshRotation.value = withTiming(720, {
-      duration: 2000,
-      easing: Easing.linear,
-    });
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleRefresh();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const refreshAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          rotate: `${refreshRotation.value}deg`,
-        },
-      ],
-    };
-  });
+  const t = getInboxRowTheme(isDark);
 
   return (
-    <View className="relative ml-2">
-      <TouchableOpacity onPress={() => setOpen((v) => !v)}>
-        <EllipsisVertical color={"white"} />
-      </TouchableOpacity>
-      {open && (
-        <Pressable
-          onPress={() => setOpen(false)}
+    <Pressable
+      onPress={() => router.push("/protected/inbox/Filters")}
+      // The design's header action: 38x38 / radius 11, 20px glyph in `--fg-2`.
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 11,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Filter size={20} color={t.fg2} />
+      {activeFilterCount > 0 && (
+        // Design's bell dot, carrying the count: `--danger` with a 2px
+        // `--bg-surface` ring so it reads against the bar.
+        <View
           style={{
             position: "absolute",
-            top: -1000,
-            bottom: -1000,
-            left: -1000,
-            right: -1000,
-            zIndex: 40,
+            top: 4,
+            right: 4,
+            minWidth: 15,
+            height: 15,
+            paddingHorizontal: 3,
+            borderRadius: 9999,
+            backgroundColor: t.danger,
+            borderWidth: 2,
+            borderColor: getInboxHeaderBg(isDark),
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
-      )}
-
-      {/* MENU */}
-      {open && (
-        <View className="absolute right-0 top-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg py-2 w-48 z-50">
-          {/* FILTERS */}
-          <Pressable
-            className="flex-row items-center gap-3 px-4 py-3"
-            onPress={() => {
-              setOpen(false);
-              router.push("/protected/inbox/Filters");
+        >
+          <Text
+            style={{
+              color: "#fff",
+              fontSize: 8,
+              fontFamily: "Nunito_800ExtraBold",
             }}
           >
-            <View className="relative">
-              <Filter color={textColor} size={18} />
-              {activeFilterCount > 0 && (
-                <View className="absolute -top-1 -right-1 bg-primaryBlue rounded-full min-w-[16px] h-[16px] px-1 items-center justify-center">
-                  <Text className="text-white text-[10px] font-bold">
-                    {activeFilterCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text className="dark:text-white text-sm">Filters</Text>
-          </Pressable>
-
-          {/* REFRESH */}
-          <Pressable
-            className="flex-row items-center gap-3 px-4 py-3"
-            onPress={() => {
-              // setOpen(false);
-              handleRefresh();
-            }}
-          >
-            <Animated.View style={refreshAnimatedStyle}>
-              <RefreshCcw color={textColor} size={18} />
-            </Animated.View>
-            <Text className="dark:text-white text-sm">Refresh</Text>
-          </Pressable>
+            {activeFilterCount}
+          </Text>
         </View>
       )}
-    </View>
+    </Pressable>
   );
 };
 

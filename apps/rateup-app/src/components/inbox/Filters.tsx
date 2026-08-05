@@ -1,36 +1,40 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   Text,
   KeyboardAvoidingView,
   Pressable,
   TouchableOpacity,
   Platform,
-  ScrollView,
-  TextInput,
-  useColorScheme,
-} from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import React, { useCallback, useEffect, useState } from "react";
+  ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import {
-  ChatFilter,
   useChatFilterStore,
   useSelectedTabStore,
 } from "@/utils/store";
 import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowLeft } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
-import { IconArrowLeft } from "@tabler/icons-react-native";
-import { useTeamsByUser } from "@/api/teams/teams.query";
-import { colors } from "@/constants/constants";
+import { useTeamsByUser, useTeamsMembersOfOrg } from "@/api/teams/teams.query";
+import { useLifeCyclesQuery } from "@/api/lifecycle/lifecycle.query";
+import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
+import { WaMessageClosedStatus } from "@/constants/constants";
+import { Colors } from "@/constants/colors";
 
 const FiltersScreen = () => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { selectedTab } = useSelectedTabStore();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  // Queries
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
-  const [processedFilter, setProcessedFilter] = useState(null);
+  const { data: membersRes, isLoading: membersLoading } = useTeamsMembersOfOrg();
+  const { data: lifecycles, isLoading: lifecyclesLoading } = useLifeCyclesQuery();
+  const { data: waSettings, isLoading: waSettingsLoading } = useWaSettings();
+  const { data: filterData, isLoading: filterDataLoading } = useChatFilterData();
+
   const {
     filter,
     setFilter,
@@ -38,345 +42,399 @@ const FiltersScreen = () => {
     setPreviousFilterForTab,
     previousFilterForTab,
   } = useChatFilterStore();
-  const router = useRouter();
-  const { data, isLoading, error } = useChatFilterData();
-  const insets = useSafeAreaInsets();
 
-  const checkIfAnyFilterisActive = useCallback((filters: any) => {
-    return (
-      filters.contactGroups.length > 0 ||
-      filters.campaigns.length > 0 ||
-      filters.tags.length > 0 ||
-      filters.searchTerm?.length > 0 ||
-      filters.messageType !== "all" ||
-      filters.messageType !== "usermessages" ||
-      filters.strictFilter !== false ||
-      !filters.waMessageAssignStatus ||
-      filters.waMessageAssignStatus.length
-    );
-  }, []);
+  const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
+  const bgColor = isDark ? Colors.dark.bg : "white";
 
-  const prepareFilters = useCallback(
-    (filters: any) => {
-      if (checkIfAnyFilterisActive(filters)) {
-        const processedFilters = {
-          ...filters,
-          contactGroups: filters?.contactGroups?.map(
-            (group: any) => group.value
-          ),
-          campaigns: filters?.campaigns?.map((group: any) => group.value),
-          tags: filters?.tags?.map((group: any) => ({
-            [group.group]: group.value,
-          })),
-        };
-        setProcessedFilter(processedFilters);
-      }
-    },
-    [checkIfAnyFilterisActive]
-  );
-  const teamOptions = teamRes
-    ? teamRes.data?.map((team: any) => ({
-        value: team?.id,
-        label: team?.name,
+  const handleClearAll = () => {
+    clearFilter();
+  };
+
+  // 1. Channel / Phone Options
+  const channelOptions = [
+    { label: "All Channels", value: "all" },
+    ...(waSettings
+      ? waSettings.map((account: any) => ({
+        label: account.phone,
+        value: account.phone,
       }))
-    : [];
-
-  useEffect(() => {
-    const openStatus = [
-      WaMessageAssignStatus.ASSIGNED,
-      WaMessageAssignStatus.UNASSIGNED,
-    ];
-    const hasOpenStatus = filter.status.some((s) =>
-      openStatus.includes(s as WaMessageAssignStatus)
-    );
-    if (selectedTab === "Addressed" && hasOpenStatus) {
-      setFilter({
-        ...filter,
-        status: filter.status.filter(
-          (s) => !openStatus.includes(s as WaMessageAssignStatus)
-        ),
-      });
-    } else if (selectedTab === "All" && !hasOpenStatus) {
-      const prFilter = previousFilterForTab.find((t) => t.tab === "All");
-      if (prFilter) {
-        const openStatusInPrFilter = prFilter.filter.status.filter((s) =>
-          openStatus.includes(s as WaMessageAssignStatus)
-        );
-        setFilter({
-          ...filter,
-          status: [...filter.status, ...openStatusInPrFilter],
-        });
-      } else {
-        setFilter({ ...filter, status: [...filter.status, ...openStatus] });
-      }
-    }
-  }, [selectedTab]);
-
-  useEffect(() => {
-    if (!selectedTab) return;
-    if (selectedTab === "blocked") {
-      prepareFilters({
-        ...filter,
-        messageType: "all",
-        waMessageAssignStatus: undefined,
-        blockedUsers: true,
-      });
-      return;
-    }
-    if (selectedTab === "All") {
-      prepareFilters({
-        ...filter,
-        messageType: "all",
-        waMessageAssignStatus: null,
-        blockedUsers: false,
-      });
-    } else if (selectedTab === "New") {
-      prepareFilters({
-        ...filter,
-        messageType: "all",
-        waMessageAssignStatus: "UnAssigned",
-        blockedUsers: false,
-      });
-    } else {
-      prepareFilters({
-        ...filter,
-        messageType: selectedTab === "Sent" ? "all" : "usermessages",
-        waMessageAssignStatus: selectedTab,
-        blockedUsers: false,
-      });
-    }
-  }, [selectedTab, filter, prepareFilters]);
-
-  const categoryOptions = [
-    { value: "conversation", label: "Conversations" },
-    { value: "campaign", label: "Campaigns" },
-    { value: "automation", label: "Automation" },
+      : []),
   ];
 
-  const textColor = isDark ? "white" : colors["slate-950"];
-  const bgColor = isDark ? colors["slate-950"] : "white";
+  // 2. Status Options (Only on All or Closed tab)
+  const isAllTab = selectedTab === "All";
+  const isClosedTab = selectedTab === "Closed";
+
+  const statusOptions = Object.values(WaMessageAssignStatus)
+    .filter((status) => {
+      if (status === WaMessageAssignStatus.NEW) return false;
+      if (isClosedTab) {
+        return WaMessageClosedStatus.includes(status as any);
+      }
+      return true;
+    })
+    .map((status) => {
+      const labelsMap: Record<string, string> = {
+        UNASSIGNED: "UnAssigned",
+        ASSIGNED: "Assigned",
+        CLOSED: "Closed",
+        RESOLVED: "Resolved",
+        UNRESOLVED: "Unresolved",
+        SPAM: "Spam",
+      };
+      return {
+        value: status,
+        label: labelsMap[status] || status,
+      };
+    });
+
+  // 3. Team Options
+  const teamOptions = teamRes
+    ? teamRes.data?.map((team: any) => ({
+      value: team?.id,
+      label: team?.name,
+    }))
+    : [];
+
+  // 4. Member Options
+  const memberOptions = membersRes
+    ? membersRes.data?.map((member: any) => ({
+      value: member?.id,
+      label: member?.name,
+    }))
+    : [];
+
+  // 5. Lifecycle Options
+  const lifecycleOptions = lifecycles
+    ? lifecycles.map((stage: any) => ({
+      value: stage?.id,
+      label: `${stage?.emoji || ""} ${stage?.name || ""}`.trim(),
+    }))
+    : [];
+
+  // 6. Label Options
+  const labelGroup = filterData?.find((g: any) => g.group === "tags" || g.group === "labels");
+  const labelOptions = labelGroup ? labelGroup.values : [];
+
+  const toggleStatus = (statusValue: string) => {
+    const current = filter.status || [];
+    const updated = current.includes(statusValue)
+      ? current.filter((s) => s !== statusValue)
+      : [...current, statusValue];
+
+    setFilter({
+      ...filter,
+      status: updated,
+    });
+  };
+
+  const toggleTeam = (teamId: string) => {
+    const current = filter.assignedTeams || [];
+    const updated = current.includes(teamId)
+      ? current.filter((id) => id !== teamId)
+      : [...current, teamId];
+
+    setFilter({
+      ...filter,
+      assignedTeams: updated,
+    });
+  };
+
+  const toggleMember = (memberId: string) => {
+    const current = filter.assignedUserIds || [];
+    const updated = current.includes(memberId)
+      ? current.filter((id) => id !== memberId)
+      : [...current, memberId];
+
+    setFilter({
+      ...filter,
+      assignedUserIds: updated,
+    });
+  };
+
+  const toggleLabel = (labelVal: string) => {
+    const current = filter.labels || [];
+    const updated = current.includes(labelVal)
+      ? current.filter((l) => l !== labelVal)
+      : [...current, labelVal];
+
+    setFilter({
+      ...filter,
+      labels: updated,
+    });
+  };
+
+  const selectLifecycle = (lifecycleId: string) => {
+    setFilter({
+      ...filter,
+      lifecycle: filter.lifecycle === lifecycleId ? "" : lifecycleId,
+    });
+  };
+
+  const selectChannel = (phoneVal: string) => {
+    setFilter({
+      ...filter,
+      phone: phoneVal,
+    });
+  };
 
   return (
-    <SafeAreaView className="bg-white dark:bg-slate-950 flex-1">
+    <View style={{ backgroundColor: bgColor }} className="flex-grow flex-1">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <View className="flex-1 justify-between px-4 pt-4">
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-6">
+            <View className="flex-row items-center gap-2">
+              <Pressable onPress={() => router.back()}>
+                <ArrowLeft size={24} color={textColor} />
+              </Pressable>
+              <Text className="text-2xl font-bold dark:text-white" style={{ fontFamily: "Nunito_800ExtraBold" }}>
+                Filters
+              </Text>
+            </View>
+            <TouchableOpacity onPress={handleClearAll} className="bg-gray-100 dark:bg-zinc-800 px-4 py-2 rounded-full">
+              <Text className="text-sm font-semibold text-gray-600 dark:text-gray-300" style={{ fontFamily: "Nunito_700Bold" }}>
+                Reset
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Header */}
-            <View className="flex-row justify-between items-center mb-4">
-              <View className="flex-row items-center gap-2">
-                <Pressable onPress={() => router.back()}>
-                  <IconArrowLeft height={24} width={24} color={textColor} />
-                </Pressable>
-                <Text className="text-2xl font-bold dark:text-white">
-                  Filters
-                </Text>
-              </View>
-              <TouchableOpacity className="bg-primaryBlue px-4 py-3 rounded-full">
-                <Text className="text-md text-white">Clear all</Text>
-              </TouchableOpacity>
-            </View>
-            {/* Loading and Error States */}
-            {isLoading && (
-              <Text className="text-center text-gray-500 mt-4">
-                Loading filters...
+
+            {/* Channels / Phone Number */}
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                Channel
               </Text>
-            )}
-            {error && (
-              <Text className="text-center text-red-500 mt-4">
-                Failed to load filters
-              </Text>
-            )}
-            {/* Tags / Groups / Campaigns */}
-            {Array.isArray(data) && data.length > 0 && (
-              <View>
-                <Text className="dark:text-white">Tags/Groups/Campaigns</Text>
-                <View className="mt-4 space-y-2 border p-2 border-lightgray rounded-xl h-14 flex justify-center">
-                  <Text className="dark:text-white">
-                    Select Tags, Groups or Campaigns
-                  </Text>
-
-                  <View className="flex-row flex-wrap gap-2">
-                    {data
-                      .flatMap((group) =>
-                        group?.values?.map((value: any) => ({
-                          group: group.group,
-                          value,
-                        }))
-                      )
-                      .filter(Boolean)
-                      .map(({ group, value }) => {
-                        const allSelected = [
-                          ...filter.contactGroups,
-                          ...filter.tags,
-                          ...filter.campaigns,
-                        ];
-
-                        const isSelected = allSelected.some(
-                          (item) => item.value === value && item.group === group
-                        );
-
-                        return (
-                          <Pressable
-                            key={`${group}-${value}`}
-                            onPress={() => {
-                              const current = allSelected;
-                              const exists = current.find(
-                                (item) =>
-                                  item.value === value && item.group === group
-                              );
-
-                              const updated = exists
-                                ? current.filter(
-                                    (item) =>
-                                      !(
-                                        item.value === value &&
-                                        item.group === group
-                                      )
-                                  )
-                                : [...current, { group, value }];
-
-                              const contactGroups = updated.filter(
-                                (i) => i.group === "contactGroups"
-                              );
-                              const campaigns = updated.filter(
-                                (i) => i.group === "campaigns"
-                              );
-                              const tags = updated.filter(
-                                (i) =>
-                                  i.group !== "contactGroups" &&
-                                  i.group !== "campaigns"
-                              );
-
-                              setFilter({
-                                ...filter,
-                                contactGroups,
-                                campaigns,
-                                tags,
-                              });
-                            }}
-                            className={`px-4 py-2 rounded-full border ${
-                              isSelected
-                                ? "bg-rateUpGreen border-rateUpGreen"
-                                : "border-lightgray"
+              {waSettingsLoading ? (
+                <Text className="text-gray-400">Loading Channels...</Text>
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {channelOptions.map((opt) => {
+                    const isSelected = (filter.phone === opt.value) || (!filter.phone && opt.value === "all");
+                    return (
+                      <Pressable
+                        key={opt.value}
+                        onPress={() => selectChannel(opt.value)}
+                        className={`px-4 py-2 rounded-full border ${isSelected
+                          ? "bg-primaryBlue border-primaryBlue"
+                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                          }`}
+                      >
+                        <Text
+                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
                             }`}
-                          >
-                            <Text
-                              className={
-                                isSelected ? "text-white" : "text-black"
-                              }
-                            >
-                              {value}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                  </View>
+                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-              </View>
-            )}
-            <View className="py-4">
-              <Text className="mb-2 dark:text-white">Category</Text>
-              <View
-                className="border border-lightgray rounded-xl px-3"
-                style={{ backgroundColor: bgColor }}
-              >
-                <Picker
-                  itemStyle={{
-                    color: textColor,
-                  }}
-                  dropdownIconColor={textColor}
-                  selectedValue={filter.category}
-                  mode="dialog"
-                  onValueChange={(value) => {
-                    setFilter({
-                      ...filter,
-                      category: filter.category === value ? null : value,
-                    });
-                  }}
-                >
-                  {categoryOptions.map((item) => (
-                    <Picker.Item
-                      key={item.value}
-                      label={item.label}
-                      value={item.value}
-                      style={{ backgroundColor: bgColor }}
-                      color={textColor}
-                    />
-                  ))}
-                </Picker>
-              </View>
+              )}
             </View>
-            {/* assignned and mine */}
-            {["Assigned", "mine"].includes(selectedTab) && (
-              <View className="py-4">
-                <Text className="mb-2 dark:text-white">Assigned Team</Text>
-                <View
-                  className="border border-lightgray rounded-xl px-3"
-                  style={{ backgroundColor: bgColor }}
-                >
-                  <Picker
-                    selectedValue={filter.assignedTeams ?? null}
-                    mode={Platform.OS === "android" ? "dropdown" : "dialog"}
-                    onValueChange={(value) => {
-                      setFilter({
-                        ...filter,
-                        assignedTeams: value,
-                      });
-                    }}
-                    style={{
-                      height: 48,
-                      color: textColor, // Android text
-                    }}
-                    itemStyle={{
-                      color: textColor, // iOS wheel text
-                    }}
-                    dropdownIconColor={textColor} // Android only
-                  >
-                    {/* Placeholder */}
-                    <Picker.Item
-                      label="Select a team"
-                      value={null}
-                      color="#999"
-                    />
 
-                    {teamOptions.map((item: any) => (
-                      <Picker.Item
-                        key={item.value}
-                        label={item.label}
-                        value={item.value}
-                      />
-                    ))}
-                  </Picker>
+            {/* Status (Only on All or Closed tab) */}
+            {(isAllTab || isClosedTab) && (
+              <View className="mb-6">
+                <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                  Status
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {statusOptions.map((opt) => {
+                    const isSelected = filter.status?.includes(opt.value);
+                    return (
+                      <Pressable
+                        key={opt.value}
+                        onPress={() => toggleStatus(opt.value)}
+                        className={`px-4 py-2 rounded-full border ${isSelected
+                          ? "bg-primaryBlue border-primaryBlue"
+                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                          }`}
+                      >
+                        <Text
+                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </View>
             )}
+
+            {/* Lifecycle Stages */}
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                Lifecycle
+              </Text>
+              {lifecyclesLoading ? (
+                <Text className="text-gray-400">Loading Lifecycles...</Text>
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {lifecycleOptions.map((opt: any) => {
+                    const isSelected = filter.lifecycle === opt.value;
+                    return (
+                      <Pressable
+                        key={opt.value}
+                        onPress={() => selectLifecycle(opt.value)}
+                        className={`px-4 py-2 rounded-full border ${isSelected
+                          ? "bg-primaryBlue border-primaryBlue"
+                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                          }`}
+                      >
+                        <Text
+                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* Label / Tags Filters */}
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                Labels
+              </Text>
+              {filterDataLoading ? (
+                <Text className="text-gray-400">Loading Labels...</Text>
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {labelOptions.map((opt: string) => {
+                    const isSelected = filter.labels?.includes(opt);
+                    return (
+                      <Pressable
+                        key={opt}
+                        onPress={() => toggleLabel(opt)}
+                        className={`px-4 py-2 rounded-full border ${isSelected
+                          ? "bg-primaryBlue border-primaryBlue"
+                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                          }`}
+                      >
+                        <Text
+                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                        >
+                          {opt}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* User Filters */}
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                Assigned User
+              </Text>
+              {membersLoading ? (
+                <Text className="text-gray-400">Loading Users...</Text>
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {memberOptions.map((opt: any) => {
+                    const isSelected = filter.assignedUserIds?.includes(opt.value);
+                    return (
+                      <Pressable
+                        key={opt.value}
+                        onPress={() => toggleMember(opt.value)}
+                        className={`px-4 py-2 rounded-full border ${isSelected
+                          ? "bg-primaryBlue border-primaryBlue"
+                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                          }`}
+                      >
+                        <Text
+                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* Team Filters */}
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                Assigned Team
+              </Text>
+              {teamsLoading ? (
+                <Text className="text-gray-400">Loading Teams...</Text>
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {teamOptions.map((opt: any) => {
+                    const isSelected = filter.assignedTeams?.includes(opt.value);
+                    return (
+                      <Pressable
+                        key={opt.value}
+                        onPress={() => toggleTeam(opt.value)}
+                        className={`px-4 py-2 rounded-full border ${isSelected
+                          ? "bg-primaryBlue border-primaryBlue"
+                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                          }`}
+                      >
+                        <Text
+                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
           </ScrollView>
 
           {/* Submit Button */}
           <Pressable
-            className="bg-primaryBlue rounded-xl py-4"
+            className="bg-primaryBlue rounded-xl py-4 absolute bottom-0 left-4 right-4"
             style={{ marginBottom: insets.bottom + 10 }}
             onPress={() => {
-              setFilter({
-                ...filter,
-              });
+              const index = previousFilterForTab.findIndex((p) => p.tab === selectedTab);
+              let updated;
+              if (index !== -1) {
+                updated = previousFilterForTab.map((p, i) =>
+                  i === index ? { ...p, filter } : p
+                );
+              } else {
+                updated = [...previousFilterForTab, { tab: selectedTab, filter }];
+              }
+              setPreviousFilterForTab(updated);
               router.back();
             }}
           >
-            <Text className="text-white text-center font-bold text-lg">
+            <Text className="text-white text-center font-bold text-lg" style={{ fontFamily: "Nunito_700Bold" }}>
               Show results
             </Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

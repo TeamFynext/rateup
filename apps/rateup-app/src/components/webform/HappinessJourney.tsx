@@ -1,12 +1,10 @@
+import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
-import {
-  View,
+import { View,
   Text,
   Pressable,
   Dimensions,
-  ScrollView,
-  useColorScheme,
-} from "react-native";
+  ScrollView } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { useAllResponseNPSForGraph } from "@/api/response/response.query";
 import {
@@ -18,7 +16,8 @@ import {
 } from "lucide-react-native";
 
 const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [timePeriod, setTimePeriod] = useState<"hourly" | "daily" | "weekly">(
     "daily",

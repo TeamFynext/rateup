@@ -7,25 +7,32 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
-  TextInput,
   Modal,
   TouchableWithoutFeedback,
   FlatList,
+  useColorScheme,
 } from "react-native";
-
-import { ReplyIcon, Divide } from "lucide-react-native"; // replace with your icon lib
-
+import { ReplyIcon, ChevronDown, Check } from "lucide-react-native";
 import {
   WaTemplateComponent,
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "@/context/type";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
+import { Colors } from "@/constants/colors";
 
-// Placeholder for your utility function
-const TextWithFormatting = (text: string, params: string[]) => {
-  // implement as needed
-  return text;
+// Helper for divider
+const Divider = () => {
+  const isDark = useColorScheme() === "dark";
+  return (
+    <View
+      style={{
+        height: 1,
+        backgroundColor: isDark ? Colors.dark.border : Colors.light.border,
+        marginVertical: 8,
+      }}
+    />
+  );
 };
 
 // ---------- Wrapper Component ----------
@@ -35,8 +42,21 @@ interface Props_ {
 }
 
 export function WaInboxTemplate({ templateBody, parameters }: Props_) {
+  const isDark = useColorScheme() === "dark";
+  if (!templateBody) return null;
+
   return (
-    <View>
+    <View
+      style={{
+        backgroundColor: isDark ? Colors.dark.surface : "#fff",
+        borderRadius: 16,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+        marginTop: 14,
+        marginBottom: 10,
+      }}
+    >
       {templateBody?.components?.map((component, i) => (
         <WaInboxTemplateComponents
           key={i}
@@ -53,7 +73,7 @@ export function WaInboxTemplate({ templateBody, parameters }: Props_) {
 // ---------- Component Resolver ----------
 interface Props {
   templateComponent: WaTemplateFetchBodyComponent;
-  parameterData: WaTemplateComponent;
+  parameterData: WaTemplateComponent | undefined;
 }
 
 export default function WaInboxTemplateComponents({
@@ -86,12 +106,13 @@ export default function WaInboxTemplateComponents({
 
 // ---------- Header ----------
 const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
+  const isDark = useColorScheme() === "dark";
   const getUrlIfParameterIsPresent = (): string => {
     if (parameterData) {
-      const file =
-        parameterData.parameters?.[0]?.[
-          templateComponent?.format?.toLowerCase()
-        ]?.link;
+      const formatKey = templateComponent?.format?.toLowerCase();
+      const file = formatKey
+        ? (parameterData.parameters?.[0] as any)?.[formatKey]?.link
+        : undefined;
       if (file instanceof File) {
         return URL.createObjectURL(file);
       } else {
@@ -105,7 +126,14 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
   switch (templateComponent?.format) {
     case "TEXT":
       return (
-        <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+        <Text
+          style={{
+            fontFamily: "Nunito_700Bold",
+            fontSize: 15,
+            color: isDark ? "#fff" : Colors.light.textPrimary,
+            marginBottom: 6,
+          }}
+        >
           {templateComponent?.text}
         </Text>
       );
@@ -113,15 +141,30 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       return (
         <Image
           source={{ uri: getUrlIfParameterIsPresent() }}
-          style={{ width: "100%", height: 300, resizeMode: "contain" }}
+          style={{ width: "100%", height: 160, borderRadius: 12, resizeMode: "cover", marginBottom: 10 }}
         />
       );
     case "DOCUMENT":
       return (
         <TouchableOpacity
           onPress={() => Linking.openURL(getUrlIfParameterIsPresent())}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 8,
+            borderRadius: 8,
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+            marginBottom: 8,
+          }}
         >
-          <Text style={{ color: "blue", textDecorationLine: "underline" }}>
+          <Text
+            style={{
+              fontFamily: "Nunito_600SemiBold",
+              color: isDark ? Colors.accent.cyan : Colors.brand.blue,
+              textDecorationLine: "underline",
+              fontSize: 13,
+            }}
+          >
             View Document
           </Text>
         </TouchableOpacity>
@@ -133,20 +176,36 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
 
 // ---------- Body ----------
 const WaInboxTemplateBody = ({ parameterData, templateComponent }: Props) => {
-  const text = TextWithFormatting(
-    templateComponent?.text,
-    parameterData?.parameters?.map((data) => data?.text) ??
-      templateComponent?.example?.body_text?.[0] ??
-      []
-  );
+  const isDark = useColorScheme() === "dark";
+  // Fallback text formatting helper placeholder
+  const text = templateComponent?.text || "";
 
-  return <Text>{text}</Text>;
+  return (
+    <Text
+      style={{
+        fontFamily: "Nunito_400Regular",
+        fontSize: 14,
+        color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+        lineHeight: 20,
+      }}
+    >
+      {text}
+    </Text>
+  );
 };
 
 // ---------- Footer ----------
 const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {
+  const isDark = useColorScheme() === "dark";
   return (
-    <Text style={{ fontSize: 12, color: "gray", marginTop: 10 }}>
+    <Text
+      style={{
+        fontFamily: "Nunito_400Regular",
+        fontSize: 12,
+        color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+        marginTop: 6,
+      }}
+    >
       {props?.text}
     </Text>
   );
@@ -154,24 +213,35 @@ const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {
 
 // ---------- Buttons ----------
 const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
+  const isDark = useColorScheme() === "dark";
   return (
-    <View>
+    <View style={{ marginTop: 8 }}>
       {props?.buttons?.map((button, i) => (
         <View key={i}>
-          {i === 0 && <Divide />}
+          {i === 0 && <Divider />}
           <TouchableOpacity
             style={{
               flexDirection: "row",
               alignItems: "center",
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-              backgroundColor: "transparent",
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+              backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+              borderRadius: 8,
+              marginBottom: 4,
             }}
           >
-            <ReplyIcon size={18} color="black" />
-            <Text style={{ marginLeft: 8 }}>{button?.text}</Text>
+            <ReplyIcon size={15} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
+            <Text
+              style={{
+                fontFamily: "Nunito_600SemiBold",
+                fontSize: 13,
+                color: isDark ? Colors.accent.cyan : Colors.brand.blue,
+                marginLeft: 8,
+              }}
+            >
+              {button?.text}
+            </Text>
           </TouchableOpacity>
-          {i !== props?.buttons?.length - 1 && <Divide />}
         </View>
       ))}
     </View>
@@ -192,6 +262,8 @@ export function AccountSelector({
   const { data, isPending, isError } = useWaSettings();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const accountOptions = data
     ? data.map((account) => ({
@@ -211,27 +283,69 @@ export function AccountSelector({
   }, [accountOptions, value]);
 
   if (isError)
-    return <Text className="text-red-500">Something went wrong!</Text>;
+    return <Text style={{ color: "red", fontFamily: "Nunito_600SemiBold" }}>Something went wrong!</Text>;
 
   if (isPending) {
     return (
-      <View className="w-60 h-10 justify-center items-center rounded-md border border-gray-300">
-        <ActivityIndicator size="small" />
+      <View
+        style={{
+          height: 42,
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+          backgroundColor: isDark ? Colors.dark.surface : "#fff",
+        }}
+      >
+        <ActivityIndicator size="small" color={Colors.brand.blue} />
       </View>
     );
   }
 
   return (
-    <View className="my-2">
-      <Text className="mb-1 font-semibold">{label}</Text>
+    <View style={{ marginBottom: 14 }}>
+      <Text
+        style={{
+          fontFamily: "Nunito_600SemiBold",
+          color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+          fontSize: 14,
+          marginBottom: 6,
+        }}
+      >
+        {label}
+      </Text>
 
       <TouchableOpacity
-        className="border border-gray-300 rounded-md px-3 py-2"
+        style={{
+          height: 42,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+          backgroundColor: isDark ? Colors.dark.surface : "#fff",
+          paddingHorizontal: 12,
+        }}
         onPress={() => setModalVisible(true)}
       >
-        <Text className={selectedLabel ? "text-black" : "text-gray-400"}>
+        <Text
+          style={{
+            fontFamily: "Nunito_600SemiBold",
+            fontSize: 14,
+            color: selectedLabel
+              ? isDark
+                ? "#fff"
+                : Colors.light.textPrimary
+              : isDark
+              ? Colors.dark.textPlaceholder
+              : Colors.light.textPlaceholder,
+          }}
+        >
           {selectedLabel || "Select Account"}
         </Text>
+        <ChevronDown size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
       </TouchableOpacity>
 
       <Modal
@@ -241,26 +355,71 @@ export function AccountSelector({
         onRequestClose={() => setModalVisible(false)}
       >
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View className="flex-1 justify-center bg-black/40 px-5">
-            <View className="bg-white rounded-lg py-3 max-h-[60%]">
+          <View style={{ flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", paddingHorizontal: 20 }}>
+            <View
+              style={{
+                backgroundColor: isDark ? Colors.dark.surface : "#fff",
+                borderRadius: 16,
+                paddingVertical: 8,
+                maxHeight: "60%",
+                borderWidth: 1,
+                borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+              }}
+            >
               <FlatList
                 data={accountOptions}
                 keyExtractor={(item) => item.value}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      onChange?.(item.value);
-                      setSelectedLabel(item.label);
-                      setModalVisible(false);
-                    }}
-                    className="px-4 py-3 border-b border-gray-100"
-                  >
-                    <Text className="text-base">{item.label}</Text>
-                  </TouchableOpacity>
-                )}
+                renderItem={({ item }) => {
+                  const isSelected = item.value === value;
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        onChange?.(item.value);
+                        setSelectedLabel(item.label);
+                        setModalVisible(false);
+                      }}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        borderBottomWidth: 1,
+                        borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_600SemiBold",
+                          fontSize: 15,
+                          color: isSelected
+                            ? isDark
+                              ? Colors.accent.cyan
+                              : Colors.brand.blue
+                            : isDark
+                            ? "#fff"
+                            : Colors.light.textPrimary,
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                      {isSelected && (
+                        <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
                 ListEmptyComponent={
-                  <Text className="px-4 py-3 text-gray-500">
-                    No account found!
+                  <Text
+                    style={{
+                      fontFamily: "Nunito_600SemiBold",
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                      textAlign: "center",
+                    }}
+                  >
+                    No accounts found!
                   </Text>
                 }
               />

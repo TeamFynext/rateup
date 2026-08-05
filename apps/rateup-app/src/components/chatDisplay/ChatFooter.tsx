@@ -1,86 +1,91 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-  FlatList,
-} from "react-native";
-import React, { useState } from "react";
+import { useColorScheme } from "nativewind";
+import { useMemo } from "react";
+import { View, Text } from "react-native";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/context/AuthContext";
-import { useChatAssignStatusStore } from "@/utils/store";
-import { Info, UserCheck } from "lucide-react-native";
+import {
+  useChatAssignStatusStore,
+  useSelectedContactStore,
+} from "@/utils/store";
+import { Info, UserPlus } from "lucide-react-native";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { MessagePlatform } from "@/constants/enums";
+import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ChatFooter = ({ id }: { id: string }) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore(
     (state) => state.waAssignStatus,
   );
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
-  const [isModalVisible, setModalVisible] = useState(false);
   let currentUserAssignment = assignedUsers?.find(
     (entry: any) => entry.assignedUserId == userId,
   );
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
-  const toggleModal = () => setModalVisible(!isModalVisible);
-  const AssignedUsersModal = () => (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={isModalVisible}
-      onRequestClose={toggleModal}
-    >
-      <Pressable
-        className="flex-1 justify-center items-center bg-black/50"
-        onPress={toggleModal}
-      >
-        <View className=" rounded-2xl p-4 w-[80%] max-h-[50%] min-h-[50%]">
-          <Text className="text-xl font-bold mb-4">Assigned Members</Text>
-          <FlatList
-            contentContainerStyle={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 5,
-            }}
-            data={assignedUsers}
-            keyExtractor={(item) => item.assignedUserId}
-            renderItem={({ item }) => (
-              <View className="flex-row gap-1 justify-start items-center px-6 bg-rateUpGreen20 rounded-lg">
-                <UserCheck color="#7A8289" width={20} height={20} />
-                <Text className="text-lg text-gray-500">
-                  {item.assignedUser?.name}
-                </Text>
-              </View>
-            )}
-            ListEmptyComponent={
-              <Text className="text-gray-500 text-center">
-                No assigned users
-              </Text>
-            }
-          />
-        </View>
-      </Pressable>
-    </Modal>
-  );
+
+  const selectedContact = useSelectedContactStore((s) => s.selectedContact);
+  const platform =
+    selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const { data: waSettings } = useWaSettings();
+
+  const whatsappSettingsPhoneId = useMemo(() => {
+    if (
+      platform === MessagePlatform.INSTAGRAM ||
+      platform === MessagePlatform.FACEBOOK ||
+      platform === MessagePlatform.WEBCHAT
+    ) {
+      return selectedContact?.lastMessage?.sourceIdentifier;
+    }
+    // WhatsApp default
+    return (
+      waSettings?.find(
+        (s: any) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier,
+      )?.phoneId || ""
+    );
+  }, [waSettings, platform, selectedContact]);
 
   if (
-    !currentUserAssignment ||
+    !hasAssignedUsers ||
     waAssignStatus === "UNASSIGNED" ||
     waAssignStatus === "NEW" ||
     WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus)
   ) {
     return (
       <View style={{ paddingBottom: insets.bottom }}>
-        <View className="bg-black flex-row py-2 px-1 items-center justify-center gap-1">
-          <Info color={"white"} size={16} />
-          <Text className="text-white">Please assign to start the chat</Text>
+        {/* Design's unassigned banner: `--bg-warm-soft` with a `--warm-700`
+            label and the icon leading. */}
+        <View
+          style={{
+            flexDirection: "row",
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            alignItems: "center",
+            gap: 10,
+            backgroundColor: t.warmSoft,
+            borderBottomWidth: 1,
+            borderBottomColor: t.border1,
+          }}
+        >
+          <UserPlus color={t.warmStrong} size={15} />
+          <Text
+            style={{
+              flex: 1,
+              fontFamily: "Nunito_600SemiBold",
+              color: t.warmStrong,
+              fontSize: 12,
+            }}
+          >
+            Unassigned conversation
+          </Text>
         </View>
         <NotAssigned contactId={id} />
       </View>
@@ -90,19 +95,40 @@ const ChatFooter = ({ id }: { id: string }) => {
   return (
     <View style={{ paddingBottom: insets.bottom }}>
       {!currentUserAssignment && hasAssignedUsers && (
-        <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
-          <Info color={"white"} size={16} />
-          <Text className="text-white">This chat is not assigned to you.</Text>
-          {assignedUsers && (
-            <TouchableOpacity onPress={toggleModal}>
-              <Text className="text-rateUpGreen underline">View Members?</Text>
-            </TouchableOpacity>
-          )}
+        <View
+          style={{
+            flexDirection: "row",
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+            backgroundColor: t.surface2,
+            borderBottomWidth: 1,
+            borderBottomColor: t.border1,
+          }}
+        >
+          <Info color={t.fg4} size={15} />
+          <Text
+            style={{
+              flex: 1,
+              fontFamily: "Nunito_600SemiBold",
+              color: t.fg3,
+              fontSize: 12,
+            }}
+          >
+            This chat is not assigned to you.
+          </Text>
         </View>
       )}
 
-      {currentUserAssignment && <MessageSendPanel />}
-      <AssignedUsersModal />
+      {currentUserAssignment && (
+        <MessageSendPanel
+          platform={platform}
+          whatsappSettingsPhoneId={whatsappSettingsPhoneId}
+          teamId={currentUserAssignment?.teamId || null}
+        />
+      )}
     </View>
   );
 };

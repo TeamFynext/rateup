@@ -1,4 +1,13 @@
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { Toast } from "toastify-react-native";
+import { setConversationFavorite } from "./contacts.api";
+import { useContactsStore } from "@/store/inboxStore";
+import { useSelectedContactStore } from "@/utils/store";
 import {
   assignedContact,
   editContact,
@@ -66,5 +75,52 @@ export const useChatFilterData = () => {
 export const useEditContactMutation = () => {
   return useMutation({
     mutationFn: editContact,
+  });
+};
+
+/**
+ * Star / un-star a ticket. The endpoint sets rather than toggles, so the caller
+ * passes the value it wants. Mirrors the web inbox's `useToggleFavorite`:
+ * patch the local row, then refresh the counts and the list.
+ *
+ * `contactId` is what the mobile contacts store is keyed by; `conversationId`
+ * is what the API keys on.
+ */
+export const useToggleFavorite = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      contactId: string;
+      conversationId: string;
+      isFavorite: boolean;
+    }) =>
+      setConversationFavorite({
+        conversationId: vars.conversationId,
+        isFavorite: vars.isFavorite,
+      }),
+    onSuccess: (_res, vars) => {
+      useContactsStore
+        .getState()
+        .setContactFavorite(vars.contactId, vars.isFavorite);
+
+      const { selectedContact, setSelectedContact } =
+        useSelectedContactStore.getState();
+      if (selectedContact?.id === vars.contactId) {
+        setSelectedContact({ ...selectedContact, isFavorite: vars.isFavorite });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
+    },
+    onError: (error: any) => {
+      Toast.show({
+        type: "error",
+        text1: "Could not update favourite",
+        text2:
+          error?.response?.data?.message ??
+          error?.message ??
+          "Please try again.",
+      });
+    },
   });
 };

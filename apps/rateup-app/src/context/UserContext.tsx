@@ -1,11 +1,4 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { orgWsMessage } from "./type";
 import { useAuth } from "./AuthContext";
@@ -33,8 +26,13 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   const { orgId, isAuthenticated } = useAuth();
   const [mobileId, setMobileId] = useState<string | null>(null);
   const connectionRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryIntervalRef = useRef(1000); // 1s, exponential backoff
+  // `connectWebSocket` closes over isAuthenticated/orgId/mobileId, and it gets
+  // stored in socket.onclose and the AppState listener — both of which outlive
+  // the render that created them. Deferred calls go through this ref so they
+  // always run the current version instead of a frozen closure.
+  const connectWebSocketRef = useRef<() => void>(() => {});
   useEffect(() => {
     let mounted = true;
 
@@ -56,8 +54,8 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     }
     const token = await SuperTokens.getAccessToken();
 
-    if(!token){
-      console.log("no token found")
+    if (!token) {
+      console.log("no token found");
       return;
     }
 
@@ -89,11 +87,8 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
       }
 
       reconnectTimeoutRef.current = setTimeout(() => {
-        retryIntervalRef.current = Math.min(
-          retryIntervalRef.current * 2,
-          30000,
-        );
-        connectWebSocket();
+        retryIntervalRef.current = Math.min(retryIntervalRef.current * 2, 30000);
+        connectWebSocketRef.current();
       }, retryIntervalRef.current);
     };
 
@@ -102,9 +97,16 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
+  // Runs after every render, so the ref always holds the newest closure. Must
+  // stay declared above the effects below — effects fire in declaration order,
+  // so this refreshes the ref before anything reads it.
+  useEffect(() => {
+    connectWebSocketRef.current = connectWebSocket;
+  });
+
   useEffect(() => {
     if (!mobileId) return;
-    connectWebSocket();
+    connectWebSocketRef.current();
     return () => {
       if (connectionRef.current) {
         connectionRef.current.close();
@@ -125,7 +127,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated
       ) {
         console.log("🔁 Reconnecting WebSocket on app resume");
-        connectWebSocket();
+        connectWebSocketRef.current();
       }
     });
 

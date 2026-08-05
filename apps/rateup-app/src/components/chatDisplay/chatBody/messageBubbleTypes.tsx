@@ -20,7 +20,9 @@ import {
   Modal,
   Pressable,
   Platform,
+  useColorScheme,
 } from "react-native";
+import { Colors } from "@/constants/colors";
 import * as FileSystem from "expo-file-system/legacy";
 import Video from "react-native-video";
 import { fromByteArray } from "base64-js";
@@ -37,8 +39,10 @@ import * as IntentLauncher from "expo-intent-launcher";
 
 export default function WaInboxText({
   messageContent,
+  textColor,
 }: {
   messageContent: string;
+  textColor?: string;
 }) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = messageContent?.split(urlRegex).filter(Boolean);
@@ -50,7 +54,7 @@ export default function WaInboxText({
             <Text className="underline text-blue-600 text-base">{text}</Text>
           </Pressable>
         ) : (
-          <Text className="text-base" key={index}>
+          <Text style={{ color: textColor }} className="text-base" key={index}>
             {text}
           </Text>
         ),
@@ -119,6 +123,8 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
 }
 
 export function WaInboxVideo({ messageContent }: { messageContent: string }) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { mutate, isPending } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
   const [id, caption] = messageContent.split("_caption_");
@@ -203,11 +209,28 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
       ) : (
         // Download Placeholder
         <TouchableOpacity
-          className="w-64 h-64 rounded-xl bg-gray-200 dark:bg-gray-700 justify-center items-center self-center shadow-md"
           onPress={handleDownload}
+          style={{
+            width: 256,
+            height: 256,
+            borderRadius: 16,
+            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+            justifyContent: "center",
+            alignItems: "center",
+            alignSelf: "center",
+          }}
         >
-          <Download size={32} color="#4b5563" />
-          <Text className="text-sm text-gray-600 mt-2">Download video</Text>
+          <Download size={32} color={isDark ? Colors.dark.textSecondary : Colors.light.textSubtle} />
+          <Text
+            style={{
+              fontFamily: "Nunito_600SemiBold",
+              color: isDark ? Colors.dark.textSecondary : Colors.light.textSubtle,
+              marginTop: 8,
+              fontSize: 13,
+            }}
+          >
+            Download video
+          </Text>
         </TouchableOpacity>
       )}
       {/* Caption */}
@@ -256,14 +279,17 @@ export function WaInboxAudio({
   messageContent: string;
   timestamp: string;
 }) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { mutate, isPending } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
-  const [id, caption] = messageContent.split("_caption_");
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [id, caption] = messageContent.split("_caption_");
+  const safeId = id.replace(/[^a-zA-Z0-9-]/g, "_");
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
-  const downloadPath = `${appFolderPath}/${id}.mp3`;
+  const downloadPath = `${appFolderPath}/${safeId}.mp3`;
   const link = id.startsWith("http") ? id : null;
   const source = localPath || link || null;
   const player = useAudioPlayer(source ? { uri: source } : null);
@@ -367,24 +393,25 @@ export function WaInboxAudio({
   };
 
   return (
-    <View className="w-[60vw] rounded-2xl bg-white px-4 py-3">
+    <View className="w-[60vw] rounded-2xl px-4 py-3" style={{ backgroundColor: isDark ? Colors.dark.surface : Colors.light.card }}>
       {link || localPath ? (
         <View className="flex-row items-center space-x-3">
           <View className="flex-row gap-1">
             {/* Headphones Icon */}
-            <View className="p-2 rounded-full bg-rateUpGreen20">
-              <Headphones size={20} color="#009987" />
+            <View className="p-2 rounded-full" style={{ backgroundColor: isDark ? Colors.brand.blueLight + "33" : Colors.brand.blue + "20" }}>
+              <Headphones size={20} color={isDark ? Colors.brand.blueLight : Colors.brand.blue} />
             </View>
 
             {/* Play / Pause Button */}
             <TouchableOpacity
               onPress={play}
-              className="p-2 rounded-full bg-gray-100"
+              className="p-2 rounded-full"
+              style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }}
             >
               {isPlaying ? (
-                <Pause size={20} color="#000" />
+                <Pause size={20} color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} />
               ) : (
-                <Play size={20} color="#000" />
+                <Play size={20} color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} />
               )}
             </TouchableOpacity>
           </View>
@@ -392,10 +419,11 @@ export function WaInboxAudio({
           {/* Progress Bar + Time */}
           <View className="flex-1 ml-2">
             {/* Progress Bar */}
-            <View className="h-2 bg-rateUpGreen20 rounded-full overflow-hidden mb-1">
+            <View className="h-2 rounded-full overflow-hidden mb-1" style={{ backgroundColor: isDark ? Colors.brand.blueLight + "33" : Colors.brand.blue + "20" }}>
               <View
-                className="h-full bg-rateUpGreen rounded-full"
+                className="h-full rounded-full"
                 style={{
+                  backgroundColor: isDark ? Colors.brand.blueLight : Colors.brand.blue,
                   width: duration ? `${(progress / duration) * 100}%` : "0%",
                 }}
               />
@@ -403,41 +431,42 @@ export function WaInboxAudio({
 
             {/* Time Info */}
             <View className="flex-row justify-between px-1">
-              <Text className="text-xs text-gray-600">
+              <Text className="text-xs" style={{ color: isDark ? Colors.dark.textSecondary : Colors.light.textSubtle }}>
                 {isPlaying ? formatTime(progress) : formatTime(duration)}
               </Text>
-              <Text className="text-xs text-gray-500">{timestamp}</Text>
+              <Text className="text-xs" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>{timestamp}</Text>
             </View>
           </View>
         </View>
       ) : (
         <View className="flex-row items-center space-x-3">
           {/* Headphones Icon */}
-          <View className="p-2 rounded-full bg-gray-200">
-            <Headphones size={20} color="#9ca3af" />
+          <View className="p-2 rounded-full" style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }}>
+            <Headphones size={20} color={isDark ? Colors.dark.textMuted : Colors.light.textMuted} />
           </View>
 
           {/* Download Button */}
           <TouchableOpacity
             onPress={handleDownload}
             disabled={isPending}
-            className="flex-1 flex-row justify-between items-center rounded-lg px-3 py-2 bg-gray-50"
+            className="flex-1 flex-row justify-between items-center rounded-lg px-3 py-2"
+            style={{ backgroundColor: isDark ? Colors.dark.surface : Colors.light.bg }}
           >
             {isPending ? (
-              <ActivityIndicator size="small" color="#009987" />
+              <ActivityIndicator size="small" color={isDark ? Colors.brand.blueLight : Colors.brand.blue} />
             ) : (
-              <Text className="text-sm text-gray-700 font-medium">
+              <Text className="text-sm font-medium" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>
                 Tap to download audio
               </Text>
             )}
-            <Text className="text-xs text-gray-500">{timestamp}</Text>
+            <Text className="text-xs" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>{timestamp}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Optional Caption */}
       {caption ? (
-        <Text className="text-sm text-gray-700 italic mt-2 text-center">
+        <Text className="text-sm italic mt-2 text-center" style={{ color: isDark ? Colors.dark.textSecondary : Colors.light.textSubtle }}>
           {caption}
         </Text>
       ) : null}
@@ -450,6 +479,8 @@ export function WaInboxDocument({
 }: {
   messageContent: string;
 }) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [isPending, setIsPending] = useState(false);
   const [localPath, setLocalPath] = useState<string | null>(null);
 
@@ -562,11 +593,11 @@ export function WaInboxDocument({
     }
   };
   return (
-    <View className="w-[60vw] rounded-xl bg-white p-3 min-h-[64px] justify-center relative">
+    <View className="w-[60vw] rounded-xl p-3 min-h-[64px] justify-center relative" style={{ backgroundColor: isDark ? Colors.dark.surface : Colors.light.card }}>
       {/* Loading spinner - absolute to prevent layout shift */}
       {isPending && (
-        <View className="absolute inset-0 justify-center items-center z-10 bg-white/70 rounded-xl">
-          <ActivityIndicator size="small" color="#009987" />
+        <View className="absolute inset-0 justify-center items-center z-10 rounded-xl" style={{ backgroundColor: isDark ? "rgba(9,21,34,0.7)" : "rgba(255,255,255,0.7)" }}>
+          <ActivityIndicator size="small" color={isDark ? Colors.brand.blueLight : Colors.brand.blue} />
         </View>
       )}
 
@@ -576,14 +607,14 @@ export function WaInboxDocument({
           disabled={isPending}
           className="flex-row items-center space-x-4"
         >
-          <View className="p-3 rounded-full bg-gray-200">
-            <Download size={24} color="#9ca3af" />
+          <View className="p-3 rounded-full" style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }}>
+            <Download size={24} color={isDark ? Colors.dark.textMuted : Colors.light.textMuted} />
           </View>
           <View className="flex-1">
-            <Text className="text-sm text-gray-700 font-medium">
+            <Text className="text-sm font-medium" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>
               Tap to download document
             </Text>
-            <Text className="text-xs text-gray-500">{filename}</Text>
+            <Text className="text-xs" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>{filename}</Text>
           </View>
         </TouchableOpacity>
       ) : (
@@ -592,16 +623,16 @@ export function WaInboxDocument({
           activeOpacity={0.7}
           className="flex-col justify-center items-center space-y-1"
         >
-          <Text className="text-base text-gray-700 font-medium text-center">
+          <Text className="text-base font-medium text-center" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>
             📄 Open Document
           </Text>
-          <Text className="text-xs text-gray-500 text-center">{filename}</Text>
+          <Text className="text-xs text-center" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>{filename}</Text>
         </TouchableOpacity>
       )}
 
       {/* Optional caption */}
       {caption ? (
-        <Text className="text-sm text-gray-700 text-center italic mt-2">
+        <Text className="text-sm text-center italic mt-2" style={{ color: isDark ? Colors.dark.textSecondary : Colors.light.textSubtle }}>
           {caption}
         </Text>
       ) : null}
@@ -621,14 +652,16 @@ interface Props1 {
 
 export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
   const [openSections, setOpenSections] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
-    <View className="p-3 rounded-xl bg-muted/50 space-y-3">
+    <View className="p-3 rounded-xl space-y-3" style={{ backgroundColor: isDark ? Colors.dark.surface : Colors.light.card }}>
       {/* Responded */}
       {messageContent ? (
         <View className="flex-row items-center space-x-2">
-          <LucideCheckCircle2 size={16} color="#4ade80" />
-          <Text className="text-sm text-muted-foreground">
+          <LucideCheckCircle2 size={16} color={isDark ? Colors.brand.blueLight : Colors.brand.blue} />
+          <Text className="text-sm" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>
             {`${messageContent} responded`}
           </Text>
         </View>
@@ -641,14 +674,14 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
 
       {/* Body */}
       {interactiveBody?.body?.text && (
-        <Text className="text-base text-foreground leading-5">
+        <Text className="text-base leading-5" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>
           {interactiveBody.body.text}
         </Text>
       )}
 
       {/* Footer */}
       {interactiveBody?.footer?.text && (
-        <Text className="text-xs text-muted-foreground">
+        <Text className="text-xs" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>
           {interactiveBody.footer.text}
         </Text>
       )}
@@ -659,7 +692,8 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
           {interactiveBody.action.buttons.map((button) => (
             <Pressable
               key={button?.reply?.id}
-              className="bg-rateUpGreen px-4 py-2 rounded-lg flex items-center justify-center"
+              className="px-4 py-2 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: Colors.brand.blue }}
             >
               <Text className="text-white text-sm font-medium">
                 {button?.reply?.title || button?.reply?.id}
@@ -671,7 +705,7 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
 
       {/* Flow CTA */}
       {interactiveBody?.action?.parameters?.flow_cta && (
-        <Pressable className="bg-rateUpGreen px-4 py-3 rounded-lg items-center">
+        <Pressable className="px-4 py-3 rounded-lg items-center" style={{ backgroundColor: Colors.brand.blue }}>
           <Text className="text-white font-medium">
             {interactiveBody?.action?.parameters?.flow_cta}
           </Text>
@@ -681,7 +715,8 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
       {/* URL CTA */}
       {interactiveBody?.action?.name === "cta_url" && (
         <Pressable
-          className="bg-blue-500 px-4 py-3 rounded-lg items-center"
+          className="px-4 py-3 rounded-lg items-center"
+          style={{ backgroundColor: Colors.brand.blue }}
           onPress={() => {
             const url = interactiveBody?.action?.parameters?.url;
             if (url) Linking.openURL(url);
@@ -700,23 +735,24 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
           <Pressable
             disabled={!interactiveBody?.action?.sections?.length}
             onPress={() => setOpenSections((prev) => !prev)}
-            className="w-full bg-muted rounded-lg px-4 py-3 items-center"
+            className="w-full rounded-lg px-4 py-3 items-center"
+            style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }}
           >
-            <Text className="text-sm font-semibold">
+            <Text className="text-sm font-semibold" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>
               {interactiveBody?.action?.button}
             </Text>
           </Pressable>
 
           {/* Sections list */}
           {openSections && (
-            <View className="mt-2 bg-white rounded-xl p-3 max-h-80">
+            <View className="mt-2 rounded-xl p-3 max-h-80" style={{ backgroundColor: isDark ? Colors.dark.bg : Colors.light.card }}>
               {interactiveBody?.action?.sections?.map((section) => (
                 <View key={section.title} className="mb-4">
-                  <Text className="text-xs font-semibold text-muted-foreground mb-2">
+                  <Text className="text-xs font-semibold mb-2" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>
                     {section.title}
                   </Text>
 
-                  <View className="h-[1px] bg-gray-200 mb-2" />
+                  <View className="h-[1px] mb-2" style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }} />
 
                   {section?.rows?.map((r) => (
                     <Pressable
@@ -724,15 +760,15 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
                       className="py-2"
                       onPress={() => console.log("Selected:", r)}
                     >
-                      <Text className="text-sm font-medium">{r.title}</Text>
+                      <Text className="text-sm font-medium" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>{r.title}</Text>
 
                       {r.description && (
-                        <Text className="text-xs text-muted-foreground mt-1">
+                        <Text className="text-xs mt-1" style={{ color: isDark ? Colors.dark.textSecondary : Colors.light.textSubtle }}>
                           {r.description}
                         </Text>
                       )}
 
-                      <View className="h-[1px] bg-gray-200 mt-3" />
+                      <View className="h-[1px] mt-3" style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }} />
                     </Pressable>
                   ))}
                 </View>
@@ -746,12 +782,14 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
 }
 
 function WaInboxInteractiveHeader({ interactiveBody }: Props1) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const header = interactiveBody?.header;
   if (!header) return null;
 
   switch (header.type) {
     case "text":
-      return <Text className="text-base font-semibold">{header.text}</Text>;
+      return <Text className="text-base font-semibold" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>{header.text}</Text>;
     case "image":
       return (
         <Image
@@ -815,6 +853,8 @@ const WaInboxTemplateHeader = ({
   templateComponent,
   parameterData,
 }: Props3) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const format = templateComponent?.format?.toLowerCase(); // "image", "document", etc
   //@ts-ignore
   const mediaId = parameterData?.parameters?.[0]?.[format]?.link;
@@ -824,7 +864,7 @@ const WaInboxTemplateHeader = ({
   switch (templateComponent.format) {
     case "TEXT":
       return (
-        <Text className="text-base font-semibold mb-2">
+        <Text className="text-base font-semibold mb-2" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>
           {templateComponent.text}
         </Text>
       );
@@ -840,7 +880,7 @@ const WaInboxTemplateHeader = ({
     case "DOCUMENT":
       return (
         <View className="h-72 mb-3 rounded-md overflow-hidden">
-          <Text>{uri}</Text>
+          <Text style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>{uri}</Text>
         </View>
       );
     default:
@@ -849,6 +889,8 @@ const WaInboxTemplateHeader = ({
 };
 
 const WaInboxTemplateBody = ({ templateComponent, parameterData }: Props3) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const text = templateComponent?.text;
   const values =
     parameterData?.parameters?.map((d) => d?.text) ??
@@ -856,31 +898,36 @@ const WaInboxTemplateBody = ({ templateComponent, parameterData }: Props3) => {
     [];
 
   return (
-    <Text className="text-[15px] text-neutral-800 mb-2">
+    <Text className="text-[15px] mb-2" style={{ color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }}>
       {TextWithFormatting({ text, examples: values })}
     </Text>
   );
 };
 
 const WaInboxTemplateFooter = ({ text }: WaTemplateFetchBodyComponent) => {
-  return <Text className="text-xs text-gray-500 italic mt-1">{text}</Text>;
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  return <Text className="text-xs italic mt-1" style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}>{text}</Text>;
 };
 
 const WaInboxTemplateButtons = ({ buttons }: WaTemplateFetchBodyComponent) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   if (!buttons?.length) return null;
 
   return (
-    <View className="border-t border-gray-200 mt-2">
+    <View className="border-t mt-2" style={{ borderColor: isDark ? Colors.dark.border : Colors.light.border }}>
       {buttons.map((button, i) => (
         <TouchableOpacity
           key={i}
-          className="flex-row items-center py-3 border-b border-gray-100"
+          className="flex-row items-center py-3 border-b"
+          style={{ borderColor: isDark ? Colors.dark.borderLight : Colors.light.border }}
           onPress={() => {
             // handle reply button press here
           }}
         >
-          <Reply size={18} color="#000" className="mr-2 ml-1" />
-          <Text className="text-sm">{button?.text}</Text>
+          <Reply size={18} color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} className="mr-2 ml-1" />
+          <Text className="text-sm" style={{ color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary }}>{button?.text}</Text>
         </TouchableOpacity>
       ))}
     </View>

@@ -1,9 +1,11 @@
+import { useColorScheme } from "nativewind";
 import React from "react";
-import { View, Text, useColorScheme } from "react-native";
+import { View, Text } from "react-native";
 import dayjs from "dayjs";
 
 export const ContactCard = ({ item }: { item: any }) => {
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const created = dayjs(item.createdAt);
 

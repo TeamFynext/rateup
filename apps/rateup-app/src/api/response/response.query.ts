@@ -7,6 +7,7 @@ import {
   getSurveyResponseAnalyics,
   getSurveyResponseCount,
 } from "./response.api";
+import type { NpsGraphTimePeriod } from "./response.api";
 
 export const useResponseAnalytics = (surveyId: any, filter: any) => {
   const filterQuery = Object.entries(filter)
@@ -36,7 +37,7 @@ export const useResponses = (surveyTeamMapId: string) =>
     enabled: !!surveyTeamMapId,
   });
 
-  export const useResponseCount = (surveyId:string) => {
+export const useResponseCount = (surveyId: string) => {
   return useQuery({
     queryFn: () => getSurveyResponseCount(surveyId),
     queryKey: ["responseCount", surveyId],
@@ -52,28 +53,14 @@ export function useHappyIndex(surveyId: string) {
   });
 }
 
-
 export const useAllResponseNPSForGraph = (
-  timePeriod,
-  userTimeZone,
-  surveyId = "",
-  teamMapIds = [],
+  timePeriod: NpsGraphTimePeriod,
+  userTimeZone: string,
+  surveyId: string = "",
+  teamMapIds: string[] = [],
 ) => {
   return useQuery({
-    queryKey: [
-      "reponse-nps",
-      "graph-nps",
-      timePeriod,
-      userTimeZone,
-      surveyId,
-      teamMapIds,
-    ],
-    queryFn: () =>
-      getNPSSurveyResponseForGraph(
-        timePeriod,
-        userTimeZone,
-        surveyId,
-        teamMapIds,
-      ),
+    queryKey: ["reponse-nps", "graph-nps", timePeriod, userTimeZone, surveyId, teamMapIds],
+    queryFn: () => getNPSSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
   });
 };

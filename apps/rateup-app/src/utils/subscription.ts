@@ -1,18 +1,21 @@
 import { SubscriptionFeaturePathName } from "../../enums";
+import type { Subscription } from "@/api/sunscription/subscription.type";
 
-export function getNestedProperty(sourceObject: object, path: string) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+export function getNestedProperty(sourceObject: unknown, path: string): unknown {
   return path
     .split(".")
-    .reduce(
-      (obj, key) => (obj && obj[key] !== undefined ? obj[key] : undefined),
-      sourceObject,
-    );
+    .reduce<unknown>((obj, key) => (isRecord(obj) ? obj[key] : undefined), sourceObject);
 }
 
 export function hasFeature(
-  subscription: any,
+  subscription: Subscription | null | undefined,
   featurePath: SubscriptionFeaturePathName,
-) {
+): boolean {
   if (!subscription) return false;
-  return getNestedProperty(subscription.features, featurePath)?.active;
+  const feature = getNestedProperty(subscription.features, featurePath);
+  return isRecord(feature) && feature.active === true;
 }

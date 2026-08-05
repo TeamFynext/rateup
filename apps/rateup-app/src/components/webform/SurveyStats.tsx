@@ -1,10 +1,12 @@
+import { useColorScheme } from "nativewind";
 import React, { useMemo } from "react";
 import { useResponseCount } from "@/api/response/response.query";
 import { useGetSurveyStats } from "@/api/survey/survey.query";
-import { Text, View, useColorScheme } from "react-native";
+import { Text, View } from "react-native";
 
 const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { data: responseCountData } = useResponseCount(surveyId);
 

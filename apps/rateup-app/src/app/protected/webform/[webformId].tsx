@@ -10,11 +10,8 @@ import {
   useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import {
-  useResponseAnalytics,
-  useResponsesBySurvey,
-} from "@/api/response/response.query";
+import { createMaterialTopTabNavigator } from "expo-router/js-top-tabs";
+import { useResponseAnalytics, useResponsesBySurvey } from "@/api/response/response.query";
 import { ContactCard } from "@/components/flow/FlowResponseCard";
 import { useSurvey } from "@/api/survey/survey.query";
 import { useQuestions } from "@/api/question/question.query";
@@ -25,17 +22,12 @@ import NpsOverview from "@/components/webform/NpsOverview";
 import HappinessJourney from "@/components/webform/HappinessJourney";
 import SurveyQuestions from "@/components/flow/SurveyQuestions";
 import { ArrowLeft } from "lucide-react-native";
+import { firstParam } from "@/utils/params";
 
 const Tab = createMaterialTopTabNavigator();
 const SubTab = createMaterialTopTabNavigator();
 
-const AnalyticsTab = ({
-  webformId,
-  webform,
-}: {
-  webformId: string;
-  webform: any;
-}) => {
+const AnalyticsTab = ({ webformId }: { webformId: string; webform: any }) => {
   const isDark = useColorScheme() === "dark";
 
   const { data, isLoading } = useResponseAnalytics(webformId, {});
@@ -43,10 +35,7 @@ const AnalyticsTab = ({
   const { data: questions } = useQuestions(webformId);
 
   const [npsOverView, choiceWiseOverView] = useMemo(
-    () =>
-      data
-        ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
-        : [[], []],
+    () => (data ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)] : [[], []]),
     [data],
   );
 
@@ -78,11 +67,7 @@ const AnalyticsTab = ({
           tabBarLabel: ({ focused }) => (
             <Text
               className={`text-md font-bold ${
-                focused
-                  ? "text-rateUpBlue"
-                  : isDark
-                    ? "text-slate-400"
-                    : "text-gray-400"
+                focused ? "text-rateUpBlue" : isDark ? "text-slate-400" : "text-gray-400"
               }`}
             >
               {route.name}
@@ -132,8 +117,6 @@ const AnalyticsTab = ({
 };
 
 const ResponsesTab = ({ webformId }: { webformId?: string }) => {
-  const isDark = useColorScheme() === "dark";
-
   const { data: dat1, isLoading } = useResponsesBySurvey(webformId, {});
 
   const totalResponse = dat1?.totalCount || 0;
@@ -153,9 +136,7 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
   if (!dat1?.responses?.length) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
-        <Text className="text-gray-500 dark:text-slate-400">
-          No responses available.
-        </Text>
+        <Text className="text-gray-500 dark:text-slate-400">No responses available.</Text>
       </View>
     );
   }
@@ -164,14 +145,10 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
     <View className="bg-white dark:bg-slate-950 h-full">
       {/* Response Count Header */}
       <View className="px-4 py-3 border-b border-gray-200 dark:border-slate-800 bg-rateUpGreen20 dark:bg-slate-900 flex-row items-center justify-between">
-        <Text className="text-base font-semibold text-rateUpGreen">
-          Total Responses
-        </Text>
+        <Text className="text-base font-semibold text-rateUpGreen">Total Responses</Text>
 
         <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
-          <Text className="text-white text-sm font-semibold">
-            {totalResponse}
-          </Text>
+          <Text className="text-white text-sm font-semibold">{totalResponse}</Text>
         </View>
       </View>
 
@@ -188,8 +165,9 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
               setData([item]);
 
               router.push({
-                pathname: `/protected/webform/webformresponse/${item.id}`,
+                pathname: "/protected/webform/webformresponse/[webformresponseId]",
                 params: {
+                  webformresponseId: item.id,
                   webformId: webformId,
                   respondent: item.phone,
                 },
@@ -209,7 +187,7 @@ const WebFormPage = () => {
 
   const { webformId, webFormName } = useLocalSearchParams();
 
-  const { data: surveyData, isLoading: surveyLoading } = useSurvey(webformId);
+  const { data: surveyData } = useSurvey(firstParam(webformId));
 
   const screenWidth = Dimensions.get("window").width;
 
@@ -233,9 +211,7 @@ const WebFormPage = () => {
           <ArrowLeft color={isDark ? "white" : "black"} />
         </Pressable>
 
-        <Text className="text-black dark:text-white text-2xl font-bold">
-          {webFormName}
-        </Text>
+        <Text className="text-black dark:text-white text-2xl font-bold">{webFormName}</Text>
       </View>
 
       {/* Tabs */}
@@ -247,18 +223,12 @@ const WebFormPage = () => {
             <View
               style={{ width: sw }}
               className={`mx-auto p-3 rounded-xl ${
-                focused
-                  ? "bg-rateUpGreen20 dark:bg-slate-800"
-                  : "bg-white dark:bg-slate-950"
+                focused ? "bg-rateUpGreen20 dark:bg-slate-800" : "bg-white dark:bg-slate-950"
               }`}
             >
               <Text
                 className={`text-base text-center font-semibold ${
-                  focused
-                    ? "text-rateUpBlue"
-                    : isDark
-                      ? "text-slate-400"
-                      : "text-gray-500"
+                  focused ? "text-rateUpBlue" : isDark ? "text-slate-400" : "text-gray-500"
                 }`}
               >
                 {route.name}
@@ -282,9 +252,7 @@ const WebFormPage = () => {
           {() => <AnalyticsTab webformId={webformId} webform={surveyData} />}
         </Tab.Screen>
 
-        <Tab.Screen name="Responses">
-          {() => <ResponsesTab webformId={webformId} />}
-        </Tab.Screen>
+        <Tab.Screen name="Responses">{() => <ResponsesTab webformId={webformId} />}</Tab.Screen>
       </Tab.Navigator>
     </View>
   );

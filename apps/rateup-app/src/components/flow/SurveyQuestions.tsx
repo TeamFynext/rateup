@@ -1,10 +1,5 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  useColorScheme,
-} from "react-native";
+import { useColorScheme } from "nativewind";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import React, { useMemo, useState } from "react";
 import {
   AngryIcon,
@@ -17,23 +12,24 @@ import {
 } from "lucide-react-native";
 import { QuestionType2 } from "./enum";
 import { renderChoiceItem } from "@/util";
+import type { SurveyQuestion } from "@/api/question/types";
+import type { ChoiceWiseEntry, NpsEntry } from "@/api/response/types";
+import type { DbFlow } from "@/api/whatsapp/types";
 
 type SurveyQuestionProps = {
-  choiceWise: any;
-  NPS: any;
+  /** `Object.entries` of the analytics `choiceWise` map, keyed by question id. */
+  choiceWise: [string, ChoiceWiseEntry][];
+  /** `Object.entries` of the analytics `nps` map, keyed by question id. */
+  NPS: [string, NpsEntry][];
   version?: number;
-  questions?: any[];
-  flow: any;
+  questions?: SurveyQuestion[];
+  /** null on web forms, which have no backing flow. */
+  flow: DbFlow | null;
 };
 
-const SurveyQuestions = ({
-  choiceWise,
-  NPS,
-  flow,
-  version,
-  questions,
-}: SurveyQuestionProps) => {
-  const isDark = useColorScheme() === "dark";
+const SurveyQuestions = ({ choiceWise, NPS, flow, version, questions }: SurveyQuestionProps) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -52,9 +48,9 @@ const SurveyQuestions = ({
   };
 
   const flowQuestions = useMemo(() => {
-    return flow?.json?.screens?.flatMap((screen: any) =>
+    return flow?.json?.screens?.flatMap((screen) =>
       screen.layout.children
-        .filter((child: any) => child.type !== QuestionType2.Footer)
+        .filter((child) => child.type !== QuestionType2.Footer)
         .map(({ id, label, metaType, name, header }) => ({
           id,
           label,
@@ -62,23 +58,25 @@ const SurveyQuestions = ({
           name,
           header,
         }))
-        .filter(({ name }: { name: any }) => name),
+        .filter(({ name }) => name),
     );
   }, [flow]);
 
-  const getQuestion = (questionId: any) => {
-    const question =
-      version === 1
-        ? questions?.find((q) => q?.id === questionId)
-        : flowQuestions.find((q: any) => q.id === questionId);
+  const getQuestion = (questionId: string) => {
+    if (version === 1) {
+      const question = questions?.find((q) => q?.id === questionId);
+
+      return {
+        type: question?.type,
+        questionTitle: question?.title || question?.label,
+      };
+    }
+
+    const question = flowQuestions?.find((q) => q.id === questionId);
 
     return {
-      type: version === 1 ? question?.type : question?.metaType,
-
-      questionTitle:
-        version === 1
-          ? question?.title || question?.label
-          : question?.header || question?.label,
+      type: question?.metaType,
+      questionTitle: question?.header || question?.label,
     };
   };
 
@@ -92,11 +90,11 @@ const SurveyQuestions = ({
       {choiceWise?.map(([questionId, questionData], index) => {
         const questionDetails = getQuestion(questionId);
 
-        const type = questionDetails?.type as QuestionType2;
+        const type = questionDetails?.type;
 
         const title = questionDetails?.questionTitle;
 
-        const npsEntry = NPS.find(([id]: any) => id === questionId)?.[1];
+        const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
 
         const responseCount = questionData?.responseCount || 0;
 
@@ -112,18 +110,14 @@ const SurveyQuestions = ({
 
         const total = promoters + passives + detractors;
 
-        const chartData = questionData?.data.map(
-          (item: any, index: number) => ({
-            ...item,
-            percentage: getPercentage(item?.count, responseCount),
-          }),
-        );
+        const chartData = questionData?.data.map((item) => ({
+          ...item,
+          percentage: getPercentage(item?.count, responseCount),
+        }));
 
-        const maxCount = Math.max(...chartData.map((c: any) => c.count));
+        const maxCount = Math.max(...chartData.map((c) => c.count));
 
-        const mostVotedChoice = chartData.find(
-          (c: any) => c.count === maxCount,
-        )?.choice;
+        const mostVotedChoice = chartData.find((c) => c.count === maxCount)?.choice;
 
         const isExpanded = expanded.has(questionId);
 
@@ -144,9 +138,7 @@ const SurveyQuestions = ({
             >
               <View className="flex-row items-center gap-2 flex-1">
                 <View className="bg-rateUpBlue rounded-full w-6 h-6 flex justify-center items-center">
-                  <Text className="text-sm font-semibold text-white">
-                    {index + 1}
-                  </Text>
+                  <Text className="text-sm font-semibold text-white">{index + 1}</Text>
                 </View>
 
                 <Text className="font-semibold text-md flex-1 text-black dark:text-white">
@@ -158,10 +150,7 @@ const SurveyQuestions = ({
                 {isExpanded ? (
                   <ChevronUp size={20} color={isDark ? "#CBD5E1" : "#4B5563"} />
                 ) : (
-                  <ChevronDown
-                    size={20}
-                    color={isDark ? "#CBD5E1" : "#4B5563"}
-                  />
+                  <ChevronDown size={20} color={isDark ? "#CBD5E1" : "#4B5563"} />
                 )}
               </View>
             </Pressable>
@@ -172,13 +161,7 @@ const SurveyQuestions = ({
                 <View className="flex gap-1 p-1">
                   {chartData?.length > 0 ? (
                     chartData.map((item: any, idx: number) =>
-                      renderChoiceItem(
-                        type,
-                        item,
-                        idx,
-                        mostVotedChoice,
-                        version,
-                      ),
+                      renderChoiceItem(type, item, idx, mostVotedChoice, version),
                     )
                   ) : (
                     <Text className="text-gray-500 dark:text-slate-400 text-center">
@@ -194,11 +177,7 @@ const SurveyQuestions = ({
                     <View className="flex-row justify-between items-center">
                       <View className="flex-row gap-2 items-center">
                         <View className="rounded-lg p-1 bg-[#2B82DE1F]">
-                          <TargetIcon
-                            color={"#2B82DE"}
-                            width={25}
-                            height={25}
-                          />
+                          <TargetIcon color={"#2B82DE"} width={25} height={25} />
                         </View>
 
                         <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
@@ -207,9 +186,7 @@ const SurveyQuestions = ({
                       </View>
 
                       <Text className="text-[#00BF83] font-bold text-xl">
-                        {npsScore > 0
-                          ? `+${Math.round(npsScore)}`
-                          : Math.round(npsScore)}
+                        {npsScore > 0 ? `+${Math.round(npsScore)}` : Math.round(npsScore)}
                       </Text>
                     </View>
 
@@ -225,9 +202,7 @@ const SurveyQuestions = ({
                         </Text>
                       </View>
 
-                      <Text className="text-[#00BF83] font-bold text-xl">
-                        {total}
-                      </Text>
+                      <Text className="text-[#00BF83] font-bold text-xl">{total}</Text>
                     </View>
 
                     {/* Promoters */}
@@ -242,9 +217,7 @@ const SurveyQuestions = ({
                         </Text>
                       </View>
 
-                      <Text className="text-[#00BF83] font-bold text-xl">
-                        {promoters}
-                      </Text>
+                      <Text className="text-[#00BF83] font-bold text-xl">{promoters}</Text>
                     </View>
 
                     {/* Passives */}
@@ -259,9 +232,7 @@ const SurveyQuestions = ({
                         </Text>
                       </View>
 
-                      <Text className="text-[#FFC107] font-bold text-xl">
-                        {passives}
-                      </Text>
+                      <Text className="text-[#FFC107] font-bold text-xl">{passives}</Text>
                     </View>
 
                     {/* Detractors */}
@@ -276,9 +247,7 @@ const SurveyQuestions = ({
                         </Text>
                       </View>
 
-                      <Text className="text-[#FF6161] font-bold text-xl">
-                        {detractors}
-                      </Text>
+                      <Text className="text-[#FF6161] font-bold text-xl">{detractors}</Text>
                     </View>
                   </View>
                 )}
@@ -293,13 +262,12 @@ const SurveyQuestions = ({
 
 export default SurveyQuestions;
 
-const getLocalizedText = (input: any) => {
-  const rawText =
-    typeof input === "string"
-      ? input
-      : typeof input === "object" && input !== null
-        ? input.en || Object.values(input)[0]
-        : "";
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 
-  return rawText.replace(/<[^>]+>/g, "").trim();
+const getLocalizedText = (input: unknown): string => {
+  const rawText: unknown =
+    typeof input === "string" ? input : isRecord(input) ? input.en || Object.values(input)[0] : "";
+
+  return typeof rawText === "string" ? rawText.replace(/<[^>]+>/g, "").trim() : "";
 };

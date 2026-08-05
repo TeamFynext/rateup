@@ -1,12 +1,24 @@
-import React, { memo, useMemo } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
+import React, { memo, useMemo, useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+} from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useWaFlowsFromDb } from "@/api/whatsapp/flow/flow.query";
 import FlowSearchBar from "@/components/flow/FlowSearchBar";
 import { useRouter } from "expo-router";
 import { useFlowFilterStore, useSearchFlowStore } from "@/utils/store";
-import { MoveRight } from "lucide-react-native";
+import { MoveRight, SlidersHorizontal } from "lucide-react-native";
 import { colors } from "@/constants/constants";
+import ScreenHeader, {
+  HeaderIconButton,
+} from "@/components/common/ScreenHeader";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { useColorScheme } from "nativewind";
+import { Colors } from "@/constants/colors";
 
 const getStatusBadge = (status: string) => {
   const color = status === "PUBLISHED" ? "bg-green-500" : "bg-orange-400";
@@ -25,11 +37,23 @@ const getStatusBadge = (status: string) => {
 };
 
 const Flow = () => {
-  const { data = [], isLoading } = useWaFlowsFromDb();
+  const { data = [], isLoading, isError, refetch } = useWaFlowsFromDb();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
   const { search } = useSearchFlowStore();
   const router = useRouter();
 
   const { teamId, status, sortByDate, alphabetical } = useFlowFilterStore();
+
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
+  const pageBg = isDark ? Colors.dark.bg : Colors.light.bg;
 
   const filteredAndSortedFlows = useMemo(() => {
     let flows = [...data];
@@ -37,7 +61,7 @@ const Flow = () => {
     // Filter by team
     if (teamId !== "all") {
       flows = flows.filter((flow) =>
-        flow.survey?.teams?.some((team: any) => team.teamId === teamId)
+        flow.survey?.teams?.some((team: any) => team.teamId === teamId),
       );
     }
 
@@ -48,7 +72,7 @@ const Flow = () => {
 
     if (search.trim()) {
       flows = flows.filter((flow) =>
-        flow.name.toLowerCase().includes(search.toLowerCase())
+        flow.name.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -63,12 +87,12 @@ const Flow = () => {
     if (sortByDate === "latest") {
       flows = flows.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     } else if (sortByDate === "oldest") {
       flows = flows.sort(
         (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
     }
 
@@ -77,7 +101,10 @@ const Flow = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white dark:bg-slate-950 px-4 pt-4 w-screen justify-center items-center">
+      <View
+        className="flex-1 px-4 pt-4 w-screen justify-center items-center"
+        style={{ backgroundColor: pageBg }}
+      >
         <ActivityIndicator size="large" />
         <Text className="text-primaryBlue font-semibold">Loading flows...</Text>
       </View>
@@ -126,7 +153,11 @@ const Flow = () => {
               <Text className="text-xs font-semibold text-primaryBlue">
                 Response
               </Text>
-              <MoveRight width={15} height={15} color={colors["primary-blue"]} />
+              <MoveRight
+                width={15}
+                height={15}
+                color={colors["primary-blue"]}
+              />
             </View>
           </View>
         </View>
@@ -134,14 +165,51 @@ const Flow = () => {
     );
   };
 
+  const activeFilterCount = [
+    teamId !== "all",
+    status !== "all",
+    sortByDate !== "latest",
+    alphabetical !== null,
+  ].filter(Boolean).length;
+
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950">
-      <FlowSearchBar />
+    <View style={{ flex: 1, backgroundColor: pageBg }}>
+      <ScreenHeader
+        title="WhatsApp Flow"
+        actions={
+          <HeaderIconButton
+            onPress={() => router.push("/protected/flow/FlowFilter")}
+            badge={activeFilterCount}
+          >
+            <SlidersHorizontal size={20} color={t.fg2} />
+          </HeaderIconButton>
+        }
+        below={<FlowSearchBar />}
+      />
       <View className="flex-1 pt-2 px-4 w-screen">
         <FlashList
           data={filteredAndSortedFlows}
           renderItem={renderItem}
           keyExtractor={(item) => item.dbFlowId}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors["primary-blue"]}
+              colors={[colors["primary-blue"]]}
+            />
+          }
+          ListEmptyComponent={
+            <View className="items-center mt-20">
+              {isError ? (
+                <Text className="text-gray-700 dark:text-gray-300 font-medium">
+                  Check your internet connection
+                </Text>
+              ) : (
+                <Text className="text-gray-500">No flows found.</Text>
+              )}
+            </View>
+          }
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       </View>

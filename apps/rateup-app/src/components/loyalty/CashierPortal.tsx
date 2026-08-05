@@ -1,17 +1,16 @@
+import { useColorScheme } from "nativewind";
 import { Toast } from "toastify-react-native";
-import {
-  View,
+import { View,
   Text,
   Pressable,
   useWindowDimensions,
   FlatList,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   ScrollView,
   Modal,
-} from "react-native";
-import { useMemo, useState } from "react";
+  RefreshControl } from "react-native";
+import { useMemo, useState, useCallback } from "react";
 import { countries } from "@/constants/countries";
 import {
   ChevronDown,
@@ -24,7 +23,7 @@ import {
   User,
 } from "lucide-react-native";
 import { colors } from "@/constants/constants";
-import { IconGift } from "@tabler/icons-react-native";
+
 import {
   useAssignRewardMutation,
   useAwardPointsMutation,
@@ -37,6 +36,65 @@ import {
   AvailableRewardsCard,
   PendingRedemptionsCard,
 } from "./cashierPortal/components";
+import { Colors } from "@/constants/colors";
+import ScreenHeader from "@/components/common/ScreenHeader";
+interface ActionCardProps {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: string;
+  lightBg: string;
+  border: string;
+  onPress: () => void;
+}
+
+const ActionCard = ({
+  title,
+  subtitle,
+  icon,
+  color,
+  lightBg,
+  border,
+  onPress,
+}: ActionCardProps) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`rounded-xl p-4 w-[48%] mb-4 border ${isDark ? "bg-slate-900 border-slate-800" : ""
+        }`}
+      style={{
+        backgroundColor: isDark ? undefined : lightBg,
+        borderColor: border,
+      }}
+    >
+      <View className="flex-row items-center">
+        <View
+          className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+          style={{ backgroundColor: color }}
+        >
+          {icon}
+        </View>
+
+        <View className="flex-1">
+          <Text
+            className="text-sm font-semibold"
+            style={{ color: isDark ? "#fff" : "#0f172a" }}
+          >
+            {title}
+          </Text>
+          <Text
+            className="text-xs"
+            style={{ color: isDark ? "#9ca3af" : "#64748b" }}
+          >
+            {subtitle}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+};
 
 const CashierPortal = () => {
   const [phone, setPhone] = useState("");
@@ -52,19 +110,26 @@ const CashierPortal = () => {
   const [redeemCouponOpen, setRedeemCouponOpen] = useState(false);
 
   const { data: tiers } = useLoyaltyTiers();
-  const { data: customerData, isLoading: isLoadingCustomer } =
+  const { data: customerData, isLoading: isLoadingCustomer, isError: isCustomerError, refetch } =
     useCustomerRewardsByPhone(fullPhoneNumber);
   const awardPoints = useAwardPointsMutation();
   const redeemRewardMutation = useRedeemReward(fullPhoneNumber);
-  const assignReward = useAssignRewardMutation(() => {});
+  const assignReward = useAssignRewardMutation(() => { });
   const redeemRewardByShortCode = useRedeemRewardByShortCode();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const [pointsAmount, setPointsAmount] = useState("");
   const [pointsNotes, setPointsNotes] = useState("");
   const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null);
   const [assignRewardNotes, setAssignRewardNotes] = useState("");
 
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const textColor = isDark ? "white" : colors["slate-950"];
 
@@ -190,51 +255,6 @@ const CashierPortal = () => {
     }
   };
 
-  const ActionCard = ({
-    title,
-    subtitle,
-    icon,
-    color,
-    lightBg,
-    border,
-    onPress,
-  }: any) => (
-    <Pressable
-      onPress={onPress}
-      className={`rounded-xl p-4 w-[48%] mb-4 border ${
-        isDark ? "bg-slate-900 border-slate-800" : ""
-      }`}
-      style={{
-        backgroundColor: isDark ? undefined : lightBg,
-        borderColor: border,
-      }}
-    >
-      <View className="flex-row items-center">
-        <View
-          className="w-10 h-10 rounded-lg items-center justify-center mr-3"
-          style={{ backgroundColor: color }}
-        >
-          {icon}
-        </View>
-
-        <View className="flex-1">
-          <Text
-            className="text-sm font-semibold"
-            style={{ color: isDark ? "#fff" : "#0f172a" }}
-          >
-            {title}
-          </Text>
-          <Text
-            className="text-xs"
-            style={{ color: isDark ? "#9ca3af" : "#64748b" }}
-          >
-            {subtitle}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       onPress={() => handleSelectCountry(item)}
@@ -259,19 +279,11 @@ const CashierPortal = () => {
   };
 
   return (
-    <View className="flex-1 w-full bg-white dark:bg-gray-900">
-      {/* Header */}
-      <View className="flex-row px-5 py-6 bg-primaryBlue items-start">
-        <View className="flex-row items-start gap-3 flex-1">
-          <IconGift color="white" strokeWidth={2} size={26} />
-          <View className="flex-1">
-            <Text className="text-white text-xl font-bold">Cashier Portal</Text>
-            <Text className="text-white/80 text-sm mt-1">
-              Quick customer lookup and transaction processing
-            </Text>
-          </View>
-        </View>
-      </View>
+    <View
+      className="flex-1 w-full"
+      style={{ backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg }}
+    >
+      <ScreenHeader title="Loyalty" />
 
       {/* Body */}
       <ScrollView
@@ -283,6 +295,14 @@ const CashierPortal = () => {
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors["primary-blue"]}
+            colors={[colors["primary-blue"]]}
+          />
+        }
       >
         {/* Card */}
         <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm">
@@ -346,11 +366,10 @@ const CashierPortal = () => {
           <Pressable
             onPress={handleSearch}
             disabled={phone.length < 6}
-            className={`mt-5 py-3 rounded-xl items-center ${
-              phone.length < 6
-                ? "bg-gray-300 dark:bg-slate-700"
-                : "bg-primaryBlue active:opacity-80"
-            }`}
+            className={`mt-5 py-3 rounded-xl items-center ${phone.length < 6
+              ? "bg-gray-300 dark:bg-slate-700"
+              : "bg-primaryBlue active:opacity-80"
+              }`}
           >
             <Text className="text-white font-semibold text-base">
               {isLoadingCustomer ? "Searching..." : "Search Customer"}
@@ -359,21 +378,31 @@ const CashierPortal = () => {
         </View>
         {!customer && (
           <View className="h-full justify-center flex-1 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-gray-200 dark:border-slate-800 shadow-sm items-center">
-            {/* Icon */}
-            <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mb-4">
-              <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
-            </View>
+            {isCustomerError ? (
+              <>
+                <Text className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  Check your internet connection
+                </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
+                  We couldn&apos;t reach the server to fetch customer details.
+                </Text>
+              </>
+            ) : (
+              <>
+                <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mb-4">
+                  <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
+                </View>
 
-            {/* Title */}
-            <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-              No Customer Selected
-            </Text>
+                <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+                  No Customer Selected
+                </Text>
 
-            {/* Description */}
-            <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
-              Search for a customer using their phone number to view details and
-              perform actions.
-            </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
+                  Search for a customer using their phone number to view details and
+                  perform actions.
+                </Text>
+              </>
+            )}
           </View>
         )}
         {customer && (
@@ -648,11 +677,10 @@ const CashierPortal = () => {
                     <Pressable
                       key={reward.id}
                       onPress={() => setSelectedRewardId(reward.id)}
-                      className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${
-                        selected
-                          ? "border-primaryBlue bg-primaryBlue/5"
-                          : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                      }`}
+                      className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${selected
+                        ? "border-primaryBlue bg-primaryBlue/5"
+                        : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                        }`}
                     >
                       {/* Left */}
                       <View className="flex-1 mr-3">
@@ -691,11 +719,10 @@ const CashierPortal = () => {
               <Pressable
                 onPress={handleClaimReward}
                 disabled={!selectedRewardId || redeemRewardMutation?.isPending}
-                className={`px-5 py-2 rounded-lg flex-row items-center ${
-                  !selectedRewardId
-                    ? "bg-gray-300 dark:bg-slate-700"
-                    : "bg-primaryBlue"
-                }`}
+                className={`px-5 py-2 rounded-lg flex-row items-center ${!selectedRewardId
+                  ? "bg-gray-300 dark:bg-slate-700"
+                  : "bg-primaryBlue"
+                  }`}
               >
                 {redeemRewardMutation?.isPending && (
                   <Loader2 size={16} color="white" style={{ marginRight: 6 }} />
@@ -745,11 +772,10 @@ const CashierPortal = () => {
                   <Pressable
                     key={reward.id}
                     onPress={() => setSelectedRewardId(reward.id)}
-                    className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${
-                      selected
-                        ? "border-primaryBlue bg-primaryBlue/5"
-                        : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                    }`}
+                    className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${selected
+                      ? "border-primaryBlue bg-primaryBlue/5"
+                      : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                      }`}
                   >
                     <View className="flex-1">
                       <Text className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -798,11 +824,10 @@ const CashierPortal = () => {
               <Pressable
                 onPress={handleAssignReward}
                 disabled={!selectedRewardId || assignReward?.isPending}
-                className={`px-5 py-2 rounded-lg flex-row items-center ${
-                  !selectedRewardId
-                    ? "bg-gray-300 dark:bg-slate-700"
-                    : "bg-primaryBlue"
-                }`}
+                className={`px-5 py-2 rounded-lg flex-row items-center ${!selectedRewardId
+                  ? "bg-gray-300 dark:bg-slate-700"
+                  : "bg-primaryBlue"
+                  }`}
               >
                 {assignReward?.isPending && (
                   <Loader2 size={16} color="white" style={{ marginRight: 6 }} />
@@ -869,11 +894,10 @@ const CashierPortal = () => {
               <Pressable
                 onPress={handleRedeemCoupon}
                 disabled={!couponCode}
-                className={`px-5 py-2 rounded-lg ${
-                  !couponCode
-                    ? "bg-gray-300 dark:bg-slate-700"
-                    : "bg-primaryBlue active:opacity-80"
-                }`}
+                className={`px-5 py-2 rounded-lg ${!couponCode
+                  ? "bg-gray-300 dark:bg-slate-700"
+                  : "bg-primaryBlue active:opacity-80"
+                  }`}
               >
                 <Text className="text-white font-semibold">Redeem Coupon</Text>
               </Pressable>
