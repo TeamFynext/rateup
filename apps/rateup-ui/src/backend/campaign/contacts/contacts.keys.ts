@@ -42,7 +42,14 @@ export const contactGroupKeys = {
   detail: (groupId: string | undefined) => ["contactGroupById", groupId] as const,
   list: (groupId: string, pagination: KeyPart, search: KeyPart, sort: KeyPart, filters: KeyPart) =>
     ["contactGroupById", groupId, pagination, search, sort, filters] as const,
-  byTeam: () => ["contactGroupsDataByTeamId"] as const,
+  /**
+   * `contactChannel` is part of the key because it changes the member counts the API returns;
+   * without a team id this is the prefix that sweeps every team's group list.
+   */
+  byTeam: (teamId?: string, contactChannel?: string) =>
+    (teamId === undefined
+      ? ["contactGroupsDataByTeamId"]
+      : ["contactGroupsDataByTeamId", teamId, contactChannel]) as readonly unknown[],
   /** Without a contact id this is the prefix that sweeps every contact's group list. */
   byContact: (contactId?: string) =>
     (contactId === undefined

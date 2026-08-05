@@ -104,7 +104,13 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
         <IconDotsVertical className="h-4 w-4" />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+      {/* Sized to its content: the popup defaults to `w-(--anchor-width)`, and the anchor is a
+          32px icon button, so labels like "View Details" wrapped onto two lines. */}
+      <DropdownMenuContent
+        align="end"
+        className="w-auto min-w-40"
+        onClick={(event) => event.stopPropagation()}
+      >
         <DropdownMenuItem
           onClick={(event) => {
             event.stopPropagation();

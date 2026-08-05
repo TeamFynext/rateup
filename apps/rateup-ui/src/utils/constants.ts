@@ -200,6 +200,14 @@ export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;
 
 export const PAGE_SIZE = ["50", "100", "200", "500"];
 
+/**
+ * Value for the API's `channel` contact filter, which selects contacts reachable on WhatsApp —
+ * i.e. those carrying neither an Instagram (`igsId`) nor a Facebook Messenger (`psid`)
+ * identifier. Deliberately not a `source` filter: `source` is free-form and says
+ * "CSV IMPORT"/"external" for every contact that did not arrive through the inbox.
+ */
+export const WHATSAPP_CONTACT_CHANNEL = "whatsapp";
+
 export const SAVE_HOTKEY = "mod+s";
 
 export const COORDINATESX = ["LEFT", "CENTER", "RIGHT"];

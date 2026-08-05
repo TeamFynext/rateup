@@ -232,7 +232,9 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
       >
         <IconDotsVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      {/* Anchored to a small icon button, and the popup defaults to `w-(--anchor-width)` — without
+          a width of its own "Edit Group" and "Delete Group" wrap onto two lines each. */}
+      <DropdownMenuContent align="end" className="w-auto min-w-40">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />

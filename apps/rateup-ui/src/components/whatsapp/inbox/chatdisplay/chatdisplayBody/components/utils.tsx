@@ -1,4 +1,4 @@
-import { IconBan, IconBrandWhatsapp, IconClock } from "@tabler/icons-react";
+import { IconBan, IconBrandWhatsapp, IconClock, IconExternalLink } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { useTranslation } from "react-i18next";
 
@@ -45,12 +45,34 @@ import WaInboxVideo from "./video/index.tsx";
 const IgCommentBubble = ({
   messageContent,
 }: {
-  messageContent: { text?: string; commentId?: string; mediaId?: string };
+  messageContent: { text?: string; commentId?: string; mediaId?: string; permalink?: string };
 }) => {
+  const { t: translations } = useTranslation();
+  // Resolved by the webhook when the comment arrived and stored on the message:
+  // a comment carries only the media's numeric id, and an instagram.com/p/ URL
+  // needs the shortcode, so there is nothing to build from here. Comments stored
+  // before that shipped carry no link and simply show none.
+  const permalink = messageContent.permalink;
+
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-foreground p-2 bg-muted rounded-[10px] w-fit">
-        Commented on your post
+      <span className="flex flex-col items-center gap-2 text-xs text-foreground p-2 bg-muted rounded-[10px] w-fit">
+        {translations("Commented on your post")}
+        {permalink ? (
+          <a
+            href={permalink}
+            target="_blank"
+            rel="noreferrer noopener"
+            // The link opens instagram.com, so it says where it goes and carries
+            // its own label — the surrounding text is not read out with it.
+            aria-label={translations("View this post on Instagram")}
+            title={translations("View this post on Instagram")}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+          >
+            {translations("View post")}
+            <IconExternalLink className="size-3.5" aria-hidden="true" />
+          </a>
+        ) : null}
       </span>
       {messageContent.text ? <WaInboxText messageContent={messageContent.text} /> : null}
     </div>
@@ -72,7 +94,12 @@ const asRecord = (content: ParsedWaMessageContent): Record<string, unknown> =>
     : {};
 
 const asComment = (content: ParsedWaMessageContent) =>
-  asRecord(content) as { text?: string; commentId?: string; mediaId?: string };
+  asRecord(content) as {
+    text?: string;
+    commentId?: string;
+    mediaId?: string;
+    permalink?: string;
+  };
 
 const asAttachments = (content: ParsedWaMessageContent) => {
   const record = asRecord(content);

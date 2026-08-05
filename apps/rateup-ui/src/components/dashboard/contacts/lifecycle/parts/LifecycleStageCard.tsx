@@ -1,10 +1,8 @@
 // Extracted verbatim from `LifecyclePage.tsx`. Behaviour is unchanged.
 
-import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -14,12 +12,10 @@ import type { UILifecycleStage } from "./shared.tsx";
 export function LifecycleStageCard({
   stage,
   pct,
-  onAdjustCount,
   isLost,
 }: Readonly<{
   stage: UILifecycleStage;
   pct: number;
-  onAdjustCount: () => void;
   isLost: boolean;
 }>) {
   const { t } = useTranslation("contacts.lifecycle");
@@ -64,33 +60,11 @@ export function LifecycleStageCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
-        <div className="text-2xl font-black leading-none tracking-tight text-foreground">
-          {stage.count}
-        </div>
-
-        <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/40 p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onAdjustCount}
-            className="size-5 rounded p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-            title="Decrease"
-          >
-            <IconMinus className="size-3" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onAdjustCount}
-            className="size-5 rounded p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-            title="Increase"
-          >
-            <IconPlus className="size-3" />
-          </Button>
-        </div>
+      {/* No +/- next to the count: it is derived from how many contacts sit in the stage, so
+          there is nothing to nudge. The pair used to be wired to one handler that only toasted
+          "Contact counts are derived from contact assignments." */}
+      <div className="mt-3 text-2xl font-black leading-none tracking-tight text-foreground">
+        {stage.count}
       </div>
 
       <div className="mt-3 space-y-1">

@@ -44,7 +44,7 @@ import {
   ContactGroupType,
 } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
-import { PAGE_SIZE } from "@/utils/constants.ts";
+import { PAGE_SIZE, WHATSAPP_CONTACT_CHANNEL } from "@/utils/constants.ts";
 
 import StatePagination from "./CampaignContactPagination.tsx";
 
@@ -74,9 +74,14 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
     pageSize: Number(PAGE_SIZE[0]),
   });
 
-  const { data, isPending } = useContacts(pagination, debouncedSearch);
+  // Campaigns message over WhatsApp, so only WhatsApp contacts can take part: the contact list is
+  // filtered to them, and each group's member count reports only the members it can reach.
+  const { data, isPending } = useContacts(pagination, debouncedSearch, undefined, [
+    { id: "channel", value: WHATSAPP_CONTACT_CHANNEL },
+  ]);
   const { data: contactGroup, isLoading: groupIsLoading } = useContactGroupsByTeamId(
     campaign?.teamId,
+    WHATSAPP_CONTACT_CHANNEL,
   );
   const { data: campaignData, isPending: isAllCampaignLoading } = useCampaignData(campaignType);
   const addCampaignParticipants = useAddCampaignParticipants(campaign?.id, () => {

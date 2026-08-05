@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { Card } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
@@ -63,7 +64,9 @@ export function TeamSelector({
   }
   if (teamsLoading) {
     return (
-      <Card className="h-10 w-60 justify-center rounded-md border p-0">
+      // Same `className` as the trigger below, so the control does not change width once the
+      // teams land — `w-60` is only the fallback for callers that pass no width.
+      <Card className={cn("h-10 w-60 justify-center rounded-md border p-0", className)}>
         <div className="my-auto flex w-full items-center justify-between">
           <Skeleton className="ml-2 h-[17px] w-25" />
           <Skeleton className="mr-2 h-[17px] w-5" />
@@ -74,7 +77,7 @@ export function TeamSelector({
 
   return (
     <Select value={value} onValueChange={(next) => onChange?.(next ?? "")} items={teamOptions}>
-      <SelectTrigger className={`${className || ""}`}>
+      <SelectTrigger className={cn(className)}>
         <div>
           <IconUsers className="size-4 text-muted-foreground" />
         </div>

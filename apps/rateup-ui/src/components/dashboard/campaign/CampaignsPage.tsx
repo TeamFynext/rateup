@@ -115,7 +115,14 @@ export function CampaignsPage() {
         <div className="space-y-4">
           <div>
             <FieldTitle className="text-xs">{t("Team")}</FieldTitle>
-            <TeamSelector value={selectedTeam} onChange={setSelectedTeam} enableAll />
+            {/* `SelectTrigger` is `w-fit` by default, so without this the team control sits at
+                its content width while Status — inside a `Field` — stretches to the popover. */}
+            <TeamSelector
+              value={selectedTeam}
+              onChange={setSelectedTeam}
+              enableAll
+              className="w-full"
+            />
           </div>
 
           <Field>

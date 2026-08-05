@@ -31,7 +31,8 @@ import { getInitials } from "../ui/utils.ts";
 import {
   buildContactSchema,
   type ContactFormValues,
-  contactFormDefaults,
+  type ContactInitialValues,
+  toFormValues,
 } from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";
@@ -49,28 +50,6 @@ const collectErrorMessages = (node: unknown, messages: string[] = []): string[] 
   }
   return messages;
 };
-
-/**
- * Prefilled form values. Callers pass either a saved contact being edited (`id` present) or a
- * draft assembled elsewhere — the inbox's "add this sender" flow supplies only a few fields.
- */
-export interface ContactInitialValues {
-  id?: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  dob?: Date | string | null;
-  source?: string;
-  profilePic?: string;
-  labels?: (string | undefined)[];
-  contactGroupIds?: (string | undefined)[];
-  assignedUserIds?: (string | undefined)[];
-  lifecycleId?: string;
-  notes?: string;
-  external_id?: string;
-  contactType?: string[];
-  updateExisting?: boolean;
-}
 
 /**
  * The caller-supplied "create contacts" mutation (`useAddNewContactMutation`, which posts to a
@@ -110,9 +89,8 @@ const CreateOrEditContactModal = ({
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
-      ...contactFormDefaults,
+      ...toFormValues(initialValues, customFields),
       contactType: customFields?.map((field) => field.slug) || [],
-      ...initialValues,
     },
   });
 
@@ -121,6 +99,8 @@ const CreateOrEditContactModal = ({
       ...values,
       dob: values.dob ? new Date(values.dob).toISOString() : null,
       external_id: values.external_id || undefined,
+      // "No lifecycle" is "" in the form but a uuid column in the API; null is how it's cleared.
+      lifecycleId: values.lifecycleId || null,
       phone: values.phone?.replace(/^\+/, "") || "",
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
       lastReceivedMessageTimeStamp: undefined as string | undefined,
@@ -162,9 +142,9 @@ const CreateOrEditContactModal = ({
 
   useEffect(() => {
     if (initialValues) {
-      form.reset({ ...contactFormDefaults, ...initialValues, phone: "+" + initialValues.phone });
+      form.reset(toFormValues(initialValues, customFields));
     }
-  }, [initialValues, form]);
+  }, [initialValues, customFields, form]);
 
   useEffect(() => {
     form.setValue("contactType", customFields?.map((field) => field.slug) || []);
@@ -198,7 +178,7 @@ const CreateOrEditContactModal = ({
         {initialValues && (
           <div className="flex items-center gap-3 pb-3 border-b">
             <Avatar className="w-16 h-16">
-              <AvatarImage src={initialValues.profilePic} />
+              <AvatarImage src={initialValues.profilePic ?? undefined} />
               <AvatarFallback className="bg-linear-to-br from-primary to-blue-600 text-white">
                 {getInitials(initialValues.name)}
               </AvatarFallback>

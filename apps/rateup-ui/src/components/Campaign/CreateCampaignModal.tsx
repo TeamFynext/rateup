@@ -403,7 +403,14 @@ const CreateCampaignModal = ({
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+      {/* A definite height rather than `max-h`: the two tabs differ a lot in content, so a
+          content-sized dialog collapsed on Basic Info and jumped to full height on Templates.
+          `min()` keeps it off the viewport edges on short screens and stops it stretching to
+          absurd heights on tall ones — the body scrolls either way. */}
+      {/* `overflow-hidden` because the footer paints an opaque `bg-background` bar with square
+          corners over the dialog's own `rounded-xl` — without clipping, the bottom corners
+          square off. Menus and selects portal out, so nothing that needs to escape is clipped. */}
+      <DialogContent className="max-w-2xl h-[min(34rem,88dvh)] overflow-hidden p-0 flex flex-col gap-0">
         {/* Header - Fixed at top */}
         <div className="px-6 pt-6 pb-4 border-b">
           <DialogHeader>
@@ -482,44 +489,6 @@ const CreateCampaignModal = ({
                     )}
                   />
 
-                  <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-                    <CardContent className="pt-4">
-                      <Controller
-                        control={form.control}
-                        name="useUserConsent"
-                        render={({ field, fieldState }) => (
-                          <Field
-                            orientation="horizontal"
-                            className="justify-between"
-                            data-invalid={fieldState.invalid}
-                          >
-                            <div className="space-y-1 flex-1">
-                              <div className="flex items-center gap-2">
-                                <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                <FieldLabel htmlFor={field.name} className="font-medium">
-                                  {t("User Consent")}
-                                </FieldLabel>
-                              </div>
-                              <FieldDescription className="text-xs">
-                                {field.value
-                                  ? t("Only send messages to contacts who have given consent")
-                                  : t("Send messages to all contacts regardless of consent status")}
-                              </FieldDescription>
-                              <p className="text-xs text-blue-600 dark:text-blue-400">
-                                {t("Recommended: Keep enabled for compliance")}
-                              </p>
-                            </div>
-                            <Switch
-                              id={field.name}
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </Field>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-
                   <Controller
                     control={form.control}
                     name="dailySendLimit"
@@ -565,7 +534,7 @@ const CreateCampaignModal = ({
                 </div>
               </TabsContent>
 
-              <TabsContent value="templates" className="mt-4 m-0">
+              <TabsContent value="templates" className="mt-4 m-0 space-y-4">
                 {watchedType === CampaignType.DRIP ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -904,6 +873,49 @@ const CreateCampaignModal = ({
                     )}
                   </div>
                 )}
+
+                {/* Consent lives with the message rather than in Basic Info: it decides who the
+                    template you just picked actually goes to, and it reads as a sending rule
+                    beside the template, not as campaign metadata. Outside the drip/one-off
+                    branch above, so both kinds of campaign get it. */}
+                <Controller
+                  control={form.control}
+                  name="useUserConsent"
+                  render={({ field, fieldState }) => (
+                    <Field
+                      orientation="horizontal"
+                      className="justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950"
+                      data-invalid={fieldState.invalid}
+                    >
+                      <div className="flex-1 space-y-0.5">
+                        <FieldLabel
+                          htmlFor={field.name}
+                          className="flex items-center gap-2 font-medium"
+                        >
+                          <IconCheck className="size-4 text-blue-600 dark:text-blue-400" />
+                          {t("User Consent")}
+                        </FieldLabel>
+                        <FieldDescription className="text-xs">
+                          {field.value
+                            ? t("Only send messages to contacts who have given consent")
+                            : t("Send messages to all contacts regardless of consent status")}
+                        </FieldDescription>
+                        {/* Only worth saying while it is off — with consent on, the reader is
+                            already doing the recommended thing. */}
+                        {!field.value && (
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            {t("Recommended: Keep enabled for compliance")}
+                          </p>
+                        )}
+                      </div>
+                      <Switch
+                        id={field.name}
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </Field>
+                  )}
+                />
               </TabsContent>
             </div>
 

@@ -16,6 +16,7 @@ import {
   IconUserPlus,
   IconUsers,
 } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -50,6 +51,14 @@ import { RewardFormContainer } from "@/components/LoyaltyComponents/RewardFormCo
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
@@ -62,6 +71,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
+
+/**
+ * Shown instead of a bare gap when a reward category has nothing in it yet. The create action is
+ * repeated here because the toolbar button above sits far to the right of an otherwise empty pane.
+ */
+function RewardsEmptyState({
+  icon,
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: Readonly<{
+  icon: ReactNode;
+  title: string;
+  description: string;
+  actionLabel: string;
+  onAction: () => void;
+}>) {
+  return (
+    <Empty className="rounded-lg border border-dashed">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">{icon}</EmptyMedia>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button size="sm" onClick={onAction}>
+          <IconPlus className="w-4 h-4 mr-1.5" />
+          {actionLabel}
+        </Button>
+      </EmptyContent>
+    </Empty>
+  );
+}
 
 export function RewardsPage() {
   // Backend queries
@@ -582,6 +625,20 @@ export function RewardsPage() {
                 </Button>
               </div>
 
+              {rewardsList.length === 0 && (
+                <RewardsEmptyState
+                  icon={<IconTag />}
+                  title="No point rewards yet"
+                  description="Point rewards let customers spend the points they earn on discounts, free items or services."
+                  actionLabel="Create Reward"
+                  onAction={() => {
+                    setRewardFormCategory("point-rewards");
+                    setRewardsViewMode("create");
+                    resetForm();
+                  }}
+                />
+              )}
+
               <div className="space-y-2">
                 {rewardsList.map((reward) => (
                   <RewardCard
@@ -636,6 +693,20 @@ export function RewardsPage() {
                   Create Coupon
                 </Button>
               </div>
+
+              {couponsList.length === 0 && (
+                <RewardsEmptyState
+                  icon={<IconGift />}
+                  title="No coupons yet"
+                  description="Coupons are open to every customer — they redeem a code without spending any points."
+                  actionLabel="Create Coupon"
+                  onAction={() => {
+                    setRewardFormCategory("coupons");
+                    setRewardsViewMode("create");
+                    resetForm();
+                  }}
+                />
+              )}
 
               <div className="space-y-2">
                 {couponsList.map((coupon) => (
@@ -692,6 +763,20 @@ export function RewardsPage() {
                   Create Gift
                 </Button>
               </div>
+
+              {freeGiftsList.length === 0 && (
+                <RewardsEmptyState
+                  icon={<IconGift />}
+                  title="No free gifts yet"
+                  description="Free gifts are assigned to specific customers, each with its own generated code. They are also what the referral program hands out."
+                  actionLabel="Create Gift"
+                  onAction={() => {
+                    setRewardFormCategory("free-gifts");
+                    setRewardsViewMode("create");
+                    resetForm();
+                  }}
+                />
+              )}
 
               <div className="space-y-2">
                 {freeGiftsList.map((gift) => (

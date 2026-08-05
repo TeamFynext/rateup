@@ -157,7 +157,13 @@ function FlowCard({
         <IconDots size={20} />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+      {/* Sized to its content: the popup defaults to `w-(--anchor-width)`, and the anchor is an
+          icon button, so "Copy & Renew Flow" wrapped over three lines. */}
+      <DropdownMenuContent
+        align="end"
+        className="w-auto min-w-40"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Tooltip>
           <TooltipTrigger render={<div />}>
             <DropdownMenuItem

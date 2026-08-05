@@ -691,31 +691,39 @@ export function useNavMain({
               },
             ],
           },
-          {
-            group: t("Platform Settings"),
-            items: [
-              ...(hasTeamFeature(TeamFeature.Inbox)
-                ? [
-                    {
-                      title: t("Channels"),
-                      url: "/dashboard/settings/channels",
-                      icon: IconMessage,
-                      description: t("Communication channels"),
-                    },
-                  ]
-                : []),
-              ...(hasTeamFeature(TeamFeature.AppsServices)
-                ? [
-                    {
-                      title: "Integrations",
-                      url: "/dashboard/settings/integrations",
-                      icon: IconWebhook,
-                      description: "Webhooks & external services",
-                    },
-                  ]
-                : []),
-            ],
-          },
+          // Both entries below are conditional, so the group itself has to be too — otherwise a
+          // member with neither gets a bare "Platform Settings" heading with nothing under it.
+          ...(user?.role === UserRole.SUPADM || hasTeamFeature(TeamFeature.AppsServices)
+            ? [
+                {
+                  group: t("Platform Settings"),
+                  items: [
+                    // Channels is super-admin only: connecting or removing a WhatsApp/Instagram
+                    // account changes messaging for the whole org, not just one team.
+                    ...(user?.role === UserRole.SUPADM
+                      ? [
+                          {
+                            title: t("Channels"),
+                            url: "/dashboard/settings/channels",
+                            icon: IconMessage,
+                            description: t("Communication channels"),
+                          },
+                        ]
+                      : []),
+                    ...(hasTeamFeature(TeamFeature.AppsServices)
+                      ? [
+                          {
+                            title: "Integrations",
+                            url: "/dashboard/settings/integrations",
+                            icon: IconWebhook,
+                            description: "Webhooks & external services",
+                          },
+                        ]
+                      : []),
+                  ],
+                },
+              ]
+            : []),
           {
             group: t("System Settings"),
             items: [
