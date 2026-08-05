@@ -21,6 +21,7 @@ vi.mock("../../utils/prisma.js", () => ({
       create: vi.fn(),
       delete: vi.fn(),
       findUnique: vi.fn(),
+      upsert: vi.fn(),
     },
   },
 }));
@@ -31,6 +32,9 @@ vi.mock("../../utils/logger.js", () => ({
 
 vi.mock("../org/org.services.js", () => ({ getOrgById: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
+vi.mock("../../utils/checkRoleHandler.js", () => ({
+  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
+}));
 
 import bcrypt from "bcrypt";
 import { Prisma } from "../../../generated/prisma/client.js";
@@ -40,6 +44,7 @@ import { getOrgById } from "../org/org.services.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { generateRandomAlphaId } from "../../utils/misc/random.utils.js";
 import {
+  ApiKeyAlreadyExistsError,
   createApiKey,
   deleteApiKey,
   generateApiKey,
@@ -91,6 +96,7 @@ beforeEach(() => {
   db.apiAccessToken.create.mockResolvedValue({ orgId: ORG, accessToken: "h", createdAt: CREATED });
   db.apiAccessToken.delete.mockResolvedValue({ orgId: ORG, accessToken: "h", createdAt: CREATED });
   db.apiAccessToken.findUnique.mockResolvedValue({ orgId: ORG, createdAt: CREATED });
+  db.apiAccessToken.upsert.mockResolvedValue({ orgId: ORG, accessToken: "h", createdAt: CREATED });
   orgById.mockResolvedValue({ id: ORG, name: "Acme" });
 });
 
@@ -103,43 +109,47 @@ afterEach(() => {
 // ===========================================================================
 
 describe("generateApiKey", () => {
-  test("the key is drawn from Math.random, one call per character", () => {
+  test("the key does not come from Math.random", async () => {
     const spy = vi.spyOn(Math, "random");
 
-    const key = generateRandomAlphaId(128);
+    await generateApiKey();
 
-    expect(key).toHaveLength(128);
-    expect(spy).toHaveBeenCalledTimes(128);
+    expect(spy).not.toHaveBeenCalled();
   });
 
-  test("a repeated Math.random sequence reproduces the key exactly", () => {
-    // NOTE: Math.random is not a CSPRNG. Its generator state is finite and
-    // recoverable from output; this test only shows the key is a pure function
-    // of that stream, with no other entropy mixed in.
-    const seq = Array.from({ length: 128 }, (_, i) => ((i * 7919) % 1000) / 1000);
+  test("the shared alpha-id helper does not either", () => {
+    const spy = vi.spyOn(Math, "random");
 
-    let i = 0;
-    vi.spyOn(Math, "random").mockImplementation(() => seq[i++ % seq.length]);
-    const first = generateRandomAlphaId(128);
+    // Also mints the Zoho webhook secret (zoho.controller.ts:116).
+    const id = generateRandomAlphaId(128);
 
-    i = 0;
-    const second = generateRandomAlphaId(128);
-
-    expect(second).toBe(first);
+    expect(spy).not.toHaveBeenCalled();
+    expect(id).toMatch(/^[A-Za-z]{128}$/);
   });
 
-  test("the alphabet is the 52 ascii letters and nothing else", () => {
-    const key = generateRandomAlphaId(512);
+  test("two keys minted in a row differ", async () => {
+    const a = await generateApiKey();
+    const b = await generateApiKey();
 
-    expect(key).toMatch(/^[A-Za-z]{512}$/);
+    expect(a.key).not.toBe(b.key);
   });
 
   test("generateApiKey returns the plaintext beside its hash", async () => {
     const { key, hash } = await generateApiKey();
 
-    expect(key).toMatch(/^[A-Za-z]{128}$/);
+    expect(key).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(hash).not.toBe(key);
     expect(hash.startsWith("$2")).toBe(true);
+  });
+
+  test("the key is short enough that bcrypt hashes all of it", async () => {
+    const { key, hash } = await generateApiKey();
+
+    expect(Buffer.byteLength(key)).toBeLessThanOrEqual(72);
+    // Change any single character and the comparison fails — which was not true
+    // of the last 56 characters of the old key.
+    const tampered = key.slice(0, -1) + (key.endsWith("A") ? "B" : "A");
+    expect(await bcrypt.compare(tampered, hash)).toBe(false);
   });
 
   test("the hash is bcrypt at five rounds", async () => {
@@ -148,8 +158,7 @@ describe("generateApiKey", () => {
     expect(hash.split("$")[2]).toBe("05");
   });
 
-  test("bcrypt truncates the key at 72 bytes, so the last 56 characters are never checked", async () => {
-    // NOTE: bcrypt hashes at most 72 bytes of input. The key is 128 characters.
+  test("bcrypt itself still truncates at 72 bytes", async () => {
     const key = "A".repeat(72) + "B".repeat(56);
     const differentTail = "A".repeat(72) + "C".repeat(56);
 
@@ -189,13 +198,18 @@ describe("createApiKey", () => {
     expect(db.apiAccessToken.findUnique).not.toHaveBeenCalled();
   });
 
-  test("a second key for the same org is refused by the unique constraint", async () => {
-    // prisma/schema.prisma:1802 — orgId is @unique, so there is one key per org.
+  test("a second key for the same org is refused in terms the handler can use", async () => {
     db.apiAccessToken.create.mockRejectedValueOnce(
       new FakeKnownError("P2002", { target: ["orgId"] }),
     );
 
-    await expect(createApiKey(ORG)).rejects.toMatchObject({ code: "P2002" });
+    await expect(createApiKey(ORG)).rejects.toBeInstanceOf(ApiKeyAlreadyExistsError);
+  });
+
+  test("any other write failure is rethrown untouched", async () => {
+    db.apiAccessToken.create.mockRejectedValueOnce(new Error("connection lost"));
+
+    await expect(createApiKey(ORG)).rejects.toThrow("connection lost");
   });
 });
 
@@ -271,36 +285,38 @@ describe("deleteApiKey and getApiKeyCreatedAt", () => {
 });
 
 describe("regenerateApiKey", () => {
-  test("deletes before creating", async () => {
-    const order: string[] = [];
-    db.apiAccessToken.delete.mockImplementationOnce(async () => {
-      order.push("delete");
-      return {};
-    });
-    db.apiAccessToken.create.mockImplementationOnce(async () => {
-      order.push("create");
-      return {};
-    });
-
+  test("replaces the row in one statement", async () => {
     await regenerateApiKey(ORG);
 
-    expect(order).toEqual(["delete", "create"]);
+    expect(db.apiAccessToken.delete).not.toHaveBeenCalled();
+    expect(db.apiAccessToken.create).not.toHaveBeenCalled();
+    expect(db.apiAccessToken.upsert).toHaveBeenCalledOnce();
+    expect(db.apiAccessToken.upsert.mock.calls[0][0].where).toEqual({ orgId: ORG });
   });
 
-  test("the two writes are not in a transaction, so a failed create leaves no key", async () => {
-    db.apiAccessToken.create.mockRejectedValueOnce(new Error("connection lost"));
+  test("a failed write leaves the existing key in place", async () => {
+    db.apiAccessToken.upsert.mockRejectedValueOnce(new Error("connection lost"));
 
     await expect(regenerateApiKey(ORG)).rejects.toThrow("connection lost");
-    // The delete already committed as its own statement; nothing rolls it back.
-    expect(db.apiAccessToken.delete).toHaveBeenCalledTimes(1);
-    expect(db.apiAccessToken.create).toHaveBeenCalledTimes(1);
+    expect(db.apiAccessToken.delete).not.toHaveBeenCalled();
   });
 
-  test("an org with no existing key cannot regenerate", async () => {
-    db.apiAccessToken.delete.mockRejectedValueOnce(new FakeKnownError("P2025"));
+  // The delete-then-create ordering also made regenerate unusable for an org
+  // that had no key yet: the delete raised P2025 against the missing row.
+  test("an org with no existing key can regenerate", async () => {
+    const key = await regenerateApiKey(ORG);
 
-    await expect(regenerateApiKey(ORG)).rejects.toMatchObject({ code: "P2025" });
-    expect(db.apiAccessToken.create).not.toHaveBeenCalled();
+    expect(key).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(db.apiAccessToken.upsert.mock.calls[0][0].create.orgId).toBe(ORG);
+  });
+
+  test("stores the hash of the key it returns, never the key", async () => {
+    const key = await regenerateApiKey(ORG);
+
+    const { create, update } = db.apiAccessToken.upsert.mock.calls[0][0];
+    expect(create.accessToken).not.toBe(key);
+    expect(await bcrypt.compare(key, create.accessToken)).toBe(true);
+    expect(await bcrypt.compare(key, update.accessToken)).toBe(true);
   });
 
   test("the regenerated key is different from the one it replaced", async () => {
@@ -413,9 +429,7 @@ describe("verifyApiAccessTokenHook", () => {
     expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({ where: { orgId: OTHER_ORG } });
   });
 
-  test("a lookup failure on the org replies 404 and then keeps going", async () => {
-    // NOTE: the inner catch has no return, unlike the `if (!org)` branch six
-    // lines above it. Execution falls through to the token check.
+  test("a lookup failure on the org replies 404 and stops", async () => {
     orgById.mockRejectedValueOnce(new Error("invalid uuid"));
     const { key, hash } = await generateApiKey();
     db.apiAccessToken.findUnique.mockResolvedValue({ orgId: ORG, accessToken: hash });
@@ -427,22 +441,22 @@ describe("verifyApiAccessTokenHook", () => {
 
     await verifyApiAccessTokenHook(request, rep);
 
-    expect(rep.code).toHaveBeenNthCalledWith(1, 404);
-    expect(db.apiAccessToken.findUnique).toHaveBeenCalled();
-    expect(request.user).toEqual({ orgId: "not-a-uuid", role: "SUPER_ADMIN" });
+    expect(rep.code).toHaveBeenCalledTimes(1);
+    expect(rep.code).toHaveBeenCalledWith(404);
+    // The key comparison used to run against an org that could not be loaded,
+    // and request.user was set on a request already refused.
+    expect(db.apiAccessToken.findUnique).not.toHaveBeenCalled();
+    expect(request.user).toBeUndefined();
   });
 
-  test("that fall-through can produce two replies for one request", async () => {
+  test("one refused request produces exactly one reply", async () => {
     orgById.mockRejectedValueOnce(new Error("invalid uuid"));
     const rep = reply();
 
-    // No authorization header is given, so after the 404 fall-through the second
-    // reply is now the specific 400 "no bearer token" (see the fixed test above),
-    // not the generic 401 the old `.startsWith` crash used to produce.
     await verifyApiAccessTokenHook(hookReq({ params: { orgId: "not-a-uuid" } }), rep);
 
-    expect(rep.send).toHaveBeenCalledTimes(2);
-    expect(rep.code.mock.calls.map((c: unknown[]) => c[0])).toEqual([404, 400]);
+    expect(rep.send).toHaveBeenCalledTimes(1);
+    expect(rep.code.mock.calls.map((c: unknown[]) => c[0])).toEqual([404]);
   });
 
   // Fixed as part of the strict-mode migration: a missing `authorization` header
@@ -491,18 +505,38 @@ describe("verifyApiAccessTokenHook", () => {
     expect(request.user).toBeUndefined();
   });
 
-  test("the whole request header set is written to the log on every refusal", async () => {
-    // NOTE: this includes the Authorization header carrying the API key.
-    const rep = reply();
+  test("no refusal writes the request headers to the log", async () => {
+    const { key } = await generateApiKey();
+    db.apiAccessToken.findUnique.mockResolvedValue({ orgId: ORG, accessToken: "$2b$05$notahash" });
 
+    for (const headers of [
+      { authorization: "Basic secret" },
+      { authorization: "Bearer " },
+      { authorization: `Bearer ${key}`, cookie: "sAccessToken=abc" },
+      {},
+    ]) {
+      await verifyApiAccessTokenHook(hookReq({ params: { orgId: ORG }, headers }), reply());
+    }
+    await verifyApiAccessTokenHook(hookReq({ headers: { authorization: "Bearer x" } }), reply());
+    orgById.mockResolvedValueOnce(null);
+    await verifyApiAccessTokenHook(hookReq({ params: { orgId: OTHER_ORG } }), reply());
+
+    const logged = JSON.stringify([
+      ...(log.error as unknown as Mock).mock.calls,
+      ...(log.warn as unknown as Mock).mock.calls,
+    ]);
+    expect(logged).not.toContain(key);
+    expect(logged).not.toContain("Basic secret");
+    expect(logged).not.toContain("sAccessToken");
+  });
+
+  test("but the org id and the reason are still logged", async () => {
     await verifyApiAccessTokenHook(
       hookReq({ params: { orgId: ORG }, headers: { authorization: "Basic secret" } }),
-      rep,
+      reply(),
     );
 
-    expect((log.error as unknown as Mock).mock.calls[0][1]).toEqual({
-      authorization: "Basic secret",
-    });
+    expect(log.error).toHaveBeenCalledWith({ orgId: ORG }, "No bearer token found in headers");
   });
 
   test("a refused request never reaches the token comparison", async () => {
@@ -532,7 +566,7 @@ describe("controllers", () => {
     await createApiAccessTokenHandler(req(), rep);
 
     const body = rep.send.mock.calls[0][0];
-    expect(body.apiKey).toMatch(/^[A-Za-z]{128}$/);
+    expect(body.apiKey).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(db.apiAccessToken.create.mock.calls[0][0].data.orgId).toBe(ORG);
   });
 
@@ -545,41 +579,51 @@ describe("controllers", () => {
     expect(db.apiAccessToken.create.mock.calls[0][0].data.orgId).not.toBe(OTHER_ORG);
   });
 
-  test("create sets no status code, so the plaintext key is a plain 200", async () => {
+  test("create answers 201", async () => {
     const rep = reply();
 
     await createApiAccessTokenHandler(req(), rep);
 
-    expect(rep.code).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(201);
   });
 
-  test("delete never replies at all", async () => {
-    // NOTE: an async Fastify handler that resolves without sending leaves the
-    // request open. Same shape as issues.txt 36.3 and 39.3.
+  test("a duplicate create answers 409 and names the remedy", async () => {
+    db.apiAccessToken.create.mockRejectedValueOnce(
+      new FakeKnownError("P2002", { target: ["orgId"] }),
+    );
     const rep = reply();
 
-    await expect(deleteApiAccessTokenHandler(req(), rep)).resolves.toBeUndefined();
+    await createApiAccessTokenHandler(req(), rep);
 
-    expect(rep.send).not.toHaveBeenCalled();
-    expect(rep.code).not.toHaveBeenCalled();
+    expect(rep.code).toHaveBeenCalledWith(409);
+    expect(rep.send.mock.calls[0][0].error).toContain("regenerate");
+  });
+
+  test("delete answers 204", async () => {
+    const rep = reply();
+
+    await deleteApiAccessTokenHandler(req(), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(204);
+    expect(rep.send).toHaveBeenCalledOnce();
     expect(db.apiAccessToken.delete).toHaveBeenCalledWith({ where: { orgId: ORG } });
   });
 
-  test("the created-at read answers with the timestamp", async () => {
+  test("the created-at read reports both the timestamp and that a key exists", async () => {
     const rep = reply();
 
     await getApiAccessTokenCreatedAtHandler(req(), rep);
 
-    expect(rep.send).toHaveBeenCalledWith({ createdAt: CREATED });
+    expect(rep.send).toHaveBeenCalledWith({ exists: true, createdAt: CREATED });
   });
 
-  test("no key answers with an undefined timestamp rather than a 404", async () => {
+  test("no key reads back an explicit absence", async () => {
     db.apiAccessToken.findUnique.mockResolvedValueOnce(null);
     const rep = reply();
 
     await getApiAccessTokenCreatedAtHandler(req(), rep);
 
-    expect(rep.send).toHaveBeenCalledWith({ createdAt: undefined });
+    expect(rep.send).toHaveBeenCalledWith({ exists: false, createdAt: null });
   });
 
   test("regenerate answers with a fresh plaintext key", async () => {
@@ -587,8 +631,8 @@ describe("controllers", () => {
 
     await regenerateApiAccessTokenHandler(req(), rep);
 
-    expect(rep.send.mock.calls[0][0].apiKey).toMatch(/^[A-Za-z]{128}$/);
-    expect(db.apiAccessToken.delete).toHaveBeenCalledTimes(1);
+    expect(rep.send.mock.calls[0][0].apiKey).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(db.apiAccessToken.upsert).toHaveBeenCalledTimes(1);
   });
 
   test("a failed create escapes the handler rather than answering", async () => {
@@ -631,32 +675,40 @@ describe("routes", () => {
     ]);
   });
 
-  test("no route requires a role, so any member can mint an API key", async () => {
-    // NOTE: the key the mint returns authenticates as SUPER_ADMIN.
+  test("minting, deleting and regenerating require SUPER_ADMIN", async () => {
     const { srv, routes } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
 
-    for (const r of routes) {
-      expect(r.handler).toBeUndefined();
-      expect(typeof r.opts).toBe("function");
+    for (const url of ["POST /", "DELETE /", "POST /regenerate"]) {
+      const r = routes.find((x) => `${x.method} ${x.url}` === url);
+      expect((r.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
     }
   });
 
-  test("every route is registered two-arg, with no options object at all", async () => {
-    // So there is nowhere a role check, a schema or a rate limit could be
-    // declared per route — only the tree-wide preHandler above.
+  // The read returns only whether a key exists and when it was minted, never
+  // the key itself.
+  test("the created-at read stays open to any member", async () => {
     const { srv, routes } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
 
-    const handlers = [
+    const read = routes.find((r) => r.method === "GET");
+    expect(read.opts).toBe(getApiAccessTokenCreatedAtHandler);
+    expect(read.handler).toBeUndefined();
+  });
+
+  test("the three gated routes carry their handler in the third argument", async () => {
+    const { srv, routes } = fakeServer();
+
+    await apiAccessTokenRoutes(srv);
+
+    expect(routes.map((r) => r.handler)).toEqual([
       createApiAccessTokenHandler,
       deleteApiAccessTokenHandler,
       regenerateApiAccessTokenHandler,
-      getApiAccessTokenCreatedAtHandler,
-    ];
-    expect(routes.map((r) => r.opts)).toEqual(handlers);
+      undefined,
+    ]);
   });
 
   test("the session check is the only hook", async () => {

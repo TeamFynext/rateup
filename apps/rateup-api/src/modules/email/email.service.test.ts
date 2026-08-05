@@ -36,7 +36,7 @@ beforeEach(() => {
   db.otpStore.upsert.mockResolvedValue({ id: "otp-row" });
   db.otpStore.findUnique.mockResolvedValue(null);
   db.otpStore.delete.mockResolvedValue({ id: "otp-row" });
-  send.mockResolvedValue(undefined);
+  send.mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -80,24 +80,25 @@ describe("sendEmailService", () => {
     expect(send.mock.calls[0][0].html).toContain("hello");
   });
 
-  test("the caller's markup reaches the html body unescaped", async () => {
+  test("escapes the caller's markup on the way into the html body", async () => {
     await sendEmailService({
       ...params,
       data: { body: "<b>urgent</b>", buttonLink: "https://evil.test/login" },
     } as never);
 
     const { html } = send.mock.calls[0][0];
-    expect(html).toContain("<b>urgent</b>");
+    expect(html).not.toContain("<b>urgent</b>");
+    expect(html).toContain("&lt;b&gt;urgent&lt;/b&gt;");
+    // An ordinary http(s) link is still rendered.
     expect(html).toContain(`href="https://evil.test/login"`);
   });
 
-  // NOTE: an unmatched purpose makes getEmailBodyTemplate return undefined, and
-  // the message is sent anyway with no html part at all.
-  test("still sends when the purpose matches no template", async () => {
-    await sendEmailService({ ...params, purpose: "NoSuchTemplate" } as never);
+  test("refuses to send when the purpose matches no template", async () => {
+    await expect(
+      sendEmailService({ ...params, purpose: "NoSuchTemplate" } as never),
+    ).rejects.toThrow(/No email template/);
 
-    expect(send).toHaveBeenCalledOnce();
-    expect(send.mock.calls[0][0].html).toBeUndefined();
+    expect(send).not.toHaveBeenCalled();
   });
 
   test("sets no from, reply-to or attachments of its own", async () => {
@@ -123,17 +124,30 @@ describe("sendEmailService", () => {
     expect(send.mock.calls[0][0].to).toBe("a@x.test, b@y.test, c@z.test");
   });
 
-  test("resolves with nothing, so the handler answers 200 with an empty body", async () => {
+  test("resolves with nothing when the message went out", async () => {
     await expect(sendEmailService(params as never)).resolves.toBeUndefined();
   });
 
-  // NOTE: this service has no try/catch of its own. It reads as though a
-  // transport failure would surface — but sendAWSEmail catches and logs
-  // everything it throws, so in production this path is never taken.
-  test("would propagate a transport error if the transport ever threw", async () => {
+  test("fails when the transport reports the message was not sent", async () => {
+    send.mockResolvedValueOnce(false);
+
+    await expect(sendEmailService(params as never)).rejects.toThrow(/could not be sent/);
+  });
+
+  test("propagates a transport error too", async () => {
     send.mockRejectedValueOnce(new Error("SES rejected"));
 
     await expect(sendEmailService(params as never)).rejects.toThrow("SES rejected");
+  });
+
+  test("renders the payload it is given rather than the body's data", async () => {
+    await sendEmailService(
+      { ...params, data: { body: "from the body" } } as never,
+      { body: "from the caller", buttonLink: "https://app.example" } as never,
+    );
+
+    expect(send.mock.calls[0][0].html).toContain("from the caller");
+    expect(send.mock.calls[0][0].html).not.toContain("from the body");
   });
 });
 
@@ -274,16 +288,15 @@ describe("validateOtp", () => {
     await expect(validateOtp("123456", "user-1", "survey-1")).resolves.toBe(true);
   });
 
-  // NOTE: nothing consumes the code on success. It keeps working for the rest
-  // of the ten minutes, for anyone who has it, as many times as they like.
-  test("leaves the code in place after a successful check", async () => {
+  test("consumes the code on a successful check", async () => {
     db.otpStore.findUnique.mockResolvedValue(stored());
 
-    await validateOtp("123456", "user-1", "survey-1");
-    await validateOtp("123456", "user-1", "survey-1");
-    await validateOtp("123456", "user-1", "survey-1");
+    await expect(validateOtp("123456", "user-1", "survey-1")).resolves.toBe(true);
 
-    expect(db.otpStore.delete).not.toHaveBeenCalled();
+    expect(db.otpStore.delete).toHaveBeenCalledOnce();
+    expect(db.otpStore.delete.mock.calls[0][0].where).toEqual(
+      db.otpStore.findUnique.mock.calls[0][0].where,
+    );
   });
 
   test("rejects and clears an expired code", async () => {
@@ -306,9 +319,6 @@ describe("validateOtp", () => {
     expect(db.otpStore.delete).not.toHaveBeenCalled();
   });
 
-  // NOTE: a wrong guess costs the attacker nothing — no counter, no lockout, no
-  // invalidation of the live code. A six digit space with a ten minute window
-  // and an unmetered public endpoint is enumerable.
   test("a wrong guess neither clears the code nor records the attempt", async () => {
     db.otpStore.findUnique.mockResolvedValue(null);
 

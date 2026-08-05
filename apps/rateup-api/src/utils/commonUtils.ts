@@ -7,8 +7,18 @@ const getShortUrlId = () => {
   return customAlphabet(nolookalikesSafe, 8)();
 };
 
+const MAX_SHORT_ID_ATTEMPTS = 5;
+
 const shortIdUniqueConstraintErrHandler = async <R>(
   functionToBeHandled: (...args: unknown[]) => R | Promise<R>,
+  ...args: unknown[]
+): Promise<R> => {
+  return shortIdRetry(functionToBeHandled, MAX_SHORT_ID_ATTEMPTS, ...args);
+};
+
+const shortIdRetry = async <R>(
+  functionToBeHandled: (...args: unknown[]) => R | Promise<R>,
+  attemptsLeft: number,
   ...args: unknown[]
 ): Promise<R> => {
   try {
@@ -21,9 +31,12 @@ const shortIdUniqueConstraintErrHandler = async <R>(
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === "P2002" &&
       Array.isArray(target) &&
-      target.includes("shortUrlId")
+      target.includes("shortUrlId") &&
+      attemptsLeft > 1
     ) {
-      return shortIdUniqueConstraintErrHandler(functionToBeHandled);
+      // ...args forwarded: the retry used to re-invoke the wrapped function with
+      // nothing at all, so a short-id collision recreated the row from undefined inputs.
+      return shortIdRetry(functionToBeHandled, attemptsLeft - 1, ...args);
     } else {
       throw err;
     }

@@ -8,9 +8,65 @@ import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+
+/**
+ * File a message we just sent against the contact's ticket.
+ *
+ * Every automated Instagram send funnels through the helpers below, and none of
+ * them used to record what they sent: the reply reached the customer, but the
+ * inbox showed only the customer's half of the conversation. Meta's send
+ * response carries `recipient_id`, which is how a private reply — addressed to a
+ * comment rather than a person — still lands on the right contact.
+ *
+ * Storage failures are logged, not thrown. The message is already delivered;
+ * reporting it as failed would be a worse lie than a missing row.
+ */
+async function recordSentInstagramMessage(
+  igsId: string | undefined,
+  orgId: string,
+  ibaId: string,
+  payload: Record<string, unknown>,
+  responseData: unknown,
+): Promise<void> {
+  const { message_id: messageId, recipient_id: recipientId } =
+    (responseData as { message_id?: string; recipient_id?: string } | undefined) ?? {};
+  const contactId = igsId ?? recipientId;
+
+  if (!contactId) {
+    log.warn(
+      { ibaId, messageId },
+      "[Instagram Messaging] Sent a message with no recipient to file it against",
+    );
+    return;
+  }
+
+  try {
+    await handleWaMessages(
+      "send",
+      payload,
+      contactId,
+      orgId,
+      PlatformType.INSTAGRAM,
+      ibaId,
+      undefined,
+      messageId,
+      undefined,
+      false,
+      null,
+      "AUTOMATED",
+      true,
+    );
+  } catch (error) {
+    log.error(
+      { err: error, igsId: contactId, messageId },
+      "[Instagram Messaging] Message was sent but could not be stored",
+    );
+  }
+}
 
 async function callInstagramMessengerProfileApi(
-  ibaId: string,
   pageAccessToken: string,
   method: "GET" | "POST" | "DELETE",
   data?: Record<string, unknown>,
@@ -38,8 +94,13 @@ export async function sendInstagramPrivateReply(
   commentId: string,
   text: string,
   ibaId: string,
+  orgId: string,
+  /** Known by the automation that triggered this; Meta's response is the fallback. */
+  igsId?: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -52,14 +113,20 @@ export async function sendInstagramPrivateReply(
       throw new Error(`No Facebook Page ID configured for ibaId ${ibaId}`);
     }
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, {
+    const payload = {
       recipient: { comment_id: commentId },
       message: { text },
-    });
+    };
+
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(
       `[Instagram Messaging] Sent private reply to comment ${commentId}: "${text.substring(0, 50)}..."`,
     );
+
+    // No igsId of our own: a private reply is addressed to the comment, so the
+    // contact it belongs to comes from Meta's `recipient_id`.
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     return response.data;
   } catch (error) {
@@ -109,6 +176,8 @@ export async function sendInstagramTextMessage(
       `[Instagram Messaging] Sent text message to igsId ${igsId}: "${text.substring(0, 50)}..."`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending text message to ${igsId}`);
@@ -122,16 +191,13 @@ export async function sendInstagramTextMessage(
 export async function sendInstagramImage(
   igsId: string,
   imageUrl: string,
+  orgId: string,
+  ibaId: string,
   caption?: string,
-  orgId?: string,
-  ibaId?: string,
-): Promise<unknown> {
+): Promise<{ image: unknown; caption?: { sent: boolean; error?: unknown } }> {
   try {
     // Outbound — gate on the conversation limit (inbound is never blocked).
-    if (orgId) await assertWithinConversationLimit(orgId);
-    if (!ibaId) {
-      throw new Error(`No Instagram business account id provided for igsId ${igsId}`);
-    }
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -160,17 +226,23 @@ export async function sendInstagramImage(
 
     log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
 
-    // If caption is provided, send it as a separate text message
-    if (caption) {
-      if (!orgId) {
-        throw new Error(
-          `No organization id provided for Instagram image caption to igsId ${igsId}`,
-        );
-      }
-      await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
+    // The caption goes out as its own message, and files itself when it does.
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
+    if (!caption) {
+      return { image: response.data };
     }
 
-    return response.data;
+    try {
+      await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
+      return { image: response.data, caption: { sent: true } };
+    } catch (captionError) {
+      log.error(
+        { err: captionError },
+        `[Instagram Messaging] Image delivered to ${igsId} but its caption failed`,
+      );
+      return { image: response.data, caption: { sent: false, error: captionError } };
+    }
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending image to ${igsId}`);
     throw error;
@@ -197,6 +269,8 @@ export async function sendInstagramGenericTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -237,6 +311,8 @@ export async function sendInstagramGenericTemplate(
       `[Instagram Messaging] Sent generic template to igsId ${igsId} with ${elements.length} elements`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending generic template to ${igsId}`);
@@ -260,6 +336,8 @@ export async function sendInstagramQuickReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -289,6 +367,8 @@ export async function sendInstagramQuickReply(
       `[Instagram Messaging] Sent quick reply to igsId ${igsId} with ${quickReplies.length} options`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending quick reply to ${igsId}`);
@@ -308,6 +388,8 @@ export async function sendInstagramProductTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -337,6 +419,8 @@ export async function sendInstagramProductTemplate(
       `[Instagram Messaging] Sent product template to igsId ${igsId} for products ${productIds.join(", ")}`,
     );
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending product template to ${igsId}`);
@@ -355,6 +439,8 @@ export async function sendInstagramStoryReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -381,6 +467,8 @@ export async function sendInstagramStoryReply(
     const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`);
+
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     return response.data;
   } catch (error) {
@@ -420,23 +508,15 @@ export async function setInstagramIceBreakers(
       })),
     };
 
-    const response = await callInstagramMessengerProfileApi(
-      ibaId,
-      pageAccessToken,
-      "POST",
-      payload,
-    );
+    const response = await callInstagramMessengerProfileApi(pageAccessToken, "POST", payload);
 
-    const settings = await getWaSettingsByIbaId(ibaId);
-    if (settings) {
-      await updateWaSettingsById(settings.id, {
-        instagramIceBreakers: iceBreakers,
-      });
-    }
+    await updateWaSettingsById(waSettings.id, waSettings.orgId, {
+      instagramIceBreakers: iceBreakers,
+    });
 
     log.info(`[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`);
 
-    return response.data;
+    return response;
   } catch (error) {
     log.error(
       { err: error },
@@ -463,22 +543,35 @@ export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "GET",
-    undefined,
-    {
-      fields: "ice_breakers",
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "GET", undefined, {
+    fields: "ice_breakers",
+  });
 
-  const iceBreakers = response?.ice_breakers ?? [];
-  await updateWaSettingsById(waSettings.id, {
+  const iceBreakers = unwrapMessengerProfileField<{ question: string; payload: string }>(
+    response,
+    "ice_breakers",
+  );
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramIceBreakers: iceBreakers,
   });
 
-  return response;
+  return { ice_breakers: iceBreakers };
+}
+
+function unwrapMessengerProfileField<T>(response: unknown, field: string): T[] {
+  const body = response as
+    | { data?: Array<Record<string, unknown>> | Record<string, unknown>; [k: string]: unknown }
+    | null
+    | undefined;
+  if (!body) return [];
+
+  const topLevel = body[field];
+  if (Array.isArray(topLevel)) return topLevel as T[];
+
+  const data = body.data;
+  const first = Array.isArray(data) ? data[0] : data;
+  const nested = (first as Record<string, unknown> | undefined)?.[field];
+  return Array.isArray(nested) ? (nested as T[]) : [];
 }
 
 export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
@@ -492,10 +585,10 @@ export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "DELETE", {
     fields: ["ice_breakers"],
   });
-  await updateWaSettingsById(waSettings.id, {
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramIceBreakers: [],
   });
   return response;
@@ -524,11 +617,11 @@ export async function setInstagramPersistentMenu(
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "POST", {
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "POST", {
     persistent_menu: menus,
   });
 
-  await updateWaSettingsById(waSettings.id, {
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramPersistentMenu: menus,
   });
 
@@ -552,22 +645,19 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "GET",
-    undefined,
-    {
-      fields: "persistent_menu",
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "GET", undefined, {
+    fields: "persistent_menu",
+  });
 
-  const persistentMenu = response?.persistent_menu ?? [];
-  await updateWaSettingsById(waSettings.id, {
+  const persistentMenu = unwrapMessengerProfileField<InstagramPersistentMenuEntry>(
+    response,
+    "persistent_menu",
+  );
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramPersistentMenu: persistentMenu,
   });
 
-  return response;
+  return { persistent_menu: persistentMenu };
 }
 
 export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string) {
@@ -581,10 +671,10 @@ export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string
   if (!pageAccessToken) {
     throw new Error(`No Instagram page access token configured for ibaId ${ibaId}`);
   }
-  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
+  const response = await callInstagramMessengerProfileApi(pageAccessToken, "DELETE", {
     fields: ["persistent_menu"],
   });
-  await updateWaSettingsById(waSettings.id, {
+  await updateWaSettingsById(waSettings.id, waSettings.orgId, {
     instagramPersistentMenu: [],
   });
   return response;
@@ -600,6 +690,8 @@ export async function sendInstagramVideo(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -627,6 +719,8 @@ export async function sendInstagramVideo(
 
     log.info(`[Instagram Messaging] Sent video to igsId ${igsId}: ${videoUrl}`);
 
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
+
     return response.data;
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending video to ${igsId}`);
@@ -644,6 +738,8 @@ export async function sendInstagramFile(
   ibaId: string,
 ): Promise<unknown> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -670,6 +766,8 @@ export async function sendInstagramFile(
     const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent file to igsId ${igsId}: ${fileUrl}`);
+
+    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     return response.data;
   } catch (error) {
@@ -708,6 +806,34 @@ export async function getInstagramMediaPosts(ibaId: string): Promise<InstagramMe
   );
 
   return (response.data?.data as InstagramMediaItem[]) ?? [];
+}
+
+/**
+ * The public instagram.com URL for one media item.
+ *
+ * A comment webhook only carries the media's numeric id, and there is no way to
+ * build a permalink from it — instagram.com/p/ URLs use an opaque shortcode — so
+ * the link has to be read back from Meta. Permalinks never change, hence the
+ * long cache the callers put in front of this.
+ */
+export async function getInstagramMediaPermalink(
+  mediaId: string,
+  ibaId: string,
+): Promise<string | null> {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+  if (!waSettings?.pageAccessToken) {
+    throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+  }
+
+  const response = await callMetaApi(
+    `/${mediaId}?fields=permalink,media_type`,
+    "GET",
+    waSettings.pageAccessToken,
+  );
+
+  // Deleted media, and media on an account the token no longer covers, answer
+  // 200 with no permalink rather than erroring.
+  return (response.data?.permalink as string | undefined) ?? null;
 }
 
 export async function getInstagramStories(ibaId: string): Promise<InstagramStoryItem[]> {

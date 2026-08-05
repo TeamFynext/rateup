@@ -7,7 +7,6 @@ import {
   getRegisteredWebhooksHandler,
   registerWebhookByTopicHandler,
   registerWebhookHandler,
-  testShopifyCronActionFnHandler,
   updateShopifyIntegrationByShopHandler,
   getFulfillmentOrdersHandler,
   createFulfillmentHandler,
@@ -62,7 +61,6 @@ export async function shopifyRoutes(server: FastifyInstance) {
     },
     deleteIntegrationByShopHandler,
   );
-  server.get("/test", testShopifyCronActionFnHandler);
   server.get("/orders/:id/fulfillment-orders", getFulfillmentOrdersHandler);
   server.post("/orders/fulfill", createFulfillmentHandler);
 }

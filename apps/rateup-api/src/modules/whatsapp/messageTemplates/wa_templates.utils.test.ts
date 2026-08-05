@@ -81,10 +81,6 @@ describe("generateTemplate - the body", () => {
     expect(result.category).toBe(WaTemplateCategory.UTILITY);
   });
 
-  // NOTE: pins current behaviour. An authentication template asks Meta to generate
-  // the body itself, so the text the user typed is dropped on the floor rather than
-  // refused. Both branches of the outer if produce the same component, which is why
-  // the body text never survives. See issues.txt 14.8.
   test("silently drops the body text of an authentication template", () => {
     const result = generateTemplate(
       input({ category: WaTemplateCategory.AUTHENTICATION, body: "Your code is {{1}}" }),
@@ -186,10 +182,6 @@ describe("generateTemplate - headers, footers and buttons", () => {
     });
   });
 
-  // NOTE: pins current behaviour. Buttons are pushed before the header, so the
-  // component array is body, buttons, header, footer — not the order Meta documents
-  // its templates in. Meta accepts it today; noted because the next person reading
-  // a stored template will not expect it. See issues.txt 14.8.
   test("puts the buttons ahead of the header in the component list", () => {
     const result = generateTemplate(
       input({
@@ -263,14 +255,15 @@ describe("generateTemplate - carousels", () => {
     ]);
   });
 
-  // NOTE: pins current behaviour. `card.buttons.length` is read with no optional
-  // chaining, unlike every other card field, so a carousel card saved without a
-  // buttons array throws instead of producing a button-less card.
-  // See issues.txt 14.8.
-  test("throws on a carousel card that has no buttons array", () => {
-    expect(() => generateTemplate(input({ mediaCarousel: [{ header: "h", body: "b" }] }))).toThrow(
-      TypeError,
+  test("produces a button-less card when the card has no buttons array", () => {
+    const result: any = generateTemplate(input({ mediaCarousel: [{ header: "h", body: "b" }] }));
+
+    const carousel = result.components.find(
+      (c: any) => String(c.type).toUpperCase() === "CAROUSEL",
     );
+    expect(
+      carousel.cards[0].components.some((c: any) => String(c.type).toUpperCase() === "BUTTONS"),
+    ).toBe(false);
   });
 });
 
@@ -351,10 +344,6 @@ describe("getTemplateInMessageFormat", () => {
     ]);
   });
 
-  // NOTE: pins current behaviour. getHeaderObject's switch has no default, so a
-  // PRODUCT header — a format this codebase does create — yields undefined, and
-  // that undefined is left in the components array sent to Meta.
-  // See issues.txt 14.9.
   test("leaves an undefined hole for a header format it cannot render", () => {
     const result = getTemplateInMessageFormat(
       messageBody([{ type: "HEADER", format: "PRODUCT" }]),
@@ -364,8 +353,6 @@ describe("getTemplateInMessageFormat", () => {
     expect(result.template.components).toEqual([undefined]);
   });
 
-  // NOTE: same shape — an unrecognised component type falls off the end of the
-  // outer switch and contributes undefined. See issues.txt 14.9.
   test("leaves an undefined hole for a component type it does not know", () => {
     const result = getTemplateInMessageFormat(messageBody([{ type: "CAROUSEL" }]), null);
 
@@ -405,21 +392,13 @@ describe("getTemplateQuery", () => {
     );
   });
 
-  // NOTE: pins current behaviour, and this one means the function has never worked.
-  // The parameter list is spelled `paramteters`, so what Meta receives is a header
-  // component carrying no parameters at all. Nothing in the repo calls
-  // getTemplateQuery today — sendTemplateToUserCore builds its own components — so
-  // this is latent. See issues.txt 14.9.
-  test("misspells the parameter list, so the link it resolved is not sent", async () => {
+  test("sends the link it resolved, under the name Meta expects", async () => {
     const result: any = await getTemplateQuery("tpl-1", "org-1", { header: "https://cdn/i.jpg" });
 
-    expect(result.components[0]).toHaveProperty("paramteters");
-    expect(result.components[0]).not.toHaveProperty("parameters");
+    expect(result.components[0]).toHaveProperty("parameters");
+    expect(result.components[0]).not.toHaveProperty("paramteters");
   });
 
-  // NOTE: the HEADER case has no break after its inner switch, so a text header
-  // falls through to `default: return null` and leaves a null in the array.
-  // See issues.txt 14.9.
   test("leaves a null for a header format the inner switch does not match", async () => {
     getTemplateByIdMock.mockResolvedValue({
       data: { name: "n", language: "en", components: [{ type: "HEADER", format: "TEXT" }] },
@@ -485,9 +464,6 @@ describe("verifyTemplateSubscriptionLimit", () => {
     expect(rep.code).toHaveBeenCalledWith(403);
   });
 
-  // NOTE: pins current behaviour, identical to issues.txt 11.7 and the same shape
-  // as 2.2 — comparing against an undefined max is always false, so a plan that
-  // states no template count grants unlimited templates. See issues.txt 14.7.
   test("enforces no limit when the plan does not state one", async () => {
     templateCountMock.mockResolvedValue(9999);
     const rep = reply();
@@ -497,17 +473,14 @@ describe("verifyTemplateSubscriptionLimit", () => {
     expect(rep.code).not.toHaveBeenCalled();
   });
 
-  // NOTE: the count query is inside the try, so a database failure is reported to
-  // the user as a 403 carrying the raw error text. See issues.txt 14.7.
-  test("reports a database failure to the user as a refusal", async () => {
+  test("lets a database failure surface rather than calling it a refusal", async () => {
     templateCountMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
     const rep = reply();
 
-    await verifyTemplateSubscriptionLimit(request(), rep);
+    await expect(verifyTemplateSubscriptionLimit(request(), rep)).rejects.toThrow(
+      "connection terminated unexpectedly",
+    );
 
-    expect(rep.send.mock.calls[0][0]).toEqual({
-      message: "connection terminated unexpectedly",
-      displayMessageInClient: true,
-    });
+    expect(rep.code).not.toHaveBeenCalled();
   });
 });

@@ -4,18 +4,20 @@ import { generateOTP } from "./email.util.js";
 import { GenerateOtpInput, SendEmailInput, validateOtpInput } from "./email.schema.js";
 import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
 
+function reportFailure(reply: FastifyReply, error: unknown, context: string) {
+  log.error({ err: error }, context);
+  reply.code(500).send({ error: "Something Went Wrong! Try again." });
+}
+
 export async function sendEmailHandler(
   request: FastifyRequest<{ Body: SendEmailInput }>,
   reply: FastifyReply,
 ) {
   try {
-    console.log(request.body);
     const res = await sendEmailService(request.body);
     reply.code(200).send(res);
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Something Went Wrong! Try again.";
-    log.error({ err: e }, message);
-    reply.code(500).send({ error: message });
+    reportFailure(reply, e, "Sending an email failed");
   }
 }
 
@@ -27,13 +29,10 @@ export async function sendOTPEmailHandler(
     const otp = generateOTP(6);
     const { userId, surveyId, data } = request.body;
     await storeOtp(otp, userId, surveyId);
-    data.otp = otp;
-    const res = await sendEmailService(request.body);
+    const res = await sendEmailService(request.body, { ...data, otp });
     reply.code(200).send(res);
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Something Went Wrong! Try again.";
-    log.error({ err: e }, message);
-    reply.code(500).send({ error: message });
+    reportFailure(reply, e, "Sending an OTP email failed");
   }
 }
 
@@ -46,8 +45,6 @@ export async function validateOTPHandler(
     const isValid = await validateOtp(otp, userId, surveyId);
     reply.code(200).send({ isValid });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Something Went Wrong! Try again.";
-    log.error({ err: e }, message);
-    reply.code(500).send({ error: message });
+    reportFailure(reply, e, "Validating an OTP failed");
   }
 }

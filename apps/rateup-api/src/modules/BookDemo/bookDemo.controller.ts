@@ -43,7 +43,7 @@ Work Email: ${workEmail}
       text: "",
       subject: "RateUp - Demo Booked Successfully",
       html: `
-      
+
 <!DOCTYPE html>
 <html lang="en">
   <head>

@@ -32,23 +32,44 @@ export async function getAutomatedRepliesMessagIdHandler(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
 ) {
-  const automatedReplies = await getAutomatedRepliesMessagId(req.params.id, req.user.orgId);
-  reply.send(automatedReplies);
+  try {
+    const automatedReplies = await getAutomatedRepliesMessagId(req.params.id, req.user.orgId);
+    reply.send(automatedReplies);
+  } catch (error) {
+    log.error({ err: error }, "Error reading automated reply messages");
+    reply.code(500).send(error instanceof Error ? error.message : "error reading messages");
+  }
 }
 
 export async function getAllAutomatedRepliesByOrgIdHandler(
   req: FastifyRequest<{ Params: ByTeamIdParams }>,
   reply: FastifyReply,
 ) {
-  const automatedReplies = await getAutomatedRepliesByOrgId(req.user.orgId);
-  reply.send(automatedReplies);
+  try {
+    const automatedReplies = await getAutomatedRepliesByOrgId(req.user.orgId);
+    reply.send(automatedReplies);
+  } catch (error) {
+    log.error({ err: error }, "Error listing automated replies");
+    reply.code(500).send(error instanceof Error ? error.message : "error listing automatedReplies");
+  }
 }
 export async function getAutomatedRepliesByIdHandler(
   req: FastifyRequest<{ Params: ByWaAutomatedReplyIdParams }>,
   reply: FastifyReply,
 ) {
-  const automatedReply = await getAutomatedReplyById(req.params.waAutomatedReplyId);
-  reply.send(automatedReply);
+  try {
+    const automatedReply = await getAutomatedReplyById(
+      req.params.waAutomatedReplyId,
+      req.user.orgId,
+    );
+    if (!automatedReply) {
+      return reply.code(404).send("Automated reply not found");
+    }
+    reply.send(automatedReply);
+  } catch (error) {
+    log.error({ err: error }, "Error reading automated reply");
+    reply.code(500).send(error instanceof Error ? error.message : "error reading automatedReply");
+  }
 }
 
 export async function createAutomatedReplyHandler(
@@ -109,6 +130,8 @@ export async function updateAutomatedReplyHandler(
   } catch (error) {
     if (hasErrorCode(error, "P2002")) {
       reply.code(409).send("Some specified keywords already exist for this organization.");
+    } else if (error instanceof Error && error.message === "Automated reply not found") {
+      reply.code(404).send(error.message);
     } else {
       log.error({ err: error }, "Error updating automated reply");
       reply
@@ -123,12 +146,23 @@ export async function deleteAutomatedReplyHandler(
   reply: FastifyReply,
 ) {
   const automationId = req.params.waAutomatedReplyId;
-  const automatedReply = await deleteAutomatedReply(automationId);
-  const keys = await connection.keys(`round_robin_index:*:${automationId}:*`);
-  if (keys.length) {
-    await connection.del(...keys);
+  try {
+    const automatedReply = await deleteAutomatedReply(automationId, req.user.orgId);
+    const keys = await connection.keys(`round_robin_index:*:${automationId}:*`);
+    if (keys.length) {
+      await connection.del(...keys);
+    }
+    reply.send(automatedReply);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Automated reply not found") {
+      reply.code(404).send(error.message);
+    } else {
+      log.error({ err: error }, "Error deleting automated reply");
+      reply
+        .code(500)
+        .send(error instanceof Error ? error.message : "error in deleting automatedReply");
+    }
   }
-  reply.send(automatedReply);
 }
 
 export async function initiateAutomatedReplyByIdHandler(

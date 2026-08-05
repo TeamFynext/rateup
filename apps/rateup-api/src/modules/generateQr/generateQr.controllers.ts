@@ -4,6 +4,8 @@ import {
   updateGenerateQrRecordReqBodyType,
 } from "./generateQr.schema.js";
 import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
+import connection from "../../utils/redisConnection.js";
+import { log } from "../../utils/logger.js";
 import {
   createGenerateQrRecordInDB,
   deleteGenerateQrRecordInDB,
@@ -46,6 +48,13 @@ async function getPublicGenerateQrRecordWithShortId(
   rep: FastifyReply,
 ) {
   const generateQrRecordWithShortUrlId = await getPublicGenerateQrRecordWithShortIdFromDB(req);
+  if (!generateQrRecordWithShortUrlId) {
+    rep.code(404).send({
+      success: false,
+      message: "Generate Qr Record with requested shortId not found.",
+    });
+    return;
+  }
   rep.code(200).send(generateQrRecordWithShortUrlId);
 }
 
@@ -70,11 +79,42 @@ async function deleteGenerateQrRecordWithShortId(
   rep.code(200).send({ success: true, message: "Deleted QR sucessfully." });
 }
 
+async function alreadyCountedToday(ip: string, shortUrlId: string) {
+  try {
+    const key = `generateQr:scan:${shortUrlId}:${ip}`;
+    const first = await connection.set(key, "1", "EX", 86_400, "NX");
+    return first === null;
+  } catch (error) {
+    log.error({ err: error, shortUrlId }, "QR scan dedup check failed; counting the scan");
+    return false;
+  }
+}
+
 async function incrementGenerateQrNoOfScans(
   req: FastifyRequest<{ Params: { shortUrlId: string } }>,
   rep: FastifyReply,
 ) {
-  await incrementNoOfScansInDB(req);
+  const { shortUrlId } = req.params;
+
+  if (await alreadyCountedToday(req.ip || "unknown", shortUrlId)) {
+    // Answered the same way as a counted scan: whether this address has already
+    // been seen today is not the caller's business, and a scanner has nothing
+    // to do with the answer either way.
+    rep.code(200).send({
+      success: true,
+      message: "Successfully incremented number of scan value.",
+    });
+    return;
+  }
+
+  if (!(await incrementNoOfScansInDB(req))) {
+    rep.code(404).send({
+      success: false,
+      message: "Generate Qr Record with requested shortId not found.",
+    });
+    return;
+  }
+
   rep.code(200).send({
     success: true,
     message: "Successfully incremented number of scan value.",

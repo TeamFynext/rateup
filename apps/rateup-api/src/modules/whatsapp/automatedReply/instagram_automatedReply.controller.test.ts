@@ -161,8 +161,6 @@ describe("createInstagramAutomationHandler", () => {
       name: "Comment reply",
       matchData: { keywords: ["price"] },
       whatsappSettingsPhoneId: "phone-1",
-      sendOnceIn24Hours: true,
-      isActive: true,
     };
 
     await createInstagramAutomationHandler(makeRequest({ body }), reply);

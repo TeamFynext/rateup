@@ -86,11 +86,30 @@ export async function getSubscribedApps(wabaId: string, accessToken: string) {
   return res.data;
 }
 
+/**
+ * The WhatsApp two-step verification PIN sent when registering a number. It is what
+ * stops the number being re-registered on someone else's WABA, so the shared "123456"
+ * default is weak — set WA_REGISTRATION_PIN per environment.
+ *
+ * The default is kept deliberately: numbers already registered hold whatever PIN they
+ * were registered with until it is changed through Meta's API, so failing hard here
+ * would break registration without improving any existing number.
+ */
+const DEFAULT_WA_REGISTRATION_PIN = "123456";
+
 export async function registerPhoneNumber(wa_phone_id: string, accessToken: string) {
   let url = `/${wa_phone_id}/register`;
+  const pin = process.env.WA_REGISTRATION_PIN || DEFAULT_WA_REGISTRATION_PIN;
+  if (pin === DEFAULT_WA_REGISTRATION_PIN) {
+    log.warn(
+      { wa_phone_id },
+      "Registering a WhatsApp number with the default two-step verification PIN. " +
+        "Set WA_REGISTRATION_PIN to use a real one.",
+    );
+  }
   const res = await callMetaApi(url, "POST", accessToken, {
     messaging_product: "whatsapp",
-    pin: "123456", // TODO
+    pin,
   });
   return res.data;
 }

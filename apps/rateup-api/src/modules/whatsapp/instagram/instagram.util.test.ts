@@ -1,7 +1,12 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
 import { describe, expect, test } from "vitest";
 
 import { InstagramEvent } from "../../../types/enums.js";
-import { getInstagramWebhookEvent } from "./instagram.util.js";
+import { getInstagramWebhookEvent, resolveCommentTimestampMs } from "./instagram.util.js";
+
+// Only for the expected values below — instagram.util.ts extends utc itself.
+dayjs.extend(utc);
 
 /** One entry in the `messaging` array Meta posts to the Instagram webhook. */
 function messaging(overrides: Record<string, unknown> = {}): any {
@@ -26,7 +31,9 @@ describe("getInstagramWebhookEvent - the events it recognises", () => {
     );
   });
 
-  test("classifies an ad or shop click as a referral", () => {
+  // A referral is its own event only when it arrived with nothing else — see the
+  // "a referral that arrives with text" case below.
+  test("classifies an ad or shop click with no message of its own as a referral", () => {
     const event = getInstagramWebhookEvent(
       messaging({ message: { mid: "mid-1", referral: { ref: "promo", source: "ADS" } } }),
     );
@@ -88,25 +95,24 @@ describe("getInstagramWebhookEvent - what it declines to classify", () => {
     expect(event).toBe(InstagramEvent.MESSAGE);
   });
 
-  // NOTE: pins current behaviour. There is no is_echo branch here, unlike the
-  // Facebook equivalent. Echoes are caught further down in handleInstagramMessages
-  // and handleInstagramStoryMentionRule — but NOT in the reaction, postback or
-  // referral handlers, so an echo carrying any of those is stored as if the
-  // customer had sent it. See issues.txt 12.6.
-  test("classifies an echo of the business's own message as a message", () => {
+  test("declines an echo of the business's own message", () => {
     const event = getInstagramWebhookEvent(
       messaging({ message: { mid: "mid-1", text: "hi", is_echo: true } }),
     );
 
-    expect(event).toBe(InstagramEvent.MESSAGE);
+    expect(event).toBeNull();
   });
 
-  // NOTE: pins current behaviour. Unlike getFacebookWebhookEvent, there is no
-  // try/catch, so a malformed entry throws out of the classification step — and
-  // handleInstagramWebhook calls this inside its unguarded loop, so the throw takes
-  // the rest of the batch with it. See issues.txt 12.2.
-  test("throws rather than returning nothing when handed nothing at all", () => {
-    expect(() => getInstagramWebhookEvent(undefined as any)).toThrow(TypeError);
+  test("declines an echo even when it carries a postback", () => {
+    const event = getInstagramWebhookEvent(
+      messaging({ message: { mid: "mid-1", is_echo: true }, postback: { payload: "TRACK" } }),
+    );
+
+    expect(event).toBeNull();
+  });
+
+  test("reports nothing rather than throwing when handed nothing at all", () => {
+    expect(getInstagramWebhookEvent(undefined as any)).toBeNull();
   });
 });
 
@@ -119,19 +125,28 @@ describe("getInstagramWebhookEvent - which check wins when several could match",
     expect(event).toBe(InstagramEvent.POSTBACK);
   });
 
-  // NOTE: pins current behaviour. A customer who taps an ad and types a message
-  // sends one event carrying both. The referral check comes first, so it is routed
-  // to handleInstagramReferral — which stores { type, referral, timestamp, sender }
-  // and never looks at message.text. The customer's actual words are dropped from
-  // the inbox and from the automated-reply match. See issues.txt 12.5.
-  test("a referral beats the message it arrived with, so the text is lost", () => {
+  test("a referral that arrives with text is a message, so the text survives", () => {
     const event = getInstagramWebhookEvent(
       messaging({
         message: { mid: "mid-1", text: "Is this still available?", referral: { ref: "promo" } },
       }),
     );
 
-    expect(event).toBe(InstagramEvent.REFERRAL);
+    expect(event).toBe(InstagramEvent.MESSAGE);
+  });
+
+  test("a referral that arrives with an attachment is also a message", () => {
+    const event = getInstagramWebhookEvent(
+      messaging({
+        message: {
+          mid: "mid-1",
+          referral: { ref: "promo" },
+          attachments: [{ type: "image", payload: { url: "u" } }],
+        },
+      }),
+    );
+
+    expect(event).toBe(InstagramEvent.MESSAGE);
   });
 
   test("a story mention beats the plain-message classification", () => {
@@ -149,5 +164,50 @@ describe("getInstagramWebhookEvent - which check wins when several could match",
     );
 
     expect(event).toBe(InstagramEvent.STORY_MENTION);
+  });
+});
+
+describe("resolveCommentTimestampMs", () => {
+  test("converts the comment's own seconds timestamp to milliseconds", () => {
+    expect(resolveCommentTimestampMs(1_700_000_000, 1_785_917_090)).toBe(1_700_000_000_000);
+  });
+
+  test("falls back to the entry time when the comment carries none", () => {
+    // The shape Meta actually posts: no created_time on the comment value.
+    expect(resolveCommentTimestampMs(undefined, 1_785_917_090)).toBe(1_785_917_090_000);
+  });
+
+  test("leaves an entry time that is already in milliseconds alone", () => {
+    expect(resolveCommentTimestampMs(undefined, 1_785_917_090_000)).toBe(1_785_917_090_000);
+  });
+
+  test("falls back to now when neither time is usable", () => {
+    const before = Date.now();
+    const resolved = resolveCommentTimestampMs(undefined, undefined);
+
+    expect(resolved).toBeGreaterThanOrEqual(before);
+    expect(resolved).toBeLessThanOrEqual(Date.now());
+  });
+
+  test("ignores a non-finite or non-positive time rather than producing an invalid date", () => {
+    expect(resolveCommentTimestampMs(NaN, 1_785_917_090)).toBe(1_785_917_090_000);
+    expect(resolveCommentTimestampMs(0, 1_785_917_090)).toBe(1_785_917_090_000);
+  });
+
+  // Graph API reads (as opposed to webhook deliveries) return created_time as an
+  // ISO string, which is why dayjs parses rather than arithmetic on a number.
+  test("parses the ISO created_time a Graph API read returns", () => {
+    expect(resolveCommentTimestampMs("2026-08-05T13:34:50+0000")).toBe(
+      dayjs.utc("2026-08-05T13:34:50Z").valueOf(),
+    );
+  });
+
+  test("reads a numeric string as an epoch, not a year", () => {
+    expect(resolveCommentTimestampMs("1785917090")).toBe(1_785_917_090_000);
+  });
+
+  test("skips a string that is not a date at all", () => {
+    expect(resolveCommentTimestampMs("not-a-date", 1_785_917_090)).toBe(1_785_917_090_000);
+    expect(resolveCommentTimestampMs("", 1_785_917_090)).toBe(1_785_917_090_000);
   });
 });

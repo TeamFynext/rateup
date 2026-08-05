@@ -105,7 +105,10 @@ export type SkillBody = z.infer<typeof skillBodySchema>;
 export const connectorBodySchema = z.object({
   name: z.string(),
   description: z.string(),
-  base_url: z.string(),
+  base_url: z
+    .url()
+    .max(2048)
+    .refine((value) => value.startsWith("https://"), { error: "base_url must be https" }),
   auth_type: z.enum(["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"]),
   requires_certificate: z.boolean().optional(),
 });

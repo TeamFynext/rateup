@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { EMAIL_PURPOSES } from "./email.util.js";
 
 const sendEmailSchema = z.object({
   toEmail: z.string(),
   subject: z.string(),
-  purpose: z.string(),
+  purpose: z.enum(EMAIL_PURPOSES),
   text: z.string(),
   data: z.any(),
 });

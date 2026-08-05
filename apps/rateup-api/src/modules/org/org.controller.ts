@@ -32,6 +32,7 @@ import { getWebhookSecret } from "../../utils/webhook.js";
 import { getUserByEmail } from "../user/user.service.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 import { errorMessage } from "../../utils/commonUtils.js";
+import { isRootOrg } from "../../utils/auth.js";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -202,11 +203,38 @@ export async function deleteOrgHandler(
   }>,
   reply: FastifyReply,
 ) {
+  const sessionOrgId = request.user?.orgId;
+  if (!sessionOrgId) {
+    reply.code(401).send({ success: false, message: "Not authorized" });
+    return;
+  }
+  if (request.params.orgId !== sessionOrgId) {
+    reply.code(403).send({
+      success: false,
+      message: "You can only delete your own organization",
+    });
+    return;
+  }
+  await runDeleteOrg(sessionOrgId, reply);
+}
+
+// The platform-operator twin, behind assertRootOrg — this one is meant to name
+// an arbitrary organisation.
+export async function deleteOrgAdminHandler(
+  request: FastifyRequest<{
+    Params: { orgId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  await runDeleteOrg(request.params.orgId, reply);
+}
+
+async function runDeleteOrg(orgId: string, reply: FastifyReply) {
   try {
-    const deleteOrganization = await deleteOrg(request.params.orgId);
+    const deleteOrganization = await deleteOrg(orgId);
     reply.code(200).send(deleteOrganization);
   } catch (e) {
-    console.error(e);
+    log.error({ err: e, orgId }, "Failed to delete org");
     reply.code(500).send({ success: false, message: e instanceof Error ? e.message : String(e) });
   }
 }
@@ -216,11 +244,22 @@ export async function pauseOrgHandler(
   reply: FastifyReply,
 ) {
   try {
-    const orgId = request.params.id;
-    const res = await pauseOrg(orgId, request.body);
+    const sessionOrgId = request.user?.orgId;
+    if (!sessionOrgId) {
+      reply.code(401).send({ success: false, message: "Not authorized" });
+      return;
+    }
+    if (request.params.id !== sessionOrgId && !isRootOrg(request)) {
+      reply.code(403).send({
+        success: false,
+        message: "You can only pause your own organization",
+      });
+      return;
+    }
+    const res = await pauseOrg(request.params.id, request.body);
     reply.code(200).send(res);
   } catch (e) {
-    console.error(e);
+    log.error({ err: e, orgId: request.params.id }, "Failed to pause org");
     reply.code(500).send(e);
   }
 }

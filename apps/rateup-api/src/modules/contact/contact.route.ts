@@ -1,3 +1,4 @@
+import type { ContactCore } from "./contact.schema.js";
 import { FastifyInstance } from "fastify";
 import {
   contactCoreSchema,
@@ -58,7 +59,7 @@ export async function contactRoutes(server: FastifyInstance) {
     throwFileSizeLimit: true,
   });
 
-  server.post(
+  server.post<{ Body: ContactCore }>(
     "/",
     {
       preHandler: [

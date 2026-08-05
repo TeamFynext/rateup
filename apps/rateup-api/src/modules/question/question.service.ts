@@ -14,7 +14,7 @@ export async function createQuestion(surveyId: string, input: CreateQuestionInpu
 
   // 2. Determine position of new question
   let { position, ...rest } = input;
-  if (!position) {
+  if (position === undefined) {
     position = questions.length;
   }
   if (position > questions.length || position < 0) {
@@ -77,13 +77,13 @@ export async function deleteQuestionById(surveyId: string, id: string) {
     data: PrismaJson.PWaFlowLogicJumps,
     questionIdToRemove: string,
   ) {
-    // Iterate through each key in the object
+    if (!data || typeof data !== "object") return data;
     for (const key in data) {
-      if (data.hasOwnProperty(key)) {
+      if (Object.hasOwn(data, key) && Array.isArray(data[key])) {
         // Filter out the objects where the questionId matches the one to remove
         data[key] = data[key].filter(
           (item) =>
-            !item.conditions.some((condition) => condition.questionId === questionIdToRemove),
+            !item?.conditions?.some?.((condition) => condition.questionId === questionIdToRemove),
         );
       }
     }
@@ -101,11 +101,37 @@ export async function deleteQuestionById(surveyId: string, id: string) {
   }
 }
 
+/** Raised when a reorder is not a permutation of the survey's questions. */
+export class QuestionOrderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "QuestionOrderError";
+  }
+}
+
 export async function reorderQuestions(surveyId: string, newOrder: Array<string>) {
   const questions = await getQuestionsBySurveyId(surveyId);
-  let orderedQuestions = newOrder.map((id) =>
-    questions.find((q) => q.id === id),
-  ) as Array<Question>;
+  const byId = new Map(questions.map((q) => [q.id, q]));
+
+  if (new Set(newOrder).size !== newOrder.length) {
+    throw new QuestionOrderError("The new order repeats a question id");
+  }
+  if (newOrder.length !== questions.length) {
+    throw new QuestionOrderError(
+      `The new order must name all ${questions.length} questions; it named ${newOrder.length}`,
+    );
+  }
+
+  const orderedQuestions: Array<Question> = [];
+  for (const id of newOrder) {
+    const question = byId.get(id);
+    if (!question) {
+      throw new QuestionOrderError(
+        `The new order names a question this survey does not have: ${id}`,
+      );
+    }
+    orderedQuestions.push(question);
+  }
 
   await updateQuestionsOnSurvey(surveyId, orderedQuestions);
   await updateSurveyVariables(surveyId, orderedQuestions);
@@ -144,30 +170,19 @@ export async function updateQuestion(
  * @param questions
  */
 export async function updateQuestionsOnSurvey(surveyId: string, questions: Array<Question>) {
-  let surveyQns = await prisma.survey.update({
+  const enablesTickets = questions.some(
+    (question) => question.ticketIssue !== undefined && question.ticketIssue !== null,
+  );
+
+  await prisma.survey.update({
     where: {
       id: surveyId,
     },
     data: {
       questions,
+      ...(enablesTickets ? { enableTickets: true } : {}),
     },
   });
-
-  if (surveyQns) {
-    for (const question of questions) {
-      if (question.ticketIssue !== undefined) {
-        await prisma.survey.update({
-          where: {
-            id: surveyId,
-          },
-          data: {
-            enableTickets: true,
-          },
-        });
-        break;
-      }
-    }
-  }
 }
 export async function updateLogicJump(screenId: string, surveyId: string) {
   const flow = await prisma.waFlow.findFirst({
@@ -178,7 +193,7 @@ export async function updateLogicJump(screenId: string, surveyId: string) {
   if (!flow) {
     throw new Error(`Flow not found for surveyId: ${surveyId}`);
   }
-  let data = flow.logicJumps;
+  let data = flow.logicJumps && typeof flow.logicJumps === "object" ? flow.logicJumps : {};
   delete data[screenId];
   await prisma.waFlow.update({
     where: {
@@ -195,9 +210,19 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
   const buffer = await fileBody.toBuffer();
   const allowedEmails: string[] = [];
 
-  const processEmail = (row: Record<string, unknown>) => {
-    if (!emailPattern.test(String(row?.email ?? ""))) {
-      throw new Error("Invalid Email");
+  const rejected: Array<{ row: number; value: string }> = [];
+  let rowsSeen = 0;
+  let sawEmailColumn = false;
+
+  const processEmail = (row: Record<string, unknown>, index: number) => {
+    rowsSeen++;
+    if (row && Object.hasOwn(row, "email")) sawEmailColumn = true;
+    const value = String(row?.email ?? "");
+    if (!emailPattern.test(value)) {
+      // +2: one for the header line, one because a spreadsheet's first data row
+      // is row 2 to the person looking at it.
+      if (rejected.length < 20) rejected.push({ row: index + 2, value });
+      return;
     }
     allowedEmails.push(String(row.email));
   };
@@ -218,6 +243,16 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
     data.forEach(processEmail);
   }
 
+  // Only meaningful once there is a row to look at: a header-only file has no
+  // rows at all and is "no email IDs found", not "no email column".
+  if (rowsSeen > 0 && !sawEmailColumn) {
+    throw new Error("The file has no 'email' column");
+  }
+  if (rejected.length) {
+    const detail = rejected.map((r) => `row ${r.row} (${r.value || "empty"})`).join(", ");
+    const more = rejected.length === 20 ? ", and more" : "";
+    throw new Error(`Invalid email addresses: ${detail}${more}`);
+  }
   if (allowedEmails.length === 0) {
     throw new Error("No email IDs found");
   }

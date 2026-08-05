@@ -25,6 +25,26 @@ export function getSpreadsheetFilename(basename: string, format: SpreadsheetExpo
   return `${basename}.${format}`;
 }
 
+export function toCsv(rows: Array<Array<string | number | null | undefined>>): string {
+  return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function csvCell(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+
+  let text = String(value);
+
+  if (/^[=+\-@\t\r]/.test(text)) {
+    text = `'${text}`;
+  }
+
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+
+  return text;
+}
+
 // --- Import (read) side ---
 
 export type SpreadsheetInputFormat = "csv" | "xlsx" | "ods";

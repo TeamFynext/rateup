@@ -122,8 +122,8 @@ async function deleteGenerateQrRecordInDB(
 
 async function incrementNoOfScansInDB(
   req: FastifyRequest<{ Params: GetGenerateQrRecordWithShortIdParams }>,
-) {
-  await prisma.generateQr.update({
+): Promise<boolean> {
+  const { count } = await prisma.generateQr.updateMany({
     where: {
       shortUrlId: req.params.shortUrlId,
     },
@@ -133,6 +133,7 @@ async function incrementNoOfScansInDB(
       },
     },
   });
+  return count > 0;
 }
 
 export {

@@ -8,7 +8,6 @@ import {
   deleteWaPaymentConfigurationHandler,
   deleteZapierTriggerHookHandler,
   getAllIntegrationsByOrgHandler,
-  getAllIntegrationsHandler,
   getGoogleAuthUrlForSheetHandler,
   getIntegrationByNameHandler,
   getRegenerateWaPaymentConfigOauthHandler,
@@ -22,6 +21,11 @@ import {
   integrationSchema,
   updateIntgrationSchema,
   waPaymentCreateSchema,
+  deleteZapierHookSchema,
+  type DeleteZapierHookInput,
+  type IntegrationSchema,
+  type ByNameParams,
+  type UpdateIntgrationInput,
 } from "./integrations.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { shopifyRoutes } from "./shopify/shopify.route.js";
@@ -32,7 +36,6 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.register(shopifyRoutes, { prefix: "/shopify" });
 
   server.get("/", {}, getAllIntegrationsByOrgHandler);
-  server.get("/all", {}, getAllIntegrationsHandler);
   server.get(
     "/:name",
     {
@@ -43,18 +46,20 @@ export async function integrationsRoutes(server: FastifyInstance) {
     getIntegrationByNameHandler,
   );
   server.get("/statuses", {}, getIntegrationStatusesHandler);
-  server.post(
+  server.post<{ Body: IntegrationSchema }>(
     "/",
     {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         body: integrationSchema,
       },
     },
     createIntegrationHandler,
   );
-  server.put(
+  server.put<{ Params: ByNameParams; Body: UpdateIntgrationInput }>(
     "/:name",
     {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         params: byNameSchema,
         body: updateIntgrationSchema,
@@ -119,5 +124,13 @@ export async function integrationsRoutes(server: FastifyInstance) {
     },
     deleteWaPaymentConfigurationHandler,
   );
-  server.delete("/zapier-hook", deleteZapierTriggerHookHandler);
+  server.delete<{ Body: DeleteZapierHookInput }>(
+    "/zapier-hook",
+    {
+      schema: {
+        body: deleteZapierHookSchema,
+      },
+    },
+    deleteZapierTriggerHookHandler,
+  );
 }

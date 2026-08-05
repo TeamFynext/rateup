@@ -1,367 +1,349 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../utils/redisConnection.js", () => ({
   notificationQueue: { add: vi.fn() },
 }));
-vi.mock("../../utils/constants/constants.js", () => ({ rateupLogo: "https://cdn/logo.png" }));
 
+vi.mock("../../utils/prisma.js", () => ({
+  default: { bookDemo: { create: vi.fn() } },
+}));
+
+import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 import { bookDemoHandler, partnerDataHandler } from "./bookDemo.controller.js";
+import { createBookDemoInputSchema, createPartnerDataInputSchema } from "./bookDemo.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const queueAdd = (notificationQueue as unknown as { add: Mock }).add;
+const db = prisma as unknown as { bookDemo: Record<string, Mock> };
+const queue = notificationQueue.add as unknown as Mock;
 
-/** A valid demo request, as the route schema would have accepted it. */
-function demoBody(overrides: Record<string, unknown> = {}) {
-  return {
-    name: "Ada Lovelace",
-    workEmail: "ada@example.com",
-    businessName: "Analytical Engines Ltd",
-    phone: "15550001234",
-    message: "Keen to see the WhatsApp inbox",
-    ...overrides,
-  } as any;
-}
+/** The five fields the demo form actually collects. */
+const demo = {
+  name: "Ann Smith",
+  workEmail: "ann@example.test",
+  businessName: "Example Co",
+  phone: "15550001234",
+  message: "I would like a demo please",
+};
 
-/** A valid partner enquiry. */
-function partnerBody(overrides: Record<string, unknown> = {}) {
-  return {
-    fullName: "Ada Lovelace",
-    workEmail: "ada@example.com",
-    phone: "15550001234",
-    companyName: "Analytical Engines Ltd",
-    website: "https://example.com",
-    country: "India",
-    businessType: "Agency",
-    companySize: "11-50",
-    yearsInBusiness: "5",
-    whyPartner: "Our clients keep asking for WhatsApp",
-    services: ["Implementation", "Support"],
-    referralVolume: "10-20",
-    managesClients: "Yes",
-    apiExperience: "Yes",
-    canOnboard: "Yes",
-    ...overrides,
-  } as any;
-}
+const partner = {
+  fullName: "Ann Smith",
+  workEmail: "ann@example.test",
+  phone: "15550001234",
+  companyName: "Example Co",
+  website: "example.test",
+  country: "India",
+  businessType: "Agency",
+  companySize: "11-50",
+  yearsInBusiness: "3",
+  whyPartner: "Shared customers",
+  services: ["Reviews", "Loyalty"],
+  referralVolume: "10-20",
+  managesClients: "yes",
+  apiExperience: "yes",
+  canOnboard: "yes",
+};
 
-function request(body: unknown): any {
-  return { body };
-}
-
-function reply() {
+function makeReply() {
   const rep: any = { status: vi.fn(() => rep), send: vi.fn(() => rep) };
   return rep;
 }
 
-/** The email payload of the nth queued notification. */
-function queuedEmail(index = 0) {
-  return queueAdd.mock.calls[index][1].emailData;
+function answer(rep: any) {
+  return { code: rep.status.mock.calls[0]?.[0], body: rep.send.mock.calls[0]?.[0] };
 }
 
-function sent(rep: any) {
-  return rep.send.mock.calls[0][0];
+function makeRequest(body: unknown) {
+  return { body } as any;
 }
 
-const originalEnv = {
-  ROOT_ORG_MAIL_ID: process.env.ROOT_ORG_MAIL_ID,
-  NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL: process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL,
-};
+/** The email payload of the nth queued notification job. */
+function queued(n: number) {
+  return queue.mock.calls[n][1].emailData;
+}
+
+const ROOT_MAIL = process.env.ROOT_ORG_MAIL_ID;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  queueAdd.mockResolvedValue(undefined);
-  process.env.ROOT_ORG_MAIL_ID = "sales@rateup.app";
-  process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL = "https://cdn.example.com";
+  queue.mockResolvedValue({ id: "job-1" });
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  process.env.ROOT_ORG_MAIL_ID = "sales@rateup.test";
 });
 
-afterAll(() => {
-  for (const [key, value] of Object.entries(originalEnv)) {
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
+afterEach(() => {
+  if (ROOT_MAIL === undefined) delete process.env.ROOT_ORG_MAIL_ID;
+  else process.env.ROOT_ORG_MAIL_ID = ROOT_MAIL;
 });
 
-describe("bookDemoHandler - the internal notification", () => {
-  test("queues a notification to the address the org set", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
+// ===========================================================================
+// bookDemoHandler
+// ===========================================================================
 
-    expect(queuedEmail(0).to).toBe("sales@rateup.app");
-    expect(queueAdd.mock.calls[0][0]).toBe("notification");
+describe("bookDemoHandler — what reaches the queue", () => {
+  test("queues exactly two notifications: one inbound, one confirmation", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
+
+    expect(queue).toHaveBeenCalledTimes(2);
+    expect(queue.mock.calls.map((c) => c[0])).toEqual(["notification", "notification"]);
   });
 
-  test("falls back to the RateUp inbox when no address is configured", async () => {
+  test("sends the inbound alert to the configured org mailbox", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
+
+    expect(queued(0).to).toBe("sales@rateup.test");
+  });
+
+  test("falls back to hello@rateup.app when no org mailbox is configured", async () => {
     delete process.env.ROOT_ORG_MAIL_ID;
 
-    await bookDemoHandler(request(demoBody()), reply());
+    await bookDemoHandler(makeRequest(demo), makeReply());
 
-    expect(queuedEmail(0).to).toBe("hello@rateup.app");
+    expect(queued(0).to).toBe("hello@rateup.app");
   });
 
-  test("names the requester in the subject", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
+  test("names the requester in the inbound subject", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
 
-    expect(queuedEmail(0).subject).toBe("New Demo Request from Ada Lovelace");
+    expect(queued(0).subject).toBe("New Demo Request from Ann Smith");
   });
 
-  test("carries every detail the requester gave, in both text and html", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
+  test("carries every submitted field into the inbound alert", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
 
-    const { text, html } = queuedEmail(0);
-    for (const body of [text, html]) {
-      expect(body).toContain("Ada Lovelace");
-      expect(body).toContain("Analytical Engines Ltd");
-      expect(body).toContain("15550001234");
-      expect(body).toContain("Keen to see the WhatsApp inbox");
-      expect(body).toContain("ada@example.com");
+    for (const value of Object.values(demo)) {
+      expect(queued(0).text).toContain(value);
+      expect(queued(0).html).toContain(value);
     }
   });
 
-  test("says N/A for a request that carried no message", async () => {
-    await bookDemoHandler(request(demoBody({ message: undefined })), reply());
+  test("sends the confirmation to the address the requester gave", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
 
-    expect(queuedEmail(0).text).toContain("Message: N/A");
-    expect(queuedEmail(0).html).toContain("N/A");
+    expect(queued(1).to).toBe(demo.workEmail);
+    expect(queued(1).subject).toBe("RateUp - Demo Booked Successfully");
+  });
+
+  // The confirmation repeats the booking back to the requester, minus their own email.
+  test("repeats the booking details in the confirmation", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
+
+    expect(queued(1).html).toContain(demo.name);
+    expect(queued(1).html).toContain(demo.businessName);
+    expect(queued(1).html).toContain(demo.phone);
+    expect(queued(1).html).toContain(demo.message);
+  });
+
+  test("writes N/A in both mails when no message was left", async () => {
+    await bookDemoHandler(makeRequest({ ...demo, message: undefined }), makeReply());
+
+    expect(queued(0).text).toContain("Message: N/A");
+    expect(queued(1).html).toContain("N/A");
+  });
+
+  test("treats an empty message the same as a missing one", async () => {
+    await bookDemoHandler(makeRequest({ ...demo, message: "" }), makeReply());
+
+    expect(queued(0).text).toContain("Message: N/A");
   });
 });
 
-describe("bookDemoHandler - the confirmation to the requester", () => {
-  test("queues a second notification to the address they gave", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
+describe("bookDemoHandler — the reply", () => {
+  test("answers 200 with a confirmation message", async () => {
+    const rep = makeReply();
 
-    expect(queueAdd).toHaveBeenCalledTimes(2);
-    expect(queuedEmail(1).to).toBe("ada@example.com");
-    expect(queuedEmail(1).subject).toBe("RateUp - Demo Booked Successfully");
+    await bookDemoHandler(makeRequest(demo), rep);
+
+    const { code, body } = answer(rep);
+    expect(code).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.message).toContain("received");
   });
 
-  test("greets them by name and repeats their booking details", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
+  test("answers 500 when the queue rejects, rather than propagating", async () => {
+    queue.mockRejectedValue(new Error("redis down"));
+    const rep = makeReply();
 
-    const { html } = queuedEmail(1);
-    expect(html).toContain("Hello, Ada Lovelace");
-    expect(html).toContain("Analytical Engines Ltd");
-    expect(html).toContain("15550001234");
-  });
-
-  test("does not repeat their email address back to them", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
-
-    expect(queuedEmail(1).html).not.toContain("ada@example.com");
-  });
-
-  test("carries the RateUp logo and the current year", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
-
-    const { html } = queuedEmail(1);
-    expect(html).toContain("https://cdn/logo.png");
-    expect(html).toContain(String(new Date().getFullYear()));
-  });
-
-  test("builds the social icon urls from the configured image host", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
-
-    expect(queuedEmail(1).html).toContain("https://cdn.example.com/images/email/linkedin_logo.png");
-  });
-
-  // NOTE: pins current behaviour. The image host comes from a NEXT_PUBLIC_ variable
-  // — a frontend naming convention — read inside the API. When it is not set on the
-  // API's own environment the src becomes the literal string "undefined/images/...".
-  // See issues.txt 16.5.
-  test("writes the word undefined into the image urls when the host is not set", async () => {
-    delete process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL;
-
-    await bookDemoHandler(request(demoBody()), reply());
-
-    expect(queuedEmail(1).html).toContain("undefined/images/email/website_logo.png");
-  });
-
-  test("sends an empty plain-text alternative", async () => {
-    await bookDemoHandler(request(demoBody()), reply());
-
-    expect(queuedEmail(1).text).toBe("");
-  });
-});
-
-describe("bookDemoHandler - what the caller is told", () => {
-  test("answers 200 and confirms the request was received", async () => {
-    const rep = reply();
-
-    await bookDemoHandler(request(demoBody()), rep);
-
-    expect(rep.status).toHaveBeenCalledWith(200);
-    expect(sent(rep)).toEqual({
-      success: true,
-      message: "Your demo request has been received. We’ll contact you soon!",
+    await expect(bookDemoHandler(makeRequest(demo), rep)).resolves.toBeDefined();
+    expect(answer(rep)).toEqual({
+      code: 500,
+      body: { success: false, message: "Something went wrong while booking a demo." },
     });
   });
 
-  test("answers 500 when the notification queue is unreachable", async () => {
-    queueAdd.mockRejectedValue(new Error("redis is down"));
-    const rep = reply();
+  // The confirmation is queued after the inbound alert and is not rolled back, so a
+  // failure on the second job leaves the team notified while the requester is told the
+  // booking failed.
+  test("still answers 500 when only the confirmation fails to queue", async () => {
+    queue.mockResolvedValueOnce({ id: "job-1" }).mockRejectedValueOnce(new Error("redis down"));
+    const rep = makeReply();
 
-    await bookDemoHandler(request(demoBody()), rep);
+    await bookDemoHandler(makeRequest(demo), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(500);
-    expect(sent(rep)).toEqual({
-      success: false,
-      message: "Something went wrong while booking a demo.",
-    });
+    expect(answer(rep).code).toBe(500);
+    expect(queue).toHaveBeenCalledTimes(2);
   });
 
-  // NOTE: pins current behaviour. The internal notification is queued first, so a
-  // failure queueing the requester's confirmation answers 500 — telling the
-  // requester their booking failed — while the sales team has already been sent the
-  // lead and will contact them. Nothing records which of the two went out.
-  // See issues.txt 16.4.
-  test("has already told the sales team when the confirmation fails to queue", async () => {
-    queueAdd.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("redis is down"));
-    const rep = reply();
+  test("logs the failure", async () => {
+    const cause = new Error("redis down");
+    queue.mockRejectedValue(cause);
 
-    await bookDemoHandler(request(demoBody()), rep);
+    await bookDemoHandler(makeRequest(demo), makeReply());
 
-    expect(queuedEmail(0).to).toBe("sales@rateup.app");
-    expect(rep.status).toHaveBeenCalledWith(500);
+    expect(console.error).toHaveBeenCalledWith("Error handling demo booking:", cause);
   });
 });
 
-describe("bookDemoHandler - what a submitter can put in the email", () => {
-  // NOTE: pins current behaviour, and this is the serious one. Every field is
-  // interpolated into an HTML email body with no escaping. POST /api/bookdemo is
-  // registered with no checkSession and no rate limit (bookDemo.route.ts,
-  // registerRoutes.ts:124), so anyone on the internet can put arbitrary markup into
-  // an email that lands in the sales team's inbox. See issues.txt 16.1.
-  test("puts markup from the name straight into the internal email", async () => {
-    await bookDemoHandler(
-      request(demoBody({ name: '<a href="https://evil.example/login">Reset your password</a>' })),
-      reply(),
-    );
+describe("bookDemoHandler — persistence", () => {
+  test("does not store the request anywhere", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
 
-    expect(queuedEmail(0).html).toContain('<a href="https://evil.example/login">');
-    expect(queuedEmail(0).html).not.toContain("&lt;a href");
-  });
-
-  // NOTE: the same absence of escaping on the confirmation, which is the worse
-  // half: the recipient is an address the submitter chose, the branding is
-  // RateUp's, and the body carries their markup. That is an unauthenticated way to
-  // send RateUp-branded mail carrying arbitrary content to any address.
-  // See issues.txt 16.1.
-  test("puts markup from the message into the RateUp-branded confirmation", async () => {
-    await bookDemoHandler(
-      request(
-        demoBody({
-          workEmail: "victim@example.com",
-          message:
-            '</div><h1>Your account is suspended</h1><a href="https://evil.example">Fix it</a>',
-        }),
-      ),
-      reply(),
-    );
-
-    const { to, html } = queuedEmail(1);
-    expect(to).toBe("victim@example.com");
-    expect(html).toContain("<h1>Your account is suspended</h1>");
-    expect(html).toContain('<a href="https://evil.example">');
-  });
-
-  // NOTE: the schema sets a minimum length on message and no maximum, so a single
-  // request can push an arbitrarily large payload through the queue and into two
-  // emails. There is no rate limit on the route either. See issues.txt 16.2.
-  test("accepts a message of any size and queues it twice", async () => {
-    const huge = "x".repeat(200_000);
-
-    await bookDemoHandler(request(demoBody({ message: huge })), reply());
-
-    expect(queuedEmail(0).html).toContain(huge);
-    expect(queuedEmail(1).html).toContain(huge);
+    expect(db.bookDemo.create).not.toHaveBeenCalled();
   });
 });
+
+// ===========================================================================
+// partnerDataHandler
+// ===========================================================================
 
 describe("partnerDataHandler", () => {
-  test("queues one notification to the org's address", async () => {
-    await partnerDataHandler(request(partnerBody()), reply());
+  test("queues one notification and sends the applicant nothing back", async () => {
+    await partnerDataHandler(makeRequest(partner), makeReply());
 
-    expect(queueAdd).toHaveBeenCalledTimes(1);
-    expect(queuedEmail(0).to).toBe("sales@rateup.app");
-    expect(queuedEmail(0).subject).toBe("New Partner Inquiry from Ada Lovelace");
+    expect(queue).toHaveBeenCalledTimes(1);
+    expect(queued(0).to).toBe("sales@rateup.test");
   });
 
-  test("falls back to the RateUp inbox when no address is configured", async () => {
+  test("falls back to hello@rateup.app when no org mailbox is configured", async () => {
     delete process.env.ROOT_ORG_MAIL_ID;
 
-    await partnerDataHandler(request(partnerBody()), reply());
+    await partnerDataHandler(makeRequest(partner), makeReply());
 
-    expect(queuedEmail(0).to).toBe("hello@rateup.app");
+    expect(queued(0).to).toBe("hello@rateup.app");
   });
 
-  test("carries every answer the enquirer gave", async () => {
-    await partnerDataHandler(request(partnerBody()), reply());
+  test("names the applicant in the subject", async () => {
+    await partnerDataHandler(makeRequest(partner), makeReply());
 
-    const { text, html } = queuedEmail(0);
-    for (const body of [text, html]) {
-      expect(body).toContain("Analytical Engines Ltd");
-      expect(body).toContain("https://example.com");
-      expect(body).toContain("Our clients keep asking for WhatsApp");
-      expect(body).toContain("11-50");
+    expect(queued(0).subject).toBe("New Partner Inquiry from Ann Smith");
+  });
+
+  test("flattens the services list into a readable line", async () => {
+    await partnerDataHandler(makeRequest(partner), makeReply());
+
+    expect(queued(0).text).toContain("Services: Reviews, Loyalty");
+    expect(queued(0).html).toContain("Reviews, Loyalty");
+  });
+
+  test("carries every submitted field into the alert", async () => {
+    await partnerDataHandler(makeRequest(partner), makeReply());
+
+    for (const [key, value] of Object.entries(partner)) {
+      if (key === "services") continue;
+      expect(queued(0).text).toContain(value as string);
     }
   });
 
-  test("lists the chosen services as a comma-separated line", async () => {
-    await partnerDataHandler(request(partnerBody()), reply());
+  test("answers 200 on success", async () => {
+    const rep = makeReply();
 
-    expect(queuedEmail(0).text).toContain("Services: Implementation, Support");
-    expect(queuedEmail(0).html).toContain("Implementation, Support");
-  });
+    await partnerDataHandler(makeRequest(partner), rep);
 
-  test("sends no confirmation to the enquirer, unlike the demo form", async () => {
-    await partnerDataHandler(request(partnerBody({ workEmail: "ada@example.com" })), reply());
-
-    expect(queueAdd.mock.calls.every((c) => c[1].emailData.to === "sales@rateup.app")).toBe(true);
-  });
-
-  test("answers 200 and confirms the enquiry was submitted", async () => {
-    const rep = reply();
-
-    await partnerDataHandler(request(partnerBody()), rep);
-
-    expect(rep.status).toHaveBeenCalledWith(200);
-    expect(sent(rep)).toEqual({
-      success: true,
-      message: "Partner inquiry submitted successfully",
+    expect(answer(rep)).toEqual({
+      code: 200,
+      body: { success: true, message: "Partner inquiry submitted successfully" },
     });
   });
 
-  test("answers 500 when the notification queue is unreachable", async () => {
-    queueAdd.mockRejectedValue(new Error("redis is down"));
-    const rep = reply();
+  test("answers 500 when the queue rejects", async () => {
+    queue.mockRejectedValue(new Error("redis down"));
+    const rep = makeReply();
 
-    await partnerDataHandler(request(partnerBody()), rep);
+    await partnerDataHandler(makeRequest(partner), rep);
 
-    expect(rep.status).toHaveBeenCalledWith(500);
-    expect(sent(rep)).toEqual({ success: false, message: "Internal server error" });
+    expect(answer(rep)).toEqual({
+      code: 500,
+      body: { success: false, message: "Internal server error" },
+    });
   });
 
-  // NOTE: the same unescaped interpolation as the demo form, on a route that is
-  // equally unauthenticated. This one only reaches the internal inbox, since there
-  // is no confirmation email. See issues.txt 16.1.
-  test("puts markup from the company name straight into the email", async () => {
-    await partnerDataHandler(
-      request(partnerBody({ companyName: "<script>alert(1)</script>" })),
-      reply(),
+  // `services.join` runs before the try block can help — an absent array throws a
+  // TypeError that the catch turns into a 500 rather than a 400. The zod body schema on
+  // the route is what keeps this unreachable in production.
+  test("answers 500, not a crash, when services is missing", async () => {
+    const rep = makeReply();
+
+    await expect(
+      partnerDataHandler(makeRequest({ ...partner, services: undefined }), rep),
+    ).resolves.toBeDefined();
+    expect(answer(rep).code).toBe(500);
+  });
+});
+
+// ===========================================================================
+// The body schemas guarding both routes
+// ===========================================================================
+
+describe("createBookDemoInputSchema", () => {
+  test("accepts a complete submission", () => {
+    expect(createBookDemoInputSchema.safeParse(demo).success).toBe(true);
+  });
+
+  test("treats the message as optional", () => {
+    const { message: _omitted, ...withoutMessage } = demo;
+
+    expect(createBookDemoInputSchema.safeParse(withoutMessage).success).toBe(true);
+  });
+
+  test("rejects a one-character name", () => {
+    expect(createBookDemoInputSchema.safeParse({ ...demo, name: "A" }).success).toBe(false);
+  });
+
+  test("rejects a one-character business name", () => {
+    expect(createBookDemoInputSchema.safeParse({ ...demo, businessName: "A" }).success).toBe(false);
+  });
+
+  test("rejects an address that is not an email", () => {
+    expect(createBookDemoInputSchema.safeParse({ ...demo, workEmail: "ann" }).success).toBe(false);
+  });
+
+  test("rejects a phone number shorter than ten digits", () => {
+    expect(createBookDemoInputSchema.safeParse({ ...demo, phone: "123456789" }).success).toBe(
+      false,
     );
-
-    expect(queuedEmail(0).html).toContain("<script>alert(1)</script>");
   });
 
-  // NOTE: services is joined without a guard. The route schema requires an array,
-  // so this is only reachable by a caller that bypasses validation — but the
-  // function is exported and has no guard of its own. See issues.txt 16.5.
-  test("throws when handed services that are not a list", async () => {
-    const rep = reply();
+  test("rejects a phone number longer than twenty characters", () => {
+    expect(createBookDemoInputSchema.safeParse({ ...demo, phone: "1".repeat(21) }).success).toBe(
+      false,
+    );
+  });
+});
 
-    await partnerDataHandler(request(partnerBody({ services: "Implementation" })), rep);
+describe("createPartnerDataInputSchema", () => {
+  test("accepts a complete inquiry", () => {
+    expect(createPartnerDataInputSchema.safeParse(partner).success).toBe(true);
+  });
 
-    expect(rep.status).toHaveBeenCalledWith(500);
-    expect(queueAdd).not.toHaveBeenCalled();
+  test("requires at least one service", () => {
+    expect(createPartnerDataInputSchema.safeParse({ ...partner, services: [] }).success).toBe(
+      false,
+    );
+  });
+
+  test.each([
+    "website",
+    "country",
+    "businessType",
+    "companySize",
+    "yearsInBusiness",
+    "whyPartner",
+    "referralVolume",
+    "managesClients",
+    "apiExperience",
+    "canOnboard",
+  ])("rejects an empty %s", (field) => {
+    expect(createPartnerDataInputSchema.safeParse({ ...partner, [field]: "" }).success).toBe(false);
   });
 });

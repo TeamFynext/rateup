@@ -13,8 +13,9 @@ vi.mock("../../../utils/prisma.js", () => ({
     customerReward: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     loyaltyProgram: { findUnique: vi.fn() },
     loyaltyTier: { findFirst: vi.fn() },
-    loyaltyReward: { findUnique: vi.fn() },
+    loyaltyReward: { findUnique: vi.fn(), findFirst: vi.fn() },
     loyaltyTransaction: { create: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -61,6 +62,7 @@ const db = prisma as unknown as {
   loyaltyTier: Record<string, Mock>;
   loyaltyReward: Record<string, Mock>;
   loyaltyTransaction: Record<string, Mock>;
+  $transaction: Mock;
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
@@ -120,7 +122,9 @@ beforeEach(() => {
   db.loyaltyProgram.findUnique.mockResolvedValue(program());
   db.loyaltyTier.findFirst.mockResolvedValue(null);
   db.loyaltyReward.findUnique.mockResolvedValue({ id: "rwd-1", name: "Free coffee" });
+  db.loyaltyReward.findFirst.mockResolvedValue({ id: "rwd-1", name: "Free coffee" });
   db.loyaltyTransaction.create.mockResolvedValue({ id: "txn-1" });
+  db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(db));
   (calculatePointsForPurchase as Mock).mockResolvedValue({ points: 100, rule: { id: "rule-1" } });
   (checkAndUpgradeTier as Mock).mockResolvedValue({ upgraded: false });
 });
@@ -218,26 +222,21 @@ describe("createCustomerAccount — an account that already exists", () => {
 // ===========================================================================
 
 describe("createCustomerAccount — the signup bonus", () => {
-  // NOTE: pins current behaviour, and this is the headline defect of the module.
-  // The account row is created with `currentPoints: refereeBonusPoints` and the
-  // signup bonus is NEVER added to it — only a ledger row is written. The
-  // customer is told they have the points and the transaction history says so,
-  // but the balance they can spend is zero. See issues.txt 20.14.
-  test("writes a ledger row for the signup bonus but never credits the balance", async () => {
+  test("credits the signup bonus into the opening balance", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ signupBonus: 500 }));
 
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
     expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
-      currentPoints: 0,
-      lifetimePoints: 0,
+      currentPoints: 500,
+      lifetimePoints: 500,
     });
     expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
       source: "signup_bonus",
       points: 500,
       balanceAfter: 500,
     });
-    // No follow-up update credits it.
+    // Credited in the create, so nothing needs to follow it up.
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
@@ -274,27 +273,25 @@ describe("createCustomerAccount — referrals", () => {
 
   test("ignores a referral code that matches nothing", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-    db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
 
     await createCustomerAccount({ ...signupInput, referCode: "NOPE-1234" }, PROGRAM, ORG);
 
     expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data.referredById).toBeNull();
   });
 
-  test("looks the referral code up inside the same program", async () => {
-    await createCustomerAccount({ ...signupInput, referCode: "ANN-AB12" }, PROGRAM, ORG);
+  test("looks the referral code up inside the same program, ignoring case", async () => {
+    await createCustomerAccount({ ...signupInput, referCode: "ann-ab12" }, PROGRAM, ORG);
 
-    expect(db.customerLoyaltyAccount.findUnique.mock.calls[1][0].where).toEqual({
-      referralCode: "ANN-AB12",
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toEqual({
       programId: PROGRAM,
+      referralCode: { equals: "ann-ab12", mode: "insensitive" },
     });
   });
 
   test("credits the referrer's balance and lifetime points", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer);
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
 
@@ -306,9 +303,8 @@ describe("createCustomerAccount — referrals", () => {
 
   test("records the referrer's bonus in the ledger", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer);
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
+    db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-referrer", currentPoints: 250 });
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
 
@@ -322,9 +318,7 @@ describe("createCustomerAccount — referrals", () => {
 
   test("credits the referee's bonus into the opening balance", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ refereeBonus: 25 }));
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer);
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
 
@@ -335,48 +329,41 @@ describe("createCustomerAccount — referrals", () => {
     });
   });
 
-  // NOTE: pins current behaviour. The referee's ledger row records
-  // `balanceAfter: signupBonus + refereeBonusPoints`, but the signup bonus was
-  // never credited (20.14), so the recorded balance overstates the real one by
-  // exactly the signup bonus. See issues.txt 20.15.
-  test("the referee's ledger row overstates the balance by the uncredited signup bonus", async () => {
+  test("the referee's ledger row matches the balance it actually has", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ refereeBonus: 25, signupBonus: 500 }));
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer);
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
 
-    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data.currentPoints).toBe(25);
+    const opening = db.customerLoyaltyAccount.create.mock.calls[0][0].data.currentPoints;
+    expect(opening).toBe(525);
     const refereeRow = db.loyaltyTransaction.create.mock.calls.find(
       (c) => c[0].data.accountId === "acct-1",
     );
-    expect(refereeRow![0].data.balanceAfter).toBe(525);
+    expect(refereeRow![0].data.balanceAfter).toBe(opening);
   });
 
-  // NOTE: the referrer's balanceAfter is computed from the row read BEFORE the
-  // increment, not from the update's result. Two referrals landing together both
-  // record the same pre-increment balance. See issues.txt 20.15.
-  test("the referrer's ledger balance is derived from a pre-increment read", async () => {
+  test("the referrer's ledger balance comes from the write, not from a stale read", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 50 }));
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer);
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
     db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-referrer", currentPoints: 999 });
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
 
-    expect(db.loyaltyTransaction.create.mock.calls[0][0].data.balanceAfter).toBe(250);
+    expect(db.loyaltyTransaction.create.mock.calls[0][0].data.balanceAfter).toBe(999);
   });
 
   test("a gift referral assigns the reward instead of adding points", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(
       program({ referralBonusType: "gift", referralRewardId: "rwd-1", referralBonus: 50 }),
     );
-    db.customerLoyaltyAccount.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer)
-      .mockResolvedValueOnce({ id: "acct-referrer", contact: { phone: "9", orgId: ORG } });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
+    // assignRewardToCustomer re-reads the referrer's account for the dispatch.
+    db.customerLoyaltyAccount.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      id: "acct-referrer",
+      programId: PROGRAM,
+      contact: { phone: "9", orgId: ORG },
+    });
 
     await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
 
@@ -388,10 +375,10 @@ describe("createCustomerAccount — referrals", () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(
       program({ referralBonusType: "gift", referralRewardId: "rwd-1" }),
     );
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
     db.customerLoyaltyAccount.findUnique
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(referrer)
-      .mockResolvedValueOnce({ id: "acct-referrer", contact: null });
+      .mockResolvedValueOnce({ id: "acct-referrer", programId: PROGRAM, contact: null });
     db.customerReward.findUnique.mockResolvedValue({ id: "already" });
 
     await expect(
@@ -401,21 +388,16 @@ describe("createCustomerAccount — referrals", () => {
 });
 
 describe("createCustomerAccount — the opening tier", () => {
-  // NOTE: pins current behaviour. New accounts are placed in the tier whose
-  // `priority` is exactly 1 — but createLoyaltyTier assigns priorities starting
-  // at 0 and incrementing, so a program's FIRST tier has priority 0 and is never
-  // found here. A program with one tier enrols everyone with no tier at all;
-  // a program with two enrols them into the second. See issues.txt 20.11.
-  test("looks for the entry tier at priority 1, not 0", async () => {
+  test("takes the entry tier to be the lowest threshold, not a priority number", async () => {
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
-    expect(db.loyaltyTier.findFirst.mock.calls[0][0].where).toEqual({
-      programId: PROGRAM,
-      priority: 1,
+    expect(db.loyaltyTier.findFirst.mock.calls[0][0]).toMatchObject({
+      where: { programId: PROGRAM },
+      orderBy: { threshold: "asc" },
     });
   });
 
-  test("leaves the account untiered when no tier has priority 1", async () => {
+  test("leaves the account untiered when the program has no tiers at all", async () => {
     db.loyaltyTier.findFirst.mockResolvedValue(null);
 
     await createCustomerAccount(signupInput, PROGRAM, ORG);
@@ -423,7 +405,7 @@ describe("createCustomerAccount — the opening tier", () => {
     expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data.currentTierId).toBeNull();
   });
 
-  test("uses the priority-1 tier when one exists", async () => {
+  test("uses the entry tier when the program has one", async () => {
     db.loyaltyTier.findFirst.mockResolvedValue({ id: "tier-second" });
 
     await createCustomerAccount(signupInput, PROGRAM, ORG);
@@ -487,11 +469,6 @@ describe("awardPoints", () => {
     });
   });
 
-  // Fixed: the engine returns the matched rule under the key `rule`, and
-  // awardPoints now destructures `{ points, rule: appliedRule }` to match —
-  // previously it destructured a nonexistent `appliedRule` key, so every
-  // purchase transaction recorded `appliedRuleId: undefined` regardless of
-  // which rule actually priced it. See issues.txt 20.16.
   test("records which earning rule priced the purchase", async () => {
     (calculatePointsForPurchase as Mock).mockResolvedValue({
       points: 100,
@@ -554,10 +531,6 @@ describe("awardPoints", () => {
     expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
   });
 
-  // NOTE: the balance write, the ledger row and the tier move are three separate
-  // statements with no transaction around them. A failure after the first leaves
-  // points credited with no ledger entry explaining them.
-  // See issues.txt 20.17.
   test("credits the balance before the ledger row is written, untransacted", async () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
@@ -638,15 +611,11 @@ describe("getLCustomerByPhone", () => {
 });
 
 describe("updateCustomerAccount", () => {
-  // NOTE: the update is keyed on the account id alone; nothing ties it to the
-  // caller's program or org. The schema does confine the body to `status`, so
-  // the blast radius is suspending or closing another org's account rather than
-  // editing its points. See issues.txt 20.18.
-  test("writes the body straight through with no program or org check", async () => {
-    await updateCustomerAccount("acct-other-org", { status: "closed" } as any);
+  test("scopes the write to the caller's program", async () => {
+    await updateCustomerAccount("acct-other-org", { status: "closed" } as any, PROGRAM);
 
     expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
-      where: { id: "acct-other-org" },
+      where: { id: "acct-other-org", programId: PROGRAM },
       data: { status: "closed" },
     });
   });
@@ -660,6 +629,7 @@ describe("assignRewardToCustomer", () => {
   beforeEach(() => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({
       id: "acct-1",
+      programId: PROGRAM,
       contact: { name: "Ann", phone: "919000000001", orgId: ORG },
     });
   });
@@ -673,7 +643,7 @@ describe("assignRewardToCustomer", () => {
   });
 
   test("refuses when the reward does not exist", async () => {
-    db.loyaltyReward.findUnique.mockResolvedValue(null);
+    db.loyaltyReward.findFirst.mockResolvedValue(null);
 
     await expect(assignRewardToCustomer("acct-1", "nope")).rejects.toThrow("Reward not found");
   });
@@ -721,16 +691,21 @@ describe("assignRewardToCustomer", () => {
     );
   });
 
-  // NOTE: the account and the reward are fetched independently and never
-  // compared. Nothing stops a reward from one program being assigned to an
-  // account in another. See issues.txt 20.18.
-  test("never checks that the reward and the account share a program", async () => {
+  test("looks the reward up inside the account's own program", async () => {
     await assignRewardToCustomer("acct-1", "rwd-other-program");
 
-    expect(db.loyaltyReward.findUnique.mock.calls[0][0]).toEqual({
-      where: { id: "rwd-other-program" },
+    expect(db.loyaltyReward.findFirst.mock.calls[0][0]).toEqual({
+      where: { id: "rwd-other-program", programId: PROGRAM },
     });
-    expect(db.customerReward.create).toHaveBeenCalled();
+  });
+
+  test("a reward in another program is simply not found", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(null);
+
+    await expect(assignRewardToCustomer("acct-1", "rwd-other-program")).rejects.toThrow(
+      "Reward not found",
+    );
+    expect(db.customerReward.create).not.toHaveBeenCalled();
   });
 });
 
@@ -745,7 +720,7 @@ describe("getRewardByShortCode", () => {
   test("refuses a short code that matches nothing", async () => {
     db.customerReward.findUnique.mockResolvedValue(null);
 
-    await expect(getRewardByShortCode("NOPE")).rejects.toThrow("Reward not found");
+    await expect(getRewardByShortCode("NOPE", ORG)).rejects.toThrow("Reward not found");
   });
 
   test("refuses a short code belonging to another org", async () => {
@@ -763,16 +738,13 @@ describe("getRewardByShortCode", () => {
     expect(await getRewardByShortCode("SHORT1", ORG)).toEqual(issued);
   });
 
-  // NOTE: pins current behaviour. `orgId` is an OPTIONAL parameter and the
-  // ownership check is `if (orgId && ...)`, so any caller that omits it reads
-  // another org's reward. See issues.txt 20.18.
-  test("skips the ownership check entirely when no org is supplied", async () => {
+  test("the check cannot be skipped, because the org is not optional", async () => {
     db.customerReward.findUnique.mockResolvedValue({
       ...issued,
       account: { program: { orgId: "org-other" } },
     });
 
-    await expect(getRewardByShortCode("SHORT1")).resolves.toBeDefined();
+    await expect(getRewardByShortCode("SHORT1", ORG)).rejects.toThrow("Reward not found");
   });
 });
 
@@ -791,7 +763,7 @@ describe("markRewardAsRedeemed", () => {
     await markRewardAsRedeemed("SHORT1", ORG);
 
     expect(db.customerReward.update).toHaveBeenCalledWith({
-      where: { id: "cr-1" },
+      where: { id: "cr-1", status: { not: "REDEEMED" } },
       data: { status: "REDEEMED" },
     });
   });
@@ -802,24 +774,34 @@ describe("markRewardAsRedeemed", () => {
     await expect(markRewardAsRedeemed("SHORT1", ORG)).rejects.toThrow("Reward is already redeemed");
   });
 
-  // NOTE: the guard is a read followed by a write with nothing in between, so two
-  // cashiers scanning the same code at once both pass it. See issues.txt 20.17.
-  test("guards against double redemption with a read, not a conditional write", async () => {
+  test("guards against double redemption in the write itself", async () => {
     db.customerReward.findUnique.mockResolvedValue(issued);
     db.customerReward.update.mockResolvedValue({ id: "cr-1" });
 
     await markRewardAsRedeemed("SHORT1", ORG);
 
-    expect(db.customerReward.update.mock.calls[0][0].where).toEqual({ id: "cr-1" });
+    expect(db.customerReward.update.mock.calls[0][0].where).toEqual({
+      id: "cr-1",
+      status: { not: "REDEEMED" },
+    });
   });
 
-  test("inherits the optional-org gap from the lookup", async () => {
+  test("reports an already-redeemed reward when the guarded write loses the race", async () => {
+    db.customerReward.findUnique.mockResolvedValue(issued);
+    db.customerReward.update.mockRejectedValueOnce(
+      Object.assign(new Error("Record to update not found"), { code: "P2025" }),
+    );
+
+    await expect(markRewardAsRedeemed("SHORT1", ORG)).rejects.toThrow("Reward is already redeemed");
+  });
+
+  test("inherits the required org from the lookup", async () => {
     db.customerReward.findUnique.mockResolvedValue({
       ...issued,
       account: { program: { orgId: "org-other" } },
     });
     db.customerReward.update.mockResolvedValue({ id: "cr-1" });
 
-    await expect(markRewardAsRedeemed("SHORT1")).resolves.toBeDefined();
+    await expect(markRewardAsRedeemed("SHORT1", ORG)).rejects.toThrow("Reward not found");
   });
 });

@@ -19,12 +19,14 @@ export async function syncProductSetsHandler(
     const { catalogId } = request.body;
 
     // Get catalog to find connected WhatsApp settings
-    const catalog = await getWaCatalog(catalogId);
+    const catalog = await getWaCatalog(catalogId, orgId);
     if (!catalog || catalog.orgId !== orgId) {
       return reply.code(404).send({ error: "Catalog not found" });
     }
 
-    // Get access token from connected WhatsApp settings
+    // Get access token from connected WhatsApp settings. Any connected number will do:
+    // the Meta access token is per-WABA, not per-number, so a catalog attached to
+    // several numbers resolves to the same token whichever one is picked.
     const connectedPhone = catalog.connectedWaPhoneIds[0];
     if (!connectedPhone) {
       return reply.code(400).send({ error: "No WhatsApp account connected to this catalog" });
@@ -56,7 +58,7 @@ export async function getProductSetsByCatalogHandler(
 ) {
   try {
     const { catalogId } = request.params;
-    const productSets = await getProductSetsByCatalog(catalogId);
+    const productSets = await getProductSetsByCatalog(catalogId, request.user.orgId);
     reply.code(200).send(productSets);
   } catch (error) {
     log.error(error);
@@ -70,7 +72,13 @@ export async function getProductSetByIdHandler(
 ) {
   try {
     const { productSetId } = request.params;
-    const productSet = await getProductSetById(productSetId);
+    const productSet = await getProductSetById(productSetId, request.user.orgId);
+    // 404 rather than 200-with-null, so a set that does not exist and one belonging to
+    // another org are indistinguishable, and the client can tell "no such set" from
+    // "a set with no content".
+    if (!productSet) {
+      return reply.code(404).send({ error: "Product set not found" });
+    }
     reply.code(200).send(productSet);
   } catch (error) {
     log.error(error);

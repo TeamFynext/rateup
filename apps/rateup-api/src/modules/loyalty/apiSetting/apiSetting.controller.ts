@@ -19,7 +19,7 @@ export async function getLoyaltyApiSettingsHandler(request: FastifyRequest, repl
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -34,7 +34,7 @@ export async function getLoyaltyApiSettingByIdHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -49,7 +49,7 @@ export async function createLoyaltyApiSettingHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }
 
@@ -61,12 +61,13 @@ export async function updateLoyaltyApiSettingHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { id } = request.params;
     const body = request.body;
-    const res = await updateLoyaltyApiSetting(id, body);
+    const res = await updateLoyaltyApiSetting(id, body, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
 }

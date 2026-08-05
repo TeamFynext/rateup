@@ -892,7 +892,13 @@ declare global {
       id: string;
       media_product_type?: "POST" | "AD" | "REEL" | "LIVE";
     };
-    created_time: number;
+    /**
+     * Absent on live webhook deliveries; only Graph API reads carry it, and
+     * those return an ISO string rather than the unix seconds a webhook uses.
+     */
+    created_time?: number | string;
+    /** Set when the comment is a reply to another comment. */
+    parent_id?: string;
     ad_id?: string;
     ad_title?: string;
   }

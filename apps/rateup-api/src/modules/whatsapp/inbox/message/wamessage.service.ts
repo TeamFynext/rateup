@@ -1203,7 +1203,7 @@ export async function assignWaMessageToUser(
       },
     });
 
-    const updatedContact = await updateContactById(data.contactId, {
+    const updatedContact = await updateContactById(data.contactId, orgId, {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
     });
     // Assigning a contact whose last conversation is already closed starts a fresh
@@ -1296,7 +1296,7 @@ export async function reopenConversation(
   messageId?: string,
 ) {
   const conversation = conversationId
-    ? await getConversationById(conversationId)
+    ? await getConversationById(conversationId, orgId)
     : await getLastCreatedConversationForContact(contactId);
 
   const assignmentHistory = conversation
@@ -1831,6 +1831,10 @@ export async function updateWaMessageByMessageId(
   data: Prisma.WaMessageUncheckedUpdateInput,
   id?: string,
 ) {
+  if (!id && !messageId) {
+    log.warn("updateWaMessageByMessageId called with no id and no messageId; refusing");
+    return null;
+  }
   const whereClause = id ? { id } : { messageId };
 
   const message = await prisma.waMessage.findFirst({

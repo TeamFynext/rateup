@@ -13,12 +13,14 @@ import {
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    if (routeOptions.config && routeOptions.config["isPublic"] === true) {
-      routeOptions.preHandler = [];
-      return;
-    } else {
-      routeOptions.preHandler = [checkSession];
-    }
+    const declared = Array.isArray(routeOptions.preHandler)
+      ? routeOptions.preHandler
+      : routeOptions.preHandler
+        ? [routeOptions.preHandler]
+        : [];
+
+    routeOptions.preHandler =
+      routeOptions.config?.["isPublic"] === true ? declared : [checkSession, ...declared];
   });
 
   server.get("/public/:shortUrlId", getPublicLinktreeWithShortIdRouteOptions);

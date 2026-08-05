@@ -1,4 +1,5 @@
 import { asyncErrHandler } from "../../utils/commonUtils.js";
+import { rateLimit } from "../../utils/rateLimit.js";
 import {
   createGenerateQrRecord,
   deleteGenerateQrRecordWithShortId,
@@ -27,7 +28,9 @@ const createGenerateQrRecordRouteOptions = {
 };
 
 const getPublicGenerateQrRecordWithShortIdRouteOptions = {
-  schema: {},
+  schema: {
+    params: getGenerateQrRecordWithShortIdParams,
+  },
   config: { isPublic: true },
   handler: asyncErrHandler(getPublicGenerateQrRecordWithShortId),
 };
@@ -73,6 +76,7 @@ const incrementGenerateQrNoOfScansRouteOptions = {
     params: getGenerateQrRecordWithShortIdParams,
   },
   config: { isPublic: true },
+  preHandler: [rateLimit({ max: 120, windowSeconds: 3600, key: "generateQrScan" })],
   handler: asyncErrHandler(incrementGenerateQrNoOfScans),
 };
 

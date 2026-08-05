@@ -142,35 +142,43 @@ describe("reading automations", () => {
       reply,
     );
 
-    expect(m.getById).toHaveBeenCalledWith("auto-1");
+    expect(m.getById).toHaveBeenCalledWith("auto-1", "org-1");
     expect(reply.payload).toBe(AUTOMATION);
   });
 
-  // NOTE: none of these three handlers has a try/catch, so a service failure escapes
-  // to Fastify's default error handler instead of becoming a controlled reply.
+  // All three now answer 500 themselves rather than letting the failure escape to
+  // Fastify's default error handler, consistent with the rest of the file.
   test.each([
     ["messages", getAutomatedRepliesMessagIdHandler, "getMessages"],
     ["the org list", getAllAutomatedRepliesByOrgIdHandler, "listByOrg"],
     ["one automation", getAutomatedRepliesByIdHandler, "getById"],
-  ])("lets a failure reading %s propagate", async (_name, handler, key) => {
+  ])("answers 500 when reading %s fails", async (_name, handler, key) => {
     (m as any)[key].mockRejectedValue(new Error("db down"));
+    const reply = makeReply();
 
-    await expect((handler as any)(makeRequest({ params: {} }), makeReply())).rejects.toThrow(
-      "db down",
-    );
+    await (handler as any)(makeRequest({ params: {} }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.payload).toBe("db down");
+    expect(log.error).toHaveBeenCalled();
   });
 
-  // NOTE: the fetch is by id alone — nothing ties it to the caller's org.
-  test("returns an automation belonging to another org", async () => {
-    m.getById.mockResolvedValue({ id: "auto-victim", orgId: "org-victim" });
+  // The fetch is scoped to the caller's org, so another org's automation comes back
+  // null and is answered 404 — the same answer as an id that never existed.
+  test("answers 404 for an automation belonging to another org", async () => {
+    m.getById.mockResolvedValue(null);
     const reply = makeReply();
 
     await getAutomatedRepliesByIdHandler(
-      makeRequest({ params: { waAutomatedReplyId: "auto-victim" } }),
+      makeRequest({
+        params: { waAutomatedReplyId: "auto-victim" },
+        user: { orgId: "org-attacker" },
+      }),
       reply,
     );
 
-    expect(reply.payload).toMatchObject({ orgId: "org-victim" });
+    expect(m.getById).toHaveBeenCalledWith("auto-victim", "org-attacker");
+    expect(reply.code).toHaveBeenCalledWith(404);
   });
 });
 
@@ -294,6 +302,23 @@ describe("updateAutomatedReplyHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(409);
   });
 
+  test("answers 404 when the automation is not the caller's org's", async () => {
+    m.update.mockRejectedValue(new Error("Automated reply not found"));
+    const reply = makeReply();
+
+    await updateAutomatedReplyHandler(
+      makeRequest({
+        params: { waAutomatedReplyId: "auto-victim" },
+        body: { name: "hijacked" },
+        user: { orgId: "org-attacker" },
+      }),
+      reply,
+    );
+
+    expect(m.update).toHaveBeenCalledWith("auto-victim", { name: "hijacked" }, "org-attacker");
+    expect(reply.code).toHaveBeenCalledWith(404);
+  });
+
   test("returns 500 for any other update failure", async () => {
     m.update.mockRejectedValue(new Error("db down"));
     const reply = makeReply();
@@ -317,7 +342,7 @@ describe("deleteAutomatedReplyHandler", () => {
       reply,
     );
 
-    expect(m.remove).toHaveBeenCalledWith("auto-1");
+    expect(m.remove).toHaveBeenCalledWith("auto-1", "org-1");
     expect(reply.payload).toBe(AUTOMATION);
   });
 
@@ -348,16 +373,35 @@ describe("deleteAutomatedReplyHandler", () => {
     expect(redis.del).not.toHaveBeenCalled();
   });
 
-  // NOTE: no try/catch here either, and no org scoping on the delete.
-  test("lets a delete failure propagate", async () => {
+  test("answers 500 rather than letting a delete failure propagate", async () => {
     m.remove.mockRejectedValue(new Error("db down"));
+    const reply = makeReply();
 
-    await expect(
-      deleteAutomatedReplyHandler(
-        makeRequest({ params: { waAutomatedReplyId: "auto-1" } }),
-        makeReply(),
-      ),
-    ).rejects.toThrow("db down");
+    await deleteAutomatedReplyHandler(
+      makeRequest({ params: { waAutomatedReplyId: "auto-1" } }),
+      reply,
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.payload).toBe("db down");
+  });
+
+  test("answers 404 and clears nothing for another org's automation", async () => {
+    m.remove.mockRejectedValue(new Error("Automated reply not found"));
+    const reply = makeReply();
+
+    await deleteAutomatedReplyHandler(
+      makeRequest({
+        params: { waAutomatedReplyId: "auto-victim" },
+        user: { orgId: "org-attacker" },
+      }),
+      reply,
+    );
+
+    expect(m.remove).toHaveBeenCalledWith("auto-victim", "org-attacker");
+    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(redis.keys).not.toHaveBeenCalled();
+    expect(redis.del).not.toHaveBeenCalled();
   });
 });
 

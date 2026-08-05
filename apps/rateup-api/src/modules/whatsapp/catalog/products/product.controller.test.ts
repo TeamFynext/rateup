@@ -192,11 +192,22 @@ describe("syncCatalogProductsHandler", () => {
     expect(reply.payload).toEqual({ synced: 1 });
   });
 
-  // NOTE: unlike its neighbours this one performs no catalog lookup at all.
-  test("does not check the catalog exists first", async () => {
+  // Checks the catalog first, consistent with its neighbours. getWaCatalog is scoped to
+  // the org, so this is an ownership check as well as an existence one.
+  test("checks the catalog exists and belongs to the caller first", async () => {
     await syncCatalogProductsHandler(makeRequest({ body: {} }), makeReply());
 
-    expect(m.getCatalog).not.toHaveBeenCalled();
+    expect(m.getCatalog).toHaveBeenCalledWith("cat-1", "org-1");
+  });
+
+  test("answers 404 without syncing when the catalog is not the caller's", async () => {
+    m.getCatalog.mockResolvedValue(null);
+    const reply = makeReply();
+
+    await syncCatalogProductsHandler(makeRequest({ body: {} }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(m.syncToMeta).not.toHaveBeenCalled();
   });
 
   test("returns 500 when the sync fails", async () => {
@@ -210,23 +221,30 @@ describe("syncCatalogProductsHandler", () => {
 });
 
 describe("getCatalogProductsHandler", () => {
-  test("lists the catalog's products, passing the query through", async () => {
+  // The query argument is gone: it was accepted, named `_query` and ignored, so any
+  // search or paging a caller sent was silently dropped. The dashboard sends none.
+  test("lists the catalog's products", async () => {
     const reply = makeReply();
 
     await getCatalogProductsHandler(makeRequest({ query: { search: "shoe" } }), reply);
 
-    expect(m.list).toHaveBeenCalledWith("cat-1", { search: "shoe" });
+    expect(m.list).toHaveBeenCalledWith("cat-1");
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
-  // NOTE: no ownership check — another org's products are listed given its catalog id.
-  test("lists another org's products given its catalog id", async () => {
+  // The handler now checks the catalog first, like every other handler in this file.
+  test("answers 404 for a catalog belonging to another org", async () => {
+    m.getCatalog.mockResolvedValue(null);
+    const reply = makeReply();
+
     await getCatalogProductsHandler(
       makeRequest({ params: { catalogId: "cat-victim" }, query: {} }),
-      makeReply(),
+      reply,
     );
 
-    expect(m.list).toHaveBeenCalledWith("cat-victim", {});
+    expect(m.getCatalog).toHaveBeenCalledWith("cat-victim", "org-1");
+    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(m.list).not.toHaveBeenCalled();
   });
 
   test("returns 500 when the listing fails", async () => {
@@ -475,11 +493,21 @@ describe("createShopifyProductHandler", () => {
     expect(reply.payload).toEqual({ message: "Failed to create Shopify product" });
   });
 
-  // NOTE: this handler never checks the catalog exists, unlike the other Shopify
-  // handlers — the product is created in Shopify before anything is validated.
-  test("creates the product in Shopify without checking the catalog first", async () => {
+  // The catalog is checked BEFORE the Shopify write. Creating first meant a bad or
+  // foreign catalogId left an orphaned product in Shopify that nothing would import.
+  test("checks the catalog before creating anything in Shopify", async () => {
     await createShopifyProductHandler(makeRequest({ body }), makeReply());
 
-    expect(m.getCatalog).not.toHaveBeenCalled();
+    expect(m.getCatalog).toHaveBeenCalledWith("cat-1", "org-1");
+  });
+
+  test("creates nothing in Shopify when the catalog is not the caller's", async () => {
+    m.getCatalog.mockResolvedValue(null);
+    const reply = makeReply();
+
+    await createShopifyProductHandler(makeRequest({ body }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(m.createInShopify).not.toHaveBeenCalled();
   });
 });

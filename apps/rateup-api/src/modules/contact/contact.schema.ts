@@ -3,6 +3,33 @@ import { ContactGroupType } from "../../../generated/prisma/client.js";
 import { z } from "zod";
 import { ResolutionResult, WaMessageAssignStatus } from "../../types/enums.js";
 
+/**
+ * `Contact.lifecycleId` is a uuid FK, but form clients spell "no lifecycle" as `""` — which
+ * Postgres rejects outright (22P02 `invalid input syntax for type uuid: ""`) rather than
+ * treating as null. Normalise the blank here so the column only ever sees a uuid or null.
+ *
+ * `.optional()` sits outside the transform so an omitted field stays `undefined`: a partial update
+ * (an inbox status change, say) leaves the field out, and collapsing that to null would clear the
+ * contact's lifecycle.
+ */
+const optionalLifecycleId = z
+  .union([z.uuid(), z.literal(""), z.null()])
+  .transform((value) => value || null)
+  .optional();
+
+/**
+ * A form client sends `""` for a field the user emptied, which is a clear, not the literal empty
+ * string. It matters most for `external_id`: it is half of `@@unique([external_id, orgId])`, so a
+ * stored `""` collides with the next contact whose id is also blank.
+ */
+const clearableText = z
+  .union([z.string(), z.null()])
+  .transform((value) => (value ? value : null))
+  .optional();
+
+/** Bodies are JSON, so a date arrives as an ISO string rather than a `Date`. */
+const clearableDate = z.coerce.date().nullable().optional();
+
 const contactCoreSchema = z.object({
   name: z.string(),
   phone: z.string().optional(),
@@ -24,7 +51,7 @@ const contactCoreSchema = z.object({
   labels: z.array(z.uuid()).optional(),
   contactGroupIds: z.array(z.string()).optional(),
   assignedUserIds: z.array(z.string()).optional(),
-  lifecycleId: z.string().optional(),
+  lifecycleId: optionalLifecycleId,
   notes: z.string().optional(),
 });
 
@@ -56,6 +83,10 @@ const updateContactSchema = z.object({
   // explicit null, and reopening sends null to clear the previous one.
   resolutionResult: z.enum(ResolutionResult).nullish(), // close-with-result taxonomy
   messageId: z.string().optional(), // for internal messages
+  // Editable on the contact form, so they have to survive validation to reach the update.
+  email: clearableText,
+  dob: clearableDate,
+  external_id: clearableText,
   lastReceivedMessageTimeStamp: z.string().optional(),
   whatsappUserName: z.string().optional().nullable(),
   followerCount: z.number().optional().nullable(),
@@ -72,7 +103,7 @@ const updateContactSchema = z.object({
   labels: z.array(z.uuid()).optional(),
   contactGroupIds: z.array(z.string()).optional(),
   assignedUserIds: z.array(z.string()).optional(),
-  lifecycleId: z.string().optional().nullable(),
+  lifecycleId: optionalLifecycleId,
   integrationIds: z.any().optional(),
   notes: z.string().optional().nullable(),
 });

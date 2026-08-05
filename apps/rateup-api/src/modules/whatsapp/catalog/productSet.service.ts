@@ -98,9 +98,9 @@ export async function syncProductSetsForCatalog(
 /**
  * Get all product sets for a catalog
  */
-export async function getProductSetsByCatalog(catalogId: string) {
+export async function getProductSetsByCatalog(catalogId: string, orgId: string) {
   return await prisma.whatsappProductSet.findMany({
-    where: { catalogId },
+    where: { catalogId, orgId },
     orderBy: { name: "asc" },
   });
 }
@@ -108,8 +108,11 @@ export async function getProductSetsByCatalog(catalogId: string) {
 /**
  * Get a specific product set
  */
-export async function getProductSetById(productSetId: string) {
-  return await prisma.whatsappProductSet.findUnique({
-    where: { productSetId },
+export async function getProductSetById(productSetId: string, orgId: string) {
+  // findFirst on the { orgId, productSetId } pair rather than findUnique on the id
+  // alone — the pair is a unique index (org_id_product_set_id_unique), so this is the
+  // same lookup, just one that cannot return another org's set.
+  return await prisma.whatsappProductSet.findFirst({
+    where: { productSetId, orgId },
   });
 }

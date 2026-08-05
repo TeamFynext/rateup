@@ -32,10 +32,8 @@ export async function createContactLabelHandler(
     reply.code(201).send(label);
   } catch (error) {
     log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(409).send({ error: "Label with this name already exists" });
-      }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      reply.code(409).send({ error: "Label with this name already exists" });
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
@@ -87,12 +85,10 @@ export async function updateContactLabelHandler(
     reply.code(200).send(label);
   } catch (error) {
     log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(409).send({ error: "Label with this name already exists" });
-      } else if (error.code === "P2025") {
-        reply.code(404).send({ error: "Label not found" });
-      }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      reply.code(409).send({ error: "Label with this name already exists" });
+    } else if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      reply.code(404).send({ error: "Label not found" });
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
@@ -110,10 +106,8 @@ export async function deleteContactLabelHandler(
     reply.code(200).send(label);
   } catch (error) {
     log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        reply.code(404).send({ error: "Label not found" });
-      }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      reply.code(404).send({ error: "Label not found" });
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
@@ -173,8 +167,8 @@ export async function assignLabelsToContactsHandler(
   try {
     const { orgId } = request.user;
     const { labelIds, contactIds } = request.body;
-    const contact = await assignLabelsToContacts(contactIds, labelIds, orgId);
-    reply.code(200).send(contact);
+    const result = await assignLabelsToContacts(contactIds, labelIds, orgId);
+    reply.code(200).send(result);
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });

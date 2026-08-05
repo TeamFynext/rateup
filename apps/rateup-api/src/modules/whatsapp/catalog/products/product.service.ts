@@ -92,8 +92,8 @@ export async function createCatalogProductsBatch(
       input = {
         ...rest,
         id: retailer_id,
-        price: `${parseFloat(String(price)).toFixed(2)} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        price: formatMoney(price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         internal_label: (internal_label ?? []).map((label) => `'${label}'`),
       };
     }
@@ -109,8 +109,8 @@ export async function createCatalogProductsBatch(
       });
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         ...tagInputs,
       };
     }
@@ -118,14 +118,9 @@ export async function createCatalogProductsBatch(
       const { base_price, currencyCode, ...rest } = data as CatalogHotelRoomInput;
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
       };
     }
-    // `type` may in principle be any CatalogProductTypes member (FLIGHT,
-    // DESTINATION, HOME_LISTING, VEHICLE), none of which are handled above —
-    // previously `input` silently stayed `undefined` and the code below threw
-    // a confusing "Cannot destructure property 'id' of undefined". Fail with
-    // a clear message instead. See issues.txt.
     if (!input) {
       throw new Error(`Unsupported catalog product type: ${type}`);
     }
@@ -141,9 +136,6 @@ export async function createCatalogProductsBatch(
       type,
       retailer_id: id ?? undefined,
       hotel_id,
-      // DB column is `hotel_ratailer_id` (a pre-existing typo baked into the
-      // Prisma schema); the DTO/API field is correctly spelled
-      // `hotel_retailer_id`. See issues.txt — BUG (fixed).
       hotel_ratailer_id: hotel_retailer_id,
       hotel_room_id,
       shopifyVariantId: shopifyVariantId ?? undefined,
@@ -169,6 +161,25 @@ export async function createCatalogProductsBatch(
     data: newProducts,
     skipDuplicates: true,
   });
+}
+
+/**
+ * Formats a money field the way Meta expects: "99.50 INR".
+ *
+ * Shared by create and update because the two used to disagree — create sent
+ * `parseFloat(price).toFixed(2)` while update sent the raw value, so the same product
+ * went to Meta as "99.50 INR" on create and "99.5 INR" on update, and a price like
+ * 99.999 went through unrounded on update. Note sale_price and base_price were
+ * unformatted on BOTH paths; they go through here too now.
+ *
+ * A non-numeric or absent amount is passed through untouched rather than becoming
+ * "NaN <currency>", so bad input still fails at Meta's validation with the original
+ * value visible rather than being silently mangled here.
+ */
+function formatMoney(amount: unknown, currencyCode: string | undefined): string {
+  const parsed = parseFloat(String(amount));
+  const value = Number.isFinite(parsed) ? parsed.toFixed(2) : String(amount);
+  return `${value} ${currencyCode}`;
 }
 
 interface SendProductRequestProps {
@@ -209,7 +220,7 @@ export async function syncCatalogProducts(
 ) {
   const [waSettings, catalogInfo] = await Promise.all([
     getWaSettings(orgId),
-    getWaCatalog(catalogId),
+    getWaCatalog(catalogId, orgId),
   ]);
   if (!waSettings || !catalogInfo) return;
   const { accessToken } = waSettings;
@@ -370,7 +381,17 @@ export async function syncCatalogProducts(
   };
 }
 
-export async function getCatalogProducts(catalogId: string, _query: unknown = null) {
+/**
+ * Lists every product in a catalog.
+ *
+ * Deliberately takes no query/filter argument. It used to accept one, name it `_query`
+ * and ignore it, so any search or paging a caller sent was silently dropped and the full
+ * list came back with no error. The dashboard sends nothing (products.api.ts calls
+ * `getCatalogProducts(catalogId)` with no params), so the parameter was dead rather than
+ * unimplemented — dropped instead of filled in. Add filtering here if a caller ever needs
+ * it, rather than accepting an argument that does nothing.
+ */
+export async function getCatalogProducts(catalogId: string) {
   return await prisma.waCatalogProduct.findMany({
     where: {
       catalogId,
@@ -383,7 +404,7 @@ export async function deleteCatalogProducts(
   catalogId: string,
   productIds: CatalogProductIdsSchema["productIds"],
 ) {
-  const catalogInfo = await getWaCatalog(catalogId);
+  const catalogInfo = await getWaCatalog(catalogId, orgId);
   if (!catalogInfo) {
     throw new Error(`Catalog not found for id ${catalogId}`);
   }
@@ -403,7 +424,10 @@ export async function deleteCatalogProducts(
     if (vertical === "hotel_room") {
       obj.data = {
         hotel_retailer_id: id.hotel_retailer_id,
-        hotel_room_id: id,
+        // `id.id`, not `id` — every other branch uses the field, and sending Meta the
+        // whole identifier object here matched nothing, so hotel-room deletes silently
+        // never reached Meta.
+        hotel_room_id: id.id,
       };
     }
     return obj;
@@ -414,21 +438,29 @@ export async function deleteCatalogProducts(
     throw new Error(`Unsupported catalog vertical: ${vertical}`);
   }
   await sendProducts(orgId, requests, catalogProductType, catalogId);
+  // Every branch is confined to this catalog. Without catalogId the deleteMany matched
+  // rows in ANY catalog of ANY org that happened to share the id — and retailer ids are
+  // merchant-chosen SKUs ("sku-1", "SHIRT-M"), so collisions across orgs are entirely
+  // plausible. One org deleting a product silently deleted another org's row.
+  // (The Meta call above was already correctly scoped; only this local delete was not.)
   let whereCondition;
   if (vertical === "commerce") {
     whereCondition = {
+      catalogId,
       retailer_id: {
         in: productIds.map((p) => p.id),
       },
     };
   } else if (vertical === "hotels") {
     whereCondition = {
+      catalogId,
       hotel_id: {
         in: productIds.map((p) => p.id),
       },
     };
   } else {
     whereCondition = {
+      catalogId,
       OR: productIds.map((p) => ({
         hotel_ratailer_id: p.hotel_retailer_id,
         hotel_room_id: p.id,
@@ -458,8 +490,8 @@ export async function updateCatalogProducts(
       input = {
         ...rest,
         id: retailer_id,
-        price: `${price} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        price: formatMoney(price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         internal_label: internal_label && internal_label.map((label) => `'${label}'`),
       };
     }
@@ -467,10 +499,6 @@ export async function updateCatalogProducts(
       const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } =
         data as Partial<CatalogHotelInput>;
       const tagInputs: Record<string, string | number> = {};
-      // `tags`/`numbertags` are optional under Partial (an update need not
-      // touch them); previously this threw "Cannot read properties of
-      // undefined (reading 'map')" whenever an update omitted them. See
-      // issues.txt — BUG (fixed).
       (tags ?? []).map((tag, index) => {
         tagInputs[`custom_label_${index}`] = tag;
       });
@@ -479,8 +507,8 @@ export async function updateCatalogProducts(
       });
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
-        sale_price: `${sale_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
+        sale_price: formatMoney(sale_price, currencyCode),
         ...tagInputs,
       };
     }
@@ -488,7 +516,7 @@ export async function updateCatalogProducts(
       const { base_price, currencyCode, ...rest } = data as Partial<CatalogHotelRoomInput>;
       input = {
         ...rest,
-        base_price: `${base_price} ${currencyCode}`,
+        base_price: formatMoney(base_price, currencyCode),
       };
     }
     if (!input) {
@@ -513,11 +541,6 @@ export async function updateCatalogProducts(
   for (const product of newProducts) {
     const { retailer_id, type, hotel_id, hotel_retailer_id, hotel_room_id, ...rest } = product;
     if (type === CatalogProductTypes.PRODUCT_ITEM) {
-      // An update payload is a Partial — `retailer_id` (Meta's `id`) could in
-      // principle be omitted. It's the only way to locate the row, so fail
-      // clearly rather than sending `undefined` into the compound unique
-      // filter below (which Prisma would reject with a much less clear
-      // error). See issues.txt.
       if (!retailer_id) {
         throw new Error("Cannot update a PRODUCT_ITEM catalog product without a retailer_id");
       }
@@ -557,13 +580,6 @@ export async function updateCatalogProducts(
         where: {
           catalog_hotel_room_id_unique: {
             catalogId,
-            // DB column is `hotel_ratailer_id` (pre-existing typo in the
-            // Prisma schema); `hotel_retailer_id` above is the correctly
-            // spelled DTO field. Previously this destructured a
-            // `hotel_ratailer_id` variable that never matched any key on
-            // `product`, so it was always `undefined` here — the compound
-            // unique filter could never match a HOTEL_ROOM row. See
-            // issues.txt — BUG (fixed).
             hotel_ratailer_id: hotel_retailer_id,
             hotel_room_id,
           },

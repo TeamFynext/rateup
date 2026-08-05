@@ -1,7 +1,14 @@
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 import { WaReceiveMessageBody } from "../../../../types/whatsapp.types.js";
 import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils.js";
+import { log } from "../../../../utils/logger.js";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+
+// returnAppropriateTimeStamp calls dayjs().utc() and dayjs.unix().utc(). This module
+// used to rely on survey.service.ts / response.service.ts / flow.service.ts having
+// extended the plugin first; in isolation it threw "utc is not a function".
+dayjs.extend(utc);
 
 export async function handleWaReceivedImages(
   messageBody: WaInboxMessageBody,
@@ -39,9 +46,21 @@ export async function returnAppropriateTimeStamp(
 ) {
   if (messageBody.exchangeProcess === "receive") {
     if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK) {
-      return new Date(
-        (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody).timestamp,
-      ).toISOString();
+      const timestamp = (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody)
+        .timestamp;
+      const parsed = dayjs(timestamp);
+      // A malformed or missing timestamp used to throw RangeError out of here
+      // (new Date(NaN).toISOString()), and the Instagram comment handler
+      // swallowed it — the message was lost while the webhook still answered
+      // 200. dayjs reports the same input as invalid instead of throwing, so it
+      // lands with the time we received it rather than not landing at all.
+      if (!parsed.isValid()) {
+        log.warn({ timestamp, platform }, "Unusable message timestamp; falling back to now");
+        return dayjs().toISOString();
+      }
+      // toISOString(), not .utc().format(): the stored format is the
+      // millisecond-precision Zulu string every other reader already expects.
+      return parsed.toISOString();
     }
     const unixTimeStamp = parseInt(
       (messageBody.receive as WaReceiveMessageBody).messages[0].timestamp,
@@ -52,8 +71,10 @@ export async function returnAppropriateTimeStamp(
   return dayjs().utc().format();
 }
 
+// "day", not "D": dayjs normalises "D" to "date", a unit its diff() has no case for, so
+// the result fell through to raw milliseconds and anything older than 1ms read as expired.
 export const isSessionExpired = (userInitiatedFinalTimeStamp: Date) =>
-  userInitiatedFinalTimeStamp && dayjs().diff(userInitiatedFinalTimeStamp, "D") >= 1;
+  userInitiatedFinalTimeStamp && dayjs().diff(userInitiatedFinalTimeStamp, "day") >= 1;
 
 /** How long an auto-generated ticket title may get before it is cut short. */
 const SUBJECT_MAX_LENGTH = 60;

@@ -131,6 +131,24 @@ const surveyThemeSchemaCore = z.object({
   thankyouTheme: thankyouThemeSchema.optional(),
 });
 
+const themeIdParamsSchema = z.object({
+  webSurveyThemeId: z.uuid(),
+});
+
+const createThemeBodySchema = z.object({
+  themeName: z.string().trim().min(1).max(100),
+  surveyId: z.uuid().optional(),
+});
+
+const renameThemeBodySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+});
+
+const updateActiveThemeBodySchema = z.object({
+  surveyId: z.uuid(),
+  theme: z.record(z.string(), z.unknown()),
+});
+
 const bySurveyIdSchema = z.object({
   surveyId: z.uuid(),
 });
@@ -144,4 +162,12 @@ export type bySurveyIdSchema = z.infer<typeof bySurveyIdSchema>;
 export type bySurveyThemeIdSchema = z.infer<typeof bySurveyThemeIdSchema>;
 
 // Auto-exported after fastify-zod migration
-export { surveyThemeSchemaCore, bySurveyIdSchema, bySurveyThemeIdSchema };
+export {
+  surveyThemeSchemaCore,
+  bySurveyIdSchema,
+  bySurveyThemeIdSchema,
+  themeIdParamsSchema,
+  createThemeBodySchema,
+  renameThemeBodySchema,
+  updateActiveThemeBodySchema,
+};

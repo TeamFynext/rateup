@@ -29,6 +29,7 @@ import {
   GetResponsesParams,
   responseFilterQuery,
   summarizeSchema,
+  SummarizeInput,
 } from "./response.schema.js";
 
 export async function responseRoutes(server: FastifyInstance) {
@@ -112,11 +113,18 @@ export async function responseRoutes(server: FastifyInstance) {
     syncResponseToGoogleSheetHandler,
   );
 
-  server.post("/export-contacts/:surveyId", exportContactResponseToContactsHandler);
+  server.post<{ Params: GetResponsesParams }>(
+    "/export-contacts/:surveyId",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    exportContactResponseToContactsHandler,
+  );
 
-  server.post(
+  server.post<{ Params: GetResponsesParams; Body: SummarizeInput }>(
     "/summarize/:surveyId",
     {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         body: summarizeSchema,
       },

@@ -128,17 +128,16 @@ describe("route registration", () => {
     return { srv, routes, hooks };
   }
 
-  // NOTE: zapierAuthenticationHandler sets request.user and only replies when
-  // the url contains "/auth" — the shape of a preHandler. It is registered as
-  // the handler of POST /auth and nowhere else.
-  test("adds no hook and no preHandler to anything", async () => {
+  test("authenticates the whole tree with a preHandler hook", async () => {
     const { srv, routes, hooks } = server();
 
     await zapierRoutes(srv);
 
-    expect(hooks).toHaveLength(0);
+    expect(hooks).toHaveLength(1);
+    expect(hooks[0].name).toBe("preHandler");
+    expect(hooks[0].fn).toBe(zapierAuthenticationHandler);
+    // The hook covers every route, so none of them needs its own.
     for (const r of routes) {
-      expect(r.opts?.preHandler).toBeUndefined();
       expect(r.opts?.onRequest).toBeUndefined();
     }
   });
@@ -390,23 +389,23 @@ describe("the unauthenticated handlers take their org from the query string", ()
     expect(getContactsByPhoneNumberAndOrgId).toHaveBeenCalledWith("98765", VICTIM_ORG);
   });
 
-  // NOTE: by-id reads through the contact module's getContactById, which is
-  // not org-scoped (issues.txt 18.5) — so a contact id alone is enough, with
-  // no orgId needed at all.
-  test("contact search by id passes no org anywhere", async () => {
+  test("contact search by id carries the named org", async () => {
     (getContactById as unknown as Mock).mockResolvedValueOnce({ id: "c-1", name: "Ann" });
     const rep = reply();
 
-    await getContactHandler({ query: { contactId: "c-1" } } as never, rep);
+    await getContactHandler({ query: { contactId: "c-1", orgId: VICTIM_ORG } } as never, rep);
 
-    expect(getContactById).toHaveBeenCalledWith("c-1");
+    expect(getContactById).toHaveBeenCalledWith("c-1", VICTIM_ORG);
     expect(answer(rep).body).toEqual([{ id: "c-1", name: "Ann" }]);
   });
 
-  test("contact delete by id passes no org either", async () => {
-    await deleteContactHandler({ query: {}, body: { contactId: "c-1" } } as never, reply());
+  test("contact delete by id carries the named org", async () => {
+    await deleteContactHandler(
+      { query: { orgId: VICTIM_ORG }, body: { contactId: "c-1" } } as never,
+      reply(),
+    );
 
-    expect(deleteContactById).toHaveBeenCalledWith("c-1");
+    expect(deleteContactById).toHaveBeenCalledWith("c-1", VICTIM_ORG);
   });
 
   test("contact delete by phone deletes inside whatever org is named", async () => {
@@ -465,18 +464,16 @@ describe("the unauthenticated handlers take their org from the query string", ()
 // ===========================================================================
 
 describe("contactSearchSchema", () => {
-  // NOTE: the refine reads `!data?.contactId?.length && !data?.phone?.length`,
-  // so it passes only when BOTH are empty/omitted — the inverse of its own
-  // message ("Either contactId or phone number should be provided"). This is
-  // a pre-existing bug, not fixed here (see the NOTE in zapier.schema.ts) —
-  // out of scope for a types-only pass since fixing it would change which
-  // requests are accepted. The `.length` accesses used to be unguarded, so a
-  // request that omitted one field threw a raw TypeError inside the refine
-  // instead of failing validation cleanly — that part *was* a type/null-safety
-  // bug and is now fixed with `?.`, so omitted fields are evaluated like any
-  // other falsy value instead of crashing.
-  test("rejects a search that supplies a contactId", () => {
-    const parsed = contactSearchSchema.safeParse({ contactId: "c-1", phone: "" });
+  test("accepts a search that supplies a contactId", () => {
+    expect(contactSearchSchema.safeParse({ contactId: "c-1", phone: "" }).success).toBe(true);
+  });
+
+  test("accepts a search that supplies a phone", () => {
+    expect(contactSearchSchema.safeParse({ contactId: "", phone: "9876" }).success).toBe(true);
+  });
+
+  test("rejects a search that supplies neither", () => {
+    const parsed = contactSearchSchema.safeParse({ contactId: "", phone: "" });
 
     expect(parsed.success).toBe(false);
     if (parsed.success) throw new Error("expected validation to fail");
@@ -485,19 +482,11 @@ describe("contactSearchSchema", () => {
     );
   });
 
-  test("rejects a search that supplies a phone", () => {
-    expect(contactSearchSchema.safeParse({ contactId: "", phone: "9876" }).success).toBe(false);
+  test("accepts a request that omits the field it is not searching by", () => {
+    expect(contactSearchSchema.safeParse({ phone: "9876" }).success).toBe(true);
   });
 
-  test("accepts only the search that supplies neither", () => {
-    expect(contactSearchSchema.safeParse({ contactId: "", phone: "" }).success).toBe(true);
-  });
-
-  test("evaluates rather than throwing when a field is omitted", () => {
-    expect(contactSearchSchema.safeParse({ phone: "9876" }).success).toBe(false);
-  });
-
-  test("accepts an empty object too (both fields omitted)", () => {
-    expect(contactSearchSchema.safeParse({}).success).toBe(true);
+  test("rejects an empty object", () => {
+    expect(contactSearchSchema.safeParse({}).success).toBe(false);
   });
 });

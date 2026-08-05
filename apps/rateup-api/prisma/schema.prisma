@@ -2135,6 +2135,9 @@ model CustomerLoyaltyAccount {
   lastActivityAt DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  lastInactivityReminderAt DateTime?
+  lastBirthdayGreetedAt    DateTime?
+
   // Relations
   transactions        LoyaltyTransaction[]
   redemptions         LoyaltyRedemption[]
@@ -2748,13 +2751,13 @@ model Conversation {
   createdAt              DateTime                          @default(now())
   updatedAt              DateTime?                         @updatedAt
 
+  @@unique([orgId, number], name: "conversation_org_id_number_unique")
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
   @@index([orgId, status])
   @@index([orgId, createdAt])
   @@index([orgId, lastMessageAt(sort: Desc)])
-  @@unique([orgId, number], name: "conversation_org_id_number_unique")
   @@index([orgId, isFavorite])
 }
 

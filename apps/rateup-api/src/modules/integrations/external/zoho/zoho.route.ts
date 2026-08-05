@@ -97,5 +97,11 @@ export async function zohoRoutes(server: FastifyInstance) {
 
   server.post("/webhooks/:product", handleZohoWebhook);
 
-  server.post("/unsubscribe/:orgId", disconnectZohoIntegrationHandler);
+  server.post<{ Params: { orgId: string } }>(
+    "/unsubscribe/:orgId",
+    {
+      preHandler: checkSession,
+    },
+    disconnectZohoIntegrationHandler,
+  );
 }

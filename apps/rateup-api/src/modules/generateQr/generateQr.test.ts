@@ -21,15 +21,24 @@ vi.mock("../../utils/prisma.js", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       delete: vi.fn(),
     },
   },
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
+vi.mock("../../utils/redisConnection.js", () => ({ default: { set: vi.fn() } }));
+vi.mock("../../utils/logger.js", () => ({
+  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+}));
+vi.mock("../../utils/rateLimit.js", () => ({
+  rateLimit: vi.fn((opts) => Object.assign(vi.fn(), { opts })),
+}));
 
 import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
+import connection from "../../utils/redisConnection.js";
 import { checkSession } from "../../utils/checkSession.js";
 import {
   createGenerateQrRecordInDB,
@@ -119,6 +128,10 @@ function answer(rep: any) {
 beforeEach(() => {
   vi.clearAllMocks();
   // clearAllMocks keeps implementations but drops queued values.
+  // "OK" is what Redis answers when SET NX actually set the key — i.e. this is
+  // the first scan from this address for this code today.
+  (connection.set as unknown as Mock).mockResolvedValue("OK");
+  db.generateQr.updateMany.mockResolvedValue({ count: 1 });
   db.generateQr.create.mockResolvedValue(row());
   db.generateQr.findFirst.mockResolvedValue(row());
   db.generateQr.findMany.mockResolvedValue([row()]);
@@ -328,38 +341,30 @@ describe("deleteGenerateQrRecordInDB", () => {
 // ===========================================================================
 
 describe("incrementNoOfScansInDB", () => {
-  test("increments on the short id alone, with no org and no ownership check", async () => {
+  // The counter is unauthenticated by design — a scanner has no session — so
+  // the short id is still the whole of the where clause. What changed is that
+  // the caller is bounded (44.2) and a miss is a miss rather than a 500 (44.4).
+  test("increments on the short id alone", async () => {
     await incrementNoOfScansInDB(req({ params: { shortUrlId: SHORT } }));
 
-    expect(db.generateQr.update).toHaveBeenCalledWith({
+    expect(db.generateQr.updateMany).toHaveBeenCalledWith({
       where: { shortUrlId: SHORT },
       data: { noOfScans: { increment: 1 } },
     });
   });
 
-  test("nothing bounds how many times the same caller may increment", async () => {
-    for (let i = 0; i < 5; i++) {
-      await incrementNoOfScansInDB(req({ params: { shortUrlId: SHORT } }));
-    }
+  test("an unknown short id reports a miss rather than rejecting", async () => {
+    db.generateQr.updateMany.mockResolvedValueOnce({ count: 0 });
 
-    expect(db.generateQr.update).toHaveBeenCalledTimes(5);
-    for (const call of db.generateQr.update.mock.calls) {
-      expect(call[0].data).toEqual({ noOfScans: { increment: 1 } });
-    }
+    await expect(incrementNoOfScansInDB(req({ params: { shortUrlId: "nope" } }))).resolves.toBe(
+      false,
+    );
   });
 
-  test("an unknown short id rejects instead of being ignored", async () => {
-    db.generateQr.update.mockRejectedValueOnce(new FakeKnownError("P2025"));
-
-    await expect(
-      incrementNoOfScansInDB(req({ params: { shortUrlId: "nope" } })),
-    ).rejects.toMatchObject({ code: "P2025" });
-  });
-
-  test("returns nothing, so the caller cannot tell what happened", async () => {
-    await expect(
-      incrementNoOfScansInDB(req({ params: { shortUrlId: SHORT } })),
-    ).resolves.toBeUndefined();
+  test("a counted scan reports it", async () => {
+    await expect(incrementNoOfScansInDB(req({ params: { shortUrlId: SHORT } }))).resolves.toBe(
+      true,
+    );
   });
 });
 
@@ -428,27 +433,41 @@ describe("controllers", () => {
     });
   });
 
-  test("the public read answers 200 with null for an unknown short id", async () => {
-    // NOTE: its authenticated twin answers 404 for the same condition.
+  test("the public read answers 404 for an unknown short id", async () => {
     db.generateQr.findFirst.mockResolvedValueOnce(null);
     const rep = reply();
 
     await getPublicGenerateQrRecordWithShortId(req({ params: { shortUrlId: "nope" } }), rep);
 
-    expect(answer(rep)).toEqual({ code: 200, body: null });
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { success: false, message: "Generate Qr Record with requested shortId not found." },
+    });
   });
 
-  test("the public read hands back whatever link is stored", async () => {
+  test("the two reads now answer a missing code the same way", async () => {
+    db.generateQr.findFirst.mockResolvedValue(null);
+    const publicRep = reply();
+    const privateRep = reply();
+
+    await getPublicGenerateQrRecordWithShortId(req({ params: { shortUrlId: "nope" } }), publicRep);
+    await getGenerateQrRecordWithShortId(req({ params: { shortUrlId: "nope" } }), privateRep);
+
+    expect(answer(publicRep)).toEqual(answer(privateRep));
+  });
+
+  test("the public read serves a record it does resolve", async () => {
     db.generateQr.findFirst.mockResolvedValueOnce({
       name: "T",
       shortUrlId: SHORT,
-      link: "javascript:alert(1)",
+      link: "https://rateup.app/s/abc",
     });
     const rep = reply();
 
     await getPublicGenerateQrRecordWithShortId(req({ params: { shortUrlId: SHORT } }), rep);
 
-    expect(answer(rep).body.link).toBe("javascript:alert(1)");
+    expect(answer(rep).code).toBe(200);
+    expect(answer(rep).body.link).toBe("https://rateup.app/s/abc");
   });
 
   test("the listing answers 200 with the array", async () => {
@@ -478,25 +497,72 @@ describe("controllers", () => {
     });
   });
 
-  test("the scan counter reports success without knowing whether it counted", async () => {
+  test("the scan counter counts a first scan and reports success", async () => {
     const rep = reply();
 
-    await incrementGenerateQrNoOfScans(req({ params: { shortUrlId: SHORT } }), rep);
+    await incrementGenerateQrNoOfScans(
+      req({ params: { shortUrlId: SHORT }, ip: "203.0.113.1" }),
+      rep,
+    );
 
+    expect(db.generateQr.updateMany).toHaveBeenCalledOnce();
     expect(answer(rep)).toEqual({
       code: 200,
       body: { success: true, message: "Successfully incremented number of scan value." },
     });
   });
 
-  test("a failed increment escapes the controller rather than answering", async () => {
-    db.generateQr.update.mockRejectedValueOnce(new FakeKnownError("P2025"));
+  test("a repeat scan from the same address is not counted again", async () => {
+    (connection.set as unknown as Mock).mockResolvedValueOnce(null);
+    const rep = reply();
+
+    await incrementGenerateQrNoOfScans(
+      req({ params: { shortUrlId: SHORT }, ip: "203.0.113.1" }),
+      rep,
+    );
+
+    expect(db.generateQr.updateMany).not.toHaveBeenCalled();
+    // Answered the same either way: whether this address was seen today is not
+    // the caller's business.
+    expect(answer(rep).code).toBe(200);
+  });
+
+  test("the dedup key names both the code and the address, and expires daily", async () => {
+    await incrementGenerateQrNoOfScans(
+      req({ params: { shortUrlId: SHORT }, ip: "203.0.113.1" }),
+      reply(),
+    );
+
+    expect(connection.set).toHaveBeenCalledWith(
+      `generateQr:scan:${SHORT}:203.0.113.1`,
+      "1",
+      "EX",
+      86_400,
+      "NX",
+    );
+  });
+
+  test("a Redis failure counts the scan rather than dropping it", async () => {
+    (connection.set as unknown as Mock).mockRejectedValueOnce(new Error("redis down"));
+    const rep = reply();
+
+    await incrementGenerateQrNoOfScans(req({ params: { shortUrlId: SHORT } }), rep);
+
+    expect(db.generateQr.updateMany).toHaveBeenCalledOnce();
+    expect(answer(rep).code).toBe(200);
+  });
+
+  test("an unknown short id answers 404 rather than escaping as a 500", async () => {
+    db.generateQr.updateMany.mockResolvedValueOnce({ count: 0 });
     const rep = reply();
 
     await expect(
       incrementGenerateQrNoOfScans(req({ params: { shortUrlId: "nope" } }), rep),
-    ).rejects.toMatchObject({ code: "P2025" });
-    expect(rep.send).not.toHaveBeenCalled();
+    ).resolves.toBeUndefined();
+    expect(answer(rep)).toEqual({
+      code: 404,
+      body: { success: false, message: "Generate Qr Record with requested shortId not found." },
+    });
   });
 });
 
@@ -557,7 +623,7 @@ describe("routes", () => {
     expect(opts.preHandler).toEqual([checkSession]);
   });
 
-  test("the hook clears the preHandler for a route flagged public", async () => {
+  test("the hook adds nothing to a route flagged public", async () => {
     const { srv, hooks } = fakeServer();
     await linkRoutes(srv);
 
@@ -567,9 +633,7 @@ describe("routes", () => {
     expect(opts.preHandler).toEqual([]);
   });
 
-  test("the hook replaces a preHandler a route declared for itself", async () => {
-    // NOTE: it assigns rather than appends, so any future role check declared
-    // in a route's own options would be discarded here.
+  test("the hook keeps a preHandler a route declared for itself", async () => {
     const { srv, hooks } = fakeServer();
     await linkRoutes(srv);
 
@@ -577,8 +641,30 @@ describe("routes", () => {
     const opts: any = { preHandler: [ownGuard] };
     hooks[0].fn(opts);
 
-    expect(opts.preHandler).toEqual([checkSession]);
-    expect(opts.preHandler).not.toContain(ownGuard);
+    expect(opts.preHandler).toEqual([checkSession, ownGuard]);
+  });
+
+  test("a public route keeps its own guard too", async () => {
+    const { srv, hooks } = fakeServer();
+    await linkRoutes(srv);
+
+    const limiter = vi.fn();
+    const opts: any = { config: { isPublic: true }, preHandler: [limiter] };
+    hooks[0].fn(opts);
+
+    expect(opts.preHandler).toEqual([limiter]);
+    expect(opts.preHandler).not.toContain(checkSession);
+  });
+
+  test("a single-function preHandler is normalised rather than dropped", async () => {
+    const { srv, hooks } = fakeServer();
+    await linkRoutes(srv);
+
+    const ownGuard = vi.fn();
+    const opts: any = { preHandler: ownGuard };
+    hooks[0].fn(opts);
+
+    expect(opts.preHandler).toEqual([checkSession, ownGuard]);
   });
 
   test("isPublic must be exactly true — anything else gets the session check", async () => {
@@ -608,25 +694,35 @@ describe("routes", () => {
     for (const o of privateOnes) expect((o as any).config).toBeUndefined();
   });
 
-  test("no route declares a role or feature requirement", async () => {
-    const all = [
+  test("no authenticated route declares a role requirement", async () => {
+    const authenticated = [
       createGenerateQrRecordRouteOptions,
       getGenerateQrRecordWithShortIdRouteOptions,
       getAllGenerateQrRecordsRouteOptions,
       updateGenerateQrRecordWithShortIdRouteOptions,
       deleteGenerateQrRecordWithShortIdRouteOptions,
-      getPublicGenerateQrRecordWithShortIdRouteOptions,
-      incrementGenerateQrNoOfScansRouteOptions,
     ];
 
-    for (const o of all) {
+    for (const o of authenticated) {
       expect(o).not.toHaveProperty("onRequest");
       expect((o as any).preHandler).toBeUndefined();
     }
   });
 
-  test("the public read declares no schema at all", async () => {
-    expect(getPublicGenerateQrRecordWithShortIdRouteOptions.schema).toEqual({});
+  test("the public counter carries a rate limiter", async () => {
+    const limiter = (incrementGenerateQrNoOfScansRouteOptions as any).preHandler[0];
+
+    expect(limiter.opts).toEqual({
+      max: 120,
+      windowSeconds: 3600,
+      key: "generateQrScan",
+    });
+  });
+
+  test("the public read validates its short id", async () => {
+    expect(getPublicGenerateQrRecordWithShortIdRouteOptions.schema).toEqual({
+      params: getGenerateQrRecordWithShortIdParams,
+    });
   });
 
   test("the public scan counter validates its params but declares no response", async () => {
@@ -649,16 +745,37 @@ describe("schemas", () => {
     ).toBe(true);
   });
 
-  test("the link is a bare string, so any scheme is accepted", () => {
-    // NOTE: no z.url() and no scheme check. The stored value is what the
-    // public endpoint hands to a scanner's browser.
-    for (const link of ["javascript:alert(1)", "data:text/html,<script>1</script>", "not a url"]) {
-      expect(createGenerateQrRecordReqBody.safeParse({ name: "T", link }).success).toBe(true);
+  test("the link must be an http or https URL", () => {
+    for (const link of [
+      "javascript:alert(1)",
+      "data:text/html,<script>1</script>",
+      "not a url",
+      "ftp://x.test/f",
+      "",
+    ]) {
+      expect(createGenerateQrRecordReqBody.safeParse({ name: "T", link }).success).toBe(false);
     }
+    expect(
+      createGenerateQrRecordReqBody.safeParse({ name: "T", link: "http://x.test" }).success,
+    ).toBe(true);
+    expect(
+      createGenerateQrRecordReqBody.safeParse({ name: "T", link: "https://x.test/a?b=c" }).success,
+    ).toBe(true);
   });
 
-  test("an empty link passes validation", () => {
-    expect(createGenerateQrRecordReqBody.safeParse({ name: "T", link: "" }).success).toBe(true);
+  test("the link is bounded in length", () => {
+    expect(
+      createGenerateQrRecordReqBody.safeParse({
+        name: "T",
+        link: `https://x.test/${"a".repeat(2100)}`,
+      }).success,
+    ).toBe(false);
+  });
+
+  test("an empty name is refused", () => {
+    expect(
+      createGenerateQrRecordReqBody.safeParse({ name: "", link: "https://x.test" }).success,
+    ).toBe(false);
   });
 
   test("create strips unknown keys rather than rejecting them", () => {
@@ -677,13 +794,18 @@ describe("schemas", () => {
     expect(updateGenerateQrRecordReqBody.safeParse({ shortUrlId: SHORT }).success).toBe(true);
   });
 
-  test("update accepts a new link with no validation, repointing a printed code", () => {
-    const parsed = updateGenerateQrRecordReqBody.parse({
-      shortUrlId: SHORT,
-      link: "http://attacker.test",
-    });
-
-    expect(parsed.link).toBe("http://attacker.test");
+  // Repointing a printed code is the point of a dynamic QR — what the update
+  // may not do any more is repoint it at an unparseable value or a scheme the
+  // browser executes.
+  test("update takes a new link but holds it to the same rules", () => {
+    expect(
+      updateGenerateQrRecordReqBody.parse({ shortUrlId: SHORT, link: "https://elsewhere.test" })
+        .link,
+    ).toBe("https://elsewhere.test");
+    expect(
+      updateGenerateQrRecordReqBody.safeParse({ shortUrlId: SHORT, link: "javascript:alert(1)" })
+        .success,
+    ).toBe(false);
   });
 
   test("update cannot reach noOfScans or the owning org", () => {

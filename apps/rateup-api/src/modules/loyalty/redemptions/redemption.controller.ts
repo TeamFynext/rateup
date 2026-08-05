@@ -16,6 +16,7 @@ import {
 } from "../accounts/account.schema.js";
 import { TransactionFilter } from "./redemption.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
+import { toCsv } from "../../../utils/spreadsheet.js";
 
 export async function redeemRewardHandler(
   request: FastifyRequest<{ Body: RedeemRewardInput }>,
@@ -31,12 +32,18 @@ export async function redeemRewardHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    // Intentionally broad: any error-like object with a P2002 "code" is reported as an
-    // already-redeemed reward, not just real PrismaClientKnownRequestError instances —
-    // see the redemption controller test suite for why (unique-constraint collisions on
-    // any of the three unique columns this path writes should read the same way to the user).
     if (typeof e === "object" && e !== null && "code" in e && e.code === "P2002") {
-      reply.code(400).send({ error: "Reward already redeemed" });
+      const target = (e as { meta?: { target?: unknown } }).meta?.target;
+      const fields = Array.isArray(target) ? target.map(String) : [String(target ?? "")];
+
+      if (fields.includes("rewardId") || fields.includes("accountId")) {
+        reply.code(400).send({ error: "Reward already redeemed" });
+        return;
+      }
+
+      reply.code(409).send({
+        error: "Could not complete the redemption because of a code collision. Please try again.",
+      });
       return;
     }
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
@@ -48,7 +55,7 @@ export async function verifyRedemptionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await verifyRedemption(request.body.redemptionCode);
+    const result = await verifyRedemption(request.body.redemptionCode, request.user.orgId);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -61,7 +68,7 @@ export async function applyRedemptionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await applyRedemption(request.body);
+    const result = await applyRedemption(request.body, request.user.orgId);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -74,7 +81,7 @@ export async function getRedemptionsByCustomerHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await getRedemptionsByCustomer(request.params.customerId);
+    const result = await getRedemptionsByCustomer(request.params.customerId, request.user.orgId);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -188,7 +195,7 @@ export async function getTransactionsHandler(
           ]);
         });
 
-        const csv = rows.map((row) => row.join(",")).join("\n");
+        const csv = toCsv(rows);
 
         reply.header("Content-Type", "text/csv");
         reply.header(

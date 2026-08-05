@@ -15,6 +15,7 @@ vi.mock("../../utils/prisma.js", () => ({
 vi.mock("../../../generated/prisma/client.js", () => ({ Prisma: {} }));
 
 import prisma from "../../utils/prisma.js";
+import { ChannelNotFoundError } from "./commerce.errors.js";
 import {
   getAllCommerceOrders,
   getCommerceChannels,
@@ -98,12 +99,12 @@ describe("orderTotal", () => {
     expect(orderTotal(null, { charge: 40 })).toBe(40);
   });
 
-  // NOTE: pins current behaviour. `products` is a Json[] column with no schema,
-  // so a non-numeric price coerces to NaN and poisons every total it is summed
-  // into — including the period totals in getCommerceOverview.
-  // See issues.txt 19.1.
-  test("yields NaN for a line item whose price is not a number", () => {
-    expect(orderTotal([item({ price: "1,200" })])).toBeNaN();
+  test("treats a line item whose price is not a number as zero", () => {
+    expect(orderTotal([item({ price: "1,200" })])).toBe(0);
+  });
+
+  test("keeps the readable lines of an order that has one unreadable one", () => {
+    expect(orderTotal([item({ price: 100, quantity: 1 }), item({ price: "1,200" })])).toBe(100);
   });
 
   test("accepts a numeric string price, because Number() coerces it", () => {
@@ -139,9 +140,6 @@ describe("orderCurrency", () => {
     expect(orderCurrency(null)).toBeUndefined();
   });
 
-  // NOTE: a mixed-currency order silently reports only the first currency, and
-  // the totals above it add the amounts together with no conversion.
-  // See issues.txt 19.2.
   test("reports one currency for an order that mixes two", () => {
     const products = [item({ currency: "INR", price: 100 }), item({ currency: "USD", price: 100 })];
 
@@ -172,7 +170,7 @@ describe("resolveChannelCatalogId", () => {
     db.whatsappCatalog.findFirst.mockResolvedValue(null);
 
     await expect(resolveChannelCatalogId(ORG, { catalogId: "cat-other-org" })).rejects.toThrow(
-      "Channel not found for this organization",
+      "Channel not found",
     );
   });
 
@@ -191,7 +189,7 @@ describe("resolveChannelCatalogId", () => {
     db.whatsappCatalog.findFirst.mockResolvedValue(null);
 
     await expect(resolveChannelCatalogId(ORG, { phoneId: "phone-other-org" })).rejects.toThrow(
-      "Channel not found for this organization",
+      "Channel not found",
     );
   });
 
@@ -201,22 +199,21 @@ describe("resolveChannelCatalogId", () => {
     expect(db.catalogPhoneIdMap.findUnique).not.toHaveBeenCalled();
   });
 
-  // NOTE: the two refusals carry different messages, and the controller sends
-  // both verbatim with a 400. "No catalog is connected to that channel" means the
-  // phoneId is not mapped; "Channel not found for this organization" means it IS
-  // mapped, just to someone else's catalog. The pair distinguishes the two.
-  // See issues.txt 19.3.
-  test("distinguishes an unmapped channel from one owned by another org", async () => {
+  test("cannot be used to tell an unmapped channel from one owned by another org", async () => {
     db.catalogPhoneIdMap.findUnique.mockResolvedValue(null);
-    await expect(resolveChannelCatalogId(ORG, { phoneId: "phone-unmapped" })).rejects.toThrow(
-      "No catalog is connected to that channel",
+    const unmapped = await resolveChannelCatalogId(ORG, { phoneId: "phone-unmapped" }).catch(
+      (e) => e,
     );
 
     db.catalogPhoneIdMap.findUnique.mockResolvedValue({ catalogId: "cat-other-org" });
     db.whatsappCatalog.findFirst.mockResolvedValue(null);
-    await expect(resolveChannelCatalogId(ORG, { phoneId: "phone-other-org" })).rejects.toThrow(
-      "Channel not found for this organization",
+    const foreign = await resolveChannelCatalogId(ORG, { phoneId: "phone-other-org" }).catch(
+      (e) => e,
     );
+
+    expect(unmapped.message).toBe(foreign.message);
+    expect(unmapped).toBeInstanceOf(ChannelNotFoundError);
+    expect(foreign).toBeInstanceOf(ChannelNotFoundError);
   });
 });
 
@@ -328,13 +325,13 @@ describe("the order filter", () => {
     expect(where()).toEqual({ catalog: { orgId: ORG }, catalogId: CATALOG });
   });
 
-  test("builds a closed date range from both bounds", async () => {
+  test("builds a half-open date range from both bounds", async () => {
     const from = new Date("2026-01-01T00:00:00.000Z");
     const to = new Date("2026-01-31T00:00:00.000Z");
 
     await getCommerceTopProducts(ORG, { limit: 5, from, to } as any);
 
-    expect(where().createdAt).toEqual({ gte: from, lte: to });
+    expect(where().createdAt).toEqual({ gte: from, lt: to });
   });
 
   test("builds a half-open range from one bound", async () => {
@@ -488,10 +485,7 @@ describe("getCommerceOverview", () => {
     });
   });
 
-  // NOTE: the current window is inclusive at both ends (gte/lte) while the
-  // previous one is half-open (gte/lt), so the comparison window is one instant
-  // shorter than the window it is compared against. See issues.txt 19.4.
-  test("the two windows are not bounded the same way", async () => {
+  test("bounds both windows the same way", async () => {
     const from = new Date("2026-01-11T00:00:00.000Z");
     const to = new Date("2026-01-21T00:00:00.000Z");
 
@@ -499,7 +493,7 @@ describe("getCommerceOverview", () => {
 
     expect(db.waCatalogOrder.findMany.mock.calls[0][0].where.createdAt).toEqual({
       gte: from,
-      lte: to,
+      lt: to,
     });
     expect(db.waCatalogOrder.findMany.mock.calls[1][0].where.createdAt).toHaveProperty("lt");
   });
@@ -531,10 +525,7 @@ describe("getCommerceOverview", () => {
     expect(res.delta.totalSales).toBe(-25);
   });
 
-  // NOTE: pins current behaviour. Growth from an empty previous period is
-  // reported as exactly +100%, which reads as "sales doubled" — the same number
-  // an actual doubling produces. See issues.txt 19.5.
-  test("reports growth from nothing as +100%", async () => {
+  test("reports growth from nothing as no comparison at all", async () => {
     db.waCatalogOrder.findMany
       .mockResolvedValueOnce([order({ products: [item({ price: 50000, quantity: 1 })] })])
       .mockResolvedValueOnce([]);
@@ -544,8 +535,8 @@ describe("getCommerceOverview", () => {
       to: new Date("2026-01-21"),
     });
 
-    expect(res.delta.totalSales).toBe(100);
-    expect(res.delta.orderCount).toBe(100);
+    expect(res.delta.totalSales).toBeNull();
+    expect(res.delta.orderCount).toBeNull();
   });
 
   test("reports no change at all when both periods are empty", async () => {
@@ -557,9 +548,6 @@ describe("getCommerceOverview", () => {
     expect(res.delta).toEqual({ totalSales: null, orderCount: null, avgOrderValue: null });
   });
 
-  // NOTE: every order in the window is materialised in Node and reduced there —
-  // twice, once per window — with no take and no database-side aggregation.
-  // See issues.txt 19.6.
   test("loads whole orders into memory rather than aggregating in the database", async () => {
     await getCommerceOverview(ORG, {});
 
@@ -568,16 +556,39 @@ describe("getCommerceOverview", () => {
     expect(call.select).toEqual({ products: true, deliveryOption: true, paymentStatus: true });
   });
 
-  test("a single unreadable price poisons the whole period total", async () => {
+  test("a single unreadable price does not poison the period total", async () => {
     db.waCatalogOrder.findMany.mockResolvedValue([
-      order({ products: [item({ price: 100 })] }),
+      order({ products: [item({ price: 100, quantity: 1 })] }),
       order({ products: [item({ price: "1,200" })] }),
     ]);
 
     const res = await getCommerceOverview(ORG, {});
 
-    expect(res.totalSales).toBeNaN();
-    expect(res.avgOrderValue).toBeNaN();
+    expect(res.totalSales).toBe(100);
+    expect(res.avgOrderValue).toBe(50);
+  });
+
+  test("reports which currencies the totals are a sum of", async () => {
+    db.waCatalogOrder.findMany.mockResolvedValue([
+      order({ products: [item({ price: 100, quantity: 1, currency: "USD" })] }),
+      order({ products: [item({ price: 100, quantity: 1, currency: "INR" })] }),
+    ]);
+
+    const res = await getCommerceOverview(ORG, {});
+
+    expect(res.currencies.sort()).toEqual(["INR", "USD"]);
+    expect(res.mixedCurrency).toBe(true);
+  });
+
+  test("reports a single-currency period as unmixed", async () => {
+    db.waCatalogOrder.findMany.mockResolvedValue([
+      order({ products: [item({ price: 100, quantity: 1, currency: "INR" })] }),
+    ]);
+
+    const res = await getCommerceOverview(ORG, {});
+
+    expect(res.currencies).toEqual(["INR"]);
+    expect(res.mixedCurrency).toBe(false);
   });
 });
 
@@ -663,14 +674,7 @@ describe("getCommerceTimeseries", () => {
     expect(res.map((b) => b.date)).toEqual(["2026-01-01", "2026-01-02"]);
   });
 
-  // NOTE: pins current behaviour. Both the bucket boundary (`startOf(unit)`) and
-  // the label (`format("YYYY-MM-DD")`) are computed in the SERVER's timezone,
-  // while the from/to bounds are compared by postgres against a UTC timestamp
-  // column. An order placed at 23:30 UTC therefore lands in the NEXT day's bucket
-  // on any server east of UTC+00:30 — the same rows chart differently depending
-  // on where the process runs, and neither the org's timezone nor UTC is used.
-  // See issues.txt 19.9.
-  test("buckets by the server's local day rather than by UTC", async () => {
+  test("buckets by UTC, whatever timezone the server runs in", async () => {
     const createdAt = new Date("2026-01-23T23:30:00.000Z");
     db.waCatalogOrder.findMany.mockResolvedValue([
       { createdAt, products: [item({ price: 100, quantity: 1 })], deliveryOption: null },
@@ -678,9 +682,7 @@ describe("getCommerceTimeseries", () => {
 
     const res = await getCommerceTimeseries(ORG, { interval: "day" } as any);
 
-    // The label follows the local clock, not createdAt's UTC date ("2026-01-23").
-    expect(res[0].date).toBe(dayjs(createdAt).startOf("day").format("YYYY-MM-DD"));
-    expect(res[0].date).toBe(dayjs(createdAt).format("YYYY-MM-DD"));
+    expect(res[0].date).toBe("2026-01-23");
   });
 
   test("reads the orders oldest-first so the earliest one anchors the range", async () => {
@@ -712,33 +714,33 @@ describe("getCommerceTimeseries", () => {
     expect(res[0].sales).toBe(140);
   });
 
-  // NOTE: pins current behaviour. The fill loop steps one interval at a time from
-  // `from` to `to`, both taken straight off the querystring with no span limit.
-  // A single request can therefore ask the handler to build tens of thousands of
-  // buckets. See issues.txt 19.7.
-  test("builds one bucket per day across an arbitrarily long requested window", async () => {
+  test("caps how many buckets one request can ask for", async () => {
     const res = await getCommerceTimeseries(ORG, {
       interval: "day",
-      from: new Date(1990, 0, 1),
-      to: new Date(2026, 0, 1),
+      from: new Date(Date.UTC(1990, 0, 1)),
+      to: new Date(Date.UTC(2026, 0, 1)),
     } as any);
 
-    expect(res.length).toBeGreaterThan(13000);
+    expect(res.length).toBe(2000);
   });
 
-  // NOTE: the fill loop's only exit is `cursor.isAfter(dayjs(end), unit)`, and an
-  // invalid dayjs never reports itself as after anything — so an unparseable
-  // bound would spin forever. That is unreachable through the route today only
-  // because z.coerce.date() rejects unparseable input at the boundary; the loop
-  // itself has neither a validity guard nor an iteration cap. Asserted against
-  // dayjs directly rather than by calling the function, which would hang.
-  // See issues.txt 19.7.
-  test("the fill loop's exit condition is never met by an invalid date", () => {
-    const invalid = dayjs(new Date("not a date"));
+  test("fills an ordinary window in full", async () => {
+    const res = await getCommerceTimeseries(ORG, {
+      interval: "day",
+      from: new Date(Date.UTC(2026, 0, 1)),
+      to: new Date(Date.UTC(2026, 0, 10)),
+    } as any);
 
-    expect(invalid.isValid()).toBe(false);
-    expect(invalid.isAfter(dayjs("2026-01-01"), "day")).toBe(false);
-    expect(invalid.add(1, "day").isAfter(dayjs("2026-01-01"), "day")).toBe(false);
+    expect(res.length).toBe(10);
+  });
+
+  test("returns rather than spinning when a bound is not a real date", async () => {
+    const res = await getCommerceTimeseries(ORG, {
+      interval: "day",
+      from: new Date("not a date"),
+    } as any);
+
+    expect(Array.isArray(res)).toBe(true);
   });
 });
 
@@ -843,11 +845,7 @@ describe("getCommerceTopProducts", () => {
     expect((await getCommerceTopProducts(ORG, { limit: 5 } as any))[0].share).toBe(0);
   });
 
-  // NOTE: name, image and price are captured from whichever line item is seen
-  // first and never revisited, while units and revenue keep accumulating. A
-  // product whose price changed reports its old unit price beside a revenue
-  // figure computed from both prices. See issues.txt 19.8.
-  test("reports the first price it saw even after the price changed", async () => {
+  test("reports the average price actually realised, not the first one seen", async () => {
     db.waCatalogOrder.findMany.mockResolvedValue([
       { products: [item({ retailerId: "sku-1", price: 100, quantity: 1, title: "Mug" })] },
       { products: [item({ retailerId: "sku-1", price: 250, quantity: 1, title: "Mug (new)" })] },
@@ -855,9 +853,11 @@ describe("getCommerceTopProducts", () => {
 
     const [product] = await getCommerceTopProducts(ORG, { limit: 5 } as any);
 
-    expect(product.price).toBe(100);
-    expect(product.name).toBe("Mug");
     expect(product.revenue).toBe(350);
+    expect(product.units).toBe(2);
+    expect(product.price).toBe(175);
+    expect(product.price * product.units).toBe(product.revenue);
+    expect(product.name).toBe("Mug");
   });
 
   test("only ever reads the caller's own orders", async () => {
@@ -958,9 +958,6 @@ describe("getAllCommerceOrders", () => {
     expect(res[0]).toMatchObject({ total: 200, itemCount: 2, currency: "INR" });
   });
 
-  // NOTE: the export path has no take at all, so it materialises every matching
-  // order — and the filters are optional, so the default is the org's entire
-  // order history. See issues.txt 19.6.
   test("reads every matching order with no limit", async () => {
     await getAllCommerceOrders(ORG, {} as any);
 
@@ -973,7 +970,7 @@ describe("getAllCommerceOrders", () => {
     db.whatsappCatalog.findFirst.mockResolvedValue(null);
 
     await expect(getAllCommerceOrders(ORG, { catalogId: "cat-other-org" } as any)).rejects.toThrow(
-      "Channel not found for this organization",
+      ChannelNotFoundError,
     );
     expect(db.waCatalogOrder.findMany).not.toHaveBeenCalled();
   });

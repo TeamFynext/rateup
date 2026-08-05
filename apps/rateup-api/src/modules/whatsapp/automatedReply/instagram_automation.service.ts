@@ -10,7 +10,6 @@ import prisma from "../../../utils/prisma.js";
 import {
   createOrUpdateInstagramAutomationMessage,
   logInstagramAutomationAction,
-  wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import { parseToWhatsAppFormat } from "../whatsappSurvey/wasurvey.utils.js";
 import {
@@ -62,7 +61,6 @@ export interface InstagramAutomation {
   orgId: string;
   name: string;
   matchData: WaAutomatedReplyMatchData;
-  sendOnceIn24Hours?: boolean;
   whatsappSettingsPhoneId?: string | null;
 }
 
@@ -78,18 +76,6 @@ export async function startInstagramAutomationFlow(
 ): Promise<void> {
   try {
     log.info(`[Instagram Automation] Starting flow ${automation.id} for igsId ${igsId}`);
-
-    // Check if automation should only run once in 24 hours
-    if (automation.sendOnceIn24Hours) {
-      const wasSentRecently = await wasInstagramAutomationSentRecently(igsId, automation.id, orgId);
-
-      if (wasSentRecently) {
-        log.info(
-          `[Instagram Automation] Skipping automation ${automation.id} - already sent in last 24 hours`,
-        );
-        return;
-      }
-    }
 
     // Find the start node
     const startNode = automation.matchData?.json?.nodes?.find((node) => node.type === "startNode");
@@ -132,7 +118,33 @@ export async function startInstagramAutomationFlow(
     );
   } catch (error) {
     log.error({ err: error }, `[Instagram Automation] Error starting flow ${automation.id}`);
-    // Error is logged but not thrown to prevent affecting other operations
+    // Still not thrown — a broken flow must not take down the webhook that triggered it —
+    // but the tracking row is marked so a half-run flow is queryable rather than
+    // indistinguishable from a completed one.
+    await markInstagramAutomationStopped(igsId, automation.id, error);
+  }
+}
+
+/**
+ * Records that a flow stopped part-way. Best-effort: a failure to write the marker must
+ * not mask the original error, so it is logged and swallowed. updateMany is used because
+ * the tracking row may not exist yet if the flow failed before creating it.
+ *
+ * `paused` is the marker: WaAutomationProgressStatus has no `failed` value, so a crash
+ * shares a status with a deliberate wait for user input. Distinguish the two by the
+ * accompanying error log, not by the row alone.
+ */
+async function markInstagramAutomationStopped(igsId: string, automationId: string, cause: unknown) {
+  try {
+    await prisma.waAutomatedReplyMessage.updateMany({
+      where: { phone: igsId, waAutomatedReplyId: automationId },
+      data: { status: "paused" },
+    });
+  } catch (markError) {
+    log.error(
+      { err: markError, cause },
+      `[Instagram Automation] Could not mark automation ${automationId} stopped`,
+    );
   }
 }
 
@@ -220,7 +232,7 @@ export async function processNextInstagramNode(
             nodeString(node.data?.text) ??
             "";
           const fallbackText = parseToWhatsAppFormat(rawText) || "Thanks for your comment!";
-          await sendInstagramPrivateReply(remainingCommentId, fallbackText, ibaId);
+          await sendInstagramPrivateReply(remainingCommentId, fallbackText, ibaId, orgId, igsId);
           remainingCommentId = undefined;
         }
         await handleInstagramImageNode(node, igsId, orgId, ibaId);
@@ -325,7 +337,9 @@ export async function processNextInstagramNode(
     }
   } catch (error) {
     log.error({ err: error }, `[Instagram Automation] Error processing node ${nodeId}`);
-    // Error is logged but not thrown to prevent affecting other operations
+    // As in startInstagramAutomationFlow: not thrown, but recorded so the flow that
+    // stopped here can be found later.
+    await markInstagramAutomationStopped(igsId, automation.id, error);
   }
 }
 
@@ -343,7 +357,7 @@ async function handleInstagramTextNode(
     const rawText = nodeString(node.data?.body) ?? nodeString(node.data?.text) ?? "Hello!";
     const text = parseToWhatsAppFormat(rawText) || "Hello!";
     if (commentId) {
-      await sendInstagramPrivateReply(commentId, text, ibaId);
+      await sendInstagramPrivateReply(commentId, text, ibaId, orgId, igsId);
     } else {
       await sendInstagramTextMessage(igsId, text, orgId, ibaId);
     }
@@ -370,7 +384,7 @@ async function handleInstagramImageNode(
       return;
     }
 
-    await sendInstagramImage(igsId, getFileUrlFromKey(imageUrl), caption, orgId, ibaId);
+    await sendInstagramImage(igsId, getFileUrlFromKey(imageUrl), orgId, ibaId, caption);
   } catch (error) {
     log.error({ err: error }, `[Instagram Automation] Error handling image node ${node.id}`);
   }
