@@ -100,9 +100,14 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl rounded-xl border-0 p-0 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.42)] max-h-[92vh]">
-        <div className="overflow-y-auto max-h-[92vh] px-6 pb-5 pt-5">
-          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-[#072554]">
+      {/* `sm:max-w-xl`, not `max-w-xl`: the base width has to stay `DialogContent`'s own
+          `max-w-[calc(100%-2rem)]` so the dialog keeps its gutters on a phone, and the override
+          has to land on `sm` to beat the component's `sm:max-w-md`. The height cap plus the
+          scrolling body below keep it inside short viewports — `dvh` so mobile browser chrome
+          cannot push the submit button out of reach. */}
+      <DialogContent className="sm:max-w-xl max-h-[90dvh] grid-rows-[minmax(0,1fr)] overflow-hidden rounded-xl p-4 sm:p-6">
+        <div className="min-h-0 overflow-y-auto">
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary">
             <RateupStar className="h-6 w-6" />
           </div>
 

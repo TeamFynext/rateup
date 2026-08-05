@@ -38,16 +38,6 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
-    id: "2026-08-04-contacts-open-in-inbox",
-    title: "Jump from a contact to their chat",
-    summary:
-      "The actions menu on a contact row has a new Open in Inbox item. It takes you straight to that contact's conversation, so you no longer have to search for them once you are there.",
-    publishedAt: "2026-08-04",
-    kinds: ["new"],
-    area: "Contacts",
-    link: { to: "/dashboard/contacts", label: "Open contacts" },
-  },
-  {
     id: "2026-07-25-docs-shortcut",
     title: "Documentation is one click away",
     summary:
