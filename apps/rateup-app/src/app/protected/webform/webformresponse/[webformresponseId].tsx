@@ -12,17 +12,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useWebFormResponseDataStore } from "@/utils/store";
 import { useQuestions } from "@/api/question/question.query";
 import { ArrowLeft } from "lucide-react-native";
+import { firstParam } from "@/utils/params";
 
 const ResponseId = () => {
   const isDark = useColorScheme() === "dark";
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
 
-  const { webformresponseId, webformId, respondent } = useLocalSearchParams();
+  const { webformId, respondent } = useLocalSearchParams();
 
   const { data } = useWebFormResponseDataStore();
 
-  const { data: questions, isLoading } = useQuestions(webformId);
+  const { data: questions, isLoading } = useQuestions(firstParam(webformId));
 
   const router = useRouter();
 
@@ -48,8 +49,7 @@ const ResponseId = () => {
     const map: Record<string, string> = {};
 
     questions?.forEach((q) => {
-      const raw =
-        q.title?.English || q.description?.English || q.label?.English || "";
+      const raw = q.title?.English || q.description?.English || q.label?.English || "";
 
       map[q.id] = stripHtml(raw);
     });
@@ -71,9 +71,7 @@ const ResponseId = () => {
         {/* Avatar + Name */}
         <View className="flex-row items-center space-x-4 mb-6 gap-3">
           <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">
-            <Text className="text-rateUpGreen font-bold text-2xl">
-              {respondent ? "0" : "R"}
-            </Text>
+            <Text className="text-rateUpGreen font-bold text-2xl">{respondent ? "0" : "R"}</Text>
           </View>
 
           <Text className="text-xl font-medium text-gray-900 dark:text-white">
@@ -100,14 +98,10 @@ const ResponseId = () => {
           const value = item.response?.[responseType];
 
           const displayValue =
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "boolean"
+            typeof value === "string" || typeof value === "number" || typeof value === "boolean"
               ? String(value)
               : Array.isArray(value)
-                ? value
-                    .map((v) => (typeof v === "string" ? v : v?.value || ""))
-                    .join(", ")
+                ? value.map((v) => (typeof v === "string" ? v : v?.value || "")).join(", ")
                 : typeof value === "object" && value?.value
                   ? value.value
                   : Object.entries(value || {})
@@ -126,9 +120,7 @@ const ResponseId = () => {
               {/* Index & Type */}
               <View className="flex-row items-center mb-3 gap-2">
                 <View className="w-7 h-7 rounded-full bg-rateUpGreen items-center justify-center">
-                  <Text className="text-white text-xs font-semibold">
-                    {index + 1}
-                  </Text>
+                  <Text className="text-white text-xs font-semibold">{index + 1}</Text>
                 </View>
 
                 <Text className="text-white bg-rateUpGreen px-3 py-1 rounded-full text-xs font-medium capitalize">

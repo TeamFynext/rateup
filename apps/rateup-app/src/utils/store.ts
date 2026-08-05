@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { ContactsWithLastMessage } from "../api/inbox/types";
+import type { SurveyResponseRow } from "../api/response/types";
+import type { DbFlow } from "../api/whatsapp/types";
 import { deleteUploadedFiles } from "./fileUpload";
 
 type ChatState = {
@@ -36,15 +38,13 @@ export const useSelectedTabStore = create<SelectedTabState>((set: any) => ({
 
 export const useSelectedContactStore = create<SelectedContactState>((set: any) => ({
   selectedContact: null,
-  setSelectedContact: (contact: SelectedContactData | null) =>
-    set({ selectedContact: contact }),
+  setSelectedContact: (contact: SelectedContactData | null) => set({ selectedContact: contact }),
 }));
 
 export const useSessionActiveStore = create<SessionState>((set: any) => ({
   isSessionActive: true,
   setIsSessionActive: (session: boolean) => set({ isSessionActive: session }),
 }));
-
 
 export type ChatFilter = {
   messageType: "all" | "replied" | "unread" | "usermessages";
@@ -160,7 +160,6 @@ export const useWebFormFilterStore = create<any>((set) => ({
     }),
 }));
 
-
 interface Message {
   id?: string;
   contactId: string;
@@ -179,7 +178,7 @@ interface MessageState {
   messages: Record<string, Message[]>;
   addMessage: (
     contactId: string,
-    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">
+    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">,
   ) => void;
   removeMessage: (contactId: string) => void;
 }
@@ -288,20 +287,18 @@ export const useSearchWebFormStore = create<SearchWebFormState>()((set) => ({
 }));
 
 type FlowResponseDataStore = {
-  data: any[];
-  setData: (newData: any[]) => void;
+  data: SurveyResponseRow[];
+  setData: (newData: SurveyResponseRow[]) => void;
 };
 
-export const useFlowResponseDataStore = create<FlowResponseDataStore>(
-  (set) => ({
-    data: [],
-    setData: (newData) => set({ data: newData }),
-  })
-);
+export const useFlowResponseDataStore = create<FlowResponseDataStore>((set) => ({
+  data: [],
+  setData: (newData) => set({ data: newData }),
+}));
 
 type FlowDataStore = {
-  flowData: any[];
-  setFlowData: (newData: any[]) => void;
+  flowData: DbFlow[];
+  setFlowData: (newData: DbFlow[]) => void;
 };
 
 export const useFlowDataStore = create<FlowDataStore>((set) => ({
@@ -314,13 +311,10 @@ type WebFormResponseDataStore = {
   setData: (newData: any[]) => void;
 };
 
-export const useWebFormResponseDataStore = create<WebFormResponseDataStore>(
-  (set) => ({
-    data: [],
-    setData: (newData) => set({ data: newData }),
-  })
-);
-
+export const useWebFormResponseDataStore = create<WebFormResponseDataStore>((set) => ({
+  data: [],
+  setData: (newData) => set({ data: newData }),
+}));
 
 type WaMedia = {
   type: string;

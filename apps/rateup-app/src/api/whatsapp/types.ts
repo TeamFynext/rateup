@@ -1,3 +1,5 @@
+import type { WaQuestions } from "@/components/flow/enum";
+
 export type WaTemplate = {
   id: string;
   createdAt: Date;
@@ -112,10 +114,32 @@ export enum WaFlowLayoutType {
   scl = "SingleColumnLayout",
 }
 
+/**
+ * A child of a screen's layout. In v1 flows this is the "Form" wrapper whose
+ * `children` hold the question elements; v2 flows put the question elements at
+ * this level instead, which is why the question fields below are present (and
+ * optional) here. Mirrors `WaFlowForm` in the API's global.d.ts.
+ */
 export type WaFlowForm = {
   type: string; // add types
-  name: string;
-  children: Array<WaFlowFormElement>;
+  /** Absent on non-interactive v2 elements (TextBody, TextHeading, ...). */
+  name?: string;
+  /** Only the v1 "Form" wrapper nests children; v2 elements are leaves. */
+  children?: Array<WaFlowFormElement>;
+  /** v2 only: the Meta component type backing this question. */
+  metaType?: WaQuestions;
+  /** v2 only: the element's stable id (injectIdToFlowJson). */
+  id?: string;
+  /** v2 only: the question's selectable options. */
+  "data-source"?: Array<WaFlowFormChoice>;
+  /** v2 only: the element's display label. */
+  label?: string;
+  /** v2 only: heading text, lifted into its own TextBody element on export. */
+  header?: string;
+  /** Text elements only. */
+  text?: string;
+  /** Only present on the "Footer" variant of a screen's layout children. */
+  "on-click-action"?: WaFlowOnClickAction;
 };
 
 export type WaFlowFormElement = {

@@ -27,8 +27,8 @@ const DocumentResponse = ({ info }: { info: string }) => {
       const hasPermission = await requestStoragePermission();
       if (!hasPermission) {
         Toast.show({
-          type: "warning",
-          text1: "Storage permission denied."
+          type: "warn",
+          text1: "Storage permission denied.",
         });
         return;
       }
@@ -44,19 +44,16 @@ const DocumentResponse = ({ info }: { info: string }) => {
       const fileExistsNow = fileInfo.exists;
       if (!fileExistsNow) {
         Toast.show({
-          type: "normal",
-          text1: "Downloading document..."
+          type: "default",
+          text1: "Downloading document...",
         });
 
-        const downloadResult = await FileSystem.downloadAsync(
-          fileUrl,
-          localFilePath,
-        );
+        const downloadResult = await FileSystem.downloadAsync(fileUrl, localFilePath);
 
         if (downloadResult.status === 200) {
           Toast.show({
             type: "success",
-            text1: "Download complete!"
+            text1: "Download complete!",
           });
           setFileExists(true);
         } else {
@@ -78,7 +75,7 @@ const DocumentResponse = ({ info }: { info: string }) => {
       console.error("Error opening document:", err);
       Toast.show({
         type: "error",
-        text1: "Could not open the document."
+        text1: "Could not open the document.",
       });
     }
   };
@@ -101,18 +98,12 @@ const DocumentResponse = ({ info }: { info: string }) => {
         <Text numberOfLines={1} className="text-sm font-medium text-gray-800">
           {fileName}
         </Text>
-        <Text className="text-xs text-gray-500">
-          Tap to {fileExists ? "preview" : "download"}
-        </Text>
+        <Text className="text-xs text-gray-500">Tap to {fileExists ? "preview" : "download"}</Text>
       </View>
 
       {/* Right action icon */}
       <View className="flex">
-        {fileExists ? (
-          <Eye size={18} color="#10b981" />
-        ) : (
-          <Download size={18} color="#3b82f6" />
-        )}
+        {fileExists ? <Eye size={18} color="#10b981" /> : <Download size={18} color="#3b82f6" />}
       </View>
     </TouchableOpacity>
   );

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -16,10 +16,7 @@ import { useWaFlowFromDb } from "@/api/whatsapp/flow/flow.query";
 import { ContactCard } from "@/components/flow/FlowResponseCard";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {
-  useResponseAnalytics,
-  useResponsesBySurvey,
-} from "@/api/response/response.query";
+import { useResponseAnalytics, useResponsesBySurvey } from "@/api/response/response.query";
 import { useQuestions } from "@/api/question/question.query";
 import { useFlowDataStore, useFlowResponseDataStore } from "@/utils/store";
 import SurveyStatsWebForm from "@/components/webform/SurveyStats";
@@ -39,7 +36,7 @@ const OverviewTab = ({
   flow,
   version,
 }: {
-  surveyId?: string;
+  surveyId: string;
   flow: any;
   version: number;
 }) => {
@@ -49,10 +46,7 @@ const OverviewTab = ({
   const { data: questions } = useQuestions(surveyId);
 
   const [npsOverView, choiceWiseOverView] = useMemo(
-    () =>
-      data
-        ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
-        : [[], []],
+    () => (data ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)] : [[], []]),
     [data],
   );
 
@@ -84,11 +78,7 @@ const OverviewTab = ({
           tabBarLabel: ({ focused }) => (
             <Text
               className={`text-sm font-bold ${
-                focused
-                  ? "text-rateUpBlue"
-                  : isDark
-                    ? "text-slate-400"
-                    : "text-gray-400"
+                focused ? "text-rateUpBlue" : isDark ? "text-slate-400" : "text-gray-400"
               }`}
             >
               {route.name}
@@ -141,12 +131,10 @@ const ResponsesTab = ({
   flow,
   version,
 }: {
-  surveyId?: string;
+  surveyId: string;
   flow: any;
   version: number;
 }) => {
-  const isDark = useColorScheme() === "dark";
-
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
 
   const totalResponse = dat1?.totalCount || 0;
@@ -167,9 +155,7 @@ const ResponsesTab = ({
   if (!dat1?.responses?.length) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
-        <Text className="text-gray-500 dark:text-slate-400">
-          No responses available.
-        </Text>
+        <Text className="text-gray-500 dark:text-slate-400">No responses available.</Text>
       </View>
     );
   }
@@ -178,14 +164,10 @@ const ResponsesTab = ({
     <View className="bg-white dark:bg-slate-950 h-full">
       {/* Response Count Header */}
       <View className="px-4 py-3 border-b border-gray-200 dark:border-slate-800 bg-rateUpGreen20 dark:bg-slate-900 flex-row items-center justify-between">
-        <Text className="text-base font-semibold text-rateUpGreen">
-          Total Responses
-        </Text>
+        <Text className="text-base font-semibold text-rateUpGreen">Total Responses</Text>
 
         <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
-          <Text className="text-white text-sm font-semibold">
-            {totalResponse}
-          </Text>
+          <Text className="text-white text-sm font-semibold">{totalResponse}</Text>
         </View>
       </View>
 
@@ -199,14 +181,13 @@ const ResponsesTab = ({
               setData([item]);
               setFlowData([flow]);
 
-              const routeBase =
-                version === 1
-                  ? "/protected/flow/flowresponse"
-                  : "/protected/flow/flow2";
-
               router.push({
-                pathname: `${routeBase}/${item.id}`,
+                pathname:
+                  version === 1
+                    ? "/protected/flow/flowresponse/[flowresponseId]"
+                    : "/protected/flow/flow2/[flowresponseId]",
                 params: {
+                  flowresponseId: item.id,
                   surveyId: surveyId,
                   respondent: item.phone,
                 },
@@ -252,6 +233,14 @@ const FlowPage = () => {
     );
   }
 
+  if (!flowData) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <Text className="text-red-500">Failed to load flow data.</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white dark:bg-slate-950 p-2">
       {/* Header */}
@@ -260,9 +249,7 @@ const FlowPage = () => {
           <ArrowLeft color={isDark ? "white" : "black"} />
         </Pressable>
 
-        <Text className="text-black dark:text-white text-2xl font-bold">
-          {flowName}
-        </Text>
+        <Text className="text-black dark:text-white text-2xl font-bold">{flowName}</Text>
       </View>
 
       {/* Tabs */}
@@ -274,18 +261,12 @@ const FlowPage = () => {
             <View
               style={{ width: sw }}
               className={`mx-auto p-3 rounded-xl ${
-                focused
-                  ? "bg-rateUpGreen20 dark:bg-slate-800"
-                  : "bg-white dark:bg-slate-950"
+                focused ? "bg-rateUpGreen20 dark:bg-slate-800" : "bg-white dark:bg-slate-950"
               }`}
             >
               <Text
                 className={`text-base text-center font-semibold ${
-                  focused
-                    ? "text-rateUpGreen"
-                    : isDark
-                      ? "text-slate-400"
-                      : "text-gray-500"
+                  focused ? "text-rateUpGreen" : isDark ? "text-slate-400" : "text-gray-500"
                 }`}
               >
                 {route.name}
@@ -311,21 +292,13 @@ const FlowPage = () => {
       >
         <Tab.Screen name="Analytics">
           {() => (
-            <OverviewTab
-              surveyId={flowData?.surveyId}
-              flow={flowData}
-              version={flowData?.version}
-            />
+            <OverviewTab surveyId={flowData.surveyId} flow={flowData} version={flowData.version} />
           )}
         </Tab.Screen>
 
         <Tab.Screen name="Responses">
           {() => (
-            <ResponsesTab
-              surveyId={flowData?.surveyId}
-              version={flowData?.version}
-              flow={flowData}
-            />
+            <ResponsesTab surveyId={flowData.surveyId} version={flowData.version} flow={flowData} />
           )}
         </Tab.Screen>
       </Tab.Navigator>

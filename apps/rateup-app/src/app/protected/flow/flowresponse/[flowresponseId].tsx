@@ -1,25 +1,25 @@
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  useColorScheme,
-} from "react-native";
+import { View, Text, FlatList, TouchableOpacity, useColorScheme } from "react-native";
 import React, { useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFlowResponseDataStore } from "@/utils/store";
 import { useQuestions } from "@/api/question/question.query";
 import { ArrowLeft } from "lucide-react-native";
+import { firstParam } from "@/utils/params";
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isUnknownArray = (value: unknown): value is unknown[] => Array.isArray(value);
 
 const ResponseId = () => {
   const isDark = useColorScheme() === "dark";
 
-  const { flowresponseId, surveyId, respondent } = useLocalSearchParams();
+  const { surveyId, respondent } = useLocalSearchParams();
 
   const { data } = useFlowResponseDataStore();
 
-  const { data: questions } = useQuestions(surveyId);
+  const { data: questions } = useQuestions(firstParam(surveyId));
 
   const router = useRouter();
 
@@ -57,9 +57,7 @@ const ResponseId = () => {
         {/* Avatar + Name */}
         <View className="flex-row items-center space-x-4 mb-6 gap-3">
           <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">
-            <Text className="text-rateUpGreen font-bold text-2xl">
-              {respondent ? "0" : "R"}
-            </Text>
+            <Text className="text-rateUpGreen font-bold text-2xl">{respondent ? "0" : "R"}</Text>
           </View>
 
           <Text className="text-xl font-medium text-gray-900 dark:text-white">
@@ -81,17 +79,22 @@ const ResponseId = () => {
 
           const questionTitle = questionMap[questionId] || "Unknown Question";
 
-          const value = item.response?.[responseType];
+          const value =
+            responseType !== undefined && isRecord(item.response)
+              ? item.response[responseType]
+              : undefined;
 
           const displayValue =
             typeof value === "string"
               ? value
-              : Array.isArray(value)
+              : isUnknownArray(value)
                 ? value
-                    .map((v) => (typeof v === "string" ? v : v?.value || ""))
+                    .map((v) =>
+                      typeof v === "string" ? v : isRecord(v) ? String(v.value || "") : "",
+                    )
                     .join(", ")
-                : typeof value === "object" && value?.value
-                  ? value.value
+                : isRecord(value) && value.value
+                  ? String(value.value)
                   : JSON.stringify(value);
 
           return (
@@ -105,9 +108,7 @@ const ResponseId = () => {
               {/* Index & Type */}
               <View className="flex-row items-center mb-3 gap-2">
                 <View className="w-7 h-7 rounded-full bg-rateUpGreen items-center justify-center">
-                  <Text className="text-white text-xs font-semibold">
-                    {index + 1}
-                  </Text>
+                  <Text className="text-white text-xs font-semibold">{index + 1}</Text>
                 </View>
 
                 <Text className="text-white bg-rateUpGreen px-3 py-1 rounded-full text-xs font-medium capitalize">

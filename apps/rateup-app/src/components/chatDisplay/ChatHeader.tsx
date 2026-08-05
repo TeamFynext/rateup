@@ -10,16 +10,10 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import {
-  generateInternalMessageId,
-  namePreview,
-} from "../../utils/chatbox_utils";
+import { generateInternalMessageId, namePreview } from "../../utils/chatbox_utils";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import {
-  useChatAssignStatusStore,
-  useSelectedContactStore,
-} from "@/utils/store";
+import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
 import { useContactsStore } from "@/store/inboxStore";
 import {
@@ -46,10 +40,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
 import { MessagePlatform } from "@/constants/enums";
 import { FontAwesome } from "@expo/vector-icons";
-import {
-  useEditContactMutation,
-  useToggleFavorite,
-} from "@/api/inbox/contacts/contacts.query";
+import { useEditContactMutation, useToggleFavorite } from "@/api/inbox/contacts/contacts.query";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -69,16 +60,9 @@ const MoreOptions = ({
   const isDark = colorScheme === "dark";
   const router = useRouter();
   const modalWidth = screenWidth * 0.4;
-  const waAssignStatus = useChatAssignStatusStore(
-    (state) => state.waAssignStatus,
-  );
+  const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1" onPress={onClose}>
         <View
           style={{
@@ -109,13 +93,9 @@ const MoreOptions = ({
               });
             }}
           >
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-            >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Pencil
-                color={
-                  isDark ? Colors.dark.textPrimary : Colors.light.textPrimary
-                }
+                color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary}
                 size={18}
               />
               <Text
@@ -130,12 +110,7 @@ const MoreOptions = ({
             </View>
           </TouchableOpacity>
 
-          <AssignToUser
-            contactId={contactId}
-            iconSize={18}
-            fontSize={15}
-            plain
-          />
+          <AssignToUser contactId={contactId} iconSize={18} fontSize={15} plain />
 
           {waAssignStatus !== "CLOSED" ? (
             <TouchableOpacity
@@ -145,13 +120,9 @@ const MoreOptions = ({
                 onCloseChatPress();
               }}
             >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <CircleCheckBig
-                  color={
-                    isDark ? Colors.dark.textPrimary : Colors.light.textPrimary
-                  }
+                  color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary}
                   size={18}
                 />
                 <Text
@@ -218,15 +189,9 @@ const ConfirmationModal = ({
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const editContactMutation = useEditContactMutation();
-  const setWaAssignStatus = useChatAssignStatusStore(
-    (state) => state.setWaAssignStatus,
-  );
-  const selectedContact = useSelectedContactStore(
-    (state) => state.selectedContact,
-  );
-  const setSelectedContact = useSelectedContactStore(
-    (state) => state.setSelectedContact,
-  );
+  const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
+  const selectedContact = useSelectedContactStore((state) => state.selectedContact);
+  const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
 
   /** Which outcome is in flight, so only that row shows a spinner. */
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
@@ -247,12 +212,10 @@ const ConfirmationModal = ({
           // sitting in Open with its old status. Pushing the change through the
           // store rewrites the cached filter lists, moves the row to Closed and
           // persists both the contact and the lists.
-          useContactsStore
-            .getState()
-            .updateContactById(contactId, (c: any) => ({
-              ...c,
-              waMessageAssignStatus: status,
-            }));
+          useContactsStore.getState().updateContactById(contactId, (c: any) => ({
+            ...c,
+            waMessageAssignStatus: status,
+          }));
           // Keep the thread's own chrome in step — the footer and this menu both
           // branch on it.
           setWaAssignStatus(status);
@@ -285,12 +248,7 @@ const ConfirmationModal = ({
   const t = getInboxRowTheme(isDark);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onCancel}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
       {/* Design's bottom-sheet host: `rgba(8,28,63,0.5)` scrim over a panel
           rounded 22px at the top. */}
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
@@ -353,9 +311,7 @@ const ConfirmationModal = ({
             Pick an outcome — it&apos;s saved to the ticket.
           </Text>
 
-          <View
-            style={{ paddingTop: 8, paddingHorizontal: 12, paddingBottom: 22 }}
-          >
+          <View style={{ paddingTop: 8, paddingHorizontal: 12, paddingBottom: 22 }}>
             {CLOSE_RESULTS.map((r) => (
               <TouchableOpacity
                 key={r.status}
@@ -373,10 +329,7 @@ const ConfirmationModal = ({
                   marginBottom: 8,
                   // Dim the outcomes that aren't being submitted; the one that
                   // is keeps full opacity and shows its spinner.
-                  opacity:
-                    editContactMutation.isPending && pendingStatus !== r.status
-                      ? 0.4
-                      : 1,
+                  opacity: editContactMutation.isPending && pendingStatus !== r.status ? 0.4 : 1,
                 }}
               >
                 <View
@@ -434,20 +387,14 @@ const ChatHeader = ({
   const now = dayjs();
   const diffInMinutes = sessionExpiry.diff(now, "minute");
   const isSessionActive = diffInMinutes > 0;
-  const selectedContact = useSelectedContactStore(
-    (state) => state.selectedContact,
-  );
+  const selectedContact = useSelectedContactStore((state) => state.selectedContact);
   // The star lives on the ticket, so read both from the row we opened. Prefer
   // the contacts store, which is what the toggle patches.
   const storedContact = useContactsStore((state) => state.contactsById.get(id));
-  const conversationId =
-    storedContact?.conversationId ?? selectedContact?.conversationId;
+  const conversationId = storedContact?.conversationId ?? selectedContact?.conversationId;
   const isFavorite = storedContact?.isFavorite ?? selectedContact?.isFavorite;
   const toggleFavorite = useToggleFavorite();
-  const platform =
-    selectedContact?.sourcePlatform ||
-    selectedContact?.lastMessage?.sourcePlatform ||
-    MessagePlatform.WHATSAPP;
+  const platform = selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
 
   // Design: 8px white glyph inside the 15px channel dot.
   const renderPlatformIcon = () => {
@@ -467,8 +414,7 @@ const ChatHeader = ({
   const minutesLeft = diffInMinutes % 60;
 
   const t = getInboxRowTheme(isDark);
-  const avatarColor =
-    inboxAvatarColors[paletteIndex(id, inboxAvatarColors.length)];
+  const avatarColor = inboxAvatarColors[paletteIndex(id, inboxAvatarColors.length)];
   const channelColor = inboxChannelColors[platform] ?? Colors.brand.blue;
   const sessionColor = isSessionActive ? t.warmStrong : t.danger;
 
@@ -588,9 +534,7 @@ const ChatHeader = ({
               disabled={toggleFavorite.isPending}
               accessibilityRole="button"
               accessibilityState={{ selected: !!isFavorite }}
-              accessibilityLabel={
-                isFavorite ? "Remove from favourites" : "Add to favourites"
-              }
+              accessibilityLabel={isFavorite ? "Remove from favourites" : "Add to favourites"}
               style={{
                 width: 34,
                 height: 34,
@@ -609,12 +553,7 @@ const ChatHeader = ({
               )}
             </TouchableOpacity>
           ) : null}
-          <AssignToUser
-            contactId={id}
-            iconOnly
-            iconSize={19}
-            iconColor={t.fg3}
-          />
+          <AssignToUser contactId={id} iconOnly iconSize={19} iconColor={t.fg3} />
           <TouchableOpacity
             onPress={() => setOptionsVisible(true)}
             style={{
@@ -654,9 +593,7 @@ const ChatHeader = ({
             color: sessionColor,
           }}
         >
-          {isSessionActive
-            ? `Session expires in ${hoursLeft}h ${minutesLeft}m`
-            : "Session expired"}
+          {isSessionActive ? `Session expires in ${hoursLeft}h ${minutesLeft}m` : "Session expired"}
         </Text>
       </View>
 

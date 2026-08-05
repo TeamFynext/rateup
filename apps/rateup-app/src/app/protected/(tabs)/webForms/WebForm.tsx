@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity,
-  RefreshControl,
-} from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
 import React, { useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -16,9 +10,7 @@ import { useSurveys } from "@/api/survey/survey.query";
 import { useRouter } from "expo-router";
 import { MoveRight, SlidersHorizontal } from "lucide-react-native";
 import { colors } from "@/constants/constants";
-import ScreenHeader, {
-  HeaderIconButton,
-} from "@/components/common/ScreenHeader";
+import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
@@ -56,33 +48,21 @@ const WebForm = () => {
     let filtered = webform.filter((form) => form.type === "web");
 
     if (status !== "all") {
-      filtered = filtered.filter((form) =>
-        status === "ACTIVE" ? form.active : !form.active,
-      );
+      filtered = filtered.filter((form) => (status === "ACTIVE" ? form.active : !form.active));
     }
 
     if (teamId !== "all") {
-      filtered = filtered.filter((form) =>
-        form.teams?.some((team: any) => team.id === teamId),
-      );
+      filtered = filtered.filter((form) => form.teams?.some((team: any) => team.id === teamId));
     }
 
     if (search.trim()) {
-      filtered = filtered.filter((form) =>
-        form.title.toLowerCase().includes(search.toLowerCase()),
-      );
+      filtered = filtered.filter((form) => form.title.toLowerCase().includes(search.toLowerCase()));
     }
 
     if (sortByDate === "latest") {
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else {
-      filtered.sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
+      filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     }
 
     if (alphabetical === "A-Z") {
@@ -101,9 +81,7 @@ const WebForm = () => {
         style={{ backgroundColor: pageBg }}
       >
         <ActivityIndicator size="large" />
-        <Text className="text-primaryBlue font-semibold mt-2">
-          Loading web forms...
-        </Text>
+        <Text className="text-primaryBlue font-semibold mt-2">Loading web forms...</Text>
       </View>
     );
   }
@@ -114,16 +92,13 @@ const WebForm = () => {
         className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-md flex flex-col space-y-2 mb-2"
         onPress={() =>
           router.push({
-            pathname: `/protected/webform/${item.id}`,
-            params: { webFormName: item.title },
+            pathname: "/protected/webform/[webformId]",
+            params: { webformId: item.id, webFormName: item.title },
           })
         }
       >
         <View className="flex-row justify-between items-start">
-          <Text
-            className="text-base font-semibold dark:text-white w-[65%]"
-            numberOfLines={2}
-          >
+          <Text className="text-base font-semibold dark:text-white w-[65%]" numberOfLines={2}>
             {item.title}
           </Text>
           <Text className="text-xs text-gray-500">
@@ -136,9 +111,7 @@ const WebForm = () => {
         <View className="flex-row justify-between items-center mt-1">
           <View
             className={`px-2 py-[2px] rounded-full flex-row items-center ${
-              item.active
-                ? "bg-green-100 text-green-700"
-                : "bg-orange-100 text-orange-700"
+              item.active ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
             }`}
           >
             <View
@@ -146,21 +119,13 @@ const WebForm = () => {
                 item.active ? "bg-green-500" : "bg-orange-500"
               }`}
             />
-            <Text className="text-xs font-medium">
-              {item.active ? "Active" : "Paused"}
-            </Text>
+            <Text className="text-xs font-medium">{item.active ? "Active" : "Paused"}</Text>
           </View>
 
           <View className="px-2 py-1 rounded-full bg-primaryBlue/20">
             <View className="flex-row justify-center items-center gap-1">
-              <Text className="text-xs font-semibold text-primaryBlue">
-                Response
-              </Text>
-              <MoveRight
-                width={15}
-                height={15}
-                color={colors["primary-blue"]}
-              />
+              <Text className="text-xs font-semibold text-primaryBlue">Response</Text>
+              <MoveRight width={15} height={15} color={colors["primary-blue"]} />
             </View>
           </View>
         </View>

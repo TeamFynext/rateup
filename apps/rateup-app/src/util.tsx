@@ -1,6 +1,14 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { AlertCircle, Archive, CheckCircle2, MessageCircle, StarIcon, UserCog, Circle } from "lucide-react-native";
+import {
+  AlertCircle,
+  Archive,
+  CheckCircle2,
+  MessageCircle,
+  StarIcon,
+  UserCog,
+  Circle,
+} from "lucide-react-native";
 import { QuestionType2, WaQuestions } from "./components/flow/enum";
 import { create } from "zustand";
 import { FontAwesome } from "@expo/vector-icons";
@@ -16,11 +24,7 @@ interface StarRowProps {
   size?: number;
 }
 
-const Rating: React.FC<StarRowProps> = ({
-  count,
-  color = "#004F98",
-  size = 20,
-}) => {
+const Rating: React.FC<StarRowProps> = ({ count, color = "#004F98", size = 20 }) => {
   const stars = Array.from({ length: count }, (_, index) => (
     <StarIcon key={index} color={color} size={size} fill={color} />
   ));
@@ -46,22 +50,18 @@ const getSmiley = (choice: string) => {
 
 export const renderChoiceItem = (
   type: any,
-  item: { choice: string; count: number; percentage?: number },
+  item: { choice: string; count: number; percentage?: number | string },
   index: number,
-  mostVotedChoice: string,
-  version: any
+  mostVotedChoice: string | undefined,
+  version: any,
 ) => {
   const choiceLower = item?.choice.toLowerCase();
   const isMostVoted = item?.choice === mostVotedChoice;
 
   const getVoteText = (count: number) => (count > 1 ? "votes" : "vote");
   const valueText = `${item?.count} ${getVoteText(item.count)}`;
-  const perc =
-    typeof item?.percentage === "number" ? item.percentage.toFixed(1) : "0.0";
-  const renderStatRow = (
-    label: React.ReactNode,
-    badge: React.ReactNode = null
-  ) => (
+  const perc = typeof item?.percentage === "number" ? item.percentage.toFixed(1) : "0.0";
+  const renderStatRow = (label: React.ReactNode, badge: React.ReactNode = null) => (
     <View
       key={index}
       className="flex-row justify-between gap-10 items-center rounded-md px-6 py-2 bg-white dark:bg-slate-800"
@@ -100,18 +100,19 @@ export const renderChoiceItem = (
           ) : (
             <Rating count={parseInt(item.choice)} />
           )}
-        </>
+        </>,
       );
 
     case QuestionType2.Opinion:
     case WaQuestions.Opinion:
       return renderStatRow(
         <View
-          className={`border border-rateUpBlue px-2 py-2 w-10 h-10 flex items-center justify-center rounded-md  ${isMostVoted ? "bg-[#C4D7F5]" : ""
-            }`}
+          className={`border border-rateUpBlue px-2 py-2 w-10 h-10 flex items-center justify-center rounded-md  ${
+            isMostVoted ? "bg-[#C4D7F5]" : ""
+          }`}
         >
           <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
-        </View>
+        </View>,
       );
 
     case QuestionType2.Smiley:
@@ -126,7 +127,7 @@ export const renderChoiceItem = (
               <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
             </View>
           )}
-        </>
+        </>,
       );
 
     case QuestionType2.LD:
@@ -142,7 +143,7 @@ export const renderChoiceItem = (
               </Text>
             </View>
           )}
-        </>
+        </>,
       );
 
     case QuestionType2.YN:
@@ -150,21 +151,19 @@ export const renderChoiceItem = (
       return renderStatRow(
         <Text className="text-sm text-gray-900 dark:text-gray-200">
           {choiceLower === "yes" ? "✅ Yes" : "❌ No"}
-        </Text>
+        </Text>,
       );
 
     default:
       return renderStatRow(
         <>
           <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
-        </>
+        </>,
       );
   }
 };
 
-export function getSoucePlatformIconAndColor(
-  sourcePlatform: string | undefined
-) {
+export function getSoucePlatformIconAndColor(sourcePlatform: string | undefined) {
   switch (sourcePlatform) {
     case MessagePlatform.WHATSAPP:
       return {
@@ -204,26 +203,39 @@ export const getClosedIcon = (status: any) => {
   }
 };
 
+interface EditorMark {
+  type: string;
+}
 
-export function parseToWhatsAppFormat(editorContent) {
-  function formatText(text, type = "*") {
+interface EditorNode {
+  type: string;
+  text?: string;
+  marks?: EditorMark[];
+  content?: EditorNode[];
+}
+
+interface EditorContent {
+  content: EditorNode[];
+}
+
+export function parseToWhatsAppFormat(editorContent: EditorContent): string {
+  function formatText(text: string, type: string = "*"): string {
     let trimmedEnd = text.trimEnd();
     let trimmedStart = text.trimStart();
     let trimmed = text.trim();
 
     let leadingSpaces = " ".repeat(text.length - trimmedStart.length);
     let trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
-    let formattedText =
-      trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
+    let formattedText = trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
     return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
   }
-  const parseNode = (node) => {
+  const parseNode = (node: EditorNode | null | undefined): string => {
     if (!node) return "";
     switch (node.type) {
       case "paragraph":
-        return node?.content?.map(parseNode).join("");
+        return node?.content?.map(parseNode).join("") ?? "";
       case "text":
-        let text = node.text;
+        let text = node.text ?? "";
         if (node.marks) {
           node.marks.forEach((mark) => {
             switch (mark.type) {
@@ -246,17 +258,17 @@ export function parseToWhatsAppFormat(editorContent) {
         }
         return text;
       case "bulletList":
-        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
+        return node.content?.map((item) => `* ${parseNode(item)}`).join("\n") ?? "";
       case "orderedList":
-        return node.content
-          .map((item, index) => `${index + 1}. ${parseNode(item)}`)
-          .join("\n");
+        return (
+          node.content?.map((item, index) => `${index + 1}. ${parseNode(item)}`).join("\n") ?? ""
+        );
       case "blockquote":
-        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
+        return node.content?.map((item) => `> ${parseNode(item)}`).join("\n") ?? "";
       case "codeBlock":
-        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
+        return `\`\`\`${node.content?.map(parseNode).join("") ?? ""}\`\`\``;
       case "listItem":
-        return node.content.map(parseNode).join("");
+        return node.content?.map(parseNode).join("") ?? "";
       default:
         return "";
     }
@@ -264,7 +276,6 @@ export function parseToWhatsAppFormat(editorContent) {
 
   return editorContent.content.map(parseNode).join("\n");
 }
-
 
 interface VoiceRecordState {
   isRecording: boolean;
@@ -275,8 +286,8 @@ interface VoiceRecordState {
   audioContext: AudioContext | null;
   source: MediaStreamAudioSourceNode | null;
   chunks: Blob[];
-  fileKey: string;
-  setFileKey: (value) => void;
+  fileKey: string | null;
+  setFileKey: (value: string | null) => void;
   setIsRecording: (value: boolean) => void;
   setAudioUrl: (value: string | null) => void;
   setMediaRecorder: (recorder: MediaRecorder | null) => void;
@@ -299,32 +310,23 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set) => ({
   chunks: [],
   fileKey: null,
 
-  setIsRecording: (value) =>
-    set(() => ({ isRecording: value })),
+  setIsRecording: (value) => set(() => ({ isRecording: value })),
 
-  setAudioUrl: (value) =>
-    set(() => ({ audioUrl: value })),
+  setAudioUrl: (value) => set(() => ({ audioUrl: value })),
 
-  setMediaRecorder: (recorder) =>
-    set(() => ({ mediaRecorder: recorder })),
+  setMediaRecorder: (recorder) => set(() => ({ mediaRecorder: recorder })),
 
-  setStream: (stream) =>
-    set(() => ({ stream })),
+  setStream: (stream) => set(() => ({ stream })),
 
-  setAnalyser: (analyser) =>
-    set(() => ({ analyser })),
+  setAnalyser: (analyser) => set(() => ({ analyser })),
 
-  setAudioContext: (context) =>
-    set(() => ({ audioContext: context })),
+  setAudioContext: (context) => set(() => ({ audioContext: context })),
 
-  setSource: (source) =>
-    set(() => ({ source })),
+  setSource: (source) => set(() => ({ source })),
 
-  setChunks: (chunks) =>
-    set(() => ({ chunks })),
+  setChunks: (chunks) => set(() => ({ chunks })),
 
-  setFileKey: (value) =>
-    set(() => ({ fileKey: value })),
+  setFileKey: (value) => set(() => ({ fileKey: value })),
 
   resetRecordingState: () =>
     set(() => ({
@@ -339,7 +341,6 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set) => ({
       fileKey: null,
     })),
 }));
-
 
 const BROWSER_ID_KEY = "browserId";
 
