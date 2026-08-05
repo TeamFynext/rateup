@@ -718,6 +718,8 @@ export interface InstagramWebhookBody {
             text?: string;
             comment_id?: string; // Included when message originates from a comment (private reply flow)
             media_id?: string; // The post/reel/live media the comment was on
+            /** Public instagram.com URL of that media, resolved when the comment arrived. */
+            media_permalink?: string;
             attachments?: [
               // Included when a customer sends multiple media attachments or a URL for a story mention or share
               {

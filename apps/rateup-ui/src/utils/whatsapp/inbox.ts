@@ -62,7 +62,7 @@ export function getContactPlatform(
  */
 export type ParsedWaMessageContent =
   | string
-  | { text?: string; commentId?: string; mediaId?: string }
+  | { text?: string; commentId?: string; mediaId?: string; permalink?: string }
   | {
       attachments: Array<{
         content: string;
@@ -136,6 +136,7 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
             text: receive.message.text,
             commentId: receive.message.comment_id,
             mediaId: receive.message.media_id,
+            permalink: receive.message.media_permalink,
           };
         } else if (receive.message.attachments) {
           messageContent = {
