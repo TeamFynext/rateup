@@ -189,6 +189,16 @@ describe("createLinktreeInDB", () => {
     expect(db.linktree.create.mock.calls[0][0].data.shortUrlId).toMatch(/^[0-9A-Za-z]{8}$/);
   });
 
+  test("hands back an empty links array for the null the column starts at", async () => {
+    db.linktree.create.mockResolvedValueOnce(row({ links: null }));
+
+    const created = await createLinktreeInDB(req({ body: { name: "Our links" } }));
+
+    // The stored null used to reach the serializer, which answered 500 with
+    // "Response doesn't match the schema" — the response schema declares an array.
+    expect(created.links).toEqual([]);
+  });
+
   test("a new linktree starts unpublished and uncounted, by database default", async () => {
     await createLinktreeInDB(req({ body: { name: "Our links" } }));
 
@@ -200,6 +210,15 @@ describe("createLinktreeInDB", () => {
 });
 
 describe("the org-scoped reads and writes", () => {
+  test("a listed linktree with no links yet reads back as an empty array", async () => {
+    db.linktree.findMany.mockResolvedValueOnce([row({ links: null }), row()]);
+
+    const listed = await getAllLinktreesFromDB(req());
+
+    expect(listed[0].links).toEqual([]);
+    expect(listed[1].links).toEqual(links());
+  });
+
   test("the listing is scoped to the session org, newest first", async () => {
     await getAllLinktreesFromDB(req());
 

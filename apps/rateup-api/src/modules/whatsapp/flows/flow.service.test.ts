@@ -364,6 +364,14 @@ describe("cloneFlow", () => {
     expect(data).not.toHaveProperty("spreadSheetId");
   });
 
+  test("lets the copy take a fresh id instead of the original's", async () => {
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    // Spreading the source row used to carry `id` through, and the insert died with
+    // "Unique constraint failed on the fields: (`id`)".
+    expect(db.survey.create.mock.calls[0][0].data).not.toHaveProperty("id");
+  });
+
   test("creates the cloned flow as a draft against the new survey", async () => {
     await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
 

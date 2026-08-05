@@ -935,6 +935,44 @@ describe("updateContactById", () => {
     expect(db.contactLabelMap.deleteMany).not.toHaveBeenCalled();
   });
 
+  test("writes the contact-form fields the update used to drop", async () => {
+    db.contact.update.mockResolvedValue(updated());
+    const dob = new Date("1990-04-02T00:00:00.000Z");
+
+    await updateContactById(
+      "c1",
+      ORG,
+      { email: "ann@example.com", dob, external_id: "crm-7" } as any,
+      USER,
+      existing,
+    );
+
+    expect(db.contact.update.mock.calls[0][0].data).toMatchObject({
+      email: "ann@example.com",
+      dob,
+      external_id: "crm-7",
+    });
+  });
+
+  test("leaves untouched fields alone on a partial update", async () => {
+    db.contact.update.mockResolvedValue(updated());
+
+    // An inbox status change must not blank the contact's email or lifecycle.
+    await updateContactById(
+      "c1",
+      ORG,
+      { waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED } as any,
+      USER,
+      existing,
+    );
+
+    const { data } = db.contact.update.mock.calls[0][0];
+    expect(data.email).toBeUndefined();
+    expect(data.dob).toBeUndefined();
+    expect(data.external_id).toBeUndefined();
+    expect(data.lifecycleId).toBeUndefined();
+  });
+
   test("replaces the custom field values", async () => {
     db.contact.update.mockResolvedValue(updated());
 

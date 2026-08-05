@@ -707,6 +707,9 @@ export async function updateContactById(
               spamMarkedBy: resolveClosedByUserId(transitionActor),
             }
           : {}),
+        email: contact.email,
+        dob: contact.dob,
+        external_id: contact.external_id,
         notes: contact.notes,
         lifecycleId: contact.lifecycleId,
       },
