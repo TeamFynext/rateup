@@ -161,7 +161,7 @@ function FlowCard({
           icon button, so "Copy & Renew Flow" wrapped over three lines. */}
       <DropdownMenuContent
         align="end"
-        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
+        className="w-auto min-w-40"
         onClick={(e) => e.stopPropagation()}
       >
         <Tooltip>

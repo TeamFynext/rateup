@@ -234,10 +234,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
       </DropdownMenuTrigger>
       {/* Anchored to a small icon button, and the popup defaults to `w-(--anchor-width)` — without
           a width of its own "Edit Group" and "Delete Group" wrap onto two lines each. */}
-      <DropdownMenuContent
-        align="end"
-        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
-      >
+      <DropdownMenuContent align="end" className="w-auto min-w-40">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />

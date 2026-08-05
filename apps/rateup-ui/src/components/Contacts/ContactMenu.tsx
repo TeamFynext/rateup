@@ -62,10 +62,7 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
       </DropdownMenuTrigger>
       {/* The popup defaults to `w-(--anchor-width)`, and the anchor here is a bare icon button —
           every label wrapped. Sized to its content instead, and pinned to the row's right edge. */}
-      <DropdownMenuContent
-        align="end"
-        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
-      >
+      <DropdownMenuContent align="end" className="w-auto min-w-40">
         <DropdownMenuItem
           onClick={() => {
             setViewDetails(true);

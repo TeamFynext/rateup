@@ -41,7 +41,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
           otherwise, which wraps the labels. */}
       <DropdownMenuContent
         align="end"
-        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
+        className="w-auto min-w-40"
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();

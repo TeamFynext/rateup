@@ -108,7 +108,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
           32px icon button, so labels like "View Details" wrapped onto two lines. */}
       <DropdownMenuContent
         align="end"
-        className="w-auto min-w-40 **:data-[slot=dropdown-menu-item]:text-xs **:data-[slot=dropdown-menu-item]:whitespace-nowrap"
+        className="w-auto min-w-40"
         onClick={(event) => event.stopPropagation()}
       >
         <DropdownMenuItem
