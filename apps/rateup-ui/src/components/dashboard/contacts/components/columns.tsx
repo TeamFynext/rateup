@@ -3,31 +3,15 @@ import dayjs from "dayjs";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { DataTableColumnHeader } from "@/components/Table/data-table-column-header.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 
 import { DataTableRowActions } from "./data-table-row-actions.tsx";
 
+/**
+ * No select column: the custom fields toolbar has no bulk action and there is no bulk endpoint
+ * behind one, so row selection had nothing to drive. Add the column back alongside the action,
+ * not before it.
+ */
 export const columns: ColumnDef<CustomFieldData>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        indeterminate={table.getIsSomePageRowsSelected()}
-        onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     accessorKey: "name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,

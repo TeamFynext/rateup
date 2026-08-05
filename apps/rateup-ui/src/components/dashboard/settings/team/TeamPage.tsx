@@ -2,7 +2,14 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconChevronRight, IconPlus, IconRefresh, IconUser, IconUsers } from "@tabler/icons-react";
+import {
+  IconChevronRight,
+  IconLock,
+  IconPlus,
+  IconRefresh,
+  IconUser,
+  IconUsers,
+} from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -27,6 +34,7 @@ import {
 import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
 import { formatDate } from "@/utils/dateTime.ts";
@@ -98,6 +106,28 @@ const FEATURES_WITH_SUBSCRIPTION: {
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 
+/**
+ * Wraps a team card in an explanation for people who can only look at it. Without this a member
+ * clicked a card that looked interactive and nothing happened, with no hint as to why.
+ */
+function TeamCardShell({
+  canManage,
+  children,
+}: Readonly<{ canManage: boolean; children: React.ReactNode }>) {
+  const { t: translations } = useTranslation();
+
+  if (canManage) return children;
+
+  return (
+    <Tooltip>
+      {/* `render` on a plain div: the trigger has to be an element that wraps the card, and the
+          card itself is not a button. */}
+      <TooltipTrigger render={<div />}>{children}</TooltipTrigger>
+      <TooltipContent>{translations("Members cannot make changes to the team")}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function TeamPage() {
   const uid = useId();
   const { t: translations } = useTranslation();
@@ -105,6 +135,8 @@ export function TeamPage() {
   const searchParams = useSearch({ strict: false });
   const action = searchParams?.action;
   const { user } = useUser();
+  // Creating a team, opening one and everything inside it are all super-admin only.
+  const canManageTeams = user?.role === UserRole.SUPADM;
   const { data: subscription } = useSubscription();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
@@ -258,67 +290,80 @@ export function TeamPage() {
         items={teamsData?.data ?? []}
         getKey={(team) => team.id}
         renderItem={(team) => (
-          <ActionCard
-            onClick={() => {
-              if (user?.role === UserRole.SUPADM) {
-                navigate({
-                  to: `/dashboard/settings/team/${team.id}`,
-                });
+          <TeamCardShell canManage={canManageTeams}>
+            <ActionCard
+              // A member's click went nowhere while the card still looked clickable. Only wire
+              // the navigation for those who can act on it, and drop the pointer cursor and
+              // hover lift for everyone else — the tooltip above says why.
+              onClick={
+                canManageTeams
+                  ? () => {
+                      navigate({
+                        to: `/dashboard/settings/team/${team.id}`,
+                      });
+                    }
+                  : undefined
               }
-            }}
-            title={
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="w-[38px] h-[38px] rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: team.color || "#7F77DD" }}
-                >
-                  <IconUsers className="w-[17px] h-[17px] text-white" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-medium text-sm truncate">{team.name}</span>
-                    <span className="text-[11px] font-medium border rounded-full px-1.5 py-0.5 text-muted-foreground bg-muted">
-                      {team.code}
+              className={canManageTeams ? undefined : "cursor-default hover:translate-y-0"}
+              title={
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-[38px] h-[38px] rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: team.color || "#7F77DD" }}
+                  >
+                    <IconUsers className="w-[17px] h-[17px] text-white" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-medium text-sm truncate">{team.name}</span>
+                      <span className="text-[11px] font-medium border rounded-full px-1.5 py-0.5 text-muted-foreground bg-muted">
+                        {team.code}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground/60 mt-0.5">
+                      {translations("created")} {formatDate(team.createdAt)}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground/60 mt-0.5">
-                    {translations("created")} {formatDate(team.createdAt)}
-                  </span>
                 </div>
-              </div>
-            }
-            footerLeft={
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="flex">
-                    {Array.from({
-                      length: Math.min(team._count.members, 3),
-                    }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-[26px] h-[26px] rounded-full border-2 border-background flex items-center justify-center -ml-1.5 first:ml-0"
-                        style={{ backgroundColor: team.color || "#7F77DD" }}
-                      >
-                        <IconUser className="h-3 w-3 text-white" />
-                      </div>
-                    ))}
-                    {team._count.members > 3 && (
-                      <div className="w-[26px] h-[26px] rounded-full bg-muted border-2 border-background flex items-center justify-center -ml-1.5">
-                        <span className="text-[9px] font-medium text-muted-foreground">
-                          +{team._count.members - 3}
-                        </span>
-                      </div>
-                    )}
+              }
+              footerLeft={
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center">
+                    <div className="flex">
+                      {Array.from({
+                        length: Math.min(team._count.members, 3),
+                      }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-[26px] h-[26px] rounded-full border-2 border-background flex items-center justify-center -ml-1.5 first:ml-0"
+                          style={{ backgroundColor: team.color || "#7F77DD" }}
+                        >
+                          <IconUser className="h-3 w-3 text-white" />
+                        </div>
+                      ))}
+                      {team._count.members > 3 && (
+                        <div className="w-[26px] h-[26px] rounded-full bg-muted border-2 border-background flex items-center justify-center -ml-1.5">
+                          <span className="text-[9px] font-medium text-muted-foreground">
+                            +{team._count.members - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {team._count.members}{" "}
+                      {team._count.members === 1 ? translations("member") : translations("members")}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {team._count.members}{" "}
-                    {team._count.members === 1 ? translations("member") : translations("members")}
-                  </span>
+                  {/* The chevron promises a destination only a manager has. */}
+                  {canManageTeams ? (
+                    <IconChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                  ) : (
+                    <IconLock className="w-3.5 h-3.5 text-muted-foreground/40" />
+                  )}
                 </div>
-                <IconChevronRight className="w-4 h-4 text-muted-foreground/40" />
-              </div>
-            }
-          />
+              }
+            />
+          </TeamCardShell>
         )}
       />
       {/* create team */}

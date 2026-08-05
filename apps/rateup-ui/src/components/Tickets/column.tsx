@@ -381,14 +381,17 @@ export function Column({
               >
                 <IconDots size={16} />
               </DropdownMenuTrigger>
+              {/* `onClick`, not `onSelect`: these menus are Base UI, which has no `onSelect` on
+                  `Menu.Item`. React bound it as the DOM text-selection event instead — valid
+                  enough to type-check, and never fired, so Edit and Delete did nothing. */}
               <DropdownMenuContent align="end" className="w-[150px]">
-                <DropdownMenuItem onSelect={openEditModal}>
+                <DropdownMenuItem onClick={openEditModal}>
                   <IconEdit size={14} className="mr-2" />
                   {t("Edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                  onSelect={handleDelete}
+                  onClick={handleDelete}
                 >
                   <IconTrash size={14} className="mr-2" />
                   {t("Delete")}

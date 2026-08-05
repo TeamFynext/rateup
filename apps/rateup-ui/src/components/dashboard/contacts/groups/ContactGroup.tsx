@@ -80,7 +80,6 @@ export function ContactGroup() {
     data: groupDetails,
     error: groupByIderror,
     refetch: refetchgroupById,
-    isRefetching,
   } = useContactGroupById(
     groupId?.toString(),
     true,
@@ -110,7 +109,13 @@ export function ContactGroup() {
       meta: { title: "Action" },
     },
   ];
-  const loadingState = isLoading || isRefetching;
+  /**
+   * Skeleton only while there is nothing to show. Including `isRefetching` here meant every
+   * invalidation — removing a member, adding one, renaming the group — tore the whole table
+   * down to skeleton rows and back; react-query keeps the previous page cached, so the rows
+   * can stay put and simply update when the refetch lands.
+   */
+  const loadingState = isLoading;
   const [showEditIconDialog, setShowEditIconDialog] = useState(false);
   const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id ?? "");
   function handleSaveGroupName() {

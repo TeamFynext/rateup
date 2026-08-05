@@ -72,14 +72,20 @@ export function ActionCard({
           {subtitle && <CardDescription className="truncate">{subtitle}</CardDescription>}
         </div>
         <div className="flex items-center gap-2">
+          {/* The wrapper is what stops the click, not the switch itself: Base UI renders
+              `Switch.Root` as a span *plus a hidden input beside it*, and its click handler
+              re-dispatches a bubbling click on that input. Being a sibling, that click never
+              passes through the switch's own `onClick`, so it reached the card and navigated.
+              Wrapping catches both elements. */}
           {showSwitch && (
-            <Switch
-              checked={switchChecked}
-              onCheckedChange={(checked) => {
-                onSwitchChange?.(checked);
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
+            <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+              <Switch
+                checked={switchChecked}
+                onCheckedChange={(checked) => {
+                  onSwitchChange?.(checked);
+                }}
+              />
+            </span>
           )}
           {actions}
         </div>

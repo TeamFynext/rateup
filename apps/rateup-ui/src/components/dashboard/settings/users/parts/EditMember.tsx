@@ -11,6 +11,7 @@ import {
   IconMessageCircle,
   IconPencil,
   IconShield,
+  IconShieldLock,
   IconTrash,
   IconUpload,
   IconUser,
@@ -128,6 +129,11 @@ export function EditMember({
 
   const canEditNameAndPhone =
     currentUserRole === UserRole.SUPADM || selectedUser?.id === currentUserId;
+  /**
+   * A super admin is the account that owns the org's settings, billing and every team — deleting
+   * one can leave the org with no one able to administer it, so the action is not offered.
+   */
+  const isSuperAdminUser = selectedUser?.role === UserRole.SUPADM;
   const canEditAll = currentUserRole === UserRole.SUPADM;
 
   const closeDialog = () => {
@@ -166,7 +172,9 @@ export function EditMember({
   };
 
   const handleDeleteUser = async () => {
-    if (!selectedUser?.id) return;
+    // Guarded as well as hidden: the button below is not rendered for a super admin, so reaching
+    // here means the selection changed underneath the dialog.
+    if (!selectedUser?.id || isSuperAdminUser) return;
 
     const shouldDelete = await confirm({
       title: translations("Delete User Account"),
@@ -698,32 +706,48 @@ export function EditMember({
 
               <Separator className="my-4" />
 
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <IconTrash className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="text-sm text-red-700 mb-1">
-                      {translations("Delete User Account")}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {translations(
-                        "Permanently remove this user and all associated data. This action cannot be undone.",
-                      )}
-                    </p>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={updateActiveStatus.isPending}
-                      onClick={handleDeleteUser}
-                    >
-                      <IconTrash className="w-3.5 h-3.5 mr-1.5" />
-                      {updateActiveStatus.isPending
-                        ? translations("Deleting")
-                        : translations("Delete User")}
-                    </Button>
+              {isSuperAdminUser ? (
+                <div className="p-4 bg-muted/50 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <IconShieldLock className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="text-sm mb-1">{translations("Super admin account")}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        {translations(
+                          "A super admin cannot be deleted. Change their role first if this account should be removed.",
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <IconTrash className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="text-sm text-red-700 mb-1">
+                        {translations("Delete User Account")}
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {translations(
+                          "Permanently remove this user and all associated data. This action cannot be undone.",
+                        )}
+                      </p>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={updateActiveStatus.isPending}
+                        onClick={handleDeleteUser}
+                      >
+                        <IconTrash className="w-3.5 h-3.5 mr-1.5" />
+                        {updateActiveStatus.isPending
+                          ? translations("Deleting")
+                          : translations("Delete User")}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         )}
