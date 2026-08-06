@@ -149,35 +149,64 @@ describe("handleWebSocketConnection", () => {
     expect(s.close).toHaveBeenCalledOnce();
   });
 
-  test("tags the socket with the role from the session, not the query string", async () => {
+  // The tag names the client *surface* (`main` = dashboard, `fab` = support widget), which
+  // is what `roleFilter` selects on. It was previously taken from the session's org role, so
+  // a dashboard socket was tagged `SUPER_ADMIN`/`MEMBER`/… and never equalled the `"main"`
+  // filter every inbox broadcast carries — realtime was dead for every logged-in user.
+  test("tags the socket with the client surface from the query string", async () => {
     const s = socket();
 
     await handleWebSocketConnection(
       s,
-      req({ query: { role: "SUPER_ADMIN" }, user: { orgId: OWN_ORG, role: "MEMBER" } }),
+      req({ query: { role: "fab" }, user: { orgId: OWN_ORG, role: "MEMBER" } }),
     );
 
-    expect((s as any).role).toBe("MEMBER");
+    expect((s as any).role).toBe("fab");
   });
 
-  test("a role filter no longer matches a self-declared role", async () => {
+  test("a self-declared org role is not honoured as a surface", async () => {
     const s = socket();
     await handleWebSocketConnection(
       s,
       req({ query: { role: "SUPER_ADMIN" }, user: { orgId: OWN_ORG, role: "MEMBER" } }),
     );
 
+    // Collapsed to `main`, so it cannot receive anything aimed at a privilege level...
+    expect((s as any).role).toBe("main");
     broadcast(OWN_ORG, { type: "inbox" }, "SUPER_ADMIN");
-
     expect(s.send).not.toHaveBeenCalled();
   });
 
-  test("defaults the role to main when the session carries none", async () => {
+  test("defaults the surface to main when the query carries none", async () => {
     const s = socket();
 
     await handleWebSocketConnection(s, req());
 
     expect((s as any).role).toBe("main");
+  });
+
+  test("the dashboard receives the inbox broadcast aimed at main", async () => {
+    const dashboard = socket();
+    const widget = socket();
+    await handleWebSocketConnection(dashboard, req({ user: { orgId: OWN_ORG, role: "AGENT" } }));
+    await handleWebSocketConnection(widget, req({ query: { role: "fab" } }));
+
+    broadcast(OWN_ORG, { type: "inbox" }, "main");
+
+    expect(dashboard.send).toHaveBeenCalledOnce();
+    expect(widget.send).not.toHaveBeenCalled();
+  });
+
+  test("a webchat broadcast reaches the widget and not the dashboard", async () => {
+    const dashboard = socket();
+    const widget = socket();
+    await handleWebSocketConnection(dashboard, req({ user: { orgId: OWN_ORG, role: "AGENT" } }));
+    await handleWebSocketConnection(widget, req({ query: { role: "fab" } }));
+
+    broadcast(OWN_ORG, { type: "inbox" }, "fab");
+
+    expect(widget.send).toHaveBeenCalledOnce();
+    expect(dashboard.send).not.toHaveBeenCalled();
   });
 
   test("schedules an online status for the connecting user", async () => {
@@ -264,9 +293,8 @@ describe("sendViaWstoOrgHandler", () => {
     });
   });
 
-  // NOTE: neither call site in the codebase passes a roleFilter — both call it
-  // with two arguments — so the filter is always undefined and every socket in
-  // the org receives every message.
+  // Both inbox call sites now pass one (`fab` for webchat, `main` otherwise), so an
+  // undefined filter means "every socket in the org", not "the usual case".
   test("omitting the filter publishes it as undefined", async () => {
     await sendViaWstoOrgHandler(OWN_ORG, { type: "inbox" } as never);
 
