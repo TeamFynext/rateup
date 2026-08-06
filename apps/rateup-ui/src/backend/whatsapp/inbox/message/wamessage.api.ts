@@ -123,6 +123,13 @@ export type ContactsWithLastMessage = ContactsData & {
   ticketReopenCount?: number | null;
   conversationLastMessageAt?: string | null;
   conversationLastCustomerMessageAt?: string | null;
+  /**
+   * The ticket's `Conversation.updatedAt` (see `filterChats` in the API). Row
+   * freshness for the client cache: the store only replaces a cached row when
+   * the response's stamp is at least as new, so this is what lets a reload
+   * correct a row whose status or last message moved on the server.
+   */
+  updatedAt?: string;
 
   // ---- Inbox signals ----
   isFavorite?: boolean;

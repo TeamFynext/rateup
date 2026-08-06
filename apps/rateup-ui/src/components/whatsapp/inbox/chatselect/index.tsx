@@ -160,27 +160,26 @@ const WaInboxChatSelect = () => {
 
     let isActive = true;
 
-    const state = useContactsStore.getState();
-
-    const getNewContacts = (page: { rows: ContactsWithLastMessage[] }) => {
-      const existingIds = new Set(state.contactsByFilter[filterKey] || []);
-      // Rows are tickets — dedupe on the ticket key, not the contact id, or a
-      // contact's second ticket would be discarded as a duplicate of its first.
-      const filteredContacts = page.rows.filter((c) => {
-        const existingContact = state.contactsById.get(getRowKey(c));
-        if (!existingContact) return true;
-        return !existingIds.has(getRowKey(c));
+    // Rows a fetch returns are *not* filtered against what the store already
+    // holds. A ticket the store knows about is exactly the one whose last
+    // message, unread count and status go stale, and the cached copy outlives
+    // the tab (IndexedDB), so dropping it here meant a reload re-read the old
+    // row and threw the fresh one away — the list only ever corrected itself on
+    // logout, which is what clears that cache. `addContactsForFilter` already
+    // merges by `updatedAt`, so handing it every row is safe and idempotent.
+    const stampContacts = (page: { rows: ContactsWithLastMessage[] }) =>
+      page.rows.map((c) => {
+        // The API sends the ticket's own `updatedAt`; that is what decides
+        // whether this row supersedes the cached one, so it must survive. Only
+        // a row without one falls back to the client clock, and then only if
+        // the store has nothing to keep — stamping "now" over a real server
+        // timestamp would make the cached row outrank every later response.
+        const existing = useContactsStore.getState().contactsById.get(getRowKey(c));
+        return {
+          ...c,
+          updatedAt: c.updatedAt ?? existing?.updatedAt ?? new Date().toISOString(),
+        };
       });
-
-      return filteredContacts.map((c) => {
-        // A row that is already in the store keeps its stored `updatedAt`: the
-        // store merges over the existing entry, so the field is never lost even
-        // though this re-emitted row does not carry one itself.
-        if (state.contactsById.get(getRowKey(c)))
-          return c as ContactsWithLastMessage & { updatedAt: string };
-        return { ...c, updatedAt: new Date().toISOString() };
-      });
-    };
 
     const syncContacts = async () => {
       if (!filteredContacts || !isActive) return;
@@ -193,11 +192,11 @@ const WaInboxChatSelect = () => {
       for (const page of filteredContacts.pages) {
         if (!isActive || !page.rows?.length) continue;
 
-        const newContacts = getNewContacts(page);
+        const rows = stampContacts(page);
 
-        if (newContacts.length) {
-          await state.addContactsForFilter(filterKey, newContacts);
-          updateInitialMessagesToStore(newContacts);
+        if (rows.length) {
+          await useContactsStore.getState().addContactsForFilter(filterKey, rows);
+          updateInitialMessagesToStore(rows);
         }
       }
     };

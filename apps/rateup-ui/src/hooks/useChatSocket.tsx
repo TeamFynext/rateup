@@ -1,5 +1,4 @@
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -19,24 +18,37 @@ export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
   const retryCountRef = useRef(0);
   const browserId = getBrowserId();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const messageStore = useMessagesStore.getState();
-  const { updateContactById, addContactsForFilter } = useContactsStore();
-  const bumpSectionCounts = useChatContactCountStore((state) => state.bumpSectionCounts);
+  // Held in a ref so the connection effect does not depend on it. Everything
+  // else the handler needs is read from `getState()` at event time.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+
   useEffect(() => {
     if (!browserId) return;
 
     let ws: WebSocket | null = null;
     let closedByUser = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const connect = () => {
       ws = new WebSocket(`${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}`);
       socketRef.current = ws;
 
+      // Without this the retry budget is spent across the whole life of the
+      // page rather than per outage: five idle-timeouts from a proxy over an
+      // afternoon and realtime never came back until a reload.
+      ws.onopen = () => {
+        retryCountRef.current = 0;
+      };
+
       ws.onmessage = async (event) => {
         const data = JSON.parse(event.data);
-        const selectedContact = useContactsStore.getState().selectedContact;
+        const contactsStore = useContactsStore.getState();
+        const messageStore = useMessagesStore.getState();
+        const { updateContactById, addContactsForFilter } = contactsStore;
+        const { bumpSectionCounts } = useChatContactCountStore.getState();
+        const selectedContact = contactsStore.selectedContact;
         switch (data.type) {
           case "inbox":
             const { message, contact: incomingContact } = data.inbox;
@@ -191,20 +203,15 @@ export const useChatSocket = () => {
             break;
         }
 
-        // handleWebSocketMessage({
-        //   newMessagePayload: data,
-        //   queryClient,
-        //   userId: user?.userId,
-        // });
-        handleNotificationWithSound({ message: data, navigate });
+        handleNotificationWithSound({ message: data, navigate: navigateRef.current });
       };
 
       ws.onclose = () => {
-        console.log("WebSocket closed");
-        if (!closedByUser && retryCountRef.current < 5) {
-          retryCountRef.current += 1;
-          setTimeout(connect, 1000); // retry after 1s
-        }
+        if (closedByUser || retryCountRef.current >= 5) return;
+        retryCountRef.current += 1;
+        // Back off rather than hammering a server that is still coming up.
+        const delay = Math.min(1000 * 2 ** (retryCountRef.current - 1), 15_000);
+        retryTimer = setTimeout(connect, delay);
       };
     };
 
@@ -212,9 +219,16 @@ export const useChatSocket = () => {
 
     return () => {
       closedByUser = true;
+      if (retryTimer) clearTimeout(retryTimer);
       ws?.close();
     };
-  }, [browserId, queryClient, messageStore]);
+    // `browserId` is the only input to the connection. The handler reads the
+    // stores through `getState()` precisely so they stay out of here: this hook
+    // sits in a component that re-renders on store activity, and depending on a
+    // store's identity — `useMessagesStore.getState()` returns a fresh object
+    // after every merge — tore the socket down and rebuilt it on each inbound
+    // message, dropping whatever arrived during the gap.
+  }, [browserId]);
 };
 
 /** The inbox-notification slice of the socket payload this handler reads. */
