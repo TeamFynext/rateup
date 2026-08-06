@@ -17,12 +17,25 @@ export const WS_CHANNEL = "ws:messages";
 
 // Store active connections in memory for direct socket access
 /**
- * A live browser socket, tagged with the role of the user who opened it so broadcasts can
- * be filtered to (say) admins only.
+ * A live browser socket, tagged with the *client surface* that opened it so a broadcast can
+ * be aimed at one of them. The two surfaces are `main` (the dashboard app) and `fab` (the
+ * embedded support widget); the client declares which it is with `?role=`, and the inbox
+ * broadcasts pick one with `sendViaWstoOrgHandler`'s `roleFilter`.
+ *
+ * This is deliberately *not* the user's org role. Tagging it with the session role
+ * (`SUPER_ADMIN`, `AGENT`, …) meant no dashboard socket ever equalled the `"main"` filter,
+ * so every inbox event was dropped before it reached the browser.
  */
 type RoleTaggedSocket = WebSocket & { role?: string };
 
 const activeConnections = new Map<string, Map<string, RoleTaggedSocket>>();
+
+/**
+ * The surfaces a socket may claim to be. Anything else — notably an org role like
+ * `SUPER_ADMIN` — is not a surface, so it collapses to `main` rather than being trusted:
+ * the tag is client-declared, and must never be able to name a privilege level.
+ */
+const WS_CLIENT_SURFACES = new Set(["main", "fab"]);
 
 // Helper to generate job key
 function getJobKey(userId: string, orgId: string) {
@@ -98,7 +111,12 @@ export async function handleWebSocketConnection(
 ) {
   const browserId = request.params.afterAuthId;
   const orgId = request.user?.orgId;
-  const role = request.user?.role || "main";
+  // The client surface, not the session role — see RoleTaggedSocket. The dashboard sends
+  // no `role` at all, so it has to default to `main`, which is what the inbox broadcasts
+  // target; the support widget sends `?role=fab`.
+  const requestedSurface = request.query?.role;
+  const role =
+    requestedSurface && WS_CLIENT_SURFACES.has(requestedSurface) ? requestedSurface : "main";
   const userId = request.userId;
 
   if (!orgId || !browserId) {
