@@ -212,6 +212,7 @@ model Org {
   inboxAutomations         InboxAutomation[]
   inboxStats               InboxStats?
   inboxMentions            InboxMention[]
+  conversationTags         ConversationTag[]
 }
 
 model UsageStats {
@@ -2748,6 +2749,9 @@ model Conversation {
   /// Resolution quality set when the conversation is closed with a result.
   resolutionResult       ResolutionResult?
   inboxMentions          InboxMention[]
+  /// Conversation-scoped tags. Distinct from `ContactLabel`, which sticks to the
+  /// customer across every ticket they ever open.
+  tags                   ConversationTagMap[]
   createdAt              DateTime                          @default(now())
   updatedAt              DateTime?                         @updatedAt
 
@@ -2759,6 +2763,40 @@ model Conversation {
   @@index([orgId, createdAt])
   @@index([orgId, lastMessageAt(sort: Desc)])
   @@index([orgId, isFavorite])
+}
+
+/// Org-defined vocabulary for tagging a single conversation ("Bug Report",
+/// "Escalated", "Follow-up"). The conversation-grained counterpart to
+/// `ContactLabel`: a tag describes *this ticket*, a label describes the *customer*
+/// and follows them across every ticket they open.
+model ConversationTag {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  color       String?  @default("#3b82f6")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orgId       String   @db.Uuid
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  conversationTags ConversationTagMap[]
+
+  @@unique([name, orgId], name: "conversation_tag_name_org_id_unique")
+  @@index([orgId])
+}
+
+model ConversationTagMap {
+  conversationId String       @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  tagId String          @db.Uuid
+  tag   ConversationTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([conversationId, tagId])
+  @@index([conversationId])
+  @@index([tagId])
 }
 
 /// Per-org allocator for `Conversation.number`. One row per org; the
