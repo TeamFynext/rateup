@@ -94,6 +94,9 @@ const WaChatFilterSchema = z.object({
   assignedTeams: z.array(z.string()).optional(),
   phone: z.string(),
   labels: z.array(z.string()).optional(),
+  /// Conversation tag ids. Named in full to keep it clear of `tags` above, which
+  /// is the org's free-form contact-tag JSON and unrelated.
+  conversationTags: z.array(z.string()).optional(),
   sortBy: z.string().optional(),
   category: z.string().optional(),
   lifecycle: z.string().optional(),
