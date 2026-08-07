@@ -322,7 +322,18 @@ const AddCatalogProduct = ({
       }
     } catch {}
 
-    const data = { type: formType, [formType]: [{ ...rest }] };
+    // The tag inputs register `image.0.tag` / `video.0.tag` even when no file or link was
+    // given, so an untouched media slot submits as `{ tag: [] }` with no `url` — which the
+    // API rejects. Drop urlless entries, and the field entirely once it's empty.
+    const media = (entries?: Array<{ url?: string; tag?: string[] }>) => {
+      const filled = (entries ?? []).filter((entry) => entry?.url);
+      return filled.length ? filled : undefined;
+    };
+
+    const data = {
+      type: formType,
+      [formType]: [{ ...rest, image: media(rest.image), video: media(rest.video) }],
+    };
 
     if (productData) {
       updateProducts.mutate(data, {
