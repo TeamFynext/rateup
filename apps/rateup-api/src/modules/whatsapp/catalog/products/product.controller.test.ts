@@ -424,10 +424,12 @@ describe("createShopifyProductHandler", () => {
     expect(item.item_group_id).toBe("999");
   });
 
-  test("formats the sale price to two decimal places", async () => {
+  // sale_price is a number like price; the "<amount> <currency>" formatting happens later,
+  // in the import path's formatMoney.
+  test("carries the price through as the sale price", async () => {
     await createShopifyProductHandler(makeRequest({ body: { ...body, price: 99.5 } }), makeReply());
 
-    expect(m.importShopify.mock.calls[0][2][0].sale_price).toBe("99.50");
+    expect(m.importShopify.mock.calls[0][2][0].sale_price).toBe(99.5);
   });
 
   test("falls back to the title when the product has no description", async () => {

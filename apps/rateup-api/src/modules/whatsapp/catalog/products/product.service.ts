@@ -742,7 +742,7 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
         currencyCode,
         availability: v.availableForSale ? "in stock" : "out of stock",
         brand: product.vendor || product.title,
-        sale_price: salePrice.toFixed(2),
+        sale_price: salePrice,
         item_group_id: productGroupId,
       });
     }
@@ -899,7 +899,7 @@ export async function syncShopifyProductsToCatalog(
       currencyCode,
       availability,
       brand: newBrand,
-      sale_price: salePrice.toFixed(2),
+      sale_price: salePrice,
       item_group_id: productGroupId,
     });
   }

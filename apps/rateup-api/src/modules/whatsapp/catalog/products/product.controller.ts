@@ -233,7 +233,7 @@ export async function createShopifyProductHandler(
         currencyCode,
         availability: "in stock",
         brand,
-        sale_price: parseFloat(String(price)).toFixed(2),
+        sale_price: price,
         item_group_id: productGroupId,
       };
 
