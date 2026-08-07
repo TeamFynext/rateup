@@ -448,6 +448,17 @@ export async function filterChats(
         )`);
       }
 
+      // Conversation tags are ticket-grained, so this matches on the row's own
+      // conversation rather than on the contact the way labels above do.
+      if ((bodyFilterProps?.conversationTags?.length ?? 0) > 0) {
+        params.push(bodyFilterProps.conversationTags);
+        filters.push(`EXISTS (
+          SELECT 1 FROM "ConversationTagMap" ctm
+          WHERE ctm."conversationId" = conv.id
+          AND ctm."tagId" = ANY($${paramIndex++}::uuid[])
+        )`);
+      }
+
       if (bodyFilterProps?.lifecycle) {
         params.push(bodyFilterProps.lifecycle);
         filters.push(`c."lifecycleId" = $${paramIndex++}::uuid`);
@@ -781,6 +792,18 @@ export async function filterChats(
         WHERE clm."contactId" IN (SELECT id FROM filtered_conversations)
         GROUP BY clm."contactId"
       ),
+      conversation_tags AS (
+        SELECT
+          ctm."conversationId",
+          json_agg(
+            json_build_object('id', ct.id, 'name', ct.name, 'color', ct.color)
+            ORDER BY ct."createdAt"
+          ) as tags
+        FROM "ConversationTagMap" ctm
+        INNER JOIN "ConversationTag" ct ON ctm."tagId" = ct.id
+        WHERE ctm."conversationId" IN (SELECT "conversationId" FROM filtered_conversations)
+        GROUP BY ctm."conversationId"
+      ),
       conversation_last_message AS (
         SELECT DISTINCT ON (w."conversationId")
           w."conversationId",
@@ -820,6 +843,7 @@ export async function filterChats(
         fc.*,
         COALESCE(au.users, '[]'::json) as "assignedUsers",
         COALESCE(cls.labels, '[]'::json) as "contactLabels",
+        COALESCE(cvt.tags, '[]'::json) as "conversationTags",
         CASE WHEN clm."lastMessageBody" IS NOT NULL THEN clm."lastMessageBody"
              WHEN COALESCE(ctc."otherTicketCount", 0) = 0 THEN fc."contactLastMessageBody"
         END AS "lastMessageBody",
@@ -841,6 +865,7 @@ export async function filterChats(
       FROM filtered_conversations fc
       LEFT JOIN assigned_users au ON au."conversationId" = fc."conversationId"
       LEFT JOIN contact_labels cls ON cls."contactId" = fc.id
+      LEFT JOIN conversation_tags cvt ON cvt."conversationId" = fc."conversationId"
       LEFT JOIN conversation_last_message clm ON clm."conversationId" = fc."conversationId"
       LEFT JOIN conversation_mentions cm ON cm."conversationId" = fc."conversationId"
       LEFT JOIN contact_ticket_counts ctc ON ctc."conversationId" = fc."conversationId"
