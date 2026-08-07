@@ -51,6 +51,7 @@ import { fallbackImage } from "@/utils/constants";
 import CatalogSettingsTab from "../CatalogSettingsTab";
 import { useCommerce } from "../CommerceContext";
 import { CommerceShell } from "../CommerceShell";
+import { catalogPrice } from "../utils";
 
 const TILE_CLASSES = [
   "bg-amber-500/10 text-amber-600",
@@ -302,11 +303,11 @@ export function CatalogsPage() {
                         <div className="mt-auto flex items-center justify-between">
                           <span className="flex items-baseline gap-1.5">
                             <span className="text-base font-bold text-foreground">
-                              {price ? `${sym}${price}` : "—"}
+                              {catalogPrice(price, sym)}
                             </span>
                             {hasSale && (
                               <span className="text-xs text-muted-foreground line-through">
-                                {props.price}
+                                {catalogPrice(props.price, sym)}
                               </span>
                             )}
                           </span>
