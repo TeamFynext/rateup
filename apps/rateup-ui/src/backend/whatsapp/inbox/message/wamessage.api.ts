@@ -1,4 +1,5 @@
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import type { PaginationState, RequestPayload } from "@/types/api.ts";
 import type { MessagePlatform } from "@/types/enums.ts";
 import type { WaInboxMessage, WaTemplateComponent } from "@/types/global";
@@ -144,7 +145,10 @@ export type ContactsWithLastMessage = ContactsData & {
   mentionCount?: number;
   /** Sibling tickets for the same contact — drives the thread's history strip. */
   otherTicketCount?: number;
+  /** Contact-grained: these follow the customer across every one of their tickets. */
   contactLabels?: ContactLabelOption[];
+  /** Ticket-grained: these describe this conversation only. */
+  conversationTags?: ConversationTagOption[];
 };
 
 /**

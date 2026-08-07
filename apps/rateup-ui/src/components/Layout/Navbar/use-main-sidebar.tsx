@@ -8,6 +8,7 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
+import { useConversationTags } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
@@ -48,6 +49,9 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const { data: lifecycles, isPending: isPendingLifecycles } = useLifeCyclesQuery();
   const { data: customFieldData, isPending: isCustomFieldPending } = useCustomFields();
   const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
+  // Inbox-only, but the sidebar is mounted app-wide; the query is cheap and
+  // shared with the ticket panel and inbox settings.
+  const { data: conversationTags = [] } = useConversationTags();
   const { data: userRes, isLoading: isStaffLoading } = useTeamsMembersOfOrg();
   const { data: teamRes, isLoading: isTeamLoading } = useTeamsByUser();
 
@@ -189,6 +193,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   return {
     channels,
     contactLabels,
+    conversationTags,
     customFieldData,
     isCorruptedSession,
     isLoading,

@@ -7,6 +7,7 @@ import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.ap
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
+import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -82,6 +83,11 @@ function useChatFilter() {
       const { filter, setFilter } = chatFilterStore;
       if (label === "label") {
         setFilter({ ...filter, labels: toggleList(filter.labels, value) });
+      } else if (label === "conversationTag") {
+        setFilter({
+          ...filter,
+          conversationTags: toggleList(filter.conversationTags ?? [], value),
+        });
       } else if (label === "lifecycle") {
         setFilter({
           ...filter,
@@ -625,6 +631,7 @@ export default function AppSidebar({
   subscription,
   lifecycles,
   contactLabels,
+  conversationTags,
   channels = [],
   userData,
   staff,
@@ -633,6 +640,7 @@ export default function AppSidebar({
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
   contactLabels?: ContactLabelOption[];
+  conversationTags?: ConversationTagOption[];
   channels?: ChannelOption[];
   userData?: IUserInfoApiResponse;
   staff: Array<{ id: string; name?: string }>;
@@ -689,6 +697,7 @@ export default function AppSidebar({
     subscription,
     lifecycles: user?.showLifecycle ? lifecycles : [],
     contactLabels,
+    conversationTags,
     channels,
     staff,
     teams,

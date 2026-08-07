@@ -28,6 +28,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
   const {
     channels,
     contactLabels,
+    conversationTags,
     customFieldData,
     isCorruptedSession,
     isLoading,
@@ -68,6 +69,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 subscription={subscription}
                 channels={channels}
                 contactLabels={contactLabels}
+                conversationTags={conversationTags}
                 lifecycles={lifecycles}
                 userData={resolvedUserInfo ?? undefined}
                 staff={staff}

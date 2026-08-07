@@ -4,6 +4,7 @@ import {
   IconAt,
   IconCircle,
   IconCircleCheck,
+  IconHash,
   IconRosetteDiscountCheck,
   IconShieldExclamation,
   IconStar,
@@ -377,6 +378,19 @@ export default function WaInboxChatSelectCard({
               }}
             >
               {label.name}
+            </span>
+          ))}
+
+          {/* Conversation tags read as outlined `#` chips so they are told apart
+              from the filled contact-label chips above at a glance. */}
+          {contact?.conversationTags?.map((tag) => (
+            <span
+              key={tag.id}
+              className="inline-flex items-center gap-0.5 rounded-full border px-2 py-px text-[10px] font-bold"
+              style={{ color: tag.color ?? undefined, borderColor: tag.color ?? undefined }}
+            >
+              <IconHash className="size-2.25" />
+              {tag.name}
             </span>
           ))}
 
