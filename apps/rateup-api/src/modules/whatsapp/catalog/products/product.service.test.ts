@@ -67,7 +67,7 @@ function productItem(overrides: Partial<ProductItemInput> = {}): ProductItemInpu
     condition: "new",
     link: "https://example.com/products/sku-1",
     price: 99.5,
-    sale_price: "89",
+    sale_price: 89,
     currencyCode: "INR",
     availability: "in stock",
     brand: "Acme",
