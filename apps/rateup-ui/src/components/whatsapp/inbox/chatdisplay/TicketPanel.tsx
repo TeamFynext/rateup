@@ -5,6 +5,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconChevronUp,
+  IconHash,
   IconLink,
   IconMessageCircle,
   IconMessages,
@@ -28,6 +29,11 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
+import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
+import {
+  useAssignConversationTags,
+  useConversationTags,
+} from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
 import { getRowKey, type ResolutionResult } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useEditConversation,
@@ -147,17 +153,20 @@ export default function TicketPanel({
     | { id: string; name: string; emoji: string; category: string }[]
     | undefined;
   const { data: allLabels = [] } = useContactLabels();
+  const { data: allTags = [] } = useConversationTags();
   const { data: teamRes } = useTeamsByUser();
   const teams = teamRes?.data ?? [];
 
   const editContactMutation = useEditContactMutation(undefined);
   const spamMutation = useSetContactSpam();
   const assignLabels = useAssignContactLabelsToContactId();
+  const assignTags = useAssignConversationTags();
   const editConversation = useEditConversation();
 
   const [copied, setCopied] = useState(false);
   const [assignExpanded, setAssignExpanded] = useState(false);
   const [labelPickerOpen, setLabelPickerOpen] = useState(false);
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [editingTicket, setEditingTicket] = useState(false);
@@ -169,12 +178,15 @@ export default function TicketPanel({
     setEditingName(false);
     setEditingTicket(false);
     setLabelPickerOpen(false);
+    setTagPickerOpen(false);
     setAssignExpanded(false);
     setCopied(false);
   }, [contact?.conversationId, contact?.id]);
 
   const contactLabels: ContactLabelOption[] = contact?.contactLabels ?? [];
   const activeLabelIds = contactLabels.map((l) => l.id);
+  const conversationTags: ConversationTagOption[] = contact?.conversationTags ?? [];
+  const activeTagIds = conversationTags.map((tag) => tag.id);
   const assignedUsers: { id: string; name: string; teamId: string }[] =
     contact?.assignedUsers ?? [];
   const primaryAssignee = assignedUsers[0];
@@ -226,6 +238,33 @@ export default function TicketPanel({
         onSuccess: () => {
           updateContactById(contact.id, (c) => ({ ...c, contactLabels: nextLabels }));
           setSelectedContact({ ...contact, contactLabels: nextLabels });
+        },
+      },
+    );
+  };
+
+  /**
+   * Tags live on the ticket, so this keys off `conversationId` rather than the
+   * contact — the same customer's other tickets keep their own tag set.
+   */
+  const handleToggleTag = (tagId: string) => {
+    const conversationId = contact?.conversationId;
+    if (!conversationId) return;
+    const nextIds = activeTagIds.includes(tagId)
+      ? activeTagIds.filter((id) => id !== tagId)
+      : [...activeTagIds, tagId];
+
+    assignTags.mutate(
+      { conversationId, tagIds: nextIds },
+      {
+        onSuccess: (nextTags) => {
+          // The server answers with the tag set it settled on, so the row and the
+          // selection are updated from that rather than from the optimistic guess.
+          // Keyed by the *row*, not the contact: `updateContactById` resolves a
+          // bare contact id to that contact's live ticket, which would move the
+          // tags onto the wrong ticket when an older one is open.
+          updateContactById(getRowKey(contact), (c) => ({ ...c, conversationTags: nextTags }));
+          setSelectedContact({ ...contact, conversationTags: nextTags });
         },
       },
     );
@@ -511,8 +550,82 @@ export default function TicketPanel({
         </Section>
       )}
 
-      {/* ---- Labels ---- */}
-      <Section label={t("Labels")}>
+      {/* ---- Conversation Tags ----
+           Ticket-grained, so they sit directly above the contact-grained labels
+           and the two are named apart on screen: a tag describes *this* ticket,
+           a label describes the customer. */}
+      {contact?.conversationId && (
+        <Section label={t("Conversation Tags")}>
+          <div className="flex flex-wrap gap-1.5">
+            {conversationTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border max-w-full"
+                style={{ borderColor: tag.color ?? undefined, color: tag.color ?? undefined }}
+              >
+                <IconHash className="size-2.5 shrink-0" />
+                <span className="truncate">{tag.name}</span>
+                <button
+                  type="button"
+                  aria-label={t("Remove tag")}
+                  onClick={() => handleToggleTag(tag.id)}
+                  disabled={assignTags.isPending}
+                  className="cursor-pointer shrink-0"
+                >
+                  <IconX className="size-2.75" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => setTagPickerOpen((v) => !v)}
+              className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer border border-dashed border-border text-muted-foreground"
+            >
+              <IconPlus className="size-2.75" />
+              {t("Add")}
+            </button>
+          </div>
+
+          {tagPickerOpen &&
+            (allTags.length === 0 ? (
+              <p className="mt-2 text-[12px] text-muted-foreground">
+                {t("No conversation tags yet — create them in Inbox Settings.")}
+              </p>
+            ) : (
+              <div className="mt-2 p-1.5 rounded-[10px] max-h-56 overflow-y-auto overscroll-contain border border-border bg-background shadow-sm">
+                {allTags.map((tag) => {
+                  const checked = activeTagIds.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => handleToggleTag(tag.id)}
+                      disabled={assignTags.isPending}
+                      className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md cursor-pointer hover:bg-primary/10"
+                    >
+                      <span
+                        className={cn(
+                          "size-3.75 rounded shrink-0 flex items-center justify-center border-[1.5px]",
+                          checked ? "bg-primary border-primary" : "border-border",
+                        )}
+                      >
+                        {checked && <IconCheck className="size-2.75 text-primary-foreground" />}
+                      </span>
+                      <IconHash
+                        className="size-3 shrink-0"
+                        style={{ color: tag.color ?? undefined }}
+                      />
+                      <span className="text-[13px] truncate text-foreground">{tag.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+        </Section>
+      )}
+
+      {/* ---- Contact Labels ---- */}
+      <Section label={t("Contact Labels")}>
         <div className="flex flex-wrap gap-1.5">
           {contactLabels.map((label) => (
             <span

@@ -22,6 +22,7 @@ import {
   IconFileText,
   IconFolder,
   IconGift,
+  IconHash,
   IconInbox,
   IconLinkPlus,
   IconLogs,
@@ -53,6 +54,7 @@ import { useTranslation } from "react-i18next";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
+import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
 import type { User } from "@/context/UserContext.tsx";
@@ -104,6 +106,7 @@ interface NavMainInput {
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
   contactLabels?: ContactLabelOption[];
+  conversationTags?: ConversationTagOption[];
   channels?: ChannelOption[];
   staff: Array<{ id: string; name?: string }>;
   teams: Array<{ id: string; name?: string }>;
@@ -119,6 +122,7 @@ export function useNavMain({
   subscription,
   lifecycles = [],
   contactLabels = [],
+  conversationTags = [],
   channels = [],
   staff,
   teams,
@@ -265,7 +269,9 @@ export function useNavMain({
                     ...(contactLabels.length > 0
                       ? [
                           {
-                            title: "Labels",
+                            // Contact-grained: picking one lists every ticket
+                            // belonging to a customer carrying the label.
+                            title: "Contact Labels",
                             isSectionHeader: true,
                             icon: IconTag,
                             showClearButton: chatFilterStore.filter.labels?.length > 0,
@@ -293,6 +299,35 @@ export function useNavMain({
                                 isActive: chatFilterStore.filter.labels?.includes(lbl.id),
                               }),
                             ),
+                          },
+                        ]
+                      : []),
+                    ...(conversationTags.length > 0
+                      ? [
+                          {
+                            // Ticket-grained, unlike Contact Labels above: picking
+                            // one lists only the conversations carrying the tag.
+                            title: "Conversation Tags",
+                            isSectionHeader: true,
+                            icon: IconHash,
+                            showClearButton:
+                              (chatFilterStore.filter.conversationTags?.length ?? 0) > 0,
+                            clearFilter: () =>
+                              chatFilterStore.setFilter({
+                                ...chatFilterStore.filter,
+                                conversationTags: [],
+                              }),
+                            items: conversationTags.map((tag) => ({
+                              title: tag.name,
+                              url: "#",
+                              icon: (props: Record<string, unknown>) => (
+                                <IconHash {...props} style={{ color: tag.color ?? undefined }} />
+                              ),
+                              handleClick: () => {
+                                handleFilter("conversationTag", tag.id);
+                              },
+                              isActive: chatFilterStore.filter.conversationTags?.includes(tag.id),
+                            })),
                           },
                         ]
                       : []),
@@ -766,10 +801,12 @@ export function useNavMain({
     ],
     [
       channels,
+      chatFilterStore.filter.conversationTags,
       chatFilterStore.filter.labels,
       chatFilterStore.filter.lifecycle,
       chatFilterStore.filter.phone,
       contactLabels,
+      conversationTags,
       handleFilter,
       hasTeamFeature,
       hiddenModules,
