@@ -38,6 +38,26 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-07-inbox-settings-redesign",
+    title: "Inbox Settings, rebuilt",
+    summary:
+      "Inbox Settings has a new layout with everything on one row of tabs, and two new ones: Teams shows which teams conversations can be assigned to and who is on each, and Channels shows the accounts the inbox receives on and whether each is still connected. Quick replies and automation are unchanged, just relocated.",
+    publishedAt: "2026-08-07",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "settings" }, label: "Open settings" },
+  },
+  {
+    id: "2026-08-07-conversation-tags",
+    title: "Conversation tags, separate from contact labels",
+    summary:
+      "Tickets can now carry their own tags. A conversation tag describes one ticket — Bug Report, Escalated, Follow-up — while a label stays on the customer and shows on every ticket they open; the sidebar names them apart as Conversation Tags and Contact Labels, and both filter the list. Create and rename either one under Inbox Settings.",
+    publishedAt: "2026-08-07",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "settings" }, label: "Manage tags" },
+  },
+  {
     id: "2026-08-05-campaign-whatsapp-participants",
     title: "Campaigns only pick WhatsApp contacts",
     summary:
