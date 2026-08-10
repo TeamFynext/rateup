@@ -93,7 +93,7 @@ export async function createCatalogProductsBatch(
         ...rest,
         id: retailer_id,
         price: formatMoney(price, currencyCode),
-        sale_price: formatMoney(sale_price, currencyCode),
+        ...moneyField("sale_price", sale_price, currencyCode),
         internal_label: (internal_label ?? []).map((label) => `'${label}'`),
       };
     }
@@ -180,6 +180,21 @@ function formatMoney(amount: unknown, currencyCode: string | undefined): string 
   const parsed = parseFloat(String(amount));
   const value = Number.isFinite(parsed) ? parsed.toFixed(2) : String(amount);
   return `${value} ${currencyCode}`;
+}
+
+/**
+ * A formatted money field, or nothing at all when the amount is absent.
+ *
+ * Spread into the Meta payload for optional amounts (sale_price): a product synced from an
+ * existing catalog has no sale price, and passing that straight to formatMoney would send
+ * Meta the literal "undefined INR" instead of leaving the field alone.
+ */
+function moneyField(
+  field: string,
+  amount: number | undefined,
+  currencyCode: string | undefined,
+): Record<string, string> {
+  return amount === undefined ? {} : { [field]: formatMoney(amount, currencyCode) };
 }
 
 interface SendProductRequestProps {
@@ -491,7 +506,7 @@ export async function updateCatalogProducts(
         ...rest,
         id: retailer_id,
         price: formatMoney(price, currencyCode),
-        sale_price: formatMoney(sale_price, currencyCode),
+        ...moneyField("sale_price", sale_price, currencyCode),
         internal_label: internal_label && internal_label.map((label) => `'${label}'`),
       };
     }
