@@ -4,6 +4,7 @@ import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
+import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
@@ -24,21 +25,32 @@ import { Switch } from "@/components/ui/switch.tsx";
 
 import type { ExpirationSettingsSchema } from "./schemas.ts";
 
+type ExpirationSettings = z.infer<typeof ExpirationSettingsSchema>;
+
 interface PointsExpirationSettingsProps {
-  form: UseFormReturn<z.infer<typeof ExpirationSettingsSchema>>;
-  onSave: (data: z.infer<typeof ExpirationSettingsSchema>) => void;
-  isPending: boolean;
+  form: UseFormReturn<ExpirationSettings>;
+  /** `null` until the program exists, which is also when the card is disabled. */
+  programId: string | null;
   disabled?: boolean;
 }
 
 export function PointsExpirationSettings({
   form,
-  onSave,
-  isPending,
+  programId,
   disabled = false,
 }: Readonly<PointsExpirationSettingsProps>) {
   const uid = useId();
   const { t } = useTranslation();
+
+  const { mutate, isPending } = useUpdateLoyaltyProgramMutation(programId ?? "");
+
+  const onSave = (data: ExpirationSettings) => {
+    if (!programId) return;
+    mutate(
+      { enablePointsExpiration: data.enabled, pointsExpirationMonths: data.months },
+      { onSuccess: () => form.reset(data) },
+    );
+  };
 
   return (
     <Card>

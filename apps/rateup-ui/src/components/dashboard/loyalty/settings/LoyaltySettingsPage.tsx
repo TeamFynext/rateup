@@ -18,7 +18,6 @@ import {
   useEventTriggers,
 } from "@/backend/loyalty/eventTriggers.query";
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
-import type { LoyaltyProgramUpdateInput } from "@/backend/loyalty/program.api";
 import {
   useCreateLoyaltyProgramMutation,
   useDeleteLoyaltyProgramMutation,
@@ -32,7 +31,7 @@ import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import { BasicSettings } from "@/components/loyalty/settings/BasicSettings.tsx";
 import { BirthdayReminderSettings } from "@/components/loyalty/settings/BirthdayReminderSettings.tsx";
-import { DEFAULT_JOIN_MESSAGE_TEMPLATE } from "@/components/loyalty/settings/constants.ts";
+import { DEFAULT_JOIN_MESSAGE_TEXT } from "@/components/loyalty/settings/constants.ts";
 import { DangerZone } from "@/components/loyalty/settings/DangerZone.tsx";
 import { NotificationSettings } from "@/components/loyalty/settings/NotificationSettings.tsx";
 import { PointsExpirationSettings } from "@/components/loyalty/settings/PointsExpirationSettings.tsx";
@@ -162,7 +161,7 @@ export function LoyaltySettingsPage() {
       moneyCurrency: "INR",
       defaultCountryCode: "IN",
       whatsappSettingsId: undefined,
-      referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEMPLATE,
+      referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEXT,
     },
   });
 
@@ -196,28 +195,34 @@ export function LoyaltySettingsPage() {
   // Sync state with data
   useEffect(() => {
     if (program) {
-      basicForm.reset({
-        programName: program.name || "",
-        pointsCurrency: program.currencyName || "Points",
-        moneyCurrency: program.currencyCode || "INR",
-        defaultCountryCode: program.defaultCountryCode || "IN",
-        whatsappSettingsId: program.whatsappSettingsId,
-        referralMessageTemplate: program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
-      });
+      if (!notificationsForm.formState.isDirty) {
+        notificationsForm.reset({
+          programActive: program.status === "active",
+          customerNotifications: program.pointsActivityAlerts ?? true,
+          autoApproveAdjustments: program.autoApproveAdjustments ?? false,
+          emailNotifications: program.emailNotifications ?? true,
+          whatsappNotifications: program.whatsappNotifications ?? true,
+          enableShopifyOrderPoints: program.enableShopifyOrderPoints ?? false,
+        });
+      }
 
-      notificationsForm.reset({
-        programActive: program.status === "active",
-        customerNotifications: program.customerNotifications ?? true,
-        autoApproveAdjustments: program.autoApproveAdjustments ?? false,
-        emailNotifications: program.emailNotifications ?? true,
-        whatsappNotifications: program.whatsappNotifications ?? true,
-        enableShopifyOrderPoints: program.enableShopifyOrderPoints ?? false,
-      });
+      if (!basicForm.formState.isDirty) {
+        basicForm.reset({
+          programName: program.name || "",
+          pointsCurrency: program.currencyName || "Points",
+          moneyCurrency: program.currencyCode || "INR",
+          defaultCountryCode: program.defaultCountryCode || "IN",
+          whatsappSettingsId: program.whatsappSettingsId,
+          referralMessageTemplate: program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEXT,
+        });
+      }
 
-      expirationForm.reset({
-        enabled: program.enablePointsExpiration ?? false,
-        months: program.pointsExpirationMonths || 12,
-      });
+      if (!expirationForm.formState.isDirty) {
+        expirationForm.reset({
+          enabled: program.enablePointsExpiration ?? false,
+          months: program.pointsExpirationMonths || 12,
+        });
+      }
     }
   }, [program, basicForm, expirationForm, notificationsForm]);
 
@@ -284,7 +289,7 @@ export function LoyaltySettingsPage() {
       referralMessageTemplate: data.referralMessageTemplate,
     };
     if (program?.id) {
-      updateProgramMutation.mutate(payload);
+      updateProgramMutation.mutate(payload, { onSuccess: () => basicForm.reset(data) });
     } else {
       await createProgramMutation.mutateAsync(payload);
 
@@ -370,12 +375,6 @@ export function LoyaltySettingsPage() {
       } catch (error) {
         console.error("Error creating program defaults:", error);
       }
-    }
-  };
-
-  const handleSaveNotifications = (updates: LoyaltyProgramUpdateInput) => {
-    if (program?.id) {
-      updateProgramMutation.mutate(updates);
     }
   };
 
@@ -473,15 +472,6 @@ export function LoyaltySettingsPage() {
     setPointsExpiredModified(false);
   };
 
-  const onSaveExpiration = (data: z.infer<typeof ExpirationSettingsSchema>) => {
-    if (program?.id) {
-      updateProgramMutation.mutate({
-        enablePointsExpiration: data.enabled,
-        pointsExpirationMonths: data.months,
-      });
-    }
-  };
-
   const handleResetPoints = async () => {
     if (!program?.id) return;
 
@@ -563,7 +553,7 @@ export function LoyaltySettingsPage() {
 
               <NotificationSettings
                 form={notificationsForm}
-                onSave={handleSaveNotifications}
+                programId={program?.id ?? null}
                 disabled={noProgram}
               />
 
@@ -578,8 +568,7 @@ export function LoyaltySettingsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <PointsExpirationSettings
                 form={expirationForm}
-                onSave={onSaveExpiration}
-                isPending={updateProgramMutation.isPending}
+                programId={program?.id ?? null}
                 disabled={noProgram}
               />
 

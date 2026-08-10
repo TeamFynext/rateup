@@ -1,31 +1,18 @@
-import { IconLoader2, IconTypography } from "@tabler/icons-react";
-import type { Content, JSONContent } from "@tiptap/react";
-import { EditorContent } from "@tiptap/react";
+import { IconLoader2 } from "@tabler/icons-react";
+import type { JSONContent } from "@tiptap/react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
-import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
-import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
-import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
-import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
-import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
-import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
-import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
-import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
-import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
-import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
-import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
-import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
-import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError } from "@/components/ui/field.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 
-import { DEFAULT_JOIN_MESSAGE_TEMPLATE } from "./constants.ts";
+import { DEFAULT_JOIN_MESSAGE_TEXT } from "./constants.ts";
 import type { BasicSettingsSchema } from "./schemas.ts";
+
+const MAX_LENGTH = 1024;
 
 interface ReferralMessageSettingsProps {
   form: UseFormReturn<z.infer<typeof BasicSettingsSchema>>;
@@ -41,18 +28,7 @@ export function ReferralMessageSettings({
   disabled = false,
 }: Readonly<ReferralMessageSettingsProps>) {
   const { t } = useTranslation();
-  const referralMessageTemplate = form.watch("referralMessageTemplate");
-  const normalizedTemplate = normalizeTemplateValue(
-    referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
-  );
-  const editorContent = toEditorContent(normalizedTemplate);
-  const referralEditor = useWaEditor({
-    content: editorContent,
-    onChange: (value) => {
-      if (!disabled) form.setValue("referralMessageTemplate", value);
-    },
-  });
-  const plainTextMessage = getPlainText(editorContent);
+  const plainTextMessage = getPlainText(form.watch("referralMessageTemplate"));
   const previewWithSamples = replacePreviewVariables(plainTextMessage);
   const hasContactNameVariable = plainTextMessage.includes("{{1}}");
   const hasReferralCodeVariable = plainTextMessage.includes("{{2}}");
@@ -67,7 +43,7 @@ export function ReferralMessageSettings({
           <Controller
             control={form.control}
             name="referralMessageTemplate"
-            render={({ fieldState }) => (
+            render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldDescription className="text-xs">
                   {t("Use variables")}: {"{{1}}"} {t("for contact name")},{"{{2}}"}{" "}
@@ -113,7 +89,7 @@ export function ReferralMessageSettings({
                     variant="ghost"
                     onClick={() => {
                       if (!disabled) {
-                        form.setValue("referralMessageTemplate", DEFAULT_JOIN_MESSAGE_TEMPLATE, {
+                        form.setValue("referralMessageTemplate", DEFAULT_JOIN_MESSAGE_TEXT, {
                           shouldDirty: true,
                         });
                       }
@@ -124,60 +100,22 @@ export function ReferralMessageSettings({
                   </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex-1">
-                    <ToolbarProvider editor={referralEditor!}>
-                      <TooltipProvider>
-                        <EditorContent
-                          editor={referralEditor}
-                          style={{
-                            backgroundColor: "var(--accent)",
-                            borderRadius: "5px",
-                            maxHeight: "250px",
-                            minHeight: "150px",
-                          }}
-                          className="overflow-y-auto rounded-xl"
-                        />
-                        <div className="flex items-center justify-end space-x-1 px-2 pt-1">
-                          <WaTextCharacterCount editor={referralEditor} max={1024} />
-                        </div>
-                        <div className="flex flex-wrap p-2">
-                          <div className="mt-1 flex items-center">
-                            <InsertEmoji editor={referralEditor} />
-                          </div>
-                          <Popover>
-                            <PopoverTrigger>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                title="Format"
-                              >
-                                <IconTypography className="h-5 w-5" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full">
-                              <div className="flex flex-nowrap gap-1">
-                                <div className="flex items-center">
-                                  <BoldToolbar />
-                                  <ItalicToolbar />
-                                  <StrikeThroughToolbar />
-                                  <CodeToolbar />
-                                </div>
-                                <div className="flex items-center">
-                                  <BlockquoteToolbar />
-                                  <BulletListToolbar />
-                                  <OrderedListToolbar />
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          <div className="flex items-center">
-                            <UndoToolbar />
-                            <RedoToolbar />
-                          </div>
-                        </div>
-                      </TooltipProvider>
-                    </ToolbarProvider>
+                  <div className="space-y-1">
+                    <Textarea
+                      value={plainTextMessage}
+                      onChange={(event) => field.onChange(event.target.value)}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                      maxLength={MAX_LENGTH}
+                      rows={8}
+                      disabled={disabled}
+                      aria-invalid={fieldState.invalid}
+                      className="min-h-37.5 max-h-62.5 resize-y bg-accent"
+                    />
+                    <p className="text-right text-xs text-muted-foreground">
+                      {plainTextMessage.length}/{MAX_LENGTH}
+                    </p>
                   </div>
 
                   <div className="space-y-1.5">
@@ -258,44 +196,6 @@ function getPlainText(value: unknown): string {
   }
 
   return "";
-}
-
-function normalizeTemplateValue(value: unknown) {
-  if (typeof value !== "string") return value;
-
-  const parsed = tryParseJson(value);
-  if (parsed === null) {
-    return value;
-  }
-
-  return parsed;
-}
-
-function toEditorContent(value: unknown): Content {
-  if (!value) return "";
-
-  if (Array.isArray(value)) {
-    return {
-      type: "doc",
-      content: value,
-    };
-  }
-
-  if (typeof value === "object") {
-    const doc = value as JSONContent;
-    if (doc.type === "doc" && Array.isArray(doc.content)) {
-      return doc;
-    }
-
-    if (Array.isArray(doc.content)) {
-      return {
-        type: "doc",
-        content: doc.content,
-      };
-    }
-  }
-
-  return typeof value === "string" ? value : null;
 }
 
 function tryParseJson(value: string) {

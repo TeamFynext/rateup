@@ -135,6 +135,8 @@ export function CustomerPage() {
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
 
+  const panelTier = customerDetails?.currentTier ?? selectedCustomer?.currentTier ?? null;
+
   const getTierBadgeClassName = (tierColor: string) => {
     if (tierColor === "purple") {
       return "bg-purple-50 text-purple-700 hover:bg-purple-50 border border-purple-200";
@@ -361,17 +363,17 @@ export function CustomerPage() {
                 name: selectedCustomer.contact.name,
                 phone: selectedCustomer.contact.phone,
                 email: selectedCustomer.contact.email,
-                currentPoints: selectedCustomer.currentPoints,
-                lifetimePoints: selectedCustomer.lifetimePoints,
-                currentTier: selectedCustomer.currentTier
+                currentPoints: customerDetails?.currentPoints ?? selectedCustomer.currentPoints,
+                lifetimePoints: customerDetails?.lifetimePoints ?? selectedCustomer.lifetimePoints,
+                currentTier: panelTier
                   ? {
-                      id: selectedCustomer.currentTier.id,
-                      name: selectedCustomer.currentTier.name,
-                      color: selectedCustomer.currentTier.color,
+                      id: panelTier.id,
+                      name: panelTier.name,
+                      color: panelTier.color,
                     }
                   : null,
-                status: selectedCustomer.status,
-                referralCode: selectedCustomer.referralCode,
+                status: customerDetails?.status ?? selectedCustomer.status,
+                referralCode: customerDetails?.referralCode ?? selectedCustomer.referralCode,
                 createdAt: selectedCustomer.createdAt,
               }}
               transactions={customerDetails?.transactions}

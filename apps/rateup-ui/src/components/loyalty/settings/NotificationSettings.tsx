@@ -1,28 +1,77 @@
+import { IconLoader2 } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
-import type { LoyaltyProgramUpdateInput } from "@/backend/loyalty/program.api";
+import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
+import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 import type { NotificationsSettingsSchema } from "./schemas.ts";
 
+type NotificationsSettings = z.infer<typeof NotificationsSettingsSchema>;
+type NotificationsField = keyof NotificationsSettings;
+const NOTIFICATION_FIELDS: readonly NotificationsField[] = [
+  "customerNotifications",
+  "autoApproveAdjustments",
+  "emailNotifications",
+  "whatsappNotifications",
+  "enableShopifyOrderPoints",
+];
+
 interface NotificationSettingsProps {
-  form: UseFormReturn<z.infer<typeof NotificationsSettingsSchema>>;
-  onSave: (updates: LoyaltyProgramUpdateInput) => void;
+  form: UseFormReturn<NotificationsSettings>;
+  /** `null` until the program exists, which is also when the card is disabled. */
+  programId: string | null;
   disabled?: boolean;
 }
 
 export function NotificationSettings({
   form,
-  onSave,
+  programId,
   disabled = false,
 }: Readonly<NotificationSettingsProps>) {
   const uid = useId();
   const { t } = useTranslation();
+
+  const programStatus = useUpdateLoyaltyProgramMutation(programId ?? "");
+  const notifications = useUpdateLoyaltyProgramMutation(programId ?? "");
+
+  const { dirtyFields } = form.formState;
+  const notificationsDirty = NOTIFICATION_FIELDS.some((field) => dirtyFields[field]);
+
+  const commitProgramStatus = async (active: boolean, previous: boolean) => {
+    if (!programId) return;
+    try {
+      await programStatus.mutateAsync({ status: active ? "active" : "paused" });
+    } catch {
+      form.setValue("programActive", previous);
+      return;
+    }
+
+    form.resetField("programActive", { defaultValue: active });
+  };
+
+  const saveNotifications = async () => {
+    if (!programId) return;
+    const values = form.getValues();
+    try {
+      await notifications.mutateAsync({
+        pointsActivityAlerts: values.customerNotifications,
+        autoApproveAdjustments: values.autoApproveAdjustments,
+        emailNotifications: values.emailNotifications,
+        whatsappNotifications: values.whatsappNotifications,
+        enableShopifyOrderPoints: values.enableShopifyOrderPoints,
+      });
+    } catch {
+      return;
+    }
+    // Only this card's fields, so the sibling card's unsaved switch stays dirty.
+    NOTIFICATION_FIELDS.forEach((field) => form.resetField(field, { defaultValue: values[field] }));
+  };
 
   return (
     <div className="space-y-4">
@@ -48,14 +97,11 @@ export function NotificationSettings({
                   id={`${uid}-field`}
                   checked={field.value}
                   onCheckedChange={(val) => {
-                    if (!disabled) {
-                      field.onChange(val);
-                      onSave({
-                        status: val ? "active" : "paused",
-                      });
-                    }
+                    const previous = field.value;
+                    field.onChange(val);
+                    void commitProgramStatus(val, previous);
                   }}
-                  disabled={disabled}
+                  disabled={disabled || programStatus.isPending}
                 />
               </Field>
             )}
@@ -83,14 +129,7 @@ export function NotificationSettings({
                 <Switch
                   id={`${uid}-field-2`}
                   checked={field.value}
-                  onCheckedChange={(val) => {
-                    if (!disabled) {
-                      field.onChange(val);
-                      onSave({
-                        customerNotifications: val,
-                      });
-                    }
-                  }}
+                  onCheckedChange={field.onChange}
                   disabled={disabled}
                 />
               </Field>
@@ -113,14 +152,7 @@ export function NotificationSettings({
                 <Switch
                   id={`${uid}-field-3`}
                   checked={field.value}
-                  onCheckedChange={(val) => {
-                    if (!disabled) {
-                      field.onChange(val);
-                      onSave({
-                        autoApproveAdjustments: val,
-                      });
-                    }
-                  }}
+                  onCheckedChange={field.onChange}
                   disabled={disabled}
                 />
               </Field>
@@ -143,14 +175,7 @@ export function NotificationSettings({
                 <Switch
                   id={`${uid}-field-4`}
                   checked={field.value}
-                  onCheckedChange={(val) => {
-                    if (!disabled) {
-                      field.onChange(val);
-                      onSave({
-                        emailNotifications: val,
-                      });
-                    }
-                  }}
+                  onCheckedChange={field.onChange}
                   disabled={disabled}
                 />
               </Field>
@@ -173,14 +198,7 @@ export function NotificationSettings({
                 <Switch
                   id={`${uid}-field-5`}
                   checked={field.value}
-                  onCheckedChange={(val) => {
-                    if (!disabled) {
-                      field.onChange(val);
-                      onSave({
-                        whatsappNotifications: val,
-                      });
-                    }
-                  }}
+                  onCheckedChange={field.onChange}
                   disabled={disabled}
                 />
               </Field>
@@ -203,19 +221,29 @@ export function NotificationSettings({
                 <Switch
                   id={`${uid}-field-6`}
                   checked={field.value}
-                  onCheckedChange={(val) => {
-                    if (!disabled) {
-                      field.onChange(val);
-                      onSave({
-                        enableShopifyOrderPoints: val,
-                      });
-                    }
-                  }}
+                  onCheckedChange={field.onChange}
                   disabled={disabled}
                 />
               </Field>
             )}
           />
+
+          <Button
+            type="button"
+            size="sm"
+            className="mt-2"
+            onClick={() => void saveNotifications()}
+            disabled={disabled || notifications.isPending || !notificationsDirty}
+          >
+            {notifications.isPending ? (
+              <>
+                <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
+                {t("Saving")}
+              </>
+            ) : (
+              t("Save Changes")
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>
