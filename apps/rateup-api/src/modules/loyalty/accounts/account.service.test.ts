@@ -268,6 +268,33 @@ describe("createCustomerAccount — the signup bonus", () => {
   });
 });
 
+describe("createCustomerAccount — the join confirmation", () => {
+  // The welcome message used to sit inside the `signupBonus > 0` block, and signupBonus
+  // defaults to 0 with no UI to change it — so joining a normal program silently sent
+  // nothing. Confirming the join does not depend on there being points to announce.
+  test("welcomes the member even when the program pays no signup bonus", async () => {
+    await createCustomerAccount(signupInput, PROGRAM, ORG, "919999999999");
+
+    const calls = (sendTextMessage as Mock).mock.calls;
+    expect(calls).toHaveLength(2);
+    expect(calls[0][2]).toContain("You are now registered in our Loyalty Program.");
+    expect(calls[1][2]).toBe("https://wa.me/join");
+  });
+
+  test("still says nothing about points when there is no signup bonus", async () => {
+    await createCustomerAccount(signupInput, PROGRAM, ORG, "919999999999");
+
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+  });
+
+  test("stays silent without a sending number to build the link from", async () => {
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+
+    expect(sendTextMessage).not.toHaveBeenCalled();
+  });
+});
+
 describe("createCustomerAccount — referrals", () => {
   const referrer = { id: "acct-referrer", currentPoints: 200 };
 

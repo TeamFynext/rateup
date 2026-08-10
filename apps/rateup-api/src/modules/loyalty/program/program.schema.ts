@@ -1,33 +1,52 @@
 import z from "zod";
 
-export const loyaltyProgramSchema = z.object({
+const loyaltyProgramFields = {
   name: z.string().min(1, "Program name is required"),
-  status: z.enum(["draft", "active", "paused"]).default("draft"),
-  currencyName: z.string().default("Points"),
+  status: z.enum(["draft", "active", "paused"]),
+  currencyName: z.string(),
   currencyCode: z.string(),
   currencySymbol: z.string().optional(),
   defaultCountryCode: z.string(),
-  signupBonus: z.number().default(0),
-  referralBonus: z.number().default(0),
-  referralBonusType: z.enum(["points", "gift"]).default("points"),
+  signupBonus: z.number(),
+  referralBonus: z.number(),
+  referralBonusType: z.enum(["points", "gift"]),
   referralRewardId: z.uuid().optional().nullable(),
-  refereeBonus: z.number().default(0),
-  refereeBonusType: z.enum(["points", "gift"]).default("points"),
+  refereeBonus: z.number(),
+  refereeBonusType: z.enum(["points", "gift"]),
   refereeRewardId: z.uuid().optional().nullable(),
-  tiersEnabled: z.boolean().default(true),
+  tiersEnabled: z.boolean(),
   tierResetPeriod: z.enum(["never", "yearly", "monthly"]).optional().nullable(),
-  pointsActivityAlerts: z.boolean().default(true),
-  autoApproveAdjustments: z.boolean().default(false),
-  emailNotifications: z.boolean().default(true),
-  whatsappNotifications: z.boolean().default(true),
-  enableShopifyOrderPoints: z.boolean().default(false),
-  enablePointsExpiration: z.boolean().default(false),
-  pointsExpirationMonths: z.number().default(12),
+  pointsActivityAlerts: z.boolean(),
+  autoApproveAdjustments: z.boolean(),
+  emailNotifications: z.boolean(),
+  whatsappNotifications: z.boolean(),
+  enableShopifyOrderPoints: z.boolean(),
+  enablePointsExpiration: z.boolean(),
+  pointsExpirationMonths: z.number(),
   referralMessageTemplate: z.any(),
   whatsappSettingsId: z.string().optional().nullable(),
+};
+
+export const loyaltyProgramSchema = z.object({
+  ...loyaltyProgramFields,
+  status: loyaltyProgramFields.status.default("draft"),
+  currencyName: loyaltyProgramFields.currencyName.default("Points"),
+  signupBonus: loyaltyProgramFields.signupBonus.default(0),
+  referralBonus: loyaltyProgramFields.referralBonus.default(0),
+  referralBonusType: loyaltyProgramFields.referralBonusType.default("points"),
+  refereeBonus: loyaltyProgramFields.refereeBonus.default(0),
+  refereeBonusType: loyaltyProgramFields.refereeBonusType.default("points"),
+  tiersEnabled: loyaltyProgramFields.tiersEnabled.default(true),
+  pointsActivityAlerts: loyaltyProgramFields.pointsActivityAlerts.default(true),
+  autoApproveAdjustments: loyaltyProgramFields.autoApproveAdjustments.default(false),
+  emailNotifications: loyaltyProgramFields.emailNotifications.default(true),
+  whatsappNotifications: loyaltyProgramFields.whatsappNotifications.default(true),
+  enableShopifyOrderPoints: loyaltyProgramFields.enableShopifyOrderPoints.default(false),
+  enablePointsExpiration: loyaltyProgramFields.enablePointsExpiration.default(false),
+  pointsExpirationMonths: loyaltyProgramFields.pointsExpirationMonths.default(12),
 });
 
-export const loyaltyProgramUpdateSchema = loyaltyProgramSchema.partial();
+export const loyaltyProgramUpdateSchema = z.object(loyaltyProgramFields).partial();
 
 export const programIdParamSchema = z.object({
   programId: z.string(),
