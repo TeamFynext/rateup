@@ -63,7 +63,9 @@ function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
         internal_label: [] as string[],
         link: "",
         price: 0,
-        sale_price: 0,
+        // Left empty rather than 0: a product with no sale price must submit without one,
+        // otherwise every product syncs to Meta as being on sale for nothing.
+        sale_price: undefined as number | undefined,
         currencyCode: "INR",
         video: [{ url: "", tag: [] as string[] }],
         availability: "in stock",
@@ -226,10 +228,12 @@ const AddCatalogProduct = ({
       if (productData) {
         if (productData.image?.length) setImageUpload("url");
         const initialValues = getInitialValues(type);
-        // Copies only the keys the chosen product type declares.
+        // Copies only the keys the chosen product type declares, and only where the product
+        // actually has a value — products synced from Meta omit whatever was never set on
+        // them, and copying those blanks over would drop the defaults instead.
         const values = initialValues as Record<string, unknown>;
         Object.keys(initialValues).forEach((key) => {
-          values[key] = productData[key];
+          if (productData[key] !== undefined) values[key] = productData[key];
         });
         form.reset(initialValues);
       } else {
@@ -439,13 +443,18 @@ const AddCatalogProduct = ({
 
                 {!addToShopify && (
                   <Field data-invalid={!!errors.sale_price}>
-                    <FieldLabel htmlFor="sale_price">Sale price *</FieldLabel>
+                    <FieldLabel htmlFor="sale_price">Sale price</FieldLabel>
                     <Input
                       id="sale_price"
                       type="number"
                       min={0}
-                      value={form.watch("sale_price")}
-                      onChange={(e) => form.setValue("sale_price", Number(e.target.value))}
+                      value={form.watch("sale_price") ?? ""}
+                      onChange={(e) =>
+                        form.setValue(
+                          "sale_price",
+                          e.target.value === "" ? undefined : Number(e.target.value),
+                        )
+                      }
                       aria-invalid={!!errors.sale_price}
                     />
                     <FieldError>{errors.sale_price?.message as string}</FieldError>
