@@ -157,6 +157,30 @@ describe("createCatalogProductsBatch - product items", () => {
     expect(metaRequests()[0].data.price).toBe("99.50 INR");
   });
 
+  test("formats the sale price the same way as the price", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ sale_price: 89 })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data.sale_price).toBe("89.00 INR");
+  });
+
+  // Products synced from an existing Meta catalog have no sale price unless one was set on
+  // them, and editing one used to send Meta the literal "undefined INR".
+  test("omits the sale price entirely when the product has none", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ sale_price: undefined })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data).not.toHaveProperty("sale_price");
+  });
+
   test("quotes each internal label, as Meta's batch format requires", async () => {
     await createCatalogProductsBatch(
       ORG_ID,
@@ -459,6 +483,19 @@ describe("updateCatalogProducts", () => {
     );
 
     expect(metaRequests()[0].data.price).toBe("100.00 INR");
+  });
+
+  // The case that reaches this path most often: editing a product synced from Meta, which
+  // has no sale price to send back.
+  test("omits the sale price when the product has none, as create does", async () => {
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem({ sale_price: undefined })],
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
+
+    expect(metaRequests()[0].data).not.toHaveProperty("sale_price");
   });
 
   test("quotes the internal labels as create does", async () => {
