@@ -47,7 +47,10 @@ export const catalogProductCore = z.object({
   size: z.string().optional(),
   image_link: z.string().optional(),
   sale_price_effective_date: z.string().optional(),
-  sale_price: z.number(), // like price, formatted to "<amount> <currencyCode>" on the way to Meta
+  // Like price, formatted to "<amount> <currencyCode>" on the way to Meta. Optional because
+  // Meta only reports a sale price for products that are actually on sale, so products synced
+  // from an existing catalog come back without one and must be editable as they are.
+  sale_price: z.number().optional(),
   manufacturer_part_number: z.string().optional(),
   item_group_id: z.string().optional(),
   google_product_category: z.string().optional(),
