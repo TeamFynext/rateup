@@ -18,6 +18,9 @@ const Index = () => {
       router.replace(sessionExists ? "/protected/inbox" : "/auth/SignIn");
     };
     init();
+    // Runs once on mount to pick a landing route; re-running on a new `router`
+    // identity would redirect the user out of wherever they had navigated to.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

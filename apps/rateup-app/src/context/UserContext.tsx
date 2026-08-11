@@ -4,6 +4,8 @@ import { orgWsMessage } from "./type";
 import { useAuth } from "./AuthContext";
 import { getMobileId } from "../util";
 import SuperTokens from "supertokens-react-native";
+import { isEqual } from "lodash";
+import { mergeStats, useContactsStore, useMessagesStore } from "../store/inboxStore";
 
 interface UserContextProps {
   user: any;
@@ -19,6 +21,41 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 const WEBSOCKET_PROTOCOL = API_URL.startsWith("https") ? "wss" : "ws";
 const WEBSOCKET_URL = API_URL.replace(/(http)s?/, WEBSOCKET_PROTOCOL);
 const WS_URL = `${WEBSOCKET_URL}/api${ORG_WS_BASE_PATH}`;
+
+/**
+ * Patch a delivery receipt straight into the stores.
+ *
+ * Deliberately not routed through `wsData` like the `inbox` events are. Three
+ * frames arrive per outgoing message (sent → delivered → read), often inside a
+ * single React batch — `setWsData` keeps only the last, so an effect watching it
+ * would silently drop the earlier ones. They also have to land while neither the
+ * inbox list nor the thread is mounted, or the ticks would be stale on return.
+ */
+const applyMessageStatusUpdate = (
+  update: NonNullable<orgWsMessage["message_status_update"]> | undefined,
+) => {
+  if (!update?.messageId) return;
+  const { contactId, messageId, stats } = update;
+
+  useMessagesStore.getState().applyMessageStatus(contactId, messageId, stats);
+
+  // The inbox row shows its own tick against the last message, and that copy
+  // lives on the contact rather than in the message store.
+  if (!contactId) return;
+  const contact = useContactsStore.getState().contactsById.get(contactId);
+  const lastMessage = contact?.lastMessage;
+  if (!lastMessage || (lastMessage.messageId ?? lastMessage.id) !== messageId) return;
+
+  const mergedStats = mergeStats(lastMessage.stats, stats);
+  // `updateContactById` rewrites the map and stamps `updatedAt` unconditionally,
+  // so a no-op call would re-render the list on every frame.
+  if (isEqual(lastMessage.stats, mergedStats)) return;
+
+  useContactsStore.getState().updateContactById(contactId, (c) => ({
+    ...c,
+    lastMessage: { ...c.lastMessage, stats: mergedStats },
+  }));
+};
 
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
@@ -73,6 +110,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        if (message?.type === "message_status_update") {
+          applyMessageStatusUpdate(message.message_status_update);
+        }
         setWsData(message);
       } catch (err) {
         console.error("❌ Error parsing WebSocket message:", err);

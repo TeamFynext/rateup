@@ -11,7 +11,7 @@ import {
   returnMessageContentBasedOnParsedMessage,
 } from "@/api/inbox/messages/utils";
 import { useWsData } from "@/context/UserContext";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
@@ -53,24 +53,18 @@ export default function Inbox({
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-  } = useFilteredContacts(encodedFilter);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+    useFilteredContacts(encodedFilter);
 
-  const contactsByFilter = useContactsStore(state => state.contactsByFilter);
-  const contactsById = useContactsStore(state => state.contactsById);
-  const addContactsForFilter = useContactsStore(state => state.addContactsForFilter);
-  const updateContactById = useContactsStore(state => state.updateContactById);
-  const currentUser = useContactsStore(state => state.currentUser);
+  const contactsByFilter = useContactsStore((state) => state.contactsByFilter);
+  const contactsById = useContactsStore((state) => state.contactsById);
+  const addContactsForFilter = useContactsStore((state) => state.addContactsForFilter);
+  const updateContactById = useContactsStore((state) => state.updateContactById);
+  const currentUser = useContactsStore((state) => state.currentUser);
   const { colorScheme } = useColorScheme();
   const screenBg = colorScheme === "dark" ? Colors.dark.bg : Colors.light.bg;
-  const setFilter = useContactsStore(state => state.setFilter);
-  const loadContactsFromDB = useContactsStore(state => state.loadContactsFromDB);
+  const setFilter = useContactsStore((state) => state.setFilter);
+  const loadContactsFromDB = useContactsStore((state) => state.loadContactsFromDB);
 
   const filterKey = makeFilterKey(mergedFilter);
 
@@ -78,6 +72,9 @@ export default function Inbox({
     setFilter(mergedFilter);
     // Assuming currentUser logic isn't strictly required for contacts load, passing null or basic info is fine.
     loadContactsFromDB(mergedFilter, null);
+    // `mergedFilter` is rebuilt every render, so depending on it would reload the
+    // list forever. `filterKey` is its stable serialised form and stands in for it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey, setFilter, loadContactsFromDB]);
 
   // Handle data load from react-query
@@ -127,6 +124,10 @@ export default function Inbox({
     return () => {
       isActive = false;
     };
+    // Reads `contactsById`/`contactsByFilter` only to diff against what just
+    // arrived. Depending on them would re-run this on every store write — including
+    // the writes it makes itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, filterKey]);
 
   // Websocket hook
@@ -149,10 +150,10 @@ export default function Inbox({
             lastReceivedMessageTimeStamp: wsData.inbox?.contact.lastReceivedMessageTimeStamp,
             unReadMessageCount: isUnread
               ? (oldContact.unReadMessageCount ?? 0) + 1
-              : oldContact.unReadMessageCount ?? 0,
+              : (oldContact.unReadMessageCount ?? 0),
           };
         },
-        isUnread
+        isUnread,
       );
 
       if (wsData.inbox.message) {
@@ -170,8 +171,8 @@ export default function Inbox({
   const finalContacts =
     waMessageAssignStatus === "Addressed"
       ? displayedContacts.filter((c) =>
-        WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus)
-      )
+          WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus),
+        )
       : displayedContacts;
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
@@ -183,7 +184,7 @@ export default function Inbox({
 
     const messagePreview = returnMessageContentBasedOnParsedMessage(
       parsedMessage,
-      item?.lastMessage?.messageBody?.exchangeProcess
+      item?.lastMessage?.messageBody?.exchangeProcess,
     );
     const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
     const now = dayjs();
@@ -227,10 +228,7 @@ export default function Inbox({
 
   if (isLoading && !finalContacts.length) {
     return (
-      <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: screenBg }}
-      >
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: screenBg }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -238,10 +236,7 @@ export default function Inbox({
 
   if (isError && !finalContacts.length) {
     return (
-      <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: screenBg }}
-      >
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: screenBg }}>
         <Text className="text-red-500 text-center">Failed to load contacts.</Text>
       </View>
     );

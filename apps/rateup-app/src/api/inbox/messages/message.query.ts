@@ -1,9 +1,4 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessagePlatform } from "@/constants/enums";
 import {
   assignInboxToUser,
@@ -32,7 +27,7 @@ export const useSendNewWaMessage = (
   contactId: string,
   teamId: string | null,
   whatsappSettingsPhoneId: string,
-  platform = MessagePlatform.WHATSAPP
+  platform = MessagePlatform.WHATSAPP,
 ) => {
   const qc = useQueryClient();
   return useMutation({
@@ -58,8 +53,9 @@ export const useGetMediaFile = () => {
   });
 };
 
-
-export const useAssignInboxToUser = (contactId: any) => {
+// `_contactId` is kept in the signature for call-site symmetry with the other
+// inbox hooks; the mutation itself takes the id from its own payload.
+export const useAssignInboxToUser = (_contactId?: any) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,

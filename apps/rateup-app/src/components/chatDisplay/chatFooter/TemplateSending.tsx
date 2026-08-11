@@ -21,14 +21,10 @@ import { AccountSelector } from "./templates/TemplateComponents";
 import { getContactById } from "@/api/inbox/contacts/contacts.api";
 import { Colors } from "@/constants/colors";
 
-const TemplateSending = ({
-  onClose,
-  contact,
-}: {
-  onClose: any;
-  contact: any;
-}) => {
-  const [parameterData, setParameterData] = useState([]);
+const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) => {
+  // Never written: the template body params aren't editable from the phone yet,
+  // so this stays the empty array the send call expects.
+  const [parameterData] = useState([]);
   const [contactDetails, setContactDetails] = useState<any>(null);
   const [teamId, setTeamId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -38,8 +34,7 @@ const TemplateSending = ({
   const [loadingContact, setLoadingContact] = useState(true);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [sending, setSending] = useState(false);
-  const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] =
-    useState<string>("");
+  const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] = useState<string>("");
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -47,10 +42,7 @@ const TemplateSending = ({
   const teams = useTeamsByUser();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
 
-  const sendTemplate = useSendWaTemplateToUser(
-    contactDetails?.phone,
-    contactDetails?.id
-  );
+  const sendTemplate = useSendWaTemplateToUser(contactDetails?.phone, contactDetails?.id);
 
   useEffect(() => {
     async function getContactDetails() {
@@ -58,10 +50,10 @@ const TemplateSending = ({
       try {
         const detail = await getContactById(contact);
         setContactDetails(detail);
-      } catch (e) {
+      } catch {
         Toast.show({
           type: "error",
-          text1: "Contacts fetching failed"
+          text1: "Contacts fetching failed",
         });
       } finally {
         setLoadingContact(false);
@@ -77,19 +69,17 @@ const TemplateSending = ({
   }, [teamId, searchTerm]);
 
   const approvedTemplates = templatesAvailableForTeam?.filter(
-    (template) => template?.data?.status === "APPROVED"
+    (template) => template?.data?.status === "APPROVED",
   );
 
   const filteredTemplates = approvedTemplates?.filter((template) =>
-    template.data.name.toLowerCase().includes(searchTerm.toLowerCase())
+    template.data.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const hasTemplates = filteredTemplates?.some(
-    (data) => data.id === selectedTemplateId
-  );
+  const hasTemplates = filteredTemplates?.some((data) => data.id === selectedTemplateId);
 
   const selectedTemplate = filteredTemplates?.find(
-    (template) => template.id === selectedTemplateId
+    (template) => template.id === selectedTemplateId,
   );
 
   async function handleSendTemplate() {
@@ -102,10 +92,10 @@ const TemplateSending = ({
         whatsappSettingsPhoneId: whatsappSettingsPhoneId,
       });
       onClose(); // Close modal after send
-    } catch (e) {
+    } catch {
       Toast.show({
         type: "error",
-        text1: "Error in template sending"
+        text1: "Error in template sending",
       });
     } finally {
       setSending(false);
@@ -175,8 +165,8 @@ const TemplateSending = ({
                   ? "#fff"
                   : Colors.light.textPrimary
                 : isDark
-                ? Colors.dark.textPlaceholder
-                : Colors.light.textPlaceholder,
+                  ? Colors.dark.textPlaceholder
+                  : Colors.light.textPlaceholder,
             }}
           >
             {selectedTeamName || "Select a team"}
@@ -191,7 +181,14 @@ const TemplateSending = ({
           onRequestClose={() => setDropdownVisible(false)}
         >
           <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
-            <View style={{ flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", paddingHorizontal: 20 }}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                backgroundColor: "rgba(0,0,0,0.4)",
+                paddingHorizontal: 20,
+              }}
+            >
               <View
                 style={{
                   backgroundColor: isDark ? Colors.dark.surface : "#fff",
@@ -234,14 +231,17 @@ const TemplateSending = ({
                                 ? Colors.accent.cyan
                                 : Colors.brand.blue
                               : isDark
-                              ? "#fff"
-                              : Colors.light.textPrimary,
+                                ? "#fff"
+                                : Colors.light.textPrimary,
                           }}
                         >
                           {item.name}
                         </Text>
                         {isSelected && (
-                          <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
+                          <Check
+                            size={16}
+                            color={isDark ? Colors.accent.cyan : Colors.brand.blue}
+                          />
                         )}
                       </TouchableOpacity>
                     );
@@ -267,10 +267,7 @@ const TemplateSending = ({
       </View>
 
       {/* Account Selector */}
-      <AccountSelector
-        value={whatsappSettingsPhoneId}
-        onChange={setWhatsappSettingsPhoneId}
-      />
+      <AccountSelector value={whatsappSettingsPhoneId} onChange={setWhatsappSettingsPhoneId} />
 
       {/* Search input */}
       {teamId && (
@@ -301,7 +298,9 @@ const TemplateSending = ({
             <Search size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
             <TextInput
               placeholder="Search templates..."
-              placeholderTextColor={isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder}
+              placeholderTextColor={
+                isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
+              }
               value={searchTerm}
               onChangeText={setSearchTerm}
               style={{
@@ -356,11 +355,17 @@ const TemplateSending = ({
                       ? "rgba(79,195,255,0.15)"
                       : "rgba(28,81,142,0.08)"
                     : isDark
-                    ? Colors.dark.surface
-                    : Colors.light.surface,
+                      ? Colors.dark.surface
+                      : Colors.light.surface,
                 }}
               >
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Text
                     style={{
                       fontFamily: "Nunito_700Bold",

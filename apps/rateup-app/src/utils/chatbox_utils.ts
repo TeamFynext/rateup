@@ -14,7 +14,9 @@ export const namePreview = (name_: any) => {
     }
     return nameArray[0].slice(0, 2).toUpperCase();
   } else {
-    return 0;
+    // Empty string, not `0` — every caller drops this straight into a <Text>,
+    // so a numeric fallback painted a literal "0" inside the avatar circle.
+    return "";
   }
 };
 
@@ -27,10 +29,5 @@ export function isInboxSessionExpired(timeStamp: string) {
 }
 
 export function generateInternalMessageId() {
-  return (
-    "wamid." +
-    Date.now().toString(36) +
-    "-" +
-    Math.random().toString(36).slice(2, 10)
-  );
+  return "wamid." + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
 }

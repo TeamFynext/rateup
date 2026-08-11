@@ -21,22 +21,11 @@ import {
   useSessionActiveStore,
   useVoiceRecordStore,
 } from "@/utils/store";
-import {
-  useCreatePrivateMessage,
-  useSendNewWaMessage,
-} from "@/api/inbox/messages/message.query";
+import { useCreatePrivateMessage, useSendNewWaMessage } from "@/api/inbox/messages/message.query";
 import { uploadFile } from "@/utils/fileUpload";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import VoiceRecorder from "./VoiceRecorder";
-import {
-  ImageIcon,
-  VideoIcon,
-  MusicIcon,
-  File,
-  Paperclip,
-  Plus,
-  Send,
-} from "lucide-react-native"; // Import Lucide icons
+import { ImageIcon, VideoIcon, MusicIcon, File, Paperclip, Plus, Send } from "lucide-react-native"; // Import Lucide icons
 import TemplateSending from "./TemplateSending";
 import MentionList from "./mention/MentionList";
 import { useMention } from "./mention/useMention";
@@ -72,7 +61,6 @@ const MessageSendPanel = ({
   whatsappSettingsPhoneId: string;
   teamId: string | null;
 }) => {
-
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "white" : "black";
@@ -84,7 +72,7 @@ const MessageSendPanel = ({
     selectedContactId as string,
     teamId,
     whatsappSettingsPhoneId,
-    platform as MessagePlatform
+    platform as MessagePlatform,
   );
   const createPrivateMessage = useCreatePrivateMessage(selectedContactId);
   let { isSessionActive } = useSessionActiveStore();
@@ -110,7 +98,7 @@ const MessageSendPanel = ({
     } else {
       setValue("type", "text");
     }
-  }, [media]);
+  }, [media, setValue, watch]);
 
   const values = watch();
 
@@ -118,6 +106,9 @@ const MessageSendPanel = ({
     if (values.type === "location" && values.location) {
       handleSend();
     }
+    // Fires on the form values only. `handleSend` is redeclared every render, so
+    // depending on it would re-send the location on each keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values]);
 
   useEffect(() => {
@@ -131,6 +122,9 @@ const MessageSendPanel = ({
         },
       });
     }
+    // Keyed on a finished recording only. `body` is spread into the update, so
+    // depending on it would loop this effect against its own write.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioUrl]);
 
   const rotateValue = useSharedValue(0);
@@ -241,7 +235,9 @@ const MessageSendPanel = ({
         },
         sender: { name: "You" },
       };
-      useMessagesStore.getState().addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
+      useMessagesStore
+        .getState()
+        .addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
       useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
 
       createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
@@ -272,22 +268,30 @@ const MessageSendPanel = ({
           send: {
             type: values.media?.length ? "image" : "text",
             text: values.text,
-            image: values.media?.length ? { link: values.media[0].uri, caption: values.text?.body } : undefined,
+            image: values.media?.length
+              ? { link: values.media[0].uri, caption: values.text?.body }
+              : undefined,
           },
         },
         sender: { name: "You" },
       };
-      useMessagesStore.getState().addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
+      useMessagesStore
+        .getState()
+        .addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
       useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
 
-      useContactsStore.getState().updateContactById(contactId, (c) => {
-        if (!c) return c;
-        return {
-          ...c,
-          lastMessage: mockedMessage,
-          lastReceivedMessageTimeStamp: new Date().toISOString(),
-        };
-      }, false);
+      useContactsStore.getState().updateContactById(
+        contactId,
+        (c) => {
+          if (!c) return c;
+          return {
+            ...c,
+            lastMessage: mockedMessage,
+            lastReceivedMessageTimeStamp: new Date().toISOString(),
+          };
+        },
+        false,
+      );
 
       sendnewWaMessage.mutate(values);
     } else {
@@ -344,32 +348,22 @@ const MessageSendPanel = ({
                     {item.uploading ? (
                       <View className="w-full h-full bg-gray-100 rounded-xl items-center justify-center">
                         <ActivityIndicator size="small" color="#888" />
-                        <Text className="text-[10px] text-gray-500 mt-1">
-                          Uploading...
-                        </Text>
+                        <Text className="text-[10px] text-gray-500 mt-1">Uploading...</Text>
                       </View>
                     ) : item.type === "image" ? (
                       <Image
                         source={{ uri: item.url }}
                         className="w-full h-full rounded-xl"
-                        onError={(e) => { }}
+                        onError={() => {}}
                       />
                     ) : (
                       <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
                         {item.type !== "image" && (
                           <View className="w-full h-full items-center justify-center bg-gray-100 rounded">
-                            {item.type === "video" && (
-                              <VideoIcon size={20} color={"black"} />
-                            )}
-                            {item.type === "audio" && (
-                              <MusicIcon size={20} color={"black"} />
-                            )}
-                            {item.type === "document" && (
-                              <File size={20} color={"black"} />
-                            )}
-                            <Text className="text-xs text-center px-1 mt-1">
-                              {item.type}
-                            </Text>
+                            {item.type === "video" && <VideoIcon size={20} color={"black"} />}
+                            {item.type === "audio" && <MusicIcon size={20} color={"black"} />}
+                            {item.type === "document" && <File size={20} color={"black"} />}
+                            <Text className="text-xs text-center px-1 mt-1">{item.type}</Text>
                           </View>
                         )}
                       </View>
@@ -382,7 +376,6 @@ const MessageSendPanel = ({
 
           {mediaPanelVisible && (
             <View className="px-3.5 pt-3 pb-1">
-
               {/* File chips */}
               {media.length > 0 && (
                 <ScrollView
@@ -415,7 +408,9 @@ const MessageSendPanel = ({
                         <TouchableOpacity onPress={() => removeMedia(item.key)}>
                           <Text
                             className="text-sm leading-4"
-                            style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
+                            style={{
+                              color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                            }}
                           >
                             ×
                           </Text>
@@ -521,11 +516,7 @@ const MessageSendPanel = ({
             {/* Teammate picker for `@` — above the composer, so it never covers
                 what is being typed. */}
             {mention.isOpen && (
-              <MentionList
-                users={mention.suggestions}
-                onSelect={mention.pick}
-                isDark={isDark}
-              />
+              <MentionList users={mention.suggestions} onSelect={mention.pick} isDark={isDark} />
             )}
 
             {/* Segmented control for Message / Note toggle */}
@@ -550,16 +541,24 @@ const MessageSendPanel = ({
                     justifyContent: "center",
                     paddingVertical: 8,
                     borderRadius: 6,
-                    backgroundColor: selectedIndex === 0
-                      ? (isDark ? Colors.accent.cyan : Colors.brand.blue)
-                      : "transparent",
+                    backgroundColor:
+                      selectedIndex === 0
+                        ? isDark
+                          ? Colors.accent.cyan
+                          : Colors.brand.blue
+                        : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      color: selectedIndex === 0
-                        ? (isDark ? "#091522" : "#fff")
-                        : (isDark ? Colors.dark.textMuted : Colors.light.textMuted),
+                      color:
+                        selectedIndex === 0
+                          ? isDark
+                            ? "#091522"
+                            : "#fff"
+                          : isDark
+                            ? Colors.dark.textMuted
+                            : Colors.light.textMuted,
                       fontSize: 13,
                       fontFamily: "Nunito_600SemiBold",
                     }}
@@ -580,16 +579,17 @@ const MessageSendPanel = ({
                     justifyContent: "center",
                     paddingVertical: 8,
                     borderRadius: 6,
-                    backgroundColor: selectedIndex === 1
-                      ? Colors.accent.orange
-                      : "transparent",
+                    backgroundColor: selectedIndex === 1 ? Colors.accent.orange : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      color: selectedIndex === 1
-                        ? "#fff"
-                        : (isDark ? Colors.dark.textMuted : Colors.light.textMuted),
+                      color:
+                        selectedIndex === 1
+                          ? "#fff"
+                          : isDark
+                            ? Colors.dark.textMuted
+                            : Colors.light.textMuted,
                       fontSize: 13,
                       fontFamily: "Nunito_600SemiBold",
                     }}
@@ -663,15 +663,57 @@ const MessageSendPanel = ({
                 animationType="fade"
                 onRequestClose={() => setTemplateModalVisible(false)}
               >
-                <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", alignItems: "center", paddingHorizontal: 16 }}>
-                  <View style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff", width: "100%", borderRadius: 16, overflow: "hidden", maxHeight: "80%", minHeight: "50%" }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb", backgroundColor: Colors.brand.blue }}>
-                      <Text style={{ color: "#fff", fontSize: 16, fontFamily: "Nunito_700Bold", flex: 1 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: isDark ? Colors.dark.surface : "#fff",
+                      width: "100%",
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      maxHeight: "80%",
+                      minHeight: "50%",
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        borderBottomWidth: 1,
+                        borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb",
+                        backgroundColor: Colors.brand.blue,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontSize: 16,
+                          fontFamily: "Nunito_700Bold",
+                          flex: 1,
+                        }}
+                      >
                         Send Template
                       </Text>
                       <TouchableOpacity
                         onPress={() => setTemplateModalVisible(false)}
-                        style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: "rgba(255,255,255,0.2)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
                         <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
                       </TouchableOpacity>
@@ -696,9 +738,7 @@ const MessageSendPanel = ({
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: isDark
-                    ? Colors.dark.inputBg
-                    : Colors.light.inputBg,
+                  backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
                   borderRadius: 24,
                   paddingVertical: 10,
                   paddingHorizontal: 14,
@@ -706,9 +746,7 @@ const MessageSendPanel = ({
                   alignItems: "center",
                   gap: 8,
                   borderWidth: 1,
-                  borderColor: isDark
-                    ? Colors.dark.inputBorder
-                    : Colors.light.border,
+                  borderColor: isDark ? Colors.dark.inputBorder : Colors.light.border,
                 }}
               >
                 <TextInput
@@ -721,13 +759,9 @@ const MessageSendPanel = ({
                     padding: 0,
                     maxHeight: 120,
                   }}
-                  placeholder={
-                    selectedIndex === 0 ? "Type a message…" : "Add a note…"
-                  }
+                  placeholder={selectedIndex === 0 ? "Type a message…" : "Add a note…"}
                   placeholderTextColor={
-                    isDark
-                      ? Colors.dark.textPlaceholder
-                      : Colors.light.textPlaceholder
+                    isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
                   }
                   multiline
                   value={textBody}
@@ -735,14 +769,10 @@ const MessageSendPanel = ({
                   onSelectionChange={mention.handleSelectionChange}
                 />
                 {!isPrivate && (
-                  <Pressable
-                    onPress={() => setMediaPanelVisible((prev) => !prev)}
-                  >
+                  <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
                     <Paperclip
                       size={17}
-                      color={
-                        isDark ? Colors.dark.inactive : Colors.light.textPlaceholder
-                      }
+                      color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
                     />
                   </Pressable>
                 )}
@@ -757,9 +787,7 @@ const MessageSendPanel = ({
                     width: 42,
                     height: 42,
                     borderRadius: 21,
-                    backgroundColor: isPrivate
-                      ? Colors.accent.orange
-                      : Colors.brand.blue,
+                    backgroundColor: isPrivate ? Colors.accent.orange : Colors.brand.blue,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
@@ -838,15 +866,52 @@ const MessageSendPanel = ({
             animationType="fade"
             onRequestClose={() => setTemplateModalVisible(false)}
           >
-            <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", alignItems: "center", paddingHorizontal: 16 }}>
-              <View style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff", width: "100%", borderRadius: 16, overflow: "hidden", maxHeight: "80%", minHeight: "50%" }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb", backgroundColor: Colors.brand.blue }}>
-                  <Text style={{ color: "#fff", fontSize: 16, fontFamily: "Nunito_700Bold", flex: 1 }}>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.3)",
+                justifyContent: "center",
+                alignItems: "center",
+                paddingHorizontal: 16,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: isDark ? Colors.dark.surface : "#fff",
+                  width: "100%",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  maxHeight: "80%",
+                  minHeight: "50%",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb",
+                    backgroundColor: Colors.brand.blue,
+                  }}
+                >
+                  <Text
+                    style={{ color: "#fff", fontSize: 16, fontFamily: "Nunito_700Bold", flex: 1 }}
+                  >
                     Send Template
                   </Text>
                   <TouchableOpacity
                     onPress={() => setTemplateModalVisible(false)}
-                    style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
                   </TouchableOpacity>
@@ -871,9 +936,7 @@ const MessageSendPanel = ({
           <View
             style={{
               flex: 1,
-              backgroundColor: isDark
-                ? Colors.dark.inputBg
-                : Colors.light.inputBg,
+              backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
               borderRadius: 24,
               paddingVertical: 10,
               paddingHorizontal: 14,
@@ -881,9 +944,7 @@ const MessageSendPanel = ({
               alignItems: "center",
               gap: 8,
               borderWidth: 1,
-              borderColor: isDark
-                ? Colors.dark.inputBorder
-                : Colors.light.border,
+              borderColor: isDark ? Colors.dark.inputBorder : Colors.light.border,
               opacity: 0.6,
             }}
           >
@@ -913,7 +974,11 @@ const MessageSendPanel = ({
               justifyContent: "center",
             }}
           >
-            <Send size={18} color={isDark ? Colors.dark.inactive : Colors.light.inactive} style={{ marginLeft: 2 }} />
+            <Send
+              size={18}
+              color={isDark ? Colors.dark.inactive : Colors.light.inactive}
+              style={{ marginLeft: 2 }}
+            />
           </Pressable>
         </View>
       )}

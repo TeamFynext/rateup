@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import React, { useRef, useCallback, useMemo, useEffect } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import { parseWaMessage_ } from "@/api/inbox/messages/utils";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
@@ -19,7 +19,6 @@ import { ViewToken } from "react-native";
 import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
-import { useQueryClient } from "@tanstack/react-query";
 import { Colors } from "@/constants/colors";
 import { useMessagesStore } from "@/store/inboxStore"; // NEW
 
@@ -34,15 +33,8 @@ const ChatBody = ({ id }: { id: string }) => {
   const isDark = colorScheme === "dark";
   // The design's thread sits on `--bg-page`, same as the list.
   const threadBg = isDark ? Colors.dark.bg : Colors.light.bg;
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isPending,
-    isError,
-    error,
-  } = useGetMessagesByContactId(id);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, error } =
+    useGetMessagesByContactId(id);
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
@@ -51,8 +43,8 @@ const ChatBody = ({ id }: { id: string }) => {
 
   // Zustand Store Integration
   const key = `${id}_all`;
-  const storeMessages = useMessagesStore(state => state.messagesByKey.get(key)?.messages) ?? [];
-  const mergeMessages = useMessagesStore(state => state.mergeMessages);
+  const storeMessages = useMessagesStore((state) => state.messagesByKey.get(key)?.messages) ?? [];
+  const mergeMessages = useMessagesStore((state) => state.mergeMessages);
 
   // Sync API data to Zustand
   useEffect(() => {
@@ -67,10 +59,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   // Sync WebSocket data to Zustand
   useEffect(() => {
-    if (
-      wsData?.type === "inbox" &&
-      wsData.inbox?.contact?.id == id
-    ) {
+    if (wsData?.type === "inbox" && wsData.inbox?.contact?.id == id) {
       const msg = wsData.inbox?.message;
       if (msg) {
         mergeMessages(key, [msg], false);
@@ -128,11 +117,8 @@ const ChatBody = ({ id }: { id: string }) => {
       const time = dayjs(item.createdAt).format("h:mm A");
 
       const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");
-      const nextItem =
-        index < messageList.length - 1 ? messageList[index + 1] : null;
-      const nextDate = nextItem
-        ? dayjs(nextItem.createdAt).format("YYYY-MM-DD")
-        : null;
+      const nextItem = index < messageList.length - 1 ? messageList[index + 1] : null;
+      const nextDate = nextItem ? dayjs(nextItem.createdAt).format("YYYY-MM-DD") : null;
 
       const shouldShowDate = currentDate !== nextDate;
       return (
@@ -142,11 +128,7 @@ const ChatBody = ({ id }: { id: string }) => {
             paddingHorizontal: 8,
           }}
         >
-          {shouldShowDate && (
-            <DateSeparator
-              label={dayjs(item.createdAt).format("DD MMM YYYY")}
-            />
-          )}
+          {shouldShowDate && <DateSeparator label={dayjs(item.createdAt).format("DD MMM YYYY")} />}
           <MessageBubble
             messageContent={parsed.messageContent}
             interactive={parsed.interactive}
@@ -154,6 +136,11 @@ const ChatBody = ({ id }: { id: string }) => {
             assignStatus={item.messageBody?.internal?.assignStatus || ""}
             exchangeProcess={item.messageBody.exchangeProcess}
             senderName={item.sender?.name || ""}
+            // Outgoing with no sender attached. The payload carries no
+            // `isAutomedMessage` (that lives on waMessageOrgTeamMap server-side
+            // and isn't returned), so an absent `sender` is the signal that no
+            // person pressed send — the same test the web inbox makes.
+            isAutomated={item.messageBody?.exchangeProcess === "send" && !item.sender}
             messageType={parsed.messageType}
             template={parsed.template}
             templateComponentParams={item.templateComponentParams}
@@ -162,7 +149,7 @@ const ChatBody = ({ id }: { id: string }) => {
         </View>
       );
     },
-    [messageList, isDark],
+    [messageList, threadBg],
   );
 
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;
@@ -192,9 +179,7 @@ const ChatBody = ({ id }: { id: string }) => {
           backgroundColor: threadBg,
         }}
       >
-        <Text className="text-red-500">
-          {error?.message || "Something went wrong"}
-        </Text>
+        <Text className="text-red-500">{error?.message || "Something went wrong"}</Text>
       </View>
     );
   }
@@ -221,7 +206,7 @@ const ChatBody = ({ id }: { id: string }) => {
           setShowScrollToBottom(!isAtBottom);
         }}
         //@ts-ignore
-        onScrollToIndexFailed={({ index }) => {
+        onScrollToIndexFailed={() => {
           setTimeout(() => {
             listRef.current?.scrollToOffset({
               offset: 0,

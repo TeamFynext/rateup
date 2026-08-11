@@ -1,6 +1,6 @@
 import { useColorScheme } from "nativewind";
 import React, { useEffect } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 import { RefreshCcw } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import Animated, {
@@ -34,6 +34,9 @@ export default function RefreshButton() {
     }, 1000);
 
     return () => clearTimeout(timer);
+    // One refresh a second after mount. `handleRefresh` is redeclared every
+    // render, so depending on it would restart the timer indefinitely.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshAnimatedStyle = useAnimatedStyle(() => {

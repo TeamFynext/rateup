@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Platform, View, useColorScheme } from "react-native";
+import { View, useColorScheme } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
 import ChatHeader from "@/components/chatDisplay/ChatHeader";
@@ -25,13 +25,9 @@ const ChatDisplay = () => {
   const lastReceivedMessageTimeStamp = selectedContact?.lastReceivedMessageTimeStamp || "";
   const sessionActive = selectedContact?.sessionActive || false;
 
-  const setWaAssignStatus = useChatAssignStatusStore(
-    (state) => state.setWaAssignStatus,
-  );
+  const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
 
-  const setIsSessionActive = useSessionActiveStore(
-    (state) => state.setIsSessionActive,
-  );
+  const setIsSessionActive = useSessionActiveStore((state) => state.setIsSessionActive);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -39,13 +35,13 @@ const ChatDisplay = () => {
   // Set session state immediately
   useEffect(() => {
     setIsSessionActive(sessionActive);
-  }, [sessionActive]);
+  }, [sessionActive, setIsSessionActive]);
 
   useEffect(() => {
     if (id) {
       setWaAssignStatus(initialStatus);
     }
-  }, [id, initialStatus]);
+  }, [id, initialStatus, setWaAssignStatus]);
 
   return (
     <View
@@ -54,11 +50,7 @@ const ChatDisplay = () => {
         backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
       }}
     >
-      <KeyboardAvoidingView
-        behavior={"padding"}
-        keyboardVerticalOffset={20}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoidingView behavior={"padding"} keyboardVerticalOffset={20} style={{ flex: 1 }}>
         <ChatHeader
           id={id}
           name={name}

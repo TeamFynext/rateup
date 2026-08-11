@@ -48,8 +48,7 @@ export const signIn = async (email: string, password: string) => {
   } catch (err: any) {
     return {
       success: false,
-      message:
-        err?.response?.data?.message || "Sign in failed. Please try again.",
+      message: err?.response?.data?.message || "Sign in failed. Please try again.",
     };
   }
 };
@@ -64,7 +63,7 @@ export const signOut = async () => {
     await SuperTokens.signOut();
     router.replace("/auth/SignIn");
     return { success: true };
-  } catch (err: any) {
+  } catch {
     return {
       success: false,
       message: "Sign Out failed. Please try again",
@@ -74,12 +73,9 @@ export const signOut = async () => {
 
 export const sendPasswordResetEmail = async (email: string) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/api/auth/user/password/reset/token`,
-      {
-        formFields: [{ id: "email", value: email }],
-      },
-    );
+    const response = await axios.post(`${API_URL}/api/auth/user/password/reset/token`, {
+      formFields: [{ id: "email", value: email }],
+    });
 
     const data = response.data;
 
@@ -89,8 +85,7 @@ export const sendPasswordResetEmail = async (email: string) => {
         message: "Reset link sent successfully",
       };
     } else if (data.status === "FIELD_ERROR") {
-      const errorMsg =
-        data.formFields?.[0]?.error || "Invalid email format or missing email";
+      const errorMsg = data.formFields?.[0]?.error || "Invalid email format or missing email";
       return {
         success: false,
         message: errorMsg,
@@ -101,7 +96,7 @@ export const sendPasswordResetEmail = async (email: string) => {
         message: "Something went wrong. Please try again.",
       };
     }
-  } catch (err) {
+  } catch {
     return {
       success: false,
       message: "Send failed. Check your network or try again later.",

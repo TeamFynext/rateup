@@ -14,9 +14,7 @@ import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import Inbox from "@/components/inbox/inbox";
 import RefreshButton from "@/components/inbox/RefreshButton";
 import InboxSearchView from "@/components/inbox/InboxSearchView";
-import ScreenHeader, {
-  HeaderIconButton,
-} from "@/components/common/ScreenHeader";
+import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { Search } from "lucide-react-native";
 import { useInboxCountStore } from "@/store/inboxCountStore";
@@ -43,31 +41,19 @@ function SegmentPill({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const background = focused
-    ? Colors.brand.blue
-    : isDark
-      ? "transparent"
-      : Colors.light.card;
+  const background = focused ? Colors.brand.blue : isDark ? "transparent" : Colors.light.card;
   const borderColor = focused
     ? Colors.brand.blue
     : isDark
       ? Colors.dark.pillBorder
       : Colors.light.border;
-  const labelColor = focused
-    ? "#fff"
-    : isDark
-      ? Colors.dark.pillText
-      : Colors.light.pillText;
+  const labelColor = focused ? "#fff" : isDark ? Colors.dark.pillText : Colors.light.pillText;
   const countBg = focused
     ? "rgba(255,255,255,0.22)"
     : isDark
       ? Colors.dark.statusBg
       : Colors.light.surface;
-  const countFg = focused
-    ? "#fff"
-    : isDark
-      ? Colors.dark.textMuted
-      : Colors.light.textMuted;
+  const countFg = focused ? "#fff" : isDark ? Colors.dark.textMuted : Colors.light.textMuted;
 
   return (
     <Pressable
@@ -125,7 +111,8 @@ export default function InboxLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { selectedTab, setSelectedTab } = useSelectedTabStore();
   const activeTab = selectedTab as "Open" | "Closed" | "All" | "Mine" | "New" | "Favourites";
-  const setActiveTab = (tab: "Open" | "Closed" | "All" | "Mine" | "New" | "Favourites") => setSelectedTab(tab);
+  const setActiveTab = (tab: "Open" | "Closed" | "All" | "Mine" | "New" | "Favourites") =>
+    setSelectedTab(tab);
 
   const { userId } = useAuth();
   const setFilter = useChatFilterStore((state) => state.setFilter);
@@ -154,38 +141,20 @@ export default function InboxLayout() {
 
       case "Closed":
         return (
-          <Inbox
-            messageType="all"
-            waMessageAssignStatus="Addressed"
-            searchTerm={searchTerm}
-          />
+          <Inbox messageType="all" waMessageAssignStatus="Addressed" searchTerm={searchTerm} />
         );
 
       case "All":
-        return (
-          <Inbox
-            messageType="all"
-            waMessageAssignStatus={null}
-            searchTerm={searchTerm}
-          />
-        );
+        return <Inbox messageType="all" waMessageAssignStatus={null} searchTerm={searchTerm} />;
 
       case "Mine":
         return (
-          <Inbox
-            messageType="usermessages"
-            waMessageAssignStatus="mine"
-            searchTerm={searchTerm}
-          />
+          <Inbox messageType="usermessages" waMessageAssignStatus="mine" searchTerm={searchTerm} />
         );
 
       case "New":
         return (
-          <Inbox
-            messageType="usermessages"
-            waMessageAssignStatus="New"
-            searchTerm={searchTerm}
-          />
+          <Inbox messageType="usermessages" waMessageAssignStatus="New" searchTerm={searchTerm} />
         );
 
       case "Favourites":
@@ -203,17 +172,14 @@ export default function InboxLayout() {
     }
   };
 
-  const { data: contactCountsData, isLoading: isContactCountsLoading } =
-    useContactCounts();
+  const { data: contactCountsData } = useContactCounts();
   const setCounts = useInboxCountStore((state) => state.setCounts);
   const contactCounts = useInboxCountStore((state) => state.counts);
 
   useEffect(() => {
     if (contactCountsData) {
       setCounts({
-        openCount:
-          (contactCountsData.assigned || 0) +
-          (contactCountsData.unassigned || 0),
+        openCount: (contactCountsData.assigned || 0) + (contactCountsData.unassigned || 0),
         closedCount: contactCountsData.closed || 0,
         allCount: contactCountsData.total || contactCountsData.all || 0,
         newCount: contactCountsData.new || 0,
@@ -223,13 +189,8 @@ export default function InboxLayout() {
 
   const activeFilterCount =
     (filterFromStore.status && filterFromStore.status.length > 0 ? 1 : 0) +
-    (filterFromStore.assignedTeams && filterFromStore.assignedTeams.length > 0
-      ? 1
-      : 0) +
-    (filterFromStore.assignedUserIds &&
-    filterFromStore.assignedUserIds.length > 0
-      ? 1
-      : 0) +
+    (filterFromStore.assignedTeams && filterFromStore.assignedTeams.length > 0 ? 1 : 0) +
+    (filterFromStore.assignedUserIds && filterFromStore.assignedUserIds.length > 0 ? 1 : 0) +
     (filterFromStore.labels && filterFromStore.labels.length > 0 ? 1 : 0) +
     (filterFromStore.lifecycle ? 1 : 0) +
     (filterFromStore.phone && filterFromStore.phone !== "all" ? 1 : 0);
@@ -304,21 +265,15 @@ export default function InboxLayout() {
                         flexDirection: "row",
                         alignItems: "center",
                         height: 32,
-                        backgroundColor: isDark
-                          ? Colors.dark.statusBg
-                          : Colors.light.surface,
+                        backgroundColor: isDark ? Colors.dark.statusBg : Colors.light.surface,
                         padding: 2,
                         borderRadius: 9999,
                         borderWidth: 1,
-                        borderColor: isDark
-                          ? Colors.dark.pillBorder
-                          : Colors.light.border,
+                        borderColor: isDark ? Colors.dark.pillBorder : Colors.light.border,
                       }}
                     >
                       <Pressable
-                        onPress={() =>
-                          setFilter({ ...filterFromStore, assignedUserIds: [] })
-                        }
+                        onPress={() => setFilter({ ...filterFromStore, assignedUserIds: [] })}
                         style={{
                           height: 26,
                           justifyContent: "center",

@@ -1,9 +1,34 @@
 export type orgWsMessage = {
-  type: "inbox";
+  type: "inbox" | "message_status_update";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
   };
+  /**
+   * A delivery receipt for an outgoing message. Carries no message body — only
+   * the wamid to match on and the timestamps known so far, so it patches an
+   * already-cached message rather than creating one.
+   */
+  message_status_update?: {
+    /** WhatsApp message id (wamid); matches `WaGetMessagesBody.messageId`. */
+    messageId: string;
+    contactId: string | null;
+    sourceIdentifier?: string | null;
+    stats: WaMessageStats;
+  };
+};
+
+/**
+ * Timestamps, not booleans: an unreached state is the empty string, which is
+ * what the tick renderer in MessageBubble tests for.
+ */
+export type WaMessageStats = {
+  read: string;
+  sent: string;
+  delivered: string;
+  failed?: string;
+  /** Legacy name for `failed`; still read by the tick renderer. */
+  error?: string;
 };
 
 export type WaGetMessagesBody = {
@@ -11,10 +36,10 @@ export type WaGetMessagesBody = {
   waContctId: string;
   createdAt: string;
   waCreatedAt: string;
-  sendBy?:string;
+  sendBy?: string;
   messageBody: any;
   templateComponentParams: any;
-  stats?: { read: string; delivered: string; sent: string; error: string };
+  stats?: WaMessageStats;
   sender?: {
     name?: string;
     profile_photo?: string;
@@ -23,51 +48,50 @@ export type WaGetMessagesBody = {
   readUsers?: string[];
 };
 
- type ContactsData = {
+type ContactsData = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  dob?: Date;
+  source: string;
+  createdAt: Date;
+  tags?: any;
+  consent: boolean;
+  waMessageAssignStatus: any;
+  whatsappUserName?: string;
+  blockedOnWhatsApp: boolean;
+  lastReceivedMessageTimeStamp?: string;
+  loyaltyCustomer?: {
     id: string;
-    name: string;
-    phone: string;
-    email: string;
-    dob?: Date;
-    source: string;
+    email?: string;
     createdAt: Date;
-    tags?: any;
-    consent: boolean;
-    waMessageAssignStatus:any;
-    whatsappUserName?: string;
-    blockedOnWhatsApp: boolean;
-    lastReceivedMessageTimeStamp?:string;
-    loyaltyCustomer?: {
-      id: string;
-      email?: string;
-      createdAt: Date;
-      referralCodes: Array<{
-        referralCode: string;
-      }>;
-      redeems: Array<{
-        status: string;
-      }>;
-      totalEarnedPoints: number;
-      redeemedPoints: number;
-    };
-    org: {
-      whatsappSettings: {
-        contactTags: string[];
-      };
-    };
-    contactGroups?: [
-      {
-        contactGroup?: {
-          name?: string;
-        };
-      },
-    ];
-    campaignParticipants: any[];
-    aiWaChat: boolean;
+    referralCodes: Array<{
+      referralCode: string;
+    }>;
+    redeems: Array<{
+      status: string;
+    }>;
+    totalEarnedPoints: number;
+    redeemedPoints: number;
   };
+  org: {
+    whatsappSettings: {
+      contactTags: string[];
+    };
+  };
+  contactGroups?: [
+    {
+      contactGroup?: {
+        name?: string;
+      };
+    },
+  ];
+  campaignParticipants: any[];
+  aiWaChat: boolean;
+};
 
-
-  export type WaTemplateFetchBody = {
+export type WaTemplateFetchBody = {
   id: string;
   name: string;
   language: string;
@@ -138,7 +162,6 @@ type WaTemplateParameter = {
   document?: Document;
 };
 
-
 type Currency = {
   fallback_value: string;
   code: string;
@@ -163,23 +186,22 @@ type Document = {
   link: string;
 };
 
-
 export interface MembersResponse {
-    message: string;
-    data: TeamMembersData[];
-  }
+  message: string;
+  data: TeamMembersData[];
+}
 
-  type Team = {
-    team_id: string;
-    team_name: string;
-    team_code: string;
-  };
-  export interface TeamMembersData {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    teams: Team[];
-    isPaused?: boolean;
-    status: "online" | "offline";
-  }
+type Team = {
+  team_id: string;
+  team_name: string;
+  team_code: string;
+};
+export interface TeamMembersData {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  teams: Team[];
+  isPaused?: boolean;
+  status: "online" | "offline";
+}

@@ -1,5 +1,5 @@
 import { Toast } from "toastify-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import { Mic, CircleStop } from "lucide-react-native";
 import { uploadFile, getFileUrlFromKey } from "@/utils/fileUpload";
@@ -46,7 +46,7 @@ const WaveBar = ({ delay, size = "default" }: { delay: number; size?: "default" 
         true,
       ),
     );
-  }, []);
+  }, [delay, size, height]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: height.value,
@@ -69,9 +69,7 @@ const WaveBar = ({ delay, size = "default" }: { delay: number; size?: "default" 
 
 const VoiceWave = () => {
   return (
-    <View
-      style={{ flexDirection: "row", alignItems: "flex-end", marginRight: 10 }}
-    >
+    <View style={{ flexDirection: "row", alignItems: "flex-end", marginRight: 10 }}>
       {[0, 100, 200, 300, 400].map((delay, index) => (
         <WaveBar key={index} delay={delay} />
       ))}
