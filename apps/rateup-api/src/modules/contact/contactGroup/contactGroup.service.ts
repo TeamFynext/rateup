@@ -53,8 +53,8 @@ export async function getContactGroupsByTeamId(
 ) {
   // Callers that can only reach one channel (the campaign participant picker, which is
   // WhatsApp-only) pass it here so `_count.contacts` reports the members they can actually use.
-  const contactFilter =
-    contactChannel === WHATSAPP_CONTACT_CHANNEL ? { contact: whatsappContactWhere } : undefined;
+  // const contactFilter =
+  //   contactChannel === WHATSAPP_CONTACT_CHANNEL ? { contact: whatsappContactWhere } : undefined;
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       teamId,
@@ -69,7 +69,8 @@ export async function getContactGroupsByTeamId(
       },
       _count: {
         select: {
-          contacts: contactFilter ? { where: contactFilter } : true,
+          contacts: true,
+          // contacts: contactFilter ? { where: contactFilter } : true,
         },
       },
     },
