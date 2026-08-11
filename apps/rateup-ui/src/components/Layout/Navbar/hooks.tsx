@@ -22,15 +22,22 @@ import {
   IconFileText,
   IconFolder,
   IconGift,
+  IconBook,
   IconHash,
   IconInbox,
+  IconLayoutGrid,
   IconLinkPlus,
   IconLogs,
   IconMessage,
+  IconPlayerPlay,
+  IconPlug,
   IconQrcode,
   IconReportAnalytics,
+  IconRobotFace,
+  IconRocket,
   IconSend,
   IconSettings,
+  IconSettings2,
   IconShield,
   IconShieldExclamation,
   IconShoppingCart,
@@ -683,16 +690,54 @@ export function useNavMain({
             },
           ]
         : []),
-      // ...(hasFeature(subscription, sfpn.AI) && hasTeamFeature(TeamFeature.AiChatbot)
-      //   ? [
-      //       {
-      //         title: "Meta AI Agent",
-      //         url: "/dashboard/meta-agent",
-      //         icon: IconRobotFace,
-      //         items: [],
-      //       },
-      //     ]
-      //   : []),
+      ...(hasTeamFeature(TeamFeature.AiChatbot)
+        ? [
+            {
+              title: "Meta AI Agent",
+              url: "/dashboard/meta-agent",
+              icon: IconRobotFace,
+              // Each area of the agent is its own route, so the sidebar is the
+              // navigation for them rather than a second rail inside the page.
+              items: [
+                {
+                  title: t("Overview"),
+                  url: "/dashboard/meta-agent/overview",
+                  icon: IconRocket,
+                },
+                {
+                  title: t("Knowledge"),
+                  url: "/dashboard/meta-agent/knowledge",
+                  icon: IconBook,
+                },
+                {
+                  title: t("Skills"),
+                  url: "/dashboard/meta-agent/skills",
+                  icon: IconSparkles,
+                },
+                {
+                  title: t("UI Skills"),
+                  url: "/dashboard/meta-agent/ui-skills",
+                  icon: IconLayoutGrid,
+                },
+                {
+                  title: t("Connectors"),
+                  url: "/dashboard/meta-agent/connectors",
+                  icon: IconPlug,
+                },
+                {
+                  title: t("Settings"),
+                  url: "/dashboard/meta-agent/settings",
+                  icon: IconSettings2,
+                },
+                {
+                  title: t("Operate"),
+                  url: "/dashboard/meta-agent/operate",
+                  icon: IconPlayerPlay,
+                },
+              ],
+            },
+          ]
+        : []),
       {
         title: t("Settings"),
         url: "/dashboard/settings",

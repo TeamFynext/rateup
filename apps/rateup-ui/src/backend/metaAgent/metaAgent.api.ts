@@ -3,15 +3,26 @@ import { axiosClient } from "../apiClient";
 const BASE_URL = "/meta-agent";
 const base = (waSettingsId: string) => `${BASE_URL}/${waSettingsId}`;
 
+export type MetaAgentChannel =
+  | "email"
+  | "instagram"
+  | "line"
+  | "messenger"
+  | "sms"
+  | "tiktok"
+  | "unknown"
+  | "webchat"
+  | "whatsapp";
+
 export interface MetaBusinessAgent {
   id: string;
   orgId: string;
   whatsappSettingsId: string;
   agentId?: string | null;
-  channel: string;
+  channel: MetaAgentChannel;
   isEligible?: boolean | null;
   eligibilityCheckedAt?: string | null;
-  status: string;
+  status: "NOT_ONBOARDED" | "ONBOARDED" | "DISABLED";
   createdAt: string;
   updatedAt: string;
 }
@@ -27,9 +38,17 @@ export const checkAgentEligibility = async (waSettingsId: string) => {
   return res.data as MetaBusinessAgent;
 };
 
-export const onboardAgent = async (waSettingsId: string, channel = "whatsapp") => {
+export const onboardAgent = async (
+  waSettingsId: string,
+  channel: MetaAgentChannel = "whatsapp",
+) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/onboarding`, { channel });
   return res.data as MetaBusinessAgent;
+};
+
+export const deleteAgent = async (waSettingsId: string) => {
+  const res = await axiosClient.delete(`${base(waSettingsId)}/agent`);
+  return res.data as { deletedAgentId: string | null };
 };
 
 // ---- allowlist ----
@@ -62,11 +81,16 @@ export const syncAllowlist = async (waSettingsId: string) => {
 };
 
 // ---- agent settings ----
+/** The eight intervals Meta accepts; 0 turns follow-ups off. */
+export const FOLLOWUP_INTERVALS = [0, 300, 900, 1800, 3600, 7200, 28800, 86400] as const;
+export type FollowupInterval = (typeof FOLLOWUP_INTERVALS)[number];
+
 export interface AgentSettings {
   rollout?: { enabled?: boolean };
   handoff?: { enabled?: boolean; message?: string };
   followup?: { enabled?: boolean; followup_interval_in_seconds?: number; message?: string };
   ai_audience?: "EVERYONE" | "ALLOWLISTED_ONLY";
+  never_say_phrases?: string[];
   settingsSyncedAt?: string | null;
 }
 
@@ -106,6 +130,10 @@ export const updateBusinessInfo = async (waSettingsId: string, data: BusinessInf
   return res.data as BusinessInfo;
 };
 
+export const deleteBusinessInfo = async (waSettingsId: string) => {
+  await axiosClient.delete(`${base(waSettingsId)}/knowledge/business-info`);
+};
+
 export const syncBusinessInfo = async (waSettingsId: string) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/knowledge/business-info/sync`);
   return res.data as BusinessInfo;
@@ -121,21 +149,19 @@ export interface Faq {
   createdAt: string;
 }
 
+export type FaqInput = Pick<Faq, "question" | "answer">;
+
 export const listFaqs = async (waSettingsId: string) => {
   const res = await axiosClient.get(`${base(waSettingsId)}/knowledge/faqs`);
   return res.data as Faq[];
 };
 
-export const createFaq = async (waSettingsId: string, data: Pick<Faq, "question" | "answer">) => {
+export const createFaq = async (waSettingsId: string, data: FaqInput) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/knowledge/faqs`, data);
   return res.data as Faq;
 };
 
-export const updateFaq = async (
-  waSettingsId: string,
-  faqId: string,
-  data: Pick<Faq, "question" | "answer">,
-) => {
+export const updateFaq = async (waSettingsId: string, faqId: string, data: FaqInput) => {
   const res = await axiosClient.put(`${base(waSettingsId)}/knowledge/faqs/${faqId}`, data);
   return res.data as Faq;
 };
@@ -150,6 +176,10 @@ export const syncFaqs = async (waSettingsId: string) => {
 };
 
 // ---- knowledge: files ----
+/** Meta's documented cap and accepted types. */
+export const KNOWLEDGE_FILE_MAX_BYTES = 100_000_000;
+export const KNOWLEDGE_FILE_ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.csv,.xlsx";
+
 export interface KnowledgeFile {
   id: string;
   metaId?: string | null;
@@ -182,11 +212,13 @@ export const syncFiles = async (waSettingsId: string) => {
 };
 
 // ---- knowledge: websites ----
+export type CrawlStatus = "pending" | "in_progress" | "completed" | "failed";
+
 export interface KnowledgeWebsite {
   id: string;
   metaId?: string | null;
   url: string;
-  crawlStatus?: "pending" | "in_progress" | "completed" | "failed" | null;
+  crawlStatus?: CrawlStatus | null;
   pagesCrawled?: number | null;
   lastCrawledAt?: string | null;
   createdAt: string;
@@ -199,6 +231,13 @@ export const listWebsites = async (waSettingsId: string) => {
 
 export const createWebsite = async (waSettingsId: string, url: string) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/knowledge/websites`, { url });
+  return res.data as KnowledgeWebsite;
+};
+
+export const updateWebsite = async (waSettingsId: string, websiteId: string, url: string) => {
+  const res = await axiosClient.put(`${base(waSettingsId)}/knowledge/websites/${websiteId}`, {
+    url,
+  });
   return res.data as KnowledgeWebsite;
 };
 
@@ -218,27 +257,23 @@ export interface Skill {
   title: string;
   description: string;
   skill: string;
+  channel?: string | null;
   createdAt: string;
 }
+
+export type SkillInput = Pick<Skill, "title" | "description" | "skill">;
 
 export const listSkills = async (waSettingsId: string) => {
   const res = await axiosClient.get(`${base(waSettingsId)}/skills`);
   return res.data as Skill[];
 };
 
-export const createSkill = async (
-  waSettingsId: string,
-  data: Pick<Skill, "title" | "description" | "skill">,
-) => {
+export const createSkill = async (waSettingsId: string, data: SkillInput) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/skills`, data);
   return res.data as Skill;
 };
 
-export const updateSkill = async (
-  waSettingsId: string,
-  skillId: string,
-  data: Pick<Skill, "title" | "description" | "skill">,
-) => {
+export const updateSkill = async (waSettingsId: string, skillId: string, data: SkillInput) => {
   const res = await axiosClient.put(`${base(waSettingsId)}/skills/${skillId}`, data);
   return res.data as Skill;
 };
@@ -252,17 +287,121 @@ export const syncSkills = async (waSettingsId: string) => {
   return res.data as Skill[];
 };
 
+// ---- ui skills ----
+export const UI_SKILL_COMPONENT_TYPES = [
+  "carousel_quick_reply",
+  "carousel_url",
+  "cta_url",
+  "flow",
+  "image",
+  "interactive_list",
+  "location",
+  "location_request",
+] as const;
+export type UiSkillComponentType = (typeof UI_SKILL_COMPONENT_TYPES)[number];
+
+export interface UiSkill {
+  id: string;
+  metaId?: string | null;
+  title: string;
+  componentType: UiSkillComponentType;
+  status: "enabled" | "disabled";
+  instruction: string;
+  flowId?: string | null;
+  createdAt: string;
+}
+
+export interface UiSkillInput {
+  title: string;
+  component_type: UiSkillComponentType;
+  status: "enabled" | "disabled";
+  instruction: string;
+  flow_id?: string;
+}
+
+/** Meta's update endpoint takes only these three; component_type is immutable. */
+export interface UiSkillUpdateInput {
+  title?: string;
+  status?: "enabled" | "disabled";
+  instruction?: string;
+}
+
+export const listUiSkills = async (waSettingsId: string) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/ui-skills`);
+  return res.data as UiSkill[];
+};
+
+export const createUiSkill = async (waSettingsId: string, data: UiSkillInput) => {
+  const res = await axiosClient.post(`${base(waSettingsId)}/ui-skills`, data);
+  return res.data as UiSkill;
+};
+
+export const updateUiSkill = async (
+  waSettingsId: string,
+  uiSkillId: string,
+  data: UiSkillUpdateInput,
+) => {
+  const res = await axiosClient.put(`${base(waSettingsId)}/ui-skills/${uiSkillId}`, data);
+  return res.data as UiSkill;
+};
+
+export const deleteUiSkill = async (waSettingsId: string, uiSkillId: string) => {
+  await axiosClient.delete(`${base(waSettingsId)}/ui-skills/${uiSkillId}`);
+};
+
+export const syncUiSkills = async (waSettingsId: string) => {
+  const res = await axiosClient.post(`${base(waSettingsId)}/ui-skills/sync`);
+  return res.data as UiSkill[];
+};
+
 // ---- connectors ----
+export const CONNECTOR_AUTH_TYPES = [
+  "NONE",
+  "API_KEY",
+  "BASIC",
+  "OAUTH2",
+  "OAUTH2_CLIENT_CREDENTIALS",
+  "CUSTOM",
+] as const;
+export type ConnectorAuthType = (typeof CONNECTOR_AUTH_TYPES)[number];
+export type ConnectionStatus = "PENDING_OAUTH" | "ACTIVE" | "EXPIRED" | "ERROR";
+
+export interface UserAuthInjectionConfig {
+  location: "body" | "headers" | "path" | "query";
+  field_name: string;
+  prefix: string;
+}
+
+export interface MtlsConfig {
+  has_certificate: boolean;
+  fingerprint?: string;
+  expires_at?: number;
+  subject?: string;
+}
+
 export interface Connector {
   id: string;
   metaId?: string | null;
   name: string;
   description: string;
   baseUrl: string;
-  authType: "OAUTH2_CLIENT_CREDENTIALS" | "API_KEY" | "NONE";
-  requiresCertificate?: boolean;
-  connectionStatus?: "PENDING_OAUTH" | "ACTIVE" | "EXPIRED" | "ERROR";
+  authType: ConnectorAuthType;
+  requiresCertificate: boolean;
+  connectionStatus: ConnectionStatus;
+  connectionError?: string | null;
+  userAuthInjectionConfig?: UserAuthInjectionConfig | null;
+  mtlsConfig?: MtlsConfig | null;
   createdAt: string;
+  _count?: { tools: number };
+}
+
+export interface ConnectorInput {
+  name: string;
+  description: string;
+  base_url: string;
+  auth_type: ConnectorAuthType;
+  user_auth_injection_config?: UserAuthInjectionConfig;
+  requires_certificate?: boolean;
 }
 
 export const listConnectors = async (waSettingsId: string) => {
@@ -270,17 +409,17 @@ export const listConnectors = async (waSettingsId: string) => {
   return res.data as Connector[];
 };
 
-export const createConnector = async (
-  waSettingsId: string,
-  data: {
-    name: string;
-    description: string;
-    base_url: string;
-    auth_type: Connector["authType"];
-    requires_certificate?: boolean;
-  },
-) => {
+export const createConnector = async (waSettingsId: string, data: ConnectorInput) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/connectors`, data);
+  return res.data as Connector;
+};
+
+export const updateConnector = async (
+  waSettingsId: string,
+  connectorId: string,
+  data: ConnectorInput,
+) => {
+  const res = await axiosClient.put(`${base(waSettingsId)}/connectors/${connectorId}`, data);
   return res.data as Connector;
 };
 
@@ -293,41 +432,175 @@ export const syncConnectors = async (waSettingsId: string) => {
   return res.data as Connector[];
 };
 
+/** One API-key field Meta injects, e.g. `Authorization: Bearer <value>`. */
+export interface ApiKeyParam {
+  field_name: string;
+  value: string;
+  prefix?: string;
+}
+
+export interface ApiKeyConfig {
+  headers?: ApiKeyParam[];
+  query_params?: ApiKeyParam[];
+  body_params?: ApiKeyParam[];
+}
+
 export const upsertConnectorApiKey = async (
   waSettingsId: string,
   connectorId: string,
-  apiKey: string,
+  apiKeyConfig: ApiKeyConfig,
 ) => {
   const res = await axiosClient.post(
     `${base(waSettingsId)}/connectors/${connectorId}/upsertApiKey`,
+    { api_key_config: apiKeyConfig },
+  );
+  return res.data as Connector;
+};
+
+export interface OAuthConfig {
+  token_url: string;
+  scopes_to_request: string[];
+  client_id: string;
+  client_secret: string;
+  token_request_content_type?: "application/x-www-form-urlencoded" | "application/json";
+}
+
+export const upsertConnectorOAuth = async (
+  waSettingsId: string,
+  connectorId: string,
+  oauthConfig: OAuthConfig,
+) => {
+  const res = await axiosClient.post(
+    `${base(waSettingsId)}/connectors/${connectorId}/upsertOAuth`,
     {
-      api_key: apiKey,
+      oauth_config: oauthConfig,
     },
   );
   return res.data as Connector;
 };
 
-export const upsertConnectorOAuth = async (
+export interface CertificateInput {
+  client_certificate: string;
+  client_key: string;
+  ca_certificate?: string;
+}
+
+export const upsertConnectorCertificate = async (
   waSettingsId: string,
   connectorId: string,
-  data: { client_id: string; client_secret: string; token_url?: string },
+  data: CertificateInput,
 ) => {
   const res = await axiosClient.post(
-    `${base(waSettingsId)}/connectors/${connectorId}/upsertOAuth`,
+    `${base(waSettingsId)}/connectors/${connectorId}/upsertCertificate`,
     data,
   );
   return res.data as Connector;
 };
 
+export interface ConnectorLogsQuery {
+  start_time?: number;
+  end_time?: number;
+  limit?: number;
+  tool_id?: string;
+  include_stats?: boolean;
+  summary_only?: boolean;
+  top_n?: number;
+}
+
+export interface ConnectorLogEntry {
+  event_time?: string;
+  failure_code_name?: string;
+  error_message?: string;
+  tool_name?: string;
+  occurrences?: number;
+  last_seen?: string;
+}
+
+export interface ConnectorLogStats {
+  start_count: number;
+  success_count: number;
+  exception_count: number;
+  success_rate: number;
+  avg_latency_s: number;
+  p95_latency_s: number;
+  p99_latency_s: number;
+  time_window_seconds: number;
+}
+
+export const getConnectorLogs = async (
+  waSettingsId: string,
+  connectorId: string,
+  query: ConnectorLogsQuery = {},
+) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/connectors/${connectorId}/logs`, {
+    params: query,
+  });
+  return res.data as { data: ConnectorLogEntry[]; stats?: ConnectorLogStats };
+};
+
 // ---- connector tools ----
+export type ToolMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+
+export interface ParameterBinding {
+  kind: "default" | "macro";
+  value?: string;
+  macro?: "WHATSAPP_PHONE_NUMBER" | "WHATSAPP_IDENTITY_HASH" | "WHATSAPP_CURRENT_STATUS_ID";
+}
+
+export interface ParameterNode {
+  type: "string" | "integer" | "number" | "boolean";
+  description?: string;
+  required?: boolean;
+  binding?: ParameterBinding;
+}
+
+export interface BodyNode {
+  type: "object" | "array" | "string" | "integer" | "number" | "boolean";
+  description?: string;
+  required?: string[];
+  properties?: Record<string, BodyNode>;
+  items?: BodyNode;
+  binding?: ParameterBinding;
+}
+
+export interface RequestDefinition {
+  method: ToolMethod;
+  path: string;
+  path_parameters?: Record<string, ParameterNode>;
+  query_parameters?: Record<string, ParameterNode>;
+  headers?: Record<string, ParameterNode>;
+  body?: {
+    content_type: "application/json";
+    params: Record<string, BodyNode>;
+    required?: string[];
+  };
+}
+
+export interface UserAuthActionConfig {
+  user_action_tool_type: "auth" | "refresh";
+  user_auth_token_path: string;
+  refresh_token_path?: string;
+  expires_at_path?: string;
+  expires_at_type?: "absolute" | "relative_seconds";
+}
+
 export interface ConnectorTool {
   id: string;
   metaId?: string | null;
   name: string;
   description: string;
-  requestDefinition: Record<string, unknown>;
-  userAuthRequired?: boolean;
+  requestDefinition: RequestDefinition;
+  userAuthRequired: boolean;
+  userAuthActionConfig?: UserAuthActionConfig | null;
   createdAt: string;
+}
+
+export interface ConnectorToolInput {
+  name: string;
+  description: string;
+  request_definition: RequestDefinition;
+  user_auth_required: boolean;
+  user_auth_action_config?: UserAuthActionConfig;
 }
 
 export const listConnectorTools = async (waSettingsId: string, connectorId: string) => {
@@ -338,9 +611,22 @@ export const listConnectorTools = async (waSettingsId: string, connectorId: stri
 export const createConnectorTool = async (
   waSettingsId: string,
   connectorId: string,
-  data: { name: string; description: string; request_definition: Record<string, unknown> },
+  data: ConnectorToolInput,
 ) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/connectors/${connectorId}/tools`, data);
+  return res.data as ConnectorTool;
+};
+
+export const updateConnectorTool = async (
+  waSettingsId: string,
+  connectorId: string,
+  toolId: string,
+  data: ConnectorToolInput,
+) => {
+  const res = await axiosClient.put(
+    `${base(waSettingsId)}/connectors/${connectorId}/tools/${toolId}`,
+    data,
+  );
   return res.data as ConnectorTool;
 };
 
@@ -352,11 +638,12 @@ export const deleteConnectorTool = async (
   await axiosClient.delete(`${base(waSettingsId)}/connectors/${connectorId}/tools/${toolId}`);
 };
 
+/** Meta takes the run input as an opaque JSON string. */
 export const runConnectorTool = async (
   waSettingsId: string,
   connectorId: string,
   toolId: string,
-  input?: Record<string, unknown>,
+  input?: string,
 ) => {
   const res = await axiosClient.post(
     `${base(waSettingsId)}/connectors/${connectorId}/tools/${toolId}/run`,
@@ -371,9 +658,27 @@ export const syncConnectorTools = async (waSettingsId: string, connectorId: stri
 };
 
 // ---- operate: eval (transient, always button-triggered) ----
+export interface EvalCase {
+  id: string;
+  scenario: string;
+  categories?: string[];
+  max_turns?: number;
+  success_criteria?: string[];
+}
+
+export interface EvalRunResult {
+  summary_id: string;
+  avg_conversation_score?: number;
+  avg_turn_score?: number;
+  summary: string;
+  highlights?: string;
+  top_failure_categories?: string;
+  eval_ids_by_score?: string;
+}
+
 export const listEvalCases = async (waSettingsId: string) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/eval/cases`);
-  return res.data;
+  return res.data as { eval_cases: EvalCase[] };
 };
 
 export const submitEvalRun = async (waSettingsId: string, evalCaseIds: string[]) => {
@@ -390,23 +695,58 @@ export const getEvalRunStatus = async (waSettingsId: string, jobId: string) => {
   return res.data as {
     status: "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
     progress?: { completed: number; total: number; current_stage: string };
-    result?: unknown;
-    error?: { code: string; message: string };
+    result?: EvalRunResult;
+    error?: { code: string; message: string; failed_case_ids?: string[] };
   };
 };
 
+export interface EvalDetail {
+  id: string;
+  score?: number;
+  per_turn_labels: string;
+  reasons: string;
+  custom_success_criteria?: string;
+  eval_case_id?: string;
+  transcript?: string;
+  creation_time: number;
+  update_time: number;
+}
+
+export const getEvalDetails = async (waSettingsId: string, evalIds: string[]) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/eval/details`, {
+    params: { eval_ids: evalIds.join(",") },
+  });
+  return res.data as { evaluations: EvalDetail[] };
+};
+
+export const getEvalSummary = async (waSettingsId: string, summaryIds: string[]) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/eval/summary`, {
+    params: { summary_ids: summaryIds.join(",") },
+  });
+  return res.data as { insights: (EvalRunResult & { id: string })[] };
+};
+
 // ---- operate: events ----
-export const submitAgentEvent = async (
-  waSettingsId: string,
-  data: { to: string; event: { type: string; description: string; payload: string } },
-) => {
+export interface AgentEventInput {
+  to: string;
+  event: { type: string; description: string; payload: string };
+}
+
+export const submitAgentEvent = async (waSettingsId: string, data: AgentEventInput) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/events`, data);
   return res.data as { status: string; agent_event_id?: string };
 };
 
 export const getAgentEventStatus = async (waSettingsId: string, eventId: string) => {
   const res = await axiosClient.get(`${base(waSettingsId)}/events/${eventId}`);
-  return res.data;
+  return res.data as {
+    status: "request_received" | "processing" | "sent" | "failed" | "skipped" | "success";
+    event_type: string;
+    error_message?: string;
+    skipped_reason?: string;
+    created_at: string;
+    updated_at: string;
+  };
 };
 
 // ---- operate: test ----
@@ -420,9 +760,11 @@ export const testAgent = async (
     message_id: string;
     agent_response: string;
     conversation_id: string;
+    timestamp?: number;
     handoff_reason?: string;
     no_response_reason?: string;
     quick_replies?: string[];
+    product_variant_ids?: string[];
   };
 };
 
@@ -433,5 +775,5 @@ export const setThreadControl = async (
   to: string,
 ) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/thread-control`, { action, to });
-  return res.data;
+  return res.data as { messaging_product: string };
 };

@@ -1,27 +1,42 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { getApiErrorMessage } from "@/utils/apiError";
+
 import {
   addAllowlistEntry,
+  type AgentEventInput,
   type AgentSettings,
+  type ApiKeyConfig,
   type BusinessInfo,
+  type CertificateInput,
   checkAgentEligibility,
+  type ConnectorInput,
+  type ConnectorLogsQuery,
+  type ConnectorToolInput,
   createConnector,
   createConnectorTool,
   createFaq,
   createSkill,
+  createUiSkill,
   createWebsite,
+  deleteAgent,
+  deleteBusinessInfo,
   deleteConnector,
   deleteConnectorTool,
   deleteFaq,
   deleteFile,
   deleteSkill,
+  deleteUiSkill,
   deleteWebsite,
-  type Faq,
+  type FaqInput,
   getAgentEventStatus,
   getAgentSettings,
   getBusinessInfo,
+  getConnectorLogs,
+  getEvalDetails,
   getEvalRunStatus,
+  getEvalSummary,
   getMetaBusinessAgent,
   listAllowlist,
   listConnectors,
@@ -30,11 +45,14 @@ import {
   listFaqs,
   listFiles,
   listSkills,
+  listUiSkills,
   listWebsites,
+  type MetaAgentChannel,
+  type OAuthConfig,
   onboardAgent,
   removeAllowlistEntry,
   runConnectorTool,
-  type Skill,
+  type SkillInput,
   setThreadControl,
   submitAgentEvent,
   submitEvalRun,
@@ -46,13 +64,21 @@ import {
   syncFaqs,
   syncFiles,
   syncSkills,
+  syncUiSkills,
   syncWebsites,
   testAgent,
+  type UiSkillInput,
+  type UiSkillUpdateInput,
   updateAgentSettings,
   updateBusinessInfo,
+  updateConnector,
+  updateConnectorTool,
   updateFaq,
   updateSkill,
+  updateUiSkill,
+  updateWebsite,
   upsertConnectorApiKey,
+  upsertConnectorCertificate,
   upsertConnectorOAuth,
   uploadFile,
 } from "./metaAgent.api";
@@ -64,7 +90,10 @@ const key = (resource: string, waSettingsId: string, ...rest: unknown[]) => [
   ...rest,
 ];
 
-const onErr = (fallback: string) => (error: Error) => toast.error(error?.message || fallback);
+// The API relays Meta's own `detail` for a rejected payload, which names the
+// offending field — far more useful than a generic failure line.
+const onErr = (fallback: string) => (error: unknown) =>
+  toast.error(getApiErrorMessage(error, fallback));
 
 // ---- agent record ----
 export const useMetaBusinessAgent = (waSettingsId: string) =>
@@ -90,12 +119,25 @@ export const useCheckAgentEligibility = (waSettingsId: string) => {
 export const useOnboardAgent = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (channel?: string) => onboardAgent(waSettingsId, channel),
+    mutationFn: (channel?: MetaAgentChannel) => onboardAgent(waSettingsId, channel),
     onSuccess: (data) => {
       qc.setQueryData(key("agent", waSettingsId), data);
       toast.success("Agent onboarding started");
     },
     onError: onErr("Failed to onboard agent"),
+  });
+};
+
+export const useDeleteAgent = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteAgent(waSettingsId),
+    onSuccess: () => {
+      // Everything mirrored locally went with it, so nothing cached is still true.
+      qc.invalidateQueries({ queryKey: ["metaAgent"] });
+      toast.success("Agent deleted at Meta");
+    },
+    onError: onErr("Failed to delete agent"),
   });
 };
 
@@ -195,6 +237,18 @@ export const useUpdateBusinessInfo = (waSettingsId: string) => {
   });
 };
 
+export const useDeleteBusinessInfo = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteBusinessInfo(waSettingsId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("businessInfo", waSettingsId) });
+      toast.success("Business info reset at Meta");
+    },
+    onError: onErr("Failed to reset business info"),
+  });
+};
+
 export const useSyncBusinessInfo = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
@@ -218,7 +272,7 @@ export const useFaqs = (waSettingsId: string) =>
 export const useCreateFaq = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Pick<Faq, "question" | "answer">) => createFaq(waSettingsId, data),
+    mutationFn: (data: FaqInput) => createFaq(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("faqs", waSettingsId) });
       toast.success("FAQ created");
@@ -230,7 +284,7 @@ export const useCreateFaq = (waSettingsId: string) => {
 export const useUpdateFaq = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ faqId, data }: { faqId: string; data: Pick<Faq, "question" | "answer"> }) =>
+    mutationFn: ({ faqId, data }: { faqId: string; data: FaqInput }) =>
       updateFaq(waSettingsId, faqId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("faqs", waSettingsId) });
@@ -328,6 +382,19 @@ export const useCreateWebsite = (waSettingsId: string) => {
   });
 };
 
+export const useUpdateWebsite = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ websiteId, url }: { websiteId: string; url: string }) =>
+      updateWebsite(waSettingsId, websiteId, url),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("websites", waSettingsId) });
+      toast.success("Website updated — Meta will re-crawl it");
+    },
+    onError: onErr("Failed to update website"),
+  });
+};
+
 export const useDeleteWebsite = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
@@ -363,8 +430,7 @@ export const useSkills = (waSettingsId: string) =>
 export const useCreateSkill = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Pick<Skill, "title" | "description" | "skill">) =>
-      createSkill(waSettingsId, data),
+    mutationFn: (data: SkillInput) => createSkill(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("skills", waSettingsId) });
       toast.success("Skill created");
@@ -376,13 +442,8 @@ export const useCreateSkill = (waSettingsId: string) => {
 export const useUpdateSkill = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      skillId,
-      data,
-    }: {
-      skillId: string;
-      data: Pick<Skill, "title" | "description" | "skill">;
-    }) => updateSkill(waSettingsId, skillId, data),
+    mutationFn: ({ skillId, data }: { skillId: string; data: SkillInput }) =>
+      updateSkill(waSettingsId, skillId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("skills", waSettingsId) });
       toast.success("Skill updated");
@@ -415,6 +476,63 @@ export const useSyncSkills = (waSettingsId: string) => {
   });
 };
 
+// ---- ui skills ----
+export const useUiSkills = (waSettingsId: string) =>
+  useQuery({
+    queryKey: key("uiSkills", waSettingsId),
+    queryFn: () => listUiSkills(waSettingsId),
+    enabled: !!waSettingsId,
+  });
+
+export const useCreateUiSkill = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UiSkillInput) => createUiSkill(waSettingsId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("uiSkills", waSettingsId) });
+      toast.success("UI skill created");
+    },
+    onError: onErr("Failed to create UI skill"),
+  });
+};
+
+export const useUpdateUiSkill = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ uiSkillId, data }: { uiSkillId: string; data: UiSkillUpdateInput }) =>
+      updateUiSkill(waSettingsId, uiSkillId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("uiSkills", waSettingsId) });
+      toast.success("UI skill updated");
+    },
+    onError: onErr("Failed to update UI skill"),
+  });
+};
+
+export const useDeleteUiSkill = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (uiSkillId: string) => deleteUiSkill(waSettingsId, uiSkillId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("uiSkills", waSettingsId) });
+      toast.success("UI skill deleted");
+    },
+    onError: onErr("Failed to delete UI skill"),
+  });
+};
+
+export const useSyncUiSkills = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => syncUiSkills(waSettingsId),
+    onSuccess: (data) => {
+      qc.setQueryData(key("uiSkills", waSettingsId), data);
+      toast.success("UI skills synced from Meta");
+    },
+    onError: onErr("Failed to sync UI skills"),
+  });
+};
+
 // ---- connectors ----
 export const useConnectors = (waSettingsId: string) =>
   useQuery({
@@ -426,13 +544,25 @@ export const useConnectors = (waSettingsId: string) =>
 export const useCreateConnector = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Parameters<typeof createConnector>[1]) =>
-      createConnector(waSettingsId, data),
+    mutationFn: (data: ConnectorInput) => createConnector(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
       toast.success("Connector created");
     },
     onError: onErr("Failed to create connector"),
+  });
+};
+
+export const useUpdateConnector = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ connectorId, data }: { connectorId: string; data: ConnectorInput }) =>
+      updateConnector(waSettingsId, connectorId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
+      toast.success("Connector updated");
+    },
+    onError: onErr("Failed to update connector"),
   });
 };
 
@@ -463,11 +593,11 @@ export const useSyncConnectors = (waSettingsId: string) => {
 export const useUpsertConnectorApiKey = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ connectorId, apiKey }: { connectorId: string; apiKey: string }) =>
-      upsertConnectorApiKey(waSettingsId, connectorId, apiKey),
+    mutationFn: ({ connectorId, config }: { connectorId: string; config: ApiKeyConfig }) =>
+      upsertConnectorApiKey(waSettingsId, connectorId, config),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
-      toast.success("API key saved");
+      toast.success("API key saved at Meta");
     },
     onError: onErr("Failed to save API key"),
   });
@@ -476,39 +606,73 @@ export const useUpsertConnectorApiKey = (waSettingsId: string) => {
 export const useUpsertConnectorOAuth = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      connectorId,
-      data,
-    }: {
-      connectorId: string;
-      data: { client_id: string; client_secret: string; token_url?: string };
-    }) => upsertConnectorOAuth(waSettingsId, connectorId, data),
+    mutationFn: ({ connectorId, config }: { connectorId: string; config: OAuthConfig }) =>
+      upsertConnectorOAuth(waSettingsId, connectorId, config),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
-      toast.success("OAuth credentials saved");
+      toast.success("OAuth credentials saved at Meta");
     },
     onError: onErr("Failed to save OAuth credentials"),
   });
 };
 
+export const useUpsertConnectorCertificate = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ connectorId, data }: { connectorId: string; data: CertificateInput }) =>
+      upsertConnectorCertificate(waSettingsId, connectorId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
+      toast.success("Certificate saved at Meta");
+    },
+    onError: onErr("Failed to save certificate"),
+  });
+};
+
+/** Logs are fetched on demand — Meta keeps only the last 7 days. */
+export const useConnectorLogs = (
+  waSettingsId: string,
+  connectorId: string,
+  query: ConnectorLogsQuery,
+  enabled: boolean,
+) =>
+  useQuery({
+    queryKey: key("connectorLogs", waSettingsId, connectorId, query),
+    queryFn: () => getConnectorLogs(waSettingsId, connectorId, query),
+    enabled: enabled && !!waSettingsId && !!connectorId,
+  });
+
 // ---- connector tools ----
-export const useConnectorTools = (waSettingsId: string, connectorId: string) =>
+export const useConnectorTools = (waSettingsId: string, connectorId: string, enabled = true) =>
   useQuery({
     queryKey: key("connectorTools", waSettingsId, connectorId),
     queryFn: () => listConnectorTools(waSettingsId, connectorId),
-    enabled: !!waSettingsId && !!connectorId,
+    enabled: enabled && !!waSettingsId && !!connectorId,
   });
 
 export const useCreateConnectorTool = (waSettingsId: string, connectorId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Parameters<typeof createConnectorTool>[2]) =>
-      createConnectorTool(waSettingsId, connectorId, data),
+    mutationFn: (data: ConnectorToolInput) => createConnectorTool(waSettingsId, connectorId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("connectorTools", waSettingsId, connectorId) });
+      qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
       toast.success("Tool created");
     },
     onError: onErr("Failed to create tool"),
+  });
+};
+
+export const useUpdateConnectorTool = (waSettingsId: string, connectorId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ toolId, data }: { toolId: string; data: ConnectorToolInput }) =>
+      updateConnectorTool(waSettingsId, connectorId, toolId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key("connectorTools", waSettingsId, connectorId) });
+      toast.success("Tool updated");
+    },
+    onError: onErr("Failed to update tool"),
   });
 };
 
@@ -518,6 +682,7 @@ export const useDeleteConnectorTool = (waSettingsId: string, connectorId: string
     mutationFn: (toolId: string) => deleteConnectorTool(waSettingsId, connectorId, toolId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("connectorTools", waSettingsId, connectorId) });
+      qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
       toast.success("Tool deleted");
     },
     onError: onErr("Failed to delete tool"),
@@ -526,7 +691,7 @@ export const useDeleteConnectorTool = (waSettingsId: string, connectorId: string
 
 export const useRunConnectorTool = (waSettingsId: string, connectorId: string) =>
   useMutation({
-    mutationFn: ({ toolId, input }: { toolId: string; input?: Record<string, unknown> }) =>
+    mutationFn: ({ toolId, input }: { toolId: string; input?: string }) =>
       runConnectorTool(waSettingsId, connectorId, toolId, input),
     onError: onErr("Tool run failed"),
   });
@@ -553,6 +718,7 @@ export const useListEvalCases = (waSettingsId: string) =>
 export const useSubmitEvalRun = (waSettingsId: string) =>
   useMutation({
     mutationFn: (evalCaseIds: string[]) => submitEvalRun(waSettingsId, evalCaseIds),
+    onSuccess: () => toast.success("Evaluation queued"),
     onError: onErr("Failed to submit eval run"),
   });
 
@@ -567,11 +733,24 @@ export const useEvalRunStatus = (waSettingsId: string, jobId?: string) =>
         : false,
   });
 
+export const useEvalDetails = (waSettingsId: string, evalIds: string[]) =>
+  useQuery({
+    queryKey: key("evalDetails", waSettingsId, evalIds.join(",")),
+    queryFn: () => getEvalDetails(waSettingsId, evalIds),
+    enabled: !!waSettingsId && evalIds.length > 0,
+  });
+
+export const useEvalSummary = (waSettingsId: string, summaryIds: string[]) =>
+  useQuery({
+    queryKey: key("evalSummary", waSettingsId, summaryIds.join(",")),
+    queryFn: () => getEvalSummary(waSettingsId, summaryIds),
+    enabled: !!waSettingsId && summaryIds.length > 0,
+  });
+
 // ---- operate: events ----
 export const useSubmitAgentEvent = (waSettingsId: string) =>
   useMutation({
-    mutationFn: (data: Parameters<typeof submitAgentEvent>[1]) =>
-      submitAgentEvent(waSettingsId, data),
+    mutationFn: (data: AgentEventInput) => submitAgentEvent(waSettingsId, data),
     onSuccess: () => toast.success("Event submitted"),
     onError: onErr("Failed to submit event"),
   });
@@ -581,6 +760,11 @@ export const useAgentEventStatus = (waSettingsId: string, eventId?: string) =>
     queryKey: key("eventStatus", waSettingsId, eventId),
     queryFn: () => getAgentEventStatus(waSettingsId, eventId!),
     enabled: !!waSettingsId && !!eventId,
+    // Meta processes events asynchronously; stop polling once it settles.
+    refetchInterval: (query) =>
+      query.state.data && ["request_received", "processing"].includes(query.state.data.status)
+        ? 3000
+        : false,
   });
 
 // ---- operate: test ----

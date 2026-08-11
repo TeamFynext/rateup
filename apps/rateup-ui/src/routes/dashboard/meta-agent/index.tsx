@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { MetaAgentPage } from "@/components/dashboard/metaAgent/MetaAgentPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/meta-agent/")({
-  component: MetaAgentPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/meta-agent/overview" });
+  },
 });
