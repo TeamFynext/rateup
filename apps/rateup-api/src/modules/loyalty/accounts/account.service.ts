@@ -224,28 +224,7 @@ export async function createCustomerAccount(
         balanceAfter: openingPoints,
       },
     });
-    if (account && sourceIdentifier) {
-      const joinLink = generateWhatsAppJoinLink({
-        waNumber: sourceIdentifier,
-        referralCode: account.referralCode,
-        source: data.source,
-      });
-      await sendTextMessage(
-        { phone, orgId },
-        null,
-        `🎉 Welcome ${account.contact?.name || ""}!
-
-You are now registered in our Loyalty Program.
-
-🔗 Your referral code: ${referralCode}
-
- Share & earn rewards:
-        `,
-      );
-      await sendTextMessage({ phone, orgId }, null, joinLink);
-    }
-
-    // Dispatch Points Issued
+    // Only meaningful when there were points to announce.
     await dispatchLoyaltyNotification(orgId, LoyaltyEventType.POINTS_ISSUED, {
       customerPhone: phone,
       customerName: contact?.name || "Customer",
@@ -254,6 +233,27 @@ You are now registered in our Loyalty Program.
       reason: "Signup Bonus",
       referralCode, // passing just in case
     });
+  }
+
+  if (account && sourceIdentifier) {
+    const joinLink = generateWhatsAppJoinLink({
+      waNumber: sourceIdentifier,
+      referralCode: account.referralCode,
+      source: data.source,
+    });
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      `🎉 Welcome ${account.contact?.name || ""}!
+
+You are now registered in our Loyalty Program.
+
+🔗 Your referral code: ${referralCode}
+
+ Share & earn rewards:
+        `,
+    );
+    await sendTextMessage({ phone, orgId }, null, joinLink);
   }
 
   return account;
