@@ -1458,8 +1458,30 @@ declare global {
       import("../modules/metaAgent/metaAgent.schema.js").BusinessInfoBody;
     /** Meta's FAQ metadata is a flat string map. */
     type PMetaAgentFaqMetadata = Record<string, string>;
+    /** Skill metadata is the same flat string map as FAQ metadata. */
+    type PMetaAgentSkillMetadata = Record<string, string>;
     /** An OpenAPI-ish request spec Meta stores verbatim for a connector tool. */
-    type PMetaAgentRequestDefinition = Record<string, unknown>;
+    type PMetaAgentRequestDefinition =
+      import("../modules/metaAgent/metaAgent.schema.js").RequestDefinition;
+    type PMetaAgentUserAuthInjectionConfig = {
+      location: "body" | "headers" | "path" | "query";
+      field_name: string;
+      prefix: string;
+    };
+    type PMetaAgentUserAuthActionConfig = {
+      user_action_tool_type: "auth" | "refresh";
+      user_auth_token_path: string;
+      refresh_token_path?: string;
+      expires_at_path?: string;
+      expires_at_type?: "absolute" | "relative_seconds";
+    };
+    /** Non-secret mTLS metadata Meta echoes back after a certificate upsert. */
+    type PMetaAgentMtlsConfig = {
+      has_certificate: boolean;
+      fingerprint?: string;
+      expires_at?: number;
+      subject?: string;
+    };
     /** `ApprovalRequest.requestData` — the fields specific to each request type. */
     type PApprovalRequestData = ApprovalRequestData;
     type PMetaConversionSettings = MetaConversionSettings;

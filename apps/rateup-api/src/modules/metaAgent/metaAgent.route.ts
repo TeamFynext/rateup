@@ -3,15 +3,22 @@ import { checkSession } from "../../utils/checkSession.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import * as ctrl from "./metaAgent.controller.js";
 import {
+  type ByConnectorIdParams,
+  type ByConnectorToolIdParams,
   type ByIdParams,
   type ByWhatsappSettingsIdParams,
   type ConnectorBody,
   type ConnectorToolBody,
+  type ConnectorToolRunBody,
+  type UpsertApiKeyBody,
+  type UpsertCertificateBody,
+  type UpsertOAuthBody,
   agentEventBodySchema,
   agentSettingsBodySchema,
   agentTestBodySchema,
   allowlistEntryBodySchema,
   businessInfoBodySchema,
+  byAgentEventIdParamSchema,
   byConnectorIdParamSchema,
   byConnectorToolIdParamSchema,
   byIdParamSchema,
@@ -20,11 +27,16 @@ import {
   connectorLogsQuerySchema,
   connectorToolBodySchema,
   connectorToolRunBodySchema,
+  evalDetailsQuerySchema,
   evalRunBodySchema,
+  evalRunQuerySchema,
+  evalSummaryQuerySchema,
   faqBodySchema,
   onboardingBodySchema,
   skillBodySchema,
   threadControlBodySchema,
+  uiSkillBodySchema,
+  uiSkillUpdateBodySchema,
   upsertApiKeyBodySchema,
   upsertCertificateBodySchema,
   upsertOAuthBodySchema,
@@ -54,6 +66,13 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     `${p}/onboarding`,
     { schema: { params: byWhatsappSettingsIdParamSchema, body: onboardingBodySchema } },
     ctrl.onboardAgentHandler,
+  );
+  // Tearing the agent down at Meta drops every mirrored config with it, so it
+  // sits behind the same role gate as the credential writes below.
+  server.delete<{ Params: ByWhatsappSettingsIdParams }>(
+    `${p}/agent`,
+    { preHandler: adminOnly, schema: { params: byWhatsappSettingsIdParamSchema } },
+    ctrl.deleteAgentHandler,
   );
 
   // allowlist - local list, Meta only called on add/remove/sync
@@ -177,6 +196,11 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byWhatsappSettingsIdParamSchema, body: websiteBodySchema } },
     ctrl.createWebsiteHandler,
   );
+  server.put(
+    `${p}/knowledge/websites/:id`,
+    { schema: { params: byIdParamSchema, body: websiteBodySchema } },
+    ctrl.updateWebsiteHandler,
+  );
   server.delete(
     `${p}/knowledge/websites/:id`,
     { schema: { params: byIdParamSchema } },
@@ -215,6 +239,33 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     ctrl.syncSkillsHandler,
   );
 
+  // configure: ui skills (rich WhatsApp components the agent may send)
+  server.get(
+    `${p}/ui-skills`,
+    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    ctrl.listUiSkillsHandler,
+  );
+  server.post(
+    `${p}/ui-skills`,
+    { schema: { params: byWhatsappSettingsIdParamSchema, body: uiSkillBodySchema } },
+    ctrl.createUiSkillHandler,
+  );
+  server.put(
+    `${p}/ui-skills/:id`,
+    { schema: { params: byIdParamSchema, body: uiSkillUpdateBodySchema } },
+    ctrl.updateUiSkillHandler,
+  );
+  server.delete(
+    `${p}/ui-skills/:id`,
+    { schema: { params: byIdParamSchema } },
+    ctrl.deleteUiSkillHandler,
+  );
+  server.post(
+    `${p}/ui-skills/sync`,
+    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    ctrl.syncUiSkillsHandler,
+  );
+
   // configure: connectors
   server.get(
     `${p}/connectors`,
@@ -229,6 +280,11 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     },
     ctrl.createConnectorHandler,
   );
+  server.put<{ Params: ByIdParams; Body: ConnectorBody }>(
+    `${p}/connectors/:id`,
+    { preHandler: adminOnly, schema: { params: byIdParamSchema, body: connectorBodySchema } },
+    ctrl.updateConnectorHandler,
+  );
   server.delete<{ Params: ByIdParams }>(
     `${p}/connectors/:id`,
     { preHandler: adminOnly, schema: { params: byIdParamSchema } },
@@ -239,20 +295,17 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byIdParamSchema, querystring: connectorLogsQuerySchema } },
     ctrl.getConnectorLogsHandler,
   );
-  server.post<{ Params: ByIdParams; Body: { api_key: string } }>(
+  server.post<{ Params: ByIdParams; Body: UpsertApiKeyBody }>(
     `${p}/connectors/:id/upsertApiKey`,
     { preHandler: adminOnly, schema: { params: byIdParamSchema, body: upsertApiKeyBodySchema } },
     ctrl.upsertConnectorApiKeyHandler,
   );
-  server.post<{
-    Params: ByIdParams;
-    Body: { client_id: string; client_secret: string; token_url?: string };
-  }>(
+  server.post<{ Params: ByIdParams; Body: UpsertOAuthBody }>(
     `${p}/connectors/:id/upsertOAuth`,
     { preHandler: adminOnly, schema: { params: byIdParamSchema, body: upsertOAuthBodySchema } },
     ctrl.upsertConnectorOAuthHandler,
   );
-  server.post<{ Params: ByIdParams; Body: { certificate: string; private_key?: string } }>(
+  server.post<{ Params: ByIdParams; Body: UpsertCertificateBody }>(
     `${p}/connectors/:id/upsertCertificate`,
     {
       preHandler: adminOnly,
@@ -272,10 +325,7 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byConnectorIdParamSchema } },
     ctrl.listConnectorToolsHandler,
   );
-  server.post<{
-    Params: { whatsappSettingsId: string; connectorId: string };
-    Body: ConnectorToolBody;
-  }>(
+  server.post<{ Params: ByConnectorIdParams; Body: ConnectorToolBody }>(
     `${p}/connectors/:connectorId/tools`,
     {
       preHandler: adminOnly,
@@ -283,19 +333,22 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     },
     ctrl.createConnectorToolHandler,
   );
-  server.delete<{
-    Params: { whatsappSettingsId: string; connectorId: string; toolId: string };
-  }>(
+  server.put<{ Params: ByConnectorToolIdParams; Body: ConnectorToolBody }>(
+    `${p}/connectors/:connectorId/tools/:toolId`,
+    {
+      preHandler: adminOnly,
+      schema: { params: byConnectorToolIdParamSchema, body: connectorToolBodySchema },
+    },
+    ctrl.updateConnectorToolHandler,
+  );
+  server.delete<{ Params: ByConnectorToolIdParams }>(
     `${p}/connectors/:connectorId/tools/:toolId`,
     { preHandler: adminOnly, schema: { params: byConnectorToolIdParamSchema } },
     ctrl.deleteConnectorToolHandler,
   );
   // A tool run is an outbound call to the business's own systems using those
   // credentials, so it belongs with them rather than with the reads.
-  server.post<{
-    Params: { whatsappSettingsId: string; connectorId: string; toolId: string };
-    Body: { input?: Record<string, unknown> };
-  }>(
+  server.post<{ Params: ByConnectorToolIdParams; Body: ConnectorToolRunBody }>(
     `${p}/connectors/:connectorId/tools/:toolId/run`,
     {
       preHandler: adminOnly,
@@ -322,8 +375,18 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   );
   server.get(
     `${p}/eval/run`,
-    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    { schema: { params: byWhatsappSettingsIdParamSchema, querystring: evalRunQuerySchema } },
     ctrl.getEvalRunStatusHandler,
+  );
+  server.get(
+    `${p}/eval/details`,
+    { schema: { params: byWhatsappSettingsIdParamSchema, querystring: evalDetailsQuerySchema } },
+    ctrl.getEvalDetailsHandler,
+  );
+  server.get(
+    `${p}/eval/summary`,
+    { schema: { params: byWhatsappSettingsIdParamSchema, querystring: evalSummaryQuerySchema } },
+    ctrl.getEvalSummaryHandler,
   );
 
   // operate: event
@@ -332,9 +395,10 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     { schema: { params: byWhatsappSettingsIdParamSchema, body: agentEventBodySchema } },
     ctrl.submitAgentEventHandler,
   );
+  // Meta's own event ids, not ours, so this one is not a uuid param.
   server.get(
-    `${p}/events/:id`,
-    { schema: { params: byIdParamSchema } },
+    `${p}/events/:agentEventId`,
+    { schema: { params: byAgentEventIdParamSchema } },
     ctrl.getAgentEventStatusHandler,
   );
 

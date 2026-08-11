@@ -2,21 +2,33 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import { MetaAgentApiError } from "./metaAgent.client.js";
 import * as service from "./metaAgent.service.js";
+import { MetaAgentValidationError } from "./metaAgent.service.js";
 import {
   AgentEventBody,
   AgentSettingsBody,
   AgentTestBody,
   BusinessInfoBody,
+  ByConnectorIdParams,
+  ByConnectorToolIdParams,
   ByIdParams,
   ByWhatsappSettingsIdParams,
   ConnectorBody,
   ConnectorLogsQuery,
   ConnectorToolBody,
+  ConnectorToolRunBody,
+  EvalDetailsQuery,
   EvalRunBody,
+  EvalRunQuery,
+  EvalSummaryQuery,
   FaqBody,
   OnboardingBody,
   SkillBody,
   ThreadControlBody,
+  UiSkillBody,
+  UiSkillUpdateBody,
+  UpsertApiKeyBody,
+  UpsertCertificateBody,
+  UpsertOAuthBody,
   WebsiteBody,
 } from "./metaAgent.schema.js";
 
@@ -26,12 +38,17 @@ function statusFromMeta(status: number | undefined): number {
   if (status === 400 || status === 422) return 400;
   // Meta could not find what we named on the business's behalf.
   if (status === 404) return 404;
+  // A create that collides with something already there.
+  if (status === 409) return 409;
   // Our credentials, Meta's throttle or Meta being down: upstream problems, all
   // of which are 502 from here.
   return 502;
 }
 
 function handleError(reply: FastifyReply, error: unknown) {
+  if (error instanceof MetaAgentValidationError) {
+    return reply.code(400).send({ message: error.message });
+  }
   if (error instanceof MetaAgentApiError) {
     log.error({ err: error }, "Meta Business Agent API error");
     return reply.code(statusFromMeta(error.status)).send({
@@ -71,6 +88,11 @@ export const onboardAgentHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: OnboardingBody }>
 >((req, orgId) => service.onboardAgent(orgId, req.params.whatsappSettingsId, req.body.channel));
 
+export const deleteAgentHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
+  (req, orgId) => service.deleteAgent(orgId, req.params.whatsappSettingsId),
+);
+
+// ---- allowlist ----
 export const listAllowlistHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
   (req, orgId) => service.listAllowlist(orgId, req.params.whatsappSettingsId),
 );
@@ -91,6 +113,7 @@ export const syncAllowlistHandler = wrap<FastifyRequest<{ Params: ByWhatsappSett
   (req, orgId) => service.syncAllowlist(orgId, req.params.whatsappSettingsId),
 );
 
+// ---- settings ----
 export const getAgentSettingsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
   (req, orgId) => service.getAgentSettings(orgId, req.params.whatsappSettingsId),
 );
@@ -191,6 +214,11 @@ export const createWebsiteHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: WebsiteBody }>
 >((req, orgId) => service.createWebsite(orgId, req.params.whatsappSettingsId, req.body));
 
+export const updateWebsiteHandler = wrap<FastifyRequest<{ Params: ByIdParams; Body: WebsiteBody }>>(
+  (req, orgId) =>
+    service.updateWebsite(orgId, req.params.whatsappSettingsId, req.params.id, req.body),
+);
+
 export const deleteWebsiteHandler = wrap<FastifyRequest<{ Params: ByIdParams }>>(
   async (req, orgId) => {
     await service.deleteWebsite(orgId, req.params.whatsappSettingsId, req.params.id);
@@ -225,6 +253,31 @@ export const syncSkillsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSetting
   (req, orgId) => service.syncSkills(orgId, req.params.whatsappSettingsId),
 );
 
+// ---- ui skills ----
+export const listUiSkillsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
+  (req, orgId) => service.listUiSkills(orgId, req.params.whatsappSettingsId),
+);
+
+export const createUiSkillHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: UiSkillBody }>
+>((req, orgId) => service.createUiSkill(orgId, req.params.whatsappSettingsId, req.body));
+
+export const updateUiSkillHandler = wrap<
+  FastifyRequest<{ Params: ByIdParams; Body: UiSkillUpdateBody }>
+>((req, orgId) =>
+  service.updateUiSkill(orgId, req.params.whatsappSettingsId, req.params.id, req.body),
+);
+
+export const deleteUiSkillHandler = wrap<FastifyRequest<{ Params: ByIdParams }>>(
+  async (req, orgId) => {
+    await service.deleteUiSkill(orgId, req.params.whatsappSettingsId, req.params.id);
+  },
+);
+
+export const syncUiSkillsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
+  (req, orgId) => service.syncUiSkills(orgId, req.params.whatsappSettingsId),
+);
+
 // ---- connectors ----
 export const listConnectorsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
   (req, orgId) => service.listConnectors(orgId, req.params.whatsappSettingsId),
@@ -233,6 +286,12 @@ export const listConnectorsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSet
 export const createConnectorHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: ConnectorBody }>
 >((req, orgId) => service.createConnector(orgId, req.params.whatsappSettingsId, req.body));
+
+export const updateConnectorHandler = wrap<
+  FastifyRequest<{ Params: ByIdParams; Body: ConnectorBody }>
+>((req, orgId) =>
+  service.updateConnector(orgId, req.params.whatsappSettingsId, req.params.id, req.body),
+);
 
 export const deleteConnectorHandler = wrap<FastifyRequest<{ Params: ByIdParams }>>(
   async (req, orgId) => {
@@ -247,27 +306,19 @@ export const getConnectorLogsHandler = wrap<
 );
 
 export const upsertConnectorApiKeyHandler = wrap<
-  FastifyRequest<{ Params: ByIdParams; Body: { api_key: string } }>
+  FastifyRequest<{ Params: ByIdParams; Body: UpsertApiKeyBody }>
 >((req, orgId) =>
-  service.upsertConnectorApiKey(
-    orgId,
-    req.params.whatsappSettingsId,
-    req.params.id,
-    req.body.api_key,
-  ),
+  service.upsertConnectorApiKey(orgId, req.params.whatsappSettingsId, req.params.id, req.body),
 );
 
 export const upsertConnectorOAuthHandler = wrap<
-  FastifyRequest<{
-    Params: ByIdParams;
-    Body: { client_id: string; client_secret: string; token_url?: string };
-  }>
+  FastifyRequest<{ Params: ByIdParams; Body: UpsertOAuthBody }>
 >((req, orgId) =>
   service.upsertConnectorOAuth(orgId, req.params.whatsappSettingsId, req.params.id, req.body),
 );
 
 export const upsertConnectorCertificateHandler = wrap<
-  FastifyRequest<{ Params: ByIdParams; Body: { certificate: string; private_key?: string } }>
+  FastifyRequest<{ Params: ByIdParams; Body: UpsertCertificateBody }>
 >((req, orgId) =>
   service.upsertConnectorCertificate(orgId, req.params.whatsappSettingsId, req.params.id, req.body),
 );
@@ -277,19 +328,13 @@ export const syncConnectorsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSet
 );
 
 // ---- connector tools ----
-interface ConnectorToolParams {
-  whatsappSettingsId: string;
-  connectorId: string;
-}
-type ConnectorToolIdParams = ConnectorToolParams & { toolId: string };
-
-export const listConnectorToolsHandler = wrap<FastifyRequest<{ Params: ConnectorToolParams }>>(
+export const listConnectorToolsHandler = wrap<FastifyRequest<{ Params: ByConnectorIdParams }>>(
   (req, orgId) =>
     service.listConnectorTools(orgId, req.params.whatsappSettingsId, req.params.connectorId),
 );
 
 export const createConnectorToolHandler = wrap<
-  FastifyRequest<{ Params: ConnectorToolParams; Body: ConnectorToolBody }>
+  FastifyRequest<{ Params: ByConnectorIdParams; Body: ConnectorToolBody }>
 >((req, orgId) =>
   service.createConnectorTool(
     orgId,
@@ -299,7 +344,19 @@ export const createConnectorToolHandler = wrap<
   ),
 );
 
-export const deleteConnectorToolHandler = wrap<FastifyRequest<{ Params: ConnectorToolIdParams }>>(
+export const updateConnectorToolHandler = wrap<
+  FastifyRequest<{ Params: ByConnectorToolIdParams; Body: ConnectorToolBody }>
+>((req, orgId) =>
+  service.updateConnectorTool(
+    orgId,
+    req.params.whatsappSettingsId,
+    req.params.connectorId,
+    req.params.toolId,
+    req.body,
+  ),
+);
+
+export const deleteConnectorToolHandler = wrap<FastifyRequest<{ Params: ByConnectorToolIdParams }>>(
   async (req, orgId) => {
     await service.deleteConnectorTool(
       orgId,
@@ -311,7 +368,7 @@ export const deleteConnectorToolHandler = wrap<FastifyRequest<{ Params: Connecto
 );
 
 export const runConnectorToolHandler = wrap<
-  FastifyRequest<{ Params: ConnectorToolIdParams; Body: { input?: Record<string, unknown> } }>
+  FastifyRequest<{ Params: ByConnectorToolIdParams; Body: ConnectorToolRunBody }>
 >((req, orgId) =>
   service.runConnectorTool(
     orgId,
@@ -322,7 +379,7 @@ export const runConnectorToolHandler = wrap<
   ),
 );
 
-export const syncConnectorToolsHandler = wrap<FastifyRequest<{ Params: ConnectorToolParams }>>(
+export const syncConnectorToolsHandler = wrap<FastifyRequest<{ Params: ByConnectorIdParams }>>(
   (req, orgId) =>
     service.syncConnectorTools(orgId, req.params.whatsappSettingsId, req.params.connectorId),
 );
@@ -337,16 +394,28 @@ export const submitEvalRunHandler = wrap<
 >((req, orgId) => service.submitEvalRun(orgId, req.params.whatsappSettingsId, req.body));
 
 export const getEvalRunStatusHandler = wrap<
-  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: { job_id: string } }>
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: EvalRunQuery }>
 >((req, orgId) => service.getEvalRunStatus(orgId, req.params.whatsappSettingsId, req.query.job_id));
+
+export const getEvalDetailsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: EvalDetailsQuery }>
+>((req, orgId) => service.getEvalDetails(orgId, req.params.whatsappSettingsId, req.query.eval_ids));
+
+export const getEvalSummaryHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: EvalSummaryQuery }>
+>((req, orgId) =>
+  service.getEvalSummary(orgId, req.params.whatsappSettingsId, req.query.summary_ids),
+);
 
 // ---- operate: event ----
 export const submitAgentEventHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: AgentEventBody }>
 >((req, orgId) => service.submitAgentEvent(orgId, req.params.whatsappSettingsId, req.body));
 
-export const getAgentEventStatusHandler = wrap<FastifyRequest<{ Params: ByIdParams }>>(
-  (req, orgId) => service.getAgentEventStatus(orgId, req.params.whatsappSettingsId, req.params.id),
+export const getAgentEventStatusHandler = wrap<
+  FastifyRequest<{ Params: { whatsappSettingsId: string; agentEventId: string } }>
+>((req, orgId) =>
+  service.getAgentEventStatus(orgId, req.params.whatsappSettingsId, req.params.agentEventId),
 );
 
 // ---- operate: test ----
