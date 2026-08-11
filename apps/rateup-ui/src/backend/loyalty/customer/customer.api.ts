@@ -98,7 +98,20 @@ export interface LoyaltyTransaction {
   createdBy?: string | null;
 }
 
-interface LoyaltyCustomerDetail extends LoyaltyCustomer {
+export interface LoyaltyCustomerDetail {
+  id: string;
+  programId: string;
+  contactId: string;
+  currentPoints: number;
+  lifetimePoints: number;
+  totalSpend: string;
+  currentTierId: string | null;
+  referralCode: string;
+  referredById: string | null;
+  status: string;
+  createdAt: string;
+  lastActivityAt: string;
+  updatedAt: string;
   currentTier?: {
     id: string;
     programId: string;

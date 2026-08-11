@@ -179,6 +179,11 @@ export const useAwardPointsMutation = () => {
       queryClient.invalidateQueries({
         queryKey: loyaltyKeys.customerByContact(variables.contactId),
       });
+      // The award only carries a contactId, so sweep every customer detail rather than the
+      // one row. Without this the detail view keeps the balance it was opened with.
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.customer() });
+      // Awarding writes an `earn` row, and may move the customer up a tier.
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
       toast.success("Points awarded successfully");
@@ -201,6 +206,11 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
       queryClient.invalidateQueries({
         queryKey: loyaltyKeys.customers(),
       });
+      // Drives the panel's available/issuable/redeemed reward lists — the assigned reward
+      // does not appear there until this refetches.
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       onSuccess?.();
       toast.success("Reward assigned successfully!");
     },

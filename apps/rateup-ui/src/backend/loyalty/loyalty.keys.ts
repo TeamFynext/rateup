@@ -31,7 +31,11 @@ export const loyaltyKeys = {
   customers: () => ["loyaltyCustomers"] as const,
   customerList: (pagination: KeyPart, search: KeyPart, sort: KeyPart, filters: KeyPart) =>
     ["loyaltyCustomers", pagination, search, sort, filters] as const,
-  customer: (customerId: KeyPart) => ["loyaltyCustomer", customerId] as const,
+  /** Without an id this is the prefix that sweeps every customer detail. */
+  customer: (customerId?: KeyPart) =>
+    (customerId === undefined
+      ? ["loyaltyCustomer"]
+      : ["loyaltyCustomer", customerId]) as readonly unknown[],
   customerByContact: (contactId: KeyPart) => ["loyaltyCustomerByContact", contactId] as const,
 
   tiers: () => ["loyalty-tiers"] as const,
@@ -66,3 +70,24 @@ export const loyaltyKeys = {
       ? ["loyalty-cashier-customer"]
       : ["loyalty-cashier-customer", phone]) as readonly unknown[],
 } as const;
+
+export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
+  loyaltyKeys.dashboard(),
+  loyaltyKeys.customers(),
+  loyaltyKeys.customer(),
+  ["loyaltyCustomerByContact"],
+  loyaltyKeys.tiers(),
+  ["loyalty-tier"],
+  loyaltyKeys.rewards(),
+  ["loyalty-reward"],
+  loyaltyKeys.earningRules(),
+  ["loyalty-earning-rule"],
+  loyaltyKeys.program(),
+  loyaltyKeys.redeems(),
+  loyaltyKeys.redemptions(),
+  loyaltyKeys.transactions(),
+  loyaltyKeys.approvals(),
+  loyaltyKeys.templates(),
+  ["loyalty-cashier-search"],
+  loyaltyKeys.cashierCustomer(),
+];
