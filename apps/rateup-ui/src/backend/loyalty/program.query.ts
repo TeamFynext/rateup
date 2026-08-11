@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+import { loyaltyKeyRoots, loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 
-import type { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.api";
+import type { LoyaltyProgram, LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.api";
 import {
   createLoyaltyProgram,
   deleteLoyaltyProgram,
@@ -11,6 +11,9 @@ import {
   resetLoyaltyProgramPoints,
   updateLoyaltyProgram,
 } from "./program.api";
+
+/** Identifies program-update mutations so overlapping ones can be counted. */
+const loyaltyProgramUpdateMutationKey = ["loyaltyProgram", "update"] as const;
 
 /**
  * Hook to fetch the loyalty program
@@ -52,16 +55,35 @@ export const useUpdateLoyaltyProgramMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: loyaltyProgramUpdateMutationKey,
     mutationFn: (programData: LoyaltyProgramUpdateInput) =>
       updateLoyaltyProgram(programId, programData),
+    onMutate: async (programData) => {
+      await queryClient.cancelQueries({ queryKey: loyaltyKeys.program() });
+
+      const previous = queryClient.getQueryData<LoyaltyProgram>(loyaltyKeys.program());
+      if (previous) {
+        const optimistic = { ...previous, ...programData };
+        queryClient.setQueryData(loyaltyKeys.program(), optimistic);
+      }
+
+      return { previous };
+    },
     onSuccess: () => {
       toast.success("Loyalty program updated successfully");
-      queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
       onSuccess?.();
     },
-    onError: (error) => {
+    onError: (error, _programData, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(loyaltyKeys.program(), context.previous);
+      }
       toast.error(error?.message || "Error updating loyalty program!");
       onError?.();
+    },
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey: loyaltyProgramUpdateMutationKey }) === 1) {
+        queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
+      }
     },
   });
 };
@@ -79,7 +101,10 @@ export const useDeleteLoyaltyProgramMutation = (onSuccess?: () => void, onError?
       toast.success("Loyalty program deleted successfully", {
         id: "loyalty-program-delete",
       });
-      queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
+
+      for (const queryKey of loyaltyKeyRoots) {
+        queryClient.removeQueries({ queryKey });
+      }
       onSuccess?.();
     },
     onError: (error) => {

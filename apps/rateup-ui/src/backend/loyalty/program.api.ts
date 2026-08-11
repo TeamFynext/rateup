@@ -27,7 +27,7 @@ export interface LoyaltyProgram {
   referralMessageTemplate?: ReferralMessageTemplate;
   enablePointsExpiration?: boolean;
   pointsExpirationMonths?: number;
-  customerNotifications?: boolean;
+  pointsActivityAlerts?: boolean;
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
@@ -56,7 +56,6 @@ export interface LoyaltyProgramInput {
   defaultCountryCode?: string;
   referralMessageTemplate?: ReferralMessageTemplate;
   pointsExpirationMonths?: number;
-  customerNotifications?: boolean;
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
