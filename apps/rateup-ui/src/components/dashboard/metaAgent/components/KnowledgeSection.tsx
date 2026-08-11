@@ -1,42 +1,32 @@
-import { useState } from "react";
-
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { BusinessInfoPanel } from "./knowledge/BusinessInfoPanel";
 import { FaqsPanel } from "./knowledge/FaqsPanel";
 import { FilesPanel } from "./knowledge/FilesPanel";
 import { WebsitesPanel } from "./knowledge/WebsitesPanel";
 
-const PILLS = [
-  { id: "business-info", label: "Business info" },
-  { id: "faqs", label: "FAQs" },
-  { id: "files", label: "Files" },
-  { id: "websites", label: "Websites" },
-] as const;
-
-type PillId = (typeof PILLS)[number]["id"];
-
-export function KnowledgeSection({ waSettingsId }: { waSettingsId: string }) {
-  const [active, setActive] = useState<PillId>("business-info");
-
+export function KnowledgeSection({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   return (
-    <div className="space-y-4">
-      <ToggleGroup
-        variant="outline"
-        value={[active]}
-        onValueChange={(value) => value && setActive(value?.[0] as PillId)}
-      >
-        {PILLS.map((pill) => (
-          <ToggleGroupItem key={pill.id} value={pill.id}>
-            {pill.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+    <Tabs defaultValue="business-info">
+      <TabsList>
+        <TabsTrigger value="business-info">Business info</TabsTrigger>
+        <TabsTrigger value="faqs">FAQs</TabsTrigger>
+        <TabsTrigger value="files">Files</TabsTrigger>
+        <TabsTrigger value="websites">Websites</TabsTrigger>
+      </TabsList>
 
-      {active === "business-info" && <BusinessInfoPanel waSettingsId={waSettingsId} />}
-      {active === "faqs" && <FaqsPanel waSettingsId={waSettingsId} />}
-      {active === "files" && <FilesPanel waSettingsId={waSettingsId} />}
-      {active === "websites" && <WebsitesPanel waSettingsId={waSettingsId} />}
-    </div>
+      <TabsContent value="business-info">
+        <BusinessInfoPanel waSettingsId={waSettingsId} />
+      </TabsContent>
+      <TabsContent value="faqs">
+        <FaqsPanel waSettingsId={waSettingsId} />
+      </TabsContent>
+      <TabsContent value="files">
+        <FilesPanel waSettingsId={waSettingsId} />
+      </TabsContent>
+      <TabsContent value="websites">
+        <WebsitesPanel waSettingsId={waSettingsId} />
+      </TabsContent>
+    </Tabs>
   );
 }

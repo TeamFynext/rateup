@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-11-meta-agent-rebuild",
+    title: "Meta Business Agent, rebuilt",
+    summary:
+      "Every area of the agent — Overview, Knowledge, Skills, UI Skills, Connectors, Settings and Operate — is now its own page, listed under Meta AI Agent in the main sidebar, so you no longer drill in and out of cards to move between them. New: UI skills, so the agent can answer with carousels, link buttons and WhatsApp Flows; a connector workspace with per-tool definitions, a live test runner and Meta's error logs; never-say phrases and an eval runner that picks scenarios from a list. Every form now validates against Meta's own limits before it sends — required fields are marked, phone numbers use the country picker, and a rejected value is shown against the field rather than as a toast.",
+    publishedAt: "2026-08-11",
+    kinds: ["new", "improvement"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent", label: "Open the agent" },
+  },
+  {
     id: "2026-08-07-inbox-settings-redesign",
     title: "Inbox Settings, rebuilt",
     summary:
