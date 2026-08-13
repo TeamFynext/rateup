@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
+import fastifyMultipart from "@fastify/multipart";
 import {
   createWaSettingsHandler,
+  getBusinessProfileHandler,
   deleteWaSettingsHandler,
   getConversationalAutomationHandler,
   syncConversationalAutomationHandler,
@@ -9,7 +11,12 @@ import {
   getWaLogsHandler,
   getWaSettingsForOrgHandler,
   getWaSettingsHandler,
+  reRegisterPhoneNumberHandler,
   subscribeFieldstoPageHandler,
+  syncDisplayNameHandler,
+  updateBusinessProfileHandler,
+  updateDisplayNameHandler,
+  updateProfilePictureHandler,
   syncAdAccountsHandler,
   syncAdsByAdAccountHandler,
   syncFbPagesHandler,
@@ -21,6 +28,7 @@ import {
 } from "./wa_settings.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import {
+  businessProfileSchema,
   byAdAccountIdParamsSchema,
   byFbPageQuerySchema,
   byLeadGenFormIdParamsSchema,
@@ -28,11 +36,21 @@ import {
   conversationalAutomationSchema,
   createWaSettingsInputSchema,
   paginationQuery,
+  updateDisplayNameSchema,
   updateWaSettingsInputSchema,
   whatsappSettingsIdParamSchema,
 } from "./wa_settings.schema.js";
 
 export async function waSettingsRoutes(server: FastifyInstance) {
+  // Registered per route scope, not globally — without this the profile photo upload is
+  // rejected by the content-type parser before its handler ever runs. WhatsApp caps a
+  // profile photo at 5 MB.
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1024 * 1024 * 5,
+    },
+    throwFileSizeLimit: true,
+  });
   server.addHook("preHandler", checkSession);
   server.get("/", getWaSettingsHandler);
   server.post(
@@ -174,5 +192,68 @@ export async function waSettingsRoutes(server: FastifyInstance) {
       },
     },
     syncConversationalAutomationHandler,
+  );
+
+  server.post(
+    "/display-name/:phoneId",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+        body: updateDisplayNameSchema,
+      },
+    },
+    updateDisplayNameHandler,
+  );
+
+  server.post(
+    "/display-name/:phoneId/sync",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+      },
+    },
+    syncDisplayNameHandler,
+  );
+
+  server.get(
+    "/profile/:phoneId",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+      },
+    },
+    getBusinessProfileHandler,
+  );
+
+  server.post(
+    "/profile/:phoneId",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+        body: businessProfileSchema,
+      },
+    },
+    updateBusinessProfileHandler,
+  );
+
+  server.post(
+    "/profile/:phoneId/photo",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+        consumes: ["multipart/form-data"],
+      },
+    },
+    updateProfilePictureHandler,
+  );
+
+  server.post(
+    "/display-name/:phoneId/register",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+      },
+    },
+    reRegisterPhoneNumberHandler,
   );
 }

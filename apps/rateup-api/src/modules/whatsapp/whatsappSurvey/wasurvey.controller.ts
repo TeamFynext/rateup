@@ -69,6 +69,7 @@ import {
 } from "../../../types/whatsapp.types.js";
 import type {
   WaAccountUpdate,
+  WaPhoneNumberNameUpdate,
   WaTemplateCategoryChange,
   WaTemplateSendComponent,
   WaTemplateStatusChange,
@@ -208,6 +209,10 @@ export async function whatsappEventHandler(request: FastifyRequest, reply: Fasti
         break;
       case WaEvent.ACCOUNT_UPDATE:
         await handleAccountUpdateEvent(body);
+        break;
+
+      case WaEvent.PhoneNumberNameUpdate:
+        await handlePhoneNumberNameUpdateEvent(body);
         break;
 
       case WaEvent.SMBMessageEchoes:
@@ -419,6 +424,32 @@ async function handleAccountUpdateEvent(body: WaMessageBody) {
     // Other account updates might not imply disconnection, but we log them.
     log.info(`Account update received for WABA ID ${wabaId}: %o`, value);
   }
+}
+
+/**
+ * Meta decided on a requested display name. Nothing is written: the display name lives at
+ * Meta and is read live, while `phoneDisplayName` is the org's own label for the channel.
+ * The decision is logged so support can see when a name was approved or why it was refused.
+ */
+async function handlePhoneNumberNameUpdateEvent(body: WaMessageBody) {
+  const wabaId = body.entry?.[0]?.id;
+  const value = body.entry?.[0]?.changes?.[0]?.value as WaPhoneNumberNameUpdate | undefined;
+
+  if (!value?.display_phone_number) {
+    log.warn("Ignoring phone_number_name_update without a phone number");
+    return;
+  }
+
+  if (value.decision === "APPROVED") {
+    log.info(
+      `Display name "${value.requested_verified_name}" approved for ${value.display_phone_number} on WABA ${wabaId}. The number must be re-registered to start using it.`,
+    );
+    return;
+  }
+
+  log.info(
+    `Display name "${value.requested_verified_name}" ${value.decision} for ${value.display_phone_number} on WABA ${wabaId}: ${value.rejection_reason ?? "no reason given"}`,
+  );
 }
 
 async function templateStatusChangeHandler(changeValue: WaTemplateStatusChange) {

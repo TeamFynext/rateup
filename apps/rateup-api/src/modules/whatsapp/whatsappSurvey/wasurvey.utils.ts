@@ -63,6 +63,8 @@ export function getEventType(data: WaMessageBody) {
       return WaEvent.TemplateStatusChange;
     } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
       return WaEvent.ACCOUNT_UPDATE;
+    } else if (data.entry[0].changes[0].field === WaEvent.PhoneNumberNameUpdate) {
+      return WaEvent.PhoneNumberNameUpdate;
     } else if (
       data.entry[0].changes[0].field === WaEvent.Message &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody).messages?.length > 0

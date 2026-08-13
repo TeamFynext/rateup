@@ -193,6 +193,53 @@ const conversationalAutomationSchema = z.object({
 
 export type ConversationalAutomationInput = z.infer<typeof conversationalAutomationSchema>;
 
+/**
+ * A display name change request. Meta reviews the name against its display name
+ * guidelines, so this only submits it — the number keeps its current name until the
+ * review is approved and the number is re-registered.
+ */
+const updateDisplayNameSchema = z.object({
+  newDisplayName: z.string().trim().min(1).max(200),
+});
+
+export type UpdateDisplayNameInput = z.infer<typeof updateDisplayNameSchema>;
+
+/**
+ * Meta's `WhatsAppVertical` values, minus `UNDEFINED` and `NOT_A_BIZ`, which the profile
+ * API does not accept on write.
+ */
+const businessVerticals = [
+  "OTHER",
+  "AUTO",
+  "BEAUTY",
+  "APPAREL",
+  "EDU",
+  "ENTERTAIN",
+  "EVENT_PLAN",
+  "FINANCE",
+  "GROCERY",
+  "GOVT",
+  "HOTEL",
+  "HEALTH",
+  "NONPROFIT",
+  "PROF_SERVICES",
+  "RETAIL",
+  "TRAVEL",
+  "RESTAURANT",
+] as const;
+
+/** Field limits are Meta's own; `address` is freeform text and is not validated against a map. */
+const businessProfileSchema = z.object({
+  about: z.string().max(139).optional(),
+  address: z.string().max(256).optional(),
+  description: z.string().max(512).optional(),
+  email: z.string().max(128).optional(),
+  websites: z.array(z.string().max(256)).max(2).optional(),
+  vertical: z.enum(businessVerticals).optional(),
+});
+
+export type BusinessProfileInput = z.infer<typeof businessProfileSchema>;
+
 // Auto-exported after fastify-zod migration
 export {
   createWaSettingsInputSchema,
@@ -206,4 +253,6 @@ export {
   byAdAccountIdParamsSchema,
   whatsappSettingsIdParamSchema,
   conversationalAutomationSchema,
+  updateDisplayNameSchema,
+  businessProfileSchema,
 };
