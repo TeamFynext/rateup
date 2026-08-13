@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  BusinessProfileInput,
   ByAdAccountIdParamsSchema,
   ByFbPageQuerySchema,
   ByLeadGenFormIdParamsSchema,
@@ -9,6 +10,7 @@ import {
   createWaSettingsInput,
   PaginationQuery,
   updateWaSettingsInput,
+  UpdateDisplayNameInput,
   whatsappSettingsIdParamSchema,
 } from "./wa_settings.schema.js";
 import { getOrgIdAndRole } from "../../user/user.service.js";
@@ -28,9 +30,16 @@ import {
   getMetaAssets,
   getMetaDatasetsFromWa,
   getWaLogs,
+  buildBusinessProfileBody,
+  getBusinessProfile,
   getWaSettings,
   getWaSettingsById,
+  reRegisterPhoneNumber,
   subscribeFieldtoPage,
+  syncDisplayName,
+  updateBusinessProfile,
+  updateDisplayName,
+  updateProfilePicture,
   syncMetaAssetstoDb,
   updateContactTag,
   updateConversationalAutomation,
@@ -41,7 +50,9 @@ import {
 import { Prisma } from "../../../../generated/prisma/client.js";
 import { WaConfigType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
-import { callMetaApi } from "../wa_axios.js";
+import { callMetaApi, GraphApiError } from "../wa_axios.js";
+import { getGraphApiErrorMessage } from "../wa_error_handler.js";
+import { validateFile } from "../../../utils/upload/validate.js";
 
 /**
  * These onboarding-sync payloads are already plain JSON (parsed by axios out of a Meta
@@ -578,6 +589,146 @@ export async function syncConversationalAutomationHandler(
     log.error({ err: error }, "Error while syncing conversational automation");
     reply.code(500).send({ message: "Something went wrong" });
   }
+}
+
+export async function syncDisplayNameHandler(
+  request: FastifyRequest<{ Params: ByWaSettingsIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await syncDisplayName(orgId, phoneId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while syncing display name");
+    replyWithMetaError(reply, error, "Error while syncing display name");
+  }
+}
+
+export async function updateDisplayNameHandler(
+  request: FastifyRequest<{
+    Params: ByWaSettingsIdParamsSchema;
+    Body: UpdateDisplayNameInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await updateDisplayName(orgId, phoneId, request.body.newDisplayName);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while updating display name");
+    replyWithMetaError(reply, error, "Error while updating display name");
+  }
+}
+
+export async function reRegisterPhoneNumberHandler(
+  request: FastifyRequest<{ Params: ByWaSettingsIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await reRegisterPhoneNumber(orgId, phoneId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while re-registering phone number");
+    replyWithMetaError(reply, error, "Error while re-registering phone number");
+  }
+}
+
+export async function getBusinessProfileHandler(
+  request: FastifyRequest<{ Params: ByWaSettingsIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await getBusinessProfile(orgId, phoneId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while getting the business profile");
+    replyWithMetaError(reply, error, "Error while getting the business profile");
+  }
+}
+
+export async function updateBusinessProfileHandler(
+  request: FastifyRequest<{
+    Params: ByWaSettingsIdParamsSchema;
+    Body: BusinessProfileInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    // Meta has no way to clear a profile field, so an all-blank request would either be a
+    // no-op or a bare "(#131000) Something went wrong" — this says which it is.
+    if (!Object.keys(buildBusinessProfileBody(request.body)).length) {
+      return reply.code(400).send({
+        message: "Nothing to update — WhatsApp does not accept an empty profile field",
+      });
+    }
+    const data = await updateBusinessProfile(orgId, phoneId, request.body);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while updating the business profile");
+    replyWithMetaError(reply, error, "Error while updating the business profile");
+  }
+}
+
+export async function updateProfilePictureHandler(
+  request: FastifyRequest<{ Params: ByWaSettingsIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const file = await request.file();
+    if (!file) {
+      return reply.code(400).send({ message: "No file uploaded" });
+    }
+
+    const validation = validateFile({ data: file });
+    if (!validation.valid) {
+      file.file.resume();
+      return reply.code(400).send({ message: validation.message });
+    }
+    // WhatsApp only takes a JPEG or PNG for a profile photo, so the wider media allow-list
+    // that validateFile works from is narrowed here.
+    if (!PROFILE_PICTURE_MIME_TYPES.has(file.mimetype)) {
+      file.file.resume();
+      return reply.code(400).send({ message: "Profile photo must be a JPEG or PNG image" });
+    }
+
+    const buffer = await file.toBuffer();
+    const data = await updateProfilePicture(orgId, phoneId, {
+      buffer,
+      mimetype: file.mimetype,
+      filename: file.filename,
+    });
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while updating the profile photo");
+    replyWithMetaError(reply, error, "Error while updating the profile photo");
+  }
+}
+
+const PROFILE_PICTURE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
+
+/**
+ * Meta's display name errors are the ones a user can act on — the guideline violation, the
+ * "10 changes per 30 days" cap — so they are passed through instead of being flattened
+ * into a generic 500.
+ */
+function replyWithMetaError(reply: FastifyReply, error: unknown, fallback: string) {
+  if (error instanceof GraphApiError) {
+    reply.code(400).send({ message: getGraphApiErrorMessage(error) });
+    return;
+  }
+  reply.code(500).send({ message: fallback });
 }
 
 export async function getMetaDatasetsHandler(

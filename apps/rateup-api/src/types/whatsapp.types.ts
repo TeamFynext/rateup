@@ -38,13 +38,25 @@ export interface WaAccountUpdate {
   restriction_info?: Array<{ restriction_type?: string; expiration?: string }>;
 }
 
+/**
+ * Meta decided on a requested display name (`phone_number_name_update`). The number is
+ * identified by its formatted phone number, not its phone ID.
+ */
+export interface WaPhoneNumberNameUpdate {
+  display_phone_number: string;
+  decision: "APPROVED" | "REJECTED" | string;
+  requested_verified_name: string;
+  rejection_reason?: string | null;
+}
+
 /** Every payload shape a webhook `changes[].value` can carry. */
 export type WaWebhookChangeValue =
   | WaReceiveMessageBody
   | LeadGenBody
   | WaTemplateStatusChange
   | WaTemplateCategoryChange
-  | WaAccountUpdate;
+  | WaAccountUpdate
+  | WaPhoneNumberNameUpdate;
 
 // TODO: find if there is an official type for this
 export interface WaMessageBody {

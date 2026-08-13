@@ -78,7 +78,21 @@ import { getMetaBusinessAgentHandler, listFaqsHandler } from "./metaAgent.contro
 import { metaAgentWebhookEventHandler } from "./metaAgent.webhook.controller.js";
 import { metaAgentRoutes } from "./metaAgent.route.js";
 import { metaAgentWebhookRoutes } from "./metaAgent.webhook.route.js";
-import { byIdParamSchema, connectorBodySchema } from "./metaAgent.schema.js";
+import {
+  agentEventBodySchema,
+  agentSettingsBodySchema,
+  allowlistEntryBodySchema,
+  byIdParamSchema,
+  connectorBodySchema,
+  connectorLogsQuerySchema,
+  connectorToolBodySchema,
+  requestDefinitionSchema,
+  skillBodySchema,
+  uiSkillBodySchema,
+  upsertApiKeyBodySchema,
+  upsertCertificateBodySchema,
+  upsertOAuthBodySchema,
+} from "./metaAgent.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -574,15 +588,242 @@ describe("the connector schema", () => {
     ).toBe(false);
   });
 
-  test("constrains the auth type to the three Meta supports", () => {
-    expect(
+  test("constrains the auth type to the six Meta documents", () => {
+    const withAuth = (auth_type: string) =>
       connectorBodySchema.safeParse({
         name: "n",
         description: "d",
         base_url: "https://x.test",
-        auth_type: "BASIC",
+        auth_type,
+      }).success;
+
+    for (const auth of [
+      "OAUTH2_CLIENT_CREDENTIALS",
+      "OAUTH2",
+      "API_KEY",
+      "BASIC",
+      "CUSTOM",
+      "NONE",
+    ]) {
+      expect(withAuth(auth)).toBe(true);
+    }
+    expect(withAuth("MUTUAL_TLS")).toBe(false);
+  });
+});
+
+// Each of these mirrors a shape Meta's reference spells out, and each was a
+// place the payload we sent would have been rejected — or silently misread —
+// before it was pinned down here.
+describe("the credential upsert schemas match Meta's own bodies", () => {
+  test("an API key is a set of named header/query/body fields, not one string", () => {
+    expect(upsertApiKeyBodySchema.safeParse({ api_key: "secret" }).success).toBe(false);
+    expect(
+      upsertApiKeyBodySchema.safeParse({
+        api_key_config: {
+          headers: [{ field_name: "Authorization", value: "secret", prefix: "Bearer " }],
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  test("an API key config with every bucket empty is rejected", () => {
+    expect(
+      upsertApiKeyBodySchema.safeParse({ api_key_config: { headers: [], query_params: [] } })
+        .success,
+    ).toBe(false);
+  });
+
+  test("OAuth needs the token url and at least one scope", () => {
+    const oauth = (config: Record<string, unknown>) =>
+      upsertOAuthBodySchema.safeParse({ oauth_config: config }).success;
+
+    expect(oauth({ client_id: "id", client_secret: "s" })).toBe(false);
+    expect(
+      oauth({
+        token_url: "https://auth.test/token",
+        scopes_to_request: [],
+        client_id: "id",
+        client_secret: "s",
+      }),
+    ).toBe(false);
+    expect(
+      oauth({
+        token_url: "https://auth.test/token",
+        scopes_to_request: ["orders.read"],
+        client_id: "id",
+        client_secret: "s",
+      }),
+    ).toBe(true);
+  });
+
+  test("a certificate upsert wants PEM blocks under Meta's field names", () => {
+    const pem = "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----";
+    expect(
+      upsertCertificateBodySchema.safeParse({ certificate: pem, private_key: pem }).success,
+    ).toBe(false);
+    expect(
+      upsertCertificateBodySchema.safeParse({ client_certificate: pem, client_key: "hunter2" })
+        .success,
+    ).toBe(false);
+    expect(
+      upsertCertificateBodySchema.safeParse({ client_certificate: pem, client_key: pem }).success,
+    ).toBe(true);
+  });
+});
+
+describe("the connector tool request definition", () => {
+  const definition = (over: Record<string, unknown> = {}) => ({
+    method: "GET",
+    path: "/orders",
+    ...over,
+  });
+
+  test("only accepts the five methods Meta lists", () => {
+    expect(requestDefinitionSchema.safeParse(definition({ method: "HEAD" })).success).toBe(false);
+    expect(requestDefinitionSchema.safeParse(definition({ method: "PATCH" })).success).toBe(true);
+  });
+
+  test("requires a leading slash on the path", () => {
+    expect(requestDefinitionSchema.safeParse(definition({ path: "orders" })).success).toBe(false);
+  });
+
+  // The failure this catches is invisible until runtime, when the agent calls a
+  // literal `/orders/{orderId}`.
+  test("rejects a path placeholder with no matching path parameter", () => {
+    expect(
+      requestDefinitionSchema.safeParse(definition({ path: "/orders/{orderId}" })).success,
+    ).toBe(false);
+    expect(
+      requestDefinitionSchema.safeParse(
+        definition({
+          path: "/orders/{orderId}",
+          path_parameters: { orderId: { type: "string", required: true } },
+        }),
+      ).success,
+    ).toBe(true);
+  });
+
+  test("a default binding needs a value and a macro binding a known macro", () => {
+    const withBinding = (binding: Record<string, unknown>) =>
+      requestDefinitionSchema.safeParse(
+        definition({ query_parameters: { phone: { type: "string", binding } } }),
+      ).success;
+
+    expect(withBinding({ kind: "default" })).toBe(false);
+    expect(withBinding({ kind: "default", value: "IN" })).toBe(true);
+    expect(withBinding({ kind: "macro", macro: "NOT_A_MACRO" })).toBe(false);
+    expect(withBinding({ kind: "macro", macro: "WHATSAPP_PHONE_NUMBER" })).toBe(true);
+  });
+
+  test("body objects nest through properties", () => {
+    expect(
+      requestDefinitionSchema.safeParse(
+        definition({
+          method: "POST",
+          body: {
+            content_type: "application/json",
+            params: {
+              order: {
+                type: "object",
+                required: ["id"],
+                properties: {
+                  id: { type: "string" },
+                  tags: { type: "array", items: { type: "string" } },
+                },
+              },
+            },
+            required: ["order"],
+          },
+        }),
+      ).success,
+    ).toBe(true);
+  });
+
+  test("user_auth_required is not optional on a tool", () => {
+    const tool = { name: "get_order", description: "d", request_definition: definition() };
+    expect(connectorToolBodySchema.safeParse(tool).success).toBe(false);
+    expect(connectorToolBodySchema.safeParse({ ...tool, user_auth_required: false }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe("the settings, skill and ui-skill schemas", () => {
+  test("an enabled follow-up must carry an interval and a message", () => {
+    expect(agentSettingsBodySchema.safeParse({ followup: { enabled: true } }).success).toBe(false);
+    expect(
+      agentSettingsBodySchema.safeParse({
+        followup: { enabled: true, followup_interval_in_seconds: 900, message: "Still there?" },
+      }).success,
+    ).toBe(true);
+  });
+
+  test("only Meta's eight follow-up intervals are accepted", () => {
+    expect(
+      agentSettingsBodySchema.safeParse({
+        followup: { enabled: true, followup_interval_in_seconds: 600, message: "hi" },
       }).success,
     ).toBe(false);
+  });
+
+  test("a skill title is a lowercase slug within 64 characters", () => {
+    const skill = (title: string) =>
+      skillBodySchema.safeParse({ title, description: "d", skill: "s" }).success;
+
+    expect(skill("Order Status")).toBe(false);
+    expect(skill("order-status-lookup")).toBe(true);
+    expect(skill("a".repeat(65))).toBe(false);
+  });
+
+  test("a flow ui-skill is the one component type that needs a flow id", () => {
+    const uiSkill = (over: Record<string, unknown>) =>
+      uiSkillBodySchema.safeParse({
+        title: "Book a table",
+        status: "enabled",
+        instruction: "Send when the customer wants to book",
+        ...over,
+      }).success;
+
+    expect(uiSkill({ component_type: "flow" })).toBe(false);
+    expect(uiSkill({ component_type: "flow", flow_id: "1234567890123" })).toBe(true);
+    expect(uiSkill({ component_type: "cta_url" })).toBe(true);
+    expect(uiSkill({ component_type: "carousel" })).toBe(false);
+  });
+});
+
+describe("the operate schemas", () => {
+  test("phone numbers must be E.164 before they reach Meta", () => {
+    expect(allowlistEntryBodySchema.safeParse({ consumer_phone_number: "5551234" }).success).toBe(
+      false,
+    );
+    expect(
+      allowlistEntryBodySchema.safeParse({ consumer_phone_number: "+15551234567" }).success,
+    ).toBe(true);
+  });
+
+  test("an event payload must be JSON within 4096 characters", () => {
+    const event = (payload: string) =>
+      agentEventBodySchema.safeParse({
+        to: "+15551234567",
+        event: { type: "order_shipped", description: "d", payload },
+      }).success;
+
+    expect(event("not json")).toBe(false);
+    expect(event(JSON.stringify({ orderId: "1" }))).toBe(true);
+    expect(event(JSON.stringify({ blob: "x".repeat(5000) }))).toBe(false);
+  });
+
+  // Meta only keeps 7 days of connector logs and 400s on a wider window.
+  test("the connector log window is capped at 7 days", () => {
+    const day = 24 * 60 * 60;
+    expect(
+      connectorLogsQuerySchema.safeParse({ start_time: 1_000_000, end_time: 1_000_000 + 8 * day })
+        .success,
+    ).toBe(false);
+    expect(
+      connectorLogsQuerySchema.safeParse({ start_time: 1_000_000, end_time: 1_000_000 + 6 * day })
+        .success,
+    ).toBe(true);
   });
 });
 
@@ -642,12 +883,17 @@ describe("metaAgentRoutes", () => {
       .map((r) => `${r.method} ${r.url.replace("/:whatsappSettingsId", "")}`);
 
     expect(gated).toEqual([
+      // Tearing the agent down at Meta discards every mirrored config, so it is
+      // gated alongside the credential writes rather than left to any member.
+      "DELETE /agent",
       "POST /connectors",
+      "PUT /connectors/:id",
       "DELETE /connectors/:id",
       "POST /connectors/:id/upsertApiKey",
       "POST /connectors/:id/upsertOAuth",
       "POST /connectors/:id/upsertCertificate",
       "POST /connectors/:connectorId/tools",
+      "PUT /connectors/:connectorId/tools/:toolId",
       "DELETE /connectors/:connectorId/tools/:toolId",
       "POST /connectors/:connectorId/tools/:toolId/run",
     ]);

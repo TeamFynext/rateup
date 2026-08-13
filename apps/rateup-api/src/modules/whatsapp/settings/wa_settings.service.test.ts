@@ -21,7 +21,10 @@ vi.mock("../../../../utils/encryption/encryption.utils.js", () => ({
   aes_encrypt: vi.fn(),
   aes_decrypt: vi.fn(),
 }));
-vi.mock("../auth/wa_auth.service.js", () => ({ getPhoneDetails: vi.fn() }));
+vi.mock("../auth/wa_auth.service.js", () => ({
+  getPhoneDetails: vi.fn(),
+  registerPhoneNumber: vi.fn(),
+}));
 vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
@@ -36,19 +39,21 @@ vi.mock("../../../utils/logger.js", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryption.utils.js";
-import { getPhoneDetails } from "../auth/wa_auth.service.js";
+import { getPhoneDetails, registerPhoneNumber } from "../auth/wa_auth.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
 import { log } from "../../../utils/logger.js";
 import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
 import {
+  buildBusinessProfileBody,
   createWaSettings,
   deleteWaSettings,
   getAccessibleWaSettings,
   getAdAccountsFromWa,
   getAdsFromWa,
   getAllWaSettings,
+  getBusinessProfile,
   getContactTag,
   getConversationalAutomation,
   getFbPagesFromWa,
@@ -59,7 +64,12 @@ import {
   getWaSettingsByIbaId,
   getWaSettingsByPageId,
   getWaSettingsWithAccessTokenDecrypted,
+  reRegisterPhoneNumber,
+  syncDisplayName,
+  updateBusinessProfile,
   updateContactTag,
+  updateDisplayName,
+  updateProfilePicture,
   updateWaSettings,
   updateWaSettingsById,
   updateWaSettingsStatus,
@@ -81,6 +91,7 @@ const db = prisma as unknown as {
 const encryptMock = aes_encrypt as unknown as Mock;
 const decryptMock = aes_decrypt as unknown as Mock;
 const getPhoneDetailsMock = getPhoneDetails as unknown as Mock;
+const registerPhoneNumberMock = registerPhoneNumber as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const subscribePageToAppMock = subscribePageToApp as unknown as Mock;
 const getChannelScopeMock = getChannelScope as unknown as Mock;
@@ -116,6 +127,7 @@ beforeEach(() => {
   encryptMock.mockReturnValue({ encryptedData: "cipher-text", iv: "iv-hex" });
   decryptMock.mockReturnValue("plain-token");
   getPhoneDetailsMock.mockResolvedValue({ display_phone_number: "+1 555 0001" });
+  registerPhoneNumberMock.mockResolvedValue({ success: true });
   callMetaApiMock.mockResolvedValue({ data: { data: [] } });
   subscribePageToAppMock.mockResolvedValue(undefined);
   getChannelScopeMock.mockResolvedValue({ all: false, ids: new Set([SETTINGS_ID]) });
@@ -725,5 +737,265 @@ describe("getConversationalAutomation", () => {
     await expect(getConversationalAutomation(ORG_A, PHONE_ID)).rejects.toThrow(
       "WhatsApp settings not found",
     );
+  });
+});
+
+describe("syncDisplayName", () => {
+  test("asks Meta for the name fields and reports both the live and the pending name", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: {
+        verified_name: "Lucky Shrub",
+        name_status: "APPROVED",
+        new_display_name: "New Lucky Shrub",
+        new_name_status: "PENDING_REVIEW",
+      },
+    });
+
+    await expect(syncDisplayName(ORG_A, PHONE_ID)).resolves.toEqual({
+      verifiedName: "Lucky Shrub",
+      nameStatus: "APPROVED",
+      newDisplayName: "New Lucky Shrub",
+      newNameStatus: "PENDING_REVIEW",
+    });
+
+    const [url, method, token, , , , params] = callMetaApiMock.mock.calls[0];
+    expect(url).toBe(`/${PHONE_ID}`);
+    expect(method).toBe("GET");
+    expect(token).toBe("plain-token");
+    expect(params).toEqual({
+      fields: "verified_name,name_status,new_display_name,new_name_status",
+    });
+  });
+
+  test("never writes Meta's name over the org's own channel label", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(row({ phoneDisplayName: "Support desk" }));
+    callMetaApiMock.mockResolvedValue({ data: { verified_name: "Lucky Shrub" } });
+
+    await syncDisplayName(ORG_A, PHONE_ID);
+
+    expect(db.whatsappSettings.update).not.toHaveBeenCalled();
+  });
+
+  test("refuses for a channel the org does not own", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(null);
+
+    await expect(syncDisplayName(ORG_A, PHONE_ID)).rejects.toThrow("WhatsApp settings not found");
+  });
+});
+
+describe("updateDisplayName", () => {
+  test("submits the new name to Meta without touching the stored one", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(row({ phoneDisplayName: "Old Name" }));
+    callMetaApiMock.mockResolvedValueOnce({ data: { success: true } }).mockResolvedValueOnce({
+      data: {
+        verified_name: "Old Name",
+        name_status: "APPROVED",
+        new_display_name: "Lucky Shrub",
+        new_name_status: "PENDING_REVIEW",
+      },
+    });
+
+    await expect(updateDisplayName(ORG_A, PHONE_ID, "Lucky Shrub")).resolves.toMatchObject({
+      newDisplayName: "Lucky Shrub",
+      newNameStatus: "PENDING_REVIEW",
+    });
+
+    const [url, method, , , , , params] = callMetaApiMock.mock.calls[0];
+    expect(url).toBe(`/${PHONE_ID}`);
+    expect(method).toBe("POST");
+    expect(params).toEqual({ new_display_name: "Lucky Shrub" });
+    // The pending name is not written locally — only an approved one is.
+    expect(db.whatsappSettings.update).not.toHaveBeenCalled();
+  });
+
+  test("refuses for a channel the org does not own", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(null);
+
+    await expect(updateDisplayName(ORG_A, PHONE_ID, "Lucky Shrub")).rejects.toThrow(
+      "WhatsApp settings not found",
+    );
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("reRegisterPhoneNumber", () => {
+  test("re-registers with the channel's own access token", async () => {
+    await expect(reRegisterPhoneNumber(ORG_A, PHONE_ID)).resolves.toEqual({ success: true });
+
+    expect(registerPhoneNumberMock).toHaveBeenCalledWith(PHONE_ID, "plain-token");
+  });
+
+  test("refuses for a channel the org does not own", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(null);
+
+    await expect(reRegisterPhoneNumber(ORG_A, PHONE_ID)).rejects.toThrow(
+      "WhatsApp settings not found",
+    );
+    expect(registerPhoneNumberMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("getBusinessProfile", () => {
+  test("asks Meta for every profile field and flattens the single-element list", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: {
+        data: [
+          {
+            about: "Succulent specialists!",
+            address: "1 Hacker Way",
+            description: "We sell plants",
+            email: "lucky@luckyshrub.com",
+            profile_picture_url: "https://pps.whatsapp.net/v/t61",
+            websites: ["https://www.luckyshrub.com/"],
+            vertical: "RETAIL",
+          },
+        ],
+      },
+    });
+
+    await expect(getBusinessProfile(ORG_A, PHONE_ID)).resolves.toEqual({
+      about: "Succulent specialists!",
+      address: "1 Hacker Way",
+      description: "We sell plants",
+      email: "lucky@luckyshrub.com",
+      profilePictureUrl: "https://pps.whatsapp.net/v/t61",
+      websites: ["https://www.luckyshrub.com/"],
+      vertical: "RETAIL",
+    });
+
+    const [url, method, , , , , params] = callMetaApiMock.mock.calls[0];
+    expect(url).toBe(`/${PHONE_ID}/whatsapp_business_profile`);
+    expect(method).toBe("GET");
+    expect(params.fields).toContain("profile_picture_url");
+  });
+
+  test("reports empty fields for a number with no profile set", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { data: [] } });
+
+    await expect(getBusinessProfile(ORG_A, PHONE_ID)).resolves.toEqual({
+      about: null,
+      address: null,
+      description: null,
+      email: null,
+      profilePictureUrl: null,
+      websites: [],
+      vertical: null,
+    });
+  });
+
+  test("refuses for a channel the org does not own", async () => {
+    db.whatsappSettings.findFirst.mockResolvedValue(null);
+
+    await expect(getBusinessProfile(ORG_A, PHONE_ID)).rejects.toThrow(
+      "WhatsApp settings not found",
+    );
+  });
+});
+
+describe("updateBusinessProfile", () => {
+  test("sends only what the caller supplied, with websites JSON-encoded as Meta wants", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { success: true } });
+
+    await updateBusinessProfile(ORG_A, PHONE_ID, {
+      about: "Succulent specialists!",
+      websites: ["https://www.luckyshrub.com"],
+    });
+
+    const [url, method, , body] = callMetaApiMock.mock.calls[0];
+    expect(url).toBe(`/${PHONE_ID}/whatsapp_business_profile`);
+    expect(method).toBe("POST");
+    expect(body).toEqual({
+      messaging_product: "whatsapp",
+      about: "Succulent specialists!",
+      websites: '["https://www.luckyshrub.com"]',
+    });
+  });
+
+  test("leaves websites out entirely when the caller did not send any", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { success: true } });
+
+    await updateBusinessProfile(ORG_A, PHONE_ID, { about: "Hi" });
+
+    expect(callMetaApiMock.mock.calls[0][3]).toEqual({
+      messaging_product: "whatsapp",
+      about: "Hi",
+    });
+  });
+
+  test("drops blank fields, which Meta rejects rather than clearing", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { success: true } });
+
+    await updateBusinessProfile(ORG_A, PHONE_ID, {
+      about: "",
+      address: "   ",
+      description: "  We sell plants  ",
+      email: "lucky@luckyshrub.com",
+      websites: ["", "https://www.luckyshrub.com"],
+    });
+
+    expect(callMetaApiMock.mock.calls[0][3]).toEqual({
+      messaging_product: "whatsapp",
+      description: "We sell plants",
+      email: "lucky@luckyshrub.com",
+      websites: '["https://www.luckyshrub.com"]',
+    });
+  });
+
+  test("an all-blank update carries no fields at all", () => {
+    expect(buildBusinessProfileBody({ about: "", address: "  ", websites: [""] })).toEqual({});
+  });
+});
+
+describe("updateProfilePicture", () => {
+  const file = { buffer: Buffer.from("image-bytes"), mimetype: "image/png", filename: "logo.png" };
+
+  test("opens an upload session, sends the bytes, then sets the returned handle", async () => {
+    callMetaApiMock
+      .mockResolvedValueOnce({ data: { id: "upload:session-1" } })
+      .mockResolvedValueOnce({ data: { h: "4::aW" } })
+      .mockResolvedValueOnce({ data: { success: true } });
+
+    await expect(updateProfilePicture(ORG_A, PHONE_ID, file)).resolves.toEqual({ success: true });
+
+    const [sessionUrl, , , , , , sessionParams] = callMetaApiMock.mock.calls[0];
+    expect(sessionUrl).toBe("/app-1/uploads");
+    expect(sessionParams).toEqual({
+      file_name: "logo.png",
+      file_length: file.buffer.length,
+      file_type: "image/png",
+    });
+
+    const [uploadUrl, , uploadToken, uploadBody, , uploadHeaders] = callMetaApiMock.mock.calls[1];
+    expect(uploadUrl).toBe("/upload:session-1");
+    // The upload leg authenticates with an OAuth header rather than a bearer token.
+    expect(uploadToken).toBeNull();
+    expect(uploadBody).toBe(file.buffer);
+    expect(uploadHeaders.Authorization).toBe("OAuth plain-token");
+    expect(uploadHeaders.file_offset).toBe("0");
+
+    expect(callMetaApiMock.mock.calls[2][3]).toEqual({
+      messaging_product: "whatsapp",
+      profile_picture_handle: "4::aW",
+    });
+  });
+
+  test("stops before uploading when Meta gives no session", async () => {
+    callMetaApiMock.mockResolvedValueOnce({ data: {} });
+
+    await expect(updateProfilePicture(ORG_A, PHONE_ID, file)).rejects.toThrow(
+      "Meta did not return an upload session",
+    );
+    expect(callMetaApiMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not touch the profile when the upload returns no handle", async () => {
+    callMetaApiMock
+      .mockResolvedValueOnce({ data: { id: "upload:session-1" } })
+      .mockResolvedValueOnce({ data: {} });
+
+    await expect(updateProfilePicture(ORG_A, PHONE_ID, file)).rejects.toThrow(
+      "Meta did not return a file handle for the uploaded image",
+    );
+    expect(callMetaApiMock).toHaveBeenCalledTimes(2);
   });
 });

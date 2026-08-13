@@ -351,6 +351,7 @@ model MetaBusinessAgent {
   followupIntervalSeconds Int?
   followupMessage         String?
   aiAudience              String? // EVERYONE, ALLOWLISTED_ONLY
+  neverSayPhrases         String[]  @default([])
   settingsSyncedAt        DateTime?
 
   // agent_config/business_info, cached locally
@@ -366,6 +367,7 @@ model MetaBusinessAgent {
   files      MetaAgentFile[]
   websites   MetaAgentWebsite[]
   skills     MetaAgentSkill[]
+  uiSkills   MetaAgentUiSkill[]
   connectors MetaAgentConnector[]
 }
 
@@ -430,6 +432,29 @@ model MetaAgentSkill {
   title       String
   description String
   skill       String
+  channel     String? // channel Meta filed the skill under, returned on read
+  /// [PMetaAgentSkillMetadata]
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// agent-ui-skills — the rich WhatsApp components (carousels, CTAs, flows) the
+/// agent is allowed to send. A separate Meta endpoint from `agent_config/skills`.
+model MetaAgentUiSkill {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId        String?
+  title         String
+  componentType String // carousel_quick_reply, carousel_url, cta_url, flow, image, interactive_list, location, location_request
+  status        String  @default("enabled") // enabled, disabled
+  instruction   String
+  // Meta types this as an integer, but flow ids run to 16 digits — kept as text
+  // so nothing rounds on the way through, and parsed at the Meta boundary.
+  flowId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -444,9 +469,18 @@ model MetaAgentConnector {
   name                String
   description         String
   baseUrl             String
-  authType            String // OAUTH2_CLIENT_CREDENTIALS, API_KEY, NONE
+  authType            String  @default("NONE") // OAUTH2_CLIENT_CREDENTIALS, OAUTH2, API_KEY, BASIC, CUSTOM, NONE
   requiresCertificate Boolean @default(false)
   connectionStatus    String  @default("PENDING_OAUTH") // PENDING_OAUTH, ACTIVE, EXPIRED, ERROR
+  // Meta returns connection_status as an object; the failure reason rides along
+  // with the status and is the only thing that explains an ERROR to the user.
+  connectionError     String?
+
+  /// [PMetaAgentUserAuthInjectionConfig]
+  userAuthInjectionConfig Json?
+  /// Non-secret mTLS metadata Meta echoes back (fingerprint, subject, expiry).
+  /// [PMetaAgentMtlsConfig]
+  mtlsConfig              Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -465,6 +499,9 @@ model MetaAgentConnectorTool {
   /// [PMetaAgentRequestDefinition]
   requestDefinition Json
   userAuthRequired  Boolean @default(false)
+  /// How to pull tokens out of an auth/refresh call's response.
+  /// [PMetaAgentUserAuthActionConfig]
+  userAuthActionConfig Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
