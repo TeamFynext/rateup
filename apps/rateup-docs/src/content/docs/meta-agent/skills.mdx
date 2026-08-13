@@ -1,0 +1,45 @@
+---
+title: "Skills"
+description: Named blocks of instructions, each with a description of when the agent should apply it.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+A **skill** is a named block of instructions plus a description of when to apply it. Knowledge tells
+the agent what is true; a skill tells it what to do.
+
+---
+
+## Create a Skill
+
+<Steps>
+  <Step>Click **Add skill**.</Step>
+  <Step>Give it a name — a slug: lowercase letters, numbers and hyphens, up to 64 characters.</Step>
+  <Step>Fill in **When to use it** — the trigger, in plain words. For example: *"When the customer asks where their order is, or gives an order number."*</Step>
+  <Step>Write the **Instructions** — what the agent should do once that situation arises.</Step>
+  <Step>Click **Create skill**.</Step>
+</Steps>
+
+**Edit skill** reopens an existing one; **Save changes** stores it.
+
+---
+
+## Writing One That Works
+
+| Do | Instead of |
+|----|-----------|
+| One situation per skill | A single skill covering everything |
+| A concrete trigger in **When to use it** | "For order questions" |
+| Instructions that say what to ask for | Instructions that assume the agent has the order |
+| Naming the limit — what it must not promise | Leaving refunds and dates open-ended |
+
+The **When to use it** text is what the agent matches against, so it earns more care than the
+instructions. Two skills with overlapping triggers will compete.
+
+---
+
+## Related Pages
+
+- [Knowledge](/meta-agent/knowledge) — the facts a skill draws on
+- [UI Skills](/meta-agent/ui-skills) — replying with buttons and carousels
+- [Operate](/meta-agent/operate) — test a skill before customers meet it

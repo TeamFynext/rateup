@@ -1,6 +1,6 @@
 ---
 title: "Sidebar Filters"
-description: Narrow any Inbox view by channel, lifecycle stage, label, agent or team — all from the sidebar, under the views.
+description: Narrow any Inbox view by channel, lifecycle stage, contact label, conversation tag, agent or team — all from the sidebar, under the views.
 ---
 
 import ScreenShot from "@/components/Screenshot";
@@ -12,7 +12,8 @@ view you are looking at.
 |---------|-----------|
 | **Channel** | The number or account the customer wrote to |
 | **Lifecycle** | The contact's lifecycle stage |
-| **Labels** | Labels on the contact |
+| **Contact Labels** | Labels on the contact — matches every ticket that customer has |
+| **Conversation Tags** | Tags on the ticket itself |
 | **Users** | The agent the ticket is assigned to |
 | **Teams** | The team the ticket is assigned to |
 
@@ -47,15 +48,20 @@ Channel applies to **every** view, including **Spam**, and stays applied as you 
 
 ---
 
-## Lifecycle & Labels
+## Lifecycle, Contact Labels & Conversation Tags
 
-Both filter on the **contact** rather than the ticket:
+The first two filter on the **contact**; the third filters on the **ticket**:
 
 - **Lifecycle** — one stage at a time, shown with its emoji
-- **Labels** — several at once; a ticket matches if its contact carries any of them
+- **Contact Labels** — several at once; a ticket matches if its contact carries any of them
+- **Conversation Tags** — several at once; only the conversations carrying the tag match
 
-Useful for triage: work through **New Lead** enquiries first, or find everyone tagged **VIP** who is
-waiting.
+Useful for triage: work through **New Lead** enquiries first, find everyone labelled **VIP** who is
+waiting, or pull up every conversation tagged **Escalated**.
+
+Contact Labels and Conversation Tags each carry their own clear control once a filter is active.
+The difference between them is worth knowing before you rely on either — see
+[Conversation Tags & Contact Labels](/inbox/conversation-tags).
 
 ---
 
@@ -138,6 +144,7 @@ Useful combinations:
 ## Related Pages
 
 - [Inbox Views](/inbox/inboxview)
+- [Conversation Tags & Contact Labels](/inbox/conversation-tags)
 - [Search, Selection & Sorting](/inbox/toolbar)
 - [Assignment & Reassignment](/inbox/asigning-conversation)
 - [Teams](/settings/teams) — which channels a team may see at all

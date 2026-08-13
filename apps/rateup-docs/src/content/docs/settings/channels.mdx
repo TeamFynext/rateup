@@ -1,9 +1,11 @@
 ---
 title: "Channels"
-description: Connect the WhatsApp, Instagram and Facebook accounts your customers message you on.
+description: Connect the WhatsApp, Instagram and Facebook accounts your customers message you on, and manage each number's name, display name and business profile.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 **Channels** is where your messaging accounts are connected. Everything else in RateUp — the Inbox,
 Commerce, Campaigns, Loyalty notifications — depends on at least one channel being live here.
@@ -35,6 +37,136 @@ identity they are replying as.
 
 ---
 
+## Edit a WhatsApp Number
+
+A connected number has three separate things you can change, and they are deliberately kept apart —
+one is yours, two belong to Meta.
+
+| Tab | What it changes | Where it lives |
+|-----|-----------------|----------------|
+| **Channel** | The name you use for the number inside RateUp, plus its credentials | RateUp only |
+| **Display name** | The business name customers see in WhatsApp | Meta — needs review |
+| **Profile** | Photo, about line, description, category and contact details | Meta — applies immediately |
+
+Open them from the pencil (**Edit channel**) on a number under **Automated**. A number configured
+under **Manual** carries the same three tabs on its own card.
+
+<ImagePlaceholder
+  file="settings/channel-edit-tabs.png"
+  shot="The Edit channel dialog for a connected WhatsApp number, open on the Channel tab, with all three tabs (Channel, Display name, Profile) visible."
+  caption="Editing a connected number."
+/>
+
+{/* TODO: capture the Edit channel dialog */}
+
+<Callout type="warn">
+  Only a super admin can change a channel. Other roles can see the tabs but the save is refused.
+</Callout>
+
+---
+
+## Rename a Channel
+
+The **Channel name** is your own label — it names the number in channel pickers, template screens
+and the Inbox's channel filter. Customers never see it.
+
+<Steps>
+  <Step>Open the number and stay on the **Channel** tab.</Step>
+  <Step>Type the new name.</Step>
+  <Step>Click **Save name**.</Step>
+</Steps>
+
+It saves on its own. You do not need to resubmit the number's credentials, and nothing is sent to
+Meta — so there is no review and no waiting.
+
+---
+
+## Change the Display Name
+
+The **display name** is the business name WhatsApp shows customers. Meta reviews every change
+against its display name guidelines, so this is a request, not an edit.
+
+<Steps>
+  <Step>Open the **Display name** tab. The name Meta currently holds is shown at the top with its status.</Step>
+  <Step>Type the name you want in **New display name**.</Step>
+  <Step>Click **Submit for review**.</Step>
+  <Step>Check back with **Sync from Meta** until the requested name is approved.</Step>
+  <Step>Click **Re-register number** to put the approved name into use.</Step>
+</Steps>
+
+### What the statuses mean
+
+| Status | Meaning |
+|--------|---------|
+| **Approved** | The name in use has passed review |
+| **In review** | Meta is still deciding |
+| **Approved — not in use yet** | Meta approved your requested name, but the number still shows the old one until you re-register |
+| **Rejected** | The name breaks Meta's guidelines — edit it and submit again |
+| **Expired** | The approval lapsed before the number was re-registered |
+
+<Callout type="warn">
+  An approved name does nothing until you click **Re-register number**, and the approval only lasts
+  **14 days**. Miss that window and the name has to go through review again.
+</Callout>
+
+You can change a display name **10 times per 30 days**. Beyond that Meta refuses the request, and
+its own message is shown back to you.
+
+---
+
+## Update the Business Profile
+
+The **Profile** tab is what customers see when they open your business in WhatsApp: the photo, the
+about line under your name, and your contact details. Unlike the display name, these apply as soon
+as they are saved.
+
+<Steps>
+  <Step>Open the **Profile** tab.</Step>
+  <Step>Click **Upload photo** (or **Change photo**) and pick a JPEG or PNG of up to 5 MB. It uploads on selection.</Step>
+  <Step>Fill in the fields you want to change.</Step>
+  <Step>Click **Save profile**.</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="settings/channel-profile-tab.png"
+  shot="The Profile tab of the Edit channel dialog, showing the round photo with the Change photo button and the About, Description, Email, Category, Address and Website fields."
+  caption="The business profile customers see in WhatsApp."
+/>
+
+{/* TODO: capture the Profile tab */}
+
+| Field | Shown as | Limit |
+|-------|----------|-------|
+| Photo | The business avatar | JPEG or PNG, 5 MB; square images work best |
+| **About** | The one-line status under your name | 139 characters |
+| **Description** | The longer blurb on the business page | 512 characters |
+| **Email** | Contact email | 128 characters |
+| **Category** | The business category, from WhatsApp's own list | — |
+| **Address** | Freeform text — WhatsApp does not check it against a map | 256 characters |
+| **Website** / **Second website** | Up to two links | 256 characters each |
+
+<Callout type="warn">
+  WhatsApp has no way to clear a profile field. Anything you leave blank is left exactly as it is
+  rather than emptied, and a save with every field blank is refused.
+</Callout>
+
+---
+
+## Connect a Number Manually
+
+Most accounts connect through the **Automated** tab, where Meta's own login flow supplies the
+credentials. **Manual** is for numbers whose credentials you hold yourself — WABA ID, Phone ID,
+App ID, webhook password and access token.
+
+A manually configured number gets the same **Channel**, **Display name** and **Profile** tabs once
+it exists. Its credentials sit under the channel name on the **Channel** tab, saved with **Save
+Changes**; **Delete Configuration** removes the number.
+
+The two modes are exclusive: a number onboarded automatically cannot be edited as a manual one until
+it is de-registered, and vice versa.
+
+---
+
 ## What Depends on a Channel
 
 | Feature | Needs |
@@ -60,6 +192,11 @@ identity they are replying as.
 | "WhatsApp settings not found" elsewhere in RateUp | No WhatsApp account is connected |
 | An Instagram account will not connect | It must be a professional account linked to a Facebook page |
 | Replies fail on one number only | Check that specific account's status, not the channel as a whole |
+| The approved display name still is not showing | Re-register the number — approval alone does not apply it |
+| "Nothing to update — WhatsApp does not accept an empty profile field" | Every profile field was blank; fill in at least one |
+| "Profile photo must be a JPEG or PNG image" | Convert the file — WhatsApp takes no other format for a profile photo |
+| A display name change is refused outright | You may have used all 10 changes for this 30-day period |
+| The Display name or Profile tab cannot read from Meta | The number's access token has expired — reconnect the account |
 
 ---
 

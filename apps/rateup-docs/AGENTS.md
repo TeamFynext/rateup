@@ -36,8 +36,9 @@ Quoting the app's exact strings — *"No campaigns found"*, *"Verify and Save"* 
 docs findable and trustworthy. Invented labels are worse than no docs.
 
 **Never document a route that is commented out.** Several exist (`/dashboard/landingPages`,
-Meta AI Agent, campaign participants in the external API, loyalty Coupons). They were deliberately
-excluded.
+campaign participants in the external API, loyalty Coupons). They were deliberately excluded.
+**Meta AI Agent is no longer one of them** — `/dashboard/meta-agent` and its seven sub-routes are
+live in `hooks.tsx`, gated on `TeamFeature.AiChatbot`, and are documented in `meta-agent/`.
 
 ---
 
@@ -169,7 +170,7 @@ labelled dashed frame:
 - Always pair it with a `{/* TODO: … */}` comment
 
 **99 screenshots are referenced from `public/docs/screenshots/`** as `/docs/screenshots/<file>` —
-served from `public/`, not the CDN. Every reference resolves. **3 placeholders remain** (§10), and 8
+served from `public/`, not the CDN. Every reference resolves. **7 placeholders remain** (§10), and 8
 older inbox shots still point at the CDN.
 
 **A screenshot that shows a control which no longer exists is worse than no screenshot.** When a
@@ -247,7 +248,7 @@ an unescaped `{{ }}`.
 
 ## 9. Where We Are Now
 
-**103 pages across 15 sections + 2 top-level pages.** Every section maps 1:1 to an app sidebar
+**112 pages across 16 sections + 2 top-level pages.** Every section maps 1:1 to an app sidebar
 entry. Build clean.
 
 Each of the three WhatsApp builders now has a **detail page** alongside its list page — the pattern
@@ -257,12 +258,13 @@ managing, the detail page covers the editor itself.
 | Section | Pages | Covers |
 |---------|-------|--------|
 | `getting-started` | 4 | Register, login, reset password |
-| `inbox` | 22 | Tickets, 8 views, replying, private notes, closing, ticket details, filters, settings |
+| `inbox` | 23 | Tickets, 8 views, replying, private notes, closing, ticket details, filters, tags & labels, settings |
 | `analytics` | 7 | All six analytics tabs |
 | `contacts` | 6 | Managing, groups, labels, lifecycle, custom fields |
 | `campaign` | 3 | Creating, details, broadcast vs drip |
 | `whatsapp` | 9 | Flows + flow editor, chatbots + chatbot builder, templates + template editor, conversational components, settings |
 | `instagram` | 4 | Chatbots, comment/story automations, entry points |
+| `meta-agent` | 8 | Overview & onboarding, knowledge, skills, UI skills, connectors, settings, operate |
 | `automation` | 4 | Triggers, conditions, actions |
 | `commerce` | 6 | Overview, catalogs, orders, payments, checkout settings |
 | `loyalty` | 12 | Dashboard, earning rules, rewards, customers, transactions, approvals, cashier, commands, notifications, templates, settings |
@@ -301,7 +303,7 @@ externally, they need redirects — **this has not been done.**
 | Item | Notes |
 |------|-------|
 | **Onboarding / setup page** | `/login/setup` — the post-signup checklist. Three sections (Connect WhatsApp, Team & automation, Design your loyalty program), 11 task cards, progress tracking, **Continue to Dashboard**. Belongs in `getting-started/`. **Not written.** |
-| **Screenshots** | **3 placeholders**: `inbox/toolbar-annotated` and `inbox/close-menu` (stale captures, deleted — see below) and `web-forms/webhook-settings` (needs a survey's Settings → Webhook section). Everything else is shot, including all three WhatsApp detail pages |
+| **Screenshots** | **7 placeholders**: `inbox/toolbar-annotated` and `inbox/close-menu` (stale captures, deleted — see below), `web-forms/webhook-settings`, `settings/channel-edit-tabs` + `settings/channel-profile-tab` (the Edit channel dialog), and `inbox/conversation-tags-panel`. In `meta-agent/`, only the section index is shot (`meta-agent/overview.png`) — the seven inner pages have no screenshots at all |
 | **`whatsapp/catalogs.mdx` was deleted** | The deletion is staged, but `/whatsapp/catalogs` is still linked from `commerce/catalogs.mdx` (×2), `commerce/index.mdx` and `whatsapp/index.mdx`, and `public/docs/screenshots/whatsapp/catalog.png` is now orphaned. Either restore the page or repoint those four links — the `/dashboard/whatsapp/catalog` route does still exist |
 | **Stale captures to re-shoot** | `inbox/close-menu` (the menu no longer lists "Mark as Spam"; spam and block sit below a separator) and `inbox/toolbar-annotated` (the advanced-filters icon is gone). Both files were **deleted**; the pages carry `ImagePlaceholder`s with the shot instructions. `inbox/mark-as-spam` has been re-shot against the new menu. `inbox/staff-team-filters` and `inbox/layout-annotated` still work but predate the sidebar's **Channel** section |
 | **Old-URL redirects** | For the two renamed sections |

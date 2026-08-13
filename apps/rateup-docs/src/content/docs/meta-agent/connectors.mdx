@@ -1,0 +1,81 @@
+---
+title: "Connectors"
+description: External APIs the agent can call for live data — credentials, the tools on them, and Meta's error logs.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Knowledge is static. A **connector** is how the agent answers questions whose answer changes by the
+minute — *where is my order*, *is this in stock* — by calling your API.
+
+A connector is one API. The **tools** on it are the individual calls the agent may make.
+
+---
+
+## Add a Connector
+
+<Steps>
+  <Step>Click **Add connector**.</Step>
+  <Step>Name it and write a **Description** — the agent reads this to decide when this connector is the right one.</Step>
+  <Step>Set the **Base URL**. Tool paths are appended to it, and it must be `https`.</Step>
+  <Step>Choose an **Auth type** and fill in its credentials.</Step>
+  <Step>Click **Create connector**.</Step>
+</Steps>
+
+Each connector shows its state: **Connected**, **Awaiting credentials** or **Credentials expired**.
+
+### Auth types
+
+| Type | What it is |
+|------|-----------|
+| **None** | A public API that needs no credentials |
+| **API key** | A key, sent as a header, query parameter or body field |
+| **Basic** | A username and password pair |
+| **OAuth 2.0 client credentials** | One machine-to-machine token Meta refreshes for you |
+| **OAuth 2.0 (user)** | Per-customer auth — Meta adds the customer's stored token to every request |
+| **Custom** | A scheme you drive yourself through tool definitions |
+
+OAuth types need a **Token URL** — the endpoint Meta exchanges credentials at, also `https` — plus
+the client id, client secret and scopes. **Require mTLS** adds a PEM-encoded client certificate and
+key if your API demands one on the TLS handshake.
+
+Fixed **headers**, **query parameters** or **body fields** can be injected on every call the agent
+makes through the connector.
+
+---
+
+## Add a Tool
+
+A tool is one endpoint the agent may call.
+
+<Steps>
+  <Step>Open the connector and click **Add tool**.</Step>
+  <Step>Give it a **Tool name** — a stable key: letters, numbers, underscores and hyphens.</Step>
+  <Step>Write a **Description** the agent can act on, such as *"Fetches a single order by its id, including line items and shipping status."*</Step>
+  <Step>Define the **path parameters**, **query parameters** and **request body** it takes.</Step>
+  <Step>Click **Create tool**.</Step>
+</Steps>
+
+Tick **Requires the customer's own token** for a call that must run as the customer — Meta then
+injects their stored token using the connector's injection config.
+
+---
+
+## Watch It Work
+
+Each connector keeps a log panel over **Last 24 hours**, **Last 3 days** or **Last 7 days**, showing
+**Success rate**, **Failures** and **Last seen**. It is the first place to look when the agent
+starts saying it cannot find an order.
+
+<Callout type="warn">
+  A tool's description is the whole of what the agent knows about it. A vague one gets called at the
+  wrong moment; an overstated one gets called for data it cannot return.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Knowledge](/meta-agent/knowledge) — for facts that do not change
+- [Operate](/meta-agent/operate) — exercise a tool with a test message
+- [External API](/external-api) — RateUp's own API, in the other direction

@@ -1,0 +1,90 @@
+---
+title: "Conversation Tags & Contact Labels"
+description: Tag a single ticket, or label the customer behind it — two separate taxonomies, both of which filter the Inbox.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+The Inbox classifies work at two different grains, and mixing them up is the usual mistake.
+
+| | **Conversation tag** | **Contact label** |
+|---|---|---|
+| Describes | One ticket | The customer |
+| Shows on | Only the conversation you tagged | Every ticket that customer ever opens |
+| Good for | *Bug Report*, *Escalated*, *Follow-up*, *Refund* | *VIP*, *Wholesale*, *Churn risk* |
+| Sidebar section | **Conversation Tags** | **Contact Labels** |
+
+A tag describes what *this* conversation was about. A label describes who you are talking to.
+
+<ImagePlaceholder
+  file="inbox/conversation-tags-panel.png"
+  shot="The ticket details panel with the Conversation Tags and Contact Labels sections visible, each showing a couple of coloured chips and the Add control."
+  caption="Both taxonomies on one ticket."
+/>
+
+{/* TODO: capture the ticket panel's tag and label sections */}
+
+---
+
+## Create a Tag or a Label
+
+Both are created the same way, on their own tab.
+
+<Steps>
+  <Step>Open **Inbox → Settings**.</Step>
+  <Step>Choose the **Conversation tags** or **Contact labels** tab.</Step>
+  <Step>Click **Create tag** (or **Create label**).</Step>
+  <Step>Give it a **Name** and a **Colour**, then **Save**.</Step>
+</Steps>
+
+Each row shows how many conversations or contacts currently carry it, so you can see what is
+actually in use before renaming or deleting. An empty tab reads *"No conversation tags yet."*
+
+Use **Edit** to rename or recolour, and **Delete** to remove one. Deleting takes the tag off every
+conversation carrying it.
+
+---
+
+## Tag a Conversation
+
+<Steps>
+  <Step>Open the ticket and expand the details panel on the right.</Step>
+  <Step>Under **Conversation Tags**, click **Add**.</Step>
+  <Step>Pick the tags that apply, then **Done**.</Step>
+</Steps>
+
+Contact labels sit in the same panel under **Contact Labels**, and are added the same way — but
+they attach to the customer, so they will appear on their next ticket too.
+
+Tags also show as chips on the conversation row in the list, so you can see them without opening
+the ticket.
+
+---
+
+## Filter by Tag or Label
+
+The Inbox sidebar carries a section for each, listed under the views:
+
+| Section | Filters to |
+|---------|-----------|
+| **Contact Labels** | Every ticket belonging to a customer carrying the label |
+| **Conversation Tags** | Only the conversations carrying the tag |
+
+Each section only appears once at least one tag or label exists, and has its own clear control once
+a filter is active. Both combine with the rest of the sidebar — views, channel, teams, users and
+lifecycle — see [Filtering the Inbox](/inbox/inbox-filter).
+
+<Callout type="info">
+  Filtering by a contact label is the wider of the two: it pulls in that customer's whole history,
+  not just the conversation you had in mind.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Ticket Details](/inbox/ticket-details) — the panel where both are applied
+- [Filtering the Inbox](/inbox/inbox-filter)
+- [Inbox Settings](/inbox/inbox-settings) — where both are created
+- [Labels](/contacts/labels) — contact labels from the Contacts side

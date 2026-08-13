@@ -1,0 +1,61 @@
+---
+title: "Overview & Onboarding"
+description: Check whether a WhatsApp number can run Meta's Business Agent, and onboard it.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+**Overview** is where an agent starts. Nothing else in this section does anything until a number is
+onboarded — onboarding is what creates the agent at Meta and returns the agent id every other call
+is scoped to.
+
+---
+
+## Check Eligibility
+
+Not every WhatsApp number may run a Business Agent. Meta decides.
+
+<Steps>
+  <Step>Pick the number from **Select WhatsApp number**.</Step>
+  <Step>Enter the **Consumer phone number** in E.164 format, including the country code.</Step>
+  <Step>Click **Check with Meta**.</Step>
+</Steps>
+
+The card then reads either *"Meta confirmed this number is eligible."* or *"Meta says this number is
+not eligible for the Business Agent yet."* **Re-check** asks again — eligibility can change without
+you doing anything.
+
+---
+
+## Onboard the Agent
+
+Once the number is eligible, **Onboard agent** creates it at Meta. The header badge changes to
+**ONBOARDED** and the remaining pages become useful.
+
+**Re-onboard** repeats the call for a number that is already onboarded — use it if the agent at Meta
+was removed or has to be recreated.
+
+<Callout type="warn">
+  Onboarding does not switch the agent on. It exists but answers nobody until you enable rollout —
+  see [Settings](/meta-agent/settings). Give it knowledge and skills first.
+</Callout>
+
+---
+
+## What to Do Next
+
+| Step | Page |
+|------|------|
+| Tell it about the business | [Knowledge](/meta-agent/knowledge) |
+| Tell it how to handle specific situations | [Skills](/meta-agent/skills) |
+| Let it answer with buttons, carousels and Flows | [UI Skills](/meta-agent/ui-skills) |
+| Give it live data from your systems | [Connectors](/meta-agent/connectors) |
+| Try it without involving a customer | [Operate](/meta-agent/operate) |
+| Turn it on | [Settings](/meta-agent/settings) |
+
+---
+
+## Related Pages
+
+- [Meta AI Agent](/meta-agent)
+- [Channels](/settings/channels) — the numbers you can choose from

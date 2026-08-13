@@ -1,0 +1,42 @@
+---
+title: "Agent Settings"
+description: Rollout, who the agent may answer, human handoff and follow-up messages.
+---
+
+**Settings** is where the agent goes live, and where you bound what it does once it is.
+
+---
+
+## Rollout & Behaviour
+
+| Control | What it does |
+|---------|-------------|
+| **Rollout enabled** | Whether the agent answers at all |
+| **AI audience** | **Everyone**, or **Allowlisted numbers only** |
+| **Handoff message** | Shown when the agent hands a conversation to a human |
+| **Custom handoff message** | Off means Meta sends its own translated message instead |
+| **Follow up when a customer goes quiet** | Whether the agent nudges an abandoned conversation |
+| **Follow-up message** | What that nudge says |
+| **Never-say phrases** | Exact phrases the agent must never produce — press Enter after each one |
+
+Follow-up timing is chosen from a fixed set: Meta only supports those intervals.
+
+---
+
+## Roll Out Safely
+
+<Callout type="warn">
+  **Allowlisted numbers only** is how you test against real conversations without exposing every
+  customer to a half-configured agent. Switch to **Everyone** once you have watched it answer.
+</Callout>
+
+Never-say phrases are the cheapest safeguard here. Add the promises your business cannot keep —
+guaranteed delivery dates, refund commitments, medical or legal advice — as exact phrases.
+
+---
+
+## Related Pages
+
+- [Overview & Onboarding](/meta-agent/overview) — needed before rollout does anything
+- [Operate](/meta-agent/operate) — test before enabling
+- [Inbox](/inbox) — where a handed-off conversation lands

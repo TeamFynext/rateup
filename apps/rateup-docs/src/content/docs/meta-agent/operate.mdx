@@ -1,0 +1,57 @@
+---
+title: "Operate"
+description: Test the agent, send business events, hand threads between the agent and your inbox, and run evaluations.
+---
+
+**Operate** is the working page: everything here exercises a live agent without necessarily
+involving a customer.
+
+---
+
+## Test the Agent
+
+**Test message** sends a message to the agent and shows the reply. No real customer is notified, so
+it is the safe way to check a new skill or connector tool.
+
+---
+
+## Send a Business Event
+
+A business event tells the agent something happened on your side, so it can act on it in an ongoing
+conversation.
+
+| Field | What goes in it |
+|-------|-----------------|
+| **Event type** | A stable key you choose, reused for every event of this kind |
+| **Consumer phone number** | E.164 format, including the country code |
+| **Description** | What this event means, in words the agent can act on — for example *"The customer's order has left the warehouse."* |
+| **Payload** | The structured data that goes with it |
+
+---
+
+## Thread Control
+
+Hands a live conversation between the AI agent and your inbox. Use it to pull a conversation to a
+human mid-thread, or hand one back once the human is done.
+
+---
+
+## Run an Evaluation
+
+Meta simulates conversations against your scenarios and scores how the agent handled them.
+
+**Load eval cases** fetches the scenarios; **Reload cases** refreshes the list; a run reports as
+**QUEUED**, **RUNNING**, then a result or **FAILED**.
+
+<Callout type="info">
+  Evaluations are how you tell whether a change to knowledge or skills actually improved anything.
+  Run one before and after a substantial edit rather than judging by a single test message.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Agent Settings](/meta-agent/settings) — rollout and audience
+- [Connectors](/meta-agent/connectors) — the log panel, when a tool call fails
+- [Inbox](/inbox) — where a handed-off conversation is answered

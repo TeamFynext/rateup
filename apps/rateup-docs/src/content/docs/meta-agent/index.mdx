@@ -1,0 +1,42 @@
+---
+title: "Meta AI Agent"
+description: Meta's Business Agent, configured from RateUp — what it knows, what it can do, who it answers and how you test it.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+The **Meta AI Agent** answers your customers on WhatsApp using Meta's own Business Agent. It runs at
+Meta, not in RateUp — you configure what it knows, what it may do and who it is allowed to talk to,
+and Meta does the answering.
+
+Each area is its own page in the sidebar under **Meta AI Agent**, and every page works against one
+WhatsApp number, chosen from the **Select WhatsApp number** picker at the top.
+
+<ScreenShot src="/docs/screenshots/meta-agent/overview.png" alt="The Meta AI Agent Overview page" />
+
+<Callout type="info">
+  The section only appears if your plan includes the AI chatbot feature. Until a number is
+  onboarded, the header shows **Not onboarded** and the other pages have nothing to configure.
+</Callout>
+
+---
+
+## The Order to Do It In
+
+<Cards>
+  <Card title="Overview" href="/meta-agent/overview" description="Check eligibility and onboard the number. Everything else needs this first." />
+  <Card title="Knowledge" href="/meta-agent/knowledge" description="Business info, FAQs, files and websites the agent draws answers from." />
+  <Card title="Skills" href="/meta-agent/skills" description="Named blocks of instructions, and when to apply them." />
+  <Card title="UI Skills" href="/meta-agent/ui-skills" description="Carousels, buttons, lists and Flows the agent can reply with." />
+  <Card title="Connectors" href="/meta-agent/connectors" description="External APIs and the tools on them the agent can call for live data." />
+  <Card title="Settings" href="/meta-agent/settings" description="Rollout, human handoff, follow-ups and audience targeting." />
+  <Card title="Operate" href="/meta-agent/operate" description="Test messages, business events, thread control and evaluations." />
+</Cards>
+
+---
+
+## Related Pages
+
+- [Channels](/settings/channels) — the WhatsApp number the agent runs on
+- [Chatbots](/whatsapp/chatbots) — RateUp's own rule-based bots
+- [Flows](/whatsapp/flows) — published Flows a UI skill can open

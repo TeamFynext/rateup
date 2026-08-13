@@ -1,0 +1,54 @@
+---
+title: "UI Skills"
+description: Carousels, buttons, lists, location requests and Flows the agent can answer with instead of plain text.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+A **UI skill** lets the agent answer with something tappable rather than a paragraph. You pick the
+component and describe the moment the agent should reach for it.
+
+---
+
+## Add a UI Skill
+
+<Steps>
+  <Step>Click **Add UI skill**.</Step>
+  <Step>Under **Component type**, choose a component.</Step>
+  <Step>Fill in **When to send it** — the moment this component fits.</Step>
+  <Step>Click **Create UI skill**.</Step>
+</Steps>
+
+**Edit UI skill** reopens one, and each can be switched off with **Disable** without deleting it —
+the row then reads **Disabled**.
+
+---
+
+## The Components
+
+| Component | What the customer sees |
+|-----------|------------------------|
+| **Call-to-action link** | A single message with one prominent link button |
+| **Interactive list** | A tappable list of options in a bottom sheet |
+| **Carousel with links** | A swipeable card set where each card links out to your site |
+| **Carousel with quick replies** | A swipeable card set where each card offers tappable replies |
+| **Location request** | Asks the customer to share where they are |
+| **Location** | Shares a pin on the map |
+| **Image** | Sends an image alongside the reply |
+| **WhatsApp Flow** | Opens one of your published Flows |
+
+A WhatsApp Flow UI skill asks you to **Select a published flow** — only published
+[Flows](/whatsapp/flows) can be chosen, so publish it first.
+
+<Callout type="info">
+  A UI skill is an option, not a script. The agent decides whether the moment matches your
+  description, so write **When to send it** as narrowly as you can.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Skills](/meta-agent/skills)
+- [Flows](/whatsapp/flows) — building the Flows a UI skill can open
+- [Meta AI Agent](/meta-agent)

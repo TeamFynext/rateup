@@ -12,6 +12,7 @@
     "conversation-lifecycle",
     "ticket-details",
     "toolbar",
+    "conversation-tags",
     "inbox-filter",
     "inbox-settings"
   ]

@@ -1,17 +1,31 @@
 ---
 title: "Inbox Settings"
-description: Configure quick replies and auto-close automation for your Inbox.
+description: Configure teams, channels, labels, tags, quick replies and auto-close automation for your Inbox.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Inbox Settings is where admins configure the two things that shape how the Inbox behaves for
-everyone: **quick replies** and **auto-close rules**.
+Inbox Settings is where admins configure how the Inbox behaves for everyone — who handles
+conversations, how they are classified, and what agents send.
 
-Open it from **Inbox → Settings** in the sidebar. It has two tabs.
+Open it from **Inbox → Settings** in the sidebar. It has six tabs, in the order work flows through
+them.
 
 <ScreenShot src="/docs/screenshots/inbox/inbox-settings-tabs.png" alt="Inbox Settings" />
+
+| Tab | What it covers |
+|-----|----------------|
+| **Teams** | The teams conversations can be assigned to, and who is on each. Managed on [Teams](/settings/teams) |
+| **Channels** | The accounts this inbox receives on, each marked **Connected** or **Disconnected**. Managed on [Channels](/settings/channels) |
+| **Contact labels** | Labels that stay on the customer — see [Conversation Tags](/inbox/conversation-tags) |
+| **Conversation tags** | Tags that describe a single ticket — see [Conversation Tags](/inbox/conversation-tags) |
+| **Quick replies** | Saved answers agents insert in the composer |
+| **Automation** | Auto-close rules for tickets that go quiet |
+
+Teams and Channels are read-only summaries here: each carries a **Manage teams** / **Manage
+channels** link through to the Settings page that owns it. They exist so you can see, without
+leaving the Inbox, who can be assigned work and whether a channel has dropped.
 
 <Callout type="info">
   These settings apply to the whole organisation. Changing them affects every agent's Inbox
@@ -137,4 +151,5 @@ Save.
 
 - [Replying to Customers](/inbox/responding-to-conversation) — where quick replies are used
 - [Closing & Reopening](/inbox/conversation-lifecycle) — what closing does
+- [Conversation Tags](/inbox/conversation-tags) — tags and labels, and how they differ
 - [Accessing the Inbox](/inbox/accessing-inbox) — roles and permissions
