@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-13-wa-display-name",
+    title: "Manage your WhatsApp channel and profile",
+    summary:
+      "Editing a WhatsApp number now opens three tabs. Channel is your own label for the number inside RateUp, saved on its own without touching Meta. Display name is what customers see in WhatsApp — submit a new one for review, check where it stands with Sync from Meta, then re-register the number once approved. Profile is the photo, about line, description, category, address, email and websites customers see when they open your business; upload a JPEG or PNG up to 5 MB to change the photo. Manually configured numbers get the same sections on their card.",
+    publishedAt: "2026-08-13",
+    kinds: ["new", "improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
     id: "2026-08-11-meta-agent-rebuild",
     title: "Meta Business Agent, rebuilt",
     summary:

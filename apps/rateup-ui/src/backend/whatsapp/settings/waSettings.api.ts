@@ -262,3 +262,106 @@ export const syncConversationalAutomation = async (phoneId: string) => {
   const res = await axiosClient.post(`${SettingsUrl}/conversational-automation/${phoneId}/sync`);
   return res.data as ConversationalAutomation;
 };
+
+/**
+ * A number's display name as Meta sees it. `verifiedName`/`nameStatus` describe the name in
+ * use; a change still under review shows up as `newDisplayName`/`newNameStatus`.
+ */
+export interface DisplayNameStatus {
+  verifiedName: string | null;
+  nameStatus: string | null;
+  newDisplayName: string | null;
+  newNameStatus: string | null;
+}
+
+export const syncDisplayName = async (phoneId: string) => {
+  const res = await axiosClient.post(`${SettingsUrl}/display-name/${phoneId}/sync`);
+  return res.data as DisplayNameStatus;
+};
+
+export const updateDisplayName = async ({
+  phoneId,
+  newDisplayName,
+}: {
+  phoneId: string;
+  newDisplayName: string;
+}) => {
+  const res = await axiosClient.post(`${SettingsUrl}/display-name/${phoneId}`, { newDisplayName });
+  return res.data as DisplayNameStatus;
+};
+
+export const reRegisterPhoneNumber = async (phoneId: string) => {
+  const res = await axiosClient.post(`${SettingsUrl}/display-name/${phoneId}/register`);
+  return res.data as { success?: boolean };
+};
+
+/** Meta's `WhatsAppVertical` values that the profile API accepts on write. */
+export const BUSINESS_VERTICALS = [
+  "OTHER",
+  "AUTO",
+  "BEAUTY",
+  "APPAREL",
+  "EDU",
+  "ENTERTAIN",
+  "EVENT_PLAN",
+  "FINANCE",
+  "GROCERY",
+  "GOVT",
+  "HOTEL",
+  "HEALTH",
+  "NONPROFIT",
+  "PROF_SERVICES",
+  "RETAIL",
+  "TRAVEL",
+  "RESTAURANT",
+] as const;
+
+export type BusinessVertical = (typeof BUSINESS_VERTICALS)[number];
+
+/** The profile customers see when they open the business in WhatsApp. */
+export interface BusinessProfile {
+  about: string | null;
+  address: string | null;
+  description: string | null;
+  email: string | null;
+  profilePictureUrl: string | null;
+  websites: string[];
+  vertical: string | null;
+}
+
+export interface BusinessProfileInput {
+  about?: string;
+  address?: string;
+  description?: string;
+  email?: string;
+  websites?: string[];
+  vertical?: BusinessVertical;
+}
+
+export const getBusinessProfile = async (phoneId: string) => {
+  const res = await axiosClient.get(`${SettingsUrl}/profile/${phoneId}`);
+  return res.data as BusinessProfile;
+};
+
+export const updateBusinessProfile = async ({
+  phoneId,
+  data,
+}: {
+  phoneId: string;
+  data: BusinessProfileInput;
+}) => {
+  const res = await axiosClient.post(`${SettingsUrl}/profile/${phoneId}`, data);
+  return res.data;
+};
+
+export const updateProfilePicture = async ({ phoneId, file }: { phoneId: string; file: File }) => {
+  const body = new FormData();
+  // `size` goes ahead of the file: the API's upload validation reads it off the preceding
+  // multipart fields. `timeout: 0` so a slow upload is not cut off by the client default.
+  body.append("size", file.size.toString());
+  body.append("file", file);
+  const res = await axiosClient.post(`${SettingsUrl}/profile/${phoneId}/photo`, body, {
+    timeout: 0,
+  });
+  return res.data;
+};

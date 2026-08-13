@@ -1,27 +1,22 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
-import z from "zod";
+import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { useUpdateWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+
+import { WaBusinessProfileForm } from "./wa-business-profile-form.tsx";
+import { WaChannelNameForm } from "./wa-channel-name-form.tsx";
+import { WaDisplayNamePanel } from "./wa-display-name-panel.tsx";
 
 type WaSetting = WaSettings[number];
-
-interface WaSettingEditFormValues {
-  phoneDisplayName: string;
-}
 
 export const WaSettingEditModal = ({
   opened,
@@ -32,58 +27,54 @@ export const WaSettingEditModal = ({
   close: () => void;
   waSetting: WaSetting | null;
 }>) => {
-  const updatemut = useUpdateWaSettingsMutation(waSetting?.id ?? "");
-
-  const schema = z.object({
-    phoneDisplayName: z.string(),
-  });
-
-  const form = useForm<WaSettingEditFormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      phoneDisplayName: waSetting?.phoneDisplayName || "",
-    },
-  });
-
-  useEffect(() => {
-    form.reset({ phoneDisplayName: waSetting?.phoneDisplayName || "" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waSetting?.id]);
-
-  function handleSubmit(values: WaSettingEditFormValues) {
-    updatemut.mutate(values, { onSuccess: () => close() });
-  }
+  const { t: translations } = useTranslation();
 
   if (!waSetting) return null;
 
   return (
     <Dialog open={opened} onOpenChange={(next) => (next ? undefined : close())}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Edit Configuration</DialogTitle>
+          <DialogTitle>{translations("Edit channel")}</DialogTitle>
+          <DialogDescription>{waSetting.phone}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
-          <Controller
-            name="phoneDisplayName"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Display name for whatsapp phone number</FieldLabel>
-                <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={close}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={updatemut.isPending}>
-              {updatemut.isPending && <Spinner />}
-              Save
-            </Button>
-          </DialogFooter>
-        </form>
+
+        {/* Keyed so switching accounts starts every tab fresh rather than reusing the last one. */}
+        <Tabs key={waSetting.id} defaultValue="channel">
+          <TabsList>
+            <TabsTrigger value="channel">{translations("Channel")}</TabsTrigger>
+            <TabsTrigger value="display-name">{translations("Display name")}</TabsTrigger>
+            <TabsTrigger value="profile">{translations("Profile")}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="channel" className="mt-4">
+            <WaChannelNameForm settingId={waSetting.id} channelName={waSetting.phoneDisplayName} />
+          </TabsContent>
+
+          <TabsContent value="display-name" className="mt-4">
+            <p className="mb-4 text-xs text-muted-foreground">
+              {translations(
+                "Shown to customers in WhatsApp. Changes go to Meta for review and apply once approved.",
+              )}
+            </p>
+            <WaDisplayNamePanel phoneId={waSetting.phoneId} enabled={opened} />
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-4">
+            <p className="mb-4 text-xs text-muted-foreground">
+              {translations(
+                "The photo and details customers see when they open your business in WhatsApp.",
+              )}
+            </p>
+            <WaBusinessProfileForm phoneId={waSetting.phoneId} enabled={opened} />
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={close}>
+            {translations("Close")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
