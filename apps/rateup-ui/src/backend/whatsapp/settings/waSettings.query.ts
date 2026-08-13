@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { userKeys } from "@/backend/user/user.keys";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import type { ColumnFilterState, PaginationState } from "@/types/api.ts";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 import type {
   ConversationalAutomation,
@@ -14,12 +15,15 @@ import {
   createWaSettings,
   deleteWaSettings,
   deRegisterBusinessClient,
+  getBusinessProfile,
   getConversationalAutomation,
   getMetaAssets,
   getWaLogs,
   getWaSettings,
   registerBusinessClient,
+  reRegisterPhoneNumber,
   subscribeFieldtoPage,
+  syncDisplayName,
   syncAdAccounts,
   syncAdsByAdAccount,
   syncConversationalAutomation,
@@ -27,7 +31,10 @@ import {
   syncFbPages,
   syncLeadgenFormQuestions,
   syncMetaLeadgenForms,
+  updateBusinessProfile,
   updateConversationalAutomation,
+  updateDisplayName,
+  updateProfilePicture,
   updateUserAccessToken,
   updateWaSettingsById,
   upsertWaSettings,
@@ -290,6 +297,84 @@ export const useSyncConversationalAutomation = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Error syncing from Meta");
+    },
+  });
+};
+
+/**
+ * The number's display name straight from Meta. It is read live and never stored — the
+ * channel's own `phoneDisplayName` is an internal label and stays untouched.
+ */
+export const useDisplayNameStatus = (phoneId: string, enabled = true) =>
+  useQuery({
+    queryKey: whatsappKeys.displayName(phoneId),
+    queryFn: () => syncDisplayName(phoneId),
+    enabled: enabled && !!phoneId,
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  });
+
+export const useUpdateDisplayNameMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateDisplayName,
+    onSuccess: (data, variables) => {
+      qc.setQueryData(whatsappKeys.displayName(variables.phoneId), data);
+      toast.success("Display name submitted for review");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Error updating display name"));
+    },
+  });
+};
+
+export const useReRegisterPhoneNumberMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reRegisterPhoneNumber,
+    onSuccess: (_data, phoneId) => {
+      qc.invalidateQueries({ queryKey: whatsappKeys.displayName(phoneId) });
+      toast.success("Phone number re-registered");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Error re-registering phone number"));
+    },
+  });
+};
+
+export const useBusinessProfile = (phoneId: string, enabled = true) =>
+  useQuery({
+    queryKey: whatsappKeys.businessProfile(phoneId),
+    queryFn: () => getBusinessProfile(phoneId),
+    enabled: enabled && !!phoneId,
+    retry: false,
+  });
+
+export const useUpdateBusinessProfileMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateBusinessProfile,
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: whatsappKeys.businessProfile(variables.phoneId) });
+      toast.success("Profile updated");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Error updating profile"));
+    },
+  });
+};
+
+export const useUpdateProfilePictureMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateProfilePicture,
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: whatsappKeys.businessProfile(variables.phoneId) });
+      toast.success("Profile photo updated");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Error updating profile photo"));
     },
   });
 };

@@ -19,6 +19,7 @@ import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-kno
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
+import { Route as DashboardMetaAgentRouteRouteImport } from './routes/dashboard/meta-agent/route'
 import { Route as authInviteIndexRouteImport } from './routes/(auth)/invite/index'
 import { Route as authLoginIndexRouteImport } from './routes/(auth)/login/index'
 import { Route as authLogoutIndexRouteImport } from './routes/(auth)/logout/index'
@@ -55,6 +56,13 @@ import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/c
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
 import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
+import { Route as DashboardMetaAgentConnectorsRouteImport } from './routes/dashboard/meta-agent/connectors'
+import { Route as DashboardMetaAgentKnowledgeRouteImport } from './routes/dashboard/meta-agent/knowledge'
+import { Route as DashboardMetaAgentOperateRouteImport } from './routes/dashboard/meta-agent/operate'
+import { Route as DashboardMetaAgentOverviewRouteImport } from './routes/dashboard/meta-agent/overview'
+import { Route as DashboardMetaAgentSettingsRouteImport } from './routes/dashboard/meta-agent/settings'
+import { Route as DashboardMetaAgentSkillsRouteImport } from './routes/dashboard/meta-agent/skills'
+import { Route as DashboardMetaAgentUiSkillsRouteImport } from './routes/dashboard/meta-agent/ui-skills'
 import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
@@ -211,6 +219,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
 const DashboardCommerceRouteRoute = DashboardCommerceRouteRouteImport.update({
   id: '/commerce',
   path: '/commerce',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardMetaAgentRouteRoute = DashboardMetaAgentRouteRouteImport.update({
+  id: '/meta-agent',
+  path: '/meta-agent',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const authInviteIndexRoute = authInviteIndexRouteImport.update({
@@ -394,10 +407,52 @@ const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardMetaAgentIndexRoute = DashboardMetaAgentIndexRouteImport.update({
-  id: '/meta-agent/',
-  path: '/meta-agent/',
-  getParentRoute: () => DashboardRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardMetaAgentRouteRoute,
 } as any)
+const DashboardMetaAgentConnectorsRoute =
+  DashboardMetaAgentConnectorsRouteImport.update({
+    id: '/connectors',
+    path: '/connectors',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentKnowledgeRoute =
+  DashboardMetaAgentKnowledgeRouteImport.update({
+    id: '/knowledge',
+    path: '/knowledge',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentOperateRoute =
+  DashboardMetaAgentOperateRouteImport.update({
+    id: '/operate',
+    path: '/operate',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentOverviewRoute =
+  DashboardMetaAgentOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentSettingsRoute =
+  DashboardMetaAgentSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentSkillsRoute =
+  DashboardMetaAgentSkillsRouteImport.update({
+    id: '/skills',
+    path: '/skills',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentUiSkillsRoute =
+  DashboardMetaAgentUiSkillsRouteImport.update({
+    id: '/ui-skills',
+    path: '/ui-skills',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
 const DashboardQrCreatorIndexRoute = DashboardQrCreatorIndexRouteImport.update({
   id: '/qrCreator/',
   path: '/qrCreator/',
@@ -1038,12 +1093,20 @@ export interface FileRoutesByFullPath {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/blog': typeof marketingBlogRouteRouteWithChildren
   '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
+  '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
+  '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
+  '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
+  '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
+  '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
+  '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
+  '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
   '/invite/': typeof authInviteIndexRoute
   '/login/': typeof authLoginIndexRoute
   '/logout/': typeof authLogoutIndexRoute
@@ -1195,6 +1258,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
+  '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
+  '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
+  '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
+  '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
+  '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
+  '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
   '/invite': typeof authInviteIndexRoute
   '/login': typeof authLoginIndexRoute
   '/logout': typeof authLogoutIndexRoute
@@ -1345,12 +1415,20 @@ export interface FileRoutesById {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/(marketing)/blog': typeof marketingBlogRouteRouteWithChildren
   '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
+  '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/(marketing)/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/(marketing)/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/(marketing)/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
+  '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
+  '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
+  '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
+  '/dashboard/meta-agent/settings': typeof DashboardMetaAgentSettingsRoute
+  '/dashboard/meta-agent/skills': typeof DashboardMetaAgentSkillsRoute
+  '/dashboard/meta-agent/ui-skills': typeof DashboardMetaAgentUiSkillsRoute
   '/(auth)/invite/': typeof authInviteIndexRoute
   '/(auth)/login/': typeof authLoginIndexRoute
   '/(auth)/logout/': typeof authLogoutIndexRoute
@@ -1502,12 +1580,20 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/blog'
     | '/dashboard/commerce'
+    | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
     | '/'
     | '/admin/'
     | '/dashboard/'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
+    | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/knowledge'
+    | '/dashboard/meta-agent/operate'
+    | '/dashboard/meta-agent/overview'
+    | '/dashboard/meta-agent/settings'
+    | '/dashboard/meta-agent/skills'
+    | '/dashboard/meta-agent/ui-skills'
     | '/invite/'
     | '/login/'
     | '/logout/'
@@ -1659,6 +1745,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
+    | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/knowledge'
+    | '/dashboard/meta-agent/operate'
+    | '/dashboard/meta-agent/overview'
+    | '/dashboard/meta-agent/settings'
+    | '/dashboard/meta-agent/skills'
+    | '/dashboard/meta-agent/ui-skills'
     | '/invite'
     | '/login'
     | '/logout'
@@ -1808,12 +1901,20 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/(marketing)/blog'
     | '/dashboard/commerce'
+    | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
     | '/(marketing)/'
     | '/admin/'
     | '/dashboard/'
     | '/(marketing)/blog/rss.xml'
     | '/(marketing)/blog/sitemap.xml'
+    | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/knowledge'
+    | '/dashboard/meta-agent/operate'
+    | '/dashboard/meta-agent/overview'
+    | '/dashboard/meta-agent/settings'
+    | '/dashboard/meta-agent/skills'
+    | '/dashboard/meta-agent/ui-skills'
     | '/(auth)/invite/'
     | '/(auth)/login/'
     | '/(auth)/logout/'
@@ -2089,6 +2190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCommerceRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/meta-agent': {
+      id: '/dashboard/meta-agent'
+      path: '/meta-agent'
+      fullPath: '/dashboard/meta-agent'
+      preLoaderRoute: typeof DashboardMetaAgentRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/(auth)/invite/': {
       id: '/(auth)/invite/'
       path: '/invite'
@@ -2336,10 +2444,59 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/meta-agent/': {
       id: '/dashboard/meta-agent/'
-      path: '/meta-agent'
+      path: '/'
       fullPath: '/dashboard/meta-agent/'
       preLoaderRoute: typeof DashboardMetaAgentIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/connectors': {
+      id: '/dashboard/meta-agent/connectors'
+      path: '/connectors'
+      fullPath: '/dashboard/meta-agent/connectors'
+      preLoaderRoute: typeof DashboardMetaAgentConnectorsRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/knowledge': {
+      id: '/dashboard/meta-agent/knowledge'
+      path: '/knowledge'
+      fullPath: '/dashboard/meta-agent/knowledge'
+      preLoaderRoute: typeof DashboardMetaAgentKnowledgeRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/operate': {
+      id: '/dashboard/meta-agent/operate'
+      path: '/operate'
+      fullPath: '/dashboard/meta-agent/operate'
+      preLoaderRoute: typeof DashboardMetaAgentOperateRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/overview': {
+      id: '/dashboard/meta-agent/overview'
+      path: '/overview'
+      fullPath: '/dashboard/meta-agent/overview'
+      preLoaderRoute: typeof DashboardMetaAgentOverviewRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/settings': {
+      id: '/dashboard/meta-agent/settings'
+      path: '/settings'
+      fullPath: '/dashboard/meta-agent/settings'
+      preLoaderRoute: typeof DashboardMetaAgentSettingsRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/skills': {
+      id: '/dashboard/meta-agent/skills'
+      path: '/skills'
+      fullPath: '/dashboard/meta-agent/skills'
+      preLoaderRoute: typeof DashboardMetaAgentSkillsRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/ui-skills': {
+      id: '/dashboard/meta-agent/ui-skills'
+      path: '/ui-skills'
+      fullPath: '/dashboard/meta-agent/ui-skills'
+      preLoaderRoute: typeof DashboardMetaAgentUiSkillsRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
     }
     '/dashboard/qrCreator/': {
       id: '/dashboard/qrCreator/'
@@ -3157,8 +3314,37 @@ const DashboardCommerceRouteRouteWithChildren =
     DashboardCommerceRouteRouteChildren,
   )
 
+interface DashboardMetaAgentRouteRouteChildren {
+  DashboardMetaAgentConnectorsRoute: typeof DashboardMetaAgentConnectorsRoute
+  DashboardMetaAgentKnowledgeRoute: typeof DashboardMetaAgentKnowledgeRoute
+  DashboardMetaAgentOperateRoute: typeof DashboardMetaAgentOperateRoute
+  DashboardMetaAgentOverviewRoute: typeof DashboardMetaAgentOverviewRoute
+  DashboardMetaAgentSettingsRoute: typeof DashboardMetaAgentSettingsRoute
+  DashboardMetaAgentSkillsRoute: typeof DashboardMetaAgentSkillsRoute
+  DashboardMetaAgentUiSkillsRoute: typeof DashboardMetaAgentUiSkillsRoute
+  DashboardMetaAgentIndexRoute: typeof DashboardMetaAgentIndexRoute
+}
+
+const DashboardMetaAgentRouteRouteChildren: DashboardMetaAgentRouteRouteChildren =
+  {
+    DashboardMetaAgentConnectorsRoute: DashboardMetaAgentConnectorsRoute,
+    DashboardMetaAgentKnowledgeRoute: DashboardMetaAgentKnowledgeRoute,
+    DashboardMetaAgentOperateRoute: DashboardMetaAgentOperateRoute,
+    DashboardMetaAgentOverviewRoute: DashboardMetaAgentOverviewRoute,
+    DashboardMetaAgentSettingsRoute: DashboardMetaAgentSettingsRoute,
+    DashboardMetaAgentSkillsRoute: DashboardMetaAgentSkillsRoute,
+    DashboardMetaAgentUiSkillsRoute: DashboardMetaAgentUiSkillsRoute,
+    DashboardMetaAgentIndexRoute: DashboardMetaAgentIndexRoute,
+  }
+
+const DashboardMetaAgentRouteRouteWithChildren =
+  DashboardMetaAgentRouteRoute._addFileChildren(
+    DashboardMetaAgentRouteRouteChildren,
+  )
+
 interface DashboardRouteRouteChildren {
   DashboardCommerceRouteRoute: typeof DashboardCommerceRouteRouteWithChildren
+  DashboardMetaAgentRouteRoute: typeof DashboardMetaAgentRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
@@ -3166,7 +3352,6 @@ interface DashboardRouteRouteChildren {
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
-  DashboardMetaAgentIndexRoute: typeof DashboardMetaAgentIndexRoute
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
   DashboardQuickAccessLinksIndexRoute: typeof DashboardQuickAccessLinksIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
@@ -3229,6 +3414,7 @@ interface DashboardRouteRouteChildren {
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardCommerceRouteRoute: DashboardCommerceRouteRouteWithChildren,
+  DashboardMetaAgentRouteRoute: DashboardMetaAgentRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
@@ -3236,7 +3422,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
-  DashboardMetaAgentIndexRoute: DashboardMetaAgentIndexRoute,
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
   DashboardQuickAccessLinksIndexRoute: DashboardQuickAccessLinksIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,

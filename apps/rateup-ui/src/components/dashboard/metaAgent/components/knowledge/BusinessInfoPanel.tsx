@@ -1,149 +1,241 @@
-import { IconRefresh } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { IconRestore } from "@tabler/icons-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 import type { BusinessInfo } from "@/backend/metaAgent/metaAgent.api";
 import {
   useBusinessInfo,
+  useDeleteBusinessInfo,
   useSyncBusinessInfo,
   useUpdateBusinessInfo,
 } from "@/backend/metaAgent/metaAgent.query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { FieldGroup, FieldLegend, FieldSeparator, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
-import { formatSyncedAt } from "../../utils/formatSyncedAt";
+import { businessInfoFormSchema, type BusinessInfoFormValues } from "../../metaAgent.schemas";
+import { FormField } from "../shared/FormField";
+import { PanelCard } from "../shared/PanelCard";
 
-export function BusinessInfoPanel({ waSettingsId }: { waSettingsId: string }) {
+const EMPTY: BusinessInfoFormValues = {
+  business_description: "",
+  payment_method: "",
+  return_policy: "",
+  purchase_info: "",
+  delivery_and_shipping: "",
+  email: "",
+  address: "",
+  hours_of_operation: "",
+};
+
+const toForm = (data?: BusinessInfo): BusinessInfoFormValues => ({
+  business_description: data?.business_description ?? "",
+  payment_method: data?.payment_method ?? "",
+  return_policy: data?.return_policy ?? "",
+  purchase_info: data?.purchase_info ?? "",
+  delivery_and_shipping: data?.delivery_and_shipping ?? "",
+  email: data?.contact_info?.email ?? "",
+  address: data?.contact_info?.address ?? "",
+  hours_of_operation: data?.contact_info?.hours_of_operation ?? "",
+});
+
+export function BusinessInfoPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   const { data, isLoading } = useBusinessInfo(waSettingsId);
   const update = useUpdateBusinessInfo(waSettingsId);
+  const reset = useDeleteBusinessInfo(waSettingsId);
   const sync = useSyncBusinessInfo(waSettingsId);
-  const [form, setForm] = useState<BusinessInfo>({});
 
+  const form = useForm<BusinessInfoFormValues>({
+    resolver: zodResolver(businessInfoFormSchema),
+    defaultValues: EMPTY,
+  });
+
+  // A sync replaces what Meta holds, so the form follows the server rather than
+  // keeping a stale draft on screen.
   useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+    if (data) form.reset(toForm(data));
+  }, [data, form]);
+
+  const onSubmit = (values: BusinessInfoFormValues) =>
+    update.mutate({
+      business_description: values.business_description,
+      payment_method: values.payment_method,
+      return_policy: values.return_policy,
+      purchase_info: values.purchase_info,
+      delivery_and_shipping: values.delivery_and_shipping,
+      contact_info: {
+        email: values.email,
+        address: values.address,
+        hours_of_operation: values.hours_of_operation,
+      },
+    });
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>Business info</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {formatSyncedAt(data?.businessInfoSyncedAt)}
-          </p>
+    <PanelCard
+      title="Business info"
+      description="Every field is optional — the agent uses whichever ones you fill in."
+      syncedAt={data?.businessInfoSyncedAt}
+      onSync={() => sync.mutate()}
+      isSyncing={sync.isPending}
+      actions={
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button variant="ghost" size="sm" disabled={reset.isPending}>
+                <IconRestore data-icon="inline-start" />
+                Reset
+              </Button>
+            }
+          />
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset business info at Meta?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Clears every business info field Meta holds for this number. Your other knowledge —
+                FAQs, files and websites — is untouched.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => reset.mutate(undefined, { onSuccess: () => form.reset(EMPTY) })}
+              >
+                Reset
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      }
+    >
+      {isLoading ? (
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
-        <Button variant="outline" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
-          <IconRefresh data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
-          Sync from Meta
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        ) : (
+      ) : (
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="business-description">Business description</FieldLabel>
-              <Textarea
-                id="business-description"
-                placeholder="What does your business do?"
-                value={form.business_description ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, business_description: e.target.value }))}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="payment-method">Payment methods</FieldLabel>
-              <Textarea
-                id="payment-method"
-                placeholder="Cards, UPI, cash on delivery..."
-                value={form.payment_method ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value }))}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="return-policy">Return policy</FieldLabel>
-              <Textarea
-                id="return-policy"
-                value={form.return_policy ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, return_policy: e.target.value }))}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="purchase-info">Purchase info</FieldLabel>
-              <Textarea
-                id="purchase-info"
-                value={form.purchase_info ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, purchase_info: e.target.value }))}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="delivery-shipping">Delivery and shipping</FieldLabel>
-              <Textarea
-                id="delivery-shipping"
-                value={form.delivery_and_shipping ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, delivery_and_shipping: e.target.value }))}
-              />
-            </Field>
+            <FormField
+              control={form.control}
+              name="business_description"
+              label="Business description"
+              description="What you sell and who you sell it to. The agent leans on this most."
+            >
+              {(field, controlProps) => (
+                <Textarea
+                  {...field}
+                  {...controlProps}
+                  rows={3}
+                  placeholder="We roast and ship single-origin coffee across India."
+                />
+              )}
+            </FormField>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Field>
-                <FieldLabel htmlFor="contact-email">Contact email</FieldLabel>
-                <Input
-                  id="contact-email"
-                  type="email"
-                  value={form.contact_info?.email ?? ""}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      contact_info: { ...f.contact_info, email: e.target.value },
-                    }))
-                  }
+            <FormField control={form.control} name="payment_method" label="Payment methods">
+              {(field, controlProps) => (
+                <Textarea
+                  {...field}
+                  {...controlProps}
+                  rows={2}
+                  placeholder="Cards, UPI, net banking, cash on delivery."
                 />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="contact-address">Address</FieldLabel>
-                <Input
-                  id="contact-address"
-                  value={form.contact_info?.address ?? ""}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      contact_info: { ...f.contact_info, address: e.target.value },
-                    }))
-                  }
+              )}
+            </FormField>
+
+            <FormField control={form.control} name="return_policy" label="Return policy">
+              {(field, controlProps) => (
+                <Textarea
+                  {...field}
+                  {...controlProps}
+                  rows={2}
+                  placeholder="Unopened items can be returned within 14 days."
                 />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="contact-hours">Hours of operation</FieldLabel>
-                <Input
-                  id="contact-hours"
-                  placeholder="Mon-Fri 9am-6pm"
-                  value={form.contact_info?.hours_of_operation ?? ""}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      contact_info: { ...f.contact_info, hours_of_operation: e.target.value },
-                    }))
-                  }
+              )}
+            </FormField>
+
+            <FormField control={form.control} name="purchase_info" label="Purchase info">
+              {(field, controlProps) => (
+                <Textarea
+                  {...field}
+                  {...controlProps}
+                  rows={2}
+                  placeholder="How customers order, minimums, bulk pricing."
                 />
-              </Field>
-            </div>
+              )}
+            </FormField>
+
+            <FormField
+              control={form.control}
+              name="delivery_and_shipping"
+              label="Delivery and shipping"
+            >
+              {(field, controlProps) => (
+                <Textarea
+                  {...field}
+                  {...controlProps}
+                  rows={2}
+                  placeholder="Dispatch times, courier partners, shipping charges."
+                />
+              )}
+            </FormField>
+
+            <FieldSeparator />
+
+            <FieldSet>
+              <FieldLegend variant="label">Contact info</FieldLegend>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FormField control={form.control} name="email" label="Contact email">
+                  {(field, controlProps) => (
+                    <Input
+                      {...field}
+                      {...controlProps}
+                      type="email"
+                      placeholder="support@example.com"
+                    />
+                  )}
+                </FormField>
+                <FormField control={form.control} name="address" label="Address">
+                  {(field, controlProps) => (
+                    <Input {...field} {...controlProps} placeholder="221B Baker Street, London" />
+                  )}
+                </FormField>
+                <FormField
+                  control={form.control}
+                  name="hours_of_operation"
+                  label="Hours of operation"
+                >
+                  {(field, controlProps) => (
+                    <Input {...field} {...controlProps} placeholder="Mon–Fri 9am–6pm IST" />
+                  )}
+                </FormField>
+              </div>
+            </FieldSet>
 
             <div className="flex justify-end border-t pt-4">
-              <Button disabled={update.isPending} onClick={() => update.mutate(form)}>
-                Save & push to Meta
+              <Button type="submit" disabled={update.isPending || !form.formState.isDirty}>
+                {update.isPending && <Spinner data-icon="inline-start" />}
+                Save &amp; push to Meta
               </Button>
             </div>
           </FieldGroup>
-        )}
-      </CardContent>
-    </Card>
+        </form>
+      )}
+    </PanelCard>
   );
 }

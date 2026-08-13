@@ -1,5 +1,7 @@
-import { IconRefresh } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 import type { AgentSettings } from "@/backend/metaAgent/metaAgent.api";
 import {
@@ -7,9 +9,9 @@ import {
   useSyncAgentSettings,
   useUpdateAgentSettings,
 } from "@/backend/metaAgent/metaAgent.query";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FieldTitle } from "@/components/ui/field";
+import { FieldGroup, FieldSeparator } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -19,197 +21,256 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { TagsInput } from "@/components/ui/tags-input";
+import { Textarea } from "@/components/ui/textarea";
 
-import { formatSyncedAt } from "../utils/formatSyncedAt";
+import { settingsFormSchema, type SettingsFormValues } from "../metaAgent.schemas";
+import { FormField } from "./shared/FormField";
+import { PanelCard } from "./shared/PanelCard";
 
-const FOLLOWUP_INTERVALS = [
-  { label: "Off", value: 0 },
-  { label: "5 minutes", value: 300 },
-  { label: "15 minutes", value: 900 },
-  { label: "30 minutes", value: 1800 },
-  { label: "1 hour", value: 3600 },
-  { label: "2 hours", value: 7200 },
-  { label: "8 hours", value: 28800 },
-  { label: "24 hours", value: 86400 },
-];
+const INTERVAL_ITEMS = [
+  { value: "0", label: "Off" },
+  { value: "300", label: "5 minutes" },
+  { value: "900", label: "15 minutes" },
+  { value: "1800", label: "30 minutes" },
+  { value: "3600", label: "1 hour" },
+  { value: "7200", label: "2 hours" },
+  { value: "28800", label: "8 hours" },
+  { value: "86400", label: "24 hours" },
+] as const;
 
-export function SettingsSection({ waSettingsId }: { waSettingsId: string }) {
+const AUDIENCE_ITEMS = [
+  { value: "EVERYONE", label: "Everyone" },
+  { value: "ALLOWLISTED_ONLY", label: "Allowlisted numbers only" },
+] as const;
+
+const toForm = (data?: AgentSettings): SettingsFormValues => ({
+  rolloutEnabled: data?.rollout?.enabled ?? false,
+  handoffEnabled: data?.handoff?.enabled ?? false,
+  handoffMessage: data?.handoff?.message ?? "",
+  followupEnabled: data?.followup?.enabled ?? false,
+  followupInterval: data?.followup?.followup_interval_in_seconds ?? 0,
+  followupMessage: data?.followup?.message ?? "",
+  aiAudience: data?.ai_audience ?? "EVERYONE",
+  neverSayPhrases: data?.never_say_phrases ?? [],
+});
+
+export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   const { data, isLoading } = useAgentSettings(waSettingsId);
   const update = useUpdateAgentSettings(waSettingsId);
   const sync = useSyncAgentSettings(waSettingsId);
 
-  const [form, setForm] = useState<AgentSettings>({});
+  const form = useForm<SettingsFormValues>({
+    resolver: zodResolver(settingsFormSchema),
+    defaultValues: toForm(),
+  });
 
   useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+    if (data) form.reset(toForm(data));
+  }, [data, form]);
+
+  const handoffEnabled = form.watch("handoffEnabled");
+  const followupEnabled = form.watch("followupEnabled");
+  const rolloutEnabled = form.watch("rolloutEnabled");
+
+  const onSubmit = (values: SettingsFormValues) =>
+    update.mutate({
+      rollout: { enabled: values.rolloutEnabled },
+      handoff: { enabled: values.handoffEnabled, message: values.handoffMessage },
+      followup: {
+        enabled: values.followupEnabled,
+        followup_interval_in_seconds: values.followupInterval,
+        message: values.followupMessage,
+      },
+      ai_audience: values.aiAudience,
+      never_say_phrases: values.neverSayPhrases,
+    });
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>Rollout & behavior</CardTitle>
-          <p className="text-xs text-muted-foreground">{formatSyncedAt(data?.settingsSyncedAt)}</p>
+    <PanelCard
+      title="Rollout & behaviour"
+      description="How the agent behaves once it is live, and who it is allowed to answer."
+      syncedAt={data?.settingsSyncedAt}
+      onSync={() => sync.mutate()}
+      isSyncing={sync.isPending}
+    >
+      {isLoading ? (
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
         </div>
-        <Button variant="outline" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
-          <IconRefresh data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
-          Sync from Meta
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {isLoading && (
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </div>
-        )}
-        {!isLoading && (
-          <>
-            <SettingRow
-              title="Rollout enabled"
-              description="Turn the AI agent on or off for this WhatsApp number."
+      ) : (
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <FieldGroup className="gap-6">
+            <FormField
+              control={form.control}
+              name="rolloutEnabled"
+              label="Rollout enabled"
+              orientation="horizontal"
+              description="The master switch. With this off, the agent answers nobody, whatever else is configured."
             >
-              <Switch
-                checked={!!form.rollout?.enabled}
-                onCheckedChange={(checked) =>
-                  setForm((f) => ({ ...f, rollout: { ...f.rollout, enabled: checked } }))
-                }
-              />
-            </SettingRow>
+              {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+            </FormField>
 
-            <SettingRow
-              title="Human handoff"
-              description="Message shown when handing off to a human."
-            >
-              <div className="flex w-full max-w-sm items-center gap-3">
-                <Switch
-                  checked={!!form.handoff?.enabled}
-                  onCheckedChange={(checked) =>
-                    setForm((f) => ({ ...f, handoff: { ...f.handoff, enabled: checked } }))
-                  }
-                />
-                <Input
-                  placeholder="Handoff message"
-                  value={form.handoff?.message ?? ""}
-                  disabled={!form.handoff?.enabled}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, handoff: { ...f.handoff, message: e.target.value } }))
-                  }
-                />
-              </div>
-            </SettingRow>
+            {!rolloutEnabled && (
+              <Alert>
+                <IconInfoCircle />
+                <AlertDescription>
+                  The agent is currently off. Everything below is saved, but nothing takes effect
+                  until rollout is enabled.
+                </AlertDescription>
+              </Alert>
+            )}
 
-            <SettingRow
-              title="Follow-up messages"
-              description="Nudge the consumer if they go quiet after this interval."
+            <FieldSeparator />
+
+            <FormField
+              control={form.control}
+              name="handoffEnabled"
+              label="Custom handoff message"
+              orientation="horizontal"
+              description="Off means Meta sends its own translated message when handing over to a human."
             >
-              <div className="flex w-full max-w-sm flex-wrap items-center gap-2">
-                <Switch
-                  checked={!!form.followup?.enabled}
-                  onCheckedChange={(checked) =>
-                    setForm((f) => ({ ...f, followup: { ...f.followup, enabled: checked } }))
-                  }
-                />
-                <Select
-                  value={String(form.followup?.followup_interval_in_seconds ?? 0)}
-                  disabled={!form.followup?.enabled}
-                  onValueChange={(value) =>
-                    setForm((f) => ({
-                      ...f,
-                      followup: { ...f.followup, followup_interval_in_seconds: Number(value) },
-                    }))
-                  }
-                  items={FOLLOWUP_INTERVALS.map((opt) => ({
-                    value: String(opt.value),
-                    label: opt.label,
-                  }))}
+              {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+            </FormField>
+
+            {handoffEnabled && (
+              <FormField
+                control={form.control}
+                name="handoffMessage"
+                label="Handoff message"
+                required
+                hint={`${form.watch("handoffMessage").length}/1024`}
+              >
+                {(field, controlProps) => (
+                  <Textarea
+                    {...field}
+                    {...controlProps}
+                    rows={2}
+                    placeholder="Let me get a colleague to help with that — one moment."
+                  />
+                )}
+              </FormField>
+            )}
+
+            <FieldSeparator />
+
+            <FormField
+              control={form.control}
+              name="followupEnabled"
+              label="Follow up when a customer goes quiet"
+              orientation="horizontal"
+            >
+              {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+            </FormField>
+
+            {followupEnabled && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
+                <FormField
+                  control={form.control}
+                  name="followupInterval"
+                  label="After"
+                  required
+                  description="Meta only supports these intervals."
                 >
-                  <SelectTrigger className="w-36">
+                  {(field, controlProps) => (
+                    <Select
+                      name={field.name}
+                      value={String(field.value)}
+                      onValueChange={(value) => field.onChange(Number(value ?? 0))}
+                      items={INTERVAL_ITEMS}
+                    >
+                      <SelectTrigger {...controlProps} className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INTERVAL_ITEMS.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </FormField>
+                <FormField
+                  control={form.control}
+                  name="followupMessage"
+                  label="Follow-up message"
+                  required
+                  hint={`${form.watch("followupMessage").length}/1024`}
+                >
+                  {(field, controlProps) => (
+                    <Input
+                      {...field}
+                      {...controlProps}
+                      placeholder="Still there? Happy to keep helping."
+                    />
+                  )}
+                </FormField>
+              </div>
+            )}
+
+            <FieldSeparator />
+
+            <FormField
+              control={form.control}
+              name="aiAudience"
+              label="AI audience"
+              required
+              description="Allowlisted-only is the safe way to pilot: only numbers on the Overview allowlist get the agent."
+            >
+              {(field, controlProps) => (
+                <Select
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={(value) => field.onChange(value ?? "EVERYONE")}
+                  items={AUDIENCE_ITEMS}
+                >
+                  <SelectTrigger {...controlProps} className="w-full sm:w-72">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {FOLLOWUP_INTERVALS.map((opt) => (
-                      <SelectItem key={opt.value} value={String(opt.value)}>
-                        {opt.label}
+                    {AUDIENCE_ITEMS.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Input
-                  placeholder="Follow-up message"
-                  disabled={!form.followup?.enabled}
-                  value={form.followup?.message ?? ""}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, followup: { ...f.followup, message: e.target.value } }))
-                  }
-                />
-              </div>
-            </SettingRow>
+              )}
+            </FormField>
 
-            <SettingRow
-              title="AI audience"
-              description="Restrict responses to allowlisted numbers only (WhatsApp only)."
+            <FormField
+              control={form.control}
+              name="neverSayPhrases"
+              label="Never-say phrases"
+              description="Exact phrases the agent must never produce. Press Enter after each one."
             >
-              <Select
-                value={form.ai_audience ?? "EVERYONE"}
-                onValueChange={(value) =>
-                  setForm((f) => ({ ...f, ai_audience: value as AgentSettings["ai_audience"] }))
-                }
-                items={[
-                  { value: "EVERYONE", label: "Everyone" },
-                  { value: "ALLOWLISTED_ONLY", label: "Allowlisted numbers only" },
-                ]}
-              >
-                <SelectTrigger className="w-56">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EVERYONE">Everyone</SelectItem>
-                  <SelectItem value="ALLOWLISTED_ONLY">Allowlisted numbers only</SelectItem>
-                </SelectContent>
-              </Select>
-            </SettingRow>
+              {(field, controlProps) => (
+                <TagsInput
+                  id={controlProps.id}
+                  aria-invalid={controlProps["aria-invalid"]}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  maxTags={50}
+                  placeholder="guaranteed refund"
+                />
+              )}
+            </FormField>
 
             <div className="flex justify-end border-t pt-4">
-              <Button
-                disabled={update.isPending}
-                onClick={() =>
-                  update.mutate({
-                    rollout: form.rollout,
-                    handoff: form.handoff,
-                    followup: form.followup,
-                    ai_audience: form.ai_audience,
-                  })
-                }
-              >
-                Save & push to Meta
+              <Button type="submit" disabled={update.isPending || !form.formState.isDirty}>
+                {update.isPending && <Spinner data-icon="inline-start" />}
+                Save &amp; push to Meta
               </Button>
             </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function SettingRow({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-4">
-      <div>
-        <FieldTitle className="text-sm">{title}</FieldTitle>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
-      {children}
-    </div>
+          </FieldGroup>
+        </form>
+      )}
+    </PanelCard>
   );
 }

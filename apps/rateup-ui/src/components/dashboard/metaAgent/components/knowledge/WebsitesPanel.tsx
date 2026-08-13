@@ -1,105 +1,204 @@
-import { IconGlobe, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { IconGlobe, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 
+import type { CrawlStatus, KnowledgeWebsite } from "@/backend/metaAgent/metaAgent.api";
 import {
   useCreateWebsite,
   useDeleteWebsite,
   useSyncWebsites,
+  useUpdateWebsite,
   useWebsites,
 } from "@/backend/metaAgent/metaAgent.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
+import { websiteFormSchema, type WebsiteFormValues } from "../../metaAgent.schemas";
+import { FormField } from "../shared/FormField";
+import { PanelCard } from "../shared/PanelCard";
+
+const STATUS_VARIANT: Record<CrawlStatus, "default" | "secondary" | "destructive" | "outline"> = {
   completed: "default",
   in_progress: "secondary",
-  pending: "secondary",
+  pending: "outline",
   failed: "destructive",
 };
 
-export function WebsitesPanel({ waSettingsId }: { waSettingsId: string }) {
+const STATUS_LABEL: Record<CrawlStatus, string> = {
+  completed: "Crawled",
+  in_progress: "Crawling",
+  pending: "Queued",
+  failed: "Failed",
+};
+
+export function WebsitesPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   const { data: websites, isLoading } = useWebsites(waSettingsId);
   const createWebsite = useCreateWebsite(waSettingsId);
   const deleteWebsite = useDeleteWebsite(waSettingsId);
   const sync = useSyncWebsites(waSettingsId);
-  const [url, setUrl] = useState("");
+  const [editing, setEditing] = useState<KnowledgeWebsite | null>(null);
+
+  const form = useForm<WebsiteFormValues>({
+    resolver: zodResolver(websiteFormSchema),
+    defaultValues: { url: "" },
+  });
+
+  const onSubmit = (values: WebsiteFormValues) =>
+    createWebsite.mutate(values.url, { onSuccess: () => form.reset() });
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Websites ({websites?.length ?? 0})</CardTitle>
-        <Button variant="outline" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
-          <IconRefresh data-icon="inline-start" className={sync.isPending ? "animate-spin" : ""} />
-          Sync crawl status
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <PanelCard
+      title="Websites"
+      description="Meta crawls these pages and indexes them for the agent. Sync to refresh crawl status."
+      count={websites?.length ?? 0}
+      onSync={() => sync.mutate()}
+      isSyncing={sync.isPending}
+    >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="mb-4">
         <FieldGroup>
-          <Field orientation="horizontal">
-            <FieldLabel htmlFor="website-url" className="sr-only">
-              Website URL
-            </FieldLabel>
-            <Input
-              id="website-url"
-              placeholder="https://example.com/faq"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
-            <Button
-              variant="outline"
-              disabled={!url || createWebsite.isPending}
-              onClick={() => createWebsite.mutate(url, { onSuccess: () => setUrl("") })}
-            >
-              <IconPlus data-icon="inline-start" />
-              Add
-            </Button>
-          </Field>
+          <FormField
+            control={form.control}
+            name="url"
+            label="Page URL"
+            required
+            description="Must be a public https page — Meta's crawler does not sign in."
+          >
+            {(field, controlProps) => (
+              <div className="flex flex-wrap items-start gap-2">
+                <Input
+                  {...field}
+                  {...controlProps}
+                  placeholder="https://example.com/faq"
+                  className="min-w-0 flex-1"
+                />
+                <Button type="submit" variant="outline" disabled={createWebsite.isPending}>
+                  <IconPlus data-icon="inline-start" />
+                  Add
+                </Button>
+              </div>
+            )}
+          </FormField>
         </FieldGroup>
+      </form>
 
-        {isLoading && (
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-10 w-full" />
-          </div>
-        )}
+      {isLoading && <Skeleton className="h-10 w-full" />}
 
-        {!isLoading && !websites?.length && (
-          <Empty className="border-none py-8">
-            <EmptyTitle>No websites added</EmptyTitle>
-            <EmptyDescription>Meta will crawl added URLs for agent knowledge.</EmptyDescription>
-          </Empty>
-        )}
+      {!isLoading && !websites?.length && (
+        <Empty className="border-none py-8">
+          <EmptyTitle>No websites added</EmptyTitle>
+          <EmptyDescription>
+            Point Meta at your FAQ, shipping or pricing pages and it will keep them indexed.
+          </EmptyDescription>
+        </Empty>
+      )}
 
-        <div className="divide-y">
-          {websites?.map((site) => (
+      <div className="divide-y">
+        {websites?.map((site) => {
+          const status = site.crawlStatus ?? "pending";
+          return (
             <div key={site.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
                 <IconGlobe className="shrink-0 text-muted-foreground" />
                 <span className="truncate text-sm">{site.url}</span>
-                <Badge variant={STATUS_VARIANT[site.crawlStatus ?? "pending"]}>
-                  {site.crawlStatus ?? "pending"}
-                </Badge>
+                <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
                 {!!site.pagesCrawled && (
-                  <span className="text-xs text-muted-foreground">{site.pagesCrawled} pages</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {site.pagesCrawled} pages
+                  </span>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="shrink-0"
-                disabled={deleteWebsite.isPending}
-                onClick={() => deleteWebsite.mutate(site.id)}
-              >
-                <IconTrash className="text-destructive" />
-              </Button>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Edit ${site.url}`}
+                  onClick={() => setEditing(site)}
+                >
+                  <IconPencil />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Remove ${site.url}`}
+                  disabled={deleteWebsite.isPending}
+                  onClick={() => deleteWebsite.mutate(site.id)}
+                >
+                  <IconTrash className="text-destructive" />
+                </Button>
+              </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          );
+        })}
+      </div>
+
+      <EditWebsiteDialog
+        waSettingsId={waSettingsId}
+        website={editing}
+        onClose={() => setEditing(null)}
+      />
+    </PanelCard>
+  );
+}
+
+function EditWebsiteDialog({
+  waSettingsId,
+  website,
+  onClose,
+}: Readonly<{ waSettingsId: string; website: KnowledgeWebsite | null; onClose: () => void }>) {
+  const updateWebsite = useUpdateWebsite(waSettingsId);
+  const form = useForm<WebsiteFormValues>({
+    resolver: zodResolver(websiteFormSchema),
+    values: { url: website?.url ?? "" },
+  });
+
+  return (
+    <Dialog open={!!website} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit website</DialogTitle>
+          <DialogDescription>
+            Changing the URL restarts the crawl, so the page count resets until Meta finishes.
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          onSubmit={form.handleSubmit((values) => {
+            if (!website) return;
+            updateWebsite.mutate(
+              { websiteId: website.id, url: values.url },
+              { onSuccess: onClose },
+            );
+          })}
+        >
+          <FieldGroup className="gap-4">
+            <FormField control={form.control} name="url" label="Page URL" required>
+              {(field, controlProps) => <Input {...field} {...controlProps} />}
+            </FormField>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateWebsite.isPending}>
+                {updateWebsite.isPending && <Spinner data-icon="inline-start" />}
+                Save changes
+              </Button>
+            </DialogFooter>
+          </FieldGroup>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

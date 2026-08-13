@@ -15,6 +15,8 @@ type KeyPart = unknown;
 
 export const whatsappKeys = {
   settings: () => ["waSettings"] as const,
+  displayName: (phoneId: KeyPart) => ["waDisplayName", phoneId] as const,
+  businessProfile: (phoneId: KeyPart) => ["waBusinessProfile", phoneId] as const,
   metaAssets: (waSettingsId: KeyPart) => ["metaAssets", waSettingsId] as const,
 
   templates: () => ["watemplates"] as const,
