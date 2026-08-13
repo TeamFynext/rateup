@@ -16,7 +16,10 @@ vi.mock("./wa_settings.service.js", () => ({
   getWaLogs: vi.fn(),
   getWaSettings: vi.fn(),
   getWaSettingsById: vi.fn(),
+  reRegisterPhoneNumber: vi.fn(),
   subscribeFieldtoPage: vi.fn(),
+  syncDisplayName: vi.fn(),
+  updateDisplayName: vi.fn(),
   syncConversationalAutomation: vi.fn(),
   syncMetaAssetstoDb: vi.fn(),
   updateContactTag: vi.fn(),
@@ -52,8 +55,11 @@ import {
   getWaLogs,
   getWaSettings,
   getWaSettingsById,
+  reRegisterPhoneNumber,
   subscribeFieldtoPage,
+  syncDisplayName,
   syncMetaAssetstoDb,
+  updateDisplayName,
   updateContactTag,
   updateConversationalAutomation,
   updateWaSettings,
@@ -61,7 +67,7 @@ import {
   upsertWaSettings,
 } from "./wa_settings.service.js";
 import { getOrgIdAndRole } from "../../user/user.service.js";
-import { callMetaApi } from "../wa_axios.js";
+import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
@@ -72,12 +78,15 @@ import {
   getWaLogsHandler,
   getWaSettingsForOrgHandler,
   getWaSettingsHandler,
+  reRegisterPhoneNumberHandler,
   subscribeFieldstoPageHandler,
+  syncDisplayNameHandler,
   syncAdAccountsHandler,
   syncFbPagesHandler,
   syncLeadgenFormsHandler,
   updateContactTagHandler,
   updateConversationalAutomationHandler,
+  updateDisplayNameHandler,
   updateWaSettingsByIdHandler,
   updateWaSettingsHandler,
   upsertWaSettingsHandler,
@@ -102,6 +111,9 @@ const m = {
   getWaLogs: getWaLogs as unknown as Mock,
   getWaSettings: getWaSettings as unknown as Mock,
   getWaSettingsById: getWaSettingsById as unknown as Mock,
+  reRegisterPhoneNumber: reRegisterPhoneNumber as unknown as Mock,
+  syncDisplayName: syncDisplayName as unknown as Mock,
+  updateDisplayName: updateDisplayName as unknown as Mock,
   subscribeFieldtoPage: subscribeFieldtoPage as unknown as Mock,
   syncMetaAssetstoDb: syncMetaAssetstoDb as unknown as Mock,
   updateContactTag: updateContactTag as unknown as Mock,
@@ -129,6 +141,13 @@ function settingsRow(overrides: Record<string, unknown> = {}): any {
     ...overrides,
   };
 }
+
+const DISPLAY_NAME_STATUS = {
+  verifiedName: "Lucky Shrub",
+  nameStatus: "APPROVED",
+  newDisplayName: null,
+  newNameStatus: null,
+};
 
 function request(overrides: Record<string, unknown> = {}): any {
   return {
@@ -175,6 +194,9 @@ beforeEach(() => {
   m.updateContactTag.mockResolvedValue({});
   m.getConversationalAutomation.mockResolvedValue({ commands: [], prompts: [] });
   m.updateConversationalAutomation.mockResolvedValue({ success: true });
+  m.syncDisplayName.mockResolvedValue(DISPLAY_NAME_STATUS);
+  m.updateDisplayName.mockResolvedValue(DISPLAY_NAME_STATUS);
+  m.reRegisterPhoneNumber.mockResolvedValue({ success: true });
   m.callMetaApi.mockResolvedValue({ data: { business_verification_status: "verified" } });
 });
 
@@ -713,5 +735,60 @@ describe("conversational automation", () => {
 
     expect(rep.code).toHaveBeenCalledWith(500);
     expect(sent(rep)).toEqual({ message: "Something went wrong" });
+  });
+});
+
+describe("the display name handlers", () => {
+  test("syncs the name for the caller's own org", async () => {
+    const rep = reply();
+
+    await syncDisplayNameHandler(request({ params: { phoneId: PHONE_ID } }), rep);
+
+    expect(m.syncDisplayName).toHaveBeenCalledWith(ORG_A, PHONE_ID);
+    expect(sent(rep)).toEqual(DISPLAY_NAME_STATUS);
+  });
+
+  test("submits a new name for review", async () => {
+    const rep = reply();
+
+    await updateDisplayNameHandler(
+      request({ params: { phoneId: PHONE_ID }, body: { newDisplayName: "Lucky Shrub" } }),
+      rep,
+    );
+
+    expect(m.updateDisplayName).toHaveBeenCalledWith(ORG_A, PHONE_ID, "Lucky Shrub");
+  });
+
+  test("re-registers the number", async () => {
+    const rep = reply();
+
+    await reRegisterPhoneNumberHandler(request({ params: { phoneId: PHONE_ID } }), rep);
+
+    expect(m.reRegisterPhoneNumber).toHaveBeenCalledWith(ORG_A, PHONE_ID);
+  });
+
+  test("passes Meta's own rejection message back instead of a generic 500", async () => {
+    // The mocked GraphApiError ignores its argument; the shape the handler reads is set below.
+    const graphError = new GraphApiError({} as any) as any;
+    graphError.error = { error_user_msg: "Name does not comply with the guidelines" };
+    m.updateDisplayName.mockRejectedValue(graphError);
+    const rep = reply();
+
+    await updateDisplayNameHandler(
+      request({ params: { phoneId: PHONE_ID }, body: { newDisplayName: "Lucky Shrub" } }),
+      rep,
+    );
+
+    expect(rep.code).toHaveBeenCalledWith(400);
+    expect(sent(rep)).toEqual({ message: "Name does not comply with the guidelines" });
+  });
+
+  test("falls back to a 500 for anything that is not a Meta error", async () => {
+    m.syncDisplayName.mockRejectedValue(new Error("db is down"));
+    const rep = reply();
+
+    await syncDisplayNameHandler(request({ params: { phoneId: PHONE_ID } }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(500);
   });
 });

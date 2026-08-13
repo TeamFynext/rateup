@@ -1,10 +1,11 @@
 import { Prisma, WhatsappSettings } from "../../../../generated/prisma/client.js";
 import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryption.utils.js";
 import prisma from "../../../utils/prisma.js";
-import { getPhoneDetails } from "../auth/wa_auth.service.js";
+import { getPhoneDetails, registerPhoneNumber } from "../auth/wa_auth.service.js";
 import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
+  BusinessProfileInput,
   ContactTagSchema,
   ConversationalAutomationInput,
   PaginationQuery,
@@ -771,6 +772,223 @@ export async function updateConversationalAutomation(
   });
 
   return res.data;
+}
+
+/**
+ * A business phone number's display name and where it is in Meta's review process.
+ *
+ * `verifiedName` is the name that undergoes verification; `nameStatus` says whether it is
+ * approved. A change that is still under review shows up as `newDisplayName` /
+ * `newNameStatus` until Meta decides, and only lands on the number once it is approved
+ * *and* the number is re-registered.
+ *
+ * This is Meta's name, not ours: it is always read live and never written to
+ * `phoneDisplayName`, which is the org's own label for the channel and is theirs to set.
+ */
+export interface DisplayNameStatus {
+  verifiedName: string | null;
+  nameStatus: string | null;
+  newDisplayName: string | null;
+  newNameStatus: string | null;
+}
+
+export async function syncDisplayName(orgId: string, phoneId: string): Promise<DisplayNameStatus> {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  const res = await callMetaApi(
+    `/${phoneId}`,
+    "GET",
+    settings.accessToken,
+    undefined,
+    {},
+    {},
+    { fields: "verified_name,name_status,new_display_name,new_name_status" },
+  );
+
+  return {
+    verifiedName: res.data?.verified_name ?? null,
+    nameStatus: res.data?.name_status ?? null,
+    newDisplayName: res.data?.new_display_name ?? null,
+    newNameStatus: res.data?.new_name_status ?? null,
+  };
+}
+
+/** Submits a new display name to Meta for review, and reports where the request landed. */
+export async function updateDisplayName(
+  orgId: string,
+  phoneId: string,
+  newDisplayName: string,
+): Promise<DisplayNameStatus> {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  await callMetaApi(
+    `/${phoneId}`,
+    "POST",
+    settings.accessToken,
+    undefined,
+    {},
+    {},
+    { new_display_name: newDisplayName },
+  );
+
+  return await syncDisplayName(orgId, phoneId);
+}
+
+/**
+ * Re-registers the number with WhatsApp servers, which is what actually applies an
+ * approved display name change. Has no effect before the change is approved.
+ */
+/** The profile fields Meta returns for a business phone number. */
+export interface BusinessProfile {
+  about: string | null;
+  address: string | null;
+  description: string | null;
+  email: string | null;
+  profilePictureUrl: string | null;
+  websites: string[];
+  vertical: string | null;
+}
+
+const BUSINESS_PROFILE_FIELDS =
+  "about,address,description,email,profile_picture_url,websites,vertical";
+
+export async function getBusinessProfile(orgId: string, phoneId: string): Promise<BusinessProfile> {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  const res = await callMetaApi(
+    `/${phoneId}/whatsapp_business_profile`,
+    "GET",
+    settings.accessToken,
+    undefined,
+    {},
+    {},
+    { fields: BUSINESS_PROFILE_FIELDS },
+  );
+
+  const profile = res.data?.data?.[0] ?? {};
+  return {
+    about: profile.about ?? null,
+    address: profile.address ?? null,
+    description: profile.description ?? null,
+    email: profile.email ?? null,
+    profilePictureUrl: profile.profile_picture_url ?? null,
+    websites: profile.websites ?? [],
+    vertical: profile.vertical ?? null,
+  };
+}
+
+/**
+ * Builds the Graph body for a profile update, dropping anything blank.
+ *
+ * Meta answers a blank field with a bare `(#131000) Something went wrong` rather than
+ * clearing it, so an empty string is left out of the request altogether — the stored value
+ * simply stays as it is. Exported for the handler, which refuses a request that would carry
+ * no fields at all.
+ */
+export function buildBusinessProfileBody(data: BusinessProfileInput): Record<string, unknown> {
+  const { websites, ...rest } = data;
+  const body: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(rest)) {
+    if (typeof value !== "string" || value.trim() === "") continue;
+    body[key] = value.trim();
+  }
+
+  const usableWebsites = websites?.map((site) => site.trim()).filter(Boolean) ?? [];
+  // The list is JSON-encoded rather than sent as an array — the form Meta documents here.
+  if (usableWebsites.length) body.websites = JSON.stringify(usableWebsites);
+
+  return body;
+}
+
+/** Writes the profile fields the caller supplied; anything blank or omitted is left as it is. */
+export async function updateBusinessProfile(
+  orgId: string,
+  phoneId: string,
+  data: BusinessProfileInput,
+) {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  const res = await callMetaApi(
+    `/${phoneId}/whatsapp_business_profile`,
+    "POST",
+    settings.accessToken,
+    {
+      messaging_product: "whatsapp",
+      ...buildBusinessProfileBody(data),
+    },
+  );
+  return res.data;
+}
+
+/**
+ * Replaces the number's profile photo.
+ *
+ * Meta takes the image through its resumable upload API — a session against the app, then
+ * the bytes — and the opaque handle that comes back is what the profile endpoint accepts.
+ */
+export async function updateProfilePicture(
+  orgId: string,
+  phoneId: string,
+  file: { buffer: Buffer; mimetype: string; filename: string },
+) {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+  if (!settings.appId) throw new Error("appId is missing from the WhatsApp settings");
+
+  const sessionRes = await callMetaApi(
+    `/${settings.appId}/uploads`,
+    "POST",
+    settings.accessToken,
+    undefined,
+    {},
+    {},
+    {
+      file_name: file.filename,
+      file_length: file.buffer.length,
+      file_type: file.mimetype,
+    },
+  );
+
+  const uploadSessionId = sessionRes.data?.id;
+  if (!uploadSessionId) throw new Error("Meta did not return an upload session");
+
+  // This leg authenticates with `OAuth <token>`, not a bearer header, and carries the bytes raw.
+  const uploadRes = await callMetaApi(
+    `/${uploadSessionId}`,
+    "POST",
+    null,
+    file.buffer,
+    {},
+    {
+      Authorization: `OAuth ${settings.accessToken}`,
+      "Content-Type": "application/octet-stream",
+      file_offset: "0",
+      "Content-Length": file.buffer.length.toString(),
+    },
+  );
+
+  const handle = uploadRes.data?.h;
+  if (!handle) throw new Error("Meta did not return a file handle for the uploaded image");
+
+  const res = await callMetaApi(
+    `/${phoneId}/whatsapp_business_profile`,
+    "POST",
+    settings.accessToken,
+    { messaging_product: "whatsapp", profile_picture_handle: handle },
+  );
+  return res.data;
+}
+
+export async function reRegisterPhoneNumber(orgId: string, phoneId: string) {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  return await registerPhoneNumber(phoneId, settings.accessToken);
 }
 
 export async function getWaSettingsByPhone(phone: string) {

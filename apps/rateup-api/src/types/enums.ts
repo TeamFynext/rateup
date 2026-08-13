@@ -197,6 +197,7 @@ export enum WaEvent {
   LEADGEN = "leadgen",
   SMBMessageEchoes = "smb_message_echoes",
   ACCOUNT_UPDATE = "account_update",
+  PhoneNumberNameUpdate = "phone_number_name_update",
 }
 
 export enum WhatsappSettingsStatus {
