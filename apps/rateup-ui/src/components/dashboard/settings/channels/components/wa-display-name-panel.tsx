@@ -29,6 +29,20 @@ function statusVariant(status: string | null): "default" | "secondary" | "destru
   return "secondary";
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  APPROVED: "Approved",
+  PENDING_REVIEW: "In review",
+  DECLINED: "Rejected",
+  REJECTED: "Rejected",
+  EXPIRED: "Expired",
+  AVAILABLE_WITHOUT_REVIEW: "No review needed",
+  NONE: "Not set",
+};
+
+function statusLabel(status: string, translations: (key: string) => string) {
+  return translations(STATUS_LABELS[status] ?? status);
+}
+
 /**
  * The display name a WhatsApp number shows to its customers, as Meta holds it.
  *
@@ -98,7 +112,7 @@ export function WaDisplayNamePanel({
               </span>
               {status?.nameStatus && (
                 <Badge variant={statusVariant(status.nameStatus)} className="text-[10px]">
-                  {status.nameStatus}
+                  {statusLabel(status.nameStatus, translations)}
                 </Badge>
               )}
             </div>
@@ -131,14 +145,16 @@ export function WaDisplayNamePanel({
             {translations("Requested name")}: {pendingName}
             {pendingStatus && (
               <Badge variant={statusVariant(pendingStatus)} className="text-[10px]">
-                {pendingStatus}
+                {isPendingApproved
+                  ? translations("Approved — not in use yet")
+                  : statusLabel(pendingStatus, translations)}
               </Badge>
             )}
           </AlertTitle>
           <AlertDescription>
             {isPendingApproved
               ? translations(
-                  "Approved by Meta. Re-register the number to start using this name — you have 14 days from approval.",
+                  "Meta has approved this name, but the number still shows the current one. Re-register it to switch over — you have 14 days from approval.",
                 )
               : translations(
                   "Meta is reviewing this name. It replaces the current one once approved.",
