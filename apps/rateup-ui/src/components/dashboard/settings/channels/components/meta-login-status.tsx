@@ -99,7 +99,7 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
                             </Button>
                           }
                         />
-                        <TooltipContent>{translations("Edit Display Name")}</TooltipContent>
+                        <TooltipContent>{translations("Edit channel")}</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger
