@@ -124,6 +124,35 @@ test("webhook payloads are retargeted at the account under test", async () => {
  * well-formed response from the wrong API.
  * ------------------------------------------------------------------ */
 
+test("mints a unique message id per send, carrying the recipient", async () => {
+  const WAMID = /^wamid\.Test(\d+)FQIAER[0-9A-F]{26}==$/;
+  const send = (mock, to) =>
+    fetch(`${mock.url}/v25.0/1234/messages`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", to }),
+    }).then((r) => r.json());
+
+  const ids = [];
+  // Two instances, because the id used to come from a per-process counter: it
+  // repeated after every restart, and the app that stores these keys its
+  // messages on them — so a status callback resolved to a message from an
+  // earlier run and updated that row instead of the one just sent.
+  for (const _run of [1, 2]) {
+    await withMock(async (mock) => {
+      for (const to of ["919747053900", "919447587162"]) {
+        const sent = await send(mock, to);
+        const id = sent.messages[0].id;
+        assert.match(id, WAMID, `unexpected message id shape: ${id}`);
+        assert.equal(id.match(WAMID)[1], to, "the id must carry the recipient");
+        ids.push(id);
+      }
+    });
+  }
+
+  assert.equal(new Set(ids).size, ids.length, "message ids must never repeat, restart or not");
+});
+
 test("tells WhatsApp and Instagram sends apart on the shared /messages route", async () => {
   await withMock(async (mock) => {
     // A Cloud API send always declares messaging_product.

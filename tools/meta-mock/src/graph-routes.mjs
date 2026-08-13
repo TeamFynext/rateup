@@ -12,6 +12,29 @@
  * would be work with no caller and more surface to keep correct when Meta
  * changes it.
  */
+
+import { randomBytes } from "node:crypto";
+
+/**
+ * A message id in the shape Meta hands back from a send.
+ *
+ * NOT `mintId()`: that is a per-process counter, so it hands out the same ids
+ * again after every restart. The receiving app keys `WaMessage` on this value
+ * and looks a status up by it — with repeats, a status callback can resolve to a
+ * message from an earlier run and update that row instead of the one just sent,
+ * which reads downstream as a status that silently never arrived.
+ *
+ * A real wamid is base64 that decodes to the recipient's number plus a random
+ * blob. This keeps that structure — recipient digits, then 13 random bytes — so
+ * an id is recognisable while being unique across runs and across mocks.
+ * `Test` marks it as minted here and not by Graph.
+ */
+function mintMessageId(recipientId) {
+  const phone = String(recipientId ?? "").replace(/\D/g, "");
+  const blob = randomBytes(13).toString("hex").toUpperCase();
+  return `wamid.Test${phone}FQIAER${blob}==`;
+}
+
 export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
   const { flows, templates } = state;
 
@@ -192,8 +215,8 @@ export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
       method: "POST",
       match: /^\/(?<phoneId>\d+)\/(?<endpoint>messages|marketing_messages)$/,
       handle: ({ body, params }) => {
-        const messageId = `wamid.STUB${mintId()}`;
         const recipientId = body?.to ?? "";
+        const messageId = mintMessageId(recipientId);
 
         // A real send is answered immediately and *then* produces sent →
         // delivered → read callbacks. Detached on purpose, so the response goes
