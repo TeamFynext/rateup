@@ -139,39 +139,46 @@ export function getQuestionTypeLabel(type: ElementType) {
   }
 }
 
-export function getSubscriptionFeatureLabel(feature: sfpn) {
-  switch (feature) {
-    case sfpn.WebSurvey:
-      return "Web Survey";
-    case sfpn.WebSurvey + ".encryption":
-      return "Encryption";
-    case sfpn.WebSurvey + ".emailNotification":
-      return "Email Notification";
-    case sfpn.WebSurvey + ".googleReview":
-      return "Google Review";
-    case sfpn.WebSurvey + ".htmlCodePage":
-      return "HTML Code Page";
-    case sfpn.ReputationManagement:
-      return "Reputation Management";
-    case sfpn.Team:
-      return "Team";
-    case sfpn.Team + ".teamMember":
-      return "Team Members";
-    case sfpn.Whatsapp:
-      return "Whatsapp";
-    case sfpn.Ticket:
-      return "Ticket";
-    case sfpn.AI:
-      return "AI";
-    case sfpn.Webhook:
-      return "Webhook";
-    case sfpn.WhatsAppConversation:
-      return "WhatsApp Conversation";
-    case sfpn.Menu:
-      return "Digital Menu";
-    default:
-      throw new Error("Invalid Subscription Feature" + feature);
-  }
+const SUBSCRIPTION_FEATURE_LABELS: Readonly<Record<string, string>> = {
+  [sfpn.WebSurvey]: "Web Survey",
+  [sfpn.Encryption]: "Encryption",
+  [sfpn.EmailNotification]: "Email Notification",
+  [sfpn.GoogleReview]: "Google Review",
+  [sfpn.HTMLCodePage]: "HTML Code Page",
+  [sfpn.ReputationManagement]: "Reputation Management",
+  [sfpn.Team]: "Team",
+  [sfpn.TeamMember]: "Team Members",
+  [sfpn.Whatsapp]: "Whatsapp",
+  [sfpn.Ticket]: "Ticket",
+  [sfpn.AI]: "AI",
+  [sfpn.Webhook]: "Webhook",
+  [sfpn.WhatsAppConversation]: "WhatsApp Conversation",
+  [sfpn.Menu]: "Digital Menu",
+};
+
+/**
+ * Whether a feature path is part of the current schema. `Subscription.features`
+ * is an untyped Json column, so stored rows can name anything — retired keys
+ * (`loyalty`, `whatsapp.flow`) still sit in rows written before the schema
+ * migration. Callers use this to mark such a path as unrecognised rather than
+ * presenting it as a real, editable feature.
+ */
+export function isKnownSubscriptionFeature(feature: string): boolean {
+  return feature in SUBSCRIPTION_FEATURE_LABELS;
+}
+
+/**
+ * A display name for a feature path. Never throws: an unknown path is titled
+ * from its last segment (`whatsapp.flow` -> "Flow"), because a stale key in one
+ * org's stored features must not take the whole admin screen down.
+ */
+export function getSubscriptionFeatureLabel(feature: sfpn | string): string {
+  return (
+    SUBSCRIPTION_FEATURE_LABELS[feature] ??
+    (feature.split(".").pop() ?? feature)
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/^./, (character) => character.toUpperCase())
+  );
 }
 
 export function getWaFlowFormElementTypeLabel(type?: WaFlowFormElementType) {
