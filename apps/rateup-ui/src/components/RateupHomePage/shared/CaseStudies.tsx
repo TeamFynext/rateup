@@ -18,16 +18,17 @@ const Stars = () => (
   </div>
 );
 
-const bhima = `${imagesPath}/landing/logos/bhima.png`;
-const shopdoc = `${imagesPath}/landing/logos/sd.png`;
-const myg = `${imagesPath}/landing/logos/myg.png`;
+const bhima = `${imagesPath}/landing/logos/Bhima.png`;
+const shopdoc = `${imagesPath}/landing/logos/shopdoc.png`;
+const myg = `${imagesPath}/landing/logos/myg.jpg`;
+const metromedical = `${imagesPath}/landing/logos/metromedical.png`;
 
 // Custom coded mockups for the right side portion of each case study
 function BhimaVisual() {
   return (
     <div className="w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-b from-[#7f1d1d] to-[#450a0a] text-white select-none">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 border border-[#A0721F] overflow-hidden p-1.5">
+        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 border border-[#A0721F] overflow-hidden">
           <img src={bhima} alt="Bhima Logo" className="w-full h-full object-contain" />
         </div>
         <div>
@@ -87,7 +88,7 @@ function ShopDocVisual() {
   return (
     <div className="w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-b from-[#0f766e] to-[#115e59] text-white select-none">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-cyan-500/20 border border-[#2a9d8f] overflow-hidden p-1.5">
+        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-cyan-500/20 border border-[#2a9d8f] overflow-hidden">
           <img src={shopdoc} alt="ShopDoc Logo" className="w-full h-full object-contain" />
         </div>
         <div>
@@ -163,7 +164,7 @@ function MyGVisual() {
   return (
     <div className="w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-b from-[#111827] via-[#0f172a] to-[#1e1b4b] text-white select-none">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-orange-500/20 border border-orange-500 overflow-hidden p-1.5">
+        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-orange-500/20 border border-orange-500 overflow-hidden">
           <img src={myg} alt="myG Logo" className="w-full h-full object-contain" />
         </div>
         <div>
@@ -222,16 +223,12 @@ function MetroMedicalsVisual() {
   return (
     <div className="w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-[#061d33] text-white select-none">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#2A9D8F]/20 border border-[#2A9D8F]">
-          <svg
-            className="w-6 h-6 text-[#2A9D8F]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#2A9D8F]/20 border border-red-700 overflow-hidden">
+          <img
+            src={metromedical}
+            alt="Metro Medicals Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
           <h4 className="font-black text-[15px] tracking-wide text-white uppercase leading-none mb-1">
@@ -369,7 +366,7 @@ const cases = [
     logoText: "MM",
     logoStyle: { background: "linear-gradient(135deg,#2A9D8F,#1A6B63)" },
     company: "Metro Medicals",
-    image: "",
+    image: metromedical,
     industry: "Healthcare",
     kpi: "94%",
     kpiLabel: "feedback response",
@@ -441,15 +438,11 @@ export default function CaseStudies() {
                 onClick={() => setActive(cs.id)}
               >
                 <span className={styles.csTabLogo} style={cs.logoStyle}>
-                  {cs.id === 3 ? (
-                    cs.logoText
-                  ) : (
-                    <img
-                      src={cs.image}
-                      alt={cs.company}
-                      className="w-full h-full object-contain p-1.5 rounded-[10px]"
-                    />
-                  )}
+                  <img
+                    src={cs.image}
+                    alt={cs.company}
+                    className="w-full h-full object-contain border rounded-[10px]"
+                  />
                 </span>
 
                 <span className={styles.csTabId}>
