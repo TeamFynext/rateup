@@ -52,10 +52,6 @@ export const useChatSocket = () => {
         switch (data.type) {
           case "inbox":
             const { message, contact: incomingContact } = data.inbox;
-            let markUnread = false;
-            if (selectedContact?.id === incomingContact?.id) {
-              markUnread = true;
-            }
             // The message names its ticket even though the contact payload does
             // not, so the row is resolved from that rather than the contact id.
             const incomingConversationId = message?.conversationId ?? null;
@@ -70,26 +66,22 @@ export const useChatSocket = () => {
                 ? getRowKey(selectedContact) === existingRowKey
                 : selectedContact.id === incomingContact.id);
             if (existingRowKey) {
-              updateContactById(
-                existingRowKey,
-                (contact) => ({
-                  ...contact,
-                  waMessageAssignStatus: incomingContact.waMessageAssignStatus,
-                  unReadMessageCount: isOpenInThread ? 0 : (contact.unReadMessageCount ?? 0) + 1,
-                  lastMessage: {
-                    messageBody: message.messageBody,
-                    sourceIdentifier: message.sourceIdentifier,
-                    sourcePlatform: message.sourcePlatform,
-                    waCreatedAt: message.waCreatedAt,
-                  },
-                  ...(message.messageBody.exchangeProcess === "receive"
-                    ? {
-                        lastReceivedMessageTimeStamp: message.waCreatedAt,
-                      }
-                    : {}),
-                }),
-                markUnread,
-              );
+              updateContactById(existingRowKey, (contact) => ({
+                ...contact,
+                waMessageAssignStatus: incomingContact.waMessageAssignStatus,
+                unReadMessageCount: isOpenInThread ? 0 : (contact.unReadMessageCount ?? 0) + 1,
+                lastMessage: {
+                  messageBody: message.messageBody,
+                  sourceIdentifier: message.sourceIdentifier,
+                  sourcePlatform: message.sourcePlatform,
+                  waCreatedAt: message.waCreatedAt,
+                },
+                ...(message.messageBody.exchangeProcess === "receive"
+                  ? {
+                      lastReceivedMessageTimeStamp: message.waCreatedAt,
+                    }
+                  : {}),
+              }));
             } else if (
               // Spam is contact-grained and exclusive to the Spam tab: a spam
               // contact's message must not spawn a row in Open/All, and a

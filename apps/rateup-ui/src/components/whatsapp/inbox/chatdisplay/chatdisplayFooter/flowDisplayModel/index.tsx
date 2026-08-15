@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSendFlowToUser, useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -23,10 +24,16 @@ interface Props {
 
 export default function WaInboxFlowDisplayModal(props: Props) {
   const [selectedDbFlowId, setSelectedDbFlowId] = useState<string>("");
-  const { data, isLoading, error } = useWaFlowsFromDb();
-  const [teamId, setTeamId] = useState<string | null>(null);
-  const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
+  // Only the flows that live on the number this conversation is on: Meta scopes flow
+  // ids to a WABA, so sending one from another number is refused.
+  const { data, isLoading, error } = useWaFlowsFromDb(true, whatsappSettingsPhoneId);
+  const [teamId, setTeamId] = useState<string | null>(null);
+  const sendFlowToUser = useSendFlowToUser(
+    props?.contact?.phone,
+    props?.contact?.id,
+    props?.contact ? getRowKey(props.contact) : undefined,
+  );
 
   const { t: translations } = useTranslation();
   function onClose() {
@@ -34,12 +41,22 @@ export default function WaInboxFlowDisplayModal(props: Props) {
     props?.close();
   }
   function handleSendFlow() {
+    const flow = data?.find((f) => f.dbFlowId === selectedDbFlowId);
     sendFlowToUser.mutate(
       {
         dbFlowId: selectedDbFlowId,
         teamId,
-        flowId: data?.find((f) => f.dbFlowId === selectedDbFlowId)?.flowId,
+        flowId: flow?.flowId,
         whatsappSettingsPhoneId,
+        // What the customer is about to receive: the flow's own invitation message
+        // and its button, shown in the thread until the send is read back.
+        pending: flow
+          ? {
+              kind: "flow",
+              text: flow.templateMessage?.body || flow.name,
+              cta: flow.templateMessage?.cta,
+            }
+          : undefined,
       },
       {
         onSuccess: () => {

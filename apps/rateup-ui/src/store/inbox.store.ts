@@ -132,7 +132,6 @@ interface ContactsStoreState {
   updateContactById: (
     contactId: string,
     updater: (c: ContactWithUpdatedAt) => ContactWithUpdatedAt,
-    markUnread?: boolean,
   ) => void;
   resetUnreadForContact: (contactId: string, contact?: ContactWithUpdatedAt) => void;
   setSelectedContact: (contact: ContactWithUpdatedAt | null) => void;
@@ -379,7 +378,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         }
       },
 
-      updateContactById(contactId, updater, markUnread) {
+      updateContactById(contactId, updater) {
         const state = get();
         // Realtime events are contact-grained; route them to that contact's live
         // ticket. Callers inside the store already pass a row key, so accept both.
@@ -526,7 +525,10 @@ export const useContactsStore = create<ContactsStoreState>()(
             }),
           );
           // Read-receipts stay contact-grained — that is what the API accepts.
-          if (contact.id === get().selectedContact?.id && markUnread) {
+          // A message landing in the thread the agent is looking at is read on
+          // arrival; the server no-ops when nothing was newly read, so calling
+          // on every such message is cheap.
+          if (contact.id === get().selectedContact?.id) {
             markWaMessagesAsRead(contact.id);
           }
           saveContactToDB(updatedContact);
@@ -778,7 +780,14 @@ export const useContactsStore = create<ContactsStoreState>()(
       },
 
       setSelectedContact(contact) {
-        if (contact && contact.unReadMessageCount !== 0) {
+        // Keyed off the thread actually changing, not off `unReadMessageCount`:
+        // the realtime handler zeroes that counter for the open row, so a
+        // message arriving in the thread you are looking at would leave nothing
+        // to trigger the receipt. `setSelectedContact` is also called to patch
+        // the open contact (labels, tags, rename), hence the id comparison —
+        // those must not re-send.
+        const previouslySelectedId = get().selectedContact?.id;
+        if (contact && contact.id !== previouslySelectedId) {
           get().resetUnreadForContact(getRowKey(contact), contact);
         }
         // Register the selection in `contactsById` if it is not already there.

@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
-import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker.tsx";
@@ -28,6 +27,7 @@ import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 import type { ParsedWaMessageContent } from "@/utils/whatsapp/inbox.ts";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
+import type { PendingMessage } from "../../pendingMessages.ts";
 import { reactionEmojiMap } from "../layout/singleMessageLayout/index.tsx";
 import WaInboxAttachments from "./attachments/index.tsx";
 import WaInboxAudio from "./audio/index.tsx";
@@ -242,19 +242,15 @@ export function getReactionMessage({
     };
 }
 
-export const TempMessageBody = ({
-  body,
-  timestamp,
-}: {
-  body: {
-    text?: TiptapNode | string;
-    url?: string;
-    urlType?: string;
-    filename?: string;
-  };
-  /** Optimistic messages stamp this with `Date.now()`. */
-  timestamp?: string | number;
-}) => {
+/**
+ * A message that has been sent but not yet read back from the server: same outgoing
+ * bubble as the real thing, with a clock instead of a delivery tick.
+ *
+ * Templates draw the very card the preview drew, and flows their invitation message
+ * and button, so what appears the instant you hit send is what the customer gets —
+ * not a placeholder that swaps for something different a second later.
+ */
+export const PendingMessageBubble = ({ message }: { message: PendingMessage }) => {
   const { user } = useUser();
   return (
     <Message align="end">
@@ -265,32 +261,58 @@ export const TempMessageBody = ({
         <MessageHeader>{user?.userName}</MessageHeader>
         <Bubble variant="default" align="end">
           <BubbleContent>
-            {body.url && body.urlType === "image" && (
-              <Image src={body.url} height={150} width={150} alt="image of text messaage" />
-            )}
-            {body.url && body.urlType === "video" && (
-              <video src={body.url} height={"150px"} width={"150px"} />
-            )}
-            {body.url && body.urlType === "document" && (
-              <p
-                className="cursor-pointer underline"
-                onClick={() => {
-                  window.open(body.url, "_blank");
-                }}
-              >
-                {body.filename}
-              </p>
-            )}
-            {body.url && body.urlType === "audio" && <audio src={body.url} />}
-            <div>{body.text ? parseJsonToReact(body?.text) : null}</div>
+            <PendingMessageContent message={message} />
           </BubbleContent>
         </Bubble>
         <MessageFooter className="gap-1.5">
-          <span>{formatToCustomTime(timestamp)}</span>
+          <span>{formatToCustomTime(message.timestamp)}</span>
           <IconClock className="size-3" />
         </MessageFooter>
       </MessageContent>
     </Message>
+  );
+};
+
+const PendingMessageContent = ({ message }: { message: PendingMessage }) => {
+  if (message.kind === "template") {
+    return <WaInboxTemplate parameters={message.parameters} templateBody={message.template} />;
+  }
+
+  if (message.kind === "flow") {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="whitespace-pre-wrap">{message.text}</p>
+        {message.cta && (
+          <span className="rounded-md border border-border px-3 py-1.5 text-center text-sm font-medium text-primary">
+            {message.cta}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  const { body } = message;
+  return (
+    <>
+      {body.url && body.urlType === "image" && (
+        <Image src={body.url} height={150} width={150} alt="image of text messaage" />
+      )}
+      {body.url && body.urlType === "video" && (
+        <video src={body.url} height={"150px"} width={"150px"} />
+      )}
+      {body.url && body.urlType === "document" && (
+        <p
+          className="cursor-pointer underline"
+          onClick={() => {
+            window.open(body.url, "_blank");
+          }}
+        >
+          {body.filename}
+        </p>
+      )}
+      {body.url && body.urlType === "audio" && <audio src={body.url} />}
+      <div>{body.text ? parseJsonToReact(body?.text) : null}</div>
+    </>
   );
 };
 

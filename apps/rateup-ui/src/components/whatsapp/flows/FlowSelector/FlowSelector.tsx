@@ -25,6 +25,12 @@ interface FlowSelectorProps {
   className?: string;
   /** Accepted for call-site compatibility; the shadcn Select filters natively. */
   searchable?: boolean;
+  /**
+   * Restrict the list to flows that live on this number's WABA. Meta scopes flow ids to
+   * a WABA, so a flow picked from another number cannot be used — attaching one to a
+   * template's FLOW button fails at Meta with "the flow does not exist".
+   */
+  whatsappSettingsPhoneId?: string;
 }
 
 export function FlowSelector({
@@ -37,9 +43,10 @@ export function FlowSelector({
   error,
   disabled,
   className,
+  whatsappSettingsPhoneId,
 }: Readonly<FlowSelectorProps>) {
   const uid = useId();
-  const { data: flows, isLoading } = useWaFlowsFromDb();
+  const { data: flows, isLoading } = useWaFlowsFromDb(true, whatsappSettingsPhoneId);
 
   if (isLoading || !flows) {
     return <Skeleton className="mt-2 h-11 w-full" />;

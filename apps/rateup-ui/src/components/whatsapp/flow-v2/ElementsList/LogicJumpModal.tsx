@@ -113,6 +113,20 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
     [screens],
   );
 
+  /**
+   * A jump's action is either a screen id to navigate to, or one of the two
+   * control actions the endpoint understands: carry on to the next screen, or
+   * end the run here — saving what has been answered so far and closing the flow.
+   */
+  const actionOptions = useMemo(
+    () => [
+      { label: translations("Next Screen (default)"), value: LogicAction.NextQ as string },
+      { label: translations("End Survey"), value: LogicAction.EndSurvey as string },
+      ...screenOptions,
+    ],
+    [screenOptions, translations],
+  );
+
   const getConditions = (questionId: string) => {
     if (!questionId) return [];
     const question = filteredQuestions.find((q) => q.id === questionId);
@@ -435,23 +449,23 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                             htmlFor={`${uid}-field-4-${jumpIndex}`}
                             className="text-xs mb-1 block"
                           >
-                            {translations("Navigate to Screen")}
+                            {translations("Navigate to")}
                           </FieldLabel>
                           <Select
                             value={typeof jump.action === "string" ? jump.action : ""}
-                            items={screenOptions}
+                            items={actionOptions}
                             onValueChange={(value) => handleUpdateAction(jumpIndex, value)}
                           >
                             <SelectTrigger
                               id={`${uid}-field-4-${jumpIndex}`}
                               className="w-full truncate"
                             >
-                              <SelectValue placeholder={translations("Select target screen")} />
+                              <SelectValue placeholder={translations("Select action")} />
                             </SelectTrigger>
                             <SelectContent>
-                              {screenOptions.map((screen) => (
-                                <SelectItem key={screen.value} value={screen.value}>
-                                  {screen.label}
+                              {actionOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>

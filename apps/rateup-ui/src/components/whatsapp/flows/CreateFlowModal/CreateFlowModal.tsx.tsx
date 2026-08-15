@@ -7,6 +7,7 @@ import z from "zod";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useCreateFlowMutation } from "@/backend/whatsapp/flow/flow.query";
+import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -28,6 +29,7 @@ interface CreateFlowFormValues {
   name: string;
   categories: string[];
   teamId: string[];
+  whatsappSettingsPhoneId?: string;
 }
 
 function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
@@ -38,6 +40,7 @@ function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => 
     name: z.string().min(1, translations("Please enter a name")),
     categories: z.array(z.string()).min(1, translations("Please select a category")),
     teamId: z.array(z.string()),
+    whatsappSettingsPhoneId: z.string().optional(),
   });
 
   const form = useForm<CreateFlowFormValues>({
@@ -46,6 +49,7 @@ function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => 
       name: "",
       categories: [],
       teamId: [],
+      whatsappSettingsPhoneId: undefined,
     },
   });
 
@@ -69,6 +73,7 @@ function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => 
         name: values.name,
         categories: values.categories,
         teamIds: values.teamId,
+        whatsappSettingsPhoneId: values.whatsappSettingsPhoneId,
       },
       {
         onSettled: (id) => {
@@ -126,6 +131,23 @@ function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => 
                   placeholder={translations("Select Categories")}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="whatsappSettingsPhoneId"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                {/* The flow is created on this number's WABA at Meta and can only be
+                    used from that number — sent from it, or attached to a template
+                    built on it. */}
+                <AccountSelector
+                  label={translations("WhatsApp number")}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </Field>
             )}
           />

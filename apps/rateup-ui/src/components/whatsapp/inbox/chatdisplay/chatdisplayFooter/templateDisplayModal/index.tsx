@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
@@ -32,7 +33,12 @@ function templateBodyText(templateComponent: WaTemplateFetchBodyComponent[]) {
 
 export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }: Readonly<Props>) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const sendTemplate = useSendWaTemplateToUser(contact?.phone ?? "", contact?.id);
+  // The row key lets the send draw its card in the thread while it is in flight.
+  const sendTemplate = useSendWaTemplateToUser(
+    contact?.phone ?? "",
+    contact?.id,
+    contact ? getRowKey(contact) : undefined,
+  );
   const [teamId, setTeamId] = useState<string>("");
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);

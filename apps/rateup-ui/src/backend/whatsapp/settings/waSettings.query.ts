@@ -3,7 +3,6 @@ import { toast } from "sonner";
 
 import { userKeys } from "@/backend/user/user.keys";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
-import type { ColumnFilterState, PaginationState } from "@/types/api.ts";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 import type {
@@ -18,7 +17,6 @@ import {
   getBusinessProfile,
   getConversationalAutomation,
   getMetaAssets,
-  getWaLogs,
   getWaSettings,
   registerBusinessClient,
   reRegisterPhoneNumber,
@@ -155,17 +153,6 @@ export const useDeregisterBusinessClientMutation = () => {
     },
   });
 };
-
-export const useWaLogs = (
-  pagination: PaginationState,
-  search: string,
-  sort: { id: string; desc: string },
-  columnFilters: ColumnFilterState[],
-) =>
-  useQuery({
-    queryKey: ["waLogs", pagination, search, sort, columnFilters],
-    queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
-  });
 
 export const useMetaAssets = (waSettingsId: string) =>
   useQuery({
