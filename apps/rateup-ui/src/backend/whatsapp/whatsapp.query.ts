@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import type { NewPendingMessage } from "@/store/pendingMessages.ts";
+import { usePendingSend } from "@/store/pendingMessages.ts";
 import type { RequestPayload } from "@/types/api.ts";
 import type { WaTemplateComponent } from "@/types/global";
 
@@ -163,8 +165,17 @@ export const useRegisterTemplatesMutation = (onSuccess?: () => void, onError?: (
   return registerMutation;
 };
 
-export const useSendWaTemplateToUser = (phone: string, contactId: string | undefined) => {
+/**
+ * @param rowKey thread the template is going to, so the card it will become shows
+ *   there while the send is in flight.
+ */
+export const useSendWaTemplateToUser = (
+  phone: string,
+  contactId: string | undefined,
+  rowKey?: string,
+) => {
   const queryClient = useQueryClient();
+  const pending = usePendingSend(rowKey, contactId);
   return useMutation({
     mutationFn: ({
       templateId,
@@ -176,14 +187,19 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string | undef
       parameterData: WaTemplateComponent[];
       teamId: string;
       whatsappSettingsPhoneId: string;
+      /** The card to draw while this is in flight; not part of the request. */
+      pending?: NewPendingMessage;
     }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
+    onMutate: (variables) => ({ pendingId: pending.begin(variables.pending) }),
+    onSuccess: (_data, _variables, context) => {
       queryClient.invalidateQueries({ queryKey: whatsappKeys.contacts() });
       queryClient.invalidateQueries({ queryKey: whatsappKeys.contact(contactId) });
       toast.success("Template sent successfully");
+      // Invalidates the thread itself, then takes the pending card back down.
+      return pending.settle(context?.pendingId);
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      pending.rollback(context?.pendingId);
       toast.error(error?.message || "Error sending template!");
     },
   });

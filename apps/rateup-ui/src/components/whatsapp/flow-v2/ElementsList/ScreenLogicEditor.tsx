@@ -358,6 +358,11 @@ function ConditionsActionMapBlock({
 
   const possibleActions = [
     { label: translations("Next Screen (default)"), value: LogicAction.NextQ },
+    // Ends the run from the endpoint: the answers collected so far are saved and
+    // the flow closes, rather than navigating anywhere. Only reachable on a
+    // screen that has a logic jump, since that is what routes its footer
+    // through our endpoint.
+    { label: translations("End Survey"), value: LogicAction.EndSurvey },
     ...nextScreens.map((s) => ({
       label: `${translations("JUMP TO")} => ${s.title}`,
       value: s.id,

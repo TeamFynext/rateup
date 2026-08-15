@@ -14,6 +14,7 @@ import useContactStore, { useContactsStore } from "@/store/inbox.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import type { AssignInboxResult } from "./wamessage.api";
 import type { WaMessageLogFilter } from "./wamessage.api";
@@ -87,6 +88,9 @@ export const useSendNewWaMessage = (
     },
     onError: (error) => {
       console.error("Error sending message", error);
+      // The composer clears itself and its pending bubble on settle, so without this
+      // a failed send looks exactly like a successful one that has not echoed yet.
+      toast.error(getApiErrorMessage(error, "Could not send the message"));
     },
   });
 };

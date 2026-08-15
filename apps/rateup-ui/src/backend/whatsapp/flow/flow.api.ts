@@ -22,8 +22,15 @@ axiosClient.interceptors.response.use(undefined, (error) => {
 
 const BASE = `${WHATSAPP_URL}/flows`;
 
-export async function getWaFlowsFromDb() {
-  const res = await axiosClient.get(`${BASE}?source=db`);
+/**
+ * @param whatsappSettingsPhoneId only flows that live on this number's WABA. Flow ids
+ *   are scoped to a WABA at Meta, so anything that will use a flow on one number —
+ *   a template's FLOW button, say — has to ask for that number's flows.
+ */
+export async function getWaFlowsFromDb(whatsappSettingsPhoneId?: string) {
+  const res = await axiosClient.get(`${BASE}?source=db`, {
+    params: whatsappSettingsPhoneId ? { whatsappSettingsPhoneId } : undefined,
+  });
   return res.data as DbFlow[];
 }
 export async function getWaFlowsFromWa() {
@@ -74,6 +81,8 @@ export interface createFlowInput {
   name: string;
   teamIds: string[];
   categories: string[];
+  /** Number to create the flow on; the org's default channel when omitted. */
+  whatsappSettingsPhoneId?: string;
 }
 export async function createFlow(data: createFlowInput) {
   return (await axiosClient.post(`${BASE}`, data))?.data;

@@ -962,6 +962,12 @@ declare global {
     anonymous: boolean;
     version: number;
     ticketIssued: FlowTicket[];
+    /**
+     * WhatsApp channel the flow lives on. Meta scopes flow ids to a WABA, so the flow
+     * can only be used from this number. Null on flows created before it was tracked —
+     * those belong to the org's default channel.
+     */
+    whatsappSettingsId: string | null;
   }
 
   interface LoyaltyCustomer {

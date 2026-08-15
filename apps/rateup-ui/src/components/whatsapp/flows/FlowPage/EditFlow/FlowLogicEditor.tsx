@@ -384,7 +384,9 @@ function ConditionsActionMapBlock<T extends FlowLogicJump | FlowLogicJumpCompone
   const nextScreens = flowJson.screens.slice(currentIndex + 1);
   const possibleActions = [
     { label: "Next Screen (default)", value: LogicAction.NextQ },
-    // { label: "End Survey", value: LogicAction.EndSurvey }, // TODO: implement
+    // Ends the run from the endpoint: the answers collected so far are saved and
+    // the flow closes, rather than navigating anywhere.
+    { label: "End Survey", value: LogicAction.EndSurvey },
     ...nextScreens.map((s) => ({
       label: `JUMP TO => ${s.title}`, // TODO: truncate
       value: s.id,

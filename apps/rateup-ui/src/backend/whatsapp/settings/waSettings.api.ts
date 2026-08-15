@@ -1,4 +1,4 @@
-import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
+import type { RequestPayload } from "@/types/api.ts";
 import type { MetaLoginAssets, WaConfigType, WhatsappSettingsStatus } from "@/types/enums.ts";
 
 /** A question on a Meta leadgen form, as the Graph API returns it. */
@@ -101,41 +101,6 @@ export const updateUserAccessToken = async ({
     code,
   });
   return res;
-};
-
-interface WaLogsRes {
-  logs: {
-    id: string;
-    createdAt: string;
-    logs?: {
-      code?: number;
-      title?: string;
-      message?: string;
-      error_data?: {
-        details?: string;
-      };
-    }[];
-  };
-  totalCount: number;
-}
-export const getWaLogs = async (
-  pagination: {
-    pageIndex: number;
-    pageSize: number;
-  },
-  search: string,
-  sort: {
-    id: string;
-    desc: string;
-  },
-  columnFilters: ColumnFilterState[],
-) => {
-  const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
-  const desc = sort.desc ? "desc" : "asc";
-  const url = `${SettingsUrl}/logs?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}`;
-
-  const res = await axiosClient.get(url);
-  return res.data as WaLogsRes;
 };
 
 export const syncFbPages = async (waSettingsId: string) => {

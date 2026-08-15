@@ -20,20 +20,21 @@ import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { getMessagesFromIDB } from "@/store/inbox.idb.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import { usePendingMessagesStore } from "@/store/pendingMessages.ts";
+import type { PendingMessage } from "@/store/pendingMessages.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import WhatsAppInboxLoader from "../../loader/index.tsx";
 import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
-import { useTemperoryMessageStore } from "../chatdisplayFooter/index.tsx";
 import {
   DateComponent,
   DeletedMessage,
   EndofConversationComponent,
   getReactionMessage,
+  PendingMessageBubble,
   SingleMessage,
-  TempMessageBody,
 } from "./components/utils.tsx";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout/index.tsx";
 
@@ -94,7 +95,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
     [allMessages, isNotesView],
   );
 
-  const { messages: tempMessages } = useTemperoryMessageStore();
+  const { pendingByRow } = usePendingMessagesStore();
 
   useEffect(() => {
     if (!selectedContact) return;
@@ -152,7 +153,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
   }, [selectedKey, isPending, messagesByKey, enable]);
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
-  const pendingMessages = selectedContact ? (tempMessages?.[getRowKey(selectedContact)] ?? []) : [];
+  const pendingMessages = selectedContact ? (pendingByRow[getRowKey(selectedContact)] ?? []) : [];
 
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
@@ -189,13 +190,9 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
               </MessageScrollerItem>
             ))}
             {!isNotesView &&
-              pendingMessages.map((msg, i) => (
-                <MessageScrollerItem
-                  key={msg?.id || i}
-                  messageId={msg?.id || `temp-${i}`}
-                  scrollAnchor
-                >
-                  <TempMessageBody body={msg?.body} timestamp={msg.timestamp} />
+              pendingMessages.map((msg: PendingMessage) => (
+                <MessageScrollerItem key={msg.id} messageId={msg.id} scrollAnchor>
+                  <PendingMessageBubble message={msg} />
                 </MessageScrollerItem>
               ))}
           </MessageScrollerContent>

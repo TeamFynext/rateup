@@ -25,10 +25,16 @@ import {
   updateFlowMetaData,
 } from "./flow.api";
 
-export const useWaFlowsFromDb = (enabled = true) =>
+/**
+ * @param whatsappSettingsPhoneId narrows the list to the flows that live on that
+ *   number's WABA — see getWaFlowsFromDb. Part of the query key, so switching numbers
+ *   refetches rather than reusing the previous number's flows.
+ */
+export const useWaFlowsFromDb = (enabled = true, whatsappSettingsPhoneId?: string) =>
   useQuery({
-    queryKey: ["flow", "db"],
-    queryFn: getWaFlowsFromDb,
+    // "list" keeps this apart from useWaFlowFromDb's ["flow", "db", dbFlowId].
+    queryKey: ["flow", "db", "list", whatsappSettingsPhoneId ?? null],
+    queryFn: () => getWaFlowsFromDb(whatsappSettingsPhoneId),
     enabled,
   });
 
