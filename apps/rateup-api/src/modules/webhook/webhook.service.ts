@@ -1,7 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import prisma from "../../utils/prisma.js";
-import { outgoingWebhookQueue } from "../../utils/redisConnection.js";
+import { outgoingWebhookQueue } from "../../workers/bullmq/queues/index.js";
 import { log } from "../../utils/logger.js";
 
 export async function upsertWebhook(orgId: string, url: string, events: string[]) {

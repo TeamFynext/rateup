@@ -20,7 +20,7 @@ import {
   startBackfillConversations,
   getBackfillConversationStatus,
   stopBackfillConversations,
-} from "./update.backfill.queue.js";
+} from "./update.backfill.control.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
 

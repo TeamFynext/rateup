@@ -15,7 +15,7 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
-import { notificationQueue } from "../../../utils/redisConnection.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 
 export interface CardInput {
   title?: string;

@@ -24,8 +24,8 @@ const redisStub = vi.hoisted(() => {
   return base;
 });
 
-vi.mock("../../../utils/redisConnection.js", () => ({
-  default: redisStub,
+vi.mock("../../../utils/redisConnection.js", () => ({ default: redisStub }));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   userStatusQueue: { add: vi.fn(), remove: vi.fn() },
 }));
 
@@ -40,7 +40,7 @@ vi.mock("supertokens-node/recipe/session/index.js", () => ({
 vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
-import { userStatusQueue } from "../../../utils/redisConnection.js";
+import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
 import { log } from "../../../utils/logger.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import {

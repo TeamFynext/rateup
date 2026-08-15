@@ -85,9 +85,10 @@ vi.mock("./conversation/conversation.service.js", () => ({
 
 vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
+  resolveContactChannel: vi.fn(async () => ({ platform: "ALL" })),
 }));
 
-vi.mock("../../utils/redisConnection.js", () => ({
+vi.mock("../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
   notificationQueue: { add: vi.fn() },
 }));
@@ -125,7 +126,7 @@ import {
   addNewContactsToGroup,
 } from "./contactGroup/contactGroup.service.js";
 import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
-import { integrationTriggerQueue, notificationQueue } from "../../utils/redisConnection.js";
+import { integrationTriggerQueue, notificationQueue } from "../../workers/bullmq/queues/index.js";
 import {
   assignWaMessageToUser,
   createInternalWaMessage,
@@ -1176,6 +1177,35 @@ describe("updateContactById", () => {
       orgId: ORG,
       phone: "919000000001",
       platform: "ALL",
+    });
+  });
+
+  // A WhatsApp-only rule must not run for an Instagram chat: it would try to
+  // WhatsApp-message the contact's IGSID and fail.
+  test("runs the automation against the channel the contact is actually on", async () => {
+    db.contact.update.mockResolvedValue(
+      updated({ waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED }),
+    );
+    const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel } =
+      await import("../whatsapp/automatedReply/wa_automatedReply.utils.js");
+    (resolveContactChannel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      platform: "INSTAGRAM",
+      phoneNumberId: "iba-1",
+    });
+
+    await updateContactById(
+      "c1",
+      ORG,
+      { waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED } as any,
+      USER,
+      existing,
+    );
+
+    expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalledWith("CHAT_ASSIGNED", {
+      orgId: ORG,
+      phone: "919000000001",
+      platform: "INSTAGRAM",
+      phoneNumberId: "iba-1",
     });
   });
 

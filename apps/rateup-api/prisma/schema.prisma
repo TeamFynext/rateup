@@ -186,11 +186,9 @@ model Org {
   generateQr               GenerateQr[]
   Integration              Integration[]
   waMessageSchedule        WaMessageSchedule[]
-  WaLogs                   WaLogs[]
   loyaltyProgram           LoyaltyProgram?
   loyaltyTemplates         LoyaltyWaCommand[]
   WaAutomatedReplyMessage  WaAutomatedReplyMessage[]
-  WaAutomatedReplyCommands WaAutomatedReplyCommands[]
   WaAutomatedReply         WaAutomatedReply[]
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
@@ -327,6 +325,7 @@ model WhatsappSettings {
   paymentMethod           String                @default("NATIVE") // NATIVE, SHOPIFY_LINK
   metaBusinessAgent       MetaBusinessAgent?
   teamAccess              TeamWhatsappChannel[] // teams explicitly granted this channel
+  waFlows                 WaFlow[] // flows created under this channel's WABA
 }
 
 model MetaBusinessAgent {
@@ -618,16 +617,6 @@ model WaAccountSettings {
   contactGroupTags String[] @default([])
 }
 
-model WaLogs {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  phone     String?
-  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId     String   @db.Uuid
-  /// [PWaGraphApiErrorDetail]
-  logs      Json[]
-}
-
 model OrgMember {
   id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt           DateTime             @default(now())
@@ -837,6 +826,13 @@ model SurveyResponse {
   Testimonial          Testimonial[]
   Ticket               Ticket[]
   ticketCards          TicketCard[]
+  /// Caller-supplied key that makes a submission idempotent. WhatsApp Flow runs
+  /// pass their flow token: Meta retries a `data_exchange` request that 500s,
+  /// and the answers may already have been filed by the attempt that failed.
+  /// Null for every path that has no natural key (web responses, legacy
+  /// phone-token flow runs) — Postgres treats nulls as distinct, so any number
+  /// of rows may leave it unset.
+  idempotencyKey       String?               @unique
 }
 
 model SurveyStats {
@@ -1492,7 +1488,15 @@ model WaFlow {
   ///[FlowTicket[]]
   ticketIssued Json[]
 
+  // The WhatsApp channel this flow lives on. Meta scopes `flowId` to a WABA, so a
+  // flow can only be referenced (sent, or attached to a template's FLOW button) from
+  // the number whose WABA it was created under. Null means "not recorded" — the org
+  // default channel is used, which is what every flow did before this column existed.
+  whatsappSettings   WhatsappSettings? @relation(fields: [whatsappSettingsId], references: [id], onDelete: SetNull)
+  whatsappSettingsId String?           @db.Uuid
+
   @@unique([flowId, orgId])
+  @@index([whatsappSettingsId])
 }
 
 model Testimonial {
@@ -1797,21 +1801,6 @@ model WaAutomatedReply {
   platform                String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
-  WaAutomatedReplyCommands WaAutomatedReplyCommands[]
-}
-
-model WaAutomatedReplyCommands {
-  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt          DateTime          @default(now())
-  command            String
-  orgId              String            @db.Uuid
-  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
-  waAutomatedReplyId String?           @db.Uuid
-  businessHourId     String?           @db.Uuid
-  businessHour       BusinessHour?     @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
-
-  @@unique([command, orgId, businessHourId], name: "org_command_businessHour_unique")
 }
 
 model RuleMessageBodyLock {
@@ -2689,7 +2678,6 @@ model BusinessHour {
 
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
-  waAutomatedReplyCommands WaAutomatedReplyCommands[]
   ruleMessageBodyLocks     RuleMessageBodyLock[]
 }
 

@@ -22,7 +22,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { createHubSpotContact, getHubSpotCompanyByOwnerEmail } from "../../utils/hubspot.js";
 
 import { getEmailBodyTemplate } from "../email/email.util.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {

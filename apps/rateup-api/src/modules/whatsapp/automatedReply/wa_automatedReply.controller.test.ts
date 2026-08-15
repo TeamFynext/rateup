@@ -15,6 +15,8 @@ vi.mock("../whatsappSurvey/wasurvey.controller.js", () => ({ handleAutomatedRepl
 
 vi.mock("../../../utils/redisConnection.js", () => ({
   default: { keys: vi.fn(async () => []), del: vi.fn() },
+}));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
   notificationQueue: { add: vi.fn() },
   sendMessageQueue: { add: vi.fn() },

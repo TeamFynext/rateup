@@ -11,6 +11,9 @@ vi.mock("../../../utils/prisma.js", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    waFlow: {
+      findMany: vi.fn(),
+    },
   },
   excludeFields: vi.fn(),
 }));
@@ -23,7 +26,10 @@ vi.mock("./wa_templates.utils.js", () => ({
   generateTemplate: vi.fn(),
   getFlowIdFromTemplateComponents: vi.fn(),
 }));
-vi.mock("../flows/flow.service.js", () => ({ getFlowWithSurveyTeamMapIds: vi.fn() }));
+vi.mock("../flows/flow.service.js", () => ({
+  getFlowWithSurveyTeamMapIds: vi.fn(),
+  getWaSettingsForFlow: vi.fn(),
+}));
 vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({
   createSession: vi.fn(),
   deleteSession: vi.fn(),
@@ -39,10 +45,11 @@ import prisma from "../../../utils/prisma.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
-import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
+import { getFlowWithSurveyTeamMapIds, getWaSettingsForFlow } from "../flows/flow.service.js";
 import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import { verifyFlowToken } from "../flows/flowToken.js";
 import { TemplateType } from "../../../../generated/prisma/client.js";
 import {
   createTemplate,
@@ -64,6 +71,7 @@ import {
   updateTemplate,
   updateTemplateInDb,
   uploadFileToWaTemplate,
+  TemplateFlowChannelError,
 } from "./wa_templates.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -76,7 +84,9 @@ const db = (
     >;
   }
 ).waTemplate;
+const waFlowDb = (prisma as unknown as { waFlow: Record<"findMany", Mock> }).waFlow;
 const getWaSettingsMock = getWaSettings as unknown as Mock;
+const getWaSettingsForFlowMock = getWaSettingsForFlow as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const generateTemplateMock = generateTemplate as unknown as Mock;
 const getFlowIdMock = getFlowIdFromTemplateComponents as unknown as Mock;
@@ -128,6 +138,8 @@ beforeEach(() => {
   getFlowIdMock.mockReturnValue(undefined);
   createTemplateMessageMock.mockReturnValue({ type: "template" });
   getFileUrlMock.mockImplementation((key: string) => `https://cdn/${key}`);
+  waFlowDb.findMany.mockResolvedValue([]);
+  getWaSettingsForFlowMock.mockResolvedValue(SETTINGS);
 });
 
 describe("fetchTemplates", () => {
@@ -286,6 +298,58 @@ describe("createTemplate", () => {
     await expect(createTemplate(ORG_A, { name: "order_update" })).rejects.toThrow(
       "No WhatsApp settings found for orgId " + ORG_A,
     );
+  });
+
+  // Meta resolves flow_id within the WABA of the create call, so a flow from another
+  // of the org's numbers comes back as a bare "Invalid parameter" (code 100 / 2388141).
+  describe("a FLOW button pointing at another number's flow", () => {
+    const withFlowButton = {
+      name: "order_update",
+      components: [
+        { type: "buttons", buttons: [{ type: "FLOW", text: "Open", flow_id: "wa-flow-1" }] },
+      ],
+    };
+
+    test("is refused before the template ever reaches Meta", async () => {
+      waFlowDb.findMany.mockResolvedValue([
+        { flowId: "wa-flow-1", name: "Feedback", whatsappSettingsId: "wa-settings-2" },
+      ]);
+      getWaSettingsForFlowMock.mockResolvedValue({ ...SETTINGS, wabaId: "waba-2" });
+
+      await expect(createTemplate(ORG_A, withFlowButton)).rejects.toThrow(TemplateFlowChannelError);
+      expect(callMetaApiMock).not.toHaveBeenCalled();
+    });
+
+    test("names the flow, so the caller knows which button to change", async () => {
+      waFlowDb.findMany.mockResolvedValue([
+        { flowId: "wa-flow-1", name: "Feedback", whatsappSettingsId: "wa-settings-2" },
+      ]);
+      getWaSettingsForFlowMock.mockResolvedValue({ ...SETTINGS, wabaId: "waba-2" });
+
+      await expect(createTemplate(ORG_A, withFlowButton)).rejects.toThrow(/Feedback/);
+    });
+
+    test("is allowed through when the flow is on the same business account", async () => {
+      waFlowDb.findMany.mockResolvedValue([
+        { flowId: "wa-flow-1", name: "Feedback", whatsappSettingsId: "wa-settings-1" },
+      ]);
+      callMetaApiMock.mockResolvedValue({ status: 200, data: { id: "wa-tpl-1" } });
+
+      await expect(createTemplate(ORG_A, withFlowButton)).resolves.toMatchObject({
+        id: "wa-tpl-1",
+      });
+    });
+
+    // A flow we hold no record of may still exist at Meta — imported outside RateUp,
+    // say — and the create call is the authority on that.
+    test("leaves a flow we have no record of to Meta", async () => {
+      waFlowDb.findMany.mockResolvedValue([]);
+      callMetaApiMock.mockResolvedValue({ status: 200, data: { id: "wa-tpl-1" } });
+
+      await expect(createTemplate(ORG_A, withFlowButton)).resolves.toMatchObject({
+        id: "wa-tpl-1",
+      });
+    });
   });
 
   test("replaces Meta's reason with a generic message on a non-200 success", async () => {
@@ -755,7 +819,9 @@ describe("sendTemplateToPhone", () => {
     expect(getFileUrlMock).not.toHaveBeenCalled();
   });
 
-  test("opens a survey session for a template carrying a flow button", async () => {
+  // The run context travels in the signed flow token now, so a send opens no
+  // WaSession row — and two flow templates to the same person no longer collide.
+  test("opens no session row for a template carrying a flow button", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
       survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
@@ -763,13 +829,8 @@ describe("sendTemplateToPhone", () => {
 
     await sendTemplateToPhone(args());
 
-    expect(deleteSessionMock).toHaveBeenCalledWith(ORG_A, "15550001");
-    expect(createSessionMock).toHaveBeenCalledWith({
-      phone: "15550001",
-      orgId: ORG_A,
-      surveyTeamMapId: "stm-1",
-      language: "en",
-    });
+    expect(deleteSessionMock).not.toHaveBeenCalled();
+    expect(createSessionMock).not.toHaveBeenCalled();
   });
 
   test("refuses a flow template whose flow is not in our database", async () => {
@@ -797,7 +858,9 @@ describe("sendTemplateToPhone", () => {
     await expect(sendTemplateToPhone(args())).rejects.toThrow("Team not found in survey");
   });
 
-  test("uses the recipient's phone number as the flow token", async () => {
+  // The token carries the run context (survey mapping, org, respondent) so the
+  // reply can be attributed without a WaSession lookup — see flows/flowToken.ts.
+  test("signs the run context into the flow token", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
       survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
@@ -808,10 +871,17 @@ describe("sendTemplateToPhone", () => {
     const flowButton = createTemplateMessageMock.mock.calls[0][1].components.find(
       (c: any) => c.sub_type === "flow",
     );
-    expect(flowButton.parameters[0].action.flow_token).toBe("15550001");
+    const context = verifyFlowToken(flowButton.parameters[0].action.flow_token);
+    expect(context).toMatchObject({
+      surveyTeamMapId: "stm-1",
+      orgId: ORG_A,
+      phone: "15550001",
+      language: "en",
+    });
   });
 
-  test("has already replaced the customer's session when the send fails", async () => {
+  // A failed send leaves nothing behind to clean up.
+  test("propagates a send failure", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
       survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
@@ -819,7 +889,6 @@ describe("sendTemplateToPhone", () => {
     sendMessageMock.mockRejectedValue(new Error("graph is down"));
 
     await expect(sendTemplateToPhone(args())).rejects.toThrow("graph is down");
-    expect(deleteSessionMock).toHaveBeenCalled();
-    expect(createSessionMock).toHaveBeenCalled();
+    expect(createSessionMock).not.toHaveBeenCalled();
   });
 });

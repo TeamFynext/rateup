@@ -8,8 +8,8 @@ vi.mock("../../../utils/prisma.js", () => ({
   excludeFields: vi.fn(),
 }));
 
-vi.mock("../../../utils/redisConnection.js", () => ({
-  default: { exists: vi.fn(async () => 0) },
+vi.mock("../../../utils/redisConnection.js", () => ({ default: { exists: vi.fn(async () => 0) } }));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
   notificationQueue: { add: vi.fn() },
   sendMessageQueue: { add: vi.fn() },
@@ -67,10 +67,8 @@ import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service.j
 import { WaAutomatedReplyMatchType } from "../../../types/enums.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import {
-  type automationProps,
   generateInternalMessageId,
   generateOrderReferenceId,
-  selectAutomationByBusinessHours,
   validateAutomationMatchCondition,
   validateRuleConditions,
   validateTimeWindow,
@@ -501,54 +499,6 @@ describe("validateTimeWindow", () => {
         validateTimeWindow(openAllDay("monday", [{ openTime: "22:00", closeTime: "06:00" }])),
       ).toBe(true);
     });
-  });
-});
-
-describe("selectAutomationByBusinessHours", () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date(MONDAY_NOON));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  test("prefers an automation whose business hours are open right now", () => {
-    const open = { id: "open", businessHour: openAllDay("monday") };
-    const fallback: { id: string; businessHour: automationProps["businessHour"] } = {
-      id: "fallback",
-      businessHour: null,
-    };
-
-    expect(selectAutomationByBusinessHours([fallback, open])).toBe(open);
-  });
-
-  test("falls back to the always-on automation when none are open", () => {
-    const closed = { id: "closed", businessHour: openAllDay("tuesday") };
-    const fallback: { id: string; businessHour: automationProps["businessHour"] } = {
-      id: "fallback",
-      businessHour: null,
-    };
-
-    expect(selectAutomationByBusinessHours([closed, fallback])).toBe(fallback);
-  });
-
-  test("takes the first open automation when several are open", () => {
-    const first = { id: "first", businessHour: openAllDay("monday") };
-    const second = { id: "second", businessHour: openAllDay("monday") };
-
-    expect(selectAutomationByBusinessHours([first, second])).toBe(first);
-  });
-
-  test("selects nothing when all are closed and there is no fallback", () => {
-    expect(
-      selectAutomationByBusinessHours([{ id: "closed", businessHour: openAllDay("tuesday") }]),
-    ).toBeUndefined();
-  });
-
-  test("selects nothing from an empty list", () => {
-    expect(selectAutomationByBusinessHours([])).toBeUndefined();
   });
 });
 

@@ -55,6 +55,8 @@ const createResponseInputSchema = z.object({
     .optional(),
   phone: z.string().optional(),
   contactId: z.string().optional(),
+  /** See SurveyResponse.idempotencyKey — repeat submissions with the same key collapse. */
+  idempotencyKey: z.string().optional(),
 });
 
 const getResponsesParamsSchema = z.object({

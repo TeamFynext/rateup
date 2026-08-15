@@ -2,7 +2,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import crypto from "node:crypto";
 import { orgWsMessage } from "../../../types/global.js";
 import { log } from "../../../utils/logger.js";
-import baseRedis, { userStatusQueue } from "../../../utils/redisConnection.js";
+import baseRedis from "../../../utils/redisConnection.js";
+import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
 import { WebSocket } from "@fastify/websocket";
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 // Constants for delays

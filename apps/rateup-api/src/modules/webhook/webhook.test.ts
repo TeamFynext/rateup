@@ -10,9 +10,7 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../utils/redisConnection.js", () => ({
-  outgoingWebhookQueue: { add: vi.fn() },
-}));
+vi.mock("../../workers/bullmq/queues/index.js", () => ({ outgoingWebhookQueue: { add: vi.fn() } }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../../utils/checkRoleHandler.js", () => ({
@@ -24,7 +22,7 @@ vi.mock("node:dns/promises", () => ({ lookup: vi.fn() }));
 import prisma from "../../utils/prisma.js";
 import { lookup } from "node:dns/promises";
 import { log } from "../../utils/logger.js";
-import { outgoingWebhookQueue } from "../../utils/redisConnection.js";
+import { outgoingWebhookQueue } from "../../workers/bullmq/queues/index.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {

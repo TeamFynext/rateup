@@ -13,7 +13,6 @@ vi.mock("./wa_settings.service.js", () => ({
   getLeadgenFormsFromWa: vi.fn(),
   getMetaAssets: vi.fn(),
   getMetaDatasetsFromWa: vi.fn(),
-  getWaLogs: vi.fn(),
   getWaSettings: vi.fn(),
   getWaSettingsById: vi.fn(),
   reRegisterPhoneNumber: vi.fn(),
@@ -52,7 +51,6 @@ import {
   getLeadgenFormsFromWa,
   getMetaAssets,
   getMetaDatasetsFromWa,
-  getWaLogs,
   getWaSettings,
   getWaSettingsById,
   reRegisterPhoneNumber,
@@ -75,7 +73,6 @@ import {
   getConversationalAutomationHandler,
   getMetaAssetsHandler,
   getMetaDatasetsHandler,
-  getWaLogsHandler,
   getWaSettingsForOrgHandler,
   getWaSettingsHandler,
   reRegisterPhoneNumberHandler,
@@ -108,7 +105,6 @@ const m = {
   getMetaAssets: getMetaAssets as unknown as Mock,
   getMetaDatasetsFromWa: getMetaDatasetsFromWa as unknown as Mock,
   getOrgIdAndRole: getOrgIdAndRole as unknown as Mock,
-  getWaLogs: getWaLogs as unknown as Mock,
   getWaSettings: getWaSettings as unknown as Mock,
   getWaSettingsById: getWaSettingsById as unknown as Mock,
   reRegisterPhoneNumber: reRegisterPhoneNumber as unknown as Mock,
@@ -189,7 +185,6 @@ beforeEach(() => {
   m.getMetaDatasetsFromWa.mockResolvedValue([{ id: "pixel-1" }]);
   m.syncMetaAssetstoDb.mockResolvedValue(undefined);
   m.subscribeFieldtoPage.mockResolvedValue({ success: true });
-  m.getWaLogs.mockResolvedValue({ totalCount: 0, logs: [] });
   m.getContactTag.mockResolvedValue({ contactTags: ["vip"] });
   m.updateContactTag.mockResolvedValue({});
   m.getConversationalAutomation.mockResolvedValue({ commands: [], prompts: [] });
@@ -649,26 +644,6 @@ describe("contact tags", () => {
     const rep = reply();
 
     await updateContactTagHandler(request({ body: { tags: [], groupTags: [] } }), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(500);
-  });
-});
-
-describe("getWaLogsHandler", () => {
-  test("passes the paging query straight through, scoped to the org", async () => {
-    const rep = reply();
-
-    await getWaLogsHandler(request({ query: { page: 0, limit: 50 } }), rep);
-
-    expect(m.getWaLogs).toHaveBeenCalledWith(ORG_A, { page: 0, limit: 50 });
-    expect(rep.code).toHaveBeenCalledWith(200);
-  });
-
-  test("answers 500 when the logs cannot be read", async () => {
-    m.getWaLogs.mockRejectedValue(new Error("db down"));
-    const rep = reply();
-
-    await getWaLogsHandler(request({ query: {} }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(500);
   });

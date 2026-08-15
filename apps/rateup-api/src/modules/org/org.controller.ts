@@ -30,7 +30,7 @@ import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../../utils/logger.js";
 import { getWebhookSecret } from "../../utils/webhook.js";
 import { getUserByEmail } from "../user/user.service.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { errorMessage } from "../../utils/commonUtils.js";
 import { isRootOrg } from "../../utils/auth.js";
 

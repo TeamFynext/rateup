@@ -19,7 +19,10 @@ vi.mock("../../../utils/prisma.js", () => ({
   },
   excludeFields: vi.fn(),
 }));
-vi.mock("../settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
+vi.mock("../settings/wa_settings.service.js", () => ({
+  getWaSettings: vi.fn(),
+  getWaSettingsById: vi.fn(),
+}));
 vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
@@ -81,7 +84,7 @@ vi.mock("../../../utils/logger.js", () => ({
 
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
-import { getWaSettings } from "../settings/wa_settings.service.js";
+import { getWaSettings, getWaSettingsById } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { generateFlowMessageData } from "./flow.utils.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
@@ -117,6 +120,7 @@ const db = prisma as unknown as {
 };
 const axiosMock = axios as unknown as { get: Mock; post: Mock };
 const getWaSettingsMock = getWaSettings as unknown as Mock;
+const getWaSettingsByIdMock = getWaSettingsById as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const generateFlowMessageDataMock = generateFlowMessageData as unknown as Mock;
 const sendMessageMock = sendMessage as unknown as Mock;
@@ -126,7 +130,20 @@ const ORG_A = "org-a";
 const ORG_B = "org-b";
 const DB_FLOW_ID = "dbflow-1";
 
-const SETTINGS = { wabaId: "waba-1", accessToken: "token-abc" };
+const WA_SETTINGS_ID = "wa-settings-1";
+const SETTINGS = {
+  id: WA_SETTINGS_ID,
+  phoneId: "phone-1",
+  wabaId: "waba-1",
+  accessToken: "token-abc",
+};
+/** The org's other number, on a business account of its own. */
+const OTHER_SETTINGS = {
+  id: "wa-settings-2",
+  phoneId: "phone-2",
+  wabaId: "waba-2",
+  accessToken: "token-xyz",
+};
 
 /** A stored flow row, owned by org A unless told otherwise. */
 function flowRow(overrides: Record<string, unknown> = {}): any {
@@ -150,6 +167,7 @@ function flowRow(overrides: Record<string, unknown> = {}): any {
 beforeEach(() => {
   vi.clearAllMocks();
   getWaSettingsMock.mockResolvedValue(SETTINGS);
+  getWaSettingsByIdMock.mockResolvedValue(SETTINGS);
   callMetaApiMock.mockResolvedValue({ data: { data: [] } });
   axiosMock.post.mockResolvedValue({ data: {} });
   axiosMock.get.mockResolvedValue({ data: {} });
@@ -193,6 +211,29 @@ describe("reading a flow - who is allowed to see it", () => {
     const { where } = db.waFlow.findMany.mock.calls[0][0];
     expect(where.orgId).toBe(ORG_A);
     expect(where.survey.teams.some.teamId).toEqual({ in: ["team-1"] });
+  });
+
+  // Meta scopes flow ids to a WABA, so a caller that will use a flow on one number
+  // asks for that number's flows only.
+  test("narrows the list to one channel when asked to", async () => {
+    getWaSettingsMock.mockResolvedValue(SETTINGS);
+
+    await getFlowsFromDb(ORG_A, "user-1", OTHER_SETTINGS.id);
+
+    const { where } = db.waFlow.findMany.mock.calls[0][0];
+    expect(where.OR).toEqual([{ whatsappSettingsId: OTHER_SETTINGS.id }]);
+  });
+
+  // Flows created before the channel was recorded carry null and belong to the org
+  // default, so filtering by that channel has to keep them.
+  test("keeps the flows that predate the channel column on the default channel", async () => {
+    await getFlowsFromDb(ORG_A, "user-1", WA_SETTINGS_ID);
+
+    const { where } = db.waFlow.findMany.mock.calls[0][0];
+    expect(where.OR).toEqual([
+      { whatsappSettingsId: WA_SETTINGS_ID },
+      { whatsappSettingsId: null },
+    ]);
   });
 
   test("scopes a lookup by survey id to the caller's org", async () => {
@@ -543,6 +584,33 @@ describe("sendFlow", () => {
     });
 
     expect(sendMessageMock.mock.calls[0][4]).toBe("phone-2");
+  });
+
+  // Sending a flow from a number on another WABA is rejected by Meta, so with no
+  // number given the flow goes out through the channel it was created on.
+  test("sends through the flow's own number when the caller names none", async () => {
+    db.waFlow.findFirst.mockResolvedValue(flowRow({ whatsappSettingsId: OTHER_SETTINGS.id }));
+    getWaSettingsByIdMock.mockResolvedValue(OTHER_SETTINGS);
+
+    await sendFlow({ orgId: ORG_A, dbFlowId: DB_FLOW_ID, phone: "15550001" });
+
+    expect(sendMessageMock.mock.calls[0][4]).toBe(OTHER_SETTINGS.phoneId);
+  });
+
+  test("refuses to send a flow from a number on another business account", async () => {
+    db.waFlow.findFirst.mockResolvedValue(flowRow({ whatsappSettingsId: WA_SETTINGS_ID }));
+    getWaSettingsByIdMock.mockResolvedValue(SETTINGS);
+    getWaSettingsMock.mockResolvedValue(OTHER_SETTINGS);
+
+    await expect(
+      sendFlow({
+        orgId: ORG_A,
+        dbFlowId: DB_FLOW_ID,
+        phone: "15550001",
+        whatsappSettingsPhoneId: OTHER_SETTINGS.phoneId,
+      }),
+    ).resolves.toBe(false);
+    expect(sendMessageMock).not.toHaveBeenCalled();
   });
 
   test("reports failure rather than throwing when the send fails", async () => {

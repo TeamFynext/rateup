@@ -1,7 +1,7 @@
 import { CreateContactMessageInput } from "./contact.schema.js";
 import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js";
 import prisma from "../../utils/prisma.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { log } from "../../utils/logger.js";
 
 export async function createMsg({ name, email, message, address }: CreateContactMessageInput) {

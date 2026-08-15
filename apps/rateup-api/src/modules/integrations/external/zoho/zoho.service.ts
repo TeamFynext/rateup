@@ -1,4 +1,4 @@
-import { integrationTriggerQueue } from "../../../../utils/redisConnection.js";
+import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
 import axios from "axios";

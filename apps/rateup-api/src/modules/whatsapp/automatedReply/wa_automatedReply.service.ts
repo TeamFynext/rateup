@@ -5,7 +5,6 @@ import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
 import { checkConversationLimitAvailable } from "../whatsappSurvey/wasurvey.auth.js";
 import { log } from "../../../utils/logger.js";
-import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils.js";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
@@ -40,29 +39,12 @@ export async function getAutomatedRepliesByOrgId(orgId: string) {
 }
 
 export async function getAutomatedReplyById(id: string, orgId: string) {
-  const automatedReply = await prisma.waAutomatedReply.findFirst({
+  return await prisma.waAutomatedReply.findFirst({
     where: {
       id,
       orgId,
     },
-    include: {
-      WaAutomatedReplyCommands: {
-        select: {
-          command: true,
-          businessHourId: true,
-        },
-      },
-    },
   });
-  if (!automatedReply) {
-    return null;
-  }
-  const { WaAutomatedReplyCommands, ...rest } = automatedReply;
-  return {
-    ...rest,
-    commands: WaAutomatedReplyCommands.map((c) => c.command),
-    businessHourId: WaAutomatedReplyCommands?.[0]?.businessHourId,
-  };
 }
 
 export async function createAutomatedReply(data: CreateAutomatedReplySchema, orgId: string) {
@@ -183,23 +165,6 @@ export async function getAutomatedRepliesByKeyWeords(orgId: string, keyword: str
       },
     },
   });
-}
-
-export async function getCommandByOrgIdAndCommand(orgId: string, command: string) {
-  const AutomatedReplyCommands = await prisma.waAutomatedReplyCommands.findMany({
-    where: {
-      orgId,
-      command,
-    },
-    select: {
-      command: true,
-      waAutomatedReplyId: true,
-      waAutomatedReply: true,
-      businessHour: true,
-    },
-  });
-
-  return selectAutomationByBusinessHours(AutomatedReplyCommands);
 }
 
 export async function verifyAutomationTriggerLimit(orgId: string) {

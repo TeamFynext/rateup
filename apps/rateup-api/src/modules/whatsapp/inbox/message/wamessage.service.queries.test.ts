@@ -57,7 +57,7 @@ vi.mock("../../../contact/conversation/conversation.service.js", () => ({
   setInboxStatus: vi.fn(),
   updateConversationAssignees: vi.fn(),
 }));
-vi.mock("../../../../utils/redisConnection.js", () => ({
+vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   notificationQueue: { add: vi.fn() },
   sendMessageQueue: { add: vi.fn() },
 }));
@@ -82,7 +82,7 @@ import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js"
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.service.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
-import { sendMessageQueue } from "../../../../utils/redisConnection.js";
+import { sendMessageQueue } from "../../../../workers/bullmq/queues/index.js";
 import { log } from "../../../../utils/logger.js";
 import { Role } from "../../../org/org.services.js";
 import {

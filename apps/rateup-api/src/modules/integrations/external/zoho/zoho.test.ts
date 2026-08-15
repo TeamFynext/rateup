@@ -35,12 +35,12 @@ vi.mock("./zoho.client.js", () => ({
 vi.mock("axios", () => ({ default: { post: vi.fn(), get: vi.fn() } }));
 
 vi.mock("../../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../../../utils/redisConnection.js", () => ({
+vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
 }));
 
 import axios from "axios";
-import { integrationTriggerQueue } from "../../../../utils/redisConnection.js";
+import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import { checkSession } from "../../../../utils/checkSession.js";
 import { getIntegrationByName } from "../../integrations.service.js";
 import { getIntegrationByZohoChannelId, getValidZohoAccessToken } from "./zoho.service.js";

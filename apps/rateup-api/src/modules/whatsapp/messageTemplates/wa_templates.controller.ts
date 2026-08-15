@@ -5,11 +5,10 @@ import {
   waMessageScheduleSource,
   WaTemplateComponentType,
   WaTemplateStatus,
-  WaTemplateSupportedFormats,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import { getOrgIdAndRole } from "../../user/user.service.js";
-import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import {
   ByTemplateIdParamsSchema,
@@ -32,6 +31,7 @@ import {
   registerTemplatesInDb,
   saveTemplate,
   sendTemplateToPhone,
+  TemplateFlowChannelError,
   syncTemplates,
   updateTemplate,
   updateTemplateInDb,
@@ -40,31 +40,22 @@ import {
 } from "./wa_templates.service.js";
 import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
-import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import { signFlowToken } from "../flows/flowToken.js";
+import { buildTemplateComponents } from "./templateComponents.js";
 import prisma from "../../../utils/prisma.js";
 import { GraphApiError } from "../wa_axios.js";
 import { getGraphApiErrorMessage, handleWhatsappError } from "../wa_error_handler.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
-import {
-  generateOrderReferenceId,
-  sendPaymentInitTemplate,
-} from "../automatedReply/wa_automatedReply.utils.js";
+import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 import { wait } from "../whatsappSurvey/wasurvey.controller.js";
 import { createWaMessageSchedule } from "../wa_message_scheduler.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
 import {
-  WHATSAPP_BUTTON_TYPE,
   type OutgoingTemplateComponent,
   type WaTemplateComponent,
 } from "../../../types/whatsapp.types.js";
-import { isEmptyString } from "../../../utils/commonUtils.js";
-import { getConnectedWaCatalog } from "../catalog/catalog.service.js";
-import dayjs from "dayjs";
 import { validateFile } from "../../../utils/upload/validate.js";
-import {
-  ErrorLogsQuery,
-  SendTemplateToContacts,
-} from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
+import { SendTemplateToContacts } from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
 
 function getErrorResponseData(e: unknown): unknown {
   return e && typeof e === "object" && "response" in e
@@ -170,6 +161,10 @@ export async function createTemplateHandler(
     reply.code(200).send("template created");
   } catch (e) {
     log.error({ err: e, data: getErrorResponseData(e) }, "Error creating template");
+    if (e instanceof TemplateFlowChannelError) {
+      // The caller picked a flow from another number — something they can fix, so 400.
+      return reply.code(400).send({ message: e.message });
+    }
     let errorMessage = "Error creating template";
     if (e instanceof GraphApiError) {
       errorMessage = getGraphApiErrorMessage(e);
@@ -273,7 +268,10 @@ export async function updateTemplateHandler(
     }
   } catch (e) {
     log.error({ err: e, data: getErrorResponseData(e) }, "Error updating template");
-    if (e instanceof GraphApiError) {
+    if (e instanceof TemplateFlowChannelError) {
+      // The caller picked a flow from another number — something they can fix, so 400.
+      reply.code(400).send({ message: e.message });
+    } else if (e instanceof GraphApiError) {
       handleWhatsappError(e, request, reply);
     } else {
       reply.code(500).send(e);
@@ -450,27 +448,12 @@ export async function sendTemplateToUserCore(
   // does not retain narrowing even after an early-return null check.
   const dbTemplate: templateData = dbTemplateResult;
 
-  const { data, defaultValues, whatsappSettingsPhoneId } = dbTemplate;
-  const components = [...parameterData]; // Clone parameter data
+  const { data, whatsappSettingsPhoneId } = dbTemplate;
   log.trace("parameterData => %o", parameterData);
 
   const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
   let surveyTeamMapId: string | undefined = undefined;
   if (containsFlowButton) {
-    components.push({
-      type: "button",
-      sub_type: "flow",
-      index: 0,
-      parameters: [
-        {
-          type: "action",
-          action: {
-            flow_token: phone,
-          },
-        },
-      ],
-    });
-
     const flowId = getFlowIdFromTemplateComponents(data.components);
     if (!flowId) {
       throw new Error("Flow id not found in template");
@@ -485,645 +468,22 @@ export async function sendTemplateToUserCore(
     if (!surveyTeamMapId) {
       throw new Error("Team not found in survey");
     }
-
-    await deleteSession(orgId, phone);
-    await createSession({
-      phone,
-      orgId,
-      surveyTeamMapId,
-      language: dbFlow?.survey?.languages[0],
-    });
   }
 
-  const headerComponent = dbTemplate.data.components.find(
-    (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-  );
-
-  const format = headerComponent?.format;
-
-  // Function to push a new HEADER component
-  const addHeaderComponent = (
-    format: WaTemplateSupportedFormats,
-    link: string,
-    filename: string | null = null,
-  ) => {
-    const newComponent = {
-      type: WaTemplateComponentType.HEADER,
-      parameters: [
-        {
-          type: format.toLowerCase(),
-          [format.toLowerCase()]: {
-            link,
-            ...(filename ? { filename } : {}),
-          },
-        },
-      ],
-    };
-    components.push(newComponent);
-  };
-
-  if (!components.some((c) => c.type === WaTemplateComponentType.HEADER)) {
-    switch (format) {
-      case WaTemplateSupportedFormats.IMAGE:
-        if (defaultValues?.image?.link) {
-          addHeaderComponent(
-            WaTemplateSupportedFormats.IMAGE,
-            getFileUrlFromKey(defaultValues.image.link),
-          );
-        } else {
-          throw new Error("Image not found in template. Please upload an image and try again");
-        }
-        break;
-
-      case WaTemplateSupportedFormats.DOCUMENT:
-        if (defaultValues?.document?.link) {
-          addHeaderComponent(
-            WaTemplateSupportedFormats.DOCUMENT,
-            getFileUrlFromKey(defaultValues.document.link),
-            defaultValues?.document?.filename,
-          );
-        } else {
-          throw new Error("File not found in template. Please upload a document and try again");
-        }
-        break;
-      case WaTemplateSupportedFormats.VIDEO:
-        if (defaultValues?.video?.link) {
-          addHeaderComponent(
-            WaTemplateSupportedFormats.VIDEO,
-            getFileUrlFromKey(defaultValues.video.link),
-          );
-        } else {
-          throw new Error("Video not found in template. Please upload a video and try again");
-        }
-        break;
-      case WaTemplateSupportedFormats.PRODUCT:
-        const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!, orgId);
-        if (!catalog || catalog.catalogId !== defaultValues?.catalog?.catalogId) {
-          log.error(
-            "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
-            defaultValues?.catalog?.catalogId,
-            whatsappSettingsPhoneId,
-          );
-          throw Error("The selected catalog not linked to the selected whatsapp account");
-        }
-        components.push({
-          type: WaTemplateComponentType.HEADER,
-          parameters: [
-            {
-              type: WaTemplateSupportedFormats.PRODUCT.toLocaleUpperCase(),
-              [WaTemplateSupportedFormats.PRODUCT.toLocaleLowerCase()]: {
-                product_retailer_id: defaultValues?.catalog?.spm?.product_retailer_id,
-                catalog_id: catalog.catalogId,
-              },
-            },
-          ],
-        });
-        break;
-      default:
-        // Handle unsupported formats if needed
-        break;
-    }
-  }
-
-  async function processComponents() {
-    for await (const item of dbTemplate.data.components) {
-      if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-        let quickReplyIdx = 0;
-        for await (const [idx, button] of item.buttons?.entries() ?? []) {
-          if (button?.type === "URL" && (button.example?.length ?? 0) > 0) {
-            if (button?.example?.[0]?.startsWith(":")) {
-              let shortUrlId = button?.example[0].slice(1);
-              if (shortUrlId?.startsWith("error")) continue;
-
-              const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
-                where: { shortUrlId },
-              });
-              if (!surveyTeamMapData) continue;
-
-              const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
-                where: {
-                  surveyId: surveyTeamMapData.surveyId,
-                  ...(teamId && { teamId }),
-                },
-              });
-
-              let url =
-                surveyTeamMapWithTeam?.shortUrlId ||
-                surveyTeamMapWithTeam?.id ||
-                shortUrlId ||
-                "error";
-              let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
-              log.info("Short URL ID: %s", url);
-              log.info(
-                "length : %s",
-                `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`.length,
-              );
-              components.push({
-                type: "button",
-                sub_type: "url",
-                index: idx,
-                parameters: [
-                  {
-                    type: "text",
-                    text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
-                  },
-                ],
-              });
-            } else if (button?.url?.includes("COPY_CODE")) {
-              components.push({
-                type: "button",
-                sub_type: button.type,
-                index: 0,
-                parameters: [
-                  {
-                    type: "text",
-                    text: components?.[0]?.parameters?.[0]?.text || "123",
-                  },
-                ],
-              });
-            } else {
-              components.push({
-                type: "button",
-                sub_type: "url",
-                index: idx,
-                parameters: [
-                  {
-                    type: "text",
-                    text: buttonVariable || button?.example?.[0] || phone,
-                  },
-                ],
-              });
-            }
-          } else if (button.type === "COPY_CODE") {
-            components.push({
-              type: "button",
-              sub_type: button.type,
-              index: 0,
-              parameters: [
-                {
-                  type: "coupon_code",
-                  coupon_code: button.example?.[0],
-                },
-              ],
-            });
-          } else if (button.type === WHATSAPP_BUTTON_TYPE.CATALOG) {
-            components.push({
-              type: "button",
-              sub_type: button.type,
-              index: 0,
-              ...(defaultValues?.catalog?.thumbnail_product_retailer_id?.length
-                ? {
-                    parameters: [
-                      {
-                        type: "action",
-                        action: {
-                          thumbnail_product_retailer_id:
-                            defaultValues?.catalog?.thumbnail_product_retailer_id,
-                        },
-                      },
-                    ],
-                  }
-                : {}),
-            });
-          } else if (button.type === WHATSAPP_BUTTON_TYPE.MPM) {
-            components.push({
-              type: "button",
-              sub_type: button.type,
-              index: 0,
-              parameters: [
-                {
-                  type: "action",
-                  action: {
-                    thumbnail_product_retailer_id:
-                      isEmptyString(defaultValues?.catalog?.thumbnail_product_retailer_id) ??
-                      undefined,
-                    sections: defaultValues?.catalog?.mpm?.sections?.map(({ title, products }) => ({
-                      title,
-                      product_items: products.map((p) => ({
-                        product_retailer_id: p,
-                      })),
-                    })),
-                  },
-                },
-              ],
-            });
-          } else if (
-            button.type === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS &&
-            dbTemplate.templateType !== TemplateType.ORDER_DETAILS &&
-            !components.some((c) => c.type === "button" && c.sub_type === "order_details")
-          ) {
-            const sub_total =
-              Number(defaultValues?.orderDetails?.item?.price) *
-              Number(defaultValues?.orderDetails?.item?.quantity);
-            const total_amount =
-              sub_total +
-              Number(defaultValues?.orderDetails?.shipping ?? 0) +
-              Number(defaultValues?.orderDetails?.tax ?? 0) -
-              Number(defaultValues?.orderDetails?.discount ?? 0);
-            components.push({
-              type: "button",
-              sub_type: button.type.toLowerCase(),
-              index: 0,
-              parameters: [
-                {
-                  type: "action",
-                  action: {
-                    order_details: {
-                      reference_id: generateOrderReferenceId(),
-                      currency: "INR",
-                      type: defaultValues?.orderDetails?.productType,
-                      payment_settings: [
-                        {
-                          type: "payment_gateway",
-                          payment_gateway: {
-                            type: defaultValues?.orderDetails?.paymentType,
-                            configuration_name: defaultValues?.orderDetails?.paymentConfigName,
-                          },
-                        },
-                      ],
-                      ...(defaultValues?.orderDetails?.productType === "physical-goods"
-                        ? {
-                            shipping_info: {
-                              country: "IN",
-                              addresses: [],
-                            },
-                          }
-                        : {}),
-                      order: {
-                        items: [
-                          {
-                            amount: {
-                              offset: 100,
-                              value: Number(defaultValues?.orderDetails?.item?.price) * 100,
-                            },
-                            ...(defaultValues?.orderDetails?.item?.salePrice
-                              ? {
-                                  sale_amount: {
-                                    offset: 100,
-                                    value:
-                                      Number(defaultValues?.orderDetails?.item?.salePrice) * 100,
-                                  },
-                                }
-                              : {}),
-                            name: defaultValues?.orderDetails?.item?.name,
-                            quantity: defaultValues?.orderDetails?.item?.quantity,
-                            country_of_origin: defaultValues?.orderDetails?.item?.origin,
-                            importer_name: defaultValues?.orderDetails?.item?.importerName,
-                            importer_address: {
-                              address_line1: defaultValues?.orderDetails?.item?.importerAddress1,
-                              city: defaultValues?.orderDetails?.item?.importerCity,
-                              zone_code: defaultValues?.orderDetails?.item?.importerZoneCode,
-                              postal_code: defaultValues?.orderDetails?.item?.importerPostalCode,
-                              country_code: "IN",
-                            },
-                          },
-                        ],
-                        sub_total: {
-                          offset: 100,
-                          value: sub_total * 100,
-                        },
-                        shipping: {
-                          offset: 100,
-                          value: Number(defaultValues?.orderDetails?.shipping) * 100,
-                        },
-                        tax: {
-                          offset: 100,
-                          description: defaultValues?.orderDetails?.taxDescription,
-                          value: Number(defaultValues?.orderDetails?.tax) * 100,
-                        },
-                        ...(defaultValues?.orderDetails?.discount
-                          ? {
-                              discount: {
-                                offset: 100,
-                                description: defaultValues?.orderDetails?.discountDescription,
-                                value: Number(defaultValues?.orderDetails?.discount) * 100,
-                              },
-                            }
-                          : {}),
-                        status: "pending",
-                        ...(defaultValues?.orderDetails?.expiry
-                          ? {
-                              expiration: {
-                                timestamp: dayjs(defaultValues?.orderDetails?.expiry)
-                                  .add(300, "seconds")
-                                  .unix(),
-                              },
-                            }
-                          : {}),
-                      },
-                      total_amount: {
-                        offset: 100,
-                        value: total_amount * 100,
-                      },
-                    },
-                  },
-                },
-              ],
-            });
-          } else if (button.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-            if (
-              (quickReplyPayload?.length ?? 0) > quickReplyIdx &&
-              quickReplyPayload?.[quickReplyIdx]
-            ) {
-              components.push({
-                type: "button",
-                sub_type: button.type,
-                index: idx,
-                parameters: [
-                  {
-                    type: "payload",
-                    payload: quickReplyPayload[quickReplyIdx],
-                  },
-                ],
-              });
-              quickReplyIdx++;
-            }
-          }
-        }
-      }
-      if (item.type?.toLowerCase() === WaTemplateComponentType.CAROUSEL) {
-        const headerFormat = item?.cards?.[0]?.components.find(
-          (c) => c?.type.toLowerCase() === WaTemplateComponentType.HEADER,
-        )?.format;
-        if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
-          const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId!, orgId);
-          if (!catalog || catalog.catalogId !== defaultValues?.catalog?.catalogId) {
-            log.error(
-              "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
-              defaultValues?.catalog?.catalogId,
-              whatsappSettingsPhoneId,
-            );
-            throw Error("The selected catalog not linked to the selected whatsapp account");
-          }
-          let cards = await Promise.all(
-            item?.cards?.map(async (card, index) => {
-              const cardInComponents = components.find(
-                (c) => c.type === WaTemplateComponentType.CAROUSEL,
-              )?.cards?.[index];
-              const cardDefaultValues = defaultValues?.productCarousel?.find(
-                (c) => c.cardIndex === index,
-              );
-              let cardComponents = cardInComponents ? [...cardInComponents.components] : [];
-              for (const comp of card.components) {
-                if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
-                  if (!comp.format) continue;
-                  if (!cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER)) {
-                    const productId = cardDefaultValues?.product_retailer_id;
-                    cardComponents.push({
-                      type: WaTemplateComponentType.HEADER,
-                      parameters: [
-                        {
-                          type: comp.format.toLowerCase(),
-                          [comp.format.toLowerCase()]: {
-                            product_retailer_id: productId,
-                            catalog_id: catalog.catalogId,
-                          },
-                        },
-                      ],
-                    });
-                  }
-                } else if (comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-                  for (const [idx, button] of comp.buttons?.entries() ?? []) {
-                    if (button?.type === "URL") {
-                      if (button?.example?.[0]?.startsWith(":")) {
-                        let shortUrlId = button?.example[0].slice(1);
-                        if (shortUrlId?.startsWith("error")) continue;
-
-                        const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
-                          where: { shortUrlId },
-                        });
-                        if (!surveyTeamMapData) continue;
-
-                        const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
-                          where: {
-                            surveyId: surveyTeamMapData.surveyId,
-                            ...(teamId && { teamId }),
-                          },
-                        });
-
-                        let url =
-                          surveyTeamMapWithTeam?.shortUrlId ||
-                          surveyTeamMapWithTeam?.id ||
-                          shortUrlId ||
-                          "error";
-                        let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
-                        log.info("Short URL ID: %s", url);
-                        log.info(
-                          "length : %s",
-                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`.length,
-                        );
-                        cardComponents.push({
-                          type: "button",
-                          sub_type: "url",
-                          index: idx,
-                          parameters: [
-                            {
-                              type: "text",
-                              text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
-                            },
-                          ],
-                        });
-                        continue;
-                      }
-                      cardComponents.push({
-                        type: "button",
-                        sub_type: "url",
-                        index: idx,
-                        ...(button?.example?.[0]
-                          ? {
-                              parameters: [
-                                {
-                                  type: "text",
-                                  text: button?.example[0],
-                                },
-                              ],
-                            }
-                          : {}),
-                      });
-                    }
-                  }
-                }
-              }
-              return {
-                card_index: index,
-                components: cardComponents,
-              };
-            }) ?? [],
-          );
-          components.push({
-            type: "carousel",
-            cards,
-          });
-        } else {
-          let cards = await Promise.all(
-            item?.cards?.map(async (card, index) => {
-              const cardInComponents = components.find(
-                (c) => c.type === WaTemplateComponentType.CAROUSEL,
-              )?.cards?.[index];
-              const cardDefaultValues = defaultValues?.mediaCarousel?.find(
-                (c) => c.cardIndex === index,
-              );
-              let cardComponents = cardInComponents ? [...cardInComponents.components] : [];
-              for (const comp of card.components) {
-                if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
-                  if (!comp.format) continue;
-                  if (
-                    !cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER) &&
-                    cardDefaultValues?.headerLink
-                  ) {
-                    const fileKey = cardDefaultValues.headerLink;
-                    cardComponents.push({
-                      type: WaTemplateComponentType.HEADER,
-                      parameters: [
-                        {
-                          type: comp.format.toLowerCase(),
-                          [comp.format.toLowerCase()]: {
-                            link: getFileUrlFromKey(fileKey),
-                          },
-                        },
-                      ],
-                    });
-                  }
-                } else if (comp.type.toLowerCase() === WaTemplateComponentType.BODY) {
-                  // body_text is documented as a list of example sets; a flat list of
-                  // strings is also accepted, so normalise to one set of values.
-                  const storedExamples = comp.example?.body_text;
-                  const defaultValue: string[] = Array.isArray(storedExamples?.[0])
-                    ? storedExamples[0]
-                    : ((storedExamples as string[] | undefined) ?? []);
-                  if (defaultValue.length > 0) {
-                    const cardBodyIndex = cardComponents.findIndex(
-                      (component) => component.type === "body",
-                    );
-                    if (cardBodyIndex !== -1) {
-                      let params = cardComponents[cardBodyIndex]?.parameters;
-                      if (params) {
-                        params.forEach((data, i) => {
-                          if (typeof data?.text !== "string" || !data.text.trim()) {
-                            data.text = defaultValue?.[i];
-                          }
-                        });
-                        if (params.length < defaultValue.length) {
-                          const remainingValues = defaultValue.slice(params.length);
-                          remainingValues.forEach((value: string) => {
-                            params.push({
-                              type: "text",
-                              text: value,
-                            });
-                          });
-                        }
-                        cardComponents[cardBodyIndex] = {
-                          type: "body",
-                          parameters: params,
-                        };
-                      }
-                    } else {
-                      cardComponents.push({
-                        type: "body",
-                        parameters: defaultValue.map((data) => ({
-                          type: "text",
-                          text: data,
-                        })),
-                      });
-                    }
-                  } else {
-                    cardComponents = cardComponents.filter((f) => f.type !== "body");
-                  }
-                } else if (comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-                  for (const [idx, button] of comp.buttons?.entries() ?? []) {
-                    if (button?.type === "URL") {
-                      if (button?.example?.[0]?.startsWith(":")) {
-                        let shortUrlId = button?.example[0].slice(1);
-                        if (shortUrlId?.startsWith("error")) continue;
-
-                        const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
-                          where: { shortUrlId },
-                        });
-                        if (!surveyTeamMapData) continue;
-
-                        const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
-                          where: {
-                            surveyId: surveyTeamMapData.surveyId,
-                            ...(teamId && { teamId }),
-                          },
-                        });
-
-                        let url =
-                          surveyTeamMapWithTeam?.shortUrlId ||
-                          surveyTeamMapWithTeam?.id ||
-                          shortUrlId ||
-                          "error";
-                        let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
-                        log.info("Short URL ID: %s", url);
-                        log.info(
-                          "length : %s",
-                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`.length,
-                        );
-                        cardComponents.push({
-                          type: "button",
-                          sub_type: "url",
-                          index: idx,
-                          parameters: [
-                            {
-                              type: "text",
-                              text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
-                            },
-                          ],
-                        });
-                        continue;
-                      }
-                      cardComponents.push({
-                        type: "button",
-                        sub_type: "url",
-                        index: idx,
-                        ...(button?.example?.[0]
-                          ? {
-                              parameters: [
-                                {
-                                  type: "text",
-                                  text: button?.example[0],
-                                },
-                              ],
-                            }
-                          : {}),
-                      });
-                    } else if (button?.type === "QUICK_REPLY") {
-                      cardComponents.push({
-                        type: "button",
-                        sub_type: "quick_reply",
-                        index: idx,
-                        ...(cardDefaultValues?.quickReplyPayload
-                          ? {
-                              parameters: [
-                                {
-                                  type: "payload",
-                                  payload: cardDefaultValues?.quickReplyPayload,
-                                },
-                              ],
-                            }
-                          : {}),
-                      });
-                    }
-                  }
-                }
-              }
-              return {
-                card_index: index,
-                components: cardComponents,
-              };
-            }) ?? [],
-          );
-          components.push({
-            type: "carousel",
-            cards,
-          });
-        }
-      }
-    }
-  }
-
-  // Call the function and wait for it to complete before proceeding.
-  await processComponents();
+  // One builder for every template send — the campaign worker calls the same
+  // function, so a template produces identical components whichever path sends it.
+  const components = await buildTemplateComponents({
+    dbTemplate,
+    orgId,
+    phone,
+    teamId,
+    parameters: parameterData,
+    tag,
+    buttonVariable,
+    quickReplyPayload,
+    includeFlowButton: containsFlowButton,
+    flowToken: surveyTeamMapId ? signFlowToken({ surveyTeamMapId, orgId, phone }) : undefined,
+  });
 
   const templateQuery = {
     name: data?.name,
@@ -1145,7 +505,7 @@ export async function sendTemplateToUserCore(
       (component) => component.type === "body",
     )?.parameters;
     if (params) {
-      params.forEach((data, i) => {
+      params.forEach((data: any, i: number) => {
         if (typeof data?.text !== "string" || !data.text.trim()) {
           data.text = defaultValue?.[i];
         }
@@ -1358,34 +718,5 @@ export async function getMessageStatusByIdHandler(
   } catch (error) {
     log.error({ err: error }, "Error getting message status by id");
     reply.code(500).send(error);
-  }
-}
-
-export async function getErrorLogsHandler(
-  request: FastifyRequest<{
-    Querystring: ErrorLogsQuery;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const data = await prisma.waLogs.findMany({
-      where: {
-        orgId: request.user.orgId,
-        createdAt: {
-          ...(request.query.endDate ? { lte: new Date(request.query.endDate) } : {}),
-          ...(request.query.startDate ? { gte: new Date(request.query.startDate) } : {}),
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      omit: {
-        orgId: true,
-      },
-    });
-    return reply.code(200).send(data);
-  } catch (error) {
-    log.error({ err: error }, "Error getting error logs");
-    reply.code(500).send({ message: "Error getting error logs" });
   }
 }

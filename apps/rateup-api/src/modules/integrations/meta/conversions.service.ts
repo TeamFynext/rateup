@@ -4,7 +4,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { Role } from "../../../../generated/prisma/client.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
-import { notificationQueue } from "../../../utils/redisConnection.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 
 /** Meta nests the useful text under `response.data.error.message`; fall back to the Error. */
 function metaConversionErrorMessage(error: unknown): string {
