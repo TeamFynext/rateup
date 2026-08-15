@@ -26,6 +26,8 @@ export const outgoingWebhookWorker = new Worker(
     });
     if (!webhook?.org?.Webhook?.events.includes(event)) return;
 
+    console.log("🚀 ~ webhook.org.Webhook.url:", webhook.org.Webhook.url, job?.id);
+
     const response = await fetch(webhook.org.Webhook.url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
