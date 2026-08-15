@@ -5,8 +5,10 @@ import { getWaSettings } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { CreateWaTemplateInput } from "./wa_templates.schema.js";
 import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
-import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
-import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { getFlowWithSurveyTeamMapIds, getWaSettingsForFlow } from "../flows/flow.service.js";
+import { signFlowToken } from "../flows/flowToken.js";
+import { getFlowIdsFromTemplateComponents } from "../../../utils/waTemplateComponents.js";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import {
   WaTemplateCategory,
   WaTemplateComponentType,
@@ -200,6 +202,53 @@ export async function getTemplateWithHSMId(hsmId: string) {
 }
 
 /**
+ * A FLOW button on the template points at a flow that lives on another of the org's
+ * WhatsApp channels. Meta answers that with a bare "Invalid parameter", so this is
+ * raised before the call and reported to the caller as a 400.
+ */
+export class TemplateFlowChannelError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TemplateFlowChannelError";
+  }
+}
+
+/**
+ * Rejects FLOW buttons whose flow does not live on the WABA the template is being
+ * created under.
+ *
+ * Meta resolves `flow_id` within the WABA of the create call, so a flow created on
+ * one number is invisible to a template on another and the create fails with
+ * "The flow associated with the button does not exist" (code 100 / 2388141). Flows
+ * we hold no record of are left alone: they may well exist at Meta, and the create
+ * call is the authority on that.
+ */
+async function assertFlowButtonsOnWaba(
+  orgId: string,
+  components: WaTemplateComponent[] | undefined,
+  wabaId: string | null,
+) {
+  const flowIds = getFlowIdsFromTemplateComponents(components ?? []);
+  if (!flowIds.length) {
+    return;
+  }
+
+  const flows = await prisma.waFlow.findMany({
+    where: { orgId, flowId: { in: flowIds } },
+    select: { flowId: true, name: true, whatsappSettingsId: true },
+  });
+
+  for (const flow of flows) {
+    const flowWaSettings = await getWaSettingsForFlow(orgId, flow.whatsappSettingsId);
+    if (flowWaSettings.wabaId !== wabaId) {
+      throw new TemplateFlowChannelError(
+        `The flow "${flow.name}" belongs to a different WhatsApp number than the one this template is being created on. Pick a flow from that number, or create the template on the number the flow belongs to.`,
+      );
+    }
+  }
+}
+
+/**
  * Creates a template using the WhatsApp Business API
  * @param template
  * @returns
@@ -213,6 +262,11 @@ export async function createTemplate(
   if (!waSettings) {
     throw new Error("No WhatsApp settings found for orgId " + orgId);
   }
+  await assertFlowButtonsOnWaba(
+    orgId,
+    template.components as WaTemplateComponent[] | undefined,
+    waSettings.wabaId,
+  );
   const res = await callMetaApi(
     `/${waSettings.wabaId}/message_templates`,
     "POST",
@@ -349,11 +403,18 @@ export async function editTemplate(
   whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId: hsm_id, components });
+  const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+  if (!waSettings) {
+    throw new Error("No WhatsApp settings found for orgId " + orgId);
+  }
+  // Outside the try: a flow from another number is the caller's to fix, and the catch
+  // below flattens everything to `false`, which would report it as a generic failure.
+  await assertFlowButtonsOnWaba(
+    orgId,
+    components as unknown as WaTemplateComponent[],
+    waSettings.wabaId,
+  );
   try {
-    const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
-    if (!waSettings) {
-      throw new Error("No WhatsApp settings found for orgId " + orgId);
-    }
     const res = await callMetaApi(`/${hsm_id}`, "POST", waSettings.accessToken, {
       category,
       components,
@@ -739,20 +800,6 @@ export async function sendTemplateToPhone({
   const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
 
   if (containsFlowButton) {
-    components.push({
-      type: "button",
-      sub_type: "flow",
-      index: 0,
-      parameters: [
-        {
-          type: "action",
-          action: {
-            flow_token: phone,
-          },
-        },
-      ],
-    });
-
     const flowId = getFlowIdFromTemplateComponents(data.components);
     if (!flowId) {
       log.error("Flow id not found in template\n Template => %o", data);
@@ -775,14 +822,26 @@ export async function sendTemplateToPhone({
       throw new Error("Team not found in survey");
     }
 
-    await deleteSession(orgId, phone);
-    await createSession({
-      phone,
-      orgId,
-      surveyTeamMapId: surveyTeamMap,
-      language: dbFlow?.survey?.languages[0],
+    // Pushed only once the survey mapping is known, so the flow token can carry
+    // the run context rather than just the recipient's phone.
+    components.push({
+      type: "button",
+      sub_type: "flow",
+      index: 0,
+      parameters: [
+        {
+          type: "action",
+          action: {
+            flow_token: signFlowToken({
+              surveyTeamMapId: surveyTeamMap,
+              orgId,
+              phone,
+              language: dbFlow?.survey?.languages[0],
+            }),
+          },
+        },
+      ],
     });
-    log.trace("Session created successfully");
   }
 
   const containsImageComponent =

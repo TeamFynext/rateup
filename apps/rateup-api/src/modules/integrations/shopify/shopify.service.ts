@@ -5,16 +5,11 @@ import { GraphqlClient, GraphQLClientResponse, Session, DataType } from "@shopif
 import type { IncomingMessage, ServerResponse } from "http";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import isEmpty from "lodash/isEmpty.js";
-import { notificationQueue, shopifySurveyQueue } from "../../../utils/redisConnection.js";
+import { notificationQueue, shopifySurveyQueue } from "../../../workers/bullmq/queues/index.js";
 import crypto from "crypto";
 import _get from "lodash/get.js";
 import { log } from "../../../utils/logger.js";
-import {
-  createSession,
-  deleteSession,
-  getSession,
-  sendMessage,
-} from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import {
   convertComponentForSenting,
   updateButtonText,
@@ -27,10 +22,7 @@ import {
   ShopifyEvents,
   SubscriptionFeaturePathName,
 } from "../../../types/enums.js";
-import {
-  createTemplateMessage,
-  validateSession,
-} from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { createTemplateMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.service.js";
 import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils.js";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -62,6 +54,7 @@ import { awardPoints, getLCustomerByPhone } from "../../loyalty/accounts/account
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { EarningRulesEngine } from "../../loyalty/earningRulesEngine.js";
 import { ShopifyBody, shopifyErrorDetail } from "./shopify.types.js";
+import { signFlowToken } from "../../whatsapp/flows/flowToken.js";
 import type {
   ShopifyGraphqlEdge,
   ShopifyGraphqlNode,
@@ -671,22 +664,6 @@ export async function sendWhatsAppTemplateToCustomer(
       if (!surveyTeamMap) {
         throw new Error("SurveyTeamMap not found for flowId " + flowId);
       }
-      const existingSession = await getSession(orgId, phone);
-
-      if (existingSession) {
-        if (validateSession(existingSession)) {
-          await deleteSession(orgId, phone);
-        } else {
-          log.warn("Session already exists for %o. Skipping...", phone);
-        }
-      }
-      // creating session
-      await createSession({
-        phone,
-        surveyTeamMapId: surveyTeamMap.id,
-        orgId: orgId,
-        language: surveyTeamMap.survey.languages[0],
-      });
       // adding flow button
       templateComponents.push({
         type: "button",
@@ -696,7 +673,12 @@ export async function sendWhatsAppTemplateToCustomer(
           {
             type: "action",
             action: {
-              flow_token: phone,
+              flow_token: signFlowToken({
+                surveyTeamMapId: surveyTeamMap.id,
+                orgId,
+                phone,
+                language: surveyTeamMap.survey.languages[0],
+              }),
             },
           },
         ],

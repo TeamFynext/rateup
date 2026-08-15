@@ -5,7 +5,6 @@ vi.mock("../../../utils/prisma.js", () => ({
     contact: { findMany: vi.fn() },
     surveyTeamMap: { findFirst: vi.fn() },
     waMessage: { findFirst: vi.fn() },
-    waLogs: { findMany: vi.fn() },
   },
   excludeFields: vi.fn(),
 }));
@@ -26,6 +25,7 @@ vi.mock("./wa_templates.service.js", () => ({
   updateTemplate: vi.fn(),
   updateTemplateInDb: vi.fn(),
   uploadFileToWaTemplate: vi.fn(),
+  TemplateFlowChannelError: class TemplateFlowChannelError extends Error {},
 }));
 vi.mock("./wa_templates.utils.js", () => ({
   generateTemplate: vi.fn(),
@@ -95,7 +95,6 @@ import { TemplateType } from "../../../../generated/prisma/client.js";
 import {
   createTemplateHandler,
   deleteTemplateHandler,
-  getErrorLogsHandler,
   getMessageStatusByIdHandler,
   getTemplateByIdHandler,
   getTemplatesHandler,
@@ -116,7 +115,6 @@ const db = prisma as unknown as {
   contact: { findMany: Mock };
   surveyTeamMap: { findFirst: Mock };
   waMessage: { findFirst: Mock };
-  waLogs: { findMany: Mock };
 };
 const m = {
   createTemplate: createTemplate as unknown as Mock,
@@ -222,7 +220,6 @@ beforeEach(() => {
   m.getGraphApiErrorMessage.mockReturnValue("Meta says no");
   db.contact.findMany.mockResolvedValue([{ id: "c-1", phone: "15550001" }]);
   db.waMessage.findFirst.mockResolvedValue(null);
-  db.waLogs.findMany.mockResolvedValue([]);
 });
 
 describe("listing and reading templates", () => {
@@ -919,39 +916,5 @@ describe("getMessageStatusByIdHandler", () => {
     await getMessageStatusByIdHandler(request({ params: { messageId: "wamid-1" } }), rep);
 
     expect(sent(rep).status).toBe("failed");
-  });
-});
-
-describe("getErrorLogsHandler", () => {
-  test("returns the org's logs, newest first, without leaking the org id", async () => {
-    const rep = reply();
-
-    await getErrorLogsHandler(request({ query: {} }), rep);
-
-    const call = db.waLogs.findMany.mock.calls[0][0];
-    expect(call.where.orgId).toBe(ORG_A);
-    expect(call.orderBy).toEqual({ createdAt: "desc" });
-    expect(call.omit).toEqual({ orgId: true });
-  });
-
-  test("narrows to the date range the caller asked for", async () => {
-    await getErrorLogsHandler(
-      request({ query: { startDate: "2026-01-01", endDate: "2026-02-01" } }),
-      reply(),
-    );
-
-    expect(db.waLogs.findMany.mock.calls[0][0].where.createdAt).toEqual({
-      gte: new Date("2026-01-01"),
-      lte: new Date("2026-02-01"),
-    });
-  });
-
-  test("answers 500 when the logs cannot be read", async () => {
-    db.waLogs.findMany.mockRejectedValue(new Error("db down"));
-    const rep = reply();
-
-    await getErrorLogsHandler(request({ query: {} }), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(500);
   });
 });

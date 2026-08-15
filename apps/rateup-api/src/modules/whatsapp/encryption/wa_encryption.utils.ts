@@ -4,6 +4,7 @@ import { getWaSettings, updateWaSettings } from "../settings/wa_settings.service
 import { setBusinessPublicKey } from "./wa_encryption.service.js";
 import { log } from "../../../utils/logger.js";
 import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
+import { FlowEndpointException, undecryptableRequest } from "../flows/flow.errors.js";
 import { WhatsappSettings } from "../../../../generated/prisma/client.js";
 
 // The raw (still-encrypted) request body WhatsApp Flow's endpoint sends us.
@@ -50,15 +51,10 @@ export const decryptRequest = (
       Buffer.from(encrypted_aes_key, "base64"),
     );
   } catch (error) {
-    console.error(error);
-    /*
-        Failed to decrypt. Please verify your private key.
-        If you change your public key. You need to return HTTP status code 421 to refresh the public key on the client
-        */
-    throw new FlowEndpointException(
-      421,
-      "Failed to decrypt the request. Please verify your private key.",
-    );
+    // A 421 tells the client to re-fetch our public key and retry, which is how
+    // a key rotation heals itself rather than bricking every open flow.
+    log.error({ err: error }, "Failed to decrypt the flow request's AES key");
+    throw undecryptableRequest("Failed to decrypt the request. Please verify your private key.");
   }
 
   // decrypt flow data
@@ -104,34 +100,18 @@ export const encryptResponse = (
   ]).toString("base64");
 };
 
-export const FlowEndpointException = class FlowEndpointException extends Error {
-  statusCode: number;
-
-  constructor(statusCode: number, message: string) {
-    super(message);
-
-    this.name = this.constructor.name;
-    this.statusCode = statusCode;
-  }
-};
-
 export async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
   const { phoneId, accessToken, orgId } = waSettings;
   if (!phoneId) {
     throw new Error(`WhatsApp settings for orgId ${orgId} has no phoneId`);
   }
   const passphrase = crypto.randomBytes(16).toString("hex");
-  log.trace("Passphrase generated");
-
-  log.trace("Generating new key pairs for encryption");
+  // Never log `encryption` itself — it carries the private key and passphrase.
   const encryption = generateKeyPairsForWaEncryption(passphrase);
-  log.trace("Generated key pairs: %o", encryption);
 
   await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
-
-  log.trace("Updating encryption keys in database");
   await updateWaSettings(orgId, phoneId, { encryption });
-  log.trace("Encryption keys updated successfully");
+  log.info({ orgId, phoneId }, "Rotated the WhatsApp Flow encryption keys");
 }
 
 export async function handleFlowResponse(
@@ -141,8 +121,20 @@ export async function handleFlowResponse(
   }>,
   res: FastifyReply,
 ) {
-  log.trace("Received request to handle flow response \n%o\n%o", req.url, req.body);
-  const { orgId } = req.params;
+  const { orgId, dbFlowId } = req.params;
+  log.trace({ orgId, dbFlowId }, "Flow endpoint request");
+
+  // 427 is the documented code for a request we understand but must not serve.
+  // First thing checked: an unsigned request should not cost us a key lookup,
+  // let alone a decryption.
+  const signature = isRequestSignatureValid(req);
+  if (!signature.valid) {
+    log.warn(
+      { ip: req.ip, reason: signature.reason, rawBodyLength: signature.rawBodyLength },
+      "Rejected a WhatsApp Flow endpoint request that failed signature verification",
+    );
+    return res.status(427).send();
+  }
 
   const waSettings = await getWaSettings(orgId);
   if (!waSettings) {
@@ -176,98 +168,120 @@ export async function handleFlowResponse(
   }
   const { privateKey, passphrase } = encryption;
 
-  if (!isRequestSignatureValid(req)) {
-    // Return status code 432 if request signature does not match.
-    // To learn more about return error codes visit: https://developers.facebook.com/docs/whatsapp/flows/reference/error-codes#endpoint_error_codes
-    log.error("Request signature is not valid");
-    return res.status(432).send();
-  }
-
   let decryptedRequest = null;
   try {
     decryptedRequest = decryptRequest(req.body, privateKey, passphrase);
   } catch (err) {
-    console.error(err);
     if (err instanceof FlowEndpointException) {
       return res.status(err.statusCode).send();
     }
+    log.error({ err }, "Failed to decrypt the flow request");
     return res.status(500).send();
   }
 
   const { aesKeyBuffer, initialVectorBuffer, decryptedBody } = decryptedRequest;
-  log.trace("💬 Decrypted Request:%o", decryptedBody);
-
-  // TODO: Uncomment this block and add your flow token validation logic.
-  // If the flow token becomes invalid, return HTTP code 427 to disable the flow and show the message in `error_msg` to the user
-  // Refer to the docs for details https://developers.facebook.com/docs/whatsapp/flows/reference/error-codes#endpoint_error_codes
-
-  /*
-    if (!isValidFlowToken(decryptedBody.flow_token)) {
-      const error_response = {
-        error_msg: `The message is no longer available`,
-      };
-      return res
-        .status(427)
-        .send(
-          encryptResponse(error_response, aesKeyBuffer, initialVectorBuffer)
-        );
-    }
-    */
 
   try {
-    log.trace(req.params.dbFlowId);
-    const dbFlow = await getFlowFromDb(req.params.dbFlowId, orgId);
+    const dbFlow = await getFlowFromDb(dbFlowId, orgId);
     if (!dbFlow) {
-      throw new Error(`Flow not found in db for dbFlowId: ${req.params.dbFlowId}`);
+      throw new Error(`Flow not found in db for dbFlowId: ${dbFlowId}`);
     }
-    log.trace("👉 DB Flow:%o", { name: dbFlow.name, status: dbFlow.status });
 
     const screenResponse = await handleDecryptedFlowRequest(decryptedBody, dbFlow);
 
-    log.trace({ screenResponse }, "👉 Response to Encrypt");
-
     res.send(encryptResponse(screenResponse, aesKeyBuffer, initialVectorBuffer));
   } catch (error) {
+    // A run we cannot serve (unknown or tampered token) closes the flow with a
+    // message for the respondent, rather than a 500 Meta would keep retrying.
+    if (error instanceof FlowEndpointException) {
+      log.warn({ err: error }, "Refusing the flow request");
+      return res
+        .status(error.statusCode)
+        .send(
+          encryptResponse(
+            { error_msg: error.errorMessage ?? "This message is no longer available" },
+            aesKeyBuffer,
+            initialVectorBuffer,
+          ),
+        );
+    }
     log.error({ err: error }, "Error getting next screen");
     return res.status(500).send();
   }
 }
-// const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
+/**
+ * Why a delivery failed verification. Distinguished so the logs say which of the
+ * several very different causes it was — a missing header (Meta is not signing
+ * at all) is a different problem from a mismatch (wrong secret, or a body that
+ * was re-serialized before hashing).
+ */
+export type SignatureCheck =
+  | { valid: true }
+  | {
+      valid: false;
+      reason:
+        | "no-app-secret"
+        | "no-signature-header"
+        | "malformed-signature-header"
+        | "no-raw-body"
+        | "unparsable-signature"
+        | "signature-mismatch";
+      rawBodyLength?: number;
+    };
 
-// const APP_SECRET = passphrase;
-
-export function isRequestSignatureValid(_req: FastifyRequest) {
-  // AFAIK you can't access rawBody natively in Fastify. So skipping signature validation for now.
-  // TODO: implement this after adding rawBody support in Fastify (maybe use fastify-raw-body?)
-  return true;
-  /*
-  try {
-    log.trace("Checking if request signature is valid");
-    log.trace("Request headers: %o", req.headers);
-    log.trace("APP_SECRET: %s", APP_SECRET);
-    if (!APP_SECRET) {
-      console.warn(
-        "App Secret is not set up. Please Add your app secret in /.env file to check for request validation",
-      );
-      return true;
-    }
-
-    const signatureHeader = req.headers["x-hub-signature-256"] as string;
-    const signatureBuffer = Buffer.from(signatureHeader.replace("sha256=", ""), "utf-8");
-
-    const hmac = crypto.createHmac("sha256", APP_SECRET);
-    const digestString = hmac.update("").digest("hex");
-    const digestBuffer = Buffer.from(digestString, "utf-8");
-
-    if (!crypto.timingSafeEqual(digestBuffer, signatureBuffer)) {
-      console.error("Error: Request Signature did not match");
-      return false;
-    }
-    log.trace("Request signature is valid");
-    return true;
-  } catch (error) {
-    log.error("Error checking request signature: %o", error);
-    console.log("erorrrr", error);
+/**
+ * Meta signs every endpoint delivery with the app secret over the raw body.
+ * Verifying it is what stops anyone who knows the URL from driving the endpoint;
+ * the payload encryption alone does not authenticate the caller.
+ *
+ * Needs `config: { rawBody: true }` on the route — a re-serialized body would
+ * not hash identically. See flow.endpoint-routes.ts.
+ */
+export function isRequestSignatureValid(req: FastifyRequest): SignatureCheck {
+  // Trimmed: a trailing newline picked up from an env file or a dashboard paste
+  // changes the digest and is invisible in logs.
+  const appSecret = process.env.waclient_secret?.trim();
+  if (!appSecret) {
+    return { valid: false, reason: "no-app-secret" };
   }
-  */
+
+  const header = req.headers["x-hub-signature-256"];
+  if (typeof header !== "string") {
+    return { valid: false, reason: "no-signature-header" };
+  }
+  if (!header.startsWith("sha256=")) {
+    return { valid: false, reason: "malformed-signature-header" };
+  }
+
+  const rawBody = (req as FastifyRequest & { rawBody?: string | Buffer }).rawBody;
+  if (rawBody === undefined) {
+    return { valid: false, reason: "no-raw-body" };
+  }
+
+  const expected = crypto.createHmac("sha256", appSecret).update(rawBody).digest();
+  let received: Buffer;
+  try {
+    received = Buffer.from(header.slice("sha256=".length), "hex");
+  } catch {
+    return { valid: false, reason: "unparsable-signature" };
+  }
+
+  // timingSafeEqual throws on a length mismatch, so check that first.
+  if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
+    if (process.env.FLOW_SIGNATURE_DEBUG === "1") {
+      // Everything needed to reproduce the digest offline and find which secret
+      // Meta actually signed with. The body is the encrypted envelope, so this
+      // leaks no answer data — but it is verbose, hence the explicit opt-in.
+      log.warn(
+        {
+          receivedSignature: header,
+          expectedSignature: `sha256=${expected.toString("hex")}`,
+          rawBody: typeof rawBody === "string" ? rawBody : rawBody.toString("utf8"),
+        },
+        "Flow endpoint signature debug",
+      );
+    }
+    return { valid: false, reason: "signature-mismatch", rawBodyLength: rawBody.length };
+  }
+  return { valid: true };
 }

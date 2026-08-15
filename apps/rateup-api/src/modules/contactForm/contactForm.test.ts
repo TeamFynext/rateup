@@ -4,16 +4,14 @@ vi.mock("../../utils/prisma.js", () => ({
   default: { contactForm: { create: vi.fn() } },
 }));
 
-vi.mock("../../utils/redisConnection.js", () => ({
-  notificationQueue: { add: vi.fn() },
-}));
+vi.mock("../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
 import prisma from "../../utils/prisma.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { log } from "../../utils/logger.js";
 import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js";
 import { createMsg } from "./contact.service.js";

@@ -29,7 +29,6 @@ import {
   getLeadgenFormsFromWa,
   getMetaAssets,
   getMetaDatasetsFromWa,
-  getWaLogs,
   buildBusinessProfileBody,
   getBusinessProfile,
   getWaSettings,
@@ -286,22 +285,6 @@ export async function updateContactTagHandler(
     reply.code(204).send();
   } catch (error) {
     log.error({ err: error }, "Error while updating contact tags");
-    reply.code(500).send({ message: "Something went wrong" });
-  }
-}
-
-export async function getWaLogsHandler(
-  request: FastifyRequest<{
-    Querystring: PaginationQuery;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const data = await getWaLogs(orgId, request.query);
-    reply.code(200).send(data);
-  } catch (error) {
-    log.error({ err: error }, "Error while getting wa logs");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

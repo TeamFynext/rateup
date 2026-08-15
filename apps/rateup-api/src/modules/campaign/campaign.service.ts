@@ -16,7 +16,7 @@ import {
   waCampaignDequeue,
   waCampaignEnqueue,
   waMessageQueue,
-} from "../../utils/redisConnection.js";
+} from "../../workers/bullmq/queues/index.js";
 import { Campaign, CampaignDripStage, Prisma } from "../../../generated/prisma/client.js";
 
 export interface WaMessageStats {

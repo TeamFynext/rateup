@@ -1,15 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../../utils/redisConnection.js", () => ({
-  notificationQueue: { add: vi.fn() },
-}));
+vi.mock("../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 
 vi.mock("../../utils/prisma.js", () => ({
   default: { bookDemo: { create: vi.fn() } },
 }));
 
 import prisma from "../../utils/prisma.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { bookDemoHandler, partnerDataHandler } from "./bookDemo.controller.js";
 import { createBookDemoInputSchema, createPartnerDataInputSchema } from "./bookDemo.schema.js";
 

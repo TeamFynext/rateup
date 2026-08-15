@@ -28,6 +28,7 @@ import {
   type ByDbFlowIdParams,
   byDbFlowIdParams,
   byWaFlowIdParams,
+  byWhatsappSettingsPhoneQuery,
   cloneFlowSchema,
   type CreateFlowInput,
   createFlowInput,
@@ -88,7 +89,15 @@ export async function flowRoutes(server: FastifyInstance) {
     getFlowMetricsHandler,
   );
 
-  server.get("/unsynced", getUnsyncedFlowsHandler);
+  server.get(
+    "/unsynced",
+    {
+      schema: {
+        querystring: byWhatsappSettingsPhoneQuery,
+      },
+    },
+    getUnsyncedFlowsHandler,
+  );
 
   server.post(
     "/import",

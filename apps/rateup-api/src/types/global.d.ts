@@ -738,7 +738,7 @@ declare global {
 
   /**
    * The `error` object Meta returns on a failed Graph API call, as captured on
-   * `WaMessage.logs` / `WaLogs.logs`. Fields vary by failure, so all are optional.
+   * `WaMessage.logs`. Fields vary by failure, so all are optional.
    */
   interface WaGraphApiErrorDetail {
     message?: string;

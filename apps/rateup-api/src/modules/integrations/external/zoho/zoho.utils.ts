@@ -1,4 +1,4 @@
-import { integrationTriggerQueue } from "../../../../utils/redisConnection.js";
+import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import { ZohoTriggers } from "./zoho.service.js";
 import type { ZohoCredential } from "./zoho.types.js";
 

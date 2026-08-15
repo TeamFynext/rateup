@@ -1,4 +1,4 @@
-import { zapierTriggerQueue } from "../../../../utils/redisConnection.js";
+import { zapierTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import prisma from "../../../../utils/prisma.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 

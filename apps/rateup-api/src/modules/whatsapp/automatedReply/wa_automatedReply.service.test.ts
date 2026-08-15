@@ -11,7 +11,6 @@ vi.mock("../../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     waAutomatedReplyMessage: { findMany: vi.fn() },
-    waAutomatedReplyCommands: { findMany: vi.fn() },
     usageStats: { update: vi.fn() },
   },
   excludeFields: vi.fn(),
@@ -21,9 +20,6 @@ vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: 
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
   checkConversationLimitAvailable: vi.fn(),
 }));
-vi.mock("./wa_automatedReply.utils.js", () => ({
-  selectAutomationByBusinessHours: vi.fn((list: unknown[]) => list[0]),
-}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -31,10 +27,6 @@ vi.mock("../../../utils/logger.js", () => ({
 import prisma from "../../../utils/prisma.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
 import { checkConversationLimitAvailable } from "../whatsappSurvey/wasurvey.auth.js";
-import {
-  type automationProps,
-  selectAutomationByBusinessHours,
-} from "./wa_automatedReply.utils.js";
 import { log } from "../../../utils/logger.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import {
@@ -45,7 +37,6 @@ import {
   getAutomatedRepliesByOrgId,
   getAutomatedRepliesMessagId,
   getAutomatedReplyById,
-  getCommandByOrgIdAndCommand,
   updateAutomatedReply,
   verifyAutomationTriggerLimit,
 } from "./wa_automatedReply.service.js";
@@ -62,36 +53,26 @@ const db = prisma as unknown as {
     delete: Mock;
   };
   waAutomatedReplyMessage: { findMany: Mock };
-  waAutomatedReplyCommands: { findMany: Mock };
   usageStats: { update: Mock };
 };
 
 const getSubscriptionMock = getSubscription as unknown as Mock;
 const checkConversationLimitMock = checkConversationLimitAvailable as unknown as Mock;
-const selectByHoursMock = selectAutomationByBusinessHours as unknown as Mock;
 
 const AUTOMATION = { id: "auto-1", name: "Greeting", orgId: "org-1" };
 
 beforeEach(() => {
   vi.clearAllMocks();
   db.waAutomatedReply.findMany.mockResolvedValue([AUTOMATION]);
-  db.waAutomatedReply.findUnique.mockResolvedValue({
-    ...AUTOMATION,
-    WaAutomatedReplyCommands: [{ command: "hello", businessHourId: "bh-1" }],
-  });
-  db.waAutomatedReply.findFirst.mockResolvedValue({
-    ...AUTOMATION,
-    WaAutomatedReplyCommands: [{ command: "hello", businessHourId: "bh-1" }],
-  });
+  db.waAutomatedReply.findUnique.mockResolvedValue(AUTOMATION);
+  db.waAutomatedReply.findFirst.mockResolvedValue(AUTOMATION);
   db.waAutomatedReply.create.mockResolvedValue(AUTOMATION);
   db.waAutomatedReply.update.mockResolvedValue(AUTOMATION);
   db.waAutomatedReply.delete.mockResolvedValue(AUTOMATION);
   db.waAutomatedReplyMessage.findMany.mockResolvedValue([]);
-  db.waAutomatedReplyCommands.findMany.mockResolvedValue([]);
   db.usageStats.update.mockResolvedValue({});
   getSubscriptionMock.mockResolvedValue({ features: { whatsapp: { active: true } } });
   checkConversationLimitMock.mockResolvedValue(true);
-  selectByHoursMock.mockImplementation((list: unknown[]) => list[0]);
 });
 
 describe("getAutomatedRepliesMessagId", () => {
@@ -126,21 +107,6 @@ describe("getAutomatedRepliesByOrgId", () => {
 });
 
 describe("getAutomatedReplyById", () => {
-  test("flattens the stored commands into a plain keyword list", async () => {
-    db.waAutomatedReply.findFirst.mockResolvedValue({
-      ...AUTOMATION,
-      WaAutomatedReplyCommands: [
-        { command: "hello", businessHourId: "bh-1" },
-        { command: "hi", businessHourId: "bh-1" },
-      ],
-    });
-
-    const result = await getAutomatedReplyById("auto-1", "org-1");
-
-    expect(result?.commands).toEqual(["hello", "hi"]);
-    expect(result).not.toHaveProperty("WaAutomatedReplyCommands");
-  });
-
   test("scopes the lookup to the caller's org", async () => {
     await getAutomatedReplyById("auto-1", "org-1");
 
@@ -150,27 +116,7 @@ describe("getAutomatedReplyById", () => {
     });
   });
 
-  test("lifts the business hours off the first command", async () => {
-    const result = await getAutomatedReplyById("auto-1", "org-1");
-
-    expect(result?.businessHourId).toBe("bh-1");
-  });
-
-  test("reports no business hours when the automation has no commands", async () => {
-    db.waAutomatedReply.findFirst.mockResolvedValue({
-      ...AUTOMATION,
-      WaAutomatedReplyCommands: [],
-    });
-
-    const result = await getAutomatedReplyById("auto-1", "org-1");
-
-    expect(result?.commands).toEqual([]);
-    expect(result?.businessHourId).toBeUndefined();
-  });
-
-  // Previously this destructured the result with no null check, throwing a bare
-  // TypeError for an unknown id. It now returns null, which the controller answers 404.
-  test("returns null rather than throwing for an unknown id", async () => {
+  test("returns null for an unknown id", async () => {
     db.waAutomatedReply.findFirst.mockResolvedValue(null);
 
     await expect(getAutomatedReplyById("missing", "org-1")).resolves.toBeNull();
@@ -383,32 +329,6 @@ describe("getAutomatedRepliesByKeyWeords", () => {
         matchData: { path: ["keywords"], array_contains: ["hello"] },
       },
     });
-  });
-});
-
-describe("getCommandByOrgIdAndCommand", () => {
-  test("looks the command up in the org and picks by business hours", async () => {
-    const commands: {
-      command: string;
-      waAutomatedReplyId: string;
-      businessHour: automationProps["businessHour"];
-    }[] = [{ command: "hello", waAutomatedReplyId: "auto-1", businessHour: null }];
-    db.waAutomatedReplyCommands.findMany.mockResolvedValue(commands);
-
-    const result = await getCommandByOrgIdAndCommand("org-1", "hello");
-
-    expect(db.waAutomatedReplyCommands.findMany.mock.calls[0][0].where).toEqual({
-      orgId: "org-1",
-      command: "hello",
-    });
-    expect(selectByHoursMock).toHaveBeenCalledWith(commands);
-    expect(result).toBe(commands[0]);
-  });
-
-  test("selects nothing when the org has no such command", async () => {
-    selectByHoursMock.mockReturnValue(undefined);
-
-    await expect(getCommandByOrgIdAndCommand("org-1", "nope")).resolves.toBeUndefined();
   });
 });
 

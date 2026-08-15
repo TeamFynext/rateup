@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { rateupLogo } from "../../utils/constants/constants.js";
 import { CreateBookDemoInput, CreatePartnerDataInput } from "./bookDemo.schema.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 export async function bookDemoHandler(
   request: FastifyRequest<{ Body: CreateBookDemoInput }>,

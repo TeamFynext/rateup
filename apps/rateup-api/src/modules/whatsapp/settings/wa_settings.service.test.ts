@@ -12,7 +12,6 @@ vi.mock("../../../utils/prisma.js", () => ({
       updateMany: vi.fn(),
     },
     waAccountSettings: { findFirst: vi.fn(), upsert: vi.fn() },
-    waLogs: { count: vi.fn(), findMany: vi.fn() },
     metaAssets: { findUnique: vi.fn(), upsert: vi.fn() },
   },
   excludeFields: vi.fn(),
@@ -58,7 +57,6 @@ import {
   getConversationalAutomation,
   getFbPagesFromWa,
   getMetaDatasetsFromWa,
-  getWaLogs,
   getWaSettings,
   getWaSettingsById,
   getWaSettingsByIbaId,
@@ -85,7 +83,6 @@ const db = prisma as unknown as {
     Mock
   >;
   waAccountSettings: Record<"findFirst" | "upsert", Mock>;
-  waLogs: Record<"count" | "findMany", Mock>;
   metaAssets: Record<"findUnique" | "upsert", Mock>;
 };
 const encryptMock = aes_encrypt as unknown as Mock;
@@ -138,8 +135,6 @@ beforeEach(() => {
   db.whatsappSettings.update.mockResolvedValue(row());
   db.whatsappSettings.updateMany.mockResolvedValue({ count: 1 });
   db.whatsappSettings.delete.mockResolvedValue(row());
-  db.waLogs.count.mockResolvedValue(0);
-  db.waLogs.findMany.mockResolvedValue([]);
 });
 
 describe("createWaSettings", () => {
@@ -209,7 +204,18 @@ describe("reading a channel", () => {
   test("scopes the org's default channel to that org", async () => {
     await getWaSettings(ORG_A);
 
-    expect(db.whatsappSettings.findFirst.mock.calls[0][0]).toEqual({ where: { orgId: ORG_A } });
+    expect(db.whatsappSettings.findFirst.mock.calls[0][0].where).toEqual({ orgId: ORG_A });
+  });
+
+  // Callers derive a wabaId from this, and Meta scopes flows and templates to a WABA,
+  // so an unstable default would spread an org's assets across its numbers.
+  test("settles the default on the oldest channel rather than on row order", async () => {
+    await getWaSettings(ORG_A);
+
+    expect(db.whatsappSettings.findFirst.mock.calls[0][0].orderBy).toEqual([
+      { createdAt: "asc" },
+      { id: "asc" },
+    ]);
   });
 
   test("narrows to one number when a phone id is named", async () => {
@@ -534,65 +540,6 @@ describe("contact tags", () => {
       contactGroupTags: ["wholesale"],
     });
     expect(call.update).toEqual({ contactTags: ["vip"], contactGroupTags: ["wholesale"] });
-  });
-});
-
-describe("getWaLogs", () => {
-  test("returns the page of logs alongside a total", async () => {
-    db.waLogs.count.mockResolvedValue(137);
-    db.waLogs.findMany.mockResolvedValue([{ id: "log-1" }]);
-
-    await expect(getWaLogs(ORG_A, { page: 0, limit: 50 } as any)).resolves.toEqual({
-      totalCount: 137,
-      logs: [{ id: "log-1" }],
-    });
-  });
-
-  test("scopes both halves to the org", async () => {
-    await getWaLogs(ORG_A, { page: 0, limit: 50 } as any);
-
-    expect(db.waLogs.count.mock.calls[0][0].where.orgId).toBe(ORG_A);
-    expect(db.waLogs.findMany.mock.calls[0][0].where.orgId).toBe(ORG_A);
-  });
-
-  test("matches a phone number loosely when one is given", async () => {
-    await getWaLogs(ORG_A, { page: 0, limit: 50, phone: "5550" } as any);
-
-    expect(db.waLogs.findMany.mock.calls[0][0].where.phone).toEqual({ contains: "5550" });
-  });
-
-  test("takes every log when no page size is given", async () => {
-    await getWaLogs(ORG_A, {} as any);
-
-    expect(db.waLogs.findMany.mock.calls[0][0].skip).toBeUndefined();
-    expect(db.waLogs.findMany.mock.calls[0][0].take).toBeUndefined();
-  });
-
-  test("sorts newest first by default", async () => {
-    await getWaLogs(ORG_A, { page: 0, limit: 50 } as any);
-
-    expect(db.waLogs.findMany.mock.calls[0][0].orderBy).toEqual([
-      { createdAt: "desc" },
-      { phone: "desc" },
-    ]);
-  });
-
-  test("counts only the logs the filter actually matches", async () => {
-    await getWaLogs(ORG_A, { page: 0, limit: 50, phone: "5550" } as any);
-
-    expect(db.waLogs.count.mock.calls[0][0].where).toEqual({
-      orgId: ORG_A,
-      phone: { contains: "5550" },
-    });
-    expect(db.waLogs.count.mock.calls[0][0].where).toEqual(
-      db.waLogs.findMany.mock.calls[0][0].where,
-    );
-  });
-
-  test("treats the page number as zero-based", async () => {
-    await getWaLogs(ORG_A, { page: 1, limit: 50 } as any);
-
-    expect(db.waLogs.findMany.mock.calls[0][0].skip).toBe(50);
   });
 });
 

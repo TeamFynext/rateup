@@ -1,7 +1,6 @@
 import { FastifyInstance } from "fastify";
 import type { MultipartFile } from "@fastify/multipart";
 import {
-  getErrorLogsExternalController,
   getMessageStatusByIdExternalController,
   getTemplatesExternalController,
   sendTemplateByNameToPhoneExternalController,
@@ -12,7 +11,6 @@ import {
   sendTemplateByNameToPhone,
   sendTemplateToContactsParamsWithOrgId,
   sendTemplatesToContacts,
-  errorLogsQuery,
   messageStatusParams,
   dbTemplateResponse,
 } from "./wa_templates.external.schema.js";
@@ -111,19 +109,6 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
       },
     },
     sendTemplatesToContactsHandler,
-  );
-
-  server.get(
-    "/errors",
-    {
-      schema: {
-        querystring: errorLogsQuery,
-        tags: ["WhatsApp/Template"],
-        description: "Get all error logs with optional date filtering",
-        summary: "Get error logs",
-      },
-    },
-    getErrorLogsExternalController,
   );
 
   server.get(

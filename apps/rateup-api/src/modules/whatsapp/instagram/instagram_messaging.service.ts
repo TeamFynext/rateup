@@ -6,66 +6,11 @@
 
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
+import { sendMetaMessage } from "../meta/metaMessage.service.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
-import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
-import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 
-/**
- * File a message we just sent against the contact's ticket.
- *
- * Every automated Instagram send funnels through the helpers below, and none of
- * them used to record what they sent: the reply reached the customer, but the
- * inbox showed only the customer's half of the conversation. Meta's send
- * response carries `recipient_id`, which is how a private reply — addressed to a
- * comment rather than a person — still lands on the right contact.
- *
- * Storage failures are logged, not thrown. The message is already delivered;
- * reporting it as failed would be a worse lie than a missing row.
- */
-async function recordSentInstagramMessage(
-  igsId: string | undefined,
-  orgId: string,
-  ibaId: string,
-  payload: Record<string, unknown>,
-  responseData: unknown,
-): Promise<void> {
-  const { message_id: messageId, recipient_id: recipientId } =
-    (responseData as { message_id?: string; recipient_id?: string } | undefined) ?? {};
-  const contactId = igsId ?? recipientId;
-
-  if (!contactId) {
-    log.warn(
-      { ibaId, messageId },
-      "[Instagram Messaging] Sent a message with no recipient to file it against",
-    );
-    return;
-  }
-
-  try {
-    await handleWaMessages(
-      "send",
-      payload,
-      contactId,
-      orgId,
-      PlatformType.INSTAGRAM,
-      ibaId,
-      undefined,
-      messageId,
-      undefined,
-      false,
-      null,
-      "AUTOMATED",
-      true,
-    );
-  } catch (error) {
-    log.error(
-      { err: error, igsId: contactId, messageId },
-      "[Instagram Messaging] Message was sent but could not be stored",
-    );
-  }
-}
-
+/** Instagram's messenger-profile surface (ice breakers, persistent menu). */
 async function callInstagramMessengerProfileApi(
   pageAccessToken: string,
   method: "GET" | "POST" | "DELETE",
@@ -86,10 +31,18 @@ async function callInstagramMessengerProfileApi(
 }
 
 /**
- * Send a private reply to an Instagram comment.
- * Must be used within 7 days of the comment (or during live broadcast for live comments).
- * This opens the 24-hour messaging window once the user replies.
+ * File a message we just sent against the contact's ticket.
+ *
+ * Every automated Instagram send funnels through the helpers below, and none of
+ * them used to record what they sent: the reply reached the customer, but the
+ * inbox showed only the customer's half of the conversation. Meta's send
+ * response carries `recipient_id`, which is how a private reply — addressed to a
+ * comment rather than a person — still lands on the right contact.
+ *
+ * Storage failures are logged, not thrown. The message is already delivered;
+ * reporting it as failed would be a worse lie than a missing row.
  */
+
 export async function sendInstagramPrivateReply(
   commentId: string,
   text: string,
@@ -99,8 +52,6 @@ export async function sendInstagramPrivateReply(
   igsId?: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -118,7 +69,17 @@ export async function sendInstagramPrivateReply(
       message: { text },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(
       `[Instagram Messaging] Sent private reply to comment ${commentId}: "${text.substring(0, 50)}..."`,
@@ -126,9 +87,8 @@ export async function sendInstagramPrivateReply(
 
     // No igsId of our own: a private reply is addressed to the comment, so the
     // contact it belongs to comes from Meta's `recipient_id`.
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error(
       { err: error },
@@ -148,8 +108,6 @@ export async function sendInstagramTextMessage(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     // Get settings for this organization
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -170,15 +128,23 @@ export async function sendInstagramTextMessage(
     };
 
     // Send via Meta Graph API
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(
       `[Instagram Messaging] Sent text message to igsId ${igsId}: "${text.substring(0, 50)}..."`,
     );
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending text message to ${igsId}`);
     throw error;
@@ -196,8 +162,6 @@ export async function sendInstagramImage(
   caption?: string,
 ): Promise<{ image: unknown; caption?: { sent: boolean; error?: unknown } }> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -222,26 +186,38 @@ export async function sendInstagramImage(
     };
 
     // Send the image
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
 
     // The caption goes out as its own message, and files itself when it does.
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
 
     if (!caption) {
-      return { image: response.data };
+      return { image: { message_id: result.messageId } };
     }
 
     try {
       await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
-      return { image: response.data, caption: { sent: true } };
+      return { image: { message_id: result.messageId }, caption: { sent: true } };
     } catch (captionError) {
       log.error(
         { err: captionError },
         `[Instagram Messaging] Image delivered to ${igsId} but its caption failed`,
       );
-      return { image: response.data, caption: { sent: false, error: captionError } };
+      return {
+        image: { message_id: result.messageId },
+        caption: { sent: false, error: captionError },
+      };
     }
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending image to ${igsId}`);
@@ -269,8 +245,6 @@ export async function sendInstagramGenericTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -305,15 +279,23 @@ export async function sendInstagramGenericTemplate(
       },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(
       `[Instagram Messaging] Sent generic template to igsId ${igsId} with ${elements.length} elements`,
     );
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending generic template to ${igsId}`);
     throw error;
@@ -336,8 +318,6 @@ export async function sendInstagramQuickReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -361,15 +341,23 @@ export async function sendInstagramQuickReply(
       },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(
       `[Instagram Messaging] Sent quick reply to igsId ${igsId} with ${quickReplies.length} options`,
     );
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending quick reply to ${igsId}`);
     throw error;
@@ -388,8 +376,6 @@ export async function sendInstagramProductTemplate(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -413,15 +399,23 @@ export async function sendInstagramProductTemplate(
       },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(
       `[Instagram Messaging] Sent product template to igsId ${igsId} for products ${productIds.join(", ")}`,
     );
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending product template to ${igsId}`);
     throw error;
@@ -439,8 +433,6 @@ export async function sendInstagramStoryReply(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -464,13 +456,21 @@ export async function sendInstagramStoryReply(
       },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(`[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`);
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending story reply to ${igsId}`);
     throw error;
@@ -690,8 +690,6 @@ export async function sendInstagramVideo(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -715,13 +713,21 @@ export async function sendInstagramVideo(
       },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(`[Instagram Messaging] Sent video to igsId ${igsId}: ${videoUrl}`);
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending video to ${igsId}`);
     throw error;
@@ -738,8 +744,6 @@ export async function sendInstagramFile(
   ibaId: string,
 ): Promise<unknown> {
   try {
-    // Outbound — gate on the conversation limit (inbound is never blocked).
-    await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
@@ -763,13 +767,21 @@ export async function sendInstagramFile(
       },
     };
 
-    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
+    const result = await sendMetaMessage({
+      platform: PlatformType.INSTAGRAM,
+      orgId,
+      to: igsId,
+      sourceIdentifier: ibaId,
+      payload,
+      messageType: "AUTOMATED",
+      isAutomated: true,
+      enforceConversationLimit: true,
+    });
+    if (!result.ok) throw new Error(result.error);
 
     log.info(`[Instagram Messaging] Sent file to igsId ${igsId}: ${fileUrl}`);
 
-    await recordSentInstagramMessage(igsId, orgId, ibaId, payload, response.data);
-
-    return response.data;
+    return { message_id: result.messageId };
   } catch (error) {
     log.error({ err: error }, `[Instagram Messaging] Error sending file to ${igsId}`);
     throw error;

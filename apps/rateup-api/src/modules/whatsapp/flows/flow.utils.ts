@@ -24,10 +24,16 @@ import prisma from "../../../utils/prisma.js";
 interface generateFlowMessageDataProps {
   to: string;
   dbFlow: WaFlow;
+  /**
+   * Signed run context (see flowToken.ts). Defaults to the recipient's phone,
+   * the legacy token the reply handlers still accept.
+   */
+  flowToken?: string;
 }
 export function generateFlowMessageData({
   to,
   dbFlow,
+  flowToken,
 }: generateFlowMessageDataProps): WaSendMessageBody {
   const flow_id = dbFlow.flowId;
   if (!flow_id) {
@@ -104,7 +110,7 @@ export function generateFlowMessageData({
         parameters: {
           mode: mode.toLowerCase() as "draft" | "published",
           flow_message_version: 3,
-          flow_token: to,
+          flow_token: flowToken ?? to,
           flow_id,
           flow_cta: cta,
           flow_action_payload: {

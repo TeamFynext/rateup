@@ -38,7 +38,7 @@ vi.mock("../../integrations/external/zapier/zapier.service.js", () => ({
     TICKET_ASSIGNEE_UPDATED: "ticket_assignee_updated",
   },
 }));
-vi.mock("../../../utils/redisConnection.js", () => ({ notificationQueue: { add: vi.fn() } }));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 vi.mock("../../../utils/commonUtils.js", () => ({ getShortUrlId: vi.fn(() => "TKT-1") }));
 vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 

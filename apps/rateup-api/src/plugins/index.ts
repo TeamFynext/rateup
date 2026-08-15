@@ -5,10 +5,8 @@ import supertokens from "supertokens-node";
 import { plugin, errorHandler } from "supertokens-node/framework/fastify/index.js";
 import { SuperTokensConfig } from "../config.js";
 import { parseCorsWhitelist } from "../utils/corsWhitelist.js";
-import { registerCronJobs } from "./cron.js";
 import { registerSwagger } from "./swagger.js";
 import { registerKafka } from "./kafka.js";
-import registerWorkers from "../jobs/index.js";
 
 export async function registerPlugins(server: FastifyInstance) {
   // SuperTokens initialization
@@ -55,11 +53,9 @@ export async function registerPlugins(server: FastifyInstance) {
   // Kafka producer
   await registerKafka(server);
 
-  // Initialize BullMQ workers
-  await registerWorkers();
-
-  // Cron jobs
-  await registerCronJobs(server);
+  // NOTE: BullMQ consumers and cron jobs deliberately do NOT live here. They run in
+  // the separate worker service (src/worker.ts) so the API can be scaled to N
+  // replicas without every replica firing the same cron tick N times.
 
   // Swagger (only if enabled)
   if (process.env.SWAGGER === "1") {

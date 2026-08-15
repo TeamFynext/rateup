@@ -1,11 +1,11 @@
 import { Worker } from "bullmq";
-import baseRedis from "../utils/redisConnection.js";
-import { processNotification } from "../modules/notification/notification.service.js";
-import { log } from "../utils/logger.js";
+import baseRedis from "../../../utils/redisConnection.js";
+import { processNotification } from "../../../modules/notification/notification.service.js";
+import { log } from "../../../utils/logger.js";
 
 const workerConnection = baseRedis.duplicate();
 
-const notificationWorker = new Worker(
+export const notificationWorker = new Worker(
   "notificationQueue",
   async (job) => {
     if (!job?.data) {

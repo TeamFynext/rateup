@@ -20,7 +20,7 @@ import {
 } from "../../utils/email/payments/subscriptionActivated.js";
 import { getRecurringCharge, getShopifyInfo } from "../integrations/shopify/shopify.service.js";
 import prisma from "../../utils/prisma.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 const credentials = Buffer.from(
   `${process.env.RAZORPAY_API_KEY}:${process.env.RAZORPAY_API_SECRET}`,

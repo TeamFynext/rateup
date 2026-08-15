@@ -5,12 +5,15 @@ vi.mock("../../../utils/prisma.js", () => ({
     rule: { findMany: vi.fn() },
     businessHour: { findUnique: vi.fn() },
     waAutomatedReply: { count: vi.fn() },
+    waMessage: { findFirst: vi.fn() },
   },
   excludeFields: vi.fn(),
 }));
 
 vi.mock("../../../utils/redisConnection.js", () => ({
   default: { exists: vi.fn(async () => 0), set: vi.fn() },
+}));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
   notificationQueue: { add: vi.fn() },
   sendMessageQueue: { add: vi.fn() },
@@ -62,7 +65,10 @@ vi.mock("../../../utils/logger.js", () => ({
 import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
-import { checkAndExecuteRuleByTriggerEvent } from "./wa_automatedReply.utils.js";
+import {
+  checkAndExecuteRuleByTriggerEvent,
+  resolveContactChannel,
+} from "./wa_automatedReply.utils.js";
 
 // No dayjs.extend here on purpose — see wa_automatedReply.utils.test.ts.
 type Mock = ReturnType<typeof vi.fn>;
@@ -70,6 +76,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   rule: { findMany: Mock };
   businessHour: { findUnique: Mock };
+  waMessage: { findFirst: Mock };
 };
 const redis = redisConnection as unknown as { exists: Mock; set: Mock };
 
@@ -499,5 +506,60 @@ describe("checkAndExecuteRuleByTriggerEvent - Instagram events", () => {
     );
 
     expect(result).toBeDefined();
+  });
+});
+
+/**
+ * Contact-level triggers (assignment, close, lifecycle) know only the contact,
+ * so the channel has to be recovered before a rule can be selected for it.
+ */
+describe("resolveContactChannel", () => {
+  beforeEach(() => {
+    db.waMessage.findFirst.mockResolvedValue(null);
+  });
+
+  test.each([
+    ["INSTAGRAM", "iba-1"],
+    ["FACEBOOK", "page-1"],
+  ])("reports a %s thread with the account it arrived on", async (platform, identifier) => {
+    db.waMessage.findFirst.mockResolvedValue({
+      sourcePlatform: platform,
+      sourceIdentifier: identifier,
+    });
+
+    await expect(resolveContactChannel({ id: "c1" })).resolves.toEqual({
+      platform,
+      phoneNumberId: identifier,
+    });
+  });
+
+  // Rules scope WhatsApp by `phoneId`, but an inbound message carries the
+  // display number — passing it would filter out every channel-scoped rule.
+  test("reports a WhatsApp thread without a channel id", async () => {
+    db.waMessage.findFirst.mockResolvedValue({
+      sourcePlatform: "WHATSAPP",
+      sourceIdentifier: "15551323034",
+    });
+
+    await expect(resolveContactChannel({ id: "c1" })).resolves.toEqual({ platform: "WHATSAPP" });
+  });
+
+  test("reads the newest message, since the live channel is the last one used", async () => {
+    await resolveContactChannel({ id: "c1" });
+
+    expect(db.waMessage.findFirst.mock.calls[0][0].orderBy).toEqual({ waCreatedAt: "desc" });
+  });
+
+  test.each([
+    ["igsId", { id: "c1", igsId: "igsid-1" }, "INSTAGRAM"],
+    ["psid", { id: "c1", psid: "psid-1" }, "FACEBOOK"],
+  ])("falls back to the contact's %s when it has no messages", async (_l, contact, platform) => {
+    await expect(resolveContactChannel(contact)).resolves.toEqual({ platform });
+  });
+
+  // Narrowing a contact with no channel at all would only stop rules that
+  // legitimately fire today.
+  test("stays open for a contact with no channel", async () => {
+    await expect(resolveContactChannel({ id: "c1" })).resolves.toEqual({ platform: "ALL" });
   });
 });

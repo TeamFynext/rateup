@@ -45,7 +45,7 @@ import {
   getShopifyProductImage,
 } from "../../integrations/shopify/shopify.service.js";
 import axios from "axios";
-import { integrationTriggerQueue } from "../../../utils/redisConnection.js";
+import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
 import {
   updateZohoLeadQueue,
@@ -379,39 +379,6 @@ export function validateTimeWindow(businessHour: automationProps["businessHour"]
   return false;
 }
 
-/**
- * Selects the best automation from a list based on business hour validation
- * @param automations Array of automations with businessHour property
- * @returns Selected automation or undefined if none match
- */
-export function selectAutomationByBusinessHours<
-  T extends { businessHour: automationProps["businessHour"] },
->(automations: T[]): T | undefined {
-  let selectedAutomation: T | undefined;
-
-  // First priority: Look for automations with business hours that are currently valid
-  const businessHourAutomations = automations.filter(
-    (automation) => automation.businessHour !== null,
-  );
-
-  for (const automation of businessHourAutomations) {
-    const timeWindowValid = validateTimeWindow(
-      automation.businessHour as automationProps["businessHour"],
-    );
-    if (timeWindowValid) {
-      selectedAutomation = automation;
-      break;
-    }
-  }
-
-  // Second priority: If no valid business hour automation found, use null business hour automation
-  if (!selectedAutomation) {
-    selectedAutomation = automations.find((automation) => automation.businessHour === null);
-  }
-
-  return selectedAutomation;
-}
-
 export interface RuleWithConditions {
   id: string;
   name: string;
@@ -655,6 +622,51 @@ export interface RuleExecutionContext {
   shopifyProductIds?: string[];
   shopifyBody?: ShopifyBody;
   instagramMediaId?: string;
+}
+
+/**
+ * The channel a contact is actually reachable on, and the account that channel
+ * belongs to.
+ *
+ * Contact-level triggers (assignment, close, lifecycle) know only the contact,
+ * so they used to fire with `platform: "ALL"` — which matches every rule
+ * regardless of the platform it was built for. A WhatsApp rule would then run
+ * for an Instagram chat and try to WhatsApp-message an IGSID.
+ *
+ * The live channel is whatever the thread last used: `sourceIdentifier` is the
+ * business number for WhatsApp, the IBA id for Instagram and the page id for
+ * Messenger — the same value the inbound handlers pass as `phoneNumberId`.
+ * Falls back to the contact's own identifiers, and finally to "ALL" for a
+ * contact with no channel at all (a fresh import), where narrowing would only
+ * stop rules that legitimately fire today.
+ */
+export async function resolveContactChannel(contact: {
+  id?: string | null;
+  igsId?: string | null;
+  psid?: string | null;
+}): Promise<{ platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL"; phoneNumberId?: string }> {
+  if (contact.id) {
+    const latest = await prisma.waMessage.findFirst({
+      where: { contactId: contact.id, sourcePlatform: { not: null } },
+      orderBy: { waCreatedAt: "desc" },
+      select: { sourcePlatform: true, sourceIdentifier: true },
+    });
+    if (latest?.sourcePlatform === "INSTAGRAM") {
+      return { platform: "INSTAGRAM", phoneNumberId: latest.sourceIdentifier ?? undefined };
+    }
+    if (latest?.sourcePlatform === "FACEBOOK") {
+      return { platform: "FACEBOOK", phoneNumberId: latest.sourceIdentifier ?? undefined };
+    }
+    if (latest?.sourcePlatform === "WHATSAPP") {
+      // Deliberately no phoneNumberId: rules scope WhatsApp by `phoneId`, and
+      // an inbound message carries the display number instead — passing it
+      // would filter out every rule scoped to a channel.
+      return { platform: "WHATSAPP" };
+    }
+  }
+  if (contact.igsId) return { platform: "INSTAGRAM" };
+  if (contact.psid) return { platform: "FACEBOOK" };
+  return { platform: "ALL" };
 }
 
 export async function checkAndExecuteRuleByTriggerEvent(

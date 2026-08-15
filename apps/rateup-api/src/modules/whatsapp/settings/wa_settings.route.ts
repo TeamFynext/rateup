@@ -8,7 +8,6 @@ import {
   syncConversationalAutomationHandler,
   getMetaAssetsHandler,
   getMetaDatasetsHandler,
-  getWaLogsHandler,
   getWaSettingsForOrgHandler,
   getWaSettingsHandler,
   reRegisterPhoneNumberHandler,
@@ -91,16 +90,6 @@ export async function waSettingsRoutes(server: FastifyInstance) {
       },
     },
     deleteWaSettingsHandler,
-  );
-
-  server.get(
-    "/logs",
-    {
-      schema: {
-        querystring: paginationQuery,
-      },
-    },
-    getWaLogsHandler,
   );
 
   server.post("/sync/pages/:whatsappSettingsId", syncFbPagesHandler);

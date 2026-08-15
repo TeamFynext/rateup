@@ -46,7 +46,7 @@ vi.mock("../whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
 }));
 vi.mock("../whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn() }));
 vi.mock("hucre", () => ({ write: vi.fn(async () => Buffer.from("workbook")) }));
-vi.mock("../../utils/redisConnection.js", () => ({
+vi.mock("../../workers/bullmq/queues/index.js", () => ({
   getCampaignCount: vi.fn(),
   waCampaignDequeue: { add: vi.fn() },
   waCampaignEnqueue: { add: vi.fn() },
@@ -65,7 +65,7 @@ import {
   waCampaignDequeue,
   waCampaignEnqueue,
   waMessageQueue,
-} from "../../utils/redisConnection.js";
+} from "../../workers/bullmq/queues/index.js";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums.js";
 import {
   createCampaign,

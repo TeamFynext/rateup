@@ -8,7 +8,7 @@ import {
   WaMessageScheduleStatus,
 } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
-import { createSession, deleteSession, sendMessage } from "./whatsappSurvey/wasurvey.service.js";
+import { sendMessage } from "./whatsappSurvey/wasurvey.service.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
@@ -114,14 +114,6 @@ export async function sendSchedulesWaMessages() {
           if (!schedule.surveyTeamMapId) {
             throw new Error("surveyTeamMapId not found");
           }
-          await deleteSession(schedule.orgId, schedule.phone);
-          await createSession({
-            phone: schedule.phone,
-            orgId: schedule.orgId,
-            surveyTeamMapId: schedule.surveyTeamMapId,
-            language: dbFlow?.survey?.languages[0],
-          });
-          log.trace("Session created successfully");
         }
         const externalApi = schedule.source === waMessageScheduleSource.ExternalApi;
         const res = await sendMessage(

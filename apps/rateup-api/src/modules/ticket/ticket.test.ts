@@ -16,7 +16,7 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../utils/redisConnection.js", () => ({ notificationQueue: { add: vi.fn() } }));
+vi.mock("../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendTextMessage: vi.fn() }));
 vi.mock("../contact/contact.service.js", () => ({ getContactByPhoneNumberAndOrgId: vi.fn() }));
 vi.mock("../loyalty/util.js", () => ({ parsePhoneforWa: vi.fn((p: string) => p) }));
@@ -32,7 +32,7 @@ vi.mock("./ticketBoardLabel/ticketlabel.route.js", () => ({ default: vi.fn() }))
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service.js";
 import { parsePhoneforWa } from "../loyalty/util.js";
