@@ -34,8 +34,18 @@ async function connectWithRetry(retries = 5, delayMs = 5000) {
   log.error("Kafka producer failed to connect after all retries; continuing without it");
 }
 
-export async function registerKafka(server: FastifyInstance) {
+/**
+ * Connects the shared producer. Callers that have no Fastify instance — the
+ * worker services — use this directly; `registerKafka` layers the decorator on
+ * top for the API.
+ */
+export async function connectKafkaProducer() {
   await connectWithRetry();
+  return producer;
+}
+
+export async function registerKafka(server: FastifyInstance) {
+  await connectKafkaProducer();
 
   server.decorate("kafka", { producer });
 

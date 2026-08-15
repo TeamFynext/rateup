@@ -76,12 +76,22 @@ export async function createWaSettings(
   });
 }
 
+/**
+ * Settings for one of the org's WhatsApp channels, or — with no phone id — the org
+ * default channel.
+ *
+ * The default is the oldest row, not "whichever row Postgres happened to return
+ * first". Callers derive a `wabaId` from this, and Meta scopes flows and templates to
+ * a WABA, so an unstable default silently spreads an org's assets across its numbers.
+ * The `WaFlow.whatsappSettingsId` backfill picks the same row.
+ */
 export async function getWaSettings(orgId: string, whatsappSettingsPhoneId?: string) {
   const res = await prisma.whatsappSettings.findFirst({
     where: {
       orgId: orgId,
       ...(whatsappSettingsPhoneId && { phoneId: whatsappSettingsPhoneId }),
     },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
 
   if (!res) {
@@ -428,22 +438,6 @@ export async function updateContactTag(orgId: string, body: ContactTagSchema) {
     },
   });
   return res;
-}
-
-export async function getWaLogs(orgId: string, query: PaginationQuery) {
-  const { page, limit, desc = "desc", phone } = query;
-  const where = {
-    orgId,
-    phone: phone ? { contains: phone } : undefined,
-  };
-  const totalCount = await prisma.waLogs.count({ where });
-  const logs = await prisma.waLogs.findMany({
-    where,
-    orderBy: [{ createdAt: desc }, { phone: desc }],
-    skip: page && limit ? Number(page) * Number(limit) : undefined,
-    take: limit ? Number(limit) : undefined,
-  });
-  return { totalCount, logs };
 }
 
 /** These four cover the handful of Graph API fields the onboarding sync flow reads or writes

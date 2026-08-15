@@ -14,14 +14,14 @@ vi.mock("../../../utils/prisma.js", () => ({
 
 vi.mock("../../whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
-vi.mock("../../../utils/redisConnection.js", () => ({ notificationQueue: { add: vi.fn() } }));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 
 import crypto from "node:crypto";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../../whatsapp/wa_axios.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
-import { notificationQueue } from "../../../utils/redisConnection.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import { triggerConversionsApiForContact } from "./conversions.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;

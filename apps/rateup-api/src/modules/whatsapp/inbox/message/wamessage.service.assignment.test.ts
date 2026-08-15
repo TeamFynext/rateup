@@ -71,7 +71,7 @@ vi.mock("../../../contact/conversation/conversation.service.js", () => ({
   setInboxStatus: vi.fn(),
   updateConversationAssignees: vi.fn(),
 }));
-vi.mock("../../../../utils/redisConnection.js", () => ({
+vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   notificationQueue: { add: vi.fn() },
   sendMessageQueue: { add: vi.fn() },
 }));
@@ -101,7 +101,7 @@ import {
   setInboxStatus,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
-import { notificationQueue } from "../../../../utils/redisConnection.js";
+import { notificationQueue } from "../../../../workers/bullmq/queues/index.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import {
   assignWaMessageToUser,

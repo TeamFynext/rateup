@@ -29,9 +29,7 @@ vi.mock("../../utils/hubspot.js", () => ({
 vi.mock("../whatsapp/settings/wa_channel_access.js", () => ({
   invalidateChannelAccessCache: vi.fn(),
 }));
-vi.mock("../../utils/redisConnection.js", () => ({
-  notificationQueue: { add: vi.fn() },
-}));
+vi.mock("../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 vi.mock("../../utils/email/supertoken/inviteEmail.js", () => ({ createEmailBody: vi.fn() }));
 vi.mock("../email/email.util.js", () => ({ getEmailBodyTemplate: vi.fn() }));
 vi.mock("../../../generated/prisma/client.js", () => ({

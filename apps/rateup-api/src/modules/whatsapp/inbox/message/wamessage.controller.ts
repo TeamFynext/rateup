@@ -19,6 +19,7 @@ import {
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
+  linkWaMessageToCampaignParticipant,
   assignWaMessageToUser,
   clearMentionsForConversation,
   reopenConversation,
@@ -112,6 +113,17 @@ export async function handleWaMessages(
   isAutomated: boolean = false,
   externalApi: boolean = false,
   logs: WaGraphApiErrorDetail = {},
+  /**
+   * Campaign linkage, passed as an object so the 15 positional parameters above
+   * stop growing. Delivery statuses are matched back to a participant through
+   * `WaMessageCampaginParticipantMap` (see `bulkUpdateStatuses`), so a campaign
+   * send that skips this row can never be reported on.
+   */
+  campaign?: {
+    participantId: string;
+    dripStageId?: string | null;
+    templateData?: unknown;
+  },
 ) {
   try {
     // Prepare message body
@@ -277,6 +289,16 @@ export async function handleWaMessages(
       messageType,
       logs,
     );
+
+    // Campaign sends carry the participant they belong to. Written straight
+    // after the message so the pair either both exist or neither does.
+    if (campaign?.participantId) {
+      await linkWaMessageToCampaignParticipant(
+        waMessage.id,
+        campaign.participantId,
+        campaign.dripStageId,
+      );
+    }
 
     // A ticket with no subject is titled by the message that opened it — the
     // first message is the best one-line description of what it is about. The

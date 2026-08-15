@@ -1,10 +1,10 @@
 import { Worker, Job } from "bullmq";
-import baseRedis from "../utils/redisConnection.js";
-import { log } from "../utils/logger.js";
-import { OutgoingWebhookJobData } from "../modules/webhook/webhook.service.js";
-import prisma from "../utils/prisma.js";
+import baseRedis from "../../../utils/redisConnection.js";
+import { log } from "../../../utils/logger.js";
+import { OutgoingWebhookJobData } from "../../../modules/webhook/webhook.service.js";
+import prisma from "../../../utils/prisma.js";
 
-new Worker(
+export const outgoingWebhookWorker = new Worker(
   "outgoingWebhookQueue",
   async (job: Job<OutgoingWebhookJobData>) => {
     const { phoneId, event, payload } = job.data;

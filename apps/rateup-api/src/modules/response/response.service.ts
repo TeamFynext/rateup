@@ -59,7 +59,7 @@ import {
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { autoGenerateTicket } from "../ticket/ticketCard/card.service.js";
 import { Prisma } from "../../../generated/prisma/client.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { ContactGroupType } from "../contact/contactGroup/contactGroup.schema.js";
 
 /**
@@ -729,6 +729,45 @@ export async function deleteResponse(id: string, surveyTeamMapId: string) {
   return deleteResponse;
 }
 
+/** Prisma surfaces constraint violations as an error carrying a `code`. */
+function hasErrorCode(e: unknown, code: string): e is { code: string } {
+  return typeof e === "object" && e !== null && (e as { code?: unknown }).code === code;
+}
+
+const responseWithRelations = {
+  surveyTeamMap: {
+    include: {
+      survey: {
+        select: {
+          questions: true,
+          responseWebhookEndpoint: true,
+          title: true,
+        },
+      },
+      team: {
+        select: {
+          orgId: true,
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+  Contact: {
+    select: {
+      phone: true,
+    },
+  },
+} as const;
+
+/** Reads back a submission already filed under this key. See SurveyResponse.idempotencyKey. */
+async function findResponseByIdempotencyKey(idempotencyKey: string) {
+  return await prisma.surveyResponse.findUnique({
+    where: { idempotencyKey },
+    include: responseWithRelations,
+  });
+}
+
 export async function createResponse(
   input: CreateResponseInput,
   shouldRaiseTicket = false,
@@ -777,42 +816,47 @@ export async function createResponse(
       });
     contactId = contact?.id;
   }
-  const surveyResponse = await prisma.surveyResponse.create({
-    data: {
-      ...rest,
-      tag: rest.tag,
-      surveyTeamMapId: rest.surveyTeamMapId,
-      language: rest.language,
-      responses: rest.responses as QuestionResponse[],
-      encryptedResponses: rest.encryptedResponses,
-      contactId,
-    },
-    include: {
-      surveyTeamMap: {
-        include: {
-          survey: {
-            select: {
-              questions: true,
-              responseWebhookEndpoint: true,
-              title: true,
-            },
-          },
-          team: {
-            select: {
-              orgId: true,
-              id: true,
-              name: true,
-            },
-          },
-        },
+  // An idempotent submission that has already been filed returns the original
+  // row rather than a duplicate. Checked before the insert so the common retry
+  // does not burn a sequence value, and caught again below to close the race
+  // between two retries arriving together.
+  if (rest.idempotencyKey) {
+    const existing = await findResponseByIdempotencyKey(rest.idempotencyKey);
+    if (existing) {
+      log.info(
+        { idempotencyKey: rest.idempotencyKey, responseId: existing.id },
+        "Survey response already filed for this key; skipping the duplicate",
+      );
+      return existing;
+    }
+  }
+
+  const create = () =>
+    prisma.surveyResponse.create({
+      data: {
+        ...rest,
+        tag: rest.tag,
+        surveyTeamMapId: rest.surveyTeamMapId,
+        language: rest.language,
+        responses: rest.responses as QuestionResponse[],
+        encryptedResponses: rest.encryptedResponses,
+        contactId,
       },
-      Contact: {
-        select: {
-          phone: true,
-        },
-      },
-    },
-  });
+      include: responseWithRelations,
+    });
+
+  let surveyResponse: Awaited<ReturnType<typeof create>>;
+  try {
+    surveyResponse = await create();
+  } catch (e) {
+    // Two retries in flight at once: the loser of the unique index reads back
+    // the row the winner wrote.
+    if (hasErrorCode(e, "P2002") && rest.idempotencyKey) {
+      const existing = await findResponseByIdempotencyKey(rest.idempotencyKey);
+      if (existing) return existing;
+    }
+    throw e;
+  }
 
   if (surveyResponse) {
     updateMonthlyStat(

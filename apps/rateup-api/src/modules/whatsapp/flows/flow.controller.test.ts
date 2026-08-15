@@ -9,6 +9,7 @@ vi.mock("./flow.service.js", () => ({
   deleteFlowInWa: vi.fn(),
   deprecateFlowInWa: vi.fn(),
   getFlowFromDb: vi.fn(),
+  getFlowFromDbByFlowId: vi.fn(),
   getFlowFromWa: vi.fn(),
   getFlowJsonFromWa: vi.fn(),
   getFlowPreview: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock("./flow.service.js", () => ({
   getFlowsFromWa: vi.fn(),
   getFlowWithSurveyTeamMapIdsWithDbFlowId: vi.fn(),
   getUnsyncedFlows: vi.fn(),
+  getWaSettingsForFlow: vi.fn(),
   publishFlowInWa: vi.fn(),
   sendFlow: vi.fn(),
   syncLocalFlowToWhatsapp: vi.fn(),
@@ -54,11 +56,13 @@ import {
   deleteFlowInWa,
   deprecateFlowInWa,
   getFlowFromDb,
+  getFlowFromDbByFlowId,
   getFlowFromWa,
   getFlowJsonFromWa,
   getFlowsFromDb,
   getFlowsFromWa,
   getFlowWithSurveyTeamMapIdsWithDbFlowId,
+  getWaSettingsForFlow,
   publishFlowInWa,
   sendFlow,
   syncLocalFlowToWhatsapp,
@@ -108,6 +112,7 @@ const m = {
   deleteSurveyById: deleteSurveyById as unknown as Mock,
   deprecateFlowInWa: deprecateFlowInWa as unknown as Mock,
   getFlowFromDb: getFlowFromDb as unknown as Mock,
+  getFlowFromDbByFlowId: getFlowFromDbByFlowId as unknown as Mock,
   getFlowFromWa: getFlowFromWa as unknown as Mock,
   getFlowJsonFromWa: getFlowJsonFromWa as unknown as Mock,
   getFlowsFromDb: getFlowsFromDb as unknown as Mock,
@@ -116,6 +121,7 @@ const m = {
   getGraphApiErrorMessage: getGraphApiErrorMessage as unknown as Mock,
   getSession: getSession as unknown as Mock,
   getWaSettings: getWaSettings as unknown as Mock,
+  getWaSettingsForFlow: getWaSettingsForFlow as unknown as Mock,
   publishFlowInWa: publishFlowInWa as unknown as Mock,
   sendFlow: sendFlow as unknown as Mock,
   syncLocalFlowToWhatsapp: syncLocalFlowToWhatsapp as unknown as Mock,
@@ -128,6 +134,8 @@ const m = {
 
 const ORG_A = "org-a";
 const DB_FLOW_ID = "dbflow-1";
+const WA_SETTINGS_ID = "wa-settings-1";
+const PHONE_ID = "phone-1";
 
 /** A stored flow row of the shape the handlers read. */
 function flowRow(overrides: Record<string, unknown> = {}): any {
@@ -138,6 +146,7 @@ function flowRow(overrides: Record<string, unknown> = {}): any {
     surveyId: "survey-1",
     name: "Feedback",
     status: WaFlowStatus.DRAFT,
+    whatsappSettingsId: WA_SETTINGS_ID,
     logicJumps: {},
     survey: { questions: [] },
     ...overrides,
@@ -184,12 +193,24 @@ beforeEach(() => {
     mock.mockResolvedValue(undefined);
   }
   m.getFlowFromDb.mockResolvedValue(flowRow());
+  m.getFlowFromDbByFlowId.mockResolvedValue(flowRow());
   m.updateFlowInDb.mockResolvedValue(flowRow());
-  m.getWaSettings.mockResolvedValue({ accessToken: "token-abc", wabaId: "waba-1" });
+  m.getWaSettings.mockResolvedValue({
+    id: WA_SETTINGS_ID,
+    phoneId: PHONE_ID,
+    accessToken: "token-abc",
+    wabaId: "waba-1",
+  });
+  m.getWaSettingsForFlow.mockResolvedValue({
+    id: WA_SETTINGS_ID,
+    phoneId: PHONE_ID,
+    accessToken: "token-abc",
+    wabaId: "waba-1",
+  });
   m.callMetaApi.mockResolvedValue({ data: { success: true } });
   m.getFlowFromWa.mockResolvedValue({ categories: ["SURVEY"], name: "Feedback", status: "DRAFT" });
-  m.cloneFlowInWa.mockResolvedValue({ id: "wa-flow-2" });
-  m.createFlowInWa.mockResolvedValue({ id: "wa-flow-1" });
+  m.cloneFlowInWa.mockResolvedValue({ id: "wa-flow-2", whatsappSettingsId: WA_SETTINGS_ID });
+  m.createFlowInWa.mockResolvedValue({ id: "wa-flow-1", whatsappSettingsId: WA_SETTINGS_ID });
   m.createSurvey.mockResolvedValue({ id: "survey-1" });
   m.createSurveyFromFlow.mockResolvedValue({ survey: { id: "survey-1" }, flowMap: {} });
   m.createFlowCopyInDb.mockResolvedValue({ dbFlowId: DB_FLOW_ID });
@@ -219,8 +240,36 @@ describe("getFlowsHandler", () => {
 
     await getFlowsHandler(request({ query: { source: "db" } }), rep);
 
-    expect(m.getFlowsFromDb).toHaveBeenCalledWith(ORG_A, "user-1");
+    expect(m.getFlowsFromDb).toHaveBeenCalledWith(ORG_A, "user-1", undefined);
     expect(rep.send).toHaveBeenCalledWith([{ dbFlowId: DB_FLOW_ID }]);
+  });
+
+  test("narrows the list to the flows on the number that was asked for", async () => {
+    m.getWaSettings.mockResolvedValue({ id: "wa-settings-2", wabaId: "waba-2" });
+    m.getFlowsFromDb.mockResolvedValue([]);
+
+    await getFlowsHandler(
+      request({ query: { source: "db", whatsappSettingsPhoneId: PHONE_ID } }),
+      reply(),
+    );
+
+    expect(m.getWaSettings).toHaveBeenCalledWith(ORG_A, PHONE_ID);
+    expect(m.getFlowsFromDb).toHaveBeenCalledWith(ORG_A, "user-1", "wa-settings-2");
+  });
+
+  // Silently falling back to the org default would answer with another number's
+  // flows, which is the mix-up this filter exists to prevent.
+  test("answers 404 for a number the org does not have", async () => {
+    m.getWaSettings.mockResolvedValue(null);
+    const rep = reply();
+
+    await getFlowsHandler(
+      request({ query: { source: "db", whatsappSettingsPhoneId: "phone-elsewhere" } }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.getFlowsFromDb).not.toHaveBeenCalled();
   });
 
   test("refuses a source it does not recognise", async () => {
@@ -300,9 +349,14 @@ describe("updateFlowHandler", () => {
 
     await updateFlowHandler(request({ body: { logicJumps: { S1: [{}] } } }), reply());
 
-    expect(m.updateFlowMetaDataInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1", {
-      endpoint_uri: `https://api.example.com/api/wa/endpoint/${ORG_A}/${DB_FLOW_ID}`,
-    });
+    expect(m.updateFlowMetaDataInWa).toHaveBeenCalledWith(
+      ORG_A,
+      "wa-flow-1",
+      {
+        endpoint_uri: `https://api.example.com/api/wa/endpoint/${ORG_A}/${DB_FLOW_ID}`,
+      },
+      WA_SETTINGS_ID,
+    );
   });
 
   test("leaves the endpoint uri alone when the flow already had logic jumps", async () => {
@@ -448,7 +502,7 @@ describe("cloneFlowHandler", () => {
     await cloneFlowHandler(request({ body: { teamId: "team-1" } }), reply());
 
     expect(m.cloneFlowInWa).toHaveBeenCalled();
-    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-2");
+    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-2", WA_SETTINGS_ID);
   });
 
   // The rollback is best-effort: the caller is already being told why the clone
@@ -471,7 +525,7 @@ describe("deleteFlowHandler", () => {
 
     await deleteFlowHandler(request(), rep);
 
-    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1");
+    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1", WA_SETTINGS_ID);
     expect(m.deleteSurveyById).toHaveBeenCalledWith("survey-1");
     expect(m.deleteFlowInDb).not.toHaveBeenCalled();
     expect(rep.status).toHaveBeenCalledWith(204);
@@ -534,7 +588,7 @@ describe("deprecateFlowHandler", () => {
 
     await deprecateFlowHandler(request(), reply());
 
-    expect(m.deprecateFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1");
+    expect(m.deprecateFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1", WA_SETTINGS_ID);
     expect(m.deleteSurveyById).toHaveBeenCalledWith("survey-1");
   });
 
@@ -572,7 +626,7 @@ describe("publishFlowHandler", () => {
   test("publishes at Meta and then records the flow as published", async () => {
     await publishFlowHandler(request(), reply());
 
-    expect(m.publishFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1");
+    expect(m.publishFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1", WA_SETTINGS_ID);
     expect(m.updateFlowInDb).toHaveBeenCalledWith(ORG_A, DB_FLOW_ID, {
       status: WaFlowStatus.PUBLISHED,
     });
@@ -622,41 +676,25 @@ describe("sendFlowHandler", () => {
       phone: "15550001",
       userId: "user-1",
       whatsappSettingsPhoneId: undefined,
+      // Carried into the flow token so the reply can be attributed without a
+      // WaSession lookup.
+      context: { surveyTeamMapId: "stm-1", language: "en" },
     });
     expect(rep.status).toHaveBeenCalledWith(201);
   });
 
-  test("keeps an existing session that already belongs to this survey and team", async () => {
+  // Sends no longer touch WaSession: the run context travels in the signed flow
+  // token, so there is no per-phone row to create, expire, or collide over.
+  test("does not open a session row", async () => {
     await sendFlowHandler(sendRequest(), reply());
 
     expect(m.createSession).not.toHaveBeenCalled();
     expect(m.deleteSession).not.toHaveBeenCalled();
+    expect(m.getSession).not.toHaveBeenCalled();
   });
 
-  test("starts a fresh session when the old one has expired", async () => {
-    m.validateSession.mockReturnValue(false);
-
-    await sendFlowHandler(sendRequest(), reply());
-
-    expect(m.deleteSession).toHaveBeenCalledWith(ORG_A, "15550001");
-    expect(m.createSession).toHaveBeenCalledWith({
-      phone: "15550001",
-      orgId: ORG_A,
-      surveyTeamMapId: "stm-1",
-      language: "en",
-    });
-  });
-
-  test("starts a fresh session when the old one belongs to a different survey", async () => {
-    m.getSession.mockResolvedValue({ surveyTeamMapId: "stm-other" });
-
-    await sendFlowHandler(sendRequest(), reply());
-
-    expect(m.createSession).toHaveBeenCalled();
-  });
-
-  test("answers 500 when setting the session up fails", async () => {
-    m.getSession.mockRejectedValue(new Error("redis is down"));
+  test("answers 500 when the flow lookup fails", async () => {
+    m.getFlowWithSurveyTeamMapIds.mockRejectedValue(new Error("db is down"));
     const rep = reply();
 
     await sendFlowHandler(sendRequest(), rep);
@@ -710,10 +748,14 @@ describe("createFlowHandler", () => {
 
     await createFlowHandler(request({ body }), rep);
 
-    expect(m.createFlowInWa).toHaveBeenCalledWith(ORG_A, {
-      name: "Feedback",
-      categories: ["SURVEY"],
-    });
+    expect(m.createFlowInWa).toHaveBeenCalledWith(
+      ORG_A,
+      {
+        name: "Feedback",
+        categories: ["SURVEY"],
+      },
+      undefined,
+    );
     expect(m.createFlowCopyInDb.mock.calls[0][0]).toMatchObject({
       orgId: ORG_A,
       flowId: "wa-flow-1",
@@ -756,7 +798,35 @@ describe("createFlowHandler", () => {
     await createFlowHandler(request({ body }), reply());
 
     expect(m.createFlowCopyInDb).not.toHaveBeenCalled();
-    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1");
+    expect(m.deleteFlowInWa).toHaveBeenCalledWith(ORG_A, "wa-flow-1", WA_SETTINGS_ID);
+  });
+
+  test("creates the flow on the number the caller picked, and records it", async () => {
+    m.getWaSettings.mockResolvedValue({ id: "wa-settings-2", wabaId: "waba-2" });
+    m.createFlowInWa.mockResolvedValue({ id: "wa-flow-1", whatsappSettingsId: "wa-settings-2" });
+
+    await createFlowHandler(
+      request({ body: { ...body, whatsappSettingsPhoneId: PHONE_ID } }),
+      reply(),
+    );
+
+    expect(m.createFlowInWa).toHaveBeenCalledWith(ORG_A, expect.anything(), "wa-settings-2");
+    expect(m.createFlowCopyInDb.mock.calls[0][0]).toMatchObject({
+      whatsappSettingsId: "wa-settings-2",
+    });
+  });
+
+  test("answers 404 for a number the org does not have", async () => {
+    m.getWaSettings.mockResolvedValue(null);
+    const rep = reply();
+
+    await createFlowHandler(
+      request({ body: { ...body, whatsappSettingsPhoneId: "phone-elsewhere" } }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(m.createFlowInWa).not.toHaveBeenCalled();
   });
 
   test("has nothing to roll back when Meta refuses to create the flow", async () => {

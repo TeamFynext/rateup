@@ -1,13 +1,16 @@
 import "dotenv/config";
+import { LogController } from "fastify";
 import { build } from "./app.js";
 
 /**
- * Run the server!
+ * API service entrypoint — HTTP only, safe to run at N replicas.
+ *
+ * BullMQ consumers and cron jobs run in the worker service (src/worker.ts).
  */
 async function start() {
   const server = await build({
     // logger: true,
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 30971520,
     trustProxy: true,
     connectionTimeout: 60_000,
@@ -43,11 +46,6 @@ async function start() {
     const host = process.env.HOST || "::";
 
     await server.listen({ port, host });
-
-    // Start cron jobs if they exist
-    if (server.cron) {
-      server.cron.startAllJobs();
-    }
   } catch (err) {
     server.log.error(err);
     process.exit(1);

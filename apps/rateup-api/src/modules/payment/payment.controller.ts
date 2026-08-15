@@ -36,7 +36,7 @@ import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js"
 import { log } from "../../utils/logger.js";
 // import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 export async function createCheckoutSessionHandler(
   request: FastifyRequest<{

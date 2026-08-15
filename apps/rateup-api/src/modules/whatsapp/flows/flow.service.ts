@@ -1,6 +1,6 @@
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
-import { getWaSettings } from "../settings/wa_settings.service.js";
+import { getWaSettings, getWaSettingsById } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { graphUrl } from "../../../utils/meta.js";
 import {
@@ -37,6 +37,9 @@ import {
   type WaSessionWithSurveyTeamMap,
 } from "../whatsappSurvey/wasurvey.service.js";
 import { validateLogic, validateLogicV2 } from "../../question/question.utils.js";
+import { isSignedFlowToken, signFlowToken, verifyFlowToken } from "./flowToken.js";
+import { appendFlowResponses, clearFlowResponses, getFlowResponses } from "./flowState.js";
+import { unusableRequest } from "./flow.errors.js";
 import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
@@ -57,15 +60,34 @@ import {
 dayjs.extend(utc);
 dayjs.extend(timezone);
 /**
- * Get flows from whatsapp
- * @param orgId
- * @returns
+ * WhatsApp channel a flow belongs to.
+ *
+ * Meta scopes flow ids to a WABA: a flow created under one number's WABA does not
+ * exist for any other number, so every Meta call about a flow has to be made with
+ * that channel's credentials. `WaFlow.whatsappSettingsId` records which one it is;
+ * rows written before that column existed carry null and fall back to the org
+ * default, which is the channel those flows were created under.
+ *
+ * @param whatsappSettingsId `WaFlow.whatsappSettingsId`
  */
-export async function getFlowsFromWa(orgId: string) {
-  const waSettings = await getWaSettings(orgId);
+export async function getWaSettingsForFlow(orgId: string, whatsappSettingsId?: string | null) {
+  const waSettings = whatsappSettingsId
+    ? await getWaSettingsById(whatsappSettingsId, orgId)
+    : await getWaSettings(orgId);
   if (!waSettings) {
     throw new Error(`WhatsApp settings not found for org: ${orgId}`);
   }
+  return waSettings;
+}
+
+/**
+ * Get flows from whatsapp
+ * @param orgId
+ * @param whatsappSettingsId channel to list flows from; defaults to the org default
+ * @returns
+ */
+export async function getFlowsFromWa(orgId: string, whatsappSettingsId?: string | null) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
 
   const res = await callMetaApi(`/${waSettings.wabaId}/flows`, "GET", waSettings.accessToken);
 
@@ -78,13 +100,15 @@ export async function getFlowsFromWa(orgId: string) {
  * Get flow from whatsapp
  * @param orgId
  * @param flowId
+ * @param whatsappSettingsId channel the flow lives on
  * @returns
  */
-export async function getFlowFromWa(orgId: string, flowId: string) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function getFlowFromWa(
+  orgId: string,
+  flowId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   //query: fields=id,name,categories,preview,status,validation_errors,json_version,data_api_version,data_channel_uri,whatsapp_business_account,application
 
   const res = await callMetaApi(`/${flowId}`, "GET", waSettings.accessToken);
@@ -94,11 +118,12 @@ export async function getFlowFromWa(orgId: string, flowId: string) {
   return flow;
 }
 
-export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function getFlowPreviewFromWa(
+  orgId: string,
+  waFlowId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
 
   const res = await callMetaApi(`/${waFlowId}?fields=preview`, "GET", waSettings.accessToken);
 
@@ -129,7 +154,7 @@ export async function getFlowPreview(orgId: string, dbFlowId: string) {
     if (!flow.flowId) {
       throw new Error(`Flow ${dbFlowId} has not been created in WhatsApp yet (missing flowId)`);
     }
-    const preview = await getFlowPreviewFromWa(orgId, flow.flowId);
+    const preview = await getFlowPreviewFromWa(orgId, flow.flowId, flow.whatsappSettingsId);
     await prisma.waFlow.update({
       where: {
         dbFlowId,
@@ -148,14 +173,29 @@ export async function getFlowPreview(orgId: string, dbFlowId: string) {
  * Used to reduce the number of calls to whatsapp api
  *
  * @param orgId
+ * @param userId
+ * @param whatsappSettingsId when given, only flows that live on that WhatsApp channel.
+ *   Flows recorded before the channel was tracked (null) are included, since they belong
+ *   to the org default channel — filtering them out would hide every pre-existing flow.
  * @returns
  */
-export async function getFlowsFromDb(orgId: string, userId: string) {
+export async function getFlowsFromDb(
+  orgId: string,
+  userId: string,
+  whatsappSettingsId?: string | null,
+) {
   const teamIds = await getTeamIdsByUserId(userId);
+  const defaultWaSettings = whatsappSettingsId ? await getWaSettings(orgId) : null;
+  const isDefaultChannel = defaultWaSettings?.id === whatsappSettingsId;
 
   const flows = await prisma.waFlow.findMany({
     where: {
       orgId,
+      ...(whatsappSettingsId && {
+        OR: isDefaultChannel
+          ? [{ whatsappSettingsId }, { whatsappSettingsId: null }]
+          : [{ whatsappSettingsId }],
+      }),
       survey: {
         teams: {
           some: {
@@ -174,6 +214,10 @@ export async function getFlowsFromDb(orgId: string, userId: string) {
       version: true,
       flowId: true,
       surveyId: true,
+      whatsappSettingsId: true,
+      // The inbox draws the flow's invitation message as a pending bubble the moment
+      // it is sent, so the list carries it rather than re-reading each flow.
+      templateMessage: true,
       survey: {
         select: {
           teams: {
@@ -263,8 +307,13 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
       flow.logicJumps,
     );
   }
-  const response = await updateFlowJsonInWa(orgId, flow.flowId, jsonWithTitle as WaFlowJson);
-  await publishFlowInWa(orgId, flow.flowId);
+  const response = await updateFlowJsonInWa(
+    orgId,
+    flow.flowId,
+    jsonWithTitle as WaFlowJson,
+    flow.whatsappSettingsId,
+  );
+  await publishFlowInWa(orgId, flow.flowId, flow.whatsappSettingsId);
 
   log.trace({ message: "Flow synced to whatsapp", response });
   await updateFlowInDb(orgId, dbFlowId, {
@@ -325,9 +374,13 @@ export async function getFlowWithSurveyTeamMapIdsWithDbFlowId(dbFlowId: string, 
     },
   });
 }
-export async function getUnsyncedFlows(orgId: string, userId: string) {
-  const waFlows = await getFlowsFromWa(orgId);
-  const dbFlows = await getFlowsFromDb(orgId, userId);
+export async function getUnsyncedFlows(
+  orgId: string,
+  userId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const waFlows = await getFlowsFromWa(orgId, whatsappSettingsId);
+  const dbFlows = await getFlowsFromDb(orgId, userId, whatsappSettingsId);
 
   const unsyncedFlows = waFlows.filter(
     (waFlow) => !dbFlows.find((dbFlow) => dbFlow.flowId === waFlow.id),
@@ -421,7 +474,9 @@ export async function cloneFlow(
     return cloned;
   };
   const newClonedSurvey = await shortIdUniqueConstraintErrHandler(createClonedSurvey);
-  const { json, map, orgId, logicJumps, templateMessage } = previousFlow;
+  // The clone is created at Meta under the source flow's channel (see cloneFlowHandler),
+  // so it inherits that channel here too.
+  const { json, map, orgId, logicJumps, templateMessage, whatsappSettingsId } = previousFlow;
   await prisma.waFlow.create({
     data: {
       flowId,
@@ -431,6 +486,7 @@ export async function cloneFlow(
       orgId,
       logicJumps,
       templateMessage,
+      whatsappSettingsId,
       name: title,
       surveyId: newClonedSurvey.id,
       version: previousFlow?.version ?? 1,
@@ -445,8 +501,12 @@ interface WaFlowAsset {
   download_url: string;
 }
 
-export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
-  const assets = await getFlowAssets(orgId, waFlowId);
+export async function getFlowJsonFromWa(
+  orgId: string,
+  waFlowId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const assets = await getFlowAssets(orgId, waFlowId, whatsappSettingsId);
   const jsonAsset = assets.find((asset) => asset.asset_type === "FLOW_JSON");
   if (!jsonAsset) {
     throw new Error(`FLOW_JSON asset not found for waFlowId: ${waFlowId}`);
@@ -463,11 +523,12 @@ export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
  * @param waFlowId Flow id generated by Meta
  * @returns
  */
-export async function getFlowAssets(orgId: string, waFlowId: string): Promise<WaFlowAsset[]> {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function getFlowAssets(
+  orgId: string,
+  waFlowId: string,
+  whatsappSettingsId?: string | null,
+): Promise<WaFlowAsset[]> {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   // TODO: handle pagination
 
   const res = await callMetaApi(`/${waFlowId}/assets`, "GET", waSettings.accessToken);
@@ -481,6 +542,17 @@ interface sendFlowProps {
   phone: string;
   userId?: string;
   whatsappSettingsPhoneId?: string;
+  /**
+   * Run context to sign into the flow token. Without it the token falls back to
+   * the bare phone and the reply handlers resolve context from `WaSession`.
+   */
+  context?: {
+    surveyTeamMapId: string;
+    language?: string | null;
+    campaignParticipantId?: string | null;
+    campaignParticipantDripStageId?: string | null;
+    tag?: string | null;
+  };
 }
 export async function sendFlow({
   orgId,
@@ -488,6 +560,7 @@ export async function sendFlow({
   phone,
   userId,
   whatsappSettingsPhoneId,
+  context,
 }: sendFlowProps) {
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
@@ -495,16 +568,42 @@ export async function sendFlow({
     if (!dbFlow) {
       throw new Error(`Flow not found: ${dbFlowId}`);
     }
+    // A flow id only resolves against the WABA it was created under, so sending it from
+    // a number on another WABA gets rejected by Meta. With no number given, send from the
+    // flow's own channel rather than from the org default.
+    const flowWaSettings = await getWaSettingsForFlow(orgId, dbFlow.whatsappSettingsId);
+    if (whatsappSettingsPhoneId) {
+      const senderWaSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+      if (!senderWaSettings) {
+        throw new Error(`WhatsApp settings not found for phone: ${whatsappSettingsPhoneId}`);
+      }
+      if (senderWaSettings.wabaId !== flowWaSettings.wabaId) {
+        throw new Error(
+          `Flow ${dbFlowId} belongs to a different WhatsApp Business Account than ${whatsappSettingsPhoneId}`,
+        );
+      }
+    }
     const messageData = generateFlowMessageData({
       to: phone,
       dbFlow,
+      flowToken: context
+        ? signFlowToken({
+            surveyTeamMapId: context.surveyTeamMapId,
+            orgId,
+            phone,
+            language: context.language,
+            campaignParticipantId: context.campaignParticipantId,
+            campaignParticipantDripStageId: context.campaignParticipantDripStageId,
+            tag: context.tag,
+          })
+        : undefined,
     });
     await sendMessage(
       orgId,
       { ...messageData, to: phone },
       undefined,
       userId,
-      whatsappSettingsPhoneId,
+      whatsappSettingsPhoneId ?? flowWaSettings.phoneId ?? undefined,
     );
     return true;
   } catch (e) {
@@ -527,6 +626,8 @@ interface CreateFlowCopyInDbArgs {
     cta: string;
   };
   version?: number;
+  /** Channel the flow was created under at Meta — see getWaSettingsForFlow. */
+  whatsappSettingsId?: string | null;
 }
 
 export async function createFlowCopyInDb({
@@ -543,6 +644,7 @@ export async function createFlowCopyInDb({
     cta: "Open",
   },
   version = 2,
+  whatsappSettingsId,
 }: CreateFlowCopyInDbArgs) {
   const flow = await prisma.waFlow.create({
     data: {
@@ -556,6 +658,7 @@ export async function createFlowCopyInDb({
       status: status,
       name: name,
       version: version,
+      whatsappSettingsId,
     },
   });
 
@@ -564,21 +667,22 @@ export async function createFlowCopyInDb({
 
 /**
  * Creates flow in whatsapp
- * @param req
- * @param rep
+ *
+ * Returns the channel it was created under alongside Meta's flow id, so the caller can
+ * record it on the row — the flow id only resolves against that channel's WABA.
+ *
+ * @param whatsappSettingsId channel to create the flow on; defaults to the org default
  */
 export async function createFlowInWa(
   orgId: string,
   createFlowInput: { name: string; categories: string[] },
+  whatsappSettingsId?: string | null,
 ) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { wabaId, accessToken } = waSettings;
 
   const { data } = await callMetaApi(`/${wabaId}/flows`, "POST", accessToken, createFlowInput);
-  return data as { id: string };
+  return { ...(data as { id: string }), whatsappSettingsId: waSettings.id };
 }
 
 export async function cloneFlowInWa(
@@ -588,15 +692,13 @@ export async function cloneFlowInWa(
     categories?: string[];
     clone_flow_id: string;
   },
+  whatsappSettingsId?: string | null,
 ) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { wabaId, accessToken } = waSettings;
 
   const { data } = await callMetaApi(`/${wabaId}/flows`, "POST", accessToken, createFlowInput);
-  return data as { id: string };
+  return { ...(data as { id: string }), whatsappSettingsId: waSettings.id };
 }
 
 export async function updateFlowInDb(orgId: string, dbFlowId: string, data: UpdateFlowInput) {
@@ -635,11 +737,9 @@ export async function updateFlowMetaDataInWa(
   orgId: string,
   flowId: string,
   updatedData: { name?: string; categories?: string[]; endpoint_uri?: string },
+  whatsappSettingsId?: string | null,
 ) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { accessToken } = waSettings;
   const { data } = await callMetaApi(`/${flowId}`, "POST", accessToken, updatedData);
   return data as { id: string };
@@ -654,11 +754,13 @@ export async function updateFlowMetaDataInWa(
  * @param waFlowId
  * @param json
  */
-export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: WaFlowJson) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function updateFlowJsonInWa(
+  orgId: string,
+  waFlowId: string,
+  json: WaFlowJson,
+  whatsappSettingsId?: string | null,
+) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { accessToken } = waSettings;
   json = removeIdFromFlowJson(json);
 
@@ -686,11 +788,12 @@ export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: 
   return data;
 }
 
-export async function deleteFlowInWa(orgId: string, waFlowId: string) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function deleteFlowInWa(
+  orgId: string,
+  waFlowId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { accessToken } = waSettings;
   const res = await callMetaApi(`/${waFlowId}`, "DELETE", accessToken);
   return res.data;
@@ -705,21 +808,23 @@ export async function deleteFlowInDb(dbFlowId: string, orgId: string) {
   });
 }
 
-export async function deprecateFlowInWa(orgId: string, waFlowId: string) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function deprecateFlowInWa(
+  orgId: string,
+  waFlowId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { accessToken } = waSettings;
   const res = await callMetaApi(`/${waFlowId}/deprecate`, "POST", accessToken);
   return res.data;
 }
 
-export async function publishFlowInWa(orgId: string, waFlowId: string) {
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
-    throw new Error(`WhatsApp settings not found for org: ${orgId}`);
-  }
+export async function publishFlowInWa(
+  orgId: string,
+  waFlowId: string,
+  whatsappSettingsId?: string | null,
+) {
+  const waSettings = await getWaSettingsForFlow(orgId, whatsappSettingsId);
   const { accessToken } = waSettings;
   const res = await callMetaApi(`/${waFlowId}/publish`, "POST", accessToken);
   return res.data;
@@ -769,7 +874,6 @@ export const handleDecryptedFlowRequest = async (
 ) => {
   const { screen, data, version, action, flow_token } = decryptedBody;
   try {
-    log.trace("action: %s", action);
     // handle health check request
     if (action === "ping") {
       return {
@@ -789,7 +893,6 @@ export const handleDecryptedFlowRequest = async (
         },
       };
     }
-    let session = await getSession(dbFlow.orgId, flow_token);
     const json = dbFlow.json as unknown as WaFlowJson;
 
     // handle initial request when opening the flow
@@ -801,15 +904,29 @@ export const handleDecryptedFlowRequest = async (
         data: {},
       };
     }
+
+    // Only sent for screens marked `refresh_on_back`, which nothing here sets
+    // today. Hand back the screen asked for rather than falling through to the
+    // unhandled-action throw.
+    if (action === "BACK") {
+      return {
+        version,
+        screen,
+        data: {},
+      };
+    }
     const survey = await getSurveyById(dbFlow.surveyId);
     const questions = survey.questions as unknown as Question[];
 
     if (action === "data_exchange") {
-      if (!session) {
-        throw new Error(`Session not found for flow_token: ${flow_token}`);
+      const run = await resolveFlowRun(flow_token, dbFlow.orgId);
+      if (!run) {
+        throw unusableRequest(
+          `No flow run found for flow_token: ${flow_token}`,
+          "This survey is no longer available",
+        );
       }
       // save responses
-      log.trace("Received data exchange request");
       let versionCheck = dbFlow.version === 1;
       const currentScreenResponses = versionCheck
         ? parseResponseFromCurrentScreenResponse(dbFlow, questions, data ?? {})
@@ -828,7 +945,7 @@ export const handleDecryptedFlowRequest = async (
         if (!question?.waAppName) return noSlot;
 
         const integration = (await getIntegrationByName(
-          session.orgId,
+          run.orgId,
           question.waAppName,
         )) as unknown as AmeliaIntegration | null;
         if (!integration) return noSlot;
@@ -853,25 +970,21 @@ export const handleDecryptedFlowRequest = async (
           },
         };
       }
-      log.trace("Current screen responses: %o", currentScreenResponses);
-      // Bound to its own `const` (rather than narrowing the reassigned `let
-      // session`) — TypeScript doesn't retain updateSession's more specific
-      // return type through a `let` reassignment once the variable's
-      // declared type is a broader union, so reusing `session` here would
-      // lose the non-null `surveyTeamMap` narrowing below.
-      const currentSession = await updateSession(session.orgId, session.phone, {
-        responses: [...session.responses, ...currentScreenResponses],
-      });
-      if (!currentSession.surveyTeamMap) {
-        throw new Error(`Session ${currentSession.id} has no surveyTeamMap`);
-      }
+      // The v2 parser yields `response: undefined` for an unanswered optional
+      // field; that shape was always written straight into the session's Json
+      // column, so keep accepting it rather than dropping the entry.
+      const collected = await recordFlowResponses(
+        run,
+        currentScreenResponses as WaFlowQuestionResponse[],
+      );
+      const currentRun: FlowRun = { ...run, responses: collected };
+
       // handle the request based on the current screen
       let nextScreen = null;
       const currentIndex = json.screens.findIndex((s) => s.id === screen);
       const currentScreen = json.screens[currentIndex];
 
       if (Object.keys(dbFlow.logicJumps[screen] || {}).length > 0) {
-        log.trace("Logic jumps found for screen: %s \n %o", screen, dbFlow.logicJumps[screen]);
         const logicJumps: FlowLogicJump[] = dbFlow.logicJumps[screen];
         for (const logicJump of logicJumps) {
           let logicPassed = logicJump.conditions.every((condition) => {
@@ -886,7 +999,6 @@ export const handleDecryptedFlowRequest = async (
                 return false;
               }
               const rawResponse = data?.[flowElementName];
-              log.trace({ rawResponse }, "raw response");
               if (!rawResponse) {
                 // TODO: add logicCondition for skipped questions
                 return false;
@@ -902,7 +1014,6 @@ export const handleDecryptedFlowRequest = async (
                 elementName: flowElementName,
                 response: rawResponse,
               });
-              log.trace("parsed response: %s", response);
               if (!isComparableLogicResponse(response)) return false;
               return validateLogic(
                 question,
@@ -956,31 +1067,27 @@ export const handleDecryptedFlowRequest = async (
 
           if (logicPassed) {
             if (logicJump.action === LogicAction.NextQ) {
-              log.trace("Logic passed, moving to next question");
               nextScreen = json.screens[currentIndex + 1]?.id;
             } else if (logicJump.action === LogicAction.EndSurvey) {
               return await handleFlowEnd({
-                session: currentSession,
+                run: currentRun,
                 decryptedBody,
               });
             } else {
-              log.trace("Logic passed, jumping to screen: %s", logicJump.action);
+              log.trace({ screen, target: logicJump.action }, "Logic jump taken");
               nextScreen = logicJump.action;
             }
           }
         }
         if (!nextScreen) {
-          log.trace("Logic failed, moving to next question");
           nextScreen = json.screens[currentIndex + 1]?.id;
         }
       } else if (currentIndex === json.screens.length - 1) {
-        log.trace("End of survey");
         return await handleFlowEnd({
-          session: currentSession,
+          run: currentRun,
           decryptedBody,
         });
       } else {
-        log.trace("No logic jumps, moving to next question");
         nextScreen = json.screens[currentIndex + 1]?.id;
       }
 
@@ -990,12 +1097,17 @@ export const handleDecryptedFlowRequest = async (
         data: {},
       };
     }
+
+    // Every documented action is handled above. Anything else is a protocol we
+    // do not speak, and returning nothing would encrypt `undefined` back to the
+    // client.
+    throw new Error(`Unhandled flow endpoint action: ${action}`);
   } catch (error) {
-    // TODO: handle error
-    log.error({ err: error }, "Error in handling flow request");
-    throw new Error(
-      "Unhandled endpoint request. Make sure you handle the request action & screen logged above.",
-    );
+    // Rethrown as-is: the encryption layer turns a FlowEndpointException into
+    // the status code it carries, and anything else into a 500 it can log with
+    // the real cause rather than a generic replacement.
+    log.error({ err: error, action, screen }, "Error in handling flow request");
+    throw error;
   }
 };
 interface Slot {
@@ -1017,28 +1129,157 @@ function transformSlots(
     title: time,
   }));
 }
+/**
+ * One in-flight flow run, however its context was recovered.
+ *
+ * A signed `flow_token` carries the context and Redis holds the answers
+ * collected so far; a bare-phone token (anything sent before signed tokens
+ * shipped) falls back to the `WaSession` row, so runs already open at deploy
+ * time still complete. Everything downstream reads this shape and does not care
+ * which of the two it came from.
+ */
+export interface FlowRun {
+  flowToken: string;
+  phone: string;
+  orgId: string;
+  surveyTeamMapId: string;
+  language: string;
+  tag?: string | null;
+  ip?: string | null;
+  campaignParticipantId?: string | null;
+  campaignParticipantDripStageId?: string | null;
+  surveyTeamMap: NonNullable<WaSessionWithSurveyTeamMap["surveyTeamMap"]>;
+  /** v1 answers carry `type`; v2 flow answers legitimately omit it. */
+  responses: WaFlowQuestionResponse[];
+  /** True when the context came from a WaSession row rather than a signed token. */
+  legacy: boolean;
+}
+
+/**
+ * Key that makes this run's submission idempotent. Only a signed token
+ * identifies one run: a legacy token is the bare phone, which would collide
+ * across every survey that person ever answers.
+ */
+function runIdempotencyKey(run: FlowRun) {
+  return run.legacy ? undefined : run.flowToken;
+}
+
+/** The survey mapping plus the survey and flow config a run needs. */
+export async function getSurveyTeamMapWithFlow(surveyTeamMapId: string) {
+  return await prisma.surveyTeamMap.findFirst({
+    where: { id: surveyTeamMapId },
+    include: { survey: { include: { WaFlow: true } }, team: true },
+  });
+}
+
+/**
+ * Recovers the run a webhook belongs to. `orgId` comes from the flow's own
+ * endpoint URL, so it is trusted; a token claiming a different org is rejected
+ * rather than followed.
+ */
+export async function resolveFlowRun(flowToken: string, orgId: string): Promise<FlowRun | null> {
+  const context = verifyFlowToken(flowToken);
+  if (context) {
+    if (context.orgId !== orgId) {
+      log.error(
+        { tokenOrgId: context.orgId, orgId },
+        "Flow token was issued for a different org; refusing it",
+      );
+      return null;
+    }
+    const surveyTeamMap = await getSurveyTeamMapWithFlow(context.surveyTeamMapId);
+    if (!surveyTeamMap) {
+      log.error({ surveyTeamMapId: context.surveyTeamMapId }, "SurveyTeamMap in token not found");
+      return null;
+    }
+    return {
+      flowToken,
+      phone: context.phone,
+      orgId: context.orgId,
+      surveyTeamMapId: context.surveyTeamMapId,
+      language: context.language,
+      tag: context.tag,
+      campaignParticipantId: context.campaignParticipantId,
+      campaignParticipantDripStageId: context.campaignParticipantDripStageId,
+      surveyTeamMap: surveyTeamMap as FlowRun["surveyTeamMap"],
+      responses: await getFlowResponses<WaFlowQuestionResponse>(flowToken),
+      legacy: false,
+    };
+  }
+
+  if (isSignedFlowToken(flowToken)) {
+    // Ours, but tampered with or expired — the session fallback would key on it
+    // as if it were a phone number, so stop here instead.
+    return null;
+  }
+
+  const session = await getSession(orgId, flowToken);
+  if (!session?.surveyTeamMap || !session.surveyTeamMapId) return null;
+  return {
+    flowToken,
+    phone: session.phone,
+    orgId: session.orgId,
+    surveyTeamMapId: session.surveyTeamMapId,
+    language: session.language,
+    tag: session.tag,
+    ip: session.ip,
+    campaignParticipantId: session.campaignParticipantId,
+    campaignParticipantDripStageId: session.campaignParticipantDripStageId,
+    surveyTeamMap: session.surveyTeamMap,
+    responses: session.responses as unknown as WaFlowQuestionResponse[],
+    legacy: true,
+  };
+}
+
+/** Records this screen's answers against the run and returns the full set so far. */
+async function recordFlowResponses(
+  run: FlowRun,
+  screenResponses: WaFlowQuestionResponse[],
+): Promise<WaFlowQuestionResponse[]> {
+  if (run.legacy) {
+    const session = await updateSession(run.orgId, run.phone, {
+      responses: [...run.responses, ...screenResponses] as unknown as object[],
+    });
+    return session.responses as unknown as WaFlowQuestionResponse[];
+  }
+  return await appendFlowResponses<WaFlowQuestionResponse>(run.flowToken, screenResponses);
+}
+
+/** Releases whatever held the run's in-progress answers. */
+async function endFlowRun(run: FlowRun) {
+  if (run.legacy) {
+    await deleteSession(run.orgId, run.phone);
+    return;
+  }
+  await clearFlowResponses(run.flowToken);
+}
+
 interface handleFlowEndProps {
-  session: WaSessionWithSurveyTeamMap;
+  run: FlowRun;
   decryptedBody: DecryptedFlowRequestBody;
 }
-async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
-  log.trace("Ending Flow");
+async function handleFlowEnd({ run, decryptedBody }: handleFlowEndProps) {
   const { version, flow_token } = decryptedBody;
-  const uniqueResponses = removeDuplicateResponses(session.responses);
-  session.responses = uniqueResponses;
-  await saveResponses(session);
-  const waFlow = session.surveyTeamMap.survey.WaFlow;
+  const uniqueResponses = removeDuplicateResponses(run.responses);
+  await saveResponses({
+    ...run,
+    responses: uniqueResponses,
+    idempotencyKey: runIdempotencyKey(run),
+  });
+  await endFlowRun(run);
+  const waFlow = run.surveyTeamMap.survey.WaFlow;
   const versionCheck = waFlow?.version === 1;
 
   let sendGRLink: boolean;
   if (versionCheck) {
     sendGRLink = shouldShowGoogleReview({
-      questions: session.surveyTeamMap.survey.questions,
-      responses: uniqueResponses,
+      questions: run.surveyTeamMap.survey.questions,
+      // v1 answers always carry `type`; narrow away the v2 variant.
+      responses: uniqueResponses.filter((r): r is QuestionResponse => "type" in r),
     });
   } else {
     if (!waFlow) {
-      throw new Error(`WaFlow not found for survey: ${session.surveyTeamMap.survey.id}`);
+      throw new Error(`WaFlow not found for survey: ${run.surveyTeamMap.survey.id}`);
     }
     sendGRLink = shouldShowGoogleReviewV2({
       screens: waFlow.json.screens,
@@ -1048,9 +1289,9 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
 
   if (sendGRLink) {
     sendGReviewLink({
-      phone: session.phone,
-      surveyTeamMapId: session.surveyTeamMap.id,
-      orgId: session.orgId,
+      phone: run.phone,
+      surveyTeamMapId: run.surveyTeamMap.id,
+      orgId: run.orgId,
     })
       .then()
       .catch((e) => log.error(e));
@@ -1071,7 +1312,6 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
 }
 
 export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
-  log.trace("handling flow reply");
   const { from, flowResponse } = parseMessage(waMessage);
   if (!flowResponse) {
     log.trace("Flow reply carried no response payload. Ignoring...");
@@ -1082,17 +1322,20 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
     return;
   }
 
-  const session = await getSession(orgId, from);
-  if (!session) {
-    log.error("Session not found for %s", from);
+  // The token Meta echoes back identifies the run; it falls back to the sender's
+  // phone for flows sent before signed tokens shipped.
+  const flowToken = (flowResponse["flow_token"] as string | undefined) ?? from;
+  const run = await resolveFlowRun(flowToken, orgId);
+  if (!run) {
+    log.error("No flow run found for %s", from);
     return;
   }
-  if (!session.surveyTeamMap?.survey?.WaFlow) {
-    log.error("WaFlow not found for session %s", session.id);
+  if (!run.surveyTeamMap?.survey?.WaFlow) {
+    log.error("WaFlow not found for run %s", run.surveyTeamMapId);
     return;
   }
-  const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
-  const flow = await getFlowFromDb(dbFlowId, session.orgId);
+  const dbFlowId = run.surveyTeamMap.survey.WaFlow.dbFlowId;
+  const flow = await getFlowFromDb(dbFlowId, run.orgId);
   if (!flow) {
     log.error("Flow not found: %s", dbFlowId);
     return;
@@ -1101,42 +1344,45 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   const questionResponses = generateQuestionResponsesFromFlowResponse({
     flow,
     flowResponses: flowResponse,
-    surveyTeamMapId: session.surveyTeamMap.id,
+    surveyTeamMapId: run.surveyTeamMap.id,
   });
 
+  // A static flow submits every answer in this one payload, so the collected
+  // set is replaced rather than appended to.
   const uniqueResponses = removeDuplicateResponses(questionResponses);
-  // Both flow versions persist into the same QuestionResponse[] column; v2
-  // entries legitimately omit `type` (see WaFlowV2QuestionResponse).
-  session.responses = uniqueResponses as QuestionResponse[];
-  await saveResponses(session);
+  await saveResponses({
+    ...run,
+    responses: uniqueResponses,
+    idempotencyKey: runIdempotencyKey(run),
+  });
 
-  const versionCheck = session.surveyTeamMap.survey.WaFlow.version === 1;
+  const versionCheck = run.surveyTeamMap.survey.WaFlow.version === 1;
 
   const sendGRLink = versionCheck
     ? shouldShowGoogleReview({
-        questions: session.surveyTeamMap.survey.questions,
+        questions: run.surveyTeamMap.survey.questions,
         // v1 answers always carry `type`; narrow away the v2 variant.
         responses: uniqueResponses.filter((r): r is QuestionResponse => "type" in r),
       })
     : shouldShowGoogleReviewV2({
-        screens: session.surveyTeamMap.survey.WaFlow.json.screens,
+        screens: run.surveyTeamMap.survey.WaFlow.json.screens,
         responses: uniqueResponses,
       });
 
   if (sendGRLink) {
     await sendGReviewLink({
-      phone: session.phone,
-      surveyTeamMapId: session.surveyTeamMap.id,
-      orgId: session.orgId,
+      phone: run.phone,
+      surveyTeamMapId: run.surveyTeamMap.id,
+      orgId: run.orgId,
     });
   }
 
   // Use the utility function to find the recent automation
-  const progress = await findRecentAutomation(session.phone, orgId);
+  const progress = await findRecentAutomation(run.phone, orgId);
   const automation = progress?.waAutomatedReply;
   if (automation) {
     if (!progress.currentNode) {
-      log.error("Automation progress for phone %s has no currentNode", session.phone);
+      log.error("Automation progress for phone %s has no currentNode", run.phone);
       return;
     }
     const matchData = automation.matchData;
@@ -1152,7 +1398,7 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
     if (nextNode.type === "flowNode" && nextNodeFlowId === dbFlowId) {
       // Log flow submission using the utility function
       const automationLog = await logFlowCompletion({
-        phone: session.phone,
+        phone: run.phone,
         orgId,
         flowId: dbFlowId,
         recentActivity: {
@@ -1161,16 +1407,10 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
         },
       });
 
-      await processNextNode(
-        session.phone,
-        automation,
-        progress.currentNode,
-        orgId,
-        automationLog?.id,
-      );
+      await processNextNode(run.phone, automation, progress.currentNode, orgId, automationLog?.id);
     }
   }
-  await deleteSession(session.orgId, session.phone);
+  await endFlowRun(run);
 }
 
 export function removeDuplicateResponses<T extends { questionId: string }>(responses: T[]): T[] {

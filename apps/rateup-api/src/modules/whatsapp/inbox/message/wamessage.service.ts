@@ -17,7 +17,12 @@ import {
 } from "./wamessage.schema.js";
 import { log } from "../../../../utils/logger.js";
 import { callMetaApi } from "../../wa_axios.js";
-import { getWaSettings } from "../../settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsByIbaId,
+  getWaSettingsByPageId,
+  getWaSettingsByPhone,
+} from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import axios from "axios";
 import type { InboxStatus } from "../../../../types/enums.js";
@@ -58,7 +63,7 @@ import {
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
 import { isTerminalInboxStatus, NOT_SPAM_EVENT } from "../../constants.js";
-import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
+import { notificationQueue, sendMessageQueue } from "../../../../workers/bullmq/queues/index.js";
 import dayjs from "dayjs";
 import { HttpError } from "../../../../utils/http.js";
 import type {
@@ -111,6 +116,27 @@ const DELETED_MESSAGE_PLACEHOLDER = "This message was deleted";
 
 function isWaMessageAssignStatusTabKey(key: string): key is keyof typeof WaMessageAssignStatusTab {
   return key in WaMessageAssignStatusTab;
+}
+
+/**
+ * Links a sent message to the campaign participant it belongs to.
+ *
+ * Delivery statuses are matched back to a participant through this row (see
+ * `bulkUpdateStatuses`), so a campaign send that skips it can never be reported
+ * on.
+ */
+export async function linkWaMessageToCampaignParticipant(
+  waMessageId: string,
+  campaignParticipantId: string,
+  campaignParticipantDripStageId?: string | null,
+) {
+  return prisma.waMessageCampaginParticipantMap.create({
+    data: {
+      waMessageId,
+      campaignParticipantId,
+      campaignParticipantDripStageId: campaignParticipantDripStageId ?? null,
+    },
+  });
 }
 
 export async function addNewWaMessage(
@@ -1693,8 +1719,90 @@ export async function sendMediaMessages(
   }
 }
 
+/** Meta refuses a read receipt for anything older than this. */
+const MARK_AS_READ_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Channels whose customers see a read receipt. WEBCHAT and INTERNAL have no upstream. */
+const READ_RECEIPT_PLATFORMS = [
+  PlatformType.WHATSAPP,
+  PlatformType.INSTAGRAM,
+  PlatformType.FACEBOOK,
+];
+
+/**
+ * Tells the channel the customer's latest inbound message has been seen, so
+ * their WhatsApp ticks turn blue / their Instagram or Messenger thread shows
+ * "Seen" when an agent opens the conversation.
+ *
+ * Only the newest message is acknowledged. WhatsApp marks every earlier message
+ * in the conversation read along with it, and the Meta sender action applies to
+ * the thread rather than to a specific message — one call covers the thread
+ * either way.
+ *
+ * Best-effort: a failed receipt must not fail the agent's action, and the
+ * conversation is already marked read on our side regardless.
+ */
+async function sendReadReceipt(contactId: string) {
+  const latest = await prisma.waMessage.findFirst({
+    where: {
+      contactId,
+      sourcePlatform: { in: READ_RECEIPT_PLATFORMS },
+      messageBody: { path: ["exchangeProcess"], equals: "receive" },
+      waCreatedAt: { gte: new Date(Date.now() - MARK_AS_READ_MAX_AGE_MS) },
+    },
+    orderBy: { waCreatedAt: "desc" },
+    select: {
+      messageId: true,
+      sourceIdentifier: true,
+      sourcePlatform: true,
+      contact: { select: { orgId: true, phone: true, igsId: true, psid: true } },
+    },
+  });
+
+  const orgId = latest?.contact?.orgId;
+  if (!latest || !orgId || !latest.sourceIdentifier) return;
+
+  if (latest.sourcePlatform === PlatformType.WHATSAPP) {
+    // Addressed by message id, and only WhatsApp needs one.
+    if (!latest.messageId) return;
+    // Inbound messages carry the business number they arrived on; resolve the
+    // channel from that so a multi-number org acknowledges on the right one.
+    const channel = await getWaSettingsByPhone(latest.sourceIdentifier);
+    const waSettings = await getWaSettings(orgId, channel?.phoneId ?? undefined);
+    if (!waSettings?.phoneId) return;
+
+    await callMetaApi(`/${waSettings.phoneId}/messages`, "POST", waSettings.accessToken, {
+      messaging_product: "whatsapp",
+      status: "read",
+      message_id: latest.messageId,
+    });
+    return;
+  }
+
+  // Instagram and Messenger share one Send API shape: a sender action addressed
+  // to the person, with no message id. Meta requires the request to carry
+  // nothing but `recipient` and `sender_action`.
+  const isInstagram = latest.sourcePlatform === PlatformType.INSTAGRAM;
+  const settings = isInstagram
+    ? await getWaSettingsByIbaId(latest.sourceIdentifier)
+    : await getWaSettingsByPageId(latest.sourceIdentifier);
+  const accessToken = settings?.pageAccessToken;
+  // Instagram threads key off the IGSID, Messenger off the page-scoped id.
+  const recipientId = isInstagram ? latest.contact?.igsId : latest.contact?.psid;
+  if (!accessToken || !recipientId) return;
+
+  const body = { recipient: { id: recipientId }, sender_action: "mark_seen" };
+  // Instagram takes the token as a query parameter, Messenger as a bearer —
+  // the same split `sendMessage` makes for outbound messages on these channels.
+  await (isInstagram
+    ? callMetaApi("/me/messages", "POST", undefined, body, {
+        params: { access_token: accessToken },
+      })
+    : callMetaApi("/me/messages", "POST", accessToken, body));
+}
+
 export async function markMessagesAsRead(contactId: string, userId: string) {
-  await prisma.$executeRawUnsafe(
+  const marked = await prisma.$executeRawUnsafe(
     `
     UPDATE "WaMessage"
     SET "readUsers" = "readUsers" || $2::TEXT
@@ -1705,6 +1813,15 @@ export async function markMessagesAsRead(contactId: string, userId: string) {
     contactId,
     userId,
   );
+
+  // Nothing newly read means the receipt was already sent when whoever read it
+  // first opened the thread — re-sending on every open would be one Graph call
+  // per poll.
+  if (marked > 0) {
+    void sendReadReceipt(contactId).catch((e) =>
+      log.error({ err: e, contactId }, "Failed to send the read receipt"),
+    );
+  }
 
   // NOTE: opening a conversation deliberately does NOT clear the reader's
   // @mentions — the "@Mentions" tab must keep the conversation until the user

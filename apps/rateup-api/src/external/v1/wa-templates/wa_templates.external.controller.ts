@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js";
 import {
-  getErrorLogsHandler,
   getMessageStatusByIdHandler,
   sendTemplateToUserCore,
 } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
@@ -240,13 +239,6 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       rep.code(500).send("Error sending template to contacts");
     }
   }
-}
-
-export async function getErrorLogsExternalController(
-  request: Parameters<typeof getErrorLogsHandler>[0],
-  reply: FastifyReply,
-) {
-  return getErrorLogsHandler(request, reply);
 }
 
 export async function getMessageStatusByIdExternalController(

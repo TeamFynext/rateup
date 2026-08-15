@@ -1,4 +1,4 @@
-import { notificationQueue } from "../../redisConnection.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import { rateupLogo } from "../../constants/constants.js";
 
 export async function sendVerifyMail(verify_link: string, email_id: string, user_name: string) {

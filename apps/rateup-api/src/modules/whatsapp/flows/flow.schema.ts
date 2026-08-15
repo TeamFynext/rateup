@@ -3,6 +3,13 @@ import { QuestionType2 } from "../../../types/enums.js";
 
 const sourceQuery = z.object({
   source: z.enum(["wa", "db"]).default("wa"),
+  // Flow ids are scoped to a WABA at Meta, so callers that will use a flow on one
+  // number (a template's FLOW button, say) ask for that number's flows only.
+  whatsappSettingsPhoneId: z.string().optional(),
+});
+
+const byWhatsappSettingsPhoneQuery = z.object({
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 
 const byWaFlowIdParams = z.object({
@@ -16,6 +23,8 @@ const importFlowsBody = z.object({
   waFlowIds: z.array(z.string()),
   mapData: z.any(), // TODO: add types
   teamIds: z.array(z.string()),
+  /** Number the flows being imported live on; the org default channel when omitted. */
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 const createFlowInput = z.object({
   teamIds: z.array(z.string()),
@@ -23,6 +32,8 @@ const createFlowInput = z.object({
   categories: z.array(z.string()),
   json: z.any().optional(),
   map: z.any().optional(),
+  /** Number to create the flow on; the org default channel when omitted. */
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 
 const updateFlowInput = z.object({
@@ -70,6 +81,7 @@ const sendFlowBodySchema = z.object({
 });
 
 export type WaFlowSourceQuery = z.infer<typeof sourceQuery>;
+export type WaFlowChannelQuery = z.infer<typeof byWhatsappSettingsPhoneQuery>;
 export type ByWaFlowIdParams = z.infer<typeof byWaFlowIdParams>;
 export type ImportFlowsBody = z.infer<typeof importFlowsBody>;
 export type CreateFlowInput = z.infer<typeof createFlowInput>;
@@ -82,6 +94,7 @@ export type UpdateFlowMetaInput = z.infer<typeof updateFlowMetaInput>;
 // Auto-exported after fastify-zod migration
 export {
   sourceQuery,
+  byWhatsappSettingsPhoneQuery,
   byWaFlowIdParams,
   importFlowsBody,
   createFlowInput,

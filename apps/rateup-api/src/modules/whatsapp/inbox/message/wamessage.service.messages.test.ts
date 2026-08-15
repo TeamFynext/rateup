@@ -7,12 +7,18 @@ vi.mock("../../../../utils/prisma.js", () => ({
     contact: { findMany: vi.fn() },
     waMessageOrgTeamMap: { create: vi.fn() },
     $transaction: vi.fn(),
+    $executeRawUnsafe: vi.fn(),
   },
   excludeFields: vi.fn(),
 }));
 
 vi.mock("../../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
-vi.mock("../../settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
+vi.mock("../../settings/wa_settings.service.js", () => ({
+  getWaSettings: vi.fn(),
+  getWaSettingsByIbaId: vi.fn(),
+  getWaSettingsByPageId: vi.fn(),
+  getWaSettingsByPhone: vi.fn(),
+}));
 vi.mock("../../settings/wa_channel_access.js", () => ({ getScopedSourceIdentifiers: vi.fn() }));
 vi.mock("axios", () => ({ default: { get: vi.fn() } }));
 vi.mock("../../../contact/contact.service.js", () => ({ updateContactById: vi.fn() }));
@@ -50,7 +56,7 @@ vi.mock("../../../contact/conversation/conversation.service.js", () => ({
   setInboxStatus: vi.fn(),
   updateConversationAssignees: vi.fn(),
 }));
-vi.mock("../../../../utils/redisConnection.js", () => ({
+vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   notificationQueue: { add: vi.fn() },
   sendMessageQueue: { add: vi.fn() },
 }));
@@ -71,7 +77,12 @@ vi.mock("../../../../../generated/prisma/client.js", () => ({
 import prisma from "../../../../utils/prisma.js";
 import axios from "axios";
 import { callMetaApi } from "../../wa_axios.js";
-import { getWaSettings } from "../../settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsByIbaId,
+  getWaSettingsByPageId,
+  getWaSettingsByPhone,
+} from "../../settings/wa_settings.service.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
 import {
   createAudioMessage,
@@ -89,6 +100,7 @@ import {
   getMediaFile,
   getWaMessageByMessageId,
   getWaMessagesByContactId,
+  markMessagesAsRead,
   markWaMessageAsDeleted,
   sendContactMessage,
   sendLocationMessage,
@@ -104,11 +116,15 @@ const db = prisma as unknown as {
   contact: { findMany: Mock };
   waMessageOrgTeamMap: { create: Mock };
   $transaction: Mock;
+  $executeRawUnsafe: Mock;
 };
 
 const sendMessageMock = sendMessage as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const getWaSettingsMock = getWaSettings as unknown as Mock;
+const getWaSettingsByPhoneMock = getWaSettingsByPhone as unknown as Mock;
+const getWaSettingsByIbaIdMock = getWaSettingsByIbaId as unknown as Mock;
+const getWaSettingsByPageIdMock = getWaSettingsByPageId as unknown as Mock;
 const axiosGetMock = (axios as unknown as { get: Mock }).get;
 
 const MESSAGE: {
@@ -628,5 +644,131 @@ describe("sendLocationMessage", () => {
 
     expect(createLocationMessage).toHaveBeenCalledWith("15550001", { latitude: 1, longitude: 2 });
     expect(sendMessageMock).toHaveBeenCalled();
+  });
+});
+
+describe("markMessagesAsRead", () => {
+  const INBOUND = {
+    messageId: "wamid.abc",
+    sourceIdentifier: "15551323034",
+    sourcePlatform: PlatformType.WHATSAPP,
+    contact: { orgId: "org-1", phone: "15550001", igsId: null, psid: null },
+  };
+
+  beforeEach(() => {
+    db.$executeRawUnsafe.mockResolvedValue(1);
+    db.waMessage.findFirst.mockResolvedValue(INBOUND);
+    getWaSettingsByPhoneMock.mockResolvedValue({ phoneId: "phone-1" });
+    getWaSettingsMock.mockResolvedValue({ phoneId: "phone-1", accessToken: "token-abc" });
+    callMetaApiMock.mockResolvedValue({ data: { success: true } });
+  });
+
+  test("records the read for this user", async () => {
+    await markMessagesAsRead("contact-1", "user-1");
+
+    expect(db.$executeRawUnsafe.mock.calls[0].slice(1)).toEqual(["contact-1", "user-1"]);
+  });
+
+  // Turns the customer's ticks blue. Only the newest message is sent: WhatsApp
+  // marks every earlier message in the conversation read along with it.
+  test("sends WhatsApp the read receipt for the newest inbound message", async () => {
+    await markMessagesAsRead("contact-1", "user-1");
+    await vi.waitFor(() => expect(callMetaApiMock).toHaveBeenCalled());
+
+    expect(callMetaApiMock).toHaveBeenCalledWith("/phone-1/messages", "POST", "token-abc", {
+      messaging_product: "whatsapp",
+      status: "read",
+      message_id: "wamid.abc",
+    });
+    expect(db.waMessage.findFirst.mock.calls[0][0].orderBy).toEqual({ waCreatedAt: "desc" });
+  });
+
+  // Re-sending on every open would be one Graph call per poll.
+  test("sends nothing when the thread was already read", async () => {
+    db.$executeRawUnsafe.mockResolvedValue(0);
+
+    await markMessagesAsRead("contact-1", "user-1");
+
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+
+  // A multi-number org must acknowledge on the number the message arrived on.
+  test("acknowledges on the channel the message arrived on", async () => {
+    await markMessagesAsRead("contact-1", "user-1");
+    await vi.waitFor(() => expect(callMetaApiMock).toHaveBeenCalled());
+
+    expect(getWaSettingsByPhoneMock).toHaveBeenCalledWith("15551323034");
+    expect(getWaSettingsMock).toHaveBeenCalledWith("org-1", "phone-1");
+  });
+
+  // Instagram and Messenger take a sender action addressed to the person, with
+  // no message id — Meta requires the request to carry nothing else.
+  test("marks an Instagram thread seen with the page token as a query parameter", async () => {
+    db.waMessage.findFirst.mockResolvedValue({
+      ...INBOUND,
+      messageId: null,
+      sourceIdentifier: "iba-1",
+      sourcePlatform: PlatformType.INSTAGRAM,
+      contact: { orgId: "org-1", phone: null, igsId: "igsid-1", psid: null },
+    });
+    getWaSettingsByIbaIdMock.mockResolvedValue({ pageAccessToken: "page-token" });
+
+    await markMessagesAsRead("contact-1", "user-1");
+    await vi.waitFor(() => expect(callMetaApiMock).toHaveBeenCalled());
+
+    expect(getWaSettingsByIbaIdMock).toHaveBeenCalledWith("iba-1");
+    expect(callMetaApiMock).toHaveBeenCalledWith(
+      "/me/messages",
+      "POST",
+      undefined,
+      { recipient: { id: "igsid-1" }, sender_action: "mark_seen" },
+      { params: { access_token: "page-token" } },
+    );
+  });
+
+  test("marks a Messenger thread seen with the page token as a bearer", async () => {
+    db.waMessage.findFirst.mockResolvedValue({
+      ...INBOUND,
+      messageId: null,
+      sourceIdentifier: "page-1",
+      sourcePlatform: PlatformType.FACEBOOK,
+      contact: { orgId: "org-1", phone: null, igsId: null, psid: "psid-1" },
+    });
+    getWaSettingsByPageIdMock.mockResolvedValue({ pageAccessToken: "page-token" });
+
+    await markMessagesAsRead("contact-1", "user-1");
+    await vi.waitFor(() => expect(callMetaApiMock).toHaveBeenCalled());
+
+    expect(getWaSettingsByPageIdMock).toHaveBeenCalledWith("page-1");
+    expect(callMetaApiMock).toHaveBeenCalledWith("/me/messages", "POST", "page-token", {
+      recipient: { id: "psid-1" },
+      sender_action: "mark_seen",
+    });
+  });
+
+  // Webchat has no upstream to acknowledge to.
+  test("looks only at channels that can show a receipt", async () => {
+    await markMessagesAsRead("contact-1", "user-1");
+
+    expect(db.waMessage.findFirst.mock.calls[0][0].where.sourcePlatform).toEqual({
+      in: [PlatformType.WHATSAPP, PlatformType.INSTAGRAM, PlatformType.FACEBOOK],
+    });
+  });
+
+  test("skips the receipt when the thread has no inbound message to acknowledge", async () => {
+    db.waMessage.findFirst.mockResolvedValue(null);
+
+    await markMessagesAsRead("contact-1", "user-1");
+
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+
+  // The conversation is read on our side either way; a Graph failure must not
+  // fail the agent's action.
+  test("does not surface a failed receipt to the caller", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("graph is down"));
+
+    await expect(markMessagesAsRead("contact-1", "user-1")).resolves.not.toThrow();
+    await vi.waitFor(() => expect(log.error).toHaveBeenCalled());
   });
 });

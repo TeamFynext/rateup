@@ -196,7 +196,6 @@ export async function hasFeature(orgId: string, featurePath: SubscriptionFeature
     return false;
   }
   const feature = getNestedProperty<{ active?: boolean }>(subscription.features, featurePath);
-  console.log(feature);
   return feature?.active ?? false;
 }
 

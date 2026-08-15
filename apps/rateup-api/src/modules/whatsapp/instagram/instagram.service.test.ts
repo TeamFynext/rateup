@@ -7,6 +7,8 @@ vi.mock("../wa_axios.js", () => ({
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettingsByIbaId: vi.fn(),
   getWaSettingsById: vi.fn(),
+  getWaSettings: vi.fn(),
+  getWaSettingsByPageId: vi.fn(),
 }));
 vi.mock("../inbox/message/wamessage.service.js", () => ({
   updateWaMessageByMessageId: vi.fn(),

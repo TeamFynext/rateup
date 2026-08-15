@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../../redisConnection.js", () => ({
-  notificationQueue: { add: vi.fn() },
-}));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
 
-import { notificationQueue } from "../../redisConnection.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import { rateupLogo } from "../../constants/constants.js";
 import { createEmailBody, sendResetPasswordMail } from "./passwordReset.js";
 

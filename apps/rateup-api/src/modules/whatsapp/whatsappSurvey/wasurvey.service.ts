@@ -6,9 +6,7 @@ import {
 } from "../../../../generated/prisma/client.js";
 import {
   CampaignParticipantStatus,
-  LogicAction,
   QuestionType as Q,
-  QuestionType,
   QuestionType2,
   SubscriptionFeaturePathName,
   WaQuestions,
@@ -18,7 +16,6 @@ import {
   LeadGenBody,
   LeadGenFieldData,
   WaMessageBody,
-  WaReceiveMessageBody,
   WaSendMessageBody,
 } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
@@ -34,7 +31,6 @@ import {
 } from "../../campaign/campaignParticipants/campaignParticipants.service.js";
 import { getOrCreateContactByPhone } from "../../contact/contact.service.js";
 import { getQuestionsBySurveyId } from "../../question/question.service.js";
-import { parseLogicAction } from "../../question/question.utils.js";
 import { CreateResponseInput } from "../../response/response.schema.js";
 import {
   createResponse,
@@ -42,7 +38,7 @@ import {
   sendResponseToWebhook,
   updateResponse,
 } from "../../response/response.service.js";
-import { updateCompletedSurvey, updateVisitedSurvey } from "../../survey/survey.service.js";
+import { updateCompletedSurvey } from "../../survey/survey.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   getWaSettings,
@@ -50,26 +46,9 @@ import {
   getWaSettingsByPageId,
 } from "../settings/wa_settings.service.js";
 import { GraphApiError, callMetaApi } from "../wa_axios.js";
+import { graphApiErrorDetail } from "../../../utils/graphError.js";
 
-/** Meta returns failures as `{ error: {...} }`; anything else is a transport-level error. */
-function graphApiErrorDetail(error: unknown): WaGraphApiErrorDetail | undefined {
-  if (error !== null && typeof error === "object" && "error" in error) {
-    return (error as { error?: WaGraphApiErrorDetail }).error;
-  }
-  return undefined;
-}
-import {
-  createCTAButtonMessage,
-  createNativeListMessage,
-  createTemplateMessage,
-  createTextMessage,
-  downloadAndUpload,
-  generateMessageDataFromQuestion,
-  getMessageObject,
-  getQuestionByIdFromSession,
-  parseMessage,
-  ratingEmoji,
-} from "./wasurvey.utils.js";
+import { createTextMessage } from "./wasurvey.utils.js";
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
 import { uploadFile } from "../../../utils/upload/s3Upload.js";
 import axios from "axios";
@@ -222,36 +201,6 @@ export async function sendMessage(
     );
     return { status: true, message: messageId };
   } catch (e) {
-    console.log("🚀 ~ file: wasurvey.service.ts:436 ~ sendMessage ~ e:", e);
-
-    console.log("🚀 main:", {
-      orgId,
-      phone: to,
-      logs: (e as { error?: unknown } | null | undefined)?.error,
-    });
-    await handleWaMessages(
-      "send",
-      messageData,
-      to,
-      orgId,
-      platform,
-      sourceIdentifier,
-      userName,
-      undefined,
-      userId,
-      true,
-      teamId ?? null,
-      messageType,
-      isAutomated,
-      externalApi,
-    );
-    await prisma.waLogs.create({
-      data: {
-        orgId,
-        phone: to,
-        logs: [graphApiErrorDetail(e) ?? { message: "Network or unknown error" }],
-      },
-    });
     log.error({ error: e }, "Error sending message");
     let errorMessage = `Failed to send message`;
     if (e instanceof GraphApiError) {
@@ -587,66 +536,6 @@ export async function updateSession(
   return session as unknown as WaSessionWithSurveyTeamMap; // overriding JSON type of responses
 }
 
-export async function sendNextQuestion(session: WaSession, response: unknown) {
-  const { currentQuestionId, surveyTeamMap } = session;
-  if (!currentQuestionId) {
-    log.error("CurrentQuestionId is null");
-    throw new Error("CurrentQuestionId is null");
-  }
-  if (!surveyTeamMap) {
-    throw new Error("Session has no associated surveyTeamMap");
-  }
-  const questions = surveyTeamMap.survey.questions;
-  const currentQuestion = questions.find((q) => q.id === currentQuestionId);
-  if (!currentQuestion) {
-    throw new Error("CurrentQuestion Not Found");
-  }
-  // parseLogicAction only evaluates scalar/choice answers; richer answer shapes (e.g. the
-  // testimonial object) simply never match a logic jump and fall through to NextQ.
-  const next = parseLogicAction(
-    currentQuestion,
-    response as Choice | string | Choice[] | number,
-    session.language,
-  );
-  log.info("Next action: %s", next);
-  const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
-
-  if (next === LogicAction.NextQ && questions.length > currentIndex + 1) {
-    // Send next question
-    const nextQuestion = questions[currentIndex + 1];
-    await sendQuestion(nextQuestion, session);
-  } else if (next === LogicAction.EndSurvey || questions.length <= currentIndex + 1) {
-    // End Survey
-    await saveResponses(session);
-    if (
-      shouldShowGoogleReview({
-        questions: surveyTeamMap.survey.questions,
-        responses: session.responses,
-      })
-    ) {
-      log.trace("Sending google review link to %s", session.phone);
-      const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${session.surveyTeamMapId}/end?k=n&msg=thanks`;
-      const googleReviewMessage = createCTAButtonMessage({
-        to: session.phone,
-        buttonText: "Review us on Google",
-        url: thankYouPage,
-        body: "Thank you for your feedback!",
-      });
-      await sendMessage(session.orgId, googleReviewMessage);
-    } else {
-      const ThankYouMessage = createTextMessage(session.phone, "Thank You", "Have a nice day!");
-      await sendMessage(session.orgId, ThankYouMessage);
-    }
-    await deleteSession(session.orgId, session.phone);
-  } else {
-    // 'next' is a question id
-    const nextQuestion = getQuestionByIdFromSession(session, next);
-    if (!nextQuestion) {
-      throw new Error("Question not found");
-    }
-    await sendQuestion(nextQuestion, session);
-  }
-}
 const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
 const googleReviewSupportedMetaTypes: WaQuestions[] = [
   WaQuestions.Rating,
@@ -659,7 +548,6 @@ interface ShouldShowGoogleReviewProps {
   responses: QuestionResponse[];
 }
 export function shouldShowGoogleReview({ questions, responses }: ShouldShowGoogleReviewProps) {
-  log.trace("q\n%o\nr%o", questions, responses);
   let showGoogleReview = false;
   questions.forEach((q: Question) => {
     if (googleReviewSupportedTypes.includes(q.type) && q.googleReview) {
@@ -706,7 +594,6 @@ export function shouldShowGoogleReviewV2({
         child.metaType !== undefined && googleReviewSupportedMetaTypes.includes(child.metaType),
     ),
   );
-  log.trace("q\n%o\nr%o", questions, responses);
   let showGoogleReview = false;
   questions.forEach((q) => {
     if (q.googleReview) {
@@ -734,35 +621,6 @@ export function shouldShowGoogleReviewV2({
   });
   return showGoogleReview;
 }
-async function updateCurrentQuestion(orgId: string, from: string, newQId: string) {
-  log.trace("Updating current question for %o => %s\n", { from, orgId }, newQId);
-  await prisma.waSession.update({
-    where: {
-      phone_orgId: {
-        phone: from,
-        orgId: orgId,
-      },
-    },
-    data: {
-      currentQuestionId: newQId,
-    },
-  });
-}
-export async function sendQuestion(question: Question, session: WaSession) {
-  if (question.type == QuestionType.Testimonial) {
-    const hasResponse = session.responses.find((s) => s.questionId == question.id);
-    if (!hasResponse) {
-      await startTestimonialQuestion(question, session);
-    } else {
-      await handleTestimonialQuestion(question, session);
-    }
-  } else {
-    const message = await generateMessageDataFromQuestion(session, question);
-    await updateCurrentQuestion(session.orgId, session.phone, question.id);
-    await sendMessage(session.orgId, message);
-  }
-}
-
 /**
  * Ticket rules are evaluated for both v1 survey answers (`QuestionResponse`, whose
  * `response` is keyed by question type) and v2 flow answers (a bare scalar/array).
@@ -821,18 +679,94 @@ function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses: FlowQuest
   return null;
 }
 /**
+ * Everything `saveResponses` reads about the run it is persisting. A `WaSession`
+ * satisfies this structurally, so callers holding one can keep passing it —
+ * but the function no longer requires that the context *be* a session row.
+ * That is what lets the flow paths move off `WaSession` (to a signed
+ * flow_token plus an accumulator) without touching this function.
+ */
+export interface SaveResponsesContext {
+  /** Correlation id for the log line only. */
+  id?: string;
+  phone: string;
+  orgId: string;
+  responses: unknown[];
+  surveyTeamMapId: string | null;
+  language: string;
+  tag?: string | null;
+  ip?: string | null;
+  campaignParticipantId?: string | null;
+  campaignParticipantDripStageId?: string | null;
+  /**
+   * Makes the save idempotent — see SurveyResponse.idempotencyKey. Flow runs
+   * pass their flow token so a retried webhook cannot file the answers twice.
+   */
+  idempotencyKey?: string | null;
+  surveyTeamMap?: {
+    survey: {
+      enableAutoGenerateTicket?: boolean | null;
+      ticketColumnId?: string | null;
+      WaFlow?: {
+        anonymous?: boolean | null;
+        ticketIssued?: unknown;
+      } | null;
+    };
+  } | null;
+}
+
+/**
  * Saves responses to the database in SurveyResponse table.
  * To be called after getting response to the last question.
  *
  * -> updates completedSurvey count
  */
-export async function saveResponses(session: WaSession) {
-  let anonymous = session?.surveyTeamMap?.survey?.WaFlow?.anonymous ?? false;
-  log.trace("Saving responses for %o", {
-    id: session.id,
-    phone: anonymous ? "anonynous" : session.phone,
-    responses: session.responses,
+/**
+ * The side effects that follow a saved response. Split out of `saveResponses` so
+ * the caller can return as soon as the row exists — see the comment there.
+ */
+async function publishSavedResponse(
+  res: Awaited<ReturnType<typeof createResponse>>,
+  session: SaveResponsesContext,
+  anonymous: boolean,
+) {
+  const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
+  await saveResponseToGoogleSheet({
+    surveyTeamMapId,
+    responses,
+    language,
+    createdAt,
+    respondent: !anonymous && Contact?.phone,
+    tag,
   });
+  await sendResponseToWebhook(res, session.orgId);
+  if (session.surveyTeamMapId) {
+    await updateCompletedSurvey(session.surveyTeamMapId);
+  }
+  if (session.campaignParticipantId) {
+    if (session.campaignParticipantDripStageId) {
+      await updateDripCampaignParticipant(session.campaignParticipantDripStageId, {
+        status: CampaignParticipantStatus.COMPLETED,
+        // responseId: res.id,
+      });
+      await updateDripCampaignStats(session.campaignParticipantDripStageId);
+    } else {
+      await updateCampaignParticipant(session.campaignParticipantId, {
+        status: CampaignParticipantStatus.COMPLETED,
+        responseId: res.id,
+      });
+    }
+
+    await updateCampaignStats(session.campaignParticipantId);
+  }
+  addZapierTriggerToQueue(
+    ZapierTriggers.RESPONSE_SUBMITTED,
+    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
+    res.surveyTeamMap.team.orgId,
+  );
+}
+
+export async function saveResponses(session: SaveResponsesContext) {
+  let anonymous = session?.surveyTeamMap?.survey?.WaFlow?.anonymous ?? false;
   let questionResponses = session.responses as unknown as Array<QuestionResponse>;
   let responsesWithSha256 = questionResponses?.filter((response) => {
     return (
@@ -900,10 +834,11 @@ export async function saveResponses(session: WaSession) {
     contactId: contact?.id,
     tag: session.tag,
     location: { coordinates: undefined },
+    idempotencyKey: session.idempotencyKey ?? undefined,
   };
   const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
     ?.ticketIssued as unknown as FlowTicket[];
-  let shouldRaiseTicket = session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
+  let shouldRaiseTicket = session?.surveyTeamMap?.survey?.enableAutoGenerateTicket ?? undefined;
   let columnId = session?.surveyTeamMap?.survey?.ticketColumnId ?? undefined;
   if (ticketIssued.length && !shouldRaiseTicket) {
     columnId = getColumnIdFromTickets(ticketIssued, questionResponses) ?? undefined;
@@ -921,40 +856,25 @@ export async function saveResponses(session: WaSession) {
   // if (loyalty) {
   //   await handleLoyaltyFeedback(session.phone, loyalty);
   // }
-  log.info("Responses saved \n%o\n", surveyResponse);
-  const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
-  await saveResponseToGoogleSheet({
-    surveyTeamMapId,
-    responses,
-    language,
-    createdAt,
-    respondent: !anonymous && Contact?.phone,
-    tag,
-  });
-  await sendResponseToWebhook(res, session.orgId);
-  // TODO move out of this function
-  updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
-  if (session.campaignParticipantId) {
-    if (session.campaignParticipantDripStageId) {
-      await updateDripCampaignParticipant(session.campaignParticipantDripStageId, {
-        status: CampaignParticipantStatus.COMPLETED,
-        // responseId: res.id,
-      });
-      await updateDripCampaignStats(session.campaignParticipantDripStageId);
-    } else {
-      await updateCampaignParticipant(session.campaignParticipantId, {
-        status: CampaignParticipantStatus.COMPLETED,
-        responseId: res.id,
-      });
-    }
-
-    await updateCampaignStats(session.campaignParticipantId);
-  }
-  addZapierTriggerToQueue(
-    ZapierTriggers.RESPONSE_SUBMITTED,
-    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
-    res.surveyTeamMap.team.orgId,
+  log.info(
+    {
+      responseId: res.id,
+      surveyTeamMapId: session.surveyTeamMapId,
+      count: questionResponses.length,
+    },
+    "Survey response saved",
   );
+
+  // Everything past this point is downstream fan-out — a Google Sheets append, a
+  // customer webhook, campaign bookkeeping, a Zapier trigger. The response row
+  // is already durable, and a WhatsApp Flow endpoint has a 10-second budget for
+  // the whole request, so none of it is allowed to hold the caller. Each is
+  // logged on failure rather than surfaced: the respondent has already been told
+  // their answers were saved, which is true.
+  void publishSavedResponse(res, session, anonymous).catch((e) =>
+    log.error({ err: e, responseId: res.id }, "Post-save fan-out failed"),
+  );
+
   return res;
 }
 async function updateCampaignStats(id: string) {
@@ -1022,170 +942,6 @@ export async function sendTextMessage(
     skipConversationLimit,
   );
 }
-interface sendSurveyToParticipantParams {
-  campaignParticipantId: string;
-  phone: string;
-  surveyTeamMapId: string;
-  dbTemplate: WaTemplateWithTypes;
-}
-export async function sendSurveyToParticipant({
-  campaignParticipantId,
-  phone,
-  surveyTeamMapId,
-  dbTemplate,
-}: sendSurveyToParticipantParams) {
-  try {
-    if (!dbTemplate.orgId) {
-      throw new Error("Template has no associated orgId");
-    }
-    log.fatal("Deleting existing session if any for %s", phone); // TODO: handle this. Maybe provide options to send to remaining participants or send to all
-    await deleteSession(dbTemplate.orgId, phone);
-    log.trace("Sending survey to participant %s", phone);
-    let session = await createSession({
-      phone,
-      surveyTeamMapId,
-      orgId: dbTemplate.orgId,
-      templateId: dbTemplate.id,
-      campaignParticipantId,
-    });
-    log.trace("Session created %o", session);
-    const { name, language } = dbTemplate.data;
-    const templateQuery = {
-      name,
-      language: {
-        code: language,
-      },
-    };
-    const consentTemplateMessage = createTemplateMessage(phone, templateQuery);
-
-    // TODO: send error if sending template failed
-    await sendMessage(session.orgId, consentTemplateMessage);
-    updateVisitedSurvey(surveyTeamMapId).then(() => {});
-    return true;
-  } catch (e) {
-    log.error(e);
-    return false;
-  }
-}
-
-export async function handleTestimonialQuestion(question: Question, session: WaSession) {
-  const features = question.features?.[session.language];
-  const to = session.phone;
-  const response: Partial<TestimonialResponse> =
-    session?.responses?.find((s) => s.questionId == question.id)?.response?.[
-      QuestionType.Testimonial
-    ] ?? {};
-  if (features?.jobTitle && !response.jobTitle) {
-    const description = "\nPlease share your job title";
-    const nextSubQuestion = createTextMessage(to, null, description);
-    await sendMessage(session.orgId, nextSubQuestion);
-  }
-  if (!response.testimonial) {
-    const description = "\nPlease share your experience briefly";
-    const nextSubQuestion = createTextMessage(to, null, description);
-    await sendMessage(session.orgId, nextSubQuestion);
-  }
-  if (features?.rating && !response.rating) {
-    const description = "\nPlease Rate us";
-    const sections: WaSectionsType = [
-      {
-        rows: [1, 2, 3, 4, 5].map((i) => ({
-          id: i.toString(),
-          title: ratingEmoji.repeat(i),
-        })),
-      },
-    ];
-    const nextSubQuestion = createNativeListMessage(to, null, description, sections);
-    await sendMessage(session.orgId, nextSubQuestion);
-  }
-  if (features?.photo && !response.photo) {
-    const description = "\nPlease share your photo";
-    const nextSubQuestion = createTextMessage(to, null, description);
-    await sendMessage(session.orgId, nextSubQuestion);
-  }
-  await sendNextQuestion(session, response);
-}
-
-export async function startTestimonialQuestion(question: Question, session: WaSession) {
-  if (!session.language) {
-    log.error({ session }, "No language found for session");
-    throw new Error("No language found for session");
-  }
-  const title = question.title[session.language];
-  let description = question.description[session.language] + "\n\nPlease share your name";
-  const message = createTextMessage(session.phone, title, description);
-  await updateCurrentQuestion(session.orgId, session.phone, question.id);
-  await sendMessage(session.orgId, message);
-}
-
-export async function handleTestimonialReply(
-  reply: WaMessageBody,
-  question: Question,
-  session: WaSession,
-): Promise<void> {
-  const features = question.features?.[session?.language];
-  let message = parseMessage(reply).message;
-  const response = session?.responses?.find((s) => s.questionId == question.id)?.response?.[
-    QuestionType.Testimonial
-  ] || {
-    name: "",
-    testimonial: "",
-  };
-  let isValid = true;
-  if (!message) isValid = false;
-  else if (!response.name) {
-    //assume its name response
-    response.name = message;
-  } else if (features?.jobTitle && !response.jobTitle) {
-    //assume its job title
-    response.jobTitle = message;
-  } else if (!response.testimonial) {
-    //assume its testimonial
-    response.testimonial = message;
-  } else if (features?.rating && !response.rating) {
-    //assume its rating
-    const listReplyId = (reply.entry[0].changes[0].value as WaReceiveMessageBody).messages[0]
-      .interactive?.list_reply?.id;
-    if (!listReplyId) {
-      isValid = false;
-    } else {
-      const rating = Number.parseInt(listReplyId);
-      if (rating < 1 || rating > 5) isValid = false;
-      else response.rating = rating;
-    }
-  } else if (features?.photo && !response.photo) {
-    //assume its photo
-    const { message } = getMessageObject(reply);
-    const uniqueFilename = await downloadAndUpload(session?.orgId, message.image.id);
-    if (!(message.type === "image")) {
-      return undefined;
-    }
-    if (!(typeof uniqueFilename === "string" && uniqueFilename.length > 0)) isValid = false;
-    else response.photo = uniqueFilename;
-  }
-  if (!isValid) {
-    await sendTextMessage(session, "Invalid response. Please try again.", "");
-    await sendQuestion(question, session);
-    return;
-  }
-  const formattedResponse: QuestionResponse = {
-    questionId: session.currentQuestionId!,
-    response: {
-      [QuestionType.Testimonial]: response,
-    },
-    type: QuestionType.Testimonial,
-  };
-  const currentResponses = (session.responses as unknown as Array<QuestionResponse>).filter(
-    (r) => r.questionId !== session.currentQuestionId,
-  );
-  const updatedResponses = [...currentResponses, formattedResponse];
-
-  session = await updateSession(session.orgId, session.phone, {
-    responses: updatedResponses,
-  });
-  await handleTestimonialQuestion(question, session);
-}
-
 export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,

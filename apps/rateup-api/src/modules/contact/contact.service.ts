@@ -42,8 +42,11 @@ import {
 } from "./conversation/conversation.service.js";
 import type { InboxActor } from "./conversation/conversation.schema.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
-import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { integrationTriggerQueue, notificationQueue } from "../../utils/redisConnection.js";
+import {
+  checkAndExecuteRuleByTriggerEvent,
+  resolveContactChannel,
+} from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { integrationTriggerQueue, notificationQueue } from "../../workers/bullmq/queues/index.js";
 import {
   mapStatusToField,
   transitionInboxStat,
@@ -117,7 +120,9 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
   await checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
     phone: contact?.phone,
-    platform: "ALL",
+    // A contact created here has no thread yet, so this resolves off its own
+    // identifiers and stays "ALL" for a plain phone import.
+    ...(await resolveContactChannel(user)),
   });
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_CREATE,
@@ -789,23 +794,23 @@ export async function updateContactById(
     }
   }
 
-  if (contact.waMessageAssignStatus === WaMessageAssignStatusTab.Closed) {
-    checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
+  // Which channel the contact is actually on decides which rules may run: a
+  // WhatsApp rule firing on an Instagram chat would try to WhatsApp-message an
+  // IGSID and fail.
+  const triggerEvent =
+    contact.waMessageAssignStatus === WaMessageAssignStatusTab.Closed
+      ? "CHAT_CLOSED"
+      : contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
+        ? "CHAT_ASSIGNED"
+        : contact.lifecycleId
+          ? "LIFECYCLE_UPDATED"
+          : null;
+  if (triggerEvent) {
+    const channel = await resolveContactChannel(updatedContact);
+    checkAndExecuteRuleByTriggerEvent(triggerEvent, {
       orgId: updatedContact?.orgId,
       phone: updatedContact.phone,
-      platform: "ALL",
-    });
-  } else if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) {
-    checkAndExecuteRuleByTriggerEvent("CHAT_ASSIGNED", {
-      orgId: updatedContact?.orgId,
-      phone: updatedContact.phone,
-      platform: "ALL",
-    });
-  } else if (contact.lifecycleId) {
-    checkAndExecuteRuleByTriggerEvent("LIFECYCLE_UPDATED", {
-      orgId: updatedContact?.orgId,
-      phone: updatedContact.phone,
-      platform: "ALL",
+      ...channel,
     });
   }
   if (contact.contactGroupIds) {
@@ -1980,17 +1985,18 @@ export async function bulkUpdateWaMessageAssignStatus(
 
   await Promise.all(
     contacts.map(async (contact) => {
-      if (waMessageAssignStatus === WaMessageAssignStatusTab.Closed) {
-        checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
+      const bulkTriggerEvent =
+        waMessageAssignStatus === WaMessageAssignStatusTab.Closed
+          ? "CHAT_CLOSED"
+          : waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED
+            ? "CHAT_ASSIGNED"
+            : null;
+      if (bulkTriggerEvent) {
+        const channel = await resolveContactChannel(contact);
+        checkAndExecuteRuleByTriggerEvent(bulkTriggerEvent, {
           orgId: contact.orgId,
           phone: contact.phone,
-          platform: "ALL",
-        });
-      } else if (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) {
-        checkAndExecuteRuleByTriggerEvent("CHAT_ASSIGNED", {
-          orgId: contact.orgId,
-          phone: contact.phone,
-          platform: "ALL",
+          ...channel,
         });
       }
 

@@ -12,7 +12,7 @@ import { log } from "../../utils/logger.js";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service.js";
 import dayjs from "dayjs";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 export async function sendTicketAssignedWaMessage(data: {
   phone: string;
