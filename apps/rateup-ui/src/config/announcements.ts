@@ -38,6 +38,26 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-15-inbox-sending-feedback",
+    title: "Sends show up straight away in the inbox",
+    summary:
+      "A message, template or flow now appears in the conversation the moment you send it, marked with a clock until WhatsApp confirms it — templates show the card you previewed and flows their invitation message and button, rather than the thread sitting unchanged until the send completes. A send that fails now says so instead of passing quietly.",
+    publishedAt: "2026-08-15",
+    kinds: ["improvement", "fix"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-08-14-flows-per-number",
+    title: "Flows now belong to a WhatsApp number",
+    summary:
+      "WhatsApp scopes a flow to the number it was created on, so a flow from one number cannot be sent or attached to a template built on another. Creating a flow now asks which number it is for, and the Flow picker on a template's button only offers flows from the number that template is being created on. If a template still points at a flow from another number, saving it now says so instead of failing with WhatsApp's \"invalid parameter\". Existing flows stay on your first connected number.",
+    publishedAt: "2026-08-14",
+    kinds: ["improvement", "fix"],
+    area: "Flows",
+    link: { to: "/dashboard/whatsapp/flows", label: "Open flows" },
+  },
+  {
     id: "2026-08-13-wa-display-name",
     title: "Manage your WhatsApp channel and profile",
     summary:

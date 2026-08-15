@@ -60,7 +60,14 @@ const ButtonInput = ({
   const uid = useId();
   /** Stable, unique DOM id for one of this button's fields, e.g. fid("text"). */
   const fid = (field: string) => `${uid}-${field}`;
-  const { data: flows } = useWaFlowsFromDb(data.type === WHATSAPP_BUTTON_TYPE.FLOW);
+  const selectedWhatsappPhoneId =
+    form.watch()?.whatsappSettingsPhoneId ||
+    form.watch()?.defaultValues?.whatsappSettingsPhoneId ||
+    undefined;
+  const { data: flows } = useWaFlowsFromDb(
+    data.type === WHATSAPP_BUTTON_TYPE.FLOW,
+    selectedWhatsappPhoneId,
+  );
   const buttonState = useButtonState({
     url: form.watch()?.buttons?.[index]?.url,
     example: form.watch()?.buttons?.[index]?.example,
@@ -384,6 +391,9 @@ const ButtonInput = ({
           <FlowSelector
             onlyPublished
             id={"flowId"}
+            // The template is created on this number's WABA, and a FLOW button can only
+            // point at a flow from that same WABA.
+            whatsappSettingsPhoneId={selectedWhatsappPhoneId}
             {...inputProps(form, `buttons.${index}.flow_id`)}
             searchable
             label={<p className="text-sm font-medium">{translations("Flow")}</p>}

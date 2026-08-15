@@ -7,6 +7,7 @@ import { useImmer } from "use-immer";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
+import type { NewPendingMessage } from "@/store/pendingMessages.ts";
 import { WaTemplateComponentType } from "@/types/enums.ts";
 import { WaTemplateSupportedParameters } from "@/types/enums.ts";
 import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
@@ -27,6 +28,8 @@ interface Props {
       parameterData: WaTemplateComponent[];
       teamId: string;
       whatsappSettingsPhoneId: string;
+      /** The card to draw in the thread while the send is in flight. */
+      pending?: NewPendingMessage;
     },
     unknown
   >;
@@ -101,6 +104,13 @@ export function WaInboxTemplatePreviewNew(props: Props) {
       parameterData: modifiedParamData,
       teamId: props?.teamId,
       whatsappSettingsPhoneId: props?.whatsappSettingsPhoneId,
+      // The card goes into the thread as the request goes out, so closing this dialog
+      // leaves the template on screen rather than an unchanged conversation.
+      pending: {
+        kind: "template",
+        template: props.template,
+        parameters: modifiedParamData,
+      },
     });
     setLoading(false);
     props?.onClose();

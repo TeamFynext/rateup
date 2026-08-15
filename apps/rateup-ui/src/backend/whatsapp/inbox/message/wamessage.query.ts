@@ -12,8 +12,11 @@ import { notificationKeys } from "@/backend/notification/notification.keys";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import useContactStore, { useContactsStore } from "@/store/inbox.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
+import type { NewPendingMessage } from "@/store/pendingMessages.ts";
+import { usePendingSend } from "@/store/pendingMessages.ts";
 import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import type { AssignInboxResult } from "./wamessage.api";
 import type { WaMessageLogFilter } from "./wamessage.api";
@@ -72,21 +75,33 @@ export const useSendNewWaMessage = (
   teamId: string | null | undefined,
   whatsappSettingsPhoneId: string | undefined,
   platform = MessagePlatform.WHATSAPP,
+  rowKey?: string,
 ) => {
   const qc = useQueryClient();
+  const pending = usePendingSend(rowKey, contactId);
   return useMutation({
-    mutationFn: (message: RequestPayloadFields) =>
+    // `pending` is the card to draw while the send is in flight; it is destructured
+    // off here so it never reaches the request body.
+    mutationFn: ({
+      pending: _pending,
+      ...message
+    }: RequestPayloadFields & { pending?: NewPendingMessage }) =>
       sendNewWaMessage(contactId ?? "", {
         ...message,
         whatsappSettingsPhoneId,
         platform,
         teamId,
       }),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
-    },
-    onError: (error) => {
+    onMutate: (variables) => ({ pendingId: pending.begin(variables.pending) }),
+    // Invalidates the thread itself, then takes the pending card back down.
+    onSuccess: (_data, _variables, context) => pending.settle(context?.pendingId),
+    onError: (error, _variables, context) => {
       console.error("Error sending message", error);
+      pending.rollback(context?.pendingId);
+      qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
+      // The composer clears itself and its pending bubble on settle, so without this
+      // a failed send looks exactly like a successful one that has not echoed yet.
+      toast.error(getApiErrorMessage(error, "Could not send the message"));
     },
   });
 };

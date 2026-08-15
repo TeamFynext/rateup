@@ -140,9 +140,9 @@ export default function WaInboxChatDisplayFooter({
     currentUser?.teamId,
     whatsappSettingsPhoneId,
     platform,
+    getRowKey(contact),
   );
   const createPrivateMessage = useCreatePrivateMessage(contact.id);
-  const { addMessage, removeMessage } = useTemperoryMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
@@ -229,29 +229,25 @@ export default function WaInboxChatDisplayFooter({
       location: body.location,
     };
     resetBody();
-    addMessage(getRowKey(contact), {
-      body: {
-        text: values.text.body,
-        ...(values.media?.length
-          ? {
-              url: values.media[0].url,
-              urlType: values.media[0].type,
-              filename: values.media[0].name,
-            }
-          : {}),
-      },
-      type: "text",
-    });
     resetMedia();
     setAudioUrl(null);
-    sendnewWaMessage.mutate(
-      { ...values },
-      {
-        onSuccess: () => {
-          removeMessage(getRowKey(contact));
+    sendnewWaMessage.mutate({
+      ...values,
+      // Drawn in the thread from onMutate until the sent message is read back.
+      pending: {
+        kind: "message",
+        body: {
+          text: values.text.body,
+          ...(values.media?.length
+            ? {
+                url: values.media[0].url,
+                urlType: values.media[0].type,
+                filename: values.media[0].name,
+              }
+            : {}),
         },
       },
-    );
+    });
     updateContactById(contact.id, (contact) => ({
       ...contact,
       lastMessage: {
@@ -851,63 +847,6 @@ export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpda
     </Alert>
   );
 };
-
-interface Message {
-  id?: string;
-  contactId: string;
-  body: {
-    /** The composer's Tiptap document, or plain text for legacy entries. */
-    text: TiptapNode | string;
-    url?: string;
-    urlType?: string;
-    filename?: string;
-  };
-  type: string;
-  timestamp: number;
-  isOutgoing: boolean;
-}
-
-interface MessageState {
-  messages: Record<string, Message[]>;
-  addMessage: (
-    contactId: string,
-    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">,
-  ) => void;
-  getMessages: (contactId: string) => Message[];
-  removeMessage: (contactId: string) => void;
-}
-
-export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
-  messages: {},
-  addMessage: (contactId, message) =>
-    set((state) => {
-      const newMessage: Message = {
-        ...message,
-        contactId,
-        timestamp: Date.now(),
-        isOutgoing: true,
-      };
-
-      const currentContactMessages = state.messages[contactId] || [];
-
-      return {
-        messages: {
-          ...state.messages,
-          [contactId]: [...currentContactMessages, newMessage],
-        },
-      };
-    }),
-  getMessages: (contactId) => get().messages[contactId] || [],
-  removeMessage: (contactId) =>
-    set((state) => {
-      return {
-        messages: {
-          ...state.messages,
-          [contactId]: [],
-        },
-      };
-    }),
-}));
 
 /**
  * An optimistic message pushed into the thread before the server echoes it.
