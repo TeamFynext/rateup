@@ -24,9 +24,9 @@ export const outgoingWebhookWorker = new Worker(
         },
       },
     });
-    if (!webhook?.org?.Webhook?.events.includes(event)) return;
 
-    console.log("🚀 ~ webhook.org.Webhook.url:", webhook.org.Webhook.url, job?.id);
+    if (!webhook?.org?.Webhook?.events.includes(event)) return;
+    log.info({ url: webhook.org.Webhook.url, id: job?.id }, "🚀 ~ webhook.org.Webhook.url:");
 
     const response = await fetch(webhook.org.Webhook.url, {
       method: "POST",
