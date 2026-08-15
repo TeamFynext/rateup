@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { surveyKeys } from "@/backend/surveys/survey.keys";
+import type { NewPendingMessage } from "@/store/pendingMessages.ts";
+import { usePendingSend } from "@/store/pendingMessages.ts";
 
 import type { cloneFlowsProps, createFlowInput } from "./flow.api";
 import {
@@ -216,7 +218,12 @@ export const useDeprecateFlowMutation = () => {
   });
 };
 
-export const useSendFlowToUser = (phone: string | undefined) => {
+export const useSendFlowToUser = (
+  phone: string | undefined,
+  contactId?: string,
+  rowKey?: string,
+) => {
+  const pending = usePendingSend(rowKey, contactId);
   return useMutation({
     mutationFn: ({
       dbFlowId,
@@ -228,12 +235,18 @@ export const useSendFlowToUser = (phone: string | undefined) => {
       teamId: string | null;
       flowId: string | undefined;
       whatsappSettingsPhoneId: string | undefined;
+      /** The card to draw while this is in flight; not part of the request. */
+      pending?: NewPendingMessage;
     }) =>
       sendFlow(dbFlowId, phone ?? "", teamId ?? "", flowId ?? "", whatsappSettingsPhoneId ?? ""),
-    onSuccess: () => {
+    onMutate: (variables) => ({ pendingId: pending.begin(variables.pending) }),
+    onSuccess: (_data, _variables, context) => {
       toast.success("Flow Sent Successfully");
+      // Invalidates the thread itself, then takes the pending card back down.
+      return pending.settle(context?.pendingId);
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      pending.rollback(context?.pendingId);
       toast.error(error?.message || "Error sending flow");
     },
   });
