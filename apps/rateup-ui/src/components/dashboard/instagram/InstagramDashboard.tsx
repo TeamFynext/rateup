@@ -148,20 +148,8 @@ export function InstagramDashboard() {
 
       <Separator />
 
-      <Tabs defaultValue="ice-breakers">
+      <Tabs defaultValue="chatbots">
         <TabsList>
-          <TabsTrigger value="ice-breakers">
-            <IconMessageDots className="mr-1.5 size-4" />
-            {t("Ice Breakers")}
-          </TabsTrigger>
-          {/* <TabsTrigger value="ig-me-links">
-            <IconLink className="mr-1.5 size-4" />
-            {t("ig.me Links")}
-          </TabsTrigger> */}
-          <TabsTrigger value="persistent-menu">
-            <IconMenu2 className="mr-1.5 size-4" />
-            {t("Persistent Menu")}
-          </TabsTrigger>
           <TabsTrigger value="chatbots">
             <IconRobot className="mr-1.5 size-4" />
             {t("Chatbots")}
@@ -174,10 +162,37 @@ export function InstagramDashboard() {
             <IconHistory className="mr-1.5 size-4" />
             {t("Story Mentions")}
           </TabsTrigger>
+          <TabsTrigger value="persistent-menu">
+            <IconMenu2 className="mr-1.5 size-4" />
+            {t("Persistent Menu")}
+          </TabsTrigger>
+          <TabsTrigger value="ice-breakers">
+            <IconMessageDots className="mr-1.5 size-4" />
+            {t("Ice Breakers")}
+          </TabsTrigger>
+          {/* <TabsTrigger value="ig-me-links">
+            <IconLink className="mr-1.5 size-4" />
+            {t("ig.me Links")}
+          </TabsTrigger> */}
         </TabsList>
 
         {selectedSetting && (
           <>
+            <TabsContent value="chatbots" className="mt-4">
+              <ChatbotsTab />
+            </TabsContent>
+            <TabsContent value="comments" className="mt-4">
+              <CommentsTab />
+            </TabsContent>
+            <TabsContent value="stories" className="mt-4">
+              <StoriesTab />
+            </TabsContent>
+            <TabsContent value="persistent-menu" className="mt-4">
+              <PersistentMenuTab
+                waSettingId={selectedSetting.id}
+                businessName={selectedSetting.igDisplayName || selectedSetting.igUserName || ""}
+              />
+            </TabsContent>
             <TabsContent value="ice-breakers" className="mt-4">
               <IceBreakersTab
                 waSettingId={selectedSetting.id}
@@ -189,21 +204,6 @@ export function InstagramDashboard() {
                 username={selectedSetting.igUserName}
                 displayName={selectedSetting.igDisplayName}
               />
-            </TabsContent>
-            <TabsContent value="persistent-menu" className="mt-4">
-              <PersistentMenuTab
-                waSettingId={selectedSetting.id}
-                businessName={selectedSetting.igDisplayName || selectedSetting.igUserName || ""}
-              />
-            </TabsContent>
-            <TabsContent value="chatbots" className="mt-4">
-              <ChatbotsTab />
-            </TabsContent>
-            <TabsContent value="comments" className="mt-4">
-              <CommentsTab />
-            </TabsContent>
-            <TabsContent value="stories" className="mt-4">
-              <StoriesTab />
             </TabsContent>
           </>
         )}
