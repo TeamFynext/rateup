@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { pipelineKeys } from "@/backend/pipeline/pipeline.keys";
+
 import {
   createLifeCycle,
   deleteLifeCycle,
@@ -24,6 +26,9 @@ export function useCreateLifeCycleMutation() {
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
+      // Board columns are the org's lifecycle stages, so every pipeline's shape
+      // changes with this.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "An error occurred", {
@@ -46,6 +51,9 @@ export function useUpdateLifeCycleMutation() {
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
+      // Board columns are the org's lifecycle stages, so every pipeline's shape
+      // changes with this.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "An error occurred", {
@@ -67,6 +75,9 @@ export function useDeleteLifeCycleMutation() {
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
+      // Board columns are the org's lifecycle stages, so every pipeline's shape
+      // changes with this.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "An error occurred", {
@@ -95,6 +106,9 @@ export function useReorderLifeCycleMutation() {
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
+      // Board columns are the org's lifecycle stages, so every pipeline's shape
+      // changes with this.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
     onError: (error) => {
       toast.error(error?.message || "An error occurred", {

@@ -6,6 +6,7 @@ import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import { usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -24,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import { WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
@@ -43,6 +46,7 @@ const ActionValueInput = ({
   const { data: igData } = useAllInstagramAutomations();
   const { data: labelsData } = useContactLabels();
   const { data: lifecyclesData } = useLifeCyclesQuery();
+  const { data: pipelinesData = [] } = usePipelinesQuery();
   const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();
@@ -92,15 +96,18 @@ const ActionValueInput = ({
         useProductImageAsHeader: false,
       };
     }
+    // Two action types store an object, so the shape is narrowed by a key rather
+    // than assumed from `value` not being a string.
+    const stored = valueField.value && "templateId" in valueField.value ? valueField.value : null;
 
     return {
-      templateId: valueField.value?.templateId ?? "",
-      variableMapping: valueField.value?.variableMapping ?? [],
-      useProductImageAsHeader: valueField.value?.useProductImageAsHeader ?? false,
+      templateId: stored?.templateId ?? "",
+      variableMapping: stored?.variableMapping ?? [],
+      useProductImageAsHeader: stored?.useProductImageAsHeader ?? false,
     };
   };
 
-  /** Every action but SEND_TEMPLATE stores a plain string; that one stores a config object. */
+  /** Actions storing a config object read it through their own getter instead. */
   const textValue = typeof valueField.value === "string" ? valueField.value : "";
 
   // All fields are wrapped in Field for shadcn consistency
@@ -340,23 +347,99 @@ const ActionValueInput = ({
     );
   }
   if (actionType === "ASSIGN_LIFECYCLE") {
+    // Rules saved before the pipeline option existed hold a bare lifecycle id.
+    const stored =
+      valueField.value && typeof valueField.value !== "string" && "lifecycleId" in valueField.value
+        ? valueField.value
+        : null;
+    const lifecycleValue: { lifecycleId: string; pipelineId?: string } = stored ?? {
+      lifecycleId: typeof valueField.value === "string" ? valueField.value : "",
+    };
+    const addsLead = Boolean(lifecycleValue.pipelineId);
+
+    const noPipelines = pipelinesData.length === 0;
+
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={textValue}
-        items={lifecyclesData?.map((t) => ({ value: t.id, label: t.name })) ?? []}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select lifecycle" />
-        </SelectTrigger>
-        <SelectContent>
-          {lifecyclesData?.map((t) => (
-            <SelectItem key={t.id} value={t.id}>
-              {t.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex w-full flex-col gap-2">
+        {/* The two pickers share a line: they are one sentence — this lifecycle,
+            that board — and stacking them made the row twice as tall as its
+            neighbours for what is still a single action. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            onValueChange={(value) =>
+              valueField.onChange({ ...lifecycleValue, lifecycleId: value ?? "" })
+            }
+            value={lifecycleValue.lifecycleId}
+            items={lifecyclesData?.map((t) => ({ value: t.id, label: t.name })) ?? []}
+          >
+            <SelectTrigger className="bg-background min-w-36 flex-1">
+              <SelectValue placeholder="Select lifecycle" />
+            </SelectTrigger>
+            <SelectContent>
+              {lifecyclesData?.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {addsLead && (
+            <Select
+              onValueChange={(value) =>
+                valueField.onChange({ ...lifecycleValue, pipelineId: value ?? undefined })
+              }
+              value={lifecycleValue.pipelineId ?? ""}
+              items={pipelinesData.map((p) => ({ value: p.id, label: p.name }))}
+            >
+              <SelectTrigger
+                className="bg-background min-w-36 flex-1"
+                aria-label="Pipeline to add the lead to"
+              >
+                <SelectValue placeholder="Select pipeline" />
+              </SelectTrigger>
+              <SelectContent>
+                {pipelinesData.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {/* Opting in is what names the board, so the switch and the picker are one
+            control: turning it off drops the pipeline rather than remembering it. */}
+        <div className="flex items-center gap-2">
+          <Switch
+            id={`action-${index}-add-lead`}
+            checked={addsLead}
+            disabled={noPipelines}
+            onCheckedChange={(checked) =>
+              valueField.onChange({
+                ...lifecycleValue,
+                pipelineId: checked ? pipelinesData[0]?.id : undefined,
+              })
+            }
+          />
+          <Label
+            htmlFor={`action-${index}-add-lead`}
+            className="text-muted-foreground cursor-pointer text-[11px] font-medium"
+          >
+            {noPipelines ? (
+              "Add a lead — no pipelines yet"
+            ) : (
+              <>
+                Also add a lead
+                {addsLead && (
+                  <span className="hidden sm:inline"> · skips contacts already on that board</span>
+                )}
+              </>
+            )}
+          </Label>
+        </div>
+      </div>
     );
   }
   if (actionType === "CLOSE_TICKET") {
@@ -433,7 +516,11 @@ const ActionList: React.FC = () => {
       {fields.map((field, index) => (
         <div
           key={field.id}
-          className="flex gap-3 items-center p-4 bg-white dark:bg-card rounded-lg border border-border"
+          // Top-aligned, not centred: an action whose value needs more than one
+          // control (a template's variable mapping, a lifecycle plus its board)
+          // otherwise leaves the type select floating in the middle of the row.
+          // Single-control rows are unaffected — they are one line tall either way.
+          className="flex gap-3 items-start p-4 bg-white dark:bg-card rounded-lg border border-border"
         >
           <Controller
             control={control}

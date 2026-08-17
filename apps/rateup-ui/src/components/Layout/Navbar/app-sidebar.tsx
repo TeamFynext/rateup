@@ -13,6 +13,7 @@ import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
+import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
 import { ModeToggle } from "@/components/theme/ModeToggle.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
@@ -322,6 +323,7 @@ function NavLink({
           onClick={(e) => {
             if (!onRouteGuard(item.url)) e.preventDefault();
             onClick?.();
+            item.handleClick?.();
           }}
         />
       }
@@ -535,11 +537,13 @@ function isGrandchildActive(subItem: NavEntry, pathname: string): boolean {
 }
 
 function isNavItemActive(item: NavEntry, pathname: string): boolean {
-  const hasActiveChild = item.items?.some((subItem) => {
-    if (isPathPrefixActive(pathname, subItem.url)) return true;
-    if (isGrandchildActive(subItem, pathname)) return true;
-    return subItem.isActive ?? false;
-  });
+  // Only the URL decides which section owns the route. A child's `isActive` is a
+  // selection flag ("this filter/tab is the one showing"), not a route match —
+  // and some of them are persisted, so honouring it here pinned a section open
+  // on every other page.
+  const hasActiveChild = item.items?.some(
+    (subItem) => isPathPrefixActive(pathname, subItem.url) || isGrandchildActive(subItem, pathname),
+  );
 
   if (hasActiveChild) return true;
   if (isExactPathActive(pathname, "/dashboard")) return true;
@@ -565,6 +569,7 @@ export default function AppSidebar({
   userData,
   staff,
   teams,
+  pipelineNav,
 }: Readonly<{
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
@@ -574,6 +579,7 @@ export default function AppSidebar({
   userData?: IUserInfoApiResponse;
   staff: Array<{ id: string; name?: string }>;
   teams: Array<{ id: string; name?: string; color?: string }>;
+  pipelineNav: PipelineNavInput;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
@@ -636,6 +642,7 @@ export default function AppSidebar({
     allowedFeatures,
     user,
     sectionCounts: useChatContactCountStore().sectionCounts,
+    pipelineNav,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);

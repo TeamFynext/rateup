@@ -1,9 +1,15 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import {
+  useLeadsQuery,
+  usePipelinesQuery,
+  usePipelineQuery,
+} from "@/backend/pipeline/pipeline.query.tsx";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
@@ -12,9 +18,11 @@ import { useConversationTags } from "@/backend/whatsapp/inbox/conversationTag/co
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
+import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
+import { usePipelineStore } from "@/store/pipeline.store.ts";
 
 import {
   getSignupRedirect,
@@ -28,6 +36,7 @@ type UseMainSidebarArgs = Readonly<{
 }>;
 
 export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
+  const { t } = useTranslation();
   const { isPending: isLoadingUserInfo, data, isFetched, refetch, error } = useUserInfo();
 
   const navigate = useNavigate();
@@ -95,6 +104,42 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const channels = useMemo(
     () => getChannelOptions(waSettings, { platform: "all", usePhoneNumber: true }),
     [waSettings],
+  );
+
+  // Same shape as the inbox counts above: the sidebar is mounted app-wide, so
+  // the pipeline's leads are only fetched while the user is actually on it.
+  const isPipeline = pathname?.includes("/dashboard/pipeline");
+  const { data: pipelines = [] } = usePipelinesQuery(Boolean(isPipeline));
+  const activePipelineId =
+    (typeof search?.p === "string" ? search.p : undefined) ?? pipelines[0]?.id;
+  const { data: activePipeline } = usePipelineQuery(isPipeline ? activePipelineId : undefined);
+  const { data: pipelineLeads = [] } = useLeadsQuery(isPipeline ? activePipelineId : undefined);
+
+  // The board's own view state, so a sidebar row highlights what is on screen
+  // and clicking one drives the same store the page reads.
+  const pipelineView = usePipelineStore();
+
+  const pipelineNav = useMemo<PipelineNavInput>(
+    () => ({
+      t,
+      pipelines,
+      pipeline: activePipeline,
+      leads: pipelineLeads,
+      view: pipelineView,
+      activePipelineId,
+      currentUserId: resolvedUserData?.userId,
+      setView: pipelineView.patch,
+      toggleFacet: pipelineView.toggle,
+    }),
+    [
+      t,
+      pipelines,
+      activePipeline,
+      pipelineLeads,
+      pipelineView,
+      activePipelineId,
+      resolvedUserData?.userId,
+    ],
   );
 
   const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
@@ -200,6 +245,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     lifecycles,
     paddingExclusion,
     pathname,
+    pipelineNav,
     resolvedUserInfo,
     staff: userRes?.data ?? [],
     subscription: sub,

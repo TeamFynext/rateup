@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { campaignKeys } from "@/backend/campaign/campaign.keys";
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 import { notificationKeys } from "@/backend/notification/notification.keys";
+import { pipelineKeys } from "@/backend/pipeline/pipeline.keys";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import type { RequestPayload } from "@/types/api.ts";
@@ -158,6 +159,10 @@ export const useEditContactMutation = (groupId?: string) => {
       queryClient.invalidateQueries({ queryKey: contactKeys.filtered() });
       queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
       queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
+      // A lifecycle change moves this contact's leads into the matching column,
+      // and can open one on a team's default board — neither of which the
+      // pipeline's cache would hear about otherwise.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
       toast.success("Contact updated successfully.", {
         id: "contact-update",
       });
@@ -387,6 +392,8 @@ export const useUpdateLifecycleofMultipleContacts = () => {
     mutationFn: updateLifecycleofMultipleContacts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+      // Same mirror as the single-contact edit above.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
   });
 };

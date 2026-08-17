@@ -96,6 +96,10 @@ const FEATURES_WITH_SUBSCRIPTION: {
     feature: TeamFeature.Tickets,
     label: "Tickets",
   },
+  {
+    feature: TeamFeature.Pipeline,
+    label: "Pipeline",
+  },
   { feature: TeamFeature.QrStudio, label: "QR Studio" },
   {
     feature: TeamFeature.AiChatbot,
