@@ -19,11 +19,11 @@ Use flows for anything structured: a booking, a feedback survey, a lead form, an
 
 <Steps>
 <Step>
-Select the **WhatsApp account** the flow belongs to. You will be asked to
-*"Please select a WhatsApp account"* if you skip this.
+Click **Create Flow** and name it.
 </Step>
 <Step>
-Click **Create Flow** and name it.
+Pick the **WhatsApp number** to create the flow on. Leave it blank and it is created on your first
+connected number. This fixes the business account the flow lives under — see below.
 </Step>
 <Step>
 Build the screens in the [flow editor](/whatsapp/flow-editor) — each screen is one step the customer
@@ -38,6 +38,43 @@ Save and publish.
 </Steps>
 
 Use **Search flows** to find one once you have several.
+
+---
+
+## A Flow Belongs to One Business Account
+
+You pick a **WhatsApp number** when you create a flow, but WhatsApp stores the flow against that
+number's **WhatsApp Business Account** — the WABA the number sits under. That account, not the
+number, is the boundary:
+
+- **Numbers on the same business account share their flows.** A flow created on one can be sent from
+  any of the others, and attached to a template built on any of them.
+- **Nothing crosses to a second business account.** If you have connected numbers under two WABAs,
+  neither one's flows are available to the other.
+
+| Where the boundary applies | What happens |
+|----------------------------|--------------|
+| Sending a flow from a number on another business account | Refused before it reaches WhatsApp |
+| Saving a template whose flow is on another business account | Rejected, naming the flow — see [Template Editor](/whatsapp/template-editor) |
+
+The flows list shows every flow you have, across all numbers and accounts. It is not filtered, so the
+business account matters when you attach or send a flow, not when you browse.
+
+<Callout type="warn">
+  The **Flow** picker on a template's button is stricter than the rule above: it lists flows recorded
+  against **that exact number** only. A flow on a sibling number of the same business account will
+  not appear, even though the template would be accepted if you could select it. Build the template
+  on the number the flow was created on.
+</Callout>
+
+<Callout type="info">
+  Flows created before the number was recorded belong to your **first connected number**, and so to
+  its business account. If you run several numbers and an older flow is missing from the picker,
+  that is usually why.
+</Callout>
+
+To use the same form under a second business account, build a separate flow there. **Copy & Renew
+Flow** does not help — a copy is created on the same number as the original.
 
 ---
 

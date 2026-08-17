@@ -58,12 +58,43 @@ Each group gets the question that suits them, and nobody is asked something irre
 
 | Kind | Meaning |
 |------|---------|
-| **Default Variables** | Built in — data RateUp already knows |
-| **Custom Variables** | Ones you create with **Create Variable** |
+| **Default Variables** | One per answerable question, holding that question's answer. RateUp creates and names them; you cannot add, rename or delete them |
+| **Custom Variables** | Ones you create with **Add Variable**, and set yourself |
+
+### Default Variables
+
+Each answerable question gets a variable named after its **position in the form**, not after the
+question itself. The third question's answer is `Q3_response`.
+
+Two question types answer several things at once, so they get one variable per field:
+
+| Question type | Variables at position *n* |
+|---------------|---------------------------|
+| **Contact** | `Qn_name_response`, `Qn_phone_response`, `Qn_email_response` |
+| **Testimonial** | `Qn_name_response`, `Qn_jobTitle_response`, `Qn_testimonial_response`, `Qn_rating_response` |
+| Every other supported type | `Qn_response` |
+
+Not every question has one. Default variables exist for **Text Input**, **Large Text**, **Number**,
+**Date**, **Rating**, **Smiley**, **Opinion Scale**, **Yes or No**, **Like or Dislike**, **Terms &
+Conditions**, **Wheel Of Price**, **Contact** and **Testimonial**. The choice questions (**Single
+Select**, **Multiple Select**, both dropdowns, **Picture Choice**, **Single Select Grid**),
+**Custom NPS**, **Email**, **Phone**, **Photo**, **File Input** and **Multi Text Input** have none —
+to reference one of those answers, assign it to a custom variable.
+
+<Callout type="warn">
+  Because the names follow position, **reordering or inserting a question renumbers them**. Move
+  question 3 to the end of a five-question form and `Q3_response` now means what used to be
+  question 4. Anywhere you have referenced a default variable — question text, a thank-you page, a
+  condition, an automation — points at the new occupant of that position, not at the question you
+  meant. After changing the order, re-check every reference. A custom variable, whose name you
+  chose, is unaffected.
+</Callout>
+
+### Custom Variables
 
 <Steps>
 <Step>
-Click **Add Variable** or **Create Variable** and name it.
+Click **Add Variable**, then name it and give it a value.
 </Step>
 <Step>
 Use **Assign a value to variable** on a question so answering sets it.
@@ -72,6 +103,8 @@ Use **Assign a value to variable** on a question so answering sets it.
 Reference the variable later — in question text, on the thank-you page, or in a condition.
 </Step>
 </Steps>
+
+Names must be unique within a form — reusing one is rejected with **Variable already exist**.
 
 ### What variables are for
 

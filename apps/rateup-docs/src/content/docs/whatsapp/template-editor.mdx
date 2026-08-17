@@ -117,6 +117,25 @@ An option you cannot use is disabled with the reason on hover — *"Already adde
 | *"Only quick reply buttons are allowed along with checkout button. Remove others to add checkout button"* | Clear the other buttons first |
 | *"Max number of button in buttons should be 12"* | Remove one |
 
+### Which flows a Flow button can reach
+
+A **Whatsapp Flow** button's **Flow** picker lists only published flows recorded against the WhatsApp
+number this template is being created on. A flow that is missing is on another number — see
+[Flows](/whatsapp/flows).
+
+What is *accepted* on save is wider than what the picker offers: the check is the **WhatsApp Business
+Account**, so a flow from any number under the same account passes. Only a flow from a second
+business account is refused, naming the flow:
+
+> The flow "…" belongs to a different WhatsApp number than the one this template is being created
+> on. Pick a flow from that number, or create the template on the number the flow belongs to.
+
+<Callout type="info">
+  The message says *number*, but the boundary it enforces is the business account. If you run one
+  business account, any flow of yours is acceptable — you just have to build the template on the
+  number the flow was created on for the picker to offer it.
+</Callout>
+
 ---
 
 ## Order Details & Checkout
