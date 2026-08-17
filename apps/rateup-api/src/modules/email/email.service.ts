@@ -1,4 +1,4 @@
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { enqueueTransactionalEmail } from "../../workers/bullmq/queues/index.js";
 import prisma from "../../utils/prisma.js";
 import { SendEmailInput } from "./email.schema.js";
 import { getEmailBodyTemplate } from "./email.util.js";
@@ -14,9 +14,14 @@ export async function sendEmailService(
     text: emailParams?.text,
     html: await getEmailBodyTemplate(emailParams?.purpose, data),
   };
-  const sent = await sendAWSEmail(msg);
-  if (!sent) {
-    throw new Error("The email could not be sent");
+  // Fast lane rather than a direct SES call: OTP mail is the most latency-sensitive email
+  // here, and the transactional queue has its own worker pool that bulk sends cannot occupy.
+  // The trade is that a send failure is no longer visible to this caller — the route now
+  // reports "queued", and delivery failures surface as BullMQ retries and worker logs.
+  try {
+    await enqueueTransactionalEmail(msg);
+  } catch (error) {
+    throw new Error("The email could not be sent", { cause: error });
   }
 }
 

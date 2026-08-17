@@ -10,17 +10,20 @@ vi.mock("../../utils/prisma.js", () => ({
   },
 }));
 
-vi.mock("../../utils/email/sendAWSEmail.js", () => ({ sendAWSEmail: vi.fn() }));
+vi.mock("../../workers/bullmq/queues/index.js", () => ({
+  enqueueTransactionalEmail: vi.fn(),
+}));
 
 import crypto from "node:crypto";
 import prisma from "../../utils/prisma.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { enqueueTransactionalEmail } from "../../workers/bullmq/queues/index.js";
 import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as { otpStore: Record<string, Mock> };
-const send = sendAWSEmail as unknown as Mock;
+// OTP mail goes on the transactional (fast) lane; the worker makes the SES call.
+const send = enqueueTransactionalEmail as unknown as Mock;
 
 const sha256 = (v: string) => crypto.createHash("sha256").update(v).digest("hex");
 
@@ -36,7 +39,7 @@ beforeEach(() => {
   db.otpStore.upsert.mockResolvedValue({ id: "otp-row" });
   db.otpStore.findUnique.mockResolvedValue(null);
   db.otpStore.delete.mockResolvedValue({ id: "otp-row" });
-  send.mockResolvedValue(true);
+  send.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -56,7 +59,7 @@ describe("sendEmailService", () => {
     data: { body: "hello", buttonLink: "https://app.example" },
   };
 
-  test("sends exactly one message", async () => {
+  test("queues exactly one message", async () => {
     await sendEmailService(params as never);
 
     expect(send).toHaveBeenCalledOnce();
@@ -93,7 +96,7 @@ describe("sendEmailService", () => {
     expect(html).toContain(`href="https://evil.test/login"`);
   });
 
-  test("refuses to send when the purpose matches no template", async () => {
+  test("refuses to queue when the purpose matches no template", async () => {
     await expect(
       sendEmailService({ ...params, purpose: "NoSuchTemplate" } as never),
     ).rejects.toThrow(/No email template/);
@@ -124,20 +127,25 @@ describe("sendEmailService", () => {
     expect(send.mock.calls[0][0].to).toBe("a@x.test, b@y.test, c@z.test");
   });
 
-  test("resolves with nothing when the message went out", async () => {
+  test("resolves with nothing once the message is queued", async () => {
     await expect(sendEmailService(params as never)).resolves.toBeUndefined();
   });
 
-  test("fails when the transport reports the message was not sent", async () => {
-    send.mockResolvedValueOnce(false);
+  // NOTE: the caller now learns only that the job was accepted. A send that fails at SES is
+  // retried by the transactional worker and never reaches this route's response.
+  test("fails when the job cannot be queued", async () => {
+    send.mockRejectedValueOnce(new Error("redis unavailable"));
 
     await expect(sendEmailService(params as never)).rejects.toThrow(/could not be sent/);
   });
 
-  test("propagates a transport error too", async () => {
-    send.mockRejectedValueOnce(new Error("SES rejected"));
+  test("keeps the queue failure as the cause", async () => {
+    const queueError = new Error("redis unavailable");
+    send.mockRejectedValueOnce(queueError);
 
-    await expect(sendEmailService(params as never)).rejects.toThrow("SES rejected");
+    await expect(sendEmailService(params as never)).rejects.toThrowError(
+      expect.objectContaining({ cause: queueError }),
+    );
   });
 
   test("renders the payload it is given rather than the body's data", async () => {

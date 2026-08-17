@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({
+  enqueueTransactionalEmail: vi.fn(),
+}));
 
-import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
+import { enqueueTransactionalEmail } from "../../../workers/bullmq/queues/index.js";
 import { logoUrl } from "../react/brand.js";
 import { createEmailBody, sendResetPasswordMail } from "./passwordReset.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const addJobMock = notificationQueue.add as unknown as Mock;
+// The reset mail rides the transactional (fast) lane, not the bulk notification queue.
+const enqueueMock = enqueueTransactionalEmail as unknown as Mock;
 
 const RESET_LINK = "https://app.rateup.app/auth/reset-password?token=tok-123&rid=emailpassword";
 const ESCAPED_RESET_LINK = RESET_LINK.replace("&", "&amp;");
@@ -20,13 +23,11 @@ beforeEach(() => {
 });
 
 describe("sendResetPasswordMail", () => {
-  test("queues a notification job addressed to the requesting user", async () => {
+  test("queues a transactional email addressed to the requesting user", async () => {
     await sendResetPasswordMail(RESET_LINK, EMAIL);
 
-    expect(addJobMock).toHaveBeenCalledTimes(1);
-    const [jobName, payload] = addJobMock.mock.calls[0];
-    expect(jobName).toBe("notification");
-    expect(payload.emailData).toMatchObject({
+    expect(enqueueMock).toHaveBeenCalledTimes(1);
+    expect(enqueueMock.mock.calls[0][0]).toMatchObject({
       to: EMAIL,
       subject: "Password Reset - RateUp.app",
       text: "Reset password for your rateup account.",
@@ -37,7 +38,7 @@ describe("sendResetPasswordMail", () => {
     await sendResetPasswordMail(RESET_LINK, EMAIL);
 
     // The link lands in an href, so its `&` arrives html-escaped.
-    expect(addJobMock.mock.calls[0][1].emailData.html).toContain(ESCAPED_RESET_LINK);
+    expect(enqueueMock.mock.calls[0][0].html).toContain(ESCAPED_RESET_LINK);
   });
 
   test.each([
@@ -49,11 +50,11 @@ describe("sendResetPasswordMail", () => {
   ])("sends nothing when the request has %s", async (_name, link, email) => {
     await sendResetPasswordMail(link as string, email as string);
 
-    expect(addJobMock).not.toHaveBeenCalled();
+    expect(enqueueMock).not.toHaveBeenCalled();
   });
 
   test("surfaces a queue failure as an email-sending error", async () => {
-    addJobMock.mockRejectedValue(new Error("redis unavailable"));
+    enqueueMock.mockRejectedValue(new Error("redis unavailable"));
 
     await expect(sendResetPasswordMail(RESET_LINK, EMAIL)).rejects.toThrow(
       "Email sending failed. E:Error: redis unavailable",

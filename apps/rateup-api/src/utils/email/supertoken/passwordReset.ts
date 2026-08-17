@@ -1,4 +1,4 @@
-import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
+import { enqueueTransactionalEmail } from "../../../workers/bullmq/queues/index.js";
 import { renderPasswordResetEmail } from "../react/templates.js";
 
 export async function sendResetPasswordMail(reset_link: string, email_id: string) {
@@ -10,9 +10,9 @@ export async function sendResetPasswordMail(reset_link: string, email_id: string
       html: await createEmailBody(reset_link),
     };
     try {
-      await notificationQueue.add("notification", {
-        emailData: msg,
-      });
+      // Fast lane: the user is sitting on the "check your email" screen. See
+      // queues/notification.queue.ts.
+      await enqueueTransactionalEmail(msg);
     } catch (error) {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);

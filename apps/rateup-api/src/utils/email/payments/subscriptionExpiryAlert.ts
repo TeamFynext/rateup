@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import prisma from "../../prisma.js";
 import { formatDateT1 } from "../../date.js";
-import { sendAWSEmail } from "../sendAWSEmail.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import { log } from "../../logger.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import type { ExpiryStage } from "../../../emails/subscription-expiry.js";
@@ -62,16 +62,18 @@ async function sendExpiryEmail(
 ) {
   log.info(`....Sending Subcription Expiry Mail Alert......${subscription?.org?.owner?.email}`);
 
-  await sendAWSEmail({
-    to: subscription?.org?.owner?.email,
-    subject: SUBJECT,
-    text,
-    html: await renderSubscriptionExpiryEmail({
-      stage,
-      ownerName: subscription.org.owner.name ?? "there",
-      planName: subscription.basePlan?.displayName ?? "",
-      expiresAt: formatDateT1(subscription.expiresAt),
-    }),
+  await notificationQueue.add("notification", {
+    emailData: {
+      to: subscription?.org?.owner?.email,
+      subject: SUBJECT,
+      text,
+      html: await renderSubscriptionExpiryEmail({
+        stage,
+        ownerName: subscription.org.owner.name ?? "there",
+        planName: subscription.basePlan?.displayName ?? "",
+        expiresAt: formatDateT1(subscription.expiresAt),
+      }),
+    },
   });
 }
 

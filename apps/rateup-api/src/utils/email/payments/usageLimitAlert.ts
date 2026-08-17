@@ -1,6 +1,6 @@
 import prisma from "../../prisma.js";
 import { renderUsageLimitEmail } from "../react/templates.js";
-import { sendAWSEmail } from "../sendAWSEmail.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 
 //Send limit reached alert (only 1 mail in a week)
 export async function sendUsageLimitMailAlert(orgId: string) {
@@ -34,7 +34,7 @@ export async function sendUsageLimitMailAlert(orgId: string) {
       html: await usageLimitMailBody(),
     };
     try {
-      sendAWSEmail(msg);
+      await notificationQueue.add("notification", { emailData: msg });
     } catch (error) {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);

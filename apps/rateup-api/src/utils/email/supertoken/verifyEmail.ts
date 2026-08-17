@@ -1,4 +1,4 @@
-import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
+import { enqueueTransactionalEmail } from "../../../workers/bullmq/queues/index.js";
 import { renderVerifyEmail } from "../react/templates.js";
 
 export async function sendVerifyMail(verify_link: string, email_id: string, user_name: string) {
@@ -10,9 +10,8 @@ export async function sendVerifyMail(verify_link: string, email_id: string, user
       html: await createEmailBody(verify_link, user_name),
     };
     try {
-      await notificationQueue.add("notification", {
-        emailData: msg,
-      });
+      // Fast lane: signup is blocked until this arrives.
+      await enqueueTransactionalEmail(msg);
     } catch (error) {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);

@@ -5,7 +5,7 @@ import {
   StripeProductType,
   SubscriptionStatus,
 } from "../../../../generated/prisma/client.js";
-import { sendAWSEmail } from "../../../utils/email/sendAWSEmail.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { paymentFailed } from "../../../utils/email/payments/paymentFailed.js";
@@ -193,7 +193,7 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
           ),
         };
         try {
-          sendAWSEmail(msg);
+          await notificationQueue.add("notification", { emailData: msg });
         } catch (error) {
           console.error(error);
           throw new Error("Email sending failed. E:" + error);
@@ -239,7 +239,7 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
         ),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", { emailData: msg });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -267,7 +267,7 @@ export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData)
         html: await paymentFailed(true),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", { emailData: msg });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -285,7 +285,7 @@ export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData)
         html: await paymentFailed(false),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", { emailData: msg });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
