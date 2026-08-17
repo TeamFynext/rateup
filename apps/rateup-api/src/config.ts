@@ -344,7 +344,10 @@ export const SuperTokensConfig: TypeInput = {
           sendEmail: async function (input) {
             const dbUser = await getUserByEmail(input.user.email);
             const username = dbUser?.name || "there";
-            sendVerifyMail(input.emailVerifyLink, input.user.email, username);
+            // Awaited for the same reason as the password-reset override above: an
+            // un-awaited enqueue failure becomes an unhandled rejection while SuperTokens
+            // reports the verification email as sent.
+            await sendVerifyMail(input.emailVerifyLink, input.user.email, username);
           },
         }),
       },

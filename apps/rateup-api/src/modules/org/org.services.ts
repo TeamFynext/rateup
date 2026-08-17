@@ -792,13 +792,13 @@ export async function sendDeletionMailToOrgOwner({
     const deadline = new Date(triggeredAt);
     deadline.setDate(triggeredAt.getDate() + days);
 
-    const html = createInactivityWarningTemplate({
+    const html = await createInactivityWarningTemplate({
       orgName,
       ownerName: displayName,
       deadlineDate: deadline,
     });
 
-    const internalHtml = createOrgDeletionReminderTemplate({
+    const internalHtml = await createOrgDeletionReminderTemplate({
       orgName,
       ownerName: displayName,
       triggeredDate: triggeredAt,

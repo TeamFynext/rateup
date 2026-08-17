@@ -179,39 +179,41 @@ describe("createMsg — the write and the email", () => {
 // ===========================================================================
 
 describe("emailBodyContactForm", () => {
-  test("puts the three fields into the message", () => {
-    const html = emailBodyContactForm("Ann", "ann@example.test", "hello there");
+  test("puts the three fields into the message", async () => {
+    const html = await emailBodyContactForm("Ann", "ann@example.test", "hello there");
 
     expect(html).toContain("Ann");
     expect(html).toContain("ann@example.test");
     expect(html).toContain("hello there");
   });
 
-  test("escapes the submitter's markup instead of rendering it", () => {
-    const html = emailBodyContactForm(
+  test("escapes the submitter's markup instead of rendering it", async () => {
+    const html = await emailBodyContactForm(
       '<a href="https://evil.test">Click here</a>',
       "ann@example.test",
       '<img src="https://evil.test/pixel.png">',
     );
 
     expect(html).not.toContain('<a href="https://evil.test">');
-    expect(html).not.toContain("<img");
+    expect(html).not.toContain('<img src="https://evil.test/pixel.png">');
     expect(html).toContain("&lt;a href=&quot;https://evil.test&quot;&gt;");
   });
 
-  test("escapes angle brackets and quotes in every field", () => {
-    const html = emailBodyContactForm("</li></ul><h1>Injected", "a@b.test", 'it\'s "quoted"');
+  test("escapes angle brackets and quotes in every field", async () => {
+    const html = await emailBodyContactForm("</li></ul><h1>Injected", "a@b.test", 'it\'s "quoted"');
 
     expect(html).not.toContain("</li></ul><h1>Injected");
     expect(html).toContain("&lt;/li&gt;&lt;/ul&gt;&lt;h1&gt;Injected");
-    expect(html).toContain("&#39;");
+    expect(html).toContain("&#x27;");
     expect(html).toContain("&quot;quoted&quot;");
   });
 
-  test("leaves the template's own markup alone", () => {
-    const html = emailBodyContactForm("Ann", "ann@example.test", "hello");
+  test("labels each captured field", async () => {
+    const html = await emailBodyContactForm("Ann", "ann@example.test", "hello");
 
-    expect(html).toContain("<li><strong>Name:</strong> Ann</li>");
+    expect(html).toContain("Name");
+    expect(html).toContain("Email");
+    expect(html).toContain("Message");
   });
 });
 

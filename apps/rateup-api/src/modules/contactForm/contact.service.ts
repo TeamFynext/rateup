@@ -22,7 +22,7 @@ export async function createMsg({ name, email, message, address }: CreateContact
     // from: 'hello@rateup.app', // Change to your verified sender
     subject: "New Message in Rateup Website Contact Form",
     text: `You have received new contact message from ${email}`,
-    html: emailBodyContactForm(name, email, message),
+    html: await emailBodyContactForm(name, email, message),
   };
   try {
     await notificationQueue.add("notification", {

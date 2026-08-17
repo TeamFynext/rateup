@@ -57,7 +57,7 @@ export async function sendTicketAssignedEmail(data: {
     to: data.email,
     subject: `Ticket Assigned to You `,
     text: `A ticket has been assigned to you on Rateup.app`,
-    html: createEmailBodyTicketAssigned({
+    html: await createEmailBodyTicketAssigned({
       ticket_link,
       ticket_no: data.ticketId,
       board_name: data.board_name,
@@ -117,7 +117,7 @@ export async function sendTicketCreateEmail(data: {
     to: data.email,
     subject: `Ticket Created`,
     text: `A ticket has been created on Rateup.app`,
-    html: createEmailBodyTicketCreated({
+    html: await createEmailBodyTicketCreated({
       ticket_link,
       ticket_no: data.ticketId,
       board_name: data.board_name,

@@ -1,4 +1,4 @@
-import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunction.js";
+import { buildEmailAnswer } from "../../utils/email/emailTemplateGenerateFunction.js";
 import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail.js";
 import prisma from "../../utils/prisma.js";
 import {
@@ -942,29 +942,19 @@ export async function sendEmailOnResponseCreation(
         surveyAnswer.find((ans: { questionId: string }) => ans.questionId === qs.id)?.response ||
         {},
     }));
-    const bodyJsx = combineArray
-      ?.map((data) => {
-        const questionText = language ? data?.title[language] : Object.values(data?.title)[0];
-        const answerText = generateAnswerHtml(Object.values(data?.response)[0], data.type);
-        return (
-          answerText &&
-          `<tr>
-              <td class="question-answer-body"><strong style="font-size: 18px;">${questionText}</strong></td>
-            </tr>
-            <tr>
-              <td class="question-answer-body">${answerText}</td>
-            </tr>
-          `
-        );
-      })
-      .join("");
+    const answers = combineArray
+      .map((data) => ({
+        question: String(language ? data?.title[language] : Object.values(data?.title)[0]),
+        items: buildEmailAnswer(Object.values(data?.response)[0], data.type),
+      }))
+      .filter((answer) => answer.items.length > 0);
     const msg = {
       to: notificationEmail,
       subject: "RateUp: New Survey Response",
       text: "survey response.",
-      html: createEmailBodySurveyResponse(
+      html: await createEmailBodySurveyResponse(
         `${process.env.FRONTEND_URL}/dashboard/surveys/${survey?.id}?tab=Result`,
-        bodyJsx,
+        answers,
         survey?.title,
       ),
     };

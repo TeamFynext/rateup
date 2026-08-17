@@ -6,8 +6,9 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "utils/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "utils/**/*.ts"],
   "exclude": ["dist", "node_modules"]
 }
