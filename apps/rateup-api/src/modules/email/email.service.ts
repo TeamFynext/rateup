@@ -12,7 +12,7 @@ export async function sendEmailService(
     to: emailParams?.toEmail,
     subject: emailParams?.subject,
     text: emailParams?.text,
-    html: getEmailBodyTemplate(emailParams?.purpose, data),
+    html: await getEmailBodyTemplate(emailParams?.purpose, data),
   };
   const sent = await sendAWSEmail(msg);
   if (!sent) {

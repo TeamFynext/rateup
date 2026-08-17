@@ -1,4 +1,5 @@
 //CONSTANTS
+import "dotenv/config";
 export const statsPage = `${process.env.FRONTEND_URL}/dashboard/settings/billing`;
 export const billingPage = `${process.env.FRONTEND_URL}/dashboard/settings/billing`;
 export const ordersPage = `${process.env.FRONTEND_URL}/dashboard/settings/billing#order-history`;

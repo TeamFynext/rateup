@@ -304,7 +304,7 @@ export async function sendEmailPlanSelectionDetailsHandler(
       to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
       text: "ALERT: User initiated subscription",
       subject: "ALERT: User initiated subscription",
-      html: createEmailBodyPricingPlanSelected(request.body),
+      html: await createEmailBodyPricingPlanSelected(request.body),
     };
     await notificationQueue.add("notification", {
       emailData: emailParams,

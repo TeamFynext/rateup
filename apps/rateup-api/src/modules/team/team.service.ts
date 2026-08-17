@@ -228,11 +228,11 @@ export async function inviteTeamMember(input: InviteMemberInput) {
           to: email,
           subject: `${invitedPerson.user.name} add you to the Team ${teamMember.team.name} - RateUp.app`,
           text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
-          html:
-            getEmailBodyTemplate("GeneralTemplate", {
-              body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
-              buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
-            }) ?? "",
+          html: await getEmailBodyTemplate("GeneralTemplate", {
+            title: `You've been added to ${teamMember.team.name}`,
+            body: `Explore the features of your new team by visiting RateUp. You can switch between teams to view each team's details.`,
+            buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
+          }),
         };
         try {
           await notificationQueue.add("notification", {
@@ -299,7 +299,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         // from: 'hello@rateup.app', // Change to your verified sender
         subject: "Invitation to Join Team - RateUp.app",
         text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
-        html: createEmailBody(
+        html: await createEmailBody(
           `${process.env.FRONTEND_URL}/invite?type=team&token=${newInvite.id}`,
           email,
         ),
@@ -346,7 +346,7 @@ export async function resendInviteTeamMember(id: string) {
       to: existingInvitation?.email,
       subject: "Invitation to Join Team - RateUp.app",
       text: "You are invited to manage a Team in RateUp. Click on the accept to continue with the process.",
-      html: createEmailBody(
+      html: await createEmailBody(
         `${process.env.FRONTEND_URL}/invite?type=team&token=${existingInvitation?.id}`,
         existingInvitation?.email,
       ),
@@ -889,14 +889,11 @@ export async function addMembersToTeamsMail(
     to: email,
     subject: `You have been added to the team ${teamName} - RateUp.app`,
     text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
-    html:
-      getEmailBodyTemplate("GeneralTemplate", {
-        body: `
-      <p>You have been added to manage a Team in RateUp by ${invitedPerson.org.name}</p>
-      Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details
-      `,
-        buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
-      }) ?? "",
+    html: await getEmailBodyTemplate("GeneralTemplate", {
+      title: `You've been added to ${teamName}`,
+      body: `You have been added to manage a team in RateUp by ${invitedPerson.org.name}.\n\nExplore the features of your new team by visiting RateUp. You can switch between teams to view each team's details.`,
+      buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
+    }),
   };
   try {
     await notificationQueue.add("notification", {

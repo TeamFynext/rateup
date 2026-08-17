@@ -185,9 +185,11 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
           to: invoiceData.customer_email,
           subject: "Rateup Subscription Activated - Rateup.app",
           text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
-          html: createEmailBodySubscriptionActivated(
+          html: await createEmailBodySubscriptionActivated(
             updatedOrder.RateupPlan?.displayName ?? updatedOrder.RateupPlan?.name ?? "Rateup Plan",
             new Date(subscriptionData.current_period_end * 1000),
+            false,
+            { amountMinor: invoiceData.amount_paid, currency: invoiceData.currency },
           ),
         };
         try {
@@ -227,12 +229,13 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
         to: invoiceData.customer_email,
         subject: "Rateup Subscription Renewed - Rateup.app",
         text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
-        html: createEmailBodySubscriptionActivated(
+        html: await createEmailBodySubscriptionActivated(
           updatedSubscription.basePlan?.displayName ??
             updatedSubscription.basePlan?.name ??
             "Rateup Plan",
           new Date(subscriptionData.current_period_end * 1000),
           true,
+          { amountMinor: invoiceData.amount_paid, currency: invoiceData.currency },
         ),
       };
       try {
@@ -261,7 +264,7 @@ export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData)
         to: customer_email,
         subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
         text: `Subscription Renewal Failed. Please update your payment method.`,
-        html: paymentFailed(true),
+        html: await paymentFailed(true),
       };
       try {
         sendAWSEmail(msg);
@@ -279,7 +282,7 @@ export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData)
         to: customer_email,
         subject: "Payment Failed - Rateup.app Subscription",
         text: `Subscription Payment Failed. Please update your payment method.`,
-        html: paymentFailed(false),
+        html: await paymentFailed(false),
       };
       try {
         sendAWSEmail(msg);

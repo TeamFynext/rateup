@@ -372,7 +372,8 @@ export interface RazorpaySubscriptionWebhookPayload {
 }
 
 export interface RazorpaySubscriptionChargedPayload extends RazorpaySubscriptionWebhookPayload {
-  payment?: { entity?: { email?: string; amount: number } };
+  // `amount` is in paise; `currency` is the ISO code Razorpay charged in.
+  payment?: { entity?: { email?: string; amount: number; currency?: string } };
 }
 
 export interface RazorpayPaymentWebhookData {
@@ -482,9 +483,11 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
           // from: 'hello@rateup.app', // Change to your verified sender
           subject: "Rateup Subscription Activated - Rateup.app",
           text: `We have received a payment of ${payment.entity.amount / 100}`,
-          html: createEmailBodySubscriptionActivated(
+          html: await createEmailBodySubscriptionActivated(
             rateupPlan.displayName ?? "your plan",
             new Date(current_end * 1000),
+            false,
+            { amountMinor: payment.entity.amount, currency: payment.entity.currency },
           ),
         };
         try {
@@ -918,7 +921,7 @@ export async function updateSubscriptionForTrial(
     // from: 'hello@rateup.app', // Change to your verified sender
     subject: "Rateup Subscription Trial Started - Rateup.app",
     text: `Rateup Subscription Trial Started`,
-    html: createEmailBodyTrialSubscriptionActivated(
+    html: await createEmailBodyTrialSubscriptionActivated(
       rateupPlan,
       dayjs(updatedUsageStats.subscriptionEndDate).format("MMMM D, YYYY"),
       user.name ?? "there",

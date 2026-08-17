@@ -1053,7 +1053,7 @@ async function activateSubscriptionThroughShopify(
       to: user.email,
       subject: "Rateup Subscription Activated - Rateup.app",
       text: `Your subscription from shopify for the Rateup ${recurringCharge.name} has activated`,
-      html: createEmailBodySubscriptionActivated(
+      html: await createEmailBodySubscriptionActivated(
         rateupPlan.displayName ?? rateupPlan.name,
         expiresAt,
       ),
