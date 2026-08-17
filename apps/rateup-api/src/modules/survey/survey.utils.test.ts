@@ -5,24 +5,17 @@ vi.mock("../../utils/prisma.js", () => ({
     surveyTeamMap: { findFirst: vi.fn() },
   },
 }));
-vi.mock("./survey.service.js", () => ({
-  createSurveyVariable: vi.fn(),
-  getSurveyById: vi.fn(),
-}));
 
 import prisma from "../../utils/prisma.js";
-import { createSurveyVariable, getSurveyById } from "./survey.service.js";
 import {
-  createSurveyDefaultVariableForQuestion,
+  defaultVariablesForQuestion,
   getSurveysOrgId,
   getSurveyTeamMapIdFromShortId,
   isShortId,
 } from "./survey.utils.js";
-import { QuestionType, SurveyType, SurveyVariableType } from "../../types/enums.js";
+import { QuestionType, SurveyVariableType } from "../../types/enums.js";
 
 const findFirstMock = prisma.surveyTeamMap.findFirst as unknown as ReturnType<typeof vi.fn>;
-const getSurveyByIdMock = getSurveyById as unknown as ReturnType<typeof vi.fn>;
-const createVariableMock = createSurveyVariable as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -74,34 +67,11 @@ describe("getSurveyTeamMapIdFromShortId", () => {
   });
 });
 
-describe("createSurveyDefaultVariableForQuestion", () => {
-  test("does nothing for non-web surveys", async () => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.WhatsApp });
-
-    await createSurveyDefaultVariableForQuestion(
-      "survey-1",
-      { id: "q1", type: QuestionType.Text },
-      0,
-    );
-
-    expect(createVariableMock).not.toHaveBeenCalled();
-  });
-
-  test("creates a single response variable for simple question types, named by 1-based position", async () => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.Web });
-
-    await createSurveyDefaultVariableForQuestion(
-      "survey-1",
-      { id: "q1", type: QuestionType.Rating },
-      2,
-    );
-
-    expect(createVariableMock).toHaveBeenCalledTimes(1);
-    expect(createVariableMock).toHaveBeenCalledWith("survey-1", {
-      name: "Q3_response",
-      value: "q1",
-      type: SurveyVariableType.DEFAULT,
-    });
+describe("defaultVariablesForQuestion", () => {
+  test("names a simple question's variable by its 1-based position", () => {
+    expect(defaultVariablesForQuestion({ id: "q1", type: QuestionType.Rating }, 2)).toEqual([
+      { name: "Q3_response", value: "q1", type: SurveyVariableType.DEFAULT },
+    ]);
   });
 
   test.each([
@@ -115,43 +85,27 @@ describe("createSurveyDefaultVariableForQuestion", () => {
     QuestionType.TextArea,
     QuestionType.TnC,
     QuestionType.WOP,
-  ])("creates one variable for question type %s", async (type) => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.Web });
+  ])("returns one variable for question type %s", (type) => {
+    const variables = defaultVariablesForQuestion({ id: "q1", type }, 0);
 
-    await createSurveyDefaultVariableForQuestion("survey-1", { id: "q1", type }, 0);
-
-    expect(createVariableMock).toHaveBeenCalledTimes(1);
-    expect(createVariableMock.mock.calls[0][1].name).toBe("Q1_response");
+    expect(variables.map((v) => v.name)).toEqual(["Q1_response"]);
   });
 
-  test("creates name/phone/email variables for a Contact question", async () => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.Web });
+  test("returns name/phone/email variables for a Contact question", () => {
+    const variables = defaultVariablesForQuestion({ id: "q1", type: QuestionType.Contact }, 0);
 
-    await createSurveyDefaultVariableForQuestion(
-      "survey-1",
-      { id: "q1", type: QuestionType.Contact },
-      0,
-    );
-
-    expect(createVariableMock).toHaveBeenCalledTimes(3);
-    expect(createVariableMock.mock.calls.map((c) => c[1].name)).toEqual([
+    expect(variables.map((v) => v.name)).toEqual([
       "Q1_name_response",
       "Q1_phone_response",
       "Q1_email_response",
     ]);
+    expect(variables.every((v) => v.value === "q1")).toBe(true);
   });
 
-  test("creates name/jobTitle/testimonial/rating variables for a Testimonial question", async () => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.Web });
+  test("returns name/jobTitle/testimonial/rating variables for a Testimonial question", () => {
+    const variables = defaultVariablesForQuestion({ id: "q1", type: QuestionType.Testimonial }, 4);
 
-    await createSurveyDefaultVariableForQuestion(
-      "survey-1",
-      { id: "q1", type: QuestionType.Testimonial },
-      4,
-    );
-
-    expect(createVariableMock).toHaveBeenCalledTimes(4);
-    expect(createVariableMock.mock.calls.map((c) => c[1].name)).toEqual([
+    expect(variables.map((v) => v.name)).toEqual([
       "Q5_name_response",
       "Q5_jobTitle_response",
       "Q5_testimonial_response",
@@ -159,25 +113,11 @@ describe("createSurveyDefaultVariableForQuestion", () => {
     ]);
   });
 
-  test("returns false and creates nothing for unsupported question types", async () => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.Web });
-
-    const res = await createSurveyDefaultVariableForQuestion(
-      "survey-1",
-      { id: "q1", type: QuestionType.Photo },
-      0,
-    );
-
-    expect(res).toBe(false);
-    expect(createVariableMock).not.toHaveBeenCalled();
+  test("returns nothing for unsupported question types", () => {
+    expect(defaultVariablesForQuestion({ id: "q1", type: QuestionType.Photo }, 0)).toEqual([]);
   });
 
-  test("returns false when the question is missing a type", async () => {
-    getSurveyByIdMock.mockResolvedValue({ type: SurveyType.Web });
-
-    const res = await createSurveyDefaultVariableForQuestion("survey-1", undefined, 0);
-
-    expect(res).toBe(false);
-    expect(createVariableMock).not.toHaveBeenCalled();
+  test("returns nothing when the question is missing", () => {
+    expect(defaultVariablesForQuestion(undefined, 0)).toEqual([]);
   });
 });

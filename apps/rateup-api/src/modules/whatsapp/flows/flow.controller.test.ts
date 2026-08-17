@@ -37,12 +37,6 @@ vi.mock("../wa_axios.js", () => ({
 vi.mock("../settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
 vi.mock("../wa_error_handler.js", () => ({ getGraphApiErrorMessage: vi.fn() }));
 vi.mock("../../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
-vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({
-  createSession: vi.fn(),
-  deleteSession: vi.fn(),
-  getSession: vi.fn(),
-}));
-vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({ validateSession: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -76,8 +70,6 @@ import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
-import { createSession, deleteSession, getSession } from "../whatsappSurvey/wasurvey.service.js";
-import { validateSession } from "../whatsappSurvey/wasurvey.utils.js";
 import { QuestionType, WaFlowStatus } from "../../../types/enums.js";
 import {
   cloneFlowHandler,
@@ -104,11 +96,9 @@ const m = {
   createFlowInWa: createFlowInWa as unknown as Mock,
   createSurvey: createSurvey as unknown as Mock,
   createSurveyFromFlow: createSurveyFromFlow as unknown as Mock,
-  createSession: createSession as unknown as Mock,
   callMetaApi: callMetaApi as unknown as Mock,
   deleteFlowInDb: deleteFlowInDb as unknown as Mock,
   deleteFlowInWa: deleteFlowInWa as unknown as Mock,
-  deleteSession: deleteSession as unknown as Mock,
   deleteSurveyById: deleteSurveyById as unknown as Mock,
   deprecateFlowInWa: deprecateFlowInWa as unknown as Mock,
   getFlowFromDb: getFlowFromDb as unknown as Mock,
@@ -119,7 +109,6 @@ const m = {
   getFlowsFromWa: getFlowsFromWa as unknown as Mock,
   getFlowWithSurveyTeamMapIds: getFlowWithSurveyTeamMapIdsWithDbFlowId as unknown as Mock,
   getGraphApiErrorMessage: getGraphApiErrorMessage as unknown as Mock,
-  getSession: getSession as unknown as Mock,
   getWaSettings: getWaSettings as unknown as Mock,
   getWaSettingsForFlow: getWaSettingsForFlow as unknown as Mock,
   publishFlowInWa: publishFlowInWa as unknown as Mock,
@@ -129,7 +118,6 @@ const m = {
   updateFlowInDb: updateFlowInDb as unknown as Mock,
   updateFlowMetaDataInWa: updateFlowMetaDataInWa as unknown as Mock,
   updateMonthlyStat: updateMonthlyStat as unknown as Mock,
-  validateSession: validateSession as unknown as Mock,
 };
 
 const ORG_A = "org-a";
@@ -178,10 +166,8 @@ beforeEach(() => {
   // rejection has to be handed a fresh resolution here.
   vi.clearAllMocks();
   for (const mock of [
-    m.createSession,
     m.deleteFlowInDb,
     m.deleteFlowInWa,
-    m.deleteSession,
     m.deleteSurveyById,
     m.deprecateFlowInWa,
     m.getFlowJsonFromWa,
@@ -219,8 +205,6 @@ beforeEach(() => {
   m.getFlowWithSurveyTeamMapIds.mockResolvedValue({
     survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
   });
-  m.getSession.mockResolvedValue({ surveyTeamMapId: "stm-1" });
-  m.validateSession.mockReturnValue(true);
   process.env.API_URL = "https://api.example.com";
 });
 
@@ -676,21 +660,10 @@ describe("sendFlowHandler", () => {
       phone: "15550001",
       userId: "user-1",
       whatsappSettingsPhoneId: undefined,
-      // Carried into the flow token so the reply can be attributed without a
-      // WaSession lookup.
+      // Carried into the flow token so the reply can be attributed.
       context: { surveyTeamMapId: "stm-1", language: "en" },
     });
     expect(rep.status).toHaveBeenCalledWith(201);
-  });
-
-  // Sends no longer touch WaSession: the run context travels in the signed flow
-  // token, so there is no per-phone row to create, expire, or collide over.
-  test("does not open a session row", async () => {
-    await sendFlowHandler(sendRequest(), reply());
-
-    expect(m.createSession).not.toHaveBeenCalled();
-    expect(m.deleteSession).not.toHaveBeenCalled();
-    expect(m.getSession).not.toHaveBeenCalled();
   });
 
   test("answers 500 when the flow lookup fails", async () => {

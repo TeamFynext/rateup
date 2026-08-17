@@ -14,13 +14,10 @@ import {
   parseStartMessage,
   parseToWhatsAppFormat,
   parseWaJoinMessage,
-  validateSession,
 } from "./wasurvey.utils.js";
 import {
   aibotNodeCompletion,
-  deleteSession,
   getAiBotActiveStatus,
-  getSession,
   handleLeadGen,
   handleMessageStatusUpdate,
   sendMessage,
@@ -689,15 +686,6 @@ async function whatsappMessageHandler(
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
   } else {
-    let session = await getSession(orgId, from);
-    // deleting session after 24hrs
-    if (!validateSession(session)) {
-      if (session) {
-        await deleteSession(orgId, from);
-        session = null;
-      }
-    }
-
     await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
 }

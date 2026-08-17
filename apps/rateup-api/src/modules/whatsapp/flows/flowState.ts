@@ -6,12 +6,12 @@ import { log } from "../../../utils/logger.js";
  *
  * A multi-screen flow posts one `data_exchange` per screen carrying only that
  * screen's fields, so the answers have to accumulate somewhere until the flow
- * ends. This used to be `WaSession.responses` — a durable row per phone. The
- * data is short-lived (a flow is open for minutes) and worthless once the run
- * finishes, so it lives in Redis keyed by the flow token instead.
+ * ends. This used to be a durable database row per phone. The data is
+ * short-lived (a flow is open for minutes) and worthless once the run finishes,
+ * so it lives in Redis keyed by the flow token instead.
  *
  * Keyed by token rather than by phone, so one person can have two flows open at
- * once — which the `@@unique([phone, orgId])` session row could never represent.
+ * once — which the one-row-per-`(phone, orgId)` session could never represent.
  *
  * Tokens themselves never expire, so a run whose in-progress answers have aged
  * out simply starts collecting again from the screen the respondent is on.

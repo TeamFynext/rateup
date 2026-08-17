@@ -1,6 +1,5 @@
-import { QuestionType, SurveyType, SurveyVariableType } from "../../types/enums.js";
+import { QuestionType, SurveyVariableType } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
-import { createSurveyVariable, getSurveyById } from "./survey.service.js";
 import { surveyVariableInput } from "./survey.schema.js";
 
 export function isShortId(id: string) {
@@ -32,56 +31,34 @@ export async function getSurveyTeamMapIdFromShortId(shortId: string) {
   return res?.id;
 }
 
-export async function createSurveyDefaultVariableForQuestion(
-  surveyId: string,
+/**
+ * The DEFAULT variables a question contributes at a given position.
+ *
+ * Names are derived purely from the 1-based position, so they are only correct
+ * for a question list rebuilt as a whole — see `updateSurveyVariables`. Question
+ * types not listed here contribute nothing.
+ */
+export function defaultVariablesForQuestion(
   // Only the question's id and type are read here.
   question: Pick<Question, "id" | "type"> | undefined,
   position: number,
-) {
-  const survey = await getSurveyById(surveyId);
-  if (survey.type !== SurveyType.Web) return;
-  const variables: surveyVariableInput[] = [];
-  let variable: surveyVariableInput | null = null;
-  switch (question?.type) {
+): surveyVariableInput[] {
+  const suffixes = defaultVariableSuffixes(question?.type);
+  if (!suffixes || !question) return [];
+  return suffixes.map((suffix) => ({
+    name: `Q${position + 1}${suffix}`,
+    value: question.id,
+    type: SurveyVariableType.DEFAULT,
+  }));
+}
+
+/** Name suffixes for a question type, or null when it carries no variable. */
+function defaultVariableSuffixes(type: Question["type"] | undefined) {
+  switch (type) {
     case QuestionType.Contact:
-      variables.push({
-        name: `Q${position + 1}_name_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      variables.push({
-        name: `Q${position + 1}_phone_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      variables.push({
-        name: `Q${position + 1}_email_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      break;
+      return ["_name_response", "_phone_response", "_email_response"];
     case QuestionType.Testimonial:
-      variables.push({
-        name: `Q${position + 1}_name_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      variables.push({
-        name: `Q${position + 1}_jobTitle_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      variables.push({
-        name: `Q${position + 1}_testimonial_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      variables.push({
-        name: `Q${position + 1}_rating_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      });
-      break;
+      return ["_name_response", "_jobTitle_response", "_testimonial_response", "_rating_response"];
     case QuestionType.Text:
     case QuestionType.Date:
     case QuestionType.LD:
@@ -93,22 +70,8 @@ export async function createSurveyDefaultVariableForQuestion(
     case QuestionType.TextArea:
     case QuestionType.TnC:
     case QuestionType.WOP:
-      variable = {
-        name: `Q${position + 1}_response`,
-        value: question?.id,
-        type: SurveyVariableType.DEFAULT,
-      };
-      break;
+      return ["_response"];
     default:
-      //Not created variable for remaining question types
-      return false;
-  }
-  if (variables.length) {
-    for (const variable of variables) {
-      await createSurveyVariable(surveyId, variable);
-    }
-  }
-  if (variable) {
-    await createSurveyVariable(surveyId, variable);
+      return null;
   }
 }

@@ -783,7 +783,6 @@ model SurveyTeamMap {
   survey      Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   responses   SurveyResponse[]
-  sessions    WaSession[]
   surveyStats SurveyStats?
 
   waMessageSchedule WaMessageSchedule[]
@@ -843,32 +842,6 @@ model SurveyStats {
   started           Int           @default(0)
   completed         Int           @default(0)
   reviewLinkVisited Int           @default(0)
-}
-
-// Whatsapp session
-model WaSession {
-  id                             String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                      DateTime                      @default(now())
-  phone                          String
-  surveyTeamMap                  SurveyTeamMap?                @relation(fields: [surveyTeamMapId], references: [id])
-  surveyTeamMapId                String?                       @db.Uuid
-  template                       WaTemplate?                   @relation(fields: [templateId], references: [id])
-  templateId                     String?                       @db.Uuid
-  currentQuestionId              String?
-  campaignParticipant            CampaignParticipant?          @relation(fields: [campaignParticipantId], references: [id])
-  campaignParticipantId          String?                       @unique @db.Uuid
-  CampaignParticipantDripStage   CampaignParticipantDripStage? @relation(fields: [campaignParticipantDripStageId], references: [id])
-  campaignParticipantDripStageId String?                       @db.Uuid
-
-  /// [PQuestionResponse]
-  responses Json[]
-  language  String  @default("")
-  orgId     String  @db.Uuid
-  ip        String?
-  type      String  @default("survey") // WaSessionType
-  tag       String? @default("")
-
-  @@unique([phone, orgId])
 }
 
 model Contact {
@@ -1116,7 +1089,6 @@ model CampaignParticipant {
   contactGroupId String?         @db.Uuid
   response       SurveyResponse? @relation(fields: [responseId], references: [id], onDelete: SetNull)
   responseId     String?         @db.Uuid
-  WaSession      WaSession?
 
   errorMessage                    String?
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
@@ -1162,7 +1134,6 @@ model CampaignParticipantDripStage {
 
   dripStage                       CampaignDripStage                 @relation(fields: [dripStageId], references: [id], onDelete: Cascade)
   dripStageId                     String                            @db.Uuid
-  WaSession                       WaSession[]
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
 
   @@unique([participantId, dripStageId], name: "participant_stage_unique")
@@ -1232,7 +1203,6 @@ model WaTemplate {
   orgId                   String                @db.Uuid
   WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: SetNull)
   whatsappSettingsPhoneId String?
-  waSession               WaSession[]
   Campaign                Campaign[]
   waMessageSchedule       WaMessageSchedule[]
   loyaltyTemplates        LoyaltyWaCommand[]

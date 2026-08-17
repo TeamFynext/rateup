@@ -8,8 +8,8 @@ import { log } from "../../../utils/logger.js";
  * which org, and who is answering.
  *
  * Historically the token was just the phone number, which meant the context had
- * to be recovered by looking up a `WaSession` row keyed by `(phone, orgId)` —
- * one live run per person per org, and a DB write on every send. A signed token
+ * to be recovered by looking up a session row keyed by `(phone, orgId)` — one
+ * live run per person per org, and a DB write on every send. A signed token
  * carries the same facts inside the token itself.
  *
  * Format: `v1.<base64url(payload)>.<base64url(hmac-sha256)>`. The payload is
@@ -95,9 +95,10 @@ export function signFlowToken(context: {
 
 /**
  * Verifies and decodes a token. Returns null for anything that is not a valid
- * token this server signed — including a bare phone number, which is what the
- * pre-token senders put in `flow_token`. Callers fall back to the `WaSession`
- * lookup in that case so runs already in flight keep working.
+ * token this server signed — a tampered or truncated token, or a bare phone
+ * number, which is what a sender that was given no run context puts in
+ * `flow_token`. A run that cannot be identified cannot be attributed, so
+ * callers drop the request rather than guess.
  */
 export function verifyFlowToken(token: string | undefined | null): FlowContext | null {
   if (!token) return null;
@@ -131,9 +132,4 @@ export function verifyFlowToken(token: string | undefined | null): FlowContext |
     tag: payload.t,
     issuedAt: new Date(payload.i),
   };
-}
-
-/** True for a token this server issued, valid signature or not. */
-export function isSignedFlowToken(token: string | undefined | null) {
-  return typeof token === "string" && token.startsWith(`${TOKEN_VERSION}.`);
 }

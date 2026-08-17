@@ -13,7 +13,6 @@ import {
   WaFlowFormElementType,
   IntegratedApps,
 } from "./enums.js";
-import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service.js";
 import prisma from "../utils/prisma.js";
 import {
   WaInternalMessageBody,
@@ -449,8 +448,6 @@ declare global {
     templateType?: import("../../generated/prisma/client.js").TemplateType;
     defaultValues?: WaTemplateDefaultValues | null;
   }
-  type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
-
   interface subscriptionCountRestrictionCountType {
     max: number;
   }
