@@ -328,7 +328,7 @@ function BadgeorTextorPreview({
   } else if (badgeRequired.includes(questionType)) {
     return (
       <Badge
-        className="text-lg min-w-25 text-background"
+        className="text-background"
         variant="secondary"
         style={{
           backgroundColor: getResponseArrayByQuestionType(questionType)?.find(
