@@ -18,11 +18,7 @@ import {
   WaQuestions,
 } from "../../types/enums.js";
 import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
-import {
-  createSurveyDefaultVariableForQuestion,
-  getSurveysOrgId,
-  isShortId,
-} from "./survey.utils.js";
+import { defaultVariablesForQuestion, getSurveysOrgId, isShortId } from "./survey.utils.js";
 import cloneDeep from "lodash/cloneDeep.js";
 import {
   getInitialSurveyQuestions,
@@ -1310,17 +1306,46 @@ export async function getSurveyVariables(surveyId: string) {
   return res;
 }
 
-//update on question order change
+/**
+ * Rebuilds a survey's DEFAULT variables so their `Q<n>_…` names match the
+ * questions' current order. Call this after any change to the question list —
+ * an insert, a delete, or a reorder — since every name after the edit moves.
+ *
+ * The delete and the insert are one transaction, and rebuilds of the same
+ * survey are serialised by an advisory lock held to the end of it. Without the
+ * lock, two overlapping requests both delete the old rows and then race to
+ * insert the same names, and the loser hits the (name, surveyId) unique
+ * constraint — which is what a double-submitted reorder used to do.
+ */
 export async function updateSurveyVariables(surveyId: string, questions: Question[]) {
-  await prisma.surveyVariables.deleteMany({
-    where: {
-      type: SurveyVariableType.DEFAULT as string,
-      surveyId,
-    },
+  const survey = await prisma.survey.findUnique({
+    where: { id: surveyId },
+    select: { type: true },
   });
-  for (const [index, question] of questions.entries()) {
-    await createSurveyDefaultVariableForQuestion(surveyId, question, index);
-  }
+  // Only web surveys carry variables; for the rest this just clears any left
+  // behind by a survey that changed type.
+  const rows =
+    survey?.type === SurveyType.Web
+      ? questions.flatMap((question, index) =>
+          defaultVariablesForQuestion(question, index).map((variable) => ({
+            ...variable,
+            surveyId,
+          })),
+        )
+      : [];
+
+  await prisma.$transaction([
+    // hashtext is stable across sessions, so every rebuild of this survey takes
+    // the same lock; rebuilds of other surveys are unaffected.
+    prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${surveyId})::bigint)`,
+    prisma.surveyVariables.deleteMany({
+      where: {
+        type: SurveyVariableType.DEFAULT as string,
+        surveyId,
+      },
+    }),
+    prisma.surveyVariables.createMany({ data: rows }),
+  ]);
 }
 
 export async function updateSurveyVariable(variableId: string, data: surveyVariableUpdateInput) {

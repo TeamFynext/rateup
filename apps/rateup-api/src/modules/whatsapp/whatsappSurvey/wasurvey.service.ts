@@ -65,28 +65,6 @@ import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 
-// getSession() itself can return null (findUnique), but every function below that takes
-// a session as a parameter is only ever called after the caller has null-checked it.
-export type WaSession = NonNullable<WaSessionWithRelations>;
-// Sessions created with a surveyTeamMapId (i.e. every session in the active
-// survey-taking flow) always have a real surveyTeamMap relation.
-export type WaSessionWithSurveyTeamMap = WaSession & {
-  surveyTeamMap: NonNullable<WaSession["surveyTeamMap"]>;
-};
-
-export const toBeIncludedWaSessionRelations = {
-  surveyTeamMap: {
-    include: {
-      survey: {
-        include: {
-          WaFlow: true,
-        },
-      },
-      team: true,
-    },
-  },
-};
-
 export async function sendMessage(
   orgId: string,
   // sendPaymentInitTemplate()'s payment order-details message has a shape
@@ -429,111 +407,9 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
   }
 }
 
-export async function getSession(orgId: string, phone: string) {
-  const session = await prisma.waSession.findUnique({
-    where: {
-      phone_orgId: {
-        phone: phone,
-        orgId: orgId,
-      },
-    },
-    include: toBeIncludedWaSessionRelations,
-  });
-  return session;
-}
-export async function deleteSession(orgId: string, phone: string) {
-  log.info("Deleting session for %o", { phone, orgId });
-  try {
-    await prisma.waSession.delete({
-      where: {
-        phone_orgId: {
-          phone,
-          orgId,
-        },
-      },
-    });
-  } catch (e) {
-    // P2025 = "record to delete does not exist"; the session was already gone.
-    if ((e as { code?: string } | null | undefined)?.code === "P2025") {
-      // No session found. Ignoring...
-    } else {
-      throw e;
-    }
-  }
-}
-
 export async function getFirstQuestionId(surveyId: string) {
   const questions = await getQuestionsBySurveyId(surveyId);
   return questions[0].id;
-}
-
-interface createSessionParams {
-  phone: string;
-  surveyTeamMapId: string;
-  orgId: string;
-  templateId?: string;
-  language?: string;
-  currentQuestionId?: string;
-  campaignParticipantId?: string;
-  ip?: string;
-  tag?: string;
-  type?: string;
-  createdAt?: string;
-}
-export async function createSession({
-  phone,
-  surveyTeamMapId,
-  orgId,
-  templateId,
-  language = "",
-  currentQuestionId,
-  campaignParticipantId,
-  ip = "",
-  tag,
-  type = "survey",
-  createdAt,
-}: createSessionParams) {
-  log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
-
-  const session = await prisma.waSession.create({
-    data: {
-      phone: phone,
-      surveyTeamMapId: surveyTeamMapId,
-      language: language,
-      templateId: templateId,
-      orgId: orgId,
-      currentQuestionId: currentQuestionId,
-      campaignParticipantId: campaignParticipantId,
-      ip: ip ? ip : undefined,
-      tag,
-      type,
-      createdAt,
-    },
-    include: toBeIncludedWaSessionRelations,
-  });
-
-  log.trace("Session created");
-  return session as unknown as WaSessionWithSurveyTeamMap; // overriding JSON type of responses
-}
-
-export async function updateSession(
-  orgId: string,
-  phone: string,
-  data: Prisma.WaSessionUncheckedUpdateInput,
-) {
-  log.trace("Updating session \n%o\n", { phone, orgId, data });
-  const session = await prisma.waSession.update({
-    where: {
-      phone_orgId: {
-        phone: phone,
-        orgId: orgId,
-      },
-    },
-    include: toBeIncludedWaSessionRelations,
-    data: data,
-  });
-  log.trace("Session updated");
-  return session as unknown as WaSessionWithSurveyTeamMap; // overriding JSON type of responses
 }
 
 const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
@@ -679,11 +555,9 @@ function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses: FlowQuest
   return null;
 }
 /**
- * Everything `saveResponses` reads about the run it is persisting. A `WaSession`
- * satisfies this structurally, so callers holding one can keep passing it —
- * but the function no longer requires that the context *be* a session row.
- * That is what lets the flow paths move off `WaSession` (to a signed
- * flow_token plus an accumulator) without touching this function.
+ * Everything `saveResponses` reads about the run it is persisting. Structural,
+ * not tied to any one carrier of the run context: the flow paths assemble it
+ * from a signed flow_token plus the Redis answer accumulator.
  */
 export interface SaveResponsesContext {
   /** Correlation id for the log line only. */

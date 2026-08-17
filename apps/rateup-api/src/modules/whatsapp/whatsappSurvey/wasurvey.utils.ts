@@ -22,11 +22,7 @@ import {
 import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload.js";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
-import {
-  Contact,
-  TemplateType,
-  WaSession as PrismaWaSession,
-} from "../../../../generated/prisma/client.js";
+import { Contact, TemplateType } from "../../../../generated/prisma/client.js";
 import { sendMessage } from "./wasurvey.service.js";
 import { captureShopifyOrderPayment } from "../../integrations/shopify/shopify.service.js";
 import prisma from "../../../utils/prisma.js";
@@ -1448,12 +1444,6 @@ export async function downloadAndUpload(orgId: string, imageId: string) {
   log.trace("uploaded image to s3 key => %s", uniqueFilename);
 
   return obj?.Key ? obj.Key : null;
-}
-
-// Returns false if session is older than 1 day
-export function validateSession(session: PrismaWaSession | null | undefined) {
-  if (!session) return false;
-  return !(dayjs().diff(dayjs(session.createdAt), "day") >= 1);
 }
 
 // format for start-survey-message is "`#<surveyName> @<TeamCode>`"

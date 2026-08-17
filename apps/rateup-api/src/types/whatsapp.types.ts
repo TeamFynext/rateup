@@ -499,11 +499,6 @@ export enum WaMessageTypes {
   revoke = "revoke",
 }
 
-export enum WaSessionType {
-  survey = "survey",
-  flow = "flow",
-}
-
 //type for waTemplate starts here
 
 export enum WaTemplateSupportedParameters {
