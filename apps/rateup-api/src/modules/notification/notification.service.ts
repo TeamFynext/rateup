@@ -165,7 +165,13 @@ export async function processNotification(job: Job<NotificationJobData>) {
   const { emailData, systemNotificationData, pushNotificationData } = job.data;
 
   if (emailData) {
-    await sendAWSEmail(emailData);
+    // `sendAWSEmail` reports failure by returning false rather than throwing. Turning that
+    // into a throw is what lets BullMQ retry — otherwise a throttled SES call looks like a
+    // delivered email.
+    const sent = await sendAWSEmail(emailData);
+    if (!sent) {
+      throw new Error(`Email send failed for ${emailData.to}`);
+    }
   }
 
   if (pushNotificationData) {

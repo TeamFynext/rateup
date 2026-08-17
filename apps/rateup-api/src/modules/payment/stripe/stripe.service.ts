@@ -5,7 +5,7 @@ import {
   StripeProductType,
   SubscriptionStatus,
 } from "../../../../generated/prisma/client.js";
-import { sendAWSEmail } from "../../../utils/email/sendAWSEmail.js";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { paymentFailed } from "../../../utils/email/payments/paymentFailed.js";
@@ -185,13 +185,15 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
           to: invoiceData.customer_email,
           subject: "Rateup Subscription Activated - Rateup.app",
           text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
-          html: createEmailBodySubscriptionActivated(
+          html: await createEmailBodySubscriptionActivated(
             updatedOrder.RateupPlan?.displayName ?? updatedOrder.RateupPlan?.name ?? "Rateup Plan",
             new Date(subscriptionData.current_period_end * 1000),
+            false,
+            { amountMinor: invoiceData.amount_paid, currency: invoiceData.currency },
           ),
         };
         try {
-          sendAWSEmail(msg);
+          await notificationQueue.add("notification", { emailData: msg });
         } catch (error) {
           console.error(error);
           throw new Error("Email sending failed. E:" + error);
@@ -227,16 +229,17 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
         to: invoiceData.customer_email,
         subject: "Rateup Subscription Renewed - Rateup.app",
         text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
-        html: createEmailBodySubscriptionActivated(
+        html: await createEmailBodySubscriptionActivated(
           updatedSubscription.basePlan?.displayName ??
             updatedSubscription.basePlan?.name ??
             "Rateup Plan",
           new Date(subscriptionData.current_period_end * 1000),
           true,
+          { amountMinor: invoiceData.amount_paid, currency: invoiceData.currency },
         ),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", { emailData: msg });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -261,10 +264,10 @@ export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData)
         to: customer_email,
         subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
         text: `Subscription Renewal Failed. Please update your payment method.`,
-        html: paymentFailed(true),
+        html: await paymentFailed(true),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", { emailData: msg });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -279,10 +282,10 @@ export async function handleInvoicePaymentFailed(invoiceData: StripeInvoiceData)
         to: customer_email,
         subject: "Payment Failed - Rateup.app Subscription",
         text: `Subscription Payment Failed. Please update your payment method.`,
-        html: paymentFailed(false),
+        html: await paymentFailed(false),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", { emailData: msg });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);

@@ -67,6 +67,35 @@ Rules to keep in mind when adding code:
 - Railway config-as-code lives in `railway.api.json`, `railway.bullmq.json`,
   `railway.kafka.json`; set each service's config path in its Railway settings.
 
+## Email
+
+All email leaves from the `bullmq` service. Nothing outside `processors/notification.processor.ts`
+calls `sendAWSEmail` — callers enqueue and the worker sends, so SES credentials, retries, and
+send logging live in one place. Adding a `sendAWSEmail` call anywhere else puts SES back on the
+API's request path; enqueue instead.
+
+Two queues, both consumed by that one processor file:
+
+| Queue                     | Enqueue with                  | For                                                                             |
+| ------------------------- | ----------------------------- | ------------------------------------------------------------------------------- |
+| `notificationQueue`       | `notificationQueue.add(...)`  | Bulk/background: in-app notifications, weekly reports, billing notices          |
+| `transactionalEmailQueue` | `enqueueTransactionalEmail()` | Anything a user is waiting on: password reset, email verification, OTP, invites |
+
+The split exists because BullMQ's `priority` cannot express "jump the line" here. `fetchNextJob.lua`
+drains the `wait` list (un-prioritized jobs) with `RPOPLPUSH` **before** it looks at the prioritized
+zset, so giving the reset email a priority would have put it _behind_ every bulk job. Separate
+queues also mean separate concurrency pools: a weekly-report run that enqueues one job per org
+cannot occupy the slots a reset link needs.
+
+Both queues set `attempts: 5` with exponential backoff. That only works because `processNotification`
+throws when `sendAWSEmail` returns `false` and the workers no longer swallow the error — a send
+failure has to reach BullMQ to be retried.
+
+One consequence worth knowing before you add a route that emails: a caller only ever learns that
+the job was _accepted_. `POST /email/send-email` and `/email/otp/send-email` return 200 once the
+job is queued, so a delivery failure shows up as a worker log and a BullMQ retry, never in the
+HTTP response.
+
 ## Absorbed services
 
 `message-dispatcher` was merged into this repo — its BullMQ workers became

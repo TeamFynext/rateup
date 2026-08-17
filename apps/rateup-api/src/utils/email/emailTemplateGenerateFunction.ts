@@ -1,43 +1,77 @@
 import { QuestionType } from "../../types/enums.js";
 
-const generateListHtml = (list: unknown[] | undefined) => {
-  return list
-    ?.map((item) =>
-      item && typeof item === "object" ? `<li>${Object.values(item)[0]}</li>` : `<li>${item}</li>`,
-    )
-    .join(" ");
-};
+/**
+ * One rendered piece of a survey answer. A single answer can produce several —
+ * a testimonial, for instance, becomes one item per field.
+ */
+export interface EmailAnswerItem {
+  /** Sub-field name, when the answer is an object of several fields. */
+  label?: string;
+  text?: string;
+  imageUrl?: string;
+}
 
-const generateImageHtml = (imgSrc: string | undefined, s3Upload = false) => {
-  const url = s3Upload
+function imageUrl(path: string, s3Upload = false): string {
+  const base = s3Upload
     ? process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
     : process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL;
-  return `<img src="${url}/${imgSrc}" width="200px" alt="photo-survey"/>`;
-};
+  return `${base}/${path}`;
+}
 
-export const generateAnswerHtml = (answer: unknown, type: QuestionType | string) => {
+/** The first value of an object, which is how single-field answers are stored. */
+function firstValue(value: object): unknown {
+  return Object.values(value)[0];
+}
+
+function asText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return typeof value === "object" ? String(firstValue(value) ?? "") : String(value);
+}
+
+/**
+ * Turn a stored answer into items the response email can render.
+ *
+ * This used to build an HTML fragment that was interpolated into the template
+ * unescaped; returning data instead lets React escape respondent-supplied text.
+ * An empty array means there is nothing worth showing for the question.
+ */
+export function buildEmailAnswer(answer: unknown, type: QuestionType | string): EmailAnswerItem[] {
+  if (answer === null || answer === undefined || answer === "") return [];
+
   if (Array.isArray(answer)) {
-    return `<ul>${generateListHtml(answer)}</ul>`;
-  } else if (typeof answer === "object" && answer !== null && Object.keys(answer).length > 1) {
-    let listHtmlString = "";
-    for (const [key, value] of Object.entries(answer)) {
-      let processedValue = value;
-      if (key === "photo" && typeof processedValue === "string") {
-        processedValue = generateImageHtml(processedValue);
-      }
-      listHtmlString += `<li>${key}: ${processedValue}</li>`;
-    }
-    return `<ul>${listHtmlString}</ul>`;
-  } else if (type === QuestionType.PCQ && typeof answer === "object" && answer !== null) {
-    const item = Object.values(answer)[0];
-    const image = item && typeof item === "object" ? item.image : undefined;
-    const value = item && typeof item === "object" ? item.value : undefined;
-    const processedValue = generateImageHtml(image, true);
-    return `<ul><div>${value}</div><div>${processedValue}</div></ul>`;
-  } else if (typeof answer === "object" && answer !== null) {
-    return Object.values(answer)[0];
-  } else if (type === "Photo" && typeof answer === "string") {
-    return generateImageHtml(answer);
+    return answer.map((item) => ({ text: asText(item) })).filter((item) => item.text.length > 0);
   }
-  return answer;
-};
+
+  if (type === QuestionType.PCQ && typeof answer === "object") {
+    const item = firstValue(answer);
+    if (item && typeof item === "object") {
+      const { image, value } = item as { image?: string; value?: unknown };
+      return [
+        {
+          text: value === undefined ? undefined : String(value),
+          imageUrl: image ? imageUrl(image, true) : undefined,
+        },
+      ];
+    }
+    return [];
+  }
+
+  if (typeof answer === "object") {
+    const entries = Object.entries(answer);
+    if (entries.length > 1) {
+      return entries.map(([key, value]) =>
+        key === "photo" && typeof value === "string"
+          ? { label: key, imageUrl: imageUrl(value) }
+          : { label: key, text: asText(value) },
+      );
+    }
+    const text = asText(answer);
+    return text ? [{ text }] : [];
+  }
+
+  if (type === "Photo" && typeof answer === "string") {
+    return [{ imageUrl: imageUrl(answer) }];
+  }
+
+  return [{ text: String(answer) }];
+}

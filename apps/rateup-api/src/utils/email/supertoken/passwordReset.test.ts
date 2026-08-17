@@ -1,16 +1,20 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
+vi.mock("../../../workers/bullmq/queues/index.js", () => ({
+  enqueueTransactionalEmail: vi.fn(),
+}));
 
-import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
-import { rateupLogo } from "../../constants/constants.js";
+import { enqueueTransactionalEmail } from "../../../workers/bullmq/queues/index.js";
+import { logoUrl } from "../react/brand.js";
 import { createEmailBody, sendResetPasswordMail } from "./passwordReset.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const addJobMock = notificationQueue.add as unknown as Mock;
+// The reset mail rides the transactional (fast) lane, not the bulk notification queue.
+const enqueueMock = enqueueTransactionalEmail as unknown as Mock;
 
 const RESET_LINK = "https://app.rateup.app/auth/reset-password?token=tok-123&rid=emailpassword";
+const ESCAPED_RESET_LINK = RESET_LINK.replace("&", "&amp;");
 const EMAIL = "owner@acme.com";
 
 beforeEach(() => {
@@ -19,13 +23,11 @@ beforeEach(() => {
 });
 
 describe("sendResetPasswordMail", () => {
-  test("queues a notification job addressed to the requesting user", async () => {
+  test("queues a transactional email addressed to the requesting user", async () => {
     await sendResetPasswordMail(RESET_LINK, EMAIL);
 
-    expect(addJobMock).toHaveBeenCalledTimes(1);
-    const [jobName, payload] = addJobMock.mock.calls[0];
-    expect(jobName).toBe("notification");
-    expect(payload.emailData).toMatchObject({
+    expect(enqueueMock).toHaveBeenCalledTimes(1);
+    expect(enqueueMock.mock.calls[0][0]).toMatchObject({
       to: EMAIL,
       subject: "Password Reset - RateUp.app",
       text: "Reset password for your rateup account.",
@@ -35,7 +37,8 @@ describe("sendResetPasswordMail", () => {
   test("carries the one-time reset link through to the queued email body", async () => {
     await sendResetPasswordMail(RESET_LINK, EMAIL);
 
-    expect(addJobMock.mock.calls[0][1].emailData.html).toContain(RESET_LINK);
+    // The link lands in an href, so its `&` arrives html-escaped.
+    expect(enqueueMock.mock.calls[0][0].html).toContain(ESCAPED_RESET_LINK);
   });
 
   test.each([
@@ -47,11 +50,11 @@ describe("sendResetPasswordMail", () => {
   ])("sends nothing when the request has %s", async (_name, link, email) => {
     await sendResetPasswordMail(link as string, email as string);
 
-    expect(addJobMock).not.toHaveBeenCalled();
+    expect(enqueueMock).not.toHaveBeenCalled();
   });
 
   test("surfaces a queue failure as an email-sending error", async () => {
-    addJobMock.mockRejectedValue(new Error("redis unavailable"));
+    enqueueMock.mockRejectedValue(new Error("redis unavailable"));
 
     await expect(sendResetPasswordMail(RESET_LINK, EMAIL)).rejects.toThrow(
       "Email sending failed. E:Error: redis unavailable",
@@ -60,25 +63,26 @@ describe("sendResetPasswordMail", () => {
 });
 
 describe("createEmailBody", () => {
-  test("puts the reset link on the call-to-action button", () => {
-    const html = createEmailBody(RESET_LINK);
+  test("puts the reset link on the call-to-action button", async () => {
+    const html = await createEmailBody(RESET_LINK);
 
-    expect(html).toContain(`href="${RESET_LINK}"`);
-    expect(html).toContain("Reset Your Password");
+    expect(html).toContain(`href="${ESCAPED_RESET_LINK}"`);
+    expect(html).toContain("Set a new password");
   });
 
-  test("renders the RateUp logo and the reset icon from the CDN", () => {
-    const html = createEmailBody(RESET_LINK);
+  test("renders the RateUp logo from the CDN", async () => {
+    expect(await createEmailBody(RESET_LINK)).toContain(logoUrl());
+  });
 
-    expect(html).toContain(rateupLogo);
-    expect(html).toContain(
-      `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/resetPasswordIcon.png`,
+  test("explains why the email arrived", async () => {
+    expect(await createEmailBody(RESET_LINK)).toContain(
+      "Someone asked to reset the password on the RateUp account registered to this address",
     );
   });
 
-  test("explains why the email arrived", () => {
-    expect(createEmailBody(RESET_LINK)).toContain(
-      "A password reset request for your account has been recieved",
+  test("tells the reader what happens if they ignore it", async () => {
+    expect(await createEmailBody(RESET_LINK)).toContain(
+      "your current password stays exactly as it is until someone opens the link",
     );
   });
 });
