@@ -65,17 +65,43 @@ import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversatio
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
 import type { User } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatContactCountStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
-const CHANNEL_PLATFORM_ICON: Partial<
-  Record<MessagePlatform, React.ComponentType<{ size?: number | string; className?: string }>>
-> = {
-  [MessagePlatform.WHATSAPP]: IconBrandWhatsapp,
-  [MessagePlatform.INSTAGRAM]: IconBrandInstagram,
-  [MessagePlatform.FACEBOOK]: IconBrandFacebook,
+type NavIcon = React.ComponentType<{ size?: number | string; className?: string }>;
+
+/**
+ * Channel rows carry their platform's brand colour on the icon so the filter list
+ * is scannable at a glance. Wrapped once at module scope — building these inside
+ * the nav memo would hand React a new component type on every rebuild.
+ *
+ * The colours need `!`: `SidebarMenuSubButton` paints its icons with
+ * `[&>svg]:text-sidebar-accent-foreground`, and that descendant selector outranks
+ * a bare colour class (it only lost in dark mode, where `.dark .text-…` is two
+ * classes deep — which is why the colour used to show there and nowhere else).
+ */
+function withBrandColor(Icon: NavIcon, color: string): NavIcon {
+  return function BrandIcon({ className, ...props }) {
+    return <Icon {...props} className={cn(className, color)} />;
+  };
+}
+
+const CHANNEL_PLATFORM_ICON: Partial<Record<MessagePlatform, NavIcon>> = {
+  [MessagePlatform.WHATSAPP]: withBrandColor(
+    IconBrandWhatsapp,
+    "text-green-600! dark:text-green-500!",
+  ),
+  [MessagePlatform.INSTAGRAM]: withBrandColor(
+    IconBrandInstagram,
+    "text-pink-600! dark:text-pink-500!",
+  ),
+  [MessagePlatform.FACEBOOK]: withBrandColor(
+    IconBrandFacebook,
+    "text-blue-600! dark:text-blue-500!",
+  ),
 };
 
 /**
@@ -116,7 +142,7 @@ interface NavMainInput {
   conversationTags?: ConversationTagOption[];
   channels?: ChannelOption[];
   staff: Array<{ id: string; name?: string }>;
-  teams: Array<{ id: string; name?: string }>;
+  teams: Array<{ id: string; name?: string; color?: string }>;
   chatFilterStore: ChatFilterStore;
   hiddenModules: string[];
   handleFilter: (label: string, value: string) => void;
@@ -168,56 +194,48 @@ export function useNavMain({
                   url: "/dashboard/inbox?tab=open",
                   icon: IconInbox,
                   count: sectionCounts?.openCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("New"),
                   url: "/dashboard/inbox?tab=new",
                   icon: IconSparkles,
                   count: sectionCounts?.newCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("Closed"),
                   url: "/dashboard/inbox?tab=closed",
                   icon: IconCircleCheck,
                   count: sectionCounts?.closedCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("All"),
                   url: "/dashboard/inbox?tab=all",
                   icon: IconStack2,
                   count: sectionCounts?.allCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("Mine"),
                   url: "/dashboard/inbox?tab=mine",
                   icon: IconUserCheck,
                   count: sectionCounts?.mineCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("@Mentions"),
                   url: "/dashboard/inbox?tab=mentions",
                   icon: IconAt,
                   count: sectionCounts?.mentionsCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("Favourites"),
                   url: "/dashboard/inbox?tab=favourites",
                   icon: IconStar,
                   count: sectionCounts?.favouriteCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   title: t("Spam"),
                   url: "/dashboard/inbox?tab=spam",
                   icon: IconShieldExclamation,
                   count: sectionCounts?.spamCount || 0,
-                  variant: "inbox-tab",
                 },
                 {
                   group: "Filter",
@@ -371,9 +389,15 @@ export function useNavMain({
                                 ...chatFilterStore.filter,
                                 assignedTeams: [],
                               }),
-                            items: teams.map((team: { id: string; name?: string }) => ({
+                            items: teams.map((team) => ({
                               title: team.name,
                               url: "#",
+                              // Team colours are free-form (hex from the team editor, or the
+                              // legacy "blue" default), so they stay an inline style like the
+                              // conversation-tag dots rather than a Tailwind class.
+                              icon: (props: Record<string, unknown>) => (
+                                <IconUsers {...props} style={{ color: team.color || undefined }} />
+                              ),
                               handleClick: () => handleFilter("assignedTeams", team.id),
                               isActive: chatFilterStore.filter.assignedTeams?.includes(team.id),
                             })),

@@ -1,11 +1,4 @@
-import {
-  IconBolt,
-  IconHash,
-  IconMessage,
-  IconRadio,
-  IconTag,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconBolt, IconHash, IconMessage, IconRadio } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -13,20 +6,15 @@ import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQui
 import { cn } from "@/lib/utils.ts";
 
 import ChannelSettings from "./ChannelSettings.tsx";
-import ContactLabelSettings from "./ContactLabelSettings.tsx";
 import ConversationTagSettings from "./ConversationTagSettings.tsx";
 import InboxAutomation from "./InboxAutomation.tsx";
-import TeamSettings from "./TeamSettings.tsx";
 
 /**
- * Tab order follows the design: who handles conversations (teams, channels),
- * then how they are classified (labels, tags), then what agents send and what
- * runs on its own.
+ * Tab order follows the design: where conversations come in (channels), then how
+ * they are classified (tags), then what agents send and what runs on its own.
  */
 const TABS = [
-  { value: "teams", label: "Teams", icon: IconUsers },
   { value: "channels", label: "Channels", icon: IconRadio },
-  { value: "contact_labels", label: "Contact labels", icon: IconTag },
   { value: "conversation_tags", label: "Conversation tags", icon: IconHash },
   { value: "quick_replies", label: "Quick replies", icon: IconMessage },
   { value: "automation", label: "Automation", icon: IconBolt },
@@ -36,7 +24,7 @@ type TabValue = (typeof TABS)[number]["value"];
 
 const InboxSettings = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabValue>("teams");
+  const [activeTab, setActiveTab] = useState<TabValue>("channels");
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
@@ -48,9 +36,7 @@ const InboxSettings = () => {
           {t("Inbox Settings")}
         </h1>
         <p className="mt-0.5 text-[13px] text-muted-foreground">
-          {t(
-            "Manage teams, channels, contact labels, conversation tags, quick replies and automation.",
-          )}
+          {t("Manage channels, conversation tags, quick replies and automation.")}
         </p>
 
         <div className="mt-3.5 flex gap-1 overflow-x-auto">
@@ -79,9 +65,7 @@ const InboxSettings = () => {
 
       {/* ---- Panel ---- */}
       <div className="min-h-0 flex-1 overflow-y-auto px-7 py-6">
-        {activeTab === "teams" && <TeamSettings />}
         {activeTab === "channels" && <ChannelSettings />}
-        {activeTab === "contact_labels" && <ContactLabelSettings />}
         {activeTab === "conversation_tags" && <ConversationTagSettings />}
         {activeTab === "quick_replies" && <WaQuickReplySettings />}
         {activeTab === "automation" && <InboxAutomation />}
