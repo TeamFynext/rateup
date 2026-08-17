@@ -17,6 +17,7 @@ import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
 import { ModeToggle } from "@/components/theme/ModeToggle.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Collapsible,
@@ -43,10 +44,8 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -58,6 +57,15 @@ import { WhatsAppSettingsModal } from "./utils.tsx";
 import WhatsNewButton from "./whats-new/WhatsNewButton.tsx";
 
 const sidebarIconProps = { className: "size-5!", strokeWidth: 1.75 };
+
+/**
+ * Nav counts sit in a narrow rail, so a raw 12_483 would blow the row out.
+ * Anything under 1000 stays exact; past that it reads 1.2K / 3.4M.
+ */
+const countFormatter = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
 // ---------------------------------------------------------------------------
 // Custom hook – chat filter logic
@@ -240,20 +248,16 @@ function getMostSpecificChildRoute(children: NavEntry[], currentRoute: string) {
 /** Shared visual: icon box + label + optional chevron. Used by every nav item variant. */
 function NavItemContent({
   item,
-  isActive,
   showRotatingChevron,
   showDescription,
 }: Readonly<{
   item: NavEntry;
-  isActive: boolean;
   showRotatingChevron?: boolean;
   showDescription?: boolean;
 }>) {
   const chevron = showRotatingChevron ? (
     <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
   ) : null;
-  const activeChevron =
-    !showRotatingChevron && isActive ? <IconChevronRight className="ml-auto" /> : null;
 
   return (
     <>
@@ -280,8 +284,12 @@ function NavItemContent({
             <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
           ) : null}
         </div>
+        {item.count != null && item.count > 0 && (
+          <Badge variant="secondary" className="ml-auto tabular-nums" title={String(item.count)}>
+            {countFormatter.format(item.count)}
+          </Badge>
+        )}
         {chevron}
-        {activeChevron}
       </div>
     </>
   );
@@ -301,85 +309,6 @@ function NavLink({
   onClick?: () => void;
   showDescription?: boolean;
 }>) {
-  const { state, isMobile } = useSidebar();
-  const isCollapsed = state === "collapsed";
-
-  if (item.variant === "inbox-tab") {
-    const linkElement = (
-      <Link
-        to={item.url || "#"}
-        title={isCollapsed ? undefined : item.title}
-        aria-label={item.title}
-        onClick={(e) => {
-          if (!onRouteGuard(item.url)) e.preventDefault();
-          onClick?.();
-        }}
-        className={cn(
-          "flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] transition-colors w-full",
-          "group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center",
-          isActive
-            ? "bg-blue-50 dark:bg-blue-500/20"
-            : "bg-transparent hover:bg-blue-50/50 dark:hover:bg-blue-500/10",
-        )}
-      >
-        <span
-          className={cn(
-            "relative flex items-center justify-center [&>svg]:size-[17px]",
-            isActive ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300",
-          )}
-        >
-          {item.icon && <item.icon />}
-          {item.count != null && item.count > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 hidden h-3.5 min-w-3.5 items-center justify-center rounded-full border border-background bg-primary px-0.5 text-[8px] font-bold leading-none text-white group-data-[collapsible=icon]:flex">
-              {item.count}
-            </span>
-          )}
-        </span>
-        <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-          <div
-            className={cn(
-              "text-sm",
-              isActive
-                ? "font-bold text-primary dark:text-primary"
-                : "font-medium text-slate-700 dark:text-slate-300",
-            )}
-          >
-            {item.title}
-          </div>
-          {item.hint ? (
-            <div className="mt-px text-[11px] text-slate-400 dark:text-slate-500">{item.hint}</div>
-          ) : null}
-        </div>
-        {item.count != null && (
-          <span
-            className={cn(
-              "rounded-full px-2 py-0.5 text-[11px] font-bold group-data-[collapsible=icon]:hidden",
-              isActive
-                ? "bg-primary text-primary-foreground"
-                : "bg-slate-50 text-muted-foreground dark:bg-white/10",
-            )}
-          >
-            {item.count}
-          </span>
-        )}
-      </Link>
-    );
-
-    if (isCollapsed) {
-      return (
-        <Tooltip>
-          <TooltipTrigger render={linkElement} />
-          <TooltipContent side="right" align="center" hidden={isMobile}>
-            {item.title}
-            {item.count != null ? ` (${item.count})` : ""}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return linkElement;
-  }
-
   return (
     <SidebarMenuButton
       isActive={isActive}
@@ -397,7 +326,7 @@ function NavLink({
         />
       }
     >
-      <NavItemContent item={item} isActive={isActive} showDescription={showDescription} />
+      <NavItemContent item={item} showDescription={showDescription} />
     </SidebarMenuButton>
   );
 }
@@ -491,7 +420,7 @@ function NavItem({
     return (
       <Collapsible defaultOpen={false} className="group/collapsible" render={<SidebarMenuItem />}>
         <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
-          <NavItemContent item={item} isActive={false} showRotatingChevron />
+          <NavItemContent item={item} showRotatingChevron />
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
@@ -644,7 +573,7 @@ export default function AppSidebar({
   channels?: ChannelOption[];
   userData?: IUserInfoApiResponse;
   staff: Array<{ id: string; name?: string }>;
-  teams: Array<{ id: string; name?: string }>;
+  teams: Array<{ id: string; name?: string; color?: string }>;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
