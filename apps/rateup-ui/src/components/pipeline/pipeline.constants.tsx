@@ -31,6 +31,8 @@ import type { PipelineView } from "@/store/pipeline.store.ts";
 // `t` can reach them. These maps carry only what a translation cannot: the icon
 // and the colour.
 
+export const PIPELINE_LIMIT_PER_ORG = 1;
+
 export const VIEW_TABS: ReadonlyArray<{ id: PipelineView; icon: Icon }> = [
   { id: "board", icon: IconLayoutKanban },
   { id: "list", icon: IconList },

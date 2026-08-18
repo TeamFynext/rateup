@@ -1935,6 +1935,7 @@
     "Pie": "Kuchen",
     "Pipeline": "Pipeline",
     "Pipeline deleted": "Pipeline gelöscht",
+    "Pipeline name": "Pipelinename",
     "Pipeline settings": "Pipeline-Einstellungen",
     "Pipeline settings saved": "Pipeline-Einstellungen gespeichert",
     "Pipeline views": "Pipeline-Ansichten",
@@ -2900,6 +2901,7 @@
     "What happens next?": "Was passiert als nächstes?",
     "What kind of work lives here?": "Welche Art von Arbeit lebt hier?",
     "What needs to be resolved?": "Was muss gelöst werden?",
+    "What this board is called in the sidebar and the switcher.": "Wie dieses Board in der Seitenleiste und im Switcher heißt.",
     "What's new": "Was ist neu?",
     "Whatsapp": "WhatsApp",
     "WhatsApp": "WhatsApp",
@@ -2989,32 +2991,6 @@
   },
   "Example": {
     " /points": "Beispiel: /points"
-  },
-  "apianalytics": {
-    "All": "Alle",
-    "Avg Delivery Time": "Durchschnittliche Lieferzeit",
-    "Avg Response": "Durchschnittliche Antwort",
-    "Campaign & Inbox": "Kampagne und Posteingang",
-    "Daily Message Volume": "Tägliches Nachrichtenvolumen",
-    "Detailed analytics of WhatsApp messages sent": "Detaillierte Analyse der gesendeten WhatsApp-Nachrichten",
-    "Export": "Exportieren",
-    "External": "Extern",
-    "Failed Messages": "Fehlgeschlagene Nachrichten",
-    "Failure Rate": "Ausfallrate",
-    "Last used": "Zuletzt verwendet",
-    "Message Delivery Trend (24h)": "Nachrichtenübermittlungstrend (24 Stunden)",
-    "messages sent": "gesendete Nachrichten",
-    "Messages Sent": "Gesendete Nachrichten",
-    "No data available": "Keine Daten verfügbar",
-    "No data available for the last 24 hours": "Für die letzten 24 Stunden sind keine Daten verfügbar",
-    "No team data available": "Keine Teamdaten verfügbar",
-    "of total": "insgesamt",
-    "Success Rate": "Erfolgsquote",
-    "Successful Delivery": "Erfolgreiche Lieferung",
-    "Team Performance Breakdown": "Aufschlüsselung der Teamleistung",
-    "Total Messages Sent": "Gesamtzahl der gesendeten Nachrichten",
-    "WhatsApp Messages Analytics": "WhatsApp-Nachrichtenanalyse",
-    "WhatsApp Template Analytics": "WhatsApp-Vorlagenanalyse"
   },
   "campaign.resend": {
     "{total} recipients will be sent over {days} day(s)": "{total} Empfänger werden über {days} Tag(e) verschickt",
@@ -3149,6 +3125,32 @@
     "Selected": "Ausgewählt",
     "You have not selected any participant": "Sie haben keinen Teilnehmer ausgewählt"
   },
+  "apianalytics": {
+    "All": "Alle",
+    "Avg Delivery Time": "Durchschnittliche Lieferzeit",
+    "Avg Response": "Durchschnittliche Antwort",
+    "Campaign & Inbox": "Kampagne und Posteingang",
+    "Daily Message Volume": "Tägliches Nachrichtenvolumen",
+    "Detailed analytics of WhatsApp messages sent": "Detaillierte Analyse der gesendeten WhatsApp-Nachrichten",
+    "Export": "Exportieren",
+    "External": "Extern",
+    "Failed Messages": "Fehlgeschlagene Nachrichten",
+    "Failure Rate": "Ausfallrate",
+    "Last used": "Zuletzt verwendet",
+    "Message Delivery Trend (24h)": "Nachrichtenübermittlungstrend (24 Stunden)",
+    "messages sent": "gesendete Nachrichten",
+    "Messages Sent": "Gesendete Nachrichten",
+    "No data available": "Keine Daten verfügbar",
+    "No data available for the last 24 hours": "Für die letzten 24 Stunden sind keine Daten verfügbar",
+    "No team data available": "Keine Teamdaten verfügbar",
+    "of total": "insgesamt",
+    "Success Rate": "Erfolgsquote",
+    "Successful Delivery": "Erfolgreiche Lieferung",
+    "Team Performance Breakdown": "Aufschlüsselung der Teamleistung",
+    "Total Messages Sent": "Gesamtzahl der gesendeten Nachrichten",
+    "WhatsApp Messages Analytics": "WhatsApp-Nachrichtenanalyse",
+    "WhatsApp Template Analytics": "WhatsApp-Vorlagenanalyse"
+  },
   "https": {
     "//example": {
       "com/webhook": "https://example.com/webhook"
@@ -3239,6 +3241,51 @@
   "Warning": {
     " High Risk Action": "Warnung: Aktion mit hohem Risiko"
   },
+  "loyalty.earningRules": {
+    "{name} tier deleted": "{name}-Stufe gelöscht",
+    "{name} tier deleted and customers were downgraded to the previous tier": "{name}-Stufe wurde gelöscht und Kunden wurden auf die vorherige Stufe herabgestuft",
+    "Add Rule": "Regel hinzufügen",
+    "Add Tier": "Stufe hinzufügen",
+    "Additional Earning Rules": "Zusätzliche Verdienstregeln",
+    "Additional points on top of standard rate": "Zusätzliche Punkte zusätzlich zum Standardtarif",
+    "All earning rules in this tier will be permanently removed. This cannot be undone.": "Alle Verdienstregeln in dieser Stufe werden dauerhaft entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "Are you sure you want to delete {name}? This cannot be undone.": "Sind Sie sicher, dass Sie {name} löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+    "Are you sure you want to delete this earning rule? This cannot be undone.": "Sind Sie sicher, dass Sie diese Verdienstregel löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+    "Back": "Zurück",
+    "Bonus Points": "Bonuspunkte",
+    "Cancel": "Abbrechen",
+    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "Erstellen Sie Bonusregeln wie Happy-Hour-Multiplikatoren, Geburtstagsboni oder Wochenendangebote",
+    "Create Earning Rule": "Erstellen Sie eine Verdienstregel",
+    "Create Your First Rule": "Erstellen Sie Ihre erste Regel",
+    "Creating...": "Erstellen...",
+    "Define how customers earn points through purchases and activities": "Definieren Sie, wie Kunden durch Einkäufe und Aktivitäten Punkte sammeln",
+    "Delete {name} tier": "{name}-Stufe löschen",
+    "Delete earning rule": "Verdienstregel löschen",
+    "Describe when and how this rule applies...": "Beschreiben Sie, wann und wie diese Regel gilt ...",
+    "Downgrade & Delete": "Herabstufen und löschen",
+    "e": {
+      "g": {
+        ", 2": {
+          "0 = Double points, 1": {
+            "5 = 50% more": "5 = 50 % mehr"
+          }
+        },
+        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": ", Happy-Hour-Bonus, Wochenend-Multiplikator, Geburtstagsbonus"
+      }
+    },
+    "Earning rule created successfully": "Verdienstregel erfolgreich erstellt",
+    "Earning rule deleted successfully": "Verdienstregel erfolgreich gelöscht",
+    "Error loading earning rules": "Fehler beim Laden der Verdienstregeln",
+    "Multiplier": "Multiplikator",
+    "New tier added": "Neue Stufe hinzugefügt",
+    "No additional rules yet": "Noch keine zusätzlichen Regeln",
+    "Point Earning Rules": "Regeln zum Punktesammeln",
+    "Rule Name": "Regelname",
+    "rules": "Regeln",
+    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "Diese Stufe hat Kunden. Wenn Sie fortfahren, werden diese Kunden auf die vorherige Stufe herabgestuft und diese Stufe wird gelöscht.",
+    "Tier-Based Earning Rates": "Stufenbasierte Verdienstraten",
+    "tiers": "Ebenen"
+  },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Lebenszyklusphase hinzufügen",
     "Add Lost Stage": "Verlorene Bühne hinzufügen",
@@ -3318,51 +3365,6 @@
     "Visualize how contacts progress through your customer journey": "Visualisieren Sie, wie Kontakte Ihre Customer Journey durchlaufen",
     "Won stage": "Etappe gewonnen",
     "You have disabled lifecycle stages visibility view. Go into Setup to show it again.": "Sie haben die Sichtbarkeitsansicht der Lebenszyklusphasen deaktiviert. Gehen Sie ins Setup, um es erneut anzuzeigen."
-  },
-  "loyalty.earningRules": {
-    "{name} tier deleted": "{name}-Stufe gelöscht",
-    "{name} tier deleted and customers were downgraded to the previous tier": "{name}-Stufe wurde gelöscht und Kunden wurden auf die vorherige Stufe herabgestuft",
-    "Add Rule": "Regel hinzufügen",
-    "Add Tier": "Stufe hinzufügen",
-    "Additional Earning Rules": "Zusätzliche Verdienstregeln",
-    "Additional points on top of standard rate": "Zusätzliche Punkte zusätzlich zum Standardtarif",
-    "All earning rules in this tier will be permanently removed. This cannot be undone.": "Alle Verdienstregeln in dieser Stufe werden dauerhaft entfernt. Dies kann nicht rückgängig gemacht werden.",
-    "Are you sure you want to delete {name}? This cannot be undone.": "Sind Sie sicher, dass Sie {name} löschen möchten? Dies kann nicht rückgängig gemacht werden.",
-    "Are you sure you want to delete this earning rule? This cannot be undone.": "Sind Sie sicher, dass Sie diese Verdienstregel löschen möchten? Dies kann nicht rückgängig gemacht werden.",
-    "Back": "Zurück",
-    "Bonus Points": "Bonuspunkte",
-    "Cancel": "Abbrechen",
-    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "Erstellen Sie Bonusregeln wie Happy-Hour-Multiplikatoren, Geburtstagsboni oder Wochenendangebote",
-    "Create Earning Rule": "Erstellen Sie eine Verdienstregel",
-    "Create Your First Rule": "Erstellen Sie Ihre erste Regel",
-    "Creating...": "Erstellen...",
-    "Define how customers earn points through purchases and activities": "Definieren Sie, wie Kunden durch Einkäufe und Aktivitäten Punkte sammeln",
-    "Delete {name} tier": "{name}-Stufe löschen",
-    "Delete earning rule": "Verdienstregel löschen",
-    "Describe when and how this rule applies...": "Beschreiben Sie, wann und wie diese Regel gilt ...",
-    "Downgrade & Delete": "Herabstufen und löschen",
-    "e": {
-      "g": {
-        ", 2": {
-          "0 = Double points, 1": {
-            "5 = 50% more": "5 = 50 % mehr"
-          }
-        },
-        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": ", Happy-Hour-Bonus, Wochenend-Multiplikator, Geburtstagsbonus"
-      }
-    },
-    "Earning rule created successfully": "Verdienstregel erfolgreich erstellt",
-    "Earning rule deleted successfully": "Verdienstregel erfolgreich gelöscht",
-    "Error loading earning rules": "Fehler beim Laden der Verdienstregeln",
-    "Multiplier": "Multiplikator",
-    "New tier added": "Neue Stufe hinzugefügt",
-    "No additional rules yet": "Noch keine zusätzlichen Regeln",
-    "Point Earning Rules": "Regeln zum Punktesammeln",
-    "Rule Name": "Regelname",
-    "rules": "Regeln",
-    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "Diese Stufe hat Kunden. Wenn Sie fortfahren, werden diese Kunden auf die vorherige Stufe herabgestuft und diese Stufe wird gelöscht.",
-    "Tier-Based Earning Rates": "Stufenbasierte Verdienstraten",
-    "tiers": "Ebenen"
   },
   "Eg": {},
   "campaign.participantMenu": {}

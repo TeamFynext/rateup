@@ -115,6 +115,49 @@ function automationToggles(t: TFunction): AutomationToggle[] {
  * their auto-add still switchable, but cannot be removed here: dropping one would
  * be a one-way door you could not undo.
  */
+/**
+ * Renaming the board. Mounted with `key={pipeline.id}` so switching boards
+ * resets the field rather than carrying one board's unsaved text onto another.
+ */
+function NameSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
+  const { t } = useTranslation();
+  const updatePipeline = useUpdatePipelineMutation();
+  const [name, setName] = useState(pipeline.name);
+
+  const trimmed = name.trim();
+  // An empty name would leave an unlabelled row in the switcher, and saving the
+  // name it already has would toast for nothing.
+  const canSave = Boolean(trimmed) && trimmed !== pipeline.name && !updatePipeline.isPending;
+
+  const save = () => {
+    if (!canSave) return;
+    updatePipeline.mutate({ pipelineId: pipeline.id, input: { name: trimmed } });
+  };
+
+  return (
+    <section>
+      <SectionTitle>{t("Name")}</SectionTitle>
+      <SectionNote>{t("What this board is called in the sidebar and the switcher.")}</SectionNote>
+
+      <Card className="flex-row flex-wrap items-center gap-2 p-3.5">
+        <Input
+          id="pipeline-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") save();
+          }}
+          aria-label={t("Pipeline name")}
+          className="min-w-52 flex-1"
+        />
+        <Button size="sm" onClick={save} disabled={!canSave}>
+          {t("Save")}
+        </Button>
+      </Card>
+    </section>
+  );
+}
+
 function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
   const { t } = useTranslation();
   const updatePipeline = useUpdatePipelineMutation();
@@ -436,6 +479,8 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
       <div className="flex max-w-4xl flex-col gap-6">
         {/* Admin-only, and first: who works the board frames everything below it. */}
         {isOrgAdmin && <TeamsSection pipeline={pipeline} />}
+
+        <NameSection key={pipeline.id} pipeline={pipeline} />
 
         <section>
           <div className="mb-1 flex items-center justify-between">

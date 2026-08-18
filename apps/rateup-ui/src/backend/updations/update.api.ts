@@ -55,6 +55,28 @@ export async function seedInboxStats() {
   });
 }
 
+export interface SeedPipelinesResult {
+  message: string;
+  applied: boolean;
+  orgsScanned: number;
+  pipelinesCreated: number;
+  stagesCreated: number;
+  /** Teams pointed at the new board with auto-add switched on. */
+  teamsAutoAdding: number;
+  skippedHasPipeline: number;
+  skippedNoLifecycles: number;
+  skippedNoTeams: number;
+}
+
+/** Dry run unless `apply` is true; only then is anything created. */
+export async function seedPipelines(apply = false) {
+  return await axiosClient.put<SeedPipelinesResult>(
+    `${baseUrl}/seed-pipelines?apply=${apply}`,
+    null,
+    { timeout: 60000 },
+  );
+}
+
 export interface ReconcileInboxStatusResult {
   message: string;
   applied: boolean;

@@ -1951,6 +1951,7 @@
     "Pie": "فطيرة",
     "Pipeline": "خط أنابيب",
     "Pipeline deleted": "تم حذف خط الأنابيب",
+    "Pipeline name": "اسم خط الأنابيب",
     "Pipeline settings": "إعدادات خطوط الأنابيب",
     "Pipeline settings saved": "تم حفظ إعدادات خط الأنابيب",
     "Pipeline views": "وجهات نظر خطوط الأنابيب",
@@ -2916,6 +2917,7 @@
     "What happens next?": "ماذا سيحدث بعد ذلك؟",
     "What kind of work lives here?": "أي نوع من العمل يعيش هنا؟",
     "What needs to be resolved?": "ما الذي يجب حله؟",
+    "What this board is called in the sidebar and the switcher.": "ما يسمى هذا المجلس في الشريط الجانبي والمحول.",
     "What's new": "ما هو الجديد",
     "Whatsapp": "واتس اب",
     "WhatsApp": "واتساب",
@@ -3005,32 +3007,6 @@
   },
   "Example": {
     " /points": "مثال: / نقطة"
-  },
-  "apianalytics": {
-    "All": "الجميع",
-    "Avg Delivery Time": "متوسط ​​وقت التسليم",
-    "Avg Response": "متوسط ​​الاستجابة",
-    "Campaign & Inbox": "الحملة والبريد الوارد",
-    "Daily Message Volume": "حجم الرسائل اليومية",
-    "Detailed analytics of WhatsApp messages sent": "تحليلات مفصلة لرسائل WhatsApp المرسلة",
-    "Export": "يصدّر",
-    "External": "خارجي",
-    "Failed Messages": "رسائل فاشلة",
-    "Failure Rate": "معدل الفشل",
-    "Last used": "آخر استخدام",
-    "Message Delivery Trend (24h)": "اتجاه تسليم الرسائل (24 ساعة)",
-    "messages sent": "الرسائل المرسلة",
-    "Messages Sent": "الرسائل المرسلة",
-    "No data available": "لا توجد بيانات متاحة",
-    "No data available for the last 24 hours": "لا توجد بيانات متاحة لآخر 24 ساعة",
-    "No team data available": "لا توجد بيانات الفريق المتاحة",
-    "of total": "من المجموع",
-    "Success Rate": "معدل النجاح",
-    "Successful Delivery": "التسليم الناجح",
-    "Team Performance Breakdown": "انهيار أداء الفريق",
-    "Total Messages Sent": "إجمالي الرسائل المرسلة",
-    "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
-    "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
   },
   "campaign.resend": {
     "{total} recipients will be sent over {days} day(s)": "سيتم إرسال المستلمين {total} خلال {days} يوم (أيام)",
@@ -3181,6 +3157,32 @@
     "Selected": "مختارة",
     "You have not selected any participant": "لم تقم باختيار أي مشارك"
   },
+  "apianalytics": {
+    "All": "الجميع",
+    "Avg Delivery Time": "متوسط ​​وقت التسليم",
+    "Avg Response": "متوسط ​​الاستجابة",
+    "Campaign & Inbox": "الحملة والبريد الوارد",
+    "Daily Message Volume": "حجم الرسائل اليومية",
+    "Detailed analytics of WhatsApp messages sent": "تحليلات مفصلة لرسائل WhatsApp المرسلة",
+    "Export": "يصدّر",
+    "External": "خارجي",
+    "Failed Messages": "رسائل فاشلة",
+    "Failure Rate": "معدل الفشل",
+    "Last used": "آخر استخدام",
+    "Message Delivery Trend (24h)": "اتجاه تسليم الرسائل (24 ساعة)",
+    "messages sent": "الرسائل المرسلة",
+    "Messages Sent": "الرسائل المرسلة",
+    "No data available": "لا توجد بيانات متاحة",
+    "No data available for the last 24 hours": "لا توجد بيانات متاحة لآخر 24 ساعة",
+    "No team data available": "لا توجد بيانات الفريق المتاحة",
+    "of total": "من المجموع",
+    "Success Rate": "معدل النجاح",
+    "Successful Delivery": "التسليم الناجح",
+    "Team Performance Breakdown": "انهيار أداء الفريق",
+    "Total Messages Sent": "إجمالي الرسائل المرسلة",
+    "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
+    "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
+  },
   "https": {
     "//example": {
       "com/webhook": "https://example.com/webhook"
@@ -3279,6 +3281,51 @@
   "Warning": {
     " High Risk Action": "تحذير: عمل عالي المخاطر"
   },
+  "loyalty.earningRules": {
+    "{name} tier deleted": "تم حذف الطبقة {name}",
+    "{name} tier deleted and customers were downgraded to the previous tier": "تم حذف طبقة {name} وتم إرجاع العملاء إلى الطبقة السابقة",
+    "Add Rule": "أضف القاعدة",
+    "Add Tier": "أضف الطبقة",
+    "Additional Earning Rules": "قواعد الكسب الإضافية",
+    "Additional points on top of standard rate": "نقاط إضافية بالإضافة إلى السعر القياسي",
+    "All earning rules in this tier will be permanently removed. This cannot be undone.": "ستتم إزالة جميع قواعد الربح في هذا المستوى نهائيًا. لا يمكن التراجع عن هذا.",
+    "Are you sure you want to delete {name}? This cannot be undone.": "هل أنت متأكد أنك تريد حذف {name}؟ لا يمكن التراجع عن هذا.",
+    "Are you sure you want to delete this earning rule? This cannot be undone.": "هل أنت متأكد أنك تريد حذف قاعدة الربح هذه؟ لا يمكن التراجع عن هذا.",
+    "Back": "خلف",
+    "Bonus Points": "نقاط المكافأة",
+    "Cancel": "يلغي",
+    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "قم بإنشاء قواعد المكافآت مثل مضاعفات الساعة السعيدة، أو مكافآت عيد الميلاد، أو عروض نهاية الأسبوع الخاصة",
+    "Create Earning Rule": "إنشاء قاعدة الكسب",
+    "Create Your First Rule": "قم بإنشاء القاعدة الأولى الخاصة بك",
+    "Creating...": "جارٍ الإنشاء...",
+    "Define how customers earn points through purchases and activities": "تحديد كيفية كسب العملاء للنقاط من خلال المشتريات والأنشطة",
+    "Delete {name} tier": "احذف الطبقة {name}",
+    "Delete earning rule": "حذف قاعدة الكسب",
+    "Describe when and how this rule applies...": "وضح متى وكيف يتم تطبيق هذه القاعدة...",
+    "Downgrade & Delete": "الرجوع إلى إصدار سابق وحذف",
+    "e": {
+      "g": {
+        ", 2": {
+          "0 = Double points, 1": {
+            "5 = 50% more": "5 = 50% أكثر"
+          }
+        },
+        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": "، مكافأة الساعة السعيدة، مضاعف عطلة نهاية الأسبوع، مكافأة عيد الميلاد"
+      }
+    },
+    "Earning rule created successfully": "تم إنشاء قاعدة الربح بنجاح",
+    "Earning rule deleted successfully": "تم حذف قاعدة الربح بنجاح",
+    "Error loading earning rules": "حدث خطأ أثناء تحميل قواعد الربح",
+    "Multiplier": "المضاعف",
+    "New tier added": "تمت إضافة طبقة جديدة",
+    "No additional rules yet": "لا توجد قواعد إضافية حتى الآن",
+    "Point Earning Rules": "قواعد كسب النقاط",
+    "Rule Name": "اسم القاعدة",
+    "rules": "قواعد",
+    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "هذه الطبقة لديها عملاء. إذا تابعت، فسيتم تخفيض مستوى هؤلاء العملاء إلى المستوى السابق وسيتم حذف هذا المستوى.",
+    "Tier-Based Earning Rates": "معدلات الربح على أساس الطبقة",
+    "tiers": "طبقات"
+  },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "إضافة مرحلة دورة الحياة",
     "Add Lost Stage": "أضف المرحلة المفقودة",
@@ -3362,51 +3409,6 @@
     "Visualize how contacts progress through your customer journey": "تصور كيفية تقدم جهات الاتصال خلال رحلة العميل الخاصة بك",
     "Won stage": "مرحلة الفوز",
     "You have disabled lifecycle stages visibility view. Go into Setup to show it again.": "لقد قمت بتعطيل عرض رؤية مراحل دورة الحياة. انتقل إلى الإعداد لإظهاره مرة أخرى."
-  },
-  "loyalty.earningRules": {
-    "{name} tier deleted": "تم حذف الطبقة {name}",
-    "{name} tier deleted and customers were downgraded to the previous tier": "تم حذف طبقة {name} وتم إرجاع العملاء إلى الطبقة السابقة",
-    "Add Rule": "أضف القاعدة",
-    "Add Tier": "أضف الطبقة",
-    "Additional Earning Rules": "قواعد الكسب الإضافية",
-    "Additional points on top of standard rate": "نقاط إضافية بالإضافة إلى السعر القياسي",
-    "All earning rules in this tier will be permanently removed. This cannot be undone.": "ستتم إزالة جميع قواعد الربح في هذا المستوى نهائيًا. لا يمكن التراجع عن هذا.",
-    "Are you sure you want to delete {name}? This cannot be undone.": "هل أنت متأكد أنك تريد حذف {name}؟ لا يمكن التراجع عن هذا.",
-    "Are you sure you want to delete this earning rule? This cannot be undone.": "هل أنت متأكد أنك تريد حذف قاعدة الربح هذه؟ لا يمكن التراجع عن هذا.",
-    "Back": "خلف",
-    "Bonus Points": "نقاط المكافأة",
-    "Cancel": "يلغي",
-    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "قم بإنشاء قواعد المكافآت مثل مضاعفات الساعة السعيدة، أو مكافآت عيد الميلاد، أو عروض نهاية الأسبوع الخاصة",
-    "Create Earning Rule": "إنشاء قاعدة الكسب",
-    "Create Your First Rule": "قم بإنشاء القاعدة الأولى الخاصة بك",
-    "Creating...": "جارٍ الإنشاء...",
-    "Define how customers earn points through purchases and activities": "تحديد كيفية كسب العملاء للنقاط من خلال المشتريات والأنشطة",
-    "Delete {name} tier": "احذف الطبقة {name}",
-    "Delete earning rule": "حذف قاعدة الكسب",
-    "Describe when and how this rule applies...": "وضح متى وكيف يتم تطبيق هذه القاعدة...",
-    "Downgrade & Delete": "الرجوع إلى إصدار سابق وحذف",
-    "e": {
-      "g": {
-        ", 2": {
-          "0 = Double points, 1": {
-            "5 = 50% more": "5 = 50% أكثر"
-          }
-        },
-        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": "، مكافأة الساعة السعيدة، مضاعف عطلة نهاية الأسبوع، مكافأة عيد الميلاد"
-      }
-    },
-    "Earning rule created successfully": "تم إنشاء قاعدة الربح بنجاح",
-    "Earning rule deleted successfully": "تم حذف قاعدة الربح بنجاح",
-    "Error loading earning rules": "حدث خطأ أثناء تحميل قواعد الربح",
-    "Multiplier": "المضاعف",
-    "New tier added": "تمت إضافة طبقة جديدة",
-    "No additional rules yet": "لا توجد قواعد إضافية حتى الآن",
-    "Point Earning Rules": "قواعد كسب النقاط",
-    "Rule Name": "اسم القاعدة",
-    "rules": "قواعد",
-    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "هذه الطبقة لديها عملاء. إذا تابعت، فسيتم تخفيض مستوى هؤلاء العملاء إلى المستوى السابق وسيتم حذف هذا المستوى.",
-    "Tier-Based Earning Rates": "معدلات الربح على أساس الطبقة",
-    "tiers": "طبقات"
   },
   "Eg": {},
   "campaign.participantMenu": {}

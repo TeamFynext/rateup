@@ -34,7 +34,7 @@ import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
 import type { PipelineViewState } from "@/store/pipeline.store.ts";
 import type { LeadFilter } from "@/store/pipeline.store.ts";
 
-import { SOURCE_META } from "./pipeline.constants.tsx";
+import { PIPELINE_LIMIT_PER_ORG, SOURCE_META } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel } from "./pipeline.labels.ts";
 import { countByStatus, isAssignedTo, isRotting, lifecycleFacets } from "./pipeline.utils.ts";
 
@@ -130,14 +130,18 @@ export function buildPipelineNavItems({
       // The open lead belongs to the board being left.
       handleClick: () => setView({ leadId: null }),
     })),
-    {
-      title: t("New pipeline"),
-      url: boardHref,
-      icon: IconPlus,
-      variant: "inbox-tab",
-      isActive: false,
-      handleClick: () => setView({ createPipelineOpen: true }),
-    },
+    ...(pipelines.length < PIPELINE_LIMIT_PER_ORG
+      ? [
+          {
+            title: t("New pipeline"),
+            url: boardHref,
+            icon: IconPlus,
+            variant: "inbox-tab",
+            isActive: false,
+            handleClick: () => setView({ createPipelineOpen: true }),
+          },
+        ]
+      : []),
   ];
 
   const viewRows: NavEntry[] = FILTER_ROWS.map((row) => ({

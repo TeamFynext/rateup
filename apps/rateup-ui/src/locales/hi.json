@@ -1935,6 +1935,7 @@
     "Pie": "पाई",
     "Pipeline": "पाइपलाइन",
     "Pipeline deleted": "पाइपलाइन हटा दी गई",
+    "Pipeline name": "पाइपलाइन का नाम",
     "Pipeline settings": "पाइपलाइन सेटिंग्स",
     "Pipeline settings saved": "पाइपलाइन सेटिंग सहेजी गईं",
     "Pipeline views": "पाइपलाइन दृश्य",
@@ -2900,6 +2901,7 @@
     "What happens next?": "आगे क्या होता है?",
     "What kind of work lives here?": "यहाँ किस तरह का काम रहता है?",
     "What needs to be resolved?": "क्या समाधान किये जाने की आवश्यकता है?",
+    "What this board is called in the sidebar and the switcher.": "साइडबार और स्विचर में इस बोर्ड को क्या कहा जाता है।",
     "What's new": "नया क्या है",
     "Whatsapp": "Whatsapp",
     "WhatsApp": "WhatsApp",
@@ -2989,32 +2991,6 @@
   },
   "Example": {
     " /points": "उदाहरण: /अंक"
-  },
-  "apianalytics": {
-    "All": "सभी",
-    "Avg Delivery Time": "औसत डिलिवरी समय",
-    "Avg Response": "औसत प्रतिक्रिया",
-    "Campaign & Inbox": "अभियान और इनबॉक्स",
-    "Daily Message Volume": "दैनिक संदेश मात्रा",
-    "Detailed analytics of WhatsApp messages sent": "भेजे गए व्हाट्सएप संदेशों का विस्तृत विश्लेषण",
-    "Export": "निर्यात",
-    "External": "बाहरी",
-    "Failed Messages": "विफल संदेश",
-    "Failure Rate": "विफलता दर",
-    "Last used": "अंतिम समय प्रयोग हुआ",
-    "Message Delivery Trend (24h)": "संदेश वितरण प्रवृत्ति (24 घंटे)",
-    "messages sent": "संदेश भेजे गए",
-    "Messages Sent": "संदेश भेजे गए",
-    "No data available": "कोई डेटा मौजूद नहीं",
-    "No data available for the last 24 hours": "पिछले 24 घंटों का कोई डेटा उपलब्ध नहीं है",
-    "No team data available": "कोई टीम डेटा उपलब्ध नहीं है",
-    "of total": "का कुल",
-    "Success Rate": "सफलता दर",
-    "Successful Delivery": "सफल डिलीवरी",
-    "Team Performance Breakdown": "टीम प्रदर्शन टूटना",
-    "Total Messages Sent": "भेजे गए कुल संदेश",
-    "WhatsApp Messages Analytics": "व्हाट्सएप संदेश विश्लेषण",
-    "WhatsApp Template Analytics": "व्हाट्सएप टेम्पलेट एनालिटिक्स"
   },
   "campaign.resend": {
     "{total} recipients will be sent over {days} day(s)": "{total} प्राप्तकर्ताओं को {days} दिन में भेजा जाएगा",
@@ -3149,6 +3125,32 @@
     "Selected": "चयनित",
     "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है"
   },
+  "apianalytics": {
+    "All": "सभी",
+    "Avg Delivery Time": "औसत डिलिवरी समय",
+    "Avg Response": "औसत प्रतिक्रिया",
+    "Campaign & Inbox": "अभियान और इनबॉक्स",
+    "Daily Message Volume": "दैनिक संदेश मात्रा",
+    "Detailed analytics of WhatsApp messages sent": "भेजे गए व्हाट्सएप संदेशों का विस्तृत विश्लेषण",
+    "Export": "निर्यात",
+    "External": "बाहरी",
+    "Failed Messages": "विफल संदेश",
+    "Failure Rate": "विफलता दर",
+    "Last used": "अंतिम समय प्रयोग हुआ",
+    "Message Delivery Trend (24h)": "संदेश वितरण प्रवृत्ति (24 घंटे)",
+    "messages sent": "संदेश भेजे गए",
+    "Messages Sent": "संदेश भेजे गए",
+    "No data available": "कोई डेटा मौजूद नहीं",
+    "No data available for the last 24 hours": "पिछले 24 घंटों का कोई डेटा उपलब्ध नहीं है",
+    "No team data available": "कोई टीम डेटा उपलब्ध नहीं है",
+    "of total": "का कुल",
+    "Success Rate": "सफलता दर",
+    "Successful Delivery": "सफल डिलीवरी",
+    "Team Performance Breakdown": "टीम प्रदर्शन टूटना",
+    "Total Messages Sent": "भेजे गए कुल संदेश",
+    "WhatsApp Messages Analytics": "व्हाट्सएप संदेश विश्लेषण",
+    "WhatsApp Template Analytics": "व्हाट्सएप टेम्पलेट एनालिटिक्स"
+  },
   "https": {
     "//example": {
       "com/webhook": "https://example.com/webhook"
@@ -3239,6 +3241,51 @@
   "Warning": {
     " High Risk Action": "चेतावनी: उच्च जोखिम वाली कार्रवाई"
   },
+  "loyalty.earningRules": {
+    "{name} tier deleted": "{name} टियर हटा दिया गया",
+    "{name} tier deleted and customers were downgraded to the previous tier": "{name} टियर हटा दिया गया और ग्राहकों को पिछले टियर पर डाउनग्रेड कर दिया गया",
+    "Add Rule": "नियम जोड़ें",
+    "Add Tier": "टियर जोड़ें",
+    "Additional Earning Rules": "अतिरिक्त कमाई के नियम",
+    "Additional points on top of standard rate": "मानक दर के शीर्ष पर अतिरिक्त अंक",
+    "All earning rules in this tier will be permanently removed. This cannot be undone.": "इस स्तर पर कमाई के सभी नियम स्थायी रूप से हटा दिए जाएंगे। इसे असंपादित नहीं किया जा सकता है।",
+    "Are you sure you want to delete {name}? This cannot be undone.": "क्या आप वाकई {name} को हटाना चाहते हैं? इसे असंपादित नहीं किया जा सकता है।",
+    "Are you sure you want to delete this earning rule? This cannot be undone.": "क्या आप वाकई इस कमाई नियम को हटाना चाहते हैं? इसे असंपादित नहीं किया जा सकता है।",
+    "Back": "पीछे",
+    "Bonus Points": "बोनस अंक",
+    "Cancel": "रद्द करना",
+    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "हैप्पी आवर मल्टीप्लायर, जन्मदिन बोनस या सप्ताहांत विशेष जैसे बोनस नियम बनाएं",
+    "Create Earning Rule": "कमाई का नियम बनाएं",
+    "Create Your First Rule": "अपना पहला नियम बनाएं",
+    "Creating...": "बनाया जा रहा है...",
+    "Define how customers earn points through purchases and activities": "परिभाषित करें कि ग्राहक खरीदारी और गतिविधियों के माध्यम से अंक कैसे अर्जित करते हैं",
+    "Delete {name} tier": "{name} टियर हटाएं",
+    "Delete earning rule": "कमाई का नियम हटाएं",
+    "Describe when and how this rule applies...": "बताएं कि यह नियम कब और कैसे लागू होता है...",
+    "Downgrade & Delete": "डाउनग्रेड करें और हटाएं",
+    "e": {
+      "g": {
+        ", 2": {
+          "0 = Double points, 1": {
+            "5 = 50% more": "5 = 50% अधिक"
+          }
+        },
+        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": ", हैप्पी आवर बोनस, वीकेंड मल्टीप्लायर, जन्मदिन बोनस"
+      }
+    },
+    "Earning rule created successfully": "कमाई का नियम सफलतापूर्वक बनाया गया",
+    "Earning rule deleted successfully": "कमाई का नियम सफलतापूर्वक हटा दिया गया",
+    "Error loading earning rules": "आय नियम लोड करने में त्रुटि",
+    "Multiplier": "गुणक",
+    "New tier added": "नया स्तर जोड़ा गया",
+    "No additional rules yet": "अभी तक कोई अतिरिक्त नियम नहीं",
+    "Point Earning Rules": "अंक अर्जित करने के नियम",
+    "Rule Name": "नियम का नाम",
+    "rules": "नियम",
+    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "इस स्तर के ग्राहक हैं. यदि आप जारी रखते हैं, तो उन ग्राहकों को पिछले स्तर पर डाउनग्रेड कर दिया जाएगा और यह स्तर हटा दिया जाएगा।",
+    "Tier-Based Earning Rates": "टियर-आधारित कमाई दरें",
+    "tiers": "स्तरों"
+  },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "जीवनचक्र चरण जोड़ें",
     "Add Lost Stage": "खोया हुआ चरण जोड़ें",
@@ -3318,51 +3365,6 @@
     "Visualize how contacts progress through your customer journey": "कल्पना करें कि आपकी ग्राहक यात्रा के दौरान संपर्क कैसे आगे बढ़ते हैं",
     "Won stage": "स्टेज जीत लिया",
     "You have disabled lifecycle stages visibility view. Go into Setup to show it again.": "आपने जीवनचक्र चरण दृश्यता दृश्य अक्षम कर दिया है. इसे दोबारा दिखाने के लिए सेटअप में जाएँ।"
-  },
-  "loyalty.earningRules": {
-    "{name} tier deleted": "{name} टियर हटा दिया गया",
-    "{name} tier deleted and customers were downgraded to the previous tier": "{name} टियर हटा दिया गया और ग्राहकों को पिछले टियर पर डाउनग्रेड कर दिया गया",
-    "Add Rule": "नियम जोड़ें",
-    "Add Tier": "टियर जोड़ें",
-    "Additional Earning Rules": "अतिरिक्त कमाई के नियम",
-    "Additional points on top of standard rate": "मानक दर के शीर्ष पर अतिरिक्त अंक",
-    "All earning rules in this tier will be permanently removed. This cannot be undone.": "इस स्तर पर कमाई के सभी नियम स्थायी रूप से हटा दिए जाएंगे। इसे असंपादित नहीं किया जा सकता है।",
-    "Are you sure you want to delete {name}? This cannot be undone.": "क्या आप वाकई {name} को हटाना चाहते हैं? इसे असंपादित नहीं किया जा सकता है।",
-    "Are you sure you want to delete this earning rule? This cannot be undone.": "क्या आप वाकई इस कमाई नियम को हटाना चाहते हैं? इसे असंपादित नहीं किया जा सकता है।",
-    "Back": "पीछे",
-    "Bonus Points": "बोनस अंक",
-    "Cancel": "रद्द करना",
-    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "हैप्पी आवर मल्टीप्लायर, जन्मदिन बोनस या सप्ताहांत विशेष जैसे बोनस नियम बनाएं",
-    "Create Earning Rule": "कमाई का नियम बनाएं",
-    "Create Your First Rule": "अपना पहला नियम बनाएं",
-    "Creating...": "बनाया जा रहा है...",
-    "Define how customers earn points through purchases and activities": "परिभाषित करें कि ग्राहक खरीदारी और गतिविधियों के माध्यम से अंक कैसे अर्जित करते हैं",
-    "Delete {name} tier": "{name} टियर हटाएं",
-    "Delete earning rule": "कमाई का नियम हटाएं",
-    "Describe when and how this rule applies...": "बताएं कि यह नियम कब और कैसे लागू होता है...",
-    "Downgrade & Delete": "डाउनग्रेड करें और हटाएं",
-    "e": {
-      "g": {
-        ", 2": {
-          "0 = Double points, 1": {
-            "5 = 50% more": "5 = 50% अधिक"
-          }
-        },
-        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": ", हैप्पी आवर बोनस, वीकेंड मल्टीप्लायर, जन्मदिन बोनस"
-      }
-    },
-    "Earning rule created successfully": "कमाई का नियम सफलतापूर्वक बनाया गया",
-    "Earning rule deleted successfully": "कमाई का नियम सफलतापूर्वक हटा दिया गया",
-    "Error loading earning rules": "आय नियम लोड करने में त्रुटि",
-    "Multiplier": "गुणक",
-    "New tier added": "नया स्तर जोड़ा गया",
-    "No additional rules yet": "अभी तक कोई अतिरिक्त नियम नहीं",
-    "Point Earning Rules": "अंक अर्जित करने के नियम",
-    "Rule Name": "नियम का नाम",
-    "rules": "नियम",
-    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "इस स्तर के ग्राहक हैं. यदि आप जारी रखते हैं, तो उन ग्राहकों को पिछले स्तर पर डाउनग्रेड कर दिया जाएगा और यह स्तर हटा दिया जाएगा।",
-    "Tier-Based Earning Rates": "टियर-आधारित कमाई दरें",
-    "tiers": "स्तरों"
   },
   "Eg": {},
   "campaign.participantMenu": {}

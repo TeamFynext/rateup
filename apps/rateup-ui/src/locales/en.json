@@ -1935,6 +1935,7 @@
     "Pie": "Pie",
     "Pipeline": "Pipeline",
     "Pipeline deleted": "Pipeline deleted",
+    "Pipeline name": "Pipeline name",
     "Pipeline settings": "Pipeline settings",
     "Pipeline settings saved": "Pipeline settings saved",
     "Pipeline views": "Pipeline views",
@@ -2900,6 +2901,7 @@
     "What happens next?": "What happens next?",
     "What kind of work lives here?": "What kind of work lives here?",
     "What needs to be resolved?": "What needs to be resolved?",
+    "What this board is called in the sidebar and the switcher.": "What this board is called in the sidebar and the switcher.",
     "What's new": "What's new",
     "Whatsapp": "Whatsapp",
     "WhatsApp": "WhatsApp",
@@ -2989,32 +2991,6 @@
   },
   "Example": {
     " /points": "Example: /points"
-  },
-  "apianalytics": {
-    "All": "All",
-    "Avg Delivery Time": "Avg Delivery Time",
-    "Avg Response": "Avg Response",
-    "Campaign & Inbox": "Campaign & Inbox",
-    "Daily Message Volume": "Daily Message Volume",
-    "Detailed analytics of WhatsApp messages sent": "Detailed analytics of WhatsApp messages sent",
-    "Export": "Export",
-    "External": "External",
-    "Failed Messages": "Failed Messages",
-    "Failure Rate": "Failure Rate",
-    "Last used": "Last used",
-    "Message Delivery Trend (24h)": "Message Delivery Trend (24h)",
-    "messages sent": "messages sent",
-    "Messages Sent": "Messages Sent",
-    "No data available": "No data available",
-    "No data available for the last 24 hours": "No data available for the last 24 hours",
-    "No team data available": "No team data available",
-    "of total": "of total",
-    "Success Rate": "Success Rate",
-    "Successful Delivery": "Successful Delivery",
-    "Team Performance Breakdown": "Team Performance Breakdown",
-    "Total Messages Sent": "Total Messages Sent",
-    "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
-    "WhatsApp Template Analytics": "WhatsApp Template Analytics"
   },
   "campaign.resend": {
     "{total} recipients will be sent over {days} day(s)": "{total} recipients will be sent over {days} day(s)",
@@ -3149,6 +3125,32 @@
     "Selected": "Selected",
     "You have not selected any participant": "You have not selected any participant"
   },
+  "apianalytics": {
+    "All": "All",
+    "Avg Delivery Time": "Avg Delivery Time",
+    "Avg Response": "Avg Response",
+    "Campaign & Inbox": "Campaign & Inbox",
+    "Daily Message Volume": "Daily Message Volume",
+    "Detailed analytics of WhatsApp messages sent": "Detailed analytics of WhatsApp messages sent",
+    "Export": "Export",
+    "External": "External",
+    "Failed Messages": "Failed Messages",
+    "Failure Rate": "Failure Rate",
+    "Last used": "Last used",
+    "Message Delivery Trend (24h)": "Message Delivery Trend (24h)",
+    "messages sent": "messages sent",
+    "Messages Sent": "Messages Sent",
+    "No data available": "No data available",
+    "No data available for the last 24 hours": "No data available for the last 24 hours",
+    "No team data available": "No team data available",
+    "of total": "of total",
+    "Success Rate": "Success Rate",
+    "Successful Delivery": "Successful Delivery",
+    "Team Performance Breakdown": "Team Performance Breakdown",
+    "Total Messages Sent": "Total Messages Sent",
+    "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
+    "WhatsApp Template Analytics": "WhatsApp Template Analytics"
+  },
   "https": {
     "//example": {
       "com/webhook": "https://example.com/webhook"
@@ -3238,6 +3240,51 @@
   "Warning": {
     " High Risk Action": "Warning: High Risk Action"
   },
+  "loyalty.earningRules": {
+    "{name} tier deleted": "{name} tier deleted",
+    "{name} tier deleted and customers were downgraded to the previous tier": "{name} tier deleted and customers were downgraded to the previous tier",
+    "Add Rule": "Add Rule",
+    "Add Tier": "Add Tier",
+    "Additional Earning Rules": "Additional Earning Rules",
+    "Additional points on top of standard rate": "Additional points on top of standard rate",
+    "All earning rules in this tier will be permanently removed. This cannot be undone.": "All earning rules in this tier will be permanently removed. This cannot be undone.",
+    "Are you sure you want to delete {name}? This cannot be undone.": "Are you sure you want to delete {name}? This cannot be undone.",
+    "Are you sure you want to delete this earning rule? This cannot be undone.": "Are you sure you want to delete this earning rule? This cannot be undone.",
+    "Back": "Back",
+    "Bonus Points": "Bonus Points",
+    "Cancel": "Cancel",
+    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials",
+    "Create Earning Rule": "Create Earning Rule",
+    "Create Your First Rule": "Create Your First Rule",
+    "Creating...": "Creating...",
+    "Define how customers earn points through purchases and activities": "Define how customers earn points through purchases and activities",
+    "Delete {name} tier": "Delete {name} tier",
+    "Delete earning rule": "Delete earning rule",
+    "Describe when and how this rule applies...": "Describe when and how this rule applies...",
+    "Downgrade & Delete": "Downgrade & Delete",
+    "e": {
+      "g": {
+        ", 2": {
+          "0 = Double points, 1": {
+            "5 = 50% more": "e.g., 2.0 = Double points, 1.5 = 50% more"
+          }
+        },
+        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": "e.g., Happy Hour Bonus, Weekend Multiplier, Birthday Bonus"
+      }
+    },
+    "Earning rule created successfully": "Earning rule created successfully",
+    "Earning rule deleted successfully": "Earning rule deleted successfully",
+    "Error loading earning rules": "Error loading earning rules",
+    "Multiplier": "Multiplier",
+    "New tier added": "New tier added",
+    "No additional rules yet": "No additional rules yet",
+    "Point Earning Rules": "Point Earning Rules",
+    "Rule Name": "Rule Name",
+    "rules": "rules",
+    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.",
+    "Tier-Based Earning Rates": "Tier-Based Earning Rates",
+    "tiers": "tiers"
+  },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Add Lifecycle Stage",
     "Add Lost Stage": "Add Lost Stage",
@@ -3317,51 +3364,6 @@
     "Visualize how contacts progress through your customer journey": "Visualize how contacts progress through your customer journey",
     "Won stage": "Won stage",
     "You have disabled lifecycle stages visibility view. Go into Setup to show it again.": "You have disabled lifecycle stages visibility view. Go into Setup to show it again."
-  },
-  "loyalty.earningRules": {
-    "{name} tier deleted": "{name} tier deleted",
-    "{name} tier deleted and customers were downgraded to the previous tier": "{name} tier deleted and customers were downgraded to the previous tier",
-    "Add Rule": "Add Rule",
-    "Add Tier": "Add Tier",
-    "Additional Earning Rules": "Additional Earning Rules",
-    "Additional points on top of standard rate": "Additional points on top of standard rate",
-    "All earning rules in this tier will be permanently removed. This cannot be undone.": "All earning rules in this tier will be permanently removed. This cannot be undone.",
-    "Are you sure you want to delete {name}? This cannot be undone.": "Are you sure you want to delete {name}? This cannot be undone.",
-    "Are you sure you want to delete this earning rule? This cannot be undone.": "Are you sure you want to delete this earning rule? This cannot be undone.",
-    "Back": "Back",
-    "Bonus Points": "Bonus Points",
-    "Cancel": "Cancel",
-    "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials": "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials",
-    "Create Earning Rule": "Create Earning Rule",
-    "Create Your First Rule": "Create Your First Rule",
-    "Creating...": "Creating...",
-    "Define how customers earn points through purchases and activities": "Define how customers earn points through purchases and activities",
-    "Delete {name} tier": "Delete {name} tier",
-    "Delete earning rule": "Delete earning rule",
-    "Describe when and how this rule applies...": "Describe when and how this rule applies...",
-    "Downgrade & Delete": "Downgrade & Delete",
-    "e": {
-      "g": {
-        ", 2": {
-          "0 = Double points, 1": {
-            "5 = 50% more": "e.g., 2.0 = Double points, 1.5 = 50% more"
-          }
-        },
-        ", Happy Hour Bonus, Weekend Multiplier, Birthday Bonus": "e.g., Happy Hour Bonus, Weekend Multiplier, Birthday Bonus"
-      }
-    },
-    "Earning rule created successfully": "Earning rule created successfully",
-    "Earning rule deleted successfully": "Earning rule deleted successfully",
-    "Error loading earning rules": "Error loading earning rules",
-    "Multiplier": "Multiplier",
-    "New tier added": "New tier added",
-    "No additional rules yet": "No additional rules yet",
-    "Point Earning Rules": "Point Earning Rules",
-    "Rule Name": "Rule Name",
-    "rules": "rules",
-    "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.": "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.",
-    "Tier-Based Earning Rates": "Tier-Based Earning Rates",
-    "tiers": "tiers"
   },
   "Eg": {},
   "campaign.participantMenu": {}
