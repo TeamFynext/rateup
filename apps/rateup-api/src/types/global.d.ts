@@ -1506,6 +1506,25 @@ declare global {
     type PWaGraphApiErrorDetail = WaGraphApiErrorDetail;
     type PInstagramIceBreakers = InstagramIceBreaker[];
     type PInstagramPersistentMenu = InstagramPersistentMenuEntry[];
+    type PLeadActivityDetails = LeadActivityDetails;
+  }
+
+  /**
+   * `LeadActivity.details` — the metadata a timeline entry needs to render without
+   * re-reading the rows it describes. Every field is optional: which ones are set
+   * depends on the activity `type`.
+   */
+  interface LeadActivityDetails {
+    fromStageName?: string;
+    toStageName?: string;
+    addedNames?: string[];
+    removedNames?: string[];
+    lostReasonLabel?: string;
+    note?: string;
+    lifecycleName?: string;
+    taskTitle?: string;
+    sourceLabel?: string;
+    automated?: boolean;
   }
 
   /** One tappable prompt shown before an Instagram conversation starts. */

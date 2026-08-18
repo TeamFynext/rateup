@@ -9,6 +9,14 @@ vi.mock("../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     contact: { count: vi.fn() },
+    // The writers mirror each lifecycle onto every pipeline's board columns.
+    pipeline: { findMany: vi.fn() },
+    pipelineStage: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      updateMany: vi.fn(),
+      deleteMany: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -27,6 +35,7 @@ import {
   deleteLifecycleById,
   getLifecycles,
   getLifeCyclesWithContactCount,
+  LifecycleInUseError,
   reorderLabels,
   updateLifecycle,
 } from "./lifecycle.service.js";
@@ -46,8 +55,19 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   lifecycle: Record<string, Mock>;
   contact: Record<string, Mock>;
+  pipeline: Record<string, Mock>;
+  pipelineStage: Record<string, Mock>;
   $transaction: Mock;
 };
+
+/**
+ * Runs a `$transaction` callback against the same mock, so assertions on
+ * `db.lifecycle.update` see the writes the transaction made. Array-form calls
+ * are still resolved as-is.
+ */
+async function runTransaction(arg: unknown) {
+  return typeof arg === "function" ? await (arg as (tx: unknown) => unknown)(prisma) : arg;
+}
 
 const ORG = "11111111-1111-1111-1111-111111111111";
 const VICTIM_ORG = "22222222-2222-2222-2222-222222222222";
@@ -79,7 +99,12 @@ beforeEach(() => {
   db.lifecycle.update.mockResolvedValue({ id: STAGE });
   db.lifecycle.delete.mockResolvedValue({ id: STAGE });
   db.contact.count.mockResolvedValue(0);
-  db.$transaction.mockImplementation(async (ops: unknown[]) => ops);
+  db.pipeline.findMany.mockResolvedValue([]);
+  db.pipelineStage.findMany.mockResolvedValue([]);
+  db.pipelineStage.createMany.mockResolvedValue({ count: 0 });
+  db.pipelineStage.updateMany.mockResolvedValue({ count: 0 });
+  db.pipelineStage.deleteMany.mockResolvedValue({ count: 0 });
+  db.$transaction.mockImplementation(runTransaction);
 });
 
 // ===========================================================================
@@ -361,6 +386,151 @@ describe("createLifecycle", () => {
 });
 
 // ===========================================================================
+// Pipeline board columns mirror the lifecycle stages
+// ===========================================================================
+
+describe("pipeline stage mirroring", () => {
+  const PIPELINE_A = "cccccccc-cccc-cccc-cccc-cccccccccccc";
+  const PIPELINE_B = "dddddddd-dddd-dddd-dddd-dddddddddddd";
+
+  test("a new lifecycle becomes a column on every pipeline in the org", async () => {
+    db.pipeline.findMany.mockResolvedValue([{ id: PIPELINE_A }, { id: PIPELINE_B }]);
+    db.lifecycle.create.mockResolvedValue({
+      id: STAGE,
+      name: "Engaged Lead",
+      ordering: 3,
+      color: "#1c518e",
+      isWon: false,
+    });
+
+    await createLifecycle(ORG, body() as never);
+
+    expect(db.pipeline.findMany).toHaveBeenCalledWith({
+      where: { orgId: ORG },
+      select: { id: true },
+    });
+    expect(db.pipelineStage.createMany.mock.calls[0][0].data).toEqual([
+      {
+        pipelineId: PIPELINE_A,
+        name: "Engaged Lead",
+        order: 3,
+        color: "#1c518e",
+        isWon: false,
+        probability: 0,
+        rottingDays: 0,
+        lifecycleId: STAGE,
+      },
+      {
+        pipelineId: PIPELINE_B,
+        name: "Engaged Lead",
+        order: 3,
+        color: "#1c518e",
+        isWon: false,
+        probability: 0,
+        rottingDays: 0,
+        lifecycleId: STAGE,
+      },
+    ]);
+  });
+
+  test("an org with no pipelines yet writes no columns", async () => {
+    await createLifecycle(ORG, body() as never);
+
+    expect(db.pipelineStage.createMany).not.toHaveBeenCalled();
+  });
+
+  // The won column's probability is the only board setting a lifecycle knows.
+  test("a won lifecycle arrives as a 100% won column", async () => {
+    db.pipeline.findMany.mockResolvedValue([{ id: PIPELINE_A }]);
+    db.lifecycle.create.mockResolvedValue({
+      id: STAGE,
+      name: "Won",
+      ordering: 5,
+      color: null,
+      isWon: true,
+    });
+
+    await createLifecycle(ORG, body({ isWon: true }) as never);
+
+    expect(db.pipelineStage.createMany.mock.calls[0][0].data[0]).toMatchObject({
+      isWon: true,
+      probability: 100,
+    });
+  });
+
+  test("renaming a lifecycle renames its columns", async () => {
+    await updateLifecycle(STAGE, ORG, body({ name: "Renamed", color: "#ff0000" }) as never);
+
+    expect(db.pipelineStage.updateMany).toHaveBeenCalledWith({
+      where: { lifecycleId: STAGE },
+      data: { name: "Renamed", color: "#ff0000" },
+    });
+  });
+
+  // Probability and the rotting window are tuned per board and have no
+  // lifecycle equivalent, so an edit must never reset them.
+  test("an edit only writes the fields the lifecycle owns", async () => {
+    await updateLifecycle(STAGE, ORG, body() as never);
+
+    const written = db.pipelineStage.updateMany.mock.calls[0][0].data;
+    expect(Object.keys(written).sort()).toEqual(["color", "name"]);
+  });
+
+  test("reordering the lifecycles reorders the columns with them", async () => {
+    await reorderLabels(ORG, {
+      lifecycles: [
+        { id: "a", ordering: 2, category: "active", isWon: false },
+        { id: "b", ordering: 5, category: "won", isWon: true },
+      ],
+    } as never);
+
+    expect(
+      db.pipelineStage.updateMany.mock.calls.map((c) => [c[0].where.lifecycleId, c[0].data]),
+    ).toEqual([
+      ["a", { order: 2, isWon: false }],
+      ["b", { order: 5, isWon: true, probability: 100 }],
+    ]);
+  });
+
+  test("deleting a lifecycle drops the columns that are empty", async () => {
+    db.pipelineStage.findMany.mockResolvedValue([
+      { id: "empty-one", _count: { leads: 0 } },
+      { id: "empty-two", _count: { leads: 0 } },
+    ]);
+
+    await deleteLifecycleById(STAGE, ORG);
+
+    expect(db.pipelineStage.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["empty-one", "empty-two"] } },
+    });
+    expect(db.lifecycle.delete).toHaveBeenCalled();
+  });
+
+  // Deleting these would strand the leads inside them; the schema's SetNull
+  // leaves them behind as plain, unmapped columns instead.
+  test("a column still holding leads survives the deletion", async () => {
+    db.pipelineStage.findMany.mockResolvedValue([
+      { id: "busy", _count: { leads: 4 } },
+      { id: "empty", _count: { leads: 0 } },
+    ]);
+
+    await deleteLifecycleById(STAGE, ORG);
+
+    expect(db.pipelineStage.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["empty"] } },
+    });
+  });
+
+  test("a lifecycle still holding contacts is refused before any column is touched", async () => {
+    db.contact.count.mockResolvedValueOnce(2);
+
+    await expect(deleteLifecycleById(STAGE, ORG)).rejects.toBeInstanceOf(LifecycleInUseError);
+    expect(db.pipelineStage.deleteMany).not.toHaveBeenCalled();
+    expect(db.lifecycle.delete).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
 // The body schema against the model
 // ===========================================================================
 
@@ -443,7 +613,7 @@ describe("reorderLabels", () => {
     await reorderLabels(ORG, { lifecycles: [item(), item({ id: "b", ordering: 1 })] } as never);
 
     expect(db.$transaction).toHaveBeenCalledOnce();
-    expect(db.$transaction.mock.calls[0][0]).toHaveLength(2);
+    expect(db.lifecycle.update).toHaveBeenCalledTimes(2);
   });
 
   test("writes the ordering each entry carries", async () => {
@@ -536,7 +706,7 @@ describe("reorderLabels", () => {
     await reorderLabels(ORG, { lifecycles: [] } as never);
 
     expect(db.lifecycle.update).not.toHaveBeenCalled();
-    expect(db.$transaction.mock.calls[0][0]).toEqual([]);
+    expect(db.pipelineStage.updateMany).not.toHaveBeenCalled();
   });
 
   test("the reorder schema requires every field of every entry", () => {

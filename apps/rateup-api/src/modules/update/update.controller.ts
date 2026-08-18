@@ -13,6 +13,7 @@ import {
   updateUsageStatsTemplateMessageCount,
   syncTeamFeaturesFromSubscription,
   seedInboxStatsAutomation,
+  seedPipelinesForOrgs,
   reconcileInboxStatus,
   backfillConversationsFromMessages,
 } from "./update.service.js";
@@ -357,6 +358,26 @@ export async function syncTeamFeaturesHandler(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error syncing team features");
+  }
+}
+
+export async function seedPipelinesHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string; orgId?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await seedPipelinesForOrgs(apply, request.query.orgId);
+    reply.code(200).send({
+      message: apply
+        ? `Created ${result.pipelinesCreated} pipeline(s) with ${result.stagesCreated} column(s).`
+        : `Dry run: ${result.pipelinesCreated} org(s) would get a pipeline. Re-run with ?apply=true to write.`,
+      applied: apply,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
 
