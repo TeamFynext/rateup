@@ -38,6 +38,7 @@ enum TeamFeature {
   loyalty
   web_forms
   tickets
+  pipeline
   qr_studio
   ai_chatbot
   apps_services
@@ -142,6 +143,12 @@ model User {
   removedAssignees            ConversationAssignedUserTeamMap[] @relation("ConversationRemovedUser")
   assignedStafftoConversation ConversationAssignedUserTeamMap[] @relation("ConversationAssignedByUser")
   inboxMentions               InboxMention[]
+  assignedLeads               LeadAssignee[]                    @relation("LeadAssignee")
+  ownedLeads                  Lead[]                            @relation("LeadOwner")
+  closedLeads                 Lead[]                            @relation("LeadClosedBy")
+  leadNotes                   LeadNote[]
+  leadActivities              LeadActivity[]
+  leadTasks                   LeadTask[]
 }
 
 model Org {
@@ -211,6 +218,7 @@ model Org {
   inboxStats               InboxStats?
   inboxMentions            InboxMention[]
   conversationTags         ConversationTag[]
+  pipelines                Pipeline[]
 }
 
 model UsageStats {
@@ -277,7 +285,8 @@ model Lifecycle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contacts Contact[]
+  contacts       Contact[]
+  pipelineStages PipelineStage[]
 
   org   Org?    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String? @db.Uuid
@@ -492,12 +501,12 @@ model MetaAgentConnectorTool {
   connector   MetaAgentConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
   connectorId String             @db.Uuid
 
-  metaId            String?
-  name              String
-  description       String
+  metaId               String?
+  name                 String
+  description          String
   /// [PMetaAgentRequestDefinition]
-  requestDefinition Json
-  userAuthRequired  Boolean @default(false)
+  requestDefinition    Json
+  userAuthRequired     Boolean @default(false)
   /// How to pull tokens out of an auth/refresh call's response.
   /// [PMetaAgentUserAuthActionConfig]
   userAuthActionConfig Json?
@@ -661,6 +670,14 @@ model Team {
   waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
   waMessageSchedule      WaMessageSchedule[]
   featureAccess          TeamFeatureAccess[]
+  pipelines              PipelineTeam[]
+  leads                  Lead[]
+
+  /// Board this team's contacts land on. Several teams may share one pipeline.
+  defaultPipeline   Pipeline? @relation("TeamDefaultPipeline", fields: [defaultPipelineId], references: [id], onDelete: SetNull)
+  defaultPipelineId String?   @db.Uuid
+  /// Open a lead on `defaultPipeline` when a contact reaches a mapped lifecycle.
+  autoCreateLeads   Boolean   @default(false)
 
   /// When true the team reaches every channel in the org, including ones connected later.
   /// When false access is limited to `channelAccess`. Defaults to true so new teams —
@@ -905,6 +922,7 @@ model Contact {
   Conversations               Conversation[]
   loyaltyAccounts             CustomerLoyaltyAccount[]
   ticketCards                 TicketCard[]
+  leads                       Lead[]
   inboxMentions               InboxMention[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
@@ -2911,4 +2929,282 @@ model InboxStats {
   unresolvedCount Int @default(0)
   blockedCount    Int @default(0)
   totalCount      Int @default(0)
+}
+
+// ============================================================
+// Lead pipeline
+//
+// A Pipeline is a board of ordered PipelineStages; a Lead is a card sitting in
+// one stage. Stages carry the sales metadata a ticket column never had â€” win
+// probability, a rotting threshold, and a mapping onto the inbox `Lifecycle`
+// so moving a lead also moves the contact's lifecycle.
+// ============================================================
+
+enum LeadStatus {
+  OPEN
+  WON
+  LOST
+}
+
+enum LeadSource {
+  WHATSAPP
+  INSTAGRAM
+  MESSENGER
+  SURVEY
+  REFERRAL
+  LOYALTY
+  MANUAL
+}
+
+enum LeadChannel {
+  NONE
+  WHATSAPP
+  INSTAGRAM
+  MESSENGER
+}
+
+enum LeadTaskType {
+  CALL
+  MESSAGE
+  MEETING
+  DOCUMENT
+  TODO
+}
+
+model Pipeline {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  /// Flag leads idle past their stage's `rottingDays` as needing attention.
+  rottingEnabled       Boolean @default(true)
+  /// Write the stage's mapped lifecycle onto the contact whenever a lead moves.
+  lifecycleSyncEnabled Boolean @default(true)
+  /// Assign an incoming lead to the least-loaded member of its team.
+  autoAssignEnabled    Boolean @default(false)
+  /// Nudge owners about leads with no scheduled next activity.
+  nudgeEnabled         Boolean @default(false)
+
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @db.Uuid
+
+  teams           PipelineTeam[]
+  /// Teams that send their contacts here by default.
+  defaultForTeams Team[]               @relation("TeamDefaultPipeline")
+  stages          PipelineStage[]
+  leads           Lead[]
+  labels          PipelineLabel[]
+  lostReasons     PipelineLostReason[]
+
+  @@unique([orgId, name], name: "pipeline_name_org_id_unique")
+}
+
+model PipelineTeam {
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  pipelineId String   @db.Uuid
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String   @db.Uuid
+  createdAt  DateTime @default(now())
+
+  @@id([pipelineId, teamId])
+}
+
+model PipelineStage {
+  id    String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String
+  /// Short label for the drawer's stage stepper; falls back to `name`.
+  short String?
+  order Int     @default(0)
+  /// Hex the org picked for this stage; null renders with the default accent.
+  color String?
+
+  /// Share of leads in this stage expected to convert, 0-100. Drives the forecast.
+  probability Int     @default(0)
+  /// Days idle before a lead here is flagged as rotting. 0 disables the check.
+  rottingDays Int     @default(0)
+  /// Landing in this stage marks the lead won.
+  isWon       Boolean @default(false)
+
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  pipelineId String   @db.Uuid
+
+  /// Inbox lifecycle this stage maps onto. Null leaves the contact's lifecycle alone.
+  lifecycle   Lifecycle? @relation(fields: [lifecycleId], references: [id], onDelete: SetNull)
+  lifecycleId String?    @db.Uuid
+
+  leads Lead[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pipelineId, order])
+}
+
+model PipelineLostReason {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  label String
+  order Int    @default(0)
+
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  pipelineId String   @db.Uuid
+
+  leads Lead[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([pipelineId, label], name: "lost_reason_label_pipeline_id_unique")
+}
+
+model PipelineLabel {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String
+  color String
+
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  pipelineId String   @db.Uuid
+
+  leads LeadLabelMap[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([pipelineId, name], name: "pipeline_label_name_pipeline_id_unique")
+}
+
+model LeadLabelMap {
+  lead      Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId    String        @db.Uuid
+  label     PipelineLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  labelId   String        @db.Uuid
+  createdAt DateTime      @default(now())
+
+  @@id([leadId, labelId])
+}
+
+model Lead {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name    String
+  /// Business the lead represents; blank for walk-in customers.
+  company String?
+  phone   String?
+  email   String?
+
+  status  LeadStatus  @default(OPEN)
+  source  LeadSource  @default(MANUAL)
+  channel LeadChannel @default(NONE)
+
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  pipelineId String   @db.Uuid
+
+  stage   PipelineStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId String        @db.Uuid
+
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  teamId String? @db.Uuid
+
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contactId String?  @db.Uuid
+
+  lostReason   PipelineLostReason? @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
+  lostReasonId String?             @db.Uuid
+
+  /// Whoever put the lead on the board. Fixed at creation and never reassigned —
+  /// assignees change as the lead is handed around, the owner records who
+  /// brought it in. Null for leads opened by automation rather than a person.
+  owner   User?   @relation("LeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId String? @db.Uuid
+
+  /// When the lead entered its current stage â€” the "Nd in stage" figure.
+  stageEnteredAt  DateTime  @default(now())
+  /// Last inbound or outbound touch; rotting is measured from here.
+  lastActivityAt  DateTime  @default(now())
+  /// Month this lead is forecast to close.
+  expectedCloseAt DateTime?
+  closedAt        DateTime?
+
+  closedBy   User?   @relation("LeadClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  closedById String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  labels     LeadLabelMap[]
+  notes      LeadNote[]
+  activities LeadActivity[]
+  tasks      LeadTask[]
+  /// A lead can be worked by several people, the same way a ticket card is.
+  assignees  LeadAssignee[]
+
+  @@index([pipelineId, status])
+  @@index([stageId])
+}
+
+model LeadAssignee {
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId     String   @db.Uuid
+  assignee   User     @relation("LeadAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
+  assigneeId String   @db.Uuid
+  createdAt  DateTime @default(now())
+
+  @@id([leadId, assigneeId])
+  @@index([assigneeId])
+}
+
+model LeadNote {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  text String
+
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId String @db.Uuid
+
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId, createdAt])
+}
+
+model LeadActivity {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// CREATED, MOVED, ASSIGNEES_CHANGED, WON, LOST, REOPENED, NOTE_ADDED,
+  /// TASK_ADDED, TASK_COMPLETED, LIFECYCLE_SYNCED
+  type    String
+  /// [PLeadActivityDetails]
+  details Json?
+
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId String @db.Uuid
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+/// The lead's scheduled next activity â€” the board card shows the earliest open one.
+model LeadTask {
+  id    String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type  LeadTaskType @default(TODO)
+  title String
+  dueAt DateTime?
+
+  completedAt DateTime?
+
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId String @db.Uuid
+
+  assignee   User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId, completedAt, dueAt])
 }

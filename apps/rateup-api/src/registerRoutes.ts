@@ -24,6 +24,7 @@ import { paymentPublicRoutes } from "./modules/payment/payment.public.route.js";
 import { testimonialRoutes } from "./modules/testimonial/testimonials.route.js";
 import { testimonialCollectionRoutes } from "./modules/testimonial/testimonialCollection/testimonialCollection.route.js";
 import { ticketRoutes } from "./modules/ticket/ticket.route.js";
+import { pipelineRoutes } from "./modules/pipeline/pipeline.route.js";
 import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic.route.js";
 import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes.js";
 import linktreeRoutes from "./modules/linktree/linktree.routes.js";
@@ -103,6 +104,7 @@ const routeConfigs = [
     prefix: "/api/testimonial/collections",
   },
   { plugin: ticketRoutes, prefix: "/api/tickets" },
+  { plugin: pipelineRoutes, prefix: "/api/pipelines" },
   { plugin: loyaltyRoutes, prefix: "/api/loyalty" },
   { plugin: linktreeRoutes, prefix: "/api/linktrees" },
   { plugin: statsRoutes, prefix: "/api/stats" },
