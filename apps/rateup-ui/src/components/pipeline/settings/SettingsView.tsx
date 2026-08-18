@@ -434,6 +434,9 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
       <div className="flex max-w-4xl flex-col gap-6">
+        {/* Admin-only, and first: who works the board frames everything below it. */}
+        {isOrgAdmin && <TeamsSection pipeline={pipeline} />}
+
         <section>
           <div className="mb-1 flex items-center justify-between">
             <SectionTitle>{t("Stages")}</SectionTitle>
@@ -614,37 +617,34 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
           </div>
         </section>
 
-        {/* Admin-only: handing the board to another team, or deleting it. */}
+        {/* Admin-only: deleting the board. Stays last — it is the one action that
+            cannot be undone, so it should not sit above routine tuning. */}
         {isOrgAdmin && (
-          <>
-            <TeamsSection pipeline={pipeline} />
+          <section>
+            <h2 className="text-destructive font-nunito text-[15px] font-extrabold">
+              {t("Danger zone")}
+            </h2>
+            <SectionNote>{t("Actions here cannot be undone.")}</SectionNote>
 
-            <section>
-              <h2 className="text-destructive font-nunito text-[15px] font-extrabold">
-                {t("Danger zone")}
-              </h2>
-              <SectionNote>{t("Actions here cannot be undone.")}</SectionNote>
-
-              <Card className="border-destructive/40 flex-row items-center gap-3 p-3.5">
-                <span className="bg-destructive/10 text-destructive flex size-8 shrink-0 items-center justify-center rounded-lg">
-                  <IconTrash className="size-4" />
+            <Card className="border-destructive/40 flex-row items-center gap-3 p-3.5">
+              <span className="bg-destructive/10 text-destructive flex size-8 shrink-0 items-center justify-center rounded-lg">
+                <IconTrash className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="text-foreground block text-[13px] font-bold">
+                  {t("Delete this pipeline")}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <span className="text-foreground block text-[13px] font-bold">
-                    {t("Delete this pipeline")}
-                  </span>
-                  <span className="text-muted-foreground block text-[11px]">
-                    {t(
-                      "Removes the board, its stages and every lead on it, with their notes and timelines. Contacts are left alone.",
-                    )}
-                  </span>
-                </div>
-                <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
-                  {t("Delete")}
-                </Button>
-              </Card>
-            </section>
-          </>
+                <span className="text-muted-foreground block text-[11px]">
+                  {t(
+                    "Removes the board, its stages and every lead on it, with their notes and timelines. Contacts are left alone.",
+                  )}
+                </span>
+              </div>
+              <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+                {t("Delete")}
+              </Button>
+            </Card>
+          </section>
         )}
       </div>
 
