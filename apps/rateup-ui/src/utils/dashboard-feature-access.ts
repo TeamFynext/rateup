@@ -6,6 +6,7 @@ const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = 
   { feature: TeamFeature.Contacts, to: "/dashboard/contacts" },
   { feature: TeamFeature.Campaigns, to: "/dashboard/campaign" },
   { feature: TeamFeature.Loyalty, to: "/dashboard/loyalty/dashboard" },
+  { feature: TeamFeature.Pipeline, to: "/dashboard/pipeline" },
   { feature: TeamFeature.Tickets, to: "/dashboard/tickets" },
 ];
 
@@ -22,6 +23,7 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/contacts", TeamFeature.Contacts],
   ["/dashboard/campaign", TeamFeature.Campaigns],
   ["/dashboard/loyalty", TeamFeature.Loyalty],
+  ["/dashboard/pipeline", TeamFeature.Pipeline],
   ["/dashboard/tickets", TeamFeature.Tickets],
   ["/dashboard/surveys", TeamFeature.WebForms],
   ["/dashboard/automation", TeamFeature.Automation],
