@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
 import { Button, buttonVariants } from "@/components/ui/button.tsx";
-import { imagesPath } from "@/utils/constants.ts";
+import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
 
 interface AuthHeaderProps {
   isSignup: boolean;
@@ -15,8 +15,6 @@ export function AuthHeader({
   onSwitch,
   maxWidth = "max-w-sm",
 }: Readonly<AuthHeaderProps>) {
-  const logoUrl = `${imagesPath}/rateup-logo-horizontal-transparent.png`;
-
   const switchLabel = isSignup ? "Sign In" : "Create account";
 
   return (
@@ -26,7 +24,7 @@ export function AuthHeader({
       >
         <Link to="/" className="flex items-center shrink-0">
           <Image
-            src={logoUrl}
+            src={rateupLogoHorizontalWhiteTransparent}
             alt="RateUp Logo"
             width={100}
             height={33}

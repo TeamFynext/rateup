@@ -21,9 +21,7 @@ export function BlogHero({ searchQuery, onSearchChange }: BlogHeroProps) {
           <h1 className="font-nunito font-black text-[clamp(34px,4.5vw,54px)] text-[#0E1E3A] leading-[1.05] tracking-[-0.025em] m-0">
             WhatsApp Marketing &amp;
             <br />
-            <span className="bg-[linear-gradient(100deg,#6BD0FF_0%,#2FA3FF_55%,#2C6FD6_100%)] bg-clip-text text-transparent">
-              Loyalty Insights
-            </span>
+            <span className="text-[#2FA3FF]">Loyalty Insights</span>
           </h1>
 
           {/* Subtitle */}
