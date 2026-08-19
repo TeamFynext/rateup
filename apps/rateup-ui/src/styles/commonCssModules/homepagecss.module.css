@@ -40,9 +40,9 @@
   --cyan-rgb: 79, 195, 255;
   --light-blue-rgb: 120, 180, 255;
 
-  --grad-cyan-start: #6bd0ff;
+  --grad-cyan-start: #2fa3ff;
   --grad-cyan-middle: #2fa3ff;
-  --grad-cyan-end: #2c6fd6;
+  --grad-cyan-end: #2fa3ff;
 
   --btn-primary-start: #3d8bee;
   --btn-primary-end: #2360c8;
@@ -2196,9 +2196,9 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 30px 16px 22px;
-  border-radius: var(--radius-xl);
+  gap: 7px;
+  padding: 10px 6px 8px;
+  border-radius: var(--radius-md);
   background: var(--panel);
   border: 1px solid var(--hair);
 }
@@ -2209,13 +2209,11 @@ footer {
 }
 
 .intgLogo {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: var(--panel-2);
-  border: 1px solid var(--hair);
 }
 
 .intgName {

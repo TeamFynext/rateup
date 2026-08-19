@@ -84,8 +84,8 @@ export default function Integrations() {
               <span className={styles.intgLogo} style={intg.isApi ? { color: "var(--cyan)" } : {}}>
                 {intg.isApi ? (
                   <svg
-                    width="32"
-                    height="32"
+                    width="44"
+                    height="44"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -100,7 +100,7 @@ export default function Integrations() {
                   <img
                     src={intg.image}
                     alt={intg.name}
-                    className="w-10 h-10 object-contain rounded-lg"
+                    className="w-14 h-14 object-contain rounded-lg"
                   />
                 )}
               </span>
