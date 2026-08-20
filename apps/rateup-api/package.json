@@ -10,7 +10,8 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "dev:worker": "tsx watch src/workers/bullmq/index.ts && tsx watch src/workers/kafka/index.ts",
+    "dev:bullmq": "tsx watch src/workers/bullmq/index.ts",
+    "dev:kafka": "tsx watch src/workers/kafka/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/index.js",
     "start:bullmq": "node dist/src/workers/bullmq/index.js",
