@@ -9,6 +9,7 @@ import type {
   LeadStatus,
   PipelineDetail,
   PipelineStage,
+  StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
 import type { LeadFilter } from "@/store/pipeline.store.ts";
 
@@ -63,7 +64,7 @@ export function initials(name: string | null | undefined): string {
 export interface LeadFilterState {
   filter: LeadFilter;
   search: string;
-  lifecycleId: string | null;
+  stageId: string | null;
   teamId: string | null;
   source: string | null;
   assigneeId: string | null;
@@ -74,8 +75,7 @@ export interface LeadFilterState {
  *
  * `currentUserId` resolves the "Mine" view; passing `undefined` makes it match
  * nothing rather than everything, which is the honest answer while the session
- * is loading. A lifecycle facet filters by the *stage's* lifecycle, so the
- * caller resolves it to that lifecycle's stage ids before calling in.
+ * is loading. The stage facet filters on the lead's own column.
  */
 export function filterLeads(
   leads: Lead[],
@@ -83,17 +83,16 @@ export function filterLeads(
   options: {
     rottingEnabled: boolean;
     currentUserId: string | undefined;
-    lifecycleStageIds: string[] | null;
   },
 ): Lead[] {
   const search = filters.search.trim().toLowerCase();
-  const { currentUserId, lifecycleStageIds } = options;
+  const { currentUserId } = options;
 
   return leads.filter((lead) => {
     if (filters.teamId && lead.teamId !== filters.teamId) return false;
     if (filters.source && lead.source !== filters.source) return false;
     if (filters.assigneeId && !isAssignedTo(lead, filters.assigneeId)) return false;
-    if (lifecycleStageIds && !lifecycleStageIds.includes(lead.stageId)) return false;
+    if (filters.stageId && lead.stageId !== filters.stageId) return false;
     if (search) {
       const haystack = `${lead.name} ${lead.company ?? ""}`.toLowerCase();
       if (!haystack.includes(search)) return false;
@@ -116,64 +115,59 @@ export function filterLeads(
   });
 }
 
-/** Lifecycle facet rows for the sidebar, counted across every lead. */
-export function lifecycleFacets(pipeline: PipelineDetail, leads: Lead[]) {
-  const seen = new Map<string, { id: string; name: string; emoji: string; stageIds: string[] }>();
-
-  for (const stage of pipeline.stages) {
-    if (!stage.lifecycle) continue;
-    const entry = seen.get(stage.lifecycle.id) ?? {
-      id: stage.lifecycle.id,
-      name: stage.lifecycle.name,
-      emoji: stage.lifecycle.emoji,
-      stageIds: [],
-    };
-    entry.stageIds.push(stage.id);
-    seen.set(stage.lifecycle.id, entry);
-  }
-
-  return [...seen.values()].map((entry) => ({
-    ...entry,
-    count: leads.filter((lead) => entry.stageIds.includes(lead.stageId)).length,
+/**
+ * Stage facet rows for the sidebar, counted across every lead.
+ *
+ * One row per column, in board order. Previously this grouped columns by the
+ * lifecycle they mapped, which no longer exists — a column is now the thing
+ * itself, so the facet is a straight per-stage count.
+ */
+export function stageFacets(pipeline: PipelineDetail, leads: Lead[]) {
+  return pipeline.stages.map((stage) => ({
+    id: stage.id,
+    name: stage.name,
+    status: stage.status,
+    color: stage.color,
+    count: leads.filter((lead) => lead.stageId === stage.id).length,
   }));
 }
 
 /**
- * Board columns grouped into lifecycle bands, in stage order. Stages with no
- * lifecycle mapping fall into their own trailing band so nothing is hidden.
+ * Board columns grouped into status bands, in stage order.
+ *
+ * A band breaks wherever the status changes, so a board that interleaves
+ * statuses gets a band per run rather than being silently reordered — the
+ * column order the org set is what the board shows. The heading is UI copy
+ * (Open / Won / Lost), so the view supplies it from `status`.
  */
 export interface StageBand {
   key: string;
-  /** The lifecycle's own name — org data. Null for the trailing unmapped band,
-   *  whose heading is UI copy and so is left to the view. */
-  label: string | null;
-  category: "active" | "won" | "lost";
+  status: StageStatus;
   stages: PipelineStage[];
 }
 
 export function groupStagesIntoBands(stages: PipelineStage[]): StageBand[] {
   const bands: StageBand[] = [];
 
-  for (const stage of stages) {
-    const key = stage.lifecycle?.id ?? "unmapped";
+  for (const [index, stage] of stages.entries()) {
     const last = bands.at(-1);
-    if (last?.key === key) {
+    if (last?.status === stage.status) {
       last.stages.push(stage);
       continue;
     }
-    bands.push({
-      key,
-      label: stage.lifecycle?.name ?? null,
-      category: stage.lifecycle?.category ?? (stage.isWon ? "won" : "active"),
-      stages: [stage],
-    });
+    bands.push({ key: `${stage.status}-${index}`, status: stage.status, stages: [stage] });
   }
 
   return bands;
 }
 
+/**
+ * Every lead in a column, closed ones included. Lost leads used to be excluded
+ * because they had no column of their own; now that Lost is a real column, a
+ * lost lead belongs in it and hiding it would make the column read as empty.
+ */
 export function leadsInStage(leads: Lead[], stageId: string): Lead[] {
-  return leads.filter((lead) => lead.stageId === stageId && lead.status !== "LOST");
+  return leads.filter((lead) => lead.stageId === stageId);
 }
 
 export function countByStatus(leads: Lead[], status: LeadStatus): number {
@@ -252,10 +246,13 @@ export interface FunnelRow {
 }
 
 export function buildFunnel(stages: PipelineStage[], leads: Lead[]): FunnelRow[] {
-  const counts = stages.map((stage) => leadsInStage(leads, stage.id).length);
+  // Closing columns are the funnel's outcome, not a step along it, so they are
+  // left out rather than showing up as a final always-narrow bar.
+  const open = stages.filter((stage) => stage.status === "OPEN");
+  const counts = open.map((stage) => leadsInStage(leads, stage.id).length);
   const widest = Math.max(1, ...counts);
 
-  return stages.map((stage, index) => ({
+  return open.map((stage, index) => ({
     stage,
     count: counts[index],
     width: Math.round((counts[index] / widest) * 100),
@@ -347,18 +344,21 @@ export function buildStallRows(
   leads: Lead[],
   rottingEnabled: boolean,
 ): StallRow[] {
-  return stages
-    .filter((stage) => stage.rottingDays > 0)
-    .map((stage) => {
-      const open = leads.filter((lead) => lead.stageId === stage.id && lead.status === "OPEN");
-      const stalled = open.filter((lead) => isRotting(lead, rottingEnabled)).length;
-      return {
-        stage,
-        stalled,
-        inStage: open.length,
-        width: open.length === 0 ? 0 : Math.round((stalled / open.length) * 100),
-      };
-    });
+  return (
+    stages
+      // Nothing in a closing column can be late: the lead is already done.
+      .filter((stage) => stage.status === "OPEN" && stage.rottingDays > 0)
+      .map((stage) => {
+        const open = leads.filter((lead) => lead.stageId === stage.id && lead.status === "OPEN");
+        const stalled = open.filter((lead) => isRotting(lead, rottingEnabled)).length;
+        return {
+          stage,
+          stalled,
+          inStage: open.length,
+          width: open.length === 0 ? 0 : Math.round((stalled / open.length) * 100),
+        };
+      })
+  );
 }
 
 export interface SourceRow {

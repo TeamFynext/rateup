@@ -3,7 +3,6 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { contactKeys } from "@/backend/campaign/contacts/contacts.keys";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import * as api from "./pipeline.api";
@@ -87,9 +86,8 @@ export function useTeamPipelineDefaultsQuery(enabled = true) {
  * action (so a burst of drags collapses into one message) and sweeps the
  * `["pipeline"]` root, which covers the board, the list and the switcher counts.
  *
- * Contacts are swept too: moving a lead writes the stage's lifecycle onto the
- * contact, so the inbox and the contacts table would otherwise keep showing the
- * lifecycle the customer was on before the drag.
+ * Contacts are not swept: a lead and the contact behind it are separate records
+ * now, and moving one no longer writes anything onto the other.
  */
 /**
  * Both message builders take `t` rather than returning a bare string. A plain
@@ -119,7 +117,6 @@ function usePipelineMutation<TVariables, TResult>(options: {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
-      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
   });
 }
@@ -276,7 +273,7 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
                 stageId,
                 stage: target ?? lead.stage,
                 stageEnteredAt: new Date().toISOString(),
-                status: target?.isWon ? "WON" : "OPEN",
+                status: target?.status ?? lead.status,
               }
             : lead,
         ),
@@ -300,7 +297,6 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
-      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
   });
 }

@@ -15,7 +15,6 @@ import {
   useSyncTeamFeatures,
   useSeedInboxStats,
   useReconcileInboxStatus,
-  useSeedPipelines,
   useBackfillConversations,
   useMigrateFreePlanFeatures,
   useMigrateNonFreePlanFeatures,
@@ -39,7 +38,6 @@ export function UpdateAllThemes() {
   const migrateLoyaltyTierPriorityMutation = useMigrateLoyaltyTierPriority();
   const seedInboxStatsMutation = useSeedInboxStats();
   const reconcileInboxStatusMutation = useReconcileInboxStatus();
-  const seedPipelinesMutation = useSeedPipelines();
   const backfillConversationsMutation = useBackfillConversations();
   const migrateFreePlanFeaturesMutation = useMigrateFreePlanFeatures();
   const migrateNonFreePlanFeaturesMutation = useMigrateNonFreePlanFeatures();
@@ -74,17 +72,6 @@ export function UpdateAllThemes() {
         "This rewrites Conversation.status to match each contact's inbox status. Run the dry run first and confirm the mismatch count looks right. This cannot be undone.",
     });
     if (shouldApply) reconcileInboxStatusMutation.mutate(true);
-  };
-
-  // Creating boards across every org is additive but bulk, so it goes through
-  // the same confirm the other writes do.
-  const handleSeedPipelinesApply = async () => {
-    const shouldApply = await confirm({
-      title: "Create pipelines for every org",
-      description:
-        "This creates one pipeline per organisation that does not have one yet, with a column for each of that org's own lifecycle stages, the default lost reasons, and every team in the org attached. Each of those teams is also pointed at the new board with Auto-add contacts switched ON, so contacts reaching a mapped lifecycle stage will start opening leads automatically. Orgs that already have a pipeline, or that have no lifecycles or no teams, are skipped. Run the dry run first.",
-    });
-    if (shouldApply) seedPipelinesMutation.mutate(true);
   };
 
   const handleBackfillApply = async () => {
@@ -388,54 +375,9 @@ export function UpdateAllThemes() {
               </div>
             </CardContent>
           </Card>
-          <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-start gap-3">
-                <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
-                  <IconDatabase className="h-5 w-5 text-amber-600" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-lg">Seed Pipelines</CardTitle>
-                  <CardDescription className="mt-1">
-                    Creates one pipeline per organisation that has none, with a column for each of
-                    that org&apos;s own lifecycle stages and every team in the org attached, each
-                    with Auto-add contacts on. Orgs that already have a board, or have no lifecycles
-                    or no teams, are skipped. Dry run reports the counts without writing.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => seedPipelinesMutation.mutate(false)}
-                  disabled={seedPipelinesMutation.isPending}
-                  className="flex-1"
-                >
-                  {seedPipelinesMutation.isPending ? (
-                    <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      Running...
-                    </>
-                  ) : (
-                    <>
-                      <IconRefresh className="mr-2 h-4 w-4" />
-                      Dry Run
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleSeedPipelinesApply}
-                  disabled={seedPipelinesMutation.isPending}
-                  className="flex-1"
-                >
-                  <IconDatabase className="mr-2 h-4 w-4" />
-                  Create Pipelines
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Seed Pipelines: COMMENTED OUT — it built each board from the org's
+              lifecycles, and stages no longer derive from lifecycles. Rewriting it
+              means seeding from DEFAULT_STAGES in the API's pipeline.service.ts. */}
           <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">

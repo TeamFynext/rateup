@@ -12,7 +12,7 @@ import { useUserInfo } from "@/backend/user/user.query.tsx";
 import { Route } from "@/routes/dashboard/pipeline/index.tsx";
 import { usePipelineStore, type PipelineViewState } from "@/store/pipeline.store.ts";
 
-import { filterLeads, lifecycleFacets, type LeadFilterState } from "./pipeline.utils.ts";
+import { filterLeads, stageFacets, type LeadFilterState } from "./pipeline.utils.ts";
 
 /**
  * Reads the whole pipeline screen out of the store and the query cache once, so
@@ -54,31 +54,24 @@ export function usePipelineData() {
     () => ({
       filter: view.filter,
       search: view.search,
-      lifecycleId: view.lifecycleId,
+      stageId: view.stageId,
       teamId: view.teamId,
       source: view.source,
       assigneeId: view.assigneeId,
     }),
-    [view.filter, view.search, view.lifecycleId, view.teamId, view.source, view.assigneeId],
+    [view.filter, view.search, view.stageId, view.teamId, view.source, view.assigneeId],
   );
 
-  const facets = useMemo(
-    () => (pipeline ? lifecycleFacets(pipeline, leads) : []),
-    [pipeline, leads],
-  );
+  const facets = useMemo(() => (pipeline ? stageFacets(pipeline, leads) : []), [pipeline, leads]);
 
   const visibleLeads: Lead[] = useMemo(() => {
     if (!pipeline) return [];
-    const lifecycleStageIds = filters.lifecycleId
-      ? (facets.find((facet) => facet.id === filters.lifecycleId)?.stageIds ?? [])
-      : null;
 
     return filterLeads(leads, filters, {
       rottingEnabled: pipeline.rottingEnabled,
       currentUserId,
-      lifecycleStageIds,
     });
-  }, [pipeline, leads, filters, facets, currentUserId]);
+  }, [pipeline, leads, filters, currentUserId]);
 
   /** Switches board, which is the only part of the screen that is URL state. */
   const setPipeline = (pipelineId: string) => {

@@ -29,6 +29,7 @@ import type {
   LeadSource,
   PipelineDetail,
   PipelineSummary,
+  StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
 import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
 import type { PipelineViewState } from "@/store/pipeline.store.ts";
@@ -36,9 +37,16 @@ import type { LeadFilter } from "@/store/pipeline.store.ts";
 
 import { PIPELINE_LIMIT_PER_ORG, SOURCE_META } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel } from "./pipeline.labels.ts";
-import { countByStatus, isAssignedTo, isRotting, lifecycleFacets } from "./pipeline.utils.ts";
+import { countByStatus, isAssignedTo, isRotting, stageFacets } from "./pipeline.utils.ts";
 
 const PIPELINE_PATH = "/dashboard/pipeline";
+
+/** A stage row's icon says at a glance whether the column closes a lead. */
+const STAGE_STATUS_ICON: Record<StageStatus, Icon> = {
+  OPEN: IconCircleDot,
+  WON: IconCircleCheck,
+  LOST: IconCircleX,
+};
 
 // Labels come from `leadFilterLabel`, which is where `t` can reach them.
 const FILTER_ROWS: ReadonlyArray<{ id: LeadFilter; icon: Icon }> = [
@@ -50,7 +58,7 @@ const FILTER_ROWS: ReadonlyArray<{ id: LeadFilter; icon: Icon }> = [
   { id: "lost", icon: IconCircleX },
 ];
 
-type FacetKey = "lifecycleId" | "teamId" | "source" | "assigneeId";
+type FacetKey = "stageId" | "teamId" | "source" | "assigneeId";
 
 export interface PipelineNavInput {
   /** Passed in rather than hooked: this builds data, so it is not a component. */
@@ -154,17 +162,15 @@ export function buildPipelineNavItems({
     handleClick: () => setView({ filter: row.id }),
   }));
 
-  const lifecycleRows: NavEntry[] = (pipeline ? lifecycleFacets(pipeline, leads) : []).map(
-    (facet) => ({
-      title: facet.name,
-      url: boardHref,
-      icon: (props: Record<string, unknown>) => <div {...props}>{facet.emoji}</div>,
-      count: facet.count,
-      variant: "inbox-tab",
-      isActive: view.lifecycleId === facet.id,
-      handleClick: () => toggleFacet("lifecycleId", facet.id),
-    }),
-  );
+  const stageRows: NavEntry[] = (pipeline ? stageFacets(pipeline, leads) : []).map((facet) => ({
+    title: facet.name,
+    url: boardHref,
+    icon: STAGE_STATUS_ICON[facet.status],
+    count: facet.count,
+    variant: "inbox-tab",
+    isActive: view.stageId === facet.id,
+    handleClick: () => toggleFacet("stageId", facet.id),
+  }));
 
   const teams = [
     ...new Map(
@@ -197,7 +203,7 @@ export function buildPipelineNavItems({
   return [
     ...section(t("Pipelines"), pipelineRows),
     ...section(t("Views"), viewRows),
-    ...section(t("Lifecycle"), lifecycleRows),
+    ...section(t("Stages"), stageRows),
     ...section(t("Teams"), teamRows),
     ...section(t("Sources"), sourceRows),
     // Ungrouped, so it sits on its own below the last section — the sidebar

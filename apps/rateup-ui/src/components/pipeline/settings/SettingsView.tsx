@@ -1,9 +1,7 @@
 import {
   IconAlertTriangle,
   IconPlus,
-  IconRepeat,
   IconTrash,
-  IconTrophy,
   IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react";
@@ -12,22 +10,19 @@ import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query.ts";
 import {
   useCreateLostReasonMutation,
   useCreateStageMutation,
   useDeleteLostReasonMutation,
   useDeleteStageMutation,
-  usePipelinesQuery,
   useTeamPipelineDefaultsQuery,
   useUpdatePipelineMutation,
   useUpdateStageMutation,
-  useUpdateTeamPipelineDefaultMutation,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type {
   PipelineDetail,
   PipelineStage,
-  TeamPipelineDefault,
+  StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
 import { useTeamsByUser } from "@/backend/team/team.query.tsx";
 import { Badge } from "@/components/ui/badge";
@@ -44,12 +39,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
-import { STAGE_COLOR_CHOICES } from "../pipeline.constants.tsx";
+import { STAGE_COLOR_CHOICES, STAGE_STATUSES, STATUS_BAND } from "../pipeline.constants.tsx";
+import { stageStatusLabel } from "../pipeline.labels.ts";
 import { StageDot } from "../shared/atoms.tsx";
 import { DeletePipelineDialog } from "./DeletePipelineDialog.tsx";
 
@@ -69,11 +64,11 @@ function SectionNote({ children }: Readonly<{ children: React.ReactNode }>) {
  * still accepted by the update schema, but nothing in the API ever reads them —
  * they were switches that persisted a boolean and changed nothing. Listing a
  * control that does nothing is worse than not offering it, so they are gone from
- * here until they are built. Lead creation by rule now lives in the automation
- * rule builder's Assign Lifecycle action instead.
+ * here until they are built. Lead creation by rule lives in the automation rule
+ * builder's Assign Lifecycle action instead.
  */
 interface AutomationToggle {
-  key: "rottingEnabled" | "lifecycleSyncEnabled";
+  key: "rottingEnabled";
   name: string;
   description: string;
   icon: Icon;
@@ -91,29 +86,18 @@ function automationToggles(t: TFunction): AutomationToggle[] {
       icon: IconAlertTriangle,
       tone: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
     },
-    {
-      key: "lifecycleSyncEnabled",
-      name: t("Sync lifecycle to the inbox"),
-      description: t("Moving a lead updates the contact's lifecycle stage."),
-      icon: IconRepeat,
-      tone: "bg-primary/10 text-primary",
-    },
   ];
 }
 
 /**
- * Who works this board, and whose contacts land on it automatically.
+ * Who works this board.
  *
  * Membership is the pipeline's only access rule — every pipeline route checks it
- * — so this is the screen's most consequential control. Auto-add lives here too
- * rather than in lifecycle setup, because a team can only be pointed at a board
- * it is already on: routing a team somewhere its members cannot look is then not
- * a state the UI can express.
+ * — so this is the screen's most consequential control.
  *
  * You may only add teams you are on yourself, which is the API's rule, not a UI
- * one. Teams already on the board that you are not a member of stay listed, with
- * their auto-add still switchable, but cannot be removed here: dropping one would
- * be a one-way door you could not undo.
+ * one. Teams already on the board that you are not a member of stay listed but
+ * cannot be removed here: dropping one would be a one-way door you could not undo.
  */
 /**
  * Renaming the board. Mounted with `key={pipeline.id}` so switching boards
@@ -161,11 +145,8 @@ function NameSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
 function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
   const { t } = useTranslation();
   const updatePipeline = useUpdatePipelineMutation();
-  const updateTeam = useUpdateTeamPipelineDefaultMutation();
-  const confirm = useConfirm();
   const { data: teamsResponse } = useTeamsByUser();
   const { data: orgTeams = [] } = useTeamPipelineDefaultsQuery();
-  const { data: pipelines = [] } = usePipelinesQuery();
 
   const myTeams = teamsResponse?.data ?? [];
   const myTeamIds = new Set(myTeams.map((team) => team.id));
@@ -182,37 +163,6 @@ function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
     updatePipeline.mutate({
       pipelineId: pipeline.id,
       input: { teamIds: [...next, ...otherTeamIds] },
-    });
-  };
-
-  const toggleAutoAdd = async (team: TeamPipelineDefault, checked: boolean) => {
-    if (!checked) {
-      // Leave the team pointed here; it simply stops filing automatically.
-      updateTeam.mutate({ teamId: team.id, input: { autoCreateLeads: false } });
-      return;
-    }
-
-    // A team files into exactly one board, so switching this on takes the team
-    // off whatever board it was on. Name that board rather than moving it
-    // silently — the other pipeline's settings will show the switch flip.
-    if (team.defaultPipelineId && team.defaultPipelineId !== pipeline.id) {
-      const currentName =
-        pipelines.find((entry) => entry.id === team.defaultPipelineId)?.name ??
-        t("another pipeline");
-      const moved = await confirm({
-        title: t("Move {team} to this pipeline?", { team: team.name }),
-        description: t(
-          "{team} currently auto-files its contacts into {current}. Turning this on moves it here, and {current} stops receiving them. Leads already on either board stay where they are.",
-          { team: team.name, current: currentName },
-        ),
-        confirmText: t("Move"),
-      });
-      if (!moved) return;
-    }
-
-    updateTeam.mutate({
-      teamId: team.id,
-      input: { defaultPipelineId: pipeline.id, autoCreateLeads: true },
     });
   };
 
@@ -235,37 +185,23 @@ function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
           />
         </div>
 
-        {teamsOnBoard.map((team) => {
-          const switchId = `pipeline-auto-add-${team.id}`;
-          const filesHere = team.defaultPipelineId === pipeline.id && team.autoCreateLeads;
-          return (
-            <div
-              key={team.id}
-              className="border-border/60 flex flex-wrap items-center gap-3 border-t p-3.5"
-            >
-              <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
-                <IconUsersGroup className="size-4" />
-              </span>
-              <span className="flex min-w-32 flex-1 items-center gap-2">
-                <span className="text-foreground truncate text-[13px] font-bold">{team.name}</span>
-                {!myTeamIds.has(team.id) && <Badge variant="outline">{t("Not your team")}</Badge>}
-              </span>
-              <Label htmlFor={switchId} className="text-muted-foreground text-xs font-medium">
-                {t("Auto-add contacts")}
-              </Label>
-              <Switch
-                id={switchId}
-                checked={filesHere}
-                onCheckedChange={(checked) => void toggleAutoAdd(team, checked)}
-              />
-            </div>
-          );
-        })}
+        {teamsOnBoard.map((team) => (
+          <div
+            key={team.id}
+            className="border-border/60 flex flex-wrap items-center gap-3 border-t p-3.5"
+          >
+            <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+              <IconUsersGroup className="size-4" />
+            </span>
+            <span className="flex min-w-32 flex-1 items-center gap-2">
+              <span className="text-foreground truncate text-[13px] font-bold">{team.name}</span>
+              {!myTeamIds.has(team.id) && <Badge variant="outline">{t("Not your team")}</Badge>}
+            </span>
+          </div>
+        ))}
 
         <p className="text-muted-foreground border-border/60 border-t p-3.5 text-[11px]">
-          {t(
-            "With auto-add on, a contact reaching a lifecycle stage this board maps opens a lead here — unless they are on the board already. Removing a team hides the board from its members and switches its auto-add off; their leads stay put.",
-          )}
+          {t("Removing a team hides the board from its members; their leads stay where they are.")}
         </p>
       </Card>
     </section>
@@ -274,12 +210,10 @@ function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
 
 function StageRow({
   stage,
-  lifecycles,
   canDelete,
   otherStages,
 }: Readonly<{
   stage: PipelineStage;
-  lifecycles: Array<{ id: string; name: string; emoji: string }>;
   canDelete: boolean;
   otherStages: PipelineStage[];
 }>) {
@@ -341,19 +275,6 @@ function StageRow({
           className="h-9 min-w-32 flex-1 md:max-w-48 md:flex-none"
           aria-label={t("Stage name")}
         />
-        {/* Read-only: which column wins comes from the mapped lifecycle's own
-            `isWon`, and a lifecycle edit rewrites it on every board — so a switch
-            here would be overwritten behind the user's back. */}
-        {stage.isWon ? (
-          <Badge
-            variant="outline"
-            className="border-green-600/40 text-green-700 dark:text-green-500"
-            title={t("Leads reaching this stage are marked won")}
-          >
-            <IconTrophy className="size-3" />
-            {t("Won")}
-          </Badge>
-        ) : null}
         <span className="text-muted-foreground text-[11px]">
           {t("{total} leads", { total: stage.openLeadCount })}
         </span>
@@ -361,41 +282,38 @@ function StageRow({
 
       <div className="w-full sm:w-44">
         <Select
-          items={[
-            { value: "none", label: t("No mapping") },
-            ...lifecycles.map((lifecycle) => ({
-              value: lifecycle.id,
-              label: `${lifecycle.emoji} ${lifecycle.name}`,
-            })),
-          ]}
-          value={stage.lifecycleId ?? "none"}
+          items={STAGE_STATUSES.map((status) => ({
+            value: status,
+            label: stageStatusLabel(t, status),
+          }))}
+          value={stage.status}
           onValueChange={(value) =>
+            // Base UI hands back null when the value is cleared; the field has no
+            // empty state, so the current status stands.
             updateStage.mutate({
               stageId: stage.id,
-              input: { lifecycleId: value === "none" ? null : value },
+              input: { status: (value as StageStatus | null) ?? stage.status },
             })
           }
         >
           {/* A soft pill, as the design draws it: in a dense table a row of plain
               grey selects reads as chrome, while a tinted chip reads as the value
-              it holds. Unmapped stays muted so it is legible as "not set". */}
+              it holds. */}
           <SelectTrigger
             size="sm"
-            aria-label={t("Lifecycle mapping")}
+            aria-label={t("Stage status")}
             className={cn(
               "h-7 w-full rounded-full border-transparent text-[11px] font-bold shadow-none",
-              stage.lifecycleId
-                ? "bg-primary/10 text-primary hover:bg-primary/15"
-                : "bg-muted text-muted-foreground hover:bg-muted/80",
+              STATUS_BAND[stage.status].surface,
+              STATUS_BAND[stage.status].text,
             )}
           >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">{t("No mapping")}</SelectItem>
-            {lifecycles.map((lifecycle) => (
-              <SelectItem key={lifecycle.id} value={lifecycle.id}>
-                {lifecycle.emoji} {lifecycle.name}
+            {STAGE_STATUSES.map((status) => (
+              <SelectItem key={status} value={status}>
+                {stageStatusLabel(t, status)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -451,7 +369,6 @@ function StageRow({
 export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail | undefined }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: lifecycles } = useLifeCyclesQuery();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const updatePipeline = useUpdatePipelineMutation();
   const createStage = useCreateStageMutation();
@@ -463,12 +380,6 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
 
   if (!pipeline) return null;
 
-  const lifecycleOptions = (lifecycles ?? []).map((lifecycle) => ({
-    id: lifecycle.id,
-    name: lifecycle.name,
-    emoji: lifecycle.emoji,
-  }));
-
   // Who works a board and whether it is deleted are org-level calls, not board
   // tuning: a member can retune their own funnel without being able to hand the
   // board to another team or destroy it and every lead on it.
@@ -477,11 +388,8 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
       <div className="flex max-w-4xl flex-col gap-6">
-        {/* Admin-only, and first: who works the board frames everything below it. */}
-        {isOrgAdmin && <TeamsSection pipeline={pipeline} />}
-
-        <NameSection key={pipeline.id} pipeline={pipeline} />
-
+        {/* The columns come first: they are what the board is, and the only thing
+            most visits to this screen are here to change. */}
         <section>
           <div className="mb-1 flex items-center justify-between">
             <SectionTitle>{t("Stages")}</SectionTitle>
@@ -506,7 +414,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
           </div>
           <p className="text-muted-foreground mb-3.5 text-xs">
             {t(
-              "These columns come from your contact lifecycle stages, and moving a lead across them updates the contact's lifecycle automatically. Add a stage here for a step this board needs but the lifecycle does not.",
+              "These are your board's own columns. Status decides what happens when a lead lands here — Won and Lost columns close the lead and are left out of open counts.",
             )}
           </p>
 
@@ -516,7 +424,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
                 {t("Stage")}
               </span>
               <span className="text-muted-foreground w-44 text-[10px] font-extrabold tracking-[0.06em] uppercase">
-                {t("Lifecycle mapping")}
+                {t("Status")}
               </span>
               <span className="text-muted-foreground w-24 text-[10px] font-extrabold tracking-[0.06em] uppercase">
                 {t("Probability")}
@@ -531,7 +439,6 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
               <StageRow
                 key={stage.id}
                 stage={stage}
-                lifecycles={lifecycleOptions}
                 canDelete={pipeline.stages.length > 1}
                 otherStages={pipeline.stages.filter((candidate) => candidate.id !== stage.id)}
               />
@@ -618,6 +525,10 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
           </Card>
         </section>
 
+        {/* Admin-only: handing the board to another team is an org-level call, not
+            board tuning, so a member can retune their own funnel without it. */}
+        {isOrgAdmin && <TeamsSection pipeline={pipeline} />}
+
         <section>
           <SectionTitle>{t("Automation")}</SectionTitle>
           <SectionNote>{t("Rules that keep the pipeline and the inbox in sync.")}</SectionNote>
@@ -661,6 +572,10 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             })}
           </div>
         </section>
+
+        {/* The board's name is what the whole org calls it, so it sits with the
+            other org-level calls rather than up with the columns. */}
+        {isOrgAdmin && <NameSection key={pipeline.id} pipeline={pipeline} />}
 
         {/* Admin-only: deleting the board. Stays last — it is the one action that
             cannot be undone, so it should not sit above routine tuning. */}

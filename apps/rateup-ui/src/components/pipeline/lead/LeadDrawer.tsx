@@ -63,7 +63,6 @@ const ACTIVITY_ICON: Record<string, Icon> = {
   NOTE_ADDED: IconMessage2,
   TASK_ADDED: IconPlus,
   TASK_COMPLETED: IconCircleCheck,
-  LIFECYCLE_SYNCED: IconArrowsExchange,
 };
 
 /**
@@ -101,7 +100,7 @@ function describeActivity(t: TFunction, activity: LeadActivity): { title: string
           title: t("Lead created automatically"),
           body: activity.user
             ? t("Added by automation when {actor} changed this contact's lifecycle.", { actor })
-            : t("Added by automation when this contact reached a lifecycle stage this board maps."),
+            : t("Added by automation when a rule filed this contact onto the board."),
         };
       }
       return {
@@ -157,13 +156,6 @@ function describeActivity(t: TFunction, activity: LeadActivity): { title: string
       return { title: t("Next activity scheduled"), body: details.taskTitle ?? "" };
     case "TASK_COMPLETED":
       return { title: t("Activity completed"), body: details.taskTitle ?? "" };
-    case "LIFECYCLE_SYNCED":
-      return {
-        title: t("Lifecycle set to {lifecycle}", {
-          lifecycle: details.lifecycleName ?? t("a new stage"),
-        }),
-        body: t("Automatic — the stage maps to this inbox lifecycle."),
-      };
     default:
       // An activity type the UI does not know yet; the raw type is better than
       // a blank row, and it is deliberately not a translation key.

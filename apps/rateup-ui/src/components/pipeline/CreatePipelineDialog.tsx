@@ -27,7 +27,7 @@ interface CreatePipelineDialogProps {
 
 /**
  * Creates a pipeline and hands back its id. Its columns are the org's contact
- * lifecycle stages and its lost reasons are the standard set — the API seeds
+ * stages and its lost reasons are the standard set — the API seeds
  * both — so the form only asks for the two things it cannot guess.
  */
 export function CreatePipelineDialog({
@@ -79,7 +79,7 @@ export function CreatePipelineDialog({
               <DialogTitle className="font-nunito font-extrabold">{t("New pipeline")}</DialogTitle>
               <DialogDescription>
                 {t(
-                  "The board starts with one column per contact lifecycle stage. Tune each column's win probability and rotting window afterwards in pipeline settings.",
+                  "The board starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.",
                 )}
               </DialogDescription>
             </div>

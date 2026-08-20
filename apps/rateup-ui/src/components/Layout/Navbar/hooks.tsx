@@ -685,7 +685,10 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Pipeline)
+      // The pipeline is not open to customers yet, so it is gated on the root org
+      // on top of its team feature. `/dashboard/pipeline` turns the same check away.
+      ...(subscription?.orgId === import.meta.env.VITE_ROOT_ORG &&
+      hasTeamFeature(TeamFeature.Pipeline)
         ? [
             {
               title: t("Pipeline"),

@@ -38,14 +38,17 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.2338 0.0719 260.61);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.546 0.245 262.881);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+  /* Sidebar palette, from the design system's own tokens. The rail is brand navy
+     and the nav panel is white, so `--sidebar-*` here describes the panel; the
+     rail overrides the same names locally in app-sidebar.tsx. */
+  --sidebar: oklch(0.2338 0.0719 260.61); /* --blue-900 #081c3f */
+  --sidebar-foreground: oklch(0.3064 0.0045 145.46); /* --fg-2 / ink-700 #2e302e */
+  --sidebar-primary: oklch(0.4337 0.115 254.47); /* --blue-500 #1c518e (brand) */
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.9646 0.0114 252.09); /* --bg-brand-soft #eef4fb */
+  --sidebar-accent-foreground: oklch(0.3902 0.0987 252.94); /* --blue-600 #174678 */
+  --sidebar-border: oklch(0.9425 0.0027 106.45); /* --border-1 #ececea */
+  --sidebar-ring: oklch(0.4337 0.115 254.47);
   --custom-shadow-base: 0 1px 3px rgba(11, 31, 72, 0.05);
   --custom-shadow-hover: 0 8px 28px rgba(11, 31, 72, 0.1);
 }
@@ -74,14 +77,16 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.21 0.006 285.885);
+  /* The design system's `.theme-dark` scope: navy deepens, and the brand accent
+     moves from blue to cyan so it still reads against it. */
+  --sidebar: oklch(0.1762 0.0538 263.84); /* --blue-950 #050f28 */
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.623 0.214 259.815);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-primary: oklch(0.6966 0.1677 247.78); /* --cyan-400 #2fa3ff */
+  --sidebar-primary-foreground: oklch(0.2338 0.0719 260.61); /* --fg-on-brand */
+  --sidebar-accent: oklch(1 0 0 / 8%); /* --bg-surface-2 */
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --sidebar-ring: oklch(0.6966 0.1677 247.78);
   --custom-shadow-base: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --custom-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
 

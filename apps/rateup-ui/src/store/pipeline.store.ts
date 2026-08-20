@@ -26,7 +26,7 @@ export interface PipelineViewState {
   view: PipelineView;
   filter: LeadFilter;
   search: string;
-  lifecycleId: string | null;
+  stageId: string | null;
   teamId: string | null;
   source: string | null;
   assigneeId: string | null;
@@ -38,7 +38,7 @@ export interface PipelineViewState {
 interface PipelineStore extends PipelineViewState {
   patch: (patch: Partial<PipelineViewState>) => void;
   /** Sets a facet, or clears it when it is already the active one. */
-  toggle: <K extends "lifecycleId" | "teamId" | "source" | "assigneeId">(
+  toggle: <K extends "stageId" | "teamId" | "source" | "assigneeId">(
     key: K,
     value: NonNullable<PipelineViewState[K]>,
   ) => void;
@@ -49,7 +49,7 @@ const INITIAL: PipelineViewState = {
   view: "board",
   filter: "open",
   search: "",
-  lifecycleId: null,
+  stageId: null,
   teamId: null,
   source: null,
   assigneeId: null,
@@ -64,7 +64,7 @@ export const usePipelineStore = create<PipelineStore>()(
       patch: (patch) => set(patch),
       toggle: (key, value) => set((state) => ({ [key]: state[key] === value ? null : value })),
       clearFacets: () =>
-        set({ search: "", lifecycleId: null, teamId: null, source: null, assigneeId: null }),
+        set({ search: "", stageId: null, teamId: null, source: null, assigneeId: null }),
     }),
     {
       name: "rateup:pipeline:view",
@@ -75,11 +75,11 @@ export const usePipelineStore = create<PipelineStore>()(
       // Everything the user can see and undo is kept. The open lead and the
       // create dialog are not: restoring them would reopen an overlay nobody
       // asked for, over a lead that may since have been deleted.
-      partialize: ({ view, filter, search, lifecycleId, teamId, source, assigneeId }) => ({
+      partialize: ({ view, filter, search, stageId, teamId, source, assigneeId }) => ({
         view,
         filter,
         search,
-        lifecycleId,
+        stageId,
         teamId,
         source,
         assigneeId,
@@ -95,6 +95,10 @@ export const usePipelineStore = create<PipelineStore>()(
           filter: LEAD_FILTERS.includes(saved.filter as LeadFilter)
             ? saved.filter!
             : INITIAL.filter,
+          // This slot used to hold a lifecycle id. A stored one would now be
+          // read as a stage id, match no column, and leave the board looking
+          // empty with no visible facet to clear — so old values are dropped.
+          stageId: null,
         };
       },
     },

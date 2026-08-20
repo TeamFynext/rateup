@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils";
 
 import { EMOJI_PRESETS, getStageToneStyle, sortStages } from "./shared.tsx";
 import type { AddStageFormProps, SetupViewProps, StageListItemProps } from "./shared.tsx";
-import { TeamPipelinesCard } from "./TeamPipelinesCard.tsx";
 
 export function SetupView({
   backendStages,
@@ -428,8 +427,6 @@ export function SetupView({
           </Button>
         </CardFooter>
       </Card>
-
-      <TeamPipelinesCard />
     </div>
   );
 }

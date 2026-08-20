@@ -1,5 +1,5 @@
 import { IconColumns, IconGitBranch } from "@tabler/icons-react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -75,24 +75,18 @@ export function PipelinePage() {
 
   const handleMove = useCallback(
     (leadId: string, stage: PipelineStage) => {
-      // Landing on the won stage is a close, not a move: it needs a confirmation
-      // and an optional note, so route it through the dialog instead.
+      // Landing on a closing column is a close, not a move: winning wants a
+      // confirmation and losing wants a reason, so both route through the
+      // dialog. The column dropped on is carried along, so a board with several
+      // Lost columns puts the lead in the one the user actually chose.
       const lead = data.leads.find((candidate) => candidate.id === leadId);
-      if (stage.isWon && lead) {
-        setCloseTarget({ lead, status: "WON" });
+      if (stage.status !== "OPEN" && lead) {
+        setCloseTarget({ lead, status: stage.status, stageId: stage.id });
         return;
       }
       moveLead.mutate({ leadId, stageId: stage.id, stageName: stage.name });
     },
     [data.leads, moveLead],
-  );
-
-  const handleMarkLost = useCallback(
-    (leadId: string) => {
-      const lead = data.leads.find((candidate) => candidate.id === leadId);
-      if (lead) setCloseTarget({ lead, status: "LOST" });
-    },
-    [data.leads],
   );
 
   // Only the view swaps out while loading: the header owns the pipeline switcher
@@ -121,8 +115,8 @@ export function PipelinePage() {
       );
     }
 
-    // Columns mirror the org's lifecycle stages, so an org that has not set any
-    // up gets sent there rather than to a board with nothing on it.
+    // A board whose columns were all deleted has nowhere to put a lead, so it
+    // sends you to settings to add one rather than rendering an empty board.
     if (pipeline && pipeline.stages.length === 0 && view.view !== "settings") {
       return (
         <Empty className="flex-1">
@@ -133,13 +127,11 @@ export function PipelinePage() {
             <EmptyTitle>{t("This board has no columns")}</EmptyTitle>
             <EmptyDescription>
               {t(
-                "A pipeline's columns are your contact lifecycle stages. Add a stage and it appears here — on this board and every other one.",
+                "This board's columns are its own. Add one in settings, and give it a status so the board knows whether landing there closes the lead.",
               )}
             </EmptyDescription>
           </EmptyHeader>
-          <Button render={<Link to="/dashboard/contacts/lifecycle" />}>
-            {t("Set up lifecycle stages")}
-          </Button>
+          <Button onClick={() => setView({ view: "settings" })}>{t("Open settings")}</Button>
         </Empty>
       );
     }
@@ -156,7 +148,6 @@ export function PipelinePage() {
               setAddOpen(true);
             }}
             onMoveLead={handleMove}
-            onMarkLost={handleMarkLost}
           />
         );
       case "list":
@@ -198,7 +189,7 @@ export function PipelinePage() {
         onClose={() => setView({ leadId: null })}
         onMarkWon={(lead) => setCloseTarget({ lead, status: "WON" })}
         onMarkLost={(lead) => setCloseTarget({ lead, status: "LOST" })}
-        // Same path a board drag takes, so landing on the won stage still asks.
+        // Same path a board drag takes, so landing on a closing column still asks.
         onMoveStage={handleMove}
         onOpenConversation={openConversation}
       />
