@@ -55,7 +55,6 @@ import {
   type StatsField,
 } from "../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { updateZohoLeadQueue, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
-import { syncLeadsToContactLifecycle } from "../pipeline/pipelineLead/lead.service.js";
 import {
   addZohoContactToQueue,
   buildZohoContactPayload,
@@ -954,15 +953,6 @@ export async function updateContactById(
     triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
   }
 
-  if (contact.lifecycleId) {
-    await syncLeadsToContactLifecycle(
-      [contactId],
-      updatedContact.lifecycleId,
-      updatedContact.orgId,
-      userId ?? null,
-    );
-  }
-
   if (
     WaMessageClosedStatus.includes(updatedContact.waMessageAssignStatus as WaMessageAssignStatus)
   ) {
@@ -1047,8 +1037,6 @@ export async function updateContactLabelsById(
     },
     contact.orgId,
   );
-
-  await syncLeadsToContactLifecycle([contact.id], lifecycleId, contact.orgId);
 
   return contact;
 }
@@ -1606,31 +1594,12 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
   for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
     const batch = contacts.slice(i, i + BATCH_SIZE);
 
-    const batchPhones = batch.flatMap((contact) =>
-      contact.phone && contact.lifecycleId ? [contact.phone] : [],
-    );
-
-    const previousLifecycles = new Map<string, string | null>();
-    if (batchPhones.length) {
-      const existing = await prisma.contact.findMany({
-        where: { orgId, phone: { in: batchPhones } },
-        select: { phone: true, lifecycleId: true },
-      });
-
-      for (const row of existing) {
-        if (row.phone) previousLifecycles.set(row.phone, row.lifecycleId);
-      }
-    }
-
-    const movedByLifecycle = new Map<string, string[]>();
-
     for (const contact of batch) {
       if (!contact.phone) {
         log.warn("Skipping contact update: missing phone number for %s", contact.name);
         continue;
       }
       const { customFields, ...contactData } = contact;
-      const previousLifecycleId = previousLifecycles.get(contact.phone) ?? null;
 
       const updatedContact = await prisma.contact.upsert({
         where: {
@@ -1745,17 +1714,7 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
           rateupContactId: updatedContact.id,
         });
         triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
-
-        if (updatedContact.lifecycleId !== previousLifecycleId) {
-          const group = movedByLifecycle.get(updatedContact.lifecycleId) ?? [];
-          group.push(updatedContact.id);
-          movedByLifecycle.set(updatedContact.lifecycleId, group);
-        }
       }
-    }
-
-    for (const [lifecycleId, contactIds] of movedByLifecycle) {
-      await syncLeadsToContactLifecycle(contactIds, lifecycleId, orgId);
     }
   }
 }
@@ -1913,8 +1872,6 @@ export async function updateLifecycleStageofContacts(
       triggerConversionsApiForContact(contact, lifecycleId);
     }
   }
-
-  await syncLeadsToContactLifecycle(contactIds, lifecycleId, orgId);
 }
 
 export async function bulkUpdateWaMessageAssignStatus(

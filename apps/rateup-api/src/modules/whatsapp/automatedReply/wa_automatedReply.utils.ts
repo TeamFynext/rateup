@@ -34,10 +34,7 @@ import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
-import {
-  openLeadOnPipelineForContact,
-  syncLeadsToContactLifecycle,
-} from "../../pipeline/pipelineLead/lead.service.js";
+import { openLeadOnPipelineForContact } from "../../pipeline/pipelineLead/lead.service.js";
 import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
 import {
   startInstagramAutomationFlow,
@@ -1193,10 +1190,6 @@ async function executeAssignLifecycleAction(
   // Trigger Conversions API if applicable
   await triggerConversionsApiForContact(updatedContact, lifecycleId);
 
-  await syncLeadsToContactLifecycle([updatedContact.id], lifecycleId, context.orgId, null, {
-    openOnTeamDefaults: false,
-  });
-
   if (pipelineId) {
     const origin = PLATFORM_ORIGIN[context.platform ?? "WHATSAPP"] ?? {
       source: "MANUAL" as LeadSource,
@@ -1205,15 +1198,14 @@ async function executeAssignLifecycleAction(
     const lead = await openLeadOnPipelineForContact({
       contactId: updatedContact.id,
       pipelineId,
-      lifecycleId,
       source: origin.source,
       channel: origin.channel,
     });
 
     if (!lead) {
       log.info(
-        { contactId: updatedContact.id, pipelineId, lifecycleId },
-        "Rule set the lifecycle but opened no lead: the contact is already on that board, or it has no column for this lifecycle",
+        { contactId: updatedContact.id, pipelineId },
+        "Rule set the lifecycle but opened no lead: the contact is already on that board, or it has no open column",
       );
     }
   }

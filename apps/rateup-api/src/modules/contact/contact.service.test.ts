@@ -53,9 +53,7 @@ vi.mock("../integrations/meta/conversions.service.js", () => ({
 
 // The board half of the lifecycle mirror; its own behaviour is covered in
 // pipeline.test.ts, so here we only care that the contact side calls it.
-vi.mock("../pipeline/pipelineLead/lead.service.js", () => ({
-  syncLeadsToContactLifecycle: vi.fn(),
-}));
+vi.mock("../pipeline/pipelineLead/lead.service.js", () => ({}));
 
 vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
   assignWaMessageToUser: vi.fn(),
@@ -175,7 +173,6 @@ import {
 } from "./contact.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
-import { syncLeadsToContactLifecycle } from "../pipeline/pipelineLead/lead.service.js";
 
 const db = prisma as unknown as {
   contact: Record<string, Mock>;
@@ -1389,20 +1386,6 @@ describe("updateContactLabelsById", () => {
       ORG,
     );
   });
-
-  // The mirror: a lifecycle change here has to reach the board, or the two
-  // views of the same customer drift apart.
-  test("moves the contact's leads into the matching column", async () => {
-    db.contact.update.mockResolvedValue({
-      id: "c1",
-      orgId: ORG,
-      Lifecycle: { name: "Customer" },
-    });
-
-    await updateContactLabelsById("c1", ORG, "lc-1");
-
-    expect(syncLeadsToContactLifecycle).toHaveBeenCalledWith(["c1"], "lc-1", ORG);
-  });
 });
 
 describe("updateLifecycleStageofContacts", () => {
@@ -1722,66 +1705,6 @@ describe("updateMulitplceContacts", () => {
     expect(db.contactCustomFieldValue.deleteMany).toHaveBeenCalledWith({
       where: { contactId: "c1" },
     });
-  });
-
-  // A bulk import can change lifecycles, so the boards have to follow it the same
-  // way a single contact edit does.
-  test("moves the leads of a contact whose lifecycle the row changed", async () => {
-    db.contact.findMany.mockResolvedValue([{ phone: "9190001", lifecycleId: "lc-old" }]);
-    db.contact.upsert.mockResolvedValue({ id: "c1", orgId: ORG, lifecycleId: "lc-new" });
-
-    await updateMulitplceContacts(
-      [{ name: "Ann", phone: "9190001", lifecycleId: "lc-new" } as any],
-      ORG,
-    );
-
-    expect(syncLeadsToContactLifecycle).toHaveBeenCalledWith(["c1"], "lc-new", ORG);
-  });
-
-  // Re-uploading the same sheet must not open a fresh lead on every auto-add
-  // board for people who never actually moved.
-  test("leaves the boards alone when the row restates the lifecycle a contact already had", async () => {
-    db.contact.findMany.mockResolvedValue([{ phone: "9190001", lifecycleId: "lc-1" }]);
-    db.contact.upsert.mockResolvedValue({ id: "c1", orgId: ORG, lifecycleId: "lc-1" });
-
-    await updateMulitplceContacts(
-      [{ name: "Ann", phone: "9190001", lifecycleId: "lc-1" } as any],
-      ORG,
-    );
-
-    expect(syncLeadsToContactLifecycle).not.toHaveBeenCalled();
-  });
-
-  // One call per lifecycle the batch landed on, not one per row.
-  test("groups the contacts it moved by the lifecycle they landed on", async () => {
-    db.contact.findMany.mockResolvedValue([]);
-    db.contact.upsert
-      .mockResolvedValueOnce({ id: "c1", orgId: ORG, lifecycleId: "lc-1" })
-      .mockResolvedValueOnce({ id: "c2", orgId: ORG, lifecycleId: "lc-1" })
-      .mockResolvedValueOnce({ id: "c3", orgId: ORG, lifecycleId: "lc-2" });
-
-    await updateMulitplceContacts(
-      [
-        { name: "Ann", phone: "9190001", lifecycleId: "lc-1" },
-        { name: "Bo", phone: "9190002", lifecycleId: "lc-1" },
-        { name: "Cy", phone: "9190003", lifecycleId: "lc-2" },
-      ] as any,
-      ORG,
-    );
-
-    expect(syncLeadsToContactLifecycle).toHaveBeenCalledTimes(2);
-    expect(syncLeadsToContactLifecycle).toHaveBeenCalledWith(["c1", "c2"], "lc-1", ORG);
-    expect(syncLeadsToContactLifecycle).toHaveBeenCalledWith(["c3"], "lc-2", ORG);
-  });
-
-  // Rows with no lifecycle at all are not worth a lookup.
-  test("does not read previous lifecycles when no row carries one", async () => {
-    db.contact.findMany.mockClear();
-
-    await updateMulitplceContacts([{ name: "Ann", phone: "9190001" } as any], ORG);
-
-    expect(db.contact.findMany).not.toHaveBeenCalled();
-    expect(syncLeadsToContactLifecycle).not.toHaveBeenCalled();
   });
 });
 

@@ -49,6 +49,7 @@ import {
   isPipelineMember,
   TeamAccessError,
   createPipeline,
+  DEFAULT_STAGES,
   PipelineLimitError,
   updatePipeline,
 } from "./pipeline.service.js";
@@ -63,7 +64,6 @@ import {
   createLead,
   moveLead,
   openLeadOnPipelineForContact,
-  syncLeadsToContactLifecycle,
   updateLead,
 } from "./pipelineLead/lead.service.js";
 import { createLeadRequestSchema } from "./pipelineLead/lead.schema.js";
@@ -78,7 +78,6 @@ const STAGE = "44444444-4444-4444-8444-444444444444";
 const NEXT_STAGE = "55555555-5555-4555-8555-555555555555";
 const LEAD = "66666666-6666-4666-8666-666666666666";
 const CONTACT = "77777777-7777-4777-8777-777777777777";
-const LIFECYCLE = "88888888-8888-4888-8888-888888888888";
 const REASON = "99999999-9999-4999-8999-999999999999";
 
 function reply() {
@@ -190,16 +189,12 @@ describe("creating a pipeline", () => {
     expect(db.pipeline.create).not.toHaveBeenCalled();
   });
 
-  // The board's columns are the org's lifecycle stages — there is no canned
-  // funnel to fall back on, so an org with no lifecycles gets no columns.
-  test("seeds one stage per lifecycle, in lifecycle order", async () => {
+  // The board is the org's own, so it starts from the template rather than from
+  // anything the inbox happens to hold.
+  test("seeds the default funnel, in order, ending in Won and Lost", async () => {
     db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
     db.pipeline.findFirst.mockResolvedValue(null);
     db.pipeline.create.mockResolvedValue({ id: PIPELINE, stages: [] });
-    db.lifecycle.findMany.mockResolvedValue([
-      { id: LIFECYCLE, name: "New Lead", ordering: 0, color: "#16A34A", isWon: false },
-      { id: "won-lifecycle", name: "Won", ordering: 1, color: "#1C518E", isWon: true },
-    ]);
 
     await createPipeline({
       name: "WhatsApp Sales",
@@ -208,36 +203,29 @@ describe("creating a pipeline", () => {
       userId: USER,
     });
 
-    expect(db.lifecycle.findMany.mock.calls[0][0]).toMatchObject({
-      where: { orgId: ORG },
-      orderBy: { ordering: "asc" },
-    });
-
     const data = db.pipeline.create.mock.calls[0][0].data;
-    expect(data.stages.create).toEqual([
-      {
-        name: "New Lead",
-        order: 0,
-        color: "#16A34A",
-        isWon: false,
-        probability: 0,
-        rottingDays: 0,
-        lifecycleId: LIFECYCLE,
-      },
-      {
-        name: "Won",
-        order: 1,
-        color: "#1C518E",
-        isWon: true,
-        probability: 100,
-        rottingDays: 0,
-        lifecycleId: "won-lifecycle",
-      },
+    expect(data.stages.create).toHaveLength(DEFAULT_STAGES.length);
+    expect(data.stages.create.map((stage: { name: string }) => stage.name)).toEqual(
+      DEFAULT_STAGES.map((stage) => stage.name),
+    );
+    // Order is positional, so a reordered template cannot silently scramble a board.
+    expect(data.stages.create.map((stage: { order: number }) => stage.order)).toEqual([
+      0, 1, 2, 3, 4, 5, 6,
+    ]);
+    expect(data.stages.create.map((stage: { status: string }) => stage.status)).toEqual([
+      "OPEN",
+      "OPEN",
+      "OPEN",
+      "OPEN",
+      "OPEN",
+      "WON",
+      "LOST",
     ]);
     expect(data.lostReasons.create.length).toBeGreaterThan(0);
   });
 
-  test("an org with no lifecycles gets a pipeline with no columns", async () => {
+  // The board no longer reads the org's lifecycles at all.
+  test("does not look at the org's lifecycles", async () => {
     db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
     db.pipeline.findFirst.mockResolvedValue(null);
     db.pipeline.create.mockResolvedValue({ id: PIPELINE, stages: [] });
@@ -249,7 +237,7 @@ describe("creating a pipeline", () => {
       userId: USER,
     });
 
-    expect(db.pipeline.create.mock.calls[0][0].data.stages.create).toEqual([]);
+    expect(db.lifecycle.findMany).not.toHaveBeenCalled();
   });
 
   // One board per org for now. The count is per-org, so another org having one
@@ -355,20 +343,14 @@ describe("deleting a stage", () => {
 });
 
 describe("moving a lead", () => {
-  function movingInto(overrides: { isWon?: boolean; lifecycleSyncEnabled?: boolean } = {}) {
+  function movingInto(overrides: { status?: "OPEN" | "WON" | "LOST" } = {}) {
     db.lead.findUniqueOrThrow.mockResolvedValue({
       stageId: STAGE,
-      contactId: CONTACT,
       stage: { name: "Contacted" },
-      pipeline: { lifecycleSyncEnabled: overrides.lifecycleSyncEnabled ?? true },
     });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({
       name: "Qualified",
-      isWon: overrides.isWon ?? false,
-    });
-    // The lifecycle sync reads the destination stage separately.
-    db.pipelineStage.findUnique.mockResolvedValue({
-      lifecycle: { id: LIFECYCLE, name: "Hot Lead" },
+      status: overrides.status ?? "OPEN",
     });
     db.lead.update.mockResolvedValue({
       id: LEAD,
@@ -378,7 +360,6 @@ describe("moving a lead", () => {
       assignees: [],
       tasks: [],
     });
-    db.contact.findUnique.mockResolvedValue({ lifecycleId: null });
   }
 
   test("restamps the stage clock and records the move", async () => {
@@ -389,58 +370,57 @@ describe("moving a lead", () => {
     const update = db.lead.update.mock.calls[0][0].data;
     expect(update.stageId).toBe(NEXT_STAGE);
     expect(update.stageEnteredAt).toBeInstanceOf(Date);
-    expect(db.leadActivity.createMany.mock.calls[0][0].data[0]).toMatchObject({
+    expect(db.leadActivity.create.mock.calls[0][0].data).toMatchObject({
       type: "MOVED",
       details: { fromStageName: "Contacted", toStageName: "Qualified" },
     });
   });
 
-  test("writes the stage's lifecycle onto the contact", async () => {
+  // Moving a lead is now purely a board action; the contact's own lifecycle is
+  // its own record and is left alone.
+  test("does not touch the contact", async () => {
     movingInto();
-
-    await moveLead(LEAD, NEXT_STAGE, USER);
-
-    expect(db.contact.update).toHaveBeenCalledWith({
-      where: { id: CONTACT },
-      data: { lifecycleId: LIFECYCLE },
-    });
-  });
-
-  test("leaves the contact alone when the pipeline has sync switched off", async () => {
-    movingInto({ lifecycleSyncEnabled: false });
 
     await moveLead(LEAD, NEXT_STAGE, USER);
 
     expect(db.contact.update).not.toHaveBeenCalled();
   });
 
-  test("leaves the contact alone when it already sits on that lifecycle", async () => {
-    movingInto();
-    db.contact.findUnique.mockResolvedValue({ lifecycleId: LIFECYCLE });
-
-    await moveLead(LEAD, NEXT_STAGE, USER);
-
-    expect(db.contact.update).not.toHaveBeenCalled();
-  });
-
-  test("landing on the won stage closes the lead", async () => {
-    movingInto({ isWon: true });
+  test("landing on a won column closes the lead won", async () => {
+    movingInto({ status: "WON" });
 
     await moveLead(LEAD, NEXT_STAGE, USER);
 
     const update = db.lead.update.mock.calls[0][0].data;
     expect(update.status).toBe("WON");
     expect(update.closedAt).toBeInstanceOf(Date);
+    expect(update.closedById).toBe(USER);
+    expect(db.leadActivity.create.mock.calls[0][0].data.type).toBe("WON");
   });
 
-  test("leaving the won stage reopens it and clears the close", async () => {
-    movingInto({ isWon: false });
+  test("landing on a lost column closes the lead lost and keeps the reason", async () => {
+    movingInto({ status: "LOST" });
+
+    await moveLead(LEAD, NEXT_STAGE, USER);
+
+    const update = db.lead.update.mock.calls[0][0].data;
+    expect(update.status).toBe("LOST");
+    expect(update.closedAt).toBeInstanceOf(Date);
+    // The reason belongs to a lead sitting in a Lost column, so a move within
+    // that column must not wipe it.
+    expect(update).not.toHaveProperty("lostReasonId");
+    expect(db.leadActivity.create.mock.calls[0][0].data.type).toBe("LOST");
+  });
+
+  test("moving back to an open column reopens it and clears the close", async () => {
+    movingInto({ status: "OPEN" });
 
     await moveLead(LEAD, NEXT_STAGE, USER);
 
     const update = db.lead.update.mock.calls[0][0].data;
     expect(update.status).toBe("OPEN");
     expect(update.closedAt).toBeNull();
+    expect(update.closedById).toBeNull();
     expect(update.lostReasonId).toBeNull();
   });
 });
@@ -455,12 +435,10 @@ describe("closing a lead", () => {
       assignees: [],
       tasks: [],
     });
-    db.contact.findUnique.mockResolvedValue({ lifecycleId: null });
-    db.pipelineStage.findUnique.mockResolvedValue({ lifecycle: null });
   });
 
-  test("a win moves the lead onto the won stage", async () => {
-    db.pipelineStage.findFirst.mockResolvedValue({ id: NEXT_STAGE, name: "Won" });
+  test("a win moves the lead onto the won column", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue({ id: NEXT_STAGE });
 
     await closeLead(LEAD, { status: "WON" }, USER);
 
@@ -471,7 +449,10 @@ describe("closing a lead", () => {
     });
   });
 
-  test("a loss keeps the lead where it stalled and records the reason", async () => {
+  // Lost is a column now, so a loss lands in it rather than leaving the lead
+  // sitting in whatever open column it stalled in.
+  test("a loss moves the lead onto the lost column and records the reason", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue({ id: NEXT_STAGE });
     db.pipelineLostReason.findUnique.mockResolvedValue({ label: "Price too high" });
 
     await closeLead(
@@ -483,11 +464,33 @@ describe("closing a lead", () => {
     const update = db.lead.update.mock.calls[0][0].data;
     expect(update.status).toBe("LOST");
     expect(update.lostReasonId).toBe(REASON);
-    expect(update.stageId).toBeUndefined();
-    expect(db.leadActivity.createMany.mock.calls[0][0].data[0].details).toMatchObject({
+    expect(update.stageId).toBe(NEXT_STAGE);
+    expect(db.leadActivity.create.mock.calls[0][0].data.details).toMatchObject({
       lostReasonLabel: "Price too high",
       note: "Went with a rival",
     });
+  });
+
+  // A drag names the exact column it landed on; only a button press has to fall
+  // back to "the first column of that status".
+  test("closes onto the column that was dropped on when one is named", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+
+    await closeLead(LEAD, { status: "LOST", stageId: STAGE }, USER);
+
+    expect(db.pipelineStage.findFirst.mock.calls[0][0].where).toMatchObject({ id: STAGE });
+    expect(db.lead.update.mock.calls[0][0].data.stageId).toBe(STAGE);
+  });
+
+  // A board with no column of that status still records the close on the lead.
+  test("leaves the lead where it is when the board has no such column", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue(null);
+
+    await closeLead(LEAD, { status: "WON" }, USER);
+
+    const update = db.lead.update.mock.calls[0][0].data;
+    expect(update.status).toBe("WON");
+    expect(update.stageId).toBeUndefined();
   });
 
   test("closing clears the lead's open tasks", async () => {
@@ -503,10 +506,7 @@ describe("closing a lead", () => {
 
 describe("a lead's owner", () => {
   beforeEach(() => {
-    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({
-      isWon: false,
-      pipeline: { lifecycleSyncEnabled: false },
-    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ status: "OPEN" });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
   });
 
@@ -536,7 +536,7 @@ describe("a lead's owner", () => {
 
     expect(db.lead.create.mock.calls[0][0].data.ownerId).toBeNull();
 
-    const [created] = db.leadActivity.createMany.mock.calls[0][0].data;
+    const created = db.leadActivity.create.mock.calls[0][0].data;
     expect(created).toMatchObject({ type: "CREATED", userId: USER });
     expect(created.details.automated).toBe(true);
   });
@@ -551,7 +551,7 @@ describe("a lead's owner", () => {
       userId: USER,
     } as never);
 
-    const [created] = db.leadActivity.createMany.mock.calls[0][0].data;
+    const created = db.leadActivity.create.mock.calls[0][0].data;
     expect(created.details.automated).toBeUndefined();
   });
 });
@@ -560,10 +560,7 @@ describe("a rule opening a lead on a named pipeline", () => {
   beforeEach(() => {
     db.lead.findFirst.mockResolvedValue(null);
     db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
-    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({
-      isWon: false,
-      pipeline: { lifecycleSyncEnabled: false },
-    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ status: "OPEN" });
     db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
   });
@@ -572,17 +569,16 @@ describe("a rule opening a lead on a named pipeline", () => {
     return openLeadOnPipelineForContact({
       contactId: CONTACT,
       pipelineId: PIPELINE,
-      lifecycleId: LIFECYCLE,
       source: "WHATSAPP",
       channel: "WHATSAPP",
     });
   }
 
-  test("lands in the column that maps the lifecycle", async () => {
+  test("lands in the board's first open column", async () => {
     await open();
 
     expect(db.pipelineStage.findFirst).toHaveBeenCalledWith({
-      where: { pipelineId: PIPELINE, lifecycleId: LIFECYCLE },
+      where: { pipelineId: PIPELINE, status: "OPEN" },
       orderBy: { order: "asc" },
       select: { id: true },
     });
@@ -603,8 +599,8 @@ describe("a rule opening a lead on a named pipeline", () => {
     expect(db.lead.create).not.toHaveBeenCalled();
   });
 
-  // Its first stage would claim the lead reached a phase it has not.
-  test("does nothing when the board has no column for the lifecycle", async () => {
+  // A board of nothing but closing columns has nowhere to open a lead.
+  test("does nothing when the board has no open column", async () => {
     db.pipelineStage.findFirst.mockResolvedValue(null);
 
     expect(await open()).toBeNull();
@@ -614,31 +610,6 @@ describe("a rule opening a lead on a named pipeline", () => {
 
 // A rule names the board it wants, so it must not also fan the contact out across
 // every team that happens to have auto-add on.
-describe("a lifecycle sync that skips team defaults", () => {
-  test("moves the open leads but opens none", async () => {
-    db.lead.findMany.mockResolvedValue([{ id: LEAD, pipelineId: PIPELINE }]);
-    db.pipelineStage.findMany.mockResolvedValue([{ id: NEXT_STAGE, pipelineId: PIPELINE }]);
-    db.lead.findUniqueOrThrow.mockResolvedValue({
-      stageId: STAGE,
-      contactId: CONTACT,
-      stage: { name: "New Lead" },
-      pipeline: { lifecycleSyncEnabled: true },
-    });
-    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", isWon: false });
-    db.lead.update.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
-
-    const result = await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER, {
-      openOnTeamDefaults: false,
-    });
-
-    expect(result).toHaveLength(1);
-    expect(db.lead.update).toHaveBeenCalled();
-    // The team-defaults pass is what reads `team`; it must not have run.
-    expect(db.team.findMany).not.toHaveBeenCalled();
-    expect(db.lead.create).not.toHaveBeenCalled();
-  });
-});
-
 describe("assigning a lead", () => {
   const ALICE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   const BOB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -730,203 +701,70 @@ describe("assigning a lead", () => {
   });
 });
 
-describe("a contact's lifecycle changing", () => {
-  const OTHER_PIPELINE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+// The request schemas are the API's outer edge, so the guarantees the services
+// rely on downstream are asserted here rather than inferred.
+describe("the stage request schema", () => {
+  const base = { pipelineId: PIPELINE, name: "Qualified" };
 
-  function movesInto(stageId: string) {
-    db.lead.findUniqueOrThrow.mockResolvedValue({
-      stageId: STAGE,
-      contactId: CONTACT,
-      stage: { name: "New Lead" },
-      pipeline: { lifecycleSyncEnabled: true },
-    });
-    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", isWon: false });
-    db.pipelineStage.findUnique.mockResolvedValue({
-      lifecycle: { id: LIFECYCLE, name: "Hot Lead" },
-    });
-    db.contact.findUnique.mockResolvedValue({ lifecycleId: LIFECYCLE });
-    db.lead.update.mockResolvedValue({
-      id: LEAD,
-      contactId: CONTACT,
-      stageId,
-      labels: [],
-      assignees: [],
-      tasks: [],
-    });
-  }
-
-  test("moves the contact's open leads into the column that maps to it", async () => {
-    db.lead.findMany.mockResolvedValue([{ id: LEAD, pipelineId: PIPELINE }]);
-    db.pipelineStage.findMany.mockResolvedValue([{ id: NEXT_STAGE, pipelineId: PIPELINE }]);
-    movesInto(NEXT_STAGE);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.update.mock.calls[0][0].data).toMatchObject({ stageId: NEXT_STAGE });
+  test("defaults a new stage to open", () => {
+    const parsed = createStageRequestSchema.parse(base);
+    // Left undefined rather than defaulted in zod, so the service's own
+    // `?? "OPEN"` is the single place the default lives.
+    expect(parsed.status).toBeUndefined();
   });
 
-  // The query does the filtering, so the guarantees live in its `where`.
-  test("only looks at open leads on pipelines with sync switched on", async () => {
-    db.lead.findMany.mockResolvedValue([]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.findMany.mock.calls[0][0].where).toMatchObject({
-      contactId: { in: [CONTACT] },
-      status: "OPEN",
-      pipeline: { lifecycleSyncEnabled: true },
-      stage: { lifecycleId: { not: LIFECYCLE } },
-    });
-    expect(db.lead.update).not.toHaveBeenCalled();
+  test("accepts each of the three statuses and nothing else", () => {
+    for (const status of ["OPEN", "WON", "LOST"]) {
+      expect(createStageRequestSchema.safeParse({ ...base, status }).success).toBe(true);
+    }
+    expect(createStageRequestSchema.safeParse({ ...base, status: "won" }).success).toBe(false);
+    expect(createStageRequestSchema.safeParse({ ...base, status: "ARCHIVED" }).success).toBe(false);
   });
 
-  // Several stages can map to one lifecycle; the lead belongs at the front of
-  // that phase, not scattered across it.
-  test("lands on the first stage carrying the lifecycle", async () => {
-    db.lead.findMany.mockResolvedValue([{ id: LEAD, pipelineId: PIPELINE }]);
-    db.pipelineStage.findMany.mockResolvedValue([
-      { id: NEXT_STAGE, pipelineId: PIPELINE },
-      { id: "later-stage", pipelineId: PIPELINE },
-    ]);
-    movesInto(NEXT_STAGE);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.update.mock.calls[0][0].data).toMatchObject({ stageId: NEXT_STAGE });
-    expect(db.pipelineStage.findMany.mock.calls[0][0]).toMatchObject({
-      orderBy: { order: "asc" },
-    });
+  test("rejects a colour that is not #rrggbb", () => {
+    expect(createStageRequestSchema.safeParse({ ...base, color: "#16A34A" }).success).toBe(true);
+    expect(createStageRequestSchema.safeParse({ ...base, color: "red" }).success).toBe(false);
+    expect(createStageRequestSchema.safeParse({ ...base, color: "#16A34" }).success).toBe(false);
   });
 
-  test("leaves a lead alone when its pipeline never mapped that lifecycle", async () => {
-    db.lead.findMany.mockResolvedValue([{ id: LEAD, pipelineId: OTHER_PIPELINE }]);
-    db.pipelineStage.findMany.mockResolvedValue([{ id: NEXT_STAGE, pipelineId: PIPELINE }]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.update).not.toHaveBeenCalled();
-  });
-
-  test("clearing a contact's lifecycle moves nothing", async () => {
-    await syncLeadsToContactLifecycle([CONTACT], null, ORG, USER);
-
-    expect(db.lead.findMany).not.toHaveBeenCalled();
-  });
-});
-
-describe("a team's default pipeline", () => {
-  const TEAM = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
-  const OTHER_TEAM = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
-  const OTHER_PIPELINE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
-
-  beforeEach(() => {
-    // Nothing to move; these tests are about what gets opened.
-    db.lead.findMany.mockResolvedValue([]);
-    db.pipelineStage.findMany.mockResolvedValue([{ id: NEXT_STAGE, pipelineId: PIPELINE }]);
-    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({
-      isWon: false,
-      pipeline: { lifecycleSyncEnabled: true },
-    });
-    db.pipelineStage.findUnique.mockResolvedValue({ lifecycle: null });
-    db.contact.findMany.mockResolvedValue([
-      { id: CONTACT, name: "Meera Joshi", phone: "+911", email: null },
-    ]);
-    db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
-  });
-
-  test("opens a lead on the board when the contact is not on it yet", async () => {
-    db.team.findMany.mockResolvedValue([{ id: TEAM, defaultPipelineId: PIPELINE }]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.create.mock.calls[0][0].data).toMatchObject({
-      pipelineId: PIPELINE,
-      stageId: NEXT_STAGE,
-      contactId: CONTACT,
-      teamId: TEAM,
-    });
-  });
-
-  // Opt-in: the query is the guarantee, so assert what it asks for.
-  test("ignores teams that have not switched auto-create on", async () => {
-    db.team.findMany.mockResolvedValue([]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.team.findMany.mock.calls[0][0].where).toMatchObject({
-      autoCreateLeads: true,
-      defaultPipelineId: { not: null },
-    });
-    expect(db.lead.create).not.toHaveBeenCalled();
-  });
-
-  // Both queries that could cross a tenant are asserted here: the teams whose
-  // boards receive the lead, and the contacts copied onto them.
-  test("only looks at teams and contacts in the caller's org", async () => {
-    db.team.findMany.mockResolvedValue([{ id: TEAM, defaultPipelineId: PIPELINE }]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.team.findMany.mock.calls[0][0].where).toMatchObject({ orgId: ORG });
-    expect(db.contact.findMany.mock.calls[0][0].where).toMatchObject({ orgId: ORG });
-  });
-
-  // Two teams, one board: the contact belongs on it once.
-  test("two teams sharing a board produce one lead between them", async () => {
-    db.team.findMany.mockResolvedValue([
-      { id: TEAM, defaultPipelineId: PIPELINE },
-      { id: OTHER_TEAM, defaultPipelineId: PIPELINE },
-    ]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.create).toHaveBeenCalledTimes(1);
-    expect(db.lead.create.mock.calls[0][0].data).toMatchObject({ teamId: TEAM });
-  });
-
-  test("a contact already on the board is left alone", async () => {
-    db.team.findMany.mockResolvedValue([{ id: TEAM, defaultPipelineId: PIPELINE }]);
-    db.lead.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ contactId: CONTACT, pipelineId: PIPELINE }]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.create).not.toHaveBeenCalled();
-  });
-
-  // Without a column for the lifecycle there is nowhere honest to put the lead.
-  test("a board with no column for that lifecycle opens nothing", async () => {
-    db.team.findMany.mockResolvedValue([{ id: TEAM, defaultPipelineId: OTHER_PIPELINE }]);
-    db.pipelineStage.findMany.mockResolvedValue([]);
-
-    await syncLeadsToContactLifecycle([CONTACT], LIFECYCLE, ORG, USER);
-
-    expect(db.lead.create).not.toHaveBeenCalled();
-  });
-});
-
-describe("request schemas", () => {
-  test("a stage probability outside 0-100 is rejected", () => {
-    const base = { pipelineId: PIPELINE, name: "Qualified" };
-    expect(createStageRequestSchema.safeParse({ ...base, probability: 45 }).success).toBe(true);
-    expect(createStageRequestSchema.safeParse({ ...base, probability: 145 }).success).toBe(false);
+  test("keeps probability inside 0-100 and rotting inside a year", () => {
+    expect(createStageRequestSchema.safeParse({ ...base, probability: 101 }).success).toBe(false);
     expect(createStageRequestSchema.safeParse({ ...base, probability: -1 }).success).toBe(false);
+    expect(createStageRequestSchema.safeParse({ ...base, rottingDays: 366 }).success).toBe(false);
+    expect(createStageRequestSchema.safeParse({ ...base, rottingDays: 0 }).success).toBe(true);
   });
 
-  test("a stage colour has to be a #rrggbb hex", () => {
-    const base = { pipelineId: PIPELINE, name: "Qualified" };
-    expect(createStageRequestSchema.safeParse({ ...base, color: "#1C518E" }).success).toBe(true);
-    expect(createStageRequestSchema.safeParse({ ...base, color: "blue" }).success).toBe(false);
+  test("an unnamed stage is refused", () => {
+    expect(createStageRequestSchema.safeParse({ pipelineId: PIPELINE, name: "" }).success).toBe(
+      false,
+    );
   });
+});
 
-  test("a lead defaults to a manual, channel-less source", () => {
-    const parsed = createLeadRequestSchema.parse({
-      pipelineId: PIPELINE,
-      stageId: STAGE,
-      name: "Meera Joshi",
-    });
+describe("the lead request schema", () => {
+  const base = { pipelineId: PIPELINE, stageId: STAGE, name: "Meera Joshi" };
+
+  test("a lead with no stated origin is a manual one on no channel", () => {
+    const parsed = createLeadRequestSchema.parse(base);
     expect(parsed.source).toBe("MANUAL");
     expect(parsed.channel).toBe("NONE");
+  });
+
+  test("needs a board and a column to land on", () => {
+    expect(createLeadRequestSchema.safeParse({ ...base, pipelineId: undefined }).success).toBe(
+      false,
+    );
+    expect(createLeadRequestSchema.safeParse({ ...base, stageId: "not-a-uuid" }).success).toBe(
+      false,
+    );
+  });
+
+  test("an unnamed lead is refused, an unreachable one is not", () => {
+    expect(createLeadRequestSchema.safeParse({ ...base, name: "" }).success).toBe(false);
+    // Phone and email are both optional: a lead can start as just a name.
+    expect(createLeadRequestSchema.safeParse({ ...base, phone: null, email: null }).success).toBe(
+      true,
+    );
+    expect(createLeadRequestSchema.safeParse({ ...base, email: "nope" }).success).toBe(false);
   });
 });

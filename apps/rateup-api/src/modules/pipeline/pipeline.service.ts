@@ -1,5 +1,4 @@
 import prisma from "../../utils/prisma.js";
-import { stagesForNewPipeline } from "./pipeline.lifecycleSync.js";
 import type {
   CreateLabelRequestSchema,
   CreateLostReasonRequestSchema,
@@ -9,6 +8,59 @@ import type {
   UpdatePipelineRequestSchema,
   UpdateTeamDefaultRequestSchema,
 } from "./pipeline.schema.js";
+
+/**
+ * The funnel a new board starts with.
+ *
+ * A board is the org's own, so these are a starting point rather than a rule —
+ * every field is editable in pipeline settings. Won and Lost are ordinary
+ * columns carrying a closing status, which is what lets a lead be dragged into
+ * either one instead of needing a separate drop zone.
+ */
+export const DEFAULT_STAGES = [
+  {
+    name: "New Lead",
+    short: "New",
+    probability: 10,
+    rottingDays: 3,
+    status: "OPEN",
+    color: "#16A34A",
+  },
+  {
+    name: "Contacted",
+    short: "Contacted",
+    probability: 25,
+    rottingDays: 4,
+    status: "OPEN",
+    color: "#3FA46A",
+  },
+  {
+    name: "Qualified",
+    short: "Qualified",
+    probability: 45,
+    rottingDays: 5,
+    status: "OPEN",
+    color: "#FFB638",
+  },
+  {
+    name: "Demo / Proposal",
+    short: "Proposal",
+    probability: 65,
+    rottingDays: 7,
+    status: "OPEN",
+    color: "#F8951D",
+  },
+  {
+    name: "Negotiation",
+    short: "Negotiation",
+    probability: 80,
+    rottingDays: 5,
+    status: "OPEN",
+    color: "#D97A0F",
+  },
+  { name: "Won", short: "Won", probability: 100, rottingDays: 0, status: "WON", color: "#1C518E" },
+  { name: "Lost", short: "Lost", probability: 0, rottingDays: 0, status: "LOST", color: "#666864" },
+] as const;
 
 export const DEFAULT_LOST_REASONS = [
   "Price too high",
@@ -89,10 +141,6 @@ export async function createPipeline(
       select: { order: true },
     });
 
-    // Columns come from the org's lifecycle stages, not a canned funnel, so a
-    // new board already speaks the vocabulary the inbox uses.
-    const stages = await stagesForNewPipeline(tx, data.orgId);
-
     return tx.pipeline.create({
       data: {
         name: data.name,
@@ -105,7 +153,7 @@ export async function createPipeline(
             data: data.teamIds.map((teamId) => ({ teamId })),
           },
         },
-        stages: { create: stages },
+        stages: { create: DEFAULT_STAGES.map((stage, order) => ({ ...stage, order })) },
         lostReasons: {
           create: DEFAULT_LOST_REASONS.map((label, order) => ({ label, order })),
         },
@@ -142,10 +190,7 @@ export async function getPipelineById(id: string) {
       teams: { select: { teamId: true } },
       stages: {
         orderBy: { order: "asc" },
-        include: {
-          lifecycle: { select: { id: true, name: true, emoji: true, color: true, category: true } },
-          _count: { select: { leads: { where: { status: "OPEN" } } } },
-        },
+        include: { _count: { select: { leads: { where: { status: "OPEN" } } } } },
       },
       lostReasons: {
         orderBy: { order: "asc" },
@@ -193,9 +238,6 @@ export async function updatePipeline(
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.rottingEnabled !== undefined && { rottingEnabled: data.rottingEnabled }),
-        ...(data.lifecycleSyncEnabled !== undefined && {
-          lifecycleSyncEnabled: data.lifecycleSyncEnabled,
-        }),
         ...(data.autoAssignEnabled !== undefined && { autoAssignEnabled: data.autoAssignEnabled }),
         ...(data.nudgeEnabled !== undefined && { nudgeEnabled: data.nudgeEnabled }),
         ...(data.teamIds !== undefined && {

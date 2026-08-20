@@ -24,8 +24,7 @@ export async function createStage(data: CreateStageRequestSchema) {
       color: data.color,
       probability: data.probability ?? 0,
       rottingDays: data.rottingDays ?? 0,
-      lifecycleId: data.lifecycleId ?? null,
-      isWon: data.isWon ?? false,
+      status: data.status ?? "OPEN",
       order: last ? last.order + 1 : 0,
     },
   });
@@ -40,8 +39,7 @@ export async function updateStage(id: string, data: UpdateStageRequestSchema) {
       ...(data.color !== undefined && { color: data.color }),
       ...(data.probability !== undefined && { probability: data.probability }),
       ...(data.rottingDays !== undefined && { rottingDays: data.rottingDays }),
-      ...(data.lifecycleId !== undefined && { lifecycleId: data.lifecycleId }),
-      ...(data.isWon !== undefined && { isWon: data.isWon }),
+      ...(data.status !== undefined && { status: data.status }),
     },
   });
 }
