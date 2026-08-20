@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+
 import { log } from "../../logger.js";
 import { CampaignParticipantStatus, WaTemplateCategory } from "../../types/enum.js";
 import { createTemplateMessage } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js";
@@ -12,8 +14,7 @@ import {
   updateDripCampaignStats,
 } from "../../campaign.js";
 import type { WaTemplateData, WaTemplateDefaultValues } from "../../types/dispatcher.types.js";
-import prisma from "../../../../utils/prisma.js";
-import type { PrismaTransaction } from "../../prismaTypes.js";
+import dbPool from "../../../../utils/db.js";
 
 // Define proper interfaces
 interface Participant {
@@ -110,7 +111,7 @@ export async function processParticipant(participant: Participant): Promise<void
   }
 }
 
-export async function updateWaMonthlyStat(orgId: string, tx: PrismaTransaction) {
+export async function updateWaMonthlyStat(orgId: string, client: PoolClient) {
   try {
     /**
      * `messagesCount` only — the monthly and annual message counters this used
@@ -120,19 +121,17 @@ export async function updateWaMonthlyStat(orgId: string, tx: PrismaTransaction) 
      * 42703, so every campaign send counted *nothing*: the increment that does
      * exist was lost along with the two that do not.
      *
-     * This mirrors rateup-api, which owns the schema and increments exactly
-     * this column for a WhatsApp send (`updateMonthlyStat` in
-     * `stats.service.ts`).
+     * This mirrors the rest of rateup-api, which increments exactly this column
+     * for a WhatsApp send (`updateMonthlyStat` in `stats.service.ts`).
      *
      * If monthly or annual message caps are wanted, the columns need adding to
      * `prisma/schema.prisma` first — `UsageStats` keeps monthly/annual pairs
      * only for templates and conversations today.
-     *
      */
-    return await tx.usageStats.updateMany({
-      where: { orgId },
-      data: { messagesCount: { increment: 1 } },
-    });
+    return await client.query(
+      `UPDATE "UsageStats" SET "messagesCount" = "messagesCount" + 1 WHERE "orgId" = $1`,
+      [orgId],
+    );
   } catch (error) {
     log.error(`Error in updateWaMonthlyStat: %o`, error);
     throw error;
@@ -252,42 +251,54 @@ async function sendTemplateMessage(
     },
   });
 
-  // The send already happened; this records its outcome atomically.
+  // The send already happened; this records its outcome atomically. Raw `pg`
+  // rather than `prisma.$transaction`: this runs at concurrency 250 and Prisma
+  // gave up waiting for a free connection with P2028, losing the bookkeeping for
+  // every send in a real campaign. See `src/utils/db.ts`.
+  const client = await dbPool.connect();
   try {
-    await prisma.$transaction(async (tx) => {
-      await updateWaMonthlyStat(orgId, tx);
+    await client.query("BEGIN");
 
-      if (data.ok) return;
+    await updateWaMonthlyStat(orgId, client);
 
-      // Failure bookkeeping. These write to different tables, so they are
-      // independent — but they share the transaction, hence sequential rather
-      // than Promise.all (an interactive transaction has one connection).
-      if (dripCampaignId && dripCampaignParticipantId) {
-        await updateDripCampaignParticipant(
-          dripCampaignParticipantId,
-          {
-            status: CampaignParticipantStatus.FAILED,
-            errorMessage: data.error ?? null,
-            sentAt: new Date(),
-          },
-          tx,
-        );
-        await updateDripCampaignStats(dripCampaignId, "totalFailed", tx);
-      } else {
-        await updateCampaignParticipant(
-          campaignParticipantId,
-          {
-            status: CampaignParticipantStatus.FAILED,
-            errorMessage: data.error ?? null,
-            sentAt: new Date(),
-          },
-          tx,
-        );
-      }
-      await updateCampaignStats(campaignId, "totalFailed", tx);
-    });
+    if (data.ok) {
+      await client.query("COMMIT");
+      return;
+    }
+
+    // Failure bookkeeping. These write to different tables, so they are
+    // independent — but they share the one connection holding the transaction,
+    // hence sequential rather than Promise.all.
+    if (dripCampaignId && dripCampaignParticipantId) {
+      await updateDripCampaignParticipant(
+        dripCampaignParticipantId,
+        {
+          status: CampaignParticipantStatus.FAILED,
+          errorMessage: data.error ?? null,
+          sentAt: new Date(),
+        },
+        client,
+      );
+      await updateDripCampaignStats(dripCampaignId, "totalFailed", client);
+    } else {
+      await updateCampaignParticipant(
+        campaignParticipantId,
+        {
+          status: CampaignParticipantStatus.FAILED,
+          errorMessage: data.error ?? null,
+          sentAt: new Date(),
+        },
+        client,
+      );
+    }
+    await updateCampaignStats(campaignId, "totalFailed", client);
+
+    await client.query("COMMIT");
   } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
     log.error(`Error in sendTemplateMessage: %o`, error);
     throw error;
+  } finally {
+    client.release();
   }
 }
