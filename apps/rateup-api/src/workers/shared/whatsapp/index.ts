@@ -3,6 +3,7 @@ import utc from "dayjs/plugin/utc.js";
 import { log } from "../logger.js";
 import { publisher } from "../ws.publisher.js";
 import prisma from "../../../utils/prisma.js";
+import dbPool from "../../../utils/db.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import type { PrismaTransaction } from "../prismaTypes.js";
 import type { WaMessageOrgTeamType } from "../../../../generated/prisma/enums.js";
@@ -475,16 +476,25 @@ export async function executeBulkUpdates(
   dripCampaignParticipantUpdates: any[] = [],
   dripCampaignStatsUpdates: any[] = [],
 ): Promise<void> {
+  // Raw `pg` rather than `prisma.$transaction`, for a different reason than the
+  // campaign dispatch path: this transaction is not starved of a connection, it
+  // simply takes longer than Prisma allows. An interactive transaction is capped
+  // at 5s, and a status batch — six multi-row updates whose VALUES lists are as
+  // long as the Kafka batch — regularly runs past that, at which point Prisma
+  // throws P2028 and the entire batch is discarded and republished for retry,
+  // adding load to the thing that was already too slow. A `pg` transaction has no
+  // client-side deadline. See `src/utils/db.ts`.
+  const client = await dbPool.connect();
   try {
-    await prisma.$transaction(async (tx) => {
-      // Bulk update CampaignParticipant
-      if (campaignParticipantUpdates.length) {
-        const values = campaignParticipantUpdates
-          .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
-          .join(", ");
-        const flat = campaignParticipantUpdates.flat();
-        await tx.$executeRawUnsafe(
-          `UPDATE "CampaignParticipant" AS cp SET
+    await client.query("BEGIN");
+    // Bulk update CampaignParticipant
+    if (campaignParticipantUpdates.length) {
+      const values = campaignParticipantUpdates
+        .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+        .join(", ");
+      const flat = campaignParticipantUpdates.flat();
+      await client.query(
+        `UPDATE "CampaignParticipant" AS cp SET
         status = v.status,
         "errorMessage" = CASE WHEN v.status = 'FAILED' THEN v.errorMessage ELSE NULL END,
         "sentAt" = CASE 
@@ -494,18 +504,18 @@ export async function executeBulkUpdates(
         END
         FROM (VALUES ${values}) AS v(status, errorMessage, sentAt, id)
         WHERE cp.id = v.id::uuid`,
-          ...flat,
-        );
-      }
+        flat,
+      );
+    }
 
-      // Bulk update dripCampaignParticipantUpdates
-      if (dripCampaignParticipantUpdates.length) {
-        const values = dripCampaignParticipantUpdates
-          .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
-          .join(", ");
-        const flat = dripCampaignParticipantUpdates.flat();
-        await tx.$executeRawUnsafe(
-          `UPDATE "CampaignParticipantDripStage" AS cp SET
+    // Bulk update dripCampaignParticipantUpdates
+    if (dripCampaignParticipantUpdates.length) {
+      const values = dripCampaignParticipantUpdates
+        .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+        .join(", ");
+      const flat = dripCampaignParticipantUpdates.flat();
+      await client.query(
+        `UPDATE "CampaignParticipantDripStage" AS cp SET
         status = v.status,
         "errorMessage" = CASE WHEN v.status = 'FAILED' THEN v.errorMessage ELSE NULL END,
         "sentAt" = CASE 
@@ -515,46 +525,46 @@ export async function executeBulkUpdates(
         END
         FROM (VALUES ${values}) AS v(status, errorMessage, sentAt, id)
         WHERE cp.id = v.id::uuid`,
-          ...flat,
-        );
-      }
+        flat,
+      );
+    }
 
-      // messageLogUpdates entries are [messageId, logs]: the failure detail is
-      // recorded on the message itself.
-      if (messageLogUpdates.length) {
-        const waMessageLogsUpdates = messageLogUpdates
-          .filter(([messageId, logs]) => messageId && logs)
-          .map(([messageId, logs]) => [JSON.stringify(logs), messageId]);
+    // messageLogUpdates entries are [messageId, logs]: the failure detail is
+    // recorded on the message itself.
+    if (messageLogUpdates.length) {
+      const waMessageLogsUpdates = messageLogUpdates
+        .filter(([messageId, logs]) => messageId && logs)
+        .map(([messageId, logs]) => [JSON.stringify(logs), messageId]);
 
-        if (waMessageLogsUpdates.length) {
-          const values = waMessageLogsUpdates
-            .map((_, i) => `($${i * 2 + 1}::jsonb, $${i * 2 + 2})`)
-            .join(", ");
-          const flat = waMessageLogsUpdates.flat();
+      if (waMessageLogsUpdates.length) {
+        const values = waMessageLogsUpdates
+          .map((_, i) => `($${i * 2 + 1}::jsonb, $${i * 2 + 2})`)
+          .join(", ");
+        const flat = waMessageLogsUpdates.flat();
 
-          await tx.$executeRawUnsafe(
-            `UPDATE "WaMessage" AS wm
+        await client.query(
+          `UPDATE "WaMessage" AS wm
            SET logs = v.logs
            FROM (VALUES ${values}) AS v(logs, messageId)
            WHERE wm."messageId" = v.messageId`,
-            ...flat,
-          );
-        }
+          flat,
+        );
       }
+    }
 
-      // Bulk update CampaignStats
-      if (campaignStatsUpdates.length) {
-        const values = campaignStatsUpdates
-          .map(
-            (_, i) =>
-              `($${i * 6 + 1}::int, $${i * 6 + 2}::int, $${i * 6 + 3}::int, $${
-                i * 6 + 4
-              }::int, $${i * 6 + 5}::int, $${i * 6 + 6})`,
-          )
-          .join(", ");
-        const flat = campaignStatsUpdates.flat();
-        await tx.$executeRawUnsafe(
-          `UPDATE "CampaignStats" AS cs SET
+    // Bulk update CampaignStats
+    if (campaignStatsUpdates.length) {
+      const values = campaignStatsUpdates
+        .map(
+          (_, i) =>
+            `($${i * 6 + 1}::int, $${i * 6 + 2}::int, $${i * 6 + 3}::int, $${
+              i * 6 + 4
+            }::int, $${i * 6 + 5}::int, $${i * 6 + 6})`,
+        )
+        .join(", ");
+      const flat = campaignStatsUpdates.flat();
+      await client.query(
+        `UPDATE "CampaignStats" AS cs SET
           "totalSend" = cs."totalSend" + v.sent,
           "totalRead" = cs."totalRead" + v.read,
           "totalDelivered" = cs."totalDelivered" + v.delivered,
@@ -562,23 +572,23 @@ export async function executeBulkUpdates(
           "totalFailed" = cs."totalFailed" + v.failed
         FROM (VALUES ${values}) AS v(sent, read, delivered, complete, failed, campaignId)
         WHERE cs."campaignId" = v.campaignId::uuid`,
-          ...flat,
-        );
-      }
+        flat,
+      );
+    }
 
-      // Bulk update dripCampaignStatsUpdates
-      if (dripCampaignStatsUpdates.length) {
-        const values = dripCampaignStatsUpdates
-          .map(
-            (_, i) =>
-              `($${i * 6 + 1}::int, $${i * 6 + 2}::int, $${i * 6 + 3}::int, $${
-                i * 6 + 4
-              }::int, $${i * 6 + 5}::int, $${i * 6 + 6})`,
-          )
-          .join(", ");
-        const flat = dripCampaignStatsUpdates.flat();
-        await tx.$executeRawUnsafe(
-          `UPDATE "CampaignDripStage" AS cs SET
+    // Bulk update dripCampaignStatsUpdates
+    if (dripCampaignStatsUpdates.length) {
+      const values = dripCampaignStatsUpdates
+        .map(
+          (_, i) =>
+            `($${i * 6 + 1}::int, $${i * 6 + 2}::int, $${i * 6 + 3}::int, $${
+              i * 6 + 4
+            }::int, $${i * 6 + 5}::int, $${i * 6 + 6})`,
+        )
+        .join(", ");
+      const flat = dripCampaignStatsUpdates.flat();
+      await client.query(
+        `UPDATE "CampaignDripStage" AS cs SET
           "totalSend" = cs."totalSend" + v.sent,
           "totalRead" = cs."totalRead" + v.read,
           "totalDelivered" = cs."totalDelivered" + v.delivered,
@@ -586,29 +596,35 @@ export async function executeBulkUpdates(
           "totalFailed" = cs."totalFailed" + v.failed
         FROM (VALUES ${values}) AS v(sent, read, delivered, complete, failed, id)
         WHERE cs."id" = v.id::uuid`,
-          ...flat,
-        );
-      }
+        flat,
+      );
+    }
 
-      // Bulk update WaMessage
-      if (waMessageUpdates.length) {
-        const values = waMessageUpdates
-          .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
-          .join(", ");
-        const flat = waMessageUpdates.flat();
-        await tx.$executeRawUnsafe(
-          `UPDATE "WaMessage" AS wm SET
+    // Bulk update WaMessage
+    if (waMessageUpdates.length) {
+      const values = waMessageUpdates
+        .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+        .join(", ");
+      const flat = waMessageUpdates.flat();
+      await client.query(
+        `UPDATE "WaMessage" AS wm SET
           stats = v.stats::jsonb,
           "errorMessage" = CASE WHEN v.status = 'FAILED' THEN v.errorMessage ELSE NULL END
         FROM (VALUES ${values}) AS v(stats, status, errorMessage, id)
         WHERE wm.id = v.id::uuid`,
-          ...flat,
-        );
-      }
-    });
+        flat,
+      );
+    }
+
+    await client.query("COMMIT");
   } catch (error) {
+    // A failed ROLLBACK (the connection itself died) must not mask the original
+    // error, which is the one that explains the failure.
+    await client.query("ROLLBACK").catch(() => {});
     log.error("Error performing bulk updates: %o", error);
     throw error;
+  } finally {
+    client.release();
   }
 }
 
