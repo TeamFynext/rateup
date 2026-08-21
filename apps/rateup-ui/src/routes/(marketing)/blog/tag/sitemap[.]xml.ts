@@ -8,11 +8,12 @@ export const Route = createFileRoute("/(marketing)/blog/tag/sitemap.xml")({
     handlers: {
       GET: async () => {
         const tags = await getTags();
+        const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
 
         const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://myapp.com/</loc>
+    <loc>${baseUrl}/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/(marketing)/blog/tag/sitemap.xml")({
     .map(
       (tag) => `
   <url>
-    <loc>${import.meta.env.VITE_FRONTEND_URL}/blog/tag/${tag.slug}</loc>
+    <loc>${baseUrl}/blog/tag/${tag.slug}</loc>
     <lastmod>${new Date()?.toDateString()}</lastmod>
     <changefreq>weekly</changefreq>
   </url>`,
