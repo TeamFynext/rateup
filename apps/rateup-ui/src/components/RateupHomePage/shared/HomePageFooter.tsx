@@ -128,6 +128,22 @@ export default function HomePageFooter() {
             <a href="#">Status</a>
           </div>
 
+          {/*
+            Tools get their own column rather than a line in Resources: these
+            are the site's search-entry pages, and a link from every footer on the
+            site is what ties the cluster to the rest of the domain.
+          */}
+          <div className={styles["foot-col"]}>
+            <h3>Tools</h3>
+
+            <a href="/tools/whatsapp-link-generator">WhatsApp Link Generator</a>
+            <a href="/tools/whatsapp-qr-code-generator">WhatsApp QR Code Generator</a>
+            <a href="/tools/whatsapp-pricing-calculator">WhatsApp API Pricing Calculator</a>
+            <a href="/tools/rto-loss-calculator">COD RTO Loss Calculator</a>
+            <a href="/tools/nps-survey-templates">NPS Survey Templates</a>
+            <a href="/tools">All tools →</a>
+          </div>
+
           <div className={styles["foot-col"]}>
             <h3>Download App</h3>
 

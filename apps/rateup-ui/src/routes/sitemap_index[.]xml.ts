@@ -23,6 +23,7 @@ export const Route = createFileRoute("/sitemap_index.xml")({
 
         const sitemaps = [
           `${baseUrl}/sitemap.xml`,
+          `${baseUrl}/tools/sitemap.xml`,
           `${baseUrl}/blog/sitemap.xml`,
           `${baseUrl}/blog/author/sitemap.xml`,
           `${baseUrl}/blog/tag/sitemap.xml`,

@@ -309,6 +309,87 @@ const pageMetadata: Record<string, PageMetadata> = {
       follow: true,
     },
   },
+
+  // ── Tools (public, no signup) ────────────────────────────────────────────────
+  // Titles are keyword-first: the tool's search term leads, the brand trails.
+  "/tools": {
+    title: "WhatsApp & Customer Engagement Tools | RateUp",
+    description:
+      "Tools for WhatsApp business messaging: link generator, QR code generator, API pricing calculator, COD RTO loss calculator and NPS survey templates. No signup required.",
+    openGraph: {
+      title: "WhatsApp & Customer Engagement Tools | RateUp",
+      description:
+        "Calculators and generators for WhatsApp business messaging, built by RateUp. No signup, runs in your browser.",
+    },
+    alternates: {
+      canonical: "/tools",
+    },
+  },
+  "/tools/whatsapp-link-generator": {
+    title: "WhatsApp Link Generator - Create wa.me Chat Links | RateUp",
+    description:
+      "Generate a WhatsApp click-to-chat link with a prefilled message. Enter your number, copy your wa.me link, and use it in your bio, website, ads or QR codes. No signup.",
+    openGraph: {
+      title: "WhatsApp Link Generator - Create wa.me Chat Links",
+      description:
+        "Create a wa.me click-to-chat link with a prefilled message in seconds. No signup, works on mobile and desktop.",
+    },
+    alternates: {
+      canonical: "/tools/whatsapp-link-generator",
+    },
+  },
+  "/tools/whatsapp-qr-code-generator": {
+    title: "WhatsApp QR Code Generator - Download PNG & SVG | RateUp",
+    description:
+      "Create a WhatsApp QR code for packaging, receipts, standees and shopfronts. High error correction, custom colours, print-ready PNG and vector SVG download. No signup.",
+    openGraph: {
+      title: "WhatsApp QR Code Generator - Download PNG & SVG",
+      description:
+        "Turn your WhatsApp number into a scannable, print-ready QR code. No watermark, no signup.",
+    },
+    alternates: {
+      canonical: "/tools/whatsapp-qr-code-generator",
+    },
+  },
+  "/tools/whatsapp-pricing-calculator": {
+    title: "WhatsApp Business API Pricing Calculator - Meta Rates by Country | RateUp",
+    description:
+      "Calculate your monthly WhatsApp Business API cost from Meta's per-message rates. Compare marketing, utility and authentication pricing across countries, in USD and INR.",
+    openGraph: {
+      title: "WhatsApp Business API Pricing Calculator - Meta Rates by Country",
+      description:
+        "Estimate what Meta will charge you per month for WhatsApp template messages, by category and country.",
+    },
+    alternates: {
+      canonical: "/tools/whatsapp-pricing-calculator",
+    },
+  },
+  "/tools/rto-loss-calculator": {
+    title: "COD RTO Loss Calculator for Indian D2C Brands | RateUp",
+    description:
+      "Find out what cash-on-delivery RTO actually costs you every month — shipping both ways, packaging and blocked working capital — and what reducing it by a few points is worth.",
+    openGraph: {
+      title: "COD RTO Loss Calculator for Indian D2C Brands",
+      description:
+        "Put a rupee figure on your return-to-origin losses, and see what WhatsApp COD confirmation could recover.",
+    },
+    alternates: {
+      canonical: "/tools/rto-loss-calculator",
+    },
+  },
+  "/tools/nps-survey-templates": {
+    title: "NPS Survey Templates by Industry + NPS Calculator | RateUp",
+    description:
+      "16 ready-to-send NPS survey templates for ecommerce, restaurants, clinics, salons, SaaS and more — with score-based follow-ups, send timing and an NPS score calculator.",
+    openGraph: {
+      title: "NPS Survey Templates by Industry + NPS Calculator",
+      description:
+        "Industry-specific NPS questions with follow-ups for promoters, passives and detractors. Copy, edit, send.",
+    },
+    alternates: {
+      canonical: "/tools/nps-survey-templates",
+    },
+  },
 };
 
 const BASE_URL = "https://rateup.app";
