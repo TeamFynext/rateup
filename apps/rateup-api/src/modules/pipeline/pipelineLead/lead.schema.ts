@@ -56,6 +56,10 @@ export const moveLeadRequestSchema = z.object({
 
 export const closeLeadRequestSchema = z.object({
   status: z.enum(["WON", "LOST"]),
+  /** The closing column the lead was dropped on. Omitted when the close came
+   *  from a button rather than a drag, and the board then picks the first
+   *  column of that status. */
+  stageId: z.uuid().optional(),
   lostReasonId: z.uuid().nullish(),
   note: z.string().max(2000).optional(),
 });

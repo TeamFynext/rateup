@@ -2,6 +2,9 @@ import { z } from "zod";
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Expected a #rrggbb colour");
 
+/** What landing in the stage does to a lead. Mirrors the `StageStatus` enum. */
+const stageStatus = z.enum(["OPEN", "WON", "LOST"]);
+
 export const idParamsSchema = z.object({
   id: z.uuid(),
 });
@@ -13,8 +16,7 @@ export const createStageRequestSchema = z.object({
   color: hexColor.optional(),
   probability: z.number().int().min(0).max(100).optional(),
   rottingDays: z.number().int().min(0).max(365).optional(),
-  lifecycleId: z.uuid().nullish(),
-  isWon: z.boolean().optional(),
+  status: stageStatus.optional(),
 });
 
 export const updateStageRequestSchema = z.object({
@@ -23,8 +25,7 @@ export const updateStageRequestSchema = z.object({
   color: hexColor.nullish(),
   probability: z.number().int().min(0).max(100).optional(),
   rottingDays: z.number().int().min(0).max(365).optional(),
-  lifecycleId: z.uuid().nullish(),
-  isWon: z.boolean().optional(),
+  status: stageStatus.optional(),
 });
 
 export const deleteStageQuerySchema = z.object({

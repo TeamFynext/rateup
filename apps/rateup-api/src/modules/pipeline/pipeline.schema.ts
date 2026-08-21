@@ -17,7 +17,6 @@ export const updatePipelineRequestSchema = z.object({
   description: z.string().max(500).nullish(),
   teamIds: z.array(z.uuid()).min(1).optional(),
   rottingEnabled: z.boolean().optional(),
-  lifecycleSyncEnabled: z.boolean().optional(),
   autoAssignEnabled: z.boolean().optional(),
   nudgeEnabled: z.boolean().optional(),
 });

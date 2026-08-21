@@ -1,8 +1,3 @@
-import {
-  addStageToOrgPipelines,
-  removeStagesForLifecycle,
-  syncStagesWithLifecycle,
-} from "../pipeline/pipeline.lifecycleSync.js";
 import prisma from "../../utils/prisma.js";
 import { LifecycleBodySchema, LifecycleReorderSchema } from "./lifecycle.schema.js";
 
@@ -49,8 +44,6 @@ export async function updateLifecycle(
       data,
     });
 
-    await syncStagesWithLifecycle(tx, lifecycleId, data);
-
     return lifecycle;
   });
 }
@@ -64,10 +57,6 @@ export async function createLifecycle(orgId: string, data: LifecycleBodySchema) 
       },
     });
 
-    // Every pipeline board is a view of these stages, so a new one shows up as a
-    // column straight away instead of waiting to be added by hand.
-    await addStageToOrgPipelines(tx, orgId, lifecycle);
-
     return lifecycle;
   });
 }
@@ -78,7 +67,6 @@ export async function deleteLifecycleById(id: string, orgId: string) {
     throw new LifecycleInUseError(contactsInStage);
   }
   return await prisma.$transaction(async (tx) => {
-    await removeStagesForLifecycle(tx, id);
     return tx.lifecycle.delete({
       where: {
         id,
@@ -116,10 +104,6 @@ export async function reorderLabels(orgId: string, data: LifecycleReorderSchema)
           },
         }),
       );
-      await syncStagesWithLifecycle(tx, lifecycle.id, {
-        ordering: lifecycle.ordering,
-        isWon: lifecycle.isWon,
-      });
     }
 
     return lifecycles;

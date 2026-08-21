@@ -20,7 +20,7 @@ const leadListInclude = {
   owner: { select: { id: true, name: true, profilePhoto: true } },
   team: { select: { id: true, name: true, color: true } },
   contact: { select: { id: true, name: true, phone: true } },
-  stage: { select: { id: true, name: true, probability: true, rottingDays: true, isWon: true } },
+  stage: { select: { id: true, name: true, probability: true, rottingDays: true, status: true } },
   lostReason: { select: { id: true, label: true } },
   labels: { include: { label: true } },
   tasks: {
@@ -130,31 +130,6 @@ export async function getPipelineIdByTaskId(id: string) {
   return task?.lead.pipelineId;
 }
 
-async function syncContactLifecycle(
-  tx: Prisma.TransactionClient,
-  input: { contactId: string | null; stageId: string; pipelineLifecycleSyncEnabled: boolean },
-) {
-  if (!input.contactId || !input.pipelineLifecycleSyncEnabled) return null;
-
-  const stage = await tx.pipelineStage.findUnique({
-    where: { id: input.stageId },
-    select: { lifecycle: { select: { id: true, name: true } } },
-  });
-  if (!stage?.lifecycle) return null;
-
-  const contact = await tx.contact.findUnique({
-    where: { id: input.contactId },
-    select: { lifecycleId: true },
-  });
-  if (contact?.lifecycleId === stage.lifecycle.id) return null;
-
-  await tx.contact.update({
-    where: { id: input.contactId },
-    data: { lifecycleId: stage.lifecycle.id },
-  });
-  return stage.lifecycle.name;
-}
-
 export async function createLead(
   data: CreateLeadRequestSchema & {
     userId: string | null;
@@ -163,7 +138,7 @@ export async function createLead(
 ) {
   const stage = await prisma.pipelineStage.findUniqueOrThrow({
     where: { id: data.stageId },
-    select: { isWon: true, pipeline: { select: { lifecycleSyncEnabled: true } } },
+    select: { status: true },
   });
 
   return prisma.$transaction(async (tx) => {
@@ -181,8 +156,10 @@ export async function createLead(
         contactId: data.contactId ?? null,
         ownerId: data.automated ? null : data.userId,
         expectedCloseAt: data.expectedCloseAt ? new Date(data.expectedCloseAt) : null,
-        status: stage.isWon ? "WON" : "OPEN",
-        closedAt: stage.isWon ? new Date() : null,
+        // A lead can be opened straight onto a closing column, so the stage's
+        // own status decides rather than a default of OPEN.
+        status: stage.status,
+        closedAt: stage.status === "OPEN" ? null : new Date(),
         ...(data.labelIds?.length && {
           labels: { createMany: { data: data.labelIds.map((labelId) => ({ labelId })) } },
         }),
@@ -195,33 +172,13 @@ export async function createLead(
       include: leadListInclude,
     });
 
-    const lifecycleName = await syncContactLifecycle(tx, {
-      contactId: lead.contactId,
-      stageId: lead.stageId,
-      pipelineLifecycleSyncEnabled: stage.pipeline.lifecycleSyncEnabled,
-    });
-
-    await tx.leadActivity.createMany({
-      data: [
-        {
-          leadId: lead.id,
-          userId: data.userId,
-          type: "CREATED",
-          // `userId` is kept on an automated entry: the rule opened the lead, but
-          // knowing whose lifecycle change set it off is the useful part.
-          details: { sourceLabel: data.source, ...(data.automated && { automated: true }) },
-        },
-        ...(lifecycleName
-          ? [
-              {
-                leadId: lead.id,
-                userId: data.userId,
-                type: "LIFECYCLE_SYNCED",
-                details: { lifecycleName },
-              },
-            ]
-          : []),
-      ],
+    await tx.leadActivity.create({
+      data: {
+        leadId: lead.id,
+        userId: data.userId,
+        type: "CREATED",
+        details: { sourceLabel: data.source, ...(data.automated && { automated: true }) },
+      },
     });
 
     return serialiseLead(lead);
@@ -273,120 +230,56 @@ export async function moveLead(id: string, stageId: string, userId: string | nul
   return prisma.$transaction(async (tx) => {
     const before = await tx.lead.findUniqueOrThrow({
       where: { id },
-      select: {
-        stageId: true,
-        contactId: true,
-        stage: { select: { name: true } },
-        pipeline: { select: { lifecycleSyncEnabled: true } },
-      },
+      select: { stageId: true, stage: { select: { name: true } } },
     });
 
     const target = await tx.pipelineStage.findUniqueOrThrow({
       where: { id: stageId },
-      select: { name: true, isWon: true },
+      select: { name: true, status: true },
     });
 
     const now = new Date();
+    const closing = target.status !== "OPEN";
     const lead = await tx.lead.update({
       where: { id },
       data: {
         stageId,
         stageEnteredAt: now,
         lastActivityAt: now,
-        // Landing on the won stage closes the lead; leaving it reopens.
-        status: target.isWon ? "WON" : "OPEN",
-        closedAt: target.isWon ? now : null,
-        closedById: target.isWon ? userId : null,
-        lostReasonId: null,
+        // The column decides: landing on a Won or Lost stage closes the lead,
+        // and moving back to an open one reopens it.
+        status: target.status,
+        closedAt: closing ? now : null,
+        closedById: closing ? userId : null,
+        // A reason only belongs to a lead sitting in a Lost column. Dragging one
+        // out — or straight across to Won — drops the reason with it.
+        ...(target.status !== "LOST" && { lostReasonId: null }),
       },
       include: leadListInclude,
     });
 
-    const lifecycleName = await syncContactLifecycle(tx, {
-      contactId: lead.contactId,
-      stageId,
-      pipelineLifecycleSyncEnabled: before.pipeline.lifecycleSyncEnabled,
-    });
-
-    await tx.leadActivity.createMany({
-      data: [
-        {
-          leadId: id,
-          userId,
-          type: target.isWon ? "WON" : "MOVED",
-          details: { fromStageName: before.stage.name, toStageName: target.name },
-        },
-        ...(lifecycleName
-          ? [{ leadId: id, userId, type: "LIFECYCLE_SYNCED", details: { lifecycleName } }]
-          : []),
-      ],
+    await tx.leadActivity.create({
+      data: {
+        leadId: id,
+        userId,
+        type: target.status === "OPEN" ? "MOVED" : target.status,
+        details: { fromStageName: before.stage.name, toStageName: target.name },
+      },
     });
 
     return serialiseLead(lead);
   });
 }
 
-export async function syncLeadsToContactLifecycle(
-  contactIds: string[],
-  lifecycleId: string | null,
-  orgId: string,
-  userId: string | null = null,
-  options: {
-    openOnTeamDefaults?: boolean;
-  } = {},
-) {
-  if (!contactIds.length || !lifecycleId) return [];
-
-  const leads = await prisma.lead.findMany({
-    where: {
-      contactId: { in: contactIds },
-      status: "OPEN",
-      pipeline: { lifecycleSyncEnabled: true },
-      // Already in a column for this lifecycle — nothing to do.
-      stage: { lifecycleId: { not: lifecycleId } },
-    },
-    select: { id: true, pipelineId: true },
-  });
-
-  const pipelineIds = [...new Set(leads.map((lead) => lead.pipelineId))];
-  const stages = await prisma.pipelineStage.findMany({
-    where: { pipelineId: { in: pipelineIds }, lifecycleId },
-    orderBy: { order: "asc" },
-    select: { id: true, pipelineId: true },
-  });
-
-  // First stage carrying the lifecycle wins, which is where a lead entering that
-  // phase belongs.
-  const targetByPipeline = new Map<string, string>();
-  for (const stage of stages) {
-    if (!targetByPipeline.has(stage.pipelineId)) targetByPipeline.set(stage.pipelineId, stage.id);
-  }
-
-  const moved = [];
-  for (const lead of leads) {
-    const stageId = targetByPipeline.get(lead.pipelineId);
-    // A pipeline that never mapped this lifecycle has no column to move into.
-    if (!stageId) continue;
-    moved.push(await moveLead(lead.id, stageId, userId));
-  }
-
-  if (options.openOnTeamDefaults === false) return moved;
-
-  const opened = await openLeadsOnTeamDefaults(contactIds, lifecycleId, orgId, userId);
-  return [...moved, ...opened];
-}
-
 export async function openLeadOnPipelineForContact({
   contactId,
   pipelineId,
-  lifecycleId,
   source,
   channel,
   userId = null,
 }: {
   contactId: string;
   pipelineId: string;
-  lifecycleId: string;
   source: LeadSource;
   channel: LeadChannel;
   userId?: string | null;
@@ -397,8 +290,10 @@ export async function openLeadOnPipelineForContact({
   });
   if (existing) return null;
 
+  // The board's first open column — the entry point of its funnel. A board made
+  // only of closing columns has nowhere to put a new lead.
   const stage = await prisma.pipelineStage.findFirst({
-    where: { pipelineId, lifecycleId },
+    where: { pipelineId, status: "OPEN" },
     orderBy: { order: "asc" },
     select: { id: true },
   });
@@ -426,97 +321,25 @@ export async function openLeadOnPipelineForContact({
   });
 }
 
-async function openLeadsOnTeamDefaults(
-  contactIds: string[],
-  lifecycleId: string,
-  orgId: string,
-  userId: string | null,
-) {
-  // `orgId` is what keeps this inside one tenant. Everything below is reached
-  // from the team's default pipeline, so without it a board in another org that
-  // maps the same lifecycle would receive the contact's name, phone and email.
-  const teams = await prisma.team.findMany({
-    where: { orgId, autoCreateLeads: true, defaultPipelineId: { not: null } },
-    orderBy: { name: "asc" },
-    select: { id: true, defaultPipelineId: true },
-  });
-  if (!teams.length) return [];
-
-  // One entry per board, remembering which team to stamp on the new lead.
-  const teamByPipeline = new Map<string, string>();
-  for (const team of teams) {
-    if (!teamByPipeline.has(team.defaultPipelineId!)) {
-      teamByPipeline.set(team.defaultPipelineId!, team.id);
-    }
-  }
-  const pipelineIds = [...teamByPipeline.keys()];
-
-  // Only boards that have a column for this lifecycle; the rest have nowhere to
-  // put the lead and are skipped rather than defaulted to their first stage.
-  const stages = await prisma.pipelineStage.findMany({
-    where: { pipelineId: { in: pipelineIds }, lifecycleId },
-    orderBy: { order: "asc" },
-    select: { id: true, pipelineId: true },
-  });
-  const stageByPipeline = new Map<string, string>();
-  for (const stage of stages) {
-    if (!stageByPipeline.has(stage.pipelineId)) stageByPipeline.set(stage.pipelineId, stage.id);
-  }
-  if (!stageByPipeline.size) return [];
-
-  // A contact already on a board keeps the lead they have, whatever state it is
-  // in — a closed lead means someone decided, and re-adding would undo that.
-  const existing = await prisma.lead.findMany({
-    where: { contactId: { in: contactIds }, pipelineId: { in: [...stageByPipeline.keys()] } },
-    select: { contactId: true, pipelineId: true },
-  });
-  const taken = new Set(existing.map((lead) => `${lead.contactId}:${lead.pipelineId}`));
-
-  const contacts = await prisma.contact.findMany({
-    // Scoped again here: a caller passing an id from another org would otherwise
-    // copy that contact onto this org's board.
-    where: { id: { in: contactIds }, orgId },
-    select: { id: true, name: true, phone: true, email: true },
-  });
-
-  const created = [];
-  for (const contact of contacts) {
-    for (const [pipelineId, stageId] of stageByPipeline) {
-      if (taken.has(`${contact.id}:${pipelineId}`)) continue;
-      created.push(
-        await createLead({
-          pipelineId,
-          stageId,
-          contactId: contact.id,
-          name: contact.name ?? "Unnamed contact",
-          phone: contact.phone,
-          email: contact.email,
-          source: "MANUAL",
-          channel: "NONE",
-          teamId: teamByPipeline.get(pipelineId) ?? null,
-          userId,
-          automated: true,
-        }),
-      );
-    }
-  }
-  return created;
-}
-
 export async function closeLead(id: string, data: CloseLeadRequestSchema, userId: string) {
   return prisma.$transaction(async (tx) => {
     const isWon = data.status === "WON";
     const now = new Date();
 
-    // Winning moves the lead onto the pipeline's won stage so the board shows it
-    // in the right column; losing leaves it where it stalled.
-    const wonStage = isWon
+    // Closing moves the lead into a column that closes it, so the board never
+    // shows a won or lost lead sitting in an open column. `stageId` is the
+    // column the user actually dropped on; without one, the board's first
+    // column of that status stands in.
+    const target = data.stageId
       ? await tx.pipelineStage.findFirst({
-          where: { pipeline: { leads: { some: { id } } }, isWon: true },
-          orderBy: { order: "asc" },
-          select: { id: true, name: true },
+          where: { id: data.stageId, pipeline: { leads: { some: { id } } } },
+          select: { id: true },
         })
-      : null;
+      : await tx.pipelineStage.findFirst({
+          where: { pipeline: { leads: { some: { id } } }, status: data.status },
+          orderBy: { order: "asc" },
+          select: { id: true },
+        });
 
     const reason = data.lostReasonId
       ? await tx.pipelineLostReason.findUnique({
@@ -533,7 +356,9 @@ export async function closeLead(id: string, data: CloseLeadRequestSchema, userId
         closedById: userId,
         lastActivityAt: now,
         lostReasonId: isWon ? null : (data.lostReasonId ?? null),
-        ...(wonStage && { stageId: wonStage.id, stageEnteredAt: now }),
+        // A board with no column of this status keeps the lead where it stalled
+        // rather than losing it — closed is still recorded on the lead itself.
+        ...(target && { stageId: target.id, stageEnteredAt: now }),
       },
       include: leadListInclude,
     });
@@ -544,29 +369,16 @@ export async function closeLead(id: string, data: CloseLeadRequestSchema, userId
       data: { completedAt: now },
     });
 
-    const lifecycleName = isWon
-      ? await syncContactLifecycle(tx, {
-          contactId: lead.contactId,
-          stageId: lead.stageId,
-          pipelineLifecycleSyncEnabled: true,
-        })
-      : null;
-
-    await tx.leadActivity.createMany({
-      data: [
-        {
-          leadId: id,
-          userId,
-          type: data.status,
-          details: {
-            ...(reason && { lostReasonLabel: reason.label }),
-            ...(data.note && { note: data.note }),
-          },
+    await tx.leadActivity.create({
+      data: {
+        leadId: id,
+        userId,
+        type: data.status,
+        details: {
+          ...(reason && { lostReasonLabel: reason.label }),
+          ...(data.note && { note: data.note }),
         },
-        ...(lifecycleName
-          ? [{ leadId: id, userId, type: "LIFECYCLE_SYNCED", details: { lifecycleName } }]
-          : []),
-      ],
+      },
     });
 
     return serialiseLead(lead);
