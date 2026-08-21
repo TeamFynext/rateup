@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Lead, PipelineDetail, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
 import { cn } from "@/lib/utils";
 
+import { stageStatusLabel } from "../pipeline.labels.ts";
 import { daysInStage } from "../pipeline.utils.ts";
 
 interface LeadStageStepperProps {
@@ -22,9 +23,9 @@ export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadS
   const stage = pipeline.stages[currentIndex];
   const closed = lead.status !== "OPEN";
 
-  // Columns are the org's lifecycle stages, so there can be a lot of them. Past
-  // this many the labels are too narrow to read, and the segments become plain
-  // bars — the line underneath already names the stage the lead is on.
+  // A board can carry a lot of columns. Past this many the labels are too
+  // narrow to read, and the segments become plain bars — the line underneath
+  // already names the stage the lead is on.
   const labelled = pipeline.stages.length <= 6;
 
   return (
@@ -74,19 +75,16 @@ export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadS
           {" · "}
           {t("{days}d in stage", { days: daysInStage(lead) })}
         </span>
-        {stage?.lifecycle ? (
+        {stage ? (
           <span
             className="bg-muted text-muted-foreground inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
-            // Lifecycle colours are picked per org and stored as hex, so there is
-            // no class that names them.
+            // Stage colours are picked per org and stored as hex, so there is no
+            // class that names them.
             style={
-              stage.lifecycle.color
-                ? { backgroundColor: `${stage.lifecycle.color}1f`, color: stage.lifecycle.color }
-                : undefined
+              stage.color ? { backgroundColor: `${stage.color}1f`, color: stage.color } : undefined
             }
           >
-            <span aria-hidden>{stage.lifecycle.emoji}</span>
-            {stage.lifecycle.name}
+            {stageStatusLabel(t, stage.status)}
           </span>
         ) : null}
       </div>

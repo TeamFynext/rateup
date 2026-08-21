@@ -7,12 +7,17 @@
 // by a variable would never register its keys; and a plain function works in
 // `buildPipelineNavItems`, which builds sidebar data outside any component.
 //
-// Org-authored names — stage, lifecycle and label names, lost reasons, team and
-// pipeline names — are data, not UI copy, and are deliberately absent here.
+// Org-authored names — stage and label names, lost reasons, team and pipeline
+// names — are data, not UI copy, and are deliberately absent here.
 
 import type { TFunction } from "i18next";
 
-import type { LeadChannel, LeadSource, LeadTaskType } from "@/backend/pipeline/pipeline.types.ts";
+import type {
+  LeadChannel,
+  LeadSource,
+  LeadTaskType,
+  StageStatus,
+} from "@/backend/pipeline/pipeline.types.ts";
 import type { LeadFilter, PipelineView } from "@/store/pipeline.store.ts";
 
 /** How the lead reached the board. */
@@ -94,5 +99,29 @@ export function leadFilterLabel(t: TFunction, filter: LeadFilter): string {
       return t("Won");
     case "lost":
       return t("Lost");
+  }
+}
+
+/** A column's status, as the board bands and the settings picker name it. */
+export function stageStatusLabel(t: TFunction, status: StageStatus): string {
+  switch (status) {
+    case "OPEN":
+      return t("Open");
+    case "WON":
+      return t("Won");
+    case "LOST":
+      return t("Lost");
+  }
+}
+
+/** The one-line explanation under each band heading, from the design. */
+export function stageStatusHint(t: TFunction, status: StageStatus): string {
+  switch (status) {
+    case "OPEN":
+      return t("still being worked");
+    case "WON":
+      return t("closed as customer");
+    case "LOST":
+      return t("closed, no deal");
   }
 }

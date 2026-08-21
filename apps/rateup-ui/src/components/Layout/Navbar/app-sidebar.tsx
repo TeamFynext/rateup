@@ -714,7 +714,14 @@ export default function AppSidebar({
         intendedRoute={intendedRoute}
       />
       {/* Icon rail */}
-      <Sidebar className="w-fit border-r h-screen z-50 text-white!" collapsible="none">
+      {/* The rail sits on brand navy, so it carries its own copy of the sidebar
+          palette rather than the panel's: icons rest at 55% white and the active
+          one gets a soft white pill, per the design. Inheriting the panel's
+          pale-blue active state would be unreadable here. */}
+      <Sidebar
+        className="w-fit border-r h-screen z-50 [--sidebar-foreground:rgba(255,255,255,0.55)] [--sidebar-accent:rgba(255,255,255,0.14)] [--sidebar-accent-foreground:#fff] [--sidebar-border:rgba(255,255,255,0.08)]"
+        collapsible="none"
+      >
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>

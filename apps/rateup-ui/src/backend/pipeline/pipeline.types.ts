@@ -19,8 +19,11 @@ export type LeadChannel = "NONE" | "WHATSAPP" | "INSTAGRAM" | "MESSENGER";
 
 export type LeadTaskType = "CALL" | "MESSAGE" | "MEETING" | "DOCUMENT" | "TODO";
 
-/** Lifecycle category as the inbox models it; a stage inherits its stage's. */
-export type LifecycleCategory = "active" | "won" | "lost";
+/**
+ * What landing in a stage does to a lead. A board's own vocabulary — it no
+ * longer borrows the inbox's lifecycle categories.
+ */
+export type StageStatus = "OPEN" | "WON" | "LOST";
 
 export interface PipelineUser {
   id: string;
@@ -40,14 +43,6 @@ export interface PipelineContactRef {
   phone: string | null;
 }
 
-export interface StageLifecycleRef {
-  id: string;
-  name: string;
-  emoji: string;
-  color: string | null;
-  category: LifecycleCategory;
-}
-
 export interface PipelineStage {
   id: string;
   name: string;
@@ -57,10 +52,9 @@ export interface PipelineStage {
   color: string | null;
   probability: number;
   rottingDays: number;
-  isWon: boolean;
+  /** Won and Lost columns close a lead on arrival and sit out of open counts. */
+  status: StageStatus;
   pipelineId: string;
-  lifecycleId: string | null;
-  lifecycle: StageLifecycleRef | null;
   openLeadCount: number;
 }
 
@@ -86,7 +80,6 @@ export interface PipelineSummary {
   description: string | null;
   order: number;
   rottingEnabled: boolean;
-  lifecycleSyncEnabled: boolean;
   autoAssignEnabled: boolean;
   nudgeEnabled: boolean;
   teamIds: string[];
@@ -106,7 +99,7 @@ export interface LeadStageRef {
   name: string;
   probability: number;
   rottingDays: number;
-  isWon: boolean;
+  status: StageStatus;
 }
 
 export interface LeadTask {
@@ -138,7 +131,6 @@ export interface LeadActivity {
     removedNames?: string[];
     lostReasonLabel?: string;
     note?: string;
-    lifecycleName?: string;
     taskTitle?: string;
     sourceLabel?: string;
     /** The lead was opened by a rule; `user` is then whoever set the rule off. */
@@ -218,7 +210,6 @@ export interface UpdatePipelineInput {
   description?: string | null;
   teamIds?: string[];
   rottingEnabled?: boolean;
-  lifecycleSyncEnabled?: boolean;
   autoAssignEnabled?: boolean;
   nudgeEnabled?: boolean;
 }
@@ -230,8 +221,7 @@ export interface CreateStageInput {
   color?: string;
   probability?: number;
   rottingDays?: number;
-  lifecycleId?: string | null;
-  isWon?: boolean;
+  status?: StageStatus;
 }
 
 export type UpdateStageInput = Omit<Partial<CreateStageInput>, "pipelineId">;
@@ -256,6 +246,8 @@ export type UpdateLeadInput = Omit<Partial<CreateLeadInput>, "pipelineId" | "sta
 
 export interface CloseLeadInput {
   status: Extract<LeadStatus, "WON" | "LOST">;
+  /** The closing column the lead was dropped on; omitted when a button closed it. */
+  stageId?: string;
   lostReasonId?: string | null;
   note?: string;
 }

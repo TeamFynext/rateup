@@ -22,7 +22,7 @@ import type {
   LeadChannel,
   LeadSource,
   LeadTaskType,
-  LifecycleCategory,
+  StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
 // The view and filter vocabularies live with the state that holds them.
 import type { PipelineView } from "@/store/pipeline.store.ts";
@@ -112,25 +112,26 @@ export const TASK_TYPE_ICON: Record<LeadTaskType, Icon> = {
   TODO: IconChecklist,
 };
 
+/** Every status a column can carry, in the order the settings picker lists them. */
+export const STAGE_STATUSES: readonly StageStatus[] = ["OPEN", "WON", "LOST"];
+
 /**
- * Lifecycle bands group the board's stage columns. The palette is deliberately
- * the Tailwind ramp rather than bespoke tokens, so both themes come for free.
+ * Status bands group the board's columns: everything still being worked, then
+ * the two ways a lead leaves. The palette is deliberately the Tailwind ramp
+ * rather than bespoke tokens, so both themes come for free.
  */
-export const LIFECYCLE_BAND: Record<
-  LifecycleCategory,
-  { text: string; border: string; surface: string }
-> = {
-  active: {
-    text: "text-amber-700 dark:text-amber-500",
-    border: "border-amber-600/35",
-    surface: "bg-amber-50 dark:bg-amber-950/30",
-  },
-  won: {
+export const STATUS_BAND: Record<StageStatus, { text: string; border: string; surface: string }> = {
+  OPEN: {
     text: "text-primary",
     border: "border-primary/35",
     surface: "bg-primary/8 dark:bg-primary/15",
   },
-  lost: {
+  WON: {
+    text: "text-green-700 dark:text-green-500",
+    border: "border-green-600/35",
+    surface: "bg-green-50 dark:bg-green-950/30",
+  },
+  LOST: {
     text: "text-muted-foreground",
     border: "border-border",
     surface: "bg-muted",

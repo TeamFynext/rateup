@@ -10,7 +10,8 @@ import type { Lead, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import { LIFECYCLE_BAND } from "../pipeline.constants.tsx";
+import { STATUS_BAND } from "../pipeline.constants.tsx";
+import { stageStatusHint, stageStatusLabel } from "../pipeline.labels.ts";
 import { daysInStage, groupStagesIntoBands, isRotting, leadsInStage } from "../pipeline.utils.ts";
 import { StageFill } from "../shared/atoms.tsx";
 import type { PipelineData } from "../usePipelineData.ts";
@@ -22,7 +23,6 @@ interface BoardViewProps {
   onOpenConversation: (lead: Lead) => void;
   onQuickAdd: (stageId: string) => void;
   onMoveLead: (leadId: string, stage: PipelineStage) => void;
-  onMarkLost: (leadId: string) => void;
 }
 
 /**
@@ -85,19 +85,27 @@ function StageColumn({
         "bg-muted/50 flex h-full min-h-0 w-[78vw] max-w-68.5 shrink-0 snap-start flex-col rounded-xl border transition-colors sm:w-68.5",
         isOver
           ? "border-primary bg-primary/5"
-          : // Landing here closes the lead won, so the column that does it reads
-            // as the end of the funnel rather than one more step along it.
-            stage.isWon
+          : // A closing column reads as the end of the funnel rather than one
+            // more step along it.
+            stage.status === "WON"
             ? "border-green-600/40 bg-green-600/5"
-            : "border-border",
+            : stage.status === "LOST"
+              ? "border-border bg-muted"
+              : "border-border",
       )}
     >
       <div className="border-border border-b p-3">
         <div className="flex items-center gap-2">
-          {stage.isWon ? (
+          {stage.status === "WON" ? (
             <IconTrophy
               className="size-3.5 shrink-0 text-green-700 dark:text-green-500"
               title={t("Leads dropped here are marked won")}
+            />
+          ) : null}
+          {stage.status === "LOST" ? (
+            <IconCircleX
+              className="text-muted-foreground size-3.5 shrink-0"
+              title={t("Leads dropped here are marked lost")}
             />
           ) : null}
           <span className="font-nunito text-foreground min-w-0 flex-1 truncate text-[13px] font-extrabold">
@@ -162,39 +170,11 @@ function StageColumn({
   );
 }
 
-function LostDropZone({ lostCount }: Readonly<{ lostCount: number }>) {
-  const { t } = useTranslation();
-  const { ref, isOver } = useDropTarget({ lost: true });
-
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "flex w-28 shrink-0 snap-start flex-col items-center justify-center gap-2 self-stretch rounded-xl border border-dashed p-3 text-center transition-colors sm:w-36 sm:p-4",
-        isOver ? "border-destructive bg-destructive/5" : "border-border",
-      )}
-    >
-      <IconCircleX
-        className={cn("size-6", isOver ? "text-destructive" : "text-muted-foreground")}
-      />
-      {/* Two whole sentences rather than a shared "Lost" with a prefix spliced
-          on: the long and short forms do not share a word order in every
-          language, so each is translated on its own. */}
-      <span className="text-foreground text-xs font-bold">
-        <span className="hidden sm:inline">{t("Drop to mark Lost")}</span>
-        <span className="sm:hidden">{t("Lost")}</span>
-      </span>
-      <span className="text-muted-foreground text-[11px]">
-        {t("{total} lost so far", { total: lostCount })}
-      </span>
-    </div>
-  );
-}
-
 /**
- * Stage columns grouped under their lifecycle band, with a lost zone parked at
- * the end. Dropping is committed by one board-level monitor rather than per
- * column, so a card knows where it came from and where it landed in one place.
+ * Stage columns grouped under their status band. Won and Lost are ordinary
+ * columns now, so every drop is the same gesture and there is no separate zone.
+ * Dropping is committed by one board-level monitor rather than per column, so a
+ * card knows where it came from and where it landed in one place.
  */
 export function BoardView({
   data,
@@ -202,10 +182,9 @@ export function BoardView({
   onOpenConversation,
   onQuickAdd,
   onMoveLead,
-  onMarkLost,
 }: Readonly<BoardViewProps>) {
   const { t } = useTranslation();
-  const { pipeline, visibleLeads, leads } = data;
+  const { pipeline, visibleLeads } = data;
 
   useEffect(() => {
     if (!pipeline) return;
@@ -218,11 +197,6 @@ export function BoardView({
 
         const { leadId, fromStageId } = source.data;
 
-        if (target.data.lost === true) {
-          onMarkLost(leadId);
-          return;
-        }
-
         const stageId = target.data.stageId;
         if (typeof stageId !== "string" || stageId === fromStageId) return;
 
@@ -230,25 +204,28 @@ export function BoardView({
         if (stage) onMoveLead(leadId, stage);
       },
     });
-  }, [pipeline, onMoveLead, onMarkLost]);
+  }, [pipeline, onMoveLead]);
 
   if (!pipeline) return null;
 
   const bands = groupStagesIntoBands(pipeline.stages);
+  // Scaled against the open columns only: a Won column holding every lead ever
+  // closed would otherwise flatten every working column's bar to nothing.
   const widestCount = Math.max(
     1,
-    ...pipeline.stages.map((stage) => leadsInStage(visibleLeads, stage.id).length),
+    ...pipeline.stages
+      .filter((stage) => stage.status === "OPEN")
+      .map((stage) => leadsInStage(visibleLeads, stage.id).length),
   );
-  const lostCount = leads.filter((lead) => lead.status === "LOST").length;
 
   return (
     // Only the horizontal axis scrolls out here — each column owns its own
-    // vertical scroll, so the headers and the Lost zone stay put while a long
-    // column scrolls under them.
+    // vertical scroll, so the headers stay put while a long column scrolls
+    // under them.
     <div className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden p-4 sm:snap-none sm:p-6">
       <div className="flex h-full items-stretch gap-4 sm:gap-6">
         {bands.map((band) => {
-          const bandStyle = LIFECYCLE_BAND[band.category];
+          const bandStyle = STATUS_BAND[band.status];
           const bandCount = band.stages.reduce(
             (total, stage) => total + leadsInStage(visibleLeads, stage.id).length,
             0,
@@ -269,13 +246,15 @@ export function BoardView({
                     bandStyle.text,
                   )}
                 >
-                  {band.label ?? t("Unmapped stages")}
+                  {stageStatusLabel(t, band.status)}
                 </span>
                 <span className={cn("text-[11px] font-bold opacity-75", bandStyle.text)}>
                   {t("{total} leads", { total: bandCount })}
                 </span>
                 <span className="flex-1" />
-                <span className="text-muted-foreground text-[10px]">{t("syncs to inbox")}</span>
+                <span className="text-muted-foreground text-[10px]">
+                  {stageStatusHint(t, band.status)}
+                </span>
               </div>
 
               <div className="flex min-h-0 flex-1 items-stretch gap-3 sm:gap-3">
@@ -295,8 +274,6 @@ export function BoardView({
             </div>
           );
         })}
-
-        <LostDropZone lostCount={lostCount} />
       </div>
     </div>
   );

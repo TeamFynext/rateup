@@ -130,9 +130,7 @@ export function AddLeadDialog({
         <DialogHeader>
           <DialogTitle className="font-nunito font-extrabold">{t("Add lead")}</DialogTitle>
           <DialogDescription>
-            {t(
-              "New leads land on the board straight away and follow the stage's lifecycle mapping.",
-            )}
+            {t("New leads land on the board straight away, in the column you pick.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -206,14 +204,13 @@ export function AddLeadDialog({
             </div>
           ) : null}
 
-          {stage?.lifecycle ? (
-            <div className="bg-primary/8 text-primary flex items-center gap-2.5 rounded-lg p-3 sm:col-span-2">
+          {stage && stage.status !== "OPEN" ? (
+            <div className="bg-muted text-muted-foreground flex items-center gap-2.5 rounded-lg p-3 sm:col-span-2">
               <IconRepeat className="size-4 shrink-0" />
               <span className="text-xs">
-                {t(
-                  "{stage} maps to the {lifecycle} lifecycle — the contact's inbox lifecycle updates automatically.",
-                  { stage: stage.name, lifecycle: stage.lifecycle.name },
-                )}
+                {t("{stage} is a closing column — the lead opens already closed.", {
+                  stage: stage.name,
+                })}
               </span>
             </div>
           ) : null}

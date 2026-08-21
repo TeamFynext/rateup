@@ -1,6 +1,7 @@
 import {
   IconCalendarX,
   IconChevronDown,
+  IconCircleX,
   IconChevronRight,
   IconMinus,
   IconRosetteDiscountCheck,
@@ -11,12 +12,13 @@ import {
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { Lead, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
+import type { Lead, PipelineStage, StageStatus } from "@/backend/pipeline/pipeline.types.ts";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
-import { TASK_TYPE_ICON } from "../pipeline.constants.tsx";
+import { STATUS_BAND, TASK_TYPE_ICON } from "../pipeline.constants.tsx";
+import { stageStatusLabel } from "../pipeline.labels.ts";
 import { daysIdle, daysInStage, isOverdue, isRotting, leadAgeDays } from "../pipeline.utils.ts";
 import { AssigneeStack } from "../shared/AssigneeStack.tsx";
 import { StageDot } from "../shared/atoms.tsx";
@@ -34,8 +36,8 @@ interface LeadGroup {
   key: string;
   label: string;
   color: string | null;
-  /** The stage that closes a lead won; marked so the list reads like the board. */
-  isWon?: boolean;
+  /** The status of the column this group is, so the list reads like the board. */
+  status?: StageStatus;
   leads: Lead[];
 }
 
@@ -50,7 +52,7 @@ interface LeadGroup {
  */
 const COLUMN = {
   stage: "hidden w-38 shrink-0 lg:flex",
-  lifecycle: "hidden w-28 shrink-0 lg:block",
+  status: "hidden w-28 shrink-0 lg:block",
   assignees: "hidden w-33 shrink-0 lg:flex",
   next: "hidden w-42 shrink-0 lg:flex",
   stageAge: "hidden w-21 shrink-0 text-right lg:block",
@@ -90,7 +92,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
         key: stage.id,
         label: stage.name,
         color: stage.color,
-        isWon: stage.isWon,
+        status: stage.status,
         leads: visibleLeads.filter((lead) => lead.stageId === stage.id),
       }))
       .filter((group) => group.leads.length > 0);
@@ -148,7 +150,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
             />
             <HeaderCell className="min-w-0 flex-1">{t("Lead")}</HeaderCell>
             <HeaderCell className={COLUMN.stage}>{t("Stage")}</HeaderCell>
-            <HeaderCell className={COLUMN.lifecycle}>{t("Lifecycle")}</HeaderCell>
+            <HeaderCell className={COLUMN.status}>{t("Status")}</HeaderCell>
             <HeaderCell className={COLUMN.assignees}>{t("Assignees")}</HeaderCell>
             <HeaderCell className={COLUMN.next}>{t("Next activity")}</HeaderCell>
             <HeaderCell className={COLUMN.stageAge}>{t("In stage")}</HeaderCell>
@@ -178,10 +180,16 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                     <span className="font-nunito text-foreground text-xs font-extrabold">
                       {group.label}
                     </span>
-                    {group.isWon ? (
+                    {group.status === "WON" ? (
                       <IconTrophy
                         className="size-3.5 text-green-700 dark:text-green-500"
                         title={t("Leads in this stage are marked won")}
+                      />
+                    ) : null}
+                    {group.status === "LOST" ? (
+                      <IconCircleX
+                        className="text-muted-foreground size-3.5"
+                        title={t("Leads in this stage are marked lost")}
                       />
                     ) : null}
                     <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[11px] font-bold">
@@ -270,14 +278,16 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                             </span>
                           </span>
 
-                          <span className={COLUMN.lifecycle}>
-                            {stage?.lifecycle ? (
-                              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-bold">
-                                {stage.lifecycle.emoji} {stage.lifecycle.name}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-[11px]">—</span>
-                            )}
+                          <span className={COLUMN.status}>
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 text-[10px] font-bold",
+                                STATUS_BAND[lead.stage.status].surface,
+                                STATUS_BAND[lead.stage.status].text,
+                              )}
+                            >
+                              {stageStatusLabel(t, lead.stage.status)}
+                            </span>
                           </span>
 
                           <span className={cn("flex items-center gap-2", COLUMN.assignees)}>
@@ -358,7 +368,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
               <span className={cn("text-muted-foreground text-xs", COLUMN.stage)}>
                 {t("{total} stages", { total: groups.length })}
               </span>
-              <span className={cn("text-muted-foreground text-xs", COLUMN.lifecycle)} />
+              <span className={cn("text-muted-foreground text-xs", COLUMN.status)} />
               <span className={cn("text-muted-foreground text-xs", COLUMN.assignees)}>
                 {t("{total} assignees", {
                   total: new Set(visibleLeads.flatMap((lead) => lead.assignees.map((u) => u.id)))

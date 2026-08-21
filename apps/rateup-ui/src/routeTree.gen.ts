@@ -63,6 +63,7 @@ import { Route as DashboardMetaAgentOverviewRouteImport } from './routes/dashboa
 import { Route as DashboardMetaAgentSettingsRouteImport } from './routes/dashboard/meta-agent/settings'
 import { Route as DashboardMetaAgentSkillsRouteImport } from './routes/dashboard/meta-agent/skills'
 import { Route as DashboardMetaAgentUiSkillsRouteImport } from './routes/dashboard/meta-agent/ui-skills'
+import { Route as DashboardPipelineIndexRouteImport } from './routes/dashboard/pipeline/index'
 import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
@@ -453,6 +454,11 @@ const DashboardMetaAgentUiSkillsRoute =
     path: '/ui-skills',
     getParentRoute: () => DashboardMetaAgentRouteRoute,
   } as any)
+const DashboardPipelineIndexRoute = DashboardPipelineIndexRouteImport.update({
+  id: '/pipeline/',
+  path: '/pipeline/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardQrCreatorIndexRoute = DashboardQrCreatorIndexRouteImport.update({
   id: '/qrCreator/',
   path: '/qrCreator/',
@@ -1141,6 +1147,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
   '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
+  '/dashboard/pipeline/': typeof DashboardPipelineIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -1299,6 +1306,7 @@ export interface FileRoutesByTo {
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
   '/dashboard/meta-agent': typeof DashboardMetaAgentIndexRoute
+  '/dashboard/pipeline': typeof DashboardPipelineIndexRoute
   '/dashboard/qrCreator': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
@@ -1463,6 +1471,7 @@ export interface FileRoutesById {
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
   '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
+  '/dashboard/pipeline/': typeof DashboardPipelineIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -1628,6 +1637,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
     | '/dashboard/meta-agent/'
+    | '/dashboard/pipeline/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
@@ -1786,6 +1796,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox'
     | '/dashboard/instagram'
     | '/dashboard/meta-agent'
+    | '/dashboard/pipeline'
     | '/dashboard/qrCreator'
     | '/dashboard/quickAccessLinks'
     | '/dashboard/settings'
@@ -1949,6 +1960,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
     | '/dashboard/meta-agent/'
+    | '/dashboard/pipeline/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
@@ -2497,6 +2509,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/meta-agent/ui-skills'
       preLoaderRoute: typeof DashboardMetaAgentUiSkillsRouteImport
       parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/pipeline/': {
+      id: '/dashboard/pipeline/'
+      path: '/pipeline'
+      fullPath: '/dashboard/pipeline/'
+      preLoaderRoute: typeof DashboardPipelineIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/qrCreator/': {
       id: '/dashboard/qrCreator/'
@@ -3352,6 +3371,7 @@ interface DashboardRouteRouteChildren {
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
+  DashboardPipelineIndexRoute: typeof DashboardPipelineIndexRoute
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
   DashboardQuickAccessLinksIndexRoute: typeof DashboardQuickAccessLinksIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
@@ -3422,6 +3442,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
+  DashboardPipelineIndexRoute: DashboardPipelineIndexRoute,
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
   DashboardQuickAccessLinksIndexRoute: DashboardQuickAccessLinksIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,

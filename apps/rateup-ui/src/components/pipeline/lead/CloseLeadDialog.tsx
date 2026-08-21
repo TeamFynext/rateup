@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils";
 export interface CloseLeadTarget {
   lead: Lead;
   status: "WON" | "LOST";
+  /** The closing column dropped on. Absent when a button opened the dialog, and
+   *  the board then picks its first column of that status. */
+  stageId?: string;
 }
 
 interface CloseLeadDialogProps {
@@ -59,6 +62,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
         leadId: target.lead.id,
         input: {
           status: target.status,
+          stageId: target.stageId,
           lostReasonId: isLost ? reasonId : null,
           note: note.trim() || undefined,
         },
@@ -132,7 +136,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
           <div className="flex items-center gap-2.5 rounded-lg bg-green-600/10 p-3 text-green-700 dark:text-green-500">
             <IconSparkles className="size-4 shrink-0" />
             <span className="text-xs font-semibold">
-              {t("The lead moves to the won stage and the contact's lifecycle follows it.")}
+              {t("The lead moves to the won column and stops counting as open.")}
             </span>
           </div>
         )}

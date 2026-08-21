@@ -155,7 +155,7 @@ export function LeadCard({
         {lead.status === "WON" ? (
           <>
             <IconRosetteDiscountCheck className="size-3.5" />
-            <span className="truncate">{t("Won · lifecycle closed")}</span>
+            <span className="truncate">{t("Won · closed")}</span>
           </>
         ) : (
           <>

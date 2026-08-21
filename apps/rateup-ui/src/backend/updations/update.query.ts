@@ -9,7 +9,6 @@ import {
   migrateLoyaltyTierPriority,
   seedInboxStats,
   reconcileInboxStatus,
-  seedPipelines,
   backfillConversations,
   migrateFreePlanFeatures,
   migrateNonFreePlanFeatures,
@@ -94,24 +93,26 @@ export const useSeedInboxStats = () => {
   });
 };
 
-export const useSeedPipelines = () => {
-  return useMutation({
-    mutationFn: (apply: boolean) => seedPipelines(apply),
-    onSuccess: ({ data }) => {
-      const detail =
-        `${data.orgsScanned} org(s) scanned · ${data.stagesCreated} column(s) · ` +
-        `${data.teamsAutoAdding} team(s) auto-adding · ` +
-        `skipped: ${data.skippedHasPipeline} with a board, ${data.skippedNoLifecycles} without lifecycles, ` +
-        `${data.skippedNoTeams} without teams.`;
-      // A dry run wrote nothing, so it is an info toast rather than a success.
-      const notify = data.applied ? toast.success : toast.info;
-      notify(data.message, { description: detail, id: "seed-pipelines" });
-    },
-    onError: (error) => {
-      toast.error(error?.message || "Failed to seed pipelines");
-    },
-  });
-};
+// COMMENTED OUT — the seeder built a board from the org's lifecycles, and
+// stages no longer derive from lifecycles. See update.service.ts in rateup-api.
+// export const useSeedPipelines = () => {
+//   return useMutation({
+//     mutationFn: (apply: boolean) => seedPipelines(apply),
+//     onSuccess: ({ data }) => {
+//       const detail =
+//         `${data.orgsScanned} org(s) scanned · ${data.stagesCreated} column(s) · ` +
+//         `${data.teamsAutoAdding} team(s) auto-adding · ` +
+//         `skipped: ${data.skippedHasPipeline} with a board, ${data.skippedNoLifecycles} without lifecycles, ` +
+//         `${data.skippedNoTeams} without teams.`;
+//       // A dry run wrote nothing, so it is an info toast rather than a success.
+//       const notify = data.applied ? toast.success : toast.info;
+//       notify(data.message, { description: detail, id: "seed-pipelines" });
+//     },
+//     onError: (error) => {
+//       toast.error(error?.message || "Failed to seed pipelines");
+//     },
+//   });
+// };
 
 export const useReconcileInboxStatus = () => {
   return useMutation({
