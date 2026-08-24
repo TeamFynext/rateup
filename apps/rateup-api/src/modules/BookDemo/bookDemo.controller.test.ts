@@ -8,7 +8,7 @@ vi.mock("../../utils/prisma.js", () => ({
 
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
-import { bookDemoHandler, partnerDataHandler } from "./bookDemo.controller.js";
+import { bookDemoHandler, formatPreferredTime, partnerDataHandler } from "./bookDemo.controller.js";
 import { createBookDemoInputSchema, createPartnerDataInputSchema } from "./bookDemo.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -133,17 +133,44 @@ describe("bookDemoHandler — what reaches the queue", () => {
     expect(queued(1).html).toContain(demo.message);
   });
 
-  test("writes N/A in both mails when no message was left", async () => {
+  test("prints the preferred slot with the time in am/pm", async () => {
+    await bookDemoHandler(
+      makeRequest({ ...demo, preferredDate: "2026-09-01", preferredTime: "14:30" }),
+      makeReply(),
+    );
+
+    expect(queued(0).text).toContain("2026-09-01 at 2:30 PM");
+    expect(queued(1).text).toContain("2026-09-01 at 2:30 PM");
+  });
+
+  test("prints the date alone when only a date was picked", async () => {
+    await bookDemoHandler(makeRequest({ ...demo, preferredDate: "2026-09-01" }), makeReply());
+
+    expect(queued(0).text).toContain("2026-09-01");
+    // No time was given, so the slot must not carry the " at <time>" half.
+    expect(queued(0).text).not.toContain("2026-09-01 at");
+  });
+
+  test("says there is no preference when neither was picked", async () => {
+    await bookDemoHandler(makeRequest(demo), makeReply());
+
+    expect(queued(0).text).toContain("Preferred slot");
+    expect(queued(0).text).toContain("No preference");
+    expect(queued(1).text).toContain("No preference");
+  });
+
+  // The old string templates printed "Message: N/A"; the block is simply left out now.
+  test("leaves the message block out of both mails when none was left", async () => {
     await bookDemoHandler(makeRequest({ ...demo, message: undefined }), makeReply());
 
-    expect(queued(0).text).toContain("Message: N/A");
-    expect(queued(1).html).toContain("N/A");
+    expect(queued(0).text).not.toContain("What they wrote");
+    expect(queued(1).text).not.toContain("Your note");
   });
 
   test("treats an empty message the same as a missing one", async () => {
     await bookDemoHandler(makeRequest({ ...demo, message: "" }), makeReply());
 
-    expect(queued(0).text).toContain("Message: N/A");
+    expect(queued(0).text).not.toContain("What they wrote");
   });
 });
 
@@ -230,7 +257,7 @@ describe("partnerDataHandler", () => {
   test("flattens the services list into a readable line", async () => {
     await partnerDataHandler(makeRequest(partner), makeReply());
 
-    expect(queued(0).text).toContain("Services: Reviews, Loyalty");
+    expect(queued(0).text).toContain("Reviews, Loyalty");
     expect(queued(0).html).toContain("Reviews, Loyalty");
   });
 
@@ -280,6 +307,25 @@ describe("partnerDataHandler", () => {
 });
 
 // ===========================================================================
+// formatPreferredTime
+// ===========================================================================
+
+describe("formatPreferredTime", () => {
+  test.each([
+    ["09:00", "9:00 AM"],
+    ["09:30", "9:30 AM"],
+    ["11:30", "11:30 AM"],
+    ["12:00", "12:00 PM"],
+    ["12:30", "12:30 PM"],
+    ["13:00", "1:00 PM"],
+    ["19:00", "7:00 PM"],
+    ["00:15", "12:15 AM"],
+  ])("renders %s as %s", (input, expected) => {
+    expect(formatPreferredTime(input)).toBe(expected);
+  });
+});
+
+// ===========================================================================
 // The body schemas guarding both routes
 // ===========================================================================
 
@@ -314,6 +360,32 @@ describe("createBookDemoInputSchema", () => {
 
   test("rejects a phone number longer than twenty characters", () => {
     expect(createBookDemoInputSchema.safeParse({ ...demo, phone: "1".repeat(21) }).success).toBe(
+      false,
+    );
+  });
+
+  test("accepts a preferred date and time", () => {
+    expect(
+      createBookDemoInputSchema.safeParse({
+        ...demo,
+        preferredDate: "2026-09-01",
+        preferredTime: "14:30",
+      }).success,
+    ).toBe(true);
+  });
+
+  test("treats the preferred date and time as optional", () => {
+    expect(createBookDemoInputSchema.safeParse(demo).success).toBe(true);
+  });
+
+  test("rejects a preferred date that is not YYYY-MM-DD", () => {
+    expect(
+      createBookDemoInputSchema.safeParse({ ...demo, preferredDate: "01/09/2026" }).success,
+    ).toBe(false);
+  });
+
+  test("rejects a preferred time that is not HH:mm", () => {
+    expect(createBookDemoInputSchema.safeParse({ ...demo, preferredTime: "2:30 PM" }).success).toBe(
       false,
     );
   });

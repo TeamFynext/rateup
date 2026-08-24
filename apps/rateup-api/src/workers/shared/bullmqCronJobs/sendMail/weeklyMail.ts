@@ -1,7 +1,10 @@
 import { log } from "../../logger.js";
 import { notificationQueue } from "../../../bullmq/queues/notification.queue.js";
 import prisma from "../../../../utils/prisma.js";
-import { weeklyReportEmailTemplate } from "../../emailTemplate.js";
+import { renderWeeklyReportEmailBodies } from "../../../../utils/email/react/templates.js";
+
+/** The window the report's queries cover, and what the email calls it. */
+const DATE_RANGE = "Last 7 Days";
 
 export async function getWeeklyConversationReport() {
   try {
@@ -76,7 +79,7 @@ export async function getWeeklyConversationReport() {
     );
 
     for (const org of report) {
-      const templateData = weeklyReportEmailTemplate({
+      const templateData = await renderWeeklyReportEmailBodies({
         // The template's heading is the org's name; this used to pass the owner's
         // email address, so every report was titled with an email.
         orgName: org.orgName ?? org.email,
@@ -87,13 +90,13 @@ export async function getWeeklyConversationReport() {
         topPerformers: org.topPerformers,
         teams: org.teams,
         usage: org.usage,
-        dateRange: "Last 7 Days",
+        dateRange: DATE_RANGE,
       });
 
       await notificationQueue.add("notification", {
         emailData: {
           to: org.email,
-          subject: templateData.subject,
+          subject: `RateUp Weekly Report — ${DATE_RANGE}`,
           html: templateData.html,
           text: templateData.text,
         },

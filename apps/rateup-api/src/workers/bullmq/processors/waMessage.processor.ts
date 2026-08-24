@@ -13,7 +13,7 @@ import { Job, Worker } from "bullmq";
 import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { processParticipant } from "../../shared/modules/messageDispatch/messageDispatch.service.js";
-import { campaignCompletedEmailTemplate } from "../../shared/emailTemplate.js";
+import { renderCampaignCompletedEmailBodies } from "../../../utils/email/react/templates.js";
 import { getUsersByTeamId } from "../../shared/team/index.js";
 import { getCampaignById } from "../../shared/whatsapp/index.js";
 import { notificationQueue } from "../queues/notification.queue.js";
@@ -55,7 +55,7 @@ waMessageWorker.on("completed", async (job) => {
     if (job?.data?.teamId) {
       const users = await getUsersByTeamId(job.data.teamId);
       const campaign = await getCampaignById(job.data.campaignId);
-      const emailForClient = campaignCompletedEmailTemplate({
+      const emailForClient = await renderCampaignCompletedEmailBodies({
         campaignName: campaign.name,
         campaignId: campaign.id,
       });
@@ -63,7 +63,7 @@ waMessageWorker.on("completed", async (job) => {
         await notificationQueue.add("notification", {
           emailData: {
             to: user.email,
-            subject: emailForClient.subject,
+            subject: `RateUp - ${campaign.name} Completed`,
             html: emailForClient.html,
             text: emailForClient.text,
           },
