@@ -8,6 +8,16 @@ const createBookDemoInputSchema = z.object({
     .string()
     .min(10, "Phone number must be at least 10 digits")
     .max(20, "Phone number seems too long"),
+  // Both optional and free-form-shaped on purpose: the visitor picks them in their own locale with
+  // native date/time inputs, and a missing preference just means "any time works".
+  preferredDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Preferred date must be in YYYY-MM-DD format")
+    .optional(),
+  preferredTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "Preferred time must be in HH:mm format")
+    .optional(),
   message: z.string().optional(),
 });
 
