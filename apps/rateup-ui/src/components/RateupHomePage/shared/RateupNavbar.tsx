@@ -12,11 +12,7 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
-import {
-  imagesPath,
-  rateupLogoHorizontalTransparent,
-  rateupLogoHorizontalWhiteTransparent,
-} from "@/utils/constants.ts";
+import { imagesPath, rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
 
 import { RateupStar } from "../../integrations/logos.tsx";
 import { BookDemoModal } from "../helper/BookDemoModal.tsx";
@@ -28,11 +24,9 @@ interface RateupNavbarProps {
   darkNavbar?: boolean;
 }
 
-export default function RateupNavbar({ darkNavbar = false }: Readonly<RateupNavbarProps>) {
+export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
   const hasSession = useCheckSession();
-  const mobileLogo = darkNavbar
-    ? rateupLogoHorizontalTransparent
-    : rateupLogoHorizontalWhiteTransparent;
+  const mobileLogo = rateupLogoHorizontalWhiteTransparent;
   const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
   const navItems = [
     {

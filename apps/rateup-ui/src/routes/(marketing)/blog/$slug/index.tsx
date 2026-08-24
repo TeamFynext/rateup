@@ -306,21 +306,37 @@ function Page() {
       )} */}
 
       {/* CTA section */}
-      <section className="bg-blue-700 py-16 text-white">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to improve your business reviews?
-          </h2>
-          <p className="mx-auto pt-4 text-xl text-blue-100">
-            Join thousands of businesses using RateUp to enhance their online reputation.
-          </p>
-          <div className="mt-8 flex justify-center">
-            <Link
-              to="/login"
-              className="rounded-lg bg-white px-8 py-3 text-lg font-medium text-blue-700 shadow-sm hover:bg-blue-50"
-            >
-              Get Started
-            </Link>
+      <section className="mt-16 mb-20">
+        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(168deg,#061140_0%,#0C2383_42%,#1A52E8_78%,#2462FF_100%)] px-6 py-14 text-center text-white shadow-[0_20px_60px_rgba(8,24,120,0.35)] sm:px-12">
+          {/* Soft glow behind the heading */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#2FA3FF]/30 blur-3xl"
+          />
+          <div className="relative mx-auto max-w-2xl">
+            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-100 uppercase backdrop-blur-sm">
+              Get started free
+            </span>
+            <h2 className="font-nunito mt-5 text-3xl font-black tracking-tight sm:text-4xl">
+              Ready to improve your business reviews?
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-blue-100/90">
+              Join thousands of businesses using RateUp to enhance their online reputation.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <Link
+                to="/login"
+                className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-[#0C2383] shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_38px_rgba(0,0,0,0.24)]"
+              >
+                Get Started
+                <span
+                  aria-hidden="true"
+                  className="transition-transform group-hover:translate-x-0.5"
+                >
+                  &rarr;
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

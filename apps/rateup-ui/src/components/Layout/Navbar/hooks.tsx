@@ -48,6 +48,7 @@ import {
   IconTag,
   IconTemplate,
   IconTerminal2,
+  IconGitBranch,
   IconTicket,
   IconUser,
   IconUserCheck,
@@ -63,6 +64,10 @@ import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.ap
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
+import {
+  buildPipelineNavItems,
+  type PipelineNavInput,
+} from "@/components/pipeline/pipeline.nav.tsx";
 import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -149,6 +154,7 @@ interface NavMainInput {
   allowedFeatures: AllowedFeatures;
   user: User | null;
   sectionCounts: ChatContactCountStore["sectionCounts"];
+  pipelineNav: PipelineNavInput;
 }
 
 export function useNavMain({
@@ -165,6 +171,7 @@ export function useNavMain({
   allowedFeatures,
   user,
   sectionCounts,
+  pipelineNav,
 }: NavMainInput) {
   const { t } = useTranslation();
 
@@ -678,6 +685,21 @@ export function useNavMain({
             },
           ]
         : []),
+      // The pipeline is not open to customers yet, so it is gated on the root org
+      // on top of its team feature. `/dashboard/pipeline` turns the same check away.
+      ...(subscription?.orgId === import.meta.env.VITE_ROOT_ORG &&
+      hasTeamFeature(TeamFeature.Pipeline)
+        ? [
+            {
+              title: t("Pipeline"),
+              url: "/dashboard/pipeline",
+              icon: IconGitBranch,
+              // Views and facets are built next to the pipeline's own
+              // derivations so the sidebar counts and the board agree.
+              items: buildPipelineNavItems(pipelineNav),
+            },
+          ]
+        : []),
       ...(hasTeamFeature(TeamFeature.Tickets)
         ? [
             {
@@ -880,6 +902,7 @@ export function useNavMain({
       hasTeamFeature,
       hiddenModules,
       lifecycles,
+      pipelineNav,
       staff.length,
       subscription,
       t,

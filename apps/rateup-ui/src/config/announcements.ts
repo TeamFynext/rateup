@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-17-pipeline-feature-access",
+    title: "Pipeline is its own team permission",
+    summary:
+      "Feature Access on a team now lists Pipeline alongside Tickets, so you can give a team the board without the ticket queue or the other way round. Until now the pipeline rode the Tickets permission. Teams that already had Tickets on keep seeing Tickets, but Pipeline starts off — switch it on for each team that works a board, under Settings → Teams → a team → Feature Access.",
+    publishedAt: "2026-08-17",
+    kinds: ["new", "improvement"],
+    area: "Pipeline",
+    link: { to: "/dashboard/settings/team", label: "Open teams" },
+  },
+  {
     id: "2026-08-15-inbox-sending-feedback",
     title: "Sends show up straight away in the inbox",
     summary:
@@ -66,6 +76,26 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new", "improvement"],
     area: "Channels",
     link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
+    id: "2026-08-13-team-pipelines",
+    title: "Send each team's contacts to its own board",
+    summary:
+      "Lifecycle setup now carries a Team pipelines section: pick the board each team works, and turn on Auto-add contacts to have a lead open there the moment a contact reaches a lifecycle stage that board maps — Sales onto the sales pipeline, Support onto theirs. The lead lands in the column for that stage, and a contact already on the board is left alone. Teams pointing at the same pipeline share one lead rather than opening one each. Changing a contact's lifecycle anywhere — the contacts table, the inbox, an automation — now also moves their existing leads into the matching column, so the board and the customer record never disagree.",
+    publishedAt: "2026-08-13",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/contacts/lifecycle", label: "Open lifecycle setup" },
+  },
+  {
+    id: "2026-08-12-lead-pipeline",
+    title: "Lead Pipeline",
+    summary:
+      'A new Pipeline section in the sidebar turns your conversations into a sales board. Its columns are your contact lifecycle stages, so a board speaks the same language as the inbox and moving a lead updates the contact automatically — add a lifecycle stage and the column appears on every pipeline. Drag leads between stages, or onto the Lost zone to close them out. Each stage carries a win probability and a rotting window, so leads that go quiet surface themselves as "Needs attention" instead of being forgotten. Leads are worked by a set of assignees rather than a single owner, so a handover adds a name to the card instead of replacing one. Beyond the board there are four more views: a grouped List with bulk reassign, a Forecast that weights each open lead by its stage probability, Insights covering the funnel, where leads stall, sources and per-assignee win rates, and Settings for stages, lost reasons and the automation rules. Opening a lead shows its full timeline and notes.',
+    publishedAt: "2026-08-12",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
   },
   {
     id: "2026-08-11-meta-agent-rebuild",

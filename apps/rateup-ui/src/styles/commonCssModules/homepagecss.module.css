@@ -40,9 +40,9 @@
   --cyan-rgb: 79, 195, 255;
   --light-blue-rgb: 120, 180, 255;
 
-  --grad-cyan-start: #6bd0ff;
+  --grad-cyan-start: #2fa3ff;
   --grad-cyan-middle: #2fa3ff;
-  --grad-cyan-end: #2c6fd6;
+  --grad-cyan-end: #2fa3ff;
 
   --btn-primary-start: #3d8bee;
   --btn-primary-end: #2360c8;
@@ -1829,8 +1829,9 @@ footer {
 }
 .foot-grid {
   display: grid;
-  grid-template-columns: 1.4fr 0.9fr 0.9fr 0.9fr 1.1fr;
-  gap: 40px;
+  /* about · Product · Company · Resources · Tools · Download App */
+  grid-template-columns: 1.25fr 0.8fr 0.8fr 0.8fr 1.15fr 1fr;
+  gap: 32px;
 }
 .foot-about p {
   color: var(--footer-text-secondary, var(--ink-3));
@@ -1949,6 +1950,13 @@ footer {
   color: #fff;
   border-color: var(--hair-2);
   background: var(--panel-2);
+}
+/* Six columns only fit at full width; step down before they start wrapping. */
+@media (max-width: 1160px) {
+  .foot-grid {
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 36px 32px;
+  }
 }
 @media (max-width: 820px) {
   .foot-grid {
@@ -2196,9 +2204,9 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 30px 16px 22px;
-  border-radius: var(--radius-xl);
+  gap: 7px;
+  padding: 10px 6px 8px;
+  border-radius: var(--radius-md);
   background: var(--panel);
   border: 1px solid var(--hair);
 }
@@ -2209,13 +2217,11 @@ footer {
 }
 
 .intgLogo {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: var(--panel-2);
-  border: 1px solid var(--hair);
 }
 
 .intgName {

@@ -279,6 +279,7 @@ export enum TeamFeature {
   Loyalty = "loyalty",
   WebForms = "web_forms",
   Tickets = "tickets",
+  Pipeline = "pipeline",
   QrStudio = "qr_studio",
   AiChatbot = "ai_chatbot",
   AppsServices = "apps_services",

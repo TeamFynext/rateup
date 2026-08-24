@@ -186,11 +186,28 @@ const sendTemplateActionSchema = z.object({
   value: z.union([z.string().min(1, "Template is required"), sendTemplateActionValueSchema]),
 });
 
+const assignLifecycleActionValueSchema = z.object({
+  lifecycleId: z.string().min(1, "Lifecycle is required"),
+  /**
+   * Board to open a lead on when the contact reaches this lifecycle. Absent means
+   * the rule only sets the lifecycle, which is what it did before the option
+   * existed — so leaving it off is the unchanged behaviour, not a broken rule.
+   */
+  pipelineId: z.string().optional(),
+});
+
+const assignLifecycleActionSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal("ASSIGN_LIFECYCLE"),
+  value: z.union([z.string().min(1, "Lifecycle is required"), assignLifecycleActionValueSchema]),
+});
+
 const regularActionSchema = z.object({
   id: z.string().optional(),
   type: z.enum(
     optionValues(ACTION_TYPES).filter(
-      (value) => value !== "CALL_EXTERNAL_API" && value !== "SEND_TEMPLATE",
+      (value) =>
+        value !== "CALL_EXTERNAL_API" && value !== "SEND_TEMPLATE" && value !== "ASSIGN_LIFECYCLE",
     ) as [string, ...string[]],
   ),
   value: z.string().min(1, "Value is required"),
@@ -199,6 +216,7 @@ const regularActionSchema = z.object({
 const ruleActionSchema = z.union([
   externalApiActionSchema,
   sendTemplateActionSchema,
+  assignLifecycleActionSchema,
   regularActionSchema,
 ]);
 

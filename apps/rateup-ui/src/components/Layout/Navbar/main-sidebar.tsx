@@ -35,6 +35,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
     lifecycles,
     paddingExclusion,
     pathname,
+    pipelineNav,
     resolvedUserInfo,
     staff,
     subscription,
@@ -71,6 +72,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 contactLabels={contactLabels}
                 conversationTags={conversationTags}
                 lifecycles={lifecycles}
+                pipelineNav={pipelineNav}
                 userData={resolvedUserInfo ?? undefined}
                 staff={staff}
                 teams={teams}
