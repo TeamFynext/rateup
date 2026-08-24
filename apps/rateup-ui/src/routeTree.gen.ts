@@ -29,6 +29,7 @@ import { Route as marketingAboutUsIndexRouteImport } from './routes/(marketing)/
 import { Route as marketingBlogIndexRouteImport } from './routes/(marketing)/blog/index'
 import { Route as marketingBlogRssDotxmlRouteImport } from './routes/(marketing)/blog/rss[.]xml'
 import { Route as marketingBlogSitemapDotxmlRouteImport } from './routes/(marketing)/blog/sitemap[.]xml'
+import { Route as marketingBookADemoIndexRouteImport } from './routes/(marketing)/book-a-demo/index'
 import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
 import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
 import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
@@ -282,6 +283,11 @@ const marketingBlogSitemapDotxmlRoute =
     path: '/sitemap.xml',
     getParentRoute: () => marketingBlogRouteRoute,
   } as any)
+const marketingBookADemoIndexRoute = marketingBookADemoIndexRouteImport.update({
+  id: '/(marketing)/book-a-demo/',
+  path: '/book-a-demo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
   id: '/(marketing)/contact-us/',
   path: '/contact-us/',
@@ -1182,6 +1188,7 @@ export interface FileRoutesByFullPath {
   '/signup/': typeof authSignupIndexRoute
   '/about-us/': typeof marketingAboutUsIndexRoute
   '/blog/': typeof marketingBlogIndexRoute
+  '/book-a-demo/': typeof marketingBookADemoIndexRoute
   '/contact-us/': typeof marketingContactUsIndexRoute
   '/partner-page/': typeof marketingPartnerPageIndexRoute
   '/pricing/': typeof marketingPricingIndexRoute
@@ -1350,6 +1357,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupIndexRoute
   '/about-us': typeof marketingAboutUsIndexRoute
   '/blog': typeof marketingBlogIndexRoute
+  '/book-a-demo': typeof marketingBookADemoIndexRoute
   '/contact-us': typeof marketingContactUsIndexRoute
   '/partner-page': typeof marketingPartnerPageIndexRoute
   '/pricing': typeof marketingPricingIndexRoute
@@ -1524,6 +1532,7 @@ export interface FileRoutesById {
   '/(auth)/signup/': typeof authSignupIndexRoute
   '/(marketing)/about-us/': typeof marketingAboutUsIndexRoute
   '/(marketing)/blog/': typeof marketingBlogIndexRoute
+  '/(marketing)/book-a-demo/': typeof marketingBookADemoIndexRoute
   '/(marketing)/contact-us/': typeof marketingContactUsIndexRoute
   '/(marketing)/partner-page/': typeof marketingPartnerPageIndexRoute
   '/(marketing)/pricing/': typeof marketingPricingIndexRoute
@@ -1699,6 +1708,7 @@ export interface FileRouteTypes {
     | '/signup/'
     | '/about-us/'
     | '/blog/'
+    | '/book-a-demo/'
     | '/contact-us/'
     | '/partner-page/'
     | '/pricing/'
@@ -1867,6 +1877,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/about-us'
     | '/blog'
+    | '/book-a-demo'
     | '/contact-us'
     | '/partner-page'
     | '/pricing'
@@ -2040,6 +2051,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup/'
     | '/(marketing)/about-us/'
     | '/(marketing)/blog/'
+    | '/(marketing)/book-a-demo/'
     | '/(marketing)/contact-us/'
     | '/(marketing)/partner-page/'
     | '/(marketing)/pricing/'
@@ -2200,6 +2212,7 @@ export interface RootRouteChildren {
   authLogoutIndexRoute: typeof authLogoutIndexRoute
   authSignupIndexRoute: typeof authSignupIndexRoute
   marketingAboutUsIndexRoute: typeof marketingAboutUsIndexRoute
+  marketingBookADemoIndexRoute: typeof marketingBookADemoIndexRoute
   marketingContactUsIndexRoute: typeof marketingContactUsIndexRoute
   marketingPartnerPageIndexRoute: typeof marketingPartnerPageIndexRoute
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute
@@ -2395,6 +2408,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/sitemap.xml'
       preLoaderRoute: typeof marketingBlogSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
+    }
+    '/(marketing)/book-a-demo/': {
+      id: '/(marketing)/book-a-demo/'
+      path: '/book-a-demo'
+      fullPath: '/book-a-demo/'
+      preLoaderRoute: typeof marketingBookADemoIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(marketing)/contact-us/': {
       id: '/(marketing)/contact-us/'
@@ -3755,6 +3775,7 @@ const rootRouteChildren: RootRouteChildren = {
   authLogoutIndexRoute: authLogoutIndexRoute,
   authSignupIndexRoute: authSignupIndexRoute,
   marketingAboutUsIndexRoute: marketingAboutUsIndexRoute,
+  marketingBookADemoIndexRoute: marketingBookADemoIndexRoute,
   marketingContactUsIndexRoute: marketingContactUsIndexRoute,
   marketingPartnerPageIndexRoute: marketingPartnerPageIndexRoute,
   marketingPricingIndexRoute: marketingPricingIndexRoute,
