@@ -145,7 +145,6 @@ const SUBSCRIPTION_FEATURE_LABELS: Readonly<Record<string, string>> = {
   [sfpn.EmailNotification]: "Email Notification",
   [sfpn.GoogleReview]: "Google Review",
   [sfpn.HTMLCodePage]: "HTML Code Page",
-  [sfpn.ReputationManagement]: "Reputation Management",
   [sfpn.Team]: "Team",
   [sfpn.TeamMember]: "Team Members",
   [sfpn.Whatsapp]: "Whatsapp",
@@ -153,6 +152,10 @@ const SUBSCRIPTION_FEATURE_LABELS: Readonly<Record<string, string>> = {
   [sfpn.AI]: "AI",
   [sfpn.Webhook]: "Webhook",
   [sfpn.WhatsAppConversation]: "WhatsApp Conversation",
+  [sfpn.WhatsappCampaign]: "Campaigns",
+  [sfpn.WhatsappLoyalty]: "Loyalty",
+  [sfpn.WhatsappReferrals]: "Referrals",
+  [sfpn.WhatsappCatalog]: "Catalog Sync",
   [sfpn.Menu]: "Digital Menu",
 };
 

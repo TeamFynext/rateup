@@ -36,7 +36,6 @@ export function getSampleSubscriptionFeatures(count: number): SubscriptionFeatur
         count: { max: count },
       },
     },
-    reputationManagement: { count: { max: count }, active: true },
     ai: {
       count: { completionTokens: 120000, promptTokens: 120000 },
       active: false,

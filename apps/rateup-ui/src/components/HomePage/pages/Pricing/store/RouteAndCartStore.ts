@@ -13,7 +13,6 @@ export interface Cart {
   gateway?: string;
   planId?: string;
   priceId?: string;
-  trialDays?: number;
 }
 export interface Store {
   route: string;

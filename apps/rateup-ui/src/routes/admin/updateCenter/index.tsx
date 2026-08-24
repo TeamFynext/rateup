@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { UpdateAllThemes } from "@/components/admin/updateCenter/UpdateAllThemes.tsx";
+import { UpdateCenter } from "@/components/admin/updateCenter/UpdateCenter.tsx";
 
 export const Route = createFileRoute("/admin/updateCenter/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  return <UpdateAllThemes />;
+  return <UpdateCenter />;
 }

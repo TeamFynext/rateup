@@ -246,7 +246,7 @@ export default function Hero() {
               onClick={() => navigate({ to: "/signup" })}
               className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-base tracking-[-0.01em] pl-[22px] py-[6px] pr-[6px] text-white bg-[linear-gradient(135deg,#2a6254,#3d7a68)] shadow-[0_10px_26px_rgba(42,98,84,0.40)] hover:shadow-[0_14px_34px_rgba(42,98,84,0.55)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
             >
-              Start Free Trial
+              Get Started Free
               <span
                 className={`inline-flex items-center justify-center w-[38px] h-[38px] rounded-[10px] ${style.bgChipDark} flex-shrink-0`}
               >
