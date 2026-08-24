@@ -7,6 +7,7 @@ import {
   IconBrandX,
   IconBrandYoutube,
 } from "@tabler/icons-react";
+import { Image } from "@unpic/react";
 
 import { imagesPath } from "@/components/HomePage/constants";
 import { RateupStar } from "@/components/integrations/logos";
@@ -147,43 +148,47 @@ export default function HomePageFooter() {
           <div className={styles["foot-col"]}>
             <h3>Download App</h3>
 
+            {/*
+              Both badges are the official, unmodified artwork (Apple's US/UK black lockup SVG,
+              Google's current "Get it on Google Play" web SVG from the Partner Marketing Hub) —
+              neither vendor permits a hand-built recreation, which is what used to live here.
+              Apple's black lockup is required because another app-platform badge shares the layout,
+              and it goes first for the same reason. Both render at 40px tall: that is Apple's
+              onscreen minimum, and it keeps Google's badge "the same size or larger" as required.
+              The clear space (a quarter of the badge height) is the padding on each link — nothing
+              may be drawn inside it, so the old bordered pill wrapper is gone.
+            */}
             <div className={styles["foot-dl"]}>
               <a
                 href="https://apps.apple.com/in/app/rateup/id6761990608"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles["foot-dl-btn"]}
-                aria-label="Download on the App Store"
+                className={styles["foot-dl-badge"]}
               >
-                <img
-                  src={`${imagesPath}/landing/logos/apple.png`}
-                  alt=""
-                  aria-hidden="true"
-                  className={styles["foot-dl-icon"]}
+                <Image
+                  src={`${imagesPath}/landing/app-store-badge.svg`}
+                  alt="Download on the App Store"
+                  width={120}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
                 />
-                <div className={styles["foot-dl-text"]}>
-                  <span className={styles["foot-dl-sub"]}>Download on the</span>
-                  <span className={styles["foot-dl-name"]}>App Store</span>
-                </div>
               </a>
 
               <a
                 href="https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles["foot-dl-btn"]}
-                aria-label="Get it on Google Play"
+                className={styles["foot-dl-badge"]}
               >
-                <img
-                  src={`${imagesPath}/landing/logos/ico-playstore.png`}
-                  alt=""
-                  aria-hidden="true"
-                  className={styles["foot-dl-icon"]}
+                <Image
+                  src={`${imagesPath}/landing/google-play-badge.svg`}
+                  alt="Get it on Google Play"
+                  width={135}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
                 />
-                <div className={styles["foot-dl-text"]}>
-                  <span className={styles["foot-dl-sub"]}>Get it on</span>
-                  <span className={styles["foot-dl-name"]}>Google Play</span>
-                </div>
               </a>
             </div>
           </div>
@@ -193,6 +198,13 @@ export default function HomePageFooter() {
           <div>© 2026 RateUp · www.rateup.app</div>
 
           <div>Reimagine Customer Engagement — Unified. Automated. Intelligent.</div>
+
+          {/* Credit lines both vendors require wherever their badges appear. */}
+          <div className={styles["foot-legal"]}>
+            Apple and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other
+            countries. App Store is a service mark of Apple Inc. Google Play and the Google Play
+            logo are trademarks of Google LLC.
+          </div>
         </div>
       </div>
     </footer>

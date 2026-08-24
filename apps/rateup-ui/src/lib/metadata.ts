@@ -106,6 +106,19 @@ const pageMetadata: Record<string, PageMetadata> = {
       canonical: "",
     },
   },
+  "/book-a-demo": {
+    title: "Book a Demo of RateUp AI Powered WhatsApp Marketing Platform",
+    description:
+      "Book a free RateUp demo. See how WhatsApp Business API, automation, surveys & loyalty come together in one platform - pick a time that suits your team.",
+    openGraph: {
+      title: "Book a Demo of RateUp AI Powered WhatsApp Marketing Platform",
+      description:
+        "Book a free RateUp demo. See how WhatsApp Business API, automation, surveys & loyalty come together in one platform - pick a time that suits your team.",
+    },
+    alternates: {
+      canonical: "/book-a-demo",
+    },
+  },
   "/contact-us": {
     title: "Contact RateUp AI Powered WhatsApp Marketing Platform",
     description:

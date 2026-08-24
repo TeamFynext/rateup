@@ -71,7 +71,7 @@ const supportSchema = z.object({
 });
 
 export default function SupportWidget({
-  whatsappNumber = "+919633654012",
+  whatsappNumber = import.meta.env.VITE_SUPPORT_WHATSAPP,
   companyName = "Team RateUp",
   orgId,
   token,
@@ -206,7 +206,7 @@ export default function SupportWidget({
   });
 
   const handleWhatsAppClick = () => {
-    const message = encodeURIComponent(`Hello! I need support.`);
+    const message = encodeURIComponent("Hi, I need help with support");
     window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${message}`, "_blank");
   };
 

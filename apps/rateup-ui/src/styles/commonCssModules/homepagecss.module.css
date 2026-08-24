@@ -1860,64 +1860,35 @@ footer {
   color: var(--footer-link-hover, #fff);
 }
 
-/* App store download buttons */
+/* App store badges — official Apple / Google Play artwork, used unmodified.
+   Both vendors forbid recreating the badge, adding borders, shadows or graphics
+   inside the clear space, and animating it, so this block only handles size,
+   the required clear space, and a plain opacity hover. */
 .foot-dl {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
+  align-items: flex-start;
+  /* The clear space is padding inside each link; pull the block back by that
+     amount so the badges still line up with the column's text edge. */
+  margin: 6px 0 0 -10px;
 }
-.foot-dl-btn {
-  display: flex !important;
-  align-items: center;
-  gap: 13px;
-  padding: 9px 20px 9px 16px;
-  border-radius: 12px;
-  background: #000;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  color: #fff !important;
-  text-decoration: none !important;
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
+.foot-dl-badge {
+  display: block !important;
+  /* Minimum clear space = one-quarter the 40px badge height, on all four sides. */
+  padding: 10px;
   margin-bottom: 0 !important;
-  width: fit-content;
-  min-width: 175px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  line-height: 0;
+  transition: opacity 180ms ease;
 }
-.foot-dl-btn:hover {
+.foot-dl-badge:hover {
   opacity: 0.85;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-  color: #fff !important;
 }
-.foot-dl-icon {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-.foot-dl-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-.foot-dl-sub {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  font-family: var(--font-body);
-  text-transform: uppercase;
-}
-.foot-dl-name {
-  font-size: 19px;
-  font-weight: 700;
-  color: #fff;
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+.foot-dl-badge img {
+  display: block;
+  /* 40px is Apple's onscreen minimum; matching heights keep the Google Play
+     badge no smaller than the App Store one, which Google requires. */
+  height: 40px;
+  width: auto;
 }
 .foot-bottom {
   display: flex;
@@ -1930,6 +1901,13 @@ footer {
   color: var(--footer-text-secondary, var(--ink-3));
   flex-wrap: wrap;
   gap: 14px;
+}
+.foot-legal {
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--footer-text-secondary, var(--ink-3));
+  opacity: 0.75;
 }
 .foot-socials {
   display: flex;

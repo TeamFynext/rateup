@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { useState } from "react";
 
@@ -49,6 +49,11 @@ export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  /* The demo page IS the form the CTA opens, so the button would only re-offer what is already
+     on screen. Read off the router rather than a prop so it stays right wherever `Layout` is used. */
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const showBookDemo = pathname.replace(/\/+$/, "") !== "/book-a-demo";
 
   return (
     <Navbar>
@@ -102,34 +107,36 @@ export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
             >
               Sign In
             </button>
-            <BookDemoModal>
-              <button
-                style={{
-                  backgroundColor: "var(--btn-demo-bg)",
-                  border: "1px solid var(--btn-demo-border)",
-                  color: "var(--btn-demo-text)",
-                }}
-                className="inline-flex items-center gap-3 rounded-2xl font-extrabold text-sm pl-4.5 py-1.25 pr-1.25 hover:bg-(--btn-demo-hover-bg) hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
-              >
-                <span style={{ paddingRight: 2 }}>Book a Demo</span>
-                <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-white/65 shrink-0 text-slate-800">
-                  <svg
-                    className="w-3.75 h-3.75"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                </span>
-              </button>
-            </BookDemoModal>
+            {showBookDemo && (
+              <BookDemoModal>
+                <button
+                  style={{
+                    backgroundColor: "var(--btn-demo-bg)",
+                    border: "1px solid var(--btn-demo-border)",
+                    color: "var(--btn-demo-text)",
+                  }}
+                  className="inline-flex items-center gap-3 rounded-2xl font-extrabold text-sm pl-4.5 py-1.25 pr-1.25 hover:bg-(--btn-demo-hover-bg) hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <span style={{ paddingRight: 2 }}>Book a Demo</span>
+                  <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-white/65 shrink-0 text-slate-800">
+                    <svg
+                      className="w-3.75 h-3.75"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </span>
+                </button>
+              </BookDemoModal>
+            )}
             <button
               onClick={() => navigate({ to: "/signup" })}
               className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-4.5 py-1.25 pr-1.25 text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
