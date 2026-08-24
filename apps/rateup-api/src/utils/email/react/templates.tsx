@@ -25,7 +25,6 @@ import SubscriptionExpiryEmail, { type ExpiryStage } from "../../../emails/subsc
 import SurveyResponseEmail, { type SurveyResponseAnswer } from "../../../emails/survey-response.js";
 import TeamInviteEmail, { type TeamInviteEmailProps } from "../../../emails/team-invite.js";
 import TicketEmail, { type TicketEmailProps } from "../../../emails/ticket.js";
-import TrialStartedEmail from "../../../emails/trial-started.js";
 import UsageLimitEmail from "../../../emails/usage-limit.js";
 import VerifyEmail, { type VerifyEmailProps } from "../../../emails/verify-email.js";
 import WeeklyStatsEmail, { type WeeklyStatsRow } from "../../../emails/weekly-stats.js";
@@ -130,23 +129,6 @@ export function renderSubscriptionActivatedEmail(props: {
       {...props}
       billingLink={billingPage}
       nextSteps={[...ONBOARDING_STEPS]}
-    />,
-  );
-}
-
-export function renderTrialStartedEmail(props: {
-  userName: string;
-  planName: string;
-  trialDays: number;
-  expiresAt: string;
-  renewalPrice?: string;
-}) {
-  return renderEmail(
-    <TrialStartedEmail
-      {...props}
-      dashboardLink={dashboardLink}
-      nextSteps={[...ONBOARDING_STEPS]}
-      unsubscribeUrl={emailPreferencesLink}
     />,
   );
 }

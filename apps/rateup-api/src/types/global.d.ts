@@ -477,8 +477,13 @@ declare global {
       };
     [sfpn.Whatsapp]: subscriptionActiveField & {
       conversation: subscriptionWithActiveAndCount;
+      // Tier gates, optional for backward-compat with subscriptions stored before
+      // they existed. Readers must treat "absent" deliberately — see canAccess.
+      campaign?: subscriptionActiveField;
+      loyalty?: subscriptionActiveField;
+      referrals?: subscriptionActiveField;
+      catalog?: subscriptionActiveField;
     };
-    [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
     // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
     [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
@@ -823,6 +828,8 @@ declare global {
       template?: Record<string, unknown>;
       automation?: Record<string, unknown>;
     };
+    /** Retired: reputation management is no longer offered. Read only by migrations. */
+    reputationManagement?: { active?: boolean; count?: { max?: number } };
   };
 
   interface LoyaltyTimeRange {

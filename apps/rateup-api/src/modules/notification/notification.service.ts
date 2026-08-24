@@ -2,6 +2,7 @@ import { Job } from "bullmq";
 import { Prisma, Role } from "../../../generated/prisma/client.js";
 import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { log } from "../../utils/logger.js";
+import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
 import prisma from "../../utils/prisma.js";
 import { sendPushNotification } from "../mobileNotification/mobile.service.js";
 import { NotificationSettingSchema } from "./notification.schema.js";
@@ -116,6 +117,12 @@ export async function notifyConversationLimitReached(orgId: string) {
         }),
       ),
     );
+
+    // The in-app notification only reaches someone already looking at the dashboard.
+    // Hitting a limit stops messages going out, so it has to reach the owner's inbox too.
+    // `sendUsageLimitMailAlert` carries its own once-a-week guard, so a org that bounces
+    // on and off its limit is not mailed repeatedly.
+    await sendUsageLimitMailAlert(orgId);
   } catch (error) {
     log.error(error, "Failed to send conversation-limit notification");
   }

@@ -155,6 +155,10 @@ export async function addNewWaMessage(
   failed: boolean = false,
   sourceMessage: string = "inbox",
   logs: WaGraphApiErrorDetail = {},
+  // The 24h metered window this message belongs to, resolved by the caller before
+  // the row is written so attribution lands on the same insert. Optional: metering
+  // is best-effort and must never block the message.
+  meteredConversationId?: string,
 ) {
   const initialStats = {
     read: "",
@@ -195,6 +199,7 @@ export async function addNewWaMessage(
       sourcePlatform,
       sourceIdentifier,
       conversationId,
+      meteredConversationId,
       ...statsData,
       sourceMessage,
       logs,

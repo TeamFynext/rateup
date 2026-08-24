@@ -4,6 +4,7 @@ import { log } from "../../logger.js";
 import { CampaignParticipantStatus, WaTemplateCategory } from "../../types/enum.js";
 import { createTemplateMessage } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { sendMetaMessage } from "../../../../modules/whatsapp/meta/metaMessage.service.js";
+import { ConversationLimitError } from "../../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 import { buildTemplateComponents } from "../../../../modules/whatsapp/messageTemplates/templateComponents.js";
 import { signFlowToken } from "../../../../modules/whatsapp/flows/flowToken.js";
@@ -228,6 +229,13 @@ async function sendTemplateMessage(
 ): Promise<void> {
   // Sends and records in one call — including recording a rejection, which is
   // what the failure bookkeeping below reacts to.
+  //
+  // sendMetaMessage enforces the org's conversation allowance and signals a breach by
+  // throwing. That is deliberately caught and folded into the normal failure result
+  // here rather than propagating: this runs inside a BullMQ job, and a quota breach is
+  // not transient — rethrowing would retry the job on a condition that cannot resolve
+  // until the org upgrades or the cycle resets. The participant is marked FAILED with
+  // the reason instead.
   const data = await sendMetaMessage({
     platform: PlatformType.WHATSAPP,
     orgId,
@@ -249,6 +257,12 @@ async function sendTemplateMessage(
       dripStageId: dripCampaignParticipantId ?? null,
       templateData,
     },
+  }).catch((error: unknown) => {
+    if (error instanceof ConversationLimitError) {
+      log.warn({ orgId, campaignId }, "Campaign send blocked — conversation limit reached");
+      return { ok: false as const, error: error.message };
+    }
+    throw error;
   });
 
   // The send already happened; this records its outcome atomically. Raw `pg`

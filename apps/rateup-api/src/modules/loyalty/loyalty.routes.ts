@@ -20,9 +20,11 @@ import { loyaltyApiSettingRoutes } from "./apiSetting/apiSetting.route.js";
 
 export async function loyaltyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  // WhatsappLoyalty, not Whatsapp: loyalty is a Starter-and-above capability, while
+  // whatsapp.active stays on for every tier so Free keeps the inbox.
   server.addHook(
     "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsappLoyalty]),
   );
   server.addHook("preHandler", requireFeature(TeamFeature.loyalty));
 

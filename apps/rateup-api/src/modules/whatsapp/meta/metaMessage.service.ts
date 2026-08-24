@@ -58,6 +58,12 @@ export interface MetaSendInput extends MetaChannelContext {
    * does not silently start gating paths that never gated (campaign sends);
    * the inbox and Instagram paths that check today pass `true`.
    */
+  /**
+   * Defaults to TRUE: an outbound send is gated by the org's conversation allowance
+   * unless a caller explicitly opts out. This used to default to false — the opposite
+   * polarity to sendMessage's `skipConversationLimit` — which meant campaign fan-out
+   * and ad-hoc sends through this path were silently ungated.
+   */
   enforceConversationLimit?: boolean;
 }
 
@@ -102,7 +108,7 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     isAutomated = false,
     externalApi = false,
     campaign,
-    enforceConversationLimit = false,
+    enforceConversationLimit = true,
   } = input;
 
   const channel = getMetaChannel(platform);

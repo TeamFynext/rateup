@@ -1,8 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
-  activateSubscription,
+  applySubscriptionStatusEvent,
+  applySubscriptionUpdate,
+  changeSubscriptionPlan,
   cancelRazorpaySubscription,
   createCheckoutSession,
+  createConversationAddonOrder,
   createRateUpPlan,
   deletePaymentPlan,
   deleteRateUpPlan,
@@ -11,6 +14,10 @@ import {
   getAllPaymentPlans,
   getAllPaymentSubscriptions,
   getAllRateupPaymentPlans,
+  getConversationAddonOffer,
+  getOrgInvoices,
+  getSubscriptionChangeOptions,
+  isSubscriptionStatusEvent,
   RazorpayPaymentWebhookData,
   RazorpaySubscriptionChargedPayload,
   syncPaymentPlans,
@@ -18,7 +25,6 @@ import {
   updatePaymentPlan,
   updateRateUpPlan,
   updateSubscription,
-  updateSubscriptionForTrial,
   verifyPayment,
 } from "./payment.service.js";
 import {
@@ -27,12 +33,14 @@ import {
   orgPlanEmailInput,
   paymentPlanDeleteInput,
   rateupPlanParamInput,
+  type ChangePlanInput,
   UpdatePlanInput,
   updateRateUpPlanInput,
   type UpdateOrderStatusInput,
 } from "./payment.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
+import { createHash } from "node:crypto";
 import { log } from "../../utils/logger.js";
 // import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
@@ -52,8 +60,10 @@ export async function createCheckoutSessionHandler(
     const checkoutSession = await createCheckoutSession(userId, data);
     reply.code(201).send(checkoutSession);
   } catch (e) {
+    // A refused add-on purchase is a rule, not a fault: send the reason back so the
+    // billing page can say why rather than showing a generic failure.
     console.log(e);
-    reply.code(500).send("Failed");
+    reply.code(400).send({ message: e instanceof Error ? e.message : "Failed" });
   }
 }
 
@@ -76,20 +86,37 @@ export async function verificationHandler(
     throw new Error("RAZORPAY_WEBHOOK_SECRET is not configured");
   }
 
-  // Verify the webhook signature
+  // Razorpay signs the exact bytes it sent, so the HMAC has to be computed over the raw
+  // body. JSON.stringify() of the parsed object reproduces them only by luck — any
+  // non-ASCII escape or number formatting difference silently breaks verification.
+  const rawBody = (request as FastifyRequest & { rawBody?: string | Buffer }).rawBody;
+  if (rawBody === undefined) {
+    log.error("No rawBody on the Razorpay webhook request; check the route config");
+    return reply.code(500).send("Webhook misconfigured");
+  }
+
   const isValidSignature = validateWebhookSignature(
-    JSON.stringify(webhookBody),
+    rawBody.toString(),
     webhookSignature,
     webhookSecret,
   );
 
   if (!isValidSignature) {
-    console.log("invalid signature ....");
+    // Nearly always a secret mismatch between the dashboard webhook and
+    // RAZORPAY_WEBHOOK_SECRET. The fingerprint identifies which secret this process is
+    // using without putting it in the logs.
+    log.warn(
+      {
+        event: webhookBody?.event,
+        hasSignature: Boolean(webhookSignature),
+        bodyBytes: rawBody.length,
+        secretFingerprint: createHash("sha256").update(webhookSecret).digest("hex").slice(0, 8),
+      },
+      "Razorpay webhook signature rejected",
+    );
 
     reply.code(400).send("Invalid signature");
     return;
-  } else {
-    console.log("signature validated....");
   }
 
   const data = webhookBody;
@@ -122,20 +149,41 @@ export async function verificationHandler(
     }
   }
 
-  if (data?.event === "subscription.activated") {
+  if (data?.event === "subscription.updated") {
     if (!data.payload) {
       return reply.code(400).send("Missing payload");
     }
     try {
-      const paymentPlans = await activateSubscription(data.payload);
-      return reply.code(201).send(paymentPlans);
+      const updated = await applySubscriptionUpdate(data.payload);
+      return reply.code(201).send(updated);
     } catch (e) {
       console.log(e);
       return reply.code(500).send("Failed");
     }
   }
 
-  reply.code(500).send({ success: false });
+  // activated / authenticated / pending / halted / cancelled / completed all reduce to
+  // "record the new state on the order" — see SUBSCRIPTION_STATUS_BY_EVENT. None of them
+  // move money or change entitlements; subscription.charged above does that.
+  if (isSubscriptionStatusEvent(data?.event)) {
+    if (!data.payload) {
+      return reply.code(400).send("Missing payload");
+    }
+    try {
+      const updated = await applySubscriptionStatusEvent(data.event, data.payload);
+      return reply.code(201).send(updated);
+    } catch (e) {
+      console.log(e);
+      return reply.code(500).send("Failed");
+    }
+  }
+
+  // The dashboard webhook is subscribed to more events than this handler acts on.
+  // Acknowledge the rest with a 200: Razorpay retries any 5xx on a backoff, so
+  // answering "unhandled" with an error turns every ignored event into a redelivery
+  // loop rather than a no-op.
+  log.info({ event: data?.event }, "Razorpay webhook event ignored");
+  return reply.code(200).send({ success: true, handled: false });
 }
 
 export async function syncPaymentPlansHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -271,6 +319,56 @@ export async function getAllOrdersByOrg(request: FastifyRequest, reply: FastifyR
   }
 }
 
+export async function getSubscriptionChangeOptionsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await Session.getSession(request, reply);
+    const orgId = session.getAccessTokenPayload().orgId;
+
+    reply.code(200).send(await getSubscriptionChangeOptions(orgId));
+  } catch (error) {
+    log.error({ err: error }, "Failed to read subscription change options");
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function changeSubscriptionPlanHandler(
+  request: FastifyRequest<{ Body: ChangePlanInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await Session.getSession(request, reply);
+    const orgId = session.getAccessTokenPayload().orgId;
+
+    const result = await changeSubscriptionPlan(
+      orgId,
+      request.body.rateupPlanId,
+      request.body.period,
+    );
+    reply.code(200).send(result);
+  } catch (error) {
+    log.error({ err: error }, "Failed to change subscription plan");
+    reply
+      .code(400)
+      .send({ message: error instanceof Error ? error.message : "Failed to change plan" });
+  }
+}
+
+export async function getOrgInvoicesHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const session = await Session.getSession(request, reply);
+    const orgId = session.getAccessTokenPayload().orgId;
+
+    const invoices = await getOrgInvoices(orgId);
+    reply.code(200).send(invoices);
+  } catch (error) {
+    log.error({ err: error }, "Failed to load org invoices");
+    reply.code(500).send("Failed");
+  }
+}
+
 export async function getAllPaymentOrdersHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const allOrders = await getAllPaymentOrders();
@@ -300,15 +398,15 @@ export async function sendEmailPlanSelectionDetailsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const emailParams = {
-      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-      text: "ALERT: User initiated subscription",
-      subject: "ALERT: User initiated subscription",
-      html: await createEmailBodyPricingPlanSelected(request.body),
-    };
-    await notificationQueue.add("notification", {
-      emailData: emailParams,
-    });
+    // const emailParams = {
+    //   to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+    //   text: "ALERT: User initiated subscription",
+    //   subject: "ALERT: User initiated subscription",
+    //   html: await createEmailBodyPricingPlanSelected(request.body),
+    // };
+    // await notificationQueue.add("notification", {
+    //   emailData: emailParams,
+    // });
     reply.code(200).send();
   } catch (e) {
     log.error(e);
@@ -327,21 +425,12 @@ export async function updateSubscriptionOrderHandler(
     const { status } = request.body;
     const order = await updateOrder(request.params.orderId, status, request.user.orgId);
 
-    if (status === "COMPLETE") {
-      if (order.paymentStatus !== "SUCCESS") {
-        return reply.code(409).send({
-          message: "This order has not been paid for; its subscription cannot be started",
-        });
-      }
-      await updateSubscriptionForTrial(
-        // The order's own org, not the session's. They are the same after the
-        // scoped update above; naming the order's makes that explicit rather
-        // than incidental.
-        order.orgId!,
-        order.rateupPlanId,
-        order.subscriptionId,
-        request.userId,
-      );
+    // The guard outlives the trial flow it was written for: an unpaid order must not be
+    // marked complete, however it got here.
+    if (status === "COMPLETE" && order.paymentStatus !== "SUCCESS") {
+      return reply.code(409).send({
+        message: "This order has not been paid for; its subscription cannot be started",
+      });
     }
     reply.code(200).send();
   } catch (e) {
@@ -350,5 +439,41 @@ export async function updateSubscriptionOrderHandler(
     }
     log.error(e);
     reply.code(500).send({ message: "Updating order failed" });
+  }
+}
+
+export async function getConversationAddonOfferHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await Session.getSession(request, reply);
+    const orgId = session.getAccessTokenPayload().orgId;
+
+    reply.code(200).send(await getConversationAddonOffer(orgId));
+  } catch (error) {
+    log.error({ err: error }, "Failed to read the conversation add-on offer");
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function createConversationAddonOrderHandler(
+  request: FastifyRequest<{ Body: { quantity?: number } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await Session.getSession(request, reply);
+    const orgId = session.getAccessTokenPayload().orgId;
+
+    reply
+      .code(201)
+      .send(
+        await createConversationAddonOrder(session.getUserId(), orgId, request.body?.quantity ?? 1),
+      );
+  } catch (error) {
+    // A refused purchase is a rule, not a fault — a Free or Enterprise org needs to hear
+    // why rather than a generic failure.
+    log.error({ err: error }, "Failed to create a conversation add-on order");
+    reply.code(400).send({ message: error instanceof Error ? error.message : "Failed" });
   }
 }

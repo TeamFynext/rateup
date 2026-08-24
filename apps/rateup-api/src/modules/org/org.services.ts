@@ -10,7 +10,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session/index.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken.js";
-import { seedDefaultStages } from "../update/update.controller.js";
+import { seedDefaultStages } from "./org.defaultStages.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import {
   createInactivityWarningTemplate,

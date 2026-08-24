@@ -60,6 +60,9 @@ vi.mock("../../../contact/conversation/conversation.service.js", () => ({
   setConversationSubjectIfBlank: vi.fn(),
   updateConversation: vi.fn(),
 }));
+vi.mock("../../metering/meteredConversation.service.js", () => ({
+  recordMessageInWindow: vi.fn(async () => ({ conversationId: "metered-1", opened: true })),
+}));
 vi.mock("../../../org/ws/org.ws.controller.js", () => ({ sendViaWstoOrgHandler: vi.fn() }));
 vi.mock("../../instagram/instagram.service.js", () => ({ getIgUserDetailsFromMeta: vi.fn() }));
 vi.mock("../../facebook/facebook.service.js", () => ({ getFacebookUserDetailsFromMeta: vi.fn() }));

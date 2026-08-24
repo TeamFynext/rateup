@@ -29,6 +29,10 @@ export const SCHEDULED_JOBS = [
   { id: "loyaltyInactivityCheck", pattern: "0 2 * * *" }, // Every day at 2:00 AM
   { id: "loyaltyPointsExpiryAlerts", pattern: "0 3 * * *" }, // Every day at 3:00 AM
   { id: "inboxAutomation", pattern: "0 * * * *" }, // Every hour
+  // Warnings first, then the downgrade — a customer hears "expires tomorrow" and
+  // "has expired" before anything is taken away.
+  { id: "subscriptionExpiryAlerts", pattern: "30 3 * * *" }, // Every day at 3:30 AM
+  { id: "downgradeExpiredSubscriptions", pattern: "0 4 * * *" }, // Every day at 4:00 AM
   // TODO: re-enable once the report is working again.
   // { id: "weeklyInboxReport", pattern: "0 9 * * 0" }, // Sundays at 9:00 AM
 ] as const satisfies ReadonlyArray<{ id: string; pattern: string; tz?: string }>;
