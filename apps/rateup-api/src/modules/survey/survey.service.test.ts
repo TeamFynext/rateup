@@ -21,6 +21,7 @@ vi.mock("../../utils/prisma.js", () => ({
     surveyStats: { findUnique: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },
     surveyVariables: {
       create: vi.fn(),
+      createMany: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -31,6 +32,10 @@ vi.mock("../../utils/prisma.js", () => ({
     usageStats: { update: vi.fn() },
     team: { findUnique: vi.fn(), update: vi.fn() },
     $queryRaw: vi.fn(),
+    $executeRaw: vi.fn(),
+    // Only the array form is used; awaiting it keeps the operations' own mocks
+    // observable to the assertions.
+    $transaction: vi.fn(async (operations: unknown[]) => await Promise.all(operations)),
   },
   excludeFields: <T, K extends keyof T>(obj: T, fields: K[]) => {
     const copy = { ...obj };
@@ -61,10 +66,9 @@ vi.mock("../../utils/commonUtils.js", () => ({
   getShortUrlId: vi.fn(() => "SHORT001"),
   shortIdUniqueConstraintErrHandler: vi.fn((fn, ...args) => fn(...args)),
 }));
-vi.mock("./survey.utils.js", () => ({
-  isShortId: (id: string) => id.length === 8,
+vi.mock("./survey.utils.js", async (importActual) => ({
+  ...(await importActual<typeof import("./survey.utils.js")>()),
   getSurveysOrgId: vi.fn(),
-  createSurveyDefaultVariableForQuestion: vi.fn(),
 }));
 vi.mock("../question/question.utils.js", () => ({
   getInitialSurveyQuestions: vi.fn(() => []),
@@ -1212,19 +1216,51 @@ describe("survey variables", () => {
     expect(db.surveyVariables.delete).toHaveBeenCalledWith({ where: { id: "v1" } });
   });
 
-  test("updateSurveyVariables rebuilds only the DEFAULT variables, in question order", async () => {
-    const { createSurveyDefaultVariableForQuestion } = await import("./survey.utils.js");
-    const createDefaultMock = createSurveyDefaultVariableForQuestion as unknown as ReturnType<
-      typeof vi.fn
-    >;
+  test("updateSurveyVariables rebuilds the DEFAULT variables in question order, atomically", async () => {
+    db.survey.findUnique.mockResolvedValue({ type: SurveyType.Web });
 
-    await updateSurveyVariables("s1", [{ id: "q1" }, { id: "q2" }] as unknown as Question[]);
+    await updateSurveyVariables("s1", [
+      { id: "q1", type: QuestionType.Rating },
+      { id: "q2", type: QuestionType.Contact },
+    ] as unknown as Question[]);
 
     expect(db.surveyVariables.deleteMany).toHaveBeenCalledWith({
       where: { type: SurveyVariableType.DEFAULT, surveyId: "s1" },
     });
-    expect(createDefaultMock).toHaveBeenNthCalledWith(1, "s1", { id: "q1" }, 0);
-    expect(createDefaultMock).toHaveBeenNthCalledWith(2, "s1", { id: "q2" }, 1);
+    expect(db.surveyVariables.createMany).toHaveBeenCalledWith({
+      data: [
+        { name: "Q1_response", value: "q1", type: SurveyVariableType.DEFAULT, surveyId: "s1" },
+        { name: "Q2_name_response", value: "q2", type: SurveyVariableType.DEFAULT, surveyId: "s1" },
+        {
+          name: "Q2_phone_response",
+          value: "q2",
+          type: SurveyVariableType.DEFAULT,
+          surveyId: "s1",
+        },
+        {
+          name: "Q2_email_response",
+          value: "q2",
+          type: SurveyVariableType.DEFAULT,
+          surveyId: "s1",
+        },
+      ],
+    });
+    // The lock, the delete and the insert go to the database as one unit — a
+    // concurrent rebuild that interleaved between them would collide on the
+    // (name, surveyId) unique constraint.
+    expect(db.$transaction).toHaveBeenCalledOnce();
+    expect(db.$executeRaw).toHaveBeenCalled();
+  });
+
+  test("updateSurveyVariables clears the variables of a survey that is not web", async () => {
+    db.survey.findUnique.mockResolvedValue({ type: SurveyType.WhatsApp });
+
+    await updateSurveyVariables("s1", [
+      { id: "q1", type: QuestionType.Rating },
+    ] as unknown as Question[]);
+
+    expect(db.surveyVariables.deleteMany).toHaveBeenCalled();
+    expect(db.surveyVariables.createMany).toHaveBeenCalledWith({ data: [] });
   });
 });
 

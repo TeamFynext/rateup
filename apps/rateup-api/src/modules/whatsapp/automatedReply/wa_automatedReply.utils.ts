@@ -33,6 +33,8 @@ import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.control
 import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
+import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
+import { openLeadOnPipelineForContact } from "../../pipeline/pipelineLead/lead.service.js";
 import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
 import {
   startInstagramAutomationFlow,
@@ -903,7 +905,7 @@ async function executeRuleActions(
           break;
 
         case "ASSIGN_LIFECYCLE":
-          success = await executeAssignLifecycleAction(action.value as string, actionContext);
+          success = await executeAssignLifecycleAction(action.value, actionContext);
           break;
 
         case "SEND_MESSAGE":
@@ -1085,14 +1087,38 @@ async function executeAssignTeamAction(
   return true;
 }
 
+function readAssignLifecycleValue(value: unknown): {
+  lifecycleId: string;
+  pipelineId?: string;
+} {
+  if (typeof value === "string") return { lifecycleId: value };
+  if (value && typeof value === "object") {
+    const record = value as { lifecycleId?: unknown; pipelineId?: unknown };
+    return {
+      lifecycleId: typeof record.lifecycleId === "string" ? record.lifecycleId : "",
+      pipelineId: typeof record.pipelineId === "string" ? record.pipelineId : undefined,
+    };
+  }
+  return { lifecycleId: "" };
+}
+
+/** The board's view of where a lead came in, from the rule's platform. */
+const PLATFORM_ORIGIN: Record<string, { source: LeadSource; channel: LeadChannel }> = {
+  WHATSAPP: { source: "WHATSAPP", channel: "WHATSAPP" },
+  INSTAGRAM: { source: "INSTAGRAM", channel: "INSTAGRAM" },
+  FACEBOOK: { source: "MESSENGER", channel: "MESSENGER" },
+};
+
 async function executeAssignLifecycleAction(
-  lifecycleId: string,
+  rawValue: unknown,
   context: {
     orgId: string;
     phone?: string | null;
     message?: string;
+    platform?: string;
   },
 ): Promise<boolean> {
+  const { lifecycleId, pipelineId } = readAssignLifecycleValue(rawValue);
   if (!context.phone || !context.orgId || !lifecycleId) return false;
 
   const updatedContact = await prisma.contact.update({
@@ -1163,6 +1189,26 @@ async function executeAssignLifecycleAction(
 
   // Trigger Conversions API if applicable
   await triggerConversionsApiForContact(updatedContact, lifecycleId);
+
+  if (pipelineId) {
+    const origin = PLATFORM_ORIGIN[context.platform ?? "WHATSAPP"] ?? {
+      source: "MANUAL" as LeadSource,
+      channel: "NONE" as LeadChannel,
+    };
+    const lead = await openLeadOnPipelineForContact({
+      contactId: updatedContact.id,
+      pipelineId,
+      source: origin.source,
+      channel: origin.channel,
+    });
+
+    if (!lead) {
+      log.info(
+        { contactId: updatedContact.id, pipelineId },
+        "Rule set the lifecycle but opened no lead: the contact is already on that board, or it has no open column",
+      );
+    }
+  }
 
   return true;
 }

@@ -41,6 +41,7 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/sync-team-features", syncTeamFeaturesHandler);
   server.put("/migrate-loyalty-tier-priority", migrateLoyaltyTierPriorityHandler);
   server.put("/seed-inbox-stats", seedInboxStatsAutomationHandler);
+  // server.put("/seed-pipelines", seedPipelinesHandler);  // see update.service.ts
   server.put("/reconcile-inbox-status", reconcileInboxStatusHandler);
   server.put("/backfill-conversations", backfillConversationsHandler);
   server.post("/backfill-conversations/start", startBackfillConversationsHandler);

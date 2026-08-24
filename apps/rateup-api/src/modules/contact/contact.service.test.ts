@@ -51,6 +51,10 @@ vi.mock("../integrations/meta/conversions.service.js", () => ({
   triggerConversionsApiForContact: vi.fn(),
 }));
 
+// The board half of the lifecycle mirror; its own behaviour is covered in
+// pipeline.test.ts, so here we only care that the contact side calls it.
+vi.mock("../pipeline/pipelineLead/lead.service.js", () => ({}));
+
 vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
   assignWaMessageToUser: vi.fn(),
   createInternalWaMessage: vi.fn(),

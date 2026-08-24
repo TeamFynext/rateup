@@ -9,6 +9,14 @@ vi.mock("../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     contact: { count: vi.fn() },
+    // The writers mirror each lifecycle onto every pipeline's board columns.
+    pipeline: { findMany: vi.fn() },
+    pipelineStage: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      updateMany: vi.fn(),
+      deleteMany: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -27,6 +35,7 @@ import {
   deleteLifecycleById,
   getLifecycles,
   getLifeCyclesWithContactCount,
+  LifecycleInUseError,
   reorderLabels,
   updateLifecycle,
 } from "./lifecycle.service.js";
@@ -46,8 +55,19 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   lifecycle: Record<string, Mock>;
   contact: Record<string, Mock>;
+  pipeline: Record<string, Mock>;
+  pipelineStage: Record<string, Mock>;
   $transaction: Mock;
 };
+
+/**
+ * Runs a `$transaction` callback against the same mock, so assertions on
+ * `db.lifecycle.update` see the writes the transaction made. Array-form calls
+ * are still resolved as-is.
+ */
+async function runTransaction(arg: unknown) {
+  return typeof arg === "function" ? await (arg as (tx: unknown) => unknown)(prisma) : arg;
+}
 
 const ORG = "11111111-1111-1111-1111-111111111111";
 const VICTIM_ORG = "22222222-2222-2222-2222-222222222222";
@@ -79,7 +99,12 @@ beforeEach(() => {
   db.lifecycle.update.mockResolvedValue({ id: STAGE });
   db.lifecycle.delete.mockResolvedValue({ id: STAGE });
   db.contact.count.mockResolvedValue(0);
-  db.$transaction.mockImplementation(async (ops: unknown[]) => ops);
+  db.pipeline.findMany.mockResolvedValue([]);
+  db.pipelineStage.findMany.mockResolvedValue([]);
+  db.pipelineStage.createMany.mockResolvedValue({ count: 0 });
+  db.pipelineStage.updateMany.mockResolvedValue({ count: 0 });
+  db.pipelineStage.deleteMany.mockResolvedValue({ count: 0 });
+  db.$transaction.mockImplementation(runTransaction);
 });
 
 // ===========================================================================
@@ -361,7 +386,7 @@ describe("createLifecycle", () => {
 });
 
 // ===========================================================================
-// The body schema against the model
+// Pipeline board columns mirror the lifecycle stages
 // ===========================================================================
 
 describe("lifecycleBodySchema", () => {
@@ -443,7 +468,7 @@ describe("reorderLabels", () => {
     await reorderLabels(ORG, { lifecycles: [item(), item({ id: "b", ordering: 1 })] } as never);
 
     expect(db.$transaction).toHaveBeenCalledOnce();
-    expect(db.$transaction.mock.calls[0][0]).toHaveLength(2);
+    expect(db.lifecycle.update).toHaveBeenCalledTimes(2);
   });
 
   test("writes the ordering each entry carries", async () => {
@@ -536,7 +561,6 @@ describe("reorderLabels", () => {
     await reorderLabels(ORG, { lifecycles: [] } as never);
 
     expect(db.lifecycle.update).not.toHaveBeenCalled();
-    expect(db.$transaction.mock.calls[0][0]).toEqual([]);
   });
 
   test("the reorder schema requires every field of every entry", () => {

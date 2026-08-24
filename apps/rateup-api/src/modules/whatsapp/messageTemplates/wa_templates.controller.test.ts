@@ -32,11 +32,7 @@ vi.mock("./wa_templates.utils.js", () => ({
   getFlowIdFromTemplateComponents: vi.fn(),
 }));
 vi.mock("../../user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
-vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({
-  createSession: vi.fn(),
-  deleteSession: vi.fn(),
-  sendMessage: vi.fn(),
-}));
+vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
 vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({ createTemplateMessage: vi.fn() }));
 vi.mock("../whatsappSurvey/wasurvey.controller.js", () => ({ wait: vi.fn() }));
 vi.mock("../flows/flow.service.js", () => ({ getFlowWithSurveyTeamMapIds: vi.fn() }));

@@ -952,6 +952,7 @@ export async function updateContactById(
     });
     triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
   }
+
   if (
     WaMessageClosedStatus.includes(updatedContact.waMessageAssignStatus as WaMessageAssignStatus)
   ) {
@@ -1036,6 +1037,7 @@ export async function updateContactLabelsById(
     },
     contact.orgId,
   );
+
   return contact;
 }
 

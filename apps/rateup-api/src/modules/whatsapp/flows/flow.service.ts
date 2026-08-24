@@ -27,17 +27,13 @@ import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums.js
 import { FlowLogicJump } from "../../../types/global.js";
 import { getGoogleUrlBySurveyTeamMapId, getSurveyById } from "../../survey/survey.service.js";
 import {
-  deleteSession,
-  getSession,
   saveResponses,
   sendMessage,
   shouldShowGoogleReview,
   shouldShowGoogleReviewV2,
-  updateSession,
-  type WaSessionWithSurveyTeamMap,
 } from "../whatsappSurvey/wasurvey.service.js";
 import { validateLogic, validateLogicV2 } from "../../question/question.utils.js";
-import { isSignedFlowToken, signFlowToken, verifyFlowToken } from "./flowToken.js";
+import { signFlowToken, verifyFlowToken } from "./flowToken.js";
 import { appendFlowResponses, clearFlowResponses, getFlowResponses } from "./flowState.js";
 import { unusableRequest } from "./flow.errors.js";
 import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
@@ -543,8 +539,9 @@ interface sendFlowProps {
   userId?: string;
   whatsappSettingsPhoneId?: string;
   /**
-   * Run context to sign into the flow token. Without it the token falls back to
-   * the bare phone and the reply handlers resolve context from `WaSession`.
+   * Run context to sign into the flow token. It is the only thing that ties a
+   * reply back to a survey, so a flow sent without it collects answers that the
+   * reply handlers cannot attribute and therefore drop.
    */
   context?: {
     surveyTeamMapId: string;
@@ -1129,41 +1126,6 @@ function transformSlots(
     title: time,
   }));
 }
-/**
- * One in-flight flow run, however its context was recovered.
- *
- * A signed `flow_token` carries the context and Redis holds the answers
- * collected so far; a bare-phone token (anything sent before signed tokens
- * shipped) falls back to the `WaSession` row, so runs already open at deploy
- * time still complete. Everything downstream reads this shape and does not care
- * which of the two it came from.
- */
-export interface FlowRun {
-  flowToken: string;
-  phone: string;
-  orgId: string;
-  surveyTeamMapId: string;
-  language: string;
-  tag?: string | null;
-  ip?: string | null;
-  campaignParticipantId?: string | null;
-  campaignParticipantDripStageId?: string | null;
-  surveyTeamMap: NonNullable<WaSessionWithSurveyTeamMap["surveyTeamMap"]>;
-  /** v1 answers carry `type`; v2 flow answers legitimately omit it. */
-  responses: WaFlowQuestionResponse[];
-  /** True when the context came from a WaSession row rather than a signed token. */
-  legacy: boolean;
-}
-
-/**
- * Key that makes this run's submission idempotent. Only a signed token
- * identifies one run: a legacy token is the bare phone, which would collide
- * across every survey that person ever answers.
- */
-function runIdempotencyKey(run: FlowRun) {
-  return run.legacy ? undefined : run.flowToken;
-}
-
 /** The survey mapping plus the survey and flow config a run needs. */
 export async function getSurveyTeamMapWithFlow(surveyTeamMapId: string) {
   return await prisma.surveyTeamMap.findFirst({
@@ -1173,61 +1135,54 @@ export async function getSurveyTeamMapWithFlow(surveyTeamMapId: string) {
 }
 
 /**
+ * One in-flight flow run. The signed `flow_token` carries the context and Redis
+ * holds the answers collected so far, so a run needs no database row of its own.
+ */
+export interface FlowRun {
+  flowToken: string;
+  phone: string;
+  orgId: string;
+  surveyTeamMapId: string;
+  language: string;
+  tag?: string | null;
+  campaignParticipantId?: string | null;
+  campaignParticipantDripStageId?: string | null;
+  surveyTeamMap: NonNullable<Awaited<ReturnType<typeof getSurveyTeamMapWithFlow>>>;
+  /** v1 answers carry `type`; v2 flow answers legitimately omit it. */
+  responses: WaFlowQuestionResponse[];
+}
+
+/**
  * Recovers the run a webhook belongs to. `orgId` comes from the flow's own
  * endpoint URL, so it is trusted; a token claiming a different org is rejected
  * rather than followed.
  */
 export async function resolveFlowRun(flowToken: string, orgId: string): Promise<FlowRun | null> {
   const context = verifyFlowToken(flowToken);
-  if (context) {
-    if (context.orgId !== orgId) {
-      log.error(
-        { tokenOrgId: context.orgId, orgId },
-        "Flow token was issued for a different org; refusing it",
-      );
-      return null;
-    }
-    const surveyTeamMap = await getSurveyTeamMapWithFlow(context.surveyTeamMapId);
-    if (!surveyTeamMap) {
-      log.error({ surveyTeamMapId: context.surveyTeamMapId }, "SurveyTeamMap in token not found");
-      return null;
-    }
-    return {
-      flowToken,
-      phone: context.phone,
-      orgId: context.orgId,
-      surveyTeamMapId: context.surveyTeamMapId,
-      language: context.language,
-      tag: context.tag,
-      campaignParticipantId: context.campaignParticipantId,
-      campaignParticipantDripStageId: context.campaignParticipantDripStageId,
-      surveyTeamMap: surveyTeamMap as FlowRun["surveyTeamMap"],
-      responses: await getFlowResponses<WaFlowQuestionResponse>(flowToken),
-      legacy: false,
-    };
-  }
-
-  if (isSignedFlowToken(flowToken)) {
-    // Ours, but tampered with or expired — the session fallback would key on it
-    // as if it were a phone number, so stop here instead.
+  if (!context) return null;
+  if (context.orgId !== orgId) {
+    log.error(
+      { tokenOrgId: context.orgId, orgId },
+      "Flow token was issued for a different org; refusing it",
+    );
     return null;
   }
-
-  const session = await getSession(orgId, flowToken);
-  if (!session?.surveyTeamMap || !session.surveyTeamMapId) return null;
+  const surveyTeamMap = await getSurveyTeamMapWithFlow(context.surveyTeamMapId);
+  if (!surveyTeamMap) {
+    log.error({ surveyTeamMapId: context.surveyTeamMapId }, "SurveyTeamMap in token not found");
+    return null;
+  }
   return {
     flowToken,
-    phone: session.phone,
-    orgId: session.orgId,
-    surveyTeamMapId: session.surveyTeamMapId,
-    language: session.language,
-    tag: session.tag,
-    ip: session.ip,
-    campaignParticipantId: session.campaignParticipantId,
-    campaignParticipantDripStageId: session.campaignParticipantDripStageId,
-    surveyTeamMap: session.surveyTeamMap,
-    responses: session.responses as unknown as WaFlowQuestionResponse[],
-    legacy: true,
+    phone: context.phone,
+    orgId: context.orgId,
+    surveyTeamMapId: context.surveyTeamMapId,
+    language: context.language,
+    tag: context.tag,
+    campaignParticipantId: context.campaignParticipantId,
+    campaignParticipantDripStageId: context.campaignParticipantDripStageId,
+    surveyTeamMap,
+    responses: await getFlowResponses<WaFlowQuestionResponse>(flowToken),
   };
 }
 
@@ -1236,21 +1191,11 @@ async function recordFlowResponses(
   run: FlowRun,
   screenResponses: WaFlowQuestionResponse[],
 ): Promise<WaFlowQuestionResponse[]> {
-  if (run.legacy) {
-    const session = await updateSession(run.orgId, run.phone, {
-      responses: [...run.responses, ...screenResponses] as unknown as object[],
-    });
-    return session.responses as unknown as WaFlowQuestionResponse[];
-  }
   return await appendFlowResponses<WaFlowQuestionResponse>(run.flowToken, screenResponses);
 }
 
-/** Releases whatever held the run's in-progress answers. */
+/** Releases the run's in-progress answers. */
 async function endFlowRun(run: FlowRun) {
-  if (run.legacy) {
-    await deleteSession(run.orgId, run.phone);
-    return;
-  }
   await clearFlowResponses(run.flowToken);
 }
 
@@ -1264,7 +1209,7 @@ async function handleFlowEnd({ run, decryptedBody }: handleFlowEndProps) {
   await saveResponses({
     ...run,
     responses: uniqueResponses,
-    idempotencyKey: runIdempotencyKey(run),
+    idempotencyKey: run.flowToken,
   });
   await endFlowRun(run);
   const waFlow = run.surveyTeamMap.survey.WaFlow;
@@ -1353,7 +1298,7 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   await saveResponses({
     ...run,
     responses: uniqueResponses,
-    idempotencyKey: runIdempotencyKey(run),
+    idempotencyKey: run.flowToken,
   });
 
   const versionCheck = run.surveyTeamMap.survey.WaFlow.version === 1;

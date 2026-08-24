@@ -19,6 +19,8 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
   // Tickets are free with no limits (no subscription feature backs them), so
   // there is no subscription gate — access is governed only by team/RBAC perms.
   [TeamFeature.tickets]: null,
+  // Same as tickets: the lead pipeline has no subscription feature behind it.
+  [TeamFeature.pipeline]: null,
   [TeamFeature.ai_chatbot]: sfpn.AI,
 
   [TeamFeature.analytics]: null,

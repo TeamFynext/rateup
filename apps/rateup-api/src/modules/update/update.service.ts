@@ -905,6 +905,102 @@ export async function backfillConversationsFromMessages(apply: boolean) {
   return stats;
 }
 
+// COMMENTED OUT — this seeded a board from the org's lifecycles, and stages no
+// longer derive from lifecycles at all. Rewriting it means seeding from
+// `DEFAULT_STAGES` in pipeline.service.ts instead; parked until the pipeline
+// migration is dealt with. The route and the Update Center card are commented
+// out to match.
+// /**
+//  * Gives every org that has none a first pipeline, with one column per lifecycle
+//  * stage that org owns.
+//  *
+//  * Deliberately per-org rather than one shared board: `Lifecycle.orgId` scopes
+//  * the lookup, so each org's columns come from its own vocabulary and two orgs
+//  * never share a stage. An org with no lifecycles is skipped rather than given a
+//  * columnless board — there is no canned funnel to fall back on. An org with no
+//  * teams is skipped too, because pipeline access is team membership: a board
+//  * with no team attached is one nobody can open.
+//  *
+//  * Every team is also pointed at the new board with auto-add on, so a contact
+//  * reaching a mapped lifecycle stage opens a lead without anyone configuring
+//  * anything first.
+//  */
+// export async function seedPipelinesForOrgs(apply: boolean, orgId?: string) {
+//   const orgs = await prisma.org.findMany({
+//     where: orgId ? { id: orgId } : undefined,
+//     select: { id: true, name: true },
+//     orderBy: { createdAt: "asc" },
+//   });
+//
+//   const stats = {
+//     orgsScanned: orgs.length,
+//     pipelinesCreated: 0,
+//     stagesCreated: 0,
+//     teamsAutoAdding: 0,
+//     skippedHasPipeline: 0,
+//     skippedNoLifecycles: 0,
+//     skippedNoTeams: 0,
+//   };
+//
+//   for (const org of orgs) {
+//     if (await prisma.pipeline.count({ where: { orgId: org.id } })) {
+//       stats.skippedHasPipeline++;
+//       continue;
+//     }
+//
+//     const lifecycles = await prisma.lifecycle.findMany({
+//       where: { orgId: org.id },
+//       orderBy: { ordering: "asc" },
+//       select: { id: true, name: true, ordering: true, color: true, isWon: true },
+//     });
+//     if (!lifecycles.length) {
+//       stats.skippedNoLifecycles++;
+//       continue;
+//     }
+//
+//     const teams = await prisma.team.findMany({ where: { orgId: org.id }, select: { id: true } });
+//     if (!teams.length) {
+//       stats.skippedNoTeams++;
+//       continue;
+//     }
+//
+//     stats.pipelinesCreated++;
+//     stats.stagesCreated += lifecycles.length;
+//     stats.teamsAutoAdding += teams.length;
+//     if (!apply) continue;
+//
+//     const pipeline = await prisma.pipeline.create({
+//       data: {
+//         name: SEEDED_PIPELINE_NAME,
+//         orgId: org.id,
+//         order: 0,
+//         // Every team in the org, so whoever is already working gets the board.
+//         teams: {
+//           createMany: { skipDuplicates: true, data: teams.map(({ id }) => ({ teamId: id })) },
+//         },
+//         stages: { create: lifecycles.map(stageDataFromLifecycle) },
+//         lostReasons: { create: DEFAULT_LOST_REASONS.map((label, order) => ({ label, order })) },
+//       },
+//       select: { id: true },
+//     });
+//
+//     // Auto-add on from the start, so the board fills itself rather than opening
+//     // empty and waiting for someone to find the switch. Safe to point every team
+//     // at it: a team files into exactly one board, and this is the org's only one.
+//     await prisma.team.updateMany({
+//       where: { orgId: org.id, id: { in: teams.map(({ id }) => id) } },
+//       data: { defaultPipelineId: pipeline.id, autoCreateLeads: true },
+//     });
+//
+//     log.info(
+//       { orgId: org.id, pipelineId: pipeline.id, stages: lifecycles.length, teams: teams.length },
+//       "Seeded a pipeline for org",
+//     );
+//   }
+//
+//   return stats;
+// }
+
 export async function seedInboxStatsAutomation() {
   const orgs = await prisma.org.findMany({ select: { id: true } });
   let successCount = 0;

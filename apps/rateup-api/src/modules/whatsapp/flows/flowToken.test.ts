@@ -6,7 +6,7 @@ vi.mock("../../../utils/logger.js", () => ({
 
 process.env.FLOW_TOKEN_SECRET = "test-secret";
 
-const { isSignedFlowToken, signFlowToken, verifyFlowToken } = await import("./flowToken.js");
+const { signFlowToken, verifyFlowToken } = await import("./flowToken.js");
 
 const CONTEXT = {
   surveyTeamMapId: "stm-1",
@@ -97,17 +97,5 @@ describe("signFlowToken / verifyFlowToken", () => {
 
   test("returns null rather than throwing for a malformed payload", () => {
     expect(verifyFlowToken("v1.@@@notbase64json@@@.signature")).toBeNull();
-  });
-});
-
-describe("isSignedFlowToken", () => {
-  test("recognises our own tokens", () => {
-    expect(isSignedFlowToken(signFlowToken(CONTEXT))).toBe(true);
-  });
-
-  // A phone number must not be mistaken for a tampered token — the caller
-  // treats those differently (session fallback vs. hard stop).
-  test.each(["15550001", undefined, null])("does not claim %j", (value) => {
-    expect(isSignedFlowToken(value)).toBe(false);
   });
 });

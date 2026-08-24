@@ -4,7 +4,6 @@ import { readXlsxObjects, type CellValue } from "hucre";
 import { randomUUID } from "node:crypto";
 import prisma from "../../utils/prisma.js";
 import { updateSurveyVariables } from "../survey/survey.service.js";
-import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils.js";
 import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema.js";
 import { emailPattern, getQuestionsArrUpdatedGRTypeQuestion } from "./question.utils.js";
 
@@ -35,7 +34,10 @@ export async function createQuestion(surveyId: string, input: CreateQuestionInpu
   questions.splice(position, 0, newQuestion);
   await updateQuestionsOnSurvey(surveyId, questions);
 
-  await createSurveyDefaultVariableForQuestion(surveyId, newQuestion, position);
+  // Variable names are positional, so an insert renames every question after it
+  // — creating only the new question's variable would collide with the one
+  // already holding that name.
+  await updateSurveyVariables(surveyId, questions);
   return newQuestion;
 }
 

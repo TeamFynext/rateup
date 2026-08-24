@@ -30,11 +30,7 @@ vi.mock("../flows/flow.service.js", () => ({
   getFlowWithSurveyTeamMapIds: vi.fn(),
   getWaSettingsForFlow: vi.fn(),
 }));
-vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({
-  createSession: vi.fn(),
-  deleteSession: vi.fn(),
-  sendMessage: vi.fn(),
-}));
+vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
 vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({ createTemplateMessage: vi.fn() }));
 vi.mock("../../../utils/upload/s3Upload.js", () => ({ getFileUrlFromKey: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
@@ -46,7 +42,7 @@ import { getWaSettings } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds, getWaSettingsForFlow } from "../flows/flow.service.js";
-import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { verifyFlowToken } from "../flows/flowToken.js";
@@ -91,8 +87,6 @@ const callMetaApiMock = callMetaApi as unknown as Mock;
 const generateTemplateMock = generateTemplate as unknown as Mock;
 const getFlowIdMock = getFlowIdFromTemplateComponents as unknown as Mock;
 const getFlowWithTeamsMock = getFlowWithSurveyTeamMapIds as unknown as Mock;
-const createSessionMock = createSession as unknown as Mock;
-const deleteSessionMock = deleteSession as unknown as Mock;
 const sendMessageMock = sendMessage as unknown as Mock;
 const createTemplateMessageMock = createTemplateMessage as unknown as Mock;
 const getFileUrlMock = getFileUrlFromKey as unknown as Mock;
@@ -819,20 +813,6 @@ describe("sendTemplateToPhone", () => {
     expect(getFileUrlMock).not.toHaveBeenCalled();
   });
 
-  // The run context travels in the signed flow token now, so a send opens no
-  // WaSession row — and two flow templates to the same person no longer collide.
-  test("opens no session row for a template carrying a flow button", async () => {
-    getFlowIdMock.mockReturnValue("flow-1");
-    getFlowWithTeamsMock.mockResolvedValue({
-      survey: { languages: ["en"], teams: [{ id: "stm-1", teamId: "team-1" }] },
-    });
-
-    await sendTemplateToPhone(args());
-
-    expect(deleteSessionMock).not.toHaveBeenCalled();
-    expect(createSessionMock).not.toHaveBeenCalled();
-  });
-
   test("refuses a flow template whose flow is not in our database", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue(null);
@@ -859,7 +839,7 @@ describe("sendTemplateToPhone", () => {
   });
 
   // The token carries the run context (survey mapping, org, respondent) so the
-  // reply can be attributed without a WaSession lookup — see flows/flowToken.ts.
+  // reply can be attributed — see flows/flowToken.ts.
   test("signs the run context into the flow token", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
@@ -880,7 +860,6 @@ describe("sendTemplateToPhone", () => {
     });
   });
 
-  // A failed send leaves nothing behind to clean up.
   test("propagates a send failure", async () => {
     getFlowIdMock.mockReturnValue("flow-1");
     getFlowWithTeamsMock.mockResolvedValue({
@@ -889,6 +868,5 @@ describe("sendTemplateToPhone", () => {
     sendMessageMock.mockRejectedValue(new Error("graph is down"));
 
     await expect(sendTemplateToPhone(args())).rejects.toThrow("graph is down");
-    expect(createSessionMock).not.toHaveBeenCalled();
   });
 });

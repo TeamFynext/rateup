@@ -35,21 +35,29 @@ export async function updateLifecycle(
   orgId: string,
   data: LifecycleBodySchema,
 ) {
-  return await prisma.lifecycle.update({
-    where: {
-      id: lifecycleId,
-      orgId,
-    },
-    data,
+  return await prisma.$transaction(async (tx) => {
+    const lifecycle = await tx.lifecycle.update({
+      where: {
+        id: lifecycleId,
+        orgId,
+      },
+      data,
+    });
+
+    return lifecycle;
   });
 }
 
 export async function createLifecycle(orgId: string, data: LifecycleBodySchema) {
-  return await prisma.lifecycle.create({
-    data: {
-      orgId,
-      ...data,
-    },
+  return await prisma.$transaction(async (tx) => {
+    const lifecycle = await tx.lifecycle.create({
+      data: {
+        orgId,
+        ...data,
+      },
+    });
+
+    return lifecycle;
   });
 }
 
@@ -58,11 +66,13 @@ export async function deleteLifecycleById(id: string, orgId: string) {
   if (contactsInStage > 0) {
     throw new LifecycleInUseError(contactsInStage);
   }
-  return await prisma.lifecycle.delete({
-    where: {
-      id,
-      orgId,
-    },
+  return await prisma.$transaction(async (tx) => {
+    return tx.lifecycle.delete({
+      where: {
+        id,
+        orgId,
+      },
+    });
   });
 }
 
@@ -76,20 +86,26 @@ export class LifecycleInUseError extends Error {
 
 export async function reorderLabels(orgId: string, data: LifecycleReorderSchema) {
   const defaultId = data.lifecycles.find((lifecycle) => lifecycle.category !== "lost")?.id;
-  return await prisma.$transaction(
-    data.lifecycles.map((lifecycle) =>
-      prisma.lifecycle.update({
-        where: {
-          id: lifecycle.id,
-          orgId, // Ensure the label belongs to the Organization
-        },
-        data: {
-          ordering: lifecycle.ordering,
-          isDefault: lifecycle.id === defaultId,
-          isWon: lifecycle.isWon,
-          category: lifecycle.category === "lost" ? "lost" : lifecycle.isWon ? "won" : "active",
-        },
-      }),
-    ),
-  );
+  return await prisma.$transaction(async (tx) => {
+    const lifecycles = [];
+
+    for (const lifecycle of data.lifecycles) {
+      lifecycles.push(
+        await tx.lifecycle.update({
+          where: {
+            id: lifecycle.id,
+            orgId, // Ensure the label belongs to the Organization
+          },
+          data: {
+            ordering: lifecycle.ordering,
+            isDefault: lifecycle.id === defaultId,
+            isWon: lifecycle.isWon,
+            category: lifecycle.category === "lost" ? "lost" : lifecycle.isWon ? "won" : "active",
+          },
+        }),
+      );
+    }
+
+    return lifecycles;
+  });
 }

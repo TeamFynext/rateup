@@ -48,13 +48,10 @@ vi.mock("../../survey/survey.service.js", () => ({
   getSurveyById: vi.fn(),
 }));
 vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({
-  deleteSession: vi.fn(),
-  getSession: vi.fn(),
   saveResponses: vi.fn(),
   sendMessage: vi.fn(),
   shouldShowGoogleReview: vi.fn(),
   shouldShowGoogleReviewV2: vi.fn(),
-  updateSession: vi.fn(),
 }));
 vi.mock("../../question/question.utils.js", () => ({
   validateLogic: vi.fn(),
