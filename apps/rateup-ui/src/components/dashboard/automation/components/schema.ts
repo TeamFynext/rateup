@@ -138,14 +138,35 @@ export const ACTION_TYPES = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    label: "Assign Lifecycle",
+    // Superseded by Assign Stage and no longer offered for new actions. It stays
+    // in the list because rules written against it are still running: dropping
+    // the entry would leave those rows with an empty type select, and saving one
+    // would quietly rewrite the action.
+    label: "Assign Lifecycle (legacy)",
     value: "ASSIGN_LIFECYCLE",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+    legacy: true,
+  },
+  {
+    label: "Assign Stage",
+    value: "ASSIGN_STAGE",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
 ] as const;
 
-export function getActionTypesForPlatform(platform: Platform) {
-  return ACTION_TYPES.filter((a) => (a.platforms as readonly string[]).includes(platform));
+/**
+ * The action types offered for a platform.
+ *
+ * `current` is the type the action already has. A legacy type is offered only
+ * when it is the one already selected, so existing rules still render and can be
+ * saved untouched, while nothing new can be authored against it.
+ */
+export function getActionTypesForPlatform(platform: Platform, current?: string) {
+  return ACTION_TYPES.filter(
+    (a) =>
+      (a.platforms as readonly string[]).includes(platform) &&
+      (!("legacy" in a && a.legacy) || a.value === current),
+  );
 }
 
 // Single source of truth for group operators

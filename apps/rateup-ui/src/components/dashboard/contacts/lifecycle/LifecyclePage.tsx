@@ -14,13 +14,7 @@ import {
   useReorderLifeCycleMutation,
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
-import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import {
-  useSyncDatasetsMutation,
-  useUpdateWaSettingsMutation,
-  useWaSettings,
-} from "@/backend/whatsapp/settings/waSettings.query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,86 +33,14 @@ export function ContactSettings() {
   const confirm = useConfirm();
   const { data: userInfo } = useUserInfo();
 
-  const { data: waSettingsData } = useWaSettings();
-  const updateOrgDetails = useUpdateOrgDetailsMutation();
-  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id ?? "");
-  const syncDatasetsMutation = useSyncDatasetsMutation(waSettingsData?.[0]?.id || "");
-
   const [isSettingUp, setIsSettingUp] = useState(false);
-  const [isConversionApiActive, setIsConversionApiActive] = useState(false);
-  const [conversionData, setConversionData] = useState<{
-    event_name?: string;
-    currency?: string;
-    conversionsApiDatasetId?: string;
-  }>({});
 
   React.useEffect(() => {
     if (userInfo && "data" in userInfo) {
       setShowStagesGlobal(userInfo.data.showLifecycle !== false);
-      setIsConversionApiActive(userInfo.data.isConversionApiActive === true);
     }
   }, [userInfo]);
 
-  React.useEffect(() => {
-    if (waSettingsData && waSettingsData.length > 0) {
-      setConversionData({
-        event_name: waSettingsData[0].conversionData?.event_name || "Purchase",
-        currency: waSettingsData[0].conversionData?.currency || "INR",
-        conversionsApiDatasetId: waSettingsData[0].conversionsApiDatasetId || "",
-      });
-    }
-  }, [waSettingsData]);
-
-  const handleUpdateConversionApi = async (
-    active: boolean,
-    data: {
-      event_name?: string;
-      currency?: string;
-      conversionsApiDatasetId?: string;
-    },
-  ) => {
-    try {
-      const finalData = { ...data };
-
-      if (active !== isConversionApiActive) {
-        await updateOrgDetails.mutateAsync({ isConversionApiActive: active });
-        setIsConversionApiActive(active);
-
-        if (active && waSettingsData?.[0]?.id && !finalData.conversionsApiDatasetId) {
-          try {
-            const datasets = await syncDatasetsMutation.mutateAsync();
-            if (datasets && datasets.length > 0) {
-              finalData.conversionsApiDatasetId = datasets[0].id;
-              toast.success(t(`Auto-selected dataset: ${datasets[0].name}`));
-            } else {
-              toast.info(t("No Meta datasets found for this account."));
-            }
-          } catch {
-            toast.error(t("Failed to auto-fetch Meta datasets."));
-          }
-        }
-      }
-
-      if (
-        waSettingsData?.[0]?.id &&
-        (finalData.event_name !== conversionData.event_name ||
-          finalData.currency !== conversionData.currency ||
-          finalData.conversionsApiDatasetId !== conversionData.conversionsApiDatasetId)
-      ) {
-        await updateWaSettings.mutateAsync({
-          conversionData: {
-            event_name: finalData.event_name,
-            currency: finalData.currency,
-          },
-          conversionsApiDatasetId: finalData.conversionsApiDatasetId,
-        });
-        setConversionData(finalData);
-      }
-      toast.success(t("Settings saved successfully"));
-    } catch {
-      toast.error(t("Failed to save settings"));
-    }
-  };
   const [showStagesGlobal, setShowStagesGlobal] = useState(true);
   const [showAddActiveForm, setShowAddActiveForm] = useState(false);
   const [showAddLostForm, setShowAddLostForm] = useState(false);
@@ -439,12 +361,6 @@ export function ContactSettings() {
             backendStages={lifecycles || []}
             showStagesGlobal={showStagesGlobal}
             setShowStagesGlobal={setShowStagesGlobal}
-            isConversionApiActive={isConversionApiActive}
-            conversionData={conversionData}
-            handleUpdateConversionApi={handleUpdateConversionApi}
-            hasWhatsAppSettings={
-              userInfo && "data" in userInfo ? userInfo.data.hasWhatsAppSettings : false
-            }
             showAddActiveForm={showAddActiveForm}
             setShowAddActiveForm={setShowAddActiveForm}
             showAddLostForm={showAddLostForm}

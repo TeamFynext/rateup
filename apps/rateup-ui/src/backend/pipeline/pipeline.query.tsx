@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { contactKeys } from "@/backend/campaign/contacts/contacts.keys.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import * as api from "./pipeline.api";
@@ -378,5 +379,89 @@ export function useUpdateTeamPipelineDefaultMutation() {
     success: (t) => t("Team pipeline updated"),
     errorFallback: (t) => t("Could not update the team's pipeline"),
     toastId: "pipeline-team-default",
+  });
+}
+
+/**
+ * Where a contact sits on the org's board. Enabled only when the caller has the
+ * pipeline feature — the endpoint is behind `requireFeature`, so asking without
+ * it would 403 and raise a toast on a screen that never mentioned pipelines.
+ */
+export function useContactStageQuery(contactId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: pipelineKeys.contactStage(contactId),
+    queryFn: () => api.fetchContactStage(contactId!),
+    enabled: Boolean(contactId) && enabled,
+  });
+}
+
+export function useSetContactStageMutation(contactId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stageId: string) => api.setContactStage(contactId!, stageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.contactStage(contactId) });
+      // The board and its counts have moved too.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not set the stage"));
+    },
+  });
+}
+
+/**
+ * Assign a stage to a contact named at call time — the contact form's path,
+ * where the id only exists once the contact has been created.
+ */
+export function useAssignContactStageMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ contactId, stageId }: { contactId: string; stageId: string }) =>
+      api.setContactStage(contactId, stageId),
+    onSuccess: (_data, { contactId }) => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.contactStage(contactId) });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+    },
+    onError: (error) => {
+      // The contact itself saved; only the stage did not. Say so rather than
+      // letting the modal close as if everything worked.
+      toast.error(getApiErrorMessage(error, "Contact saved, but the stage was not applied"));
+    },
+  });
+}
+
+/**
+ * Bulk assign from the contacts table. Invalidates the contacts list too, since
+ * the stage column reads from the same leads.
+ */
+export function useBulkSetContactStageMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ contactIds, stageId }: { contactIds: string[]; stageId: string }) =>
+      api.bulkSetContactStage(contactIds, stageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not assign the stage"));
+    },
+  });
+}
+
+/** Destructive: deletes the lead and everything on it. Confirm before calling. */
+export function useClearContactStageMutation(contactId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.clearContactStage(contactId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.contactStage(contactId) });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+      toast.success("Removed from the board");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not remove from the board"));
+    },
   });
 }

@@ -84,7 +84,7 @@ function countFor(
 ): number {
   switch (filter) {
     case "open":
-      return leads.filter((lead) => lead.status !== "LOST").length;
+      return leads.length;
     case "mine":
       return leads.filter(
         (lead) => lead.status === "OPEN" && isAssignedTo(lead, options.currentUserId),

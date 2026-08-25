@@ -115,8 +115,12 @@ export interface AppIntegration {
       [key: string]: unknown;
     }>;
     crm?: {
+      // Key name is legacy; the mapping targets a pipeline column now. The
+      // lifecycle fields are kept on saved entries for rollback only.
       leadLifecycleMappings?: Array<{
         zohoLeadStatus: string;
+        stageId?: string;
+        stageName?: string;
         lifecycleId?: string;
         lifecycleName?: string;
       }>;
@@ -128,8 +132,11 @@ export interface AppIntegration {
         selectedPipeline?: { id?: string | number; [key: string]: unknown };
         selectedSubPipeline?: { id?: string | number; [key: string]: unknown };
         requiredFieldMappings?: Record<string, string>;
+        // Key name is legacy; see `leadLifecycleMappings` above.
         lifecycleStageMappings?: Array<{
-          lifecycleId: string;
+          stageId?: string;
+          stageName?: string;
+          lifecycleId?: string;
           lifecycleName?: string;
           biginStageId?: string;
           biginStageName?: string;

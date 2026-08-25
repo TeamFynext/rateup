@@ -46,6 +46,7 @@ import { UserRole } from "@/utils/enums/index.ts";
 import { STAGE_COLOR_CHOICES, STAGE_STATUSES, STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusLabel } from "../pipeline.labels.ts";
 import { StageDot } from "../shared/atoms.tsx";
+import { ConversionsApiSection } from "./ConversionsApiSection.tsx";
 import { DeletePipelineDialog } from "./DeletePipelineDialog.tsx";
 
 /** A section heading, at the one size and weight the design uses for them. */
@@ -576,6 +577,17 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
         {/* The board's name is what the whole org calls it, so it sits with the
             other org-level calls rather than up with the columns. */}
         {isOrgAdmin && <NameSection key={pipeline.id} pipeline={pipeline} />}
+
+        {/* Reporting a win to Meta. It belongs to the board rather than to the
+            lifecycle now, because a lead reaching a Won column is what fires the
+            event. Sits directly above the danger zone. */}
+        <section>
+          <h2 className="font-nunito text-[15px] font-extrabold">{t("Conversion tracking")}</h2>
+          <SectionNote>
+            {t("Send a conversion event to Meta when a lead is won on this board.")}
+          </SectionNote>
+          <ConversionsApiSection />
+        </section>
 
         {/* Admin-only: deleting the board. Stays last — it is the one action that
             cannot be undone, so it should not sit above routine tuning. */}
