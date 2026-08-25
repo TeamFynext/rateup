@@ -55,7 +55,7 @@ export async function zohoAuthenticationHandler(
       });
     }
 
-    log.info("Starting Zoho OAuth authentication for orgId=%s", orgId);
+    log.info("Starting Zoho OAuth authentication");
 
     // Prevent duplicate active integrations
     const existingIntegration = await getIntegrationByName(orgId, IntegratedApps.zoho);
@@ -115,7 +115,7 @@ export async function zohoAuthenticationHandler(
     // Generate webhook secret
     const zohoWebhookSecret = generateRandomAlphaId(32);
     credential.zohoWebhookSecret = zohoWebhookSecret;
-    log.info("Generated Zoho webhook secret for orgId=%s", orgId);
+    log.info("Generated Zoho webhook secret");
 
     try {
       // CRM webhook registration
@@ -179,7 +179,7 @@ export async function zohoAuthenticationHandler(
         active: true,
       });
 
-      log.info("Zoho integration updated successfully for orgId=%s", orgId);
+      log.info("Zoho integration updated successfully");
     } else {
       await createIntegration(
         {
@@ -189,7 +189,7 @@ export async function zohoAuthenticationHandler(
         orgId,
       );
 
-      log.info("Zoho integration created successfully for orgId=%s", orgId);
+      log.info("Zoho integration created successfully");
     }
 
     return reply.code(200).send({
@@ -405,7 +405,15 @@ export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyR
 
     const payload = request.body as ZohoWebhookPayload;
 
-    log.info("Received Zoho webhook for product=%s", product);
+    // `token` is the shared webhook secret — everything else is safe to show.
+    // Printed before the validity checks below so a rejected notification is
+    // still visible; that is usually the one you want to look at.
+    const { token: _secret, ...notification } = payload ?? {};
+    log.info(
+      "Zoho webhook in => product=%s %s",
+      product,
+      JSON.stringify(notification, (key, value) => (key === "token" ? "[redacted]" : value)),
+    );
 
     if (!payload?.channel_id || !payload?.token || !payload?.ids) {
       return reply.code(400).send({
@@ -603,7 +611,7 @@ export const disconnectZohoIntegrationHandler = async (
           channelIds: [credential.crmWebhook.channelId],
         });
 
-        log.info("CRM webhook unsubscribed successfully for orgId=%s", orgId);
+        log.info("CRM webhook unsubscribed successfully");
       } catch (err) {
         log.error({ err }, "Failed to unsubscribe CRM webhook");
       }
@@ -619,7 +627,7 @@ export const disconnectZohoIntegrationHandler = async (
           channelIds: [credential.biginWebhook.channelId],
         });
 
-        log.info("Bigin webhook unsubscribed successfully for orgId=%s", orgId);
+        log.info("Bigin webhook unsubscribed successfully");
       } catch (err) {
         log.error({ err }, "Failed to unsubscribe Bigin webhook");
       }
@@ -633,12 +641,12 @@ export const disconnectZohoIntegrationHandler = async (
         },
       });
 
-      log.info("Zoho token revoked successfully for orgId=%s", orgId);
+      log.info("Zoho token revoked successfully");
     } catch (err) {
       log.error({ err }, "Failed to revoke Zoho token");
     }
 
-    log.info("Zoho integration disconnected successfully for orgId=%s", orgId);
+    log.info("Zoho integration disconnected successfully");
 
     return reply.code(200).send({
       success: true,

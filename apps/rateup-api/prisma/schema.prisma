@@ -610,6 +610,9 @@ enum ActionType {
   ASSIGN_USER
   ASSIGN_TEAM
   ASSIGN_LIFECYCLE
+  /// Move the contact's lead to a pipeline column. Replaces ASSIGN_LIFECYCLE;
+  /// both exist while rules written against the old one are still running.
+  ASSIGN_STAGE
   SEND_MESSAGE
   SEND_WEB_SURVEY
   SEND_TEMPLATE
@@ -3114,6 +3117,12 @@ model Lead {
   lostReason   PipelineLostReason? @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
   lostReasonId String?             @db.Uuid
 
+  /// CRM records this lead maps to, same shape as `Contact.integrationIds`.
+  /// A lead with a contact stores them there instead, so the contact stays the
+  /// single record for anything that has one; this is for board-only leads,
+  /// which would otherwise open a fresh Bigin deal on every stage change.
+  integrationIds Json?
+
   /// Whoever put the lead on the board. Fixed at creation and never reassigned —
   /// assignees change as the lead is handed around, the owner records who
   /// brought it in. Null for leads opened by automation rather than a person.
@@ -3141,6 +3150,11 @@ model Lead {
   /// A lead can be worked by several people, the same way a ticket card is.
   assignees  LeadAssignee[]
 
+  /// One lead per contact per board. Postgres counts NULLs as distinct, so this
+  /// leaves contact-less leads — walk-ins, manual board entries — unconstrained
+  /// while closing the race in `setContactStage`, where two concurrent syncs
+  /// could both find no lead and both create one.
+  @@unique([contactId, pipelineId], name: "contact_pipeline_unique")
   @@index([pipelineId, status])
   @@index([stageId])
 }

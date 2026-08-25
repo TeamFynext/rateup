@@ -69,6 +69,7 @@ import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import {
   generateInternalMessageId,
   generateOrderReferenceId,
+  readAssignStageValue,
   validateAutomationMatchCondition,
   validateRuleConditions,
   validateTimeWindow,
@@ -907,5 +908,27 @@ describe("generateInternalMessageId", () => {
     const ids = new Set(Array.from({ length: 100 }, () => generateInternalMessageId()));
 
     expect(ids.size).toBe(100);
+  });
+});
+
+describe("readAssignStageValue", () => {
+  test("reads a bare stage id, which is what the picker saves", () => {
+    expect(readAssignStageValue("stage-1")).toBe("stage-1");
+  });
+
+  // The lifecycle migration writes `stageId` into the older action's value, so a
+  // rule converted by hand can arrive as an object rather than a string.
+  test("reads `stageId` off an object", () => {
+    expect(readAssignStageValue({ stageId: "stage-2", lifecycleId: "lc-1" })).toBe("stage-2");
+  });
+
+  // An empty result is what makes the action report failure instead of silently
+  // moving nothing, so these must not fall through to something truthy.
+  test("gives nothing for a value that names no stage", () => {
+    expect(readAssignStageValue({ lifecycleId: "lc-1" })).toBe("");
+    expect(readAssignStageValue(null)).toBe("");
+    expect(readAssignStageValue(undefined)).toBe("");
+    expect(readAssignStageValue(42)).toBe("");
+    expect(readAssignStageValue({ stageId: 7 })).toBe("");
   });
 });

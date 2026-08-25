@@ -15,6 +15,11 @@ import {
   seedInboxStatsAutomation,
   reconcileInboxStatus,
   backfillConversationsFromMessages,
+  deleteAllPipelines,
+  seedPipelinesForOrgs,
+  placeLeadsFromLifecycles,
+  mapLifecycleRefsToStages,
+  convertAssignLifecycleActions,
 } from "./update.service.js";
 import {
   startBackfillConversations,
@@ -479,6 +484,122 @@ export async function reconcileInboxStatusHandler(
       message: apply
         ? `Reconciled ${result.repaired} conversation(s).`
         : `Dry run: ${result.mismatched} conversation(s) would be reconciled. Re-run with ?apply=true to write.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+/**
+ * Wipes every pipeline in every org. Unlike its neighbours this route is session-
+ * guarded and root-org only — see the note on the route.
+ */
+export async function deleteAllPipelinesHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await deleteAllPipelines(apply);
+    reply.code(200).send({
+      message: apply
+        ? `Deleted ${result.pipelines} pipeline(s) across ${result.orgs} org(s).`
+        : `Dry run: ${result.pipelines} pipeline(s) across ${result.orgs} org(s) would be deleted. Re-run with ?apply=true to write.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+/**
+ * Creates a "Default Pipeline" per org from that org's lifecycle stages. Same
+ * guard as the wipe above — this writes across every tenant.
+ */
+export async function seedPipelinesHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string; orgId?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await seedPipelinesForOrgs(apply, request.query.orgId);
+    reply.code(200).send({
+      message: apply
+        ? `Seeded ${result.pipelinesCreated} pipeline(s) with ${result.stagesCreated} column(s).`
+        : `Dry run: ${result.pipelinesCreated} pipeline(s) with ${result.stagesCreated} column(s) would be created. Re-run with ?apply=true to write.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+/**
+ * Places a lead per classified contact on the column matching its lifecycle.
+ * Returns `done: false` while contacts remain — the caller keeps calling.
+ */
+export async function placeLeadsFromLifecyclesHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await placeLeadsFromLifecycles(apply);
+    reply.code(200).send({
+      message: apply
+        ? `Placed ${result.placed} lead(s).`
+        : `Dry run: ${result.placed} lead(s) would be placed. Re-run with ?apply=true to write.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+/**
+ * Writes a stage id next to every stored lifecycle id — Zoho mappings and
+ * automation-rule actions. Additive; see the service for why.
+ */
+export async function mapLifecycleRefsToStagesHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await mapLifecycleRefsToStages(apply);
+    const mapped = result.biginMapped + result.crmMapped + result.ruleActionsMapped;
+    reply.code(200).send({
+      message: apply
+        ? `Mapped ${mapped} stored reference(s) onto stages.`
+        : `Dry run: ${mapped} stored reference(s) would be mapped. Re-run with ?apply=true to write.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+/**
+ * Switches Assign Lifecycle rule actions over to Assign Stage. Changes what
+ * those rules do — see the service for what stops happening.
+ */
+export async function convertAssignLifecycleActionsHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await convertAssignLifecycleActions(apply);
+    reply.code(200).send({
+      message: apply
+        ? `Converted ${result.converted} action(s) to Assign Stage.`
+        : `Dry run: ${result.converted} of ${result.actions} action(s) would be converted. Re-run with ?apply=true to write.`,
       ...result,
     });
   } catch (e) {

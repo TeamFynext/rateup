@@ -14,6 +14,10 @@ import {
   reopenLead,
   updateLead,
   updateTask,
+  getContactStage,
+  setContactStage,
+  clearContactStage,
+  bulkSetContactStage,
 } from "./lead.service.js";
 import type {
   BulkUpdateLeadsRequestSchema,
@@ -207,5 +211,94 @@ export async function deleteTaskHandler(
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error deleting task" });
+  }
+}
+
+/**
+ * Where the contact sits on the org's board, for the inbox panel. Answers 200
+ * with `null` rather than 404 when the org has no board: not having a pipeline
+ * is an ordinary state, not a missing resource.
+ */
+export async function getContactStageHandler(
+  request: FastifyRequest<{ Params: { contactId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await getContactStage(request.params.contactId, request.user.orgId);
+    return reply.code(200).send(result);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error reading the contact's stage" });
+  }
+}
+
+export async function setContactStageHandler(
+  request: FastifyRequest<{ Params: { contactId: string }; Body: { stageId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const current = await getContactStage(request.params.contactId, request.user.orgId);
+    if (!current) return reply.code(404).send({ message: "No pipeline for this contact" });
+
+    const lead = await setContactStage({
+      contactId: request.params.contactId,
+      pipelineId: current.pipelineId,
+      stageId: request.body.stageId,
+      source: "MANUAL",
+      channel: "NONE",
+      userId: request.userId,
+      automated: false,
+    });
+
+    // Null means the lead was already on that column — nothing changed, which is
+    // success from the caller's point of view.
+    return reply.code(200).send(lead ?? { unchanged: true });
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error setting the contact's stage" });
+  }
+}
+
+/**
+ * The contacts table's bulk assign. Reports what actually happened rather than a
+ * bare 200: a selection can contain contacts already sitting on the target
+ * column, and the toast should not claim to have moved them.
+ */
+export async function bulkSetContactStageHandler(
+  request: FastifyRequest<{ Body: { stageId: string; contactIds: string[] } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await bulkSetContactStage({
+      contactIds: request.body.contactIds,
+      orgId: request.user.orgId,
+      stageId: request.body.stageId,
+      userId: request.userId,
+    });
+    if (!result) return reply.code(404).send({ message: "No such stage on this org's pipeline" });
+    return reply.code(200).send(result);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error assigning the stage" });
+  }
+}
+
+/**
+ * Takes the contact off the board. Destructive — the lead and everything on it
+ * goes — so the client must confirm before calling.
+ */
+export async function clearContactStageHandler(
+  request: FastifyRequest<{ Params: { contactId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const current = await getContactStage(request.params.contactId, request.user.orgId);
+    if (!current) return reply.code(404).send({ message: "No pipeline for this contact" });
+
+    const leadId = await clearContactStage(request.params.contactId, current.pipelineId);
+    return reply.code(200).send({ leadId });
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error clearing the contact's stage" });
   }
 }

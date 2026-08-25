@@ -103,3 +103,22 @@ export type BulkUpdateLeadsRequestSchema = z.infer<typeof bulkUpdateLeadsRequest
 export type CreateNoteRequestSchema = z.infer<typeof createNoteRequestSchema>;
 export type CreateTaskRequestSchema = z.infer<typeof createTaskRequestSchema>;
 export type UpdateTaskRequestSchema = z.infer<typeof updateTaskRequestSchema>;
+
+/** Params for the inbox panel's contact-stage endpoints. */
+export const contactIdParamsSchema = z.object({ contactId: z.uuid() });
+export type ContactIdParamsSchema = z.infer<typeof contactIdParamsSchema>;
+
+/** Body for setting a contact's stage from the inbox panel. */
+export const setContactStageRequestSchema = z.object({ stageId: z.uuid() });
+export type SetContactStageRequestSchema = z.infer<typeof setContactStageRequestSchema>;
+
+/**
+ * Body for the contacts table's bulk assign. Capped because the handler walks the
+ * selection one contact at a time; a bigger selection needs a background job, not
+ * a longer request.
+ */
+export const bulkSetContactStageRequestSchema = z.object({
+  stageId: z.uuid(),
+  contactIds: z.array(z.uuid()).min(1).max(500),
+});
+export type BulkSetContactStageRequestSchema = z.infer<typeof bulkSetContactStageRequestSchema>;

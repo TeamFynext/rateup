@@ -782,7 +782,14 @@ declare global {
 
   /** The `custom_data` block on a Meta Conversions API event. */
   interface MetaConversionCustomData {
+    /**
+     * Always the constant `"Won"`. Kept because custom conversions and audiences
+     * defined in Meta's dashboard may already key off it — dropping the field
+     * would silently break them. `pipeline_stage` is where the real detail is.
+     */
     lifecycle_stage?: string;
+    /** The board column that closed the lead, e.g. `"Won"` or `"Closed Won"`. */
+    pipeline_stage?: string;
     currency?: string;
     value?: number;
   }

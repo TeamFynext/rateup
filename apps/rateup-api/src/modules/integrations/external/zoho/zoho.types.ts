@@ -1,3 +1,4 @@
+import axios from "axios";
 import type { Integration } from "../../../../../generated/prisma/client.js";
 
 /**
@@ -20,12 +21,25 @@ export interface ZohoPipelineOption {
 }
 
 /**
- * How a Rateup lifecycle stage maps onto the matching Zoho CRM lead status or
+ * How a Rateup pipeline column maps onto the matching Zoho CRM lead status or
  * Bigin deal stage. Exactly one of the two target fields is set, depending on
  * which product the mapping was configured for.
+ *
+ * `stageId` is the key the sync reads in both directions. `lifecycleId` is what
+ * it used to read, and is kept on every entry the Update Center's "Map Lifecycle
+ * References" card touched: it is the only record of which lifecycle a mapping
+ * came from, so it is what a rollback would need. Nothing reads it any more.
  */
-export interface ZohoLifecycleStageMapping {
+export interface ZohoStageMapping {
+  /** The pipeline column this maps to — the live key. */
+  stageId?: string;
+  /** Stored alongside the id so a deleted column can still be identified. */
+  stageName?: string;
+  /** @deprecated Superseded by `stageId`; retained for rollback only. */
   lifecycleId?: string;
+  /** @deprecated Superseded by `stageName`; retained for rollback only. */
+  lifecycleName?: string;
+  biginStageId?: string;
   biginStageName?: string;
   zohoLeadStatus?: string;
 }
@@ -34,14 +48,19 @@ export interface ZohoBiginPipelineConfig {
   selectedPipeline?: ZohoPipelineOption;
   selectedSubPipeline?: ZohoPipelineOption;
   selectedStage?: ZohoPipelineOption;
-  lifecycleStageMappings?: ZohoLifecycleStageMapping[];
+  /**
+   * Named for the lifecycle era. The key is left alone deliberately: renaming it
+   * would orphan every mapping an org has already configured, including the
+   * `stageId`s the Update Center stamped onto them.
+   */
+  lifecycleStageMappings?: ZohoStageMapping[];
   /** Zoho field api_name -> the Rateup contact field feeding it. */
   requiredFieldMappings?: Record<string, string>;
 }
 
 export interface ZohoCrmConfig {
-  /** Maps a Zoho CRM lead status onto a Rateup lifecycle stage. */
-  leadLifecycleMappings?: ZohoLifecycleStageMapping[];
+  /** Maps a Zoho CRM lead status onto a Rateup pipeline column. Key name is legacy. */
+  leadLifecycleMappings?: ZohoStageMapping[];
 }
 
 export interface ZohoBiginConfig {
@@ -121,6 +140,8 @@ export interface ZohoTriggerData {
   email?: string;
   phone?: string;
   source?: string;
+  /** The pipeline column the contact sits on, for stage-mapped triggers. */
+  stageId?: string;
   lifecycleId?: string;
   zohoContactId?: string;
   zohoLeadId?: string;
@@ -214,4 +235,62 @@ export interface ZohoWebhookPayload {
 export function zohoErrorDetail(error: unknown): unknown {
   const data = (error as { response?: { data?: unknown } } | null | undefined)?.response?.data;
   return data ?? error;
+}
+
+/**
+ * Which Bigin stage a trigger's column maps to.
+ *
+ * Keyed on `stageId` — the board drives the deal now. The `lifecycleId` fallback
+ * is for the contact write paths in `contact.service.ts`, which still enqueue
+ * this trigger with a lifecycle rather than a stage.
+ *
+ * Each key is compared **only when the incoming value is set**. A bare
+ * `m.stageId === data.stageId` matches the first entry that has no `stageId`
+ * whenever the trigger carries none either, which silently stamps an unrelated
+ * Bigin stage onto the deal — the reason this is its own function.
+ */
+export function findBiginStageMapping(
+  mappings: ZohoStageMapping[],
+  data: { stageId?: string; lifecycleId?: string },
+): ZohoStageMapping | undefined {
+  if (data.stageId) return mappings.find((m) => m.stageId === data.stageId);
+  if (data.lifecycleId) return mappings.find((m) => m.lifecycleId === data.lifecycleId);
+  return undefined;
+}
+
+/**
+ * Bigin refusing the deal because the contact it points at is gone.
+ *
+ * Distinguished by the field path rather than the code alone: `INVALID_DATA` is
+ * Bigin's answer to any bad field, and retrying without the contact only helps
+ * for this one.
+ */
+/**
+ * Bigin refusing the record id in the URL — the deal was deleted on their side.
+ *
+ * Shaped differently from a field rejection: the body is a bare error object
+ * with a `resource_path_index` rather than a `data` array, because the request
+ * never got as far as validating fields.
+ */
+export function isStaleRecordIdError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  if (error.response?.status === 404) return true;
+
+  const body = error.response?.data as
+    | { code?: string; details?: { resource_path_index?: number } }
+    | undefined;
+  return body?.code === "INVALID_DATA" && body?.details?.resource_path_index !== undefined;
+}
+
+export function isStaleContactLinkError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  const rows = (error.response?.data as { data?: unknown } | undefined)?.data;
+  if (!Array.isArray(rows)) return false;
+  return rows.some((row) => {
+    const detail = row as { code?: string; details?: { json_path?: string } };
+    return (
+      detail?.code === "INVALID_DATA" &&
+      detail?.details?.json_path?.includes("Contact_Name") === true
+    );
+  });
 }
