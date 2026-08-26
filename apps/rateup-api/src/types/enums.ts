@@ -259,8 +259,15 @@ export enum SubscriptionFeaturePathName {
   Encryption = "webSurvey.encryption",
   Whatsapp = "whatsapp",
   WhatsAppConversation = "whatsapp.conversation",
+  // Tier gates. These live UNDER `whatsapp` rather than being their own top-level
+  // keys because they are WhatsApp-platform capabilities — but they are separate
+  // from `whatsapp.active`, which every tier keeps for inbox access. Splitting them
+  // out is what makes "inbox on Free, campaigns from Starter" expressible at all.
+  WhatsappCampaign = "whatsapp.campaign",
+  WhatsappLoyalty = "whatsapp.loyalty",
+  WhatsappReferrals = "whatsapp.referrals",
+  WhatsappCatalog = "whatsapp.catalog",
 
-  ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
   Ticket = "ticket",

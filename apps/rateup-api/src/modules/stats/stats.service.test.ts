@@ -5,6 +5,9 @@ vi.mock("../../utils/prisma.js", () => ({
   default: {
     usageStats: { upsert: vi.fn(), updateMany: vi.fn() },
     subscription: { findUnique: vi.fn() },
+    // The allowance now includes conversation packs, so the lookup goes through
+    // getConversationAllowance rather than reading the plan's number directly.
+    subscriptionAddon: { findMany: vi.fn(() => Promise.resolve([])) },
   },
 }));
 vi.mock("../../utils/logger.js", () => ({
@@ -17,7 +20,11 @@ vi.mock("../notification/notification.service.js", () => ({
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { notifyConversationLimitReached } from "../notification/notification.service.js";
-import { incrementConversationCount, resetMonthlyCounts } from "./stats.service.js";
+import {
+  incrementConversationCount,
+  incrementMeteredConversationCount,
+  resetMonthlyCounts,
+} from "./stats.service.js";
 
 const upsertMock = prisma.usageStats.upsert as unknown as ReturnType<typeof vi.fn>;
 const updateManyMock = prisma.usageStats.updateMany as unknown as ReturnType<typeof vi.fn>;
@@ -34,6 +41,9 @@ function seedSubscription({ max = 500, isAnnual = false }: { max?: number; isAnn
 beforeEach(() => {
   vi.clearAllMocks();
   subMock.mockResolvedValue(null); // default: no limit → never notifies
+  // The notifier claims the one-shot flag with a conditional updateMany; a claim of
+  // 1 row is the "we won the race" default.
+  updateManyMock.mockResolvedValue({ count: 1 });
 });
 
 describe("incrementConversationCount", () => {
@@ -59,12 +69,59 @@ describe("incrementConversationCount", () => {
   });
 });
 
-describe("incrementConversationCount — limit-reached notification", () => {
-  test("notifies exactly on the increment that reaches the monthly limit", async () => {
+describe("incrementConversationCount no longer meters the plan", () => {
+  test("does not notify, even at the limit — the inbox counter is analytics only", async () => {
     seedSubscription({ max: 500 });
-    upsertMock.mockResolvedValue({ monthlyConversationsCount: 500, annualConversationsCount: 500 });
+    upsertMock.mockResolvedValue({
+      monthlyConversationsCount: 500,
+      annualConversationsCount: 500,
+      conversationLimitNotifiedAt: null,
+    });
 
     await incrementConversationCount("org-1");
+    expect(notifyMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("incrementMeteredConversationCount", () => {
+  test("upserts, incrementing BOTH metered counters", async () => {
+    upsertMock.mockResolvedValue({});
+    await incrementMeteredConversationCount("org-1");
+
+    expect(upsertMock).toHaveBeenCalledWith({
+      where: { orgId: "org-1" },
+      update: {
+        monthlyMeteredConversationsCount: { increment: 1 },
+        annualMeteredConversationsCount: { increment: 1 },
+      },
+      create: {
+        orgId: "org-1",
+        monthlyMeteredConversationsCount: 1,
+        annualMeteredConversationsCount: 1,
+      },
+    });
+  });
+
+  test("is best-effort: swallows errors and logs instead of throwing", async () => {
+    upsertMock.mockRejectedValue(new Error("db down"));
+    await expect(incrementMeteredConversationCount("org-1")).resolves.toBeUndefined();
+    expect(log.error).toHaveBeenCalled();
+  });
+});
+
+describe("incrementMeteredConversationCount — limit-reached notification", () => {
+  const usage = (over: Partial<Record<string, unknown>> = {}) => ({
+    monthlyMeteredConversationsCount: 0,
+    annualMeteredConversationsCount: 0,
+    conversationLimitNotifiedAt: null,
+    ...over,
+  });
+
+  test("notifies on the increment that reaches the monthly limit", async () => {
+    seedSubscription({ max: 500 });
+    upsertMock.mockResolvedValue(usage({ monthlyMeteredConversationsCount: 500 }));
+
+    await incrementMeteredConversationCount("org-1");
 
     expect(notifyMock).toHaveBeenCalledTimes(1);
     expect(notifyMock).toHaveBeenCalledWith("org-1");
@@ -72,36 +129,56 @@ describe("incrementConversationCount — limit-reached notification", () => {
 
   test("does not notify below the limit", async () => {
     seedSubscription({ max: 500 });
-    upsertMock.mockResolvedValue({ monthlyConversationsCount: 499, annualConversationsCount: 499 });
+    upsertMock.mockResolvedValue(usage({ monthlyMeteredConversationsCount: 499 }));
 
-    await incrementConversationCount("org-1");
+    await incrementMeteredConversationCount("org-1");
     expect(notifyMock).not.toHaveBeenCalled();
   });
 
-  test("does not re-notify once already over the limit", async () => {
+  test("still notifies when concurrent increments overshoot the limit", async () => {
+    // The regression this replaces: `=== max` meant two racing increments stepping
+    // 499 -> 501 skipped the notification for the entire cycle. `>=` catches up.
     seedSubscription({ max: 500 });
-    upsertMock.mockResolvedValue({ monthlyConversationsCount: 501, annualConversationsCount: 501 });
+    upsertMock.mockResolvedValue(usage({ monthlyMeteredConversationsCount: 501 }));
 
-    await incrementConversationCount("org-1");
+    await incrementMeteredConversationCount("org-1");
+    expect(notifyMock).toHaveBeenCalledWith("org-1");
+  });
+
+  test("does not re-notify once the cycle's flag is already set", async () => {
+    seedSubscription({ max: 500 });
+    upsertMock.mockResolvedValue(
+      usage({ monthlyMeteredConversationsCount: 900, conversationLimitNotifiedAt: new Date() }),
+    );
+
+    await incrementMeteredConversationCount("org-1");
+    expect(notifyMock).not.toHaveBeenCalled();
+  });
+
+  test("does not notify when another concurrent call won the claim", async () => {
+    seedSubscription({ max: 500 });
+    upsertMock.mockResolvedValue(usage({ monthlyMeteredConversationsCount: 500 }));
+    updateManyMock.mockResolvedValue({ count: 0 });
+
+    await incrementMeteredConversationCount("org-1");
     expect(notifyMock).not.toHaveBeenCalled();
   });
 
   test("annual plans notify at the pooled max * 12", async () => {
     seedSubscription({ max: 500, isAnnual: true });
-    upsertMock.mockResolvedValue({
-      monthlyConversationsCount: 10,
-      annualConversationsCount: 6000,
-    });
+    upsertMock.mockResolvedValue(
+      usage({ monthlyMeteredConversationsCount: 10, annualMeteredConversationsCount: 6000 }),
+    );
 
-    await incrementConversationCount("org-1");
+    await incrementMeteredConversationCount("org-1");
     expect(notifyMock).toHaveBeenCalledWith("org-1");
   });
 
   test("never notifies when the plan has no conversation limit", async () => {
     subMock.mockResolvedValue(null);
-    upsertMock.mockResolvedValue({ monthlyConversationsCount: 999, annualConversationsCount: 999 });
+    upsertMock.mockResolvedValue(usage({ monthlyMeteredConversationsCount: 999 }));
 
-    await incrementConversationCount("org-1");
+    await incrementMeteredConversationCount("org-1");
     expect(notifyMock).not.toHaveBeenCalled();
   });
 });

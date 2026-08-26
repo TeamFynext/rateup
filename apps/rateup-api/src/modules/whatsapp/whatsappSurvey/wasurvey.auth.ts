@@ -3,6 +3,7 @@ import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import prisma from "../../../utils/prisma.js";
 import { Role } from "../../../../generated/prisma/client.js";
+import { getConversationAllowance } from "../../subscription/addons.js";
 
 export async function getWhatsappSurveyVerifySubscriptionHandler(
   request: FastifyRequest<{
@@ -72,12 +73,23 @@ export async function checkConversationLimitAvailable(orgId: string) {
     return true;
   }
 
-  const max = readWhatsappConversationMax(subscription.features);
+  // The allowance includes any conversation packs the org has bought. Reading the plan's
+  // number alone would refuse sends from a customer who has paid for the headroom.
+  const { effectiveMax: max } = await getConversationAllowance(orgId);
+  // An uncapped plan is not measured at all. Enterprise is invoiced on the usage it
+  // actually runs, so its allowance is a sentinel rather than a ceiling — comparing
+  // against it would eventually refuse a send for a customer who has no limit.
   if (max === undefined) {
     return true;
   }
 
+  // Enforced against the METERED counters (self-derived 24h conversation windows),
+  // not the inbox-ticket counters. An inbox ticket only closes when a human or an
+  // automation closes it, so it was never a bounded unit to price against; the
+  // metered window always expires. monthly/annualConversationsCount remain for inbox
+  // analytics. Function name and signature are unchanged so the ~35 send call sites
+  // and assertWithinConversationLimit pick this up without edits.
   return !(subscription.isAnnualMessageLimit
-    ? usage.annualConversationsCount >= max * 12
-    : usage.monthlyConversationsCount >= max);
+    ? usage.annualMeteredConversationsCount >= max * 12
+    : usage.monthlyMeteredConversationsCount >= max);
 }

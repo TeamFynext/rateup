@@ -6,6 +6,7 @@ import { log } from "../../logger.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import type { ExpiryStage } from "../../../emails/subscription-expiry.js";
 import { renderSubscriptionExpiryEmail } from "../react/templates.js";
+import { GATEWAY_BILLED_PLAN } from "../../../modules/subscription/planBilling.js";
 
 type SubscriptionWithOwnerAndPlan = Prisma.SubscriptionGetPayload<{
   include: { org: { select: { owner: true } }; basePlan: true };
@@ -29,6 +30,12 @@ const SUBJECT = "Rateup Subscription Expiry Alert - Rateup.app";
 export async function subscriptionExpiryAlert() {
   try {
     const subscriptions = await prisma.subscription.findMany({
+      where: {
+        // Only plans a gateway bills on a schedule have a real deadline. Warning an
+        // Enterprise customer that their contract "expires tomorrow" — when nothing will
+        // actually happen to it — is worse than saying nothing.
+        basePlan: GATEWAY_BILLED_PLAN,
+      },
       include: {
         org: {
           select: {
@@ -41,15 +48,30 @@ export async function subscriptionExpiryAlert() {
 
     if (!subscriptions.length) return;
 
-    await Promise.all(
-      REMINDER_SCHEDULE.flatMap(({ daysBefore, stage, text }) => {
-        const target = dayjs().add(daysBefore, "day").toDate().toDateString();
-        return subscriptions
-          .filter((s) => s.expiresAt.toDateString() === target)
-          .map((subscription) => sendExpiryEmail(subscription, stage, text));
-      }),
+    const sends = REMINDER_SCHEDULE.flatMap(({ daysBefore, stage, text }) => {
+      const target = dayjs().add(daysBefore, "day").toDate().toDateString();
+      return subscriptions
+        .filter((s) => s.expiresAt.toDateString() === target)
+        .filter((s) => {
+          if (s.org?.owner?.email) return true;
+          // An org whose owner has been removed has nobody to tell; skip it rather than
+          // failing the run for everyone else.
+          log.warn({ orgId: s.orgId }, "Skipping expiry alert: the org has no owner email");
+          return false;
+        })
+        .map((subscription) => sendExpiryEmail(subscription, stage, text));
+    });
+
+    // allSettled, not all: one org that cannot be queued must not cancel the rest.
+    const results = await Promise.allSettled(sends);
+    const failed = results.filter((r) => r.status === "rejected");
+    for (const failure of failed) {
+      log.error({ err: (failure as PromiseRejectedResult).reason }, "An expiry alert failed");
+    }
+    log.info(
+      { sent: results.length - failed.length, failed: failed.length },
+      "Subscription expiry alerts processed",
     );
-    log.info("....All Subscription expiry alert has sent....");
   } catch (e) {
     log.error({ err: e }, "Error sending subscription expiry email");
   }

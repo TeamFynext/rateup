@@ -6,7 +6,33 @@ import { PaymentPlanType, Prisma } from "../../../generated/prisma/client.js";
 import { createStats } from "../stats/stats.service.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
+import { GATEWAY_BILLED_PLAN } from "./planBilling.js";
+import { log } from "../../utils/logger.js";
 import merge from "lodash/merge.js";
+
+/**
+ * Whether a tier costs money — either it links a gateway product, or it carries a price.
+ * Both are checked: a tier can be priced before its gateway plans are seeded.
+ */
+function isPaidPlan(plan: {
+  paymentPlanId: string | null;
+  monthlyPaymentPlanId: string | null;
+  yearlyPaymentPlanId: string | null;
+  stripeId: string | null;
+  price: number | null;
+  monthlyPrice: number | null;
+  yearlyPrice: number | null;
+}) {
+  return Boolean(
+    plan.paymentPlanId ||
+    plan.monthlyPaymentPlanId ||
+    plan.yearlyPaymentPlanId ||
+    plan.stripeId ||
+    (plan.price ?? 0) > 0 ||
+    (plan.monthlyPrice ?? 0) > 0 ||
+    (plan.yearlyPrice ?? 0) > 0,
+  );
+}
 
 export async function createFreePlanSubscription(
   orgId: string,
@@ -21,6 +47,19 @@ export async function createFreePlanSubscription(
         id: planId,
       },
     });
+
+    // `planId` arrives as a signup form field, so it is whatever the client sent, and the
+    // tier ids are public (the pricing page reads them from an unauthenticated endpoint).
+    // Honouring a paid tier here would hand out its features — for a hundred years, with
+    // no payment — to anyone who names it. A paid plan may only ever be granted by a
+    // gateway webhook, so ignore it and fall through to Free.
+    if (rateupPlan && isPaidPlan(rateupPlan)) {
+      log.warn(
+        { orgId, planId, plan: rateupPlan.name },
+        "Ignoring a paid plan requested at signup; falling back to the free plan",
+      );
+      rateupPlan = null;
+    }
   }
   if (!planId || !rateupPlan) {
     // Check if the FREE PLAN plan exists  -- was earlier RATEUP TRIAL
@@ -31,21 +70,12 @@ export async function createFreePlanSubscription(
     });
 
     let freePlanDescription = [
-      "1 Team & 1 User",
-      "1 WhatsApp Automation",
-      "1K Template Messages",
-      "1K Automation Triggers",
-      "Omnichannel inbox - WhatsApp + Instagram",
-      "100 web surveys & 100000 responses",
-      "WhatsApp Catalog",
-      "AI Summary",
-      "Reports & Analytics",
-      "Basic CX analytics",
-      "Website widget",
-      "QR Code Generator",
-      "Integration - Google Sheet+ MS Excel+ Shopify",
-      "API Integration",
-      "Customer issue escalation & Ticketing",
+      "1 team \u00b7 1 user",
+      "100 conversations / mo",
+      "100 form submissions / mo",
+      "WhatsApp \u00b7 Instagram \u00b7 Messenger inbox",
+      "Automations, templates & chatbots",
+      "Email support",
     ];
 
     if (!rateupFreePlan) {
@@ -84,6 +114,92 @@ export async function createFreePlanSubscription(
   });
 }
 
+/**
+ * How long past `expiresAt` an org keeps its plan before being dropped to Free.
+ *
+ * A renewal charges at `current_end`, which is the same instant as `expiresAt`, and the
+ * webhook that records it lands a little after. Without slack a renewal processed a few
+ * minutes late would downgrade the org and then immediately re-grant the plan.
+ */
+const EXPIRY_GRACE_HOURS = 24;
+
+/**
+ * Returns orgs whose paid period has run out to the Free plan.
+ *
+ * This is the single mechanism behind every way a subscription can end, because they all
+ * converge on the same fact — the paid-through date has passed with no renewal:
+ *
+ *   - **Cancelled**: Razorpay stops renewing, but the org keeps what it paid for until
+ *     `expiresAt`, which is what the cancel dialog promises.
+ *   - **Halted**: the renewal charge failed after every retry, so `expiresAt` is already
+ *     behind and the org is picked up on the next run.
+ *   - **Completed / plain expiry**: the same, without a failure.
+ *
+ * Sales-led tiers are exempt — see {@link GATEWAY_BILLED_PLAN}.
+ *
+ * Being time-driven rather than webhook-driven also makes it self-healing: an org whose
+ * `subscription.cancelled` never arrived is still downgraded on schedule.
+ */
+export async function downgradeExpiredSubscriptions() {
+  const freePlan = await prisma.rateupPlan.findFirst({ where: { name: "FREE PLAN" } });
+  if (!freePlan) {
+    log.error("No FREE PLAN in the catalog; cannot downgrade expired subscriptions");
+    return { downgraded: 0 };
+  }
+
+  const cutoff = dayjs().subtract(EXPIRY_GRACE_HOURS, "hour").toDate();
+  const expired = await prisma.subscription.findMany({
+    where: {
+      expiresAt: { lt: cutoff },
+      // Only plans a gateway bills on a schedule. Enterprise and bespoke `custom` tiers
+      // are renewed by conversation, so a lapsed date there means an admin has not got
+      // to it yet — not that the customer should lose what they contracted for.
+      basePlan: GATEWAY_BILLED_PLAN,
+      // Already on Free — nothing to take away, and its expiry is a century out anyway.
+      NOT: { basePlanId: freePlan.id },
+    },
+    select: { orgId: true, expiresAt: true, basePlan: { select: { name: true } } },
+  });
+
+  if (!expired.length) return { downgraded: 0 };
+
+  const freeFeatures = getFreeSubscriptionFeatures();
+  let downgraded = 0;
+
+  for (const subscription of expired) {
+    try {
+      await prisma.subscription.update({
+        where: { orgId: subscription.orgId },
+        data: {
+          basePlanId: freePlan.id,
+          features: freeFeatures,
+          // Matches the expiry signup gives a free org: Free does not lapse.
+          expiresAt: dayjs().add(100, "year").toDate(),
+          // The org is on a different allowance now, so let the next limit alert fire.
+          lastLimitAlertSentAt: null,
+          // The gateway subscription is over; keeping the ref would let a stray webhook
+          // or a plan-change attempt act on a subscription that no longer bills.
+          subscriptionRef: null,
+        },
+      });
+      downgraded++;
+      log.info(
+        {
+          orgId: subscription.orgId,
+          from: subscription.basePlan?.name,
+          expiredAt: subscription.expiresAt,
+        },
+        "Downgraded an expired subscription to the free plan",
+      );
+    } catch (error) {
+      // One org's failure must not strand the rest of the batch.
+      log.error({ err: error, orgId: subscription.orgId }, "Could not downgrade an expired org");
+    }
+  }
+
+  return { downgraded };
+}
+
 export async function getSubscription(orgId: string) {
   let sub = (await prisma.subscription.findFirst({
     where: {
@@ -100,6 +216,23 @@ export async function getSubscription(orgId: string) {
           id: true,
           name: true,
           paymentPlan: {
+            select: {
+              period: true,
+              amount: true,
+              currency: true,
+            },
+          },
+          // The four-tier catalog links its Razorpay plans through the cadence-specific
+          // relations and leaves the legacy `paymentPlan` null, so a client reading only
+          // that one renders no price or billing cycle for anyone on Starter or Pro.
+          monthlyPaymentPlan: {
+            select: {
+              period: true,
+              amount: true,
+              currency: true,
+            },
+          },
+          yearlyPaymentPlan: {
             select: {
               period: true,
               amount: true,

@@ -1,3 +1,16 @@
+/**
+ * `statuses[].pricing` from a WhatsApp message-status webhook — what Meta charged the
+ * customer's own WABA for the message. Rateup bears no per-message cost, so these are
+ * stored for analytics and support only. `category` arrives lowercase ("service");
+ * normalize with normalizePricingCategory before persisting.
+ */
+export interface WaStatusPricing {
+  billable?: boolean;
+  pricing_model?: string;
+  category?: string;
+  type?: string;
+}
+
 import {
   WaButtonType,
   WaTemplateCategory,
@@ -185,9 +198,26 @@ export interface WaReceiveMessageBody {
       status: string;
       timestamp: string;
       recipient_id: string;
-      conversation: {
-        id: string;
+      /** Meta's stable cross-app user id (e.g. "IN.1684570989242773"). */
+      recipient_user_id?: string;
+      /**
+       * Legacy conversation-based-pricing object. Optional because Meta stopped
+       * sending it: under per-message pricing (PMP, from 2025-07-01) real v25.0
+       * status payloads carry `pricing` and no `conversation` at all. Nothing may
+       * depend on this being present — conversation metering derives its own 24h
+       * window instead (see MeteredConversation).
+       */
+      conversation?: {
+        id?: string;
+        origin?: { type?: string };
+        expiration_timestamp?: string;
       };
+      /**
+       * What Meta charged the *customer's* WABA for this message. Rateup bears no
+       * per-message cost, so this is stored for analytics and support only and never
+       * gates metering or enforcement. `category` arrives lowercase ("service").
+       */
+      pricing?: WaStatusPricing;
       type?: string;
       payment?: {
         reference_id?: string;
