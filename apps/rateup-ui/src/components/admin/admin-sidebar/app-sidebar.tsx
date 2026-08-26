@@ -5,6 +5,7 @@ import {
   IconChartBar,
   IconCommand,
   IconCreditCard,
+  IconDashboard,
   IconDatabase,
   IconHome,
   IconQrcode,
@@ -38,6 +39,11 @@ const data = {
     avatar: "/avatars/rateup.jpg",
   },
   navMain: [
+    {
+      name: "Dashboard",
+      url: "/admin",
+      icon: IconDashboard,
+    },
     {
       name: "User Stats",
       url: "/admin/userstats",

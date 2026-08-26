@@ -23,7 +23,7 @@ export default function WhatsAppSurveyHero() {
         <div className="flex flex-col sm:flex-row sm:justify-center md:justify-start gap-4">
           <a href={"https://rateup.app/login"}>
             <button className="bg-[#009987] w-full cursor-pointer hover:bg-[#075E54] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition">
-              Start Free Trial
+              Get Started Free
             </button>
           </a>
           <BookDemoModal>

@@ -67,7 +67,7 @@ const InboxHero = () => {
                 size="lg"
                 className="bg-[#1c518e] cursor-pointer hover:bg-[#1c518e] text-white font-medium px-8"
               >
-                Start Your Free Trial
+                Get Started Free
               </Button>
             </a>
             <BookDemoModal>

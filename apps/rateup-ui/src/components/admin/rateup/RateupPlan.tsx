@@ -53,7 +53,6 @@ interface RateupPlanTableData {
   paymentPlanId: string;
   stripeId: string;
   createdAt: string;
-  trialDays: number;
 }
 
 export function RateupPlan() {
@@ -137,19 +136,6 @@ export function RateupPlan() {
         return <Badge variant={planType === "FREE" ? "secondary" : "default"}>{planType}</Badge>;
       },
       meta: { title: "Plan Type" },
-    },
-    {
-      accessorKey: "trialDays",
-      header: createSortableHeader("Trial Days"),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <IconCalendar className="h-4 w-4 text-muted-foreground" />
-          <Badge variant="outline" className="font-mono">
-            {row.getValue("trialDays") || 0}
-          </Badge>
-        </div>
-      ),
-      meta: { title: "Trial Days" },
     },
     {
       accessorKey: "displayWidgetId",
@@ -249,14 +235,12 @@ export function RateupPlan() {
       paymentPlanId: plan.paymentPlanId ?? "",
       stripeId: plan.stripeId,
       createdAt: plan?.createdAt,
-      trialDays: plan?.trialDays,
     })) || [];
 
   // Calculate stats
   const totalPlans = tableData.length;
   const freePlans = tableData.filter((plan) => plan.planType === "FREE").length;
   const paidPlans = tableData.filter((plan) => plan.planType !== "FREE").length;
-  const plansWithTrials = tableData.filter((plan) => plan.trialDays > 0).length;
 
   return (
     <div className="container mx-auto space-y-8">
@@ -326,24 +310,6 @@ export function RateupPlan() {
                 {paidPlans}
               </div>
               <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Premium plans</p>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-amber-200 dark:border-amber-800">
-            <div className="absolute inset-0 bg-linear-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20" />
-            <CardHeader className="relative pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  With Trials
-                </CardTitle>
-                <IconCalendar className="h-4 w-4 text-amber-600" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative">
-              <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">
-                {plansWithTrials}
-              </div>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Trial available</p>
             </CardContent>
           </Card>
         </div>

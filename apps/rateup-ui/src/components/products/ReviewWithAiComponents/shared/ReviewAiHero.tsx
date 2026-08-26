@@ -26,7 +26,7 @@ const ReviewAiHero = () => {
                   size="lg"
                   className="bg-[#009987] cursor-pointer hover:bg-[#009987] text-[#ffffff] font-medium px-8"
                 >
-                  Start Your Free Trial
+                  Get Started Free
                 </Button>
               </a>
               <BookDemoModal>

@@ -1,128 +1,166 @@
-import { IconCircleCheck, IconFlame } from "@tabler/icons-react";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
-import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-import { Spoiler } from "@/components/ui/spoiler.tsx";
-import { cn } from "@/lib/utils.ts";
+import {
+  type BillingPeriod,
+  formatPrice,
+  type PricingCurrency,
+  type PricingTier,
+  resolveDisplayPrice,
+} from "../pricing.data.ts";
 
-import type { PricingPlan } from "../pricing-plan.ts";
-
-type BillingPeriod = "monthly" | "yearly";
-
+/**
+ * One pricing card, rendered entirely from a plans-endpoint row. The featured tier
+ * (the one the catalog gives a badge) is dark navy with the warm brand gradient on its
+ * button and a cyan check; every other tier is a light surface.
+ */
 const PlanCardNew = ({
-  plan,
-  period = "monthly",
-  fallbackSymbol = "$",
+  tier,
+  period,
+  currency,
   onButtonClick,
+  ctaLabel,
 }: {
-  plan: PricingPlan;
-  period?: BillingPeriod;
-  fallbackSymbol?: string;
+  tier: PricingTier;
+  period: BillingPeriod;
+  currency: PricingCurrency;
   onButtonClick: () => void;
+  /**
+   * Overrides the tier's own call to action. The in-app upgrade dialog uses this: a
+   * customer already paying is changing plan, not subscribing fresh, so the catalog's
+   * acquisition copy would be wrong there.
+   */
+  ctaLabel?: string;
 }) => {
-  const isPopular = Boolean(plan?.badge);
-  const isFree = plan?.name === "FREE PLAN";
-  const isAnnual = period === "yearly";
+  const dark = tier.featured;
+  const price = resolveDisplayPrice(tier, currency);
+  const annual = period === "yearly";
 
-  const currencySymbol =
-    currencyLabel.find(
-      (c) =>
-        c.label ===
-        (plan?.currency ??
-          plan?.yearlyPaymentPlan?.currency ??
-          plan?.monthlyPaymentPlan?.currency ??
-          plan?.paymentPlan?.currency),
-    )?.symbol ?? fallbackSymbol;
+  let amount: string;
+  let unit: string | null;
+  let note: string;
 
-  const monthlyPrice = plan?.monthlyPrice ?? plan?.price ?? 0;
-  const yearlyPrice = plan?.yearlyPrice ?? plan?.price ?? 0;
-  const displayPrice = isAnnual ? yearlyPrice : monthlyPrice;
+  if (tier.free) {
+    amount = formatPrice(currency, 0);
+    unit = "forever";
+    note = "No card required";
+  } else if (!price) {
+    // Either a sales-led tier, or one the catalog does not price in this currency.
+    amount = "Custom";
+    unit = null;
+    note = tier.salesLed ? "Annual or monthly billing" : "Contact us for this currency";
+  } else {
+    const perMonth = annual ? price.yearly / 12 : price.monthly;
+    amount = formatPrice(currency, Math.round(perMonth));
+    unit = "/month";
 
-  const showAnnualNote = isAnnual && !isFree && plan?.yearlyPrice != null;
-  const annualTotal = (plan?.yearlyPrice ?? 0) * 12;
+    // The checkout is created from the gateway plan in the currency on screen, so the
+    // figure shown is the figure charged. This note used to name a rupee amount beside a
+    // converted dollar headline; both are real list prices now, and quoting the other
+    // currency here would be the misleading version.
+    note = annual
+      ? `Billed ${formatPrice(currency, price.yearly)} / year`
+      : "Billed monthly · 20% more";
+  }
+
+  const check = dark ? "text-[#4FC3FF]" : "text-[#1C518E]";
+  const ctaButton = (
+    <button
+      type="button"
+      onClick={tier.salesLed ? undefined : onButtonClick}
+      className={
+        dark
+          ? "relative mt-[22px] w-full cursor-pointer rounded-lg border-none p-[13px] text-[15px] font-extrabold text-[#081C3F] shadow-[0_8px_24px_rgba(248,149,29,0.3)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px"
+          : tier.salesLed
+            ? "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-[#1C518E] p-[13px] text-[15px] font-bold text-white transition-colors duration-200 hover:bg-[#113560]"
+            : "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-[#EEF4FB] p-[13px] text-[15px] font-bold text-[#1C518E] transition-colors duration-200 hover:bg-[#D6E4F3]"
+      }
+      style={dark ? { background: "linear-gradient(135deg,#FFD54C,#F8951D)" } : undefined}
+    >
+      {ctaLabel ?? tier.cta}
+    </button>
+  );
 
   return (
     <div
-      className={cn(
-        "relative flex flex-col overflow-hidden rounded-xl bg-white transition-all duration-300 hover:shadow-2xl",
-        isPopular
-          ? "border-2 border-[#1C518E] shadow-[0_12px_48px_rgba(11,31,72,0.12)] lg:-translate-y-2"
-          : "border border-[#ECECEA] shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)]",
-      )}
+      className={
+        dark
+          ? "relative overflow-hidden rounded-2xl border border-[#081C3F] bg-[#081C3F] p-7 shadow-[0_24px_72px_rgba(11,31,72,0.18)]"
+          : "rounded-2xl border border-[#ECECEA] bg-white p-7 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
+      }
     >
-      {isPopular && (
-        <div className="flex items-center justify-center gap-2 bg-[#081C3F] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.08em] text-white">
-          <IconFlame className="h-4 w-4 text-[#FFD54C]" />
-          {plan.badge}
-        </div>
+      {dark && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-[70px] -top-[70px] h-[220px] w-[220px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(47,163,255,0.32), transparent 70%)",
+          }}
+        />
       )}
 
-      <div className="flex flex-1 flex-col p-8">
-        <div className="mb-1 flex items-baseline gap-2">
-          <h3 className="text-2xl font-bold text-[#1C518E]">{plan.displayName}</h3>
-          {plan?.tagline && (
-            <span className="text-sm font-semibold text-gray-500">{plan.tagline}</span>
-          )}
-        </div>
-
-        <div className="my-4 flex min-h-[76px] flex-col justify-center border-y border-[#ECECEA] py-4">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[44px] font-extrabold leading-none text-[#0A0B0A]">
-              {currencySymbol}
-              {displayPrice}
-            </span>
-            <span className="text-[15px] font-semibold text-gray-500">/ month</span>
-          </div>
-          {showAnnualNote && (
-            <p className="mt-1 text-[13px] font-semibold text-[#16A34A]">
-              Billed {currencySymbol}
-              {annualTotal}/year — 2 months free
-            </p>
-          )}
-          {isFree && <p className="mt-1 text-[13px] text-gray-500">Forever free</p>}
-        </div>
-
-        <Spoiler
-          maxHeight={310}
-          className="pb-2.5"
-          controlClassName="text-sm text-[#1C518E]"
-          showLabel={"Show all available features"}
-          hideLabel={"See less"}
+      <div className="relative flex items-center justify-between gap-2">
+        <div
+          className={`font-nunito text-xl font-extrabold ${dark ? "text-white" : "text-[#0A0B0A]"}`}
         >
-          <div className="flex flex-col gap-3.5">
-            {plan?.description?.map((item: string, index: number) => (
-              <div key={index} className="flex items-start gap-2.5">
-                <IconCircleCheck className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16A34A]" />
-                <span className="text-sm leading-snug text-gray-700">{item}</span>
-              </div>
-            ))}
-          </div>
-        </Spoiler>
-
-        <div className="mt-auto flex flex-col gap-4 pt-6">
-          <p className="text-[13px] font-semibold text-[#1C518E]">
-            {isFree
-              ? "*No credit card needed"
-              : plan?.trialDays
-                ? `${plan.trialDays} Days Free Trial`
-                : ""}
-          </p>
-          <button
-            onClick={onButtonClick}
-            className={cn(
-              "w-full rounded-lg px-5 py-3.5 text-[15px] font-bold transition",
-              isPopular
-                ? "bg-[#1C518E] text-white hover:bg-[#163f6e]"
-                : "border-[1.5px] border-[#1C518E] bg-transparent text-[#1C518E] hover:bg-[#1C518E] hover:text-white",
-            )}
-          >
-            {isFree
-              ? "Get Started"
-              : plan?.trialDays
-                ? `Start ${plan.trialDays} Day Free Trial`
-                : "Subscribe Now"}
-          </button>
+          {tier.name}
         </div>
+        {tier.badge && (
+          <div
+            className="rounded-full px-2.5 py-[5px] text-[11px] font-extrabold uppercase tracking-[0.1em] text-[#081C3F]"
+            style={{ background: "linear-gradient(135deg,#FFD54C,#F8951D)" }}
+          >
+            {tier.badge}
+          </div>
+        )}
       </div>
+
+      {tier.tagline && (
+        <p
+          className={`relative mt-1.5 text-[13px] leading-relaxed ${
+            dark ? "text-white/70" : "text-[#666864]"
+          }`}
+        >
+          {tier.tagline}
+        </p>
+      )}
+
+      <div className="relative mb-1 mt-[22px] flex items-baseline gap-1.5">
+        <span
+          className={`font-nunito text-[44px] font-black leading-none tracking-[-0.02em] ${
+            dark ? "text-white" : "text-[#0A0B0A]"
+          }`}
+        >
+          {amount}
+        </span>
+        {unit && (
+          <span className={`text-sm font-semibold ${dark ? "text-white/60" : "text-[#8B8E8A]"}`}>
+            {unit}
+          </span>
+        )}
+      </div>
+
+      <div className={`relative min-h-[18px] text-xs ${dark ? "text-white/60" : "text-[#8B8E8A]"}`}>
+        {note}
+      </div>
+
+      {tier.salesLed ? <BookDemoModal>{ctaButton}</BookDemoModal> : ctaButton}
+
+      <div className={`my-6 h-px ${dark ? "bg-white/10" : "bg-[#ECECEA]"}`} />
+
+      <ul
+        className={`relative m-0 flex list-none flex-col gap-3 p-0 text-sm ${
+          dark ? "text-white/85" : "text-[#4A4C49]"
+        }`}
+      >
+        {tier.features.map((feature) => (
+          <li key={feature} className="flex gap-2.5">
+            <span className={`font-extrabold ${check}`} aria-hidden>
+              ✓
+            </span>
+            {feature}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

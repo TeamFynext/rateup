@@ -31,11 +31,11 @@ const pageMetadata: Record<string, PageMetadata> = {
   "/signup": {
     title: "Sign up With RateUp - Create A Free Account on Customer Engagement Platform",
     description:
-      "Sign up RateUp. Start a free trial and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
+      "Sign up RateUp. Start free and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
     openGraph: {
       title: "Sign up With RateUp - Create A Free Account on Customer Engagement Platform",
       description:
-        "Sign up RateUp. Start a free trial and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
+        "Sign up RateUp. Start free and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
     },
     alternates: {
       canonical: "/signup",

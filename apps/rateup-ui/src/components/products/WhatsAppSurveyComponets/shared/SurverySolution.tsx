@@ -25,7 +25,7 @@ export default function SurveySection() {
                 href={"https://rateup.app/login"}
                 className="bg-[#009987] hover:bg-[#075E54] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition"
               >
-                Start Free Trial
+                Get Started Free
               </a>
             </div>
           </div>

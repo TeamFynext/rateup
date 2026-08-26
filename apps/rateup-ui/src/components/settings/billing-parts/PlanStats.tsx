@@ -161,8 +161,11 @@ export const WhatsappStats = ({
 
   const isAnnual = subscription?.isAnnualMessageLimit;
   const label = isAnnual ? "Annual Conversation" : "Monthly Conversation";
+  // The METERED counters: self-derived 24h conversation windows, which is the unit the
+  // plan allowance is enforced against. The inbox-ticket counters are analytics only.
   const rawCount =
-    (isAnnual ? stats?.annualConversationsCount : stats?.monthlyConversationsCount) || 0;
+    (isAnnual ? stats?.annualMeteredConversationsCount : stats?.monthlyMeteredConversationsCount) ||
+    0;
   const totalCount =
     (isAnnual
       ? (subscription?.features?.whatsapp?.conversation?.count?.max || 0) * 12
@@ -217,6 +220,11 @@ export const WhatsappStats = ({
             </p>
           </>
         )}
+        <p className="text-xs text-muted-foreground">
+          {translations(
+            "A conversation is a 24-hour window with one customer, on any channel. Message delivery is billed to your WhatsApp account by Meta and is not included here.",
+          )}
+        </p>
       </div>
     </Card>
   );

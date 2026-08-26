@@ -22,12 +22,13 @@ export interface PricingPlan {
   displayName?: string;
   description?: string[];
   tagline?: string;
-  badge?: string;
+  badge?: string | null;
   currency?: string;
-  price?: string | number;
-  monthlyPrice?: string | number;
-  yearlyPrice?: string | number;
-  trialDays?: number;
+  price?: string | number | null;
+  monthlyPrice?: string | number | null;
+  yearlyPrice?: string | number | null;
+  usdMonthlyPrice?: string | number | null;
+  usdYearlyPrice?: string | number | null;
   paymentPlan?: PricingGatewayPlan;
   monthlyPaymentPlan?: PricingGatewayPlan;
   yearlyPaymentPlan?: PricingGatewayPlan;

@@ -132,7 +132,21 @@ declare global {
     /** The EyeDropper API, in Chromium browsers only — feature-detected before use. */
     EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
     /** Razorpay's checkout widget, present once its script has loaded. */
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+      /** Checkout emits `payment.failed` when the gateway declines an attempt. */
+      on: (event: "payment.failed", handler: (response: RazorpayFailure) => void) => void;
+    };
+  }
+  /** The error Checkout hands back on a failed payment attempt. */
+  interface RazorpayFailure {
+    error?: {
+      code?: string;
+      description?: string;
+      reason?: string;
+      step?: string;
+      source?: string;
+    };
   }
   // The analytics snippets are read off `globalThis`, which only picks up
   // global `var` declarations — an `interface Window` member is not enough.
@@ -830,8 +844,10 @@ declare global {
         automationTrigger?: subscriptionCountRestriction;
       };
       campaign?: subscriptionActiveField & subscriptionCountRestriction;
+      loyalty?: subscriptionActiveField;
+      referrals?: subscriptionActiveField;
+      catalog?: subscriptionActiveField;
     };
-    [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
     // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
     [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
@@ -847,16 +863,25 @@ declare global {
       customer: subscriptionCountRestriction;
     };
   }
+  interface SPlanGatewayPlan {
+    period: string;
+    /** A number for real plans; the enterprise tiers use "Lets Talk!". */
+    amount: number | string;
+    currency?: string;
+  }
+
   interface SPlan {
     id: string;
     name: string;
     displayName: string;
-    paymentPlan?: {
-      period: string;
-      /** A number for real plans; the enterprise tiers use "Lets Talk!". */
-      amount: number | string;
-      currency?: string;
-    };
+    /**
+     * Legacy single-cadence link. Null on the four-tier catalog, which links its
+     * gateway plans through `monthlyPaymentPlan` / `yearlyPaymentPlan` instead —
+     * read those as a fallback rather than relying on this alone.
+     */
+    paymentPlan?: SPlanGatewayPlan;
+    monthlyPaymentPlan?: SPlanGatewayPlan;
+    yearlyPaymentPlan?: SPlanGatewayPlan;
     paymentPlanId?: string;
     /** Present when the plan is billed through Stripe rather than Razorpay. */
     stripeProduct?: StripeProduct;
@@ -949,12 +974,12 @@ declare global {
     orgId: string;
     surveyId: string;
     templateMessage: WaFlowTemplateMessage;
-    /** The list endpoint selects only the survey's team ids. */
+    /** The list endpoint selects the survey's team ids plus each team's completed count. */
     survey?: {
       teams?: Array<{
         teamId: string;
-        /** Not selected by the flow list endpoint; present on richer survey reads. */
-        surveyStats?: STStats;
+        /** The list endpoint selects only `completed`; richer survey reads carry the full funnel. */
+        surveyStats?: Partial<STStats> | null;
       }>;
     };
     startMessageConfig: WaFlowStartMessageConfig;
