@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
-  enqueueTransactionalEmail: vi.fn(),
+  sendTransactionalEmail: vi.fn(),
 }));
 
-import { enqueueTransactionalEmail } from "../../../workers/bullmq/queues/index.js";
+import { sendTransactionalEmail } from "../../../workers/bullmq/queues/index.js";
 import { logoUrl } from "../react/brand.js";
 import { createEmailBody, sendResetPasswordMail } from "./passwordReset.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 // The reset mail rides the transactional (fast) lane, not the bulk notification queue.
-const enqueueMock = enqueueTransactionalEmail as unknown as Mock;
+const enqueueMock = sendTransactionalEmail as unknown as Mock;
 
 const RESET_LINK = "https://app.rateup.app/auth/reset-password?token=tok-123&rid=emailpassword";
 const ESCAPED_RESET_LINK = RESET_LINK.replace("&", "&amp;");
