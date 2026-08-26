@@ -83,16 +83,20 @@ describe("converting production subscriptions", () => {
     expect(prisma.subscription.update).not.toHaveBeenCalled();
   });
 
-  test("leaves an org with no plan alone rather than gifting it Enterprise", async () => {
-    // Handing out unlimited features because a column is null is a gift, not a migration.
+  test("adopts an org with no plan onto Enterprise and still counts it", async () => {
+    // An unplanned row is invisible to every plan-keyed path in the app, so leaving it
+    // alone leaves it broken. It is converted like any other, and reported as unplanned so
+    // the transcript still says how many arrived that way.
     vi.mocked(prisma.subscription.findMany).mockResolvedValue([
       subscription("org-none", null),
+      subscription("org-a", "PLUS PLAN"),
     ] as never);
 
     const result = await runTask(convertSubscriptions, true);
 
-    expect(prisma.subscription.update).not.toHaveBeenCalled();
-    expect(result.details).toMatchObject({ unplanned: 1 });
+    expect(updatedOrgs()).toEqual(["org-none", "org-a"]);
+    expect(result.details).toMatchObject({ converted: 2, unplanned: 1 });
+    expect(result.lines.join("\n")).toMatch(/org-none: no plan -> Enterprise/);
   });
 
   test("reports a live Razorpay subscription without cancelling it", async () => {

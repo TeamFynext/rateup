@@ -17,12 +17,18 @@ type Log = (action: string, detail: string) => void;
  * loses capability and nobody is silently moved onto a price they did not agree to. Which
  * tier each account really belongs on is then a conversation, not a guess.
  *
- * Two categories are deliberately left untouched:
+ * Orgs already on FREE PLAN are deliberately left untouched: their legacy allowances may
+ * exceed today's Free, so leaving them means nobody loses anything in a migration that was
+ * not about them.
  *
- *   - Orgs already on FREE PLAN, whose legacy allowances may exceed today's Free. Leaving
- *     them means nobody loses anything in a migration that was not about them.
- *   - Orgs with no plan at all. Handing them Enterprise's unlimited features because a
- *     column is null would be a gift, not a migration; they are reported instead.
+ * A subscription with no plan at all is converted like any other. Enterprise is not a
+ * price — it is unlimited features invoiced on real usage — so the risk of adopting a row
+ * whose `basePlanId` is null is that someone gets more than they had, not that they are
+ * charged for something they did not agree to. The alternative is worse: an unplanned row
+ * is invisible to every plan-keyed path in the app (add-on eligibility, the expiry sweep,
+ * `refresh-plan-features`, the admin plan joins), so leaving it alone leaves it broken.
+ * They are still counted separately in the transcript, so the run says how many arrived
+ * with no plan.
  *
  * A live gateway subscription is **not** cancelled. An org moved to Enterprise that still
  * has one keeps being charged by Razorpay, which is the opposite of "invoiced on usage" —
@@ -57,11 +63,9 @@ export async function convertSubscriptions({
   for (const subscription of subscriptions) {
     const planName = subscription.basePlan?.name;
 
-    if (!subscription.basePlanId || !planName) {
-      unplanned++;
-      log("left alone", `${subscription.orgId} — no plan on the subscription`);
-      continue;
-    }
+    // A null `basePlanId` and a plan row that somehow has no name are the same case: the
+    // subscription does not name a tier, so there is nothing to match on below.
+    const hasNoPlan = !subscription.basePlanId || !planName;
 
     if (planName === "FREE PLAN") {
       leftOnFree++;
@@ -73,6 +77,8 @@ export async function convertSubscriptions({
       continue;
     }
 
+    if (hasNoPlan) unplanned++;
+
     if (subscription.subscriptionRef?.startsWith("sub_")) {
       stillBilling.push(subscription.orgId);
       log(
@@ -81,7 +87,7 @@ export async function convertSubscriptions({
       );
     }
 
-    log(subscription.orgId, `"${planName}" -> Enterprise`);
+    log(subscription.orgId, `${hasNoPlan ? "no plan" : `"${planName}"`} -> Enterprise`);
     converted++;
 
     if (!apply) continue;
@@ -101,7 +107,9 @@ export async function convertSubscriptions({
   }
 
   log("free", `${leftOnFree} org(s) left on Free`);
-  if (unplanned > 0) log("no plan", `${unplanned} org(s) had no plan and were left alone`);
+  if (unplanned > 0) {
+    log("no plan", `${unplanned} of those org(s) arrived with no plan at all`);
+  }
   if (stillBilling.length > 0) {
     log(
       "action needed",
