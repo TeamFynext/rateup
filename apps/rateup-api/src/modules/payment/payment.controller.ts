@@ -398,15 +398,15 @@ export async function sendEmailPlanSelectionDetailsHandler(
   reply: FastifyReply,
 ) {
   try {
-    // const emailParams = {
-    //   to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-    //   text: "ALERT: User initiated subscription",
-    //   subject: "ALERT: User initiated subscription",
-    //   html: await createEmailBodyPricingPlanSelected(request.body),
-    // };
-    // await notificationQueue.add("notification", {
-    //   emailData: emailParams,
-    // });
+    const emailParams = {
+      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+      text: "ALERT: User initiated subscription",
+      subject: "ALERT: User initiated subscription",
+      html: await createEmailBodyPricingPlanSelected(request.body),
+    };
+    await notificationQueue.add("notification", {
+      emailData: emailParams,
+    });
     reply.code(200).send();
   } catch (e) {
     log.error(e);
