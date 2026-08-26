@@ -22,7 +22,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { createHubSpotContact, getHubSpotCompanyByOwnerEmail } from "../../utils/hubspot.js";
 
 import { getEmailBodyTemplate } from "../email/email.util.js";
-import { enqueueTransactionalEmail, notificationQueue } from "../../workers/bullmq/queues/index.js";
+import { sendTransactionalEmail, notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -305,8 +305,8 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         ),
       };
       try {
-        // Fast lane: an invitee is waiting on this link to finish onboarding.
-        await enqueueTransactionalEmail(msg);
+        // Sent inline: an invitee is waiting on this link to finish onboarding.
+        await sendTransactionalEmail(msg);
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -350,8 +350,8 @@ export async function resendInviteTeamMember(id: string) {
         existingInvitation?.email,
       ),
     };
-    // Fast lane: this is a resend triggered by someone waiting on the invite.
-    await enqueueTransactionalEmail(msg);
+    // Sent inline: this is a resend triggered by someone waiting on the invite.
+    await sendTransactionalEmail(msg);
   }
   return "sent";
 }
