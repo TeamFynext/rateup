@@ -37,7 +37,6 @@ import { externalV1Routes } from "./external/v1/index.js";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes.js";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route.js";
 import { emailPublicRoutes } from "./modules/email/email.public.route.js";
-import { updatePublicRoutes } from "./modules/update/update.public.route.js";
 import { servicePublicRoutes } from "./modules/services/services.public.route.js";
 import generateQrRoutes from "./modules/generateQr/generateQr.routes.js";
 import { integrationsRoutes } from "./modules/integrations/integrations.route.js";
@@ -59,13 +58,14 @@ import { webhookRoutes } from "./modules/webhook/webhook.route.js";
 import { referralRoutes } from "./modules/referrals/referrals.route.js";
 import { metaAgentRoutes } from "./modules/metaAgent/metaAgent.route.js";
 import { metaAgentWebhookRoutes } from "./modules/metaAgent/metaAgent.webhook.route.js";
+import { maintenanceRoutes } from "./modules/maintenance/maintenance.route.js";
+import { adminRoutes } from "./modules/admin/admin.route.js";
 
 // Route configurations
 const routeConfigs = [
   // health check
   { plugin: healthRoutes, prefix: "/api/health" },
   // Public routes
-  { plugin: updatePublicRoutes, prefix: "/api/public/update" },
   { plugin: servicePublicRoutes, prefix: "/api/public/services" },
   { plugin: surveyPublicRoutes, prefix: "/api/public/survey" },
   { plugin: responsePublicRoutes, prefix: "/api/public/response" },
@@ -95,6 +95,8 @@ const routeConfigs = [
   { plugin: campaignRoutes, prefix: "/api/campaign" },
   { plugin: reviewSuggestionRoutes, prefix: "/api/reviewSuggestion" },
   { plugin: subscriptionRoutes, prefix: "/api/subscription" },
+  { plugin: adminRoutes, prefix: "/api/admin" },
+  { plugin: maintenanceRoutes, prefix: "/api/maintenance" },
   { plugin: paymentRoutes, prefix: "/api/payment" },
   { plugin: paymentStripeRoutes, prefix: "/api/payment/stripe" },
   { plugin: surveyThemeRoutes, prefix: "/api/surveyTheme" },

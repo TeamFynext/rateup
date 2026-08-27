@@ -14,7 +14,13 @@ vi.mock("../../utils/prisma.js", () => ({
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
+vi.mock("../../utils/auth.js", () => ({
+  assertRootOrg: vi.fn(),
+  // Returns the guard rather than being one, so the route tree can build a single
+  // subscription check and reuse it across the administrative routes.
+  getVerifySubscriptionHandler: vi.fn(() => requireReferralsMock),
+}));
+const requireReferralsMock = vi.fn();
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
@@ -28,7 +34,8 @@ import connection from "../../utils/redisConnection.js";
 import { log } from "../../utils/logger.js";
 import { rateLimit } from "../../utils/rateLimit.js";
 import { checkSession } from "../../utils/checkSession.js";
-import { assertRootOrg } from "../../utils/auth.js";
+import { assertRootOrg, getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import {
   createReferral,
   deleteReferral,
@@ -118,8 +125,29 @@ describe("referralRoutes", () => {
     await referralRoutes(srv);
 
     for (const r of routes.slice(0, 3)) {
-      expect(r.opts.preHandler).toEqual([checkSession, assertRootOrg]);
+      expect(r.opts.preHandler).toEqual([checkSession, assertRootOrg, requireReferralsMock]);
     }
+  });
+
+  test("the administrative routes are gated on the referrals subscription feature", async () => {
+    const { srv } = fakeServer();
+
+    await referralRoutes(srv);
+
+    expect(getVerifySubscriptionHandler).toHaveBeenCalledWith([
+      SubscriptionFeaturePathName.WhatsappReferrals,
+    ]);
+  });
+
+  test("track-visit is NOT subscription gated", async () => {
+    // It is hit by referred visitors, who have no session and are not the subscribing
+    // org — gating it would break the referral link itself.
+    const { srv, routes } = fakeServer();
+
+    await referralRoutes(srv);
+
+    const track = routes.find((r) => r.url === "/track-visit");
+    expect(track.opts.preHandler).not.toContain(requireReferralsMock);
   });
 
   test("track-visit stays session-free but is rate limited and validated", async () => {

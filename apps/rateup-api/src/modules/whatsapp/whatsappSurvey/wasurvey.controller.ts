@@ -368,7 +368,7 @@ async function handleMessageStatusEvent(body: WaMessageBody, eventType: WaEvent)
       return (value?.statuses || []).map((status) =>
         safeAsyncOperation(
           async () => {
-            await handleMessageStatusUpdate(eventType, status.id, status.errors);
+            await handleMessageStatusUpdate(eventType, status.id, status.errors, status.pricing);
             if (phoneId) {
               await enqueueWebhookDispatch(phoneId, "message_status", {
                 status: status.status,

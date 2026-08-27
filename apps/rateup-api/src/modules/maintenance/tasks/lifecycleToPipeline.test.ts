@@ -1,14 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 
-vi.mock("../../utils/prisma.js", () => ({ default: {} }));
+vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 
-import {
-  buildStageLookup,
-  leadRowForContact,
-  resolveStage,
-  stagesFromLifecycles,
-  type PlaceableBoard,
-} from "./update.service.js";
+import { leadRowForContact, type PlaceableBoard } from "./placeLeadsFromLifecycles.js";
+import { stagesFromLifecycles } from "./seedPipelines.js";
+import { buildStageLookup, resolveStage } from "./stageLookup.js";
 
 /** Shorthand for a lifecycle row; only the four fields the seeder reads. */
 function life(

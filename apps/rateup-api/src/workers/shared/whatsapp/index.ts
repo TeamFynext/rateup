@@ -25,6 +25,11 @@ import {
   metaErrorMessage,
   sendMetaMessage,
 } from "../../../modules/whatsapp/meta/metaMessage.service.js";
+import type { WaStatusPricing } from "../../../types/whatsapp.types.js";
+import {
+  normalizePricingCategory,
+  normalizePricingModel,
+} from "../../../modules/whatsapp/metering/pricing.utils.js";
 import crypto from "node:crypto";
 import { Queue } from "bullmq";
 
@@ -475,6 +480,13 @@ export async function executeBulkUpdates(
   waMessageUpdates: any[],
   dripCampaignParticipantUpdates: any[] = [],
   dripCampaignStatsUpdates: any[] = [],
+  /**
+   * Rows of [waMessageId, meteredConversationId | null, category | null,
+   * pricingModel | null, billable | null, pricingType | null] — Meta's per-message
+   * pricing signals. Informational only: Meta bills the customer's WABA directly, so
+   * nothing here gates metering or enforcement.
+   */
+  pricingUpdates: any[] = [],
 ): Promise<void> {
   // Raw `pg` rather than `prisma.$transaction`, for a different reason than the
   // campaign dispatch path: this transaction is not starved of a connection, it
@@ -550,6 +562,49 @@ export async function executeBulkUpdates(
           flat,
         );
       }
+    }
+
+    // Persist Meta's per-message pricing onto the message, then promote it onto the
+    // metered window that message belongs to.
+    if (pricingUpdates.length) {
+      const values = pricingUpdates
+        .map(
+          (_, i) =>
+            `($${i * 6 + 1}::uuid, $${i * 6 + 2}::uuid, $${i * 6 + 3}::"WaConversationCategory", ` +
+            `$${i * 6 + 4}::"WaPricingModel", $${i * 6 + 5}::boolean, $${i * 6 + 6})`,
+        )
+        .join(", ");
+      const flat = pricingUpdates.flat();
+
+      await client.query(
+        `UPDATE "WaMessage" AS wm SET
+        "pricingCategory" = v.category,
+        "pricingModel" = v."pricingModel",
+        "pricingBillable" = v.billable,
+        "pricingType" = v."pricingType"
+        FROM (VALUES ${values}) AS v(id, "meteredConversationId", category, "pricingModel", billable, "pricingType")
+        WHERE wm.id = v.id`,
+        flat,
+      );
+
+      // Annotates the window the message was attributed to when it was written —
+      // NOT whichever window is open now. A status can arrive long after its
+      // message (a `delivered` landing 35h later is real), by which time a
+      // different window is current.
+      //
+      // `billable` only ever promotes to true: one window can hold both a free
+      // service message and a charged template, and the window is billable if any
+      // message in it was.
+      await client.query(
+        `UPDATE "MeteredConversation" AS mc SET
+        category = COALESCE(v.category, mc.category),
+        "pricingModel" = COALESCE(v."pricingModel", mc."pricingModel"),
+        "pricingType" = COALESCE(v."pricingType", mc."pricingType"),
+        billable = mc.billable OR COALESCE(v.billable, false)
+        FROM (VALUES ${values}) AS v(id, "meteredConversationId", category, "pricingModel", billable, "pricingType")
+        WHERE mc.id = v."meteredConversationId"`,
+        flat,
+      );
     }
 
     // Bulk update CampaignStats
@@ -810,6 +865,7 @@ export async function bulkUpdateStatuses(
       messageId: string;
       errors?: any;
       timestamp?: string;
+      pricing?: WaStatusPricing;
     };
   }[],
 ): Promise<string[]> {
@@ -821,6 +877,7 @@ export async function bulkUpdateStatuses(
     status: string;
     timestamp?: string;
     errors?: any;
+    pricing?: WaStatusPricing;
   }
   const parsed: Entry[] = [];
   for (const { id, value } of batch) {
@@ -832,6 +889,7 @@ export async function bulkUpdateStatuses(
       status: String(obj.status).toLowerCase(),
       timestamp: obj.timestamp,
       errors: safeParseJSON(obj.errors),
+      pricing: obj.pricing,
     });
   }
 
@@ -841,13 +899,20 @@ export async function bulkUpdateStatuses(
   }
 
   // Aggregate per messageId to a structure compatible with processStatusUpdates
-  const byMessageId = new Map<string, { ackIds: string[]; redisData: Record<string, string> }>();
+  const byMessageId = new Map<
+    string,
+    { ackIds: string[]; redisData: Record<string, string>; pricing?: WaStatusPricing }
+  >();
   for (const ev of parsed) {
     const agg = byMessageId.get(ev.messageId) || {
       ackIds: [],
       redisData: {} as Record<string, string>,
+      pricing: undefined as WaStatusPricing | undefined,
     };
     agg.ackIds.push(ev.id);
+    // Every status for a message reports the same pricing, and some omit it — keep
+    // the first one seen rather than letting a later bare status blank it out.
+    if (!agg.pricing && ev.pricing) agg.pricing = ev.pricing;
 
     const ts = ev.timestamp || new Date().toISOString();
     // First-write-wins per status timestamp
@@ -879,6 +944,7 @@ export async function bulkUpdateStatuses(
             wm.stats,
             wm."messageId" AS "externalMessageId",
             wm."sourceIdentifier",
+            wm."meteredConversationId",
             cp.id AS "participantId",
             cp."campaignId",
             cp.status AS "participantStatus",
@@ -916,6 +982,7 @@ export async function bulkUpdateStatuses(
       contactPhone?: string;
       contactId?: string;
       sourceIdentifier?: string;
+      meteredConversationId?: string | null;
     }
   >();
   for (const row of messageData) {
@@ -941,6 +1008,7 @@ export async function bulkUpdateStatuses(
         contactPhone: row.contactPhone,
         contactId: row.contactId,
         sourceIdentifier: row.sourceIdentifier,
+        meteredConversationId: row.meteredConversationId,
       });
     }
   }
@@ -949,6 +1017,7 @@ export async function bulkUpdateStatuses(
   const messageLogUpdates: any[] = [];
   const campaignStatsUpdates: any[] = [];
   const waMessageUpdates: any[] = [];
+  const pricingUpdates: any[] = [];
   const dripCampaignParticipantUpdates: any[] = [];
   const dripCampaignStatsUpdates: any[] = [];
 
@@ -1062,6 +1131,17 @@ export async function bulkUpdateStatuses(
 
     waMessageUpdates.push(prepareWaMessageUpdate(msg.id, stats, newStatus || "", errorMsg));
 
+    if (agg.pricing) {
+      pricingUpdates.push([
+        msg.id,
+        messageInfo.meteredConversationId ?? null,
+        normalizePricingCategory(agg.pricing.category),
+        normalizePricingModel(agg.pricing.pricing_model),
+        agg.pricing.billable ?? null,
+        agg.pricing.type ?? null,
+      ]);
+    }
+
     processedOffsets.push(...agg.ackIds);
   }
 
@@ -1071,7 +1151,8 @@ export async function bulkUpdateStatuses(
     !messageLogUpdates.length &&
     !campaignStatsUpdates.length &&
     !dripCampaignStatsUpdates.length &&
-    !waMessageUpdates.length
+    !waMessageUpdates.length &&
+    !pricingUpdates.length
   ) {
     return processedOffsets;
   }
@@ -1083,6 +1164,7 @@ export async function bulkUpdateStatuses(
     waMessageUpdates,
     dripCampaignParticipantUpdates,
     dripCampaignStatsUpdates,
+    pricingUpdates,
   );
 
   return processedOffsets;

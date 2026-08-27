@@ -31,6 +31,8 @@ import {
   checkPointsExpiryAlerts,
 } from "../../../modules/loyalty/settings/eventTriggerCron.service.js";
 import { getWeeklyConversationReport } from "../../shared/bullmqCronJobs/sendMail/weeklyMail.js";
+import { downgradeExpiredSubscriptions } from "../../../modules/subscription/subscription.service.js";
+import { subscriptionExpiryAlert } from "../../../utils/email/payments/subscriptionExpiryAlert.js";
 import type { ScheduledJobId } from "../queues/cron.queue.js";
 
 const workerConnection = baseRedis.duplicate();
@@ -99,6 +101,16 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
   loyaltyPointsExpiryAlerts: async () => {
     log.info("Running Daily at 3:00 AM --> Loyalty Points Expiry Alerts (14 days before expiry)");
     await safeRun("checkPointsExpiryAlerts", checkPointsExpiryAlerts);
+  },
+
+  subscriptionExpiryAlerts: async () => {
+    log.info("Running Daily at 3:30 AM --> Subscription expiry reminders");
+    await safeRun("subscriptionExpiryAlert", subscriptionExpiryAlert);
+  },
+
+  downgradeExpiredSubscriptions: async () => {
+    log.info("Running Daily at 4:00 AM --> Returning expired subscriptions to the free plan");
+    await safeRun("downgradeExpiredSubscriptions", downgradeExpiredSubscriptions);
   },
 
   inboxAutomation: async () => {

@@ -1,0 +1,5 @@
+-- RenameIndex
+ALTER INDEX "MeteredConversation_orgId_platform_channelId_customerId_expi_id" RENAME TO "MeteredConversation_orgId_platform_channelId_customerId_exp_idx";
+
+-- RenameIndex
+ALTER INDEX "MeteredConversation_orgId_platform_channelId_customerId_open_ke" RENAME TO "MeteredConversation_orgId_platform_channelId_customerId_ope_key";

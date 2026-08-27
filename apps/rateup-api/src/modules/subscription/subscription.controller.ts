@@ -9,7 +9,6 @@ import {
 import { ByOrgIdParams } from "../org/org.schema.js";
 import { deleteSubscriptionsInput, updateSubscriptionInput } from "./subscription.schema.js";
 import { getRateuplanById } from "../payment/payment.service.js";
-import { FreePlanSubscriptionFeatures } from "./subscription.data.js";
 import dayjs from "dayjs";
 import { updateUsageStatsLastReset } from "../stats/stats.service.js";
 import { log } from "../../utils/logger.js";
@@ -55,8 +54,6 @@ export async function updateSubscriptionHandler(
     }
     if (rateupPlan.paymentPlanId)
       return res.code(403).send({ message: "You cannot change to Razorpay plans manually" });
-    else if (rateupPlan.name === "RATEUP TRIAL")
-      updatedData.features = FreePlanSubscriptionFeatures;
     else updatedData.features = rateupPlan?.features;
     updatedData.expiresAt = dayjs().add(30, "days").toISOString();
   }

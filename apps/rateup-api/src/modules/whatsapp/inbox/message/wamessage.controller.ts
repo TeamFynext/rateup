@@ -94,6 +94,7 @@ import {
   setConversationSubjectIfBlank,
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
+import { recordMessageInWindow } from "../../metering/meteredConversation.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 //this function automates the process of adding wa contacts and the associated messages to db
@@ -274,6 +275,29 @@ export async function handleWaMessages(
       }
     }
 
+    // Attribute this message to its 24h metered window before the row is written,
+    // so the id lands on the same insert instead of costing a second write.
+    //
+    // This is the one hook for the whole platform: every message in either
+    // direction on every channel — inbound webhooks, agent replies, campaigns,
+    // automated replies, Instagram, Messenger, webchat — funnels through
+    // handleWaMessages, and this is the only place WaMessage rows are created.
+    //
+    // Deliberately not gated on the subscription limit: a customer's inbound
+    // message is recorded and counted even when the org is over its allowance.
+    // Enforcement blocks outbound sends instead (see wasurvey.auth.ts) — silently
+    // dropping what a customer said is worse than an overage.
+    const parsedTimeStamp = new Date(waTimeStamp);
+    const meteredWindow = await recordMessageInWindow({
+      orgId,
+      platform: sourcePlatform,
+      channelId: sourceIdentifier,
+      customerId: from,
+      contactId: contact.id,
+      at: Number.isNaN(parsedTimeStamp.getTime()) ? new Date() : parsedTimeStamp,
+      direction: type,
+    });
+
     // Add new message to DB
     const waMessage = await addNewWaMessage(
       waMessageBody,
@@ -288,6 +312,7 @@ export async function handleWaMessages(
       failed,
       messageType,
       logs,
+      meteredWindow?.conversationId,
     );
 
     // Campaign sends carry the participant they belong to. Written straight

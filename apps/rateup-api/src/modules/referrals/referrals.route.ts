@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession.js";
-import { assertRootOrg } from "../../utils/auth.js";
+import { assertRootOrg, getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { rateLimit } from "../../utils/rateLimit.js";
 import {
   createReferralHandler,
@@ -18,10 +19,18 @@ import {
 } from "./referrals.schema.js";
 
 export async function referralRoutes(server: FastifyInstance) {
+  // Referrals are a Starter-and-above capability; this tree was previously ungated at
+  // the subscription level. Applied per-route rather than as a hook so /track-visit
+  // stays public — it is hit by referred visitors who have no session and are not the
+  // subscribing org.
+  const requireReferrals = getVerifySubscriptionHandler([
+    SubscriptionFeaturePathName.WhatsappReferrals,
+  ]);
+
   server.post<{ Body: CreateReferralInput }>(
     "/",
     {
-      preHandler: [checkSession, assertRootOrg],
+      preHandler: [checkSession, assertRootOrg, requireReferrals],
       schema: { body: createReferralSchema },
     },
     createReferralHandler,
@@ -30,7 +39,7 @@ export async function referralRoutes(server: FastifyInstance) {
   server.get(
     "/",
     {
-      preHandler: [checkSession, assertRootOrg],
+      preHandler: [checkSession, assertRootOrg, requireReferrals],
     },
     getAllReferralsHandler,
   );
@@ -38,7 +47,7 @@ export async function referralRoutes(server: FastifyInstance) {
   server.delete<{ Params: ByIdParams }>(
     "/:id",
     {
-      preHandler: [checkSession, assertRootOrg],
+      preHandler: [checkSession, assertRootOrg, requireReferrals],
       schema: { params: byIdParamsSchema },
     },
     deleteReferralHandler,

@@ -17,6 +17,7 @@ import {
   LeadGenFieldData,
   WaMessageBody,
   WaSendMessageBody,
+  WaStatusPricing,
 } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
@@ -820,6 +821,12 @@ export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,
   errors?: unknown,
+  /**
+   * Meta's per-message pricing signals off the status webhook. Optional throughout —
+   * older messages and some statuses omit it — and purely informational: Meta bills
+   * the customer's WABA directly, so this never gates metering or enforcement.
+   */
+  pricing?: WaStatusPricing,
 ) => {
   if (!messageId) return;
   const now = new Date().toISOString();
@@ -828,10 +835,16 @@ export const handleMessageStatusUpdate = async (
     topic: "status-events",
     messages: [
       {
+        // Partition by message id so a message's statuses stay ordered. Without a
+        // key kafkajs round-robins, and `sent`/`delivered`/`read` for one message can
+        // land on different partitions and be applied out of order by different
+        // consumers.
+        key: messageId,
         value: JSON.stringify({
           status,
           messageId,
           errors,
+          pricing,
           timestamp: now,
         }),
       },

@@ -159,12 +159,16 @@ describe("sendMetaMessage", () => {
     });
   });
 
-  it("only checks the conversation quota when asked", async () => {
+  it("checks the conversation quota by default, and skips it only when opted out", async () => {
+    // Enforcement is on unless a caller opts out. The default used to be false — the
+    // opposite polarity to sendMessage's `skipConversationLimit` — which left campaign
+    // fan-out and ad-hoc sends through this path silently ungated.
     await send();
-    expect(assertWithinConversationLimit).not.toHaveBeenCalled();
-
-    await send({ enforceConversationLimit: true });
     expect(assertWithinConversationLimit).toHaveBeenCalledWith(ORG);
+
+    vi.mocked(assertWithinConversationLimit).mockClear();
+    await send({ enforceConversationLimit: false });
+    expect(assertWithinConversationLimit).not.toHaveBeenCalled();
   });
 });
 

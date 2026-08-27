@@ -69,32 +69,35 @@ Rules to keep in mind when adding code:
 
 ## Email
 
-All email leaves from the `bullmq` service. Nothing outside `processors/notification.processor.ts`
-calls `sendAWSEmail` — callers enqueue and the worker sends, so SES credentials, retries, and
-send logging live in one place. Adding a `sendAWSEmail` call anywhere else puts SES back on the
-API's request path; enqueue instead.
+Bulk and background email leaves from the `bullmq` service: callers enqueue and the worker calls
+`sendAWSEmail`. Do not add a `sendAWSEmail` call of your own for that kind of mail — enqueue it,
+so retries and send logging stay in one place.
 
-Two queues, both consumed by that one processor file:
+Email a user is actively waiting on is the exception: `sendTransactionalEmail()`
+(`queues/notification.queue.ts`) makes the SES call inline, on the API's request path, so the
+mail goes out while the request is still open instead of after a Redis round-trip. If that
+direct send fails it enqueues onto `transactionalEmailQueue`, which is what still gives it the
+worker's five attempts.
 
-| Queue                     | Enqueue with                  | For                                                                             |
-| ------------------------- | ----------------------------- | ------------------------------------------------------------------------------- |
-| `notificationQueue`       | `notificationQueue.add(...)`  | Bulk/background: in-app notifications, weekly reports, billing notices          |
-| `transactionalEmailQueue` | `enqueueTransactionalEmail()` | Anything a user is waiting on: password reset, email verification, OTP, invites |
+| Lane                    | Send with                    | For                                                                             |
+| ----------------------- | ---------------------------- | ------------------------------------------------------------------------------- |
+| `notificationQueue`     | `notificationQueue.add(...)` | Bulk/background: in-app notifications, weekly reports, billing notices          |
+| inline + fallback queue | `sendTransactionalEmail()`   | Anything a user is waiting on: password reset, email verification, OTP, invites |
 
-The split exists because BullMQ's `priority` cannot express "jump the line" here. `fetchNextJob.lua`
-drains the `wait` list (un-prioritized jobs) with `RPOPLPUSH` **before** it looks at the prioritized
-zset, so giving the reset email a priority would have put it _behind_ every bulk job. Separate
-queues also mean separate concurrency pools: a weekly-report run that enqueues one job per org
-cannot occupy the slots a reset link needs.
+`transactionalEmailQueue` stays a queue of its own rather than a `priority` on
+`notificationQueue` because BullMQ's `priority` cannot express "jump the line" here.
+`fetchNextJob.lua` drains the `wait` list (un-prioritized jobs) with `RPOPLPUSH` **before** it
+looks at the prioritized zset, so giving a retried reset email a priority would have put it
+_behind_ every bulk job. Separate queues also mean separate concurrency pools.
 
-Both queues set `attempts: 5` with exponential backoff. That only works because `processNotification`
-throws when `sendAWSEmail` returns `false` and the workers no longer swallow the error — a send
-failure has to reach BullMQ to be retried.
+Both queues set `attempts: 5` with exponential backoff. That only works because
+`processNotification` throws when `sendAWSEmail` returns `false` and the workers no longer
+swallow the error — a send failure has to reach BullMQ to be retried.
 
-One consequence worth knowing before you add a route that emails: a caller only ever learns that
-the job was _accepted_. `POST /email/send-email` and `/email/otp/send-email` return 200 once the
-job is queued, so a delivery failure shows up as a worker log and a BullMQ retry, never in the
-HTTP response.
+One consequence worth knowing before you add a route that emails: a caller that enqueues only
+ever learns that the job was _accepted_. `POST /email/send-email` and `/email/otp/send-email`
+now go out inline, so a hard SES failure reaches the handler; a failure that lands in the
+fallback queue still surfaces only as a worker log and a retry.
 
 ## Absorbed services
 
