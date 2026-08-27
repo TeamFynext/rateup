@@ -2,16 +2,8 @@ import { useColorScheme } from "nativewind";
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import {
-  Image as ImageIcon,
-  MessageCircle,
-  Star,
-  UserPlus,
-} from "lucide-react-native";
-import {
-  ContactsWithLastMessage,
-  WaMessageAssignStatus,
-} from "@/api/inbox/types";
+import { Image as ImageIcon, MessageCircle, Star, UserPlus } from "lucide-react-native";
+import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
 import { useLifecycleContext } from "@/context/LifecycleContext";
@@ -85,10 +77,7 @@ function Chip({ label, color, background, dot }: ChipProps) {
           }}
         />
       ) : null}
-      <Text
-        numberOfLines={1}
-        style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}
-      >
+      <Text numberOfLines={1} style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}>
         {label}
       </Text>
     </View>
@@ -116,7 +105,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   waMessageAssignStatus,
   lifecycleId,
   ticketNumber,
-  ticketSubject,
   isFavorite,
   contactLabels,
   assignedUsers,
@@ -141,9 +129,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const status = waMessageAssignStatus
     ? (STATUS_TONE[waMessageAssignStatus] ?? {
-      tone: "closed" as InboxStatusTone,
-      label: waMessageAssignStatus,
-    })
+        tone: "closed" as InboxStatusTone,
+        label: waMessageAssignStatus,
+      })
     : null;
   const statusTone = status ? t.status[status.tone] : null;
 
@@ -171,11 +159,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const isPhoto = useMemo(() => {
     const lowerMsg = (lastMessage || "").toLowerCase();
-    return (
-      lowerMsg.includes("image") ||
-      lowerMsg.includes("photo") ||
-      lowerMsg.includes("📷")
-    );
+    return lowerMsg.includes("image") || lowerMsg.includes("photo") || lowerMsg.includes("📷");
   }, [lastMessage]);
 
   const channelColor = platform ? inboxChannelColors[platform] : undefined;
@@ -314,32 +298,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             </Text>
           </View>
 
-          {/* Ticket Info */}
-          {code || ticketSubject ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
-              {code ? (
-                <Text style={{ fontSize: 12, color: t.fg4, fontFamily: MONO }}>
-                  #{code}
-                </Text>
-              ) : null}
-              {ticketSubject ? (
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 14,
-                    fontFamily: "Nunito_600SemiBold",
-                    color: t.fg2,
-                    flexShrink: 1,
-                  }}
-                >
-                  {ticketSubject}
-                </Text>
-              ) : null}
-            </View>
-          ) : null}
-
-          {/* Snippet */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
+          {/* Ticket code + latest message, on one line.
+              This used to be two lines: the ticket subject above, the message
+              snippet below. The subject is auto-derived from the message that
+              opened the ticket, so for the many chats that open with a bare
+              "hi" the row showed two message-shaped lines — an old greeting
+              stacked on the current message — and read as two messages. The
+              latest message is the useful one, so it takes the slot. */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+            {code ? (
+              <Text style={{ fontSize: 12, color: t.fg4, fontFamily: MONO }}>#{code}</Text>
+            ) : null}
             {isPhoto ? <ImageIcon size={14} color={t.fg3} /> : null}
             <Text
               numberOfLines={1}
@@ -418,11 +387,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               renderAssigneeBadge()
             )}
           </View>
-          {isUnread ? (
-            <View style={{ marginTop: 6 }}>
-              {renderAssigneeBadge()}
-            </View>
-          ) : null}
+          {isUnread ? <View style={{ marginTop: 6 }}>{renderAssigneeBadge()}</View> : null}
         </View>
       </View>
     </Pressable>

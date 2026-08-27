@@ -7,11 +7,11 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from "react-native";
 import React from "react";
 import SignInScreen from "@/components/signInScreen";
 import GoogleLogin from "@/components/googleSignInScreen";
-import { RateLogo } from "@/constants/imageExports";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleLogin from "@/components/appleSignInScreen";
 
@@ -45,7 +45,18 @@ const SignIn = () => {
           >
             <View className="space-y-8">
               <View className="flex flex-col items-center space-y-4 mb-8">
-                <RateLogo height={64} />
+                {/* The star mark on its own, not the full logo: the wordmark
+                    would repeat the "LOGIN TO RATEUP" heading directly below.
+                    This PNG has a transparent background, so it sits correctly
+                    on both the light and dark variants of this screen —
+                    icon.png is deliberately opaque for iOS and would show as a
+                    white block in dark mode. */}
+                <Image
+                  source={require("@/assets/images/splash-icon.png")}
+                  style={{ width: 64, height: 64 }}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                />
 
                 <View>
                   <Text className="text-center font-bold text-2xl uppercase font-[Geist] text-black dark:text-white">

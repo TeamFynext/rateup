@@ -41,6 +41,25 @@ export const useSelectedContactStore = create<SelectedContactState>((set: any) =
   setSelectedContact: (contact: SelectedContactData | null) => set({ selectedContact: contact }),
 }));
 
+/**
+ * The chat currently on screen, tracked by the chat route's mount/unmount.
+ *
+ * Deliberately not `useSelectedContactStore.selectedContact`: that is set when a
+ * chat is opened and never cleared, so it keeps naming the last chat you visited
+ * long after you have left it. Using it to decide "is this chat open?" made the
+ * inbox treat every later message to that contact as already-read and the unread
+ * badge stopped appearing at all.
+ */
+type OpenChatState = {
+  openChatId: string | null;
+  setOpenChatId: (contactId: string | null) => void;
+};
+
+export const useOpenChatStore = create<OpenChatState>((set: any) => ({
+  openChatId: null,
+  setOpenChatId: (contactId: string | null) => set({ openChatId: contactId }),
+}));
+
 export const useSessionActiveStore = create<SessionState>((set: any) => ({
   isSessionActive: true,
   setIsSessionActive: (session: boolean) => set({ isSessionActive: session }),

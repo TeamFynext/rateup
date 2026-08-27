@@ -4,10 +4,7 @@ import { View, Text } from "react-native";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/context/AuthContext";
-import {
-  useChatAssignStatusStore,
-  useSelectedContactStore,
-} from "@/utils/store";
+import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
 import { Info, UserPlus } from "lucide-react-native";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { MessagePlatform } from "@/constants/enums";
@@ -15,6 +12,7 @@ import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
+import { useMessagesStore } from "@/store/inboxStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ChatFooter = ({ id }: { id: string }) => {
@@ -22,19 +20,25 @@ const ChatFooter = ({ id }: { id: string }) => {
   const isDark = colorScheme === "dark";
   const t = getInboxRowTheme(isDark);
   const insets = useSafeAreaInsets();
-  const waAssignStatus = useChatAssignStatusStore(
-    (state) => state.waAssignStatus,
-  );
+  const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
-  let currentUserAssignment = assignedUsers?.find(
-    (entry: any) => entry.assignedUserId == userId,
-  );
+  let currentUserAssignment = assignedUsers?.find((entry: any) => entry.assignedUserId == userId);
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
 
   const selectedContact = useSelectedContactStore((s) => s.selectedContact);
-  const platform =
-    selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  // Only this route's contact — the store may still hold the previously opened
+  // one, and channel is what decides which business number the reply goes out on.
+  const contact = selectedContact?.id === id ? selectedContact : undefined;
+
+  // A chat opened by deep link has no `lastMessage`: `/api/contact/:id` returns
+  // the bare contact row. The newest loaded message carries the same
+  // `sourcePlatform`/`sourceIdentifier`, so it stands in. Without it the reply is
+  // sent with an empty phoneId — from the wrong number, or not at all.
+  const latestMessage = useMessagesStore((s) => s.messagesByKey.get(`${id}_all`)?.messages?.[0]);
+  const sourceMessage = contact?.lastMessage ?? latestMessage;
+
+  const platform = sourceMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const { data: waSettings } = useWaSettings();
 
   const whatsappSettingsPhoneId = useMemo(() => {
@@ -43,15 +47,13 @@ const ChatFooter = ({ id }: { id: string }) => {
       platform === MessagePlatform.FACEBOOK ||
       platform === MessagePlatform.WEBCHAT
     ) {
-      return selectedContact?.lastMessage?.sourceIdentifier;
+      return sourceMessage?.sourceIdentifier;
     }
     // WhatsApp default
     return (
-      waSettings?.find(
-        (s: any) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier,
-      )?.phoneId || ""
+      waSettings?.find((s: any) => s?.phone === sourceMessage?.sourceIdentifier)?.phoneId || ""
     );
-  }, [waSettings, platform, selectedContact]);
+  }, [waSettings, platform, sourceMessage]);
 
   if (
     !hasAssignedUsers ||
@@ -124,6 +126,7 @@ const ChatFooter = ({ id }: { id: string }) => {
 
       {currentUserAssignment && (
         <MessageSendPanel
+          contactId={id}
           platform={platform}
           whatsappSettingsPhoneId={whatsappSettingsPhoneId}
           teamId={currentUserAssignment?.teamId || null}

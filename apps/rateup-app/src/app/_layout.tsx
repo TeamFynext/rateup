@@ -6,6 +6,10 @@ import { Stack } from "expo-router";
 import { StatusBar, Text, TextInput } from "react-native";
 import { useColorScheme } from "nativewind";
 import { getThemePreference } from "@/utils/theme";
+// Imported for its module-scope `setNotificationHandler` as much as for the
+// channel helper: the handler has to be registered before the first notification
+// arrives, and this is the earliest module the app loads.
+import { setupAndroidNotificationChannel } from "@/utils/notification";
 import { Colors } from "@/constants/colors";
 import ToastManager from "toastify-react-native";
 import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react-native";
@@ -96,6 +100,10 @@ export default function LayoutWrapper() {
     }
     initTheme();
   }, [setColorScheme]);
+
+  useEffect(() => {
+    setupAndroidNotificationChannel();
+  }, []);
 
   if (!fontsLoaded) {
     return null;

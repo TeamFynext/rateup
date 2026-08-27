@@ -1,4 +1,5 @@
 import { enableMapSet, produce } from "immer";
+import { markMessageAsRead } from "@/api/inbox/contacts/contacts.api";
 import { isEqual } from "lodash";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
@@ -570,6 +571,18 @@ export const useContactsStore = create<ContactsStoreState>()(
         }
       },
 
+      /**
+       * Clear the badge for a contact and tell the server it was read.
+       *
+       * Mirrors `resetUnreadForContact` in rateup-ui's inbox store. The counter
+       * is zeroed locally first: the inbox renders from this store, and the
+       * read-receipt call returns nothing the list reads back, so waiting on it
+       * would leave the badge up for the length of a round-trip.
+       *
+       * The receipt call itself was commented out here, which is why opening a
+       * chat cleared nothing that survived a refresh — the badge came back from
+       * the server on the next load because the server was never told.
+       */
       resetUnreadForContact(contactId, contact) {
         if (!contact) contact = get().contactsById.get(contactId);
         if (contact && contact.unReadMessageCount !== 0) {
@@ -578,7 +591,11 @@ export const useContactsStore = create<ContactsStoreState>()(
             unReadMessageCount: 0,
           }));
         }
-        // markWaMessagesAsRead(contactId);
+        if (!contact) return;
+        // Not awaited — nothing here needs the result — but the rejection is
+        // handled, or a dropped connection would surface as an unhandled promise
+        // rejection rather than a log line.
+        markMessageAsRead(contact.id).catch((e) => console.error(e));
       },
 
       setSelectedContact(contact) {

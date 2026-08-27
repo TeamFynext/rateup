@@ -388,13 +388,18 @@ const ChatHeader = ({
   const diffInMinutes = sessionExpiry.diff(now, "minute");
   const isSessionActive = diffInMinutes > 0;
   const selectedContact = useSelectedContactStore((state) => state.selectedContact);
+  // Only trust the store while it describes this route's contact. It is global
+  // and written only when an inbox row is tapped, so a chat reached any other way
+  // (a notification deep link, a cold start) finds the *previous* contact there —
+  // and `conversationId` below addresses the ticket the star is written to.
+  const contact = selectedContact?.id === id ? selectedContact : undefined;
   // The star lives on the ticket, so read both from the row we opened. Prefer
   // the contacts store, which is what the toggle patches.
   const storedContact = useContactsStore((state) => state.contactsById.get(id));
-  const conversationId = storedContact?.conversationId ?? selectedContact?.conversationId;
-  const isFavorite = storedContact?.isFavorite ?? selectedContact?.isFavorite;
+  const conversationId = storedContact?.conversationId ?? contact?.conversationId;
+  const isFavorite = storedContact?.isFavorite ?? contact?.isFavorite;
   const toggleFavorite = useToggleFavorite();
-  const platform = selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
 
   // Design: 8px white glyph inside the 15px channel dot.
   const renderPlatformIcon = () => {
@@ -448,70 +453,86 @@ const ChatHeader = ({
           <ArrowLeft size={21} color={t.fg1} />
         </TouchableOpacity>
 
-        {/* 36px avatar with the 15px channel dot */}
-        <View style={{ position: "relative", alignSelf: "center" }}>
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: avatarColor,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
+        {/* Avatar + name open the contact screen, matching the WhatsApp gesture
+            of tapping the thread header. Wrapped together rather than made two
+            separate targets so the whole block is one comfortable hit area. */}
+        <TouchableOpacity
+          activeOpacity={0.6}
+          accessibilityRole="button"
+          accessibilityLabel="Open contact info"
+          onPress={() =>
+            router.push({
+              pathname: "/protected/chat/ContactInfo",
+              params: { id: contactId },
+            } as never)
+          }
+          style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8, minWidth: 0 }}
+        >
+          {/* 36px avatar with the 15px channel dot */}
+          <View style={{ position: "relative", alignSelf: "center" }}>
+            <View
               style={{
-                fontFamily: "Nunito_800ExtraBold",
-                fontSize: 14,
-                color: "#fff",
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: avatarColor,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {namePreview(name)}
+              <Text
+                style={{
+                  fontFamily: "Nunito_800ExtraBold",
+                  fontSize: 14,
+                  color: "#fff",
+                }}
+              >
+                {namePreview(name)}
+              </Text>
+            </View>
+            <View
+              style={{
+                position: "absolute",
+                bottom: -2,
+                right: -2,
+                width: 15,
+                height: 15,
+                borderRadius: 7.5,
+                backgroundColor: channelColor,
+                borderWidth: 2,
+                borderColor: getInboxHeaderBg(isDark),
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {renderPlatformIcon()}
+            </View>
+          </View>
+
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 15,
+                fontFamily: "Nunito_800ExtraBold",
+                color: t.fg1,
+              }}
+            >
+              {formatName(name) || phone}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 11,
+                fontFamily: "Nunito_400Regular",
+                color: t.fg4,
+                marginTop: 1,
+              }}
+            >
+              {platformLabel(platform)} · {phone}
             </Text>
           </View>
-          <View
-            style={{
-              position: "absolute",
-              bottom: -2,
-              right: -2,
-              width: 15,
-              height: 15,
-              borderRadius: 7.5,
-              backgroundColor: channelColor,
-              borderWidth: 2,
-              borderColor: getInboxHeaderBg(isDark),
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {renderPlatformIcon()}
-          </View>
-        </View>
-
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: 15,
-              fontFamily: "Nunito_800ExtraBold",
-              color: t.fg1,
-            }}
-          >
-            {formatName(name) || phone}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: 11,
-              fontFamily: "Nunito_400Regular",
-              color: t.fg4,
-              marginTop: 1,
-            }}
-          >
-            {platformLabel(platform)} · {phone}
-          </Text>
-        </View>
+        </TouchableOpacity>
 
         <View
           style={{

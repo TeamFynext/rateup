@@ -5,7 +5,7 @@ import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/type
 import { useFilteredContacts } from "@/api/inbox/contacts/contacts.query";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
-import { useChatFilterStore, useSelectedContactStore } from "@/utils/store";
+import { useChatFilterStore, useOpenChatStore, useSelectedContactStore } from "@/utils/store";
 import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
@@ -139,6 +139,8 @@ export default function Inbox({
         wsData.inbox.message.readUsers.length === 0 &&
         wsData.inbox.message.sendBy === null;
 
+      const isOpenInThread = useOpenChatStore.getState().openChatId === contactId;
+
       updateContactById(
         contactId,
         (oldContact) => {
@@ -148,9 +150,16 @@ export default function Inbox({
             ...wsData.inbox?.contact,
             lastMessage: wsData.inbox?.message,
             lastReceivedMessageTimeStamp: wsData.inbox?.contact.lastReceivedMessageTimeStamp,
-            unReadMessageCount: isUnread
-              ? (oldContact.unReadMessageCount ?? 0) + 1
-              : (oldContact.unReadMessageCount ?? 0),
+            // `isOpenInThread` mirrors rateup-ui's realtime handler: a message
+            // that lands while you are looking at that very chat is already
+            // read, so counting it would put a badge on the row you are
+            // standing in — and nothing would clear it until you left and came
+            // back.
+            unReadMessageCount: isOpenInThread
+              ? 0
+              : isUnread
+                ? (oldContact.unReadMessageCount ?? 0) + 1
+                : (oldContact.unReadMessageCount ?? 0),
           };
         },
         isUnread,
@@ -204,7 +213,6 @@ export default function Inbox({
         assignedUsers={item.assignedUsers}
         lifecycleId={item.lifecycleId}
         ticketNumber={item.ticketNumber}
-        ticketSubject={item.ticketSubject}
         isFavorite={item.isFavorite}
         contactLabels={item.contactLabels}
         currentUserId={currentUser?.userId}

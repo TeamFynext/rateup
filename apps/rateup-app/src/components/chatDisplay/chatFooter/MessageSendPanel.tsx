@@ -15,12 +15,7 @@ import {
 import { Colors } from "@/constants/colors";
 import { useForm } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
-import {
-  useSelectedContactStore,
-  useMediaStore,
-  useSessionActiveStore,
-  useVoiceRecordStore,
-} from "@/utils/store";
+import { useMediaStore, useSessionActiveStore, useVoiceRecordStore } from "@/utils/store";
 import { useCreatePrivateMessage, useSendNewWaMessage } from "@/api/inbox/messages/message.query";
 import { uploadFile } from "@/utils/fileUpload";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
@@ -53,10 +48,12 @@ type FormValues = {
 };
 
 const MessageSendPanel = ({
+  contactId,
   platform,
   whatsappSettingsPhoneId,
   teamId,
 }: {
+  contactId: string;
   platform: string;
   whatsappSettingsPhoneId: string;
   teamId: string | null;
@@ -64,7 +61,13 @@ const MessageSendPanel = ({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "white" : "black";
-  const selectedContactId = useSelectedContactStore((s) => s.selectedContact?.id);
+  // The recipient comes from the route, never from the selected-contact store.
+  // The store is global and is only written when an inbox row is tapped, so any
+  // other route onto this screen (a notification deep link, a cold start) leaves
+  // it holding a *different* contact — and this id is what `sendNewWaMessage` is
+  // addressed to. Reading it from the store meant a reply typed in one chat
+  // could be delivered to whoever the store still pointed at.
+  const selectedContactId = contactId;
   const { media, resetMedia, addMedia, removeMedia } = useMediaStore();
   const { audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody } = useMessageBodyStore();

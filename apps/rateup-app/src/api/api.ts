@@ -3,8 +3,7 @@ import { router } from "expo-router";
 import SuperTokens from "supertokens-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { registerForPushNotificationsAsync } from "../utils/notification";
-import { deleteToken } from "./notification";
+import { unregisterPushToken } from "../utils/notification";
 import { Toast } from "toastify-react-native";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -55,10 +54,7 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   try {
-    const token = await registerForPushNotificationsAsync();
-    if (token) {
-      await deleteToken(token);
-    }
+    await unregisterPushToken();
     await AsyncStorage.removeItem("accessToken");
     await SuperTokens.signOut();
     router.replace("/auth/SignIn");
