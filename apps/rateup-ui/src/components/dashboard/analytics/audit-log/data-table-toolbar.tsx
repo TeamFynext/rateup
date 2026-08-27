@@ -19,7 +19,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
               <div className="flex flex-col items-start justify-center">
                 <div className="flex items-center gap-1">
                   <h4 className="text-xl tracking-tight">{translations("Team Activity log")}</h4>
-                  <RefreshButton queryKeys={["userAuditLogs"]} />
+                  <RefreshButton queryKeys={["user-audit-logs"]} />
                 </div>
                 <h6>{translations("Recent actions performed by team members")}</h6>
               </div>

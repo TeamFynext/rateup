@@ -73,7 +73,30 @@ const parseRoute = (route: string): ParsedRoute => {
   return { type: null, id: null, isValid: false };
 };
 
+// Routes that deserve a plain-English label instead of the generic
+// "<Resource> <action>" derived from the URL. Channel connect/disconnect lives
+// under /settings and /auth, which would otherwise read as "Settings created".
+const ROUTE_OVERRIDES: { method: string; pattern: RegExp; label: string }[] = [
+  { method: "POST", pattern: /^\/api\/wa\/settings\/?$/, label: "Channel added" },
+  { method: "PUT", pattern: /^\/api\/wa\/settings\/?$/, label: "Channel updated" },
+  { method: "POST", pattern: /^\/api\/wa\/auth\/register\/?$/, label: "Channel added" },
+  { method: "DELETE", pattern: /^\/api\/wa\/settings\/[^/]+\/?$/, label: "Channel removed" },
+  { method: "POST", pattern: /^\/api\/wa\/auth\/deregister\/[^/]+\/?$/, label: "Channel removed" },
+];
+
+const matchRouteOverride = (method: string, route: string): string | null => {
+  const path = route.split("?")[0];
+  const upperMethod = method.toUpperCase();
+
+  return (
+    ROUTE_OVERRIDES.find((o) => o.method === upperMethod && o.pattern.test(path))?.label ?? null
+  );
+};
+
 const formatActionMessage = (method: string, route: string): string => {
+  const override = matchRouteOverride(method, route);
+  if (override) return override;
+
   const { type, id, isValid } = parseRoute(route);
 
   if (!isValid || !type) {
@@ -90,8 +113,24 @@ const formatTimestamp = (timestamp: string): string => {
 };
 
 // Components
-const ActionCell = ({ action, route }: { action: string; route: string }) => {
-  const formattedMessage = useMemo(() => formatActionMessage(action, route), [action, route]);
+// The values the generic audit hook writes into `action`; anything else is an
+// explicit, already human-readable label recorded by a handler (e.g. "Channel added").
+const GENERIC_ACTIONS = new Set(["Create", "Update", "Delete", "Other"]);
+
+const ActionCell = ({
+  action,
+  method,
+  route,
+}: {
+  action?: string;
+  method: string;
+  route: string;
+}) => {
+  const formattedMessage = useMemo(() => {
+    if (action && !GENERIC_ACTIONS.has(action)) return action;
+
+    return formatActionMessage(method, route);
+  }, [action, method, route]);
 
   return (
     <div className="flex items-center gap-2">
@@ -163,7 +202,13 @@ export const columns = [
   {
     accessorKey: "action",
     header: "Action",
-    cell: ({ row }) => <ActionCell action={row.original?.method} route={row.original?.route} />,
+    cell: ({ row }) => (
+      <ActionCell
+        action={row.original?.action}
+        method={row.original?.method}
+        route={row.original?.route}
+      />
+    ),
     meta: { title: "Action" },
   },
   {
