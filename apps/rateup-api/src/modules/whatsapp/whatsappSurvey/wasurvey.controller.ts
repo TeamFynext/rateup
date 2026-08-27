@@ -116,7 +116,7 @@ import {
   verifyAutomationTriggerLimit,
 } from "../automatedReply/wa_automatedReply.service.js";
 import { handleWaOrderfromCatalog } from "../catalog/catalog.service.js";
-import { getTokensByOrgId } from "../../mobileNotification/mobile.service.js";
+import { getTokensForContactAudience } from "../../mobileNotification/mobile.service.js";
 import {
   assignWaMessageToUser,
   getAssignedUsersCountForContactByTeam,
@@ -586,15 +586,6 @@ async function whatsappMessageHandler(
     }
   }
 
-  const expoToken = await getTokensByOrgId(orgId);
-  await notificationQueue.add("notification", {
-    pushNotificationData: {
-      expoTokens: expoToken,
-      title: "RateUp",
-      body: `New message from ${userName}`,
-      data: {},
-    },
-  });
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   const messageLowerCase =
@@ -623,6 +614,32 @@ async function whatsappMessageHandler(
       sourceIdentifier,
     });
     return;
+  }
+
+  // Deliberately below the interaction handlers above rather than straight after
+  // the message is stored. Button taps, loyalty redemptions and join
+  // registrations all return before this point: they are self-service traffic the
+  // bot answers itself, and pushing "New message from X" for each one taught
+  // agents to swipe the notification away without reading it. `loyaltyWaCommand`
+  // is excluded here rather than by an early return because its handler runs at
+  // the foot of this function, not as a return.
+  if (!loyaltyWaCommand) {
+    // Assigned users only, falling back to the org when the contact is
+    // unassigned — see `getTokensForContactAudience`.
+    const expoTokens = await getTokensForContactAudience(orgId, messageObj?.contactId);
+    if (expoTokens.length > 0) {
+      await notificationQueue.add("notification", {
+        pushNotificationData: {
+          expoTokens,
+          title: "RateUp",
+          body: `New message from ${userName}`,
+          data: {
+            type: "wa_message",
+            ...(messageObj?.contactId ? { contactId: messageObj.contactId } : {}),
+          },
+        },
+      });
+    }
   }
 
   const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);

@@ -2605,6 +2605,10 @@ model ExpoPushToken {
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @db.Uuid
 
+  // Enforces what `addToken` only checked for: its findFirst-then-create is a
+  // read-then-write race, so two concurrent registrations of the same device
+  // could both insert. `upsert` relies on this constraint.
+  @@unique([expoToken, userId, orgId], name: "expo_token_user_org_unique")
   @@index([userId])
   @@index([orgId])
 }

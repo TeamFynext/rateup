@@ -4,7 +4,8 @@ import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { log } from "../../utils/logger.js";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
 import prisma from "../../utils/prisma.js";
-import { sendPushNotification } from "../mobileNotification/mobile.service.js";
+import { checkPushReceipts, sendPushNotification } from "../mobileNotification/mobile.service.js";
+import { notificationQueue } from "../../workers/bullmq/queues/notification.queue.js";
 import { NotificationSettingSchema } from "./notification.schema.js";
 
 export async function getNotifications(userId: string, orgId: string) {
@@ -162,14 +163,27 @@ interface PushNotificationData {
   data?: Record<string, unknown>;
 }
 
+interface PushReceiptData {
+  /** Ticket id → the token it was sent to. */
+  tokensByTicketId: Record<string, string>;
+}
+
+/**
+ * How long to wait before asking Expo what became of a queued push. Expo's own
+ * guidance is at least 15 minutes; asking sooner mostly returns "not ready yet",
+ * which this pass skips rather than retries.
+ */
+const PUSH_RECEIPT_DELAY_MS = 15 * 60 * 1000;
+
 export interface NotificationJobData {
   emailData?: EmailParams;
   systemNotificationData?: SystemNotificationData;
   pushNotificationData?: PushNotificationData;
+  pushReceiptData?: PushReceiptData;
 }
 
 export async function processNotification(job: Job<NotificationJobData>) {
-  const { emailData, systemNotificationData, pushNotificationData } = job.data;
+  const { emailData, systemNotificationData, pushNotificationData, pushReceiptData } = job.data;
 
   if (emailData) {
     // `sendAWSEmail` reports failure by returning false rather than throwing. Turning that
@@ -182,12 +196,26 @@ export async function processNotification(job: Job<NotificationJobData>) {
   }
 
   if (pushNotificationData) {
-    await sendPushNotification(
+    const tokensByTicketId = await sendPushNotification(
       pushNotificationData.expoTokens,
       pushNotificationData.title,
       pushNotificationData.body,
       pushNotificationData.data,
     );
+
+    // A ticket only says Expo accepted the message. Schedule the second half of
+    // the exchange, which is where delivery actually succeeds or fails.
+    if (Object.keys(tokensByTicketId).length > 0) {
+      await notificationQueue.add(
+        "pushReceipts",
+        { pushReceiptData: { tokensByTicketId } },
+        { delay: PUSH_RECEIPT_DELAY_MS },
+      );
+    }
+  }
+
+  if (pushReceiptData) {
+    await checkPushReceipts(pushReceiptData.tokensByTicketId);
   }
 
   if (systemNotificationData) {
@@ -196,7 +224,7 @@ export async function processNotification(job: Job<NotificationJobData>) {
     await createNotification(userId, orgId, source, subSource, data);
   }
 
-  if (!emailData && !pushNotificationData && !systemNotificationData) {
+  if (!emailData && !pushNotificationData && !systemNotificationData && !pushReceiptData) {
     throw new Error("Invalid notification job: no notification payload provided");
   }
 }
