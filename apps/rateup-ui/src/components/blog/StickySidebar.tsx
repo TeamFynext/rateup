@@ -120,10 +120,10 @@ export default function StickySidebar() {
 
         {/* ── BODY ── */}
         <div className="pt-2.5 px-[18px] pb-0">
-          {/* Free trial chip */}
+          {/* Free plan chip */}
           <div className="inline-flex items-center gap-[5px] bg-white/[0.12] border border-white/20 rounded-[30px] py-1 px-[11px] text-[10px] font-bold text-white/88 tracking-[0.04em] uppercase mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] shadow-[0_0_8px_#25D366] inline-block" />
-            Free Trial Available
+            Free Plan Available
           </div>
 
           {/* Heading */}
@@ -140,7 +140,7 @@ export default function StickySidebar() {
             href="https://rateup.app/signup"
             className="flex items-center justify-center w-full p-[13px] bg-white/[0.14] border-[1.5px] border-white/[0.32] rounded-[13px] text-white text-[13.5px] font-bold cursor-pointer no-underline mb-[9px] transition-colors duration-200 gap-[6px] hover:bg-white/[0.22]"
           >
-            Start Free Trial &nbsp;→
+            Get Started Free &nbsp;→
           </a>
           <BookDemoModal>
             <button className="flex items-center justify-center w-full p-[13px] bg-[#25D366] border-none rounded-[13px] text-white text-[13px] font-bold cursor-pointer no-underline gap-[7px] transition-colors duration-200 hover:bg-[#1EBD5A]">

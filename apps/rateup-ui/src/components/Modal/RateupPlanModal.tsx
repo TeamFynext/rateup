@@ -39,10 +39,9 @@ const currencyOptions = [
 
 /** The plan row this admin modal edits. */
 export interface RateupPlanFormValues extends RateupPaymentPlan {
-  badge?: string;
-  price?: number;
-  monthlyPrice?: number;
-  yearlyPrice?: number;
+  // badge/price/monthlyPrice/yearlyPrice are inherited from RateupPaymentPlan, which
+  // models them as nullable because that is what the plans endpoint returns for a
+  // sales-led tier. Only the gateway links are extra here.
   monthlyPaymentPlanId?: string;
   yearlyPaymentPlanId?: string;
 }
@@ -94,7 +93,6 @@ const RateupPlanModal = ({
       .string()
       .trim()
       .min(1, { message: translations("Features should Not Be empty") }),
-    trialDays: z.number(),
     badge: z.string().trim().optional(),
     price: z.number().optional(),
     currency: z.string().optional(),
@@ -116,7 +114,6 @@ const RateupPlanModal = ({
       stripeId: "",
       description: [],
       features: "",
-      trialDays: 0,
       badge: "",
       price: 0,
       currency: "",
@@ -140,7 +137,6 @@ const RateupPlanModal = ({
         stripeId: plan.stripeId ?? "",
         description: plan.description ?? [],
         features: plan.features ? JSON.stringify(plan.features, null, 2) : "",
-        trialDays: plan.trialDays ?? 0,
         badge: plan.badge ?? "",
         price: plan.price ?? 0,
         currency: plan.currency ?? "",
@@ -305,19 +301,6 @@ const RateupPlanModal = ({
                 <FieldError>{form.formState.errors.description.message}</FieldError>
               )}
               <FieldDescription>Use || for split</FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={`${uid}-trial-days`}>Trial Days</FieldLabel>
-              <Input
-                id={`${uid}-trial-days`}
-                type="number"
-                min={0}
-                step={1}
-                value={values.trialDays ?? 0}
-                onChange={(event) =>
-                  form.setValue("trialDays", Number(event.target.value), { shouldDirty: true })
-                }
-              />
             </Field>
             <Field>
               <FieldLabel htmlFor={`${uid}-field-6`}>{translations("Currency")}</FieldLabel>

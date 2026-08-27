@@ -29,7 +29,6 @@ function getPlanHighlights(plan: RateupPaymentPlan) {
     features.webSurvey?.active ? `${features.webSurvey?.count?.max || 0} Web Surveys` : null,
     features.loyalty?.active ? "WhatsApp Loyalty Program" : null,
     features.ticket?.active ? `${features.ticket?.count?.max || 0} Ticketing Seats` : null,
-    features.reputationManagement?.active ? "Reputation Management" : null,
     features.ai?.active
       ? `AI Tokens (${features.ai?.count?.promptTokens || 0} prompt tokens)`
       : null,
@@ -95,7 +94,6 @@ ${plans
 - Plan Name: ${plan.name}
 - Pricing: ${formatPrice(payment?.amount, payment?.currency, payment?.period)}
 - Billing Cycle: ${payment?.period || "Custom"}
-- Trial Period: ${plan.trialDays || 0} days
 - Plan Type: ${plan.planType}
 
 ### Included Features

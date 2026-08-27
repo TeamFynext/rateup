@@ -258,8 +258,13 @@ export enum SubscriptionFeaturePathName {
   HTMLCodePage = "webSurvey.htmlCodePage",
   Whatsapp = "whatsapp",
   WhatsAppConversation = "whatsapp.conversation",
+  // Tier gates, split out of `whatsapp.active` so the inbox can stay on for every
+  // tier while these are Starter-and-above. Mirrors rateup-api/src/types/enums.ts.
+  WhatsappCampaign = "whatsapp.campaign",
+  WhatsappLoyalty = "whatsapp.loyalty",
+  WhatsappReferrals = "whatsapp.referrals",
+  WhatsappCatalog = "whatsapp.catalog",
   Menu = "menu",
-  ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
   Ticket = "ticket",

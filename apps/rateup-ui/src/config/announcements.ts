@@ -38,6 +38,56 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-22-conversation-packs",
+    title: "Buy conversation packs from Billing",
+    summary:
+      "Running short before the month is out? Buy a conversation pack for 5,000 extra conversations, good for 30 days. It is a one-off charge — nothing renews and there is nothing to cancel — and packs stack, so buy as many as you need. Packs top up a paid plan: on Free the answer is still to upgrade, which raises every limit rather than just conversations, and Enterprise is already invoiced on the usage it actually runs.",
+    publishedAt: "2026-08-22",
+    kinds: ["new"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See packs" },
+  },
+  {
+    id: "2026-08-22-five-tier-plans",
+    title: "A new plan sits between Plus and Max",
+    summary:
+      "Starter is now Plus and the old Pro is now Max — same price, same limits, nothing to do. A new Pro plan fills the gap between them at 40,000 conversations and form submissions a month, with 5 teams and 30 users, so scaling past 10,000 no longer means jumping straight to the top tier. Existing subscriptions were renamed in place: your price, your allowances and your renewal date are all unchanged.",
+    publishedAt: "2026-08-22",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See the plans" },
+  },
+  {
+    id: "2026-08-22-plan-usage-banner",
+    title: "A heads-up when you run out of an allowance",
+    summary:
+      "A line now sits above the dashboard whenever your organisation has used up an allowance for the billing period — conversations, form submissions, seats or AI tokens — so a feature going quiet is explained rather than mysterious. Admins also get an in-app notification and the account owner gets an email, at most once a week. Free organisations see a dismissible note about upgrading; paid ones are only nudged once an allowance is most of the way gone, not while there is room to spare.",
+    publishedAt: "2026-08-22",
+    kinds: ["new"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See your usage" },
+  },
+  {
+    id: "2026-08-22-plans-return-to-free",
+    title: "Cancelled plans now return to Free",
+    summary:
+      "When a subscription is cancelled or its paid period runs out, the organisation now moves back to the Free plan and its limits, one day after the period ends. Until now a cancelled or lapsed plan kept its full allowances indefinitely. Cancelling still keeps everything you paid for until the end of the current period — nothing changes mid-cycle — and you can resubscribe at any time from Billing.",
+    publishedAt: "2026-08-22",
+    kinds: ["improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "Open billing" },
+  },
+  {
+    id: "2026-08-20-billing-invoices-and-charges",
+    title: "Change plans, and see invoices, on billing",
+    summary:
+      "You can now move between plans without cancelling first: Change plan on an active subscription schedules the switch without you cancelling first — downgrades take effect at your next renewal so you keep what you have already paid for, and upgrades apply straight away where your bank mandate allows it (the dialog tells you which before you confirm). The page also shows what you will be charged and when, what your plan includes, and one Billing History covering every charge — renewals included, which the old order list never showed — with a Download link for each invoice and Details that actually opens.",
+    publishedAt: "2026-08-20",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "Open billing" },
+  },
+  {
     id: "2026-08-17-pipeline-feature-access",
     title: "Pipeline is its own team permission",
     summary:
@@ -96,6 +146,16 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new"],
     area: "Pipeline",
     link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
+  },
+  {
+    id: "2026-08-19-plan-tiers",
+    title: "New plans, priced per conversation",
+    summary:
+      "Free, Starter, Pro and Enterprise replace the old catalog. Your allowance is now counted in conversations — one 24-hour window with a customer on any channel — rather than inbox tickets, so a thread that stays open no longer ties up your quota. Upgrading from billing only offers plans above your current one.",
+    publishedAt: "2026-08-19",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See your plan" },
   },
   {
     id: "2026-08-11-meta-agent-rebuild",

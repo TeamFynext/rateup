@@ -42,7 +42,7 @@ const TestimonialCTASection = () => {
               </BookDemoModal>
             </div>
             <p className="pt-6 text-sm text-[#1c518e]">
-              No credit card required. Free 14-day trial on all plans.
+              No credit card required. Free plan available on every tier.
             </p>
           </div>
         </motion.div>

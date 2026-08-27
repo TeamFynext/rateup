@@ -1,30 +1,27 @@
 import {
   IconAlertCircle,
-  IconCalendar,
   IconCircleCheck,
-  IconClock,
-  IconCurrencyDollar,
   IconInfoCircle,
   IconMail,
-  IconPackage,
   IconRefresh,
   IconSparkles,
   IconTrendingUp,
-  IconX,
 } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
+import {
+  useCancelRazorpaySubscriptionMutation,
+  useRateupPaymentsPlans,
+} from "@/backend/payment/payment.query";
 import { useCancelStripeSubscriptionMutation } from "@/backend/payment/stripe/stripe.query";
-import Pricing from "@/components/HomePage/pages/Pricing/index.tsx";
-import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
+import { ChangePlanDialog } from "@/components/dashboard/settings/billing/ChangePlanDialog.tsx";
+import { CurrentPlanCard } from "@/components/dashboard/settings/billing/CurrentPlanCard.tsx";
+import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
+import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +34,36 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 import type { PaymentOrder } from "./billing-parts/shared.tsx";
+
+/**
+ * Resolves the gateway plan actually backing this subscription.
+ *
+ * The legacy catalog linked a single `paymentPlan`; the four-tier catalog links a
+ * Razorpay plan per cadence and leaves `paymentPlan` null, so reading only the legacy
+ * relation shows "----" for billing cycle and cost on every Starter and Pro org.
+ *
+ * When both cadences exist, the active order's amount disambiguates which one the org
+ * is actually on — that is the figure they were charged, so it beats guessing. With no
+ * order to match, annual wins because it is the default cadence.
+ */
+function resolveGatewayPlan(
+  plan: SPlan | undefined,
+  order: PaymentOrder | null,
+): SPlanGatewayPlan | undefined {
+  if (plan?.paymentPlan) return plan.paymentPlan;
+
+  const candidates = [plan?.yearlyPaymentPlan, plan?.monthlyPaymentPlan].filter(
+    (candidate): candidate is SPlanGatewayPlan => Boolean(candidate),
+  );
+  if (candidates.length === 0) return undefined;
+
+  const matched =
+    order?.amount != null
+      ? candidates.find((candidate) => Number(candidate.amount) === Number(order.amount))
+      : undefined;
+
+  return matched ?? candidates[0];
+}
 
 export const Billing = ({
   subscription,
@@ -59,8 +86,8 @@ export const Billing = ({
   const [customUpgradeModal, setCustomUpgradeModal] = useState(false);
   const [cancelResult, setCancelResult] = useState(false);
   const [cancelDialogOpened, setCancelDialogOpened] = useState(false);
+  const [changePlanOpened, setChangePlanOpened] = useState(false);
 
-  const [isCustomPlan, setIsCustomPlan] = useState(false);
   const [isProcessingPlan, setIsProcessingPlan] = useState(
     latestOrderData?.subscriptionStatus === "pending" || false,
   );
@@ -69,19 +96,39 @@ export const Billing = ({
     () => subscription && subscription?.basePlan?.name?.includes("FREE"),
     [subscription],
   );
+  const gatewayPlan = useMemo(
+    () => resolveGatewayPlan(subscription?.basePlan, activeOrderData),
+    [subscription?.basePlan, activeOrderData],
+  );
+  // The upgrade dialog sells the same catalog the marketing page does. The previous
+  // component filtered plans on the legacy `paymentPlan.period`/`currency`, which the
+  // four-tier catalog leaves null (it links a plan per cadence instead) — so the dialog
+  // listed nothing at all for Starter and Pro.
+  const { data: plans, isPending: plansPending } = useRateupPaymentsPlans();
+
+  /**
+   * A tier sold by conversation rather than billed by a gateway — Enterprise today.
+   *
+   * Detected by the absence of any gateway plan, the same rule the API uses to decide
+   * what may lapse (`GATEWAY_BILLED_PLAN`), rather than by matching the plan's name. The
+   * old check looked for "CUSTOM" in the name, which matched a stray catalog row and
+   * never matched Enterprise — so an Enterprise org was offered Change plan and Cancel
+   * buttons for a subscription no gateway holds.
+   */
+  const isSalesLedPlan = useMemo(() => {
+    const plan = subscription?.basePlan;
+    if (!plan || isFreePlan) return false;
+    return !(
+      plan.paymentPlan ||
+      plan.monthlyPaymentPlan ||
+      plan.yearlyPaymentPlan ||
+      plan.stripeProduct
+    );
+  }, [subscription?.basePlan, isFreePlan]);
 
   useEffect(() => {
-    if (
-      subscription?.basePlan?.name &&
-      subscription.basePlan.name.toUpperCase().includes("CUSTOM")
-    ) {
-      setIsCustomPlan(true);
-    } else {
-      setIsCustomPlan(false);
-    }
-    if (subscription?.shopifyPlanId) setIsShopifyPlan(true);
-    else setIsShopifyPlan(false);
-  }, [subscription?.basePlan?.name]);
+    setIsShopifyPlan(Boolean(subscription?.shopifyPlanId));
+  }, [subscription?.shopifyPlanId]);
 
   useEffect(() => {
     setIsProcessingPlan(latestOrderData?.subscriptionStatus === "pending");
@@ -90,7 +137,6 @@ export const Billing = ({
   const CancelRazorpaySubscription = useCancelRazorpaySubscriptionMutation();
   const CancelStripeSubscription = useCancelStripeSubscriptionMutation();
   const { t: translations } = useTranslation();
-  const navigate = useNavigate();
 
   const handleCancelSubscription = () => {
     toast.loading(translations("Hold.. your subscription is getting cancelled..."), {
@@ -161,245 +207,41 @@ export const Billing = ({
           </Alert>
         )}
 
-        {/* Main Card */}
-        <Card>
-          <CardContent className="pt-6 space-y-6">
-            {/* Plan Header */}
-            <div className="flex items-start justify-between w-full">
-              <div className="flex items-center justify-between w-full">
-                <div className="space-y-3 flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <IconPackage className="h-4 w-4" />
-                    <span className="font-medium">{translations("Plan Name")}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-2xl font-bold">
-                      {subscription?.basePlan?.displayName || translations("No Plan")}
-                    </h3>
-                    {latestOrderData?.subscriptionStatus === "authenticated" && (
-                      <Badge
-                        variant="outline"
-                        className="bg-amber-50 text-amber-700 border-amber-200"
-                      >
-                        <IconSparkles className="h-3 w-3 mr-1" />
-                        {translations("Trial Period")}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  {subscription?.basePlan?.name === "RATEUP TRIAL" ||
-                  (isFreePlan && !isCustomPlan && !isProcessingPlan) ? (
-                    <Button
-                      onClick={() =>
-                        navigate({
-                          to: "/pricing",
-                        })
-                      }
-                      className="gap-2"
-                    >
-                      <IconTrendingUp className="h-4 w-4" />
-                      {translations("Upgrade plan")}
-                    </Button>
-                  ) : (
-                    subscription?.basePlan?.name &&
-                    (activeOrderData?.subscriptionStatus === "cancelled" && !isCustomPlan ? (
-                      <Button disabled variant="secondary" className="gap-2">
-                        <IconX className="h-4 w-4" />
-                        {translations("Cancelled")}
-                      </Button>
-                    ) : (
-                      !isCustomPlan &&
-                      !isProcessingPlan &&
-                      !isShopifyPlan && (
-                        <Button
-                          variant="destructive"
-                          onClick={() => setCancelDialogOpened(true)}
-                          className="gap-2"
-                        >
-                          <IconX className="h-4 w-4" />
-                          {translations("Cancel Subscription")}
-                        </Button>
-                      )
-                    ))
-                  )}
-
-                  {isCustomPlan && (
-                    <Button onClick={() => setCustomUpgradeModal(true)} className="gap-2">
-                      <IconTrendingUp className="h-4 w-4" />
-                      {translations("Upgrade plan")}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {activeOrderData?.subscriptionChargeAt &&
-                activeOrderData?.subscriptionStatus !== "cancelled" &&
-                !isCustomPlan && (
-                  <div className="space-y-3 text-right">
-                    <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                      <IconCalendar className="h-4 w-4" />
-                      <span className="font-medium">{translations("Next Charging on")}:</span>
-                    </div>
-                    <p className="text-lg font-semibold">
-                      {formatIsoDateString(activeOrderData?.subscriptionChargeAt)}
-                    </p>
-                  </div>
-                )}
-
-              {activeOrderData?.subscriptionStatus === "cancelled" &&
-                activeOrderData?.subscriptionEndedAt &&
-                !isCustomPlan && (
-                  <div className="space-y-3 text-right">
-                    <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                      <IconX className="h-4 w-4" />
-                      <span className="font-medium">{translations("Cancelled on")}:</span>
-                    </div>
-                    <p className="text-lg font-semibold">
-                      {formatIsoDateString(activeOrderData?.subscriptionEndedAt)}
-                    </p>
-                  </div>
-                )}
-            </div>
-
-            <Separator />
-
-            {/* Plan Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <IconClock className="h-4 w-4" />
-                  <span className="font-medium">
-                    {subscription?.basePlan?.paymentPlanId
-                      ? translations("Next Due")
-                      : translations("Validity")}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-base font-semibold">
-                    {isFreePlan ? "NA" : formatIsoDateString(subscription?.expiresAt)}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={checkExpiry(subscription?.expiresAt) ? "destructive" : "default"}
-                      className="gap-1"
-                    >
-                      {checkExpiry(subscription?.expiresAt) ? (
-                        <>
-                          <IconAlertCircle className="h-3 w-3" />
-                          {translations("Expired")}
-                        </>
-                      ) : (
-                        <>
-                          <IconCircleCheck className="h-3 w-3" />
-                          {translations("Active")}
-                        </>
-                      )}
-                    </Badge>
-                    {checkExpiry(subscription?.expiresAt) && !isProcessingPlan && (
-                      <Button
-                        size="sm"
-                        onClick={() => setOpenedUpgradeModal(true)}
-                        className="gap-1"
-                      >
-                        <IconTrendingUp className="h-3 w-3" />
-                        {translations("Upgrade")}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <IconCalendar className="h-4 w-4" />
-                  <span className="font-medium">{translations("Billing Cycle")}</span>
-                </div>
-                <p className="text-base font-semibold">
-                  {(subscription?.basePlan?.paymentPlan?.period ||
-                    subscription?.basePlan?.stripeProduct?.interval) ??
-                    (isShopifyPlan ? "Monthly" : "----")}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <IconCurrencyDollar className="h-4 w-4" />
-                  <span className="font-medium">{translations("Plan Cost")}</span>
-                </div>
-                {isShopifyPlan ? (
-                  <a
-                    href="https://admin.shopify.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-base font-semibold text-primary hover:underline inline-flex items-center gap-2"
-                  >
-                    See in Shopify
-                    <IconTrendingUp className="h-3 w-3" />
-                  </a>
-                ) : (
-                  <p className="text-base font-semibold">
-                    {subscription?.basePlan?.paymentPlan?.amount
-                      ? `${subscription?.basePlan?.paymentPlan?.currency} ${subscription.basePlan.paymentPlan.amount}`
-                      : subscription?.basePlan?.stripeProduct?.amount
-                        ? `$${subscription.basePlan.stripeProduct.amount}`
-                        : "----"}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {!isCustomPlan && !isProcessingPlan && (
-              <>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <IconPackage className="h-4 w-4" />
-                      <span className="font-medium">{translations("Addons")}</span>
-                    </div>
-                    <p className="text-base font-semibold text-muted-foreground">
-                      {translations("Nil")}
-                    </p>
-                  </div>
-                  {!["FREE PLAN", "RATEUP TRIAL"].includes(subscription?.basePlan?.name ?? "") &&
-                    activeOrderData?.subscriptionStatus === "cancelled" && (
-                      <Button
-                        onClick={() => setOpenedUpgradeModal(true)}
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <IconTrendingUp className="h-4 w-4" />
-                        {translations("Upgrade plan")}
-                      </Button>
-                    )}
-                </div>
-              </>
-            )}
-
-            <Separator />
-
-            {/* Support Section */}
-            <div className="flex items-center justify-center gap-3 py-4 px-6 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                {translations("*For Custom Plans / Support / Assistance")}
-              </p>
-              <div className="flex items-center gap-2">
-                <IconMail className="h-4 w-4 text-muted-foreground" />
-                <a
-                  href="mailto:hello@rateup.app"
-                  className="text-sm font-medium hover:underline text-primary"
-                >
-                  hello@rateup.app
-                </a>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <CurrentPlanCard
+          subscription={subscription}
+          activeOrderData={activeOrderData}
+          cost={{
+            amount: gatewayPlan?.amount ?? subscription?.basePlan?.stripeProduct?.amount,
+            currency: gatewayPlan?.currency ?? subscription?.basePlan?.stripeProduct?.currency,
+            period: gatewayPlan?.period ?? subscription?.basePlan?.stripeProduct?.interval,
+          }}
+          isFreePlan={Boolean(isFreePlan)}
+          isSalesLedPlan={isSalesLedPlan}
+          isProcessingPlan={isProcessingPlan}
+          isShopifyPlan={isShopifyPlan}
+          onBuy={() => (isSalesLedPlan ? setCustomUpgradeModal(true) : setOpenedUpgradeModal(true))}
+          onChangePlan={() => setChangePlanOpened(true)}
+          onCancel={() => setCancelDialogOpened(true)}
+        />
       </div>
+      <ChangePlanDialog
+        open={changePlanOpened}
+        onOpenChange={setChangePlanOpened}
+        plans={plans ?? []}
+        currentPlanId={subscription?.basePlan?.id}
+        currentCadence={gatewayPlan?.period === "monthly" ? "monthly" : "yearly"}
+        renewsOn={
+          activeOrderData?.subscriptionChargeAt
+            ? formatIsoDateString(activeOrderData.subscriptionChargeAt)
+            : undefined
+        }
+      />
       {/* Upgrade Modal */}
       <Dialog open={openedUpgradeModal} onOpenChange={setOpenedUpgradeModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        {/* sm:max-w-*, not max-w-*: DialogContent's own base class is `sm:max-w-md`, so an
+            unprefixed max-w never wins above 640px and the dialog stays 28rem wide. Wide
+            enough for the four plan cards to sit in one row on desktop. */}
+        <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto sm:max-w-[1200px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconTrendingUp className="h-5 w-5" />
@@ -407,7 +249,22 @@ export const Billing = ({
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Pricing isAccount={true} handleSelection={() => setOpenedUpgradeModal(false)} />
+            {plansPending ? (
+              <RateupLoader />
+            ) : (
+              <PricingSection
+                plans={plans ?? []}
+                variant="compact"
+                // Deliberately not passing `currentPlanName`. It narrows the cards to
+                // tiers *above* the current one, which is right for an active subscriber
+                // upgrading — but this dialog is the resubscribe path, reached only when
+                // the plan is cancelled, lapsed or free. Passing it left a cancelled Pro
+                // customer looking at Enterprise as their only option, unable to come
+                // back on Pro or move down to Starter. Someone with a live subscription
+                // changes tier through ChangePlanDialog, which offers both directions.
+                onPlanSelect={() => setOpenedUpgradeModal(false)}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
