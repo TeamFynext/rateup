@@ -10,12 +10,14 @@ import { useCheckSession } from "@/hooks/checkSession.tsx";
 import PlanCardNew from "./Card/PlanCardNew.tsx";
 import { CommerceHighlights } from "./CommerceHighlights.tsx";
 import { ComparisonTable } from "./ComparisonTable.tsx";
+import { ConversationCreditsDrawer } from "./ConversationCreditsDrawer.tsx";
 import {
   type BillingPeriod,
   buildTiers,
   type PricingCurrency,
   type PricingTier,
   tierRank,
+  resolveConversationPack,
   selectGatewayPlan,
 } from "./pricing.data.ts";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
@@ -75,6 +77,9 @@ const PricingSection = ({
 
   /** Cards, matrix and checkout links all come off the plans endpoint. */
   const tiers = useMemo(() => buildTiers(plans), [plans]);
+  // Null when the catalog is not selling a top-up, which is what hides the calculator:
+  // the page should never offer to price something that cannot be bought.
+  const conversationPack = useMemo(() => resolveConversationPack(plans), [plans]);
 
   // The matrix still compares every tier; only the cards are narrowed to upgrades.
   // Set `currentPlanName` ONLY for a subscription that is actually billing: it hides
@@ -197,6 +202,19 @@ const PricingSection = ({
               INR
             </button>
           </div>
+
+          {/* Sits with the toggles rather than under the cards: the allowance is the one
+              number a visitor arrives knowing, and the answer to "what if I go over?"
+              was below the fold where nobody scrolled to find it. The drawer prices the
+              headroom in whatever currency and cadence these toggles are set to. */}
+          {!compact && conversationPack && (
+            <ConversationCreditsDrawer
+              tiers={tiers}
+              pack={conversationPack}
+              currency={currency}
+              period={period}
+            />
+          )}
         </div>
 
         <motion.div

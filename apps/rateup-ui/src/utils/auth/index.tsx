@@ -3,7 +3,6 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
-  EmailVerificationClaim,
   sendVerificationEmail,
   verifyEmail,
 } from "supertokens-auth-react/recipe/emailverification";
@@ -30,24 +29,11 @@ export function isSuperTokensGeneralError(
 
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 
-/**
- * Pull a fresh `st-ev` value into the session's access token payload.
- *
- * `EmailVerificationReact.init()` defaults to `mode: "REQUIRED"`, which registers an
- * `isVerified(10)` claim validator that <SessionAuth> enforces on /dashboard. That
- * validator reads the cached claim and only refetches a `false` after ~10s, so anyone
- * whose email was verified elsewhere (another tab, another device, a social login)
- * carries a stale `false` and gets redirected here — where we send them back. Refreshing
- * before we navigate is what breaks the cycle.
- */
-const refreshEmailVerificationClaim = async () => {
-  try {
-    await EmailVerificationClaim.refresh({});
-  } catch (err) {
-    // Navigate anyway: the guard re-checks and the claim refetches on its own timer.
-    console.error("Failed to refresh the email verification claim:", err);
-  }
-};
+import {
+  isEmailVerified,
+  refreshEmailVerificationClaim,
+  VERIFY_EMAIL_PATH,
+} from "./emailVerification.ts";
 
 const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof useNavigate>) => {
   try {
@@ -115,8 +101,15 @@ export function useSignIn() {
         } else {
           // sign in successful. The session tokens are automatically handled by
           // the frontend SDK.
+          //
+          // A session now exists, but the API runs EmailVerification in REQUIRED mode:
+          // every guarded route answers 403 "invalid claim" until the email is verified,
+          // and /dashboard reads that as "no account" and sends the visitor back to
+          // /login — which, seeing a session, sends them to /dashboard again. Landing an
+          // unverified sign-in on the verify page is what breaks that loop.
+          const verified = await isEmailVerified();
           navigate({
-            to: route,
+            to: verified ? route : VERIFY_EMAIL_PATH,
           });
         }
       }
@@ -266,10 +259,21 @@ export function useSignUp() {
       } else {
         // sign up successful. The session tokens are automatically handled by
         // the frontend SDK.
+        //
+        // Signing up is the one moment that sends a verification email. Nothing else
+        // does — the API only registers the claim validator, and the verify screen no
+        // longer sends on mount, because it is also reached by a refresh and by every
+        // later login. Anyone who needs another has the Resend button there.
+        try {
+          await sendVerificationEmail();
+        } catch (err) {
+          // Navigate regardless: the verify screen can resend, which is a better
+          // outcome than a signup that appears to have failed.
+          console.error("Failed to send the verification email:", err);
+        }
         navigate({
-          to: "/login/verify-email",
+          to: VERIFY_EMAIL_PATH,
         });
-        // consumeVerificationCode()
       }
       // }
     } catch (err) {

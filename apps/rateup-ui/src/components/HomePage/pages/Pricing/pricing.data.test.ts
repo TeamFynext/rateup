@@ -1,9 +1,12 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  adviseOnTopUp,
   buildTiers,
+  estimateTopUp,
   resolveDisplayPrice,
   selectGatewayPlan,
+  tierConversationAllowance,
   tierRank,
 } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 
@@ -238,5 +241,115 @@ describe("which gateway plan a checkout is created from", () => {
     ] as unknown as Parameters<typeof buildTiers>[0]);
 
     expect(selectGatewayPlan(legacy, "yearly", "USD")?.planId).toBe("plan_inr_y");
+  });
+});
+
+describe("conversation top-up estimate", () => {
+  test("rounds up to whole packs — half a pack of headroom is still a pack to buy", () => {
+    expect(estimateTopUp(1000, 1500, 1000)).toEqual({
+      overage: 500,
+      packs: 1,
+      extraConversations: 1000,
+      totalConversations: 2000,
+    });
+  });
+
+  test("needs nothing when the plan already covers the volume", () => {
+    expect(estimateTopUp(1000, 1000, 1000).packs).toBe(0);
+    expect(estimateTopUp(1000, 400, 1000)).toEqual({
+      overage: 0,
+      packs: 0,
+      extraConversations: 0,
+      totalConversations: 1000,
+    });
+  });
+
+  test("stacks packs for volumes well past the allowance", () => {
+    expect(estimateTopUp(1000, 5001, 1000).packs).toBe(5);
+  });
+
+  test("quotes no packs when the catalog gives the pack no size", () => {
+    // Guards the division: a pack worth zero conversations would otherwise ask for
+    // Infinity packs and render a nonsense total.
+    expect(estimateTopUp(1000, 9000, 0).packs).toBe(0);
+  });
+});
+
+describe("tierConversationAllowance", () => {
+  const tierFor = (max: number | undefined) =>
+    buildTiers([
+      {
+        id: "1",
+        name: "PRO PLAN",
+        displayName: "Pro",
+        description: [],
+        features: { whatsapp: { conversation: { count: { max } } } },
+      },
+    ] as unknown as Parameters<typeof buildTiers>[0])[0];
+
+  test("reads the plan's monthly conversation cap", () => {
+    expect(tierConversationAllowance(tierFor(10_000))).toBe(10_000);
+  });
+
+  test("an unlimited tier has no cap to top up", () => {
+    // Enterprise carries a large sentinel rather than null so the API's `used >= max`
+    // comparisons keep working; here it has to read as "nothing to top up".
+    expect(tierConversationAllowance(tierFor(1_000_000))).toBeNull();
+    expect(tierConversationAllowance(tierFor(undefined))).toBeNull();
+  });
+});
+
+describe("when packs stop being the cheaper answer", () => {
+  // Plus 5k @ 25, Pro 25k @ 60, Max 100k @ 150 — a pack is 1k conversations.
+  const options = [
+    { planName: "PLUS PLAN", name: "Plus", included: 5_000, monthlyPrice: 25 },
+    { planName: "PRO PLAN", name: "Pro", included: 25_000, monthlyPrice: 60 },
+    { planName: "MAX PLAN", name: "Max", included: 100_000, monthlyPrice: 150 },
+  ];
+
+  const advise = (volume: number, packs: number, monthlyCostWithPacks: number | null) =>
+    adviseOnTopUp({ options, currentIncluded: 5_000, volume, packs, monthlyCostWithPacks });
+
+  test("says nothing while the plan still covers the volume", () => {
+    expect(advise(4_000, 0, 25).kind).toBe("none");
+  });
+
+  test("a small top-up stays cheaper than moving up", () => {
+    // 2 packs on Plus (25 + 20) is still under Pro's 60.
+    expect(advise(7_000, 2, 45).kind).toBe("none");
+  });
+
+  test("recommends the tier once stacking packs costs more, and the cheapest one that fits", () => {
+    // 15 packs on Plus (25 + 150) beats being on Pro at 60 for the same headroom.
+    const advice = advise(20_000, 15, 175);
+    expect(advice).toEqual({
+      kind: "upgrade",
+      option: options[1],
+      monthlySaving: 115,
+    });
+  });
+
+  test("skips a tier that does not include the whole volume", () => {
+    // 40k needs Max; Pro is cheaper but would not cover it.
+    const advice = advise(40_000, 35, 375);
+    expect(advice.kind === "upgrade" && advice.option.planName).toBe("MAX PLAN");
+  });
+
+  test("sends volume past every plan to sales rather than to more packs", () => {
+    expect(advise(150_000, 145, 1_475).kind).toBe("sales");
+  });
+
+  test("gives no advice it cannot price", () => {
+    // A currency the catalog does not price the tiers in cannot be compared against.
+    expect(advise(20_000, 15, null).kind).toBe("none");
+    expect(
+      adviseOnTopUp({
+        options: options.map((option) => ({ ...option, monthlyPrice: null })),
+        currentIncluded: 5_000,
+        volume: 20_000,
+        packs: 15,
+        monthlyCostWithPacks: 175,
+      }).kind,
+    ).toBe("none");
   });
 });

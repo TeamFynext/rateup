@@ -12,6 +12,11 @@ export const CURRENCY_SYMBOL: Record<PricingCurrency, string> = { USD: "$", INR:
  */
 const UNLIMITED_THRESHOLD = 1_000_000;
 
+/** Whether a catalog count is the "no cap" sentinel rather than a real limit. */
+export function isUnlimitedCount(value: number | null | undefined): boolean {
+  return typeof value === "number" && value >= UNLIMITED_THRESHOLD;
+}
+
 /**
  * The tiers the pricing page sells, in display order. The catalog also holds legacy and
  * test rows ("custom", "Rateup Essentials Yearly", assorted scratch plans) that are
@@ -77,7 +82,7 @@ export function formatPrice(currency: PricingCurrency, amount: number) {
 
 export function formatCount(value: number | null | undefined) {
   if (value === null || value === undefined) return "—";
-  if (value >= UNLIMITED_THRESHOLD) return "Unlimited";
+  if (isUnlimitedCount(value)) return "Unlimited";
   return value.toLocaleString("en-US");
 }
 
@@ -259,6 +264,13 @@ export function resolveDisplayPrice(tier: PricingTier, currency: PricingCurrency
 /** The catalog name of the conversation top-up, matching the API's `CONVERSATION_ADDON`. */
 export const CONVERSATION_PACK_NAME = "CONVERSATION PACK";
 
+/**
+ * How long one pack counts for. The API decides this for a real purchase
+ * (`ConversationAddonOffer.validDays`); the public plans endpoint carries no such field,
+ * so the marketing page states the catalog's standard term.
+ */
+export const CONVERSATION_PACK_DAYS = 30;
+
 export interface ConversationPack {
   /** Extra conversations one pack is worth. */
   conversations: number;
@@ -312,11 +324,125 @@ export function conversationPackAnswer(pack: ConversationPack | null): string {
     .join(" / ");
 
   return (
-    `${base} A conversation pack adds ${conversations} extra conversations for 30 days` +
+    `${base} A conversation pack adds ${conversations} extra conversations for ` +
+    `${CONVERSATION_PACK_DAYS} days` +
     `${price ? ` and costs ${price}` : ""} — a one-off charge, not a subscription, so ` +
     "nothing renews and there is nothing to cancel. Packs stack, so buy as many as you " +
     "need. Packs top up a paid plan: on Free the better move is to upgrade, which raises " +
     "every limit rather than conversations alone, and Enterprise is invoiced on the usage " +
     "it actually runs, so it has no cap to top up."
   );
+}
+
+/** The pack's list price in the currency on screen, or null when it is not priced in it. */
+export function conversationPackPrice(pack: ConversationPack, currency: PricingCurrency) {
+  return currency === "USD" ? pack.usdPrice : pack.inrPrice;
+}
+
+/**
+ * The conversations a tier includes each month, or null when it has no cap at all.
+ *
+ * Null is "nothing to top up" rather than "none included": Enterprise carries the
+ * unlimited sentinel and is invoiced on the usage it actually runs.
+ */
+export function tierConversationAllowance(tier: PricingTier): number | null {
+  const max = tier.raw.features?.whatsapp?.conversation?.count?.max;
+  if (typeof max !== "number" || isUnlimitedCount(max)) return null;
+  return max;
+}
+
+export interface TopUpEstimate {
+  /** Conversations beyond what the plan includes. */
+  overage: number;
+  /** Packs that cover the overage — the last one is only partly used. */
+  packs: number;
+  /** Conversations those packs add. */
+  extraConversations: number;
+  /** Plan allowance plus the packs. */
+  totalConversations: number;
+}
+
+/**
+ * How many packs a month of `expected` conversations needs on top of `included`.
+ *
+ * Packs are indivisible, so the count rounds up — half a pack of headroom is still a
+ * whole pack to buy, and quoting a fractional cost would understate the charge.
+ */
+export function estimateTopUp(
+  included: number,
+  expected: number,
+  conversationsPerPack: number,
+): TopUpEstimate {
+  const overage = Math.max(0, Math.ceil(expected) - included);
+  const packs =
+    conversationsPerPack > 0 && overage > 0 ? Math.ceil(overage / conversationsPerPack) : 0;
+  const extraConversations = packs * conversationsPerPack;
+  return {
+    overage,
+    packs,
+    extraConversations,
+    totalConversations: included + extraConversations,
+  };
+}
+
+/** A plan the credits calculator can price, reduced to what the advice needs. */
+export interface TopUpOption {
+  planName: string;
+  name: string;
+  included: number;
+  /** Effective price per month in the currency on screen, or null when unpriced there. */
+  monthlyPrice: number | null;
+}
+
+/**
+ * What to tell someone whose packs are adding up.
+ *
+ * `upgrade` when a bigger tier includes the whole volume for no more than the plan plus
+ * packs costs; `sales` when no tier on the page covers it at all.
+ */
+export type TopUpAdvice =
+  | { kind: "none" }
+  | { kind: "upgrade"; option: TopUpOption; monthlySaving: number }
+  | { kind: "sales" };
+
+/**
+ * Whether stacking packs has stopped being the cheaper answer.
+ *
+ * Both sides are compared per month, which is the honest comparison only for volume that
+ * recurs — a pack is a one-off, so a one-off spike is still cheaper topped up, and the
+ * copy has to say "every month" for the advice to be true. Tiers are ranked by the
+ * allowance they include rather than by catalog order, so a legacy plan with no rank
+ * still gets advice instead of silently getting none.
+ */
+export function adviseOnTopUp({
+  options,
+  currentIncluded,
+  volume,
+  packs,
+  monthlyCostWithPacks,
+}: {
+  options: TopUpOption[];
+  currentIncluded: number;
+  volume: number;
+  packs: number;
+  monthlyCostWithPacks: number | null;
+}): TopUpAdvice {
+  if (packs <= 0) return { kind: "none" };
+
+  const largest = options.reduce((max, option) => Math.max(max, option.included), 0);
+  // Past every allowance the page sells, more packs is not the answer to give.
+  if (volume > largest) return { kind: "sales" };
+
+  const covering = options
+    .filter((option) => option.included > currentIncluded && option.included >= volume)
+    .filter(
+      (option): option is TopUpOption & { monthlyPrice: number } => option.monthlyPrice !== null,
+    )
+    .sort((a, b) => a.monthlyPrice - b.monthlyPrice);
+
+  const best = covering[0];
+  if (!best || monthlyCostWithPacks === null || best.monthlyPrice > monthlyCostWithPacks) {
+    return { kind: "none" };
+  }
+  return { kind: "upgrade", option: best, monthlySaving: monthlyCostWithPacks - best.monthlyPrice };
 }

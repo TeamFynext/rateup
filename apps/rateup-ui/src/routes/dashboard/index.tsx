@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getTeamFeatures } from "@/backend/team/team.api";
 import { userInfoQuery } from "@/backend/user/user.options";
 import { Loader } from "@/components/ui/loader.tsx";
+import { isEmailVerified, VERIFY_EMAIL_PATH } from "@/utils/auth/emailVerification.ts";
 import { getDashboardLandingTarget } from "@/utils/dashboard-feature-access.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
@@ -27,6 +28,18 @@ export const Route = createFileRoute("/dashboard/")({
     const user = userQueryData && "data" in userQueryData ? userQueryData.data : null;
 
     if (!user) {
+      // "No user" here is not only a missing session: with EmailVerification in REQUIRED
+      // mode the API answers /user/info with 403 "invalid claim" while the email is
+      // unverified, and `fetchUserInfo` reports that as an error body rather than data.
+      // Sending that visitor to /login would only send them back here — /login sees a
+      // live session and returns them to the dashboard.
+      if (!(await isEmailVerified())) {
+        throw redirect({
+          to: VERIFY_EMAIL_PATH,
+          replace: true,
+        });
+      }
+
       throw redirect({
         to: "/login",
         replace: true,
