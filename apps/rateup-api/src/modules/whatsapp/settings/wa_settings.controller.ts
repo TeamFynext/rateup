@@ -48,6 +48,7 @@ import {
 } from "./wa_settings.service.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import { WaConfigType } from "../../../types/enums.js";
+import { recordAuditEvent } from "../../../utils/auditLog.js";
 import { log } from "../../../utils/logger.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
@@ -91,6 +92,10 @@ export async function createWaSettingsHandler(
     phoneId: req.body.phoneId,
     appId: req.body.appId,
     type: WaConfigType.Manual,
+  });
+  await recordAuditEvent(req, "Channel added", {
+    phoneId: waSettings?.phoneId,
+    phone: waSettings?.phone,
   });
   return res.status(200).send(waSettings);
 }
@@ -138,6 +143,62 @@ export async function updateWaSettingsHandler(
   return res.status(200).send(waSettings);
 }
 
+/** The Meta assets a channel row carries, as far as team activity cares. */
+interface ChannelAssets {
+  fbPageId?: string | null;
+  fbUserName?: string | null;
+  ibaId?: string | null;
+  igUserName?: string | null;
+}
+
+/**
+ * Turn one upsert into the team-activity events it actually represents. The route is the
+ * same whether the caller added a channel, connected a Facebook page or dropped an
+ * Instagram account, so only a before/after comparison can tell those apart. Disconnecting
+ * a page clears the linked Instagram account too, which is why this returns a list.
+ */
+export function describeChannelUpsert(
+  before: ChannelAssets | null,
+  after: ChannelAssets | null,
+): { action: string; details?: Record<string, unknown> }[] {
+  if (!before) return [{ action: "Channel added" }];
+
+  const events: { action: string; details?: Record<string, unknown> }[] = [];
+  // The client clears an asset by sending "", the column stores null: same state, so
+  // compare on presence rather than raw value.
+  const asset = (value?: string | null) => value || null;
+
+  if (asset(before.fbPageId) !== asset(after?.fbPageId)) {
+    events.push(
+      after?.fbPageId
+        ? {
+            action: "Facebook page connected",
+            details: { fbPageId: after.fbPageId, fbUserName: after.fbUserName },
+          }
+        : {
+            action: "Facebook page disconnected",
+            details: { fbPageId: before.fbPageId, fbUserName: before.fbUserName },
+          },
+    );
+  }
+
+  if (asset(before.ibaId) !== asset(after?.ibaId)) {
+    events.push(
+      after?.ibaId
+        ? {
+            action: "Instagram account connected",
+            details: { ibaId: after.ibaId, igUserName: after.igUserName },
+          }
+        : {
+            action: "Instagram account disconnected",
+            details: { ibaId: before.ibaId, igUserName: before.igUserName },
+          },
+    );
+  }
+
+  return events.length ? events : [{ action: "Channel updated" }];
+}
+
 export async function upsertWaSettingsHandler(
   req: FastifyRequest<{ Body: updateWaSettingsInput & { encryption?: WaEncryptionKeys } }>,
   res: FastifyReply,
@@ -156,7 +217,15 @@ export async function upsertWaSettingsHandler(
         message: "phoneId is required",
       });
     }
+    const existing = await getWaSettings(org.orgId, req.body.phoneId);
     const waSettings = await upsertWaSettings(org.orgId, req.body.phoneId, req.body);
+    for (const event of describeChannelUpsert(existing, waSettings)) {
+      await recordAuditEvent(req, event.action, {
+        phoneId: waSettings?.phoneId,
+        phone: waSettings?.phone,
+        ...event.details,
+      });
+    }
     return res.status(200).send(waSettings);
   } catch (e) {
     log.error({ err: e }, "Error while upserting WhatsApp settings");
@@ -258,7 +327,11 @@ export async function deleteWaSettingsHandler(
     });
   }
 
-  await deleteWaSettings(req.user.orgId, req.params.phoneId);
+  const deleted = await deleteWaSettings(req.user.orgId, req.params.phoneId);
+  await recordAuditEvent(req, "Channel removed", {
+    phoneId: deleted?.phoneId,
+    phone: deleted?.phone,
+  });
   return res.status(200).send();
 }
 

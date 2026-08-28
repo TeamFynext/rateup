@@ -22,6 +22,7 @@ import { handleWhatsappError } from "../wa_error_handler.js";
 import { generateKeyPairsForWaEncryption } from "../encryption/wa_encryption.utils.js";
 import { setBusinessPublicKey } from "../encryption/wa_encryption.service.js";
 import prisma from "../../../utils/prisma.js";
+import { recordAuditEvent } from "../../../utils/auditLog.js";
 
 export async function registerBusinessClientHandler(
   req: FastifyRequest<{
@@ -87,6 +88,10 @@ export async function registerBusinessClientHandler(
         accessToken,
         assets,
       });
+      await recordAuditEvent(req, "Channel updated", {
+        phoneId: phone?.id,
+        phone: phone?.display_phone_number,
+      });
     } else {
       const appId = process.env.wa_app_id;
       if (!appId) {
@@ -101,6 +106,10 @@ export async function registerBusinessClientHandler(
         appId,
         encryption: keys,
         assets,
+      });
+      await recordAuditEvent(req, "Channel added", {
+        phoneId: phone?.id,
+        phone: phone?.display_phone_number,
       });
     }
 
@@ -121,7 +130,11 @@ export async function deRegisterBusinessClientHandler(
   rep: FastifyReply,
 ) {
   try {
-    await deleteWaSettings(req.user.orgId, req.params.phoneId);
+    const deleted = await deleteWaSettings(req.user.orgId, req.params.phoneId);
+    await recordAuditEvent(req, "Channel removed", {
+      phoneId: deleted?.phoneId,
+      phone: deleted?.phone,
+    });
     rep.status(200).send({ message: "Business client deregistered successfully" });
   } catch (e) {
     log.error(e);
